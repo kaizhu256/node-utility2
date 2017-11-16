@@ -311,10 +311,6 @@
          * this function will normalize the value by type
          */
             switch (type) {
-            case 'dict':
-                return typeof value === 'object' && value && !Array.isArray(value)
-                    ? value
-                    : valueDefault || {};
             case 'list':
                 return Array.isArray(value)
                     ? value
@@ -895,7 +891,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
         /*
          * this function will create a dbTable
          */
-            options = local.normalizeValue('dict', options);
+            options = local.objectSetOverride(options);
             this.name = String(options.name);
             // register dbTable in dbTableDict
             local.dbTableDict[this.name] = this;
@@ -994,7 +990,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
          * this function will get the dbRow in the dbTable with the given idDict
          */
             var id, result;
-            idDict = local.normalizeValue('dict', idDict);
+            idDict = local.objectSetOverride(idDict);
             result = null;
             this.idIndexList.some(function (idIndex) {
                 id = idDict[idIndex.name];
@@ -1102,7 +1098,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
          * will be removed
          */
             var id, result;
-            dbRow = local.jsonCopy(local.normalizeValue('dict', dbRow));
+            dbRow = local.jsonCopy(local.objectSetOverride(dbRow));
             result = null;
             this.idIndexList.some(function (idIndex) {
                 id = dbRow[idIndex.name];
@@ -1162,7 +1158,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
          * this function will get the dbRow's in the dbTable with the given options.query
          */
             this._cleanup();
-            options = local.normalizeValue('dict', options);
+            options = local.objectSetOverride(options);
             return local.setTimeoutOnError(onError, null, local.dbRowProject(
                 this._crudGetManyByQuery(
                     options.query,
@@ -1304,7 +1300,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
          */
             var result, self, tmp;
             self = this;
-            tmp = local.jsonCopy(local.normalizeValue('dict', dbRow));
+            tmp = local.jsonCopy(local.objectSetOverride(dbRow));
             result = self._crudGetManyByQuery(query).map(function (dbRow) {
                 tmp._id = dbRow._id;
                 return self._crudUpdateOneById(tmp);
@@ -1365,7 +1361,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
          * this function will create an idIndex with the given options.name
          */
             var dbRow, idIndex, ii, name;
-            options = local.normalizeValue('dict', options);
+            options = local.objectSetOverride(options);
             name = String(options.name);
             // disallow idIndex with dot-name
             if (name.indexOf('.') >= 0 || name === '_id') {
@@ -1398,7 +1394,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
          * this function will remove the idIndex with the given options.name
          */
             var name;
-            options = local.normalizeValue('dict', options);
+            options = local.objectSetOverride(options);
             name = String(options.name);
             this.idIndexList = this.idIndexList.filter(function (idIndex) {
                 return idIndex.name !== name || idIndex.name === '_id';
@@ -1810,7 +1806,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
          * this function will create a dbTable with the given options
          */
             var self;
-            options = local.normalizeValue('dict', options);
+            options = local.objectSetOverride(options);
             // register dbTable
             self = local.dbTableDict[options.name] =
                 local.dbTableDict[options.name] || new local._DbTable(options);

@@ -107,6 +107,54 @@ local.assetsDict['/assets.swgg.swagger.petstore.json'] = JSON.stringify(
 
 
 
+local.swaggerErrorTypeDict = {
+    arrayMaxItems: '{{type2}} {{prefix2}} = {{data2}} must have <= {{schema.maxItems}} items',
+    arrayMinItems: '{{type2}} {{prefix2}} = {{data2}} must have >= {{schema.minItems}} items',
+    arrayUniqueItems: '{{type2}} {{prefix2}} = {{data2}} must have unique items (has duplicate item {{tmp jsonStringify}})',
+    itemEnum: '{{type2}} {{prefix2}} = {{data2}} can only have items from the list {{schema.enum jsonStringify}}',
+    itemAnyOf: '{{tmp}} (from schama.anyOf {{schema2}})',
+    itemNot: '{{type2}} {{prefix2}} = {{data2}} must not validate against schama.not {{schema2}}',
+    itemOneOf: '{{type2}} {{prefix2}} = {{data2}} did not validate against exactly one schema (validated {{tmp}}) in schema.oneOf {{schema2}}',
+    itemType: 'value {{prefix2}} = {{data2}} is not a valid {{type2}}',
+    numberMultipleOf: '{{type2}} {{prefix2}} = {{data2}} must be a multiple of {{schema.multipleOf}}',
+    numberExclusiveMaximum: '{{type2}} {{prefix2}} = {{data2}} must be < {{schema.maximum}}',
+    numberExclusiveMinimum: '{{type2}} {{prefix2}} = {{data2}} must be > {{schema.minimum}}',
+    numberMaximum: '{{type2}} {{prefix2}} = {{data2}} must be <= {{schema.maximum}}',
+    numberMinimum: '{{type2}} {{prefix2}} = {{data2}} must be >= {{schema.minimum}}',
+    objectAdditionalProperties: '{{type2}} {{prefix2}} = {{data2}} cannot have additional property {{key jsonStringify}}',
+    objectDependencies: '{{type2}} {{prefix2}} = {{data2}} with item {{key jsonStringify}} must have dependency {{key2 jsonStringify}}',
+    objectMaxProperties: '{{type2}} {{prefix2}} = {{data2}} must have <= {{schema.maxProperties}} properties',
+    objectMinProperties: '{{type2}} {{prefix2}} = {{data2}} must have >= {{schema.minProperties}} properties',
+    objectRequired: '{{type2}} {{prefix2}} = {{data2}} must have property {{key jsonStringify}}',
+    schemaDeferenceCircular: 'cannot dereference circular-reference schema {{schema2}}',
+    schemaDeference: 'cannot dereference schema {{schema2}}',
+    // https://github.com/swagger-api/swagger-editor/blob/v3.0.17/src/plugins/validation/semantic-validators/validators
+    semanticInvalidInFormdata: 'Parameter "in: formdata" is invalid, did you mean "in: formData" ( camelCase )?',
+    semanticMinimumMoreThanMaximum: 'Minimum cannot be more than maximum',
+    semanticMinPropertiesMoreThanMaxProperties: 'minProperties cannot be more than maxProperties',
+    semanticMinLengthMoreThanMaxLength: 'minLength cannot be more than maxLength',
+    semanticRequired: 'Schema properties specified as "required" must be defined',
+    semanticRequiredArrayItems: 'schema {{schema2}} with "array" type requires an "items" property',
+    semanticRequiredConsumesFormData: 'Operations with Parameters of "in: formData" must include "application/x-www-form-urlencoded" or "multipart/form-data" in their "consumes" property',
+    semanticRequiredConsumesMultipartFormData: 'Operations with Parameters of "type: file" must include "multipart/form-data" in their "consumes" property',
+    semanticRequiredInFormData: 'Parameters with "type: file" must have "in: formData"',
+    semanticRequiredReadOnly: 'Read only properties cannot marked as required by a schema.',
+    semanticRequiredTypeString: '${path} must have required string "type" param',
+    semanticTypeString: '"type" should be a string',
+    semanticUniqueInBodyFormDataParameter: 'Parameters cannot have both a "in: body" and "in: formData", as "formData" _will_ be the body',
+    semanticUniqueInBodyFormDataOperation: 'Operations cannot have both a "body" parameter and "formData" parameter',
+    semanticUniqueInBodyOperation: 'Operations must have no more than one body parameter',
+    semanticUniqueParameterName: 'Operation parameters must have unique "name" + "in" properties',
+    semanticUniqueOperationId: 'operationId {{prefix2}}["operationId"] = {{data2}} is not unique',
+    semanticUnusedDefinition: 'Definition was declared but never used in document',
+    semanticUnusedNameInPath: 'Path parameter ${parameterDefinition.name} was defined but never used',
+    stringMaxLength: 'string {{prefix2}} = {{data2}} must have <= {{schema.maxLength}} characters',
+    stringMinLength: 'string {{prefix2}} = {{data2}} must have >= {{schema.minLength}} characters',
+    stringPattern: 'string {{prefix2}} = {{data2}} must match regexp pattern {{schema.pattern jsonStringify}}',
+};
+
+
+
 local.templateApiDict = {
     "crudCountManyByQuery": {
         "_method": "GET",
@@ -254,12 +302,16 @@ local.templateApiDict = {
                 "type": "string"
             },
             {
-                "default": "{}",
                 "description": "projection-fields param",
                 "format": "json",
                 "in": "query",
                 "name": "_queryFields",
-                "type": "string"
+                "type": "string",
+                "x-swgg-collectionFormat": "json",
+                "x-swgg-items": {
+                    "type": "string"
+                },
+                "x-swgg-type": "array"
             },
             {
                 "default": 20,
@@ -277,12 +329,17 @@ local.templateApiDict = {
                 "type": "integer"
             },
             {
-                "default": "[{\"fieldName\":\"_timeUpdated\",\"isDescending\":true}]",
+                "default": [{"fieldName":"_timeUpdated","isDescending":true}],
                 "description": "cursor-sort param",
                 "format": "json",
                 "in": "query",
                 "name": "_querySort",
-                "type": "string"
+                "type": "string",
+                "x-swgg-collectionFormat": "json",
+                "x-swgg-items": {
+                    "type": "object"
+                },
+                "x-swgg-type": "array"
             }
         ],
         "responses": {
@@ -690,42 +747,37 @@ awoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=\
 
 // https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/main.handlebars
 local.templateUiMain = '\
-<div class="eventDelegateKeyup eventDelegateSubmit form header onEventUiReload tr">\n\
-    <a class="td1" href="https://github.com/kaizhu256/node-swgg" target="_blank">swgg</a>\n\
+<!-- <div class="swggUiContainer"> -->\n\
+<div class="eventDelegateKeyup eventDelegateSubmit onEventUiReload thead">\n\
+    <a class="td td1" href="https://github.com/kaizhu256/node-swgg" target="_blank">swgg</a>\n\
     <input\n\
-        class="flex1 td2"\n\
+        class="td td2"\n\
         placeholder="http://petstore.swagger.io/v2/swagger.json"\n\
         type="text"\n\
         value="{{urlSwaggerJson}}"\n\
     >\n\
     <input\n\
-        class="td3"\n\
+        class="td td3"\n\
         id="swggApiKeyInput1"\n\
         placeholder="api-key"\n\
         type="text"\n\
         value="{{apiKeyValue}}"\n\
     >\n\
-    <button class="eventDelegateClick onEventUiReload td4">Explore</button>\n\
+    <button class="eventDelegateClick onEventUiReload td td4">explore</button>\n\
     <button\n\
-        class="eventDelegateClick onEventUiReload td5"\n\
+        class="eventDelegateClick onEventUiReload td td5"\n\
         id="swggApiKeyClearButton1"\n\
-    >Clear api-keys</button>\n\
+    >clear api-keys</button>\n\
 </div>\n\
 <div class="info reset">\n\
     {{#if info}}\n\
     {{#if info.x-swgg-homepage}}\n\
-    <a class="fontWeightBold"\n\
-        href="{{info.x-swgg-homepage}}"\n\
-        target="_blank"\n\
-    >\n\
-        {{info.title htmlSafe}} ({{info.version htmlSafe}})\n\
-    </a>\n\
+    <a href="{{info.x-swgg-homepage}}" target="_blank"\n\
+    ><h2>{{info.title}} ({{info.version}})</h2></a>\n\
     {{#unless info.x-swgg-homepage}}\n\
-    <div class="fontWeightBold">{{info.title htmlSafe}} ({{info.version htmlSafe}})</div>\n\
+    <h2>{{info.title}} ({{info.version}})</h2>\n\
     {{/if info.x-swgg-homepage}}\n\
-    {{#if info.description}}\n\
-    <div>{{info.description htmlSafe br}}</div>\n\
-    {{/if info.description}}\n\
+    {{#if info.description}}<div>{{info.description htmlBr}}</div>{{/if info.description}}\n\
     {{#if info.x-swgg-downloadStandaloneApp}}\n\
     <h4><a download href="{{info.x-swgg-downloadStandaloneApp}}">download standalone app</a></h4>\n\
     {{/if info.x-swgg-downloadStandaloneApp}}\n\
@@ -733,7 +785,7 @@ local.templateUiMain = '\
         {{#if externalDocs}}\n\
         <li>\n\
             {{#if externalDocs.description}}\n\
-            <p>{{externalDocs.description htmlSafe br}}</p>\n\
+            <p>{{externalDocs.description htmlBr}}</p>\n\
             {{/if externalDocs.description}}\n\
             {{#if externalDocs.url}}\n\
             <a href="{{externalDocs.url}}" target="_blank">{{externalDocs.url}}</a>\n\
@@ -741,22 +793,20 @@ local.templateUiMain = '\
         </li>\n\
         {{/if externalDocs}}\n\
         {{#if info.termsOfService}}\n\
-        <li><a target="_blank" href="{{info.termsOfService}}">Terms of service</a></li>\n\
+        <li><a target="_blank" href="{{info.termsOfService}}">terms of service</a></li>\n\
         {{/if info.termsOfService}}\n\
         {{#if info.contact.name}}\n\
-        <li>Created by {{info.contact.name htmlSafe}}</li>\n\
+        <li>created by {{info.contact.name}}</li>\n\
         {{/if info.contact.name}}\n\
         {{#if info.contact.url}}\n\
-        <li>\n\
-            See more at <a href="{{info.contact.url}}">{{info.contact.url}}</a>\n\
-        </li>\n\
+        <li>see more at <a href="{{info.contact.url}}">{{info.contact.url}}</a></li>\n\
         {{/if info.contact.url}}\n\
         {{#if info.contact.email}}\n\
         <li>\n\
             <a\n\
                 target="_parent"\n\
-                href="mailto:{{info.contact.email}}?subject={{info.title htmlSafe}}"\n\
-            >Contact the developer</a>\n\
+                href="mailto:{{info.contact.email}}?subject={{info.title}}"\n\
+            >contact the developer</a>\n\
         </li>\n\
         {{/if info.contact.email}}\n\
         {{#if info.license}}\n\
@@ -766,15 +816,16 @@ local.templateUiMain = '\
     {{/if info}}\n\
 </div>\n\
 {{#if urlSwaggerJson}}\n\
-<pre class="code" id="swggAjaxProgressPre1">\n\
+<h4 class="label">javascript code</h4>\n\
+<pre id="swggAjaxProgressPre1">\n\
 /*\n\
  * initialize swgg-client\n\
  * 1. download currently-loaded apis to file swagger.json:\n\
- *     $ curl -L "{{urlSwaggerJson htmlSafe}}" > swagger.json\n\
+ *     $ curl -L "{{urlSwaggerJson}}" > swagger.json\n\
  * 2. npm install swgg\n\
  *     $ npm install swgg\n\
  * 3. run code below to initialize swgg-client\n\
- * 4. (optional) edit swagger.json to suit your needs\n\
+ * 4. (optional) edit file swagger.json to suit your needs\n\
  */\n\
 var swgg;\n\
 swgg = require("swgg");\n\
@@ -783,175 +834,143 @@ console.log("printing currently loaded apis ...");\n\
 console.log(JSON.stringify(Object.keys(swgg.apiDict).sort(), null, 4));\n\
 console.log("initialized swgg-client");\n\
 </pre>\n\
-<div class="color777 reset">\n\
-    [ <span>base url</span>: {{basePath}} ]\n\
-</div>\n\
+<div class="reset styleColor777">[ <span>base url</span>: {{basePath}} ]</div>\n\
 {{/if urlSwaggerJson}}\n\
 <div id="swggAjaxProgressDiv1" style="text-align: center;">\n\
     <span>{{ajaxProgressText}}</span>\n\
     <span class="uiAnimateSpin"></span>\n\
 </div>\n\
+<div class="reset resourceList"></div>\n\
+<div class="utility2FooterDiv">\n\
+    [ this document was created with\n\
+    <a href="https://github.com/kaizhu256/node-swgg" target="_blank">swgg</a>\n\
+    ]\n\
+</div>\n\
+<!-- </div> -->\n\
 ';
 
 
 
 // https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/operation.handlebars
 local.templateUiOperation = '\
-<div\n\
-    class="eventDelegateClick eventDelegateSubmit operation {{_method}}"\n\
-    data-_method-path="{{_methodPath}}"\n\
-    id="{{id}}"\n\
+<div class="operation" data-_method-path="{{_methodPath}}" id="{{id}}">\n\
+<div class="onEventOperationDisplayShow onEventInputValidate thead" tabindex="0">\n\
+    <span class="td td1"></span>\n\
+    <span class="method{{_method}} td td2">{{_method}}</span>\n\
+    <span\n\
+        class="td td3"\n\
+        {{#if deprecated}}style="text-decoration: line-through;"{{/if deprecated}}\n\
+    >{{_path}}</span>\n\
+    <span class="styleColor777 styleTextOverflowEllipsis td td4">{{summary}}</span>\n\
+</div>\n\
+<form accept-charset="UTF-8"\n\
+    class="content uiAnimateSlide"\n\
+    style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"\n\
 >\n\
-    <div\n\
-        class="cursorPointer eventDelegateClick onEventOperationDisplayShow header tr"\n\
-        tabindex="0"\n\
-    >\n\
-        <span class="td1">{{_ii}}</span>\n\
-        <span class="td2">{{_method}}</span>\n\
-        <span\n\
-            class="flex1 td3 {{#if deprecated}}deprecated{{/if deprecated}}"\n\
-        >{{_path}}</span>\n\
-        <span class="color777 flex1 td4 textOverflowEllipsis">{{summary htmlSafe}}</span>\n\
+    {{#if deprecated}}<h4 class="label">(warning: deprecated)</h4><br>{{/if deprecated}}\n\
+    <h4 class="label">description</h4>\n\
+    <div class="styleColor777 tr">{{description htmlBr}}</div>\n\
+    {{#if parameters.length}}\n\
+    <h4 class="label">parameters</h4>\n\
+    <div class="schemaP styleBorderBottom1px styleColor777 tr">\n\
+        <span class="td td1">name and description</span>\n\
+        <span class="td td2">data type</span>\n\
+        <span class="td td3">value</span>\n\
+        <span class="td td4">schema</span>\n\
     </div>\n\
-    <form accept-charset="UTF-8"\n\
-        class="content uiAnimateSlide"\n\
-        style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"\n\
-    >\n\
-        {{#if deprecated}}\n\
-        <h4 class="label">Warning: Deprecated</h4>\n\
-        {{/if deprecated}}\n\
-        <h4 class="label">Description</h4>\n\
-        <div class="tr">{{description htmlSafe br}}</div>\n\
-        {{#if parameters.length}}\n\
-        <h4 class="label">Parameters</h4>\n\
-        <div class="borderBottom schemaP tr">\n\
-            <span class="color777 td1">Name and Description</span>\n\
-            <span class="color777 td2">Data Type</span>\n\
-            <span class="color777 td3">Value</span>\n\
-            <span class="color777 td4">Schema</span>\n\
-        </div>\n\
-        {{#each parameters}}\n\
-        <div class="borderBottom schemaP tr" id="{{id}}" name="{{name}}">{{innerHTML}}</div>\n\
-        {{/each parameters}}\n\
-        {{/if parameters.length}}\n\
-        <h4 class="label">Response Messages</h4>\n\
-        <div class="responseList tr">\n\
-            <span class="color777 td1">HTTP Status Code</span>\n\
-            <span class="color777 td2">Reason</span>\n\
-        </div>\n\
-        {{#each responseList}}\n\
-        <div class="borderBottom responseList tr">\n\
-            <span class="td1">{{key}}</span>\n\
-            {{#if value.description}}\n\
-            <span class="td2">{{value.description htmlSafe}}</span>\n\
-            {{/if value.description}}\n\
-        </div>\n\
-        {{/each responseList}}\n\
-        <button class="onEventOperationAjax">Try it out!</button>\n\
-        <div class="responseAjax"></div>\n\
-    </form>\n\
+    {{#each parameters}}\n\
+    {{innerHTML notHtmlSafe}}\n\
+    {{/each parameters}}\n\
+    {{/if parameters.length}}\n\
+    <h4 class="label">response messages</h4>\n\
+    <div class="schemaResponse styleColor777 styleBorderBottom1px tr">\n\
+        <span class="td td1">http status code</span>\n\
+        <span class="td td2">reason</span>\n\
+    </div>\n\
+    {{#each responseList}}\n\
+    <div class="schemaResponse tr">\n\
+        <span class="td td1">{{key}}</span>\n\
+        <span class="td td2">{{value.description}}</span>\n\
+    </div>\n\
+    {{/each responseList}}\n\
+    <button class="onEventOperationAjax">try it out</button>\n\
+    <h4 class="label">javascript code</h4>\n\
+    <pre class="requestJavascript"></pre>\n\
+    <h4 class="label">curl request</h4>\n\
+    <pre class="requestCurl"></pre>\n\
+    <h4 class="label">response status code</h4>\n\
+    <pre class="responseStatusCode"></pre>\n\
+    <h4 class="label">response headers</h4>\n\
+    <pre class="responseHeaders"></pre>\n\
+    <h4 class="label">response body</h4>\n\
+    <pre class="responseBody" tabindex="0"></pre>\n\
+    <div class="responseMedia"></div>\n\
+</form>\n\
 </div>\n\
 ';
 
 
 
 // https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/param.handlebars
-local.templateUiParam = '\
-<span class="td1">\n\
-    {{name}}&nbsp;\n\
-    {{#if required}}\n\
-    <span class="fontWeightBold">(required)</span>\n\
-    {{/if required}}\n\
+local.templateUiParameter = '\
+<div class="schemaP tr" id="{{id}}" data-name="{{name}}">\n\
+<span class="td td1">\n\
+    {{name}}\n\
+    {{#if required}}<br><span style="font-weight: bold;">(required)</span>{{/if required}}\n\
     {{#if description}}\n\
     <br>\n\
-    <span class="color777">{{description htmlSafe br}}</span>\n\
+    <span class="styleColor777">{{description htmlBr}}</span>\n\
     {{/if description}}\n\
 </span>\n\
-<span class="td2">{{type2}}{{#if format2}}<br>({{format2}}){{/if format2}}</span>\n\
-<span class="td3">\n\
+<span class="td td2">{{type2}}{{#if format2}}<br>({{format2}}){{/if format2}}</span>\n\
+<span class="td td3">\n\
     {{#if isTextarea}}\n\
-    <textarea\n\
-        class="input"\n\
-        data-value-encoded="{{valueEncoded encodeURIComponent}}"\n\
-        placeholder="{{placeholder htmlSafe}}"></textarea>\n\
+    <div class="multilinePlaceholderContainer">\n\
+        <pre class="multilinePlaceholderPre">{{placeholder}}</pre>\n\
+        <textarea\n\
+            class="input multilinePlaceholderTextarea onEventInputTextareaChange"\n\
+            data-value-text="{{valueText encodeURIComponent notHtmlSafe}}"\n\
+        ></textarea>\n\
+    </div>\n\
     {{/if isTextarea}}\n\
-    {{#if isFile}}\n\
-    <input class="input" type="file">\n\
-    {{/if isFile}}\n\
-    {{#if isSelect}}\n\
+    {{#if isFile}}<input class="input" type="file">{{/if isFile}}\n\
+    {{#if enum2}}\n\
     <select class="input" {{#if isSelectMultiple}}multiple{{/if isSelectMultiple}}>\n\
         {{#each selectOptionList}}\n\
         <option\n\
-            data-value-decoded="{{valueDecoded jsonStringify encodeURIComponent}}"\n\
+            data-value-select-option=\n\
+                "{{valueSelectOption jsonStringify encodeURIComponent notHtmlSafe}}"\n\
             id="{{id}}"\n\
             {{selected}}\n\
-        >{{valueEncoded htmlSafe}}</option>\n\
+        >{{placeholder}}</option>\n\
         {{/each selectOptionList}}\n\
     </select>\n\
-    {{/if isSelect}}\n\
+    {{/if enum2}}\n\
     {{#if isInputText}}\n\
     <input\n\
         class="input"\n\
-        data-value-encoded="{{valueEncoded encodeURIComponent}}"\n\
-        placeholder="{{placeholder htmlSafe}}"\n\
+        data-value-text="{{valueText encodeURIComponent notHtmlSafe}}"\n\
+        placeholder="{{placeholder}}"\n\
         type="text"\n\
     >\n\
     {{/if isInputText}}\n\
+    <div class="styleColorError"></div>\n\
 </span>\n\
-<span class="td4">{{#if schemaText}}<pre>{{schemaText}}</pre>{{/if schemaText}}</span>\n\
-';
-
-
-
-// https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/resource.handlebars
-local.templateUiResource = '\
-<div\n\
-    class="borderBottom resource eventDelegateClick"\n\
-    data-name="{{name}}"\n\
-    id="{{id}}"\n\
->\n\
-    <div class="cursorPointer fontWeightBold header tr">\n\
-        <span\n\
-            class="flex1 onEventResourceDisplayAction td1 textOverflowEllipsis"\n\
-            tabindex="0"\n\
-        >{{name}} : {{description htmlSafe}}</span>\n\
-        <span\n\
-            class="onEventResourceDisplayAction td2"\n\
-            tabindex="0"\n\
-        >Expand / Collapse Operations</span>\n\
-        <span\n\
-            class="onEventDatatableReload td3"\n\
-            data-resource-name="{{name}}"\n\
-            tabindex="0"\n\
-        >Datatable</span>\n\
-    </div>\n\
-    <div class="operationList uiAnimateSlide"\n\
-        style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"\n\
-    >\n\
-        <div class="description">{{description htmlSafe br}}</div>\n\
-    </div>\n\
+<span class="td td4">\n\
+    {{#if schemaText}}<pre>{{schemaText}}</pre>{{/if schemaText}}\n\
+</span>\n\
 </div>\n\
 ';
 
 
 
-local.templateUiResponseAjax = '\
-{{#if error}}\n\
-<h4 class="label"></h4>\n\
-<pre class="code error uiAnimateShake">\n\
-ERROR\n\
-\n\
-{{error.message htmlSafe}}\n\
-</pre>\n\
-{{/if error}}\n\
-<h4 class="label"></h4>\n\
-<pre class="code">\n\
+local.templateUiRequestJavascript = '\
 /*\n\
  * reproduce api-call {{options.api._methodPath jsonStringify}}\n\
  * 1. initialize swgg-client from previous step\n\
  * 2. run code below to reproduce api-call\n\
  */\n\
-swgg.apiDict[{{options.api._methodPath jsonStringify htmlSafe}}].ajax({{optionsJson htmlSafe}}, \
+swgg.apiDict[{{options.api._methodPath jsonStringify}}].ajax({{optionsJson}}, \
 function (error, data) {\n\
     if (error) {\n\
         console.error(error);\n\
@@ -960,15 +979,41 @@ function (error, data) {\n\
     console.log(data.responseJson || data.responseText);\n\
 }\
 );\n\
-</pre>\n\
-<h4 class="label">Curl Request</h4>\n\
-<pre>{{curl htmlSafe}}</pre>\n\
-<h4 class="label">Response Code</h4>\n\
-<pre>{{statusCode}}</pre>\n\
-<h4 class="label">Response Headers</h4>\n\
-<pre>{{responseHeaders htmlSafe}}</pre>\n\
-<h4 class="label">Response Body</h4>\n\
-{{responseBody}}\n\
+';
+
+
+
+// https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/resource.handlebars
+local.templateUiResource = '\
+<div\n\
+    class="styleBorderBottom1px resource\n\
+        eventDelegateChange eventDelegateClick eventDelegateKeyup eventDelegateSubmit\n\
+    "\n\
+    data-name="{{name}}"\n\
+    id="{{id}}"\n\
+>\n\
+<h3 class="thead">\n\
+    <span\n\
+        class="onEventResourceDisplayAction styleTextOverflowEllipsis td td1"\n\
+        tabindex="0"\n\
+    >{{name}} : {{description}}</span>\n\
+    <span\n\
+        class="onEventResourceDisplayAction td td2"\n\
+        tabindex="0"\n\
+    >expand / collapse operations</span>\n\
+    <span\n\
+        class="onEventDatatableReload td td3"\n\
+        data-resource-name="{{name}}"\n\
+        tabindex="0"\n\
+    >datatable</span>\n\
+</h3>\n\
+<div\n\
+    class="operationList uiAnimateSlide"\n\
+    style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"\n\
+>\n\
+    <div class="resourceDescription">{{description htmlBr}}</div>\n\
+</div>\n\
+</div>\n\
 ';
 
 
@@ -996,84 +1041,51 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 </style>\n\
 <style>\n\
 /*csslint\n\
-    adjoining-classes: false,\n\
-    universal-selector: false\n\
 */\n\
-/* animate */\n\
-@keyframes uiAnimateShake {\n\
-    100% {\n\
-        transform: translateX(0);\n\
-    }\n\
-    0%, 20%, 60% {\n\
-        transform: translateX(1rem);\n\
-    }\n\
-    40%, 80% {\n\
-        transform: translateX(-1rem);\n\
-    }\n\
-}\n\
-.uiAnimateShake {\n\
-    animation-duration: 500ms;\n\
-    animation-name: uiAnimateShake;\n\
-}\n\
-\n\
-\n\
-\n\
-/* general */\n\
+/* jslint-ignore-begin */\n\
 .swggUiContainer,\n\
 .swggUiContainer * {\n\
     margin: 0;\n\
     margin-bottom: 10px;\n\
+    max-width: 100%;\n\
     padding: 0;\n\
 }\n\
+.swggUiContainer .operation > .thead:focus,\n\
+.swggUiContainer pre,\n\
+.swggUiContainer .resource > .thead > .td:focus {\n\
+    outline: none;\n\
+}\n\
+/* jslint-ignore-end */\n\
+\n\
+\n\
+\n\
+/* general */\n\
 .swggUiContainer {\n\
-    font-family: Arial, Helvetica, sans-serif;\n\
     margin-left: auto;\n\
     margin-right: auto;\n\
-    max-width: 1024px;\n\
+    max-width: 1200px;\n\
 }\n\
-.swggUiContainer a,\n\
-.swggUiContainer input,\n\
-.swggUiContainer span {\n\
-    min-height: 1.5rem;\n\
+.swggUiContainer button,\n\
+.swggUiContainer .operation > .thead,\n\
+.swggUiContainer .resource > .thead {\n\
+    cursor: pointer;\n\
 }\n\
 .swggUiContainer button {\n\
     padding: 10px;\n\
 }\n\
-.swggUiContainer .color777 {\n\
-    color: #777;\n\
-}\n\
-.swggUiContainer button,\n\
-.swggUiContainer .cursorPointer,\n\
-.swggUiContainer .cursorPointer input {\n\
-    cursor: pointer;\n\
-}\n\
-.swggUiContainer .code,\n\
-.swggUiContainer .operation > .content .code {\n\
-    background: #ddd;\n\
-    color: #555;\n\
-    max-height: 50rem;\n\
-}\n\
-.swggUiContainer .deprecated {\n\
-    text-decoration: line-through;\n\
-}\n\
-.swggUiContainer .flex1 {\n\
-    flex: 1;\n\
-}\n\
-.swggUiContainer .fontWeightBold {\n\
-    font-weight: bold;\n\
-}\n\
-.swggUiContainer .operation .header,\n\
-.swggUiContainer option,\n\
-.swggUiContainer .tr > * {\n\
-    margin-bottom: 0;\n\
+.swggUiContainer input,\n\
+.swggUiContainer pre,\n\
+.swggUiContainer textarea {\n\
+    min-height: 1.5rem;\n\
 }\n\
 .swggUiContainer input {\n\
-    height: 1.5rem;\n\
-    padding-left: 0.25rem;\n\
-    padding-right: 0.25rem;\n\
+    padding-left: 5px;\n\
+    padding-right: 5px;\n\
 }\n\
-.swggUiContainer select[multiple] {\n\
-    height: 10rem;\n\
+.swggUiContainer .responseStatusCode,\n\
+.swggUiContainer .responseHeaders,\n\
+.swggUiContainer .responseBody {\n\
+    background: #373;\n\
 }\n\
 .swggUiContainer pre,\n\
 .swggUiContainer textarea {\n\
@@ -1081,189 +1093,256 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
     font-family: Menlo, Monaco, Consolas, Courier New, monospace;\n\
     font-size: small;\n\
     line-height: 1.25rem;\n\
-    max-height: 20rem;\n\
-    min-height: 1.75rem;\n\
-    overflow: auto;\n\
-    padding: 0.25rem;\n\
-    white-space: pre;\n\
+    max-height: 25rem;\n\
+    padding: 5px;\n\
+    white-space: nowrap;\n\
 }\n\
-.swggUiContainer .tr {\n\
-    display: flex;\n\
+.swggUiContainer pre {\n\
+    background: #ddd;\n\
+    overflow-wrap: break-word;\n\
+    white-space: pre-wrap;\n\
 }\n\
-.swggUiContainer .tr > * {\n\
-    margin-left: 1rem;\n\
-    overflow: auto;\n\
-    padding-top: 0.1rem;\n\
+.swggUiContainer .schemaP pre,\n\
+.swggUiContainer .schemaP .multilinePlaceholderContainer,\n\
+.swggUiContainer .schemaP select[multiple],\n\
+.swggUiContainer .schemaP textarea {\n\
+    height: 10rem;\n\
+}\n\
+.swggUiContainer .td {\n\
     word-wrap: break-word;\n\
 }\n\
-.swggUiContainer .tr > *:first-child {\n\
-    margin-left: 0;\n\
-}\n\
-.swggUiContainer .tr > * > * {\n\
+.swggUiContainer .td div,\n\
+.swggUiContainer .td input,\n\
+.swggUiContainer .td pre,\n\
+.swggUiContainer .td select,\n\
+.swggUiContainer .td textarea {\n\
     width: 100%;\n\
 }\n\
-\n\
-\n\
-\n\
-/* border */\n\
-.swggUiContainer .borderBottom {\n\
-    border-bottom: 1px solid #777;\n\
-}\n\
-.swggUiContainer .resource:first-child {\n\
-    border-top: 1px solid #777;\n\
-    padding-top: 10px;\n\
-}\n\
-/* border-error*/\n\
-.swggUiContainer .error,\n\
-.swggUiContainer .operation > .content .error {\n\
-    border: 5px solid #b00;\n\
+.swggUiContainer .thead,\n\
+.swggUiContainer .tr {\n\
+    display: flex;\n\
 }\n\
 \n\
 \n\
 \n\
 /* section */\n\
-.swggUiContainer > .header {\n\
-    background: #7b0;\n\
+.swggUiContainer .methodDELETE {\n\
+    background: #b07;\n\
+}\n\
+.swggUiContainer .methodGET {\n\
+    background: #373;\n\
+}\n\
+.swggUiContainer .methodHEAD {\n\
+    background: #7b7;\n\
+}\n\
+.swggUiContainer .methodOPTIONS {\n\
+    background: #777;\n\
+}\n\
+.swggUiContainer .methodPATCH {\n\
+    background: #99f;\n\
+}\n\
+.swggUiContainer .methodPOST {\n\
+    background: #33d;\n\
+}\n\
+.swggUiContainer .methodPUT {\n\
+    background: #77e;\n\
+}\n\
+.swggUiContainer .multilinePlaceholderContainer {\n\
+    min-height: 10rem;\n\
+    position: relative;\n\
+}\n\
+.swggUiContainer .multilinePlaceholderPre {\n\
+    background: #fff;\n\
+    position: absolute;\n\
+    white-space: pre;\n\
+}\n\
+.swggUiContainer .multilinePlaceholderTextarea {\n\
+    position: absolute;\n\
+}\n\
+.swggUiContainer .operation {\n\
+    background: #dfd;\n\
+}\n\
+.swggUiContainer .operation > .content {\n\
+    padding: 20px;\n\
+}\n\
+.swggUiContainer .operation > .thead:hover {\n\
+    background: #7d7;\n\
+}\n\
+.swggUiContainer .operation > .thead > .td {\n\
+    padding: 10px 0;\n\
+}\n\
+.swggUiContainer .operation > .thead > .td1 {\n\
+    text-align: center;\n\
+    width: 2rem;\n\
+}\n\
+.swggUiContainer .operation > .thead > .td2 {\n\
+    text-align: center;\n\
+    width: 5rem;\n\
+}\n\
+.swggUiContainer .resource > .thead > .td2 {\n\
+    border-left: 1px solid #777;\n\
+    border-right: 1px solid #777;\n\
+    padding-left: 20px;\n\
+    padding-right: 20px;\n\
+}\n\
+.swggUiContainer .resource:first-child {\n\
+    border-top: 1px solid #777;\n\
+    padding-top: 10px;\n\
+}\n\
+.swggUiContainer .resourceDescription {\n\
+    background: #373;\n\
+    padding: 10px 20px;\n\
+}\n\
+.swggUiContainer > .thead {\n\
+    background: #7b5;\n\
     padding: 10px;\n\
 }\n\
-.swggUiContainer > .header > * {\n\
-    font-size: small;\n\
-    height: 2rem;\n\
+.swggUiContainer > .thead > .td {\n\
+    font-size: smaller;\n\
 }\n\
+.swggUiContainer > .thead > .td1 {\n\
+    background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAqRJREFUeNrEVz1s00AUfnGXii5maMXoEUEHVwIpEkPNgkBdMnQoU5ytiKHJwpp2Q2JIO8DCUDOxIJFIVOoWZyJSh3pp1Q2PVVlcCVBH3ufeVZZ9Zye1Ay86nXV+ue/9fO/lheg/Se02X1rvksmbnTiKvuxQMBNgBnN4a/LCbmnUAP6JV58NCUsBC8CuAJxGPF47OgNqBaA93tolUhnx6jC4NxGwyOEwlccyAs+3kwdzKq0HDn2vEBTi8J2XpyMaywNDE157BhXUE3zJhlq8GKq+Zd2zaWHepPA8oN9XkfLmRdOiJV4XUUg/IyWncLjCYY/SHndV2u7zHr3bPKZtdxgboJOnthvrfGj/oMf3G0r7JVmNlLfKklmrt2MvvcNO7LFOhoFHfuAJI5o6ta10jpt5CQLgwXhXG2YIwvu+34qf78ybOjWTnWwkgR36d7JqJOrW0hHmNrKg9xhiS4+1jFmrxymh03B0w+6kURIAu3yHtOD5oaUNojMnGgbcctNvwdAnyxvxRR+/vaJnjzbpzcZX+nN1SdGv85i9eH8w3qPO+mdm/y4dnQ1iI8Fq6Nf4cxL6GWSjiFDSs0VRnxC5g0xSB2cgHpaseTxfqOv5uoHkNQ6Ha/N1Yz9mNMppEkEkYKj79q6uCq4bCHcSX3fJ0Vk/k9siASjCm1N6gZH6Ec9IXt2WkFES2K/ixoIyktJPAu/ptOA1SgO5zqtr6KASJPF0nMV8dgMsRhRPOcMwqQAOoi0VAIMLAEWJ6YYC1c8ibj1GP51RqwzYwZVMHQuvOzMCBUtb2tGHx5NAdLKqp5AX7Ng4d+Zi8AGDI9z1ijx9yaCH04y3GCP2S+QcvaGl+pcxyUBvinFlawoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=) no-repeat left center;\n\
+    font-size: x-large;\n\
+    padding-left: 40px;\n\
+    padding-top: 7px;\n\
+    text-decoration: none;\n\
+}\n\
+.swggUiContainer > .thead > .td4,\n\
+.swggUiContainer > .thead > .td5 {\n\
+    background: #373;\n\
+    border: 0;\n\
+}\n\
+\n\
+\n\
+\n\
+/* important style */\n\
+/* border */\n\
+.swggUiContainer .styleBorderError {\n\
+    border: 5px solid #b00;\n\
+}\n\
+.swggUiContainer .styleBorderBottom1px {\n\
+    border-bottom: 1px solid #777;\n\
+}\n\
+/* color */\n\
+.swggUiContainer .resource > .thead > .td:hover {\n\
+    color: #000;\n\
+}\n\
+.swggUiContainer a,\n\
+.swggUiContainer .label,\n\
+.swggUiContainer .resource > .thead > .td {\n\
+    color: #373;\n\
+}\n\
+.swggUiContainer .styleColor777 {\n\
+    color: #777;\n\
+}\n\
+.swggUiContainer .multilinePlaceholderPre {\n\
+    color: #999;\n\
+}\n\
+.swggUiContainer .styleColorError {\n\
+    color: #b00;\n\
+}\n\
+.swggUiContainer .operation > .thead > .td2,\n\
+.swggUiContainer .resourceDescription,\n\
+.swggUiContainer .responseStatusCode,\n\
+.swggUiContainer .responseHeaders,\n\
+.swggUiContainer .responseBody,\n\
+.swggUiContainer > .thead > .td1,\n\
+.swggUiContainer > .thead > .td4,\n\
+.swggUiContainer > .thead > .td5 {\n\
+    color: #fff;\n\
+}\n\
+/* flex */\n\
+.swggUiContainer .operation > .thead > .td3 {\n\
+    flex: 1;\n\
+}\n\
+.swggUiContainer .operation > .thead > .td4 {\n\
+    flex: 1;\n\
+}\n\
+.swggUiContainer .resource > .thead > .td1 {\n\
+    flex: 1;\n\
+}\n\
+.swggUiContainer .schemaP > .td1 {\n\
+    flex: 2;\n\
+}\n\
+.swggUiContainer .schemaP > .td2 {\n\
+    flex: 1;\n\
+}\n\
+.swggUiContainer .schemaP > .td3 {\n\
+    flex: 4;\n\
+}\n\
+.swggUiContainer .schemaP > .td4 {\n\
+    flex: 3;\n\
+}\n\
+.swggUiContainer .schemaResponse > .td1 {\n\
+    flex: 1;\n\
+}\n\
+.swggUiContainer .schemaResponse > .td2 {\n\
+    flex: 4;\n\
+}\n\
+.swggUiContainer > .thead > .td2 {\n\
+    flex: 4;\n\
+}\n\
+.swggUiContainer > .thead > .td3 {\n\
+    flex: 1;\n\
+}\n\
+/* margin */\n\
+.swggUiContainer audio,\n\
+.swggUiContainer img,\n\
+.swggUiContainer .operation .thead,\n\
+.swggUiContainer option,\n\
+.swggUiContainer .responseBody,\n\
+.swggUiContainer .responseMedia,\n\
+.swggUiContainer .td,\n\
+.swggUiContainer video {\n\
+    margin-bottom: 0;\n\
+}\n\
+.swggUiContainer .label {\n\
+    margin-bottom: 1px;\n\
+}\n\
+.swggUiContainer .onEventOperationAjax,\n\
+.swggUiContainer .schemaP {\n\
+    margin-bottom: 20px;\n\
+}\n\
+.swggUiContainer .td:first-child {\n\
+    margin-left: 0;\n\
+}\n\
+.swggUiContainer > .info > ul,\n\
+.swggUiContainer .operation > .thead > .td1,\n\
+.swggUiContainer .td {\n\
+    margin-left: 20px;\n\
+}\n\
+/* @media */\n\
 @media screen and (max-width: 640px){\n\
-    .swggUiContainer > .header {\n\
+    .swggUiContainer .operation {\n\
+        font-size: small;\n\
+    }\n\
+    .swggUiContainer .resource > .thead > .td {\n\
+        flex: 1;\n\
+    }\n\
+    .swggUiContainer > .thead {\n\
         display: block;\n\
         padding: 0;\n\
     }\n\
-    .swggUiContainer > .header > * {\n\
+    .swggUiContainer > .thead > .td {\n\
         display: block;\n\
         margin: 0;\n\
         width: 100%;\n\
     }\n\
 }\n\
-.swggUiContainer > .header > .td1 {\n\
-    background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAqRJREFUeNrEVz1s00AUfnGXii5maMXoEUEHVwIpEkPNgkBdMnQoU5ytiKHJwpp2Q2JIO8DCUDOxIJFIVOoWZyJSh3pp1Q2PVVlcCVBH3ufeVZZ9Zye1Ay86nXV+ue/9fO/lheg/Se02X1rvksmbnTiKvuxQMBNgBnN4a/LCbmnUAP6JV58NCUsBC8CuAJxGPF47OgNqBaA93tolUhnx6jC4NxGwyOEwlccyAs+3kwdzKq0HDn2vEBTi8J2XpyMaywNDE157BhXUE3zJhlq8GKq+Zd2zaWHepPA8oN9XkfLmRdOiJV4XUUg/IyWncLjCYY/SHndV2u7zHr3bPKZtdxgboJOnthvrfGj/oMf3G0r7JVmNlLfKklmrt2MvvcNO7LFOhoFHfuAJI5o6ta10jpt5CQLgwXhXG2YIwvu+34qf78ybOjWTnWwkgR36d7JqJOrW0hHmNrKg9xhiS4+1jFmrxymh03B0w+6kURIAu3yHtOD5oaUNojMnGgbcctNvwdAnyxvxRR+/vaJnjzbpzcZX+nN1SdGv85i9eH8w3qPO+mdm/y4dnQ1iI8Fq6Nf4cxL6GWSjiFDSs0VRnxC5g0xSB2cgHpaseTxfqOv5uoHkNQ6Ha/N1Yz9mNMppEkEkYKj79q6uCq4bCHcSX3fJ0Vk/k9siASjCm1N6gZH6Ec9IXt2WkFES2K/ixoIyktJPAu/ptOA1SgO5zqtr6KASJPF0nMV8dgMsRhRPOcMwqQAOoi0VAIMLAEWJ6YYC1c8ibj1GP51RqwzYwZVMHQuvOzMCBUtb2tGHx5NAdLKqp5AX7Ng4d+Zi8AGDI9z1ijx9yaCH04y3GCP2S+QcvaGl+pcxyUBvinFlawoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=) no-repeat left center;\n\
-    color: white;\n\
-    font-size: x-large;\n\
-    padding-left: 2.5rem;\n\
-    text-decoration: none;\n\
+/* overflow */\n\
+.swggUiContainer pre,\n\
+.swggUiContainer textarea,\n\
+.swggUiContainer .td {\n\
+    overflow: auto;\n\
 }\n\
-.swggUiContainer > .header > .td3 {\n\
-    flex: 0.25;\n\
+.swggUiContainer .schemaP > .td3 {\n\
+    overflow: visible;\n\
 }\n\
-.swggUiContainer > .header > .td4,\n\
-.swggUiContainer > .header > .td5 {\n\
-    border: 0;\n\
-    color: #fff;\n\
-    padding: 6px 8px;\n\
-    background: #370;\n\
-}\n\
-.swggUiContainer > .info a {\n\
-    color: #373;\n\
-}\n\
-.swggUiContainer > .info > .fontWeightBold {\n\
-    font-size: x-large;\n\
-}\n\
-.swggUiContainer > .info > ul {\n\
-    margin-left: 2rem;\n\
-}\n\
-.swggUiContainer .operation {\n\
-    background: #dfd;\n\
-    font-size: smaller;\n\
-}\n\
-.swggUiContainer .operation > .content {\n\
-    padding: 1rem;\n\
-}\n\
-.swggUiContainer .operation > .content .label {\n\
-    color: #0b0;\n\
-}\n\
-.swggUiContainer .operation > .content pre {\n\
-    background: #ffd;\n\
-}\n\
-.swggUiContainer .operation > .content .tr {\n\
-    margin-left: 10px;\n\
-}\n\
-.swggUiContainer .operation > .header:focus,\n\
-.swggUiContainer .operation > .header:hover {\n\
-    background: #7d7;\n\
-    outline: none;\n\
-}\n\
-.swggUiContainer .operation > .header > span {\n\
-    padding-top: 5px;\n\
-}\n\
-.swggUiContainer .operation > .header > .td1 {\n\
-    margin-left: 1rem;\n\
-    text-align: center;\n\
-    width: 2rem;\n\
-}\n\
-.swggUiContainer .operation > .header > .td2 {\n\
-    background: #777;\n\
-    color: white;\n\
-    text-align: center;\n\
-    width: 5rem;\n\
-}\n\
-.swggUiContainer .operation .responseList > .td1 {\n\
-    flex: 1;\n\
-}\n\
-.swggUiContainer .operation .responseList > .td2 {\n\
-    flex: 4;\n\
-}\n\
-.swggUiContainer .operation .schemaP pre,\n\
-.swggUiContainer .operation .schemaP textarea {\n\
-    height: 10rem;\n\
-}\n\
-.swggUiContainer .operation .schemaP > .td1 {\n\
-    flex: 2;\n\
-}\n\
-.swggUiContainer .operation .schemaP > .td2 {\n\
-    flex: 1;\n\
-}\n\
-.swggUiContainer .operation .schemaP > .td3 {\n\
-    flex: 4;\n\
-}\n\
-.swggUiContainer .operation .schemaP > .td4 {\n\
-    flex: 3;\n\
-}\n\
-.swggUiContainer .operation.DELETE > .header > .td2 {\n\
-    background: #b00;\n\
-}\n\
-.swggUiContainer .operation.GET > .header > .td2 {\n\
-    background: #093;\n\
-}\n\
-.swggUiContainer .operation.HEAD > .header > .td2 {\n\
-    background: #f30;\n\
-}\n\
-.swggUiContainer .operation.PATCH > .header > .td2 {\n\
-    background: #b0b;\n\
-}\n\
-.swggUiContainer .operation.POST > .header > .td2 {\n\
-    background: #07b;\n\
-}\n\
-.swggUiContainer .operation.PUT > .header > .td2 {\n\
-    background: #70b;\n\
-}\n\
-.swggUiContainer .resource > .header > span {\n\
-    color: #373;\n\
-}\n\
-.swggUiContainer .resource > .header > span:focus,\n\
-.swggUiContainer .resource > .header > span:hover {\n\
-    color: black;\n\
-    outline: none;\n\
-}\n\
-.swggUiContainer .resource > .header > .td1 {\n\
-    font-size: large;\n\
-}\n\
-.swggUiContainer .resource > .header > .td2 {\n\
-    border-left: 1px solid #777;\n\
-    border-right: 1px solid #777;\n\
-    padding-left: 1rem;\n\
-    padding-right: 1rem;\n\
-}\n\
-.swggUiContainer .resource > .operationList > .description {\n\
-    background: #ddd;\n\
-    border: 1px solid #777;\n\
-    color: #555;\n\
-    padding: 0.5rem;\n\
+/* text-overflow */\n\
+.swggUiContainer .styleTextOverflowEllipsis {\n\
+    overflow: hidden;\n\
+    text-overflow: ellipsis;\n\
+    white-space: nowrap;\n\
 }\n\
 </style>\n\
 ')
@@ -1277,11 +1356,6 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
     urlSwaggerJson: ''
 }) + '\
 </div>\n\
-<div class="utility2FooterDiv">\n\
-    [ this document was created with\n\
-    <a href="https://github.com/kaizhu256/node-swgg" target="_blank">swgg</a>\n\
-    ]\n\
-</div>\n\
 <script>\n\
 /*jslint\n\
     bitwise: true,\n\
@@ -1294,7 +1368,7 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
     stupid: true\n\
 */\n\
 "use strict";\n\
-document.querySelector(".swggUiContainer > .header > .td2").value =\n\
+document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
     ((/\\bmodeSwaggerJsonUrl=([^&]+)/g).exec(location.search) || {})[1] ||\n\
         "assets.swgg.swagger.json";\n\
 </script>\n\
@@ -1328,27 +1402,19 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
         /*
          * this function will send a swagger-api ajax-request with the operation self
          */
-            var errorValidate, isMultipartFormData, tmp;
+            var isMultipartFormData, tmp;
             options.operation = self;
             isMultipartFormData = (self.consumes && self.consumes[0]) === 'multipart/form-data';
             local.objectSetDefault(options, { data: '', paramDict: {}, url: '' });
             // try to validate paramDict
-            local.tryCatchOnError(function () {
-                local.validateBySwaggerParameters({
-                    // normalize paramDict
-                    data: local.normalizeSwaggerParamDict(options).paramDict,
-                    dataReadonlyRemove: options.paramDict,
-                    prefix: ['operation', self._methodPath],
-                    parameters: self.parameters,
-                    swaggerJson: local.swaggerJson
-                });
-            }, function (error) {
-                errorValidate = error;
-            });
-            if (errorValidate) {
-                onError(errorValidate);
-                return;
-            }
+            options.error = local.validateBySwaggerParameters({
+                // normalize paramDict
+                data: local.normalizeSwaggerParamDict(options).paramDict,
+                dataReadonlyRemove: options.paramDict,
+                prefix: ['operation', self._methodPath],
+                parameters: self.parameters,
+                swaggerJson: local.swaggerJson
+            })[0];
             // init options-defaults
             local.objectSetDefault(options, {
                 inForm: isMultipartFormData
@@ -1371,7 +1437,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     return;
                 }
                 // serialize array
-                if (schemaP.type === 'array' && schemaP.in !== 'body') {
+                if (Array.isArray(tmp) && schemaP.in !== 'body') {
                     switch (schemaP.collectionFormat || schemaP['x-swgg-collectionFormat']) {
                     case 'json':
                         tmp = JSON.stringify(tmp);
@@ -1381,7 +1447,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                             options[schemaP.in === 'formData'
                                 ? 'inForm'
                                 : 'inQuery'] += '&' + encodeURIComponent(schemaP.name) + '=' +
-                                encodeURIComponent(schemaP.items.type === 'string'
+                                encodeURIComponent(local.schemaPItemsType(schemaP) === 'string'
                                     ? value
                                     : JSON.stringify(value));
                         });
@@ -1399,9 +1465,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     default:
                         tmp = tmp.join(',');
                     }
-                } else if (!(schemaP.type === 'string' ||
-                        (schemaP.schema && schemaP.schema.type === 'string') ||
-                        tmp instanceof local.Blob)) {
+                } else if (typeof tmp !== 'string' && !(tmp instanceof local.Blob)) {
                     tmp = JSON.stringify(tmp);
                 }
                 switch (schemaP.in) {
@@ -1457,6 +1521,10 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
             if (!(options.headers['Content-Type'] || options.headers['content-type'])) {
                 options.headers['content-type'] = 'application/json; charset=UTF-8';
             }
+            if (options.error || options.modeValidate) {
+                onError(options.error);
+                return;
+            }
             // send ajax-request
             return local.ajax(options, function (error, xhr) {
                 // try to init responseJson
@@ -1484,7 +1552,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     local.tryCatchOnError(function () {
                         tmp = JSON.parse(xhr.responseText);
                     }, local.nop);
-                    error = error || local.utility2._debugTryCatchErrorCaught;
+                    error = error || local.utility2._debugTryCatchError;
                     // reset state
                     local.apiDict = local.swaggerJson = null;
                     // apiUpdate swagger.json object
@@ -1715,22 +1783,22 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                 });
                 // init _methodPath
                 self._methodPath = self._method + ' ' + self._path.replace((/\{.*?\}/g), '{}');
-                self.parameters.forEach(function (schemaP, ii) {
+                self.parameters.forEach(function (schemaP) {
                     // init _idName.format and _idName.type
                     if (self._schemaName && schemaP.name === self._idName) {
                         schemaP.format = options.definitions[self._schemaName]
                             .properties[self._idBackend].format;
-                        schemaP.type = options.definitions[self._schemaName]
-                            .properties[self._idBackend].type;
+                        schemaP.type = local.schemaPType(options.definitions[self._schemaName]
+                            .properties[self._idBackend]);
                     }
                     local.tryCatchOnError(function () {
                         // dereference schemaP.$ref
-                        local.objectSetDefault(self.parameters[ii], local.jsonCopy(
+                        local.objectSetDefault(schemaP, local.jsonCopy(
                             options.parameters[
                                 (schemaP.$ref || schemaP['x-swgg-$ref']).split('#/parameters/')[1]
                             ]
                         ));
-                        delete self.parameters[ii].$ref;
+                        delete schemaP.$ref;
                     }, local.nop);
                 });
                 switch (self._crudType[0]) {
@@ -1804,85 +1872,98 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
         /*
          * this function will create a random dbField from options.schemaP
          */
-            var ii, max, min, schemaP, tmp, type;
+            var depth, ii, max, min, schemaP, value;
+            depth = Number.isFinite(options.depth)
+                ? options.depth
+                : 3;
             schemaP = options.schemaP;
+            schemaP = schemaP.schema || schemaP;
             if (schemaP.readOnly) {
                 return;
             }
             if (schemaP.enum) {
-                tmp = options.modeNotRandom
+                value = options.modeNotRandom
                     ? schemaP.enum[0]
                     : local.listGetElementRandom(schemaP.enum);
-                return schemaP.type === 'array'
-                    ? [tmp]
-                    : tmp;
+                return local.schemaPType(schemaP) === 'array'
+                    ? [value]
+                    : value;
             }
-            type = schemaP.type || (schemaP.schema && schemaP.schema.type);
-            switch (type) {
+            // init default-value
+            value = null;
+            switch (local.schemaPType(schemaP)) {
+            case 'boolean':
+                value = options.modeNotRandom
+                    ? false
+                    : Math.random() > 0.5
+                    ? false
+                    : true;
+                break;
             // 5.1. Validation keywords for numeric instances (number and integer)
             case 'integer':
             case 'number':
                 max = schemaP.maximum;
                 min = schemaP.minimum;
                 if (options.modeNotRandom) {
-                    tmp = !(0 < min || max < 0)
+                    value = !(0 < min || max < 0)
                         ? 0
                         : min || max;
                 } else {
-                    if (!(isFinite(max) && isFinite(min))) {
-                        if (!isFinite(max) && !isFinite(min)) {
+                    if (!(Number.isFinite(max) && Number.isFinite(min))) {
+                        if (!Number.isFinite(max) && !Number.isFinite(min)) {
                             max = 1000;
                             min = 0;
-                        } else if (isFinite(max)) {
+                        } else if (Number.isFinite(max)) {
                             min = max - 1000;
                         } else {
                             max = min + 1000;
                         }
                     }
-                    tmp = min + (max - min) * Math.max(Math.random(), 0.00000000001);
-                    if (type === 'integer') {
-                        tmp = Math.round(tmp);
+                    // exclusiveMaximum and exclusiveMinimum for float
+                    value = min + (max - min) * Math.max(Math.random(), min * 0.000000000000001);
+                    if (local.schemaPType(schemaP) === 'integer') {
+                        value = Math.round(value);
                     }
                 }
                 max = schemaP.maximum;
                 min = schemaP.minimum;
-                // exclusiveMaximum
-                if (schemaP.exclusiveMaximum && tmp === max) {
-                    tmp -= 1;
+                // exclusiveMaximum for integer
+                if (schemaP.exclusiveMaximum && value === max) {
+                    value -= 1;
                 }
-                // exclusiveMinimum
-                if (schemaP.exclusiveMaximum && tmp === min) {
-                    tmp += 1;
+                // exclusiveMinimum for integer
+                if (schemaP.exclusiveMaximum && value === min) {
+                    value += 1;
                 }
                 // multipleOf
                 if (schemaP.multipleOf > 0) {
-                    tmp = schemaP.multipleOf * Math.floor(tmp / schemaP.multipleOf);
-                    if (tmp < min || (schemaP.exclusiveMinimum && tmp <= min)) {
-                        tmp += schemaP.multipleOf;
+                    value = schemaP.multipleOf * Math.floor(value / schemaP.multipleOf);
+                    if (value < min || (schemaP.exclusiveMinimum && value <= min)) {
+                        value += schemaP.multipleOf;
                     }
                 }
                 break;
             // 5.2. Validation keywords for strings
             case 'string':
-                tmp = options.modeNotRandom
+                value = options.modeNotRandom
                     ? 'abcd1234'
                     : ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1);
                 switch (schemaP.format) {
                 case 'byte':
-                    tmp = local.base64FromString(tmp);
+                    value = local.base64FromString(value);
                     break;
                 case 'date':
                 case 'date-time':
-                    tmp = new Date().toISOString();
+                    value = new Date().toISOString();
                     break;
                 case 'email':
-                    tmp = tmp + '@random.com';
+                    value = value + '@example.com';
                     break;
                 case 'json':
-                    tmp = JSON.stringify({ random: tmp });
+                    value = JSON.stringify({ foo: value });
                     break;
                 case 'phone':
-                    tmp = options.modeNotRandom
+                    value = options.modeNotRandom
                         ? '+123 (1234) 1234-1234'
                         : '+' + Math.random().toString().slice(-3) +
                             ' (' + Math.random().toString().slice(-4) + ') ' +
@@ -1890,51 +1971,57 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                             Math.random().toString().slice(-4);
                     break;
                 }
-                while (tmp.length < schemaP.minLength) {
-                    tmp += tmp;
+                while (value.length < schemaP.minLength) {
+                    value += value;
                 }
-                tmp = tmp.slice(0, schemaP.maxLength || Infinity);
+                value = value.slice(0, schemaP.maxLength || Infinity);
                 break;
             // 5.3. Validation keywords for arrays
             case 'array':
-                tmp = [];
-                for (ii = 0; ii < schemaP.minItems; ii += 1) {
-                    tmp.push(null);
+                if (depth <= 0) {
+                    break;
+                }
+                value = [];
+                for (ii = 0; ii < Math.min(
+                        // 5.3.2. maxItems
+                        schemaP.maxItems || 2,
+                        // 5.3.3. minItems
+                        schemaP.minItems || 2,
+                        // 5.3.4. uniqueItems
+                        schemaP.uniqueItems
+                            ? 2
+                            : 1
+                    ); ii += 1) {
+                    // recurse dbFieldRandomCreate
+                    value.push(local.dbFieldRandomCreate({
+                        depth: depth - 1,
+                        modeNotRandom: options.modeNotRandom,
+                        schemaP: local.schemaPItems(schemaP)
+                    }));
                 }
                 break;
             // 5.4. Validation keywords for objects
-            case 'object':
-                tmp = {};
-                for (ii = 0; ii < schemaP.minProperties; ii += 1) {
-                    tmp['property' + ii] = null;
+            default:
+                if (depth <= 0) {
+                    break;
                 }
-                break;
-            case 'boolean':
-                tmp = options.modeNotRandom
-                    ? false
-                    : Math.random() <= 0.5
-                    ? false
-                    : true;
+                // recurse dbRowRandomCreate
+                value = local.dbRowRandomCreate({
+                    depth: depth - 1,
+                    modeNotRandom: options.modeNotRandom,
+                    schema: schemaP
+                });
                 break;
             }
-            return tmp;
+            return value;
         };
 
         local.dbRowListRandomCreate = function (options) {
         /*
          * this function will create a dbRowList of options.length random dbRow's
          */
-            local.objectSetDefault(options, { dbRowList: [], properties: [] });
-            Object.keys(options.properties).forEach(function (key) {
-                options.properties[key] = local.validateBySwaggerSchema({
-                    // dereference property
-                    modeDereference: true,
-                    prefix: ['dbRow', key],
-                    schema: options.properties[key],
-                    swaggerJson: local.swaggerJson
-                });
-            });
-            for (options.ii = 0; options.ii < options.length; options.ii += 1) {
+            var ii;
+            for (ii = 0; ii < options.length; ii += 1) {
                 options.dbRowList.push(local.dbRowRandomCreate(options));
             }
             return options.dbRowList;
@@ -1944,46 +2031,57 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
         /*
          * this function will create a random dbRow from options.properties
          */
-            var dbRow, tmp;
+            var ii, dbRow, properties;
             dbRow = {};
-            Object.keys(options.properties).forEach(function (key) {
-                // try to validate data
-                local.tryCatchOnError(function () {
-                    options.properties[key] = local.validateBySwaggerSchema({
+            options = local.objectSetDefault(options, { override: local.nop });
+            properties = local.validateBySwaggerSchema({
+                // dereference property
+                modeDereference: true,
+                prefix: ['dbRow'],
+                schema: options.schema,
+                swaggerJson: local.swaggerJson
+            });
+            properties = local.jsonCopy((properties && properties.properties) || {});
+            for (ii = Object.keys(properties).length;
+                    ii < (options.schema && options.schema.minProperties);
+                    ii += 1) {
+                properties['property' + ii] = { type: 'string' };
+            }
+            Object.keys(properties).forEach(function (key) {
+                dbRow[key] = local.dbFieldRandomCreate({
+                    depth: options.depth,
+                    modeNotRandom: options.modeNotRandom,
+                    schemaP: local.validateBySwaggerSchema({
                         // dereference property
                         modeDereference: true,
                         prefix: ['dbRow', key],
-                        schema: options.properties[key],
+                        schema: properties[key],
                         swaggerJson: local.swaggerJson
-                    });
-                    tmp = local.dbFieldRandomCreate({
-                        modeNotRandom: options.modeNotRandom,
-                        schemaP: options.properties[key]
-                    });
-                    local.validateBySwaggerSchema({
-                        data: tmp,
-                        prefix: ['dbRow', 'properties', key],
-                        schema: options.properties[key],
-                        swaggerJson: local.swaggerJson
-                    });
-                    dbRow[key] = tmp;
-                }, console.error);
+                    })
+                });
             });
-            return local.jsonCopy(local.objectSetOverride(dbRow, options.override(options)));
+            dbRow = local.jsonCopy(local.objectSetOverride(dbRow, options.override(options)));
+            // try to validate data
+            local.tryCatchOnError(function () {
+                local.validateBySwaggerSchema({
+                    data: dbRow,
+                    prefix: ['dbRow'],
+                    schema: options.schema,
+                    swaggerJson: local.swaggerJson
+                });
+            }, console.error);
+            return dbRow;
         };
 
         local.idDomElementCreate = function (seed) {
         /*
-         * this function will create a unique dom-element id from the seed,
+         * this function will create a deterministic and unique dom-element id from the seed,
          * that is both dom-selector and url friendly
          */
-            var id, ii;
-            id = encodeURIComponent(seed).replace((/\W/g), '_');
-            for (ii = 2; local.idDomElementDict[id]; ii += 1) {
-                id = encodeURIComponent(seed + '_' + ii).replace((/\W/g), '_');
-            }
-            local.idDomElementDict[id] = true;
-            return id;
+            local.idDomElementDict[seed] = (local.idDomElementDict[seed] || 0) + 1;
+            return encodeURIComponent(
+                seed + '_' + local.idDomElementDict[seed]
+            ).replace((/\W/g), '_');
         };
 
         local.idNameInit = function (options) {
@@ -2203,6 +2301,8 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                             })
                             .map(function (key) {
                                 tmp = local.jsonCopy(request.swgg.paramDict);
+                                tmp.id = tmp.id ||
+                                    ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1);
                                 local.objectSetOverride(tmp, {
                                     fileBlob:
                                         local.base64FromBuffer(request.swgg.bodyParsed[key]),
@@ -2453,17 +2553,16 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
         /*
          * this function will run the middleware that will validate the swagger-request
          */
-            var crud, modeNext, onNext, tmp;
+            var crud, options, tmp;
             // jslint-hack - nop
             local.nop(response);
-            modeNext = 0;
-            onNext = function () {
-                modeNext += 1;
-                switch (modeNext) {
+            options = {};
+            local.onNext(options, function (error) {
+                switch (options.modeNext) {
                 case 1:
                     if (!request.swgg.operation) {
-                        modeNext = Infinity;
-                        onNext();
+                        options.modeNext = Infinity;
+                        options.onNext();
                         return;
                     }
                     // init paramDict
@@ -2505,15 +2604,14 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                             break;
                         }
                         // parse array-multi
-                        if (request.swgg.paramDict[schemaP.name] &&
-                                schemaP.type === 'array' &&
+                        tmp = request.swgg.paramDict[schemaP.name];
+                        if (tmp &&
+                                local.schemaPType(schemaP) === 'array' &&
                                 schemaP.collectionFormat === 'multi') {
-                            tmp = '';
-                            request.swgg.paramDict[schemaP.name].forEach(function (value) {
-                                tmp += '&' + encodeURIComponent(schemaP.name) + '=' +
-                                    encodeURIComponent(value);
-                            });
-                            request.swgg.paramDict[schemaP.name] = tmp.slice(1);
+                            request.swgg.paramDict[schemaP.name] =
+                                encodeURIComponent(schemaP.name) + '=' + (Array.isArray(tmp)
+                                ? tmp
+                                : [tmp]).join('&' + encodeURIComponent(schemaP.name) + '=');
                         }
                         // init default param
                         if (local.isNullOrUndefined(request.swgg.paramDict[schemaP.name]) &&
@@ -2526,13 +2624,13 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     // normalize paramDict
                     local.normalizeSwaggerParamDict(request.swgg);
                     // validate paramDict
-                    local.validateBySwaggerParameters({
+                    error = local.validateBySwaggerParameters({
                         data: request.swgg.paramDict,
                         prefix: ['operation', request.swgg.methodPath],
                         parameters: request.swgg.operation.parameters,
                         swaggerJson: local.swaggerJson
-                    });
-                    onNext();
+                    })[0];
+                    options.onNext(error);
                     break;
                 case 2:
                     // init crud
@@ -2554,7 +2652,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     request.swgg.operation.parameters.forEach(function (schemaP) {
                         // JSON.parse json-string
                         if (schemaP.format === 'json' &&
-                                schemaP.type === 'string' &&
+                                local.schemaPType(schemaP) === 'string' &&
                                 crud.data[schemaP.name]) {
                             crud.data[schemaP.name] = JSON.parse(crud.data[schemaP.name]);
                         }
@@ -2579,7 +2677,8 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                         crud[element.key] = crud.data['_' + element.key] || JSON.parse(
                             local.templateRender(
                                 request.swgg.operation['_' + element.key] || 'null',
-                                request.swgg.paramDict
+                                request.swgg.paramDict,
+                                { notHtmlSafe: true }
                             )
                         ) || element.value;
                     });
@@ -2602,10 +2701,11 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     nextMiddleware();
                     break;
                 default:
-                    nextMiddleware();
+                    nextMiddleware(error);
                 }
-            };
-            onNext();
+            });
+            options.modeNext = 0;
+            options.onNext();
         };
 
         local.normalizeSwaggerJson = function (options) {
@@ -2689,7 +2789,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     });
                 }
                 // parse array
-                if (schemaP.type === 'array' && schemaP.in !== 'body') {
+                if (local.schemaPType(schemaP) === 'array' && schemaP.in !== 'body') {
                     if (typeof tmp === 'string') {
                         switch (schemaP.collectionFormat || schemaP['x-swgg-collectionFormat']) {
                         case 'json':
@@ -2700,6 +2800,9 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                             return;
                         case 'multi':
                             tmp = local.urlParse('?' + tmp, true).query[schemaP.name];
+                            if (!Array.isArray(tmp)) {
+                                tmp = [tmp];
+                            }
                             break;
                         case 'pipes':
                             tmp = tmp.split('|');
@@ -2714,7 +2817,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                         default:
                             tmp = tmp.split(',');
                         }
-                        if (schemaP.items && schemaP.items.type !== 'string') {
+                        if (local.schemaPItemsType(schemaP) !== 'string') {
                             // try to JSON.parse the string
                             local.tryCatchOnError(function () {
                                 tmp = tmp.map(function (element) {
@@ -2724,8 +2827,8 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                         }
                     }
                 // JSON.parse paramDict
-                } else if (schemaP.type !== 'file' &&
-                        schemaP.type !== 'string' &&
+                } else if (local.schemaPType(schemaP) !== 'file' &&
+                        local.schemaPType(schemaP) !== 'string' &&
                         (typeof tmp === 'string' || tmp instanceof local.global.Uint8Array)) {
                     // try to JSON.parse the string
                     local.tryCatchOnError(function () {
@@ -2758,6 +2861,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     }
                     // normalize error-list to contain non-null objects
                     if (ii === 0) {
+                        data = data.errorList || data;
                         // normalize error-list to be non-empty
                         if (!data.length) {
                             data.push(null);
@@ -2767,11 +2871,12 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                                 element = { message: String(element) };
                             }
                             // normalize error-object to plain json-object
-                            error = local.jsonCopy(element);
-                            error.message = element.message;
-                            error.stack = element.stack;
-                            error.statusCode = Number(error.statusCode) || 500;
-                            return error;
+                            return {
+                                message: element.message,
+                                name: element.name,
+                                stack: element.stack,
+                                statusCode: Number(element.statusCode) || 500
+                            };
                         });
                         error = local.jsonCopy(data[0]);
                         error.errors = data;
@@ -2799,6 +2904,27 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
             };
         };
 
+        local.schemaPItemsType = function (schemaP) {
+        /*
+         * this function will return schemaP.items.type
+         */
+            return local.schemaPType(local.schemaPItems(schemaP) || {});
+        };
+
+        local.schemaPItems = function (schemaP) {
+        /*
+         * this function will return schemaP.items
+         */
+            return schemaP['x-swgg-items'] || schemaP.items;
+        };
+
+        local.schemaPType = function (schemaP) {
+        /*
+         * this function will return schemaP.type
+         */
+            return schemaP['x-swgg-type'] || schemaP.type;
+        };
+
         local.serverRespondJsonapi = function (request, response, error, data, meta) {
         /*
          * http://jsonapi.org/format/#errors
@@ -2823,6 +2949,45 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
             })(error, data, meta);
         };
 
+        local.throwSwaggerError = function (options) {
+        /*
+         * this function will throw a swaggerError with the given options.errorType
+         */
+            var error;
+            if (!options) {
+                return;
+            }
+            options.data2 = options.data === undefined
+                ? 'undefined'
+                : JSON.stringify(options.data);
+            options.prefix2 = options.prefix[0] + options.prefix.slice(1).map(function (element) {
+                return '[' + JSON.stringify(element) + ']';
+            }).join('');
+            options.schema2 = JSON.stringify(options.schema) || 'undefined';
+            options.type2 = (options.schema && local.schemaPType(options.schema)) || 'object';
+            if (options.schema && options.schema.format) {
+                options.type2 += ' (' + options.schema.format + ')';
+            }
+            Object.keys(options).forEach(function (key) {
+                if (typeof options[key] === 'string' && options[key].length > 100) {
+                    options[key] = options[key].slice(0, 100) + '...' + options[key].slice(-1);
+                }
+            });
+            error = new Error('error.' + options.errorType + ' - ' + local.templateRender(
+                local.swaggerErrorTypeDict[options.errorType],
+                options,
+                { notHtmlSafe: true }
+            ));
+            error.messageShort = 'value ' + local.templateRender(
+                local.swaggerErrorTypeDict[options.errorType].replace((/.*?\{\{data2\}\} /), ''),
+                options,
+                { notHtmlSafe: true }
+            );
+            error.options = options;
+            error.statusCode = 400;
+            throw error;
+        };
+
         local.uiAnimateShake = function (element) {
         /*
          * this function will shake the dom-element
@@ -2834,11 +2999,24 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
         };
 
         local.uiEventDelegate = function (event) {
+            event.target2 = event.target;
+            // filter non-input keyup-event
+            if (event.type === 'keyup' &&
+                    !event.target2.closest('input, option, select, textarea')) {
+                return;
+            }
+            // delegate event in .operation
+            event.targetOperation = event.target2.closest('.operation');
             Object.keys(local.uiEventListenerDict).sort().some(function (key) {
-                if (!(event.currentTarget.matches(key) || event.target.matches(key))) {
+                switch (key) {
+                case '.onEventOperationDisplayShow':
+                    event.target2 = event.target2.closest(key) || event.target2;
+                    break;
+                }
+                if (!(event.currentTarget.matches(key) || event.target2.matches(key))) {
                     return;
                 }
-                switch (event.target.tagName) {
+                switch (event.target2.tagName) {
                 case 'BUTTON':
                 case 'FORM':
                     event.preventDefault();
@@ -2848,28 +3026,37 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                 local.uiEventListenerDict[key](event);
                 return true;
             });
-        };
-
-        local.uiEventInit = function (element) {
-        /*
-         * this function will init event-handling for the dom-element
-         */
-            ['Click', 'Keyup', 'Submit'].forEach(function (eventType) {
-                Array.from(
-                    element.querySelectorAll('.eventDelegate' + eventType)
-                ).forEach(function (element) {
-                    element.addEventListener(eventType.toLowerCase(), local.uiEventDelegate);
-                });
-            });
+            if (event.targetOperation && !local.timerTimeoutOnEventInputValidate) {
+                local.timerTimeoutOnEventInputValidate = setTimeout(function () {
+                    local.timerTimeoutOnEventInputValidate = null;
+                    // validate input
+                    local.uiEventListenerDict['.onEventInputValidate'](event);
+                }, 25);
+            }
         };
 
         local.uiEventListenerDict = {};
 
-        local.uiEventListenerDict['.onEventOperationAjax'] = function (event) {
+        local.uiEventListenerDict['.onEventInputTextareaChange'] = function (event) {
         /*
-         * this function will submit the operation to the backend
+         * this function will show/hide the textarea's multiline placeholder
          */
-            var options, jsonParse, tmp;
+            var isTransparent, value;
+            isTransparent = event.target2.style.background === 'transparent';
+            value = event.target2.value;
+            if (value && isTransparent) {
+                event.target2.style.background = '';
+            }
+            if (!value && !isTransparent) {
+                event.target2.style.background = 'transparent';
+            }
+        };
+
+        local.uiEventListenerDict['.onEventInputValidate'] = function (options, onError) {
+        /*
+         * this function will validate the parameters
+         */
+            var errorDict, jsonParse, tmp;
             jsonParse = function (text) {
             /*
              * this function will try to JSON.parse(text)
@@ -2880,150 +3067,198 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     return text;
                 });
             };
-            options = {};
+            options.api = local.apiDict[options.targetOperation.dataset._methodPath];
+            options.headers = {};
+            options.modeNoDefault = true;
+            options.modeValidate = !options.modeAjax;
+            options.paramDict = {};
+            options.url = '';
+            options.api.parameters.forEach(function (schemaP) {
+                tmp = options.targetOperation.querySelector(
+                    '.schemaP[data-name=' + JSON.stringify(schemaP.name) + '] .input'
+                );
+                switch (tmp.tagName) {
+                case 'INPUT':
+                    // parse file
+                    if (local.schemaPType(tmp) === 'file') {
+                        tmp = tmp.files && tmp.files[0];
+                        break;
+                    }
+                    tmp = tmp.value;
+                    if (!tmp) {
+                        return;
+                    }
+                    // parse string
+                    if (local.schemaPType(schemaP) !== 'string') {
+                        tmp = jsonParse(tmp);
+                    }
+                    break;
+                case 'SELECT':
+                    tmp = Array.from(tmp.options)
+                        .filter(function (element) {
+                            return element.selected;
+                        })
+                        .map(function (element) {
+                            return jsonParse(decodeURIComponent(
+                                element.dataset.valueSelectOption
+                            ));
+                        });
+                    if (!tmp.length || tmp[0] === '$swggUndefined') {
+                        return;
+                    }
+                    if (local.schemaPType(schemaP) !== 'array') {
+                        tmp = tmp[0];
+                    }
+                    break;
+                case 'TEXTAREA':
+                    tmp = tmp.value;
+                    if (!tmp) {
+                        return;
+                    }
+                    if (schemaP.schema &&
+                            local.schemaPType(schemaP.schema) === 'string' &&
+                            typeof tmp === 'string') {
+                        break;
+                    }
+                    // parse schema
+                    if (schemaP.in === 'body') {
+                        tmp = jsonParse(tmp);
+                        break;
+                    }
+                    // parse array
+                    tmp = tmp.split('\n').map(function (element) {
+                        return local.schemaPItemsType(schemaP) === 'string'
+                            ? element
+                            : jsonParse(element);
+                    });
+                    break;
+                }
+                options.paramDict[schemaP.name] = tmp;
+            });
+            options.api.ajax(options, onError || local.nop);
+            // init errorDict
+            errorDict = {};
+            ((options.error && options.error.errorList) || []).forEach(function (error) {
+                errorDict[error.options.prefix.filter(function (element) {
+                    return typeof element === 'string';
+                }).slice(-1)[0]] = error;
+            });
+            Array.from(options.targetOperation.querySelectorAll(
+                '.schemaP[data-name]'
+            )).forEach(function (element) {
+                tmp = errorDict[element.dataset.name];
+                // remove previous error
+                if (!tmp) {
+                    element.querySelector('.input').classList.remove('styleBorderError');
+                    element.querySelector('.styleColorError').textContent = '';
+                    return;
+                }
+                // shake invalid-input
+                if (!element.querySelector('.input').classList.contains('styleBorderError')) {
+                    element.querySelector('.input').classList.add('styleBorderError');
+                    local.uiAnimateShake(element.querySelector('.td3'));
+                }
+                element.querySelector('.styleColorError').textContent = tmp.messageShort;
+            });
+            // init requestCurl
+            tmp = options.data;
+            local.tryCatchOnError(function () {
+                tmp = JSON.stringify(JSON.parse(options.data), null, 4);
+            }, local.nop);
+            tmp = 'curl \\\n' + '--request ' + options.api._method + ' \\\n' +
+                Object.keys(options.headers).map(function (key) {
+                    return "--header '" + key + ': ' + options.headers[key] + "' \\\n";
+                }).join('') + '--data-binary ' + (typeof tmp === 'string'
+                    ? "'" + tmp.replace(/'/g, "'\"'\"'") + "'"
+                    : '<blob>') + ' \\\n"' + options.url.replace((/&/g), '&\\\n') + '"';
+            options.targetOperation.querySelector('.requestCurl').textContent = tmp;
+            // init requestJavascript
+            options.targetOperation.querySelector('.requestJavascript').textContent =
+                local.templateRender(local.templateUiRequestJavascript, {
+                    options: options,
+                    optionsJson: JSON.stringify({
+                        paramDict: options.paramDict
+                    }, null, 4)
+                }, { notHtmlSafe: true });
+        };
+
+        local.uiEventListenerDict['.onEventOperationAjax'] = function (options) {
+        /*
+         * this function will submit the operation to the backend
+         */
+            // ensure options is stateless
+            options = { targetOperation: options.targetOperation };
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
-                    options.api = local.apiDict[event.currentTarget.dataset._methodPath];
-                    options.domOperationContent = event.target.closest('.operation > .content');
-                    options.headers = {};
-                    options.modeNoDefault = true;
-                    options.paramDict = {};
-                    options.url = 'error';
-                    options.api.parameters.forEach(function (schemaP) {
-                        tmp = options.domOperationContent.querySelector(
-                            '.schemaP[name=' + schemaP.name + '] > .td3'
-                        ).children[0];
-                        switch (tmp.tagName) {
-                        case 'INPUT':
-                            // parse file
-                            if (tmp.type === 'file') {
-                                tmp = tmp.files && tmp.files[0];
-                                break;
-                            }
-                            tmp = tmp.value;
-                            if (!tmp) {
-                                return;
-                            }
-                            // parse string
-                            if (schemaP.type !== 'string') {
-                                tmp = jsonParse(tmp);
-                            }
-                            break;
-                        case 'SELECT':
-                            tmp = Array.from(tmp.options)
-                                .filter(function (element) {
-                                    return element.selected;
-                                })
-                                .map(function (element) {
-                                    return jsonParse(decodeURIComponent(
-                                        element.dataset.valueDecoded
-                                    ));
-                                });
-                            if (!tmp.length || tmp[0] === '$swggUndefined') {
-                                return;
-                            }
-                            if (schemaP.type !== 'array') {
-                                tmp = tmp[0];
-                            }
-                            break;
-                        case 'TEXTAREA':
-                            tmp = tmp.value;
-                            if (!tmp) {
-                                return;
-                            }
-                            if (schemaP.schema &&
-                                    schemaP.schema.type === 'string' &&
-                                    typeof tmp === 'string') {
-                                break;
-                            }
-                            // parse schema
-                            if (schemaP.in === 'body') {
-                                tmp = jsonParse(tmp);
-                                break;
-                            }
-                            // parse array
-                            tmp = tmp.split('\n').map(function (element) {
-                                return schemaP.items.type === 'string'
-                                    ? element
-                                    : jsonParse(element);
-                            });
-                            break;
-                        }
-                        options.paramDict[schemaP.name] = tmp;
+                    // init ajax
+                    options.modeAjax = true;
+                    // validate input
+                    local.uiEventListenerDict['.onEventInputValidate'](options, options.onNext);
+                    if (options.error) {
+                        return;
+                    }
+                    // reset response output
+                    Array.from(options.targetOperation.querySelectorAll(
+                        '.responseBody, .responseHeaders, .responseStatusCode'
+                    )).forEach(function (element) {
+                        element.classList.remove('styleBorderError');
+                        element.textContent = 'loading ...';
                     });
-                    options.api.ajax(options, options.onNext);
+                    options.targetOperation.querySelector('.responseMedia').innerHTML = '';
+                    // scrollTo response
+                    options.targetOperation.querySelector('.responseBody').focus();
                     break;
                 default:
+                    if (options.error) {
+                        return;
+                    }
                     data = local.objectSetDefault(data, {
+                        contentType: 'undefined',
                         error: error,
                         options: options,
-                        statusCode: 'error'
+                        statusCode: ''
                     });
-                    // remove previous error
-                    Array.from(
-                        options.domOperationContent.querySelectorAll('.schemaP .input')
-                    ).forEach(function (element) {
-                        element.classList.remove('error');
-                    });
-                    // shake invalid-input
-                    if (error && error.options && error.schema) {
-                        Array.from(options.domOperationContent.querySelectorAll(
-                            '.schemaP[name=' + error.schema.name + '] .input'
-                        )).forEach(function (element) {
-                            element.classList.add('error');
-                            local.uiAnimateShake(element.closest('span'));
-                        });
-                    }
-                    // init optionsJson
-                    data.optionsJson = JSON.stringify({
-                        paramDict: options.paramDict
-                    }, null, 4);
-                    // init curl
-                    local.tryCatchOnError(function () {
-                        options.data = JSON.stringify(JSON.parse(options.data), null, 4);
-                    }, local.nop);
-                    data.curl = 'curl \\\n' + '--request ' + options.api._method + ' \\\n' +
-                        Object.keys(options.headers).map(function (key) {
-                            return "--header '" + key + ': ' + options.headers[key] + "' \\\n";
-                        }).join('') + '--data-binary ' + (typeof options.data === 'string'
-                            ? "'" + options.data.replace(/'/g, "'\"'\"'") + "'"
-                            : '<blob>') + ' \\\n"' + options.url + '"';
+                    // init responseStatusCode
+                    options.targetOperation.querySelector('.responseStatusCode').textContent =
+                        data.statusCode;
                     // init responseHeaders
-                    data.responseHeaders = data.getAllResponseHeaders
-                        ? data.getAllResponseHeaders().trim()
-                        : 'error';
+                    options.targetOperation.querySelector('.responseHeaders').textContent =
+                        data.getAllResponseHeaders().trim();
                     // init responseBody
-                    ('\r\n' + (data.getAllResponseHeaders
-                        ? data.getAllResponseHeaders()
-                        : ''))
-                        .replace((/\r\ncontent-type:(.*?)\r\n/gi), function (match0, match1) {
-                            match0 = match1;
-                            data.contentType = match0.trim();
-                        });
-                    switch (data.contentType && data.contentType.split('/')[0]) {
+                    options.targetOperation.querySelector('.responseHeaders').textContent.replace((
+                        /^content-type:(.*?)$/im
+                    ), function (match0, match1) {
+                        match0 = match1;
+                        data.contentType = match0.trim();
+                    });
+                    data.mediaType = data.contentType.split('/')[0].replace('image', 'img');
+                    switch (data.mediaType) {
                     case 'audio':
+                    case 'img':
                     case 'video':
-                        data.responseBody = '<' + data.contentType.split('/')[0] +
-                            ' controls><source src="data:' + data.contentType + ';base64,' +
-                            local.base64FromBuffer(data.response) +
-                            '" type="' + data.contentType + '"></' +
-                            data.contentType.split('/')[0] + '>';
-                        break;
-                    case 'image':
-                        data.responseBody = '<img src="data:' + data.contentType + ';base64,' +
-                            local.base64FromBuffer(data.response) + '">';
+                        options.targetOperation.querySelector('.responseBody').textContent =
+                            data.contentType;
+                        options.targetOperation.querySelector('.responseMedia').innerHTML =
+                            '<' + data.mediaType + ' controls src="data:' + data.contentType +
+                            ';base64,' + local.base64FromBuffer(data.response) + '"></' +
+                            data.mediaType + '>';
                         break;
                     default:
-                        data.responseBody = '<pre>' + local.stringHtmlSafe(
+                        options.targetOperation.querySelector('.responseBody').textContent =
                             data.responseJson
-                                ? JSON.stringify(data.responseJson, null, 4)
-                                : String(data.responseText || '')
-                        ) + '</pre>';
+                            ? JSON.stringify(data.responseJson, null, 4)
+                            : data.responseText;
                     }
-                    // templateRender response
-                    options.domOperationContent.querySelector('.responseAjax').innerHTML =
-                        local.templateRender(local.templateUiResponseAjax, data);
+                    // init error
+                    if (!(data.statusCode < 400)) {
+                        Array.from(options.targetOperation.querySelectorAll(
+                            '.responseBody, .responseHeaders, .responseStatusCode'
+                        )).forEach(function (element) {
+                            element.classList.add('styleBorderError');
+                            local.uiAnimateShake(element);
+                        });
+                    }
                     break;
                 }
             });
@@ -3031,12 +3266,12 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
             options.onNext();
         };
 
-        local.uiEventListenerDict['.onEventOperationDisplayShow'] = function (event) {
+        local.uiEventListenerDict['.onEventOperationDisplayShow'] = function (event, onError) {
         /*
          * this function will toggle the display of the operation
          */
             var element;
-            element = event.target;
+            element = event.target2;
             element = element.querySelector('.operation') || element.closest('.operation');
             location.hash = '!' + element.id;
             element.closest('.resource').classList.remove('expanded');
@@ -3045,12 +3280,18 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
             // show the operation, but hide all other operations
             local.uiAnimateSlideAccordian(
                 element.querySelector('.operation > .content'),
-                Array.from(
-                    element.closest('.operationList').querySelectorAll('.operation > .content')
-                ),
+                Array.from(element.closest('.operationList').querySelectorAll(
+                    '.operation > .content'
+                )),
                 function () {
+                    // scrollTo operation
                     element.querySelector('[tabIndex]').blur();
                     element.querySelector('[tabIndex]').focus();
+                    // validate input
+                    local.uiEventListenerDict['.onEventInputValidate']({
+                        targetOperation: element
+                    });
+                    local.setTimeoutOnError(onError, null, element);
                 }
             );
         };
@@ -3060,7 +3301,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
          * this function will toggle the display of the resource
          */
             location.hash = '!' + event.currentTarget.id;
-            event.target.className.split(' ').some(function (className) {
+            event.target2.className.split(' ').some(function (className) {
                 switch (className) {
                 case 'td1':
                     // show the resource, but hide all other resources
@@ -3070,7 +3311,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     );
                     // show at least one operation in the resource
                     local.uiEventListenerDict['.onEventOperationDisplayShow']({
-                        target: event.currentTarget.querySelector(
+                        target2: event.currentTarget.querySelector(
                             '.operation .uiAnimateSlide[style*="max-height: 100%"]'
                         ) || event.currentTarget.querySelector('.operation')
                     });
@@ -3084,18 +3325,22 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     // collapse all operations in the resource
                     if (event.currentTarget.classList.contains('expanded')) {
                         event.currentTarget.classList.remove('expanded');
-                        Array.from(
-                            event.currentTarget.querySelectorAll('.operation > .content')
-                        ).forEach(function (element) {
+                        Array.from(event.currentTarget.querySelectorAll(
+                            '.operation > .content'
+                        )).forEach(function (element) {
                             local.uiAnimateSlideUp(element);
                         });
                     // expand all operations in the resource
                     } else {
                         event.currentTarget.classList.add('expanded');
-                        Array.from(
-                            event.currentTarget.querySelectorAll('.operation > .content')
-                        ).forEach(function (element) {
+                        Array.from(event.currentTarget.querySelectorAll(
+                            '.operation > .content'
+                        )).forEach(function (element) {
                             local.uiAnimateSlideDown(element);
+                            // validate input
+                            local.uiEventListenerDict['.onEventInputValidate']({
+                                targetOperation: element.closest('.operation')
+                            });
                         });
                     }
                     return true;
@@ -3109,7 +3354,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
          */
             event = event || {};
             // clear all apiKeyValue's from localStorage
-            if (event.target && event.target.id === 'swggApiKeyClearButton1') {
+            if (event.target2 && event.target2.id === 'swggApiKeyClearButton1') {
                 local.apiKeyValue = '';
                 Object.keys(localStorage).forEach(function (key) {
                     if (key.indexOf('utility2_swgg_apiKeyKey_') === 0) {
@@ -3119,7 +3364,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
             // restore apiKeyValue
             } else if (event.swggInit) {
                 local.apiKeyKey = 'utility2_swgg_apiKeyKey_' + encodeURIComponent(local.urlParse(
-                    document.querySelector('.swggUiContainer > .header > .td2').value
+                    document.querySelector('.swggUiContainer > .thead > .td2').value
                         .replace((/^\//), '')
                 ).href);
                 local.apiKeyValue = localStorage.getItem(local.apiKeyKey) || '';
@@ -3135,23 +3380,23 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                 return;
             }
             // reset ui
-            Array.from(
-                document.querySelectorAll('.swggUiContainer > .reset')
-            ).forEach(function (element) {
+            Array.from(document.querySelectorAll(
+                '.swggUiContainer > .reset'
+            )).forEach(function (element) {
                 element.remove();
             });
             // normalize swaggerJsonUrl
-            document.querySelector('.swggUiContainer > .header > .td2').value = local.urlParse(
-                document.querySelector('.swggUiContainer > .header > .td2').value
+            document.querySelector('.swggUiContainer > .thead > .td2').value = local.urlParse(
+                document.querySelector('.swggUiContainer > .thead > .td2').value
                     .replace((/^\//), '')
             ).href;
             document.querySelector('#swggAjaxProgressDiv1 span').innerHTML = 'loading swagger.json';
             // fetch swagger.json file
             local.apiUpdate({
                 modeAjax: true,
-                url: document.querySelector('.swggUiContainer > .header > .td2').value
+                url: document.querySelector('.swggUiContainer > .thead > .td2').value
             }, function (error) {
-                local.uiRender(null, onError);
+                local.uiRenderAll(null, onError);
                 local.tryCatchOnError(function () {
                     local.validateBySwaggerJson({ swaggerJson: local.swaggerJson });
                 }, local.uiNotify);
@@ -3168,176 +3413,14 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
             if (!error) {
                 return element;
             }
-            element.classList.add('error');
+            // highlight and shake input
+            element.classList.add('styleBorderError');
             local.uiAnimateShake(element);
-            element.textContent = error.stack + '\n' + element.textContent;
+            element.textContent = error.message + '\n' + element.textContent;
             return element;
         };
 
-        local.uiParamRender = function (schemaP) {
-        /*
-         * this function will render schemaP
-         */
-            schemaP.placeholder = !local.isNullOrUndefined(schemaP.default)
-                ? schemaP.default
-                : local.dbFieldRandomCreate({
-                    modeNotRandom: true,
-                    schemaP: schemaP
-                });
-            if (schemaP.type !== 'string') {
-                schemaP.placeholder = JSON.stringify(schemaP.placeholder);
-            }
-            schemaP.placeholder = String(schemaP.placeholder || '');
-            schemaP.enum2 = schemaP.enum || (schemaP.items && schemaP.items.enum);
-            // init input - file
-            if (schemaP.type === 'file') {
-                schemaP.isFile = true;
-            // init input - textarea
-            } else if (schemaP.in === 'body') {
-                schemaP.isTextarea = true;
-            // init input - select
-            } else if (schemaP.enum2 || schemaP.type === 'boolean') {
-                // init enumDefault
-                schemaP.enumDefault = [];
-                if (schemaP.required && schemaP.default !== undefined) {
-                    schemaP.enumDefault = schemaP.type === 'array'
-                        ? schemaP.default
-                        : [schemaP.default];
-                }
-                schemaP.isSelect = true;
-                schemaP.isSelectMultiple = schemaP.type === 'array';
-                schemaP.selectOptionList = (schemaP.type === 'boolean'
-                    ? [false, true]
-                    : schemaP.enum2).map(function (element) {
-                    // init hasDefault
-                    schemaP.hasDefault = schemaP.hasDefault ||
-                        schemaP.enumDefault.indexOf(element) >= 0;
-                    return {
-                        id: local.idDomElementCreate('swgg_id_' + schemaP.name),
-                        selected: schemaP.enumDefault.indexOf(element) >= 0
-                            ? 'selected'
-                            : '',
-                        type: (schemaP.items && schemaP.items.type) || schemaP.type,
-                        valueDecoded: element,
-                        valueEncoded: typeof element === 'string'
-                            ? element
-                            : JSON.stringify(element)
-                    };
-                });
-                // init 'undefined' value
-                if (!schemaP.required && !schemaP.hasDefault) {
-                    schemaP.selectOptionList.unshift({
-                        id: local.idDomElementCreate('swgg_id_' + schemaP.name),
-                        selected: 'selected',
-                        type: schemaP.type,
-                        valueDecoded: '$swggUndefined',
-                        valueEncoded: '<none>'
-                    });
-                }
-                // select at least one value
-                if (!schemaP.isSelectMultiple) {
-                    schemaP.selectOptionList.some(function (element, ii) {
-                        if (ii === 0 || element.selected) {
-                            element.selected = 'selected';
-                            if (ii !== 0) {
-                                schemaP.selectOptionList[0].selected = '';
-                                return true;
-                            }
-                        }
-                    });
-                }
-            // init input - textarea
-            } else if (schemaP.type === 'array') {
-                schemaP.isTextarea = true;
-                schemaP.placeholder = String(Array.isArray(schemaP.default)
-                    ? schemaP.default.join('\n')
-                    : 'provide multiple values in new lines' + (schemaP.required
-                        ? ' (at least one required)'
-                        : ''));
-            // init input - text
-            } else {
-                schemaP.isInputText = true;
-            }
-            // init format2 / type2
-            [schemaP, schemaP.schema || {}].some(function (element) {
-                local.objectSetDefault(schemaP, {
-                    format2: element.format,
-                    type2: element.type
-                });
-                return schemaP.type2;
-            });
-            schemaP.type2 = schemaP.type2 || 'object';
-            // init schema2
-            [
-                schemaP,
-                schemaP.items,
-                schemaP.schema,
-                schemaP.schema && schemaP.schema.items
-            ].some(function (element) {
-                schemaP.schema2 = (local.validateBySwaggerSchema({
-                    // dereference schemaP
-                    modeDereference: true,
-                    prefix: ['parameters', schemaP.name],
-                    schema: element,
-                    swaggerJson: local.swaggerJson
-                }) || {}).properties;
-                return schemaP.schema2;
-            });
-            if (schemaP.schema2) {
-                schemaP.schemaText = JSON.stringify(schemaP.type2 === 'array'
-                    ? [schemaP.schema2]
-                    : schemaP.schema2, null, 4);
-            }
-            // init valueEncoded
-            if (schemaP.required || schemaP.in === 'body' || schemaP['x-swgg-apiKey']) {
-                schemaP.valueEncoded = schemaP['x-swgg-apiKey']
-                    ? local.apiKeyValue
-                    : schemaP.default;
-                if (schemaP.valueEncoded === undefined &&
-                        local.isNullOrUndefined(schemaP.default)) {
-                    schemaP.valueEncoded = local.dbFieldRandomCreate({
-                        modeNotRandom: true,
-                        schemaP: schemaP
-                    });
-                }
-                // init valueEncoded for array
-                if (schemaP.valueEncoded && schemaP.type2 === 'array' && schemaP.in !== 'body') {
-                    schemaP.valueEncoded = schemaP.valueEncoded.map(function (element) {
-                        return typeof element === 'string'
-                            ? element
-                            : JSON.stringify(element);
-                    }).join('\n');
-                }
-            }
-            // init valueEncoded for schema
-            if (schemaP.in === 'body' && schemaP.schema2) {
-                schemaP.valueEncoded = local.dbRowRandomCreate({
-                    modeNotRandom: true,
-                    override: function () {
-                        var override = {};
-                        // preserve default value
-                        Object.keys(schemaP.schema2).forEach(function (key) {
-                            if (schemaP.schema2[key].default !== undefined) {
-                                override[key] = schemaP.schema2[key].default;
-                            }
-                        });
-                        return override;
-                    },
-                    properties: schemaP.schema2
-                });
-                if (schemaP.type2 === 'array') {
-                    schemaP.valueEncoded = [schemaP.valueEncoded];
-                }
-                schemaP.valueEncoded = JSON.stringify(schemaP.valueEncoded, null, 4);
-            }
-            if (typeof schemaP.valueEncoded !== 'string') {
-                schemaP.valueEncoded = JSON.stringify(schemaP.valueEncoded) || '';
-            }
-            // templateRender schemaP
-            schemaP.innerHTML = local.templateRender(local.templateUiParam, schemaP);
-        };
-
-        local.uiRender = function (options, onError) {
+        local.uiRenderAll = function (options, onError) {
         /*
          * this function will render swagger-ui
          */
@@ -3349,14 +3432,14 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                 options.ajaxProgressText = 'rendering swagger.json';
                 // init apiKeyValue
                 options.apiKeyValue = local.apiKeyValue;
-                // init title
+                // templateRender title
                 document.querySelector('head > title').textContent = local.templateRender(
                     local.templateUiTitle,
                     options
                 ).trim();
                 // init urlSwaggerJson
                 options.urlSwaggerJson = document.querySelector(
-                    '.swggUiContainer > .header > .td2'
+                    '.swggUiContainer > .thead > .td2'
                 ).value;
                 // templateRender main
                 document.querySelector('.swggUiContainer').innerHTML = local.templateRender(
@@ -3364,7 +3447,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     options
                 );
                 setTimeout(function () {
-                    local.uiRender(options, onError);
+                    local.uiRenderAll(options, onError);
                 }, 100);
                 return;
             }
@@ -3391,12 +3474,12 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                 });
             });
             // init uiFragment
-            options.uiFragment = local.domFragmentRender('<div class="reset resourceList"></div>');
+            options.uiFragment = document.createDocumentFragment();
             // init resourceDict
             Object.keys(options.resourceDict).sort().forEach(function (key) {
                 // templateRender resource
-                options.uiFragment.querySelector('.resourceList').appendChild(
-                    local.domFragmentRender(local.templateUiResource, options.resourceDict[key])
+                options.uiFragment.appendChild(
+                    local.domElementRender(local.templateUiResource, options.resourceDict[key])
                 );
             });
             Object.keys(options.operationDict).sort(function (aa, bb) {
@@ -3411,47 +3494,196 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                 operation = options.operationDict[operation];
                 operation.id = local.idDomElementCreate('swgg_id_' + operation.operationId);
                 operation.tags.forEach(function (tag) {
+                    // create new operation for each tag
                     operation = local.jsonCopy(operation);
                     resource = options.resourceDict[tag];
                     local.objectSetDefault(operation, {
                         description: 'no description',
                         responseList: Object.keys(operation.responses).sort().map(function (key) {
-                            return { key: key, value: operation.responses[key] };
+                            return {
+                                key: key,
+                                value: local.objectSetDefault(operation.responses[key], {
+                                    description: 'no description'
+                                })
+                            };
                         }),
                         summary: operation.description || 'no summary'
                     });
-                    operation.parameters.forEach(function (schemaP) {
-                        // init schemaP.id
-                        schemaP.id = local.idDomElementCreate('swgg_id_' + schemaP.name);
-                        local.uiParamRender(schemaP);
-                    });
+                    operation.parameters.forEach(local.uiRenderSchemaP);
                     // templateRender operation
                     options.uiFragment.querySelector('#' + resource.id + ' .operationList')
-                        .appendChild(local.domFragmentRender(local.templateUiOperation, operation));
+                        .appendChild(local.domElementRender(local.templateUiOperation, operation));
                 });
             });
-            Array.from(
-                options.uiFragment.querySelectorAll('.operation > .header > .td1')
-            ).forEach(function (element, ii) {
-                element.innerHTML = ii + 1 + '.';
+            // emulate <ol></ol> for operations
+            Array.from(options.uiFragment.querySelectorAll(
+                '.operationList'
+            )).forEach(function (element) {
+                Array.from(element.querySelectorAll(
+                    '.operation > .thead > .td1'
+                )).forEach(function (element, ii) {
+                    element.textContent = ii + 1 + '.';
+                });
             });
             // append uiFragment to swggUiContainer
             document.querySelector('#swggAjaxProgressDiv1').style.display = 'none';
-            document.querySelector('.swggUiContainer').appendChild(options.uiFragment);
-            // render valueEncoded
-            Array.from(
-                document.querySelectorAll('.swggUiContainer [data-value-encoded]')
-            ).forEach(function (element) {
-                element.value = decodeURIComponent(element.dataset.valueEncoded);
+            document.querySelector('.swggUiContainer .resourceList').appendChild(
+                options.uiFragment
+            );
+            Array.from(document.querySelectorAll(
+                '.swggUiContainer [data-value-text]'
+            )).forEach(function (element) {
+                // render valueText
+                element.value = decodeURIComponent(element.dataset.valueText);
+                delete element.dataset.valueText;
+                // init textarea's multiline placeholder
+                if (element.tagName === 'TEXTAREA') {
+                    local.uiEventListenerDict['.onEventInputTextareaChange']({ target2: element });
+                }
             });
             // init event-handling
-            local.uiEventInit(document);
+            ['Click', 'Keyup', 'Submit'].forEach(function (eventType) {
+                Array.from(document.querySelectorAll(
+                    '.swggUiContainer .eventDelegate' + eventType
+                )).forEach(function (element) {
+                    element.addEventListener(eventType.toLowerCase(), local.uiEventDelegate);
+                });
+            });
             // scrollTo location.hash
             local.uiEventListenerDict['.onEventOperationDisplayShow']({
-                target: document.querySelector('#' + (location.hash.slice(2) || 'undefined')) ||
+                target2: document.querySelector('#' + (location.hash.slice(2) || 'undefined')) ||
                     document.querySelector('.swggUiContainer .operation')
             });
             local.setTimeoutOnError(onError);
+        };
+
+        local.uiRenderSchemaP = function (schemaP) {
+        /*
+         * this function will render schemaP
+         */
+            // init schemaP.id
+            schemaP.id = local.idDomElementCreate('swgg_id_' + schemaP.name);
+            // init enum
+            schemaP.enum2 = schemaP.enum ||
+                (local.schemaPItems(schemaP) || {}).enum ||
+                (local.schemaPType(schemaP) === 'boolean' && [false, true]);
+            // init input - file
+            if (local.schemaPType(schemaP) === 'file') {
+                schemaP.isFile = true;
+            // init input - textarea
+            } else if (schemaP.in === 'body') {
+                schemaP.isTextarea = true;
+            // init input - select
+            } else if (schemaP.enum2) {
+                // init enumDefault
+                schemaP.enumDefault = [];
+                if (schemaP.required && schemaP.default !== undefined) {
+                    schemaP.enumDefault = local.schemaPType(schemaP) === 'array'
+                        ? schemaP.default
+                        : [schemaP.default];
+                }
+                schemaP.isSelectMultiple = local.schemaPType(schemaP) === 'array';
+                schemaP.selectOptionList = schemaP.enum2.map(function (element) {
+                    // init hasDefault
+                    schemaP.hasDefault = schemaP.hasDefault ||
+                        schemaP.enumDefault.indexOf(element) >= 0;
+                    return {
+                        id: local.idDomElementCreate('swgg_id_' + schemaP.name),
+                        selected: schemaP.enumDefault.indexOf(element) >= 0
+                            ? 'selected'
+                            : '',
+                        type: local.schemaPItemsType(schemaP) || local.schemaPType(schemaP),
+                        placeholder: typeof element === 'string'
+                            ? element
+                            : JSON.stringify(element),
+                        valueSelectOption: element
+                    };
+                });
+                // init 'undefined' value
+                if (!schemaP.required && !schemaP.hasDefault) {
+                    schemaP.selectOptionList.unshift({
+                        id: local.idDomElementCreate('swgg_id_' + schemaP.name),
+                        selected: 'selected',
+                        type: local.schemaPType(schemaP),
+                        placeholder: '<none>',
+                        valueSelectOption: '$swggUndefined'
+                    });
+                }
+                // select at least one value
+                schemaP.selectOptionList.some(function (element, ii) {
+                    if (ii === 0 || element.selected) {
+                        element.selected = 'selected';
+                        if (ii !== 0) {
+                            schemaP.selectOptionList[0].selected = '';
+                            return true;
+                        }
+                    }
+                });
+            // init input - textarea
+            } else if (local.schemaPType(schemaP) === 'array') {
+                schemaP.isTextarea = true;
+            // init input - text
+            } else {
+                schemaP.isInputText = true;
+            }
+            // init format2 / type2
+            [schemaP, schemaP.schema || {}].some(function (element) {
+                local.objectSetDefault(schemaP, {
+                    format2: local.schemaPItemsType(element) || element.format,
+                    type2: local.schemaPType(element)
+                });
+                return schemaP.type2;
+            });
+            schemaP.type2 = schemaP.type2 || 'object';
+            // init schema2
+            [
+                schemaP,
+                local.schemaPItems(schemaP),
+                schemaP.schema,
+                schemaP.schema && local.schemaPItems(schemaP.schema)
+            ].some(function (element) {
+                schemaP.schema2 = (local.validateBySwaggerSchema({
+                    // dereference schemaP
+                    modeDereference: true,
+                    prefix: ['parameters', schemaP.name],
+                    schema: element,
+                    swaggerJson: local.swaggerJson
+                }) || {});
+                return schemaP.schema2.properties;
+            });
+            if (schemaP.schema2.properties) {
+                schemaP.schemaText = JSON.stringify(schemaP.type2 === 'array'
+                    ? [schemaP.schema2.properties]
+                    : schemaP.schema2.properties, null, 4);
+            }
+            // init placeholder
+            schemaP.placeholder = !local.isNullOrUndefined(schemaP.default)
+                ? schemaP.default
+                : local.dbFieldRandomCreate({
+                    modeNotRandom: true,
+                    schemaP: schemaP
+                });
+            if (typeof schemaP.placeholder !== 'string') {
+                if (schemaP.in === 'body') {
+                    schemaP.placeholder = JSON.stringify(schemaP.placeholder, null, 4);
+                } else if (Array.isArray(schemaP.placeholder)) {
+                    schemaP.placeholder = schemaP.placeholder.map(function (element) {
+                        return typeof element === 'string'
+                            ? element
+                            : JSON.stringify(element);
+                    }).join('\n');
+                } else {
+                    schemaP.placeholder = JSON.stringify(schemaP.placeholder);
+                }
+            }
+            // init valueText
+            schemaP.valueText = schemaP['x-swgg-apiKey']
+                ? local.apiKeyValue
+                : schemaP.required
+                ? schemaP.placeholder
+                : '';
+            // templateRender schemaP
+            schemaP.innerHTML = local.templateRender(local.templateUiParameter, schemaP);
         };
 
         local.userLoginByPassword = function (options, onError) {
@@ -3486,7 +3718,8 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
         /*
          * this function will validate the entire swagger json object
          */
-            var swaggerJson, tmp;
+            var operation, operationIdDict, prefix, swaggerJson, test, tmp;
+            operationIdDict = {};
             swaggerJson = options.swaggerJson || {};
             local.validateBySwaggerSchema(local.objectSetDefault(options, {
                 data: swaggerJson,
@@ -3525,17 +3758,26 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
             // validate swaggerJson.paths[key][key].parameters[ii].default
             Object.keys(swaggerJson.paths).forEach(function (path) {
                 Object.keys(swaggerJson.paths[path]).forEach(function (method) {
-                    (swaggerJson.paths[path][method].parameters || []).forEach(function (schemaP) {
+                    prefix = ['swaggerJson', 'paths', path, method];
+                    operation = local.validateBySwaggerSchema({
+                        // dereference operation
+                        modeDereference: true,
+                        prefix: prefix,
+                        schema: swaggerJson.paths[path][method],
+                        swaggerJson: swaggerJson
+                    });
+                    // validate semanticUniqueOperationId
+                    test = !operationIdDict[operation.operationId];
+                    local.throwSwaggerError(!test && {
+                        data: operation.operationId,
+                        errorType: 'semanticUniqueOperationId',
+                        prefix: prefix
+                    });
+                    operationIdDict[operation.operationId] = true;
+                    (operation.parameters || []).forEach(function (schemaP) {
                         local.validateBySwaggerSchema({
                             modeDefault: true,
-                            prefix: [
-                                'swaggerJson',
-                                'paths',
-                                path,
-                                method,
-                                'parameters',
-                                schemaP.name
-                            ],
+                            prefix: prefix.concat(['parameters', schemaP.name]),
                             schema: schemaP,
                             swaggerJson: swaggerJson
                         });
@@ -3548,19 +3790,27 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
         /*
          * this function will validate options.data against options.parameters
          */
+            var errorList;
+            errorList = [];
             options.parameters.forEach(function (schemaP) {
-                local.validateBySwaggerSchema({
-                    data: options.data[schemaP.name],
-                    dataReadonlyRemove: [
-                        options.dataReadonlyRemove || {},
-                        schemaP.name,
-                        (options.dataReadonlyRemove || {})[schemaP.name]
-                    ],
-                    prefix: options.prefix.concat(schemaP.name),
-                    schema: schemaP,
-                    swaggerJson: local.swaggerJson
+                local.tryCatchOnError(function () {
+                    local.validateBySwaggerSchema({
+                        data: options.data[schemaP.name],
+                        dataReadonlyRemove: [
+                            options.dataReadonlyRemove || {},
+                            schemaP.name,
+                            (options.dataReadonlyRemove || {})[schemaP.name]
+                        ],
+                        prefix: options.prefix.concat([schemaP.name]),
+                        schema: schemaP,
+                        swaggerJson: local.swaggerJson
+                    });
+                }, function (errorCaught) {
+                    errorList.push(errorCaught);
+                    errorCaught.errorList = errorList;
                 });
             });
+            return errorList;
         };
 
         local.validateBySwaggerSchema = function (options) {
@@ -3574,38 +3824,22 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                 dataReadonlyRemove2,
                 ii,
                 oneOf,
-                prefix,
                 schema,
                 test,
-                throwError,
                 tmp;
             if (!options.schema) {
                 return;
             }
-            throwError = function (message) {
-            /*
-             * this function will throw an error with the given message
-             */
-                if (!message) {
-                    return;
-                }
-                message = new Error(message);
-                message.options = options;
-                message.schema = schema;
-                message.statusCode = 400;
-                throw message;
-            };
             data = options.data;
             options.dataReadonlyRemove = options.dataReadonlyRemove || [{}, '', null];
             dataReadonlyRemove2 = options.dataReadonlyRemove[2] || {};
-            prefix = Array.isArray(options.prefix)
-                ? options.prefix[0] + options.prefix.slice(1).map(function (element) {
-                    return '[' + JSON.stringify(element) + ']';
-                }).join('')
-                : options.prefix;
             schema = options.schema;
             circularList = [];
             while (true) {
+                // dereference schema.schema
+                while (schema.schema) {
+                    schema = schema.schema;
+                }
                 // dereference schema.oneOf
                 oneOf = (data && schema.oneOf) || [];
                 for (ii = 0; ii < oneOf.length; ii += 1) {
@@ -3634,15 +3868,16 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                 }
                 // dereference schema.$ref
                 $ref = schema && schema.$ref;
-                if ($ref === '#/x-test/aa') {
-                    local.nop();
-                }
                 if (!$ref) {
                     break;
                 }
                 test = circularList.indexOf($ref) < 0;
-                throwError(!test && prefix +
-                    ' cannot dereference circular-reference schema.$ref = ' + JSON.stringify($ref));
+                local.throwSwaggerError(!test && {
+                    data: data,
+                    errorType: 'schemaDeferenceCircular',
+                    prefix: options.prefix,
+                    schema: schema
+                });
                 circularList.push($ref);
                 tmp = $ref.split('/').slice(-2);
                 schema = $ref.indexOf('http://json-schema.org/draft-04/schema#/') === 0
@@ -3650,8 +3885,12 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     : options.swaggerJson[tmp[0]];
                 schema = schema && schema[tmp[1]];
                 test = schema;
-                throwError(!test && prefix + ' cannot dereference schema.$ref =' +
-                    JSON.stringify($ref));
+                local.throwSwaggerError(!test && {
+                    data: data,
+                    errorType: 'schemaDeference',
+                    prefix: options.prefix,
+                    schema: options.schema
+                });
             }
             if (options.modeDereference) {
                 return schema;
@@ -3660,45 +3899,38 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
             if (options.modeDefault) {
                 data = schema.default;
             }
-            // swagger-validate items-required-for-array-objects
-            // https://github.com/swagger-api/swagger-editor/blob/v3.0.17/src/plugins/validation
-            // /semantic-validators/validators/items-required-for-array-objects.js
+            // validate semanticRequired
             test = options.modeDefault ||
                 !local.isNullOrUndefined(data) ||
                 schema.required !== true ||
                 schema['x-swgg-notRequired'];
-            throwError(!test && prefix +
-                " - Schema properties specified as 'required' must be defined");
+            local.throwSwaggerError(!test && {
+                data: data,
+                errorType: 'semanticRequired',
+                prefix: options.prefix,
+                schema: schema
+            });
             if (local.isNullOrUndefined(data)) {
                 return;
             }
-            // swagger-validate items-required-for-array-objects
-            // https://github.com/swagger-api/swagger-editor/blob/v3.0.17/src/plugins/validation
-            // /semantic-validators/validators/items-required-for-array-objects.js
-            test = !options.modeSchema || data.type !== 'array' ||
-                (typeof data.items === 'object' && data.items);
-            throwError(!test && prefix +
-                " - Schema objects with 'array' type require an 'items' property");
+            // validate semanticRequiredArrayItems
+            test = !options.modeSchema || local.schemaPType(data) !== 'array' ||
+                (typeof local.schemaPItems(data) === 'object' && local.schemaPItems(data));
+            local.throwSwaggerError(!test && {
+                data: data,
+                errorType: 'semanticRequiredArrayItems',
+                prefix: options.prefix,
+                schema: schema
+            });
             // remove readOnly property
             if (schema.readOnly) {
                 delete options.dataReadonlyRemove[0][options.dataReadonlyRemove[1]];
             }
-            // validate schemaP.schema
-            // recurse - schema.schema
-            local.validateBySwaggerSchema({
-                data: data,
-                dataReadonlyRemove: options.dataReadonlyRemove,
-                modeSchema: options.modeSchema,
-                prefix: prefix,
-                schema: schema.schema,
-                swaggerJson: options.swaggerJson
-            });
             // optimization - validate schema.type first
             // 5.5.2. type
             // https://swagger.io/docs/specification/data-models/data-types/
             // https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#data-types
-            test = local.isNullOrUndefined(schema.type);
-            switch (schema.type) {
+            switch (local.schemaPType(schema)) {
             case 'array':
                 test = Array.isArray(data);
                 break;
@@ -3709,7 +3941,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                 test = !options.modeSchema;
                 break;
             case 'integer':
-                test = typeof data === 'number' && isFinite(data) && Math.floor(data) === data;
+                test = Number.isFinite(data) && Math.floor(data) === data;
                 switch (schema.format) {
                 case 'int32':
                     break;
@@ -3718,16 +3950,13 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                 }
                 break;
             case 'number':
-                test = typeof data === 'number' && isFinite(data);
+                test = Number.isFinite(data);
                 switch (schema.format) {
                 case 'double':
                     break;
                 case 'float':
                     break;
                 }
-                break;
-            case 'object':
-                test = typeof data === 'object';
                 break;
             case 'string':
                 test = typeof data === 'string' ||
@@ -3756,11 +3985,17 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     break;
                 }
                 break;
+            default:
+                test = options.modeSchema || typeof data === 'object';
+                break;
             }
-            throwError(!test && prefix + ' (' + (typeof data) +
-                ') is not a valid ' + schema.type + (schema.format
-                ? ' (' + schema.format + ')'
-                : ''));
+            local.throwSwaggerError(!test && {
+                data: data,
+                errorType: 'itemType',
+                prefix: options.prefix,
+                schema: schema,
+                typeof: typeof data
+            });
             tmp = typeof data;
             if (tmp === 'object' && Array.isArray(data)) {
                 tmp = 'array';
@@ -3770,35 +4005,63 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
             case 'number':
                 // 5.1.1. multipleOf
                 test = typeof schema.multipleOf !== 'number' || data % schema.multipleOf === 0;
-                throwError(!test && prefix + ' = ' + data + ' must be a multiple of ' +
-                    schema.multipleOf);
+                local.throwSwaggerError(!test && {
+                    data: data,
+                    errorType: 'numberMultipleOf',
+                    prefix: options.prefix,
+                    schema: schema
+                });
                 // 5.1.2. maximum and exclusiveMaximum
                 test = typeof schema.maximum !== 'number' || (schema.exclusiveMaximum
                     ? data < schema.maximum
                     : data <= schema.maximum);
-                throwError(!test && prefix + ' = ' + data + ' must be ' + (schema.exclusiveMaximum
-                    ? '< '
-                    : '<= ') + schema.maximum);
+                local.throwSwaggerError(!test && {
+                    data: data,
+                    errorType: schema.exclusiveMaximum
+                        ? 'numberExclusiveMaximum'
+                        : 'numberMaximum',
+                    prefix: options.prefix,
+                    schema: schema
+                });
                 // 5.1.3. minimum and exclusiveMinimum
                 test = typeof schema.minimum !== 'number' || (schema.exclusiveMinimum
                     ? data > schema.minimum
                     : data >= schema.minimum);
-                throwError(!test && prefix + ' = ' + data + ' must be ' + (schema.exclusiveMinimum
-                    ? '> '
-                    : '>= ') + schema.minimum);
+                local.throwSwaggerError(!test && {
+                    data: data,
+                    errorType: schema.exclusiveMinimum
+                        ? 'numberExclusiveMinimum'
+                        : 'numberMinimum',
+                    prefix: options.prefix,
+                    schema: schema
+                });
                 break;
             // 5.2. Validation keywords for strings
             case 'string':
                 // 5.2.1. maxLength
                 test = typeof schema.maxLength !== 'number' || data.length <= schema.maxLength;
-                throwError(!test && prefix + ' must have <= ' + schema.maxLength + ' characters');
+                local.throwSwaggerError(!test && {
+                    data: data,
+                    errorType: 'stringMaxLength',
+                    prefix: options.prefix,
+                    schema: schema
+                });
                 // 5.2.2. minLength
                 test = typeof schema.minLength !== 'number' || data.length >= schema.minLength;
-                throwError(!test && prefix + ' must have >= ' + schema.minLength + ' characters');
+                local.throwSwaggerError(!test && {
+                    data: data,
+                    errorType: 'stringMinLength',
+                    prefix: options.prefix,
+                    schema: schema
+                });
                 // 5.2.3. pattern
                 test = !schema.pattern || new RegExp(schema.pattern).test(data);
-                throwError(!test && prefix + ' must match regex pattern ' +
-                    JSON.stringify(schema.pattern));
+                local.throwSwaggerError(!test && {
+                    data: data,
+                    errorType: 'stringPattern',
+                    prefix: options.prefix,
+                    schema: schema
+                });
                 break;
             // 5.3. Validation keywords for arrays
             case 'array':
@@ -3810,40 +4073,70 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                         data: element,
                         dataReadonlyRemove: [dataReadonlyRemove2, ii, dataReadonlyRemove2[ii]],
                         modeSchema: options.modeSchema,
-                        prefix: prefix + '[' + ii + ']',
-                        schema: schema.items || schema.additionalItems,
+                        prefix: options.prefix.concat([ii]),
+                        schema: local.schemaPItems(schema) || schema.additionalItems,
                         swaggerJson: options.swaggerJson
                     });
                 });
                 // 5.3.2. maxItems
                 test = typeof schema.maxItems !== 'number' || data.length <= schema.maxItems;
-                throwError(!test && prefix + ' must have <= ' + schema.maxItems + ' items');
+                local.throwSwaggerError(!test && {
+                    data: data,
+                    errorType: 'arrayMaxItems',
+                    prefix: options.prefix,
+                    schema: schema
+                });
                 // 5.3.3. minItems
                 test = typeof schema.minItems !== 'number' || data.length >= schema.minItems;
-                throwError(!test && prefix + ' must have >= ' + schema.minItems + ' items');
+                local.throwSwaggerError(!test && {
+                    data: data,
+                    errorType: 'arrayMinItems',
+                    prefix: options.prefix,
+                    schema: schema
+                });
                 // 5.3.4. uniqueItems
                 test = !schema.uniqueItems || data.every(function (element) {
                     tmp = element;
                     return data.indexOf(element) === data.lastIndexOf(element);
                 });
-                throwError(!test && prefix + ' must have unique items (contains duplicate item ' +
-                    JSON.stringify(tmp) + ')');
+                local.throwSwaggerError(!test && {
+                    data: data,
+                    errorType: 'arrayUniqueItems',
+                    prefix: options.prefix,
+                    schema: schema,
+                    tmp: tmp
+                });
                 break;
             // 5.4. Validation keywords for objects
             case 'object':
                 // 5.4.1. maxProperties
                 test = typeof schema.maxProperties !== 'number' ||
                     Object.keys(data).length <= schema.maxProperties;
-                throwError(!test && prefix + ' must have <= ' + schema.maxProperties + ' items');
+                local.throwSwaggerError(!test && {
+                    data: data,
+                    errorType: 'objectMaxProperties',
+                    prefix: options.prefix,
+                    schema: schema
+                });
                 // 5.4.2. minProperties
                 test = typeof schema.minProperties !== 'number' ||
                     Object.keys(data).length >= schema.minProperties;
-                throwError(!test && prefix + ' must have >= ' + schema.minProperties + ' items');
+                local.throwSwaggerError(!test && {
+                    data: data,
+                    errorType: 'objectMinProperties',
+                    prefix: options.prefix,
+                    schema: schema
+                });
                 // 5.4.3. required
                 local.normalizeValue('list', schema.required).forEach(function (key) {
                     test = !local.isNullOrUndefined(data[key]);
-                    throwError(!test && prefix + '[' + JSON.stringify(key) +
-                        "] - Schema properties specified as 'required' must be defined");
+                    local.throwSwaggerError(!test && {
+                        data: data,
+                        errorType: 'objectRequired',
+                        key: key,
+                        prefix: options.prefix,
+                        schema: schema
+                    });
                 });
                 // 5.4.4. additionalProperties, properties and patternProperties
                 Object.keys(data).forEach(function (key) {
@@ -3859,7 +4152,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                                 dataReadonlyRemove2[key]
                             ],
                             modeSchema: options.modeSchema,
-                            prefix: prefix + '[' + JSON.stringify(key) + ']',
+                            prefix: options.prefix.concat([key]),
                             schema: schema.properties[key],
                             swaggerJson: options.swaggerJson
                         });
@@ -3871,7 +4164,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                             local.validateBySwaggerSchema({
                                 data: data[key],
                                 modeSchema: options.modeSchema,
-                                prefix: prefix + '[' + JSON.stringify(key) + ']',
+                                prefix: options.prefix.concat([key]),
                                 schema: schema.patternProperties[rgx],
                                 swaggerJson: options.swaggerJson
                             });
@@ -3900,13 +4193,18 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
  * Validation of the instance succeeds if, after these two steps, set "s" is empty.
  */
                     test = tmp || schema.additionalProperties !== false;
-                    throwError(!test && prefix + ' cannot have additional property ' +
-                        JSON.stringify(key));
+                    local.throwSwaggerError(!test && {
+                        data: data,
+                        errorType: 'objectAdditionalProperties',
+                        key: key,
+                        prefix: options.prefix,
+                        schema: schema
+                    });
                     // recurse - schema.additionalProperties
                     local.validateBySwaggerSchema({
                         data: data[key],
                         modeSchema: options.modeSchema,
-                        prefix: prefix + '[' + JSON.stringify(key) + ']',
+                        prefix: options.prefix.concat([key]),
                         schema: schema.additionalProperties,
                         swaggerJson: options.swaggerJson
                     });
@@ -3921,29 +4219,40 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     local.validateBySwaggerSchema({
                         data: data[key],
                         modeSchema: options.modeSchema,
-                        prefix: prefix + '[' + JSON.stringify(key) + ']',
+                        prefix: options.prefix.concat([key]),
                         schema: schema.dependencies[key],
                         swaggerJson: options.swaggerJson
                     });
                     // 5.4.5.2.2. Property dependencies
                     local.normalizeValue('list', schema.dependencies[key]).every(function (key2) {
                         test = !local.isNullOrUndefined(data[key2]);
-                        throwError(!test && prefix + '[' + JSON.stringify(key) +
-                            '] is missing dependency ' + prefix + '[' + JSON.stringify(key2) + ']');
+                        local.throwSwaggerError(!test && {
+                            data: data,
+                            errorType: 'objectDependencies',
+                            key: key,
+                            key2: key2,
+                            prefix: options.prefix,
+                            schema: schema
+                        });
                     });
                 });
                 break;
             }
             // 5.5. Validation keywords for any instance type
             // 5.5.1. enum
-            tmp = schema.enum || (!options.modeSchema && schema.items && schema.items.enum);
+            tmp = schema.enum || (!options.modeSchema && (local.schemaPItems(schema) || {}).enum);
             test = !tmp || (Array.isArray(data)
                 ? data
                 : [data]).every(function (element) {
                 return tmp.indexOf(element) >= 0;
             });
-            throwError(!test && prefix + ' can only have items from the list ' +
-                JSON.stringify(tmp));
+            local.throwSwaggerError(!test && {
+                data: data,
+                errorType: 'itemEnum',
+                prefix: options.prefix,
+                schema: schema,
+                tmp: tmp
+            });
             // 5.5.2. type
             local.nop();
             // 5.5.3. allOf
@@ -3951,7 +4260,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                 // recurse - schema.allOf
                 local.validateBySwaggerSchema({
                     data: data,
-                    prefix: prefix,
+                    prefix: options.prefix,
                     modeSchema: options.modeSchema,
                     schema: element,
                     swaggerJson: options.swaggerJson
@@ -3965,17 +4274,22 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     local.validateBySwaggerSchema({
                         data: data,
                         modeSchema: options.modeSchema,
-                        prefix: prefix,
+                        prefix: options.prefix,
                         schema: element,
                         swaggerJson: options.swaggerJson
                     });
                     return true;
                 }, local.nop);
-                tmp = tmp || local.utility2._debugTryCatchErrorCaught;
+                tmp = tmp || local.utility2._debugTryCatchError;
                 return !tmp;
             });
-            throwError(!test && tmp.message + ' (from schema.anyOf ' +
-                JSON.stringify(schema.anyOf) + ')');
+            local.throwSwaggerError(!test && {
+                data: data,
+                errorType: 'itemOneOf',
+                prefix: options.prefix,
+                schema: schema,
+                tmp: tmp
+            });
             // 5.5.5. oneOf
             tmp = !schema.oneOf
                 ? 1
@@ -3986,7 +4300,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                     local.validateBySwaggerSchema({
                         data: data,
                         modeSchema: options.modeSchema,
-                        prefix: prefix,
+                        prefix: options.prefix,
                         schema: element,
                         swaggerJson: options.swaggerJson
                     });
@@ -3995,23 +4309,31 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                 return tmp > 1;
             });
             test = tmp === 1;
-            throwError(!test && prefix +
-                ' did not validate against exactly one schema (validated ' + tmp +
-                ') in schema.oneOf = ' + JSON.stringify(schema.oneOf));
+            local.throwSwaggerError(!test && {
+                data: data,
+                errorType: 'itemOneOf',
+                prefix: options.prefix,
+                schema: schema,
+                tmp: tmp
+            });
             // 5.5.6. not
             test = !schema.not || !local.tryCatchOnError(function () {
                 // recurse - schema.not
                 local.validateBySwaggerSchema({
                     data: data,
                     modeSchema: options.modeSchema,
-                    prefix: prefix,
+                    prefix: options.prefix,
                     schema: schema.not,
                     swaggerJson: options.swaggerJson
                 });
                 return true;
             }, local.nop);
-            throwError(!test && prefix + ' must not validate against schama.not = ' +
-                JSON.stringify(schema.not));
+            local.throwSwaggerError(!test && {
+                data: data,
+                errorType: 'itemNot',
+                prefix: options.prefix,
+                schema: schema
+            });
             // 5.5.7. definitions
             local.nop();
             // validate data.$ref
@@ -4019,7 +4341,7 @@ document.querySelector(".swggUiContainer > .header > .td2").value =\n\
                 local.validateBySwaggerSchema({
                     modeDereference: true,
                     modeSchema: options.modeSchema,
-                    prefix: prefix,
+                    prefix: options.prefix,
                     schema: data,
                     swaggerJson: options.swaggerJson
                 });

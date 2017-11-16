@@ -2043,7 +2043,7 @@ require('http').createServer(function (request, response) {
 )}
 
 shImageToDataUri() {(set -e
-# this function convert the image $FILE to a data-uri string
+# this function will convert the image $FILE to a data-uri string
     case "$1" in
     http://*)
         FILE=/tmp/shImageToDataUri.png

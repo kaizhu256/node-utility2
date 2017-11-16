@@ -388,6 +388,17 @@
          */
             options = {};
             options.base64 = local.base64FromString(local.stringAsciiCharset + '\u1234');
+            // test null-case handling-behavior
+            local.assertJsonEqual(local.base64FromBuffer(), '');
+            local.assertJsonEqual(local.base64FromHex(), '');
+            local.assertJsonEqual(local.base64FromString(), '');
+            local.assertJsonEqual(local.base64ToBuffer(), {});
+            local.assertJsonEqual(local.base64ToHex(), '');
+            local.assertJsonEqual(local.base64ToString(), '');
+            local.assertJsonEqual(local.base64FromBuffer(local.base64ToBuffer()), '');
+            local.assertJsonEqual(local.base64FromHex(local.base64ToHex()), '');
+            local.assertJsonEqual(local.base64FromString(local.base64ToString()), '');
+            // test commutation handling-behavior
             local.assertJsonEqual(
                 local.base64FromBuffer(local.base64ToBuffer(options.base64)),
                 options.base64
@@ -685,7 +696,7 @@
                 local.assert(!local.jslint.errorText, local.jslint.errorText);
                 // test csslint passed handling-behavior
                 local.jslintAndPrintConditional(
-                    '/*csslint*/\nbody { font: normal; }',
+                    '/*csslint*/\nbody { display: block; }',
                     'passed.css',
                     'force'
                 );
@@ -843,10 +854,6 @@
         /*
          * this function will test normalizeValue's default handling-behavior
          */
-            // test dict handling-behavior
-            local.assertJsonEqual(local.normalizeValue('dict', { aa: 1 }), { aa: 1 });
-            local.assertJsonEqual(local.normalizeValue('dict', null), {});
-            local.assertJsonEqual(local.normalizeValue('dict', []), {});
             // test list handling-behavior
             local.assertJsonEqual(local.normalizeValue('list', [1]), [1]);
             local.assertJsonEqual(local.normalizeValue('list', null), []);
@@ -903,7 +910,7 @@
         /*
          * this function will test objectSetDefault's default handling-behavior
          */
-            // test null-case handling behavior
+            // test null-case handling-behavior
             local.objectSetDefault();
             local.objectSetDefault({});
             // test falsey handling-behavior
@@ -938,7 +945,7 @@
         /*
          * this function will test objectSetOverride's default handling-behavior
          */
-            // test null-case handling behavior
+            // test null-case handling-behavior
             local.objectSetOverride();
             local.objectSetOverride({});
             // test falsey handling-behavior
@@ -1070,7 +1077,7 @@
                         onParallel.counter += 1;
                         // test error handling-behavior
                         onParallel(local.errorDefault, data);
-                        // test multiple callback handling behavior
+                        // test multiple callback handling-behavior
                         setTimeout(onParallel, 5000);
                     }, function (error) {
                         // validate error occurred
@@ -1405,12 +1412,29 @@
         /*
          * this function will test templateRender's default handling-behavior
          */
-            // test undefined valueDefault handling-behavior
+            // test null-case handling-behavior
+            local.assertJsonEqual(local.templateRender(), '');
+            // test undefined-value handling-behavior
             local.assertJsonEqual(local.templateRender('{{aa}}', {}), '{{aa}}');
+            // test basic handling-behavior
+            local.assertJsonEqual(local.templateRender('{{aa}}', {
+                aa: '```<aa\nbb>```'
+            }), '```&#x3c;aa\nbb&#x3e;```');
+            // test htmlBr handling-behavior
+            local.assertJsonEqual(local.templateRender('{{aa htmlBr}}', {
+                aa: '```<aa\nbb>```'
+            }), '```&#x3c;aa<br>bb&#x3e;```');
+            // test markdownSafe handling-behavior
+            local.assertJsonEqual(local.templateRender('{{aa markdownSafe notHtmlSafe}}', {
+                aa: '```<aa\nbb>```'
+            }), '\'\'\'<aa\nbb>\'\'\'');
+            // test notHtmlSafe handling-behavior
+            local.assertJsonEqual(local.templateRender('{{aa notHtmlSafe}}', {
+                aa: '```<aa\nbb>```'
+            }), '```<aa\nbb>```');
             // test default handling-behavior
             local.assertJsonEqual(local.templateRender('{{aa alphanumeric}} ' +
-                '{{aa htmlSafe br jsonStringify jsonStringify4 markdownCodeSafe ' +
-                'decodeURIComponent encodeURIComponent trim}} ' +
+                '{{aa jsonStringify jsonStringify4 decodeURIComponent encodeURIComponent trim}} ' +
                 '{{bb}} {{cc}} {{dd}} {{ee.ff}}', {
                     // test string value handling-behavior
                     aa: '`<aa>`',
@@ -1422,7 +1446,7 @@
                     dd: undefined,
                     // test nested value handling-behavior
                     ee: { ff: 'gg' }
-                }), '__aa__ %22%5C%22\'%26%23x3c%3Baa%26%23x3e%3B\'%5C%22%22 1 null {{dd}} gg');
+                }), '__aa__ %22%5C%22%60%3Caa%3E%60%5C%22%22 1 null {{dd}} gg');
             // test partial handling-behavior
             local.assertJsonEqual(local.templateRender('{{#undefined aa}}\n' +
                 'list1{{#each list1}}\n' +
@@ -1471,6 +1495,12 @@
                 '    \n' +
                 '\n' +
                 '{{/undefined aa}}\n');
+            // test error handling-behavior
+            local.tryCatchOnError(function () {
+                local.templateRender('{{aa bb}}', { aa: 1 });
+            }, local.nop);
+            // validate error occurred
+            local.assert(local._debugTryCatchError, local._debugTryCatchError);
             onError(null, options);
         };
 
@@ -1668,11 +1698,11 @@
             onError(null, options);
         };
 
-        local.testCase_domFragmentRender_default = function (options, onError) {
+        local.testCase_domElementRender_default = function (options, onError) {
         /*
-         * this function will test domFragmentRender's default handling-behavior
+         * this function will test domElementRender's default handling-behavior
          */
-            local.assertJsonEqual(local.domFragmentRender('<div>{{value}}</div>', {
+            local.assertJsonEqual(local.domElementRender('<div>{{value}}</div>', {
                 value: 'aa'
             }).children[0].outerHTML, '<div>aa</div>');
             onError(null, options);
@@ -2338,7 +2368,7 @@
                 onError(null, options);
             });
             options.socket.write(options.input + '\n');
-            // test error-handling behavior
+            // test error handling-behavior
             options.socket.end('undefined()\n');
         };
 

@@ -124,16 +124,25 @@ local.assetsDict['/assets.index.template.html'] = '\
     box-sizing: false,\n\
     universal-selector: false\n\
 */\n\
-* {\n\
+*,\n\
+*:after,\n\
+*:before {\n\
     box-sizing: border-box;\n\
 }\n\
 body {\n\
     background: #dde;\n\
     font-family: Arial, Helvetica, sans-serif;\n\
-    margin: 20px;\n\
+    margin: 0 40px;\n\
 }\n\
-body > * {\n\
-    margin-bottom: 10px;\n\
+body > a,\n\
+body > button,\n\
+body > div,\n\
+body > input,\n\
+body > pre,\n\
+body > select,\n\
+body > span,\n\
+body > textarea {\n\
+    margin-bottom: 20px;\n\
 }\n\
 body > button {\n\
     width: 20rem;\n\
@@ -141,9 +150,20 @@ body > button {\n\
 button {\n\
     cursor: pointer;\n\
 }\n\
-.textOverflowEllipsis {\n\
-    text-overflow: ellipsis;\n\
-    white-space: nowrap;\n\
+@keyframes uiAnimateShake {\n\
+    100% {\n\
+        transform: translateX(0);\n\
+    }\n\
+    0%, 20%, 60% {\n\
+        transform: translateX(10px);\n\
+    }\n\
+    40%, 80% {\n\
+        transform: translateX(-10px);\n\
+    }\n\
+}\n\
+.uiAnimateShake {\n\
+    animation-duration: 500ms;\n\
+    animation-name: uiAnimateShake;\n\
 }\n\
 .uiAnimateSlide {\n\
     overflow-y: hidden;\n\
@@ -155,13 +175,13 @@ button {\n\
 }\n\
 .uiAnimateSpin {\n\
     animation: uiAnimateSpin 2s linear infinite;\n\
-    border: 0.5rem solid #999;\n\
+    border: 6px solid #999;\n\
     border-radius: 50%;\n\
-    border-top: 0.5rem solid #7d7;\n\
+    border-top: 8px solid #7d7;\n\
     display: inline-block;\n\
-    height: 2rem;\n\
+    height: 25px;\n\
     vertical-align: middle;\n\
-    width: 2rem;\n\
+    width: 25px;\n\
 }\n\
 .utility2FooterDiv {\n\
     text-align: center;\n\
@@ -188,7 +208,7 @@ textarea[readonly] {\n\
 </style>\n\
 </head>\n\
 <body>\n\
-<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%;"></div>\n\
+<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
 <script>\n\
 /*jslint\n\
     bitwise: true,\n\
@@ -856,7 +876,7 @@ local.assetsDict['/assets.readmeCustomOrg.npmdoc.template.md'] = '\
 \n\
 ```json\n\
 \n\
-{{packageJson jsonStringify4 markdownCodeSafe}}\n\
+{{packageJson jsonStringify4 markdownSafe}}\n\
 ```\n\
 \n\
 \n\
@@ -911,7 +931,7 @@ local.assetsDict['/assets.readmeCustomOrg.npmtest.template.md'] = '\
 \n\
 ```json\n\
 \n\
-{{packageJson jsonStringify4 markdownCodeSafe}}\n\
+{{packageJson jsonStringify4 markdownSafe}}\n\
 ```\n\
 \n\
 \n\
@@ -1044,7 +1064,7 @@ local.assetsDict['/assets.testReport.template.html'] = '\
     <span>test date</span>- {{date}}<br>\n\
     <span>commit info</span>-\n\
         {{#if env.CI_COMMIT_INFO}}\n\
-        {{env.CI_COMMIT_INFO htmlSafe}}<br>\n\
+        {{env.CI_COMMIT_INFO}}<br>\n\
         {{#unless env.CI_COMMIT_INFO}}\n\
         undefined<br>\n\
         {{/if env.CI_COMMIT_INFO}}\n\
@@ -1069,7 +1089,7 @@ local.assetsDict['/assets.testReport.template.html'] = '\
 {{#each testPlatformList}}\n\
 <div class="platform">\n\
 <h4>\n\
-    {{testPlatformNumber}}. {{name htmlSafe}}<br>\n\
+    {{testPlatformNumber}}. {{name}}<br>\n\
     {{#if screenshot}}\n\
     <a href="{{screenshot encodeURIComponent}}">\n\
         <img src="{{screenshot encodeURIComponent}}">\n\
@@ -1101,7 +1121,7 @@ local.assetsDict['/assets.testReport.template.html'] = '\
 </table>\n\
 <pre class="{{preClass}}">\n\
 {{#each errorStackList}}\n\
-{{errorStack htmlSafe}}\n\
+{{errorStack}}\n\
 {{/each errorStackList}}\n\
 </pre>\n\
 </div>\n\
@@ -2082,6 +2102,7 @@ local.assetsDict['/favicon.ico'] = '';
          * this function will convert the Uint8Array-bff to base64-encoded-text
          */
             var ii, mod3, text, uint24, uint6ToB64;
+            bff = bff || [];
             text = '';
             uint24 = 0;
             uint6ToB64 = function (uint6) {
@@ -2117,6 +2138,7 @@ local.assetsDict['/favicon.ico'] = '';
          */
             var bff, ii;
             bff = [];
+            text = text || '';
             for (ii = 0; ii < text.length; ii += 2) {
                 bff.push(parseInt(text[ii] + text[ii + 1], 16));
             }
@@ -2136,6 +2158,7 @@ local.assetsDict['/favicon.ico'] = '';
          * https://gist.github.com/wang-bin/7332335
          * this function will convert the base64-encoded text to Uint8Array
          */
+            text = text || '';
             var de = new Uint8Array(text.length); //3/4
             var u = 0, q = '', x = '', c;
             var map64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -2799,6 +2822,7 @@ function TranslateElementInit() {\n\
                         });
                         // deduplicate '/'
                         Object.keys(data.hrefDict).forEach(function (key) {
+                            // optimization - hasOwnProperty
                             if (data.hrefDict.hasOwnProperty(key + '/') ||
                                     (/\.(?:css|js)$/).test(key)) {
                                 data.hrefDict[key] = undefined;
@@ -3874,7 +3898,7 @@ return Utf8ArrayToStr(bff);
             return self;
         };
 
-        local.domFragmentRender = function (template, dict) {
+        local.domElementRender = function (template, dict) {
         /*
          * this function will return a dom-fragment rendered from the givent template and dict
          */
@@ -4677,10 +4701,6 @@ return Utf8ArrayToStr(bff);
          * this function will normalize the value by type
          */
             switch (type) {
-            case 'dict':
-                return typeof value === 'object' && value && !Array.isArray(value)
-                    ? value
-                    : valueDefault || {};
             case 'list':
                 return Array.isArray(value)
                     ? value
@@ -5891,12 +5911,13 @@ instruction\n\
             options.onNext();
         };
 
-        local.templateRender = function (template, dict) {
+        local.templateRender = function (template, dict, options) {
         /*
          * this function will render the template with the given dict
          */
-            var argList, getValue, match, renderPartial, rgx, value;
+            var argList, getValue, match, renderPartial, rgx, tryCatch, value;
             dict = dict || {};
+            options = options || {};
             getValue = function (key) {
                 argList = key.split(' ');
                 value = dict;
@@ -5913,7 +5934,7 @@ instruction\n\
                     return Array.isArray(value)
                         ? value.map(function (dict) {
                             // recurse with partial
-                            return local.templateRender(partial, dict);
+                            return local.templateRender(partial, dict, options);
                         }).join('')
                         : '';
                 case 'if':
@@ -5923,15 +5944,26 @@ instruction\n\
                         // handle 'unless' case
                         : partial.slice(1).join('{{#unless ' + key + '}}');
                     // recurse with partial
-                    return local.templateRender(partial, dict);
+                    return local.templateRender(partial, dict, options);
                 case 'unless':
                     return getValue(key)
                         ? ''
                         // recurse with partial
-                        : local.templateRender(partial, dict);
+                        : local.templateRender(partial, dict, options);
                 default:
                     // recurse with partial
-                    return match0[0] + local.templateRender(match0.slice(1), dict);
+                    return match0[0] + local.templateRender(match0.slice(1), dict, options);
+                }
+            };
+            tryCatch = function (fnc, message) {
+            /*
+             * this function will prepend the message to errorCaught
+             */
+                try {
+                    return fnc();
+                } catch (errorCaught) {
+                    errorCaught.message = message + errorCaught.message;
+                    throw errorCaught;
                 }
             };
             // render partials
@@ -5948,44 +5980,57 @@ instruction\n\
             }
             // search for keys in the template
             return template.replace((/\{\{[^}]+?\}\}/g), function (match0) {
-                getValue(match0.slice(2, -2));
-                if (value === undefined) {
-                    return match0;
-                }
-                argList.slice(1).forEach(function (arg) {
-                    switch (arg) {
-                    case 'alphanumeric':
-                        value = value.replace((/\W/g), '_');
-                        break;
-                    case 'br':
-                        value = value.replace((/\n/g), '<br>');
-                        break;
-                    case 'decodeURIComponent':
-                        value = decodeURIComponent(value);
-                        break;
-                    case 'encodeURIComponent':
-                        value = encodeURIComponent(value);
-                        break;
-                    case 'htmlSafe':
+                var htmlBr, notHtmlSafe;
+                notHtmlSafe = options.notHtmlSafe;
+                return tryCatch(function () {
+                    getValue(match0.slice(2, -2));
+                    if (value === undefined) {
+                        return match0;
+                    }
+                    argList.slice(1).forEach(function (arg) {
+                        switch (arg) {
+                        case 'alphanumeric':
+                            value = value.replace((/\W/g), '_');
+                            break;
+                        case 'decodeURIComponent':
+                            value = decodeURIComponent(value);
+                            break;
+                        case 'encodeURIComponent':
+                            value = encodeURIComponent(value);
+                            break;
+                        case 'htmlBr':
+                            htmlBr = true;
+                            break;
+                        case 'jsonStringify':
+                            value = JSON.stringify(value);
+                            break;
+                        case 'jsonStringify4':
+                            value = JSON.stringify(value, null, 4);
+                            break;
+                        case 'markdownSafe':
+                            value = value.replace((/`/g), '\'');
+                            break;
+                        case 'notHtmlSafe':
+                            notHtmlSafe = true;
+                            break;
+                        // default to String.prototype[arg]()
+                        default:
+                            value = value[arg]();
+                            break;
+                        }
+                    });
+                    value = String(value);
+                    // default to htmlSafe
+                    if (!notHtmlSafe) {
                         value = value.replace((/["&'<>]/g), function (match0) {
                             return '&#x' + match0.charCodeAt(0).toString(16) + ';';
                         });
-                        break;
-                    case 'jsonStringify':
-                        value = JSON.stringify(value);
-                        break;
-                    case 'jsonStringify4':
-                        value = JSON.stringify(value, null, 4);
-                        break;
-                    case 'markdownCodeSafe':
-                        value = value.replace((/`/g), '\'');
-                        break;
-                    default:
-                        value = value[arg]();
-                        break;
                     }
-                });
-                return String(value);
+                    if (htmlBr) {
+                        value = value.replace((/\n/g), '<br>');
+                    }
+                    return value;
+                }, 'templateRender could not render expression ' + JSON.stringify(match0) + '\n');
             });
         };
 
@@ -6674,13 +6719,13 @@ instruction\n\
             local.assert(typeof onError === 'function', typeof onError);
             try {
                 // reset errorCaught
-                local._debugTryCatchErrorCaught = null;
+                local._debugTryCatchError = null;
                 result = fnc();
-                local._debugTryCatchErrorCaught = null;
+                local._debugTryCatchError = null;
                 return result;
             } catch (errorCaught) {
                 // debug errorCaught
-                local._debugTryCatchErrorCaught = errorCaught;
+                local._debugTryCatchError = errorCaught;
                 return onError(errorCaught);
             }
         };
