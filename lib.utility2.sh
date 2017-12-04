@@ -293,7 +293,8 @@ shBuildCi() {(set -e
     # init $CI_COMMIT_*
     export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)"
     export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE"
-    export CI_COMMIT_MESSAGE_META="$(printf "#$CI_COMMIT_MESSAGE" | sed "s/.*\(\[.*\]\).*/\1/")"
+    export CI_COMMIT_MESSAGE_META="$(printf "#$CI_COMMIT_MESSAGE" | \
+        sed -e "s/\].*/]/" -e "s/.*\[/[/")"
     # decrypt and exec encrypted data
     if [ "$CRYPTO_AES_KEY" ]
     then
@@ -1519,59 +1520,59 @@ shFileJsonNormalize() {(set -e
 var local;
 local = {};
 local.fs = require('fs');
-local.jsonStringifyOrdered = function (element, replacer, space) {
+local.jsonStringifyOrdered = function (jsonObj, replacer, space) {
 /*
- * this function will JSON.stringify the element,
+ * this function will JSON.stringify the jsonObj,
  * with object-keys sorted and circular-references removed
  */
     var circularList, stringify, tmp;
-    stringify = function (element) {
+    stringify = function (jsonObj) {
     /*
-     * this function will recursively JSON.stringify the element,
+     * this function will recursively JSON.stringify the jsonObj,
      * with object-keys sorted and circular-references removed
      */
-        // if element is an object, then recurse its items with object-keys sorted
-        if (element &&
-                typeof element === 'object' &&
-                typeof element.toJSON !== 'function') {
+        // if jsonObj is an object, then recurse its items with object-keys sorted
+        if (jsonObj &&
+                typeof jsonObj === 'object' &&
+                typeof jsonObj.toJSON !== 'function') {
             // ignore circular-reference
-            if (circularList.indexOf(element) >= 0) {
+            if (circularList.indexOf(jsonObj) >= 0) {
                 return;
             }
-            circularList.push(element);
-            // if element is an array, then recurse its elements
-            if (Array.isArray(element)) {
-                return '[' + element.map(function (element) {
+            circularList.push(jsonObj);
+            // if jsonObj is an array, then recurse its jsonObjs
+            if (Array.isArray(jsonObj)) {
+                return '[' + jsonObj.map(function (jsonObj) {
                     // recurse
-                    tmp = stringify(element);
+                    tmp = stringify(jsonObj);
                     return typeof tmp === 'string'
                         ? tmp
                         : 'null';
                 }).join(',') + ']';
             }
-            return '{' + Object.keys(element)
+            return '{' + Object.keys(jsonObj)
                 // sort object-keys
                 .sort()
                 .map(function (key) {
                     // recurse
-                    tmp = stringify(element[key]);
+                    tmp = stringify(jsonObj[key]);
                     if (typeof tmp === 'string') {
                         return JSON.stringify(key) + ':' + tmp;
                     }
                 })
-                .filter(function (element) {
-                    return typeof element === 'string';
+                .filter(function (jsonObj) {
+                    return typeof jsonObj === 'string';
                 })
                 .join(',') + '}';
         }
         // else JSON.stringify as normal
-        return JSON.stringify(element);
+        return JSON.stringify(jsonObj);
     };
     circularList = [];
-    return JSON.stringify(typeof element === 'object' && element
+    return JSON.stringify(typeof jsonObj === 'object' && jsonObj
         // recurse
-        ? JSON.parse(stringify(element))
-        : element, replacer, space);
+        ? JSON.parse(stringify(jsonObj))
+        : jsonObj, replacer, space);
 };
 local.objectSetDefault = function (arg, defaults, depth) {
 /*
@@ -1695,7 +1696,7 @@ console.log('var aa = [\\n\"\",' + require('fs').readFileSync('$FILE', 'utf8')
     // remove non-match
     .replace((/^(?:[^\\n\"]|\"\W|\"\").*/gm), '')
     // remove newline
-    .replace((/\\n{2,}/gm), '\\n') + '];\n\
+    .replace((/\\n{2,}/gm), '\\n') + '\"\"\n];\n\
 aa = aa.slice(0, aa.indexOf(\"\"));\n\
 var bb = aa.slice().sort();\n\
 aa.forEach(function (aa, ii) {\n\

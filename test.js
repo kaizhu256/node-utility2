@@ -603,8 +603,8 @@
                             onError();
                         }
                     },
-                    setTimeoutOnError: function (onError, error) {
-                        onError(error);
+                    setTimeoutOnError: function (onError, timeout, error) {
+                        onError(error, timeout);
                     }
                 }]
             ], function (onError) {
@@ -918,7 +918,7 @@
                 ['', 0, false, null, undefined].forEach(function (bb) {
                     local.assertJsonEqual(
                         local.objectSetDefault({ data: aa }, { data: bb }).data,
-                        bb === undefined
+                        aa === 0 || aa === false || bb === undefined
                             ? aa
                             : bb
                     );
@@ -930,14 +930,14 @@
                 { aa: 2, bb: { dd: 2 }, cc: { dd: { ee: 2 } }, dd: [2, 2], ee: { ff: 2 } },
                 // test default-depth handling-behavior
                 null
-            ), { aa: 2, bb: { cc: 1 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] });
+            ), { aa: 0, bb: { cc: 1 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] });
             // test recursive handling-behavior
             local.assertJsonEqual(local.objectSetDefault(
                 { aa: 0, bb: { cc: 1 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] },
                 { aa: 2, bb: { dd: 2 }, cc: { dd: { ee: 2 } }, dd: [2, 2], ee: { ff: 2 } },
                 // test depth handling-behavior
                 2
-            ), { aa: 2, bb: { cc: 1, dd: 2 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] });
+            ), { aa: 0, bb: { cc: 1, dd: 2 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] });
             onError(null, options);
         };
 
@@ -1235,7 +1235,7 @@
             // test null-case handling-behavior
             local.assertJsonEqual(local.setTimeoutOnError(), undefined);
             // test onError handling-behavior
-            local.assertJsonEqual(local.setTimeoutOnError(onError, null, options), {});
+            local.assertJsonEqual(local.setTimeoutOnError(onError, 0, null, options), {});
         };
 
         local.testCase_sjclHashScryptXxx_default = function (options, onError) {
@@ -1767,18 +1767,33 @@
             }, onError);
         };
 
-        local.testCase_uiAnimateSlideXxx_default = function (options, onError) {
+        local.testCase_uiAnimateXxx_default = function (options, onError) {
         /*
-         * this function will test uiAnimateSlideXxx's default handling-behavior
+         * this function will test uiAnimateXxx's default handling-behavior
          */
-            // test null-case handling-behavior
+            options = document.createElement('div');
+            // test uiAnimateShake handling-behavior
+            local.uiAnimateShake();
+            local.uiAnimateShake(options);
+            local.assert(options.classList.contains('uiAnimateShake'), options.classList);
+            local.uiAnimateShake(options);
+            local.assert(options.classList.contains('uiAnimateShake'), options.classList);
+            // test uiAnimateShakeIfError handling-behavior
+            local.uiAnimateShakeIfError();
+            local.uiAnimateShakeIfError(null, options);
+            local.assert(!options.classList.contains('hasError'), options.classList);
+            local.uiAnimateShakeIfError(true, options);
+            local.assert(options.classList.contains('hasError'), options.classList);
+            local.uiAnimateShakeIfError(null, options);
+            local.assert(!options.classList.contains('hasError'), options.classList);
+            // test uiAnimateSlideXxx handling-behavior
             local.uiAnimateSlideDown();
             local.uiAnimateSlideUp();
-            // test default handling-behavior
-            options = document.createElement('div');
             options.classList.add('uiAnimateSlide');
             local.uiAnimateSlideDown(options);
+            local.assert(options.style.maxHeight.indexOf('px') >= 0, options.style.maxHeight);
             local.uiAnimateSlideUp(options);
+            local.assertJsonEqual(options.style.maxHeight, '0px');
             // test uiAnimateSlideAccordian handling-behavior
             local.uiAnimateSlideAccordian(options, [options, document.createElement('div')]);
             onError(null, options);

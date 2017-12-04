@@ -233,7 +233,10 @@
                     return;
                 }
                 // init arg[key] to default value defaults[key]
-                if (!arg2) {
+                switch (arg2) {
+                case '':
+                case null:
+                case undefined:
                     arg[key] = defaults2;
                     return;
                 }

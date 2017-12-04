@@ -229,11 +229,10 @@
                 file = file
                     .replace((/\bhtml\b/g), 'x-istanbul-html')
                     .replace((/<style>[\S\s]+?<\/style>/), function (match0) {
-                        return match0
-                            .replace((/\S.*?\{/g), function (match0) {
-                                return 'x-istanbul-html ' + match0
-                                    .replace((/,/g), ', x-istanbul-html ');
-                            });
+                        return match0.replace((/\S.*?\{/g), function (match0) {
+                            return 'x-istanbul-html ' +
+                                match0.replace((/,/g), ', x-istanbul-html ');
+                        });
                     })
                     .replace('position: fixed;', 'position: static;')
                     .replace('margin-top: 170px;', 'margin-top: 10px;');
@@ -343,8 +342,7 @@
             local.coverageReportHtml = '';
             local.coverageReportHtml += '<div class="coverageReportDiv">\n' +
                 '<h1>coverage-report</h1>\n' +
-                '<div ' +
-                'style="background: #fff; border: 1px solid #000; margin 0; padding: 0;">\n';
+                '<div style="background: #fff; border: 1px solid #000; margin 0; padding: 0;">\n';
             local.writerData = '';
             options.sourceStore = {};
             options.writer = local.writer;
@@ -372,10 +370,11 @@
                         // edit coverage badge percent
                         .replace((/100.0/g), options.pct)
                         // edit coverage badge color
-                        .replace((/0d0/g), ('0' + Math.round((100 - options.pct) * 2.21)
-                            .toString(16)).slice(-2) +
-                            ('0' + Math.round(options.pct * 2.21).toString(16)).slice(-2) +
-                            '00')
+                        .replace(
+                            (/0d0/g),
+                            ('0' + Math.round((100 - options.pct) * 2.21).toString(16)).slice(-2) +
+                                ('0' + Math.round(options.pct * 2.21).toString(16)).slice(-2) + '00'
+                        )
                 );
             }
             console.log('created coverage file ' + options.dir + '/index.html');
@@ -2662,11 +2661,11 @@ local.templateCoverageBadgeSvg =
             // add coverage hook to require
             local._istanbul_moduleExtensionsJs = local._istanbul_module._extensions['.js'];
             local._istanbul_module._extensions['.js'] = function (module, file) {
-                if (typeof file === 'string' &&
-                        (file.indexOf(process.env.npm_config_mode_coverage_dir) === 0 || (
-                            file.indexOf(process.cwd()) === 0 &&
-                            file.indexOf(process.cwd() + '/node_modules/') !== 0
-                        ))) {
+                if (typeof file === 'string' && (
+                        file.indexOf(process.env.npm_config_mode_coverage_dir) === 0 ||
+                        (file.indexOf(process.cwd()) === 0 &&
+                            file.indexOf(process.cwd() + '/node_modules/') !== 0)
+                    )) {
                     module._compile(local.instrumentInPackage(
                         local.fs.readFileSync(file, 'utf8'),
                         file

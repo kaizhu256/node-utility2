@@ -61,13 +61,11 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changelog for v2017.11.15
-- npm publish 2017.11.15
-- function base64Xxx - handle null-cases
-- function templateRender - default to htmlSafe and override with flag modeNotHtmlSafe
-- replace use-case normalizeValue('dict', value) with objectSetDefault(value)
-- lib.jslint.js - update csslint to v1.0.5
-- lib.swgg.js - ui - merge template templateUiResponseAjax into templateUiOperation
+#### changelog for v2017.12.4
+- npm publish 2017.12.4
+- change function objectSetDefault behavior to ignore 0 and false
+- change function setTimeoutOnError signature to function (onError, timeout, error, data)
+- fix parsing env var \$CI_COMMIT_MESSAGE_META
 - none
 
 #### this package requires
@@ -398,7 +396,6 @@ instruction
 <title>{{env.npm_package_name}} (v{{env.npm_package_version}})</title>\n\
 <style>\n\
 /*csslint\n\
-    box-model: false,\n\
     box-sizing: false,\n\
     universal-selector: false\n\
 */\n\
@@ -445,21 +442,11 @@ button {\n\
 }\n\
 .uiAnimateSlide {\n\
     overflow-y: hidden;\n\
-    transition: border-bottom 250ms, border-top 250ms, margin-bottom 250ms, margin-top 250ms, max-height 250ms, min-height 250ms, padding-bottom 250ms, padding-top 250ms;\n\
+    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;\n\
 }\n\
 @keyframes uiAnimateSpin {\n\
     0% { transform: rotate(0deg); }\n\
     100% { transform: rotate(360deg); }\n\
-}\n\
-.uiAnimateSpin {\n\
-    animation: uiAnimateSpin 2s linear infinite;\n\
-    border: 6px solid #999;\n\
-    border-radius: 50%;\n\
-    border-top: 8px solid #7d7;\n\
-    display: inline-block;\n\
-    height: 25px;\n\
-    vertical-align: middle;\n\
-    width: 25px;\n\
 }\n\
 .utility2FooterDiv {\n\
     text-align: center;\n\
@@ -491,6 +478,7 @@ textarea[readonly] {\n\
 </head>\n\
 <body>\n\
 <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
+<div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
 <script>\n\
 /*jslint\n\
     bitwise: true,\n\
@@ -821,7 +809,7 @@ utility2-comment -->\n\
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.11.15"
+    "version": "2017.12.4"
 }
 ```
 

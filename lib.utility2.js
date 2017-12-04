@@ -120,7 +120,6 @@ local.assetsDict['/assets.index.template.html'] = '\
 <title>{{env.npm_package_name}} (v{{env.npm_package_version}})</title>\n\
 <style>\n\
 /*csslint\n\
-    box-model: false,\n\
     box-sizing: false,\n\
     universal-selector: false\n\
 */\n\
@@ -167,21 +166,11 @@ button {\n\
 }\n\
 .uiAnimateSlide {\n\
     overflow-y: hidden;\n\
-    transition: border-bottom 250ms, border-top 250ms, margin-bottom 250ms, margin-top 250ms, max-height 250ms, min-height 250ms, padding-bottom 250ms, padding-top 250ms;\n\
+    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;\n\
 }\n\
 @keyframes uiAnimateSpin {\n\
     0% { transform: rotate(0deg); }\n\
     100% { transform: rotate(360deg); }\n\
-}\n\
-.uiAnimateSpin {\n\
-    animation: uiAnimateSpin 2s linear infinite;\n\
-    border: 6px solid #999;\n\
-    border-radius: 50%;\n\
-    border-top: 8px solid #7d7;\n\
-    display: inline-block;\n\
-    height: 25px;\n\
-    vertical-align: middle;\n\
-    width: 25px;\n\
 }\n\
 .utility2FooterDiv {\n\
     text-align: center;\n\
@@ -209,6 +198,7 @@ textarea[readonly] {\n\
 </head>\n\
 <body>\n\
 <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
+<div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
 <script>\n\
 /*jslint\n\
     bitwise: true,\n\
@@ -633,7 +623,7 @@ local.assetsDict['/assets.readme.template.md'] = '\
 the greatest app in the world!\n\
 \n\
 # live web demo\n\
-- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app)\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app)\n\
 \n\
 [![screenshot](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app)\n\
 \n\
@@ -3890,7 +3880,7 @@ return Utf8ArrayToStr(bff);
                     self.save(options.onNext);
                     break;
                 default:
-                    local.setTimeoutOnError(onError, error, self);
+                    local.setTimeoutOnError(onError, 0, error, self);
                 }
             });
             options.modeNext = 0;
@@ -4138,68 +4128,68 @@ return Utf8ArrayToStr(bff);
             return script;
         };
 
-        local.jsonCopy = function (arg) {
+        local.jsonCopy = function (jsonObj) {
         /*
-         * this function will return a deep-copy of the JSON-arg
+         * this function will return a deep-copy of the jsonObj
          */
-            return arg === undefined
+            return jsonObj === undefined
                 ? undefined
-                : JSON.parse(JSON.stringify(arg));
+                : JSON.parse(JSON.stringify(jsonObj));
         };
 
-        local.jsonStringifyOrdered = function (element, replacer, space) {
+        local.jsonStringifyOrdered = function (jsonObj, replacer, space) {
         /*
-         * this function will JSON.stringify the element,
+         * this function will JSON.stringify the jsonObj,
          * with object-keys sorted and circular-references removed
          */
             var circularList, stringify, tmp;
-            stringify = function (element) {
+            stringify = function (jsonObj) {
             /*
-             * this function will recursively JSON.stringify the element,
+             * this function will recursively JSON.stringify the jsonObj,
              * with object-keys sorted and circular-references removed
              */
-                // if element is an object, then recurse its items with object-keys sorted
-                if (element &&
-                        typeof element === 'object' &&
-                        typeof element.toJSON !== 'function') {
+                // if jsonObj is an object, then recurse its items with object-keys sorted
+                if (jsonObj &&
+                        typeof jsonObj === 'object' &&
+                        typeof jsonObj.toJSON !== 'function') {
                     // ignore circular-reference
-                    if (circularList.indexOf(element) >= 0) {
+                    if (circularList.indexOf(jsonObj) >= 0) {
                         return;
                     }
-                    circularList.push(element);
-                    // if element is an array, then recurse its elements
-                    if (Array.isArray(element)) {
-                        return '[' + element.map(function (element) {
+                    circularList.push(jsonObj);
+                    // if jsonObj is an array, then recurse its jsonObjs
+                    if (Array.isArray(jsonObj)) {
+                        return '[' + jsonObj.map(function (jsonObj) {
                             // recurse
-                            tmp = stringify(element);
+                            tmp = stringify(jsonObj);
                             return typeof tmp === 'string'
                                 ? tmp
                                 : 'null';
                         }).join(',') + ']';
                     }
-                    return '{' + Object.keys(element)
+                    return '{' + Object.keys(jsonObj)
                         // sort object-keys
                         .sort()
                         .map(function (key) {
                             // recurse
-                            tmp = stringify(element[key]);
+                            tmp = stringify(jsonObj[key]);
                             if (typeof tmp === 'string') {
                                 return JSON.stringify(key) + ':' + tmp;
                             }
                         })
-                        .filter(function (element) {
-                            return typeof element === 'string';
+                        .filter(function (jsonObj) {
+                            return typeof jsonObj === 'string';
                         })
                         .join(',') + '}';
                 }
                 // else JSON.stringify as normal
-                return JSON.stringify(element);
+                return JSON.stringify(jsonObj);
             };
             circularList = [];
-            return JSON.stringify(typeof element === 'object' && element
+            return JSON.stringify(typeof jsonObj === 'object' && jsonObj
                 // recurse
-                ? JSON.parse(stringify(element))
-                : element, replacer, space);
+                ? JSON.parse(stringify(jsonObj))
+                : jsonObj, replacer, space);
         };
 
         local.jwtA256GcmDecrypt = function (token, key) {
@@ -4770,7 +4760,10 @@ return Utf8ArrayToStr(bff);
                     return;
                 }
                 // init arg[key] to default value defaults[key]
-                if (!arg2) {
+                switch (arg2) {
+                case '':
+                case null:
+                case undefined:
                     arg[key] = defaults2;
                     return;
                 }
@@ -5661,14 +5654,14 @@ instruction\n\
             response.on('finish', onError);
         };
 
-        local.setTimeoutOnError = function (onError, error, data) {
+        local.setTimeoutOnError = function (onError, timeout, error, data) {
         /*
          * this function will async-call onError
          */
             if (typeof onError === 'function') {
                 setTimeout(function () {
                     onError(error, data);
-                });
+                }, timeout);
             }
             return data;
         };
@@ -6743,7 +6736,43 @@ instruction\n\
             return data;
         };
 
-        local.uiAnimateSlideAccordian = function (element, elementList, callback) {
+        local.uiAnimateShake = function (element, onError) {
+        /*
+         * this function will shake the dom-element
+         */
+            if (!element || element.classList.contains('uiAnimateShake')) {
+                local.setTimeoutOnError(onError);
+                return;
+            }
+            element.classList.add('uiAnimateShake');
+            setTimeout(function () {
+                element.classList.remove('uiAnimateShake');
+                local.setTimeoutOnError(onError);
+            }, 500);
+        };
+
+        local.uiAnimateShakeIfError = function (error, element, onError) {
+        /*
+         * this function will shake the dom-element if error occurred
+         */
+            var hasError;
+            if (!element) {
+                local.setTimeoutOnError(onError);
+                return;
+            }
+            hasError = element.classList.contains('hasError');
+            if (error && !hasError) {
+                element.classList.add('hasError');
+                local.uiAnimateShake(element, onError);
+                return;
+            }
+            if (!error && hasError) {
+                element.classList.remove('hasError');
+            }
+            local.setTimeoutOnError(onError);
+        };
+
+        local.uiAnimateSlideAccordian = function (element, elementList, onError) {
         /*
          * this function will slideDown the element,
          * and slideUp all other elements in elementList
@@ -6753,18 +6782,20 @@ instruction\n\
                     local.uiAnimateSlideUp(element2);
                 }
             });
-            local.uiAnimateSlideDown(element, callback);
+            setTimeout(function () {
+                local.uiAnimateSlideDown(element, onError);
+            }, 250);
         };
 
-        local.uiAnimateSlideDown = function (element, callback) {
+        local.uiAnimateSlideDown = function (element, onError) {
         /*
          * this function will slideDown the dom-element
          */
-            callback = callback || local.nop;
+            onError = onError || local.nop;
             if (!(element &&
                     element.style && element.style.maxHeight !== '100%' &&
                     element.classList && element.classList.contains('uiAnimateSlide'))) {
-                setTimeout(callback);
+                onError();
                 return;
             }
             element.style.borderBottom = '';
@@ -6776,19 +6807,18 @@ instruction\n\
             element.style.paddingTop = '';
             setTimeout(function () {
                 element.style.maxHeight = '100%';
-                callback();
+                onError();
             }, 250);
         };
 
-        local.uiAnimateSlideUp = function (element, callback) {
+        local.uiAnimateSlideUp = function (element, onError) {
         /*
          * this function will slideUp the dom-element
          */
-            callback = callback || local.nop;
             if (!(element &&
                     element.style && element.style.maxHeight !== '0px' &&
                     element.classList && element.classList.contains('uiAnimateSlide'))) {
-                setTimeout(callback);
+                local.setTimeoutOnError(onError);
                 return;
             }
             element.style.borderBottom = '0';
@@ -6798,7 +6828,7 @@ instruction\n\
             element.style.maxHeight = '0';
             element.style.paddingBottom = '0';
             element.style.paddingTop = '0';
-            setTimeout(callback, 250);
+            local.setTimeoutOnError(onError, 250);
         };
 
         local.urlParse = function (url) {
@@ -6992,7 +7022,6 @@ instruction\n\
             screenshot: local.env.MODE_BUILD_SCREENSHOT_IMG,
             testCaseList: []
         }] };
-        local.uglify = local.uglifyjs.uglify || local.echo;
         // init serverLocalHost
         local.urlParse('');
         // init timeoutDefault
@@ -7024,6 +7053,8 @@ instruction\n\
         // re-init timeoutDefault
         local.timeoutDefault = Number(local.timeoutDefault || 30000);
         local.onReadyAfter(local.nop);
+        // init uglify
+        local.uglify = local.uglifyjs.uglify || local.echo;
     }());
     switch (local.modeJs) {
 
