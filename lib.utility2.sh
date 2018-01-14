@@ -424,6 +424,15 @@ shBuildCi() {(set -e
         shGithubPush "https://github.com/$GITHUB_REPO" HEAD:beta
         ;;
     esac
+    # sync with $npm_package_githubRepoAlias
+    if [ "$CI_BRANCH" = alpha ] || [ "$CI_BRANCH" = beta ] || [ "$CI_BRANCH" = master ]
+    then
+        for GITHUB_REPO_ALIAS in $npm_package_githubRepoAlias
+        do
+            shGithubRepoBaseCreate "$GITHUB_REPO_ALIAS"
+            shGithubPush -f --tags "https://github.com/$GITHUB_REPO_ALIAS" "$CI_BRANCH"
+        done
+    fi
 )}
 
 shBuildCiInternal() {(set -e
@@ -1143,6 +1152,11 @@ shDebugArgv() {
     printf "\$4 - $4\n"
 }
 
+shDeployCustom() {
+# this function will do nothing
+    return
+}
+
 shDeployGithub() {(set -e
 # this function will deploy the app to $GITHUB_REPO
 # and run a simple curl check for $TEST_URL
@@ -1854,8 +1868,9 @@ shGithubCrudRepoListCreate() {(set -e
     LIST="$1"
     export MODE_BUILD="${MODE_BUILD:-shGithubCrudRepoListCreate}"
     URL=https://api.github.com/user/repos
-    # init github $GITHUB_ORG url
-    if (shIsCustomOrg)
+    # init $GITHUB_ORG
+    GITHUB_ORG="$(printf "$LIST" | head -n 1 | sed -e 's|/.*||')"
+    if (printf "$GITHUB_ORG" | grep -qe '^\(npmdoc\|npmtest\|scrapeitall\|swgg-io\)$')
     then
         URL="https://api.github.com/orgs/$GITHUB_ORG/repos"
     fi
@@ -2159,11 +2174,6 @@ shIptablesInit() {(set -e
     ip6tables-save > /etc/iptables/rules.v6
     # iptables-restore < /etc/iptables/rules.v4
     # iptables-restore < /etc/iptables/rules.v6
-)}
-
-shIsCustomOrg() {(set -e
-# this function will test if $GITHUB_ORG is a really a github-org
-    printf "$GITHUB_ORG" | grep -qe '^\(npmdoc\|npmtest\|scrapeitall\)$'
 )}
 
 shIstanbulCover() {(set -e
@@ -3272,7 +3282,6 @@ itunes-search-lite
 jslint-lite
 swagger-ui-lite
 swgg
-swgg-google
 uglifyjs-lite
 utility2
 $(ls -d swgg-* 2>/dev/null)

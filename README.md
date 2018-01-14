@@ -61,11 +61,10 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changelog for v2017.12.4
-- npm publish 2017.12.4
-- change function objectSetDefault behavior to ignore 0 and false
-- change function setTimeoutOnError signature to function (onError, timeout, error, data)
-- fix parsing env var \$CI_COMMIT_MESSAGE_META
+#### changelog for v2018.1.13
+- npm publish 2018.1.13
+- auto-cleanup screenshot and test-server links for shDeployGithub and shDeployHeroku
+- sync with \$npm_package_githubRepoAlias
 - none
 
 #### this package requires
@@ -809,7 +808,7 @@ utility2-comment -->\n\
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.12.4"
+    "version": "2018.1.13"
 }
 ```
 

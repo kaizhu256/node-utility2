@@ -3383,10 +3383,8 @@ return Utf8ArrayToStr(bff);
             });
             options.customize();
             // customize shDeployCustom
-            if (options.dataFrom.indexOf(' shDeployCustom\n') >= 0) {
+            if (options.dataFrom.indexOf('    shDeployCustom\n') >= 0) {
                 [
-                    // customize test-server
-                    (/\n\| git-branch : \|[\S\s]*?\n\| test-report : \|/),
                     // customize quickstart
                     (/\n#### changelog [\S\s]*\n# quickstart example.js\n/),
                     options.dataFrom.indexOf('"assets.index.default.template.html"') < 0 &&
@@ -3398,9 +3396,26 @@ return Utf8ArrayToStr(bff);
                 });
                 // customize screenshot
                 options.dataTo = options.dataTo.replace(new RegExp('^1\\. .*?screenshot\\.' +
-                    '(?:deployGithub|deployHeroku|npmTest|testExampleJs|testExampleSh)' +
+                    '(?:npmTest|testExampleJs|testExampleSh)' +
                     '.*?\\.png[\\S\\s]*?\\n\\n', 'gm'), '');
             }
+            // customize shDeployGithub and shDeployHeroku
+            [
+                'Github',
+                'Heroku'
+            ].forEach(function (element) {
+                if (options.dataFrom.indexOf('    shDeploy' + element + '\n') < 0) {
+                    // customize test-server
+                    options.dataTo = options.dataTo.replace(
+                        new RegExp('\\n\\| test-server-' + element.toLowerCase() + ' : \\|.*?\\n'),
+                        '\n'
+                    );
+                    // customize screenshot
+                    options.dataTo = options.dataTo.replace(new RegExp('^1\\. .*?screenshot\\.' +
+                        'deploy' + element +
+                        '.*?\\.png[\\S\\s]*?\\n\\n', 'gm'), '');
+                }
+            });
             // customize assets.index.template.html
             if (local.assetsDict['/assets.index.template.html']
                     .indexOf('"assets.index.default.template.html"') < 0) {

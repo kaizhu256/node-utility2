@@ -303,6 +303,7 @@ local.templateApiDict =
                 "type": "string"
             },
             {
+                "default": null,
                 "description": "projection-fields param",
                 "format": "json",
                 "in": "query",
@@ -331,6 +332,9 @@ local.templateApiDict =
             },
             {
                 "default": [
+                    {
+                        "fieldName": "id"
+                    },
                     {
                         "fieldName": "_timeUpdated",
                         "isDescending": true
@@ -1005,13 +1009,9 @@ local.templateUiResource = '\
     >{{name}} : {{description}}</span>\n\
     <span\n\
         class="onEventResourceDisplayAction td td2"\n\
+        style="border-left: 1px solid #000; margin: 0; padding-left: 20px;"\n\
         tabindex="0"\n\
     >expand / collapse operations</span>\n\
-    <span\n\
-        class="onEventDatatableReload td td3"\n\
-        data-resource-name="{{name}}"\n\
-        tabindex="0"\n\
-    >datatable</span>\n\
 </h3>\n\
 <div\n\
     class="operationList uiAnimateSlide"\n\
@@ -1204,10 +1204,6 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 .swggUiContainer .resource:first-child {\n\
     border-top: 1px solid #777;\n\
 }\n\
-.swggUiContainer .resource > .thead > .td2 {\n\
-    border-left: 1px solid #777;\n\
-    border-right: 1px solid #777;\n\
-}\n\
 .swggUiContainer .styleBorderBottom1px {\n\
     border-bottom: 1px solid #777;\n\
 }\n\
@@ -1321,9 +1317,6 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 }\n\
 .swggUiContainer .resource:first-child {\n\
     padding-top: 10px;\n\
-}\n\
-.swggUiContainer .resource > .thead > .td2 {\n\
-    padding: 0 20px;\n\
 }\n\
 .swggUiContainer .resourceDescription {\n\
     padding: 10px 20px;\n\
@@ -2765,7 +2758,12 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
                         value: 0
                     }, {
                         key: 'querySort',
-                        value: [{ fieldName: '_timeUpdated', isDescending: true }]
+                        value: [{
+                            fieldName: 'id'
+                        }, {
+                            fieldName: '_timeUpdated',
+                            isDescending: true
+                        }]
                     }, {
                         key: 'queryWhere',
                         value: {}
@@ -3767,6 +3765,8 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
             // init valueText
             schemaP.valueText = schemaP['x-swgg-apiKey']
                 ? local.apiKeyValue
+                : schemaP.default === null
+                ? ''
                 : schemaP.required || schemaP.isTextarea
                 ? schemaP.placeholder
                 : '';
