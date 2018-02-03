@@ -47,8 +47,13 @@
             : global;
         // init utility2_rollup
         local = local.global.utility2_rollup || local;
-        // init lib
-        local.local = local.swgg = local;
+        /* istanbul ignore next */
+        if (!local) {
+            local = local.global.utility2_rollup ||
+                local.global.utility2_rollup_old ||
+                require('./assets.utility2.rollup.js');
+            local.fs = null;
+        }
         // init exports
         if (local.modeJs === 'browser') {
             local.global.utility2_swgg = local;
@@ -61,8 +66,9 @@
             });
             module.exports = local;
             module.exports.__dirname = __dirname;
-            module.exports.module = module;
         }
+        // init lib
+        local.local = local.swgg = local;
         // init lib swgg
         local.global.swgg = local.global.utility2_swgg = local.swgg = local;
         // init lib utility2
@@ -77,6 +83,7 @@
             }()));
         local.utility2.objectSetDefault(local, local.utility2);
         local.utility2.swgg = local;
+    // run resetValidateKeySorted js-env code
         // init assets and templates
 /* jslint-ignore-begin */
 // https://github.com/json-schema-org/json-schema-org.github.io/blob/eb4805e94c3e27932352344767d19cc4c3c3381c/draft-04/schema
@@ -138,13 +145,14 @@ local.swaggerErrorTypeDict = {
     semanticRequiredConsumesFormData: 'Operations with Parameters of "in: formData" must include "application/x-www-form-urlencoded" or "multipart/form-data" in their "consumes" property',
     semanticRequiredConsumesMultipartFormData: 'Operations with Parameters of "type: file" must include "multipart/form-data" in their "consumes" property',
     semanticRequiredInFormData: 'Parameters with "type: file" must have "in: formData"',
-    semanticRequiredReadOnly: 'Read only properties cannot marked as required by a schema.',
+    semanticRequiredReadOnly: 'Read only properties cannot marked as required by a schema',
     semanticRequiredTypeString: '${path} must have required string "type" param',
     semanticTypeString: '"type" should be a string',
     semanticUniqueInBodyFormDataParameter: 'Parameters cannot have both a "in: body" and "in: formData", as "formData" _will_ be the body',
     semanticUniqueInBodyFormDataOperation: 'Operations cannot have both a "body" parameter and "formData" parameter',
     semanticUniqueInBodyOperation: 'Operations must have no more than one body parameter',
     semanticUniqueParameterName: 'Operation parameters must have unique "name" + "in" properties',
+    semanticUniquePath: 'Equivalent paths are not allowed - {{prefix0}}',
     semanticUniqueOperationId: 'operationId {{prefix0}} is not unique',
     semanticUnusedDefinition: 'Definition was declared but never used in document',
     semanticUnusedNameInPath: 'Path parameter ${parameterDefinition.name} was defined but never used',
@@ -787,7 +795,9 @@ local.templateUiMain = '\
     {{#unless info.x-swgg-homepage}}\n\
     <h2>{{info.title}} ({{info.version}})</h2>\n\
     {{/if info.x-swgg-homepage}}\n\
-    {{#if info.description}}<div>{{info.description htmlBr}}</div>{{/if info.description}}\n\
+    {{#if info.description}}\n\
+    <div>{{info.description markdownToHtml}}</div>\n\
+    {{/if info.description}}\n\
     {{#if info.x-swgg-downloadStandaloneApp}}\n\
     <h4><a download href="{{info.x-swgg-downloadStandaloneApp}}">download standalone app</a></h4>\n\
     {{/if info.x-swgg-downloadStandaloneApp}}\n\
@@ -795,7 +805,7 @@ local.templateUiMain = '\
         {{#if externalDocs}}\n\
         <li>\n\
             {{#if externalDocs.description}}\n\
-            <p>{{externalDocs.description htmlBr}}</p>\n\
+            <p>{{externalDocs.description markdownToHtml}}</p>\n\
             {{/if externalDocs.description}}\n\
             {{#if externalDocs.url}}\n\
             <a href="{{externalDocs.url}}" target="_blank">{{externalDocs.url}}</a>\n\
@@ -879,7 +889,7 @@ local.templateUiOperation = '\
 >\n\
     {{#if deprecated}}<h4 class="label">(warning: deprecated)</h4><br>{{/if deprecated}}\n\
     <h4 class="label">description</h4>\n\
-    <div class="styleColor777 tr">{{description htmlBr}}</div>\n\
+    <div class="description styleColor777">{{description markdownToHtml}}</div>\n\
     {{#if parameters.length}}\n\
     <h4 class="label">parameters</h4>\n\
     <div class="schemaP styleBorderBottom1px styleColor777 tr">\n\
@@ -893,14 +903,14 @@ local.templateUiOperation = '\
     {{/each parameters}}\n\
     {{/if parameters.length}}\n\
     <h4 class="label">response messages</h4>\n\
-    <div class="schemaResponse styleColor777 styleBorderBottom1px tr">\n\
+    <div class="schemaResponse styleBorderBottom1px styleColor777 tr">\n\
         <span class="td td1">http status code</span>\n\
         <span class="td td2">reason</span>\n\
     </div>\n\
     {{#each responseList}}\n\
     <div class="schemaResponse tr">\n\
         <span class="td td1">{{key}}</span>\n\
-        <span class="td td2">{{value.description}}</span>\n\
+        <span class="td td2">{{value.description markdownToHtml}}</span>\n\
     </div>\n\
     {{/each responseList}}\n\
     <button class="onEventOperationAjax">try it out!</button>\n\
@@ -929,7 +939,7 @@ local.templateUiParameter = '\
     {{#if required}}<br><span style="font-weight: bold;">(required)</span>{{/if required}}\n\
     {{#if description}}\n\
     <br>\n\
-    <span class="styleColor777">{{description htmlBr}}</span>\n\
+    <span class="styleColor777">{{description markdownToHtml}}</span>\n\
     {{/if description}}\n\
 </span>\n\
 <span class="td td2">{{type2}}{{#if format2}}<br>({{format2}}){{/if format2}}</span>\n\
@@ -1003,10 +1013,10 @@ local.templateUiResource = '\
     id="{{id}}"\n\
 >\n\
 <h3 class="thead">\n\
-    <span\n\
-        class="onEventResourceDisplayAction td td1"\n\
-        tabindex="0"\n\
-    >{{name}} : {{description}}</span>\n\
+    <span class="onEventResourceDisplayAction td td1" tabindex="0">\n\
+        <div class="onEventResourceDisplayAction resourceIi">{{ii}}.</div>{{name}}:\n\
+        <span class="onEventResourceDisplayAction resourceSummary">{{description}}</span>\n\
+    </span>\n\
     <span\n\
         class="onEventResourceDisplayAction td td2"\n\
         style="border-left: 1px solid #000; margin: 0; padding-left: 20px;"\n\
@@ -1017,7 +1027,7 @@ local.templateUiResource = '\
     class="operationList uiAnimateSlide"\n\
     style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"\n\
 >\n\
-    <div class="resourceDescription">{{description htmlBr}}</div>\n\
+    <div class="resourceDescription">{{description markdownToHtml}}</div>\n\
 </div>\n\
 </div>\n\
 ';
@@ -1038,6 +1048,7 @@ swgg\n\
 
 
 
+    // run resetValidateKeySorted js-env code
 local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.template.html']
     .replace('assets.index.default.template.html', '')
     .replace((/<title>.*?<\/title>/), '<title>swgg</title>')
@@ -1096,7 +1107,7 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
     position: absolute;\n\
 }\n\
 .swggUiContainer .operation > .thead > .td1 {\n\
-    text-align: center;\n\
+    text-align: left;\n\
     width: 2rem;\n\
 }\n\
 .swggUiContainer .operation > .thead > .td2 {\n\
@@ -1116,13 +1127,19 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
     overflow-wrap: break-word;\n\
     white-space: pre-wrap;\n\
 }\n\
+.swggUiContainer .resourceIi {\n\
+    min-width: 3rem;\n\
+}\n\
+.swggUiContainer .resourceSummary {\n\
+    font-weight: lighter;\n\
+}\n\
 .swggUiContainer .responseBody,\n\
 .swggUiContainer .responseHeaders,\n\
 .swggUiContainer .responseStatusCode {\n\
     font-weight: bold;\n\
 }\n\
-.swggUiContainer .schemaP pre,\n\
 .swggUiContainer .schemaP .multilinePlaceholderContainer,\n\
+.swggUiContainer .schemaP pre,\n\
 .swggUiContainer .schemaP select[multiple],\n\
 .swggUiContainer .schemaP textarea {\n\
     height: 10rem;\n\
@@ -1134,16 +1151,11 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
     overflow: auto;\n\
     word-wrap: break-word;\n\
 }\n\
-.swggUiContainer .td div,\n\
 .swggUiContainer .td input,\n\
 .swggUiContainer .td pre,\n\
 .swggUiContainer .td select,\n\
 .swggUiContainer .td textarea {\n\
     width: 100%;\n\
-}\n\
-.swggUiContainer .thead,\n\
-.swggUiContainer .tr {\n\
-    display: flex;\n\
 }\n\
 .swggUiContainer > .thead > .td1 {\n\
     font-size: x-large;\n\
@@ -1157,6 +1169,10 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 .swggUiContainer button,\n\
 .swggUiContainer .resourceDescription {\n\
     background: #373;\n\
+}\n\
+.swggUiContainer .description,\n\
+.swggUiContainer pre {\n\
+    background: #ddd;\n\
 }\n\
 .swggUiContainer .methodDELETE {\n\
     background: #b07;\n\
@@ -1184,9 +1200,6 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 }\n\
 .swggUiContainer .operation {\n\
     background: #dfd;\n\
-}\n\
-.swggUiContainer pre {\n\
-    background: #ddd;\n\
 }\n\
 .swggUiContainer > .thead {\n\
     background: #7b5;\n\
@@ -1227,8 +1240,25 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 .swggUiContainer .multilinePlaceholderPre {\n\
     color: #999;\n\
 }\n\
+.swggUiContainer .resourceDescription a {\n\
+    color: #7d7;\n\
+}\n\
+.swggUiContainer .resourceDescription code {\n\
+    color: #ddf;\n\
+}\n\
+.swggUiContainer .resourceDescription strong {\n\
+    color: #fbb;\n\
+}\n\
 .swggUiContainer .styleColor777 {\n\
     color: #777;\n\
+}\n\
+/* display */\n\
+.swggUiContainer .onEventResourceDisplayAction {\n\
+    display: inline-block;\n\
+}\n\
+.swggUiContainer .thead,\n\
+.swggUiContainer .tr {\n\
+    display: flex;\n\
 }\n\
 /* flex */\n\
 .swggUiContainer .operation > .thead > .td3 {\n\
@@ -1275,13 +1305,9 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 .swggUiContainer .responseBody,\n\
 .swggUiContainer .responseMedia,\n\
 .swggUiContainer .td,\n\
+.swggUiContainer .td .onEventResourceDisplayAction,\n\
 .swggUiContainer video {\n\
     margin-bottom: 0;\n\
-}\n\
-.swggUiContainer > .info > ul,\n\
-.swggUiContainer .operation > .thead > .td1,\n\
-.swggUiContainer .td {\n\
-    margin-left: 20px;\n\
 }\n\
 .swggUiContainer .label {\n\
     margin-bottom: 1px;\n\
@@ -1294,6 +1320,14 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
     margin-bottom: 50px;\n\
     margin-top: 40px;\n\
 }\n\
+.swggUiContainer .operation > .thead > .td1,\n\
+.swggUiContainer .td,\n\
+.swggUiContainer ul {\n\
+    margin-left: 20px;\n\
+}\n\
+.swggUiContainer .operation > .thead > .td4 {\n\
+    margin-right: 20px;\n\
+}\n\
 .swggUiContainer .td:first-child {\n\
     margin-left: 0;\n\
 }\n\
@@ -1301,6 +1335,9 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 .swggUiContainer button,\n\
 .swggUiContainer > .thead {\n\
     padding: 10px;\n\
+}\n\
+.swggUiContainer .description {\n\
+    padding: 10px 10px 1px 10px;\n\
 }\n\
 .swggUiContainer input {\n\
     padding: 0 5px;\n\
@@ -1319,7 +1356,7 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
     padding-top: 10px;\n\
 }\n\
 .swggUiContainer .resourceDescription {\n\
-    padding: 10px 20px;\n\
+    padding: 20px 20px 10px 20px;\n\
 }\n\
 .swggUiContainer > .thead > .td1 {\n\
     padding-left: 40px;\n\
@@ -1329,16 +1366,16 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 \n\
 \n\
 /* hover */\n\
+.swggUiContainer a:hover,\n\
+.swggUiContainer > .thead > .td1:hover {\n\
+    color: #33d;\n\
+}\n\
 .swggUiContainer button:hover {\n\
     background: #33d;\n\
 }\n\
-.swggUiContainer .operation > .thead:hover {\n\
+.swggUiContainer .operation > .thead:hover,\n\
+.swggUiContainer .resource > .thead > .td:hover {\n\
     background: #bbf;\n\
-}\n\
-.swggUiContainer a:hover,\n\
-.swggUiContainer .resource > .thead > .td:hover,\n\
-.swggUiContainer > .thead > .td1:hover {\n\
-    color: #33d;\n\
 }\n\
 \n\
 \n\
@@ -1453,6 +1490,7 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
             options.error = local.validateBySwaggerParameters({
                 // normalize paramDict
                 data: local.normalizeSwaggerParamDict({
+                    modeNoDefault: options.modeNoDefault,
                     operation: self,
                     paramDict: local.jsonCopy(options.paramDict)
                 }).paramDict,
@@ -1588,15 +1626,15 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
             });
         };
 
-        local.apiUpdate = function (options, onError) {
+        local.apiUpdate = function (swaggerJson, onError) {
         /*
          * this function will update the swagger-api dict of api-calls
          */
             var tmp;
-            options = options || {};
+            swaggerJson = swaggerJson || {};
             // fetch swagger.json file
-            if (options.modeAjax) {
-                local.ajax(options, function (error, xhr) {
+            if (swaggerJson.modeAjax) {
+                local.ajax(swaggerJson, function (error, xhr) {
                     // JSON.parse swagger.json string
                     local.tryCatchOnError(function () {
                         tmp = JSON.parse(xhr.responseText);
@@ -1612,10 +1650,22 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
                 return;
             }
             local.tryCatchOnError(function () {
-                options = JSON.parse(options.utility2.assetsDict['/assets.swgg.swagger.json']);
+                swaggerJson = JSON.parse(
+                    swaggerJson.utility2.assetsDict['/assets.swgg.swagger.json']
+                );
             }, local.nop);
-            // normalize options
-            options = local.normalizeSwaggerJson(options);
+            // normalize swaggerJson
+            swaggerJson = local.normalizeSwaggerJson(swaggerJson, {
+                objectSetDescription: function (dict) {
+                    if (!(typeof dict === 'object' && dict)) {
+                        return;
+                    }
+                    if (Array.isArray(dict['x-swgg-descriptionLineList'])) {
+                        dict.description = dict['x-swgg-descriptionLineList'].join('\n');
+                    }
+                    dict.description = dict.description || 'no description';
+                }
+            });
             // init apiDict
             local.apiDict = local.apiDict || {};
             // init swaggerJson
@@ -1729,7 +1779,7 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
             };
             // save tags
             tmp = {};
-            [local.swaggerJson.tags, options.tags].forEach(function (tagList) {
+            [local.swaggerJson.tags, swaggerJson.tags].forEach(function (tagList) {
                 tagList.forEach(function (tag) {
                     tmp[tag.name] = local.objectSetOverride(tmp[tag.name], tag);
                 });
@@ -1737,21 +1787,21 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
             tmp = Object.keys(tmp).sort().map(function (key) {
                 return tmp[key];
             });
-            // merge options into swaggerJson
-            options = local.objectSetOverride(local.swaggerJson, options, 10);
+            // merge swaggerJson into local.swaggerJson
+            swaggerJson = local.objectSetOverride(local.swaggerJson, swaggerJson, 10);
             // restore tags
             local.swaggerJson.tags = tmp;
             // init swaggerJsonBasePath
             local.swaggerJsonBasePath = local.swaggerJson.basePath === '/'
                 ? ''
                 : local.swaggerJson.basePath;
-            Object.keys(options.definitions).forEach(function (schemaName) {
-                tmp = options.definitions[schemaName] = local.jsonCopy(
+            Object.keys(swaggerJson.definitions).forEach(function (schemaName) {
+                tmp = swaggerJson.definitions[schemaName] = local.jsonCopy(
                     local.validateBySwaggerSchema({
                         // dereference definition
                         modeDereference: true,
                         prefix: ['swaggerJson', 'definitions', schemaName],
-                        schema: options.definitions[schemaName],
+                        schema: swaggerJson.definitions[schemaName],
                         swaggerJson: local.swaggerJson
                     })
                 );
@@ -1767,10 +1817,10 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
                 delete tmp.allOf;
             });
             // init apiDict from paths
-            Object.keys(options.paths).forEach(function (path) {
-                Object.keys(options.paths[path]).forEach(function (method) {
+            Object.keys(swaggerJson.paths).forEach(function (path) {
+                Object.keys(swaggerJson.paths[path]).forEach(function (method) {
                     var self;
-                    self = local.jsonCopy(options.paths[path][method]);
+                    self = local.jsonCopy(swaggerJson.paths[path][method]);
                     self._method = method.toUpperCase();
                     self._path = path;
                     tmp = 'operationId.' + self.operationId;
@@ -1778,11 +1828,11 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
                 });
             });
             // init apiDict from x-swgg-apiDict
-            Object.keys(options['x-swgg-apiDict'] || {}).forEach(function (key) {
+            Object.keys(swaggerJson['x-swgg-apiDict'] || {}).forEach(function (key) {
                 // init self
                 local.apiDict[key] = local.objectSetOverride(
                     local.apiDict[key],
-                    local.jsonCopy(options['x-swgg-apiDict'][key])
+                    local.jsonCopy(swaggerJson['x-swgg-apiDict'][key])
                 );
             });
             // init apiDict
@@ -1834,9 +1884,11 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
                     tags: []
                 });
                 // init _consumes0
-                tmp = self['x-swgg-consumes0'];
+                tmp = self['x-swgg-consumes0'] || (self.consumes && self.consumes[0]);
                 self.parameters.some(function (schemaP) {
-                    tmp = tmp || (schemaP.in === 'formData' && 'application/x-www-form-urlencoded');
+                    tmp = tmp ||
+                        (schemaP.in === 'formData' && 'application/x-www-form-urlencoded') ||
+                        (schemaP.in === 'body' && schemaP.schema.type === 'string' && 'text/plain');
                     return tmp;
                 });
                 self._consumes0 = tmp || 'application/json';
@@ -1850,16 +1902,16 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
                             match0 = match1;
                             local.objectSetDefault(
                                 schemaP,
-                                local.jsonCopy(options.parameters[match0])
+                                local.jsonCopy(swaggerJson.parameters[match0])
                             );
                             schemaP.$ref = undefined;
                         }
                     );
                     // init _idName.format and _idName.type
                     if (self._schemaName && schemaP.name === self._idName) {
-                        schemaP.format = options.definitions[self._schemaName]
+                        schemaP.format = swaggerJson.definitions[self._schemaName]
                             .properties[self._idBackend].format;
-                        schemaP.type = local.schemaPType(options.definitions[self._schemaName]
+                        schemaP.type = local.schemaPType(swaggerJson.definitions[self._schemaName]
                             .properties[self._idBackend]);
                     }
                     // init _schemaPDict
@@ -1887,13 +1939,13 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
                 self = local.apiDict[key.join('.')] = local.apiDict[self._methodPath] =
                     local.jsonCopy(self);
                 // init ajax
-                self.ajax = function (options, onError) {
-                    return local.apiAjax(self, options, onError);
+                self.ajax = function (swaggerJson, onError) {
+                    return local.apiAjax(self, swaggerJson, onError);
                 };
                 self._ajaxToString = self.ajax.toString()
                     .replace('{', ('{\n' +
                         '/*\n' +
-                        ' * this function will make the api-call ' +
+                        ' * this function will run the api-call ' +
                         JSON.stringify(self._methodPath) + '\n' +
                         ' * example usage:' + ('\n' +
                         'swgg.apiDict[' + JSON.stringify(key.join('.')) + '].ajax(' +
@@ -1921,15 +1973,15 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
                     }
                 });
                 // update paths
-                local.objectSetOverride(options, local.objectLiteralize({
+                local.objectSetOverride(swaggerJson, local.objectLiteralize({
                     paths: { '$[]': [self._path, { '$[]': [self._method.toLowerCase(), tmp] }] }
                 }), 3);
             });
             // normalize swaggerJson
-            local.swaggerJson = JSON.parse(local.jsonStringifyOrdered(options));
+            local.swaggerJson = JSON.parse(local.jsonStringifyOrdered(swaggerJson));
             // try to validate swaggerJson
             local.tryCatchOnError(function () {
-                local.validateBySwaggerJson({ swaggerJson: local.swaggerJson });
+                local.swaggerValidateJson(local.swaggerJson);
             }, local.onErrorDefault);
             // init corsForwardProxyHost
             local.corsForwardProxyHost = local.corsForwardProxyHost ||
@@ -1938,7 +1990,7 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
             local.assetsDict['/assets.swgg.swagger.server.json'] = JSON.stringify(
                 local.swaggerJson
             );
-            local.setTimeoutOnError(onError, 0, null, options);
+            local.setTimeoutOnError(onError, 0, null, swaggerJson);
         };
 
         local.dbFieldRandomCreate = function (options) {
@@ -1954,6 +2006,11 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
             if (schemaP.readOnly) {
                 return;
             }
+            // init default-value
+            if (options.modeNotRandom && !local.isNullOrUndefined(schemaP.default)) {
+                return local.jsonCopy(schemaP.default);
+            }
+            // init enum-value
             if (schemaP.enum) {
                 value = options.modeNotRandom
                     ? schemaP.enum[0]
@@ -2802,18 +2859,27 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
             options.onNext();
         };
 
-        local.normalizeSwaggerJson = function (options) {
+        local.normalizeSwaggerJson = function (swaggerJson, options) {
         /*
          * this function will normalize swaggerJson and filter $npm_package_swggTags0
          */
             var tmp;
-            local.objectSetDefault(options, { paths: {}, tags: [] });
+            options = local.objectSetDefault(options, {
+                objectSetDescription: function (dict) {
+                    if (dict &&
+                            dict.description &&
+                            Array.isArray(dict['x-swgg-descriptionLineList'])) {
+                        delete dict.description;
+                    }
+                }
+            });
+            local.objectSetDefault(swaggerJson, { paths: {}, tags: [] });
             // auto-create operationId from path
-            Object.keys(options.paths).forEach(function (path) {
-                Object.keys(options.paths[path]).forEach(function (method) {
-                    tmp = options.paths[path][method];
+            Object.keys(swaggerJson.paths).forEach(function (path) {
+                Object.keys(swaggerJson.paths[path]).forEach(function (method) {
+                    tmp = swaggerJson.paths[path][method];
                     // auto-create operationId
-                    if (options['x-swgg-operationIdFromPath'] ||
+                    if (swaggerJson['x-swgg-operationIdFromPath'] ||
                             tmp['x-swgg-operationIdFromPath'] ||
                             !tmp.operationId) {
                         tmp.operationId = encodeURIComponent(path + ' ' + method.toUpperCase())
@@ -2821,15 +2887,58 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
                     }
                 });
             });
-            if (!local.env.npm_package_swggTags0) {
-                return options;
+            // override tag.description with x-swgg-tags0-override
+            if (swaggerJson['x-swgg-tags0-override']) {
+                swaggerJson.tags.forEach(function (tag) {
+                    tmp = local.objectSetDefault(swaggerJson['x-swgg-tags0-override'][tag.name] &&
+                        swaggerJson['x-swgg-tags0-override'][tag.name].externalDocs, {
+                            description: tag.description,
+                            'x-swgg-descriptionLineList': tag['x-swgg-descriptionLineList']
+                        });
+                    tag.description = tmp.description;
+                    tag['x-swgg-descriptionLineList'] = tmp['x-swgg-descriptionLineList'];
+                    // objectSetDescription
+                    options.objectSetDescription(tmp);
+                    options.objectSetDescription(tag);
+                });
             }
-            // override options with x-swgg-tags0-override
-            local.objectSetOverride(options, options['x-swgg-tags0-override'] &&
-                options['x-swgg-tags0-override'][local.env.npm_package_swggTags0], 10);
+            // objectSetDescription
+            [swaggerJson.externalDocs, swaggerJson.info].forEach(options.objectSetDescription);
+            [
+                swaggerJson.definitions,
+                swaggerJson.parameters,
+                swaggerJson.responses
+            ].forEach(function (dict) {
+                Object.keys(dict || {}).forEach(function (key) {
+                    tmp = dict[key];
+                    if (dict === swaggerJson.definitions) {
+                        tmp = tmp.properties || {};
+                        Object.keys(tmp).forEach(function (key) {
+                            options.objectSetDescription(tmp[key]);
+                        });
+                        return;
+                    }
+                    options.objectSetDescription(tmp);
+                });
+            });
+            Object.keys(swaggerJson.paths).forEach(function (path) {
+                Object.keys(swaggerJson.paths[path]).forEach(function (method) {
+                    options.objectSetDescription(swaggerJson.paths[path][method]);
+                    Object.keys(
+                        swaggerJson.paths[path][method].responses || {}
+                    ).forEach(options.objectSetDescription);
+                });
+            });
+            if (!local.env.npm_package_swggTags0 ||
+                    (/-all$/).test(local.env.npm_package_swggTags0)) {
+                return swaggerJson;
+            }
+            // override swaggerJson with x-swgg-tags0-override
+            local.objectSetOverride(swaggerJson, swaggerJson['x-swgg-tags0-override'] &&
+                swaggerJson['x-swgg-tags0-override'][local.env.npm_package_swggTags0], 10);
             // filter $npm_package_swggTags0 - definitions and parameters
-            ['definitions', 'parameters'].forEach(function (schema) {
-                schema = options[schema] || {};
+            ['definitions', 'parameters', 'responses'].forEach(function (schema) {
+                schema = swaggerJson[schema] || {};
                 Object.keys(schema).forEach(function (key) {
                     if (schema[key]['x-swgg-tags0'] &&
                             schema[key]['x-swgg-tags0'] !== 'all' &&
@@ -2839,27 +2948,27 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
                 });
             });
             // filter $npm_package_swggTags0 - paths
-            Object.keys(options.paths).forEach(function (path) {
-                Object.keys(options.paths[path]).forEach(function (method) {
-                    tmp = options.paths[path][method];
+            Object.keys(swaggerJson.paths).forEach(function (path) {
+                Object.keys(swaggerJson.paths[path]).forEach(function (method) {
+                    tmp = swaggerJson.paths[path][method];
                     if (tmp['x-swgg-tags0'] &&
                             tmp['x-swgg-tags0'] !== 'all' &&
                             tmp['x-swgg-tags0'] !== local.env.npm_package_swggTags0) {
-                        delete options.paths[path][method];
+                        delete swaggerJson.paths[path][method];
                         return;
                     }
                 });
-                if (!Object.keys(options.paths[path]).length) {
-                    delete options.paths[path];
+                if (!Object.keys(swaggerJson.paths[path]).length) {
+                    delete swaggerJson.paths[path];
                 }
             });
             // filter $npm_package_swggTags0 - tags
-            options.tags = options.tags.filter(function (tag) {
+            swaggerJson.tags = swaggerJson.tags.filter(function (tag) {
                 return !tag['x-swgg-tags0'] ||
                     tmp['x-swgg-tags0'] === 'all' ||
                     tag['x-swgg-tags0'] === local.env.npm_package_swggTags0;
             });
-            return options;
+            return swaggerJson;
         };
 
         local.normalizeSwaggerParamDict = function (options) {
@@ -3040,6 +3149,132 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
                     response.statusCode;
                 response.end(JSON.stringify(data));
             })(error, data, meta);
+        };
+
+        local.swaggerValidateFile = function (options, onError) {
+        /*
+         * this function will swagger-validate the json-file options.file
+         */
+            local.onNext(options, function (error, data) {
+                switch (options.modeNext) {
+                case 1:
+                    if (typeof options.data === 'string') {
+                        options.onNext(null, options.data);
+                        return;
+                    }
+                    // fetch url
+                    if ((/^(?:http|https):\/\//).test(options.file)) {
+                        local.ajax({ url: options.file }, function (error, data) {
+                            options.onNext(error, data && data.responseText);
+                        });
+                        return;
+                    }
+                    // read file
+                    local.fs.readFile(options.file, 'utf8', options.onNext);
+                    break;
+                case 2:
+                    // jslint
+                    local.jslint.jslintAndPrint(data, options.file);
+                    local.assert(
+                        !local.jslint.errorText,
+                        local.jslint.errorText.replace((/\u001b\[\d+m/g), '')
+                    );
+                    // validate
+                    local.swgg.swaggerValidateJson(JSON.parse(data));
+                    options.onNext();
+                    break;
+                default:
+                    onError(error, error
+                        ? 'swagger-validate - failed - ' + options.file + '\n\n' + error.message
+                        : 'swagger-validate - passed - ' + options.file);
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
+        };
+
+        local.swaggerValidateJson = function (swaggerJson) {
+        /*
+         * this function will swagger-validate the json-object swaggerJson
+         */
+            var operation, operationIdDict, pathDict, prefix, test, tmp;
+            operationIdDict = {};
+            swaggerJson = swaggerJson || {};
+            local.validateBySwaggerSchema({
+                data: swaggerJson,
+                modeSchema: true,
+                prefix: ['swaggerJson'],
+                schema: local.swaggerSchemaJson,
+                swaggerJson: swaggerJson
+            });
+            // validate semanticUniquePath
+            pathDict = {};
+            Object.keys(swaggerJson.paths).forEach(function (path) {
+                tmp = path.replace((/\{.*?\}/g), '{}');
+                test = !pathDict[tmp];
+                local.throwSwaggerError(!test && {
+                    data: {},
+                    errorType: 'semanticUniquePath',
+                    prefix: ['swaggerJson', 'paths', path]
+                });
+                pathDict[tmp] = true;
+            });
+            // validate swaggerJson.definitions[key].properties[ii].default
+            Object.keys(swaggerJson.definitions || {}).forEach(function (schemaName) {
+                tmp = local.validateBySwaggerSchema({
+                    // dereference definition
+                    modeDereference: true,
+                    prefix: ['swaggerJson', 'definitions', schemaName],
+                    schema: swaggerJson.definitions[schemaName],
+                    swaggerJson: swaggerJson
+                });
+                Object.keys(tmp.properties || {}).forEach(function (key) {
+                    local.validateBySwaggerSchema({
+                        modeDefault: true,
+                        prefix: ['swaggerJson', 'definitions', schemaName, 'properties', key],
+                        schema: tmp.properties[key],
+                        swaggerJson: swaggerJson
+                    });
+                });
+            });
+            // validate swaggerJson.parameters[key].default
+            Object.keys(swaggerJson.parameters || []).forEach(function (key) {
+                local.validateBySwaggerSchema({
+                    modeDefault: true,
+                    prefix: ['swaggerJson', 'parameters', key],
+                    schema: swaggerJson.parameters[key],
+                    swaggerJson: swaggerJson
+                });
+            });
+            // validate swaggerJson.paths[key][key].parameters[ii].default
+            Object.keys(swaggerJson.paths).forEach(function (path) {
+                Object.keys(swaggerJson.paths[path]).forEach(function (method) {
+                    prefix = ['swaggerJson', 'paths', path, method];
+                    operation = local.validateBySwaggerSchema({
+                        // dereference operation
+                        modeDereference: true,
+                        prefix: prefix,
+                        schema: swaggerJson.paths[path][method],
+                        swaggerJson: swaggerJson
+                    });
+                    // validate semanticUniqueOperationId
+                    test = !operationIdDict[operation.operationId];
+                    local.throwSwaggerError(!test && {
+                        data: operation.operationId,
+                        errorType: 'semanticUniqueOperationId',
+                        prefix: prefix
+                    });
+                    operationIdDict[operation.operationId] = true;
+                    (operation.parameters || []).forEach(function (schemaP) {
+                        local.validateBySwaggerSchema({
+                            modeDefault: true,
+                            prefix: prefix.concat(['parameters', schemaP.name]),
+                            schema: schemaP,
+                            swaggerJson: swaggerJson
+                        });
+                    });
+                });
+            });
         };
 
         local.throwSwaggerError = function (options) {
@@ -3298,12 +3533,14 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
                     options.targetOperation.querySelector('.responseStatusCode').focus();
                     break;
                 default:
+                    if (error) {
+                        console.error(error);
+                    }
                     if (options.error) {
                         return;
                     }
                     data = local.objectSetDefault(data, {
                         contentType: 'undefined',
-                        responseText: error && error.stack,
                         statusCode: 'undefined'
                     });
                     // init responseStatusCode
@@ -3385,6 +3622,7 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
          * this function will toggle the display of the resource
          */
             location.hash = '!' + event.currentTarget.id;
+            event.target2 = event.target2.closest('.onEventResourceDisplayAction.td');
             event.target2.className.split(' ').some(function (className) {
                 switch (className) {
                 case 'td1':
@@ -3482,7 +3720,7 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
             }, function (error) {
                 local.uiRenderAll(null, onError);
                 local.tryCatchOnError(function () {
-                    local.validateBySwaggerJson({ swaggerJson: local.swaggerJson });
+                    local.swaggerValidateJson(local.swaggerJson);
                 }, local.uiNotify);
                 local.uiNotify(error);
             });
@@ -3503,103 +3741,108 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
             return element;
         };
 
-        local.uiRenderAll = function (options, onError) {
+        local.uiRenderAll = function (swaggerJson, onError) {
         /*
          * this function will render swagger-ui
          */
             var resource;
             // optimization - render .swggUiContainer first
-            if (!(options && options.swagger)) {
-                options = local.uiState = local.jsonCopy(local.swaggerJson);
+            if (!(swaggerJson && swaggerJson.swagger)) {
+                swaggerJson = local.uiState = local.jsonCopy(local.swaggerJson);
                 // init ajaxProgressText
-                options.ajaxProgressText = 'rendering swagger.json';
+                swaggerJson.ajaxProgressText = 'rendering swagger.json';
                 // init apiKeyValue
-                options.apiKeyValue = local.apiKeyValue;
+                swaggerJson.apiKeyValue = local.apiKeyValue;
                 // templateRender title
                 document.querySelector('head > title').textContent = local.templateRender(
                     local.templateUiTitle,
-                    options
+                    swaggerJson
                 ).trim();
                 // init urlSwaggerJson
-                options.urlSwaggerJson = document.querySelector(
+                swaggerJson.urlSwaggerJson = document.querySelector(
                     '.swggUiContainer > .thead > .td2'
                 ).value;
                 // templateRender main
                 document.querySelector('.swggUiContainer').innerHTML = local.templateRender(
                     local.templateUiMain,
-                    options
+                    swaggerJson
                 );
                 setTimeout(function () {
-                    local.uiRenderAll(options, onError);
+                    local.uiRenderAll(swaggerJson, onError);
                 }, 100);
                 return;
             }
             // optimization - render .resourceList in separate event-loop
             // reset state
             local.idDomElementDict = {};
-            local.objectSetDefault(options, { resourceDict: {}, operationDict: {}, tagDict: {} });
+            local.objectSetDefault(swaggerJson, {
+                resourceDict: {},
+                operationDict: {},
+                tagDict: {}
+            });
             // init tagDict
-            options.tags.forEach(function (tag) {
-                options.tagDict[tag.name] = tag;
+            swaggerJson.tags.forEach(function (tag) {
+                swaggerJson.tagDict[tag.name] = tag;
             });
             // init operationDict
             Object.keys(local.apiDict).sort().forEach(function (operation) {
                 // init operation
                 operation = local.jsonCopy(local.apiDict[operation]);
                 operation.tags.forEach(function (tag) {
-                    options.operationDict[operation._methodPath] = operation;
+                    swaggerJson.operationDict[operation._methodPath] = operation;
                     // init resource
-                    resource = options.resourceDict[tag] = local.objectSetDefault(
-                        options.resourceDict[tag] || options.tagDict[tag],
-                        { description: 'no description', name: tag }
+                    resource = swaggerJson.resourceDict[tag] = local.objectSetDefault(
+                        swaggerJson.resourceDict[tag] || swaggerJson.tagDict[tag],
+                        {
+                            description: 'no description',
+                            name: tag
+                        }
                     );
                     resource.id = resource.id || local.idDomElementCreate('swgg_id_' + tag);
                 });
             });
             // init uiFragment
-            options.uiFragment = document.createDocumentFragment();
+            swaggerJson.uiFragment = document.createDocumentFragment();
             // init resourceDict
-            Object.keys(options.resourceDict).sort().forEach(function (key) {
+            Object.keys(swaggerJson.resourceDict).sort().forEach(function (key, ii) {
+                swaggerJson.resourceDict[key].ii = local.numberToRomanNumerals(ii + 1);
                 // templateRender resource
-                options.uiFragment.appendChild(
-                    local.domElementRender(local.templateUiResource, options.resourceDict[key])
+                swaggerJson.uiFragment.appendChild(
+                    local.domElementRender(local.templateUiResource, swaggerJson.resourceDict[key])
                 );
             });
-            Object.keys(options.operationDict).sort(function (aa, bb) {
-                aa = options.operationDict[aa];
-                aa = aa._path + ' ' + aa._method;
-                bb = options.operationDict[bb];
-                bb = bb._path + ' ' + bb._method;
+            Object.keys(swaggerJson.operationDict).sort(function (aa, bb) {
+                aa = swaggerJson.operationDict[aa];
+                aa = aa['x-swgg-sortValue'] || (aa._path + ' ' + aa._method);
+                bb = swaggerJson.operationDict[bb];
+                bb = bb['x-swgg-sortValue'] || (bb._path + ' ' + bb._method);
                 return aa < bb
                     ? -1
                     : 1;
             }).forEach(function (operation) {
-                operation = options.operationDict[operation];
+                operation = swaggerJson.operationDict[operation];
                 operation.id = local.idDomElementCreate('swgg_id_' + operation.operationId);
                 operation.tags.forEach(function (tag) {
                     // create new operation for each tag
                     operation = local.jsonCopy(operation);
-                    resource = options.resourceDict[tag];
+                    resource = swaggerJson.resourceDict[tag];
                     local.objectSetDefault(operation, {
-                        description: 'no description',
                         responseList: Object.keys(operation.responses).sort().map(function (key) {
                             return {
                                 key: key,
-                                value: local.objectSetDefault(operation.responses[key], {
-                                    description: 'no description'
-                                })
+                                value: operation.responses[key]
                             };
                         }),
-                        summary: operation.description || 'no summary'
+                        summary: operation.description
                     });
                     operation.parameters.forEach(local.uiRenderSchemaP);
                     // templateRender operation
-                    options.uiFragment.querySelector('#' + resource.id + ' .operationList')
+                    swaggerJson.uiFragment.querySelector('#' + resource.id + ' .operationList')
                         .appendChild(local.domElementRender(local.templateUiOperation, operation));
                 });
             });
             // emulate <ol></ol> for operations
-            Array.from(options.uiFragment.querySelectorAll(
+            Array.from(swaggerJson.uiFragment.querySelectorAll(
                 '.operationList'
             )).forEach(function (element) {
                 Array.from(element.querySelectorAll(
@@ -3611,7 +3854,7 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
             // append uiFragment to swggUiContainer
             document.querySelector('#swggAjaxProgressDiv1').style.display = 'none';
             document.querySelector('.swggUiContainer .resourceList').appendChild(
-                options.uiFragment
+                swaggerJson.uiFragment
             );
             Array.from(document.querySelectorAll(
                 '.swggUiContainer [data-value-text]'
@@ -3729,6 +3972,7 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
                 schemaP.schema2 = (local.validateBySwaggerSchema({
                     // dereference schemaP
                     modeDereference: true,
+                    modeDereferenceDepth: 2,
                     prefix: ['parameters', schemaP.name],
                     schema: element,
                     swaggerJson: local.swaggerJson
@@ -3800,78 +4044,6 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
                 return;
             }
             local.serverRespondJsonapi(request, response, error);
-        };
-
-        local.validateBySwaggerJson = function (options) {
-        /*
-         * this function will validate the entire swagger json object
-         */
-            var operation, operationIdDict, prefix, swaggerJson, test, tmp;
-            operationIdDict = {};
-            swaggerJson = options.swaggerJson || {};
-            local.validateBySwaggerSchema(local.objectSetDefault(options, {
-                data: swaggerJson,
-                modeSchema: true,
-                prefix: ['swaggerJson'],
-                schema: local.swaggerSchemaJson,
-                swaggerJson: swaggerJson
-            }));
-            // validate swaggerJson.definitions[key].properties[ii].default
-            Object.keys(swaggerJson.definitions || {}).forEach(function (schemaName) {
-                tmp = local.validateBySwaggerSchema({
-                    // dereference definition
-                    modeDereference: true,
-                    prefix: ['swaggerJson', 'definitions', schemaName],
-                    schema: swaggerJson.definitions[schemaName],
-                    swaggerJson: swaggerJson
-                });
-                Object.keys(tmp.properties || {}).forEach(function (key) {
-                    local.validateBySwaggerSchema({
-                        modeDefault: true,
-                        prefix: ['swaggerJson', 'definitions', schemaName, 'properties', key],
-                        schema: tmp.properties[key],
-                        swaggerJson: swaggerJson
-                    });
-                });
-            });
-            // validate swaggerJson.parameters[key].default
-            Object.keys(swaggerJson.parameters || []).forEach(function (key) {
-                local.validateBySwaggerSchema({
-                    modeDefault: true,
-                    prefix: ['swaggerJson', 'parameters', key],
-                    schema: swaggerJson.parameters[key],
-                    swaggerJson: swaggerJson
-                });
-            });
-            // validate swaggerJson.paths[key][key].parameters[ii].default
-            Object.keys(swaggerJson.paths).forEach(function (path) {
-                Object.keys(swaggerJson.paths[path]).forEach(function (method) {
-                    prefix = ['swaggerJson', 'paths', path, method];
-                    operation = local.validateBySwaggerSchema({
-                        // dereference operation
-                        modeDereference: true,
-                        prefix: prefix,
-                        schema: swaggerJson.paths[path][method],
-                        swaggerJson: swaggerJson
-                    });
-                    // validate semanticUniqueOperationId
-                    test = !operationIdDict[operation.operationId];
-                    local.throwSwaggerError(!test && {
-                        data: operation.operationId,
-                        errorType: 'semanticUniqueOperationId',
-                        prefix: prefix
-                    });
-                    operationIdDict[operation.operationId] = true;
-                    (operation.parameters || []).forEach(function (schemaP) {
-                        local.validateBySwaggerSchema({
-                            modeDefault: true,
-                            prefix: prefix.concat(['parameters', schemaP.name]),
-                            schema: schemaP,
-                            swaggerJson: swaggerJson
-                        });
-                    });
-                });
-            });
         };
 
         local.validateBySwaggerParameters = function (options) {
@@ -3981,6 +4153,19 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
                 });
             }
             if (options.modeDereference) {
+                if (options.modeDereferenceDepth > 1) {
+                    schema = local.jsonCopy(schema);
+                    Object.keys(schema.properties || {}).forEach(function (key) {
+                        schema.properties[key] = local.validateBySwaggerSchema({
+                            // dereference property
+                            modeDereference: true,
+                            modeDereferenceDepth: options.modeDereferenceDepth - 1,
+                            prefix: options.prefix.concat(['properties', key]),
+                            schema: schema.properties[key],
+                            swaggerJson: options.swaggerJson
+                        });
+                    });
+                }
                 return schema;
             }
             // validate schema.default
@@ -4005,10 +4190,9 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
             test = !options.modeSchema || local.schemaPType(data) !== 'array' ||
                 (typeof local.schemaPItems(data) === 'object' && local.schemaPItems(data));
             local.throwSwaggerError(!test && {
-                data: data,
                 errorType: 'semanticRequiredArrayItems',
                 prefix: options.prefix,
-                schema: schema
+                schema: data
             });
             // remove readOnly property
             if (schema.readOnly) {

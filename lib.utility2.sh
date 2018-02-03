@@ -46,11 +46,11 @@ shBaseInit() {
 shBaseInstall() {
 # this function will install .bashrc, .screenrc, .vimrc, and lib.utility2.sh in $HOME,
 # and is intended for aws-ec2 setup
-# curl https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh > $HOME/lib.utility2.sh && . $HOME/lib.utility2.sh && shBaseInstall
+# curl -o "$HOME/lib.utility2.sh" https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh && . $HOME/lib.utility2.sh && shBaseInstall
     for FILE in .screenrc .vimrc lib.utility2.sh
     do
-        curl -Lfs "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE" \
-            > "$HOME/$FILE" || return $?
+        curl -Lfs -o "$HOME/$FILE" \
+            "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE" || return $?
     done
     # backup .bashrc
     if [ -f "$HOME/.bashrc" ] && [ ! -f "$HOME/.bashrc.00" ]
@@ -87,116 +87,6 @@ shBrowserTest() {(set -e
     fi
 )}
 
-shBrowserTestOnload() {(set -e
-# this function will spawn an electron process to test the onload time of the given url $URL,
-    node -e "
-// <script>
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 8,
-    maxlen: 100,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-(function () {
-    'use strict';
-    var local;
-    local = {};
-    // inject onload timer
-    if (typeof window === 'object') {
-        local.now = Date.now();
-        window.addEventListener('load', function () {
-            console.error('onLoadTime ' + (Date.now() - local.now));
-        });
-        return;
-    }
-    // npm install electron-lite
-    if (!require('fs').existsSync('node_modules/electron-lite') ||
-            process.env.npm_config_electron_version) {
-        require('child_process').spawnSync('mkdir', [
-            '-p',
-            'node_modules'
-        ], { stdio: ['ignore', 1, 2] });
-    }
-    // wait for electron to init
-    (process.versions.electron >= '0.35'
-        ? require('electron').app
-        : require('app')).once('ready', function () {
-        // init local
-        local = { frame: false, height: 768, width: 1024, x: 0, y: 0 };
-        // init browserWindow;
-        local.BrowserWindow = (process.versions.electron >= '0.35'
-            ? require('electron').BrowserWindow
-            : require('browser-window'));
-        local.browserWindow = new local.BrowserWindow(local);
-        // title
-        local.browserWindow.on('page-title-updated', function (event, title) {
-            if (event && title.indexOf('onLoadTime ') !== 0) {
-                return;
-            }
-            local.tmp = JSON.parse(JSON.stringify(process.versions));
-            local.tmp.arch = process.arch;
-            local.tmp.onLoadTime = title.split(' ')[1];
-            local.tmp.platform = process.platform;
-            local.tmp.timestamp = new Date().toISOString();
-            local.tmp.url = process.env.url;
-            local.result = {};
-            Object.keys(local.tmp).sort().forEach(function (key) {
-                local.result[key] = local.tmp[key];
-            });
-            console.log();
-            console.log(title + ' - ' + local.result.url + ' - ' + local.result.chrome);
-            console.log(JSON.stringify(local.result));
-            local.browserWindow.close();
-            process.exit(0);
-        });
-/* jslint-ignore-begin */
-require('fs').writeFileSync('/tmp/electron.webview.html', '\\
-<style>\\n\\
-body {\\n\\
-  border: 1px solid black;\\n\\
-  margin: 0;\\n\\
-  padding: 0;\\n\\
-}\\n\\
-<\/style>\\n\\
-<webview\\n\\
-    id=\"webview1\"\\n\\
-    preload=\"' + __filename + '\"\\n\\
-    src=\"' + process.env.url + '\"\\n\\
-    style=\"border: none;height: 100%;margin: 0;padding: 0;width: 100%;\"\\n\\
->\\n\\
-<\/webview>\\n\\
-<script>\\n\\
-(function () {\\n\\
-    var local;\\n\\
-    local = {};\\n\\
-    local.webview1 = document.querySelector(\"#webview1\");\\n\\
-    local.webview1.addEventListener(\"console-message\", function (event) {\\n\\
-        if (event.message.indexOf(\"onLoadTime \") === 0) {\\n\\
-            console.log(event.message);\\n\\
-            document.title = event.message;\\n\\
-        }\\n\\
-    });\\n\\
-}());\\n\\
-<\/script>\\n\\
-');
-/* jslint-ignore-end */
-        // open url
-        local.url = 'file:///tmp/electron.webview.html';
-        local.browserWindow.loadURL(local.url, {
-            userAgent: local.modeBrowserTest === 'scrape' &&
-                'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 ' +
-                '(KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
-        });
-    });
-}());
-// </script>
-    "
-)}
-
 shBuildApidoc() {(set -e
 # this function will build the apidoc
     shPasswordEnvUnset
@@ -214,6 +104,7 @@ shBuildApp() {(set -e
         unset npm_package_nameLib
     fi
     shBuildInit
+    # create file .gitignore .travis.yml LICENSE
     for FILE in .gitignore .travis.yml LICENSE
     do
         if [ ! -f "$FILE" ]
@@ -221,6 +112,7 @@ shBuildApp() {(set -e
             curl -Lfs -O "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE"
         fi
     done
+    # create file package.json
     shFileJsonNormalize package.json "{
     \"description\": \"the greatest app in the world!\",
     \"main\": \"lib.$npm_package_nameLib.js\",
@@ -231,6 +123,7 @@ shBuildApp() {(set -e
     },
     \"version\": \"0.0.1\"
 }"
+    # create file README.md lib.js
     node -e "
 // <script>
 /*jslint
@@ -244,35 +137,74 @@ shBuildApp() {(set -e
     stupid: true
 */
 'use strict';
-var local;
+var local, tmp;
 local = require('$npm_config_dir_utility2');
-try {
-    local.assert(local.fs.readFileSync('README.md', 'utf8'));
-} catch (errorCaught) {
+if (!local.fs.existsSync('README.md', 'utf8')) {
     local.fs.writeFileSync('README.md', local.templateRenderJslintLite(
         local.assetsDict['/assets.readme.template.md'],
         {}
     ));
 }
-try {
-    local.assert(local.fs.readFileSync('lib.$npm_package_nameLib.js', 'utf8'));
-} catch (errorCaught) {
-    local.fs.writeFileSync('lib.$npm_package_nameLib.js', local.templateRenderJslintLite(
-        local.assetsDict['/assets.lib.template.js'],
-        {}
-    ));
+if (!local.fs.existsSync('lib.$npm_package_nameLib.js', 'utf8')) {
+    tmp = local.assetsDict['/assets.lib.template.js'];
+    if (local.fs.existsSync('assets.utility2.rollup.js')) {
+        tmp = tmp.replace(
+            '        if (!local) {\n',
+            '        if (local) {\n'
+        );
+    }
+    local.fs.writeFileSync('lib.$npm_package_nameLib.js', local.templateRenderJslintLite(tmp, {}));
 }
-try {
-    local.assert(local.fs.readFileSync('test.js', 'utf8'));
-} catch (errorCaught) {
-    local.fs.writeFileSync('test.js', local.templateRenderJslintLite(
-        local.assetsDict['/assets.test.template.js'],
-        {}
-    ));
+if (!local.fs.existsSync('test.js', 'utf8')) {
+    tmp = local.assetsDict['/assets.test.template.js'];
+    if (local.fs.existsSync('assets.utility2.rollup.js')) {
+        tmp = tmp.replace(
+            'require(\\u0027utility2\\u0027)',
+            'require(\\u0027./assets.utility2.rollup.js\\u0027)'
+        );
+    }
+    local.fs.writeFileSync('test.js', local.templateRenderJslintLite(tmp, {}));
 }
 // </script>
     "
+    # sync master swagger.json
+    if [ -f assets.swgg.swagger.json ] &&
+        [ -f "../swgg-$npm_package_swggAll/assets.swgg.swagger.json" ] &&
+        [ ! assets.swgg.swagger.json -ef "../swgg-$npm_package_swggAll/assets.swgg.swagger.json" ]
+    then
+        cp "../swgg-$npm_package_swggAll/assets.swgg.swagger.json" .
+    fi
     npm test --mode-coverage="" --mode-test-case=testCase_buildApp_default
+)}
+
+shBuildAppSwgg0() {(set -e
+# this function will buiod the swgg-app from scratch
+# example usage:
+# TRAVIS_REPO_CREATE_FORCE=1 shBuildAppSwgg0 google-maps
+    NAME="$1"
+    shBuildInit
+    if [ "$TRAVIS_REPO_CREATE_FORCE" ]
+    then
+        rm -f README.md
+    fi
+    # create file README.md lib.js
+    for FILE in README.md assets.swgg.swagger.json assets.utility2.rollup.js
+    do
+        if [ ! -f "$FILE" ]
+        then
+            curl -Lfs -O \
+                "https://raw.githubusercontent.com/kaizhu256/node-swgg-google-maps/alpha/$FILE"
+        fi
+    done
+    sed -in \
+        -e "s|google-maps|$NAME|g" \
+        -e "s|google_maps|$(printf "$NAME" | tr - _)|g" \
+        -e "s|    shDeployHeroku|    # shDeployHeroku|" \
+        -e "s|    \"nameAliasPublish\": \".*\",|    \"nameAliasPublish\": \"\",|" \
+        -e "s|    \"swggAll\": \".*\",|    \"swggAll\": \"\",|" \
+        "README.md"
+    rm -f "README.md"n
+    shBuildApp "swgg-$NAME"
 )}
 
 shBuildCi() {(set -e
@@ -716,29 +648,20 @@ if ((/^[^\/]+\/[^\/]+\$/).test(value)) {
     stupid: true
 */
 'use strict';
-var local;
-local = {};
-local.fs = require('fs');
-local.nop = function () {
-    return;
-};
-local.readme = local.fs.readFileSync('README.md', 'utf8');
-local.readme.replace((
+require('fs').readFileSync('README.md', 'utf8').replace((
     /\`\`\`\\w*?(\n[\\W\\s]*?(\w\S*?)[\n\"][\\S\\s]+?)\n\`\`\`/g
 ), function (match0, match1, match2, ii, text) {
-    // jslint-hack
-    local.nop(match0);
     // preserve lineno
-    match1 = text.slice(0, ii).replace((/.+/g), '') + match1
+    match0 = text.slice(0, ii).replace((/.+/g), '') + match1
         // parse '\' line-continuation
         .replace((/(?:.*\\\\\n)+.*/g), function (match0) {
             return match0.replace((/\\\\\n/g), '') + match0.replace((/.+/g), '');
         });
     // trim json-file
     if (match2.slice(-5) === '.json') {
-        match1 = match1.trim();
+        match0 = match0.trim();
     }
-    local.fs.writeFileSync('tmp/README.' + match2, match1.trimRight() + '\n');
+    require('fs').writeFileSync('tmp/README.' + match2, match0.trimRight() + '\n');
 });
 // </script>
         "
@@ -955,8 +878,7 @@ shCustomOrgBuildCi() {(set -e
 )}
 
 shCustomOrgNameNormalize() {(set -e
-# this function will normalize the customOrg name $LIST
-    LIST="$1"
+# this function will normalize the customOrg name $1
     node -e "
 // <script>
 /*jslint
@@ -987,7 +909,7 @@ console.log(process.argv[1]
     .replace((/\s{2,}/), '\n')
     .trimLeft());
 // </script>
-    " "$LIST"
+    " "$@"
 )}
 
 shCustomOrgRepoListCreate() {(set -e
@@ -1512,12 +1434,9 @@ shDuList() {(set -e
 
 shFileJsonNormalize() {(set -e
 # this function will
-# 1. read the json-data from $FILE
+# 1. read the json-data from file $1
 # 2. normalize the json-data
-# 3. write the normalized json-data back to $FILE
-    FILE="$1"
-    DEFAULTS="$2"
-    OVERRIDES="$3"
+# 3. write the normalized json-data back to file $1
     node -e "
 // <script>
 /*jslint
@@ -1531,152 +1450,154 @@ shFileJsonNormalize() {(set -e
     stupid: true
 */
 'use strict';
-var local;
+var local, tmp;
 local = {};
-local.fs = require('fs');
-local.jsonStringifyOrdered = function (jsonObj, replacer, space) {
-/*
- * this function will JSON.stringify the jsonObj,
- * with object-keys sorted and circular-references removed
- */
-    var circularList, stringify, tmp;
-    stringify = function (jsonObj) {
-    /*
-     * this function will recursively JSON.stringify the jsonObj,
-     * with object-keys sorted and circular-references removed
-     */
-        // if jsonObj is an object, then recurse its items with object-keys sorted
-        if (jsonObj &&
-                typeof jsonObj === 'object' &&
-                typeof jsonObj.toJSON !== 'function') {
-            // ignore circular-reference
-            if (circularList.indexOf(jsonObj) >= 0) {
-                return;
-            }
-            circularList.push(jsonObj);
-            // if jsonObj is an array, then recurse its jsonObjs
-            if (Array.isArray(jsonObj)) {
-                return '[' + jsonObj.map(function (jsonObj) {
-                    // recurse
-                    tmp = stringify(jsonObj);
-                    return typeof tmp === 'string'
-                        ? tmp
-                        : 'null';
-                }).join(',') + ']';
-            }
-            return '{' + Object.keys(jsonObj)
-                // sort object-keys
-                .sort()
-                .map(function (key) {
-                    // recurse
-                    tmp = stringify(jsonObj[key]);
-                    if (typeof tmp === 'string') {
-                        return JSON.stringify(key) + ':' + tmp;
+(function () {
+    (function () {
+        local.jsonStringifyOrdered = function (jsonObj, replacer, space) {
+        /*
+         * this function will JSON.stringify the jsonObj,
+         * with object-keys sorted and circular-references removed
+         */
+            var circularList, stringify, tmp;
+            stringify = function (jsonObj) {
+            /*
+             * this function will recursively JSON.stringify the jsonObj,
+             * with object-keys sorted and circular-references removed
+             */
+                // if jsonObj is an object, then recurse its items with object-keys sorted
+                if (jsonObj &&
+                        typeof jsonObj === 'object' &&
+                        typeof jsonObj.toJSON !== 'function') {
+                    // ignore circular-reference
+                    if (circularList.indexOf(jsonObj) >= 0) {
+                        return;
                     }
-                })
-                .filter(function (jsonObj) {
-                    return typeof jsonObj === 'string';
-                })
-                .join(',') + '}';
-        }
-        // else JSON.stringify as normal
-        return JSON.stringify(jsonObj);
-    };
-    circularList = [];
-    return JSON.stringify(typeof jsonObj === 'object' && jsonObj
-        // recurse
-        ? JSON.parse(stringify(jsonObj))
-        : jsonObj, replacer, space);
-};
-local.objectSetDefault = function (arg, defaults, depth) {
-/*
- * this function will recursively set defaults for undefined-items in the arg
- */
-    arg = arg || {};
-    defaults = defaults || {};
-    Object.keys(defaults).forEach(function (key) {
-        var arg2, defaults2;
-        arg2 = arg[key];
-        // handle misbehaving getter
-        try {
-            defaults2 = defaults[key];
-        } catch (ignore) {
-        }
-        if (defaults2 === undefined) {
-            return;
-        }
-        // init arg[key] to default value defaults[key]
-        if (!arg2) {
-            arg[key] = defaults2;
-            return;
-        }
-        // if arg2 and defaults2 are both non-null and non-array objects,
-        // then recurse with arg2 and defaults2
-        if (depth > 1 &&
-                // arg2 is a non-null and non-array object
-                arg2 &&
-                typeof arg2 === 'object' &&
-                !Array.isArray(arg2) &&
-                // defaults2 is a non-null and non-array object
-                defaults2 &&
-                typeof defaults2 === 'object' &&
-                !Array.isArray(defaults2)) {
-            // recurse
-            local.objectSetDefault(arg2, defaults2, depth - 1);
-        }
-    });
-    return arg;
-};
-local.objectSetOverride = function (arg, overrides, depth, env) {
-/*
- * this function will recursively set overrides for items in the arg
- */
-    arg = arg || {};
-    env = env || (typeof process === 'object' && process.env) || {};
-    overrides = overrides || {};
-    Object.keys(overrides).forEach(function (key) {
-        var arg2, overrides2;
-        arg2 = arg[key];
-        overrides2 = overrides[key];
-        if (overrides2 === undefined) {
-            return;
-        }
-        // if both arg2 and overrides2 are non-null and non-array objects,
-        // then recurse with arg2 and overrides2
-        if (depth > 1 &&
-                // arg2 is a non-null and non-array object
-                (arg2 &&
-                typeof arg2 === 'object' &&
-                !Array.isArray(arg2)) &&
-                // overrides2 is a non-null and non-array object
-                (overrides2 &&
-                typeof overrides2 === 'object' &&
-                !Array.isArray(overrides2))) {
-            local.objectSetOverride(arg2, overrides2, depth - 1, env);
-            return;
-        }
-        // else set arg[key] with overrides[key]
-        arg[key] = arg === env
-            // if arg is env, then overrides falsey value with empty string
-            ? overrides2 || ''
-            : overrides2;
-    });
-    return arg;
-};
-local.file = process.argv[1];
-local.defaults = process.argv[2];
-local.overrides = process.argv[3];
-local.data = {};
-local.data = JSON.parse(local.fs.readFileSync(local.file, 'utf8'));
-if (local.defaults) {
-    local.objectSetDefault(local.data, JSON.parse(local.defaults), Infinity);
+                    circularList.push(jsonObj);
+                    // if jsonObj is an array, then recurse its jsonObjs
+                    if (Array.isArray(jsonObj)) {
+                        return '[' + jsonObj.map(function (jsonObj) {
+                            // recurse
+                            tmp = stringify(jsonObj);
+                            return typeof tmp === 'string'
+                                ? tmp
+                                : 'null';
+                        }).join(',') + ']';
+                    }
+                    return '{' + Object.keys(jsonObj)
+                        // sort object-keys
+                        .sort()
+                        .map(function (key) {
+                            // recurse
+                            tmp = stringify(jsonObj[key]);
+                            if (typeof tmp === 'string') {
+                                return JSON.stringify(key) + ':' + tmp;
+                            }
+                        })
+                        .filter(function (jsonObj) {
+                            return typeof jsonObj === 'string';
+                        })
+                        .join(',') + '}';
+                }
+                // else JSON.stringify as normal
+                return JSON.stringify(jsonObj);
+            };
+            circularList = [];
+            return JSON.stringify(typeof jsonObj === 'object' && jsonObj
+                // recurse
+                ? JSON.parse(stringify(jsonObj))
+                : jsonObj, replacer, space);
+        };
+        local.objectSetDefault = function (arg, defaults, depth) {
+        /*
+         * this function will recursively set defaults for undefined-items in the arg
+         */
+            arg = arg || {};
+            defaults = defaults || {};
+            Object.keys(defaults).forEach(function (key) {
+                var arg2, defaults2;
+                arg2 = arg[key];
+                // handle misbehaving getter
+                try {
+                    defaults2 = defaults[key];
+                } catch (ignore) {
+                }
+                if (defaults2 === undefined) {
+                    return;
+                }
+                // init arg[key] to default value defaults[key]
+                switch (arg2) {
+                case '':
+                case null:
+                case undefined:
+                    arg[key] = defaults2;
+                    return;
+                }
+                // if arg2 and defaults2 are both non-null and non-array objects,
+                // then recurse with arg2 and defaults2
+                if (depth > 1 &&
+                        // arg2 is a non-null and non-array object
+                        arg2 &&
+                        typeof arg2 === 'object' &&
+                        !Array.isArray(arg2) &&
+                        // defaults2 is a non-null and non-array object
+                        defaults2 &&
+                        typeof defaults2 === 'object' &&
+                        !Array.isArray(defaults2)) {
+                    // recurse
+                    local.objectSetDefault(arg2, defaults2, depth - 1);
+                }
+            });
+            return arg;
+        };
+        local.objectSetOverride = function (arg, overrides, depth, env) {
+        /*
+         * this function will recursively set overrides for items in the arg
+         */
+            arg = arg || {};
+            env = env || (typeof process === 'object' && process.env) || {};
+            overrides = overrides || {};
+            Object.keys(overrides).forEach(function (key) {
+                var arg2, overrides2;
+                arg2 = arg[key];
+                overrides2 = overrides[key];
+                if (overrides2 === undefined) {
+                    return;
+                }
+                // if both arg2 and overrides2 are non-null and non-array objects,
+                // then recurse with arg2 and overrides2
+                if (depth > 1 &&
+                        // arg2 is a non-null and non-array object
+                        (arg2 &&
+                        typeof arg2 === 'object' &&
+                        !Array.isArray(arg2)) &&
+                        // overrides2 is a non-null and non-array object
+                        (overrides2 &&
+                        typeof overrides2 === 'object' &&
+                        !Array.isArray(overrides2))) {
+                    local.objectSetOverride(arg2, overrides2, depth - 1, env);
+                    return;
+                }
+                // else set arg[key] with overrides[key]
+                arg[key] = arg === env
+                    // if arg is env, then overrides falsey value with empty string
+                    ? overrides2 || ''
+                    : overrides2;
+            });
+            return arg;
+        };
+    }());
+}());
+tmp = JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'));
+if (process.argv[2]) {
+    local.objectSetDefault(tmp, JSON.parse(process.argv[2]), Infinity);
 }
-if (local.overrides) {
-    local.objectSetOverride(local.data, JSON.parse(local.overrides), Infinity);
+if (process.argv[3]) {
+    local.objectSetOverride(tmp, JSON.parse(process.argv[3]), Infinity);
 }
-local.fs.writeFileSync(local.file, local.jsonStringifyOrdered(local.data, null, 4) + '\n');
+require('fs').writeFileSync(process.argv[1], local.jsonStringifyOrdered(tmp, null, 4) + '\n');
 // </script>
-    " "$FILE" "$DEFAULTS" "$OVERRIDES"
+    " "$@"
 )}
 
 shFileKeySort() {(set -e
@@ -1741,34 +1662,31 @@ VERSION_PUBLISHED="${VERSION_PUBLISHED:-0.0.0}"
     stupid: true
 */
 'use strict';
-var local;
-local = {};
-local.fs = require('fs');
-local.packageJson = JSON.parse(local.fs.readFileSync('package.json'));
+var packageJson, versionList;
+packageJson = JSON.parse(require('fs').readFileSync('package.json'));
 // jslint-hack
-local.versionOverride = '$1';
-local.versionList = [
-    local.versionOverride || local.packageJson.version,
+versionList = [
+    process.argv[1] || packageJson.version,
     '$VERSION_PUBLISHED'
 ].map(function (element) {
     return element.split('.').slice(0, 3).map(function (element) {
         return Number(element) || 0;
     });
 });
-local.versionList[1][2] += 1;
-if (local.versionList[0][0] < local.versionList[1][0] ||
-        (local.versionList[0][0] <= local.versionList[1][0] &&
-        local.versionList[0][1] < local.versionList[1][1]) ||
-        (local.versionList[0][0] <= local.versionList[1][0] &&
-        local.versionList[0][1] <= local.versionList[1][1] &&
-        local.versionList[0][2] < local.versionList[1][2])) {
-    local.versionList[0] = local.versionList[1];
+versionList[1][2] += 1;
+if (versionList[0][0] < versionList[1][0] ||
+        (versionList[0][0] <= versionList[1][0] &&
+        versionList[0][1] < versionList[1][1]) ||
+        (versionList[0][0] <= versionList[1][0] &&
+        versionList[0][1] <= versionList[1][1] &&
+        versionList[0][2] < versionList[1][2])) {
+    versionList[0] = versionList[1];
 }
-local.packageJson.version = local.versionList[0].join('.');
-local.fs.writeFileSync('package.json', JSON.stringify(local.packageJson, null, 4) + '\n');
-console.error('shFilePackageJsonVersionIncrement - ' + local.packageJson.version);
+packageJson.version = versionList[0].join('.');
+require('fs').writeFileSync('package.json', JSON.stringify(packageJson, null, 4) + '\n');
+console.error('shFilePackageJsonVersionIncrement - ' + packageJson.version);
 // </script>
-    "
+    " "$@"
 )}
 
 shFileTrimLeft() {(set -e
@@ -1937,6 +1855,8 @@ shGithubRepoBaseCreate() {(set -e
     mkdir -p "/tmp/$(printf "$GITHUB_REPO" | sed "s|/.*||")"
     cp -a /tmp/githubRepoBase "/tmp/$GITHUB_REPO"
     cd "/tmp/$GITHUB_REPO"
+    curl -Lfs https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig | \
+        sed "s|kaizhu256/node-utility2|$GITHUB_REPO|" > .git/config
     (eval shGithubCrudRepoListCreate "$GITHUB_REPO") || true
     # set default-branch to alpha
     shGithubPush "https://github.com/$GITHUB_REPO" alpha || true
@@ -1987,8 +1907,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
 )}
 
 shGrepFileReplace() {(set -e
-# this function will save the grep-and-replace lines in $FILE
-    FILE="$1"
+# this function will save the grep-and-replace lines in file $1
     node -e "
 // <script>
 /*jslint
@@ -2002,24 +1921,22 @@ shGrepFileReplace() {(set -e
     stupid: true
 */
 'use strict';
-var local;
-local = {};
-local.dict = {};
-local.fs = require('fs');
-local.fs.readFileSync('$FILE', 'utf8').split('\n').forEach(function (element) {
+var dict;
+dict = {};
+require('fs').readFileSync(process.argv[1], 'utf8').split('\n').forEach(function (element) {
     element = (/^(.+?):(\d+?):(.+?)$/).exec(element);
     if (!element) {
         return;
     }
-    local.dict[element[1]] = local.dict[element[1]] ||
-        local.fs.readFileSync(element[1], 'utf8').split('\n');
-    local.dict[element[1]][element[2] - 1] = element[3];
+    dict[element[1]] = dict[element[1]] ||
+        require('fs').readFileSync(element[1], 'utf8').split('\n');
+    dict[element[1]][element[2] - 1] = element[3];
 });
-Object.keys(local.dict).forEach(function (key) {
-    local.fs.writeFileSync(key, local.dict[key].join('\n'));
+Object.keys(dict).forEach(function (key) {
+    require('fs').writeFileSync(key, dict[key].join('\n'));
 });
 // </script>
-    "
+    " "$@"
 )}
 
 shHtpasswdCreate() {(set -e
@@ -2063,11 +1980,11 @@ shImageToDataUri() {(set -e
     case "$1" in
     http://*)
         FILE=/tmp/shImageToDataUri.png
-        curl -#Lf "$1" > "$FILE"
+        curl -#Lf -o "$FILE" "$1"
         ;;
     https://*)
         FILE=/tmp/shImageToDataUri.png
-        curl -#Lf "$1" > "$FILE"
+        curl -#Lf -o "$FILE" "$1"
         ;;
     *)
         FILE="$1"
@@ -2293,30 +2210,36 @@ shModuleDirname() {(set -e
 'use strict';
 var local;
 local = {};
-local.moduleDirname = function (module, modulePathList) {
-/*
- * this function will search modulePathList for the module's __dirname
- */
-    var result, tmp;
-    // search process.cwd()
-    if (!module || module === '.' || module.indexOf('/') >= 0) {
-        return require('path').resolve(process.cwd(), module || '');
-    }
-    // search modulePathList
-    ['node_modules']
-        .concat(modulePathList)
-        .concat(require('module').globalPaths)
-        .concat([process.env.HOME + '/node_modules', '/usr/local/lib/node_modules'])
-        .some(function (modulePath) {
-            try {
-                tmp = require('path').resolve(process.cwd(), modulePath + '/' + module);
-                result = require('fs').statSync(tmp).isDirectory() && tmp;
-                return result;
-            } catch (ignore) {
+(function () {
+    (function () {
+        local.moduleDirname = function (module, modulePathList) {
+        /*
+         * this function will search modulePathList for the module's __dirname
+         */
+            var result;
+            // search process.cwd()
+            if (!module || module === '.' || module.indexOf('/') >= 0) {
+                return require('path').resolve(process.cwd(), module || '');
             }
-        });
-    return result || '';
-};
+            // search modulePathList
+            ['node_modules']
+                .concat(modulePathList)
+                .concat(require('module').globalPaths)
+                .concat([process.env.HOME + '/node_modules', '/usr/local/lib/node_modules'])
+                .some(function (modulePath) {
+                    try {
+                        result = require('path').resolve(process.cwd(), modulePath + '/' + module);
+                        result = require('fs').statSync(result).isDirectory() && result;
+                        return result;
+                    } catch (errorCaught) {
+                        result = null;
+                    }
+                    return result;
+                });
+            return result || '';
+        };
+    }());
+}());
 console.log(local.moduleDirname('$MODULE', module.paths));
 // </script>
     "
@@ -2360,7 +2283,7 @@ shNpmDeprecateAlias() {(set -e
     shBuildPrint "npm-deprecate $NAME"
     DIR=/tmp/npmDeprecate
     rm -fr "$DIR" && mkdir -p "$DIR" && cd "$DIR"
-    npm install "$NAME"
+    mkdir -p node_modules && npm install "$NAME"
     cd "node_modules/$NAME"
     # update README.md
     printf "$MESSAGE\n" > README.md
@@ -2378,17 +2301,15 @@ shNpmDeprecateAlias() {(set -e
     stupid: true
 */
 'use strict';
-var local;
-local = {};
-local.fs = require('fs');
-local.packageJson = JSON.parse(local.fs.readFileSync('package.json'));
-local.packageJson.description = '$MESSAGE';
-Object.keys(local.packageJson).forEach(function (key) {
+var packageJson;
+packageJson = JSON.parse(require('fs').readFileSync('package.json'));
+packageJson.description = '$MESSAGE';
+Object.keys(packageJson).forEach(function (key) {
     if (key[0] === '_') {
-        delete local.packageJson[key];
+        delete packageJson[key];
     }
 });
-local.fs.writeFileSync('package.json', JSON.stringify(local.packageJson, null, 4) + '\n');
+require('fs').writeFileSync('package.json', JSON.stringify(packageJson, null, 4) + '\n');
 // </script>
     "
     shFilePackageJsonVersionIncrement
@@ -2434,24 +2355,17 @@ shNpmInstallWithPeerDependencies() {(set -e
     stupid: true
 */
 'use strict';
-var local;
-local = {};
-local.dict = {};
-local.file = '$FILE';
-local.fs = require('fs');
-local.nop = function () {
-    return;
-};
-local.rgx = (/ UNMET PEER DEPENDENCY (\S+)/g);
-local.fs.readFileSync(local.file, 'utf8').replace(local.rgx, function (match0, match1) {
-    // jslint-hack
-    local.nop(match0);
-    match1 = match1.split('@');
-    local.dict[match1[0]] = local.dict[match1[0]] || (match1[1] || '').trim();
+var dict;
+dict = {};
+require('fs').readFileSync('$FILE', 'utf8').replace((
+    / UNMET PEER DEPENDENCY (\S+)/g
+), function (match0, match1) {
+    match0 = match1.split('@');
+    dict[match0[0]] = dict[match0[0]] || (match0[1] || '').trim();
 });
-Object.keys(local.dict).forEach(function (key) {
-    console.error('npm install ' + key + '@' + local.dict[key]);
-    console.log('npm install ' + key + '@' + local.dict[key]);
+Object.keys(dict).forEach(function (key) {
+    console.error('npm install ' + key + '@' + dict[key]);
+    console.log('npm install ' + key + '@' + dict[key]);
 });
 console.log('true');
 // </script>
@@ -2609,17 +2523,14 @@ shNpmPublishAlias() {(set -e
     stupid: true
 */
 'use strict';
-var local;
-local = {};
-local.fs = require('fs');
-local.packageJson = JSON.parse(local.fs.readFileSync('package.json'));
-// jslint-hack
-local.name = '$NAME';
-local.version = '$VERSION';
-local.packageJson.nameOriginal = local.packageJson.name;
-local.packageJson.name = local.name || local.packageJson.name;
-local.packageJson.version = local.version || local.packageJson.version;
-local.fs.writeFileSync('package.json', JSON.stringify(local.packageJson, null, 4) + '\n');
+var name, packageJson, version;
+name = '$NAME';
+version = '$VERSION';
+packageJson = JSON.parse(require('fs').readFileSync('package.json'));
+packageJson.nameOriginal = packageJson.name;
+packageJson.name = name || packageJson.name;
+packageJson.version = version || packageJson.version;
+require('fs').writeFileSync('package.json', JSON.stringify(packageJson, null, 4) + '\n');
 // </script>
     "
     npm publish
@@ -2690,7 +2601,7 @@ shNpmTestPublished() {(set -e
     DIR=/tmp/npmTestPublished
     rm -fr "$DIR" && mkdir -p "$DIR" && cd "$DIR"
     # npm-install package
-    npm install "$npm_package_name"
+    mkdir -p node_modules && npm install "$npm_package_name"
     cd "node_modules/$npm_package_name"
     # bug-workaround - Cannot read property 'target' of null #10686
     # https://github.com/npm/npm/issues/10686
@@ -2742,14 +2653,18 @@ shPasswordEnvUnset() {
 'use strict';
 var local;
 local = {};
-local.envKeyIsSensitive = function (key) {
-/*
- * this function will try to determine if the env-key is sensitive
- */
-    return (/(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/)
-        .test(key.toLowerCase()) ||
-        (/Crypt|Decrypt|Key|Pass|Private|Secret|Token/).test(key);
-};
+(function () {
+    (function () {
+        local.envKeyIsSensitive = function (key) {
+        /*
+         * this function will try to determine if the env-key is sensitive
+         */
+            return (/(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/)
+                .test(key.toLowerCase()) ||
+                (/Crypt|Decrypt|Key|Pass|Private|Secret|Token/).test(key);
+        };
+    }());
+}());
 console.log(Object.keys(process.env).sort().map(function (key) {
     return local.envKeyIsSensitive(key)
         ? 'unset ' + key + '; '
@@ -2793,19 +2708,11 @@ shReadmeLinkValidate() {(set -e
     stupid: true
 */
 'use strict';
-var local;
-local = {};
-local.file = 'README.md';
-local.fs = require('fs');
-local.http = require('http');
-local.https = require('https');
-local.nop = function () {
-    return;
-};
-local.url = require('url');
-local.rgx = new RegExp('\\\\b(http|https):\\\\/\\\\/.*?[)\\\\]]', 'g');
-local.fs.readFileSync(local.file, 'utf8')
-    .replace(local.rgx, function (match0, match1) {
+var request, rgx;
+/* jslint-ignore-next-line */
+rgx = (/\\b(http|https):\\/\\/.*?[)\\]]/g);
+require('fs').readFileSync('README.md', 'utf8')
+    .replace(rgx, function (match0, match1) {
         match0 = match0
             .slice(0, -1)
             .replace('\u0022', '')
@@ -2815,15 +2722,15 @@ local.fs.readFileSync(local.file, 'utf8')
         if ((/^https:\/\/snyk\.io\//).test(match0)) {
             return;
         }
-        local.request = local[match1].request(local.url.parse(match0), function (response) {
+        request = require(match1).request(require('url').parse(match0), function (response) {
             console.log('shReadmeLinkValidate ' + response.statusCode + ' ' + match0);
             response.destroy();
             if (!(response.statusCode < 400)) {
                 throw new Error('shReadmeLinkValidate - invalid link ' + match0);
             }
         });
-        local.request.setTimeout(30000);
-        local.request.end();
+        request.setTimeout(30000);
+        request.end();
     });
 // </script>
     "
@@ -2926,7 +2833,7 @@ process.stdin.pipe(socket);
 socket.pipe(process.stdout);
 socket.on('end', process.exit);
 // </script>
-    " $1
+    " "$@"
 )}
 
 shRmDsStore() {(set -e
@@ -3000,48 +2907,42 @@ shRunWithScreenshotTxt() {(set -e
     stupid: true
 */
 'use strict';
-var local;
-local = {};
-local.fs = require('fs');
-local.nop = function () {
-    return;
-};
-local.wordwrap = function (line, ii) {
+var result, wordwrap, yy;
+wordwrap = function (line, ii) {
     if (ii && !line) {
         return '';
     }
-    local.yy += 16;
-    return '<tspan x=\"10\" y=\"' + local.yy + '\">' + line
+    yy += 16;
+    return '<tspan x=\"10\" y=\"' + yy + '\">' + line
         .replace((/&/g), '&amp;')
         .replace((/</g), '&lt;')
         .replace((/>/g), '&gt;') + '</tspan>\n';
 };
-local.yy = 10;
-local.result = (local.fs
-    .readFileSync('$npm_config_dir_tmp/runWithScreenshotTxt', 'utf8')
+yy = 10;
+result = require('fs').readFileSync('$npm_config_dir_tmp/runWithScreenshotTxt', 'utf8')
     // remove ansi escape-code
     .replace((/\u001b.*?m/g), '')
     // format unicode
     .replace((/\\u[0-9a-f]{4}/g), function (match0) {
         return String.fromCharCode('0x' + match0.slice(-4));
     })
-    .trimRight() + '\n')
-    .replace((/(.*)\n/g), function (match0, line) {
-        // jslint-hack
-        local.nop(match0);
+    .trimRight()
+    .split('\n')
+    .map(function (line) {
         return line
-            .replace((/.{0,96}/g), local.wordwrap)
+            .replace((/.{0,96}/g), wordwrap)
             /* jslint-ignore-next-line */
             .replace((/(<\/tspan>\n<tspan)/g), '\\\\\$1')
-            .replace();
-    });
-local.result = '<svg height=\"' + (local.yy + 20) +
+            .slice();
+    })
+    .join('\n') + '\n';
+result = '<svg height=\"' + (yy + 20) +
     '\" width=\"720\" xmlns=\"http://www.w3.org/2000/svg\">\n' +
-    '<rect height=\"' + (local.yy + 20) + '\" fill=\"#555\" width=\"720\"></rect>\n' +
+    '<rect height=\"' + (yy + 20) + '\" fill=\"#555\" width=\"720\"></rect>\n' +
     '<text fill=\"#7f7\" font-family=\"Courier New\" font-size=\"12\" ' +
     'xml:space=\"preserve\">\n' +
-    local.result + '</text>\n</svg>\n';
-local.fs.writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG', local.result);
+    result + '</text>\n</svg>\n';
+require('fs').writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG', result);
 // </script>
     "
     shBuildPrint "created screenshot file $npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
@@ -3272,7 +3173,8 @@ shUtility2BuildApp() {(set -e
 shUtility2Dependents() {(set -e
 # this function will return a list of utility2 dependents
     cd "$HOME/src" 2>/dev/null || true
-printf "apidoc-lite
+printf "
+apidoc-lite
 db-lite
 elasticsearch-lite
 electron-lite
@@ -3281,10 +3183,10 @@ istanbul-lite
 itunes-search-lite
 jslint-lite
 swagger-ui-lite
+swagger-validate-lite
 swgg
 uglifyjs-lite
 utility2
-$(ls -d swgg-* 2>/dev/null)
 "
 )}
 
@@ -3292,14 +3194,14 @@ shUtility2DependentsSync() {(set -e
 # this function will sync files between utility2 and its dependents
     cd "$HOME/src"
     (cd utility2 && shBuildApp)
-    # hardlink "lib.$LIB.js"
     ln -f "utility2/lib.utility2.sh" "$HOME"
-    for DIR in $UTILITY2_DEPENDENTS
+    for DIR in $UTILITY2_DEPENDENTS $(ls -d swgg-* 2>/dev/null)
     do
         if [ "$DIR" = utility2 ] || [ ! -d "$DIR" ]
         then
             continue
         fi
+        # hardlink "lib.$LIB.js"
         LIB="$(printf "$DIR" | sed -e "s/-lite\$//" -e "s/-/_/g")"
         if [ -f "utility2/lib.$LIB.js" ]
         then
@@ -3316,9 +3218,11 @@ shUtility2DependentsSync() {(set -e
         elasticsearch-lite)
             ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
             ;;
+        swagger-validate-lite)
+            ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
+            ;;
         swgg)
             ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
-            ln -f utility2/lib.swgg.js "$DIR"
             ;;
         swgg-*)
             ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
@@ -3410,4 +3314,5 @@ shXvfbStart() {
     fi
 }
 
+# run command
 shMain "$@"

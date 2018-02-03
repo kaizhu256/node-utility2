@@ -76,8 +76,13 @@
             : global;
         // init utility2_rollup
         local = local.global.utility2_rollup || local;
-        // init lib
-        local.local = local.db = local;
+        /* istanbul ignore next */
+        if (!local) {
+            local = local.global.utility2_rollup ||
+                local.global.utility2_rollup_old ||
+                require('./assets.utility2.rollup.js');
+            local.fs = null;
+        }
         // init exports
         if (local.modeJs === 'browser') {
             local.global.utility2_db = local;
@@ -90,8 +95,9 @@
             });
             module.exports = local;
             module.exports.__dirname = __dirname;
-            module.exports.module = module;
         }
+        // init lib
+        local.local = local.db = local;
     }());
 
 
@@ -99,7 +105,7 @@
     // run shared js-env code - function-before
     /* istanbul ignore next */
     (function () {
-        local.assert = function (passed, message) {
+        local.assert = function (passed, message, onError) {
         /*
          * this function will throw the error message if passed is falsey
          */
@@ -115,7 +121,12 @@
                     ? message
                     // else JSON.stringify message
                     : JSON.stringify(message));
-            throw error;
+            // debug error
+            local._debugAssertError = error;
+            onError = onError || function (error) {
+                throw error;
+            };
+            onError(error);
         };
 
         local.cliRun = function (fnc) {

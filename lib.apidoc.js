@@ -40,8 +40,13 @@
             : global;
         // init utility2_rollup
         local = local.global.utility2_rollup || local;
-        // init lib
-        local.local = local.apidoc = local;
+        /* istanbul ignore next */
+        if (!local) {
+            local = local.global.utility2_rollup ||
+                local.global.utility2_rollup_old ||
+                require('./assets.utility2.rollup.js');
+            local.fs = null;
+        }
         // init exports
         if (local.modeJs === 'browser') {
             local.global.utility2_apidoc = local;
@@ -54,8 +59,9 @@
             });
             module.exports = local;
             module.exports.__dirname = __dirname;
-            module.exports.module = module;
         }
+        // init lib
+        local.local = local.apidoc = local;
     }());
 
 
@@ -63,7 +69,7 @@
     // run shared js-env code - function-before
     /* istanbul ignore next */
     (function () {
-        local.assert = function (passed, message) {
+        local.assert = function (passed, message, onError) {
         /*
          * this function will throw the error message if passed is falsey
          */
@@ -79,7 +85,12 @@
                     ? message
                     // else JSON.stringify message
                     : JSON.stringify(message));
-            throw error;
+            // debug error
+            local._debugAssertError = error;
+            onError = onError || function (error) {
+                throw error;
+            };
+            onError(error);
         };
 
         local.cliRun = function (fnc) {
@@ -187,7 +198,7 @@
         /*
          * this function will search modulePathList for the module's __dirname
          */
-            var result, tmp;
+            var result;
             // search process.cwd()
             if (!module || module === '.' || module.indexOf('/') >= 0) {
                 return require('path').resolve(process.cwd(), module || '');
@@ -199,11 +210,13 @@
                 .concat([process.env.HOME + '/node_modules', '/usr/local/lib/node_modules'])
                 .some(function (modulePath) {
                     try {
-                        tmp = require('path').resolve(process.cwd(), modulePath + '/' + module);
-                        result = require('fs').statSync(tmp).isDirectory() && tmp;
+                        result = require('path').resolve(process.cwd(), modulePath + '/' + module);
+                        result = require('fs').statSync(result).isDirectory() && result;
                         return result;
-                    } catch (ignore) {
+                    } catch (errorCaught) {
+                        result = null;
                     }
+                    return result;
                 });
             return result || '';
         };
@@ -337,7 +350,7 @@
             }
             // search for keys in the template
             return template.replace((/\{\{[^}]+?\}\}/g), function (match0) {
-                var htmlBr, notHtmlSafe;
+                var markdownToHtml, notHtmlSafe;
                 notHtmlSafe = options.notHtmlSafe;
                 return tryCatch(function () {
                     getValue(match0.slice(2, -2));
@@ -355,9 +368,6 @@
                         case 'encodeURIComponent':
                             value = encodeURIComponent(value);
                             break;
-                        case 'htmlBr':
-                            htmlBr = true;
-                            break;
                         case 'jsonStringify':
                             value = JSON.stringify(value);
                             break;
@@ -366,6 +376,9 @@
                             break;
                         case 'markdownSafe':
                             value = value.replace((/`/g), '\'');
+                            break;
+                        case 'markdownToHtml':
+                            markdownToHtml = true;
                             break;
                         case 'notHtmlSafe':
                             notHtmlSafe = true;
@@ -383,8 +396,8 @@
                             return '&#x' + match0.charCodeAt(0).toString(16) + ';';
                         });
                     }
-                    if (htmlBr) {
-                        value = value.replace((/\n/g), '<br>');
+                    if (markdownToHtml && typeof local.marked === 'function') {
+                        value = local.marked(value);
                     }
                     return value;
                 }, 'templateRender could not render expression ' + JSON.stringify(match0) + '\n');
@@ -447,6 +460,7 @@ local.templateApidocHtml = '\
     background: #eef;\n\
     border: 1px solid;\n\
     color: #777;\n\
+    overflow-wrap: break-word;\n\
     padding: 5px;\n\
     white-space: pre-wrap;\n\
 }\n\
@@ -684,7 +698,8 @@ local.templateApidocHtml = '\
                 moduleDict: {},
                 moduleExtraDict: {},
                 packageJson: { bin: {} },
-                template: local.templateApidocHtml
+                template: local.templateApidocHtml,
+                whitelistDict: {}
             }, 2);
             // init exampleList
             [1, 2, 3, 4].forEach(function (depth) {
@@ -882,7 +897,8 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                                     return key &&
                                         (/^\w[\w\-.]*?$/).test(key) &&
                                         key.indexOf('testCase_') !== 0 &&
-                                        module[key] !== options.blacklistDict[key];
+                                        (module[key] !== options.blacklistDict[key]
+                                            || options.whitelistDict[key]);
                                 }, console.error);
                             })
                             .map(function (key) {

@@ -13,4 +13,4 @@
     url = git@heroku.com:h1-utility2-alpha.git
 [remote "origin"]
     fetch = +refs/heads/*:refs/remotes/origin/*
-    url = https://github.com/kaizhu256/node-utility2.git
+    url = https://github.com/kaizhu256/node-utility2

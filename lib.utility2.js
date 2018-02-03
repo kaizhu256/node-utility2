@@ -40,8 +40,13 @@
             : global;
         // init utility2_rollup
         local = local.global.utility2_rollup || local;
-        // init lib
-        local.local = local.utility2 = local;
+        /* istanbul ignore next */
+        if (!local) {
+            local = local.global.utility2_rollup ||
+                local.global.utility2_rollup_old ||
+                require('./assets.utility2.rollup.js');
+            local.fs = null;
+        }
         // init exports
         if (local.modeJs === 'browser') {
             local.global.utility2_utility2 = local;
@@ -54,10 +59,19 @@
             });
             module.exports = local;
             module.exports.__dirname = __dirname;
-            module.exports.module = module;
         }
+        // init lib
+        local.local = local.utility2 = local;
         // init lib utility2
         local.global.utility2 = local.global.utility2_utility2 = local.utility2 = local;
+        // init nop
+        local.nop = function () {
+        /*
+         * this function will do nothing
+         */
+            return;
+        };
+
     }());
 
 
@@ -79,12 +93,6 @@
             // return arg for inspection
             return arg;
         };
-        local.nop = function () {
-        /*
-         * this function will do nothing
-         */
-            return;
-        };
         // init lib
         [
             'apidoc',
@@ -92,6 +100,7 @@
             'github_crud',
             'istanbul',
             'jslint',
+            'marked',
             'sjcl',
             'uglifyjs'
         ].forEach(function (key) {
@@ -104,7 +113,7 @@
             local[key] = local[key] || {};
         });
         // init assets and templates
-        local.assetsDict = {};
+        local.assetsDict = local.assetsDict || {};
 
 
 
@@ -148,6 +157,10 @@ body > button {\n\
 }\n\
 button {\n\
     cursor: pointer;\n\
+}\n\
+pre {\n\
+    overflow-wrap: break-word;\n\
+    white-space: pre-wrap;\n\
 }\n\
 @keyframes uiAnimateShake {\n\
     100% {\n\
@@ -399,8 +412,7 @@ instruction\n\
                 // show tests\n\
                 if (document.querySelector(\'#testReportDiv1\').style.maxHeight === \'0px\') {\n\
                     local.uiAnimateSlideDown(document.querySelector(\'#testReportDiv1\'));\n\
-                    document.querySelector(\'#testRunButton1\').textContent =\n\
-                        \'hide internal test\';\n\
+                    document.querySelector(\'#testRunButton1\').textContent = \'hide internal test\';\n\
                     local.modeTest = true;\n\
                     local.testRunDefault(local);\n\
                 // hide tests\n\
@@ -596,8 +608,13 @@ local.assetsDict['/assets.lib.template.js'] = '\
             : global;\n\
         // init utility2_rollup\n\
         local = local.global.utility2_rollup || local;\n\
-        // init lib\n\
-        local.local = local.jslint = local;\n\
+        /* istanbul ignore next */\n\
+        if (!local) {\n\
+            local = local.global.utility2_rollup ||\n\
+                local.global.utility2_rollup_old ||\n\
+                require(\'./assets.utility2.rollup.js\');\n\
+            local.fs = null;\n\
+        }\n\
         // init exports\n\
         if (local.modeJs === \'browser\') {\n\
             local.global.utility2_jslint = local;\n\
@@ -610,8 +627,9 @@ local.assetsDict['/assets.lib.template.js'] = '\
             });\n\
             module.exports = local;\n\
             module.exports.__dirname = __dirname;\n\
-            module.exports.module = module;\n\
         }\n\
+        // init lib\n\
+        local.local = local.jslint = local;\n\
     }());\n\
 }());\n\
 ';
@@ -787,10 +805,13 @@ PORT=8081 node ./assets.app.js\n\
         "url": "https://github.com/kaizhu256/node-jslint-lite.git"\n\
     },\n\
     "scripts": {\n\
+        "apidocRawCreate": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh shNpmScriptApidocRawCreate",\n\
+        "apidocRawFetch": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh shNpmScriptApidocRawFetch",\n\
         "build-ci": "utility2 shReadmeTest build_ci.sh",\n\
         "env": "env",\n\
         "heroku-postbuild": "npm uninstall utility2 2>/dev/null; npm install kaizhu256/node-utility2#alpha && utility2 shDeployHeroku",\n\
-        "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh postinstall",\n\
+        "nameAliasPublish": "",\n\
+        "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh shNpmScriptPostinstall",\n\
         "start": "PORT=${PORT:-8080} utility2 start test.js",\n\
         "test": "PORT=$(utility2 shServerPortRandom) utility2 test test.js"\n\
     },\n\
@@ -813,8 +834,9 @@ PORT=8081 node ./assets.app.js\n\
 # this shell script will run the build for this package\n\
 \n\
 shBuildCiAfter() {(set -e\n\
+    # shDeployCustom\n\
     shDeployGithub\n\
-    shDeployHeroku\n\
+    # shDeployHeroku\n\
     shReadmeTest example.sh\n\
 )}\n\
 \n\
@@ -1014,6 +1036,7 @@ local.assetsDict['/assets.testReport.template.html'] = '\
     background: #fdd;\n\
     border-top: 1px solid black;\n\
     margin-bottom: 0;\n\
+    overflow-wrap: break-word;\n\
     padding: 10px;\n\
     white-space: pre-wrap;\n\
 }\n\
@@ -1760,7 +1783,7 @@ local.assetsDict['/favicon.ico'] = '';
             global.local.testCase_buildLib_default(options, local.onErrorThrow);
             global.local.testCase_buildTest_default(options, local.onErrorThrow);
             global.local.testCase_buildCustomOrg_default(options, local.onErrorThrow);
-            local.buildApp([], onError);
+            local.buildApp(options, onError);
         };
 
         local._testCase_buildCustomOrg_default = function (options, onError) {
@@ -1841,6 +1864,9 @@ local.assetsDict['/favicon.ico'] = '';
             var tmp, xhr;
             // init standalone handling-behavior
             local.nop = local.nop || function () {
+            /*
+             * this function will do nothing
+             */
                 return;
             };
             local.ajaxProgressCounter = local.ajaxProgressCounter || 0;
@@ -1874,9 +1900,6 @@ local.assetsDict['/favicon.ico'] = '';
             Object.keys(options.headers || {}).forEach(function (key) {
                 xhr.headers[key.toLowerCase()] = options.headers[key];
             });
-            // init corsForwardProxyHostifNeeded
-            xhr.corsForwardProxyHostifNeeded = xhr.corsForwardProxyHostifNeeded ||
-                local.corsForwardProxyHostifNeeded || local.nop;
             // init method
             xhr.method = xhr.method || 'GET';
             // init timeStart
@@ -1968,12 +1991,11 @@ local.assetsDict['/favicon.ico'] = '';
             xhr.addEventListener('progress', local.ajaxProgressUpdate);
             xhr.upload.addEventListener('progress', local.ajaxProgressUpdate);
             // open url through corsForwardProxyHost
-            xhr.corsForwardProxyHost = local.modeJs === 'browser' &&
-                (/^https{0,1}:/).test(xhr.url) &&
-                xhr.url.indexOf(location.protocol + '//' + location.host) !== 0 &&
-                xhr.corsForwardProxyHostifNeeded(xhr.url, location);
-            if (xhr.corsForwardProxyHost) {
-                xhr.open(xhr.method, xhr.corsForwardProxyHost);
+            xhr.corsForwardProxyHost = xhr.corsForwardProxyHost || local.corsForwardProxyHost;
+            xhr.location = xhr.location || local.global.location || {};
+            tmp = (local.corsForwardProxyHostIfNeeded || local.nop)(xhr);
+            if (tmp) {
+                xhr.open(xhr.method, tmp);
                 xhr.setRequestHeader('forward-proxy-headers', JSON.stringify(xhr.headers));
                 xhr.setRequestHeader('forward-proxy-url', xhr.url);
             // open url
@@ -2047,7 +2069,7 @@ local.assetsDict['/favicon.ico'] = '';
                 : 1500);
         };
 
-        local.assert = function (passed, message) {
+        local.assert = function (passed, message, onError) {
         /*
          * this function will throw the error message if passed is falsey
          */
@@ -2063,7 +2085,12 @@ local.assetsDict['/favicon.ico'] = '';
                     ? message
                     // else JSON.stringify message
                     : JSON.stringify(message));
-            throw error;
+            // debug error
+            local._debugAssertError = error;
+            onError = onError || function (error) {
+                throw error;
+            };
+            onError(error);
         };
 
         local.assertJsonEqual = function (aa, bb) {
@@ -3050,8 +3077,77 @@ return Utf8ArrayToStr(bff);
         /*
          * this function will build the app
          */
+            options = local.objectSetDefault(options, { assetsList: [] });
+            // validate fileKeySorted
+            local._debugAssertError = null;
+            options.data = [
+                'README.md',
+                'lib.' + local.env.npm_package_nameLib + '.js',
+                'lib.' + local.env.npm_package_nameLib + '.sh',
+                'npm_scripts.sh'
+            ].map(function (file) {
+                return '\n// file - ' + file + '\n' + (local.tryCatchReadFile(file, 'utf8') + '\n')
+                    // filter `
+                    .replace((/^`.*?\n/gm), '')
+                    // filter skip
+                    .replace((/^( {4}\/\/ run .*?\bjs-env code)\b/gm), '`$1')
+                    .replace((/^(\/\/ init lib)\b/gm), '`$1')
+                    // filter local
+                    .replace((/^ *?local\.(?:modeJs|global|local|tmp)\b.*?\n/gm), '')
+                    .replace((/.*?\b(?:assets\.example|assets\.index|shPrintAndEval)\b.*?\n/g), '')
+                    .replace((/.*?\\n\\\n/g), '')
+                    .replace((/^ .*?\\\n/gm), '')
+                    .replace((/^((?:| {4}| {8})local\.\S*? =(?: |$))/gm), '`$1')
+                    // filter shXxx
+                    .replace((/^(sh[A-Z]\w*?\(\) \{)/gm), '`$1')
+                    // filter `
+                    .replace((/\n\n+/g), '\n')
+                    .replace((/^[^`].*?\n/gm), '')
+                    .replace((/^`/gm), '');
+            }).join('\n').trim();
+            local.fs.writeFileSync('tmp/validateFileKeySorted.js', options.data);
+            options.keyLocal = options.keySh = '';
+            options.data.split('\n').forEach(function (line) {
+                line = line.trim();
+                switch (line.slice(0, 2)) {
+                case '':
+                case '//':
+                    // reset key
+                    options.keyLocal = options.keySh = '';
+                    // update file
+                    line.replace((/^\/\/ file - (.*?)$/), function (match0, match1) {
+                        match0 = match1;
+                        options.file = match0;
+                    });
+                    break;
+                case 'sh':
+                    // reset key
+                    options.keyLocal = '';
+                    // validate key < line
+                    local.assert(
+                        options.keySh <= line,
+                        [options.file, options.keySh, line],
+                        console.error
+                    );
+                    // update key
+                    options.keySh = line;
+                    break;
+                default:
+                    // validate key < line
+                    local.assert(
+                        options.keyLocal <= line,
+                        [options.file, options.keyLocal, line],
+                        console.error
+                    );
+                    // update key
+                    options.keyLocal = line;
+                }
+            });
+            // validate no error occurred
+            local.assert(!local._debugAssertError, local._debugAssertError);
+            // build assets
             local.fsRmrSync(local.env.npm_config_dir_build + '/app');
-            local.onParallelList({ list: options.concat([{
+            local.onParallelList({ list: options.assetsList.concat([{
                 file: '/assets.' + local.env.npm_package_nameLib + '.html',
                 url: '/index.html'
             }, {
@@ -3230,7 +3326,7 @@ return Utf8ArrayToStr(bff);
                 // customize body after use strict
                 (/\n {4}'use strict';\n[\S\s]*?\n\n\n\n/),
                 // customize body after init exports
-                (/\n {12}module.exports.module = module;\n[\S\s]*?$/)
+                (/\n {8}\/\/ init lib\n[\S\s]*?$/)
             ].forEach(function (rgx) {
                 // handle large string-replace
                 options.dataFrom.replace(rgx, function (match0) {
@@ -3250,13 +3346,19 @@ return Utf8ArrayToStr(bff);
                     '[\\S\\s]+?\\n {4}\\}\\(\\)\\);\\n'), function (match0) {
                     return match0.replace(new RegExp('^ {8}local\\.(\\w+) = ' +
                         'function \\([\\S\\s]+?\\n {8}\\};$', 'gm'), function (match0, match1) {
-                        if (typeof local[match1] !== 'function') {
-                            return match0;
-                        }
-                        return '        local.' + match1 + ' = ' + local[match1].toString() +
-                            ';';
+                        return typeof local[match1] === 'function'
+                            ? '        local.' + match1 + ' = ' + local[match1].toString() + ';'
+                            : match0;
                     });
                 });
+            }
+            // customize local
+            if (local.fs.existsSync('./assets.utility2.rollup.js') &&
+                    local.env.npm_package_nameLib !== 'swgg') {
+                options.dataTo = options.dataTo.replace(
+                    '        if (!local) {\n',
+                    '        if (local) {\n'
+                );
             }
             options.customize();
             // save lib.xxx.js
@@ -3358,6 +3460,10 @@ return Utf8ArrayToStr(bff);
                     });
                 });
             });
+            // customize version
+            options.dataTo = options.dataTo.replace((
+                /^(#### changelog for v|- npm publish v)\d{4}\.\d{1,2}\.\d{1,2}$/gm
+            ), '$1' + options.packageJson.version);
             // customize swaggerdoc
             if (!local.assetsDict['/assets.swgg.swagger.json'] ||
                     (/\bswggUiContainer\b/).test(local.assetsDict['/index.html']) ||
@@ -3710,8 +3816,7 @@ return Utf8ArrayToStr(bff);
 
         local.corsBackendHostInject = function (url, backendHost, rgxInject, location) {
         /*
-         * this function will inject backendHost into the url,
-         * if location.host is a github site
+         * this function will inject backendHost into the url, if location.host is a github site
          */
             location = location || (typeof window === 'object' && window && window.location);
             if (!(backendHost && location && (/\bgithub.io$/).test(location.host))) {
@@ -3729,17 +3834,17 @@ return Utf8ArrayToStr(bff);
             return url.replace(rgxInject || (/.*()/), backendHost + '$1');
         };
 
-        local.corsForwardProxyHostifNeeded = function (url, location) {
+        local.corsForwardProxyHostIfNeeded = function (xhr) {
         /*
-         * this function will return a corsForwardProxyHost if needed by the url
+         * this function will return xhr.corsForwardProxyHost, if needed
          */
-            // jslint-hack
-            local.nop(url);
             return local.modeJs === 'browser' &&
                 local.env.npm_package_nameLib &&
-                (/\bgithub.io$/).test(location.host)
-                ? local.corsForwardProxyHost || 'https://h1-proxy1.herokuapp.com'
-                : location.protocol + '//' + location.host;
+                xhr.url.match(/^https{0,1}:\/\//) &&
+                xhr.url.indexOf(xhr.location.protocol + '//' + xhr.location.host) !== 0 &&
+                xhr.location.host.match(/\.github\.io$/) &&
+                xhr.corsForwardProxyHost !== 'disabled' &&
+                (xhr.corsForwardProxyHost || 'https://h1-proxy1.herokuapp.com');
         };
 
         local.dbTableCustomOrgCreate = function (options, onError) {
@@ -3901,6 +4006,51 @@ return Utf8ArrayToStr(bff);
             options.modeNext = 0;
             options.onNext();
             return self;
+        };
+
+        local.debugDocumentStyle = function () {
+        /*
+         * this function will validate the document's style
+         */
+            var tmp;
+            tmp = [];
+            Array.from(document.querySelectorAll('style')).forEach(function (element) {
+                element.innerHTML.split('\n').forEach(function (element) {
+                    try {
+                        element = element.trim().slice(0, -1).trim();
+                        tmp.push([document.querySelectorAll(element).length, element]);
+                    } catch (ignore) {
+                    }
+                });
+            });
+            tmp
+                .map(function (element) {
+                    return ('000000' + element[0]).slice(-6) + ' ' + element[1];
+                })
+                .sort()
+                .map(function (element, ii) {
+                    return ii + '. ' + element;
+                })
+                .reverse()
+                .forEach(function (element) {
+                    console.error(element);
+                });
+            Array.from(document.querySelectorAll('style')).forEach(function (element) {
+                element.innerHTML.split((/\n\/\*.*?\n/g)).forEach(function (element) {
+                    tmp = '';
+                    element.replace((/(^[\w#.].*?[,{]\n)+/gm), function (match0) {
+                        match0.trim().split('\n').forEach(function (element, ii, list) {
+                            element = element.replace((/[^\w\-]+/gm), ' ').trim();
+                            if (ii === 0) {
+                                local.assert(element >= tmp, [tmp, element, match0]);
+                                tmp = element;
+                                return;
+                            }
+                            local.assert(element >= list[ii - 1], [list[ii - 1], element, match0]);
+                        });
+                    });
+                });
+            });
         };
 
         local.domElementRender = function (template, dict) {
@@ -4134,8 +4284,8 @@ return Utf8ArrayToStr(bff);
                 );
                 break;
             case '.js':
-                if ((script.indexOf('/*jslint') >= 0 &&
-                        !local.global.__coverage__) || mode === 'force') {
+                if ((script.indexOf('/*jslint') >= 0 && !local.global.__coverage__) ||
+                        mode === 'force') {
                     local.jslintAndPrint(script, file);
                 }
                 break;
@@ -4417,7 +4567,7 @@ return Utf8ArrayToStr(bff);
 
         local.middlewareCacheControlLastModified = function (request, response, nextMiddleware) {
         /*
-         * this function will run the middleware that will update the Last-Modified header
+         * this function will run the middleware that will update the response-header Last-Modified
          */
             // do not cache if headers already sent or url has '?' search indicator
             if (!(response.headersSent || request.url.indexOf('?') >= 0)) {
@@ -4501,8 +4651,7 @@ return Utf8ArrayToStr(bff);
          */
             var onError, options, timerTimeout;
             // handle preflight-cors
-            if (request.method === 'OPTIONS' &&
-                    (/forward-proxy-url/)
+            if (request.method === 'OPTIONS' && (/forward-proxy-url/)
                     .test(request.headers['access-control-request-headers'])) {
                 local.serverRespondCors(request, response);
                 response.end();
@@ -4648,7 +4797,7 @@ return Utf8ArrayToStr(bff);
         /*
          * this function will search modulePathList for the module's __dirname
          */
-            var result, tmp;
+            var result;
             // search process.cwd()
             if (!module || module === '.' || module.indexOf('/') >= 0) {
                 return require('path').resolve(process.cwd(), module || '');
@@ -4660,11 +4809,13 @@ return Utf8ArrayToStr(bff);
                 .concat([process.env.HOME + '/node_modules', '/usr/local/lib/node_modules'])
                 .some(function (modulePath) {
                     try {
-                        tmp = require('path').resolve(process.cwd(), modulePath + '/' + module);
-                        result = require('fs').statSync(tmp).isDirectory() && tmp;
+                        result = require('path').resolve(process.cwd(), modulePath + '/' + module);
+                        result = require('fs').statSync(result).isDirectory() && result;
                         return result;
-                    } catch (ignore) {
+                    } catch (errorCaught) {
+                        result = null;
                     }
+                    return result;
                 });
             return result || '';
         };
@@ -4717,6 +4868,28 @@ return Utf8ArrayToStr(bff);
                     ? value
                     : valueDefault || '';
             }
+        };
+
+        local.numberToRomanNumerals = function (num) {
+        /*
+         * this function will convert num to a roman-numeral
+         * https://stackoverflow.com
+         * /questions/9083037/convert-a-number-into-a-roman-numeral-in-javascript
+         */
+            var digits, ii, key, roman;
+            digits = String(+num).split('');
+            key = [
+                '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
+                '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
+                '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
+            ];
+            roman = '';
+            ii = 3;
+            while (ii) {
+                ii -= 1;
+                roman = (key[+digits.pop() + (ii * 10)] || '') + roman;
+            }
+            return new Array(+digits.join('') + 1).join('M') + roman;
         };
 
         local.objectGetElementFirst = function (arg) {
@@ -5334,9 +5507,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                             local.tryCatchOnError(function () {
                                 // validate no error occurred
                                 local.assert(!error, error);
-                                local.swgg.validateBySwaggerJson({
-                                    swaggerJson: JSON.parse(data)
-                                });
+                                local.swgg.swaggerValidateJson(JSON.parse(data));
                             }, console.error);
                         });
                         break;
@@ -5352,6 +5523,12 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                         // jslint file
                         local.fs.readFile(file, 'utf8', function (error, data) {
                             local.jslintAndPrintConditional(!error && data, file);
+                        });
+                        break;
+                    case '.sh':
+                        // jslint file
+                        local.fs.readFile(file, 'utf8', function (error, data) {
+                            local.jslintAndPrintConditional(!error && data, file + '.html');
                         });
                         break;
                     }
@@ -5717,16 +5894,23 @@ instruction\n\
             return local.sjclHashScryptCreate(password, hash) === hash;
         };
 
+        local.sjclHashSha1Create = function (data) {
+        /*
+         * this function will create a base64-encoded sha1 hash of the string data
+         */
+            return local.sjcl.codec.base64.fromBits(local.sjcl.hash.sha1.hash(data));
+        };
+
         local.sjclHashSha256Create = function (data) {
         /*
-         * this function will create a base64-encoded sha-256 hash of the string data
+         * this function will create a base64-encoded sha256 hash of the string data
          */
             return local.sjcl.codec.base64.fromBits(local.sjcl.hash.sha256.hash(data));
         };
 
         local.sjclHmacSha1Create = function (key, data) {
         /*
-         * this function will create a base64-encoded sha-1 hmac
+         * this function will create a base64-encoded sha1 hmac
          * from the string key and string data
          */
             return local.sjcl.codec.base64.fromBits(
@@ -5739,7 +5923,7 @@ instruction\n\
 
         local.sjclHmacSha256Create = function (key, data) {
         /*
-         * this function will create a base64-encoded sha-256 hmac
+         * this function will create a base64-encoded sha256 hmac
          * from the string key and string data
          */
             return local.sjcl.codec.base64.fromBits(
@@ -5988,7 +6172,7 @@ instruction\n\
             }
             // search for keys in the template
             return template.replace((/\{\{[^}]+?\}\}/g), function (match0) {
-                var htmlBr, notHtmlSafe;
+                var markdownToHtml, notHtmlSafe;
                 notHtmlSafe = options.notHtmlSafe;
                 return tryCatch(function () {
                     getValue(match0.slice(2, -2));
@@ -6006,9 +6190,6 @@ instruction\n\
                         case 'encodeURIComponent':
                             value = encodeURIComponent(value);
                             break;
-                        case 'htmlBr':
-                            htmlBr = true;
-                            break;
                         case 'jsonStringify':
                             value = JSON.stringify(value);
                             break;
@@ -6017,6 +6198,9 @@ instruction\n\
                             break;
                         case 'markdownSafe':
                             value = value.replace((/`/g), '\'');
+                            break;
+                        case 'markdownToHtml':
+                            markdownToHtml = true;
                             break;
                         case 'notHtmlSafe':
                             notHtmlSafe = true;
@@ -6034,8 +6218,8 @@ instruction\n\
                             return '&#x' + match0.charCodeAt(0).toString(16) + ';';
                         });
                     }
-                    if (htmlBr) {
-                        value = value.replace((/\n/g), '<br>');
+                    if (markdownToHtml && typeof local.marked === 'function') {
+                        value = local.marked(value);
                     }
                     return value;
                 }, 'templateRender could not render expression ' + JSON.stringify(match0) + '\n');
@@ -7025,7 +7209,7 @@ instruction\n\
         local.swgg = local.swgg || {
             apiUpdate: local.nop,
             normalizeSwaggerJson: local.nop,
-            validateBySwaggerJson: local.nop
+            swaggerValidateJson: local.nop
         };
         local.taskOnTaskDict = {};
         local.testReport = { testPlatformList: [{
@@ -7246,36 +7430,17 @@ instruction\n\
             local.replStart();
             local.testRunServer({});
         };
-        local.cliDict['utility2.swaggerValidate'] = function () {
+        local.cliDict['utility2.swaggerValidateFile'] = function () {
         /*
-         * swagger-json-file
-         * validate swagger-json-file
+         * file/url
+         * swagger-validate file/url
          */
-            var options;
-            options = {};
-            local.onNext(options, function (error, data) {
-                switch (options.modeNext) {
-                case 1:
-                    // fetch url
-                    if ((/^(?:http|https):\/\//).test(process.argv[3])) {
-                        local.ajax({ url: process.argv[3] }, function (error, data) {
-                            options.onNext(error, data && data.responseText);
-                        });
-                        return;
-                    }
-                    // read file
-                    local.fs.readFile(process.argv[3], 'utf8', options.onNext);
-                    break;
-                case 2:
-                    // validate data
-                    local.swgg.validateBySwaggerJson({ swaggerJson: JSON.parse(data) });
-                    break;
-                default:
-                    local.assert(!error, error);
-                }
+            setTimeout(function () {
+                local.swgg.swaggerValidateFile({ file: process.argv[3] }, function (error, data) {
+                    console.error(data);
+                    process.exit(error);
+                });
             });
-            options.modeNext = 0;
-            options.onNext();
         };
         local.cliDict['utility2.testReportCreate'] = function () {
         /*
@@ -7299,7 +7464,7 @@ instruction\n\
                 switch (process.argv[2]) {
                 case '--interactive':
                 case '-i':
-                case 'utility2.swaggerValidate':
+                case 'utility2.swaggerValidateFile':
                 case 'utility2.start':
                     break;
                 default:
@@ -7307,6 +7472,7 @@ instruction\n\
                 }
             }
         }
+    // run resetValidateKeySorted js-env code
         // override assets
         [
             'assets.index.css',
@@ -7338,11 +7504,11 @@ instruction\n\
             'lib.github_crud.js',
             'lib.istanbul.js',
             'lib.jslint.js',
+            'lib.marked.js',
             'lib.sjcl.js',
             'lib.swgg.js',
             'lib.uglifyjs.js',
-            'lib.utility2.js',
-            'lib.utility2.sh'
+            'lib.utility2.js'
         ].forEach(function (key) {
             switch (key) {
             case 'lib.apidoc.js':
@@ -7350,6 +7516,7 @@ instruction\n\
             case 'lib.github_crud.js':
             case 'lib.istanbul.js':
             case 'lib.jslint.js':
+            case 'lib.marked.js':
             case 'lib.sjcl.js':
             case 'lib.uglifyjs.js':
                 local.assetsDict['/assets.utility2.' + key] = local.tryCatchReadFile(
@@ -7365,13 +7532,6 @@ instruction\n\
                     'utf8'
                 ).replace((/^#!/), '//');
                 break;
-            case 'lib.utility2.sh':
-                local.jslintAndPrintConditional(
-                    local.tryCatchReadFile(__dirname + '/' + key, 'utf8')
-                        .replace((/^ *?#!\! .*$/gm), ''),
-                    __dirname + '/' + key + '.html'
-                );
-                break;
             }
         });
         local.assetsDict['/assets.utility2.rollup.js'] = [
@@ -7382,6 +7542,7 @@ instruction\n\
             'lib.github_crud.js',
             'lib.istanbul.js',
             'lib.jslint.js',
+            'lib.marked.js',
             'lib.sjcl.js',
             'lib.uglifyjs.js',
             'lib.utility2.js',
@@ -7402,6 +7563,7 @@ instruction\n\
             case 'lib.github_crud.js':
             case 'lib.istanbul.js':
             case 'lib.jslint.js':
+            case 'lib.marked.js':
             case 'lib.sjcl.js':
             case 'lib.uglifyjs.js':
                 key = '/assets.utility2.' + key;

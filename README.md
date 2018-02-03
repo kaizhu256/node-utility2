@@ -2,7 +2,7 @@
 the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps
 
 # live web demo
-- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/)
+- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/)
 
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/)
 
@@ -58,13 +58,25 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 #### todo
 - allow server-side stdout to be streamed to webapps
 - add server stress test using electron
-- analytics
 - none
 
-#### changelog for v2018.1.13
-- npm publish 2018.1.13
-- auto-cleanup screenshot and test-server links for shDeployGithub and shDeployHeroku
-- sync with \$npm_package_githubRepoAlias
+#### changelog for v2018.2.2
+- npm publish v2018.2.2
+- update function buildApp to validate fileKeySorted
+- allow disabling corsForwardProxyHost with value 'disabled'
+- add function debugDocumentStyle
+- add function numberToRomanNumeral
+- add param operation['x-swgg-sortValue'] to customize operation sort-order in ui
+- replace option htmlBr with markdownToHtml in function templateRender
+- add file lib.marked.js
+- fix npm-install bug for shell-functions shNpmDeprecateAlias and shNpmTestPublished
+- merge js-env for tests
+- add build for package swagger-validate-lite
+- add function sjclHashSha1Create
+- add shell-function shBuildAppSwgg0
+- update function apidocCreate with extra param options.whitelistDict
+- update shell-function shBuildApp to auto-sync master swagger.json from ../swgg-\$npm_package_swggAll/assets.swgg.swagger.json
+- auto-detect and include assets.utility2.rollup.js in functions buildLib and buildTest
 - none
 
 #### this package requires
@@ -259,8 +271,7 @@ instruction
                 // show tests
                 if (document.querySelector('#testReportDiv1').style.maxHeight === '0px') {
                     local.uiAnimateSlideDown(document.querySelector('#testReportDiv1'));
-                    document.querySelector('#testRunButton1').textContent =
-                        'hide internal test';
+                    document.querySelector('#testRunButton1').textContent = 'hide internal test';
                     local.modeTest = true;
                     local.testRunDefault(local);
                 // hide tests
@@ -423,6 +434,10 @@ body > button {\n\
 }\n\
 button {\n\
     cursor: pointer;\n\
+}\n\
+pre {\n\
+    overflow-wrap: break-word;\n\
+    white-space: pre-wrap;\n\
 }\n\
 @keyframes uiAnimateShake {\n\
     100% {\n\
@@ -615,6 +630,7 @@ utility2-comment -->\n\
 <script src="assets.utility2.lib.istanbul.js"></script>\n\
 <script src="assets.utility2.lib.jslint.js"></script>\n\
 <script src="assets.utility2.lib.db.js"></script>\n\
+<script src="assets.utility2.lib.marked.js"></script>\n\
 <script src="assets.utility2.lib.sjcl.js"></script>\n\
 <script src="assets.utility2.lib.uglifyjs.js"></script>\n\
 <script src="assets.utility2.js"></script>\n\
@@ -789,7 +805,7 @@ utility2-comment -->\n\
     "license": "MIT",
     "main": "lib.utility2.js",
     "name": "utility2",
-    "nameAliasPublish": "npmtest-lite npmtest4 test-lite",
+    "nameAliasPublish": "npmtest-lite npmclassic npmtest4 test-lite",
     "nameLib": "utility2",
     "nameOriginal": "utility2",
     "os": [
@@ -801,14 +817,17 @@ utility2-comment -->\n\
         "url": "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
+        "apidocRawCreate": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh shNpmScriptApidocRawCreate",
+        "apidocRawFetch": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh shNpmScriptApidocRawFetch",
         "build-ci": "./lib.utility2.sh shReadmeTest build_ci.sh",
         "env": "env",
         "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
-        "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh postinstall",
+        "nameAliasPublish": "",
+        "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh shNpmScriptPostinstall",
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2018.1.13"
+    "version": "2018.2.2"
 }
 ```
 

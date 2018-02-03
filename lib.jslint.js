@@ -40,8 +40,13 @@
             : global;
         // init utility2_rollup
         local = local.global.utility2_rollup || local;
-        // init lib
-        local.local = local.jslint = local;
+        /* istanbul ignore next */
+        if (!local) {
+            local = local.global.utility2_rollup ||
+                local.global.utility2_rollup_old ||
+                require('./assets.utility2.rollup.js');
+            local.fs = null;
+        }
         // init exports
         if (local.modeJs === 'browser') {
             local.global.utility2_jslint = local;
@@ -54,8 +59,9 @@
             });
             module.exports = local;
             module.exports.__dirname = __dirname;
-            module.exports.module = module;
         }
+        // init lib
+        local.local = local.jslint = local;
     }());
 
 
@@ -6505,7 +6511,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                 if (!local.CSSLint.errors.length) {
                     return script;
                 }
-                local.errorText = '\n\u001b[1m' + file + '\u001b[22m\n';
+                local.errorText = '\u001b[1m' + file + '\u001b[22m\n';
                 local.CSSLint.errors
                     .filter(function (error) {
                         return error;
@@ -6531,7 +6537,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                     return script;
                 }
                 // if error occurred, then print colorized error messages
-                local.errorText = '\n\u001b[1m' + file + '\u001b[22m\n';
+                local.errorText = '\u001b[1m' + file + '\u001b[22m\n';
                 local.jslintEs6.errors
                     .filter(function (error) {
                         return error;
@@ -6554,7 +6560,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                     return script;
                 }
                 // if error occurred, then print colorized error messages
-                local.errorText = '\n\u001b[1m' + file + '\u001b[22m\n';
+                local.errorText = '\u001b[1m' + file + '\u001b[22m\n';
                 local.JSLINT.errors
                     .filter(function (error) {
                         return error;
@@ -6570,6 +6576,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                             ', Pos ' + error.character + '\u001b[39m\n';
                     });
             }
+            local.errorText = local.errorText.trim();
             // print error to stderr
             console.error(local.errorText);
             return script;
