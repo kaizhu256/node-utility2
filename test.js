@@ -1,4 +1,5 @@
 /* istanbul instrument in package utility2 */
+/* jslint-utility2 */
 /*jslint
     bitwise: true,
     browser: true,
@@ -461,7 +462,7 @@
          * this function will test base64Xxx's default handling-behavior
          */
             options = {};
-            options.base64 = local.base64FromString(local.stringAsciiCharset + '\u1234');
+            options.base64 = local.base64FromString(local.stringCharsetAscii + '\u1234');
             // test null-case handling-behavior
             local.assertJsonEqual(local.base64FromBuffer(), '');
             local.assertJsonEqual(local.base64FromHex(), '');
@@ -827,6 +828,7 @@
             options = {};
             local.testMock([
                 [local.fs, {
+                    // test customize-local handling-behavior
                     existsSync: function () {
                         return true;
                     },
@@ -853,13 +855,15 @@
                     // test shDeployCustom handling-behavior
                     .replace('shDeployGithub', 'shDeployCustom')
                     // test no-assets.index.template.html handling-behavior
-                    .replace('assets.index.default.template.html', '')
-                    // test no-assets.app.js handling-behavior
-                    .replace((/assets.app.js/g), '');
+                    .replace('assets.index.default.template.html', '');
             };
             options.fsReadFileSync = local.fs.readFileSync;
             local.testMock([
-                [local.env, { npm_package_buildCustomOrg: '', npm_package_name: 'undefined' }],
+                [local.env, {
+                    npm_package_buildCustomOrg: '',
+                    npm_package_isPrivate: '1',
+                    npm_package_name: 'undefined'
+                }],
                 [local.fs, {
                     existsSync: function () {
                         return true;
@@ -893,7 +897,7 @@
                     // customize quickstart example.js
                     (/# quickstart example.js[\S\s]*?istanbul instrument in package/),
                     // customize quickstart-footer
-                    (/>download standalone app<[^`]*?utility2FooterDiv/),
+                    (/>\[download standalone app\]<[^`]*?utility2FooterDiv/),
                     (/```[^`]*?\n# extra screenshots/),
                     // customize build-script
                     (/# run shBuildCi[^`]*?```/)
@@ -999,7 +1003,7 @@
                 local.replStart = local.nop;
                 process.argv[2] = '--help';
                 local.cliRun();
-                ['--eval', '--help', '--interactive'].forEach(function (key) {
+                ['--eval', '--help', '--interactive', '--version'].forEach(function (key) {
                     local.cliDict[key]();
                 });
                 onError(null, options);
@@ -1116,25 +1120,13 @@
             onError(null, options);
         };
 
-        local.testCase_debugDocumentStyle_default = function (options, onError) {
-        /*
-         * this function will test debugDocumentStyle's default handling-behavior
-         */
-            if (local.modeJs !== 'browser') {
-                onError(null, options);
-                return;
-            }
-            local.debugDocumentStyle();
-            onError(null, options);
-        };
-
         local.testCase_debug_inline_default = function (options, onError) {
         /*
          * this function will test debug_inline's default handling-behavior
          */
             options = {};
             local.testMock([
-                [console, { error: function (arg) {
+                [local, { _consoleError: function (arg) {
                     options.data += (arg || '') + '\n';
                 } }]
             ], function (onError) {
@@ -2217,9 +2209,43 @@
          * this function will test stringHtmlSafe's default handling-behavior
          */
             local.assertJsonEqual(
-                local.stringHtmlSafe('<a href="/undefined?aa=1&bb=2#cc"></a>'),
-                '&#x3c;a href=&#x22;/undefined?aa=1&#x26;bb=2#cc&#x22;&#x3e;&#x3c;/a&#x3e;'
+                local.stringHtmlSafe(local.stringHtmlSafe(local.stringCharsetAscii).slice(32, -1)),
+                ' !&quot;#$%&amp;&apos;()*+,-./0123456789:;&lt;=&gt;?@' +
+                    'ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~'
             );
+            onError(null, options);
+        };
+
+        local.testCase_stringRegexpEscape_default = function (options, onError) {
+        /*
+         * this function will test stringRegexpEscape's default handling-behavior
+         */
+            local.assertJsonEqual(local.stringRegexpEscape(local.stringCharsetAscii), String() +
+                '\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007' +
+                '\b\t\n\u000b\f\r\u000e\u000f' +
+                '\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017' +
+                '\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f' +
+                ' !"#\\$%&\'\\(\\)\\*\\+,\\-\\.\\/0123456789:;<=>\\?@' +
+                'ABCDEFGHIJKLMNOPQRSTUVWXYZ\\[\\\\\\]\\^_`abcdefghijklmnopqrstuvwxyz\\{\\|\\}~' +
+                '\u007f');
+            onError(null, options);
+        };
+
+        local.testCase_stringTruncate_default = function (options, onError) {
+        /*
+         * this function will test stringTruncate's default handling-behavior
+         */
+            local.assertJsonEqual(local.stringTruncate('aa'), 'aa');
+            local.assertJsonEqual(local.stringTruncate('aa', 1), '...');
+            local.assertJsonEqual(local.stringTruncate('aa', 2), 'aa');
+            onError(null, options);
+        };
+
+        local.testCase_stringUniqueKey_default = function (options, onError) {
+        /*
+         * this function will test stringUniqueKey's default handling-behavior
+         */
+            local.assert(('zqxj').indexOf(local.stringUniqueKey('zqxj') < 0));
             onError(null, options);
         };
 
@@ -2344,21 +2370,24 @@
             // test basic handling-behavior
             local.assertJsonEqual(local.templateRender('{{aa}}', {
                 aa: '```<aa\nbb>```'
-            }), '```&#x3c;aa\nbb&#x3e;```');
+            }), '```&lt;aa\nbb&gt;```');
             // test markdownToHtml handling-behavior
             local.assertJsonEqual(local.templateRender('{{aa markdownToHtml}}', {
-                aa: '```<aa\nbb>```'
-            }), '<pre><code class="lang-&#x3c;aa">bb&amp;#x3e;</code></pre>\n');
+                aa: local.stringCharsetAscii.slice(32, -1)
+            }), '<p> !&quot;#$%&amp;&apos;()*+,-./0123456789:;&lt;=&gt;?@' +
+                'ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~</p>\n');
             // test markdownSafe handling-behavior
             local.assertJsonEqual(local.templateRender('{{aa markdownSafe notHtmlSafe}}', {
-                aa: '```<aa\nbb>```'
-            }), '\'\'\'<aa\nbb>\'\'\'');
+                aa: local.stringCharsetAscii.slice(32, -1)
+            }), ' !"#$%&\'()*+,-./0123456789:;<=>?@' +
+                'ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_\'abcdefghijklmnopqrstuvwxyz{|}~');
             // test notHtmlSafe handling-behavior
             local.assertJsonEqual(local.templateRender('{{aa notHtmlSafe}}', {
                 aa: '```<aa\nbb>```'
             }), '```<aa\nbb>```');
             // test default handling-behavior
             local.assertJsonEqual(local.templateRender('{{aa alphanumeric}} ' +
+                '{{aa truncate 4 truncate 4}} ' +
                 '{{aa jsonStringify jsonStringify4 decodeURIComponent encodeURIComponent trim}} ' +
                 '{{bb}} {{cc}} {{dd}} {{ee.ff}}', {
                     // test string value handling-behavior
@@ -2371,12 +2400,13 @@
                     dd: undefined,
                     // test nested value handling-behavior
                     ee: { ff: 'gg' }
-                }), '__aa__ %22%5C%22%60%3Caa%3E%60%5C%22%22 1 null {{dd}} gg');
+                }), '__aa__ `... %22%5C%22%60%3Caa%3E%60%5C%22%22 1 null {{dd}} gg');
             // test partial handling-behavior
             local.assertJsonEqual(local.templateRender('{{#undefined aa}}\n' +
                 'list1{{#each list1}}\n' +
                 '    aa - {{aa}}\n' +
-                '    list2{{#each list2}}\n' +
+                '    list2{{#eachTrimRightComma list2}}\n' +
+                '        {{#this/ notHtmlSafe jsonStringify}}\n' +
                 '        bb - {{bb}}\n' +
                 '        {{#if bb}}\n' +
                 '        if\n' +
@@ -2386,7 +2416,8 @@
                 '        {{#unless bb}}\n' +
                 '        unless\n' +
                 '        {{/unless bb}}\n' +
-                '    {{/each list2}}\n' +
+                '        ,\n' +
+                '    {{/eachTrimRightComma list2}}\n' +
                 '{{/each list1}}\n' +
                 '{{/undefined aa}}\n', { list1: [
                     // test null-value handling-behavior
@@ -2404,12 +2435,15 @@
                 '\n' +
                 '    aa - aa\n' +
                 '    list2\n' +
+                '        {"bb":"bb"}\n' +
                 '        bb - bb\n' +
                 '        \n' +
                 '        if\n' +
                 '        \n' +
                 '        \n' +
+                '        ,\n' +
                 '    \n' +
+                '        {"bb":null}\n' +
                 '        bb - null\n' +
                 '        \n' +
                 '        else\n' +
@@ -2417,7 +2451,7 @@
                 '        \n' +
                 '        unless\n' +
                 '        \n' +
-                '    \n' +
+                '        \n' +
                 '\n' +
                 '{{/undefined aa}}\n');
             // test error handling-behavior
@@ -2605,7 +2639,7 @@
         /*
          * this function will test uuid4Create's default handling-behavior
          */
-            local.assert((local.regexpUuidValidate).test(local.uuid4Create()), local.uuid4Create());
+            local.assert((local.regexpValidateUuid).test(local.uuid4Create()), local.uuid4Create());
             onError(null, options);
         };
 

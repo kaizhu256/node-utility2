@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /* istanbul instrument in package jslint */
+/* jslint-utility2 */
 /*jslint
     bitwise: true,
     browser: true,
@@ -96,6 +97,8 @@
              * print help
              */
                 var element, result, lengthList, sortDict;
+                console.log(require(__dirname + '/package.json').name + ' v' +
+                    require(__dirname + '/package.json').version);
                 sortDict = {};
                 result = [['[command]', '[args]', '[description]', -1]];
                 lengthList = [result[0][0].length, result[0][1].length];
@@ -136,7 +139,7 @@
                         }
                     });
                     element = element.slice(0, 3).join('---- ');
-                    if (ii === 0) {
+                    if (!ii) {
                         element = element.replace((/-/g), ' ');
                     }
                     console.log(element);
@@ -159,6 +162,15 @@
                     local.cliDict._interactive;
                 local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
             }
+            local.cliDict._version = local.cliDict._version || function () {
+            /*
+             * [none]
+             * print version
+             */
+                console.log(require(__dirname + '/package.json').version);
+            };
+            local.cliDict['--version'] = local.cliDict['--version'] || local.cliDict._version;
+            local.cliDict['-v'] = local.cliDict['-v'] || local.cliDict._version;
             // run fnc()
             fnc = fnc || function () {
                 if (local.cliDict[process.argv[2]]) {
@@ -601,7 +613,7 @@ e){e+="}",this._tokenStream=new v(e,m),this._readDeclarations()}};for(t in n)Obj
 ,"-o-animation-play-state":"[ running | paused ]#",appearance:"none | auto","-moz-appearance"
 :"none | button | button-arrow-down | button-arrow-next | button-arrow-previous | button-arrow-up | button-bevel | button-focus | caret | checkbox | checkbox-container | checkbox-label | checkmenuitem | dualbutton | groupbox | listbox | listitem | menuarrow | menubar | menucheckbox | menuimage | menuitem | menuitemtext | menulist | menulist-button | menulist-text | menulist-textfield | menupopup | menuradio | menuseparator | meterbar | meterchunk | progressbar | progressbar-vertical | progresschunk | progresschunk-vertical | radio | radio-container | radio-label | radiomenuitem | range | range-thumb | resizer | resizerpanel | scale-horizontal | scalethumbend | scalethumb-horizontal | scalethumbstart | scalethumbtick | scalethumb-vertical | scale-vertical | scrollbarbutton-down | scrollbarbutton-left | scrollbarbutton-right | scrollbarbutton-up | scrollbarthumb-horizontal | scrollbarthumb-vertical | scrollbartrack-horizontal | scrollbartrack-vertical | searchfield | separator | sheet | spinner | spinner-downbutton | spinner-textfield | spinner-upbutton | splitter | statusbar | statusbarpanel | tab | tabpanel | tabpanels | tab-scroll-arrow-back | tab-scroll-arrow-forward | textfield | textfield-multiline | toolbar | toolbarbutton | toolbarbutton-dropdown | toolbargripper | toolbox | tooltip | treeheader | treeheadercell | treeheadersortarrow | treeitem | treeline | treetwisty | treetwistyopen | treeview | -moz-mac-unified-toolbar | -moz-win-borderless-glass | -moz-win-browsertabbar-toolbox | -moz-win-communicationstext | -moz-win-communications-toolbox | -moz-win-exclude-glass | -moz-win-glass | -moz-win-mediatext | -moz-win-media-toolbox | -moz-window-button-box | -moz-window-button-box-maximized | -moz-window-button-close | -moz-window-button-maximize | -moz-window-button-minimize | -moz-window-button-restore | -moz-window-frame-bottom | -moz-window-frame-left | -moz-window-frame-right | -moz-window-titlebar | -moz-window-titlebar-maximized"
 ,"-ms-appearance":"none | icon | window | desktop | workspace | document | tooltip | dialog | button | push-button | hyperlink | radio | radio-button | checkbox | menu-item | tab | menu | menubar | pull-down-menu | pop-up-menu | list-menu | radio-group | checkbox-group | outline-tree | range | field | combo-box | signature | password | normal"
-,"-webkit-appearance":"none | button | button-bevel | caps-lock-indicator | caret | checkbox | default-button | listbox	| listitem | media-fullscreen-button | media-mute-button | media-play-button | media-seek-back-button	| media-seek-forward-button	| media-slider | media-sliderthumb | menulist	| menulist-button	| menulist-text	| menulist-textfield | push-button	| radio	| searchfield	| searchfield-cancel-button	| searchfield-decoration | searchfield-results-button | searchfield-results-decoration | slider-horizontal | slider-vertical | sliderthumb-horizontal | sliderthumb-vertical	| square-button	| textarea	| textfield	| scrollbarbutton-down | scrollbarbutton-left | scrollbarbutton-right | scrollbarbutton-up | scrollbargripper-horizontal | scrollbargripper-vertical | scrollbarthumb-horizontal | scrollbarthumb-vertical | scrollbartrack-horizontal | scrollbartrack-vertical"
+,"-webkit-appearance":"none | button | button-bevel | caps-lock-indicator | caret | checkbox | default-button | listbox\t| listitem | media-fullscreen-button | media-mute-button | media-play-button | media-seek-back-button\t| media-seek-forward-button\t| media-slider | media-sliderthumb | menulist\t| menulist-button\t| menulist-text\t| menulist-textfield | push-button\t| radio\t| searchfield\t| searchfield-cancel-button\t| searchfield-decoration | searchfield-results-button | searchfield-results-decoration | slider-horizontal | slider-vertical | sliderthumb-horizontal | sliderthumb-vertical\t| square-button\t| textarea\t| textfield\t| scrollbarbutton-down | scrollbarbutton-left | scrollbarbutton-right | scrollbarbutton-up | scrollbargripper-horizontal | scrollbargripper-vertical | scrollbarthumb-horizontal | scrollbarthumb-vertical | scrollbartrack-horizontal | scrollbartrack-vertical"
 ,"-o-appearance":"none | window | desktop | workspace | document | tooltip | dialog | button | push-button | hyperlink | radio | radio-button | checkbox | menu-item | tab | menu | menubar | pull-down-menu | pop-up-menu | list-menu | radio-group | checkbox-group | outline-tree | range | field | combo-box | signature | password | normal"
 ,azimuth:"<azimuth>","backface-visibility":"visible | hidden",background:1,"background-attachment"
 :"<attachment>#","background-clip":"<box>#","background-color":"<color>","background-image"
@@ -6448,138 +6460,296 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
 
     // run shared js-env code - function
     (function () {
+        local.csslintUtility2 = function (script) {
+        /*
+         * this function will csslint the script with utiity2-specific rules
+         */
+            var current1, current2, ii, jj, message, previous1, previous2;
+            // ignore comments
+            script = script.replace((/^ *?\/\*[\S\s]*?\*\/ *?$/gm), function (match0) {
+                if (match0 === '/* validateLineSortedReset */') {
+                    return match0;
+                }
+                // preserve lineno
+                return match0.replace((/^.*?$/gm), '');
+            });
+            ii = 0;
+            current1 = '';
+            current2 = '';
+            previous1 = '';
+            previous2 = '';
+            script.replace((/^.*?$/gm), function (line) {
+                current1 = line;
+                ii += 1;
+                jj = 0;
+                message = '';
+                if (!current1) {
+                    return;
+                }
+                // validate double-whitespace
+                if ((/\S {2}/).test(current1)) {
+                    jj = jj || ((/\S {2}/).exec(current1).index + 2);
+                    message = message || 'double whitespace';
+                }
+                // ignore indent
+                if (!message && current1[0] === ' ') {
+                    return;
+                }
+                // validate multi-line-statement
+                if ((/[,;\{\}]./).test(current1)) {
+                    jj = jj || ((/[,;\{\}]./).exec(current1).index + 1);
+                    message = message || 'multi-line statement';
+                }
+                // validateLineSortedReset
+                if (current1 === '/* validateLineSortedReset */') {
+                    current1 = '';
+                    current2 = '';
+                    previous1 = '';
+                    previous2 = '';
+                    return;
+                }
+                // validate previous1 < current1
+                current1 = current1
+                    .replace((/,$/gm), '   ,')
+                    .replace((/ \{$/gm), '   {')
+                    .replace((/(^[\w*@]| \w)/gm), ' $1');
+                if (!(previous1 < current1)) {
+                    jj = jj || 1;
+                    message = message ||
+                        ('lines not sorted\n' + previous1 + '\n' + current1);
+                }
+                previous1 = current1;
+                // validate previous2 < current2
+                current2 += current1 + '\n';
+                if (current1 === '}') {
+                    current2 = current2.slice(0, -3);
+                    if (!(previous2 < current2)) {
+                        jj = jj || 1;
+                        message = message ||
+                            ('lines not sorted\n' + previous2 + '\n' + current2).trim();
+                    }
+                    previous1 = '';
+                    previous2 = current2;
+                    current2 = '';
+                }
+                if (!message) {
+                    return;
+                }
+                local.errorList.push({
+                    col: jj,
+                    line: ii,
+                    message: message,
+                    value: line
+                });
+            });
+        };
+
         local.jslintAndPrint = function (script, file) {
         /*
          * this function will jslint / csslint the script and print any errors to stderr
          */
-            var ignoreDict, lineno, scriptParsed;
+            var ii, jj, lintType, message, scriptParsed;
             // cleanup errors
-            local.errorCounter = 0;
+            local.errorList = [];
             local.errorText = '';
             // do nothing for empty script
-            if (!script.length) {
+            if (!(script && script.length)) {
                 return script;
             }
-            // init ignoreDict
-            ignoreDict = {};
-            // init lineno
-            lineno = 0;
+            scriptParsed = script;
+            if ((/^\/\* jslint-utility2 \*\/$|^# jslint-utility2$/m).test(scriptParsed)) {
+                ii = 0;
+                scriptParsed.replace((/^.*?$/gm), function (line) {
+                    ii += 1;
+                    jj = 0;
+                    message = '';
+                    // validate indent
+                    if (!(/^ * \*/).test(line) && ((/^ */).exec(line)[0].length % 4 !== 0)) {
+                        jj = jj || 1;
+                        message = message || 'non 4-space indent';
+                    }
+                    // validate trailing-whitespace
+                    if ((/ $| \\n\\$/).test(line)) {
+                        jj = jj || line.length;
+                        message = message || 'trailing whitespace';
+                    }
+                    // validate tab
+                    if (line.indexOf('\t') >= 0) {
+                        jj = jj || (line.indexOf('\t') + 1);
+                        message = message || 'tab detected';
+                    }
+                    if (message) {
+                        local.errorList.push({
+                            col: jj,
+                            line: ii,
+                            message: message,
+                            value: JSON.stringify(line)
+                        });
+                    }
+                });
+            }
             // parse script
             scriptParsed = script
-                // indent text-block
-                // /* jslint-indent-begin */ ... /* jslint-indent-end */
-                .replace(
-/* jslint-indent-begin 20 */
-(function () {
-    /*jslint maxlen: 256*/
-    return (/^ *?\/\* jslint-indent-begin (\d+?) \*\/$[\S\s]+?^ *?\/\* jslint-indent-end \*\/$/gm);
-}()),
-/* jslint-indent-end */
-                    function (match0, match1) {
-                        return match0.replace(
-                            (/(^ *\S)/gm),
-                            new Array(Number(match1) + 1).join(' ') + '$1'
-                        );
-                    }
-                )
+                // ignore shebang
+                .replace((/^#!.*/), '')
+                // ignore long-url-comment
+                .replace((/^ *?(?:\* |\/\/ )https?:\/\/.*?$/gm), '')
                 // ignore text-block
-                // /* jslint-ignore-begin */ ... /* jslint-ignore-end */
                 .replace(
 /* jslint-ignore-begin */
 (/^ *?\/\* jslint-ignore-begin \*\/$[\S\s]+?^ *?\/\* jslint-ignore-end \*\/$/gm),
 /* jslint-ignore-end */
                     function (match0) {
-                        return match0.replace((/.*/g), '');
+                        return match0.replace((/^.*?$/gm), '');
                     }
                 )
                 // ignore next-line
-                // /* jslint-ignore-next-line */
                 .replace(
 /* jslint-ignore-next-line */
 (/^ *?\/\* jslint-ignore-next-line \*\/\n.*/gm),
                     function (match0) {
-                        return match0.replace((/.*/g), '');
+                        return match0.replace((/^.*?$/gm), '');
                     }
                 );
+            switch (file.replace((/^.*\./), '.')) {
             // csslint script
-            if (file.slice(-4) === '.css') {
-                local.CSSLint.errors = local.CSSLint.verify(scriptParsed).messages
-                    .filter(function (error) {
-                        return !ignoreDict[error.rule.id];
+            case '.css':
+                lintType = 'csslint';
+                local.CSSLint.errors = local.CSSLint.verify(scriptParsed).messages;
+                local.CSSLint.errors.forEach(function (error) {
+                    local.errorList.push(error && {
+                        col: error.col,
+                        line: error.line,
+                        message: error.type + ' - ' + error.rule.id + ' - ' + error.message +
+                            '\n    ' + error.rule.desc,
+                        value: error.evidence
                     });
-                // if error occurred, then print colorized error messages
-                if (!local.CSSLint.errors.length) {
-                    return script;
+                });
+                break;
+            // shlint script
+            case '.sh':
+                lintType = 'shlint';
+                break;
+            // jslint script
+            default:
+                // jslint es6-script
+                if ((/^\/\*jslint\b[\s\w,:]*?\bes6: true\b/m)
+                        .test(scriptParsed.slice(0, 0x1000))) {
+                    local.jslintEs6.errors = local.jslintEs6(scriptParsed).warnings;
+                    local.jslintEs6.errors.forEach(function (error) {
+                        local.errorList.push(error && {
+                            col: error.column + 1,
+                            line: error.line + 1,
+                            message: error.message,
+                            value: error.a
+                        });
+                    });
+                    break;
                 }
-                local.errorText = '\u001b[1m' + file + '\u001b[22m\n';
-                local.CSSLint.errors
-                    .filter(function (error) {
-                        return error;
-                    })
-                    .forEach(function (error) {
-                        local.errorCounter += 1;
-                        lineno += 1;
-                        local.errorText +=
-                            (' #' + String(lineno) + ' ').slice(-4) +
-                            '\u001b[33m' + error.type + ' - ' + error.rule.id +
-                            ' - ' + error.message + '\n    ' + error.rule.desc +
-                            '\u001b[39m\n    ' + String(error.evidence).trim() +
-                            '\u001b[90m \/\/ line ' + error.line +
-                            ', col ' + error.col + '\u001b[39m\n';
+                // jslint es5 script
+                local.JSLINT(scriptParsed);
+                local.JSLINT.errors.forEach(function (error) {
+                    local.errorList.push(error && {
+                        col: error.character,
+                        line: error.line,
+                        message: error.reason,
+                        value: error.evidence
                     });
-            // jslint es6-script
-            } else if ((/^\/\*jslint\b[\s\w,:]*?\bes6: true\b/m)
-                    .test(scriptParsed.slice(0, 0x1000))) {
-                // comment shebang
-                scriptParsed = scriptParsed.replace((/^#!/), '//');
-                local.jslintEs6.errors = local.jslintEs6(scriptParsed).warnings;
-                if (!local.jslintEs6.errors.length) {
-                    return script;
-                }
-                // if error occurred, then print colorized error messages
-                local.errorText = '\u001b[1m' + file + '\u001b[22m\n';
-                local.jslintEs6.errors
-                    .filter(function (error) {
-                        return error;
-                    })
-                    .forEach(function (error) {
-                        local.errorCounter += 1;
-                        lineno += 1;
-                        local.errorText +=
-                            (' #' + String(lineno) + ' ').slice(-4) +
-                            '\u001b[33m' + error.message +
-                            '\u001b[39m\n    ' + String(error.a).trim() +
-                            '\u001b[90m \/\/ Line ' + (error.line + 1) +
-                            ', Pos ' + (error.column + 1) + '\u001b[39m\n';
-                    });
-            // jslint es5 script
-            } else {
-                // comment shebang
-                scriptParsed = scriptParsed.replace((/^#!/), '//');
-                if (local.JSLINT(scriptParsed)) {
-                    return script;
-                }
-                // if error occurred, then print colorized error messages
-                local.errorText = '\u001b[1m' + file + '\u001b[22m\n';
-                local.JSLINT.errors
-                    .filter(function (error) {
-                        return error;
-                    })
-                    .forEach(function (error) {
-                        local.errorCounter += 1;
-                        lineno += 1;
-                        local.errorText +=
-                            (' #' + String(lineno) + ' ').slice(-4) +
-                            '\u001b[33m' + error.reason +
-                            '\u001b[39m\n    ' + String(error.evidence).trim() +
-                            '\u001b[90m \/\/ Line ' + error.line +
-                            ', Pos ' + error.character + '\u001b[39m\n';
-                    });
+                });
             }
+            // jslint the script with utiity2-specific rules
+            local.errorList = local.errorList.filter(function (error) {
+                return error && error.message;
+            });
+            if (!local.errorList.length &&
+                    (/^\/\* jslint-utility2 \*\/$|^# jslint-utility2$/m).test(script)) {
+                switch (file.replace((/^.*\./), '.')) {
+                case '.css':
+                    local.csslintUtility2(script);
+                    break;
+                case '.sh':
+                    local.shlintUtility2(script);
+                    break;
+                default:
+                    local.jslintUtility2(script);
+                }
+            }
+            // if error occurred, then print colorized error messages
+            local.errorList = local.errorList.filter(function (error) {
+                return error && error.message;
+            });
+            if (!local.errorList.length) {
+                return script;
+            }
+            local.errorText = '\u001b[1m' + (lintType || 'jslint') + ' ' +  file + '\u001b[22m\n';
+            local.errorList.forEach(function (error, ii) {
+                local.errorText += (' #' + String(ii + 1) + ' ').slice(-4) +
+                    '\u001b[33m' + error.message +
+                    '\u001b[39m\n    ' + String(error.value).trim() +
+                    '\u001b[90m \/\/ line ' + (error.line) +
+                    ', col ' + (error.col) + '\u001b[39m\n';
+            });
             local.errorText = local.errorText.trim();
             // print error to stderr
             console.error(local.errorText);
             return script;
+        };
+
+        local.jslintUtility2 = function (script) {
+        /*
+         * this function will jslint the script with utiity2-specific rules
+         */
+            var ii, current, previous;
+            ii = 0;
+            previous = '';
+            script.replace((/^.*?$/gm), function (line) {
+                current = line.trim();
+                ii += 1;
+                if (line === '/* validateLineSortedReset */' ||
+                        (/^ {4}\/\/ run .*?\bjs\\?-env code\b|^\/\/ init lib|\\n\\$/m).test(line)) {
+                    previous = '';
+                    return;
+                }
+                if (!(/^(?: {4}| {8})local\.\S*? =(?: |$)/m).test(line) ||
+                        (/^local\.(?:modeJs|global|local|tmp)\b/).test(current)) {
+                    return;
+                }
+                // validate previous < current
+                if (!(previous < current)) {
+                    local.errorList.push({
+                        col: 0,
+                        line: ii,
+                        message: 'lines not sorted\n' + previous + '\n' + current,
+                        value: line
+                    });
+                }
+                previous = current;
+            });
+        };
+
+        local.shlintUtility2 = function (script) {
+        /*
+         * this function will shlint the script with utiity2-specific rules
+         */
+            var ii, previous;
+            ii = 0;
+            previous = '';
+            script.replace((/^.*?$/gm), function (line) {
+                ii += 1;
+                if (!(/^sh\w+?\(\) \{/).test(line)) {
+                    return;
+                }
+                // validate previous < line
+                if (!(previous < line)) {
+                    local.errorList.push({
+                        col: 0,
+                        line: ii,
+                        message: 'lines not sorted\n' + previous + '\n' + line,
+                        value: line
+                    });
+                }
+                previous = line;
+            });
         };
     }());
     switch (local.modeJs) {
@@ -6609,7 +6779,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                 }
             });
             // if error occurred, then exit with non-zero code
-            process.exit(local.errorCounter);
+            process.exit(!!local.errorList.length);
         };
         local.cliRun();
         break;

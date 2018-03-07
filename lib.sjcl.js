@@ -1,3 +1,4 @@
+/* jslint-utility2 */
 /*jslint
     bitwise: true,
     browser: true,

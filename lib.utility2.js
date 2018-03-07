@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /* istanbul instrument in package utility2 */
+/* jslint-utility2 */
 /*jslint
     bitwise: true,
     browser: true,
@@ -53,7 +54,7 @@
         } else {
             // require builtins
             Object.keys(process.binding('natives')).forEach(function (key) {
-                if (!local[key] && !(/\/|^_|^sys$/).test(key)) {
+                if (!local[key] && !(/\/|^_|^assert|^sys$/).test(key)) {
                     local[key] = require(key);
                 }
             });
@@ -78,6 +79,7 @@
 
     // run shared js-env code - function-before
     (function () {
+        local._consoleError = console.error;
         // init global.debug_inline
         local.global['debug_inline'.replace('_i', 'I')] = local.global[
             'debug_inline'.replace('_i', 'I')
@@ -87,9 +89,9 @@
          */
             // debug arguments
             local['_debug_inlineArguments'.replace('_i', 'I')] = arguments;
-            console.error('\n\n\ndebug_inline'.replace('_i', 'I'));
-            console.error.apply(console, arguments);
-            console.error();
+            local._consoleError('\n\n\ndebug_inline'.replace('_i', 'I'));
+            local._consoleError.apply(console, arguments);
+            local._consoleError();
             // return arg for inspection
             return arg;
         };
@@ -118,24 +120,34 @@
 
 
 /* jslint-ignore-begin */
-local.assetsDict['/assets.index.default.template.html'] =
-local.assetsDict['/assets.index.template.html'] = '\
-<!doctype html>\n\
-<html lang="en">\n\
-<head>\n\
-<meta charset="UTF-8">\n\
-<meta name="viewport" content="width=device-width, initial-scale=1">\n\
-<!-- "assets.index.default.template.html" -->\n\
-<title>{{env.npm_package_name}} (v{{env.npm_package_version}})</title>\n\
-<style>\n\
+local.assetsDict['/assets.utility2.css'] = '\
+/* jslint-utility2 */\n\
 /*csslint\n\
-    box-sizing: false,\n\
-    universal-selector: false\n\
 */\n\
+/* jslint-ignore-begin */\n\
 *,\n\
 *:after,\n\
 *:before {\n\
     box-sizing: border-box;\n\
+}\n\
+/* jslint-ignore-end */\n\
+@keyframes uiAnimateShake {\n\
+    0%, 50% {\n\
+        transform: translateX(10px);\n\
+    }\n\
+    25%, 75% {\n\
+        transform: translateX(-10px);\n\
+    }\n\
+    100% {\n\
+        transform: translateX(0);\n\
+    }\n\
+}\n\
+@keyframes uiAnimateSpin {\n\
+    0% { transform: rotate(0deg); }\n\
+    100% { transform: rotate(360deg); }\n\
+}\n\
+a {\n\
+    overflow-wrap: break-word;\n\
 }\n\
 body {\n\
     background: #dde;\n\
@@ -158,20 +170,20 @@ body > button {\n\
 button {\n\
     cursor: pointer;\n\
 }\n\
+code,\n\
+pre,\n\
+textarea {\n\
+    font-family: Menlo, Consolas, Courier New, monospace;\n\
+    font-size: small;\n\
+}\n\
 pre {\n\
     overflow-wrap: break-word;\n\
     white-space: pre-wrap;\n\
 }\n\
-@keyframes uiAnimateShake {\n\
-    100% {\n\
-        transform: translateX(0);\n\
-    }\n\
-    0%, 20%, 60% {\n\
-        transform: translateX(10px);\n\
-    }\n\
-    40%, 80% {\n\
-        transform: translateX(-10px);\n\
-    }\n\
+.textOverflowEllipsis {\n\
+    overflow: hidden;\n\
+    text-overflow: ellipsis;\n\
+    white-space: nowrap;\n\
 }\n\
 .uiAnimateShake {\n\
     animation-duration: 500ms;\n\
@@ -180,10 +192,6 @@ pre {\n\
 .uiAnimateSlide {\n\
     overflow-y: hidden;\n\
     transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;\n\
-}\n\
-@keyframes uiAnimateSpin {\n\
-    0% { transform: rotate(0deg); }\n\
-    100% { transform: rotate(360deg); }\n\
 }\n\
 .utility2FooterDiv {\n\
     text-align: center;\n\
@@ -195,12 +203,28 @@ pre {\n\
     padding: 0;\n\
     width: 0;\n\
 }\n\
+';
+
+
+
+/* validateLineSortedReset */
+local.assetsDict['/assets.index.default.template.html'] =
+local.assetsDict['/assets.index.template.html'] = '\
+<!doctype html>\n\
+<html lang="en">\n\
+<head>\n\
+<meta charset="UTF-8">\n\
+<meta name="viewport" content="width=device-width, initial-scale=1">\n\
+<!-- "assets.index.default.template.html" -->\n\
+<title>{{env.npm_package_name}} (v{{env.npm_package_version}})</title>\n\
+<style>\n\
+' + local.assetsDict['/assets.utility2.css'] + '\
 </style>\n\
 <style>\n\
+/* jslint-utility2 */\n\
 /*csslint\n\
 */\n\
 textarea {\n\
-    font-family: monospace;\n\
     height: 10rem;\n\
     width: 100%;\n\
 }\n\
@@ -213,6 +237,7 @@ textarea[readonly] {\n\
 <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
 <script>\n\
+/* jslint-utility2 */\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
@@ -273,7 +298,7 @@ utility2-comment -->\n\
 </h1>\n\
 <h3>{{env.npm_package_description}}</h3>\n\
 <!-- utility2-comment\n\
-<h4><a download href="assets.app.js">download standalone app</a></h4>\n\
+<h4><a download href="assets.app.js">[download standalone app]</a></h4>\n\
 <button class="onclick onreset" id="testRunButton1">run internal test</button><br>\n\
 <div class="uiAnimateSlide" id="testReportDiv1" style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"></div>\n\
 utility2-comment -->\n\
@@ -335,6 +360,7 @@ instruction\n\
 \n\
 \n\
 /* istanbul instrument in package jslint */\n\
+/* jslint-utility2 */\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
@@ -478,7 +504,7 @@ instruction\n\
         module.exports = local;\n\
         // require builtins\n\
         Object.keys(process.binding(\'natives\')).forEach(function (key) {\n\
-            if (!local[key] && !(/\\/|^_|^sys$/).test(key)) {\n\
+            if (!local[key] && !(/\\/|^_|^assert|^sys$/).test(key)) {\n\
                 local[key] = require(key);\n\
             }\n\
         });\n\
@@ -503,12 +529,11 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') + '\
                 );\n\
             }\n\
         });\n\
+/* validateLineSortedReset */\n\
         local.assetsDict[\'/\'] =\n\
             local.assetsDict[\'/assets.example.html\'] =\n\
             local.assetsDict[\'/assets.index.template.html\']\n\
             .replace((/\\{\\{env\\.(\\w+?)\\}\\}/g), function (match0, match1) {\n\
-                // jslint-hack\n\
-                String(match0);\n\
                 switch (match1) {\n\
                 case \'npm_package_description\':\n\
                     return \'the greatest app in the world!\';\n\
@@ -568,6 +593,7 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') + '\
 
 local.assetsDict['/assets.lib.template.js'] = '\
 /* istanbul instrument in package jslint */\n\
+/* jslint-utility2 */\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
@@ -621,7 +647,7 @@ local.assetsDict['/assets.lib.template.js'] = '\
         } else {\n\
             // require builtins\n\
             Object.keys(process.binding(\'natives\')).forEach(function (key) {\n\
-                if (!local[key] && !(/\\/|^_|^sys$/).test(key)) {\n\
+                if (!local[key] && !(/\\/|^_|^assert|^sys$/).test(key)) {\n\
                     local[key] = require(key);\n\
                 }\n\
             });\n\
@@ -647,7 +673,7 @@ the greatest app in the world!\n\
 \n\
 \n\
 \n\
-[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite) [![coverage](https://kaizhu256.github.io/node-jslint-lite/build/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build/coverage.html/index.html) [![snyk.io vulnerabilities](https://snyk.io/test/github/kaizhu256/node-jslint-lite/badge.svg)](https://snyk.io/test/github/kaizhu256/node-jslint-lite)\n\
+[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite) [![coverage](https://kaizhu256.github.io/node-jslint-lite/build/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build/coverage.html/index.html)\n\
 \n\
 [![NPM](https://nodei.co/npm/jslint-lite.png?downloads=true)](https://www.npmjs.com/package/jslint-lite)\n\
 \n\
@@ -956,6 +982,7 @@ local.assetsDict['/assets.readmeCustomOrg.npmtest.template.md'] = '\
 
 local.assetsDict['/assets.test.template.js'] = '\
 /* istanbul instrument in package jslint */\n\
+/* jslint-utility2 */\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
@@ -1008,22 +1035,44 @@ local.assetsDict['/assets.test.template.js'] = '\
 local.assetsDict['/assets.testReport.template.html'] = '\
 <div class="testReportDiv">\n\
 <style>\n\
+' + local.assetsDict['/assets.utility2.css'] + '\
+</style>\n\
+<style>\n\
+/* jslint-utility2 */\n\
 /*csslint\n\
 */\n\
 .testReportDiv {\n\
     font-family: Arial, Helvetica, sans-serif;\n\
-}\n\
-.testReportDiv .displayNone {\n\
-    display: none;\n\
-}\n\
-.testReportDiv .footer {\n\
-    text-align: center;\n\
 }\n\
 .testReportDiv img {\n\
     border: 1px solid black;\n\
     margin: 5px 0 5px 0;\n\
     max-height: 256px;\n\
     max-width: 512px;\n\
+}\n\
+.testReportDiv pre {\n\
+    background: #fdd;\n\
+    border-top: 1px solid black;\n\
+    margin-bottom: 0;\n\
+    padding: 10px;\n\
+}\n\
+.testReportDiv span {\n\
+    display: inline-block;\n\
+    width: 120px;\n\
+}\n\
+.testReportDiv table {\n\
+    border-top: 1px solid black;\n\
+    text-align: left;\n\
+    width: 100%;\n\
+}\n\
+.testReportDiv table > tbody > tr:nth-child(odd) {\n\
+    background: #bfb;\n\
+}\n\
+.testReportDiv .displayNone {\n\
+    display: none;\n\
+}\n\
+.testReportDiv .footer {\n\
+    text-align: center;\n\
 }\n\
 .testReportDiv .platform {\n\
     background: #fff;\n\
@@ -1032,27 +1081,7 @@ local.assetsDict['/assets.testReport.template.html'] = '\
     padding: 0 10px 10px 10px;\n\
     text-align: left;\n\
 }\n\
-.testReportDiv pre {\n\
-    background: #fdd;\n\
-    border-top: 1px solid black;\n\
-    margin-bottom: 0;\n\
-    overflow-wrap: break-word;\n\
-    padding: 10px;\n\
-    white-space: pre-wrap;\n\
-}\n\
-.testReportDiv span {\n\
-    display: inline-block;\n\
-    width: 120px;\n\
-}\n\
 .testReportDiv .summary {\n\
-    background: #bfb;\n\
-}\n\
-.testReportDiv table {\n\
-    border-top: 1px solid black;\n\
-    text-align: left;\n\
-    width: 100%;\n\
-}\n\
-.testReportDiv table > tbody > tr:nth-child(odd) {\n\
     background: #bfb;\n\
 }\n\
 .testReportDiv .testFailed {\n\
@@ -1312,7 +1341,7 @@ local.assetsDict['/favicon.ico'] = '';
          */
             var boundary, result;
             // handle null-case
-            if (this.entryList.length === 0) {
+            if (!this.entryList.length) {
                 onError(null, local.bufferCreate());
                 return;
             }
@@ -1731,9 +1760,7 @@ local.assetsDict['/favicon.ico'] = '';
              * but it is presumed that the file descriptor or handle has already been bound
              * to a port or domain socket
              */
-                // jslint-hack
-                local.nop(port);
-                onError();
+                onError(null, port);
             } };
         };
 
@@ -1834,7 +1861,8 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will test webpage's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.modeJs === 'browser') {
+                local.validateDocumentStyle();
                 onError(null, options);
                 return;
             }
@@ -2498,9 +2526,8 @@ function TranslateElementInit() {\n\
                         options.fileScreenshotBase + '.html',
                         'utf8'
                     ).replace((/ data-scrape="([\S\s]*?)"/), function (match0, match1) {
-                        // jslint-hack
-                        local.nop(match0);
-                        data = JSON.parse(match1
+                        match0 = match1;
+                        data = JSON.parse(match0
                             .replace((/&quot;/g), '"')
                             .replace((/&amp;/g), '&'));
                     });
@@ -2640,7 +2667,7 @@ function TranslateElementInit() {\n\
                     options.browserWindow.loadURL('file://' + options.fileElectronHtml, {
                         userAgent: options.modeBrowserTest === 'scrape' &&
                             'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 ' +
-                            '(KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
+                            '(KHTML, like Gecko) Chrome/64.0.1234.123 Safari/537.36'
                     });
                     break;
                 // node.electron - after html
@@ -3078,73 +3105,6 @@ return Utf8ArrayToStr(bff);
          * this function will build the app
          */
             options = local.objectSetDefault(options, { assetsList: [] });
-            // validate fileKeySorted
-            local._debugAssertError = null;
-            options.data = [
-                'README.md',
-                'lib.' + local.env.npm_package_nameLib + '.js',
-                'lib.' + local.env.npm_package_nameLib + '.sh',
-                'npm_scripts.sh'
-            ].map(function (file) {
-                return '\n// file - ' + file + '\n' + (local.tryCatchReadFile(file, 'utf8') + '\n')
-                    // filter `
-                    .replace((/^`.*?\n/gm), '')
-                    // filter skip
-                    .replace((/^( {4}\/\/ run .*?\bjs-env code)\b/gm), '`$1')
-                    .replace((/^(\/\/ init lib)\b/gm), '`$1')
-                    // filter local
-                    .replace((/^ *?local\.(?:modeJs|global|local|tmp)\b.*?\n/gm), '')
-                    .replace((/.*?\b(?:assets\.example|assets\.index|shPrintAndEval)\b.*?\n/g), '')
-                    .replace((/.*?\\n\\\n/g), '')
-                    .replace((/^ .*?\\\n/gm), '')
-                    .replace((/^((?:| {4}| {8})local\.\S*? =(?: |$))/gm), '`$1')
-                    // filter shXxx
-                    .replace((/^(sh[A-Z]\w*?\(\) \{)/gm), '`$1')
-                    // filter `
-                    .replace((/\n\n+/g), '\n')
-                    .replace((/^[^`].*?\n/gm), '')
-                    .replace((/^`/gm), '');
-            }).join('\n').trim();
-            local.fs.writeFileSync('tmp/validateFileKeySorted.js', options.data);
-            options.keyLocal = options.keySh = '';
-            options.data.split('\n').forEach(function (line) {
-                line = line.trim();
-                switch (line.slice(0, 2)) {
-                case '':
-                case '//':
-                    // reset key
-                    options.keyLocal = options.keySh = '';
-                    // update file
-                    line.replace((/^\/\/ file - (.*?)$/), function (match0, match1) {
-                        match0 = match1;
-                        options.file = match0;
-                    });
-                    break;
-                case 'sh':
-                    // reset key
-                    options.keyLocal = '';
-                    // validate key < line
-                    local.assert(
-                        options.keySh <= line,
-                        [options.file, options.keySh, line],
-                        console.error
-                    );
-                    // update key
-                    options.keySh = line;
-                    break;
-                default:
-                    // validate key < line
-                    local.assert(
-                        options.keyLocal <= line,
-                        [options.file, options.keyLocal, line],
-                        console.error
-                    );
-                    // update key
-                    options.keyLocal = line;
-                }
-            });
-            // validate no error occurred
-            local.assert(!local._debugAssertError, local._debugAssertError);
             // build assets
             local.fsRmrSync(local.env.npm_config_dir_build + '/app');
             local.onParallelList({ list: options.assetsList.concat([{
@@ -3338,20 +3298,6 @@ return Utf8ArrayToStr(bff);
                     });
                 });
             });
-            /* istanbul ignore next */
-            if (!local.env.npm_config_mode_coverage) {
-                // normalize function-before
-                options.dataTo = options.dataTo.replace(new RegExp('\\n {4}\\/\\/ ' +
-                    'run shared js-env code - function-before\\n' +
-                    '[\\S\\s]+?\\n {4}\\}\\(\\)\\);\\n'), function (match0) {
-                    return match0.replace(new RegExp('^ {8}local\\.(\\w+) = ' +
-                        'function \\([\\S\\s]+?\\n {8}\\};$', 'gm'), function (match0, match1) {
-                        return typeof local[match1] === 'function'
-                            ? '        local.' + match1 + ' = ' + local[match1].toString() + ';'
-                            : match0;
-                    });
-                });
-            }
             // customize local
             if (local.fs.existsSync('./assets.utility2.rollup.js') &&
                     local.env.npm_package_nameLib !== 'swgg') {
@@ -3366,6 +3312,35 @@ return Utf8ArrayToStr(bff);
                 'lib.' + local.env.npm_package_nameLib + '.js',
                 options.dataTo
             );
+            // normalize function-before
+            /* istanbul ignore next */
+            [
+                'lib.' + local.env.npm_package_nameLib + '.js',
+                'lib.' + local.env.npm_package_nameLib + '.sh',
+                'npm_scripts.sh'
+            ].forEach(function (file) {
+                if (local.env.npm_config_mode_coverage) {
+                    return;
+                }
+                options.dataFunctionBefore = (local.tryCatchReadFile(
+                    file,
+                    'utf8'
+                )).replace(file.slice(-3) === '.js'
+                    ? new RegExp('\\n {4}\\/\\/ run shared js-env code - function-before\\n' +
+                        '[\\S\\s]+?\\n {4}\\}\\(\\)\\);\\n')
+                    : (/^[\S\s]*?$/), function (match0) {
+                        return match0.replace((
+                            /^ {8}local\.(\w+) = function \([\S\s]+?\n {8}\};$/gm
+                        ), function (match0, match1) {
+                            return typeof local[match1] === 'function'
+                                ? '        local.' + match1 + ' = ' + local[match1].toString() + ';'
+                                : match0;
+                        });
+                    });
+                if (options.dataFunctionBefore) {
+                    local.fs.writeFileSync(file, options.dataFunctionBefore);
+                }
+            });
             onError();
         };
 
@@ -3460,14 +3435,28 @@ return Utf8ArrayToStr(bff);
                     });
                 });
             });
+            // customize private-repository
+            if (local.env.npm_package_isPrivate) {
+                options.dataTo = options.dataTo
+                    .replace((
+                        /\n\[!\[NPM\]\(https:\/\/nodei.co\/npm\/.*?\n/
+                    ), '\n')
+                    .replace(
+                        '$ npm install ',
+                        '$ git clone --single-branch -b beta ' +
+                            local.env.npm_package_repository_url
+                            .replace('git+https://github.com/', 'git@github.com:') +
+                            ' node_modules/'
+                    );
+            }
             // customize version
             options.dataTo = options.dataTo.replace((
-                /^(#### changelog for v|- npm publish v)\d{4}\.\d{1,2}\.\d{1,2}$/gm
+                /^(#### changelog for v|- npm publish v)\d+?\.\d+?\.\d+?.*?$/gm
             ), '$1' + options.packageJson.version);
             // customize swaggerdoc
             if (!local.assetsDict['/assets.swgg.swagger.json'] ||
                     (/\bswggUiContainer\b/).test(local.assetsDict['/index.html']) ||
-                    process.env.npm_package_name === 'utility2') {
+                    local.env.npm_package_name === 'utility2') {
                 options.dataTo = options.dataTo.replace((/\n#### swagger doc\n[\S\s]*?\n#### /),
                     '\n#### ');
             }
@@ -3480,12 +3469,13 @@ return Utf8ArrayToStr(bff);
                 );
             }
             // customize comment
-            options.dataFrom.replace((/^( *?)(?:#!\! |#\/\/ |\/\/!\! )(.*?)$/gm), function (
-                match0,
-                match1,
-                match2
-            ) {
-                options.dataTo = options.dataTo.replace(match1 + match2, match0);
+            options.dataFrom.replace((
+                /^( *?)(?:#!\! |#\/\/ |\/\/!\! |<!-- )(.*?)(?: -->)?$/gm
+            ), function (match0, match1, match2) {
+                options.dataTo = options.dataTo.replace(
+                    '\n' + match1 + match2 + '\n',
+                    '\n' + match0 + '\n'
+                );
             });
             options.customize();
             // customize shDeployCustom
@@ -3505,22 +3495,24 @@ return Utf8ArrayToStr(bff);
                     '(?:npmTest|testExampleJs|testExampleSh)' +
                     '.*?\\.png[\\S\\s]*?\\n\\n', 'gm'), '');
             }
-            // customize shDeployGithub and shDeployHeroku
+            // customize shBuildCiAfter and shBuildCiBefore
             [
-                'Github',
-                'Heroku'
+                ['shDeployGithub', (/.*?\/screenshot\.deployGithub.*?\n/g)],
+                ['shDeployHeroku', (/.*?\/screenshot\.deployHeroku.*?\n/g)],
+                ['shReadmeTest example.js', (/.*?\/screenshot\.testExampleJs.*?\n/g)],
+                ['shReadmeTest example.sh', (/.*?\/screenshot\.testExampleSh.*?\n/g)]
             ].forEach(function (element) {
-                if (options.dataFrom.indexOf('    shDeploy' + element + '\n') < 0) {
-                    // customize test-server
-                    options.dataTo = options.dataTo.replace(
-                        new RegExp('\\n\\| test-server-' + element.toLowerCase() + ' : \\|.*?\\n'),
-                        '\n'
-                    );
-                    // customize screenshot
-                    options.dataTo = options.dataTo.replace(new RegExp('^1\\. .*?screenshot\\.' +
-                        'deploy' + element +
-                        '.*?\\.png[\\S\\s]*?\\n\\n', 'gm'), '');
+                if (options.dataFrom.indexOf('    ' + element[0] + '\n') >= 0) {
+                    return;
                 }
+                // customize test-server
+                options.dataTo = options.dataTo.replace(
+                    new RegExp('\\n\\| test-server-' +
+                        element[0].replace('shDeploy', '').toLowerCase() + ' : \\|.*?\\n'),
+                    '\n'
+                );
+                // customize screenshot
+                options.dataTo = options.dataTo.replace(element[1], '');
             });
             // customize assets.index.template.html
             if (local.assetsDict['/assets.index.template.html']
@@ -3539,12 +3531,11 @@ return Utf8ArrayToStr(bff);
             // customize toc
             options.toc = '\n# table of contents\n';
             options.dataTo.replace(/\n\n\n\n# (.*)/g, function (match0, match1) {
-                // jslint-hack
-                local.nop(match0);
-                if (match1 === 'table of contents') {
+                match0 = match1;
+                if (match0 === 'table of contents') {
                     return;
                 }
-                options.toc += '1. [' + match1 + '](#' + match1.toLowerCase()
+                options.toc += '1. [' + match0 + '](#' + match0.toLowerCase()
                     .replace(/[^ \-0-9A-Z_a-z]/g, '').replace(/ /g, '-') + ')\n';
             });
             options.dataTo = options.dataTo.replace('\n# table of contents\n', options.toc);
@@ -3562,18 +3553,14 @@ return Utf8ArrayToStr(bff);
                     local.fs.readFileSync('assets.swgg.swagger.json', 'utf8')
                 ));
                 local.objectSetOverride(options.swaggerJson, { info: {
-                    description: options.packageJson.description,
                     title: options.packageJson.name,
                     version: options.packageJson.version,
-                    'x-swgg-downloadStandaloneApp': ((/\bhttps:\/\/.*?\/assets\.app\.js/).exec(
-                        options.dataTo.replace(new RegExp(
-                            'https:\/\/kaizhu256.github.io' +
-                                '\/node-utility2\/build..beta..travis-ci.org\/app\/assets.app.js',
-                            'g'
-                        ), '')
-                    ) || {})[0],
+                    'x-swgg-description': options.packageJson.description,
                     'x-swgg-homepage': options.packageJson.homepage
                 } }, 2);
+                options.dataTo.replace((/\bhttps:\/\/.*?\/assets\.app\.js/), function (match0) {
+                    options.swaggerJson['x-swgg-downloadStandaloneApp'] = match0;
+                });
                 // save assets.swgg.swagger.json
                 local.fs.writeFileSync('assets.swgg.swagger.json', local.jsonStringifyOrdered(
                     options.swaggerJson,
@@ -3696,6 +3683,8 @@ return Utf8ArrayToStr(bff);
              * print help
              */
                 var element, result, lengthList, sortDict;
+                console.log(require(__dirname + '/package.json').name + ' v' +
+                    require(__dirname + '/package.json').version);
                 sortDict = {};
                 result = [['[command]', '[args]', '[description]', -1]];
                 lengthList = [result[0][0].length, result[0][1].length];
@@ -3736,7 +3725,7 @@ return Utf8ArrayToStr(bff);
                         }
                     });
                     element = element.slice(0, 3).join('---- ');
-                    if (ii === 0) {
+                    if (!ii) {
                         element = element.replace((/-/g), ' ');
                     }
                     console.log(element);
@@ -3759,6 +3748,15 @@ return Utf8ArrayToStr(bff);
                     local.cliDict._interactive;
                 local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
             }
+            local.cliDict._version = local.cliDict._version || function () {
+            /*
+             * [none]
+             * print version
+             */
+                console.log(require(__dirname + '/package.json').version);
+            };
+            local.cliDict['--version'] = local.cliDict['--version'] || local.cliDict._version;
+            local.cliDict['-v'] = local.cliDict['-v'] || local.cliDict._version;
             // run fnc()
             fnc = fnc || function () {
                 if (local.cliDict[process.argv[2]]) {
@@ -3777,9 +3775,8 @@ return Utf8ArrayToStr(bff);
             var result;
             result = {};
             document.cookie.replace((/(\w+)=([^;]*)/g), function (match0, match1, match2) {
-                // jslint-hack
-                local.nop(match0);
-                result[match1] = match2;
+                match0 = match1;
+                result[match0] = match2;
             });
             return result;
         };
@@ -3796,9 +3793,8 @@ return Utf8ArrayToStr(bff);
          * this function will remove all cookies
          */
             document.cookie.replace((/(\w+)=/g), function (match0, match1) {
-                // jslint-hack
-                local.nop(match0);
-                document.cookie = match1 + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+                match0 = match1;
+                document.cookie = match0 + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
             });
         };
 
@@ -3826,7 +3822,6 @@ return Utf8ArrayToStr(bff);
             location.pathname.replace(
                 (/\/build\.\.(alpha|beta|master)\.\.travis-ci\.org\//),
                 function (match0, match1) {
-                    // jslint-hack
                     match0 = match1;
                     backendHost = backendHost.replace('-alpha.', '-' + match0 + '.');
                 }
@@ -3840,9 +3835,9 @@ return Utf8ArrayToStr(bff);
          */
             return local.modeJs === 'browser' &&
                 local.env.npm_package_nameLib &&
-                xhr.url.match(/^https{0,1}:\/\//) &&
+                (/^https?:\/\//).test(xhr.url) &&
                 xhr.url.indexOf(xhr.location.protocol + '//' + xhr.location.host) !== 0 &&
-                xhr.location.host.match(/\.github\.io$/) &&
+                (/\.github\.io$/).test(xhr.location.host) &&
                 xhr.corsForwardProxyHost !== 'disabled' &&
                 (xhr.corsForwardProxyHost || 'https://h1-proxy1.herokuapp.com');
         };
@@ -4006,51 +4001,6 @@ return Utf8ArrayToStr(bff);
             options.modeNext = 0;
             options.onNext();
             return self;
-        };
-
-        local.debugDocumentStyle = function () {
-        /*
-         * this function will validate the document's style
-         */
-            var tmp;
-            tmp = [];
-            Array.from(document.querySelectorAll('style')).forEach(function (element) {
-                element.innerHTML.split('\n').forEach(function (element) {
-                    try {
-                        element = element.trim().slice(0, -1).trim();
-                        tmp.push([document.querySelectorAll(element).length, element]);
-                    } catch (ignore) {
-                    }
-                });
-            });
-            tmp
-                .map(function (element) {
-                    return ('000000' + element[0]).slice(-6) + ' ' + element[1];
-                })
-                .sort()
-                .map(function (element, ii) {
-                    return ii + '. ' + element;
-                })
-                .reverse()
-                .forEach(function (element) {
-                    console.error(element);
-                });
-            Array.from(document.querySelectorAll('style')).forEach(function (element) {
-                element.innerHTML.split((/\n\/\*.*?\n/g)).forEach(function (element) {
-                    tmp = '';
-                    element.replace((/(^[\w#.].*?[,{]\n)+/gm), function (match0) {
-                        match0.trim().split('\n').forEach(function (element, ii, list) {
-                            element = element.replace((/[^\w\-]+/gm), ' ').trim();
-                            if (ii === 0) {
-                                local.assert(element >= tmp, [tmp, element, match0]);
-                                tmp = element;
-                                return;
-                            }
-                            local.assert(element >= list[ii - 1], [list[ii - 1], element, match0]);
-                        });
-                    });
-                });
-            });
         };
 
         local.domElementRender = function (template, dict) {
@@ -4243,45 +4193,21 @@ return Utf8ArrayToStr(bff);
 
         local.jslintAndPrintConditional = function (script, file, mode) {
         /*
-         * this function will jslint / csslint the script and print any errors to stderr,
-         * conditionally
+         * this function will jslint / csslint the script and print any errors to stderr
+         * conditionally, depending on macros
          */
-            // cleanup errors
-            local.jslint.errorCounter = 0;
-            local.jslint.errorText = '';
             // optimization - ignore uglified/rollup files
             if (!script || script.length >= 0x100000) {
                 return script;
             }
-            switch (((/\.\w+$/).exec(file) || {})[0]) {
+            switch (file.replace((/^.*\./), '.')) {
             case '.css':
                 if (script.indexOf('/*csslint') >= 0 || mode === 'force') {
                     local.jslintAndPrint(script, file);
                 }
                 break;
-            case '.html':
-                // csslint <style> tag
-                script.replace(
-                    (/<style>([\S\s]+?)<\/style>/g),
-                    function (match0, match1, ii, text) {
-                        // jslint-hack
-                        local.nop(match0);
-                        // preserve lineno
-                        match1 = text.slice(0, ii).replace((/.+/g), '') + match1;
-                        local.jslintAndPrintConditional(match1, file + '.css', mode);
-                    }
-                );
-                // jslint <script> tag
-                script.replace(
-                    (/<script>([\S\s]+?)<\/script>/g),
-                    function (match0, match1, ii, text) {
-                        // jslint-hack
-                        local.nop(match0);
-                        // preserve lineno
-                        match1 = text.slice(0, ii).replace((/.+/g), '') + match1;
-                        local.jslintAndPrintConditional(match1, file + '.js', mode);
-                    }
-                );
+            case '.sh':
+                local.jslintAndPrint(script, file);
                 break;
             case '.js':
                 if ((script.indexOf('/*jslint') >= 0 && !local.global.__coverage__) ||
@@ -4290,6 +4216,40 @@ return Utf8ArrayToStr(bff);
                 }
                 break;
             }
+            // csslint <style>...</style>
+            script.replace(
+                (/^<style>(?:\\n\\)?\n([\S\s]+?)\n<\\?\/style>(?:\\n\\)?$/gm),
+                function (match0, match1, ii, text) {
+                    match0 = match1;
+                    local.jslintAndPrint(
+                        // preserve lineno
+                        text.slice(0, ii).replace((/.+/g), '') + '\n' + match0
+                            // filter \\n\\
+                            .replace((/\\n\\$/gm), '')
+                            // filter ' + ... + '\\
+                            .replace((/^' \+ .*? \+ '\\$/gm), ''),
+                        file + '.css',
+                        mode
+                    );
+                }
+            );
+            // jslint <script>...</script>
+            script.replace(
+                (/^(?:\/\/ )?<script>(?:\\n\\)?\n([\S\s]+?)\n(?:\/\/ )?<\\?\/script>(?:\\n\\)?$/gm),
+                function (match0, match1, ii, text) {
+                    match0 = match1;
+                    local.jslintAndPrint(
+                        // preserve lineno
+                        text.slice(0, ii).replace((/.+/g), '') + '\n' + match0
+                            // filter \\n\\
+                            .replace((/\\n\\$/gm), '')
+                            // filter ' + ... + '\\
+                            .replace((/^' \+ .*? \+ '\\$/gm), ''),
+                        file + '.js',
+                        mode
+                    );
+                }
+            );
             return script;
         };
 
@@ -4351,6 +4311,13 @@ return Utf8ArrayToStr(bff);
                 return JSON.stringify(jsonObj);
             };
             circularList = [];
+            // try to derefernce all properties in jsonObj
+            (function () {
+                try {
+                    jsonObj = JSON.parse(JSON.stringify(jsonObj));
+                } catch (ignore) {
+                }
+            }());
             return JSON.stringify(typeof jsonObj === 'object' && jsonObj
                 // recurse
                 ? JSON.parse(stringify(jsonObj))
@@ -4634,7 +4601,7 @@ return Utf8ArrayToStr(bff);
                 }
                 // init response-header content-type
                 request.urlParsed.contentType = local.contentTypeDict[
-                    ((/\.[^\.]*$/).exec(request.urlParsed.pathname) || {})[0]
+                    ((/\.[^\.]*?$/).exec(request.urlParsed.pathname) || {})[0]
                 ];
                 local.serverRespondHeadSet(request, response, null, {
                     'Content-Type': request.urlParsed.contentType
@@ -4734,7 +4701,7 @@ return Utf8ArrayToStr(bff);
             request.urlParsed = local.urlParse(request.url);
             // init response-header content-type
             request.urlParsed.contentType = local.contentTypeDict[
-                ((/\.[^\.]*$/).exec(request.urlParsed.pathname) || {})[0]
+                ((/\.[^\.]*?$/).exec(request.urlParsed.pathname) || {})[0]
             ];
             local.serverRespondHeadSet(request, response, null, {
                 'Content-Type': request.urlParsed.contentType
@@ -4873,8 +4840,7 @@ return Utf8ArrayToStr(bff);
         local.numberToRomanNumerals = function (num) {
         /*
          * this function will convert num to a roman-numeral
-         * https://stackoverflow.com
-         * /questions/9083037/convert-a-number-into-a-roman-numeral-in-javascript
+         * https://stackoverflow.com/questions/9083037/convert-a-number-into-a-roman-numeral-in-javascript
          */
             var digits, ii, key, roman;
             digits = String(+num).split('');
@@ -5472,7 +5438,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             local.testMock(mockList, function (onError) {
                 local.tryCatchOnError(function () {
                     exports = require(file);
-                }, console.error);
+                }, local.onErrorDefault);
                 onError();
             }, local.onErrorThrow);
             return exports;
@@ -5495,44 +5461,37 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             // start repl-debugger
             local.replStart();
             // debug dir
-            [__dirname, process.cwd()].forEach(function (dir) {
-                local.fs.readdirSync(dir).forEach(function (file) {
-                    file = dir + '/' + file;
-                    // if the file is modified, then restart the process
-                    local.onFileModifiedRestart(file);
-                    switch (local.path.basename(file)) {
-                    // swagger-validate assets.swgg.swagger.json
-                    case 'assets.swgg.swagger.json':
-                        local.fs.readFile(file, 'utf8', function (error, data) {
-                            local.tryCatchOnError(function () {
-                                // validate no error occurred
-                                local.assert(!error, error);
-                                local.swgg.swaggerValidateJson(JSON.parse(data));
-                            }, console.error);
-                        });
-                        break;
+            local.fs.readdirSync(process.cwd()).forEach(function (file) {
+                file = process.cwd() + '/' + file;
+                // if the file is modified, then restart the process
+                local.onFileModifiedRestart(file);
+                switch (local.path.basename(file)) {
+                // swagger-validate assets.swgg.swagger.json
+                case 'assets.swgg.swagger.json':
+                    local.fs.readFile(file, 'utf8', function (error, data) {
+                        local.tryCatchOnError(function () {
+                            // validate no error occurred
+                            local.assert(!error, error);
+                            local.swgg.swaggerValidateJson(JSON.parse(data));
+                        }, local.onErrorDefault);
+                    });
+                    break;
+                }
+                switch (local.path.extname(file)) {
+                case '.css':
+                case '.html':
+                case '.js':
+                case '.json':
+                case '.sh':
+                    if ((/\brollup\b/).test(file)) {
+                        return;
                     }
-                    switch (local.path.extname(file)) {
-                    case '.css':
-                    case '.html':
-                    case '.js':
-                    case '.json':
-                        if ((/\brollup\b/).test(file)) {
-                            return;
-                        }
-                        // jslint file
-                        local.fs.readFile(file, 'utf8', function (error, data) {
-                            local.jslintAndPrintConditional(!error && data, file);
-                        });
-                        break;
-                    case '.sh':
-                        // jslint file
-                        local.fs.readFile(file, 'utf8', function (error, data) {
-                            local.jslintAndPrintConditional(!error && data, file + '.html');
-                        });
-                        break;
-                    }
-                });
+                    // jslint file
+                    local.fs.readFile(file, 'utf8', function (error, data) {
+                        local.jslintAndPrintConditional(!error && data, file);
+                    });
+                    break;
+                }
             });
             if (local.global.utility2_rollup || local.env.npm_config_mode_start) {
                 // init assets
@@ -5618,7 +5577,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             ['index', 'index.default'].forEach(function (element) {
                 local.assetsDict['/' + element + '.html'] =
                     local.assetsDict['/' + element + '.html'] ||
-                    local.jslintAndPrintConditional(local.templateRender(
+                    local.templateRender(
                         // uncomment utility2-comment
                         local.assetsDict['/assets.' + element + '.template.html'].replace(
                             (/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g),
@@ -5630,7 +5589,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                                 local.env.NODE_ENV === 'rollup' ||
                                 local.env.NODE_ENV === 'production'
                         }
-                    ), '/' + element + '.html');
+                    );
             });
             local.assetsDict['/'] = local.assetsDict['/index.html'];
             // init assets.app.js
@@ -5673,7 +5632,7 @@ instruction\n\
                     script = local.assetsDict['/assets.utility2.rollup.content.js']
                         .split('/* utility2.rollup.js content */');
                     script.splice(1, 0, 'local.assetsDict["' + tmp + '"] = ' +
-                        JSON.stringify(local.assetsDict[tmp]));
+                            JSON.stringify(local.assetsDict[tmp]).replace((/\\n/g), '\\n\\\n'));
                     script = script.join('');
                     script += '\n';
                     script += local.assetsDict[tmp];
@@ -5703,16 +5662,13 @@ instruction\n\
                     '\n/* script-end ' + key + ' */\n';
             }).join('\n\n\n');
             local.objectSetDefault(module.exports, local);
-            // jslint assetsDict
-            Object.keys(local.assetsDict).sort().forEach(function (key) {
-                setTimeout(function () {
-                    local.jslintAndPrintConditional(local.assetsDict[key], key);
-                });
-            });
             return module.exports;
         };
 
         local.serverLog = function (options) {
+        /*
+         * this function will log server operations
+         */
             console.error('serverLog - ' + JSON.stringify(options));
         };
 
@@ -5989,11 +5945,46 @@ instruction\n\
         local.stringHtmlSafe = function (text) {
         /*
          * this function will make the text html-safe
+         * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
          */
-            // new RegExp('[' + '"&\'<>'.split('').sort().join('') + ']', 'g')
-            return text.replace((/["&'<>]/g), function (match0) {
-                return '&#x' + match0.charCodeAt(0).toString(16) + ';';
-            });
+            return text
+                .replace((/"/g), '&quot;')
+                .replace((/&/g), '&amp;')
+                .replace((/'/g), '&apos;')
+                .replace((/</g), '&lt;')
+                .replace((/>/g), '&gt;')
+                .replace((/&amp;(amp;|apos;|gt;|lt;|quot;)/ig), '&$1');
+        };
+
+        local.stringRegexpEscape = function (text) {
+        /*
+         * this function will make the text html-safe
+         * https://stackoverflow.com/questions/3561493/is-there-a-regexp-escape-function-in-javascript
+         */
+            return text.replace(/[\-\/\\\^$*+?.()|\[\]{}]/g, '\\$&');
+        };
+
+        local.stringTruncate = function (text, maxLength) {
+        /*
+         * this function will truncate the text to the given maxLength
+         */
+            return text.length > maxLength
+                ? text.slice(0, maxLength - 3).trimRight() + '...'
+                : text;
+        };
+
+        local.stringUniqueKey = function (text) {
+        /*
+         * this function will return a string-key that is unique in the given text
+         */
+            var key;
+            // seed the key with the least frequent letters in the english-language
+            // https://en.wikipedia.org/wiki/Letter_frequency
+            key = 'zqxj';
+            do {
+                key += ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1);
+            } while (text.indexOf(key) >= 0);
+            return key;
         };
 
         local.taskCreate = function (options, onTask, onError) {
@@ -6107,12 +6098,15 @@ instruction\n\
         /*
          * this function will render the template with the given dict
          */
-            var argList, getValue, match, renderPartial, rgx, tryCatch, value;
+            var argList, getValue, match, renderPartial, rgx, tryCatch, skip, value;
             dict = dict || {};
             options = options || {};
             getValue = function (key) {
                 argList = key.split(' ');
                 value = dict;
+                if (argList[0] === '#this/') {
+                    return;
+                }
                 // iteratively lookup nested values in the dict
                 argList[0].split('.').forEach(function (key) {
                     value = value && value[key];
@@ -6122,13 +6116,19 @@ instruction\n\
             renderPartial = function (match0, helper, key, partial) {
                 switch (helper) {
                 case 'each':
+                case 'eachTrimRightComma':
                     value = getValue(key);
-                    return Array.isArray(value)
+                    value = Array.isArray(value)
                         ? value.map(function (dict) {
                             // recurse with partial
                             return local.templateRender(partial, dict, options);
                         }).join('')
                         : '';
+                    // remove trailing-comma from last element
+                    if (helper === 'eachTrimRightComma') {
+                        value = value.trimRight().replace((/,$/), '');
+                    }
+                    return value;
                 case 'if':
                     partial = partial.split('{{#unless ' + key + '}}');
                     partial = getValue(key)
@@ -6179,7 +6179,7 @@ instruction\n\
                     if (value === undefined) {
                         return match0;
                     }
-                    argList.slice(1).forEach(function (arg) {
+                    argList.slice(1).forEach(function (arg, ii, list) {
                         switch (arg) {
                         case 'alphanumeric':
                             value = value.replace((/\W/g), '_');
@@ -6205,8 +6205,17 @@ instruction\n\
                         case 'notHtmlSafe':
                             notHtmlSafe = true;
                             break;
+                        case 'truncate':
+                            skip = ii + 1;
+                            if (value.length > list[skip]) {
+                                value = value.slice(0, list[skip] - 3).trimRight() + '...';
+                            }
+                            break;
                         // default to String.prototype[arg]()
                         default:
+                            if (ii === skip) {
+                                break;
+                            }
                             value = value[arg]();
                             break;
                         }
@@ -6214,12 +6223,17 @@ instruction\n\
                     value = String(value);
                     // default to htmlSafe
                     if (!notHtmlSafe) {
-                        value = value.replace((/["&'<>]/g), function (match0) {
-                            return '&#x' + match0.charCodeAt(0).toString(16) + ';';
-                        });
+                        value = value
+                            .replace((/"/g), '&quot;')
+                            .replace((/&/g), '&amp;')
+                            .replace((/'/g), '&apos;')
+                            .replace((/</g), '&lt;')
+                            .replace((/>/g), '&gt;')
+                            .replace((/&amp;(amp;|apos;|gt;|lt;|quot;)/ig), '&$1');
                     }
                     if (markdownToHtml && typeof local.marked === 'function') {
-                        value = local.marked(value);
+                        value = local.marked(value)
+                            .replace((/&amp;(amp;|apos;|gt;|lt;|quot;)/ig), '&$1');
                     }
                     return value;
                 }, 'templateRender could not render expression ' + JSON.stringify(match0) + '\n');
@@ -6526,7 +6540,7 @@ instruction\n\
                     : -1;
             });
             // stop testReport timer
-            if (testReport.testsPending === 0) {
+            if (!testReport.testsPending) {
                 local.timeElapsedPoll(testReport);
             }
             // 2. return testReport1 in html-format
@@ -6673,7 +6687,7 @@ instruction\n\
             timerInterval = setInterval(function () {
                 // update testReportDiv1 in browser
                 testReportDiv1.innerHTML = local.testReportMerge(testReport, {});
-                if (testReport.testsPending === 0) {
+                if (!testReport.testsPending) {
                     // cleanup timerInterval
                     clearInterval(timerInterval);
                 }
@@ -6927,12 +6941,11 @@ instruction\n\
          * this function will try to read the file or return an empty string
          */
             var data;
-            data = '';
             try {
                 data = local.fs.readFileSync(file, options);
             } catch (ignore) {
             }
-            return data;
+            return data || '';
         };
 
         local.uiAnimateShake = function (element, onError) {
@@ -7136,6 +7149,25 @@ instruction\n\
             }
             return id;
         };
+
+        local.validateDocumentStyle = function () {
+        /*
+         * this function will validate the document's style
+         */
+            var tmp;
+            tmp = [];
+            Array.from(document.querySelectorAll('style')).map(function (element, ii) {
+                element.innerHTML.replace((/^([^\n @].*?)[,\{:].*?$/gm), function (match0, match1) {
+                    ii = document.querySelectorAll(match1).length;
+                    if (!(ii > 1)) {
+                        tmp.push(ii + ' ' + match0);
+                    }
+                });
+            });
+            tmp.sort().forEach(function (element, ii) {
+                console.error('validateDocumentStyleUnmatched ' + ii + '. ' + element);
+            });
+        };
     }());
 
 
@@ -7181,29 +7213,33 @@ instruction\n\
         });
         local.errorDefault = new Error('default error');
         local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.echo;
-        local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.echo;
         // cbranch-no cstat-no fstat-no missing-if-branch
         local.istanbulCoverageReportCreate = local.istanbul.coverageReportCreate || local.echo;
         local.istanbulInstrumentInPackage = local.istanbul.instrumentInPackage || local.echo;
         local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.echo;
         local.jslintAndPrint = local.jslint.jslintAndPrint || local.echo;
-        local.regexpEmailValidate = new RegExp(
+        local.regexpCharsetEncodeUri = (/\w!#\$%&'\(\)\*\+,\-\.\/:;=\?@~/);
+        local.regexpCharsetEncodeUriComponent = (/\w!%'\(\)\*\-\.~/);
+        // https://github.com/chjj/marked/blob/v0.3.7/lib/marked.js#L499
+        local.regexpMatchUrl = (/\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/);
+        // https://www.w3.org/TR/html5/sec-forms.html#email-state-typeemail
+        local.regexpValidateEmail = new RegExp(
             '^[a-zA-Z0-9.!#$%&\'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}' +
                 '[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$'
         );
         // https://en.wikipedia.org/wiki/E.164
-        local.regexpPhoneValidate =
-            (/^(?:\+\d{1,3}[ \-]{0,1}){0,1}(?:\(\d{1,4}\)[ \-]{0,1}){0,1}\d[\d \-]{7,17}$/);
-        local.regexpUriComponentCharset = (/[\w\!\%\'\(\)\*\-\.\~]/);
-        local.regexpUuidValidate =
+        local.regexpValidatePhone = (/^(?:\+\d{1,3}[ \-]?)?(?:\(\d{1,4}\)[ \-]?)?\d[\d \-]{7,17}$/);
+        local.regexpValidateUuid =
             (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
-        local.stringAsciiCharset =
+        local.stringCharsetAscii =
             '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
             '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
             ' !"#$%&\'()*+,-./0123456789:;<=>?' +
             '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
             '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
-        local.stringUriComponentCharset = '!%\'()*-.' +
+        local.stringCharsetEncodeUri = '!#$%&\'()*+,-./' +
+            '0123456789:;=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
+        local.stringCharsetEncodeUriComponent = '!%\'()*-.' +
             '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
         // mock swgg
         local.swgg = local.swgg || {
@@ -7330,8 +7366,8 @@ instruction\n\
                     local.ajax({
                         url: 'https://www.npmjs.com/browse/star?offset=' + options2.element
                     }, function (error, xhr) {
-                        // jslint-hack
-                        local.nop(error);
+                        // validate no error occurred
+                        local.assert(!error, error);
                         console.error('utility2.customOrgStarFilterNotBuilt - fetched ' + xhr.url);
                         (xhr.responseText || '').toLowerCase().replace((
                             /href=\"\/package\/(.+?)\"/g
@@ -7411,13 +7447,14 @@ instruction\n\
                 retryLimit: process.argv[5]
             }, function (options, onParallel) {
                 onParallel.counter += 1;
-                local.child_process.spawn('. ' + local.__dirname + '/lib.utility2.sh; ' +
-                    options.element, { shell: true, stdio: ['ignore', 1, 2] })
-                    .on('exit', function (exitCode) {
-                        console.error('onParallelListExec - [' + (onParallel.ii + 1) +
-                            ' of ' + options.list.length + '] exitCode ' + exitCode);
-                        onParallel(exitCode && new Error(exitCode), options);
-                    });
+                local.child_process.spawn(
+                    '. ' + local.__dirname + '/lib.utility2.sh; ' + options.element,
+                    { shell: true, stdio: ['ignore', 1, 2] }
+                ).on('exit', function (exitCode) {
+                    console.error('onParallelListExec - [' + (onParallel.ii + 1) +
+                        ' of ' + options.list.length + '] exitCode ' + exitCode);
+                    onParallel(exitCode && new Error(exitCode), options);
+                });
             }, local.exit);
         };
         local.cliDict['utility2.start'] = function () {
@@ -7451,7 +7488,7 @@ instruction\n\
                 return require(local.env.npm_config_dir_build + '/test-report.json');
             }, local.onErrorDefault)).testsFailed);
         };
-        switch (process.argv2) {
+        switch (process.argv[2]) {
         case 'utility2.browserTest':
             break;
         }
@@ -7472,7 +7509,15 @@ instruction\n\
                 }
             }
         }
-    // run resetValidateKeySorted js-env code
+        break;
+    }
+    switch (local.modeJs) {
+
+
+
+    // run node js-env code - init-after-rollup
+    /* istanbul ignore next */
+    case 'node':
         // override assets
         [
             'assets.index.css',
@@ -7499,6 +7544,8 @@ instruction\n\
         }
         // init assets
         [
+            '/assets.utility2.example.js',
+            '/assets.utility2.html',
             'lib.apidoc.js',
             'lib.db.js',
             'lib.github_crud.js',
@@ -7508,21 +7555,50 @@ instruction\n\
             'lib.sjcl.js',
             'lib.swgg.js',
             'lib.uglifyjs.js',
-            'lib.utility2.js'
+            'lib.utility2.js',
+            'test.js'
         ].forEach(function (key) {
             switch (key) {
-            case 'lib.apidoc.js':
-            case 'lib.db.js':
-            case 'lib.github_crud.js':
-            case 'lib.istanbul.js':
-            case 'lib.jslint.js':
-            case 'lib.marked.js':
-            case 'lib.sjcl.js':
-            case 'lib.uglifyjs.js':
-                local.assetsDict['/assets.utility2.' + key] = local.tryCatchReadFile(
-                    __dirname + '/' + key,
-                    'utf8'
-                ).replace((/^#!/), '//');
+            case '/assets.utility2.example.js':
+                local.assetsDict[key] = '';
+                local.tryCatchOnError(function () {
+                    local.fs.readFileSync(
+                        __dirname + '/README.md',
+                        'utf8'
+                    ).replace((/```javascript([\S\s]*?)```/), function (match0, match1) {
+                        match0 = match1;
+                        local.assetsDict[key] = match0.trim() + '\n';
+                    });
+                }, local.nop);
+                break;
+            case '/assets.utility2.html':
+                local.assetsDict[key] = '';
+                local.tryCatchOnError(function () {
+                    local.fs.readFileSync(
+                        __dirname + '/README.md',
+                        'utf8'
+                    ).replace((/<!doctype html>[\S\s]*?<\/html>\\n\\\n/), function (match0) {
+                        local.assetsDict[key] = local.templateRender(match0
+                            .replace((/\\n\\$/gm), '')
+                            .replace(
+                                '<script src="assets.app.js"></script>\n',
+                                '<script src="assets.utility2.rollup.js"></script>\n' +
+                                    '<script src="assets.utility2.example.js"></script>\n' +
+                                    '<script src="assets.utiilty2.test.js"></script>\n'
+                            )
+                            .replace('assets.example.js', 'assets.utility2.example.js')
+                            .replace('assets.test.js', 'assets.utility2.test.js')
+                            .replace((/npm_package_/g), '')
+                            // uncomment utility2-comment
+                            .replace(
+                                (/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g),
+                                '$1'
+                            ), {
+                                env: require(__dirname + '/package.json'),
+                                isRollup: true
+                            });
+                    });
+                }, local.nop);
                 break;
             case 'lib.swgg.js':
             case 'lib.utility2.js':
@@ -7532,6 +7608,11 @@ instruction\n\
                     'utf8'
                 ).replace((/^#!/), '//');
                 break;
+            default:
+                local.assetsDict['/assets.utility2.' + key] = local.tryCatchReadFile(
+                    __dirname + '/' + key,
+                    'utf8'
+                ).replace((/^#!/), '//');
             }
         });
         local.assetsDict['/assets.utility2.rollup.js'] = [
@@ -7547,33 +7628,36 @@ instruction\n\
             'lib.uglifyjs.js',
             'lib.utility2.js',
             'lib.swgg.js',
+            '/assets.utility2.example.js',
+            '/assets.utility2.html',
             '/assets.utility2.rollup.end.js'
         ].map(function (key) {
             var script;
             switch (key) {
-            case 'header':
-                return '/* this rollup was created with utility2 ' +
-                    '(https://github.com/kaizhu256/node-utility2) */\n';
+            case '/assets.utility2.example.js':
+            case '/assets.utility2.html':
+                script = local.assetsDict['/assets.utility2.rollup.content.js']
+                    .split('/* utility2.rollup.js content */');
+                script.splice(1, 0, 'local.assetsDict["' + key + '"] = ' +
+                    JSON.stringify(local.assetsDict[key]).replace((/\\n/g), '\\n\\\n'));
+                script = script.join('');
+                script += '\n';
+                break;
             case '/assets.utility2.rollup.begin.js':
             case '/assets.utility2.rollup.end.js':
                 script = local.assetsDict[key];
                 break;
-            case 'lib.apidoc.js':
-            case 'lib.db.js':
-            case 'lib.github_crud.js':
-            case 'lib.istanbul.js':
-            case 'lib.jslint.js':
-            case 'lib.marked.js':
-            case 'lib.sjcl.js':
-            case 'lib.uglifyjs.js':
-                key = '/assets.utility2.' + key;
-                script = local.assetsDict[key];
-                break;
+            case 'header':
+                return '/* this rollup was created with utility2 ' +
+                    '(https://github.com/kaizhu256/node-utility2) */\n';
             case 'lib.swgg.js':
             case 'lib.utility2.js':
                 key = '/assets.' + key.replace('lib.', '');
                 script = local.assetsDict[key];
                 break;
+            default:
+                key = '/assets.utility2.' + key;
+                script = local.assetsDict[key];
             }
             return '/* script-begin ' + key + ' */\n' +
                 script.trim() +

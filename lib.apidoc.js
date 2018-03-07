@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /* istanbul instrument in package apidoc */
+/* jslint-utility2 */
 /*jslint
     bitwise: true,
     browser: true,
@@ -274,23 +275,30 @@
         local.stringHtmlSafe = function (text) {
         /*
          * this function will make the text html-safe
+         * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
          */
-            // new RegExp('[' + '"&\'<>'.split('').sort().join('') + ']', 'g')
-            return text.replace((/["&'<>]/g), function (match0) {
-                return '&#x' + match0.charCodeAt(0).toString(16) + ';';
-            });
+            return text
+                .replace((/"/g), '&quot;')
+                .replace((/&/g), '&amp;')
+                .replace((/'/g), '&apos;')
+                .replace((/</g), '&lt;')
+                .replace((/>/g), '&gt;')
+                .replace((/&amp;(amp;|apos;|gt;|lt;|quot;)/ig), '&$1');
         };
 
         local.templateRender = function (template, dict, options) {
         /*
          * this function will render the template with the given dict
          */
-            var argList, getValue, match, renderPartial, rgx, tryCatch, value;
+            var argList, getValue, match, renderPartial, rgx, tryCatch, skip, value;
             dict = dict || {};
             options = options || {};
             getValue = function (key) {
                 argList = key.split(' ');
                 value = dict;
+                if (argList[0] === '#this/') {
+                    return;
+                }
                 // iteratively lookup nested values in the dict
                 argList[0].split('.').forEach(function (key) {
                     value = value && value[key];
@@ -300,13 +308,19 @@
             renderPartial = function (match0, helper, key, partial) {
                 switch (helper) {
                 case 'each':
+                case 'eachTrimRightComma':
                     value = getValue(key);
-                    return Array.isArray(value)
+                    value = Array.isArray(value)
                         ? value.map(function (dict) {
                             // recurse with partial
                             return local.templateRender(partial, dict, options);
                         }).join('')
                         : '';
+                    // remove trailing-comma from last element
+                    if (helper === 'eachTrimRightComma') {
+                        value = value.trimRight().replace((/,$/), '');
+                    }
+                    return value;
                 case 'if':
                     partial = partial.split('{{#unless ' + key + '}}');
                     partial = getValue(key)
@@ -357,7 +371,7 @@
                     if (value === undefined) {
                         return match0;
                     }
-                    argList.slice(1).forEach(function (arg) {
+                    argList.slice(1).forEach(function (arg, ii, list) {
                         switch (arg) {
                         case 'alphanumeric':
                             value = value.replace((/\W/g), '_');
@@ -383,8 +397,17 @@
                         case 'notHtmlSafe':
                             notHtmlSafe = true;
                             break;
+                        case 'truncate':
+                            skip = ii + 1;
+                            if (value.length > list[skip]) {
+                                value = value.slice(0, list[skip] - 3).trimRight() + '...';
+                            }
+                            break;
                         // default to String.prototype[arg]()
                         default:
+                            if (ii === skip) {
+                                break;
+                            }
                             value = value[arg]();
                             break;
                         }
@@ -392,12 +415,17 @@
                     value = String(value);
                     // default to htmlSafe
                     if (!notHtmlSafe) {
-                        value = value.replace((/["&'<>]/g), function (match0) {
-                            return '&#x' + match0.charCodeAt(0).toString(16) + ';';
-                        });
+                        value = value
+                            .replace((/"/g), '&quot;')
+                            .replace((/&/g), '&amp;')
+                            .replace((/'/g), '&apos;')
+                            .replace((/</g), '&lt;')
+                            .replace((/>/g), '&gt;')
+                            .replace((/&amp;(amp;|apos;|gt;|lt;|quot;)/ig), '&$1');
                     }
                     if (markdownToHtml && typeof local.marked === 'function') {
-                        value = local.marked(value);
+                        value = local.marked(value)
+                            .replace((/&amp;(amp;|apos;|gt;|lt;|quot;)/ig), '&$1');
                     }
                     return value;
                 }, 'templateRender could not render expression ' + JSON.stringify(match0) + '\n');
@@ -521,7 +549,7 @@ local.templateApidocHtml = '\
         </a>\n\
     </h2>\n\
     <ul>\n\
-    <li>description and source-code<pre class="apidocCodePre">{{source}}</pre></li>\n\
+    <li>description and source-code<pre class="apidocCodePre">{{source truncate 4096}}</pre></li>\n\
     <li>example usage<pre class="apidocCodePre">{{example}}</pre></li>\n\
     </ul>\n\
     {{/if source}}\n\
@@ -571,11 +599,7 @@ local.templateApidocHtml = '\
                     return element;
                 }
                 // init source
-                element.source = trimLeft(toString(module[key])) || 'n/a';
-                if (element.source.length > 4096) {
-                    element.source = element.source.slice(0, 4096).trimRight() + ' ...';
-                }
-                element.source = local.stringHtmlSafe(element.source)
+                element.source = local.stringHtmlSafe(trimLeft(toString(module[key])) || 'n/a')
                     .replace((/\([\S\s]*?\)/), function (match0) {
                         // init signature
                         element.signature = match0
@@ -618,6 +642,7 @@ local.templateApidocHtml = '\
                     console.error('apidocCreate - readExample ' + file);
                     result = '';
                     result = ('\n\n\n\n\n\n\n\n' +
+                        // bug-workaround - truncate example to manageable size
                         local.fs.readFileSync(file, 'utf8').slice(0, 262144) +
                         '\n\n\n\n\n\n\n\n').replace((/\r\n*/g), '\n');
                 }, console.error);
@@ -704,9 +729,8 @@ local.templateApidocHtml = '\
             // init exampleList
             [1, 2, 3, 4].forEach(function (depth) {
                 options.exampleList = options.exampleList.concat(
-                    // http://stackoverflow.com
-                    // /questions/4509624/how-to-limit-depth-for-recursive-file-list
                     // find . -maxdepth 1 -mindepth 1 -name "*.js" -type f
+                    // http://stackoverflow.com/questions/4509624/how-to-limit-depth-for-recursive-file-list
                     local.child_process.execSync('find "' + options.dir +
                         '" -maxdepth ' + depth + ' -mindepth ' + depth +
                         ' -type f | sed -e "s|' + options.dir +
@@ -809,9 +833,8 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 options.moduleExtraDict[options.env.npm_package_name] || {};
             [1, 2, 3, 4].forEach(function (depth) {
                 options.libFileList = options.libFileList.concat(
-                    // http://stackoverflow.com
-                    // /questions/4509624/how-to-limit-depth-for-recursive-file-list
                     // find . -maxdepth 1 -mindepth 1 -name "*.js" -type f
+                    // http://stackoverflow.com/questions/4509624/how-to-limit-depth-for-recursive-file-list
                     local.child_process.execSync('find "' + options.dir +
                         '" -maxdepth ' + depth + ' -mindepth ' + depth +
                         ' -name "*.js" -type f | sed -e "s|' + options.dir +

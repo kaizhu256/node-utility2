@@ -8,7 +8,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 
 
 
-[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html) [![snyk.io vulnerabilities](https://snyk.io/test/github/kaizhu256/node-utility2/badge.svg)](https://snyk.io/test/github/kaizhu256/node-utility2)
+[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html)
 
 [![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
 
@@ -56,27 +56,31 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- allow server-side stdout to be streamed to webapps
+- add function onEventSelectAllInPre
+- add csslint macro /* csslint-validateSelectorSorted */
+- rename function serverLog -> debugLog
 - add server stress test using electron
 - none
 
-#### changelog for v2018.2.2
-- npm publish v2018.2.2
-- update function buildApp to validate fileKeySorted
-- allow disabling corsForwardProxyHost with value 'disabled'
-- add function debugDocumentStyle
-- add function numberToRomanNumeral
-- add param operation['x-swgg-sortValue'] to customize operation sort-order in ui
-- replace option htmlBr with markdownToHtml in function templateRender
-- add file lib.marked.js
-- fix npm-install bug for shell-functions shNpmDeprecateAlias and shNpmTestPublished
-- merge js-env for tests
-- add build for package swagger-validate-lite
-- add function sjclHashSha1Create
-- add shell-function shBuildAppSwgg0
-- update function apidocCreate with extra param options.whitelistDict
-- update shell-function shBuildApp to auto-sync master swagger.json from ../swgg-\$npm_package_swggAll/assets.swgg.swagger.json
-- auto-detect and include assets.utility2.rollup.js in functions buildLib and buildTest
+#### changelog for v2018.3.6
+- npm publish v2018.3.6
+- skip publish for npm_package_isPrivate
+- update function buildReadme to handle env var \$npm_package_isPrivate
+- replace shell-function shGithubPush with shGitCommandWithGithubToken
+- auto-normalize js-functions lib.xxx.sh and npm_scripts.sh
+- lib.jslint.js - add function csslintUtility2 and macro /* jslint-utility2 */
+- lib.jslint.js - add function jslintUtility2 and macro /* jslint-utility2 */
+- lib.jslint.js - add function shlintUtility2 and macro # jslint-utility2
+- update shell-function shBuildGithubUpload to auto-update github description with \$npm_package_description
+- update file assets.utility2.rollup.js with asset /assets.utility2.html
+- update function cliRun with builtin-option --version/-v
+- update function templateRender to auto-unescape excessively escaped html entities
+- in module lib.swgg.js - merge function uiRenderAll into onEventUiReload
+- update function debugDocumentStyle to sort selectors by tag < class < id
+- add function stringRegexpEscape
+- update file lib.marked.js to v0.3.7
+- update function templateRender with helpers #eachTrimRightComma, #this/, and truncate
+- add function stringUniqueKey
 - none
 
 #### this package requires
@@ -134,6 +138,7 @@ instruction
 
 
 /* istanbul instrument in package utility2 */
+/* jslint-utility2 */
 /*jslint
     bitwise: true,
     browser: true,
@@ -389,7 +394,7 @@ instruction
         module.exports = local;
         // require builtins
         Object.keys(process.binding('natives')).forEach(function (key) {
-            if (!local[key] && !(/\/|^_|^sys$/).test(key)) {
+            if (!local[key] && !(/\/|^_|^assert|^sys$/).test(key)) {
                 local[key] = require(key);
             }
         });
@@ -405,14 +410,33 @@ instruction
 <!-- "assets.index.default.template.html" -->\n\
 <title>{{env.npm_package_name}} (v{{env.npm_package_version}})</title>\n\
 <style>\n\
+/* jslint-utility2 */\n\
 /*csslint\n\
-    box-sizing: false,\n\
-    universal-selector: false\n\
 */\n\
+/* jslint-ignore-begin */\n\
 *,\n\
 *:after,\n\
 *:before {\n\
     box-sizing: border-box;\n\
+}\n\
+/* jslint-ignore-end */\n\
+@keyframes uiAnimateShake {\n\
+    0%, 50% {\n\
+        transform: translateX(10px);\n\
+    }\n\
+    25%, 75% {\n\
+        transform: translateX(-10px);\n\
+    }\n\
+    100% {\n\
+        transform: translateX(0);\n\
+    }\n\
+}\n\
+@keyframes uiAnimateSpin {\n\
+    0% { transform: rotate(0deg); }\n\
+    100% { transform: rotate(360deg); }\n\
+}\n\
+a {\n\
+    overflow-wrap: break-word;\n\
 }\n\
 body {\n\
     background: #dde;\n\
@@ -435,20 +459,20 @@ body > button {\n\
 button {\n\
     cursor: pointer;\n\
 }\n\
+code,\n\
+pre,\n\
+textarea {\n\
+    font-family: Menlo, Consolas, Courier New, monospace;\n\
+    font-size: small;\n\
+}\n\
 pre {\n\
     overflow-wrap: break-word;\n\
     white-space: pre-wrap;\n\
 }\n\
-@keyframes uiAnimateShake {\n\
-    100% {\n\
-        transform: translateX(0);\n\
-    }\n\
-    0%, 20%, 60% {\n\
-        transform: translateX(10px);\n\
-    }\n\
-    40%, 80% {\n\
-        transform: translateX(-10px);\n\
-    }\n\
+.textOverflowEllipsis {\n\
+    overflow: hidden;\n\
+    text-overflow: ellipsis;\n\
+    white-space: nowrap;\n\
 }\n\
 .uiAnimateShake {\n\
     animation-duration: 500ms;\n\
@@ -457,10 +481,6 @@ pre {\n\
 .uiAnimateSlide {\n\
     overflow-y: hidden;\n\
     transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;\n\
-}\n\
-@keyframes uiAnimateSpin {\n\
-    0% { transform: rotate(0deg); }\n\
-    100% { transform: rotate(360deg); }\n\
 }\n\
 .utility2FooterDiv {\n\
     text-align: center;\n\
@@ -477,16 +497,15 @@ pre {\n\
 /*csslint\n\
     ids: false,\n\
 */\n\
-#outputPreJslint1 {\n\
-    color: #d00;\n\
-}\n\
 textarea {\n\
-    font-family: monospace;\n\
     height: 10rem;\n\
     width: 100%;\n\
 }\n\
 textarea[readonly] {\n\
     background: #ddd;\n\
+}\n\
+#outputPreJslint1 {\n\
+    color: #d00;\n\
 }\n\
 </style>\n\
 </head>\n\
@@ -494,6 +513,7 @@ textarea[readonly] {\n\
 <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
 <script>\n\
+/* jslint-utility2 */\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
@@ -554,7 +574,7 @@ utility2-comment -->\n\
 </h1>\n\
 <h3>{{env.npm_package_description}}</h3>\n\
 <!-- utility2-comment\n\
-<h4><a download href="assets.app.js">download standalone app</a></h4>\n\
+<h4><a download href="assets.app.js">[download standalone app]</a></h4>\n\
 <button class="onclick onreset" id="testRunButton2">run internal test</button><br>\n\
 utility2-comment -->\n\
 \n\
@@ -666,12 +686,11 @@ utility2-comment -->\n\
                 );
             }
         });
+/* validateLineSortedReset */
         local.assetsDict['/'] =
             local.assetsDict['/assets.example.html'] =
             local.assetsDict['/assets.index.template.html']
             .replace((/\{\{env\.(\w+?)\}\}/g), function (match0, match1) {
-                // jslint-hack
-                String(match0);
                 switch (match1) {
                 case 'npm_package_description':
                     return 'the greatest app in the world!';
@@ -827,7 +846,7 @@ utility2-comment -->\n\
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2018.2.2"
+    "version": "2018.3.6"
 }
 ```
 
@@ -1039,6 +1058,7 @@ RUN (set -e; \
 
 shBuildCiAfter() {(set -e
     #// coverage-hack
+    # shDeployCustom
     shDeployGithub
     shDeployHeroku
     shReadmeTest example.sh

@@ -36,6 +36,7 @@
 
 
 /* istanbul instrument in package db */
+/* jslint-utility2 */
 /*jslint
     bitwise: true,
     browser: true,
@@ -156,6 +157,8 @@
              * print help
              */
                 var element, result, lengthList, sortDict;
+                console.log(require(__dirname + '/package.json').name + ' v' +
+                    require(__dirname + '/package.json').version);
                 sortDict = {};
                 result = [['[command]', '[args]', '[description]', -1]];
                 lengthList = [result[0][0].length, result[0][1].length];
@@ -219,6 +222,15 @@
                     local.cliDict._interactive;
                 local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
             }
+            local.cliDict._version = local.cliDict._version || function () {
+            /*
+             * [none]
+             * print version
+             */
+                console.log(require(__dirname + '/package.json').version);
+            };
+            local.cliDict['--version'] = local.cliDict['--version'] || local.cliDict._version;
+            local.cliDict['-v'] = local.cliDict['-v'] || local.cliDict._version;
             // run fnc()
             fnc = fnc || function () {
                 if (local.cliDict[process.argv[2]]) {
@@ -288,6 +300,13 @@
                 return JSON.stringify(jsonObj);
             };
             circularList = [];
+            // try to derefernce all properties in jsonObj
+            (function () {
+                try {
+                    jsonObj = JSON.parse(JSON.stringify(jsonObj));
+                } catch (ignore) {
+                }
+            }());
             return JSON.stringify(typeof jsonObj === 'object' && jsonObj
                 // recurse
                 ? JSON.parse(stringify(jsonObj))

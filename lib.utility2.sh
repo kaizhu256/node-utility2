@@ -1,4 +1,5 @@
 #/bin/sh
+# jslint-utility2
 
 shBaseInit() {
 # this function will init the base bash-login env, and is intended for aws-ec2 setup
@@ -98,10 +99,15 @@ shBuildApp() {(set -e
 # this function will build the app
     shPasswordEnvUnset
     export MODE_BUILD=buildApp
-    if [ "$1" ] && [ ! -f package.json ]
+    if [ "$1" ]
     then
-        printf "{\"name\":\"$1\"}\n" > package.json
         unset npm_package_nameLib
+        if [ ! -f package.json ]
+        then
+            printf "{\"name\":\"$1\"}\n" > package.json
+        fi
+        sed -in -e "s/\"name\": *\".*\"\(,*\)/\"name\":\"$1\"\1/" package.json
+        rm -f package.jsonn
     fi
     shBuildInit
     # create file .gitignore .travis.yml LICENSE
@@ -202,8 +208,8 @@ shBuildAppSwgg0() {(set -e
         -e "s|    shDeployHeroku|    # shDeployHeroku|" \
         -e "s|    \"nameAliasPublish\": \".*\",|    \"nameAliasPublish\": \"\",|" \
         -e "s|    \"swggAll\": \".*\",|    \"swggAll\": \"\",|" \
-        "README.md"
-    rm -f "README.md"n
+        README.md
+    rm -f README.mdn
     shBuildApp "swgg-$NAME"
 )}
 
@@ -274,6 +280,15 @@ shBuildCi() {(set -e
         shBuildCiInternal
         ;;
     publish)
+        if [ "$npm_package_isPrivate" ]
+        then
+            shBuildPrint "skip publish"
+            if [ "$GITHUB_TOKEN" ]
+            then
+                shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" HEAD:beta
+            fi
+            return
+        fi
         export CI_BRANCH=alpha
         # init .npmrc
         printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
@@ -293,7 +308,7 @@ shBuildCi() {(set -e
         case "$CI_COMMIT_MESSAGE_META" in
         "[npm publishAfterCommit]")
             shGitSquashPop HEAD~1 "[ci skip] npm published"
-            shGithubPush -f "https://github.com/$GITHUB_REPO" HEAD:alpha
+            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f HEAD:alpha
             return
             ;;
         *)
@@ -321,7 +336,7 @@ shBuildCi() {(set -e
     alpha)
         case "$CI_COMMIT_MESSAGE_META" in
         "[npm publish]")
-            shGithubPush "https://github.com/$GITHUB_REPO" HEAD:publish
+            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" HEAD:publish
             ;;
         "[npm publishAfterCommitAfterBuild]")
             # use date-semver
@@ -341,7 +356,7 @@ shBuildCi() {(set -e
         ;;
     master)
         git tag "$npm_package_version" || true
-        shGithubPush "https://github.com/$GITHUB_REPO" "$npm_package_version" || true
+        shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" "$npm_package_version" || true
         ;;
     publish)
         # init .npmrc
@@ -353,7 +368,7 @@ shBuildCi() {(set -e
         shNpmDeprecateAliasList "$npm_package_nameAliasDeprecate"
         # security - cleanup .npmrc
         rm "$HOME/.npmrc"
-        shGithubPush "https://github.com/$GITHUB_REPO" HEAD:beta
+        shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" HEAD:beta
         ;;
     esac
     # sync with $npm_package_githubRepoAlias
@@ -362,7 +377,8 @@ shBuildCi() {(set -e
         for GITHUB_REPO_ALIAS in $npm_package_githubRepoAlias
         do
             shGithubRepoBaseCreate "$GITHUB_REPO_ALIAS"
-            shGithubPush -f --tags "https://github.com/$GITHUB_REPO_ALIAS" "$CI_BRANCH"
+            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO_ALIAS" --tags -f \
+                "$CI_BRANCH"
         done
     fi
 )}
@@ -493,7 +509,7 @@ shBuildCiInternal() {(set -e
     fi
     # validate http-links embedded in README.md
     shSleep 30
-    shReadmeLinkValidate
+    [ "$npm_package_isPrivate" ] || shReadmeLinkValidate
 )}
 
 shBuildCustomOrg() {(set -e
@@ -511,7 +527,7 @@ shBuildGithubUpload() {(set -e
     # init $DIR
     DIR="$npm_config_dir_tmp/buildGithubUpload"
     rm -fr "$DIR"
-    git clone "$URL" --single-branch -b gh-pages "$DIR"
+    shGitCommandWithGithubToken clone "$URL" --single-branch -b gh-pages "$DIR"
     cd "$DIR"
     # cleanup screenshot
     rm -f build/*127.0.0.1*
@@ -536,10 +552,26 @@ shBuildGithubUpload() {(set -e
     # and then squash to $COMMIT_LIMIT/2 in git-repo-branch
     if [ "$COMMIT_LIMIT" ] && [ "$(git rev-list HEAD --count)" -gt "$COMMIT_LIMIT" ]
     then
-        shGithubPush -f "$URL" HEAD:gh-pages.backup
+        shGitCommandWithGithubToken push "$URL" -f HEAD:gh-pages.backup
         shGitSquashShift "$(($COMMIT_LIMIT/2))"
     fi
-    shGithubPush -f "$URL" HEAD:gh-pages
+    shGitCommandWithGithubToken push "$URL" -f HEAD:gh-pages
+    # update $GITHUB_REPO description
+    if [ "$CI_BRANCH" = alpha ] && [ "$npm_package_description" ]
+    then
+        shBuildPrint "update $GITHUB_REPO description"
+        curl -#Lf \
+        -H "Authorization: token $GITHUB_TOKEN" \
+        -H "Content-Type: application/json" \
+        -H "User-Agent: undefined" \
+        -X PATCH \
+        -d "{
+            \"description\": \"$(echo "$npm_package_description" | sed -e 's/"/\\\\"/')\",
+            \"name\": \"$(printf "$GITHUB_REPO" | sed -e "s/.*\///")\"
+        }" \
+        -o /dev/null \
+        "https://api.github.com/repos/$GITHUB_REPO"
+    fi
 )}
 
 shBuildInit() {
@@ -586,8 +618,9 @@ var dict, value;
 dict = require('./package.json');
 Object.keys(dict).forEach(function (key) {
     value = dict[key];
-    if (!(/\W/g).test(key) && typeof value === 'string' && !(/[\n\"\$']/).test(value)) {
-        process.stdout.write('export npm_package_' + key + '=\'' + value + '\';');
+    if (!(/\W/g).test(key) && typeof value === 'string' && !(/[\n\$]/).test(value)) {
+        process.stdout.write('export npm_package_' + key + '=\'' +
+            value.replace((/'/g), '\'\"\'\"\'') + '\';');
     }
 });
 value = String((dict.repository && dict.repository.url) || dict.repository || '')
@@ -624,7 +657,7 @@ if ((/^[^\/]+\/[^\/]+\$/).test(value)) {
         export npm_package_version=0.0.1 || return $?
     fi
     export npm_package_nameLib=\
-"${npm_package_nameLib:-$(printf "$npm_package_name" | sed "s/[^0-9A-Z_a-z]/_/g")}" || \
+"${npm_package_nameLib:-$(printf "$npm_package_name" | sed -e "s/[^0-9A-Z_a-z]/_/g")}" || \
         return $?
     # init $npm_config_*
     export npm_config_dir_build="${npm_config_dir_build:-$PWD/tmp/build}" || return $?
@@ -676,7 +709,7 @@ shBuildInsideDocker() {(set -e
     shXvfbStart
     # bug-workaround - Cannot read property 'target' of null #10686
     # https://github.com/npm/npm/issues/10686
-    sed -in 's/  "_requiredBy":/  "_requiredBy_":/' package.json
+    sed -in -e 's/  "_requiredBy":/  "_requiredBy_":/' package.json
     rm -f package.jsonn
     # npm-install
     npm install
@@ -814,7 +847,7 @@ shCryptoTravisEncrypt() {(set -e
             shBuildPrint "no CRYPTO_AES_KEY_ENCRYPTED"
             return 1
         fi
-        sed -in "s|\(- secure: \).*\( # CRYPTO_AES_KEY$\)|\\1$CRYPTO_AES_KEY_ENCRYPTED\\2|" \
+        sed -in -e "s|\(- secure: \).*\( # CRYPTO_AES_KEY$\)|\\1$CRYPTO_AES_KEY_ENCRYPTED\\2|" \
             .travis.yml
         rm -f .travis.ymln
         shBuildPrint "updated .travis.yml with CRYPTO_AES_KEY_ENCRYPTED"
@@ -874,7 +907,7 @@ shCustomOrgBuildCi() {(set -e
         git add -f .touch.txt
         git commit -m "[npm publishAfterCommitAfterBuild]"
     fi
-    shGithubPush -f "https://github.com/$GITHUB_REPO" HEAD:alpha
+    shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f HEAD:alpha
 )}
 
 shCustomOrgNameNormalize() {(set -e
@@ -986,7 +1019,7 @@ shGithubRepoBaseCreate $GITHUB_REPO"
     LIST2=""
     for GITHUB_REPO in $LIST
     do
-        NAME="$(printf "$GITHUB_REPO" | sed "s|^$GITHUB_ORG/node-$GITHUB_ORG-||")"
+        NAME="$(printf "$GITHUB_REPO" | sed "s/^$GITHUB_ORG\/node-$GITHUB_ORG-//")"
         LIST2="$LIST2
 (set -e; \
 shBuildPrint \"creating $GITHUB_ORG-repo $GITHUB_REPO ...\"; \
@@ -1045,14 +1078,14 @@ printf '{ \
     }, \
     \"version\": \"0.0.1\" \
 }' > package.json; \
-sed -in 's/kaizhu256-kaizhu256.//' package.json; \
+sed -in -e 's/kaizhu256-kaizhu256.//' package.json; \
 rm -f package.jsonn; \
-sed -in 's/.*CRYPTO_AES_SH_ENCRYPTED.*//' .travis.yml; \
+sed -in -e 's/.*CRYPTO_AES_SH_ENCRYPTED.*//' .travis.yml; \
 rm -f .travis.ymln; \
 shCryptoTravisEncrypt; \
 git add -f . .gitignore .travis.yml; \
 git commit -am \"[npm publishAfterCommitAfterBuild]\"; \
-shGithubPush -f https://github.com/$GITHUB_REPO alpha; \
+shGitCommandWithGithubToken push https://github.com/$GITHUB_REPO -f alpha; \
 shBuildPrint \"... created $GITHUB_ORG-repo $GITHUB_REPO\"; \
 )"
     done
@@ -1084,8 +1117,8 @@ shDeployGithub() {(set -e
 # and run a simple curl check for $TEST_URL
 # and test $TEST_URL
     export MODE_BUILD=deployGithub
-    export TEST_URL="https://$(printf "$GITHUB_REPO" | \
-        sed "s|/|.github.io/|")/build..$CI_BRANCH..travis-ci.org/app"
+    export TEST_URL=\
+"https://$(printf "$GITHUB_REPO" | sed "s/\//.github.io\//")/build..$CI_BRANCH..travis-ci.org/app"
     shBuildPrint "deployed to $TEST_URL"
     # verify deployed app's main-page returns status-code < 400
     if [ $(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
@@ -1175,7 +1208,7 @@ shDockerInstall() {(set -e
 
 shDockerLogs() {(set -e
 # this function log the docker container $1
-    docker logs -f --tail=256 "$1"
+    docker logs --tail=256 -f "$1"
 )}
 
 shDockerNpmRestart() {(set -e
@@ -1243,7 +1276,7 @@ server {
         touch /var/log/nginx/error.log
         tail -f /dev/stderr /var/log/nginx/error.log &
         /etc/init.d/nginx start
-        sed -in 's|http://petstore.swagger.io/v2|/assets|' /swagger-ui/index.html
+        sed -in -e 's/http:\/\/petstore.swagger.io\/v2/\/assets/' /swagger-ui/index.html
         rm -f /swagger-ui/index.htmln
         /elasticsearch/bin/elasticsearch -Des.http.port=9201
         sleep infinity
@@ -1503,6 +1536,13 @@ local = {};
                 return JSON.stringify(jsonObj);
             };
             circularList = [];
+            // try to derefernce all properties in jsonObj
+            (function () {
+                try {
+                    jsonObj = JSON.parse(JSON.stringify(jsonObj));
+                } catch (ignore) {
+                }
+            }());
             return JSON.stringify(typeof jsonObj === 'object' && jsonObj
                 // recurse
                 ? JSON.parse(stringify(jsonObj))
@@ -1600,51 +1640,6 @@ require('fs').writeFileSync(process.argv[1], local.jsonStringifyOrdered(tmp, nul
     " "$@"
 )}
 
-shFileKeySort() {(set -e
-# this function sort the keys in the file
-    FILE="$1"
-    node -e "
-// <script>
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 8,
-    maxlen: 100,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-'use strict';
-console.log('var aa = [\\n\"\",' + require('fs').readFileSync('$FILE', 'utf8')
-/* jslint-ignore-begin */
-    // escape backslash and double-quote
-    .replace((/[\"\\\\]/g), '#')
-    // remove newline
-    .replace((/\\n{2,}/gm), '\\n')
-    // add js
-    .replace((/^ {0,8}(\\w[^\\n ]*? =(?:| .*?))$/gm), '\"\$1\",')
-    // add js-env
-    .replace((/^ {4}.. (.*? js-env .*?)$/gm), '\"\$1\",')
-    // add sh
-    .replace((/^(\\w+?\\(\\) \\{.*?)$/gm), '\"\$1\",')
-    // remove non-match
-    .replace((/^(?:[^\\n\"]|\"\W|\"\").*/gm), '')
-    // remove newline
-    .replace((/\\n{2,}/gm), '\\n') + '\"\"\n];\n\
-aa = aa.slice(0, aa.indexOf(\"\"));\n\
-var bb = aa.slice().sort();\n\
-aa.forEach(function (aa, ii) {\n\
-    console.log(ii, aa === bb[ii], aa, bb[ii]);\n\
-});\n\
-console.assert(JSON.stringify(aa) === JSON.stringify(bb));\n\
-'
-/* jslint-ignore-end */
-    );
-// </script>
-    "
-)}
-
 shFilePackageJsonVersionIncrement() {(set -e
 # this function will increment the package.json version before npm-publish
 VERSION_PUBLISHED="$(npm info "" version 2>/dev/null)" || true
@@ -1694,6 +1689,26 @@ shFileTrimLeft() {(set -e
 # http://stackoverflow.com/questions/1935081/remove-leading-whitespace-from-file
     sed -in '/./,$!d' "$1"
     rm -f "$1"n
+)}
+
+shGitCommandWithGithubToken() {(set -e
+# this function will run the git-command using $GITHUB_TOKEN
+# http://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
+    export MODE_BUILD="${MODE_BUILD:-shGitCommandWithGithubToken}"
+    shBuildPrint "git $*"
+    COMMAND="$1"
+    shift
+    URL="$1"
+    shift
+    case "$URL" in
+    https://github.com/*)
+        if [ "$GITHUB_TOKEN" ]
+        then
+            URL="$(printf "$URL" | sed -e s/github.com/$GITHUB_TOKEN@github.com/)"
+        fi
+        ;;
+    esac
+    git "$COMMAND" "$URL" "$@"
 )}
 
 shGitGc() {(set -e
@@ -1787,7 +1802,7 @@ shGithubCrudRepoListCreate() {(set -e
     export MODE_BUILD="${MODE_BUILD:-shGithubCrudRepoListCreate}"
     URL=https://api.github.com/user/repos
     # init $GITHUB_ORG
-    GITHUB_ORG="$(printf "$LIST" | head -n 1 | sed -e 's|/.*||')"
+    GITHUB_ORG="$(printf "$LIST" | head -n 1 | sed -e "s/\/.*//")"
     if (printf "$GITHUB_ORG" | grep -qe '^\(npmdoc\|npmtest\|scrapeitall\|swgg-io\)$')
     then
         URL="https://api.github.com/orgs/$GITHUB_ORG/repos"
@@ -1795,7 +1810,7 @@ shGithubCrudRepoListCreate() {(set -e
     LIST2=""
     for GITHUB_REPO in $LIST
     do
-        NAME="$(printf "$GITHUB_REPO" | sed "s|.*/||")"
+        NAME="$(printf "$GITHUB_REPO" | sed -e "s/.*\///")"
         LIST2="$LIST2
 if (! curl -ILfs -o /dev/null https://github.com/$GITHUB_REPO); \
 then \
@@ -1811,24 +1826,6 @@ shGithubFileCommitDate() {(set -e
 # this function will print the commit-date for the github file url $1
     curl -Lfs "$1" | grep -e "datetime=" | grep -oe "\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d*Z"
     printf "$1\n"
-)}
-
-shGithubPush() {(set -e
-# this function will push to github using $GITHUB_TOKEN
-# http://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
-    EXIT_CODE=0
-    export MODE_BUILD="${MODE_BUILD:-shGithubPush}"
-    if [ "$GITHUB_TOKEN" ]
-    then
-        # init github-authentication
-        git config credential.helper "store --file=.git/tmp"
-        printf "https://nobody:$GITHUB_TOKEN@github.com\n" > .git/tmp
-    fi
-    shBuildPrint "git push $*"
-    git push "$@" || EXIT_CODE=$?
-    # security - cleanup github-authentication
-    rm -f .git/tmp
-    return "$EXIT_CODE"
 )}
 
 shGithubRepoBaseCreate() {(set -e
@@ -1852,16 +1849,16 @@ shGithubRepoBaseCreate() {(set -e
     )
     fi
     rm -fr "/tmp/$GITHUB_REPO"
-    mkdir -p "/tmp/$(printf "$GITHUB_REPO" | sed "s|/.*||")"
+    mkdir -p "/tmp/$(printf "$GITHUB_REPO" | sed "s/\/.*//")"
     cp -a /tmp/githubRepoBase "/tmp/$GITHUB_REPO"
     cd "/tmp/$GITHUB_REPO"
     curl -Lfs https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig | \
         sed "s|kaizhu256/node-utility2|$GITHUB_REPO|" > .git/config
     (eval shGithubCrudRepoListCreate "$GITHUB_REPO") || true
     # set default-branch to alpha
-    shGithubPush "https://github.com/$GITHUB_REPO" alpha || true
+    shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" alpha || true
     # push all branches
-    shGithubPush --all "https://github.com/$GITHUB_REPO" || true
+    shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" --all || true
 )}
 
 shGithubRepoListTouch() {(set -e
@@ -1901,7 +1898,7 @@ tmp\\|\
 vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
 "
     find "$DIR" -type f | \
-        grep -v "$FILE_FILTER" | \
+        grep -ve "$FILE_FILTER" | \
         tr "\n" "\000" | \
         xargs -0 grep -HIine "$REGEXP" || true
 )}
@@ -2605,7 +2602,7 @@ shNpmTestPublished() {(set -e
     cd "node_modules/$npm_package_name"
     # bug-workaround - Cannot read property 'target' of null #10686
     # https://github.com/npm/npm/issues/10686
-    sed -in 's/  "_requiredBy":/  "_requiredBy_":/' package.json
+    sed -in -e 's/  "_requiredBy":/  "_requiredBy_":/' package.json
     rm -f package.jsonn
     # npm-install
     npm install
@@ -2719,7 +2716,7 @@ require('fs').readFileSync('README.md', 'utf8')
             .replace('\u0027', '')
             .replace((/\\bbeta\\b|\\bmaster\\b/g), 'alpha')
             .replace((/\/build\//g), '/build..alpha..travis-ci.org/');
-        if ((/^https:\/\/snyk\.io\//).test(match0)) {
+        if (process.env.npm_package_isPrivate && match0.indexOf('https://github.com/') === 0) {
             return;
         }
         request = require(match1).request(require('url').parse(match0), function (response) {
@@ -2776,6 +2773,7 @@ shReadmeTest() {(set -e
             sed -in \
                 -e "s|/build..beta..travis-ci.org/|/build..alpha..travis-ci.org/|g" \
                 -e "s|npm install $npm_package_name|npm install $GITHUB_REPO#alpha|g" \
+                -e "s| -b beta | -b alpha |g" \
                 "$FILE"
             rm -f "$FILE"n
         fi
@@ -3088,12 +3086,12 @@ shUbuntuInit() {
 
     if [ -n "$force_color_prompt" ]; then
         if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-      # We have color support; assume it's compliant with Ecma-48
-      # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-      # a case would tend to support setf rather than setaf.)
-      color_prompt=yes
+            # We have color support; assume it's compliant with Ecma-48
+            # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+            # a case would tend to support setf rather than setaf.)
+            color_prompt=yes
         else
-      color_prompt=
+            color_prompt=
         fi
     fi
 
@@ -3147,11 +3145,11 @@ shUbuntuInit() {
     # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
     # sources /etc/bash.bashrc).
     if ! shopt -oq posix; then
-      if [ -f /usr/share/bash-completion/bash_completion ]; then
-        . /usr/share/bash-completion/bash_completion
-      elif [ -f /etc/bash_completion ]; then
-        . /etc/bash_completion
-      fi
+        if [ -f /usr/share/bash-completion/bash_completion ]; then
+            . /usr/share/bash-completion/bash_completion
+        elif [ -f /etc/bash_completion ]; then
+            . /etc/bash_completion
+        fi
     fi
 }
 
@@ -3271,7 +3269,7 @@ shUtility2GitDiff() {(set -e
 shUtility2Grep() {(set -e
 # this function will recursively grep $UTILITY2_DEPENDENTS for the regexp $REGEXP
     REGEXP="$1"
-    for DIR in $UTILITY2_DEPENDENTS
+    for DIR in $UTILITY2_DEPENDENTS $(cd "$HOME/src"; ls -d swgg-* 2>/dev/null)
     do
         DIR="$HOME/src/$DIR"
         if [ -d "$DIR" ]
