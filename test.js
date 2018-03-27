@@ -897,7 +897,7 @@
                     // customize quickstart example.js
                     (/# quickstart example.js[\S\s]*?istanbul instrument in package/),
                     // customize quickstart-footer
-                    (/>\[download standalone app\]<[^`]*?utility2FooterDiv/),
+                    (/>download standalone app<[^`]*?"utility2FooterDiv"/),
                     (/```[^`]*?\n# extra screenshots/),
                     // customize build-script
                     (/# run shBuildCi[^`]*?```/)
@@ -1152,6 +1152,18 @@
             local.assertJsonEqual(local.domElementRender('<div>{{value}}</div>', {
                 value: 'aa'
             }).children[0].outerHTML, '<div>aa</div>');
+            onError(null, options);
+        };
+
+        local.testCase_domQuerySelectorAllTagNameAndPrint_default = function (options, onError) {
+        /*
+         * this function will test domQuerySelectorAllTagNameAndPrint's default handling-behavior
+         */
+            if (local.modeJs !== 'browser') {
+                onError(null, options);
+                return;
+            }
+            local.domQuerySelectorAllTagNameAndPrint('body');
             onError(null, options);
         };
 

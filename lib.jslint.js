@@ -54,7 +54,7 @@
         } else {
             // require builtins
             Object.keys(process.binding('natives')).forEach(function (key) {
-                if (!local[key] && !(/\/|^_|^sys$/).test(key)) {
+                if (!local[key] && !(/\/|^_|^assert|^sys$/).test(key)) {
                     local[key] = require(key);
                 }
             });
@@ -6486,10 +6486,15 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                 if (!current1) {
                     return;
                 }
+                // validate whitespace-before-comma
+                if ((/ ,/).test(current1)) {
+                    jj = jj || ((/ ,/).exec(current1).index + 2);
+                    message = message || 'whitespace-before-comma';
+                }
                 // validate double-whitespace
                 if ((/\S {2}/).test(current1)) {
                     jj = jj || ((/\S {2}/).exec(current1).index + 2);
-                    message = message || 'double whitespace';
+                    message = message || 'double-whitespace';
                 }
                 // ignore indent
                 if (!message && current1[0] === ' ') {
@@ -6498,7 +6503,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                 // validate multi-line-statement
                 if ((/[,;\{\}]./).test(current1)) {
                     jj = jj || ((/[,;\{\}]./).exec(current1).index + 1);
-                    message = message || 'multi-line statement';
+                    message = message || 'multi-line-statement';
                 }
                 // validateLineSortedReset
                 if (current1 === '/* validateLineSortedReset */') {
@@ -6511,12 +6516,12 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                 // validate previous1 < current1
                 current1 = current1
                     .replace((/,$/gm), '   ,')
-                    .replace((/ \{$/gm), '   {')
+                    .replace((/( \{$|:)/gm), '  $1')
                     .replace((/(^[\w*@]| \w)/gm), ' $1');
                 if (!(previous1 < current1)) {
                     jj = jj || 1;
                     message = message ||
-                        ('lines not sorted\n' + previous1 + '\n' + current1);
+                        ('lines not sorted\n' + previous1 + '\n' + current1).trim();
                 }
                 previous1 = current1;
                 // validate previous2 < current2
@@ -6563,7 +6568,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                     ii += 1;
                     jj = 0;
                     message = '';
-                    // validate indent
+                    // validate 4-space indent
                     if (!(/^ * \*/).test(line) && ((/^ */).exec(line)[0].length % 4 !== 0)) {
                         jj = jj || 1;
                         message = message || 'non 4-space indent';
@@ -6699,12 +6704,26 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
         /*
          * this function will jslint the script with utiity2-specific rules
          */
-            var ii, current, previous;
+            var ii, current, previous, tmp;
             ii = 0;
             previous = '';
             script.replace((/^.*?$/gm), function (line) {
                 current = line.trim();
                 ii += 1;
+                // validate className sorted
+                tmp = (/class="([^"]+?)"/g).exec(current);
+                tmp = JSON.stringify(
+                    (tmp && tmp[1].match(/\w\S*?\{\{[^}]*?\}\}|\w\S*|\{\{[^}]*?\}\}/g)) || []
+                );
+                if (JSON.stringify(JSON.parse(tmp).sort()) !== tmp) {
+                    local.errorList.push({
+                        col: 0,
+                        line: ii,
+                        message: 'tag.classList not sorted - ' + tmp,
+                        value: line
+                    });
+                }
+                // validate line-sorted
                 if (line === '/* validateLineSortedReset */' ||
                         (/^ {4}\/\/ run .*?\bjs\\?-env code\b|^\/\/ init lib|\\n\\$/m).test(line)) {
                     previous = '';

@@ -260,11 +260,10 @@
             urlParsed = require('url').parse(options.url);
             urlParsed.headers = options.headers;
             urlParsed.method = options.method;
-            // debug request
+            // debug request-time
             timeStart = Date.now();
-            request = require(
-                urlParsed.protocol.slice(0, -1)
-            ).request(urlParsed, function (_response) {
+            request = options.request || require(urlParsed.protocol.slice(0, -1)).request;
+            request = request(urlParsed, function (_response) {
                 response = _response;
                 if (response.statusCode < 200 || response.statusCode > 299) {
                     onError2(new Error(response.statusCode));
@@ -280,8 +279,8 @@
                         onError2();
                     })
                     .on('error', onError2);
-            }).on('error', onError2);
-            request.end(options.data);
+            });
+            request.on('error', onError2).end(options.data);
         };
 
         local.nop = function () {
@@ -442,12 +441,16 @@
          * this function will delete the github file
          * https://developer.github.com/v3/repos/contents/#delete-a-file
          */
-            options = { message: options.message, url: options.url };
+            options = { message: options.message, request: options.request, url: options.url };
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
                     // get sha
-                    local.contentRequest({ method: 'GET', url: options.url }, options.onNext);
+                    local.contentRequest({
+                        method: 'GET',
+                        request: options.request,
+                        url: options.url
+                    }, options.onNext);
                     break;
                 case 2:
                     // delete file with sha
@@ -455,6 +458,7 @@
                         local.contentRequest({
                             message: options.message,
                             method: 'DELETE',
+                            request: options.request,
                             sha: data.sha,
                             url: options.url
                         }, options.onNext);
@@ -466,6 +470,7 @@
                         // recurse
                         local.contentDelete({
                             message: options.message,
+                            request: options.request,
                             url: data.element.url
                         }, onParallel);
                     }, options.onNext);
@@ -483,14 +488,18 @@
          * this function will get the github file
          * https://developer.github.com/v3/repos/contents/#get-contents
          */
-            options = { url: options.url };
+            options = { request: options.request, url: options.url };
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
-                    local.contentRequest({ method: 'GET', url: options.url }, options.onNext);
+                    local.contentRequest({
+                        method: 'GET',
+                        request: options.request,
+                        url: options.url
+                    }, options.onNext);
                     break;
                 case 2:
-                    options.onNext(null, new Buffer(data.content, 'base64'));
+                    options.onNext(null, new Buffer(data.content || '', 'base64'));
                     break;
                 default:
                     onError(error, !error && data);
@@ -509,13 +518,18 @@
                 content: options.content,
                 message: options.message,
                 modeErrorIgnore: true,
+                request: options.request,
                 url: options.url
             };
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
                     // get sha
-                    local.contentRequest({ method: 'GET', url: options.url }, options.onNext);
+                    local.contentRequest({
+                        method: 'GET',
+                        request: options.request,
+                        url: options.url
+                    }, options.onNext);
                     break;
                 case 2:
                     // put file with sha
@@ -523,6 +537,7 @@
                         content: options.content,
                         message: options.message,
                         method: 'PUT',
+                        request: options.request,
                         sha: data.sha,
                         url: options.url
                     }, options.onNext);
@@ -540,7 +555,12 @@
          * this function will put options.file into the github file
          * https://developer.github.com/v3/repos/contents/#update-a-file
          */
-            options = { file: options.file, message: options.message, url: options.url };
+            options = {
+                file: options.file,
+                message: options.message,
+                request: options.request,
+                url: options.url
+            };
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
@@ -548,6 +568,7 @@
                     if ((/^(?:http|https):\/\//).test(options.file)) {
                         local.httpRequest({
                             method: 'GET',
+                            request: options.request,
                             url: options.file
                         }, function (error, response) {
                             options.onNext(error, response && response.data);
@@ -555,15 +576,13 @@
                         return;
                     }
                     // get file
-                    local.fs.readFile(
-                        local.path.resolve(process.cwd(), options.file),
-                        options.onNext
-                    );
+                    local.fs.readFile(options.file, options.onNext);
                     break;
                 case 2:
                     local.contentPut({
                         content: data,
                         message: options.message,
+                        request: options.request,
                         // resolve file in url
                         url: (/\/$/).test(options.url)
                             ? options.url + local.path.basename(options.file)
@@ -594,6 +613,7 @@
                 },
                 message: options.message,
                 method: options.method,
+                request: options.request,
                 responseJson: {},
                 sha: options.sha,
                 url: options.url
@@ -664,13 +684,18 @@
             options = {
                 message: options.message,
                 modeErrorIgnore: true,
+                request: options.request,
                 url: options.url
             };
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
                     // get sha
-                    local.contentRequest({ method: 'GET', url: options.url }, options.onNext);
+                    local.contentRequest({
+                        method: 'GET',
+                        request: options.request,
+                        url: options.url
+                    }, options.onNext);
                     break;
                 case 2:
                     // put file with sha
@@ -678,6 +703,7 @@
                         content: new Buffer(data.content || '', 'base64'),
                         message: options.message,
                         method: 'PUT',
+                        request: options.request,
                         sha: data.sha,
                         url: options.url
                     }, options.onNext);
@@ -700,6 +726,7 @@
                 local.contentTouch({
                     message: options.message,
                     modeErrorIgnore: true,
+                    request: options.request,
                     url: data.element
                 }, onParallel);
             }, onError);

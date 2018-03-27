@@ -767,7 +767,7 @@ awoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=\
 // https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/main.handlebars
 local.templateUiMain = '\
 <!-- <div class="swggUiContainer"> -->\n\
-<div class="eventDelegateKeyup eventDelegateSubmit onEventUiReload thead">\n\
+<h2 class="eventDelegateKeyup eventDelegateSubmit hx onEventUiReload thead">\n\
     <a class="td td1" href="https://github.com/kaizhu256/node-swgg" target="_blank">swgg</a>\n\
     <input\n\
         class="td td2"\n\
@@ -782,33 +782,37 @@ local.templateUiMain = '\
         type="text"\n\
         value="{{apiKeyValue}}"\n\
     >\n\
-    <button class="eventDelegateClick onEventUiReload td td4">explore</button>\n\
+    <button class="button eventDelegateClick onEventUiReload td td4">explore</button>\n\
     <button\n\
-        class="eventDelegateClick onEventUiReload td td5"\n\
+        class="button eventDelegateClick onEventUiReload td td5"\n\
         id="swggApiKeyClearButton1"\n\
-    >clear api-keys</button>\n\
-</div>\n\
+    >\n\
+        clear api-keys\n\
+    </button>\n\
+</h2>\n\
 <div\n\
     class="errorMessage"\n\
     id="swggUiReloadErrorDiv1"\n\
     style="background: none; border: 0;"\n\
 ></div>\n\
 <div class="info reset">\n\
-    {{#if info}}\n\
     {{#if info.x-swgg-homepage}}\n\
-    <a href="{{info.x-swgg-homepage}}" target="_blank"\n\
-    ><h2>{{info.title}} ({{info.version}})</h2></a>\n\
+    <h2 class="hx">\n\
+        <a href="{{info.x-swgg-homepage}}" target="_blank">{{info.title}} ({{info.version}})</a>\n\
+    </h2>\n\
     {{#unless info.x-swgg-homepage}}\n\
-    <h2>{{info.title}} ({{info.version}})</h2>\n\
+    <h2 class="hx">{{info.title}} ({{info.version}})</h2>\n\
     {{/if info.x-swgg-homepage}}\n\
     {{#if info.x-swgg-description}}\n\
     <div class="markdown">{{info.x-swgg-description markdownToHtml}}</div>\n\
     {{/if info.x-swgg-description}}\n\
     {{#if info.description}}\n\
-    <div class="markdown resourceDescription">{{info.description markdownToHtml}}</div>\n\
+    <div class="description markdown">{{info.description markdownToHtml}}</div>\n\
     {{/if info.description}}\n\
     {{#if x-swgg-downloadStandaloneApp}}\n\
-    <h3><a download href="{{x-swgg-downloadStandaloneApp}}">[download standalone app]</a></h3>\n\
+    <a class="button" download href="{{x-swgg-downloadStandaloneApp notHtmlSafe}}">\n\
+        download standalone app\n\
+    </a><br>\n\
     {{/if x-swgg-downloadStandaloneApp}}\n\
     <ul>\n\
         {{#if externalDocs.url}}\n\
@@ -836,14 +840,15 @@ local.templateUiMain = '\
             <a\n\
                 target="_parent"\n\
                 href="mailto:{{info.contact.email}}?subject={{info.title}}"\n\
-            >contact the developer</a>\n\
+            >\n\
+                contact the developer\n\
+            </a>\n\
         </li>\n\
         {{/if info.contact.email}}\n\
         {{#if info.license}}\n\
         <li><a target="_blank" href="{{info.license.url}}">{{info.license.name}}</a></li>\n\
         {{/if info.license}}\n\
     </ul>\n\
-    {{/if info}}\n\
 </div>\n\
 {{#if urlSwaggerJson}}\n\
 <h4 class="label">nodejs initialization</h4>\n\
@@ -872,7 +877,7 @@ console.log("initialized nodejs swgg-client");\n\
     <span>{{ajaxProgressText}}</span>\n\
     <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: inline-block; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
 </div>\n\
-<div class="reset resourceList"></div>\n\
+<ol class="reset resourceList" style="list-style-type: upper-roman;"></ol>\n\
 <div class="utility2FooterDiv">\n\
     [ this document was created with\n\
     <a href="https://github.com/kaizhu256/node-swgg" target="_blank">swgg</a>\n\
@@ -886,29 +891,31 @@ console.log("initialized nodejs swgg-client");\n\
 // https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/operation.handlebars
 local.templateUiOperation = '\
 <div class="operation" data-_method-path="{{_methodPath}}" id="{{id}}">\n\
-<div class="onEventOperationDisplayShow onEventInputValidate thead" tabindex="0">\n\
+<div class="onEventInputValidate onEventOperationDisplayShow thead" tabindex="0">\n\
     <span class="td td1"></span>\n\
     <span class="method{{_method}} td td2">{{_method}}</span>\n\
     <span\n\
         class="td td3"\n\
         {{#if deprecated}}style="text-decoration: line-through;"{{/if deprecated}}\n\
-    >{{_path}}</span>\n\
+    >\n\
+        {{_path}}\n\
+    </span>\n\
     <span class="color777 td td4 textOverflowEllipsis">{{summary}}</span>\n\
 </div>\n\
 <form accept-charset="UTF-8"\n\
-    class="content uiAnimateSlide"\n\
+    class="uiAnimateSlide"\n\
     style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"\n\
 >\n\
     {{#if deprecated}}\n\
     <h4 class="errorMessage label">(warning: deprecated)</h4><br>\n\
     {{/if deprecated}}\n\
     <h4 class="label">description</h4>\n\
-    <div class="markdown operationDescription">\n\
-    {{description markdownToHtml}}\n\
+    <div class="description markdown">\n\
+        {{description markdownToHtml}}\n\
     </div>\n\
     {{#if parameters.length}}\n\
     <h4 class="label">parameters</h4>\n\
-    <div class="color777 schemaP styleBorderBottom1px tr">\n\
+    <div class="borderBottom1Px color777 schemaP thead">\n\
         <span class="td td1">name and description</span>\n\
         <span class="td td2">data type</span>\n\
         <span class="td td3">value</span>\n\
@@ -919,7 +926,7 @@ local.templateUiOperation = '\
     {{/each parameters}}\n\
     {{/if parameters.length}}\n\
     <h4 class="label">response messages</h4>\n\
-    <div class="color777 schemaResponse styleBorderBottom1px tr">\n\
+    <div class="borderBottom1Px color777 schemaResponse thead">\n\
         <span class="td td1">http status code</span>\n\
         <span class="td td2">reason</span>\n\
     </div>\n\
@@ -929,7 +936,7 @@ local.templateUiOperation = '\
         <span class="markdown td td2">{{value.description markdownToHtml}}</span>\n\
     </div>\n\
     {{/each responseList}}\n\
-    <button class="onEventOperationAjax">try it out!</button>\n\
+    <button class="button onEventOperationAjax">try it out!</button>\n\
     <h4 class="label">nodejs request</h4>\n\
     <pre class="requestJavascript"></pre>\n\
     <h4 class="label">curl request</h4>\n\
@@ -1021,8 +1028,8 @@ function (error, data) {\n\
 
 // https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/resource.handlebars
 local.templateUiResource = '\
-<div\n\
-    class="styleBorderBottom1px resource\n\
+<li\n\
+    class="resource\n\
         eventDelegateChange eventDelegateClick eventDelegateKeyup eventDelegateSubmit\n\
     "\n\
     data-name="{{name}}"\n\
@@ -1030,22 +1037,19 @@ local.templateUiResource = '\
 >\n\
 <h3 class="thead">\n\
     <span class="onEventResourceDisplayAction td td1 textOverflowEllipsis" tabindex="0">\n\
-        <div class="onEventResourceDisplayAction resourceIi">{{ii}}.</div>{{name}}:\n\
-        <span class="onEventResourceDisplayAction resourceSummary">{{summary}}</span>\n\
+        {{name}}:&nbsp;&nbsp;{{summary}}\n\
     </span>\n\
-    <span\n\
-        class="onEventResourceDisplayAction td td2"\n\
-        style="border-left: 1px solid #000; margin: 0; padding-left: 20px;"\n\
-        tabindex="0"\n\
-    >expand / collapse operations</span>\n\
+    <span class="onEventResourceDisplayAction td td2" tabindex="0">\n\
+    expand / collapse operations\n\
+    </span>\n\
 </h3>\n\
-<div\n\
+<ol\n\
     class="operationList uiAnimateSlide"\n\
     style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"\n\
 >\n\
-    <div class="markdown resourceDescription">{{description markdownToHtml}}</div>\n\
-</div>\n\
-</div>\n\
+    <div class="description markdown">{{description markdownToHtml}}</div>\n\
+</ol>\n\
+</li>\n\
 ';
 
 
@@ -1069,7 +1073,7 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
     .replace('assets.index.default.template.html', '')
     .replace((/<title>.*?<\/title>/), '<title>swgg</title>')
     .replace('\n<!-- utility2-comment\n', '\n')
-    .replace((/\n<\/style>\n<style>\n[\S\s]*\n<\/style>\n/), '\
+    .replace('\n</style>\n', '\
 \n\
 </style>\n\
 <style>\n\
@@ -1082,7 +1086,6 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
     border: 0;\n\
     border-radius: 0;\n\
     margin: 0;\n\
-    margin-bottom: 10px;\n\
     max-width: 100%;\n\
     padding: 0;\n\
 }\n\
@@ -1091,22 +1094,15 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 .swggUiContainer .resource > .thead > .td:focus {\n\
     outline: none;\n\
 }\n\
+.swggUiContainer .description > * {\n\
+    margin-top: 20px;\n\
+}\n\
+.swggUiContainer .description > *:first-child {\n\
+    margin-top: 0;\n\
+}\n\
 /* jslint-ignore-end */\n\
 /* validateLineSortedReset */\n\
 /* general */\n\
-.swggUiContainer {\n\
-    max-width: 1200px;\n\
-}\n\
-.swggUiContainer button,\n\
-.swggUiContainer .operation > .thead,\n\
-.swggUiContainer .resource > .thead {\n\
-    cursor: pointer;\n\
-}\n\
-.swggUiContainer button,\n\
-.swggUiContainer .operation > .thead > .td3 {\n\
-    font-weight: bold;\n\
-    text-decoration: underline;\n\
-}\n\
 .swggUiContainer code,\n\
 .swggUiContainer pre,\n\
 .swggUiContainer textarea {\n\
@@ -1122,13 +1118,20 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 .swggUiContainer pre {\n\
     white-space: pre;\n\
 }\n\
-.swggUiContainer textarea {\n\
-    white-space: nowrap;\n\
+.swggUiContainer .button,\n\
+.swggUiContainer .operation > .thead,\n\
+.swggUiContainer .resource > .thead {\n\
+    cursor: pointer;\n\
+}\n\
+.swggUiContainer .button,\n\
+.swggUiContainer .operation > .thead > .td3,\n\
+.swggUiContainer .resource > .thead > .td {\n\
+    font-weight: bold;\n\
+    text-decoration: underline;\n\
 }\n\
 .swggUiContainer .markdown pre {\n\
     max-height: none;\n\
 }\n\
-\n\
 .swggUiContainer .multilinePlaceholderContainer {\n\
     min-height: 10rem;\n\
     position: relative;\n\
@@ -1147,12 +1150,6 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 .swggUiContainer .operation > .thead > .td2 {\n\
     text-align: center;\n\
     width: 5rem;\n\
-}\n\
-.swggUiContainer .resourceIi {\n\
-    min-width: 3rem;\n\
-}\n\
-.swggUiContainer .resourceSummary {\n\
-    font-weight: lighter;\n\
 }\n\
 .swggUiContainer .responseBody,\n\
 .swggUiContainer .responseHeaders,\n\
@@ -1178,18 +1175,17 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 .swggUiContainer .td textarea {\n\
     width: 100%;\n\
 }\n\
-.swggUiContainer > .thead > .td1 {\n\
-    font-size: x-large;\n\
-}\n\
 /* validateLineSortedReset */\n\
 /* background */\n\
-.swggUiContainer button {\n\
+.swggUiContainer code,\n\
+.swggUiContainer pre {\n\
+    background: #ddd;\n\
+}\n\
+.swggUiContainer .button {\n\
     background: #ddf;\n\
 }\n\
-.swggUiContainer code,\n\
-.swggUiContainer pre,\n\
-.swggUiContainer .operationDescription {\n\
-    background: #ddd;\n\
+.swggUiContainer .description {\n\
+    background: #bdb;\n\
 }\n\
 .swggUiContainer .methodDELETE {\n\
     background: #b07;\n\
@@ -1218,37 +1214,35 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 .swggUiContainer .operation {\n\
     background: #dfd;\n\
 }\n\
-.swggUiContainer .resourceDescription {\n\
-    background: #9d9;\n\
-}\n\
+.swggUiContainer .resource > .thead,\n\
 .swggUiContainer > .thead {\n\
-    background: #7b5;\n\
+    background: #7b7;\n\
 }\n\
 .swggUiContainer > .thead > .td1 {\n\
     background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAqRJREFUeNrEVz1s00AUfnGXii5maMXoEUEHVwIpEkPNgkBdMnQoU5ytiKHJwpp2Q2JIO8DCUDOxIJFIVOoWZyJSh3pp1Q2PVVlcCVBH3ufeVZZ9Zye1Ay86nXV+ue/9fO/lheg/Se02X1rvksmbnTiKvuxQMBNgBnN4a/LCbmnUAP6JV58NCUsBC8CuAJxGPF47OgNqBaA93tolUhnx6jC4NxGwyOEwlccyAs+3kwdzKq0HDn2vEBTi8J2XpyMaywNDE157BhXUE3zJhlq8GKq+Zd2zaWHepPA8oN9XkfLmRdOiJV4XUUg/IyWncLjCYY/SHndV2u7zHr3bPKZtdxgboJOnthvrfGj/oMf3G0r7JVmNlLfKklmrt2MvvcNO7LFOhoFHfuAJI5o6ta10jpt5CQLgwXhXG2YIwvu+34qf78ybOjWTnWwkgR36d7JqJOrW0hHmNrKg9xhiS4+1jFmrxymh03B0w+6kURIAu3yHtOD5oaUNojMnGgbcctNvwdAnyxvxRR+/vaJnjzbpzcZX+nN1SdGv85i9eH8w3qPO+mdm/y4dnQ1iI8Fq6Nf4cxL6GWSjiFDSs0VRnxC5g0xSB2cgHpaseTxfqOv5uoHkNQ6Ha/N1Yz9mNMppEkEkYKj79q6uCq4bCHcSX3fJ0Vk/k9siASjCm1N6gZH6Ec9IXt2WkFES2K/ixoIyktJPAu/ptOA1SgO5zqtr6KASJPF0nMV8dgMsRhRPOcMwqQAOoi0VAIMLAEWJ6YYC1c8ibj1GP51RqwzYwZVMHQuvOzMCBUtb2tGHx5NAdLKqp5AX7Ng4d+Zi8AGDI9z1ijx9yaCH04y3GCP2S+QcvaGl+pcxyUBvinFlawoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=) no-repeat left center;\n\
 }\n\
 /* validateLineSortedReset */\n\
 /* border */\n\
-.swggUiContainer button {\n\
-    border: 1px solid #35b;\n\
-    border-radius: 5px;\n\
-}\n\
 .swggUiContainer input,\n\
 .swggUiContainer pre,\n\
 .swggUiContainer select,\n\
 .swggUiContainer textarea {\n\
     border: 1px solid #999;\n\
 }\n\
-.swggUiContainer .resource:first-child {\n\
-    border-top: 1px solid #777;\n\
-}\n\
-.swggUiContainer .styleBorderBottom1px {\n\
+.swggUiContainer .borderBottom1Px {\n\
     border-bottom: 1px solid #777;\n\
+}\n\
+.swggUiContainer .button {\n\
+    border: 1px solid #35b;\n\
+    border-radius: 5px;\n\
+}\n\
+.swggUiContainer .resource > .thead > .td2 {\n\
+    border-left: 1px solid #037;\n\
 }\n\
 /* validateLineSortedReset */\n\
 /* color */\n\
 .swggUiContainer a,\n\
-.swggUiContainer button,\n\
+.swggUiContainer .button,\n\
 .swggUiContainer .operation > .thead,\n\
 .swggUiContainer .resource > .thead {\n\
     color: #35b;\n\
@@ -1266,14 +1260,9 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
     color: #999;\n\
 }\n\
 .swggUiContainer .operation > .thead > .td2,\n\
+.swggUiContainer .resource > .thead,\n\
 .swggUiContainer > .thead > .td1 {\n\
-    color: #eee;\n\
-}\n\
-/* validateLineSortedReset */\n\
-/* display */\n\
-.swggUiContainer .onEventResourceDisplayAction {\n\
-    display: inline-block;\n\
-    text-decoration: underline;\n\
+    color: #fff;\n\
 }\n\
 .swggUiContainer .thead,\n\
 .swggUiContainer .tr {\n\
@@ -1316,49 +1305,48 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 }\n\
 /* validateLineSortedReset */\n\
 /* margin */\n\
-.swggUiContainer {\n\
-    margin: 0 auto;\n\
-}\n\
-.swggUiContainer audio,\n\
-.swggUiContainer img,\n\
-.swggUiContainer option,\n\
-.swggUiContainer video,\n\
-.swggUiContainer .operation .thead,\n\
-.swggUiContainer .responseBody,\n\
-.swggUiContainer .responseMedia,\n\
-.swggUiContainer .td,\n\
-.swggUiContainer .td .onEventResourceDisplayAction {\n\
-    margin-bottom: 0;\n\
+.swggUiContainer li {\n\
+    margin-bottom: 10px;\n\
 }\n\
 .swggUiContainer ol,\n\
-.swggUiContainer ul,\n\
-.swggUiContainer .operation > .thead > .td1,\n\
-.swggUiContainer .td {\n\
+.swggUiContainer ul {\n\
     margin-left: 20px;\n\
+}\n\
+.swggUiContainer .description,\n\
+.swggUiContainer .operation,\n\
+.swggUiContainer .resource,\n\
+.swggUiContainer > div,\n\
+.swggUiContainer > ol,\n\
+.swggUiContainer > pre,\n\
+.swggUiContainer > .info > div,\n\
+.swggUiContainer > .info > .button,\n\
+.swggUiContainer > .info > .hx {\n\
+    margin-bottom: 20px;\n\
 }\n\
 .swggUiContainer .label {\n\
     margin-bottom: 1px;\n\
 }\n\
-.swggUiContainer .onEventOperationAjax,\n\
-.swggUiContainer .schemaP {\n\
+.swggUiContainer .operation:last-child {\n\
+    margin-bottom: 0;\n\
+}\n\
+.swggUiContainer .operation > form > div,\n\
+.swggUiContainer .operation > form > pre {\n\
     margin-bottom: 20px;\n\
 }\n\
-.swggUiContainer .operation button {\n\
-    margin-bottom: 40px;\n\
-    margin-top: 40px;\n\
+.swggUiContainer .operation > form > .button {\n\
+    margin: 50px 0;\n\
 }\n\
-.swggUiContainer .operation > .thead > .td4 {\n\
-    margin-right: 20px;\n\
-}\n\
-.swggUiContainer .td:first-child {\n\
+.swggUiContainer .resource > ol,\n\
+.swggUiContainer .resource > .thead > .td,\n\
+.swggUiContainer .td:first-child,\n\
+.swggUiContainer > ol {\n\
     margin-left: 0;\n\
+}\n\
+.swggUiContainer .td {\n\
+    margin-left: 20px;\n\
 }\n\
 /* validateLineSortedReset */\n\
 /* padding */\n\
-.swggUiContainer button,\n\
-.swggUiContainer > .thead {\n\
-    padding: 10px;\n\
-}\n\
 .swggUiContainer code {\n\
     padding: 2px;\n\
 }\n\
@@ -1369,24 +1357,36 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 .swggUiContainer textarea {\n\
     padding: 5px;\n\
 }\n\
-.swggUiContainer .operation > .content {\n\
+.swggUiContainer .button,\n\
+.swggUiContainer .resource > .thead > .td,\n\
+.swggUiContainer > .thead {\n\
+    padding: 10px 20px;\n\
+}\n\
+.swggUiContainer .description {\n\
     padding: 20px;\n\
+}\n\
+.swggUiContainer .operation > form {\n\
+    padding: 20px 20px 0 20px;\n\
+}\n\
+.swggUiContainer .operation > form .td1 {\n\
+    padding-left: 0;\n\
+}\n\
+.swggUiContainer .operation > .thead {\n\
+    padding: 0 20px;\n\
 }\n\
 .swggUiContainer .operation > .thead > .td {\n\
     padding: 10px 0;\n\
 }\n\
-.swggUiContainer .operationDescription {\n\
-    padding: 15px 10px 1px 10px;\n\
-}\n\
-.swggUiContainer .resource:first-child {\n\
-    padding-top: 10px;\n\
-}\n\
-.swggUiContainer .resourceDescription {\n\
-    padding: 20px 20px 10px 20px;\n\
-}\n\
 .swggUiContainer > .thead > .td1 {\n\
     padding-left: 40px;\n\
-    padding-top: 5px;\n\
+    padding-top: 4px;\n\
+}\n\
+/* validateLineSortedReset */\n\
+/* .textOverflowEllipsis */\n\
+.swggUiContainer .textOverflowEllipsis {\n\
+    overflow: hidden;\n\
+    text-overflow: ellipsis;\n\
+    white-space: nowrap;\n\
 }\n\
 /* validateLineSortedReset */\n\
 /* @media */\n\
@@ -1410,12 +1410,12 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
 /* validateLineSortedReset */\n\
 /* hover */\n\
 .swggUiContainer a:hover,\n\
+.swggUiContainer .resource > .thead > .td:hover,\n\
 .swggUiContainer > .thead > .td1:hover {\n\
     color: #037;\n\
 }\n\
-.swggUiContainer button:hover,\n\
-.swggUiContainer .operation > .thead:hover,\n\
-.swggUiContainer .resource > .thead > .td:hover {\n\
+.swggUiContainer .button:hover,\n\
+.swggUiContainer .operation > .thead:hover {\n\
     background: #bbf;\n\
 }\n\
 /* validateLineSortedReset */\n\
@@ -1437,10 +1437,11 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.
     .replace((/\n<\/script>\n[\S\s]*\n<\/html>\n/), '\
 \n\
 </script>\n\
-<div class="swggUiContainer">\n\
+<div class="swggUiContainer" style="margin: 0 auto; max-width: 1200px;">\n\
 ' + local.templateRender(local.templateUiMain, {
     ajaxProgressText: 'loading script',
     apiKeyValue: '',
+    info: { 'title': 'title', version: 'version' },
     urlSwaggerJson: ''
 }) + '\
 </div>\n\
@@ -2233,8 +2234,6 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
          * this function will run the middleware that will parse request.bodyRaw
          */
             var boundary, crlf, data, header, ii, jj, name;
-            // jslint-hack - nop
-            local.nop(response);
             // if request is already parsed, then goto nextMiddleware
             if (!request.swgg.operation || !local.isNullOrUndefined(request.swgg.bodyParsed)) {
                 nextMiddleware();
@@ -2251,9 +2250,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                 request.swgg.bodyParsed = {};
                 local.bufferToString(request.bodyRaw).replace(
                     (/<(.+?)><!\[CDATA\[([\S\s]+?)\]\]>/g),
-                    function (match0, name, value) {
-                        // jslint-hack - nop
-                        local.nop(match0);
+                    function (name, match1, value) {
+                        name = match1;
                         name = decodeURIComponent(name);
                         request.swgg.bodyParsed[name] = local.schemaPType(
                             request.swgg.operation._schemaPDict[name]
@@ -2331,7 +2329,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     request.swgg.bodyParsed = JSON.parse(request.swgg.bodyParsed);
                 }, local.nop);
             }
-            nextMiddleware();
+            nextMiddleware(null, request, response);
         };
 
         local.middlewareCrudBuiltin = function (request, response, nextMiddleware) {
@@ -2538,13 +2536,11 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
         /*
          * this function will run the middleware that will end the builtin crud-operations
          */
-            // jslint-hack - nop
-            local.nop(response);
             if (request.swgg.crud.endArgList) {
                 local.serverRespondJsonapi.apply(null, request.swgg.crud.endArgList);
                 return;
             }
-            nextMiddleware();
+            nextMiddleware(null, request, response);
         };
 
         local.middlewareRouter = function (request, response, nextMiddleware) {
@@ -2553,8 +2549,6 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
          * map the request's method-path to swagger's tags[0]-crudType
          */
             var tmp;
-            // jslint-hack - nop
-            local.nop(response);
             // init swgg object
             local.objectSetDefault(request, { swgg: { crud: { crudType: [] }, user: {} } }, 3);
             // if request.url is not prefixed with swaggerJsonBasePath,
@@ -2587,7 +2581,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     '/$1{}'
                 );
             }
-            nextMiddleware();
+            nextMiddleware(null, request, response);
         };
 
         local.middlewareUserLogin = function (request, response, nextMiddleware) {
@@ -2692,8 +2686,6 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
          * this function will run the middleware that will validate the swagger-request
          */
             var crud, options, tmp;
-            // jslint-hack - nop
-            local.nop(response);
             options = {};
             local.onNext(options, function (error) {
                 switch (options.modeNext) {
@@ -2845,7 +2837,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     nextMiddleware();
                     break;
                 default:
-                    nextMiddleware(error);
+                    nextMiddleware(error, request, response);
                 }
             });
             options.modeNext = 0;
@@ -3630,7 +3622,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
          * this function will show/hide the textarea's multiline placeholder
          */
             var isTransparent, value;
-            isTransparent = event.target2.style.background === 'transparent';
+            isTransparent = event.target2.style.background.indexOf('transparent') >= 0;
             value = event.target2.value;
             if (value && isTransparent) {
                 event.target2.style.background = '';
@@ -3864,9 +3856,9 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
             local.uiAnimateSlideDown(element.closest('.resource').querySelector('.operationList'));
             // show the operation, but hide all other operations
             local.uiAnimateSlideAccordian(
-                element.querySelector('.operation > .content'),
+                element.querySelector('.operation > form'),
                 Array.from(element.closest('.operationList').querySelectorAll(
-                    '.operation > .content'
+                    '.operation > form'
                 )),
                 function () {
                     // scrollTo operation
@@ -3912,7 +3904,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     if (event.currentTarget.classList.contains('expanded')) {
                         event.currentTarget.classList.remove('expanded');
                         Array.from(event.currentTarget.querySelectorAll(
-                            '.operation > .content'
+                            '.operation > form'
                         )).forEach(function (element) {
                             local.uiAnimateSlideUp(element);
                         });
@@ -3920,7 +3912,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     } else {
                         event.currentTarget.classList.add('expanded');
                         Array.from(event.currentTarget.querySelectorAll(
-                            '.operation > .content'
+                            '.operation > form'
                         )).forEach(function (element) {
                             local.uiAnimateSlideDown(element);
                             // validate input
@@ -4070,8 +4062,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
             // init uiFragment
             swaggerJson.uiFragment = document.createDocumentFragment();
             // init resourceDict
-            Object.keys(swaggerJson.resourceDict).sort().forEach(function (key, ii) {
-                swaggerJson.resourceDict[key].ii = local.numberToRomanNumerals(ii + 1);
+            Object.keys(swaggerJson.resourceDict).sort().forEach(function (key) {
                 // templateRender resource
                 swaggerJson.uiFragment.appendChild(
                     local.domElementRender(local.templateUiResource, swaggerJson.resourceDict[key])

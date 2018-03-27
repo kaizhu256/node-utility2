@@ -56,31 +56,19 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- jslint onParallelList
 - add function onEventSelectAllInPre
 - add csslint macro /* csslint-validateSelectorSorted */
 - rename function serverLog -> debugLog
 - add server stress test using electron
 - none
 
-#### changelog for v2018.3.6
-- npm publish v2018.3.6
-- skip publish for npm_package_isPrivate
-- update function buildReadme to handle env var \$npm_package_isPrivate
-- replace shell-function shGithubPush with shGitCommandWithGithubToken
-- auto-normalize js-functions lib.xxx.sh and npm_scripts.sh
-- lib.jslint.js - add function csslintUtility2 and macro /* jslint-utility2 */
-- lib.jslint.js - add function jslintUtility2 and macro /* jslint-utility2 */
-- lib.jslint.js - add function shlintUtility2 and macro # jslint-utility2
-- update shell-function shBuildGithubUpload to auto-update github description with \$npm_package_description
-- update file assets.utility2.rollup.js with asset /assets.utility2.html
-- update function cliRun with builtin-option --version/-v
-- update function templateRender to auto-unescape excessively escaped html entities
-- in module lib.swgg.js - merge function uiRenderAll into onEventUiReload
-- update function debugDocumentStyle to sort selectors by tag < class < id
-- add function stringRegexpEscape
-- update file lib.marked.js to v0.3.7
-- update function templateRender with helpers #eachTrimRightComma, #this/, and truncate
-- add function stringUniqueKey
+#### changelog for v2018.3.27
+- npm publish v2018.3.27
+- lib.istanbul.js - revamp css
+- cleanup function jsonStringifyOrdered
+- update function jslintUtility2 to validate tag.classList is sorted
+- remove null-items from package.json
 - none
 
 #### this package requires
@@ -432,47 +420,65 @@ instruction
     }\n\
 }\n\
 @keyframes uiAnimateSpin {\n\
-    0% { transform: rotate(0deg); }\n\
-    100% { transform: rotate(360deg); }\n\
+    0% {\n\
+        transform: rotate(0deg);\n\
+    }\n\
+    100% {\n\
+        transform: rotate(360deg);\n\
+    }\n\
 }\n\
 a {\n\
     overflow-wrap: break-word;\n\
 }\n\
-body {\n\
-    background: #dde;\n\
-    font-family: Arial, Helvetica, sans-serif;\n\
-    margin: 0 40px;\n\
-}\n\
-body > a,\n\
-body > button,\n\
 body > div,\n\
-body > input,\n\
 body > pre,\n\
-body > select,\n\
-body > span,\n\
-body > textarea {\n\
+body > textarea,\n\
+body > .button {\n\
     margin-bottom: 20px;\n\
 }\n\
-body > button {\n\
-    width: 20rem;\n\
+body > textarea {\n\
+    height: 10rem;\n\
+    width: 100%;\n\
 }\n\
-button {\n\
-    cursor: pointer;\n\
+body > textarea[readonly] {\n\
+    background: #ddd;\n\
+}\n\
+body > .button {\n\
+    width: 20rem;\n\
 }\n\
 code,\n\
 pre,\n\
 textarea {\n\
-    font-family: Menlo, Consolas, Courier New, monospace;\n\
+    font-family: Consolas, Menlo, monospace;\n\
     font-size: small;\n\
 }\n\
 pre {\n\
     overflow-wrap: break-word;\n\
     white-space: pre-wrap;\n\
 }\n\
-.textOverflowEllipsis {\n\
-    overflow: hidden;\n\
-    text-overflow: ellipsis;\n\
-    white-space: nowrap;\n\
+textarea {\n\
+    overflow: auto;\n\
+    white-space: pre;\n\
+}\n\
+.button {\n\
+    background-color: #fff;\n\
+    border: 1px solid;\n\
+    border-bottom-color: rgb(186, 186, 186);\n\
+    border-left-color: rgb(209, 209, 209);\n\
+    border-radius: 4px;\n\
+    border-right-color: rgb(209, 209, 209);\n\
+    border-top-color: rgb(216, 216, 216);\n\
+    color: #00d;\n\
+    cursor: pointer;\n\
+    display: inline-block;\n\
+    font-family: Arial, Helvetica, sans-serif;\n\
+    font-size: 12px;\n\
+    font-style: normal;\n\
+    font-weight: normal;\n\
+    margin: 0;\n\
+    padding: 2px 7px 3px 7px;\n\
+    text-align: center;\n\
+    text-decoration: underline;\n\
 }\n\
 .uiAnimateShake {\n\
     animation-duration: 500ms;\n\
@@ -493,25 +499,12 @@ pre {\n\
     width: 0;\n\
 }\n\
 </style>\n\
-<style>\n\
-/*csslint\n\
-    ids: false,\n\
-*/\n\
-textarea {\n\
-    height: 10rem;\n\
-    width: 100%;\n\
-}\n\
-textarea[readonly] {\n\
-    background: #ddd;\n\
-}\n\
-#outputPreJslint1 {\n\
-    color: #d00;\n\
-}\n\
-</style>\n\
 </head>\n\
-<body>\n\
+<body style="background: #ddf; font-family: Arial, Helvetica, sans-serif; margin: 0 40px;">\n\
 <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
+<code style="display: none;"></code><div class="button uiAnimateShake uiAnimateSlide utility2FooterDiv zeroPixel" style="display: none;"></div><pre style="display: none;"></pre><textarea readonly style="display: none;"></textarea>\n\
+<code style="display: none;"></code><div class="button uiAnimateShake uiAnimateSlide utility2FooterDiv zeroPixel" style="display: none;"></div><pre style="display: none;"></pre><textarea readonly style="display: none;"></textarea>\n\
 <script>\n\
 /* jslint-utility2 */\n\
 /*jslint\n\
@@ -574,8 +567,8 @@ utility2-comment -->\n\
 </h1>\n\
 <h3>{{env.npm_package_description}}</h3>\n\
 <!-- utility2-comment\n\
-<h4><a download href="assets.app.js">[download standalone app]</a></h4>\n\
-<button class="onclick onreset" id="testRunButton2">run internal test</button><br>\n\
+<a class="button" download href="assets.app.js">download standalone app</a><br>\n\
+<button class="button onclick onreset" id="testRunButton2">run internal test</button><br>\n\
 utility2-comment -->\n\
 \n\
 \n\
@@ -635,7 +628,7 @@ utility2-comment -->\n\
 }());\n\
 </textarea>\n\
 <pre id="outputPreJsonStringify1"></pre>\n\
-<pre id="outputPreJslint1"></pre>\n\
+<pre id="outputPreJslint1" style="color: #d00;"></pre>\n\
 <label>instrumented-code</label>\n\
 <textarea class="resettable" id="outputTextarea1" readonly></textarea>\n\
 <label>stderr and stdout</label>\n\
@@ -841,12 +834,11 @@ utility2-comment -->\n\
         "build-ci": "./lib.utility2.sh shReadmeTest build_ci.sh",
         "env": "env",
         "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
-        "nameAliasPublish": "",
         "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh shNpmScriptPostinstall",
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2018.3.6"
+    "version": "2018.3.27"
 }
 ```
 
@@ -1087,7 +1079,7 @@ shBuildCiAfter() {(set -e
                 npm install '$PACKAGE'
                 cd node_modules/utility2
                 shBuildInsideDocker
-            "
+"
         done
         ;;
     esac

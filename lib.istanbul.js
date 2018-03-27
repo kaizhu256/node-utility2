@@ -54,7 +54,7 @@
         } else {
             // require builtins
             Object.keys(process.binding('natives')).forEach(function (key) {
-                if (!local[key] && !(/\/|^_|^sys$/).test(key)) {
+                if (!local[key] && !(/\/|^_|^assert|^sys$/).test(key)) {
                     local[key] = require(key);
                 }
             });
@@ -103,6 +103,8 @@
              * print help
              */
                 var element, result, lengthList, sortDict;
+                console.log(require(__dirname + '/package.json').name + ' v' +
+                    require(__dirname + '/package.json').version);
                 sortDict = {};
                 result = [['[command]', '[args]', '[description]', -1]];
                 lengthList = [result[0][0].length, result[0][1].length];
@@ -143,7 +145,7 @@
                         }
                     });
                     element = element.slice(0, 3).join('---- ');
-                    if (ii === 0) {
+                    if (!ii) {
                         element = element.replace((/-/g), ' ');
                     }
                     console.log(element);
@@ -166,6 +168,15 @@
                     local.cliDict._interactive;
                 local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
             }
+            local.cliDict._version = local.cliDict._version || function () {
+            /*
+             * [none]
+             * print version
+             */
+                console.log(require(__dirname + '/package.json').version);
+            };
+            local.cliDict['--version'] = local.cliDict['--version'] || local.cliDict._version;
+            local.cliDict['-v'] = local.cliDict['-v'] || local.cliDict._version;
             // run fnc()
             fnc = fnc || function () {
                 if (local.cliDict[process.argv[2]]) {
@@ -236,15 +247,8 @@
             file = local[file.slice(-8)];
             if (local.modeJs === 'browser') {
                 file = file
-                    .replace((/\bhtml\b/g), 'x-istanbul-html')
-                    .replace((/<style>[\S\s]+?<\/style>/), function (match0) {
-                        return match0.replace((/\S.*?\{/g), function (match0) {
-                            return 'x-istanbul-html ' +
-                                match0.replace((/,/g), ', x-istanbul-html ');
-                        });
-                    })
-                    .replace('position: fixed;', 'position: static;')
-                    .replace('margin-top: 170px;', 'margin-top: 10px;');
+                    .replace('<!doctype html>\n', '')
+                    .replace((/(<\/?)(?:body|html)/g), '$1div');
             }
             if (local.modeJs === 'node' && process.env.npm_package_homepage) {
                 file = file
@@ -252,7 +256,7 @@
                     .replace('{{env.npm_package_name}}', process.env.npm_package_name)
                     .replace('{{env.npm_package_version}}', process.env.npm_package_version);
             } else {
-                file = file.replace((/<h1 [\S\s]*<\/h1>/), '<h1>&nbsp;</h1>');
+                file = file.replace((/<h1 [\S\s]*<\/h1>/), '');
             }
             return file;
         };
@@ -2159,217 +2163,265 @@ local['foot.txt'] = '\
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
 local['head.txt'] = '\
 <!doctype html>\n\
-<html lang="en">\n\
+<html lang="en" class="x-istanbul">\n\
 <head>\n\
     <title>Code coverage report for {{entity}}</title>\n\
     <meta charset="utf-8">\n\
-    <style>\n\
-        body, html {\n\
-            margin:0; padding: 0;\n\
-        }\n\
-        body {\n\
-            font-family: Arial, Helvetica;\n\
-            font-size: 10pt;\n\
-        }\n\
-        div.header, div.footer {\n\
-            background: #eee;\n\
-            padding: 1em;\n\
-        }\n\
-        div.header {\n\
-            height: 160px;\n\
-            padding: 0 1em 0 1em;\n\
-            z-index: 100;\n\
-            position: fixed;\n\
-            top: 0;\n\
-            border-bottom: 1px solid #666;\n\
-            width: 100%;\n\
-        }\n\
-        div.footer {\n\
-            border-top: 1px solid #666;\n\
-        }\n\
-        div.body {\n\
-            margin-top: 170px;\n\
-        }\n\
-        div.meta {\n\
-            font-size: 90%;\n\
-            text-align: center;\n\
-        }\n\
-        h1, h2, h3 {\n\
-            font-weight: normal;\n\
-        }\n\
-        h1 {\n\
-            font-size: 12pt;\n\
-        }\n\
-        h2 {\n\
-            font-size: 10pt;\n\
-        }\n\
-        pre {\n\
-            font-family: Menlo, Monaco, Consolas, Courier New, monospace;\n\
-            margin: 0;\n\
-            padding: 0;\n\
-            font-size: 14px;\n\
-            tab-size: 2;\n\
-        }\n\
-\n\
-        div.path { font-size: 110%; }\n\
-        div.path a:link, div.path a:visited { color: #000; }\n\
-        table.coverage { border-collapse: collapse; margin:0; padding: 0 }\n\
-\n\
-        table.coverage td {\n\
-            margin: 0;\n\
-            padding: 0;\n\
-            color: #111;\n\
-            vertical-align: top;\n\
-        }\n\
-        table.coverage td.line-count {\n\
-            width: 50px;\n\
-            text-align: right;\n\
-            padding-right: 5px;\n\
-        }\n\
-        table.coverage td.line-coverage {\n\
-            color: #777 !important;\n\
-            text-align: right;\n\
-            border-left: 1px solid #666;\n\
-            border-right: 1px solid #666;\n\
-        }\n\
-\n\
-        table.coverage td.text {\n\
-        }\n\
-\n\
-        table.coverage td span.cline-any {\n\
-            display: inline-block;\n\
-            padding: 0 5px;\n\
-            width: 40px;\n\
-        }\n\
-        table.coverage td span.cline-neutral {\n\
-            background: #eee;\n\
-        }\n\
-        table.coverage td span.cline-yes {\n\
-            background: #b5d592;\n\
-            color: #999;\n\
-        }\n\
-        table.coverage td span.cline-no {\n\
-            background: #fc8c84;\n\
-        }\n\
-\n\
-        .cstat-yes { color: #111; }\n\
-        .cstat-no { background: #fc8c84; color: #111; }\n\
-        .fstat-no { background: #ffc520; color: #111 !important; }\n\
-        .cbranch-no { background:  yellow !important; color: #111; }\n\
-\n\
-        .cstat-skip { background: #ddd; color: #111; }\n\
-        .fstat-skip { background: #ddd; color: #111 !important; }\n\
-        .cbranch-skip { background: #ddd !important; color: #111; }\n\
-\n\
-        .missing-if-branch {\n\
-            display: inline-block;\n\
-            margin-right: 10px;\n\
-            position: relative;\n\
-            padding: 0 4px;\n\
-            background: black;\n\
-            color: yellow;\n\
-        }\n\
-\n\
-        .skip-if-branch {\n\
-            display: none;\n\
-            margin-right: 10px;\n\
-            position: relative;\n\
-            padding: 0 4px;\n\
-            background: #ccc;\n\
-            color: white;\n\
-        }\n\
-\n\
-        .missing-if-branch .typ, .skip-if-branch .typ {\n\
-            color: inherit !important;\n\
-        }\n\
-\n\
-        .entity, .metric { font-weight: bold; }\n\
-        .metric { display: inline-block; border: 1px solid #333; padding: 0.3em; background: white; }\n\
-        .metric small { font-size: 80%; font-weight: normal; color: #666; }\n\
-\n\
-        div.coverage-summary table { border-collapse: collapse; margin: 3em; font-size: 110%; }\n\
-        div.coverage-summary td, div.coverage-summary table  th { margin: 0; padding: 0.25em 1em; border-top: 1px solid #666; border-bottom: 1px solid #666; }\n\
-        div.coverage-summary th { text-align: left; border: 1px solid #666; background: #eee; font-weight: normal; }\n\
-        div.coverage-summary th.file { border-right: none !important; }\n\
-        div.coverage-summary th.pic { border-left: none !important; text-align: right; }\n\
-        div.coverage-summary th.pct { border-right: none !important; }\n\
-        div.coverage-summary th.abs { border-left: none !important; text-align: right; }\n\
-        div.coverage-summary td.pct { text-align: right; border-left: 1px solid #666; }\n\
-        div.coverage-summary td.abs { text-align: right; font-size: 90%; color: #444; border-right: 1px solid #666; }\n\
-        div.coverage-summary td.file { text-align: right; border-left: 1px solid #666; white-space: nowrap;  }\n\
-        div.coverage-summary td.pic { min-width: 120px !important;  }\n\
-        div.coverage-summary a:link { color: #000; }\n\
-        div.coverage-summary a:visited { color: #333; }\n\
-        div.coverage-summary tfoot td { border-top: 1px solid #666; }\n\
-\n\
-        div.coverage-summary .yui3-datatable-sort-indicator, div.coverage-summary .dummy-sort-indicator {\n\
-            height: 10px;\n\
-            width: 7px;\n\
-            display: inline-block;\n\
-            margin-left: 0.5em;\n\
-        }\n\
-        div.coverage-summary .yui3-datatable-sort-indicator {\n\
-            background: no-repeat scroll 0 0 transparent;\n\
-        }\n\
-        div.coverage-summary .yui3-datatable-sorted .yui3-datatable-sort-indicator {\n\
-            background-position: 0 -20px;\n\
-        }\n\
-        div.coverage-summary .yui3-datatable-sorted-desc .yui3-datatable-sort-indicator {\n\
-            background-position: 0 -10px;\n\
-        }\n\
-\n\
-        .high { background: #b5d592 !important; }\n\
-        .medium { background: #ffe87c !important; }\n\
-        .low { background: #fc8c84 !important; }\n\
-\n\
-        span.cover-fill, span.cover-empty {\n\
-            display:inline-block;\n\
-            border:1px solid #444;\n\
-            background: white;\n\
-            height: 12px;\n\
-        }\n\
-        span.cover-fill {\n\
-            background: #ccc;\n\
-            border-right: 1px solid #444;\n\
-        }\n\
-        span.cover-empty {\n\
-            background: white;\n\
-            border-left: none;\n\
-        }\n\
-        span.cover-full {\n\
-            border-right: none !important;\n\
-        }\n\
-        pre.prettyprint {\n\
-            border: none !important;\n\
-            padding: 0 !important;\n\
-            margin: 0 !important;\n\
-        }\n\
-        .com { color: #999 !important; }\n\
-        .ignore-none { color: #999; font-weight: normal; }\n\
-\n\
-    </style>\n\
+<style>\n\
+/* jslint-utility2 */\n\
+/*csslint\n\
+    box-model: false,\n\
+    important: false,\n\
+    qualified-headings: false,\n\
+*/\n\
+/* jslint-ignore-begin */\n\
+*,\n\
+*:after,\n\
+*:before {\n\
+    box-sizing: border-box;\n\
+}\n\
+/* jslint-ignore-end */\n\
+.x-istanbul {\n\
+    font-family: Helvetica Neue, Helvetica,Arial;\n\
+    font-size: 10pt;\n\
+    margin: 0;\n\
+    padding: 0;\n\
+}\n\
+.x-istanbul h1 {\n\
+    font-size: large;\n\
+}\n\
+.x-istanbul pre {\n\
+    font-family: Consolas, Menlo, Monaco, monospace;\n\
+    font-size: 14px;\n\
+    margin: 0;\n\
+    padding: 0;\n\
+    tab-size: 2;\n\
+}\n\
+.x-istanbul .cbranch-no {\n\
+    background: yellow !important;\n\
+    color: #111;\n\
+}\n\
+.x-istanbul .cbranch-skip {\n\
+    background: #ddd !important;\n\
+    color: #111;\n\
+}\n\
+.x-istanbul .com {\n\
+    color: #999 !important;\n\
+}\n\
+.x-istanbul .cover-empty,\n\
+.x-istanbul .cover-fill {\n\
+    background: white;\n\
+    border: 1px solid #444;\n\
+    display: inline-block;\n\
+    height: 12px;\n\
+}\n\
+.x-istanbul .cover-empty {\n\
+    background: white;\n\
+    border-left: none;\n\
+}\n\
+.x-istanbul .cover-fill {\n\
+    background: #ccc;\n\
+    border-right: 1px solid #444;\n\
+}\n\
+.x-istanbul .cover-full {\n\
+    border-right: none !important;\n\
+}\n\
+.x-istanbul .coverage {\n\
+    border-collapse: collapse;\n\
+    margin: 0;\n\
+    padding: 0\n\
+}\n\
+.x-istanbul .coverage td {\n\
+    color: #111;\n\
+    margin: 0;\n\
+    padding: 0;\n\
+    vertical-align: top;\n\
+}\n\
+.x-istanbul .coverage td .cline-any {\n\
+    display: inline-block;\n\
+    padding: 0 5px;\n\
+    width: 40px;\n\
+}\n\
+.x-istanbul .coverage td .cline-neutral {\n\
+    background: #eee;\n\
+}\n\
+.x-istanbul .coverage td .cline-no {\n\
+    background: #fc8c84;\n\
+}\n\
+.x-istanbul .coverage td .cline-yes {\n\
+    background: #b5d592;\n\
+    color: #999;\n\
+}\n\
+.x-istanbul .coverage .line-count {\n\
+    padding-right: 5px;\n\
+    text-align: right;\n\
+    width: 50px;\n\
+}\n\
+.x-istanbul .coverage .line-coverage {\n\
+    border-left: 1px solid #666;\n\
+    border-right: 1px solid #666;\n\
+    color: #777 !important;\n\
+    text-align: right;\n\
+}\n\
+.x-istanbul .coverage-summary {\n\
+    padding: 20px;\n\
+}\n\
+.x-istanbul .coverage-summary table {\n\
+    border-collapse: collapse;\n\
+    margin: auto;\n\
+    table-layout: fixed;\n\
+    text-align: left;\n\
+    width: 100%\n\
+}\n\
+.x-istanbul .coverage-summary td {\n\
+    border: 1px solid #666;\n\
+    margin: 0;\n\
+    padding: 5px;\n\
+    white-space: nowrap;\n\
+}\n\
+.x-istanbul .coverage-summary th {\n\
+    margin: 0;\n\
+    padding: 0 0 2px 0;\n\
+}\n\
+.x-istanbul .cstat-no {\n\
+    background: #fc8c84;\n\
+    color: #111;\n\
+}\n\
+.x-istanbul .cstat-skip {\n\
+    background: #ddd;\n\
+    color: #111;\n\
+}\n\
+.x-istanbul .cstat-yes {\n\
+    color: #111;\n\
+}\n\
+.x-istanbul .entity,\n\
+.x-istanbul .metric {\n\
+    font-weight: bold;\n\
+}\n\
+.x-istanbul .footer,\n\
+.x-istanbul .header {\n\
+    background: #eee;\n\
+    padding: 20px;\n\
+}\n\
+.x-istanbul .footer {\n\
+    border-top: 1px solid #666;\n\
+}\n\
+.x-istanbul .fstat-no {\n\
+    background: #ffc520;\n\
+    color: #111 !important;\n\
+}\n\
+.x-istanbul .fstat-skip {\n\
+    background: #ddd;\n\
+    color: #111 !important;\n\
+}\n\
+.x-istanbul .header {\n\
+    border-bottom: 1px solid #666;\n\
+    top: 0;\n\
+    width: 100%;\n\
+}\n\
+.x-istanbul .high {\n\
+    background: #b5d592 !important;\n\
+}\n\
+.x-istanbul .ignore-none {\n\
+    color: #999;\n\
+    font-weight: normal;\n\
+}\n\
+.x-istanbul .low {\n\
+    background: #fc8c84 !important;\n\
+}\n\
+.x-istanbul .medium {\n\
+    background: #ffe87c !important;\n\
+}\n\
+.x-istanbul .meta {\n\
+    text-align: center;\n\
+}\n\
+.x-istanbul .metric {\n\
+    background: white;\n\
+    border: 1px solid #333;\n\
+    display: inline-block;\n\
+    padding: .3em;\n\
+}\n\
+.x-istanbul .missing-if-branch {\n\
+    background: black;\n\
+    color: yellow;\n\
+    display: inline-block;\n\
+    margin-right: 10px;\n\
+    padding: 0 4px;\n\
+    position: relative;\n\
+}\n\
+.x-istanbul .missing-if-branch .typ,\n\
+.x-istanbul .skip-if-branch .typ {\n\
+    color: inherit !important;\n\
+}\n\
+.x-istanbul .prettyprint {\n\
+    border: none !important;\n\
+    margin: 0 !important;\n\
+    padding: 0 !important;\n\
+}\n\
+.x-istanbul .skip-if-branch {\n\
+    background: #ccc;\n\
+    color: white;\n\
+    display: none;\n\
+    margin-right: 10px;\n\
+    padding: 0 4px;\n\
+    position: relative;\n\
+}\n\
+/* validateLineSortedReset */\n\
+.x-istanbul a {\n\
+    color: #00d;\n\
+    text-decoration: underline;\n\
+}\n\
+.x-istanbul pre {\n\
+    overflow: visible;\n\
+    white-space: pre\n\
+}\n\
+.x-istanbul .file div {\n\
+    margin-bottom: 2px;\n\
+    overflow-wrap: break-word;\n\
+    white-space: normal;\n\
+    width: 100%;\n\
+}\n\
+.x-istanbul .tableHeader {\n\
+    border-collapse: collapse;\n\
+    margin: 0 auto 10px auto;\n\
+    table-layout: fixed;\n\
+    text-align: left;\n\
+    width: 100%;\n\
+}\n\
+.x-istanbul .tableHeader td {\n\
+    background: #eee;\n\
+    border: 1px solid #666;\n\
+    padding: 5px;\n\
+}\n\
+.x-istanbul .tableHeader th {\n\
+    padding: 0 0 2px 0;\n\
+}\n\
+</style>\n\
 </head>\n\
-<body>\n\
+<body class="x-istanbul">\n\
 <div class="header {{reportClass}}">\n\
     <h1 style="font-weight: bold;">\n\
         <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} (v{{env.npm_package_version}})</a>\n\
     </h1>\n\
     <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
-    <h2>\n\
-        {{#with metrics.statements}}\n\
-        Statements: <span class="metric">{{pct}}% <small>({{covered}} / {{total}})</small></span> &nbsp;&nbsp;&nbsp;&nbsp;\n\
-        {{/with}}\n\
-        {{#with metrics.branches}}\n\
-        Branches: <span class="metric">{{pct}}% <small>({{covered}} / {{total}})</small></span> &nbsp;&nbsp;&nbsp;&nbsp;\n\
-        {{/with}}\n\
-        {{#with metrics.functions}}\n\
-        Functions: <span class="metric">{{pct}}% <small>({{covered}} / {{total}})</small></span> &nbsp;&nbsp;&nbsp;&nbsp;\n\
-        {{/with}}\n\
-        {{#with metrics.lines}}\n\
-        Lines: <span class="metric">{{pct}}% <small>({{covered}} / {{total}})</small></span> &nbsp;&nbsp;&nbsp;&nbsp;\n\
-        {{/with}}\n\
-        Ignored: <span class="metric">{{#show_ignores metrics}}{{/show_ignores}}</span> &nbsp;&nbsp;&nbsp;&nbsp;\n\
-    </h2>\n\
+    <table class="tableHeader">\n\
+    <thead>\n\
+    <tr>\n\
+        <th>Ignored</th>\n\
+        <th>Statements</th>\n\
+        <th>Branches</th>\n\
+        <th>Functions</th>\n\
+        <th>Lines</th>\n\
+    </tr>\n\
+    </thead>\n\
+    <tbody>\n\
+        <td>{{#show_ignores metrics}}{{/show_ignores}}</td>\n\
+        <td>{{#with metrics.statements}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>\n\
+        <td>{{#with metrics.branches}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>\n\
+        <td>{{#with metrics.functions}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>\n\
+        <td>{{#with metrics.lines}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>\n\
+    </tbody>\n\
+    </table>\n\
     {{{pathHtml}}}\n\
 </div>\n\
 <div class="body">\n\
@@ -2505,26 +2557,16 @@ templateFor("foot"),pathTemplate=handlebars.compile('<div class="path">{{{html}}
 ,'<td class="text"><pre class="prettyprint lang-js">{{#show_code structured}}{{/show_code}}</pre></td>'
 ,"</tr>\n"].join("")),summaryTableHeader=['<div class="coverage-summary">',"<table>"
 ,"<thead>","<tr>",'   <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>'
-,'   <th data-col="pic" data-type="number" data-fmt="html" data-html="true" class="pic"></th>'
 ,'   <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>'
-,'   <th data-col="statements_raw" data-type="number" data-fmt="html" class="abs"></th>'
 ,'   <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>'
-,'   <th data-col="branches_raw" data-type="number" data-fmt="html" class="abs"></th>'
 ,'   <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>'
-,'   <th data-col="functions_raw" data-type="number" data-fmt="html" class="abs"></th>'
 ,'   <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>'
-,'   <th data-col="lines_raw" data-type="number" data-fmt="html" class="abs"></th>'
 ,"</tr>","</thead>","<tbody>"].join("\n"),summaryLineTemplate=handlebars.compile
-(["<tr>",'<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}">{{file}}</a></td>'
-,'<td data-value="{{metrics.statements.pct}}" class="pic {{reportClasses.statements}}">{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</td>'
-,'<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%</td>'
-,'<td data-value="{{metrics.statements.total}}" class="abs {{reportClasses.statements}}">({{metrics.statements.covered}}&nbsp;/&nbsp;{{metrics.statements.total}})</td>'
-,'<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%</td>'
-,'<td data-value="{{metrics.branches.total}}" class="abs {{reportClasses.branches}}">({{metrics.branches.covered}}&nbsp;/&nbsp;{{metrics.branches.total}})</td>'
-,'<td data-value="{{metrics.functions.pct}}" class="pct {{reportClasses.functions}}">{{metrics.functions.pct}}%</td>'
-,'<td data-value="{{metrics.functions.total}}" class="abs {{reportClasses.functions}}">({{metrics.functions.covered}}&nbsp;/&nbsp;{{metrics.functions.total}})</td>'
-,'<td data-value="{{metrics.lines.pct}}" class="pct {{reportClasses.lines}}">{{metrics.lines.pct}}%</td>'
-,'<td data-value="{{metrics.lines.total}}" class="abs {{reportClasses.lines}}">({{metrics.lines.covered}}&nbsp;/&nbsp;{{metrics.lines.total}})</td>'
+(["<tr>",'<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>'
+,'<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>'
+,'<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>'
+,'<td data-value="{{metrics.functions.pct}}" class="pct {{reportClasses.functions}}">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>'
+,'<td data-value="{{metrics.lines.pct}}" class="pct {{reportClasses.lines}}">{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>'
 ,"</tr>\n"].join("\n\t")),summaryTableFooter=["</tbody>","</table>","</div>"].join
 ("\n"),lt="",gt="",RE_LT=/</g,RE_GT=/>/g,RE_AMP=/&/g,RE_lt=/\u0001/g,RE_gt=/\u0002/g
 ;handlebars.registerHelper("show_picture",function(e){var t=Number(e.fn(this)),n
@@ -2532,9 +2574,8 @@ templateFor("foot"),pathTemplate=handlebars.compile('<div class="path">{{{html}}
 r+'" style="width: '+t+'px;"></span>'+'<span class="cover-empty" style="width:'+
 n+'px;"></span>'):""}),handlebars.registerHelper("show_ignores",function(e){var t=
 e.statements.skipped,n=e.functions.skipped,r=e.branches.skipped,i;return t===0&&
-n===0&&r===0?'<span class="ignore-none">none</span>':(i=[],t>0&&i.push(t===1?"1 statement"
-:t+" statements"),n>0&&i.push(n===1?"1 function":n+" functions"),r>0&&i.push(r===1?"1 branch"
-:r+" branches"),i.join(", "))}),handlebars.registerHelper("show_lines",function(
+n===0&&r===0?'<span class="ignore-none">none</span>':(i=[],r>0&&i.push("branches: "+r),t>0&&i.push(
+"statements: "+t),n>0&&i.push("functions: "+n),i.join("<br>"))}),handlebars.registerHelper("show_lines",function(
 e){var t=Number(e.fn(this)),n,r=[];for(n=0;n<t;n+=1)r[n]=n+1;return r.join("\n")
 }),handlebars.registerHelper("show_line_execution_counts",function(e,t){var n=e.
 l,r=Number(t.fn(this)),i,s,o=[],u,a="";for(i=0;i<r;i+=1)s=i+1,a="&nbsp;",u="neutral"

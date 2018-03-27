@@ -172,7 +172,7 @@ if (!local.fs.existsSync('test.js', 'utf8')) {
     local.fs.writeFileSync('test.js', local.templateRenderJslintLite(tmp, {}));
 }
 // </script>
-    "
+"
     # sync master swagger.json
     if [ -f assets.swgg.swagger.json ] &&
         [ -f "../swgg-$npm_package_swggAll/assets.swgg.swagger.json" ] &&
@@ -508,7 +508,7 @@ shBuildCiInternal() {(set -e
         COMMIT_LIMIT=20 shBuildGithubUpload
     fi
     # validate http-links embedded in README.md
-    shSleep 30
+    shSleep 60
     [ "$npm_package_isPrivate" ] || shReadmeLinkValidate
 )}
 
@@ -697,7 +697,7 @@ require('fs').readFileSync('README.md', 'utf8').replace((
     require('fs').writeFileSync('tmp/README.' + match2, match0.trimRight() + '\n');
 });
 // </script>
-        "
+"
     fi
 }
 
@@ -1224,7 +1224,7 @@ shDockerNpmRestart() {(set -e
         . /tmp/lib.utility2.sh
         cd $DIR
         PORT=$DOCKER_PORT npm start
-    "
+"
 )}
 
 shDockerRestart() {(set -e
@@ -1394,7 +1394,7 @@ shDockerRestartTransmission() {(set -e
         --log-info \
         --no-auth \
         --no-portmap
-    "
+"
 )}
 
 shDockerRm() {(set -e
@@ -1498,42 +1498,42 @@ local = {};
              * this function will recursively JSON.stringify the jsonObj,
              * with object-keys sorted and circular-references removed
              */
-                // if jsonObj is an object, then recurse its items with object-keys sorted
-                if (jsonObj &&
+                // if jsonObj is not an object or function, then JSON.stringify as normal
+                if (!(jsonObj &&
                         typeof jsonObj === 'object' &&
-                        typeof jsonObj.toJSON !== 'function') {
-                    // ignore circular-reference
-                    if (circularList.indexOf(jsonObj) >= 0) {
-                        return;
-                    }
-                    circularList.push(jsonObj);
-                    // if jsonObj is an array, then recurse its jsonObjs
-                    if (Array.isArray(jsonObj)) {
-                        return '[' + jsonObj.map(function (jsonObj) {
-                            // recurse
-                            tmp = stringify(jsonObj);
-                            return typeof tmp === 'string'
-                                ? tmp
-                                : 'null';
-                        }).join(',') + ']';
-                    }
-                    return '{' + Object.keys(jsonObj)
-                        // sort object-keys
-                        .sort()
-                        .map(function (key) {
-                            // recurse
-                            tmp = stringify(jsonObj[key]);
-                            if (typeof tmp === 'string') {
-                                return JSON.stringify(key) + ':' + tmp;
-                            }
-                        })
-                        .filter(function (jsonObj) {
-                            return typeof jsonObj === 'string';
-                        })
-                        .join(',') + '}';
+                        typeof jsonObj.toJSON !== 'function')) {
+                    return JSON.stringify(jsonObj);
                 }
-                // else JSON.stringify as normal
-                return JSON.stringify(jsonObj);
+                // ignore circular-reference
+                if (circularList.indexOf(jsonObj) >= 0) {
+                    return;
+                }
+                circularList.push(jsonObj);
+                // if jsonObj is an array, then recurse its jsonObjs
+                if (Array.isArray(jsonObj)) {
+                    return '[' + jsonObj.map(function (jsonObj) {
+                        // recurse
+                        tmp = stringify(jsonObj);
+                        return typeof tmp === 'string'
+                            ? tmp
+                            : 'null';
+                    }).join(',') + ']';
+                }
+                // if jsonObj is not an array, then recurse its items with object-keys sorted
+                return '{' + Object.keys(jsonObj)
+                    // sort object-keys
+                    .sort()
+                    .map(function (key) {
+                        // recurse
+                        tmp = stringify(jsonObj[key]);
+                        if (typeof tmp === 'string') {
+                            return JSON.stringify(key) + ':' + tmp;
+                        }
+                    })
+                    .filter(function (jsonObj) {
+                        return typeof jsonObj === 'string';
+                    })
+                    .join(',') + '}';
             };
             circularList = [];
             // try to derefernce all properties in jsonObj
@@ -1577,13 +1577,9 @@ local = {};
                 // then recurse with arg2 and defaults2
                 if (depth > 1 &&
                         // arg2 is a non-null and non-array object
-                        arg2 &&
-                        typeof arg2 === 'object' &&
-                        !Array.isArray(arg2) &&
+                        typeof arg2 === 'object' && arg2 && !Array.isArray(arg2) &&
                         // defaults2 is a non-null and non-array object
-                        defaults2 &&
-                        typeof defaults2 === 'object' &&
-                        !Array.isArray(defaults2)) {
+                        typeof defaults2 === 'object' && defaults2 && !Array.isArray(defaults2)) {
                     // recurse
                     local.objectSetDefault(arg2, defaults2, depth - 1);
                 }
@@ -1608,13 +1604,10 @@ local = {};
                 // then recurse with arg2 and overrides2
                 if (depth > 1 &&
                         // arg2 is a non-null and non-array object
-                        (arg2 &&
-                        typeof arg2 === 'object' &&
-                        !Array.isArray(arg2)) &&
+                        typeof arg2 === 'object' && arg2 && !Array.isArray(arg2) &&
                         // overrides2 is a non-null and non-array object
-                        (overrides2 &&
-                        typeof overrides2 === 'object' &&
-                        !Array.isArray(overrides2))) {
+                        typeof overrides2 === 'object' && overrides2 &&
+                        !Array.isArray(overrides2)) {
                     local.objectSetOverride(arg2, overrides2, depth - 1, env);
                     return;
                 }
@@ -1969,7 +1962,7 @@ require('http').createServer(function (request, response) {
     );
 }).listen(process.env.PORT);
 // </script>
-    "
+"
 )}
 
 shImageToDataUri() {(set -e
@@ -2005,7 +1998,7 @@ console.log('data:image/' +
     ';base64,' +
     require('fs').readFileSync('$FILE').toString('base64'));
 // </script>
-    "
+"
 )}
 
 shIptablesDockerInit() {(set -e
@@ -2239,7 +2232,7 @@ local = {};
 }());
 console.log(local.moduleDirname('$MODULE', module.paths));
 // </script>
-    "
+"
 )}
 
 shMountData() {(set -e
@@ -2308,7 +2301,7 @@ Object.keys(packageJson).forEach(function (key) {
 });
 require('fs').writeFileSync('package.json', JSON.stringify(packageJson, null, 4) + '\n');
 // </script>
-    "
+"
     shFilePackageJsonVersionIncrement
     npm publish
     npm deprecate "$NAME" "$MESSAGE"
@@ -2529,7 +2522,7 @@ packageJson.name = name || packageJson.name;
 packageJson.version = version || packageJson.version;
 require('fs').writeFileSync('package.json', JSON.stringify(packageJson, null, 4) + '\n');
 // </script>
-    "
+"
     npm publish
 )}
 
@@ -2730,7 +2723,7 @@ require('fs').readFileSync('README.md', 'utf8')
         request.end();
     });
 // </script>
-    "
+"
 )}
 
 shReadmeTest() {(set -e
@@ -2942,7 +2935,7 @@ result = '<svg height=\"' + (yy + 20) +
     result + '</text>\n</svg>\n';
 require('fs').writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG', result);
 // </script>
-    "
+"
     shBuildPrint "created screenshot file $npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
     return "$EXIT_CODE"
 )}

@@ -121,6 +121,7 @@
 
 /* jslint-ignore-begin */
 local.assetsDict['/assets.utility2.css'] = '\
+<style>\n\
 /* jslint-utility2 */\n\
 /*csslint\n\
 */\n\
@@ -143,47 +144,65 @@ local.assetsDict['/assets.utility2.css'] = '\
     }\n\
 }\n\
 @keyframes uiAnimateSpin {\n\
-    0% { transform: rotate(0deg); }\n\
-    100% { transform: rotate(360deg); }\n\
+    0% {\n\
+        transform: rotate(0deg);\n\
+    }\n\
+    100% {\n\
+        transform: rotate(360deg);\n\
+    }\n\
 }\n\
 a {\n\
     overflow-wrap: break-word;\n\
 }\n\
-body {\n\
-    background: #dde;\n\
-    font-family: Arial, Helvetica, sans-serif;\n\
-    margin: 0 40px;\n\
-}\n\
-body > a,\n\
-body > button,\n\
 body > div,\n\
-body > input,\n\
 body > pre,\n\
-body > select,\n\
-body > span,\n\
-body > textarea {\n\
+body > textarea,\n\
+body > .button {\n\
     margin-bottom: 20px;\n\
 }\n\
-body > button {\n\
-    width: 20rem;\n\
+body > textarea {\n\
+    height: 10rem;\n\
+    width: 100%;\n\
 }\n\
-button {\n\
-    cursor: pointer;\n\
+body > textarea[readonly] {\n\
+    background: #ddd;\n\
+}\n\
+body > .button {\n\
+    width: 20rem;\n\
 }\n\
 code,\n\
 pre,\n\
 textarea {\n\
-    font-family: Menlo, Consolas, Courier New, monospace;\n\
+    font-family: Consolas, Menlo, monospace;\n\
     font-size: small;\n\
 }\n\
 pre {\n\
     overflow-wrap: break-word;\n\
     white-space: pre-wrap;\n\
 }\n\
-.textOverflowEllipsis {\n\
-    overflow: hidden;\n\
-    text-overflow: ellipsis;\n\
-    white-space: nowrap;\n\
+textarea {\n\
+    overflow: auto;\n\
+    white-space: pre;\n\
+}\n\
+.button {\n\
+    background-color: #fff;\n\
+    border: 1px solid;\n\
+    border-bottom-color: rgb(186, 186, 186);\n\
+    border-left-color: rgb(209, 209, 209);\n\
+    border-radius: 4px;\n\
+    border-right-color: rgb(209, 209, 209);\n\
+    border-top-color: rgb(216, 216, 216);\n\
+    color: #00d;\n\
+    cursor: pointer;\n\
+    display: inline-block;\n\
+    font-family: Arial, Helvetica, sans-serif;\n\
+    font-size: 12px;\n\
+    font-style: normal;\n\
+    font-weight: normal;\n\
+    margin: 0;\n\
+    padding: 2px 7px 3px 7px;\n\
+    text-align: center;\n\
+    text-decoration: underline;\n\
 }\n\
 .uiAnimateShake {\n\
     animation-duration: 500ms;\n\
@@ -203,7 +222,8 @@ pre {\n\
     padding: 0;\n\
     width: 0;\n\
 }\n\
-';
+</style>\n\
+'.replace((/<\/?style>\n/g), '');
 
 
 
@@ -220,22 +240,12 @@ local.assetsDict['/assets.index.template.html'] = '\
 <style>\n\
 ' + local.assetsDict['/assets.utility2.css'] + '\
 </style>\n\
-<style>\n\
-/* jslint-utility2 */\n\
-/*csslint\n\
-*/\n\
-textarea {\n\
-    height: 10rem;\n\
-    width: 100%;\n\
-}\n\
-textarea[readonly] {\n\
-    background: #ddd;\n\
-}\n\
-</style>\n\
 </head>\n\
-<body>\n\
+<body style="background: #ddf; font-family: Arial, Helvetica, sans-serif; margin: 0 40px;">\n\
 <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
+<code style="display: none;"></code><div class="button uiAnimateShake uiAnimateSlide utility2FooterDiv zeroPixel" style="display: none;"></div><pre style="display: none;"></pre><textarea readonly style="display: none;"></textarea>\n\
+<code style="display: none;"></code><div class="button uiAnimateShake uiAnimateSlide utility2FooterDiv zeroPixel" style="display: none;"></div><pre style="display: none;"></pre><textarea readonly style="display: none;"></textarea>\n\
 <script>\n\
 /* jslint-utility2 */\n\
 /*jslint\n\
@@ -298,8 +308,8 @@ utility2-comment -->\n\
 </h1>\n\
 <h3>{{env.npm_package_description}}</h3>\n\
 <!-- utility2-comment\n\
-<h4><a download href="assets.app.js">[download standalone app]</a></h4>\n\
-<button class="onclick onreset" id="testRunButton1">run internal test</button><br>\n\
+<a class="button" download href="assets.app.js">download standalone app</a><br>\n\
+<button class="button onclick onreset" id="testRunButton1">run internal test</button><br>\n\
 <div class="uiAnimateSlide" id="testReportDiv1" style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"></div>\n\
 utility2-comment -->\n\
 \n\
@@ -822,6 +832,7 @@ PORT=8081 node ./assets.app.js\n\
     "license": "MIT",\n\
     "main": "lib.jslint.js",\n\
     "name": "jslint-lite",\n\
+    "nameAliasPublish": "",\n\
     "os": [\n\
         "darwin",\n\
         "linux"\n\
@@ -836,7 +847,6 @@ PORT=8081 node ./assets.app.js\n\
         "build-ci": "utility2 shReadmeTest build_ci.sh",\n\
         "env": "env",\n\
         "heroku-postbuild": "npm uninstall utility2 2>/dev/null; npm install kaizhu256/node-utility2#alpha && utility2 shDeployHeroku",\n\
-        "nameAliasPublish": "",\n\
         "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh shNpmScriptPostinstall",\n\
         "start": "PORT=${PORT:-8080} utility2 start test.js",\n\
         "test": "PORT=$(utility2 shServerPortRandom) utility2 test test.js"\n\
@@ -1096,7 +1106,9 @@ local.assetsDict['/assets.testReport.template.html'] = '\
         {{#if env.npm_package_homepage}}\n\
         href="{{env.npm_package_homepage}}"\n\
         {{/if env.npm_package_homepage}}\n\
-    >{{env.npm_package_name}} (v{{env.npm_package_version}})</a>\n\
+    >\n\
+        {{env.npm_package_name}} (v{{env.npm_package_version}})\n\
+    </a>\n\
 </h1>\n\
 <div class="platform summary">\n\
 <h2>summary</h2>\n\
@@ -1862,7 +1874,7 @@ local.assetsDict['/favicon.ico'] = '';
          * this function will test webpage's default handling-behavior
          */
             if (local.modeJs === 'browser') {
-                local.validateDocumentStyle();
+                local.domStyleValidate();
                 onError(null, options);
                 return;
             }
@@ -3364,7 +3376,8 @@ return Utf8ArrayToStr(bff);
             // init package.json
             options.rgx = (/\n# package.json\n```json\n([\S\s]*?)\n```\n/);
             options.dataFrom.replace(options.rgx, function (match0, match1) {
-                options.packageJson = JSON.parse(match1);
+                // remove null-items from package.json
+                options.packageJson = JSON.parse(match1.replace((/ {4}".*?": null,?$/gm), ''));
                 options.packageJson.description = options.dataFrom.split('\n')[1];
                 local.tryCatchOnError(function () {
                     local.objectSetDefault(options.packageJson, {
@@ -3416,8 +3429,6 @@ return Utf8ArrayToStr(bff);
                 new RegExp('\\n {8}local\\.testRunBrowser = function \\(event\\) \\{\\n' +
                     '[^`]*?^ {12}if \\(!event \\|\\| \\(event &&\\n', 'm'),
                 (/\n {12}\/\/ custom-case\n[^`]*?\n {12}\}\n/),
-                // customize quickstart-html-style
-                (/\n<\/style>\\n\\\n<style>\\n\\\n[^`]*?\\n\\\n<\/style>\\n\\\n/),
                 // customize quickstart-html-body
                 (/\nutility2-comment -->(?:\\n\\\n){4}[^`]*?^<!-- utility2-comment\\n\\\n/m),
                 // customize build script
@@ -3450,9 +3461,11 @@ return Utf8ArrayToStr(bff);
                     );
             }
             // customize version
-            options.dataTo = options.dataTo.replace((
-                /^(#### changelog for v|- npm publish v)\d+?\.\d+?\.\d+?.*?$/gm
-            ), '$1' + options.packageJson.version);
+            ['dataFrom', 'dataTo'].forEach(function (element) {
+                options[element] = options[element].replace((
+                    /^(#### changelog for v|- npm publish v)\d+?\.\d+?\.\d+?.*?$/gm
+                ), '$1' + options.packageJson.version);
+            });
             // customize swaggerdoc
             if (!local.assetsDict['/assets.swgg.swagger.json'] ||
                     (/\bswggUiContainer\b/).test(local.assetsDict['/index.html']) ||
@@ -4013,6 +4026,37 @@ return Utf8ArrayToStr(bff);
             return tmp.content;
         };
 
+        local.domQuerySelectorAllTagNameAndPrint = function (selector) {
+        /*
+         * this function will print all tagName's that match the selector
+         */
+            var dict;
+            dict = {};
+            Array.from(document.querySelectorAll(selector)).forEach(function (element) {
+                dict[element.tagName.toLowerCase()] = true;
+            });
+            console.log(Object.keys(dict).sort().join('\n'));
+        };
+
+        local.domStyleValidate = function () {
+        /*
+         * this function will validate the document's style
+         */
+            var tmp;
+            tmp = [];
+            Array.from(document.querySelectorAll('style')).map(function (element, ii) {
+                element.innerHTML.replace((/^([^\n @].*?)[,\{:].*?$/gm), function (match0, match1) {
+                    ii = document.querySelectorAll(match1).length;
+                    if (!(ii > 1)) {
+                        tmp.push(ii + ' ' + match0);
+                    }
+                });
+            });
+            tmp.sort().forEach(function (element, ii) {
+                console.error('validateDocumentStyleUnmatched ' + ii + '. ' + element);
+            });
+        };
+
         local.echo = function (arg) {
         /*
          * this function will return the arg
@@ -4160,11 +4204,10 @@ return Utf8ArrayToStr(bff);
             urlParsed = require('url').parse(options.url);
             urlParsed.headers = options.headers;
             urlParsed.method = options.method;
-            // debug request
+            // debug request-time
             timeStart = Date.now();
-            request = require(
-                urlParsed.protocol.slice(0, -1)
-            ).request(urlParsed, function (_response) {
+            request = options.request || require(urlParsed.protocol.slice(0, -1)).request;
+            request = request(urlParsed, function (_response) {
                 response = _response;
                 if (response.statusCode < 200 || response.statusCode > 299) {
                     onError2(new Error(response.statusCode));
@@ -4180,8 +4223,8 @@ return Utf8ArrayToStr(bff);
                         onError2();
                     })
                     .on('error', onError2);
-            }).on('error', onError2);
-            request.end(options.data);
+            });
+            request.on('error', onError2).end(options.data);
         };
 
         local.isNullOrUndefined = function (arg) {
@@ -4218,7 +4261,7 @@ return Utf8ArrayToStr(bff);
             }
             // csslint <style>...</style>
             script.replace(
-                (/^<style>(?:\\n\\)?\n([\S\s]+?)\n<\\?\/style>(?:\\n\\)?$/gm),
+                (/^<style>(?:\\n\\)?\n([\S\s]+?)\n<\/style>(?:\\n\\)?$/gm),
                 function (match0, match1, ii, text) {
                     match0 = match1;
                     local.jslintAndPrint(
@@ -4234,22 +4277,21 @@ return Utf8ArrayToStr(bff);
                 }
             );
             // jslint <script>...</script>
-            script.replace(
-                (/^(?:\/\/ )?<script>(?:\\n\\)?\n([\S\s]+?)\n(?:\/\/ )?<\\?\/script>(?:\\n\\)?$/gm),
-                function (match0, match1, ii, text) {
-                    match0 = match1;
-                    local.jslintAndPrint(
-                        // preserve lineno
-                        text.slice(0, ii).replace((/.+/g), '') + '\n' + match0
-                            // filter \\n\\
-                            .replace((/\\n\\$/gm), '')
-                            // filter ' + ... + '\\
-                            .replace((/^' \+ .*? \+ '\\$/gm), ''),
-                        file + '.js',
-                        mode
-                    );
-                }
-            );
+            script.replace((
+                /^(?:\/\/ )?<script>(?:\\n\\)?\n([\S\s]+?)\n(?:\/\/ )?<\/script>(?:\\n\\)?$/gm
+            ), function (match0, match1, ii, text) {
+                match0 = match1;
+                local.jslintAndPrint(
+                    // preserve lineno
+                    text.slice(0, ii).replace((/.+/g), '') + '\n' + match0
+                        // filter \\n\\
+                        .replace((/\\n\\$/gm), '')
+                        // filter ' + ... + '\\
+                        .replace((/^' \+ .*? \+ '\\$/gm), ''),
+                    file + '.js',
+                    mode
+                );
+            });
             return script;
         };
 
@@ -4273,42 +4315,42 @@ return Utf8ArrayToStr(bff);
              * this function will recursively JSON.stringify the jsonObj,
              * with object-keys sorted and circular-references removed
              */
-                // if jsonObj is an object, then recurse its items with object-keys sorted
-                if (jsonObj &&
+                // if jsonObj is not an object or function, then JSON.stringify as normal
+                if (!(jsonObj &&
                         typeof jsonObj === 'object' &&
-                        typeof jsonObj.toJSON !== 'function') {
-                    // ignore circular-reference
-                    if (circularList.indexOf(jsonObj) >= 0) {
-                        return;
-                    }
-                    circularList.push(jsonObj);
-                    // if jsonObj is an array, then recurse its jsonObjs
-                    if (Array.isArray(jsonObj)) {
-                        return '[' + jsonObj.map(function (jsonObj) {
-                            // recurse
-                            tmp = stringify(jsonObj);
-                            return typeof tmp === 'string'
-                                ? tmp
-                                : 'null';
-                        }).join(',') + ']';
-                    }
-                    return '{' + Object.keys(jsonObj)
-                        // sort object-keys
-                        .sort()
-                        .map(function (key) {
-                            // recurse
-                            tmp = stringify(jsonObj[key]);
-                            if (typeof tmp === 'string') {
-                                return JSON.stringify(key) + ':' + tmp;
-                            }
-                        })
-                        .filter(function (jsonObj) {
-                            return typeof jsonObj === 'string';
-                        })
-                        .join(',') + '}';
+                        typeof jsonObj.toJSON !== 'function')) {
+                    return JSON.stringify(jsonObj);
                 }
-                // else JSON.stringify as normal
-                return JSON.stringify(jsonObj);
+                // ignore circular-reference
+                if (circularList.indexOf(jsonObj) >= 0) {
+                    return;
+                }
+                circularList.push(jsonObj);
+                // if jsonObj is an array, then recurse its jsonObjs
+                if (Array.isArray(jsonObj)) {
+                    return '[' + jsonObj.map(function (jsonObj) {
+                        // recurse
+                        tmp = stringify(jsonObj);
+                        return typeof tmp === 'string'
+                            ? tmp
+                            : 'null';
+                    }).join(',') + ']';
+                }
+                // if jsonObj is not an array, then recurse its items with object-keys sorted
+                return '{' + Object.keys(jsonObj)
+                    // sort object-keys
+                    .sort()
+                    .map(function (key) {
+                        // recurse
+                        tmp = stringify(jsonObj[key]);
+                        if (typeof tmp === 'string') {
+                            return JSON.stringify(key) + ':' + tmp;
+                        }
+                    })
+                    .filter(function (jsonObj) {
+                        return typeof jsonObj === 'string';
+                    })
+                    .join(',') + '}';
             };
             circularList = [];
             // try to derefernce all properties in jsonObj
@@ -4925,13 +4967,9 @@ return Utf8ArrayToStr(bff);
                 // then recurse with arg2 and defaults2
                 if (depth > 1 &&
                         // arg2 is a non-null and non-array object
-                        arg2 &&
-                        typeof arg2 === 'object' &&
-                        !Array.isArray(arg2) &&
+                        typeof arg2 === 'object' && arg2 && !Array.isArray(arg2) &&
                         // defaults2 is a non-null and non-array object
-                        defaults2 &&
-                        typeof defaults2 === 'object' &&
-                        !Array.isArray(defaults2)) {
+                        typeof defaults2 === 'object' && defaults2 && !Array.isArray(defaults2)) {
                     // recurse
                     local.objectSetDefault(arg2, defaults2, depth - 1);
                 }
@@ -4957,13 +4995,10 @@ return Utf8ArrayToStr(bff);
                 // then recurse with arg2 and overrides2
                 if (depth > 1 &&
                         // arg2 is a non-null and non-array object
-                        (arg2 &&
-                        typeof arg2 === 'object' &&
-                        !Array.isArray(arg2)) &&
+                        typeof arg2 === 'object' && arg2 && !Array.isArray(arg2) &&
                         // overrides2 is a non-null and non-array object
-                        (overrides2 &&
-                        typeof overrides2 === 'object' &&
-                        !Array.isArray(overrides2))) {
+                        typeof overrides2 === 'object' && overrides2 &&
+                        !Array.isArray(overrides2)) {
                     local.objectSetOverride(arg2, overrides2, depth - 1, env);
                     return;
                 }
@@ -7149,25 +7184,6 @@ instruction\n\
             }
             return id;
         };
-
-        local.validateDocumentStyle = function () {
-        /*
-         * this function will validate the document's style
-         */
-            var tmp;
-            tmp = [];
-            Array.from(document.querySelectorAll('style')).map(function (element, ii) {
-                element.innerHTML.replace((/^([^\n @].*?)[,\{:].*?$/gm), function (match0, match1) {
-                    ii = document.querySelectorAll(match1).length;
-                    if (!(ii > 1)) {
-                        tmp.push(ii + ' ' + match0);
-                    }
-                });
-            });
-            tmp.sort().forEach(function (element, ii) {
-                console.error('validateDocumentStyleUnmatched ' + ii + '. ' + element);
-            });
-        };
     }());
 
 
@@ -7546,6 +7562,7 @@ instruction\n\
         [
             '/assets.utility2.example.js',
             '/assets.utility2.html',
+            '/assets.utility2.test.js',
             'lib.apidoc.js',
             'lib.db.js',
             'lib.github_crud.js',
@@ -7584,7 +7601,7 @@ instruction\n\
                                 '<script src="assets.app.js"></script>\n',
                                 '<script src="assets.utility2.rollup.js"></script>\n' +
                                     '<script src="assets.utility2.example.js"></script>\n' +
-                                    '<script src="assets.utiilty2.test.js"></script>\n'
+                                    '<script src="assets.utility2.test.js"></script>\n'
                             )
                             .replace('assets.example.js', 'assets.utility2.example.js')
                             .replace('assets.test.js', 'assets.utility2.test.js')
@@ -7599,6 +7616,9 @@ instruction\n\
                             });
                     });
                 }, local.nop);
+                break;
+            case '/assets.utility2.test.js':
+                local.assetsDict[key] = local.tryCatchReadFile(__dirname + '/test.js', 'utf8');
                 break;
             case 'lib.swgg.js':
             case 'lib.utility2.js':
@@ -7630,12 +7650,14 @@ instruction\n\
             'lib.swgg.js',
             '/assets.utility2.example.js',
             '/assets.utility2.html',
+            '/assets.utility2.test.js',
             '/assets.utility2.rollup.end.js'
         ].map(function (key) {
             var script;
             switch (key) {
             case '/assets.utility2.example.js':
             case '/assets.utility2.html':
+            case '/assets.utility2.test.js':
                 script = local.assetsDict['/assets.utility2.rollup.content.js']
                     .split('/* utility2.rollup.js content */');
                 script.splice(1, 0, 'local.assetsDict["' + key + '"] = ' +

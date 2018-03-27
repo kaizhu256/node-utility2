@@ -44,10 +44,9 @@
         "build-ci": "./lib.utility2.sh shReadmeTest build_ci.sh",
         "env": "env",
         "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
-        "nameAliasPublish": "",
         "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh shNpmScriptPostinstall",
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2018.3.6"
+    "version": "2018.3.27"
 }
