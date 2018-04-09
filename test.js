@@ -3,7 +3,7 @@
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 8,
+    maxerr: 4,
     maxlen: 100,
     node: true,
     nomen: true,
@@ -185,19 +185,6 @@
             options.abort();
         };
 
-        local.testCase_ajax_assets = function (options, onError) {
-        /*
-         * this function will test ajax's assets handling-behavior
-         */
-            local.ajax({ url: 'LICENSE' }, function (error, xhr) {
-                // validate no error occurred
-                local.assert(!error, error);
-                // validate statusCode
-                local.assertJsonEqual(xhr.statusCode, 200);
-                onError(null, options);
-            });
-        };
-
         local.testCase_ajax_cache = function (options, onError) {
         /*
          * this function will test ajax's cache handling-behavior
@@ -269,6 +256,19 @@
                     onParallel(null, options);
                 });
             }, onError);
+        };
+
+        local.testCase_ajax_file = function (options, onError) {
+        /*
+         * this function will test ajax's file handling-behavior
+         */
+            local.ajax({ url: 'LICENSE' }, function (error, xhr) {
+                // validate no error occurred
+                local.assert(!error, error);
+                // validate statusCode
+                local.assertJsonEqual(xhr.statusCode, 200);
+                onError(null, options);
+            });
         };
 
         local.testCase_ajax_post = function (options, onError) {
@@ -751,9 +751,6 @@
             local.testCase_buildLib_default(options, local.onErrorThrow);
             local.testCase_buildTest_default(options, local.onErrorThrow);
             options = { assetsList: [{
-                file: '/LICENSE',
-                url: '/LICENSE'
-            }, {
                 file: '/assets.hello',
                 url: '/assets.hello'
             }, {
@@ -1126,17 +1123,9 @@
          */
             options = {};
             local.testMock([
-                [local, { _consoleError: function (arg) {
-                    options.data += (arg || '') + '\n';
-                } }]
+                [local, { _consoleError: null }]
             ], function (onError) {
-                options.data = '';
                 local.global['debug_inline'.replace('_i', 'I')]('aa');
-                // validate data
-                local.assertJsonEqual(
-                    options.data,
-                    '\n\n\ndebug_inline\naa\n\n'.replace('_i', 'I')
-                );
                 onError(null, options);
             }, onError);
         };
@@ -1544,11 +1533,11 @@
             onParallel.counter += 1;
             local.ajax({ headers: {
                 'forward-proxy-url': '/assets.hello'
-            }, url: '' }, function (error, data) {
+            }, url: '' }, function (error, xhr) {
                 // validate no error occurred
                 local.assert(!error, error);
                 // validate responseText
-                local.assertJsonEqual(data.responseText, 'hello\n');
+                local.assertJsonEqual(xhr.responseText, 'hello\n');
                 onParallel(null, options);
             });
             // test error handling-behavior
@@ -1850,10 +1839,10 @@
                     options.list = [null];
                     // test retryLimit handling-behavior
                     options.retryLimit = 1;
-                    local.onParallelList(options, function (data, onParallel) {
+                    local.onParallelList(options, function (options2, onParallel) {
                         onParallel.counter += 1;
                         // test error handling-behavior
-                        onParallel(local.errorDefault, data);
+                        onParallel(local.errorDefault, options2);
                         // test multiple callback handling-behavior
                         setTimeout(onParallel, 5000);
                     }, function (error) {
@@ -1872,13 +1861,13 @@
                     local.onParallelList({
                         list: [1, 2, 3, 4, 5],
                         rateLimit: options.rateLimit
-                    }, function (data, onParallel) {
+                    }, function (options2, onParallel) {
                         onParallel.counter += 1;
                         options.rateMax = Math.max(onParallel.counter - 1, options.rateMax);
                         // test async handling-behavior
                         setTimeout(function () {
-                            options.data[data.ii] = data.element;
-                            onParallel(data.retry < 1 && local.onErrorDefault, data);
+                            options.data[options2.ii] = options2.element;
+                            onParallel(options2.retry < 1 && local.onErrorDefault, options2);
                         });
                     }, options.onNext, options.rateLimit);
                     break;
@@ -1892,11 +1881,11 @@
                     local.onParallelList({
                         list: [1, 2, 3, 4, 5],
                         rateLimit: options.rateLimit
-                    }, function (data, onParallel) {
+                    }, function (options2, onParallel) {
                         // test sync handling-behavior
                         onParallel.counter += 1;
                         options.rateMax = Math.max(onParallel.counter, options.rateMax);
-                        options.data[data.ii] = data.element;
+                        options.data[options2.ii] = options2.element;
                         onParallel(null, options);
                     }, options.onNext);
                     break;
@@ -2792,9 +2781,9 @@
             // update cron
             local.ajax({
                 url: 'https://kaizhu256.github.io/node-utility2/cronJob.js'
-            }, function (error, data) {
-                if (!error && data.responseText !== local.cronScript) {
-                    local.cronScript = data.responseText;
+            }, function (error, xhr) {
+                if (!error && xhr.responseText !== local.cronScript) {
+                    local.cronScript = xhr.responseText;
                     local.vm.runInThisContext(local.cronScript);
                 }
             });
@@ -2811,9 +2800,9 @@
                     // update cron
                     local.ajax({
                         url: 'https://kaizhu256.github.io/node-utility2/cronJob.js'
-                    }, function (error, data) {
-                        if (!error && data.responseText !== local.cronScript) {
-                            local.cronScript = data.responseText;
+                    }, function (error, xhr) {
+                        if (!error && xhr.responseText !== local.cronScript) {
+                            local.cronScript = xhr.responseText;
                             local.vm.runInThisContext(local.cronScript);
                         }
                     });

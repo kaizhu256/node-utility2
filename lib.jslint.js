@@ -4,7 +4,7 @@
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 8,
+    maxerr: 4,
     maxlen: 100,
     node: true,
     nomen: true,
@@ -53,11 +53,40 @@
             local.global.utility2_jslint = local;
         } else {
             // require builtins
-            Object.keys(process.binding('natives')).forEach(function (key) {
-                if (!local[key] && !(/\/|^_|^assert|^sys$/).test(key)) {
-                    local[key] = require(key);
-                }
-            });
+            // local.assert = require('assert');
+            local.buffer = require('buffer');
+            local.child_process = require('child_process');
+            local.cluster = require('cluster');
+            local.console = require('console');
+            local.constants = require('constants');
+            local.crypto = require('crypto');
+            local.dgram = require('dgram');
+            local.dns = require('dns');
+            local.domain = require('domain');
+            local.events = require('events');
+            local.fs = require('fs');
+            local.http = require('http');
+            local.https = require('https');
+            local.module = require('module');
+            local.net = require('net');
+            local.os = require('os');
+            local.path = require('path');
+            local.process = require('process');
+            local.punycode = require('punycode');
+            local.querystring = require('querystring');
+            local.readline = require('readline');
+            local.repl = require('repl');
+            local.stream = require('stream');
+            local.string_decoder = require('string_decoder');
+            local.timers = require('timers');
+            local.tls = require('tls');
+            local.tty = require('tty');
+            local.url = require('url');
+            local.util = require('util');
+            local.v8 = require('v8');
+            local.vm = require('vm');
+            local.zlib = require('zlib');
+/* validateLineSortedReset */
             module.exports = local;
             module.exports.__dirname = __dirname;
         }
@@ -6569,7 +6598,8 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                     jj = 0;
                     message = '';
                     // validate 4-space indent
-                    if (!(/^ * \*/).test(line) && ((/^ */).exec(line)[0].length % 4 !== 0)) {
+                    if (!(/^ +(?:\*|\/\/!!)/).test(line) &&
+                            ((/^ */).exec(line)[0].length % 4 !== 0)) {
                         jj = jj || 1;
                         message = message || 'non 4-space indent';
                     }
@@ -6710,8 +6740,8 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
             script.replace((/^.*?$/gm), function (line) {
                 current = line.trim();
                 ii += 1;
-                // validate className sorted
-                tmp = (/class="([^"]+?)"/g).exec(current);
+                // validate tag.classList sorted
+                tmp = (/class=\\?"([^"]+?)\\?"/g).exec(current);
                 tmp = JSON.stringify(
                     (tmp && tmp[1].match(/\w\S*?\{\{[^}]*?\}\}|\w\S*|\{\{[^}]*?\}\}/g)) || []
                 );
@@ -6729,7 +6759,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                     previous = '';
                     return;
                 }
-                if (!(/^(?: {4}| {8})local\.\S*? =(?: |$)/m).test(line) ||
+                if (!(/^(?:| {4}| {8})local\.\S*? =(?: |$)/m).test(line) ||
                         (/^local\.(?:modeJs|global|local|tmp)\b/).test(current)) {
                     return;
                 }
@@ -6755,7 +6785,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
             previous = '';
             script.replace((/^.*?$/gm), function (line) {
                 ii += 1;
-                if (!(/^sh\w+?\(\) \{/).test(line)) {
+                if (!(/^sh\w+? \(\) \{/).test(line)) {
                     return;
                 }
                 // validate previous < line

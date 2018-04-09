@@ -56,19 +56,25 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- jslint onParallelList
 - add function onEventSelectAllInPre
-- add csslint macro /* csslint-validateSelectorSorted */
 - rename function serverLog -> debugLog
 - add server stress test using electron
 - none
 
-#### changelog for v2018.3.27
-- npm publish v2018.3.27
-- lib.istanbul.js - revamp css
-- cleanup function jsonStringifyOrdered
-- update function jslintUtility2 to validate tag.classList is sorted
-- remove null-items from package.json
+#### changelog for v2018.4.7
+- npm publish v2018.4.7
+- update function buildApp to include LICENSE file
+- jslint function local.ajax - normalize arg xhr
+- jslint function local.onParallelList - normalize arg options2
+- fix build-ci for nodejs v9.x
+- update function assertJsonEqual with message argument
+- change default branch from 'alpha' to 'beta'
+- update function jslintAndPrintConditional to recurse \<script\> and \<style\> tags
+- merge shell-function shCryptoAesDecrypt -> shCryptoTravisDecrypt
+- merge shell-function shCryptoAesEncrypt -> shCryptoTravisEncrypt
+- add commit-tasks 'build app', 'build app.swgg', 'git push', 'git push origin beta:master', 'git squash.pop'
+- add shell-function shGithubRepoDescriptionUpdate
+- jslint - change default maxerr from 4 to 8
 - none
 
 #### this package requires
@@ -130,7 +136,7 @@ instruction
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 8,
+    maxerr: 4,
     maxlen: 100,
     node: true,
     nomen: true,
@@ -381,11 +387,40 @@ instruction
         // init exports
         module.exports = local;
         // require builtins
-        Object.keys(process.binding('natives')).forEach(function (key) {
-            if (!local[key] && !(/\/|^_|^assert|^sys$/).test(key)) {
-                local[key] = require(key);
-            }
-        });
+        // local.assert = require('assert');
+        local.buffer = require('buffer');
+        local.child_process = require('child_process');
+        local.cluster = require('cluster');
+        local.console = require('console');
+        local.constants = require('constants');
+        local.crypto = require('crypto');
+        local.dgram = require('dgram');
+        local.dns = require('dns');
+        local.domain = require('domain');
+        local.events = require('events');
+        local.fs = require('fs');
+        local.http = require('http');
+        local.https = require('https');
+        local.module = require('module');
+        local.net = require('net');
+        local.os = require('os');
+        local.path = require('path');
+        local.process = require('process');
+        local.punycode = require('punycode');
+        local.querystring = require('querystring');
+        local.readline = require('readline');
+        local.repl = require('repl');
+        local.stream = require('stream');
+        local.string_decoder = require('string_decoder');
+        local.timers = require('timers');
+        local.tls = require('tls');
+        local.tty = require('tty');
+        local.url = require('url');
+        local.util = require('util');
+        local.v8 = require('v8');
+        local.vm = require('vm');
+        local.zlib = require('zlib');
+/* validateLineSortedReset */
         // init assets
         local.assetsDict = local.assetsDict || {};
         /* jslint-ignore-begin */
@@ -480,6 +515,9 @@ textarea {\n\
     text-align: center;\n\
     text-decoration: underline;\n\
 }\n\
+.colorError {\n\
+    color: #d00;\n\
+}\n\
 .uiAnimateShake {\n\
     animation-duration: 500ms;\n\
     animation-name: uiAnimateShake;\n\
@@ -500,17 +538,16 @@ textarea {\n\
 }\n\
 </style>\n\
 </head>\n\
-<body style="background: #ddf; font-family: Arial, Helvetica, sans-serif; margin: 0 40px;">\n\
+<body style="background: #eef; font-family: Arial, Helvetica, sans-serif; margin: 0 40px;">\n\
 <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
-<code style="display: none;"></code><div class="button uiAnimateShake uiAnimateSlide utility2FooterDiv zeroPixel" style="display: none;"></div><pre style="display: none;"></pre><textarea readonly style="display: none;"></textarea>\n\
 <code style="display: none;"></code><div class="button uiAnimateShake uiAnimateSlide utility2FooterDiv zeroPixel" style="display: none;"></div><pre style="display: none;"></pre><textarea readonly style="display: none;"></textarea>\n\
 <script>\n\
 /* jslint-utility2 */\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
-    maxerr: 8,\n\
+    maxerr: 4,\n\
     maxlen: 100,\n\
     node: true,\n\
     nomen: true,\n\
@@ -588,10 +625,7 @@ utility2-comment -->\n\
     testCaseDict.modeTest = true;\n\
 \n\
     // comment this testCase to disable the failed assertion demo\n\
-    testCaseDict.testCase_failed_assertion_demo = function (\n\
-        options,\n\
-        onError\n\
-    ) {\n\
+    testCaseDict.testCase_failed_assertion_demo = function (options, onError) {\n\
     /*\n\
      * this function will demo a failed assertion test\n\
      */\n\
@@ -628,7 +662,7 @@ utility2-comment -->\n\
 }());\n\
 </textarea>\n\
 <pre id="outputPreJsonStringify1"></pre>\n\
-<pre id="outputPreJslint1" style="color: #d00;"></pre>\n\
+<pre class= "colorError" id="outputPreJslint1"></pre>\n\
 <label>instrumented-code</label>\n\
 <textarea class="resettable" id="outputTextarea1" readonly></textarea>\n\
 <label>stderr and stdout</label>\n\
@@ -680,6 +714,12 @@ utility2-comment -->\n\
             }
         });
 /* validateLineSortedReset */
+        // bug-workaround - long $npm_package_buildCustomOrg
+        /* jslint-ignore-begin */
+        local.assetsDict['/assets.utility2.js'] = local.assetsDict['/assets.utility2.js'] ||
+            local.fs.readFileSync(local.__dirname + '/lib.utility2.js', 'utf8'
+        ).replace((/^#!/), '//');
+/* validateLineSortedReset */
         local.assetsDict['/'] =
             local.assetsDict['/assets.example.html'] =
             local.assetsDict['/assets.index.template.html']
@@ -704,14 +744,6 @@ utility2-comment -->\n\
         local.assetsDict['/assets.example.js'] =
             local.assetsDict['/assets.example.js'] ||
             local.fs.readFileSync(__filename, 'utf8');
-        // bug-workaround - long $npm_package_buildCustomOrg
-        /* jslint-ignore-begin */
-        local.assetsDict['/assets.utility2.js'] =
-            local.assetsDict['/assets.utility2.js'] ||
-            local.fs.readFileSync(
-                local.__dirname + '/lib.utility2.js',
-                'utf8'
-            ).replace((/^#!/), '//');
         /* jslint-ignore-end */
         local.assetsDict['/favicon.ico'] = local.assetsDict['/favicon.ico'] || '';
         // if $npm_config_timeout_exit exists,
@@ -836,9 +868,9 @@ utility2-comment -->\n\
         "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
         "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh shNpmScriptPostinstall",
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
-        "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
+        "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 npm_config_mode_timeout_default=60000 ./lib.utility2.sh test test.js"
     },
-    "version": "2018.3.27"
+    "version": "2018.4.7"
 }
 ```
 
@@ -966,6 +998,7 @@ RUN (set -e; \
         v1.5.1 \
         v1.6.1 \
         v1.7.1; \
+        v1.8.1; \
     do \
         npm install kaizhu256/node-electron-lite#alpha \
             --electron-version="$ELECTRON_VERSION"; \
@@ -1048,7 +1081,7 @@ RUN (set -e; \
 
 # this shell script will run the build for this package
 
-shBuildCiAfter() {(set -e
+shBuildCiAfter () {(set -e
     #// coverage-hack
     # shDeployCustom
     shDeployGithub
@@ -1092,7 +1125,7 @@ shBuildCiAfter() {(set -e
     fi
 )}
 
-shBuildCiBefore() {(set -e
+shBuildCiBefore () {(set -e
     shNpmTestPublished
     shReadmeTest example.js
     # screenshot

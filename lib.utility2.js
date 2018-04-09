@@ -4,7 +4,7 @@
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 8,
+    maxerr: 4,
     maxlen: 100,
     node: true,
     nomen: true,
@@ -53,11 +53,40 @@
             local.global.utility2_utility2 = local;
         } else {
             // require builtins
-            Object.keys(process.binding('natives')).forEach(function (key) {
-                if (!local[key] && !(/\/|^_|^assert|^sys$/).test(key)) {
-                    local[key] = require(key);
-                }
-            });
+            // local.assert = require('assert');
+            local.buffer = require('buffer');
+            local.child_process = require('child_process');
+            local.cluster = require('cluster');
+            local.console = require('console');
+            local.constants = require('constants');
+            local.crypto = require('crypto');
+            local.dgram = require('dgram');
+            local.dns = require('dns');
+            local.domain = require('domain');
+            local.events = require('events');
+            local.fs = require('fs');
+            local.http = require('http');
+            local.https = require('https');
+            local.module = require('module');
+            local.net = require('net');
+            local.os = require('os');
+            local.path = require('path');
+            local.process = require('process');
+            local.punycode = require('punycode');
+            local.querystring = require('querystring');
+            local.readline = require('readline');
+            local.repl = require('repl');
+            local.stream = require('stream');
+            local.string_decoder = require('string_decoder');
+            local.timers = require('timers');
+            local.tls = require('tls');
+            local.tty = require('tty');
+            local.url = require('url');
+            local.util = require('util');
+            local.v8 = require('v8');
+            local.vm = require('vm');
+            local.zlib = require('zlib');
+/* validateLineSortedReset */
             module.exports = local;
             module.exports.__dirname = __dirname;
         }
@@ -79,7 +108,6 @@
 
     // run shared js-env code - function-before
     (function () {
-        local._consoleError = console.error;
         // init global.debug_inline
         local.global['debug_inline'.replace('_i', 'I')] = local.global[
             'debug_inline'.replace('_i', 'I')
@@ -89,6 +117,7 @@
          */
             // debug arguments
             local['_debug_inlineArguments'.replace('_i', 'I')] = arguments;
+            local._consoleError = local._consoleError || console.error;
             local._consoleError('\n\n\ndebug_inline'.replace('_i', 'I'));
             local._consoleError.apply(console, arguments);
             local._consoleError();
@@ -204,6 +233,9 @@ textarea {\n\
     text-align: center;\n\
     text-decoration: underline;\n\
 }\n\
+.colorError {\n\
+    color: #d00;\n\
+}\n\
 .uiAnimateShake {\n\
     animation-duration: 500ms;\n\
     animation-name: uiAnimateShake;\n\
@@ -241,17 +273,16 @@ local.assetsDict['/assets.index.template.html'] = '\
 ' + local.assetsDict['/assets.utility2.css'] + '\
 </style>\n\
 </head>\n\
-<body style="background: #ddf; font-family: Arial, Helvetica, sans-serif; margin: 0 40px;">\n\
+<body style="background: #eef; font-family: Arial, Helvetica, sans-serif; margin: 0 40px;">\n\
 <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
-<code style="display: none;"></code><div class="button uiAnimateShake uiAnimateSlide utility2FooterDiv zeroPixel" style="display: none;"></div><pre style="display: none;"></pre><textarea readonly style="display: none;"></textarea>\n\
 <code style="display: none;"></code><div class="button uiAnimateShake uiAnimateSlide utility2FooterDiv zeroPixel" style="display: none;"></div><pre style="display: none;"></pre><textarea readonly style="display: none;"></textarea>\n\
 <script>\n\
 /* jslint-utility2 */\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
-    maxerr: 8,\n\
+    maxerr: 4,\n\
     maxlen: 100,\n\
     node: true,\n\
     nomen: true,\n\
@@ -374,7 +405,7 @@ instruction\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
-    maxerr: 8,\n\
+    maxerr: 4,\n\
     maxlen: 100,\n\
     node: true,\n\
     nomen: true,\n\
@@ -513,11 +544,40 @@ instruction\n\
         // init exports\n\
         module.exports = local;\n\
         // require builtins\n\
-        Object.keys(process.binding(\'natives\')).forEach(function (key) {\n\
-            if (!local[key] && !(/\\/|^_|^assert|^sys$/).test(key)) {\n\
-                local[key] = require(key);\n\
-            }\n\
-        });\n\
+        // local.assert = require(\'assert\');\n\
+        local.buffer = require(\'buffer\');\n\
+        local.child_process = require(\'child_process\');\n\
+        local.cluster = require(\'cluster\');\n\
+        local.console = require(\'console\');\n\
+        local.constants = require(\'constants\');\n\
+        local.crypto = require(\'crypto\');\n\
+        local.dgram = require(\'dgram\');\n\
+        local.dns = require(\'dns\');\n\
+        local.domain = require(\'domain\');\n\
+        local.events = require(\'events\');\n\
+        local.fs = require(\'fs\');\n\
+        local.http = require(\'http\');\n\
+        local.https = require(\'https\');\n\
+        local.module = require(\'module\');\n\
+        local.net = require(\'net\');\n\
+        local.os = require(\'os\');\n\
+        local.path = require(\'path\');\n\
+        local.process = require(\'process\');\n\
+        local.punycode = require(\'punycode\');\n\
+        local.querystring = require(\'querystring\');\n\
+        local.readline = require(\'readline\');\n\
+        local.repl = require(\'repl\');\n\
+        local.stream = require(\'stream\');\n\
+        local.string_decoder = require(\'string_decoder\');\n\
+        local.timers = require(\'timers\');\n\
+        local.tls = require(\'tls\');\n\
+        local.tty = require(\'tty\');\n\
+        local.url = require(\'url\');\n\
+        local.util = require(\'util\');\n\
+        local.v8 = require(\'v8\');\n\
+        local.vm = require(\'vm\');\n\
+        local.zlib = require(\'zlib\');\n\
+/* validateLineSortedReset */\n\
         // init assets\n\
         local.assetsDict = local.assetsDict || {};\n\
         /* jslint-ignore-begin */\n\
@@ -539,6 +599,12 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') + '\
                 );\n\
             }\n\
         });\n\
+/* validateLineSortedReset */\n\
+        // bug-workaround - long $npm_package_buildCustomOrg\n\
+        /* jslint-ignore-begin */\n\
+        local.assetsDict[\'/assets.jslint.js\'] = local.assetsDict[\'/assets.jslint.js\'] ||\n\
+            local.fs.readFileSync(local.__dirname + \'/lib.jslint.js\', \'utf8\'\n\
+        ).replace((/^#!/), \'//\');\n\
 /* validateLineSortedReset */\n\
         local.assetsDict[\'/\'] =\n\
             local.assetsDict[\'/assets.example.html\'] =\n\
@@ -564,14 +630,6 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') + '\
         local.assetsDict[\'/assets.example.js\'] =\n\
             local.assetsDict[\'/assets.example.js\'] ||\n\
             local.fs.readFileSync(__filename, \'utf8\');\n\
-        // bug-workaround - long $npm_package_buildCustomOrg\n\
-        /* jslint-ignore-begin */\n\
-        local.assetsDict[\'/assets.jslint.js\'] =\n\
-            local.assetsDict[\'/assets.jslint.js\'] ||\n\
-            local.fs.readFileSync(\n\
-                local.__dirname + \'/lib.jslint.js\',\n\
-                \'utf8\'\n\
-            ).replace((/^#!/), \'//\');\n\
         /* jslint-ignore-end */\n\
         local.assetsDict[\'/favicon.ico\'] = local.assetsDict[\'/favicon.ico\'] || \'\';\n\
         // if $npm_config_timeout_exit exists,\n\
@@ -607,7 +665,7 @@ local.assetsDict['/assets.lib.template.js'] = '\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
-    maxerr: 8,\n\
+    maxerr: 4,\n\
     maxlen: 100,\n\
     node: true,\n\
     nomen: true,\n\
@@ -656,11 +714,40 @@ local.assetsDict['/assets.lib.template.js'] = '\
             local.global.utility2_jslint = local;\n\
         } else {\n\
             // require builtins\n\
-            Object.keys(process.binding(\'natives\')).forEach(function (key) {\n\
-                if (!local[key] && !(/\\/|^_|^assert|^sys$/).test(key)) {\n\
-                    local[key] = require(key);\n\
-                }\n\
-            });\n\
+            // local.assert = require(\'assert\');\n\
+            local.buffer = require(\'buffer\');\n\
+            local.child_process = require(\'child_process\');\n\
+            local.cluster = require(\'cluster\');\n\
+            local.console = require(\'console\');\n\
+            local.constants = require(\'constants\');\n\
+            local.crypto = require(\'crypto\');\n\
+            local.dgram = require(\'dgram\');\n\
+            local.dns = require(\'dns\');\n\
+            local.domain = require(\'domain\');\n\
+            local.events = require(\'events\');\n\
+            local.fs = require(\'fs\');\n\
+            local.http = require(\'http\');\n\
+            local.https = require(\'https\');\n\
+            local.module = require(\'module\');\n\
+            local.net = require(\'net\');\n\
+            local.os = require(\'os\');\n\
+            local.path = require(\'path\');\n\
+            local.process = require(\'process\');\n\
+            local.punycode = require(\'punycode\');\n\
+            local.querystring = require(\'querystring\');\n\
+            local.readline = require(\'readline\');\n\
+            local.repl = require(\'repl\');\n\
+            local.stream = require(\'stream\');\n\
+            local.string_decoder = require(\'string_decoder\');\n\
+            local.timers = require(\'timers\');\n\
+            local.tls = require(\'tls\');\n\
+            local.tty = require(\'tty\');\n\
+            local.url = require(\'url\');\n\
+            local.util = require(\'util\');\n\
+            local.v8 = require(\'v8\');\n\
+            local.vm = require(\'vm\');\n\
+            local.zlib = require(\'zlib\');\n\
+/* validateLineSortedReset */\n\
             module.exports = local;\n\
             module.exports.__dirname = __dirname;\n\
         }\n\
@@ -869,14 +956,14 @@ PORT=8081 node ./assets.app.js\n\
 \n\
 # this shell script will run the build for this package\n\
 \n\
-shBuildCiAfter() {(set -e\n\
+shBuildCiAfter () {(set -e\n\
     # shDeployCustom\n\
     shDeployGithub\n\
     # shDeployHeroku\n\
     shReadmeTest example.sh\n\
 )}\n\
 \n\
-shBuildCiBefore() {(set -e\n\
+shBuildCiBefore () {(set -e\n\
     shNpmTestPublished\n\
     shReadmeTest example.js\n\
 )}\n\
@@ -996,7 +1083,7 @@ local.assetsDict['/assets.test.template.js'] = '\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
-    maxerr: 8,\n\
+    maxerr: 4,\n\
     maxlen: 100,\n\
     node: true,\n\
     nomen: true,\n\
@@ -1202,7 +1289,7 @@ local.assetsDict['/assets.utility2.rollup.begin.js'] = '\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
-    maxerr: 8,\n\
+    maxerr: 4,\n\
     maxlen: 100,\n\
     node: true,\n\
     nomen: true,\n\
@@ -1363,12 +1450,12 @@ local.assetsDict['/favicon.ico'] = '';
             result = [];
             local.onParallelList({
                 list: this.entryList
-            }, function (options, onParallel) {
+            }, function (options2, onParallel) {
                 var value;
-                value = options.element.value;
+                value = options2.element.value;
                 if (!(value instanceof local.Blob)) {
-                    result[options.ii] = [boundary +
-                        '\r\nContent-Disposition: form-data; name="' + options.element.name +
+                    result[options2.ii] = [boundary +
+                        '\r\nContent-Disposition: form-data; name="' + options2.element.name +
                         '"\r\n\r\n', value, '\r\n'];
                     onParallel.counter += 1;
                     onParallel();
@@ -1377,8 +1464,8 @@ local.assetsDict['/favicon.ico'] = '';
                 // read from blob in parallel
                 onParallel.counter += 1;
                 local.blobRead(value, 'binary', function (error, data) {
-                    result[options.ii] = !error && [boundary +
-                        '\r\nContent-Disposition: form-data; name="' + options.element.name +
+                    result[options2.ii] = !error && [boundary +
+                        '\r\nContent-Disposition: form-data; name="' + options2.element.name +
                         '"' +
                         // read param filename
                         (value && value.name
@@ -2133,14 +2220,14 @@ local.assetsDict['/favicon.ico'] = '';
             onError(error);
         };
 
-        local.assertJsonEqual = function (aa, bb) {
+        local.assertJsonEqual = function (aa, bb, message) {
         /*
          * this function will assert
          * jsonStringifyOrdered(aa) === JSON.stringify(bb)
          */
             aa = local.jsonStringifyOrdered(aa);
             bb = JSON.stringify(bb);
-            local.assert(aa === bb, [aa, bb]);
+            local.assert(aa === bb, message || [aa, bb]);
         };
 
         local.assertJsonNotEqual = function (aa, bb) {
@@ -3120,6 +3207,9 @@ return Utf8ArrayToStr(bff);
             // build assets
             local.fsRmrSync(local.env.npm_config_dir_build + '/app');
             local.onParallelList({ list: options.assetsList.concat([{
+                file: '/LICENSE',
+                url: '/LICENSE'
+            }, {
                 file: '/assets.' + local.env.npm_package_nameLib + '.html',
                 url: '/index.html'
             }, {
@@ -3161,18 +3251,18 @@ return Utf8ArrayToStr(bff);
             }, {
                 file: '/jsonp.utility2.stateInit',
                 url: '/jsonp.utility2.stateInit?callback=window.utility2.stateInit'
-            }]) }, function (options, onParallel) {
-                options = options.element;
+            }]) }, function (options2, onParallel) {
+                options2 = options2.element;
                 onParallel.counter += 1;
-                local.ajax(options, function (error, xhr) {
+                local.ajax(options2, function (error, xhr) {
                     // validate no error occurred
                     local.assert(!error, error);
                     // jslint file
-                    local.jslintAndPrintConditional(xhr.responseText, options.file);
+                    local.jslintAndPrintConditional(xhr.responseText, options2.file);
                     // validate no error occurred
                     local.assert(!local.jslint.errorText, local.jslint.errorText);
                     local.fsWriteFileWithMkdirpSync(
-                        local.env.npm_config_dir_build + '/app' + options.file,
+                        local.env.npm_config_dir_build + '/app' + options2.file,
                         new Buffer(xhr.response)
                     );
                     onParallel();
@@ -3297,7 +3387,7 @@ return Utf8ArrayToStr(bff);
                 (/[\S\s]*?^\/\* istanbul instrument in package /m),
                 // customize body after use strict
                 (/\n {4}'use strict';\n[\S\s]*?\n\n\n\n/),
-                // customize body after init exports
+                // customize body after init lib
                 (/\n {8}\/\/ init lib\n[\S\s]*?$/)
             ].forEach(function (rgx) {
                 // handle large string-replace
@@ -3433,8 +3523,8 @@ return Utf8ArrayToStr(bff);
                 (/\nutility2-comment -->(?:\\n\\\n){4}[^`]*?^<!-- utility2-comment\\n\\\n/m),
                 // customize build script
                 (/\n# internal build script\n[\S\s]*?^- build_ci\.sh\n/m),
-                (/\nshBuildCiAfter\(\) \{\(set -e\n[^`]*?\n\)\}\n/),
-                (/\nshBuildCiBefore\(\) \{\(set -e\n[^`]*?\n\)\}\n/)
+                (/\nshBuildCiAfter \(\) \{\(set -e\n[^`]*?\n\)\}\n/),
+                (/\nshBuildCiBefore \(\) \{\(set -e\n[^`]*?\n\)\}\n/)
             ].forEach(function (rgx) {
                 // handle large string-replace
                 options.dataFrom.replace(rgx, function (match0) {
@@ -3598,8 +3688,8 @@ return Utf8ArrayToStr(bff);
             });
             // search-and-replace - customize dataTo
             [
-                // customize js\-env code
-                (/\n {4}\}\(\)\);\n[\S\s]*?$/)
+                // customize shared js\-env code
+                (/\n {4}\(function \(\) \{\n[\S\s]*?$/)
             ].forEach(function (rgx) {
                 // handle large string-replace
                 options.dataFrom.replace(rgx, function (match0) {
@@ -4245,7 +4335,7 @@ return Utf8ArrayToStr(bff);
             }
             switch (file.replace((/^.*\./), '.')) {
             case '.css':
-                if (script.indexOf('/*csslint') >= 0 || mode === 'force') {
+                if (script.indexOf('/*csslint') >= 0) {
                     local.jslintAndPrint(script, file);
                 }
                 break;
@@ -4259,29 +4349,28 @@ return Utf8ArrayToStr(bff);
                 }
                 break;
             }
-            // csslint <style>...</style>
+            // recurse - csslint <style>...</style>
             script.replace(
                 (/^<style>(?:\\n\\)?\n([\S\s]+?)\n<\/style>(?:\\n\\)?$/gm),
                 function (match0, match1, ii, text) {
                     match0 = match1;
-                    local.jslintAndPrint(
+                    local.jslintAndPrintConditional(
                         // preserve lineno
                         text.slice(0, ii).replace((/.+/g), '') + '\n' + match0
                             // filter \\n\\
                             .replace((/\\n\\$/gm), '')
                             // filter ' + ... + '\\
                             .replace((/^' \+ .*? \+ '\\$/gm), ''),
-                        file + '.css',
-                        mode
+                        file + '.css'
                     );
                 }
             );
-            // jslint <script>...</script>
+            // recurse - jslint <script>...</script>
             script.replace((
                 /^(?:\/\/ )?<script>(?:\\n\\)?\n([\S\s]+?)\n(?:\/\/ )?<\/script>(?:\\n\\)?$/gm
             ), function (match0, match1, ii, text) {
                 match0 = match1;
-                local.jslintAndPrint(
+                local.jslintAndPrintConditional(
                     // preserve lineno
                     text.slice(0, ii).replace((/.+/g), '') + '\n' + match0
                         // filter \\n\\
@@ -4579,24 +4668,26 @@ return Utf8ArrayToStr(bff);
          * this function will run the middleware that will update the response-header Last-Modified
          */
             // do not cache if headers already sent or url has '?' search indicator
-            if (!(response.headersSent || request.url.indexOf('?') >= 0)) {
-                // init serverResponseHeaderLastModified
-                local.serverResponseHeaderLastModified = local.serverResponseHeaderLastModified ||
-                    // resolve to 1000 ms
-                    new Date(new Date(Math.floor(Date.now() / 1000) * 1000).toGMTString());
-                // respond with 304 If-Modified-Since serverResponseHeaderLastModified
-                if (new Date(request.headers['if-modified-since']) >=
-                        local.serverResponseHeaderLastModified) {
-                    response.statusCode = 304;
-                    response.end();
-                    return;
-                }
-                response.setHeader('Cache-Control', 'no-cache');
-                response.setHeader(
-                    'Last-Modified',
-                    local.serverResponseHeaderLastModified.toGMTString()
-                );
+            if (response.headersSent || request.url.indexOf('?') >= 0) {
+                nextMiddleware();
+                return;
             }
+            // init serverResponseHeaderLastModified
+            local.serverResponseHeaderLastModified = local.serverResponseHeaderLastModified ||
+                // resolve to 1000 ms
+                new Date(new Date(Math.floor(Date.now() / 1000) * 1000).toGMTString());
+            // respond with 304 If-Modified-Since serverResponseHeaderLastModified
+            if (new Date(request.headers['if-modified-since']) >=
+                    local.serverResponseHeaderLastModified) {
+                response.statusCode = 304;
+                response.end();
+                return;
+            }
+            response.setHeader('Cache-Control', 'no-cache');
+            response.setHeader(
+                'Last-Modified',
+                local.serverResponseHeaderLastModified.toGMTString()
+            );
             nextMiddleware();
         };
 
@@ -5507,7 +5598,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                         local.tryCatchOnError(function () {
                             // validate no error occurred
                             local.assert(!error, error);
-                            local.swgg.swaggerValidateJson(JSON.parse(data));
+                            local.swgg.swaggerValidate(JSON.parse(data));
                         }, local.onErrorDefault);
                     });
                     break;
@@ -5551,13 +5642,9 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 return module.exports;
             }
             // init file $npm_package_main
-            tmp = process.cwd() + '/' + local.env.npm_package_main;
-            global.utility2_moduleExports = require(tmp);
-            local.assetsDict['/assets.' + local.env.npm_package_nameLib + '.js'] =
-                local.istanbulInstrumentInPackage(
-                    local.fs.readFileSync(tmp, 'utf8').replace((/^#!/), '//'),
-                    tmp
-                );
+            global.utility2_moduleExports = require(
+                process.cwd() + '/' + local.env.npm_package_main
+            );
             global.utility2_moduleExports.global = global;
             // read script from README.md
             script = local.templateRenderJslintLite(
@@ -5595,7 +5682,15 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             module.exports.utility2 = local;
             module.exports[local.env.npm_package_nameLib] = global.utility2_moduleExports;
             // init assets
+            tmp = process.cwd() + '/' + local.env.npm_package_main;
+            local.assetsDict['/assets.' + local.env.npm_package_nameLib + '.js'] =
+                local.fs.readFileSync(tmp, 'utf8').replace((/^#!/), '//');
             local.objectSetOverride(local.assetsDict, module.exports.assetsDict);
+            local.assetsDict['/assets.' + local.env.npm_package_nameLib + '.js'] =
+                local.istanbulInstrumentInPackage(
+                    local.assetsDict['/assets.' + local.env.npm_package_nameLib + '.js'],
+                    tmp
+                );
             module.exports.assetsDict = local.assetsDict;
             local.assetsDict['/assets.example.js'] = script;
             local.assetsDict['/assets.test.js'] = local.istanbulInstrumentInPackage(
@@ -7261,7 +7356,7 @@ instruction\n\
         local.swgg = local.swgg || {
             apiUpdate: local.nop,
             normalizeSwaggerJson: local.nop,
-            swaggerValidateJson: local.nop
+            swaggerValidate: local.nop
         };
         local.taskOnTaskDict = {};
         local.testReport = { testPlatformList: [{
@@ -7354,9 +7449,9 @@ instruction\n\
                 list: process.argv[3].split(/\s+/).filter(function (element) {
                     return element;
                 })
-            }, function (options, onParallel) {
+            }, function (options2, onParallel) {
                 onParallel.counter += 1;
-                local.browserTest({ url: options.element }, function () {
+                local.browserTest({ url: options2.element }, function () {
                     onParallel();
                 });
             }, local.exit);
@@ -7461,15 +7556,15 @@ instruction\n\
                 }),
                 rateLimit: process.argv[4],
                 retryLimit: process.argv[5]
-            }, function (options, onParallel) {
+            }, function (options2, onParallel) {
                 onParallel.counter += 1;
                 local.child_process.spawn(
-                    '. ' + local.__dirname + '/lib.utility2.sh; ' + options.element,
+                    '. ' + local.__dirname + '/lib.utility2.sh; ' + options2.element,
                     { shell: true, stdio: ['ignore', 1, 2] }
                 ).on('exit', function (exitCode) {
                     console.error('onParallelListExec - [' + (onParallel.ii + 1) +
-                        ' of ' + options.list.length + '] exitCode ' + exitCode);
-                    onParallel(exitCode && new Error(exitCode), options);
+                        ' of ' + options2.list.length + '] exitCode ' + exitCode);
+                    onParallel(exitCode && new Error(exitCode), options2);
                 });
             }, local.exit);
         };
