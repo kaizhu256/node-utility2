@@ -1,19 +1,9 @@
-":source ~/.vimrc"
-autocmd!
-"autochdir"
-autocmd BufEnter * silent! lcd %:p:h
-"auto remove trailing whitespace"
-autocmd BufRead,BufWrite * if ! &bin | silent! %s/\s\+$//e | endif
-filetype on
-filetype plugin on
-inoremap <c-a> <c-o>^
-inoremap <c-e> <c-o>$
-inoremap <c-k> <c-o>D
-inoremap <c-d> <c-o>x
+" :source ~/.vimrc
+
 set autoindent
 set backspace=2
-"central swap file location"
-set directory=~/.vim
+" https://stackoverflow.com/questions/1636297/how-to-change-the-folder-path-for-swp-files-in-vim
+set directory=$HOME/.vim/swapfiles//
 set expandtab
 set hidden
 set hlsearch
@@ -31,53 +21,64 @@ set smartcase
 set softtabstop=2
 set statusline=%l\ %c\ %F%m%r%h%w\ %y\ %p%%
 set tabstop=4
+
+autocmd!
+" autochdir
+autocmd BufEnter * silent! lcd %:p:h
+" auto remove trailing whitespace
+autocmd BufRead,BufWrite * if ! &bin | silent! %s/\s\+$//e | endif
+filetype on
+filetype plugin on
 syntax on
 
 if !exists(":Vimrc")
-  command! -nargs=* Vimrc call MyVimrc(<f-args>)
-  function! MyVimrc(...)
-    :so ~/.vimrc
-  endfunction
+    command! -nargs=* Vimrc call MyVimrc(<f-args>)
+    function! MyVimrc(...)
+        :so ~/.vimrc
+    endfunction
 endif
 
 function! MyCommentRegion(...)
-  "uncomment"
-  if !a:0
-    '<,'>s/^\(\s*\)\(""\|#\|%%\|\/\/\)!! /\1/e
-    '<,'>s/^\(\s*\)<\!--!! \(.*\) -->/\1\2/e
-  "comment \"\""
-  elseif a:1 == '"'
-    '<,'>s/^\(\s*\)\(\S\)/\1""!! \2/e
-  "comment #"
-  elseif a:1 == '#'
-    '<,'>s/^\(\s*\)\(\S\)/\1#!! \2/e
-  "comment %%"
-  elseif a:1 == '%'
-    '<,'>s/^\(\s*\)\(\S\)/\1%%!! \2/e
-  "comment //"
-  elseif a:1 == '/'
-    '<,'>s/^\(\s*\)\(\S\)/\1\/\/!! \2/e
-  "comment <!-- ... -->"
-  elseif a:1 == '<'
-    '<,'>s/^\(\s*\)\(\S.*\)/\1<!--!! \2 -->/e
-  endif
-  "restore position"
-  call setpos('.', getpos("'<"))
+    " uncomment
+    if !a:0
+        '<,'>s/^\(\s*\)\(""\|#\|%%\|\/\/\)!! /\1/e
+        '<,'>s/^\(\s*\)<\!--!! \(.*\) -->/\1\2/e
+    " comment \"\"
+    elseif a:1 == '"'
+        '<,'>s/^\(\s*\)\(\S\)/\1""!! \2/e
+    " comment #
+    elseif a:1 == '#'
+        '<,'>s/^\(\s*\)\(\S\)/\1#!! \2/e
+    " comment %%
+    elseif a:1 == '%'
+        '<,'>s/^\(\s*\)\(\S\)/\1%%!! \2/e
+    " comment //
+    elseif a:1 == '/'
+        '<,'>s/^\(\s*\)\(\S\)/\1\/\/!! \2/e
+    " comment <!-- ... -->
+    elseif a:1 == '<'
+        '<,'>s/^\(\s*\)\(\S.*\)/\1<!--!! \2 -->/e
+    endif
+    " restore position
+    call setpos('.', getpos("'<"))
 endfunction
 
+" insert-mode remap
+inoremap <c-a> <c-o>^
+inoremap <c-d> <c-o>x
+inoremap <c-e> <c-o>$
+inoremap <c-k> <c-o>D
+" non-recursive remap
 nnoremap <silent> !bc :bp<bar>sp<bar>bn<bar>bd!<CR>
 nnoremap <silent> #! :call MyCommentRegion()<cr><cr>
-nnoremap <silent> #<char-0x23> :call MyCommentRegion('#')<cr><cr>
+nnoremap <silent> #" :call MyCommentRegion('"')<cr><cr>
 nnoremap <silent> #% :call MyCommentRegion('%')<cr><cr>
 nnoremap <silent> #/ :call MyCommentRegion('/')<cr><cr>
-nnoremap <silent> #" :call MyCommentRegion('"')<cr><cr>
+nnoremap <silent> #<char-0x23> :call MyCommentRegion('#')<cr><cr>
+" visual-mode remap
 vnoremap <silent> #! <esc>:call MyCommentRegion()<cr><cr>
-vnoremap <silent> #<char-0x23> <esc>:call MyCommentRegion('#')<cr><cr>
+vnoremap <silent> #" <esc>:call MyCommentRegion('"')<cr><cr>
 vnoremap <silent> #% <esc>:call MyCommentRegion('%')<cr><cr>
 vnoremap <silent> #/ <esc>:call MyCommentRegion('/')<cr><cr>
 vnoremap <silent> #< <esc>:call MyCommentRegion('<')<cr><cr>
-vnoremap <silent> #" <esc>:call MyCommentRegion('"')<cr><cr>
-
-augroup filetypedetect
-  au BufNewFile,BufRead *.pig set filetype=pig syntax=pig
-augroup END
+vnoremap <silent> #<char-0x23> <esc>:call MyCommentRegion('#')<cr><cr>

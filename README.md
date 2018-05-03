@@ -56,25 +56,28 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- add function onEventSelectAllInPre
-- rename function serverLog -> debugLog
+- integrate db-lite and github-crud into a cloud-based db on github
 - add server stress test using electron
 - none
 
-#### changelog for v2018.4.7
-- npm publish v2018.4.7
-- update function buildApp to include LICENSE file
-- jslint function local.ajax - normalize arg xhr
-- jslint function local.onParallelList - normalize arg options2
-- fix build-ci for nodejs v9.x
-- update function assertJsonEqual with message argument
-- change default branch from 'alpha' to 'beta'
-- update function jslintAndPrintConditional to recurse \<script\> and \<style\> tags
-- merge shell-function shCryptoAesDecrypt -> shCryptoTravisDecrypt
-- merge shell-function shCryptoAesEncrypt -> shCryptoTravisEncrypt
-- add commit-tasks 'build app', 'build app.swgg', 'git push', 'git push origin beta:master', 'git squash.pop'
-- add shell-function shGithubRepoDescriptionUpdate
-- jslint - change default maxerr from 4 to 8
+#### changelog 2018.5.2
+- npm publish 2018.5.2
+- add shell-function shRandomInRange - replace hexdump
+- replace function normalizeValue with design-patterns 'Array.from', 'String', and 'Number(...) || 0'
+- remove prefix 'v' from version
+- revamp function cliRun
+- update shell-function shUtility2DependentsSync to sync .travis.yml
+- embed script in html to limit select-all insde <pre tabIndex=\"0\"> elements
+- lib.github_crud.js - replace function httpRequest -> ajax
+- update function ajax to be standalone in nodejs (by merging function httpRequest into function ajax)
+- revert function browserTest with translate and scrape features removed
+- add function ajaxCrawl
+- update function onParallelList to restart if options.list has grown
+- update shell-function shBuildAppSwgg0 to remove swgg-google-maps dependency
+- add embedded-asset assets.readmeCustomOrg.swgg.template.md
+- update shell-function shFilePackageJsonVersionUpdate to update README.md
+- lib.apidoc.js - improve error-handling for misbehaving property-accessors
+- update file .vimrc from 2-space-indent to 4-space-indent
 - none
 
 #### this package requires
@@ -430,8 +433,8 @@ instruction
 <head>\n\
 <meta charset="UTF-8">\n\
 <meta name="viewport" content="width=device-width, initial-scale=1">\n\
-<!-- "assets.index.default.template.html" -->\n\
-<title>{{env.npm_package_name}} (v{{env.npm_package_version}})</title>\n\
+<!-- "assets.utility2.template.html" -->\n\
+<title>{{env.npm_package_name}} ({{env.npm_package_version}})</title>\n\
 <style>\n\
 /* jslint-utility2 */\n\
 /*csslint\n\
@@ -464,6 +467,11 @@ instruction
 }\n\
 a {\n\
     overflow-wrap: break-word;\n\
+}\n\
+body {\n\
+    background: #eef;\n\
+    font-family: Arial, Helvetica, sans-serif;\n\
+    margin: 0 40px;\n\
 }\n\
 body > div,\n\
 body > pre,\n\
@@ -538,10 +546,10 @@ textarea {\n\
 }\n\
 </style>\n\
 </head>\n\
-<body style="background: #eef; font-family: Arial, Helvetica, sans-serif; margin: 0 40px;">\n\
+<body>\n\
 <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
-<code style="display: none;"></code><div class="button uiAnimateShake uiAnimateSlide utility2FooterDiv zeroPixel" style="display: none;"></div><pre style="display: none;"></pre><textarea readonly style="display: none;"></textarea>\n\
+<code style="display: none;"></code><div class="button colorError uiAnimateShake uiAnimateSlide utility2FooterDiv zeroPixel" style="display: none;"></div><pre style="display: none;"></pre><textarea readonly style="display: none;"></textarea>\n\
 <script>\n\
 /* jslint-utility2 */\n\
 /*jslint\n\
@@ -554,12 +562,18 @@ textarea {\n\
     regexp: true,\n\
     stupid: true\n\
 */\n\
+// init timerIntervalAjaxProgressUpdate\n\
 (function () {\n\
+/*\n\
+ * this function will increment the ajax-progress-bar until the webpage has loaded\n\
+ */\n\
     "use strict";\n\
     var ajaxProgressDiv1,\n\
         ajaxProgressState,\n\
-        ajaxProgressUpdate,\n\
-        timerIntervalAjaxProgressUpdate;\n\
+        ajaxProgressUpdate;\n\
+    if (window.timerIntervalAjaxProgressUpdate) {\n\
+        return;\n\
+    }\n\
     ajaxProgressDiv1 = document.querySelector("#ajaxProgressDiv1");\n\
     setTimeout(function () {\n\
         ajaxProgressDiv1.style.width = "25%";\n\
@@ -575,17 +589,43 @@ textarea {\n\
             }, 500);\n\
         }, 1500);\n\
     };\n\
-    timerIntervalAjaxProgressUpdate = setInterval(function () {\n\
+    window.timerIntervalAjaxProgressUpdate = setInterval(function () {\n\
         ajaxProgressState += 1;\n\
         ajaxProgressDiv1.style.width = Math.max(\n\
             100 - 75 * Math.exp(-0.125 * ajaxProgressState),\n\
-            Number(ajaxProgressDiv1.style.width.slice(0, -1)) || 0\n\
+            ajaxProgressDiv1.style.width.slice(0, -1) | 0\n\
         ) + "%";\n\
     }, 1000);\n\
     window.addEventListener("load", function () {\n\
-        clearInterval(timerIntervalAjaxProgressUpdate);\n\
+        clearInterval(window.timerIntervalAjaxProgressUpdate);\n\
         ajaxProgressUpdate();\n\
     });\n\
+}());\n\
+// init domOnEventSelectAllWithinPre\n\
+(function () {\n\
+/*\n\
+ * this function will limit select-all within <pre tabIndex="0"> elements\n\
+ * https://stackoverflow.com/questions/985272/selecting-text-in-an-element-akin-to-highlighting-with-your-mouse\n\
+ */\n\
+    "use strict";\n\
+    if (window.domOnEventSelectAllWithinPre) {\n\
+        return;\n\
+    }\n\
+    window.domOnEventSelectAllWithinPre = function (event) {\n\
+        var range, selection;\n\
+        if (event &&\n\
+                event.code === "KeyA" &&\n\
+                (event.ctrlKey || event.metaKey) &&\n\
+                event.target.closest("pre")) {\n\
+            range = document.createRange();\n\
+            range.selectNodeContents(event.target.closest("pre"));\n\
+            selection = window.getSelection();\n\
+            selection.removeAllRanges();\n\
+            selection.addRange(range);\n\
+            event.preventDefault();\n\
+        }\n\
+    };\n\
+    document.addEventListener("keydown", window.domOnEventSelectAllWithinPre);\n\
 }());\n\
 </script>\n\
 <h1>\n\
@@ -597,7 +637,7 @@ textarea {\n\
         target="_blank"\n\
     >\n\
 utility2-comment -->\n\
-        {{env.npm_package_name}} (v{{env.npm_package_version}})\n\
+        {{env.npm_package_name}} ({{env.npm_package_version}})\n\
 <!-- utility2-comment\n\
     </a>\n\
 utility2-comment -->\n\
@@ -661,8 +701,8 @@ utility2-comment -->\n\
     window.utility2.testRunDefault(testCaseDict);\n\
 }());\n\
 </textarea>\n\
-<pre id="outputPreJsonStringify1"></pre>\n\
-<pre class= "colorError" id="outputPreJslint1"></pre>\n\
+<pre id="outputPreJsonStringify1" tabindex="0"></pre>\n\
+<pre class= "colorError" id="outputPreJslint1" tabindex="0"></pre>\n\
 <label>instrumented-code</label>\n\
 <textarea class="resettable" id="outputTextarea1" readonly></textarea>\n\
 <label>stderr and stdout</label>\n\
@@ -868,9 +908,9 @@ utility2-comment -->\n\
         "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
         "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh shNpmScriptPostinstall",
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
-        "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 npm_config_mode_timeout_default=60000 ./lib.utility2.sh test test.js"
+        "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 npm_config_timeout_default=\"${npm_config_timeout_default:-60000}\" ./lib.utility2.sh test test.js"
     },
-    "version": "2018.4.7"
+    "version": "2018.5.2"
 }
 ```
 
@@ -914,13 +954,13 @@ RUN (set -e; \
         curl \
         gnupg; \
     (busybox --list | xargs -n1 /bin/sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true); \
-    curl -#L https://deb.nodesource.com/setup_6.x | /bin/bash -; \
+    curl -#L https://deb.nodesource.com/setup_8.x | /bin/bash -; \
     apt-get install -y nodejs; \
 )
 # install sqlite3
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
-    npm install sqlite3@3.1.8; \
+    npm install sqlite3@3.1.13; \
     cp -a node_modules /; \
 )
 # install electron-lite
@@ -1082,7 +1122,7 @@ RUN (set -e; \
 # this shell script will run the build for this package
 
 shBuildCiAfter () {(set -e
-    #// coverage-hack
+    #// coverage-hack - test comment handling-behavior
     # shDeployCustom
     shDeployGithub
     shDeployHeroku
@@ -1105,7 +1145,7 @@ shBuildCiAfter () {(set -e
         # npm test utility2
         for PACKAGE in utility2 "kaizhu256/node-utility2#alpha"
         do
-            docker run "$GITHUB_REPO:$DOCKER_TAG" /bin/bash -c "set -e
+            docker run "$GITHUB_REPO:$DOCKER_TAG" /bin/sh -c "set -e
                 curl -Ls https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/alpha/lib.utility2.sh > /tmp/lib.utility2.sh
                 . /tmp/lib.utility2.sh

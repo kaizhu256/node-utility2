@@ -1003,7 +1003,7 @@ local.templateUiMain = '\
 </div>\n\
 {{#if urlSwaggerJson}}\n\
 <h4 class="label">nodejs initialization</h4>\n\
-<pre id="swggAjaxProgressPre1">\n\
+<pre id="swggAjaxProgressPre1" tabIndex="0">\n\
 /*\n\
  * initialize nodejs swgg-client\n\
  * 1. download currently-loaded apis to file swagger.json:\n\
@@ -1089,15 +1089,15 @@ local.templateUiOperation = '\
     {{/each responseList}}\n\
     <button class="button onEventOperationAjax">try it out!</button>\n\
     <h4 class="label">nodejs request</h4>\n\
-    <pre class="requestJavascript"></pre>\n\
+    <pre class="requestJavascript" tabIndex="0"></pre>\n\
     <h4 class="label">curl request</h4>\n\
-    <pre class="requestCurl"></pre>\n\
+    <pre class="requestCurl" tabIndex="0"></pre>\n\
     <h4 class="label">response status code</h4>\n\
     <pre class="responseStatusCode" tabindex="0"></pre>\n\
     <h4 class="label">response headers</h4>\n\
-    <pre class="responseHeaders"></pre>\n\
+    <pre class="responseHeaders" tabIndex="0"></pre>\n\
     <h4 class="label">response body</h4>\n\
-    <pre class="responseBody"></pre>\n\
+    <pre class="responseBody" tabIndex="0"></pre>\n\
     <div class="responseMedia"></div>\n\
 </form>\n\
 </div>\n\
@@ -1151,7 +1151,7 @@ local.templateUiParameter = '\
     <div class="colorError"></div>\n\
 </span>\n\
 <span class="td td4">\n\
-    {{#if schemaText}}<pre>{{schemaText}}</pre>{{/if schemaText}}\n\
+    {{#if schemaText}}<pre tabIndex="0">{{schemaText}}</pre>{{/if schemaText}}\n\
 </span>\n\
 </div>\n\
 ';
@@ -1220,8 +1220,8 @@ swgg\n\
 
 
 /* validateLineSortedReset */
-local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.index.default.template.html']
-    .replace('assets.index.default.template.html', '')
+local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.template.html']
+    .replace('assets.utility2.template.html', '')
     .replace((/<title>.*?<\/title>/), '<title>swgg</title>')
     .replace('\n<!-- utility2-comment\n', '\n')
     .replace('\n</style>\n', '\
@@ -2407,7 +2407,6 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                 );
                 break;
             /*
-             * https://tools.ietf.org/html/rfc7578
              * parse multipart/form-data, e.g.
              * --Boundary\r\n
              * Content-Disposition: form-data; name="key"\r\n
@@ -2424,6 +2423,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
              * \r\n
              * <data2>\r\n
              * --Boundary--\r\n
+             * https://tools.ietf.org/html/rfc7578
              */
             case 'multipart/form-data':
                 request.swgg.bodyParsed = {};
@@ -3013,13 +3013,13 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
             });
             Object.keys(pathDict).forEach(function (key) {
                 Object.keys(pathDict[key]).sort().forEach(function (path, ii) {
+                    // fix error.semanticUniquePath
                     if (ii && swaggerJson['x-swgg-fixErrorSemanticUniquePath']) {
                         swaggerJson.paths[path + '#' + ii] = swaggerJson.paths[path];
                         delete swaggerJson.paths[path];
                     }
                 });
             });
-            // auto-create operationId from path
             Object.keys(swaggerJson.paths).forEach(function (path) {
                 Object.keys(swaggerJson.paths[path]).forEach(function (method) {
                     tmp = swaggerJson.paths[path][method];
@@ -3091,9 +3091,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
             ['definitions', 'parameters', 'responses'].forEach(function (schema) {
                 schema = swaggerJson[schema] || {};
                 Object.keys(schema).forEach(function (key) {
-                    if (schema[key]['x-swgg-tags0'] &&
-                            schema[key]['x-swgg-tags0'] !== 'all' &&
-                            schema[key]['x-swgg-tags0'] !== local.env.npm_package_swggTags0) {
+                    tmp = schema[key]['x-swgg-tags0'];
+                    if (tmp && tmp !== 'all' && tmp !== local.env.npm_package_swggTags0) {
                         delete schema[key];
                     }
                 });
@@ -3101,10 +3100,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
             // filter $npm_package_swggTags0 - paths
             Object.keys(swaggerJson.paths).forEach(function (path) {
                 Object.keys(swaggerJson.paths[path]).forEach(function (method) {
-                    tmp = swaggerJson.paths[path][method];
-                    if (tmp['x-swgg-tags0'] &&
-                            tmp['x-swgg-tags0'] !== 'all' &&
-                            tmp['x-swgg-tags0'] !== local.env.npm_package_swggTags0) {
+                    tmp = swaggerJson.paths[path][method]['x-swgg-tags0'];
+                    if (tmp && tmp !== 'all' && tmp !== local.env.npm_package_swggTags0) {
                         delete swaggerJson.paths[path][method];
                         return;
                     }
@@ -3195,10 +3192,10 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
 
         local.onErrorJsonapi = function (onError) {
         /*
-         * http://jsonapi.org/format/#errors
-         * http://jsonapi.org/format/#document-structure-resource-objects
          * this function will normalize the error and data to jsonapi format,
          * and pass them to onError
+         * http://jsonapi.org/format/#errors
+         * http://jsonapi.org/format/#document-structure-resource-objects
          */
             return function (error, data, meta) {
                 data = [error, data].map(function (data, ii) {
@@ -3244,10 +3241,10 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     }
                     data.meta = local.jsonCopy(meta || {});
                     data.meta.isJsonapiResponse = true;
-                    if (!ii) {
-                        data.meta.errorsLength = (data.errors && data.errors.length) | 0;
+                    if (ii) {
+                        data.meta.dataLength = data.data.length;
                     } else {
-                        data.meta.dataLength = (data.data && data.data.length) | 0;
+                        data.meta.errorsLength = data.errors.length;
                     }
                     data.meta.statusCode = Number(data.meta.statusCode) ||
                         Number(data.statusCode) ||
@@ -3292,9 +3289,9 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
 
         local.serverRespondJsonapi = function (request, response, error, data, meta) {
         /*
+         * this function will respond in jsonapi format
          * http://jsonapi.org/format/#errors
          * http://jsonapi.org/format/#document-structure-resource-objects
-         * this function will respond in jsonapi format
          */
             local.onErrorJsonapi(function (error, data) {
                 local.serverRespondHeadSet(request, response, error && error.statusCode, {
@@ -3656,7 +3653,9 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                             schema: operation
                         });
                         // validate semanticOperations3
-                        test = !tmp.name[schemaP.name + ' ' + schemaP.in];
+                        test = schemaP.name === undefined ||
+                            schemaP.in === undefined ||
+                            !tmp.name[schemaP.name + ' ' + schemaP.in];
                         local.throwSwaggerError(!test && {
                             data: operation.parameters,
                             errorType: 'semanticOperations3',
@@ -4157,7 +4156,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     schema: schema
                 });
                 // 5.4.3. required
-                local.normalizeValue('list', schema.required).forEach(function (key) {
+                Array.from(schema.required || []).forEach(function (key) {
                     // validate semanticItemsRequiredForArrayObjects2
                     test = !local.isNullOrUndefined(data[key]);
                     local.throwSwaggerError(!test && {
@@ -4254,7 +4253,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                         swaggerJson: options.swaggerJson
                     });
                     // 5.4.5.2.2. Property dependencies
-                    local.normalizeValue('list', schema.dependencies[key]).every(function (key2) {
+                    Array.from(schema.dependencies[key]).every(function (key2) {
                         test = !local.isNullOrUndefined(data[key2]);
                         local.throwSwaggerError(!test && {
                             data: data,
@@ -4412,9 +4411,10 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     options.onNext();
                     break;
                 default:
-                    onError(error, error
+                    console.error(error
                         ? 'swagger-validate - failed - ' + options.file + '\n\n' + error.message
                         : 'swagger-validate - passed - ' + options.file);
+                    onError(error);
                 }
             });
             options.modeNext = 0;
@@ -5207,11 +5207,11 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
     // run node js-env code - init-after
     /* istanbul ignore next */
     case 'node':
-        local.assetsDict['/assets.swagger-ui.logo.medium.png'] = new Buffer(
+        local.assetsDict['/assets.swagger-ui.logo.medium.png'] = Buffer.from(
             local.templateSwaggerUiLogoMediumBase64,
             'base64'
         );
-        local.assetsDict['/assets.swagger-ui.logo.small.png'] = new Buffer(
+        local.assetsDict['/assets.swagger-ui.logo.small.png'] = Buffer.from(
             local.templateSwaggerUiLogoSmallBase64,
             'base64'
         );

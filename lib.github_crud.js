@@ -99,6 +99,257 @@
     /* istanbul ignore next */
     // run shared js-env code - function-before
     (function () {
+        local.ajax = function (options, onError) {
+        /*
+         * this function will send an ajax-request with error-handling and timeout
+         * example usage:
+            local.ajax({
+                header: { 'x-header-hello': 'world' },
+                method: 'GET',
+                url: '/index.html'
+            }, function (error, xhr) {
+                console.log(xhr.responseText);
+                console.log(xhr.statusCode);
+            });
+         */
+            var ajaxProgressUpdate, bufferToNodeBuffer, isDone, modeJs, nop, streamListCleanup, xhr;
+            // init standalone handling-behavior
+            nop = function () {
+            /*
+             * this function will do nothing
+             */
+                return;
+            };
+            ajaxProgressUpdate = local.ajaxProgressUpdate || nop;
+            bufferToNodeBuffer = local.bufferToNodeBuffer || function (arg) {
+            /*
+             * this function will return the arg
+             */
+                return arg;
+            };
+            // init onError
+            if (local.onErrorWithStack) {
+                onError = local.onErrorWithStack(onError);
+            }
+            streamListCleanup = function (streamList) {
+            /*
+             * this function will end or destroy the streams in streamList
+             */
+                streamList.forEach(function (stream) {
+                    // try to end the stream
+                    try {
+                        stream.end();
+                    } catch (errorCaught) {
+                        // if error, then try to destroy the stream
+                        try {
+                            stream.destroy();
+                        } catch (ignore) {
+                        }
+                    }
+                });
+            };
+            modeJs = (function () {
+                try {
+                    return typeof navigator.userAgent === 'string' &&
+                        typeof document.querySelector('body') === 'object' &&
+                        typeof XMLHttpRequest.prototype.open === 'function' &&
+                        'browser';
+                } catch (errorCaughtBrowser) {
+                    return module.exports &&
+                        typeof process.versions.node === 'string' &&
+                        typeof require('http').createServer === 'function' &&
+                        'node';
+                }
+            }());
+            // init xhr
+            xhr = !options.httpRequest && (modeJs === 'node' ||
+                (local.serverLocalUrlTest && local.serverLocalUrlTest(options.url)))
+                ? local._http && local._http.XMLHttpRequest && new local._http.XMLHttpRequest()
+                : modeJs === 'browser' && new window.XMLHttpRequest();
+            if (!xhr) {
+                xhr = require('url').parse(options.url);
+                xhr.headers = options.headers;
+                xhr.method = options.method;
+                xhr.timeout = xhr.timeout || local.timeoutDefault || 30000;
+                xhr = (
+                    options.httpRequest || require(xhr.protocol.slice(0, -1)).request
+                )(xhr, function (response) {
+                    var chunkList;
+                    chunkList = [];
+                    xhr.responseStream = response;
+                    xhr.responseHeaders = xhr.responseStream.headers;
+                    xhr.status = xhr.responseStream.statusCode;
+                    xhr.responseStream
+                        .on('data', function (chunk) {
+                            chunkList.push(chunk);
+                        })
+                        .on('end', function () {
+                            xhr.response = Buffer.concat(chunkList);
+                            if (xhr.responseType === 'text' || !xhr.responseType) {
+                                xhr.responseText = String(xhr.response);
+                            }
+                            xhr.onEvent({ type: 'load' });
+                        })
+                        .on('error', xhr.onEvent);
+                });
+                xhr.addEventListener = nop;
+                xhr.open = nop;
+                xhr.requestStream = xhr;
+                xhr.responseText = '';
+                xhr.send = xhr.end;
+                xhr.setRequestHeader = nop;
+                setTimeout(function () {
+                    xhr.on('error', xhr.onEvent);
+                });
+            }
+            // debug xhr
+            local._debugXhr = xhr;
+            // init options
+            Object.keys(options).forEach(function (key) {
+                if (options[key] !== undefined) {
+                    xhr[key] = options[key];
+                }
+            });
+            // init headers
+            xhr.headers = {};
+            Object.keys(options.headers || {}).forEach(function (key) {
+                xhr.headers[key.toLowerCase()] = options.headers[key];
+            });
+            // init method
+            xhr.method = xhr.method || 'GET';
+            // init timeStart
+            xhr.timeStart = Date.now();
+            // init timeout
+            xhr.timeout = xhr.timeout || local.timeoutDefault || 30000;
+            // init timerTimeout
+            xhr.timerTimeout = setTimeout(function () {
+                xhr.error = xhr.error || new Error('onTimeout - timeout-error - ' +
+                    xhr.timeout + ' ms - ' + 'ajax ' + xhr.method + ' ' + xhr.url);
+                xhr.abort();
+                // cleanup requestStream and responseStream
+                streamListCleanup([xhr.requestStream, xhr.responseStream]);
+            }, xhr.timeout);
+            // init event handling
+            xhr.onEvent = function (event) {
+                if (event instanceof Error) {
+                    xhr.error = xhr.error || event;
+                    xhr.onEvent({ type: 'error' });
+                    return;
+                }
+                // init statusCode
+                xhr.statusCode = xhr.status;
+                switch (event.type) {
+                case 'abort':
+                case 'error':
+                case 'load':
+                    // do not run more than once
+                    if (isDone) {
+                        return;
+                    }
+                    isDone = xhr._isDone = true;
+                    // debug ajaxResponse
+                    if (xhr.modeDebug) {
+                        console.error('serverLog - ' + JSON.stringify({
+                            time: new Date(xhr.timeStart).toISOString(),
+                            type: 'ajaxResponse',
+                            method: xhr.method,
+                            url: xhr.url,
+                            statusCode: xhr.statusCode,
+                            timeElapsed: Date.now() - xhr.timeStart,
+                            // extra
+                            data: (function () {
+                                try {
+                                    return String(xhr.data.slice(0, 256));
+                                } catch (ignore) {
+                                }
+                            }()),
+                            responseText: (function () {
+                                try {
+                                    return String(xhr.responseText.slice(0, 256));
+                                } catch (ignore) {
+                                }
+                            }())
+                        }));
+                    }
+                    // cleanup timerTimeout
+                    clearTimeout(xhr.timerTimeout);
+                    // cleanup requestStream and responseStream
+                    setTimeout(function () {
+                        streamListCleanup([xhr.requestStream, xhr.responseStream]);
+                    });
+                    // decrement ajaxProgressCounter
+                    if (local.ajaxProgressCounter) {
+                        local.ajaxProgressCounter -= 1;
+                    }
+                    // handle abort or error event
+                    if (!xhr.error &&
+                            (event.type === 'abort' ||
+                            event.type === 'error' ||
+                            xhr.statusCode >= 400)) {
+                        xhr.error = new Error('ajax - event ' + event.type);
+                    }
+                    // debug statusCode
+                    (xhr.error || {}).statusCode = xhr.statusCode;
+                    // debug statusCode / method / url
+                    if (local.errorMessagePrepend && xhr.error) {
+                        local.errorMessagePrepend(xhr.error, modeJs + ' - ' +
+                            xhr.statusCode + ' ' + xhr.method + ' ' + xhr.url + '\n' +
+                            // try to debug responseText
+                            (function () {
+                                try {
+                                    return '    ' + JSON.stringify(xhr.responseText.slice(0, 256) +
+                                        '...') + '\n';
+                                } catch (ignore) {
+                                }
+                            }()));
+                    }
+                    onError(xhr.error, xhr);
+                    break;
+                }
+                ajaxProgressUpdate();
+            };
+            // increment ajaxProgressCounter
+            local.ajaxProgressCounter = local.ajaxProgressCounter || 0;
+            local.ajaxProgressCounter += 1;
+            xhr.addEventListener('abort', xhr.onEvent);
+            xhr.addEventListener('error', xhr.onEvent);
+            xhr.addEventListener('load', xhr.onEvent);
+            xhr.addEventListener('loadstart', ajaxProgressUpdate);
+            xhr.addEventListener('progress', ajaxProgressUpdate);
+            if (xhr.upload && xhr.upload.addEventListener) {
+                xhr.upload.addEventListener('progress', ajaxProgressUpdate);
+            }
+            // open url through corsForwardProxyHost
+            xhr.corsForwardProxyHost = xhr.corsForwardProxyHost || local.corsForwardProxyHost;
+            xhr.location = xhr.location || (local.global && local.global.location) || {};
+            if (local.corsForwardProxyHostIfNeeded && local.corsForwardProxyHostIfNeeded(xhr)) {
+                xhr.open(xhr.method, local.corsForwardProxyHostIfNeeded(xhr));
+                xhr.setRequestHeader('forward-proxy-headers', JSON.stringify(xhr.headers));
+                xhr.setRequestHeader('forward-proxy-url', xhr.url);
+            // open url
+            } else {
+                xhr.open(xhr.method, xhr.url);
+            }
+            Object.keys(xhr.headers).forEach(function (key) {
+                xhr.setRequestHeader(key, xhr.headers[key]);
+            });
+            if (local.FormData && xhr.data instanceof local.FormData) {
+                // handle formData
+                xhr.data.read(function (error, data) {
+                    if (error) {
+                        xhr.onEvent(error);
+                        return;
+                    }
+                    // send data
+                    xhr.send(bufferToNodeBuffer(data));
+                });
+            } else {
+                // send data
+                xhr.send(bufferToNodeBuffer(xhr.data));
+            }
+            return xhr;
+        };
+
         local.assert = function (passed, message, onError) {
         /*
          * this function will throw the error message if passed is falsey
@@ -136,67 +387,69 @@
             };
             local.cliDict._eval = local.cliDict._eval || function () {
             /*
-             * code
-             * eval code
+             * <code>
+             * # eval code
              */
                 local.global.local = local;
                 require('vm').runInThisContext(process.argv[3]);
             };
             local.cliDict['--eval'] = local.cliDict['--eval'] || local.cliDict._eval;
             local.cliDict['-e'] = local.cliDict['-e'] || local.cliDict._eval;
-            local.cliDict._help = local.cliDict._help || function () {
+            local.cliDict._help = local.cliDict._help || function (options) {
             /*
-             * [none]
-             * print help
+             *
+             * # print help
              */
-                var element, result, lengthList, sortDict;
-                console.log(require(__dirname + '/package.json').name + ' v' +
-                    require(__dirname + '/package.json').version);
-                sortDict = {};
-                result = [['[command]', '[args]', '[description]', -1]];
-                lengthList = [result[0][0].length, result[0][1].length];
+                var commandList, file, packageJson, text, textDict;
+                commandList = [{
+                    arg: '<arg2> ...',
+                    description: 'usage:',
+                    command: ['<arg1>']
+                }];
+                file = __filename.replace((/.*\//), '');
+                packageJson = require('./package.json');
+                textDict = {};
                 Object.keys(local.cliDict).sort().forEach(function (key, ii) {
                     if (key[0] === '_' && key !== '_default') {
                         return;
                     }
-                    sortDict[local.cliDict[key].toString()] =
-                        sortDict[local.cliDict[key].toString()] || (ii + 1);
-                    element = (/\n +\*(.*)\n +\*(.*)/).exec(local.cliDict[key].toString());
-                    // coverage-hack - ignore else-statement
-                    nop(local.global.__coverage__ && (function () {
-                        element = element || ['', '', ''];
-                    }()));
-                    element = [
-                        key.replace('_default', '[none]') + ' ',
-                        element[1].trim() + ' ',
-                        element[2].trim(),
-                        (sortDict[local.cliDict[key].toString()] << 8) + ii
-                    ];
-                    result.push(element);
-                    lengthList.forEach(function (length, jj) {
-                        lengthList[jj] = Math.max(element[jj].length, length);
-                    });
-                });
-                result.sort(function (aa, bb) {
-                    return aa[3] < bb[3]
-                        ? -1
-                        : 1;
-                });
-                console.log('usage:   ' + __filename + ' [command] [args]');
-                console.log('example: ' + __filename + ' --eval    ' +
-                    '"console.log(\'hello world\')"\n');
-                result.forEach(function (element, ii) {
-                    lengthList.forEach(function (length, jj) {
-                        while (element[jj].length < length) {
-                            element[jj] += '-';
-                        }
-                    });
-                    element = element.slice(0, 3).join('---- ');
-                    if (!ii) {
-                        element = element.replace((/-/g), ' ');
+                    text = String(local.cliDict[key]);
+                    if (key === '_default') {
+                        key = '<>';
                     }
-                    console.log(element);
+                    ii = textDict[text] = textDict[text] || (ii + 1);
+                    if (commandList[ii]) {
+                        commandList[ii].command.push(key);
+                    } else {
+                        commandList[ii] = (/\n +?\*(.*?)\n +?\*(.*?)\n/).exec(text);
+                        // coverage-hack - ignore else-statement
+                        nop(local.global.__coverage__ && (function () {
+                            commandList[ii] = commandList[ii] || ['', '', ''];
+                        }()));
+                        commandList[ii] = {
+                            arg: commandList[ii][1].trim(),
+                            command: [key],
+                            description: commandList[ii][2].trim()
+                        };
+                    }
                 });
+                (options && options.modeError
+                    ? console.error
+                    : console.log)((options && options.modeError
+                    ? '\u001b[31merror: missing <arg1>\u001b[39m\n\n'
+                    : '') + packageJson.name + ' (' + packageJson.version + ')\n\n' + commandList
+                    .filter(function (element) {
+                        return element;
+                    }).map(function (element) {
+                        return (element.description + '\n' +
+                            file + '  ' +
+                            element.command.sort().join('|') + '  ' +
+                            element.arg.replace((/ +/g), '  '))
+                                .replace((/<>\||\|<>|<> {2}/), '')
+                                .trim();
+                    })
+                    .join('\n\n') + '\n\nexample:\n' + file +
+                    '  --eval  \'console.log("hello world")\'');
             };
             local.cliDict['--help'] = local.cliDict['--help'] || local.cliDict._help;
             local.cliDict['-h'] = local.cliDict['-h'] || local.cliDict._help;
@@ -204,8 +457,8 @@
             local.cliDict.help = local.cliDict.help || local.cliDict._help;
             local.cliDict._interactive = local.cliDict._interactive || function () {
             /*
-             * [none]
-             * start interactive-mode
+             *
+             * # start interactive-mode
              */
                 local.global.local = local;
                 local.replStart();
@@ -217,8 +470,8 @@
             }
             local.cliDict._version = local.cliDict._version || function () {
             /*
-             * [none]
-             * print version
+             *
+             * # print version
              */
                 console.log(require(__dirname + '/package.json').version);
             };
@@ -226,6 +479,12 @@
             local.cliDict['-v'] = local.cliDict['-v'] || local.cliDict._version;
             // run fnc()
             fnc = fnc || function () {
+                // default to --help command if no arguments are given
+                if (process.argv.length <= 2 && !local.cliDict._default.modeNoCommand) {
+                    local.cliDict._help({ modeError: true });
+                    process.exit(1);
+                    return;
+                }
                 if (local.cliDict[process.argv[2]]) {
                     local.cliDict[process.argv[2]]();
                     return;
@@ -233,83 +492,6 @@
                 local.cliDict._default();
             };
             fnc();
-        };
-
-        local.httpRequest = function (options, onError) {
-        /*
-         * this function will request the data from options.url
-         */
-            var chunkList,
-                isDone,
-                onError2,
-                serverLog,
-                timerTimeout,
-                request,
-                response,
-                timeStart,
-                urlParsed;
-            // init onError2
-            onError2 = function (error) {
-                if (isDone) {
-                    return;
-                }
-                isDone = true;
-                // debug httpResponse
-                serverLog({
-                    type: 'httpResponse',
-                    time: new Date(timeStart).toISOString(),
-                    method: options.method,
-                    url: options.url,
-                    statusCode: Number(response && response.statusCode) || 0,
-                    duration: Date.now() - timeStart
-                });
-                // cleanup timerTimeout
-                clearTimeout(timerTimeout);
-                // cleanup request and response
-                [request, response].forEach(function (stream) {
-                    // try to end the stream
-                    try {
-                        stream.end();
-                    // else try to destroy the stream
-                    } catch (errorCaught) {
-                        try {
-                            stream.destroy();
-                        } catch (ignore) {
-                        }
-                    }
-                });
-                onError(error, response);
-            };
-            // init serverLog
-            serverLog = local.serverLog || console.error;
-            // init timerTimeout
-            timerTimeout = setTimeout(function () {
-                onError2(new Error('http-request timeout'));
-            }, options.timeout || 30000);
-            urlParsed = require('url').parse(options.url);
-            urlParsed.headers = options.headers;
-            urlParsed.method = options.method;
-            // debug request-time
-            timeStart = Date.now();
-            request = options.request || require(urlParsed.protocol.slice(0, -1)).request;
-            request = request(urlParsed, function (_response) {
-                response = _response;
-                if (response.statusCode < 200 || response.statusCode > 299) {
-                    onError2(new Error(response.statusCode));
-                    return;
-                }
-                chunkList = [];
-                response
-                    .on('data', function (chunk) {
-                        chunkList.push(chunk);
-                    })
-                    .on('end', function () {
-                        response.data = Buffer.concat(chunkList);
-                        onError2();
-                    })
-                    .on('error', onError2);
-            });
-            request.on('error', onError2).end(options.data);
         };
 
         local.nop = function () {
@@ -324,9 +506,9 @@
          * this function will create a new callback that will call onError,
          * and append the current stack to any error
          */
-            var stack;
+            var onError2, stack;
             stack = new Error().stack.replace((/(.*?)\n.*?$/m), '$1');
-            return function (error, data, meta) {
+            onError2 = function (error, data, meta) {
                 if (error &&
                         error !== local.errorDefault &&
                         String(error.stack).indexOf(stack.split('\n')[2]) < 0) {
@@ -335,6 +517,11 @@
                 }
                 onError(error, data, meta);
             };
+            // debug onError
+            onError2.toString = function () {
+                return String(onError);
+            };
+            return onError2;
         };
 
         local.onNext = function (options, onError) {
@@ -409,19 +596,23 @@
          * this function will
          * 1. async-run onEach in parallel,
          *    with the given options.rateLimit and options.retryLimit
-         * 2. call onError when isDone
+         * 2. call onError when onParallel.ii + 1 === options.list.length
          */
-            var ii, onEach2, onParallel;
+            var isListEnd, onEach2, onParallel;
             options.list = options.list || [];
             onEach2 = function () {
-                while (ii + 1 < options.list.length &&
-                        onParallel.counter < options.rateLimit + 1) {
-                    ii += 1;
+                while (true) {
+                    if (!(onParallel.ii + 1 < options.list.length)) {
+                        isListEnd = true;
+                        return;
+                    }
+                    if (!(onParallel.counter < options.rateLimit + 1)) {
+                        return;
+                    }
                     onParallel.ii += 1;
-                    onParallel.remaining -= 1;
                     onEach({
-                        element: options.list[ii],
-                        ii: ii,
+                        element: options.list[onParallel.ii],
+                        ii: onParallel.ii,
                         list: options.list,
                         retry: 0
                     }, onParallel);
@@ -437,10 +628,13 @@
                     }, 1000);
                     return true;
                 }
+                // restart if options.list has grown
+                if (isListEnd && (onParallel.ii + 1 < options.list.length)) {
+                    isListEnd = null;
+                    onEach2();
+                }
             });
-            ii = -1;
             onParallel.ii = -1;
-            onParallel.remaining = options.list.length;
             options.rateLimit = Number(options.rateLimit) || 6;
             options.rateLimit = Math.max(options.rateLimit, 1);
             options.retryLimit = Number(options.retryLimit) || 2;
@@ -465,174 +659,13 @@
 
     // run node js-env code - function
     case 'node':
-        local.contentDelete = function (options, onError) {
+        local.githubContentAjax = function (options, onError) {
         /*
-         * this function will delete the github file
-         * https://developer.github.com/v3/repos/contents/#delete-a-file
-         */
-            options = { message: options.message, request: options.request, url: options.url };
-            local.onNext(options, function (error, data) {
-                switch (options.modeNext) {
-                case 1:
-                    // get sha
-                    local.contentRequest({
-                        method: 'GET',
-                        request: options.request,
-                        url: options.url
-                    }, options.onNext);
-                    break;
-                case 2:
-                    // delete file with sha
-                    if (!error && data.sha) {
-                        local.contentRequest({
-                            message: options.message,
-                            method: 'DELETE',
-                            request: options.request,
-                            sha: data.sha,
-                            url: options.url
-                        }, options.onNext);
-                        return;
-                    }
-                    // delete tree
-                    local.onParallelList({ list: data }, function (options2, onParallel) {
-                        onParallel.counter += 1;
-                        // recurse
-                        local.contentDelete({
-                            message: options.message,
-                            request: options.request,
-                            url: options2.element.url
-                        }, onParallel);
-                    }, options.onNext);
-                    break;
-                default:
-                    onError();
-                }
-            });
-            options.modeNext = 0;
-            options.onNext();
-        };
-
-        local.contentGet = function (options, onError) {
-        /*
-         * this function will get the github file
-         * https://developer.github.com/v3/repos/contents/#get-contents
-         */
-            options = { request: options.request, url: options.url };
-            local.onNext(options, function (error, data) {
-                switch (options.modeNext) {
-                case 1:
-                    local.contentRequest({
-                        method: 'GET',
-                        request: options.request,
-                        url: options.url
-                    }, options.onNext);
-                    break;
-                case 2:
-                    options.onNext(null, new Buffer(data.content || '', 'base64'));
-                    break;
-                default:
-                    onError(error, !error && data);
-                }
-            });
-            options.modeNext = 0;
-            options.onNext();
-        };
-
-        local.contentPut = function (options, onError) {
-        /*
-         * this function will put options.content into the github file
-         * https://developer.github.com/v3/repos/contents/#update-a-file
-         */
-            options = {
-                content: options.content,
-                message: options.message,
-                modeErrorIgnore: true,
-                request: options.request,
-                url: options.url
-            };
-            local.onNext(options, function (error, data) {
-                switch (options.modeNext) {
-                case 1:
-                    // get sha
-                    local.contentRequest({
-                        method: 'GET',
-                        request: options.request,
-                        url: options.url
-                    }, options.onNext);
-                    break;
-                case 2:
-                    // put file with sha
-                    local.contentRequest({
-                        content: options.content,
-                        message: options.message,
-                        method: 'PUT',
-                        request: options.request,
-                        sha: data.sha,
-                        url: options.url
-                    }, options.onNext);
-                    break;
-                default:
-                    onError(error);
-                }
-            });
-            options.modeNext = 0;
-            options.onNext();
-        };
-
-        local.contentPutFile = function (options, onError) {
-        /*
-         * this function will put options.file into the github file
-         * https://developer.github.com/v3/repos/contents/#update-a-file
-         */
-            options = {
-                file: options.file,
-                message: options.message,
-                request: options.request,
-                url: options.url
-            };
-            local.onNext(options, function (error, data) {
-                switch (options.modeNext) {
-                case 1:
-                    // get file from url
-                    if ((/^(?:http|https):\/\//).test(options.file)) {
-                        local.httpRequest({
-                            method: 'GET',
-                            request: options.request,
-                            url: options.file
-                        }, function (error, response) {
-                            options.onNext(error, response && response.data);
-                        });
-                        return;
-                    }
-                    // get file
-                    local.fs.readFile(options.file, options.onNext);
-                    break;
-                case 2:
-                    local.contentPut({
-                        content: data,
-                        message: options.message,
-                        request: options.request,
-                        // resolve file in url
-                        url: (/\/$/).test(options.url)
-                            ? options.url + local.path.basename(options.file)
-                            : options.url
-                    }, options.onNext);
-                    break;
-                default:
-                    onError(error);
-                }
-            });
-            options.modeNext = 0;
-            options.onNext();
-        };
-
-        local.contentRequest = function (options, onError) {
-        /*
-         * this function will request the content from github
+         * this function will make a low-level content-request to github
+         * https://developer.github.com/v3/repos/contents/
          */
             // init options
             options = {
-                chunkList: [],
                 content: options.content,
                 headers: {
                     // github oauth authentication
@@ -640,9 +673,9 @@
                     // bug-workaround - https://developer.github.com/v3/#user-agent-required
                     'User-Agent': 'undefined'
                 },
+                httpRequest: options.httpRequest,
                 message: options.message,
-                method: options.method,
-                request: options.request,
+                method: options.method || 'GET',
                 responseJson: {},
                 sha: options.sha,
                 url: options.url
@@ -691,48 +724,132 @@
                 }
                 options.data = JSON.stringify({
                     branch: options.branch,
-                    content: new Buffer(options.content || '').toString('base64'),
+                    content: Buffer.from(options.content || '').toString('base64'),
                     message: options.message,
                     sha: options.sha
                 });
             }
-            local.httpRequest(options, function (error, response) {
+            local.ajax(options, function (error, xhr) {
+                console.error('serverLog - ' + JSON.stringify({
+                    time: new Date(xhr.timeStart).toISOString(),
+                    type: 'githubCrudResponse',
+                    method: xhr.method,
+                    url: xhr.url,
+                    statusCode: xhr.statusCode,
+                    timeElapsed: Date.now() - xhr.timeStart
+                }));
                 try {
-                    options.responseJson = JSON.parse(response.data.toString());
+                    options.responseJson = JSON.parse(xhr.response);
                 } catch (ignore) {
                 }
                 onError(error, options.responseJson);
             });
         };
 
-        local.contentTouch = function (options, onError) {
+        local.githubContentDelete = function (options, onError) {
         /*
-         * this function will touch options.url
-         * https://developer.github.com/v3/repos/contents/#update-a-file
+         * this function will delete the github-file
+         * https://developer.github.com/v3/repos/contents/#delete-a-file
          */
             options = {
+                httpRequest: options.httpRequest,
                 message: options.message,
-                modeErrorIgnore: true,
-                request: options.request,
                 url: options.url
             };
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
                     // get sha
-                    local.contentRequest({
-                        method: 'GET',
-                        request: options.request,
+                    local.githubContentAjax({
+                        httpRequest: options.httpRequest,
+                        url: options.url
+                    }, options.onNext);
+                    break;
+                case 2:
+                    // delete file with sha
+                    if (!error && data.sha) {
+                        local.githubContentAjax({
+                            httpRequest: options.httpRequest,
+                            message: options.message,
+                            method: 'DELETE',
+                            sha: data.sha,
+                            url: options.url
+                        }, options.onNext);
+                        return;
+                    }
+                    // delete tree
+                    local.onParallelList({ list: data }, function (options2, onParallel) {
+                        onParallel.counter += 1;
+                        // recurse
+                        local.githubContentDelete({
+                            httpRequest: options.httpRequest,
+                            message: options.message,
+                            url: options2.element.url
+                        }, onParallel);
+                    }, options.onNext);
+                    break;
+                default:
+                    onError();
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
+        };
+
+        local.githubContentGet = function (options, onError) {
+        /*
+         * this function will get the github-file
+         * https://developer.github.com/v3/repos/contents/#get-contents
+         */
+            options = { httpRequest: options.httpRequest, url: options.url };
+            local.onNext(options, function (error, data) {
+                switch (options.modeNext) {
+                case 1:
+                    local.githubContentAjax({
+                        httpRequest: options.httpRequest,
+                        url: options.url
+                    }, options.onNext);
+                    break;
+                case 2:
+                    options.onNext(null, Buffer.from(data.content || '', 'base64'));
+                    break;
+                default:
+                    onError(error, !error && data);
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
+        };
+
+        local.githubContentPut = function (options, onError) {
+        /*
+         * this function will put options.content to github-file
+         * https://developer.github.com/v3/repos/contents/#create-a-file
+         * https://developer.github.com/v3/repos/contents/#update-a-file
+         */
+            options = {
+                content: options.content,
+                httpRequest: options.httpRequest,
+                message: options.message,
+                modeErrorIgnore: true,
+                url: options.url
+            };
+            local.onNext(options, function (error, data) {
+                switch (options.modeNext) {
+                case 1:
+                    // get sha
+                    local.githubContentAjax({
+                        httpRequest: options.httpRequest,
                         url: options.url
                     }, options.onNext);
                     break;
                 case 2:
                     // put file with sha
-                    local.contentRequest({
-                        content: new Buffer(data.content || '', 'base64'),
+                    local.githubContentAjax({
+                        content: options.content,
+                        httpRequest: options.httpRequest,
                         message: options.message,
                         method: 'PUT',
-                        request: options.request,
                         sha: data.sha,
                         url: options.url
                     }, options.onNext);
@@ -745,17 +862,102 @@
             options.onNext();
         };
 
-        local.contentTouchList = function (options, onError) {
+        local.githubContentPutFile = function (options, onError) {
+        /*
+         * this function will put options.file to github-file
+         * https://developer.github.com/v3/repos/contents/#update-a-file
+         */
+            options = {
+                file: options.file,
+                httpRequest: options.httpRequest,
+                message: options.message,
+                url: options.url
+            };
+            local.onNext(options, function (error, data) {
+                switch (options.modeNext) {
+                case 1:
+                    // get file from url
+                    if ((/^(?:http|https):\/\//).test(options.file)) {
+                        local.ajax({
+                            httpRequest: options.httpRequest,
+                            url: options.file
+                        }, function (error, response) {
+                            options.onNext(error, response && response.data);
+                        });
+                        return;
+                    }
+                    // get file
+                    local.fs.readFile(options.file, options.onNext);
+                    break;
+                case 2:
+                    local.githubContentPut({
+                        content: data,
+                        httpRequest: options.httpRequest,
+                        message: options.message,
+                        // resolve file in url
+                        url: (/\/$/).test(options.url)
+                            ? options.url + local.path.basename(options.file)
+                            : options.url
+                    }, options.onNext);
+                    break;
+                default:
+                    onError(error);
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
+        };
+
+        local.githubContentTouch = function (options, onError) {
+        /*
+         * this function will touch options.url
+         * https://developer.github.com/v3/repos/contents/#update-a-file
+         */
+            options = {
+                httpRequest: options.httpRequest,
+                message: options.message,
+                modeErrorIgnore: true,
+                url: options.url
+            };
+            local.onNext(options, function (error, data) {
+                switch (options.modeNext) {
+                case 1:
+                    // get sha
+                    local.githubContentAjax({
+                        httpRequest: options.httpRequest,
+                        url: options.url
+                    }, options.onNext);
+                    break;
+                case 2:
+                    // put file with sha
+                    local.githubContentAjax({
+                        content: Buffer.from(data.content || '', 'base64'),
+                        httpRequest: options.httpRequest,
+                        message: options.message,
+                        method: 'PUT',
+                        sha: data.sha,
+                        url: options.url
+                    }, options.onNext);
+                    break;
+                default:
+                    onError(error);
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
+        };
+
+        local.githubContentTouchList = function (options, onError) {
         /*
          * this function will touch options.urlList in parallel
          * https://developer.github.com/v3/repos/contents/#update-a-file
          */
             local.onParallelList({ list: options.urlList }, function (options2, onParallel) {
                 onParallel.counter += 1;
-                local.contentTouch({
+                local.githubContentTouch({
+                    httpRequest: options.httpRequest,
                     message: options.message,
                     modeErrorIgnore: true,
-                    request: options.request,
                     url: options2.element
                 }, onParallel);
             }, onError);
@@ -776,10 +978,10 @@
         local.cliDict = {};
         local.cliDict.delete = function () {
         /*
-         * fileRemote commitMessage
-         * delete fileRemote from github
+         * <fileRemote|dirRemote> <commitMessage>
+         * # delete <fileRemote|dirRemote> from github
          */
-            local.contentDelete({
+            local.githubContentDelete({
                 message: process.argv[4],
                 url: process.argv[3]
             }, function (error) {
@@ -789,10 +991,10 @@
         };
         local.cliDict.get = function () {
         /*
-         * fileRemote
-         * get fileRemote from github
+         * <fileRemote>
+         * # get <fileRemote> from github
          */
-            local.contentGet({ url: process.argv[3] }, function (error, data) {
+            local.githubContentGet({ url: process.argv[3] }, function (error, data) {
                 // validate no error occurred
                 console.assert(!error, error);
                 try {
@@ -803,10 +1005,10 @@
         };
         local.cliDict.put = function () {
         /*
-         * fileRemote fileLocal commitMessage
-         * put fileLocal as fileRemote on github
+         * <fileRemote> <fileLocal> <commitMessage>
+         * # put <fileLocal> to <fileRemote> on github
          */
-            local.contentPutFile({
+            local.githubContentPutFile({
                 message: process.argv[5],
                 url: process.argv[3],
                 file: process.argv[4]
@@ -817,10 +1019,10 @@
         };
         local.cliDict.touch = function () {
         /*
-         * fileRemote commitMessage
-         * touch fileRemote on github
+         * <fileRemote> <commitMessage>
+         * # touch <fileRemote> on github
          */
-            local.contentTouch({
+            local.githubContentTouch({
                 message: process.argv[4],
                 url: process.argv[3]
             }, function (error) {
@@ -830,10 +1032,10 @@
         };
         local.cliDict.touchList = function () {
         /*
-         * fileRemoteList commitMessage
-         * touch comma-separated fileRemoteList on github
+         * <fileRemoteList> <commitMessage>
+         * # touch comma-separated fileRemoteList on github
          */
-            local.contentTouchList({
+            local.githubContentTouchList({
                 message: process.argv[4],
                 urlList: process.argv[3].split(',').filter(function (element) {
                     return element;

@@ -136,67 +136,69 @@
             };
             local.cliDict._eval = local.cliDict._eval || function () {
             /*
-             * code
-             * eval code
+             * <code>
+             * # eval code
              */
                 local.global.local = local;
                 require('vm').runInThisContext(process.argv[3]);
             };
             local.cliDict['--eval'] = local.cliDict['--eval'] || local.cliDict._eval;
             local.cliDict['-e'] = local.cliDict['-e'] || local.cliDict._eval;
-            local.cliDict._help = local.cliDict._help || function () {
+            local.cliDict._help = local.cliDict._help || function (options) {
             /*
-             * [none]
-             * print help
+             *
+             * # print help
              */
-                var element, result, lengthList, sortDict;
-                console.log(require(__dirname + '/package.json').name + ' v' +
-                    require(__dirname + '/package.json').version);
-                sortDict = {};
-                result = [['[command]', '[args]', '[description]', -1]];
-                lengthList = [result[0][0].length, result[0][1].length];
+                var commandList, file, packageJson, text, textDict;
+                commandList = [{
+                    arg: '<arg2> ...',
+                    description: 'usage:',
+                    command: ['<arg1>']
+                }];
+                file = __filename.replace((/.*\//), '');
+                packageJson = require('./package.json');
+                textDict = {};
                 Object.keys(local.cliDict).sort().forEach(function (key, ii) {
                     if (key[0] === '_' && key !== '_default') {
                         return;
                     }
-                    sortDict[local.cliDict[key].toString()] =
-                        sortDict[local.cliDict[key].toString()] || (ii + 1);
-                    element = (/\n +\*(.*)\n +\*(.*)/).exec(local.cliDict[key].toString());
-                    // coverage-hack - ignore else-statement
-                    nop(local.global.__coverage__ && (function () {
-                        element = element || ['', '', ''];
-                    }()));
-                    element = [
-                        key.replace('_default', '[none]') + ' ',
-                        element[1].trim() + ' ',
-                        element[2].trim(),
-                        (sortDict[local.cliDict[key].toString()] << 8) + ii
-                    ];
-                    result.push(element);
-                    lengthList.forEach(function (length, jj) {
-                        lengthList[jj] = Math.max(element[jj].length, length);
-                    });
-                });
-                result.sort(function (aa, bb) {
-                    return aa[3] < bb[3]
-                        ? -1
-                        : 1;
-                });
-                console.log('usage:   ' + __filename + ' [command] [args]');
-                console.log('example: ' + __filename + ' --eval    ' +
-                    '"console.log(\'hello world\')"\n');
-                result.forEach(function (element, ii) {
-                    lengthList.forEach(function (length, jj) {
-                        while (element[jj].length < length) {
-                            element[jj] += '-';
-                        }
-                    });
-                    element = element.slice(0, 3).join('---- ');
-                    if (!ii) {
-                        element = element.replace((/-/g), ' ');
+                    text = String(local.cliDict[key]);
+                    if (key === '_default') {
+                        key = '<>';
                     }
-                    console.log(element);
+                    ii = textDict[text] = textDict[text] || (ii + 1);
+                    if (commandList[ii]) {
+                        commandList[ii].command.push(key);
+                    } else {
+                        commandList[ii] = (/\n +?\*(.*?)\n +?\*(.*?)\n/).exec(text);
+                        // coverage-hack - ignore else-statement
+                        nop(local.global.__coverage__ && (function () {
+                            commandList[ii] = commandList[ii] || ['', '', ''];
+                        }()));
+                        commandList[ii] = {
+                            arg: commandList[ii][1].trim(),
+                            command: [key],
+                            description: commandList[ii][2].trim()
+                        };
+                    }
                 });
+                (options && options.modeError
+                    ? console.error
+                    : console.log)((options && options.modeError
+                    ? '\u001b[31merror: missing <arg1>\u001b[39m\n\n'
+                    : '') + packageJson.name + ' (' + packageJson.version + ')\n\n' + commandList
+                    .filter(function (element) {
+                        return element;
+                    }).map(function (element) {
+                        return (element.description + '\n' +
+                            file + '  ' +
+                            element.command.sort().join('|') + '  ' +
+                            element.arg.replace((/ +/g), '  '))
+                                .replace((/<>\||\|<>|<> {2}/), '')
+                                .trim();
+                    })
+                    .join('\n\n') + '\n\nexample:\n' + file +
+                    '  --eval  \'console.log("hello world")\'');
             };
             local.cliDict['--help'] = local.cliDict['--help'] || local.cliDict._help;
             local.cliDict['-h'] = local.cliDict['-h'] || local.cliDict._help;
@@ -204,8 +206,8 @@
             local.cliDict.help = local.cliDict.help || local.cliDict._help;
             local.cliDict._interactive = local.cliDict._interactive || function () {
             /*
-             * [none]
-             * start interactive-mode
+             *
+             * # start interactive-mode
              */
                 local.global.local = local;
                 local.replStart();
@@ -217,8 +219,8 @@
             }
             local.cliDict._version = local.cliDict._version || function () {
             /*
-             * [none]
-             * print version
+             *
+             * # print version
              */
                 console.log(require(__dirname + '/package.json').version);
             };
@@ -226,6 +228,12 @@
             local.cliDict['-v'] = local.cliDict['-v'] || local.cliDict._version;
             // run fnc()
             fnc = fnc || function () {
+                // default to --help command if no arguments are given
+                if (process.argv.length <= 2 && !local.cliDict._default.modeNoCommand) {
+                    local.cliDict._help({ modeError: true });
+                    process.exit(1);
+                    return;
+                }
                 if (local.cliDict[process.argv[2]]) {
                     local.cliDict[process.argv[2]]();
                     return;
@@ -269,15 +277,15 @@
             return;
         };
 
-        local.objectSetDefault = function (arg, defaults, depth) {
+        local.objectSetDefault = function (arg0, defaults, depth) {
         /*
-         * this function will recursively set defaults for undefined-items in the arg
+         * this function will recursively set defaults for undefined-items in arg0
          */
-            arg = arg || {};
+            arg0 = arg0 || {};
             defaults = defaults || {};
             Object.keys(defaults).forEach(function (key) {
                 var arg2, defaults2;
-                arg2 = arg[key];
+                arg2 = arg0[key];
                 // handle misbehaving getter
                 try {
                     defaults2 = defaults[key];
@@ -286,12 +294,12 @@
                 if (defaults2 === undefined) {
                     return;
                 }
-                // init arg[key] to default value defaults[key]
+                // init arg0[key] to default value defaults[key]
                 switch (arg2) {
                 case '':
                 case null:
                 case undefined:
-                    arg[key] = defaults2;
+                    arg0[key] = defaults2;
                     return;
                 }
                 // if arg2 and defaults2 are both non-null and non-array objects,
@@ -305,7 +313,7 @@
                     local.objectSetDefault(arg2, defaults2, depth - 1);
                 }
             });
-            return arg;
+            return arg0;
         };
 
         local.stringHtmlSafe = function (text) {
@@ -407,8 +415,8 @@
                     if (value === undefined) {
                         return match0;
                     }
-                    argList.slice(1).forEach(function (arg, ii, list) {
-                        switch (arg) {
+                    argList.slice(1).forEach(function (arg0, ii, list) {
+                        switch (arg0) {
                         case 'alphanumeric':
                             value = value.replace((/\W/g), '_');
                             break;
@@ -439,12 +447,12 @@
                                 value = value.slice(0, list[skip] - 3).trimRight() + '...';
                             }
                             break;
-                        // default to String.prototype[arg]()
+                        // default to String.prototype[arg0]()
                         default:
                             if (ii === skip) {
                                 break;
                             }
-                            value = value[arg]();
+                            value = value[arg0]();
                             break;
                         }
                     });
@@ -549,7 +557,7 @@ local.templateApidocHtml = '\
         {{#if env.npm_package_homepage}}\n\
         href="{{env.npm_package_homepage}}"\n\
         {{/if env.npm_package_homepage}}\n\
-    >{{env.npm_package_name}} (v{{env.npm_package_version}})</a>\n\
+    >{{env.npm_package_name}} ({{env.npm_package_version}})</a>\n\
 </h1>\n\
 <h4>{{env.npm_package_description}}</h4>\n\
 <div class="apidocSectionDiv"><a\n\
@@ -830,9 +838,9 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             );
             // init circularList - builtin
             Object.keys(process.binding('natives')).forEach(function (key) {
-                if (!(/\/|\d|^_linklist$|^config$|^sys$/).test(key)) {
+                local.tryCatchOnError(function () {
                     options.circularList.push(require(key));
-                }
+                }, local.nop);
             });
             // init circularList - blacklistDict
             Object.keys(options.blacklistDict).forEach(function (key) {
@@ -983,52 +991,56 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
         /*
          * this function will add the modules in moduleDict to options.moduleDict
          */
-            var isModule, tmp;
+            var isModule, objectKeys, tmp;
+            objectKeys = function (dict) {
+            /*
+             * this function will return a list of the dict's keys, with valid getters
+             */
+                return Object.keys(dict).sort().filter(function (key) {
+                    return local.tryCatchOnError(function () {
+                        return dict[key] || true;
+                    }, local.nop);
+                });
+            };
             ['child', 'prototype', 'grandchild', 'prototype'].forEach(function (element) {
-                Object.keys(moduleDict).sort().forEach(function (prefix) {
+                objectKeys(moduleDict).forEach(function (prefix) {
                     if (!(/^\w[\w\-.]*?$/).test(prefix)) {
                         return;
                     }
-                    Object.keys(moduleDict[prefix]).forEach(function (key) {
-                        // bug-workaround - buggy electron getter / setter
-                        local.tryCatchOnError(function () {
-                            if (!(/^\w[\w\-.]*?$/).test(key) || !moduleDict[prefix][key]) {
-                                return;
+                    objectKeys(moduleDict[prefix]).forEach(function (key) {
+                        if (!(/^\w[\w\-.]*?$/).test(key) || !moduleDict[prefix][key]) {
+                            return;
+                        }
+                        tmp = element === 'prototype'
+                            ? {
+                                module: moduleDict[prefix][key].prototype,
+                                name: prefix + '.' + key + '.prototype'
                             }
-                            tmp = element === 'prototype'
-                                ? {
-                                    module: moduleDict[prefix][key].prototype,
-                                    name: prefix + '.' + key + '.prototype'
-                                }
-                                : {
-                                    module: moduleDict[prefix][key],
-                                    name: prefix + '.' + key
-                                };
-                            if (!tmp.module ||
-                                    !(typeof tmp.module === 'function' ||
-                                    typeof tmp.module === 'object') ||
-                                    Array.isArray(tmp.module) ||
-                                    options.moduleDict[tmp.name] ||
-                                    options.circularList.indexOf(tmp.module) >= 0) {
-                                return;
-                            }
-                            isModule = [
-                                tmp.module,
-                                tmp.module.prototype
-                            ].some(function (dict) {
-                                return Object.keys(dict || {}).some(function (key) {
-                                    // bug-workaround - buggy electron getter / setter
-                                    return local.tryCatchOnError(function () {
-                                        return typeof dict[key] === 'function';
-                                    }, console.error);
-                                });
+                            : {
+                                module: moduleDict[prefix][key],
+                                name: prefix + '.' + key
+                            };
+                        if (!tmp.module ||
+                                !(typeof tmp.module === 'function' ||
+                                typeof tmp.module === 'object') ||
+                                Array.isArray(tmp.module) ||
+                                options.moduleDict[tmp.name] ||
+                                options.circularList.indexOf(tmp.module) >= 0) {
+                            return;
+                        }
+                        isModule = [
+                            tmp.module,
+                            tmp.module.prototype
+                        ].some(function (dict) {
+                            return objectKeys(dict || {}).some(function (key) {
+                                return typeof dict[key] === 'function';
                             });
-                            if (!isModule) {
-                                return;
-                            }
-                            options.circularList.push(tmp.module);
-                            options.moduleDict[tmp.name] = tmp.module;
-                        }, console.error);
+                        });
+                        if (!isModule) {
+                            return;
+                        }
+                        options.circularList.push(tmp.module);
+                        options.moduleDict[tmp.name] = tmp.module;
                     });
                 });
             });
@@ -1048,8 +1060,8 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
         local.cliDict = {};
         local.cliDict._default = function () {
         /*
-         * moduleDirectory
-         * create apidoc from moduleDirectory
+         * <moduleDirectory>
+         * # create apidoc from <moduleDirectory>
          */
             // jslint files
             process.stdout.write(local.apidocCreate({
