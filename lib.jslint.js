@@ -18,36 +18,57 @@
 
 
     // run shared js-env code - init-before
+    /* istanbul ignore next */
     (function () {
+        // init debug_inline
+        (function () {
+            var consoleError, context, key;
+            context = (typeof window === "object" && window) || global;
+            key = "debug_inline".replace("_i", "I");
+            if (context[key]) {
+                return;
+            }
+            consoleError = console.error;
+            context[key] = function (arg0) {
+            /*
+             * this function will both print arg0 to stderr and return it
+             */
+                // debug arguments
+                context["_" + key + "Arguments"] = arguments;
+                consoleError("\n\n" + key);
+                consoleError.apply(console, arguments);
+                consoleError("\n");
+                // return arg0 for inspection
+                return arg0;
+            };
+        }());
         // init local
         local = {};
         // init modeJs
-        local.modeJs = (function () {
+        (function () {
             try {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    typeof XMLHttpRequest.prototype.open === 'function' &&
-                    'browser';
-            } catch (errorCaughtBrowser) {
-                return module.exports &&
-                    typeof process.versions.node === 'string' &&
+                local.modeJs = typeof process.versions.node === 'string' &&
                     typeof require('http').createServer === 'function' &&
                     'node';
+            } catch (ignore) {
             }
+            local.modeJs = local.modeJs || 'browser';
         }());
         // init global
         local.global = local.modeJs === 'browser'
             ? window
             : global;
-        // init utility2_rollup
-        local = local.global.utility2_rollup || local;
-        /* istanbul ignore next */
-        if (!local) {
-            local = local.global.utility2_rollup ||
-                local.global.utility2_rollup_old ||
-                require('./assets.utility2.rollup.js');
-            local.fs = null;
-        }
+        // re-init local
+        local = local.global.utility2_rollup ||
+            // local.global.utility2_rollup_old || require('./assets.utility2.rollup.js') ||
+            local;
+        // init nop
+        local.nop = function () {
+        /*
+         * this function will do nothing
+         */
+            return;
+        };
         // init exports
         if (local.modeJs === 'browser') {
             local.global.utility2_jslint = local;
@@ -86,19 +107,15 @@
             local.v8 = require('v8');
             local.vm = require('vm');
             local.zlib = require('zlib');
-/* validateLineSortedReset */
             module.exports = local;
             module.exports.__dirname = __dirname;
         }
-        // init lib
+        // init lib main
         local.local = local.jslint = local;
-    }());
 
 
 
-    // run shared js-env code - function-before
-    /* istanbul ignore next */
-    (function () {
+        /* validateLineSortedReset */
         local.cliRun = function (fnc) {
         /*
          * this function will run the cli
@@ -222,12 +239,12 @@
 
 
 
-/* jslint-ignore-begin */
 // init lib csslint
-/* istanbul ignore next */
 // 2013-08-15T10:18:30Z
 // https://github.com/CSSLint/csslint/blob/v1.0.5/dist/csslint.js
 // utility2-uglifyjs https://raw.githubusercontent.com/CSSLint/csslint/v1.0.5/dist/csslint.js
+/* istanbul ignore next */
+/* jslint-ignore-begin */
 (function () {
 var CSSLint=function(){function s(e,t,n,r){"use strict";this.messages=[],this.stats=
 [],this.lines=e,this.ruleset=t,this.allow=n,this.allow||(this.allow={}),this.ignore=
@@ -1645,9 +1662,9 @@ t+1)+": "+e.type+" at line "+e.line+", col "+e.col,s+="\n"+e.message,s+="\n"+e.e
 
 
 // init lib jslint
-/* istanbul ignore next */
 // 2014-07-08T19:15:40Z
 // https://github.com/douglascrockford/JSLint/blob/394bf291bfa3881bb9827b9fc7b7d1112d83f313/jslint.js
+/* istanbul ignore next */
 // jslint.js
 // 2014-07-08
 
@@ -2213,7 +2230,7 @@ var JSLINT = (function () {
         prev_token,
         property,
         protosymbol,
-        regexp_flag = array_to_object(['g', 'i', 'm'], true),
+        regexp_flag = array_to_object(['g', 'i', 'm', 'u', 'y'], true),
         return_this = function return_this() {
             return this;
         },
@@ -5940,10 +5957,10 @@ klass:              do {
 
 
 // init lib jslintEs6
-/* istanbul ignore next */
 // 2016-10-24T18:30:02Z
 // https://github.com/douglascrockford/JSLint/blob/4075c9955e6eefdfafc1a6d9c1183e6147cd73f1/jslint.js
 // utility2-uglifyjs https://raw.githubusercontent.com/douglascrockford/JSLint/4075c9955e6eefdfafc1a6d9c1183e6147cd73f1/jslint.js
+/* istanbul ignore next */
 var jslint=function(){"use strict";function t(){return Object.create(null)}function n
 (e,t,n){t.forEach(function(t){e[t]=n})}function D(e){return e>="a"&&e<="z\uffff"||
 e>="A"&&e<="Z\uffff"}function P(e,t){return e.replace(l,function(e,n){var r=t[n]
@@ -6600,6 +6617,30 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
             }
             scriptParsed = script;
             if ((/^\/\* jslint-utility2 \*\/$|^# jslint-utility2$/m).test(scriptParsed)) {
+                scriptParsed = scriptParsed
+                    // ignore shebang
+                    .replace((/^#!\/.*/), '')
+                    // ignore comment
+                    .replace((
+                        /^ *?(?:#!! |\/\/!! |(?: \*|\/\/) (?:utility2-uglifyjs )?https?:\/\/).*?$/gm
+                    ), '')
+                    // ignore text-block
+                    .replace(
+/* jslint-ignore-begin */
+(/^ *?\/\* jslint-ignore-begin \*\/$[\S\s]+?^ *?\/\* jslint-ignore-end \*\/$/gm),
+/* jslint-ignore-end */
+                        function (match0) {
+                            return match0.replace((/^.*?$/gm), '');
+                        }
+                    )
+                    // ignore next-line
+                    .replace(
+/* jslint-ignore-next-line */
+(/^ *?\/\* jslint-ignore-next-line \*\/\n.*/gm),
+                        function (match0) {
+                            return match0.replace((/^.*?$/gm), '');
+                        }
+                    );
                 ii = 0;
                 scriptParsed.replace((/^.*?$/gm), function (line) {
                     ii += 1;
@@ -6631,29 +6672,6 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                     }
                 });
             }
-            // parse script
-            scriptParsed = script
-                // ignore shebang
-                .replace((/^#!.*/), '')
-                // ignore comment
-                .replace((/^ *?(?:#!! |\/\/!! |\* https?:\/\/|\/\/ https?:\/\/).*?$/gm), '')
-                // ignore text-block
-                .replace(
-/* jslint-ignore-begin */
-(/^ *?\/\* jslint-ignore-begin \*\/$[\S\s]+?^ *?\/\* jslint-ignore-end \*\/$/gm),
-/* jslint-ignore-end */
-                    function (match0) {
-                        return match0.replace((/^.*?$/gm), '');
-                    }
-                )
-                // ignore next-line
-                .replace(
-/* jslint-ignore-next-line */
-(/^ *?\/\* jslint-ignore-next-line \*\/\n.*/gm),
-                    function (match0) {
-                        return match0.replace((/^.*?$/gm), '');
-                    }
-                );
             switch (file.replace((/^.*\./), '.')) {
             // csslint script
             case '.css':
@@ -6762,13 +6780,15 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                     });
                 }
                 // validate line-sorted
-                if (line === '/* validateLineSortedReset */' ||
-                        (/^ {4}\/\/ run .*?\bjs\\?-env code\b|^\/\/ init lib|\\n\\$/m).test(line)) {
+                if (new RegExp('^ *?\\/\\* validateLineSortedReset \\*\\/$|' +
+                        '^ {4}\\/\\/ run .*?\\bjs\\\\?-env code\\b|' +
+                        '^\\/\\/ init lib ').test(line)) {
                     previous = '';
                     return;
                 }
                 if (!(/^(?:| {4}| {8})local\.\S*? =(?: |$)/m).test(line) ||
-                        (/^local\.(?:modeJs|global|local|tmp)\b/).test(current)) {
+                        (/^local\.(?:modeJs|global|local|tmp)\b|\\n\\$/).test(current) ||
+                        (/ =$/).test(previous)) {
                     return;
                 }
                 // validate previous < current

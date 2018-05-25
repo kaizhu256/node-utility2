@@ -56,28 +56,23 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- add test-coverage for function ajaxCrawl
 - integrate db-lite and github-crud into a cloud-based db on github
-- add server stress test using electron
+- add server stress-test using electron
 - none
 
-#### changelog 2018.5.2
-- npm publish 2018.5.2
-- add shell-function shRandomInRange - replace hexdump
-- replace function normalizeValue with design-patterns 'Array.from', 'String', and 'Number(...) || 0'
-- remove prefix 'v' from version
-- revamp function cliRun
-- update shell-function shUtility2DependentsSync to sync .travis.yml
-- embed script in html to limit select-all insde <pre tabIndex=\"0\"> elements
-- lib.github_crud.js - replace function httpRequest -> ajax
-- update function ajax to be standalone in nodejs (by merging function httpRequest into function ajax)
-- revert function browserTest with translate and scrape features removed
+#### changelog 2018.5.25
+- npm publish 2018.5.25
+- update function ajax to have default property 'responseHeaders' and remove methods getAllResponseHeaders and getResponseHeader
+- update shell-function shCustomOrgRepoListCreateSyncCreate to by default not npm-publish package
+- replace function streamListCleanup with streamCleanup
+- remove function envSanitize and explicitly declare env vars in function browserTest
+- migrate node -e \<script\> from single-quote to double-quote
+- remove unused assets assets.index.css
+- revamp npm_scripts.sh, and add function stringCustomizeFromToRgx, and shell-functions shBuildAppSync shFileCustomizeFromToRgx
 - add function ajaxCrawl
-- update function onParallelList to restart if options.list has grown
-- update shell-function shBuildAppSwgg0 to remove swgg-google-maps dependency
-- add embedded-asset assets.readmeCustomOrg.swgg.template.md
-- update shell-function shFilePackageJsonVersionUpdate to update README.md
-- lib.apidoc.js - improve error-handling for misbehaving property-accessors
-- update file .vimrc from 2-space-indent to 4-space-indent
+- revamp function buildLib
+- remove shell-function shNpmDeprecateAliasList
 - none
 
 #### this package requires
@@ -157,24 +152,20 @@ instruction
         // init local
         local = {};
         // init modeJs
-        local.modeJs = (function () {
+        (function () {
             try {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    typeof XMLHttpRequest.prototype.open === 'function' &&
-                    'browser';
-            } catch (errorCaughtBrowser) {
-                return module.exports &&
-                    typeof process.versions.node === 'string' &&
+                local.modeJs = typeof process.versions.node === 'string' &&
                     typeof require('http').createServer === 'function' &&
                     'node';
+            } catch (ignore) {
             }
+            local.modeJs = local.modeJs || 'browser';
         }());
         // init global
         local.global = local.modeJs === 'browser'
             ? window
             : global;
-        // init utility2_rollup
+        // re-init local
         local = local.global.utility2_rollup || (local.modeJs === 'browser'
             ? local.global.utility2_utility2
             : require('utility2'));
@@ -423,9 +414,23 @@ instruction
         local.v8 = require('v8');
         local.vm = require('vm');
         local.zlib = require('zlib');
-/* validateLineSortedReset */
+        /* validateLineSortedReset */
         // init assets
         local.assetsDict = local.assetsDict || {};
+        [
+            'assets.index.template.html',
+            'assets.swgg.swagger.json',
+            'assets.swgg.swagger.server.json'
+        ].forEach(function (file) {
+            file = '/' + file;
+            local.assetsDict[file] = local.assetsDict[file] || '';
+            if (local.fs.existsSync(local.__dirname + file)) {
+                local.assetsDict[file] = local.fs.readFileSync(
+                    local.__dirname + file,
+                    'utf8'
+                );
+            }
+        });
         /* jslint-ignore-begin */
         local.assetsDict['/assets.index.template.html'] = '\
 <!doctype html>\n\
@@ -738,28 +743,15 @@ utility2-comment -->\n\
 </html>\n\
 ';
         /* jslint-ignore-end */
-        [
-            'assets.index.css',
-            'assets.index.template.html',
-            'assets.swgg.swagger.json',
-            'assets.swgg.swagger.server.json'
-        ].forEach(function (file) {
-            file = '/' + file;
-            local.assetsDict[file] = local.assetsDict[file] || '';
-            if (local.fs.existsSync(local.__dirname + file)) {
-                local.assetsDict[file] = local.fs.readFileSync(
-                    local.__dirname + file,
-                    'utf8'
-                );
-            }
-        });
-/* validateLineSortedReset */
-        // bug-workaround - long $npm_package_buildCustomOrg
+        /* validateLineSortedReset */
         /* jslint-ignore-begin */
-        local.assetsDict['/assets.utility2.js'] = local.assetsDict['/assets.utility2.js'] ||
+        // bug-workaround - long $npm_package_buildCustomOrg
+        local.assetsDict['/assets.utility2.js'] =
+            local.assetsDict['/assets.utility2.js'] ||
             local.fs.readFileSync(local.__dirname + '/lib.utility2.js', 'utf8'
-        ).replace((/^#!/), '//');
-/* validateLineSortedReset */
+        ).replace((/^#!\//), '// ');
+        /* jslint-ignore-end */
+        /* validateLineSortedReset */
         local.assetsDict['/'] =
             local.assetsDict['/assets.example.html'] =
             local.assetsDict['/assets.index.template.html']
@@ -784,7 +776,6 @@ utility2-comment -->\n\
         local.assetsDict['/assets.example.js'] =
             local.assetsDict['/assets.example.js'] ||
             local.fs.readFileSync(__filename, 'utf8');
-        /* jslint-ignore-end */
         local.assetsDict['/favicon.ico'] = local.assetsDict['/favicon.ico'] || '';
         // if $npm_config_timeout_exit exists,
         // then exit this process after $npm_config_timeout_exit ms
@@ -889,7 +880,7 @@ utility2-comment -->\n\
     "license": "MIT",
     "main": "lib.utility2.js",
     "name": "utility2",
-    "nameAliasPublish": "npmtest-lite npmclassic npmtest4 test-lite",
+    "nameAliasPublish": "busybox npmtest-lite test-lite",
     "nameLib": "utility2",
     "nameOriginal": "utility2",
     "os": [
@@ -901,16 +892,15 @@ utility2-comment -->\n\
         "url": "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
-        "apidocRawCreate": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh shNpmScriptApidocRawCreate",
-        "apidocRawFetch": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh shNpmScriptApidocRawFetch",
-        "build-ci": "./lib.utility2.sh shReadmeTest build_ci.sh",
-        "env": "env",
-        "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
-        "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh shNpmScriptPostinstall",
-        "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
-        "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 npm_config_timeout_default=\"${npm_config_timeout_default:-60000}\" ./lib.utility2.sh test test.js"
+        "build-ci": "./npm_scripts.sh",
+        "eval": "./npm_scripts.sh",
+        "heroku-postbuild": "./npm_scripts.sh",
+        "postinstall": "./npm_scripts.sh",
+        "start": "./npm_scripts.sh",
+        "test": "./npm_scripts.sh",
+        "utility2": "./npm_scripts.sh"
     },
-    "version": "2018.5.2"
+    "version": "2018.5.25"
 }
 ```
 
@@ -1037,7 +1027,7 @@ RUN (set -e; \
         v1.4.1 \
         v1.5.1 \
         v1.6.1 \
-        v1.7.1; \
+        v1.7.1 \
         v1.8.1; \
     do \
         npm install kaizhu256/node-electron-lite#alpha \

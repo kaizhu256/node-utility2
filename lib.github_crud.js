@@ -18,36 +18,57 @@
 
 
     // run shared js-env code - init-before
+    /* istanbul ignore next */
     (function () {
+        // init debug_inline
+        (function () {
+            var consoleError, context, key;
+            context = (typeof window === "object" && window) || global;
+            key = "debug_inline".replace("_i", "I");
+            if (context[key]) {
+                return;
+            }
+            consoleError = console.error;
+            context[key] = function (arg0) {
+            /*
+             * this function will both print arg0 to stderr and return it
+             */
+                // debug arguments
+                context["_" + key + "Arguments"] = arguments;
+                consoleError("\n\n" + key);
+                consoleError.apply(console, arguments);
+                consoleError("\n");
+                // return arg0 for inspection
+                return arg0;
+            };
+        }());
         // init local
         local = {};
         // init modeJs
-        local.modeJs = (function () {
+        (function () {
             try {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    typeof XMLHttpRequest.prototype.open === 'function' &&
-                    'browser';
-            } catch (errorCaughtBrowser) {
-                return module.exports &&
-                    typeof process.versions.node === 'string' &&
+                local.modeJs = typeof process.versions.node === 'string' &&
                     typeof require('http').createServer === 'function' &&
                     'node';
+            } catch (ignore) {
             }
+            local.modeJs = local.modeJs || 'browser';
         }());
         // init global
         local.global = local.modeJs === 'browser'
             ? window
             : global;
-        // init utility2_rollup
-        local = local.global.utility2_rollup || local;
-        /* istanbul ignore next */
-        if (!local) {
-            local = local.global.utility2_rollup ||
-                local.global.utility2_rollup_old ||
-                require('./assets.utility2.rollup.js');
-            local.fs = null;
-        }
+        // re-init local
+        local = local.global.utility2_rollup ||
+            // local.global.utility2_rollup_old || require('./assets.utility2.rollup.js') ||
+            local;
+        // init nop
+        local.nop = function () {
+        /*
+         * this function will do nothing
+         */
+            return;
+        };
         // init exports
         if (local.modeJs === 'browser') {
             local.global.utility2_github_crud = local;
@@ -86,19 +107,15 @@
             local.v8 = require('v8');
             local.vm = require('vm');
             local.zlib = require('zlib');
-/* validateLineSortedReset */
             module.exports = local;
             module.exports.__dirname = __dirname;
         }
-        // init lib
+        // init lib main
         local.local = local.github_crud = local;
-    }());
 
 
 
-    /* istanbul ignore next */
-    // run shared js-env code - function-before
-    (function () {
+        /* validateLineSortedReset */
         local.ajax = function (options, onError) {
         /*
          * this function will send an ajax-request with error-handling and timeout
@@ -112,7 +129,7 @@
                 console.log(xhr.statusCode);
             });
          */
-            var ajaxProgressUpdate, bufferToNodeBuffer, isDone, modeJs, nop, streamListCleanup, xhr;
+            var ajaxProgressUpdate, bufferToNodeBuffer, isDone, modeJs, nop, streamCleanup, xhr;
             // init standalone handling-behavior
             nop = function () {
             /*
@@ -131,36 +148,30 @@
             if (local.onErrorWithStack) {
                 onError = local.onErrorWithStack(onError);
             }
-            streamListCleanup = function (streamList) {
+            streamCleanup = function (stream) {
             /*
-             * this function will end or destroy the streams in streamList
+             * this function will try to end or destroy the stream
              */
-                streamList.forEach(function (stream) {
-                    // try to end the stream
-                    try {
-                        stream.end();
-                    } catch (errorCaught) {
-                        // if error, then try to destroy the stream
-                        try {
-                            stream.destroy();
-                        } catch (ignore) {
-                        }
-                    }
-                });
-            };
-            modeJs = (function () {
+                // try to end the stream
                 try {
-                    return typeof navigator.userAgent === 'string' &&
-                        typeof document.querySelector('body') === 'object' &&
-                        typeof XMLHttpRequest.prototype.open === 'function' &&
-                        'browser';
-                } catch (errorCaughtBrowser) {
-                    return module.exports &&
-                        typeof process.versions.node === 'string' &&
+                    stream.end();
+                } catch (errorCaught) {
+                    // if error, then try to destroy the stream
+                    try {
+                        stream.destroy();
+                    } catch (ignore) {
+                    }
+                }
+            };
+            (function () {
+                try {
+                    modeJs = typeof process.versions.node === 'string' &&
                         typeof require('http').createServer === 'function' &&
                         'node';
+                } catch (ignore) {
                 }
             }());
+            modeJs = modeJs || 'browser';
             // init xhr
             xhr = !options.httpRequest && (modeJs === 'node' ||
                 (local.serverLocalUrlTest && local.serverLocalUrlTest(options.url)))
@@ -210,16 +221,14 @@
                     xhr[key] = options[key];
                 }
             });
-            // init headers
+            // init properties
             xhr.headers = {};
             Object.keys(options.headers || {}).forEach(function (key) {
                 xhr.headers[key.toLowerCase()] = options.headers[key];
             });
-            // init method
             xhr.method = xhr.method || 'GET';
-            // init timeStart
+            xhr.responseHeaders = {};
             xhr.timeStart = Date.now();
-            // init timeout
             xhr.timeout = xhr.timeout || local.timeoutDefault || 30000;
             // init timerTimeout
             xhr.timerTimeout = setTimeout(function () {
@@ -227,9 +236,10 @@
                     xhr.timeout + ' ms - ' + 'ajax ' + xhr.method + ' ' + xhr.url);
                 xhr.abort();
                 // cleanup requestStream and responseStream
-                streamListCleanup([xhr.requestStream, xhr.responseStream]);
+                streamCleanup(xhr.requestStream);
+                streamCleanup(xhr.responseStream);
             }, xhr.timeout);
-            // init event handling
+            // init event-handling
             xhr.onEvent = function (event) {
                 if (event instanceof Error) {
                     xhr.error = xhr.error || event;
@@ -247,6 +257,16 @@
                         return;
                     }
                     isDone = xhr._isDone = true;
+                    // update responseHeaders
+                    if (xhr.getAllResponseHeaders) {
+                        xhr.getAllResponseHeaders().replace((
+                            /(.*?): *?(.*?)\r\n/g
+                        ), function (match0, match1, match2) {
+                            match0 = match1;
+                            xhr.responseHeaders[match0.toLowerCase()] = match2;
+                        });
+                    }
+                    xhr.timeElapsed = Date.now() - xhr.timeStart;
                     // debug ajaxResponse
                     if (xhr.modeDebug) {
                         console.error('serverLog - ' + JSON.stringify({
@@ -255,7 +275,7 @@
                             method: xhr.method,
                             url: xhr.url,
                             statusCode: xhr.statusCode,
-                            timeElapsed: Date.now() - xhr.timeStart,
+                            timeElapsed: xhr.timeElapsed,
                             // extra
                             data: (function () {
                                 try {
@@ -275,7 +295,8 @@
                     clearTimeout(xhr.timerTimeout);
                     // cleanup requestStream and responseStream
                     setTimeout(function () {
-                        streamListCleanup([xhr.requestStream, xhr.responseStream]);
+                        streamCleanup(xhr.requestStream);
+                        streamCleanup(xhr.responseStream);
                     });
                     // decrement ajaxProgressCounter
                     if (local.ajaxProgressCounter) {
@@ -492,13 +513,6 @@
                 local.cliDict._default();
             };
             fnc();
-        };
-
-        local.nop = function () {
-        /*
-         * this function will do nothing
-         */
-            return;
         };
 
         local.onErrorWithStack = function (onError) {
@@ -736,7 +750,7 @@
                     method: xhr.method,
                     url: xhr.url,
                     statusCode: xhr.statusCode,
-                    timeElapsed: Date.now() - xhr.timeStart
+                    timeElapsed: xhr.timeElapsed
                 }));
                 try {
                     options.responseJson = JSON.parse(xhr.response);
@@ -968,8 +982,8 @@
 
 
 
-    /* istanbul ignore next */
     // run node js-env code - init-after
+    /* istanbul ignore next */
     case 'node':
         // init cli
         if (module !== require.main || local.global.utility2_rollup) {

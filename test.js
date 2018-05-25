@@ -16,49 +16,19 @@
 
 
 
-    /* istanbul ignore next */
-    // init debug_inline
-    (function () {
-        var consoleError, context, key;
-        context = (typeof window === "object" && window) || global;
-        key = "debug_inline".replace("_i", "I");
-        if (context[key]) {
-            return;
-        }
-        consoleError = console.error;
-        context[key] = function (arg0) {
-        /*
-         * this function will both print arg0 to stderr and return it
-         */
-            // debug arguments
-            context["_" + key + "Arguments"] = arguments;
-            consoleError("\n\n" + key);
-            consoleError.apply(console, arguments);
-            consoleError("\n");
-            // return arg0 for inspection
-            return arg0;
-        };
-    }());
-
-
-
     // run shared js-env code - init-before
     (function () {
         // init local
         local = {};
         // init modeJs
-        local.modeJs = (function () {
+        (function () {
             try {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    typeof XMLHttpRequest.prototype.open === 'function' &&
-                    'browser';
-            } catch (errorCaughtBrowser) {
-                return module.exports &&
-                    typeof process.versions.node === 'string' &&
+                local.modeJs = typeof process.versions.node === 'string' &&
                     typeof require('http').createServer === 'function' &&
                     'node';
+            } catch (ignore) {
             }
+            local.modeJs = local.modeJs || 'browser';
         }());
         // init global
         local.global = local.modeJs === 'browser'
@@ -272,13 +242,9 @@
                 url: 'https://undefined:0'
             }] }, function (options2, onParallel) {
                 onParallel.counter += 1;
-                local.ajax(options2.element, function (error, xhr) {
+                local.ajax(options2.element, function (error) {
                     // validate error occurred
                     local.assert(error, error);
-                    // test getAllResponseHeaders' null-case handling-behavior
-                    xhr.getAllResponseHeaders();
-                    // test getResponseHeader' null-case handling-behavior
-                    xhr.getResponseHeader('undefined');
                     onParallel(null, options);
                 });
             }, onError);
@@ -364,15 +330,8 @@
                         options.data
                     );
                     // validate responseHeaders
-                    options.data = xhr.getAllResponseHeaders();
-                    local.assert(
-                        (/^X-Response-Header-Test: bb\r\n/im).test(options.data),
-                        options.data
-                    );
-                    options.data = xhr.getResponseHeader('x-response-header-test');
+                    options.data = xhr.responseHeaders['x-response-header-test'];
                     local.assertJsonEqual(options.data, 'bb');
-                    options.data = xhr.getResponseHeader('undefined');
-                    local.assertJsonEqual(options.data, null);
                     onError(null, options);
                 });
             });
@@ -885,7 +844,9 @@
             options.customize = function () {
                 options.dataFrom = options.dataFrom
                     // test shDeployCustom handling-behavior
-                    .replace('shDeployGithub', 'shDeployCustom')
+                    .replace('# shDeployCustom', '  shDeployCustom')
+                    // test shNpmTestPublished handling-behavior
+                    .replace('  shNpmTestPublished', '# shNpmTestPublished')
                     // test no-assets.index.template.html handling-behavior
                     .replace('assets.utility2.template.html', '');
             };
@@ -1154,19 +1115,6 @@
             onError(null, options);
         };
 
-        local.testCase_debug_inline_default = function (options, onError) {
-        /*
-         * this function will test debug_inline's default handling-behavior
-         */
-            options = {};
-            local.testMock([
-                [local, { _consoleError: null }]
-            ], function (onError) {
-                local.global['debug_inline'.replace('_i', 'I')]('aa');
-                onError(null, options);
-            }, onError);
-        };
-
         local.testCase_domElementRender_default = function (options, onError) {
         /*
          * this function will test domElementRender's default handling-behavior
@@ -1198,23 +1146,6 @@
          * this function will test echo's default handling-behavior
          */
             local.assertJsonEqual(local.echo('aa'), 'aa');
-            onError(null, options);
-        };
-
-        local.testCase_envSanitize_default = function (options, onError) {
-        /*
-         * this function will envSanitize's default handling-behavior
-         */
-            // test invalid envSanitize-code handling-behavior
-            local.assertJsonEqual(local.envSanitize({
-                aa: '',
-                aaPassword: '',
-                aa_password: '',
-                aapassword: '',
-                bb: null,
-                passport: '',
-                password: ''
-            }), { aa: '', aapassword: '' });
             onError(null, options);
         };
 
@@ -2690,7 +2621,7 @@
                     var error;
                     error = new Error('error');
                     error.statusCode = 500;
-                    local.middlewareError(error, request, response);
+                    local._middlewareError(error, request, response);
                     onError();
                 }, local.onErrorThrow);
                 break;
