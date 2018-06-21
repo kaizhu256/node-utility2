@@ -296,75 +296,75 @@
             fnc();
         };
 
-        local.jsonCopy = function (jsonObj) {
+        local.jsonCopy = function (obj) {
         /*
-         * this function will return a deep-copy of the jsonObj
+         * this function will deep-copy obj
          */
-            return jsonObj === undefined
+            return obj === undefined
                 ? undefined
-                : JSON.parse(JSON.stringify(jsonObj));
+                : JSON.parse(JSON.stringify(obj));
         };
 
-        local.jsonStringifyOrdered = function (jsonObj, replacer, space) {
+        local.jsonStringifyOrdered = function (obj, replacer, space) {
         /*
-         * this function will JSON.stringify the jsonObj,
+         * this function will JSON.stringify obj,
          * with object-keys sorted and circular-references removed
          */
             var circularList, stringify, tmp;
-            stringify = function (jsonObj) {
+            stringify = function (obj) {
             /*
-             * this function will recursively JSON.stringify the jsonObj,
+             * this function will recursively JSON.stringify obj,
              * with object-keys sorted and circular-references removed
              */
-                // if jsonObj is not an object or function, then JSON.stringify as normal
-                if (!(jsonObj &&
-                        typeof jsonObj === 'object' &&
-                        typeof jsonObj.toJSON !== 'function')) {
-                    return JSON.stringify(jsonObj);
+                // if obj is not an object or function, then JSON.stringify as normal
+                if (!(obj &&
+                        typeof obj === 'object' &&
+                        typeof obj.toJSON !== 'function')) {
+                    return JSON.stringify(obj);
                 }
                 // ignore circular-reference
-                if (circularList.indexOf(jsonObj) >= 0) {
+                if (circularList.indexOf(obj) >= 0) {
                     return;
                 }
-                circularList.push(jsonObj);
-                // if jsonObj is an array, then recurse its jsonObjs
-                if (Array.isArray(jsonObj)) {
-                    return '[' + jsonObj.map(function (jsonObj) {
+                circularList.push(obj);
+                // if obj is an array, then recurse its items
+                if (Array.isArray(obj)) {
+                    return '[' + obj.map(function (obj) {
                         // recurse
-                        tmp = stringify(jsonObj);
+                        tmp = stringify(obj);
                         return typeof tmp === 'string'
                             ? tmp
                             : 'null';
                     }).join(',') + ']';
                 }
-                // if jsonObj is not an array, then recurse its items with object-keys sorted
-                return '{' + Object.keys(jsonObj)
+                // if obj is not an array, then recurse its items with object-keys sorted
+                return '{' + Object.keys(obj)
                     // sort object-keys
                     .sort()
                     .map(function (key) {
                         // recurse
-                        tmp = stringify(jsonObj[key]);
+                        tmp = stringify(obj[key]);
                         if (typeof tmp === 'string') {
                             return JSON.stringify(key) + ':' + tmp;
                         }
                     })
-                    .filter(function (jsonObj) {
-                        return typeof jsonObj === 'string';
+                    .filter(function (obj) {
+                        return typeof obj === 'string';
                     })
                     .join(',') + '}';
             };
             circularList = [];
-            // try to derefernce all properties in jsonObj
+            // try to derefernce all properties in obj
             (function () {
                 try {
-                    jsonObj = JSON.parse(JSON.stringify(jsonObj));
+                    obj = JSON.parse(JSON.stringify(obj));
                 } catch (ignore) {
                 }
             }());
-            return JSON.stringify(typeof jsonObj === 'object' && jsonObj
+            return JSON.stringify(typeof obj === 'object' && obj
                 // recurse
-                ? JSON.parse(stringify(jsonObj))
-                : jsonObj, replacer, space);
+                ? JSON.parse(stringify(obj))
+                : obj, replacer, space);
         };
 
         local.listShuffle = function (list) {

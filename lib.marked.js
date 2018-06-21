@@ -241,6 +241,7 @@ c:typeof define=="function"&&define.amd?define(function(){return c}):this.marked
 c}).call(function(){return this||(typeof window!="undefined"?window:global)}())
 local.marked = module.exports; }());
 /* jslint-ignore-end */
+    // init exports
     if (local.modeJs === 'browser') {
         local.global.utility2_marked = local.marked;
     } else {

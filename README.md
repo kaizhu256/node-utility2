@@ -61,18 +61,15 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - add server stress-test using electron
 - none
 
-#### changelog 2018.5.25
-- npm publish 2018.5.25
-- update function ajax to have default property 'responseHeaders' and remove methods getAllResponseHeaders and getResponseHeader
-- update shell-function shCustomOrgRepoListCreateSyncCreate to by default not npm-publish package
-- replace function streamListCleanup with streamCleanup
-- remove function envSanitize and explicitly declare env vars in function browserTest
-- migrate node -e \<script\> from single-quote to double-quote
-- remove unused assets assets.index.css
-- revamp npm_scripts.sh, and add function stringCustomizeFromToRgx, and shell-functions shBuildAppSync shFileCustomizeFromToRgx
-- add function ajaxCrawl
-- revamp function buildLib
-- remove shell-function shNpmDeprecateAliasList
+#### changelog 2018.6.21
+- npm publish 2018.6.21
+- update shell-function shBuildAppSwgg0 to save states shDeployCustom, shDeployGithub, shDeployHeroku, shNpmTestPublished
+- add env var \$npm_config_mode_test_fast
+- make base64 and buffer functions standalone
+- add 'debug' task to travis-ci
+- add cli-command utility2.ajax
+- add functions local.m3u8Download, local.urlJoin
+- add shell-functions shBaseInstallLinode, shCustomOrgRepoCreateSyncCreateNpmdoc, shSsh5022P, shSsh5022R
 - none
 
 #### this package requires
@@ -177,16 +174,19 @@ instruction
         local.assetsDict['/assets.hello'] = 'hello\n';
         local.assetsDict['/assets.index.template.html'] = '';
     }());
-    switch (local.modeJs) {
 
 
 
-    // run browser js-env code - function
-    case 'browser':
+    // run shared js-env code - function
+    (function () {
         local.testCase_ajax_200 = function (options, onError) {
         /*
          * this function will test ajax's "200 ok" handling-behavior
          */
+            if (local.modeJs !== 'browser') {
+                onError(null, options);
+                return;
+            }
             options = {};
             // test ajax-path 'assets.hello'
             local.ajax({ url: 'assets.hello' }, function (error, xhr) {
@@ -204,6 +204,10 @@ instruction
         /*
          * this function will test ajax's "404 not found" handling-behavior
          */
+            if (local.modeJs !== 'browser') {
+                onError(null, options);
+                return;
+            }
             options = {};
             // test ajax-path '/undefined'
             local.ajax({ url: '/undefined' }, function (error) {
@@ -217,21 +221,19 @@ instruction
                 }, onError);
             });
         };
-        break;
 
-
-
-    // run node js-env code - function
-    case 'node':
         local.testCase_webpage_default = function (options, onError) {
         /*
          * this function will test webpage's default handling-behavior
          */
+            if (local.env.npm_config_mode_test_fast || local.modeJs !== 'node') {
+                onError(null, options);
+                return;
+            }
             options = { modeCoverageMerge: true, url: local.serverLocalHost + '?modeTest=1' };
             local.browserTest(options, onError);
         };
-        break;
-    }
+    }());
     switch (local.modeJs) {
 
 
@@ -900,7 +902,7 @@ utility2-comment -->\n\
         "test": "./npm_scripts.sh",
         "utility2": "./npm_scripts.sh"
     },
-    "version": "2018.5.25"
+    "version": "2018.6.21"
 }
 ```
 
@@ -942,16 +944,12 @@ RUN (set -e; \
         busybox \
         ca-certificates \
         curl \
+        git \
         gnupg; \
     (busybox --list | xargs -n1 /bin/sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true); \
     curl -#L https://deb.nodesource.com/setup_8.x | /bin/bash -; \
     apt-get install -y nodejs; \
-)
-# install sqlite3
-RUN (set -e; \
-    export DEBIAN_FRONTEND=noninteractive; \
-    npm install sqlite3@3.1.13; \
-    cp -a node_modules /; \
+    (cd /usr/lib && npm install sqlite3@3); \
 )
 # install electron-lite
 # COPY electron-*.zip /tmp
@@ -965,7 +963,6 @@ RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
     apt-get update; \
     apt-get install --no-install-recommends -y \
-        git \
         libasound2 \
         libgconf-2-4 \
         libgtk2.0-0 \
@@ -976,9 +973,9 @@ RUN (set -e; \
     rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
     npm install kaizhu256/node-electron-lite#alpha; \
     mv node_modules/electron-lite/external /opt/electron; \
-    ln -s /opt/electron/electron /bin/electron; \
+    ln -fs /opt/electron/electron /bin/electron; \
     cd node_modules/electron-lite; \
-    npm install; \
+    npm install --unsafe-perm; \
     npm test; \
 )
 # install extra
@@ -1028,12 +1025,13 @@ RUN (set -e; \
         v1.5.1 \
         v1.6.1 \
         v1.7.1 \
-        v1.8.1; \
+        v1.8.1 \
+        v2.0.1; \
     do \
         npm install kaizhu256/node-electron-lite#alpha \
             --electron-version="$ELECTRON_VERSION"; \
         mv node_modules/electron-lite/external "/opt/electron-$ELECTRON_VERSION"; \
-        ln -s "/opt/electron-$ELECTRON_VERSION/electron" "/bin/electron-$ELECTRON_VERSION"; \
+        ln -fs "/opt/electron-$ELECTRON_VERSION/electron" "/bin/electron-$ELECTRON_VERSION"; \
         if [ "$ELECTRON_VERSION" \>= 0.35.0 ]; \
         then \
             cd node_modules/electron-lite; \

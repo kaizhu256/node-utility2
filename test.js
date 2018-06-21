@@ -454,21 +454,14 @@
             options.base64 = local.base64FromString(local.stringCharsetAscii + '\u1234');
             // test null-case handling-behavior
             local.assertJsonEqual(local.base64FromBuffer(), '');
-            local.assertJsonEqual(local.base64FromHex(), '');
             local.assertJsonEqual(local.base64FromString(), '');
             local.assertJsonEqual(local.base64ToBuffer(), {});
-            local.assertJsonEqual(local.base64ToHex(), '');
             local.assertJsonEqual(local.base64ToString(), '');
             local.assertJsonEqual(local.base64FromBuffer(local.base64ToBuffer()), '');
-            local.assertJsonEqual(local.base64FromHex(local.base64ToHex()), '');
             local.assertJsonEqual(local.base64FromString(local.base64ToString()), '');
-            // test commutation handling-behavior
+            // test identity handling-behavior
             local.assertJsonEqual(
                 local.base64FromBuffer(local.base64ToBuffer(options.base64)),
-                options.base64
-            );
-            local.assertJsonEqual(
-                local.base64FromHex(local.base64ToHex(options.base64)),
                 options.base64
             );
             local.assertJsonEqual(
@@ -671,17 +664,6 @@
             onError(null, options);
         };
 
-        local.testCase_bufferCreate_polyfill = function (options, onError) {
-        /*
-         * this function will test bufferCreate's polyfill handling-behavior
-         */
-            local.testMock([
-                [local.global, { TextDecoder: null, TextEncoder: null }]
-            ], function (onError) {
-                local.testCase_bufferCreate_default(options, onError);
-            }, onError);
-        };
-
         local.testCase_bufferIndexOfSubBuffer_default = function (options, onError) {
         /*
          * this function will test bufferIndexOfSubBuffer's default handling-behavior
@@ -713,7 +695,7 @@
         /*
          * this function will test buildApidoc's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.env.npm_config_mode_test_fast || local.modeJs !== 'node') {
                 onError(null, options);
                 return;
             }
@@ -737,7 +719,7 @@
         /*
          * this function will test buildApp's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.env.npm_config_mode_test_fast || local.modeJs !== 'node') {
                 onError(null, options);
                 return;
             }
@@ -940,7 +922,7 @@
          * this function will test childProcessSpawnWithTimeout's default handling-behavior
          */
             var onParallel;
-            if (local.modeJs !== 'node') {
+            if (local.env.npm_config_mode_test_fast || local.modeJs !== 'node') {
                 onError(null, options);
                 return;
             }
@@ -2477,6 +2459,19 @@
             onError(null, options);
         };
 
+        local.testCase_urlJoin_default = function (options, onError) {
+        /*
+         * this function will test urlJoin's default handling-behavior
+         */
+            local.assertJsonEqual(local.urlJoin('', ''), '/');
+            local.assertJsonEqual(local.urlJoin('http://aa/bb', 'zz'), 'http://aa/zz');
+            local.assertJsonEqual(local.urlJoin('http://aa/bb/', 'zz'), 'http://aa/bb/zz');
+            local.assertJsonEqual(local.urlJoin('http://aa/bb/', '/zz'), 'http://aa/zz');
+            local.assertJsonEqual(local.urlJoin('http://aa/bb/', '//zz'), 'http://zz');
+            local.assertJsonEqual(local.urlJoin('http://aa/bb/', 'http://zz'), 'http://zz');
+            onError(null, options);
+        };
+
         local.testCase_urlParse_default = function (options, onError) {
         /*
          * this function will test urlParse's default handling-behavior
@@ -2533,7 +2528,7 @@
         /*
          * this function will test webpage's error handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.env.npm_config_mode_test_fast || local.modeJs !== 'node') {
                 onError(null, options);
                 return;
             }
@@ -2577,6 +2572,7 @@
     (function () {
         // init assets
         local.assetsDict['/assets.swgg.swagger.json'] =
+            local.tryCatchReadFile('assets.swgg.swagger.json') ||
             local.assetsDict['/assets.swgg.swagger.json'] ||
             local.assetsDict['/assets.swgg.swagger.petstore.json'];
         // coverage-hack - re-run test-server

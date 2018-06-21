@@ -1,8 +1,14 @@
-#/bin/sh
+#!/bin/sh
 # jslint-utility2
 
 # POSIX test utility
 # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/test.html
+
+# useful one-liners
+# shSource; git add .; npm test --mode-coverage
+# shSource; git add .; npm test --mode-test-case=testCase_nop_default
+# shSource; git add .; shBuildApp; git diff; git status
+# shSource; git add .; shUtility2DependentsSync; git diff; git status
 
 shBaseInit () {
 # this function will init the base bash-login env, and is intended for aws-ec2 setup
@@ -72,6 +78,89 @@ shBaseInstall () {
     # source .bashrc
     . "$HOME/.bashrc" || return $?
 }
+
+shBaseInstallLinode () {(set -e
+# this function will base-install a linode debian-box
+    if ! (node --version > /dev/null 2>&1)
+    then
+# install nodejs
+# https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions
+(set -e; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    apt-get update; \
+    apt-get install --no-install-recommends -y \
+        apt-utils \
+        busybox \
+        ca-certificates \
+        curl \
+        git \
+        gnupg; \
+    (busybox --list | xargs -n1 /bin/sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true); \
+    curl -#L https://deb.nodesource.com/setup_8.x | /bin/bash -; \
+    apt-get install -y nodejs; \
+    (cd /usr/lib && npm install sqlite3@3); \
+)
+    fi
+    # install docker
+    if [ ! -f /etc/apt/sources.list.d/docker.list ]
+    then
+        printf 'deb https://apt.dockerproject.org/repo debian-stretch main' > \
+            /etc/apt/sources.list.d/docker.list
+        wget -qO - https://apt.dockerproject.org/gpg | apt-key add -
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update
+        apt-get install -y docker-engine=1.13.1-0~debian-stretch
+        cp -a /var/lib/docker /var.lib.docker.00
+    fi
+    # install extra
+    if ! (aptitude --version > /dev/null 2>&1)
+    then
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update
+        apt-get install --no-install-recommends -y \
+            aptitude \
+            net-tools \
+            screen
+    fi
+    # reset iptables
+    shIptablesReset
+    # cleanup
+    apt-get clean
+    rm -fr /var/cache/* /var/tmp/*
+    # mount /mnt/data
+    if [ -b /dev/sdc ] && ! (grep -q -E '/mnt/data' /etc/fstab)
+    then
+        printf '
+/dev/sdc /mnt/data ext4 defaults,noatime 0 0
+/mnt/data/root /root none bind
+/mnt/data/tmp /tmp none bind
+/mnt/data/var.lib.docker /var/lib/docker none bind
+' >> /etc/fstab
+        mkdir -p /mnt/data && mount /mnt/data
+        mkdir -p \
+            /mnt/data/root /root \
+            /mnt/data/root/.ssh \
+            /mnt/data/root/docker \
+            /mnt/data/tmp /tmp \
+            /mnt/data/var.lib.docker /var/lib/docker \
+            /mnt/old
+        chmod 700 /mnt/data/root/.ssh
+        touch /mnt/data/root/.ssh/authorized_keys
+        chmod 600 /mnt/data/root/.ssh/authorized_keys
+        chmod 1777 /mnt/data/tmp
+        if [ -d /var.lib.docker.00/volumes ] && [ ! -d /mnt/data/var.lib.docker/volumes ]
+        then
+            cp -a /var.lib.docker.00 /mnt/data/var.lib.docker
+        fi
+        ln -fs /tmp /mnt/data/root/tmp
+        ln -fs /mnt/data/var.lib.docker /mnt/data/root/var.lib.docker
+        /etc/init.d/docker stop
+        mount -a
+        /etc/init.d/docker start
+        # shBaseInstall
+        curl -o "$HOME/lib.utility2.sh" https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh && . $HOME/lib.utility2.sh && shBaseInstall
+    fi
+)}
 
 shBrowserTest () {(set -e
 # this function will spawn an electron process to test the given url $LIST,
@@ -190,12 +279,12 @@ shBuildAppSwgg0 () {(set -e
 # this function will build the swgg-app from scratch
 # example usage:
 # shBuildAppSwgg0 github-misc
-# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoListCreateSyncCreate kaizhu256/node-swgg-github-misc
+# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoCreateSyncCreate kaizhu256/node-swgg-github-misc
 # shNpmPublishV0 swgg-github-misc
-# shCryptoWithGithubOrg kaizhu256 shGithubRepoListTouch kaizhu256/node-swgg-github-misc "[build app] npm_package_swggAll=github-all"
+# shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc "[build app] npm_package_swggAll=github-all"
 # update README.md
-# shCryptoWithGithubOrg kaizhu256 shGithubRepoListTouch kaizhu256/node-swgg-github-misc "[git squashPop HEAD] [npm publishAfterCommitAfterBuild]"
-# shCryptoWithGithubOrg kaizhu256 shGithubRepoListTouch kaizhu256/node-swgg-github-misc "[git push origin beta:master]"
+# shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc "[git squashPop HEAD~1] [npm publishAfterCommitAfterBuild]"
+# shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc "[git push origin beta:master]" task
     NAME="$1"
     shBuildInit
     # init swgg files
@@ -216,7 +305,10 @@ shBuildAppSwgg0 () {(set -e
 var local;
 local = require("utility2");
 // init README.md
-local.fs.writeFileSync("README.md", local.assetsDict["/assets.readmeCustomOrg.swgg.template.md"]);
+local.fs.writeFileSync(
+    "tmp/README.md",
+    local.assetsDict["/assets.readmeCustomOrg.swgg.template.md"]
+);
 // init assets
 ["assets.swgg.swagger.json", "assets.utility2.rollup.js"].forEach(function (file) {
     if (!local.fs.existsSync(file)) {
@@ -228,10 +320,15 @@ local.fs.writeFileSync("README.md", local.assetsDict["/assets.readmeCustomOrg.sw
     sed -in \
         -e "s/github-misc/$NAME/g" \
         -e "s/github_misc/$(printf "$NAME" | tr - _)/g" \
-        -e "s/    \"nameAliasPublish\": \".*\",/    \"nameAliasPublish\": \"\",/" \
-        -e "s/    \"swggAll\": \".*\",/    \"swggAll\": \"$SWGG_ALL\",/" \
-        README.md
-    rm -f README.mdn
+        -e "s/    \"swggAll\": \"github-all\",/    \"swggAll\": \"$SWGG_ALL\",/" \
+        tmp/README.md
+    rm -f tmp/README.mdn
+    shFileCustomizeFromToRgx "tmp/README.md" "README.md" \
+        '\n.*herokuapp\.com\n' \
+        '\n.* shDeployCustom\n' \
+        '\n.* shDeployGithub\n' \
+        '\n.* shDeployHeroku\n' \
+        '\n.* shNpmTestPublished\n'
     shBuildApp "swgg-$NAME"
 )}
 
@@ -368,14 +465,8 @@ local = require("utility2");
 '
             shBuildApp
             ;;
-        "[git push origin "*)
-            git fetch --depth=50 origin "$(printf "$CI_COMMIT_MESSAGE_META" | sed \
-                -e "s/:.*//" -e "s/.* //")"
-            eval "$(printf "$CI_COMMIT_MESSAGE_META" | sed \
-                -e "s/git/shGitCommandWithGithubToken/" \
-                -e "s/\([^ ]*:\)/origin\/\1/")"
-            return;
-            ;;
+        # example usage:
+        # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc "[git squashPop HEAD~1] [npm publishAfterCommitAfterBuild]"
         "[git squashPop "*)
             shGitSquashPop \
                 "$(shGithubRepoBranchId $(printf "$CI_COMMIT_MESSAGE_META" | sed -e "s/.* //"))" \
@@ -383,6 +474,8 @@ local = require("utility2");
             shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f HEAD:alpha
             return
             ;;
+        # example usage:
+        # shCryptoWithGithubOrg npmdoc shGithubRepoTouch "npmdoc/node-npmdoc-mysql npmdoc/node-npmdoc-mysql" "[npm publishAfterCommitAfterBuild]"
         "[npm publishAfterCommitAfterBuild]"*)
             if [ ! "$GITHUB_TOKEN" ]
             then
@@ -394,18 +487,29 @@ local = require("utility2");
             then
                 shBuildApp
             fi
+            # shBuildAppSync
+            rm -fr "$npm_config_dir_utility2"
+            git clone --branch=alpha --single-branch --depth=50 \
+                https://github.com/kaizhu256/node-utility2 "$npm_config_dir_utility2"
+            mkdir -p "$npm_config_dir_utility2/tmp/build/app"
+            curl -Lfs https://raw.githubusercontent.com\
+/kaizhu256/node-utility2/gh-pages/build..alpha..travis-ci.org/app/assets.utility2.rollup.js > \
+                "$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js"
             ;;
         esac
         shBuildCiInternal
         ;;
     beta)
-        shBuildCiInternal
+        case "$CI_COMMIT_MESSAGE" in
+        "[npm publishAfterCommitAfterBuild]"*)
+            ;;
+        *)
+            shBuildCiInternal
+            ;;
+        esac
         ;;
     cron)
-        if [ -f .task.sh ]
-        then
-            /bin/sh .task.sh
-        fi
+        [ ! -f .task.sh ] || /bin/sh .task.sh
         ;;
     docker.*)
         export CI_BRANCH=alpha
@@ -433,7 +537,39 @@ local = require("utility2");
     task)
         case "$CI_COMMIT_MESSAGE" in
         "[\$ "*)
-            eval "$(printf "$CI_COMMIT_MESSAGE_META" | sed -e "s/^...//")"
+            eval "$(printf "$CI_COMMIT_MESSAGE_META" | sed -e "s/^..//")"
+            ;;
+        # example usage:
+        # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-sandbox2 "[debug travis@proxy.com root]" task
+        "[debug "*)
+            if [ ! "$SSH_KEY" ]
+            then
+                shBuildPrint "no SSH_KEY"
+                return 1
+            fi
+            # init id_rsa
+            (
+            cd "$HOME/.ssh"
+            printf "$SSH_KEY" | base64 --decode > id_rsa && chmod 600 id_rsa
+            ssh-keygen -y -f id_rsa > authorized_keys
+            )
+            # ssh reverse-tunnel local-machine to middleman
+            eval "$(printf "$CI_COMMIT_MESSAGE_META" | sed -e "s/debug/shSsh5022R/")"
+            PID="$(pgrep -n -f ssh)"
+            while (kill -0 "$PID" 2>/dev/null)
+            do
+                shSleep 60
+            done
+            ;;
+        # example usage:
+        # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc "[git push origin beta:master]" task
+        "[git push origin "*)
+            git fetch --depth=50 origin "$(printf "$CI_COMMIT_MESSAGE_META" | sed \
+                -e "s/:.*//" -e "s/.* //")"
+            eval "$(printf "$CI_COMMIT_MESSAGE_META" | sed \
+                -e "s/git/shGitCommandWithGithubToken/" \
+                -e "s/\([^ ]*:\)/origin\/\1/")"
+            return;
             ;;
         esac
         return
@@ -518,13 +654,11 @@ local = require("utility2");
         rm -f "$HOME/.npmrc"
         case "$CI_COMMIT_MESSAGE" in
         "[npm publishAfterCommit]"*)
-            shGitSquashPop HEAD~1 "[ci skip] npm published"
+            shGitSquashPop HEAD~1 "[ci skip] [npm published \
+$(node -e 'process.stdout.write(require("./package.json").version)')]"
             shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f HEAD:alpha
-            if (grep -q -E '    shNpmTestPublished' README.md)
-            then
-                shSleep 5
-                shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f HEAD:beta
-            fi
+            shSleep 5
+            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f HEAD:beta
             ;;
         *)
             shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" HEAD:beta
@@ -542,7 +676,8 @@ local = require("utility2");
                 "$CI_BRANCH"
             if [ "$CI_BRANCH" = alpha ] && [ "$npm_package_description" ]
             then
-                shGithubRepoDescriptionUpdate "$GITHUB_REPO_ALIAS" "$npm_package_description"
+                shGithubRepoDescriptionUpdate "$GITHUB_REPO_ALIAS" "$npm_package_description" || \
+                    true
             fi
         done
     fi
@@ -673,7 +808,7 @@ shBuildCiInternal () {(set -e
     then
         COMMIT_LIMIT=20 shBuildGithubUpload
     fi
-    shGitInfo
+    shGitInfo | head -n 4096 || true
     # validate http-links embedded in README.md
     if [ ! "$npm_package_isPrivate" ] &&
             ! (printf "$CI_COMMIT_MESSAGE_META" | grep -q -E "^npm publishAfterCommitAfterBuild")
@@ -717,12 +852,12 @@ shBuildGithubUpload () {(set -e
     if [ "$COMMIT_LIMIT" ] && [ "$(git rev-list HEAD --count)" -gt "$COMMIT_LIMIT" ]
     then
         shGitCommandWithGithubToken push "$URL" -f HEAD:gh-pages.backup
-        shGitSquashShift "$(($COMMIT_LIMIT/2))"
+        shGitSquashShift "$(($COMMIT_LIMIT / 2))"
     fi
     shGitCommandWithGithubToken push "$URL" -f HEAD:gh-pages
     if [ "$CI_BRANCH" = alpha ] && [ "$npm_package_description" ]
     then
-        shGithubRepoDescriptionUpdate "$GITHUB_REPO" "$npm_package_description"
+        shGithubRepoDescriptionUpdate "$GITHUB_REPO" "$npm_package_description" || true
     fi
 )}
 
@@ -887,12 +1022,12 @@ shChromeSocks5 () {(set -e
     then
         /Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary\
             --proxy-bypass-list="127.*;192.*;localhost"\
-            --proxy-server="socks5://localhost:2080"\
+            --proxy-server="socks5://localhost:5080"\
             --host-resolver-rules="MAP * 0.0.0.0, EXCLUDE localhost" "$@" || return $?
     else
         /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome\
             --proxy-bypass-list="127.*;192.*;localhost"\
-            --proxy-server="socks5://localhost:2080"\
+            --proxy-server="socks5://localhost:5080"\
             --host-resolver-rules="MAP * 0.0.0.0, EXCLUDE localhost" "$@" || return $?
     fi
 )}
@@ -991,17 +1126,17 @@ shCryptoWithGithubOrg () {(set -e
     "$@"
 )}
 
-shCustomOrgRepoListCreate () {(set -e
+shCustomOrgRepoCreate () {(set -e
 # this function will create and push the customOrg-repo $GITHUB_ORG/node-$GITHUB_ORG-$LIST[ii]
 # https://docs.travis-ci.com/api
 # example usage:
-# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoListCreate "kaizhu256/node-sandbox2 kaizhu256/node-sandbox3"
+# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoCreate "kaizhu256/node-sandbox2 kaizhu256/node-sandbox3"
 # sleep 5
 # shCryptoWithGithubOrg kaizhu256 shTravisSync
 # sleep 5
-# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoListCreate kaizhu256/node-sandbox2
+# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoCreate kaizhu256/node-sandbox2
     LIST="$1"
-    export MODE_BUILD=shCustomOrgRepoListCreate
+    export MODE_BUILD=shCustomOrgRepoCreate
     cd /tmp
 
 
@@ -1140,16 +1275,33 @@ shBuildPrint \"... created $GITHUB_ORG-repo $GITHUB_REPO\"; \
     shBuildPrint "... created $GITHUB_ORG-repos $LIST"
 )}
 
-shCustomOrgRepoListCreateSyncCreate () {(set -e
+shCustomOrgRepoCreateSyncCreate () {(set -e
 # this function will create, sync, create the customOrg-repo $GITHUB_ORG/node-$GITHUB_ORG-$LIST[ii]
 # example usage:
-# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoListCreateSyncCreate kaizhu256/node-sandbox2
-    LIST="$1"
-    shCustomOrgRepoListCreate "$LIST"
+# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoCreateSyncCreate kaizhu256/node-sandbox2
+    shCustomOrgRepoCreate "$LIST"
     shSleep 5
     shTravisSync
     shSleep 5
-    shCustomOrgRepoListCreate "$LIST"
+    shCustomOrgRepoCreate "$LIST"
+)}
+
+shCustomOrgRepoCreateSyncCreateNpmdoc () {(set -e
+# this function will create and push the customOrg-repo $GITHUB_ORG/node-$GITHUB_ORG-$LIST[ii]
+# example usage:
+# shCustomOrgRepoCreateSyncCreateNpmdoc npmdoc/node-npmdoc-mysql
+    LIST="$1"
+    for CUSTOM_ORG in npmdoc npmtest
+    do
+        # shCryptoWithGithubOrg npmdoc shCustomOrgRepoCreateSyncCreate npmdoc/node-npmdoc-mysql
+        # shCryptoWithGithubOrg npmdoc shGithubRepoTouch npmdoc/node-npmdoc-mysql "[npm publishAfterCommitAfterBuild]"
+        # shCryptoWithGithubOrg npmtest shCustomOrgRepoCreateSyncCreate npmtest/node-npmtest-mysql
+        # shCryptoWithGithubOrg npmtest shGithubRepoTouch npmtest/node-npmtest-mysql "[npm publishAfterCommitAfterBuild]"
+        LIST="$(printf "$LIST" | sed -e "s/npmdoc/$CUSTOM_ORG/g")"
+        shCryptoWithGithubOrg "$CUSTOM_ORG" shCustomOrgRepoCreateSyncCreate "$LIST"
+        TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg "$CUSTOM_ORG" shGithubRepoTouch "$LIST" \
+            "[npm publishAfterCommitAfterBuild]"
+    done
 )}
 
 shDateIso () {(set -e
@@ -1273,14 +1425,6 @@ shDockerCopyFromImage () {(set -e
     docker rm -fv "$CONTAINER"
 )}
 
-shDockerInstall () {(set -e
-# this function will install docker
-    mkdir -p "$HOME/docker"
-    curl -Lfs https://get.docker.com/ | /bin/sh
-    # test docker
-    docker run hello-world
-)}
-
 shDockerLogs () {(set -e
 # this function log the docker container $1
     docker logs --tail=256 -f "$1"
@@ -1360,18 +1504,17 @@ server {
 
 shDockerRestartNginx () {(set -e
 # this function will restart the nginx docker-container
-    # init $HOME/docker/etc.nginx.htpasswd.private
-    FILE="$HOME/docker/etc.nginx.htpasswd.private"
-    if [ ! -f "$FILE" ]
-    then
-        printf "foo:$(openssl passwd -crypt bar)\n" > $FILE
-    fi
-    # init $HOME/docker/etc.nginx.htpasswd.share
-    FILE="$HOME/docker/etc.nginx.htpasswd.share"
-    if [ ! -f "$FILE" ]
-    then
-        printf "foo:$(openssl passwd -crypt bar)\n" > $FILE
-    fi
+    # init htpasswd
+    # printf "aa:$(openssl passwd -crypt bb)\n" > "$HOME/docker/etc.nginx.htpasswd.private"
+    # printf "aa:$(openssl passwd -crypt bb)\n" > "$HOME/docker/etc.nginx.htpasswd.share"
+    for FILE in private share
+    do
+        FILE="$HOME/docker/etc.nginx.htpasswd.$FILE"
+        if [ ! -f "$FILE" ]
+        then
+            printf "aa:openssl passwd -crypt $(cat /dev/urandom | head --bytes 8)\n" > "$FILE"
+        fi
+    done
     # init $HOME/docker/etc.nginx.conf.d.default.conf
     # https://www.nginx.com/resources/wiki/start/topics/examples/full/#nginx-conf
     FILE="$HOME/docker/etc.nginx.conf.d/default.conf"
@@ -1391,16 +1534,21 @@ server {
 # https://www.nginx.com/resources/wiki/start/topics/examples/SSL-Offloader/#sslproxy-conf
 server {
     listen 443;
-    root /root/docker/usr.share.nginx.html;
-    ssl_certificate /root/docker/etc.nginx.ssl.cert.pem;
-    ssl_certificate_key /root/docker/etc.nginx.ssl.key.pem;
+    root /root;
+    ssl_certificate /root/docker/etc.nginx.ssl.pem;
+    ssl_certificate_key /root/docker/etc.nginx.ssl.key;
     ssl on;
     ssl_prefer_server_ciphers on;
     ssl_protocols TLSv1.2;
-    location / {
+    location /public {
         index index.html index.htm;
     }
+    location /private/docker {
+        deny all;
+        return 404;
+    }
     location /private {
+        alias /root;
         auth_basic on;
         auth_basic_user_file /root/docker/etc.nginx.htpasswd.private;
         autoindex on;
@@ -1418,14 +1566,22 @@ server {
     FILE="$HOME/docker/etc.nginx.ssl"
     if [ ! -f "$FILE.pem" ]
     then
-        openssl req -days 365 -keyout "$FILE.key" -new -newkey rsa:4096 -nodes \
-            -out "$FILE.pem" -subj "/C=AU" -x509
+        openssl req \
+            -days 365 \
+            -keyout "$FILE.key" \
+            -new \
+            -newkey rsa:4096 \
+            -nodes \
+            -out "$FILE.pem" \
+            -subj "/C=AU" -x509
     fi
-    # init $HOME/docker/usr.share.nginx.html
-    mkdir -p "$HOME/docker/usr.share.nginx.html"
+    for DIR in public share
+    do
+        mkdir -p "$HOME/$DIR"
+    done
     docker rm -fv nginx || true
     # https://registry.hub.docker.com/_/nginx/
-    docker run --name nginx -d \
+    docker run --name nginx -d -e debian_chroot=nginx \
         -p 80:8080 \
         -p 443:443 \
         -v "$HOME:/root:ro" \
@@ -1485,12 +1641,6 @@ shDockerRmAll () {(set -e
 shDockerRmExited () {(set -e
 # this function will rm all docker-containers that have exited
     docker rm -fv $(docker ps -aqf status=exited) || true
-)}
-
-shDockerRmSince () {(set -e
-# this function will rm all docker-containers since $NAME
-    NAME="$1"
-    docker rm -fv $(docker ps -aq --since="$NAME") || true
 )}
 
 shDockerRmiUntagged () {(set -e
@@ -1587,7 +1737,7 @@ shFileCustomizeFromToRgx () {(set -e
     stupid: true
 */
 'use strict';
-var local;
+var dataFrom, dataTo, local;
 local = {};
 (function () {
     (function () {
@@ -1606,49 +1756,16 @@ local = {};
             });
             return textTo;
         };
-        require('fs').writeFileSync(process.argv[2], local.stringCustomizeFromToRgx(
-            require('fs').readFileSync(process.argv[2], 'utf8'),
-            require('fs').readFileSync(process.argv[1], 'utf8'),
-            new RegExp(process.argv[3])
-        ));
+        dataFrom = require('fs').readFileSync(process.argv[2], 'utf8');
+        dataTo = require('fs').readFileSync(process.argv[1], 'utf8');
+        process.argv.slice(3).forEach(function (rgx) {
+            dataTo = local.stringCustomizeFromToRgx(dataFrom, dataTo, new RegExp(rgx));
+        });
+        require('fs').writeFileSync(process.argv[2], dataTo);
     }());
 }());
 // </script>
 " "$@"
-)}
-
-shFileGrepReplace () {(set -e
-# this function will save the grep-and-replace lines in file $1
-    node -e '
-// <script>
-/* jslint-utility2 */
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 4,
-    maxlen: 100,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-"use strict";
-var dict;
-dict = {};
-require("fs").readFileSync(process.argv[1], "utf8").split("\n").forEach(function (element) {
-    element = (/^(.+?):(\d+?):(.+?)$/).exec(element);
-    if (!element) {
-        return;
-    }
-    dict[element[1]] = dict[element[1]] ||
-        require("fs").readFileSync(element[1], "utf8").split("\n");
-    dict[element[1]][element[2] - 1] = element[3];
-});
-Object.keys(dict).forEach(function (key) {
-    require("fs").writeFileSync(key, dict[key].join("\n"));
-});
-// </script>
-' "$@"
 )}
 
 shFileJsonNormalize () {(set -e
@@ -1674,66 +1791,66 @@ var local, tmp;
 local = {};
 (function () {
     (function () {
-        local.jsonStringifyOrdered = function (jsonObj, replacer, space) {
+        local.jsonStringifyOrdered = function (obj, replacer, space) {
         /*
-         * this function will JSON.stringify the jsonObj,
+         * this function will JSON.stringify obj,
          * with object-keys sorted and circular-references removed
          */
             var circularList, stringify, tmp;
-            stringify = function (jsonObj) {
+            stringify = function (obj) {
             /*
-             * this function will recursively JSON.stringify the jsonObj,
+             * this function will recursively JSON.stringify obj,
              * with object-keys sorted and circular-references removed
              */
-                // if jsonObj is not an object or function, then JSON.stringify as normal
-                if (!(jsonObj &&
-                        typeof jsonObj === 'object' &&
-                        typeof jsonObj.toJSON !== 'function')) {
-                    return JSON.stringify(jsonObj);
+                // if obj is not an object or function, then JSON.stringify as normal
+                if (!(obj &&
+                        typeof obj === 'object' &&
+                        typeof obj.toJSON !== 'function')) {
+                    return JSON.stringify(obj);
                 }
                 // ignore circular-reference
-                if (circularList.indexOf(jsonObj) >= 0) {
+                if (circularList.indexOf(obj) >= 0) {
                     return;
                 }
-                circularList.push(jsonObj);
-                // if jsonObj is an array, then recurse its jsonObjs
-                if (Array.isArray(jsonObj)) {
-                    return '[' + jsonObj.map(function (jsonObj) {
+                circularList.push(obj);
+                // if obj is an array, then recurse its items
+                if (Array.isArray(obj)) {
+                    return '[' + obj.map(function (obj) {
                         // recurse
-                        tmp = stringify(jsonObj);
+                        tmp = stringify(obj);
                         return typeof tmp === 'string'
                             ? tmp
                             : 'null';
                     }).join(',') + ']';
                 }
-                // if jsonObj is not an array, then recurse its items with object-keys sorted
-                return '{' + Object.keys(jsonObj)
+                // if obj is not an array, then recurse its items with object-keys sorted
+                return '{' + Object.keys(obj)
                     // sort object-keys
                     .sort()
                     .map(function (key) {
                         // recurse
-                        tmp = stringify(jsonObj[key]);
+                        tmp = stringify(obj[key]);
                         if (typeof tmp === 'string') {
                             return JSON.stringify(key) + ':' + tmp;
                         }
                     })
-                    .filter(function (jsonObj) {
-                        return typeof jsonObj === 'string';
+                    .filter(function (obj) {
+                        return typeof obj === 'string';
                     })
                     .join(',') + '}';
             };
             circularList = [];
-            // try to derefernce all properties in jsonObj
+            // try to derefernce all properties in obj
             (function () {
                 try {
-                    jsonObj = JSON.parse(JSON.stringify(jsonObj));
+                    obj = JSON.parse(JSON.stringify(obj));
                 } catch (ignore) {
                 }
             }());
-            return JSON.stringify(typeof jsonObj === 'object' && jsonObj
+            return JSON.stringify(typeof obj === 'object' && obj
                 // recurse
-                ? JSON.parse(stringify(jsonObj))
-                : jsonObj, replacer, space);
+                ? JSON.parse(stringify(obj))
+                : obj, replacer, space);
         };
         local.objectSetDefault = function (arg0, defaults, depth) {
         /*
@@ -1975,7 +2092,7 @@ shGitSquashPop () {(set -e
     git reset "$COMMIT"
     git add .
     # commit HEAD immediately after previous $COMMIT
-    git commit -am "$MESSAGE"
+    git commit -am "$MESSAGE" || true
 )}
 
 shGitSquashShift () {(set -e
@@ -1996,10 +2113,10 @@ shGithubApiRateLimitGet () {(set -e
     curl -I https://api.github.com -H "Authorization: token $GITHUB_TOKEN"
 )}
 
-shGithubCrudRepoListCreate () {(set -e
+shGithubCrudRepoCreate () {(set -e
 # this function will create the $GITHUB_REPO in $LIST with $GITHUB_TOKEN
     LIST="$1"
-    export MODE_BUILD="${MODE_BUILD:-shGithubCrudRepoListCreate}"
+    export MODE_BUILD="${MODE_BUILD:-shGithubCrudRepoCreate}"
     URL=https://api.github.com/user/repos
     # init $GITHUB_ORG
     GITHUB_ORG="$(printf "$LIST" | head -n 1 | sed -e "s/\/.*//")"
@@ -2020,12 +2137,6 @@ then \
 fi"
     done
     shOnParallelListExec "$LIST2"
-)}
-
-shGithubFileCommitDate () {(set -e
-# this function will print the commit-date for the github file url $1
-    curl -Lfs "$1" | grep -E "datetime=" | grep -o -E "\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d*Z"
-    printf "$1\n"
 )}
 
 shGithubRepoBaseCreate () {(set -e
@@ -2054,7 +2165,7 @@ shGithubRepoBaseCreate () {(set -e
     cd "/tmp/githubRepo/$GITHUB_REPO"
     curl -Lfs https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig | \
         sed -e "s|kaizhu256/node-utility2|$GITHUB_REPO|" > .git/config
-    (eval shGithubCrudRepoListCreate "$GITHUB_REPO") || true
+    (eval shGithubCrudRepoCreate "$GITHUB_REPO") || true
     # set default-branch to beta
     shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" beta || true
     # push all branches
@@ -2071,33 +2182,33 @@ shGithubRepoBranchId () {(set -e
 
 shGithubRepoDescriptionUpdate () {(set -e
 # this function will update the github-repo's description
+    shSleep 5
     GITHUB_REPO="$1"
     DESCRIPTION="$2"
     shBuildPrint "update $GITHUB_REPO description"
     curl -#Lf \
-    -H "Authorization: token $GITHUB_TOKEN" \
-    -H "Content-Type: application/json" \
-    -H "User-Agent: undefined" \
-    -X PATCH \
-    -d "{
-        \"default_branch\": \"beta\",
-        \"description\": \"$(printf "$DESCRIPTION" | sed -e 's/"/\\\\"/')\",
-        \"name\": \"$(printf "$GITHUB_REPO" | sed -e "s/.*\///")\"
-    }" \
-    -o /dev/null \
+        -H "Authorization: token $GITHUB_TOKEN" \
+        -H "Content-Type: application/json" \
+        -H "User-Agent: undefined" \
+        -X PATCH \
+        -d "{
+            \"default_branch\": \"beta\",
+            \"description\": \"$(printf "$DESCRIPTION" | sed -e 's/"/\\\\"/')\",
+            \"name\": \"$(printf "$GITHUB_REPO" | sed -e "s/.*\///")\"
+        }" \
+        -o /dev/null \
     "https://api.github.com/repos/$GITHUB_REPO"
 )}
 
-shGithubRepoListTouch () {(set -e
+shGithubRepoTouch () {(set -e
 # this function will touch the $GITHUB_REPO $LIST with the $CI_COMMIT_MESSAGE
-# example usage:
-# shCryptoWithGithubOrg npmdoc shGithubRepoListTouch "npmdoc/node-npmdoc-sandbox2 npmdoc/node-npmdoc-sandbox2" "[npm publishAfterCommitAfterBuild]"
     LIST="$1"
     CI_COMMIT_MESSAGE="$2"
+    BRANCH="${3:-alpha}"
     LIST2=""
     for GITHUB_REPO in $LIST
     do
-        LIST2="$LIST2,https://github.com/$GITHUB_REPO/blob/alpha/package.json"
+        LIST2="$LIST2,https://github.com/$GITHUB_REPO/blob/$BRANCH/package.json"
     done
     utility2-github-crud touchList "$LIST2" "$CI_COMMIT_MESSAGE"
 )}
@@ -2105,7 +2216,9 @@ shGithubRepoListTouch () {(set -e
 shGrep () {(set -e
 # this function will recursively grep $DIR for the $REGEXP
     DIR="$1"
-    REGEXP="$2"
+    shift
+    REGEXP="$1"
+    shift
     FILE_FILTER="\
 /\\.|(\\b|_)(\\.\\d|\
 archive|artifact|\
@@ -2127,10 +2240,44 @@ vendor)s{0,1}(\\b|_)\
     find "$DIR" -type f | \
         grep -v -E "$FILE_FILTER" | \
         tr "\n" "\000" | \
-        xargs -0 grep -HIin -E "$REGEXP" || true
+        xargs -0 grep -HIn -E "$REGEXP" "$@" || true
     find "$DIR" -name .travis.yml | \
         tr "\n" "\000" | \
-        xargs -0 grep -HIin -E "$REGEXP" || true
+        xargs -0 grep -HIn -E "$REGEXP" "$@" || true
+)}
+
+shGrepReplace () {(set -e
+# this function will save the grep-and-replace lines in file $1
+    node -e '
+// <script>
+/* jslint-utility2 */
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 4,
+    maxlen: 100,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+"use strict";
+var dict;
+dict = {};
+require("fs").readFileSync(process.argv[1], "utf8").split("\n").forEach(function (element) {
+    element = (/^(.+?):(\d+?):(.+?)$/).exec(element);
+    if (!element) {
+        return;
+    }
+    dict[element[1]] = dict[element[1]] ||
+        require("fs").readFileSync(element[1], "utf8").split("\n");
+    dict[element[1]][element[2] - 1] = element[3];
+});
+Object.keys(dict).forEach(function (key) {
+    require("fs").writeFileSync(key, dict[key].join("\n"));
+});
+// </script>
+' "$@"
 )}
 
 shHtpasswdCreate () {(set -e
@@ -2208,86 +2355,79 @@ console.log("data:image/" +
 ' "$FILE"
 )}
 
-shIptablesDockerInit () {(set -e
-# this function will create an iptables DOCKER chain
-# https://github.com/docker/docker/issues/1871
-    iptables -t nat -N DOCKER
-    iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
-    iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL ! --dst 127.0.0.0/8 -j DOCKER
-    iptables-save > /etc/iptables/rules.v4
-    ip6tables-save > /etc/iptables/rules.v6
-)}
-
-shIptablesInit () {(set -e
-# this function will init iptables, and is intended for aws-ec2 setup
-    # http://www.cyberciti.biz/tips/linux-iptables-how-to-flush-all-rules.html
-    # reset iptables
-    iptables -F
-    iptables -X
-    iptables -t nat -F
-    iptables -t nat -X
-    iptables -t mangle -F
-    iptables -t mangle -X
-    iptables -P INPUT ACCEPT
-    iptables -P FORWARD ACCEPT
-    iptables -P OUTPUT ACCEPT
-
-    # https://wiki.debian.org/iptables
-    # Allows all loopback (lo0) traffic and drop all traffic to 127/8 that doesn''t use lo0
-    iptables -A INPUT -i lo -j ACCEPT
-    iptables -A INPUT ! -i lo -d 127.0.0.0/8 -j REJECT
-    # Accepts all established inbound connections
-    iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-    # Allows all outbound traffic
-    # You could modify this to only allow certain traffic
-    iptables -A OUTPUT -j ACCEPT
-    # Allows HTTP and HTTPS connections from anywhere (the normal ports for websites)
-    iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-    iptables -A INPUT -p tcp --dport 443 -j ACCEPT
-    # Allows SSH connections
-    # The --dport number is the same as in /etc/ssh/sshd_config
-    iptables -A INPUT -p tcp -m state --state NEW --dport 22 -j ACCEPT
-    # Now you should read up on iptables rules and consider whether ssh access
-    # for everyone is really desired. Most likely you will only allow access from certain IPs.
-    # Allow ping
-    #  note that blocking other types of icmp packets is considered a bad idea by some
-    #  remove -m icmp --icmp-type 8 from this line to allow all kinds of icmp:
-    #  https://security.stackexchange.com/questions/22711
-    iptables -A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
-
-    # allow forwarding between docker0 and eth0
-    # https://blog.andyet.com/2014/09/11/docker-host-iptables-forwarding
-    # Forward chain between docker0 and eth0
-    iptables -A FORWARD -i docker0 -o eth0 -j ACCEPT
-    iptables -A FORWARD -i eth0 -o docker0 -j ACCEPT
-    # IPv6 chain if needed
-    ip6tables -A FORWARD -i docker0 -o eth0 -j ACCEPT
-    ip6tables -A FORWARD -i eth0 -o docker0 -j ACCEPT
-    # create iptables DOCKER chain
-    # https://github.com/docker/docker/issues/1871
-    iptables -t nat -N DOCKER
-    iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
-    iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL ! --dst 127.0.0.0/8 -j DOCKER
-
-    # log iptables denied calls (access via 'dmesg' command)
-    iptables -A INPUT -m limit --limit 5/min -j LOG --log-prefix "iptables denied: " \
-        --log-level 7
-    # Reject all other inbound - default deny unless explicitly allowed policy:
-    iptables -A INPUT -j REJECT
-    iptables -A FORWARD -j REJECT
-    # iptables --list
-    iptables -t nat -L -n -v
-    iptables -L -n -v
-    # install iptables-persistent
-    if [ ! -f /etc/iptables/rules.v4 ]
+shIptablesReset () {(set -e
+# this function will reset iptables
+    if ! (iptables-restore /etc/iptables/rules.v4.00 > /dev/null 2>&1)
     then
-        apt-get install -y iptables-persistent
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update
+        apt-get install --no-install-recommends -y iptables-persistent
     fi
-    # save iptables
-    iptables-save > /etc/iptables/rules.v4
-    ip6tables-save > /etc/iptables/rules.v6
-    # iptables-restore < /etc/iptables/rules.v4
-    # iptables-restore < /etc/iptables/rules.v6
+    printf '
+# https://wiki.debian.org/iptables
+*filter
+
+# Allows all loopback (lo0) traffic and drop all traffic to 127/8 that doesn"t use lo0
+-A INPUT -i lo -j ACCEPT
+-A INPUT ! -i lo -d 127.0.0.0/8 -j REJECT
+
+# Accepts all established inbound connections
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Allows all outbound traffic
+# You could modify this to only allow certain traffic
+-A OUTPUT -j ACCEPT
+
+# Allows HTTP and HTTPS connections from anywhere (the normal ports for websites)
+-A INPUT -p tcp --dport 80 -j ACCEPT
+-A INPUT -p tcp --dport 443 -j ACCEPT
+
+# Allows SSH connections
+# The --dport number is the same as in /etc/ssh/sshd_config
+-A INPUT -p tcp -m state --state NEW --dport 22 -j ACCEPT
+-A INPUT -p tcp -m state --state NEW --dport 5022 -j ACCEPT
+
+# Now you should read up on iptables rules and consider whether ssh access
+# for everyone is really desired. Most likely you will only allow access from certain IPs.
+
+# Allow ping
+#  note that blocking other types of icmp packets is considered a bad idea by some
+#  remove -m icmp --icmp-type 8 from this line to allow all kinds of icmp:
+#  https://security.stackexchange.com/questions/22711
+-A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
+
+# log iptables denied calls (access via "dmesg" command)
+-A INPUT -m limit --limit 5/min -j LOG --log-prefix "iptables denied: " --log-level 7
+
+# allow forwarding between docker0 and eth0
+# https://blog.andyet.com/2014/09/11/docker-host-iptables-forwarding
+# Forward chain between docker0 and eth0
+-A FORWARD -i docker0 -o eth0 -j ACCEPT
+-A FORWARD -i eth0 -o docker0 -j ACCEPT
+
+# Reject all other inbound - default deny unless explicitly allowed policy:
+-A INPUT -j REJECT
+-A FORWARD -j REJECT
+
+COMMIT
+
+*nat
+# https://github.com/moby/moby/issues/1871#issuecomment-28139275
+:DOCKER - [0:0]
+-A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
+-A PREROUTING -m addrtype --dst-type LOCAL ! --dst 127.0.0.0/8 -j DOCKER
+COMMIT
+' > /etc/iptables/rules.v4.00
+    iptables-restore < /etc/iptables/rules.v4.00
+    printf '
+# disable ipv6
+*filter
+-A INPUT -j REJECT
+-A FORWARD -j DROP
+-A OUTPUT -j REJECT
+COMMIT
+' > /etc/iptables/rules.v6.00
+    ip6tables-restore < /etc/iptables/rules.v6.00
 )}
 
 shIstanbulCover () {(set -e
@@ -2317,7 +2457,7 @@ shListUnflattenAndApply () {(set -e
     do
         SUB_LIST="$SUB_LIST
 $ELEMENT"
-        II="$((II+1))"
+        II="$((II + 1))"
         if [ "$II" -ge "$LENGTH" ]
         then
             sleep 1
@@ -2442,29 +2582,6 @@ local = {};
 console.log(local.moduleDirname('$MODULE', module.paths));
 // </script>
 "
-)}
-
-shMountData () {(set -e
-# this function will mount $1 to /mnt/data, and is intended for aws-ec2 setup
-# $ shMountData /dev/sdc
-# /dev/sdc /mnt/data ext4 defaults,noatime 0 0
-# /mnt/data /root none bind
-# /mnt/data/tmp /tmp none bind
-# /mnt/data/var.lib.docker /var/lib/docker none bind
-    # mount data $1
-    mkdir -p /mnt/data
-    mount "$1" /mnt/data -o noatime || true
-    mount "$1" /mnt/data -o noatime || true
-    # mount bind
-    # http://stackoverflow.com/questions/9713104/loop-over-tuples-in-bash
-    IFS=","
-    for TMP in /mnt/data,/root /mnt/data/tmp,/tmp /mnt/data/var.lib.docker,/var/lib/docker
-    do
-        set $TMP
-        mkdir -p "$1" "$2"
-        mount "$1" "$2" -o bind || true
-    done
-    chmod 1777 /tmp
 )}
 
 shNpmDeprecateAlias () {(set -e
@@ -2599,7 +2716,7 @@ process.stdout.write(String(dict[Object.keys(dict)[0]]));
 
 shNpmPackageDependencyTreeCreate () {(set -e
 # this function will create a svg dependency-tree of the npm-package
-    if [ -f README.md ] && ! (grep -q "https://nodei.co/npm/$1\b" README.md)
+    if [ -f README.md ] && ! (grep -q -E "https://nodei.co/npm/$1\b" README.md)
     then
         return
     fi
@@ -2798,7 +2915,8 @@ shNpmTest () {(set -e
 shNpmTestPublished () {(set -e
 # this function will npm-test the published npm-package $npm_package_name
     export MODE_BUILD=npmTestPublished
-    if [ "$TRAVIS" ] && [ ! "$NPM_TOKEN" ]
+    if [ "$TRAVIS" ] && ([ ! "$NPM_TOKEN" ] ||
+        ([ "$CI_BRANCH" = alpha ] && (printf "$CI_COMMIT_MESSAGE" | grep -q -E "^\[npm publish")))
     then
         shBuildPrint "skip npm-testing published-package $npm_package_name"
         return
@@ -2874,30 +2992,29 @@ shReadmeLinkValidate () {(set -e
     stupid: true
 */
 "use strict";
-var request, rgx;
-/* jslint-ignore-next-line */
-rgx = (/\b(http|https):\/\/.*?[)\]]/g);
-require("fs").readFileSync("README.md", "utf8")
-    .replace(rgx, function (match0, match1) {
-        match0 = match0
-            .slice(0, -1)
-            .replace("\u0022", "")
-            .replace("\u0027", "")
-            .replace((/\bbeta\b|\bmaster\b/g), "alpha")
-            .replace((/\/build\//g), "/build..alpha..travis-ci.org/");
-        if (process.env.npm_package_isPrivate && match0.indexOf("https://github.com/") === 0) {
-            return;
+var request;
+require("fs").readFileSync("README.md", "utf8").replace((
+    /\b(http|https):\/\/.*?[)\]]/g
+), function (match0, match1) {
+    match0 = match0
+        .slice(0, -1)
+        .replace("\u0022", "")
+        .replace("\u0027", "")
+        .replace((/\bbeta\b|\bmaster\b/g), "alpha")
+        .replace((/\/build\//g), "/build..alpha..travis-ci.org/");
+    if (process.env.npm_package_isPrivate && match0.indexOf("https://github.com/") === 0) {
+        return;
+    }
+    request = require(match1).request(require("url").parse(match0), function (response) {
+        console.log("shReadmeLinkValidate " + response.statusCode + " " + match0);
+        response.destroy();
+        if (!(response.statusCode < 400)) {
+            throw new Error("shReadmeLinkValidate - invalid link " + match0);
         }
-        request = require(match1).request(require("url").parse(match0), function (response) {
-            console.log("shReadmeLinkValidate " + response.statusCode + " " + match0);
-            response.destroy();
-            if (!(response.statusCode < 400)) {
-                throw new Error("shReadmeLinkValidate - invalid link " + match0);
-            }
-        });
-        request.setTimeout(30000);
-        request.end();
     });
+    request.setTimeout(30000);
+    request.end();
+});
 // </script>
 '
 )}
@@ -2911,7 +3028,13 @@ shReadmeTest () {(set -e
         shBuildCi
         return;
         ;;
-    "[git "*)
+    esac
+    case "$TRAVIS_BRANCH" in
+    cron)
+        shBuildCi
+        return;
+        ;;
+    task)
         shBuildCi
         return;
         ;;
@@ -2980,12 +3103,8 @@ shReadmeTest () {(set -e
         shRunWithScreenshotTxt /bin/sh "$FILE"
         ;;
     tmp/README.build_ci.sh)
-        # bug-workaround - "syntax error near unexpected token `)'"
-        case "$CI_COMMIT_MESSAGE" in
-        "[build app"*)
-            printf "printf '\\\\n'\n" >> "$FILE"
-            ;;
-        esac
+        unset PORT
+        unset npm_config_timeout_exit
         /bin/sh "$FILE"
         ;;
     esac
@@ -3170,12 +3289,34 @@ shSource () {
     . "$HOME/.bashrc"
 }
 
-shSshReverseTunnel () {
-# this function will ssh $@ with reverse-tunneling
-    ssh -R 2022:127.0.0.1:22 \
-        -R 3022:127.0.0.1:2022 \
-        "$@" || return $?
-}
+shSsh5022F () {(set -e
+# this function will ssh the reverse-tunnel-client
+# to the middleman $USER_HOST:5022
+# example usage:
+# shSsh5022F travis@procy.com -D 5080
+    USER_HOST="$1"
+    shift
+    ssh-keygen -R "[$(printf "$USER_HOST" | sed -e "s/.*\@//")]:5022" > /dev/null 2>&1 || true
+    ssh "$USER_HOST" -p 5022 -o StrictHostKeyChecking=no "$@"
+)}
+
+shSsh5022R () {(set -e
+# this function will ssh-reverse-tunnel the local-machine $USER@127.0.0.1
+# to the middleman $USER_HOST:5022
+# example usage:
+# shSsh5022R travis@proxy.com root
+# pkill -f "ssh $USER_REMOTE@$HOST"
+    USER_HOST="$1"
+    HOST="$(printf "$USER_HOST" | sed -e "s/.*@//")"
+    USER="$(printf "$USER_HOST" | sed -e "s/@.*//")"
+    shift
+    USER_REMOTE="$1"
+    shift
+    printf "\nssh $USER_REMOTE@$HOST\n"
+    ssh "$USER_REMOTE@$HOST" -Tf -R 5022:127.0.0.1:22 -o StrictHostKeyChecking=no "
+ssh-keygen -R [127.0.0.1]:5022 > /dev/null 2>&1
+ssh $USER@127.0.0.1 -p 5022 -L $HOST:5022:127.0.0.1:22 -NTf -o StrictHostKeyChecking=no"
+)}
 
 shTravisHookListGet () {(set -e
 # this function will get the json-list of travis-repos with the search paramters $1
@@ -3224,6 +3365,8 @@ shTravisSync () {(set -e
 
 shTravisTaskPush () {(set -e
 # this function will push the shell-task-script $1 with the message $2 to travis
+# example usage:
+# shCryptoWithGithubOrg kaizhu256 shTravisTaskPush "$HOME/src/sandbox2/.task.sh"
     utility2-github-crud put https://github.com/kaizhu256/node-sandbox2/blob/task/.task.sh \
         "$1" "[\$ /bin/sh .task.sh] $2"
 )}
@@ -3354,6 +3497,7 @@ shUtility2BuildApp () {(set -e
     for DIR in \
 apidoc-lite \
 db-lite \
+electron-lite \
 github-crud \
 istanbul-lite \
 jslint-lite \
@@ -3458,14 +3602,13 @@ utility2
 )}
 
 shUtility2Grep () {(set -e
-# this function will recursively grep $UTILITY2_DEPENDENTS for the regexp $REGEXP
-    REGEXP="$1"
+# this function will recursively grep $UTILITY2_DEPENDENTS for the regexp $1
     for DIR in $UTILITY2_DEPENDENTS $(cd "$HOME/src"; ls -d swgg-* 2>/dev/null)
     do
         DIR="$HOME/src/$DIR"
         if [ -d "$DIR" ]
         then
-            shGrep "$DIR" "$REGEXP"
+            shGrep "$DIR" "$@"
         fi
     done
 )}

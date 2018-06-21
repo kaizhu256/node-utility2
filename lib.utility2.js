@@ -1035,7 +1035,6 @@ local.assetsDict['/assets.readmeCustomOrg.npmdoc.template.md'] = '\
 {{#unless env.npm_package_homepage}} \
 {{env.npm_package_name}} ({{env.npm_package_version}}) \
 {{/if env.npm_package_homepage}} \
-[![npm package](https://img.shields.io/npm/v/npmdoc-{{env.npm_package_name}}.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-{{env.npm_package_name}}) \
 [![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}}.svg)](https://travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}})\n\
 \n\
 #### {{env.npm_package_description}}\n\
@@ -1076,7 +1075,6 @@ local.assetsDict['/assets.readmeCustomOrg.npmtest.template.md'] = '\
 {{#unless env.npm_package_homepage}} \
 {{env.npm_package_name}} ({{env.npm_package_version}}) \
 {{/if env.npm_package_homepage}} \
-[![npm package](https://img.shields.io/npm/v/npmtest-{{env.npm_package_name}}.svg?style=flat-square)](https://www.npmjs.org/package/npmtest-{{env.npm_package_name}}) \
 [![travis-ci.org build-status](https://api.travis-ci.org/npmtest/node-npmtest-{{env.npm_package_name}}.svg)](https://travis-ci.org/npmtest/node-npmtest-{{env.npm_package_name}})\n\
 \n\
 #### {{env.npm_package_description}}\n\
@@ -1253,9 +1251,10 @@ instruction\n\
 \n\
 \n\
 \n\
+    # shDeployCustom\n\
     shDeployGithub\n\
-    shReadmeTest example.sh\n\
-    shReadmeTest example.js\n\
+    # shDeployHeroku\n\
+    # shNpmTestPublished\n\
 ';
 
 
@@ -1976,6 +1975,7 @@ local.assetsDict['/favicon.ico'] = '';
             if (this._isDone) {
                 return;
             }
+            data = local.bufferToNodeBuffer(data);
             this.error = error;
             this.response = data;
             // init responseText
@@ -2029,6 +2029,7 @@ local.assetsDict['/favicon.ico'] = '';
          * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#send()
          */
             var xhr;
+            data = local.bufferToNodeBuffer(data);
             xhr = this;
             xhr.data = data;
             // asynchronously send data
@@ -2104,7 +2105,7 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will test buildApidoc's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.env.npm_config_mode_test_fast || local.modeJs !== 'node') {
                 onError(null, options);
                 return;
             }
@@ -2115,7 +2116,7 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will test buildApp's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.env.npm_config_mode_test_fast || local.modeJs !== 'node') {
                 onError(null, options);
                 return;
             }
@@ -2174,8 +2175,8 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will test webpage's default handling-behavior
          */
-            if (local.modeJs === 'browser') {
-                local.domStyleValidate();
+            local.domStyleValidate();
+            if (local.env.npm_config_mode_test_fast || local.modeJs !== 'node') {
                 onError(null, options);
                 return;
             }
@@ -2203,7 +2204,7 @@ local.assetsDict['/favicon.ico'] = '';
                 console.log(xhr.statusCode);
             });
          */
-            var ajaxProgressUpdate, bufferToNodeBuffer, isDone, modeJs, nop, streamCleanup, xhr;
+            var ajaxProgressUpdate, isDone, modeJs, nop, streamCleanup, xhr;
             // init standalone handling-behavior
             nop = function () {
             /*
@@ -2212,12 +2213,6 @@ local.assetsDict['/favicon.ico'] = '';
                 return;
             };
             ajaxProgressUpdate = local.ajaxProgressUpdate || nop;
-            bufferToNodeBuffer = local.bufferToNodeBuffer || function (arg) {
-            /*
-             * this function will return the arg
-             */
-                return arg;
-            };
             // init onError
             if (local.onErrorWithStack) {
                 onError = local.onErrorWithStack(onError);
@@ -2436,11 +2431,11 @@ local.assetsDict['/favicon.ico'] = '';
                         return;
                     }
                     // send data
-                    xhr.send(bufferToNodeBuffer(data));
+                    xhr.send(data);
                 });
             } else {
                 // send data
-                xhr.send(bufferToNodeBuffer(xhr.data));
+                xhr.send(xhr.data);
             }
             return xhr;
         };
@@ -2485,18 +2480,7 @@ local.assetsDict['/favicon.ico'] = '';
                     break;
                 // options.list.push(options);
                 case 2:
-                    // normalize url
-                    if (options.url.slice(0, 2) === '//') {
-                        options.url = options.urlParsed0.protocol + options.url;
-                    }
-                    if (!(/^https?:\/\//).test(options.url)) {
-                        if (options.url[0] !== '/') {
-                            options.url = options.urlParsed0.pathname.replace((/\/[^\/]*?$/), '/') +
-                                options.url;
-                        }
-                        options.url = options.urlParsed0.protocol + '//' + options.urlParsed0.host +
-                            '/' + options.url;
-                    }
+                    options.url = local.urlJoin(options.urlParsed0.href, options.url);
                     // validate url
                     local.assert((/^https?:\/\//).test(options.url), options.url);
                     options.url = options.url
@@ -2685,12 +2669,20 @@ local.assetsDict['/favicon.ico'] = '';
             local.assert(aa !== bb, [aa]);
         };
 
-        local.base64FromBuffer = function (bff) {
+        local.base64FromBuffer = function (bff, mode) {
         /*
-         * this function will convert the Uint8Array-bff to base64-encoded-text
+         * this function will convert Uint8Array bff to b64
          * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
          */
             var ii, mod3, text, uint24, uint6ToB64;
+            // convert utf8-string bff to Uint8Array
+            if (bff && mode === 'string') {
+                bff = typeof window === 'object' &&
+                    window &&
+                    typeof window.TextEncoder === 'function'
+                    ? new window.TextEncoder().encode(bff)
+                    : Buffer.from(bff);
+            }
             bff = bff || [];
             text = '';
             uint24 = 0;
@@ -2721,60 +2713,60 @@ local.assetsDict['/favicon.ico'] = '';
             return text.replace(/A(?=A$|$)/g, '=');
         };
 
-        local.base64FromHex = function (text) {
-        /*
-         * this function will convert the hex-text to base64-encoded-text
-         */
-            var bff, ii;
-            bff = [];
-            text = text || '';
-            for (ii = 0; ii < text.length; ii += 2) {
-                bff.push(parseInt(text[ii] + text[ii + 1], 16));
-            }
-            return local.base64FromBuffer(bff);
-        };
-
         local.base64FromString = function (text) {
         /*
-         * this function will convert the utf8-text to base64-encoded-text
+         * this function will convert utf8-string text to b64
          */
-            return local.base64FromBuffer(local.bufferCreate(text));
+            return local.base64FromBuffer(text, 'string');
         };
 
-        /* jslint-ignore-begin */
-        local.base64ToBuffer = function (text) {
+        local.base64ToBuffer = function (b64, mode) {
         /*
-         * this function will convert the base64-encoded text to Uint8Array
+         * this function will convert b64 to Uint8Array
          * https://gist.github.com/wang-bin/7332335
          */
-            text = text || '';
-            var de = new Uint8Array(text.length); //3/4
-            var u = 0, q = '', x = '', c;
-            var map64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-            for (var r=0; c=text[x++]; ~c&&(u=q%4?u*64+c:c,q++%4)?de[r++]=(255&u>>(-2*q&6)):0)
-                c = map64.indexOf(c);
-            return de.subarray(0, r);
-        };
-        /* jslint-ignore-end */
-
-        local.base64ToHex = function (text) {
-        /*
-         * this function will convert the base64-encoded-text to hex-text
-         */
-            var bff, ii;
-            bff = local.base64ToBuffer(text);
-            text = '';
-            for (ii = 0; ii < bff.length; ii += 1) {
-                text += (256 + bff[ii]).toString(16).slice(-2);
+            /*globals Uint8Array*/
+            var bff, byte, chr, ii, jj, map64, mod4;
+            b64 = b64 || '';
+            bff = new Uint8Array(b64.length); // 3/4
+            byte = 0;
+            jj = 0;
+            map64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+            mod4 = 0;
+            for (ii = 0; ii < b64.length; ii += 1) {
+                chr = map64.indexOf(b64[ii]);
+                if (chr >= 0) {
+                    mod4 %= 4;
+                    if (mod4 === 0) {
+                        byte = chr;
+                    } else {
+                        byte = byte * 64 + chr;
+                        bff[jj] = 255 & (byte >> ((-2 * (mod4 + 1)) & 6));
+                        jj += 1;
+                    }
+                    mod4 += 1;
+                }
             }
-            return text;
+            // optimization - create resized-view of bff
+            bff = bff.subarray(0, jj);
+            // mode !== 'string'
+            if (mode !== 'string') {
+                return bff;
+            }
+            // mode === 'string' - browser js-env
+            if (typeof window === 'object' && window && typeof window.TextDecoder === 'function') {
+                return new window.TextDecoder().decode(bff);
+            }
+            // mode === 'string' - node js-env
+            Object.setPrototypeOf(bff, Buffer.prototype);
+            return String(bff);
         };
 
-        local.base64ToString = function (text) {
+        local.base64ToString = function (b64) {
         /*
-         * this function will convert the base64-encoded text to utf8-text
+         * this function will convert b64 to utf8-string
          */
-            return local.bufferToString(local.base64ToBuffer(text));
+            return local.base64ToBuffer(b64, 'string');
         };
 
         local.blobRead = function (blob, encoding, onError) {
@@ -3181,19 +3173,20 @@ local.assetsDict['/favicon.ico'] = '';
             onNext(null, options);
         };
 
-        local.bufferConcat = function (bufferList) {
+        local.bufferConcat = function (bffList) {
         /*
          * this function will emulate node's Buffer.concat for Uint8Array in the browser
          */
+            /*globals UintArray*/
             var ii, jj, length, result;
             length = 0;
-            bufferList = bufferList
+            bffList = bffList
                 .filter(function (bff) {
                     return bff || bff === 0;
                 })
                 .map(function (bff) {
                     // coerce bff to Uint8Array
-                    if (!(bff instanceof local.global.Uint8Array)) {
+                    if (!(bff instanceof Uint8Array)) {
                         bff = typeof bff === 'number'
                             ? local.bufferCreate(String(bff))
                             : local.bufferCreate(bff);
@@ -3203,7 +3196,7 @@ local.assetsDict['/favicon.ico'] = '';
                 });
             result = local.bufferCreate(length);
             ii = 0;
-            bufferList.forEach(function (bff) {
+            bffList.forEach(function (bff) {
                 for (jj = 0; jj < bff.length; ii += 1, jj += 1) {
                     result[ii] = bff[jj];
                 }
@@ -3213,34 +3206,17 @@ local.assetsDict['/favicon.ico'] = '';
 
         local.bufferCreate = function (text) {
         /*
-         * this function will create a Uint8Array from the text,
+         * this function will create a Uint8Array from text,
          * with either 'utf8' (default) or 'base64' encoding
          */
-// bug-workaround - TextEncoder.encode polyfill
-/* istanbul ignore next */
-/* jslint-ignore-begin */
-// utility2-uglifyjs https://github.com/feross/buffer/blob/v4.9.1/index.js#L1670
-function utf8ToBytes(e,t){t=t||Infinity;var n,r=e.length,i=null,s=[];for(var o=0
-;o<r;++o){n=e.charCodeAt(o);if(n>55295&&n<57344){if(!i){if(n>56319){(t-=3)>-1&&s
-.push(239,191,189);continue}if(o+1===r){(t-=3)>-1&&s.push(239,191,189);continue}
-i=n;continue}if(n<56320){(t-=3)>-1&&s.push(239,191,189),i=n;continue}n=(i-55296<<10|
-n-56320)+65536}else i&&(t-=3)>-1&&s.push(239,191,189);i=null;if(n<128){if((t-=1)<0
-)break;s.push(n)}else if(n<2048){if((t-=2)<0)break;s.push(n>>6|192,n&63|128)}else if(
-n<65536){if((t-=3)<0)break;s.push(n>>12|224,n>>6&63|128,n&63|128)}else{if(!(n<1114112
-))throw new Error("Invalid code point");if((t-=4)<0)break;s.push(n>>18|240,n>>12&63|128
-,n>>6&63|128,n&63|128)}}return s}
-/* jslint-ignore-end */
-            if (typeof text === 'string') {
-                if (local.modeJs === 'node') {
-                    return Buffer.from(text);
-                }
-                if (local.global.TextEncoder) {
-                    return new local.global.TextEncoder('utf-8').encode(text);
-                }
-                /* jslint-ignore-next-line */
-                return new local.global.Uint8Array(utf8ToBytes(text));
+            /*globals Uint8Array*/
+            if (typeof text !== 'string') {
+                return new Uint8Array(text);
             }
-            return new local.global.Uint8Array(text);
+            if (typeof window === 'object' && window && typeof window.TextEncoder === 'function') {
+                return new window.TextEncoder().encode(text);
+            }
+            return Buffer.from(text);
         };
 
         local.bufferIndexOfSubBuffer = function (bff, subBff, fromIndex) {
@@ -3264,22 +3240,25 @@ n<65536){if((t-=3)<0)break;s.push(n>>12|224,n>>6&63|128,n&63|128)}else{if(!(n<11
         local.bufferRandomBytes = function (length) {
         /*
          * this function will create create a Uint8Array with the given length,
-         * filled with random bytes
+         * filled with cryptographically-strong random bytes
          */
-            var bff, ii;
-            bff = new local.global.Uint8Array(length);
-            for (ii = 0; ii < bff.length; ii += 1) {
-                bff[ii] = Math.random() * 256;
-            }
-            return bff;
+            /*globals Uint8Array, crypto*/
+            return typeof crypto === 'object' && crypto && crypto.getRandomValues
+                ? crypto.getRandomValues(new Uint8Array(length))
+                : require('crypto').randomBytes(length);
         };
 
         local.bufferToNodeBuffer = function (bff) {
         /*
-         * this function will convert the Uint8Array instance to a node Buffer instance
+         * this function will coerce Uint8Array bff to nodejs Buffer
          */
-            if (local.modeJs === 'node' &&
-                    bff instanceof local.global.Uint8Array && (!Buffer.isBuffer(bff))) {
+            /*globals Uint8Array*/
+            if (typeof Buffer === 'function' &&
+                    Buffer &&
+                    typeof Buffer.isBuffer === 'function' &&
+                    bff instanceof Uint8Array &&
+                    !Buffer.isBuffer(bff)) {
+                bff = bff.subarray();
                 Object.setPrototypeOf(bff, Buffer.prototype);
             }
             return bff;
@@ -3287,28 +3266,18 @@ n<65536){if((t-=3)<0)break;s.push(n>>12|224,n>>6&63|128,n&63|128)}else{if(!(n<11
 
         local.bufferToString = function (bff) {
         /*
-         * this function will convert the Uint8Array bff to a utf8 string
+         * this function will convert Uint8Array bff to utf8 string
          */
             bff = bff || '';
             if (typeof bff === 'string') {
                 return bff;
             }
-            if (local.modeJs === 'node') {
-                return String(local.bufferToNodeBuffer(bff));
+            // browser js-env
+            if (typeof window === 'object' && window && typeof window.TextDecoder === 'function') {
+                return new window.TextDecoder().decode(bff);
             }
-            if (local.global.TextDecoder) {
-                return new local.global.TextDecoder('utf-8').decode(bff);
-            }
-// bug-workaround - TextDecoder.decode polyfill
-// http://stackoverflow.com/questions/17191945/conversion-between-utf-8-arraybuffer-and-string
-/* jslint-ignore-begin */
-function Utf8ArrayToStr(e){var t,n,r,i,s,o;t="",r=e.length,n=0;while(n<r){i=e[n++
-];switch(i>>4){case 0:case 1:case 2:case 3:case 4:case 5:case 6:case 7:t+=String
-.fromCharCode(i);break;case 12:case 13:s=e[n++],t+=String.fromCharCode((i&31)<<6|
-s&63);break;case 14:s=e[n++],o=e[n++],t+=String.fromCharCode((i&15)<<12|(s&63)<<6|
-(o&63)<<0)}}return t}
-return Utf8ArrayToStr(bff);
-/* jslint-ignore-end */
+            // node js-env
+            return String(local.bufferToNodeBuffer(bff));
         };
 
         local.buildApidoc = function (options, onError) {
@@ -3399,7 +3368,7 @@ return Utf8ArrayToStr(bff);
                     local.assert(!local.jslint.errorText, local.jslint.errorText);
                     local.fsWriteFileWithMkdirpSync(
                         local.env.npm_config_dir_build + '/app' + options2.file,
-                        local.bufferToNodeBuffer(xhr.response)
+                        xhr.response
                     );
                     onParallel();
                 });
@@ -3553,8 +3522,7 @@ return Utf8ArrayToStr(bff);
                 ), function (match0, match1) {
                     [local, local.github_crud, local.swgg].some(function (dict) {
                         if (match1[0] !== '_' && typeof dict[match1] === 'function') {
-                            match0 = '        local.' + match1 + ' = ' +
-                                String(dict[match1]) + ';';
+                            match0 = '        local.' + match1 + ' = ' + String(dict[match1]) + ';';
                             return true;
                         }
                     });
@@ -3744,6 +3712,10 @@ return Utf8ArrayToStr(bff);
                 options.dataTo = options.dataTo.replace(
                     '$ npm install ' + local.env.npm_package_name,
                     '$ npm install ' + local.env.GITHUB_REPO + '#alpha'
+                );
+                options.dataTo = options.dataTo.replace(
+                    (/\n.*?\bhttps:\/\/www.npmjs.com\/package\/.*?\n/),
+                    '\n'
                 );
             }
             // customize shBuildCiAfter and shBuildCiBefore
@@ -4282,7 +4254,11 @@ return Utf8ArrayToStr(bff);
          */
             var tmp;
             tmp = [];
-            Array.from(document.querySelectorAll('style')).map(function (element, ii) {
+            Array.from(typeof document === 'object' &&
+                    document &&
+                    typeof document.querySelectorAll === 'function'
+                ? document.querySelectorAll('style')
+                : []).map(function (element, ii) {
                 element.innerHTML.replace((/^([^\n @].*?)[,\{:].*?$/gm), function (match0, match1) {
                     ii = document.querySelectorAll(match1).length;
                     if (!(ii > 1)) {
@@ -4434,75 +4410,75 @@ return Utf8ArrayToStr(bff);
             return script;
         };
 
-        local.jsonCopy = function (jsonObj) {
+        local.jsonCopy = function (obj) {
         /*
-         * this function will return a deep-copy of the jsonObj
+         * this function will deep-copy obj
          */
-            return jsonObj === undefined
+            return obj === undefined
                 ? undefined
-                : JSON.parse(JSON.stringify(jsonObj));
+                : JSON.parse(JSON.stringify(obj));
         };
 
-        local.jsonStringifyOrdered = function (jsonObj, replacer, space) {
+        local.jsonStringifyOrdered = function (obj, replacer, space) {
         /*
-         * this function will JSON.stringify the jsonObj,
+         * this function will JSON.stringify obj,
          * with object-keys sorted and circular-references removed
          */
             var circularList, stringify, tmp;
-            stringify = function (jsonObj) {
+            stringify = function (obj) {
             /*
-             * this function will recursively JSON.stringify the jsonObj,
+             * this function will recursively JSON.stringify obj,
              * with object-keys sorted and circular-references removed
              */
-                // if jsonObj is not an object or function, then JSON.stringify as normal
-                if (!(jsonObj &&
-                        typeof jsonObj === 'object' &&
-                        typeof jsonObj.toJSON !== 'function')) {
-                    return JSON.stringify(jsonObj);
+                // if obj is not an object or function, then JSON.stringify as normal
+                if (!(obj &&
+                        typeof obj === 'object' &&
+                        typeof obj.toJSON !== 'function')) {
+                    return JSON.stringify(obj);
                 }
                 // ignore circular-reference
-                if (circularList.indexOf(jsonObj) >= 0) {
+                if (circularList.indexOf(obj) >= 0) {
                     return;
                 }
-                circularList.push(jsonObj);
-                // if jsonObj is an array, then recurse its jsonObjs
-                if (Array.isArray(jsonObj)) {
-                    return '[' + jsonObj.map(function (jsonObj) {
+                circularList.push(obj);
+                // if obj is an array, then recurse its items
+                if (Array.isArray(obj)) {
+                    return '[' + obj.map(function (obj) {
                         // recurse
-                        tmp = stringify(jsonObj);
+                        tmp = stringify(obj);
                         return typeof tmp === 'string'
                             ? tmp
                             : 'null';
                     }).join(',') + ']';
                 }
-                // if jsonObj is not an array, then recurse its items with object-keys sorted
-                return '{' + Object.keys(jsonObj)
+                // if obj is not an array, then recurse its items with object-keys sorted
+                return '{' + Object.keys(obj)
                     // sort object-keys
                     .sort()
                     .map(function (key) {
                         // recurse
-                        tmp = stringify(jsonObj[key]);
+                        tmp = stringify(obj[key]);
                         if (typeof tmp === 'string') {
                             return JSON.stringify(key) + ':' + tmp;
                         }
                     })
-                    .filter(function (jsonObj) {
-                        return typeof jsonObj === 'string';
+                    .filter(function (obj) {
+                        return typeof obj === 'string';
                     })
                     .join(',') + '}';
             };
             circularList = [];
-            // try to derefernce all properties in jsonObj
+            // try to derefernce all properties in obj
             (function () {
                 try {
-                    jsonObj = JSON.parse(JSON.stringify(jsonObj));
+                    obj = JSON.parse(JSON.stringify(obj));
                 } catch (ignore) {
                 }
             }());
-            return JSON.stringify(typeof jsonObj === 'object' && jsonObj
+            return JSON.stringify(typeof obj === 'object' && obj
                 // recurse
-                ? JSON.parse(stringify(jsonObj))
-                : jsonObj, replacer, space);
+                ? JSON.parse(stringify(obj))
+                : obj, replacer, space);
         };
 
         local.jwtA256GcmDecrypt = function (token, key) {
@@ -4977,11 +4953,11 @@ return Utf8ArrayToStr(bff);
             });
         };
 
-        local.normalizeJwtBase64Url = function (text) {
+        local.normalizeJwtBase64Url = function (b64) {
         /*
-         * this function will normlize the text to base64url format
+         * this function will normlize b64 to base64url format
          */
-            return text
+            return b64
                 .replace((/\=/g), '')
                 .replace((/\+/g), '-')
                 .replace((/\//g), '_');
@@ -6125,7 +6101,7 @@ instruction\n\
 
         local.stringRegexpEscape = function (text) {
         /*
-         * this function will make the text html-safe
+         * this function will regexp-escape text
          * https://stackoverflow.com/questions/3561493/is-there-a-regexp-escape-function-in-javascript
          */
             return text.replace(/[\-\/\\\^$*+?.()|\[\]{}]/g, '\\$&');
@@ -6133,7 +6109,7 @@ instruction\n\
 
         local.stringTruncate = function (text, maxLength) {
         /*
-         * this function will truncate the text to the given maxLength
+         * this function will truncate text to the given maxLength
          */
             return text.length > maxLength
                 ? text.slice(0, maxLength - 3).trimRight() + '...'
@@ -7210,6 +7186,29 @@ instruction\n\
             local.setTimeoutOnError(onError, 250);
         };
 
+        local.urlJoin = function (aa, bb) {
+        /*
+         * this function will, if bb is relative, url-join aa with bb
+         */
+            // bb is absolute-url
+            if ((/^\w+?:\/\//).test(bb)) {
+                return bb;
+            }
+            // bb is absolute-url without protocol
+            if (bb.slice(0, 2) === '//') {
+                return aa.split('/')[0] + bb;
+            }
+            // bb is absolute-url without host
+            if (bb[0] === '/') {
+                return aa.split('/').slice(0, 3).join('/') + bb;
+            }
+            // bb is relative-url
+            if (aa.split('/').length < 4) {
+                aa += '/';
+            }
+            return aa.replace((/[?#].*?$/), '').replace((/[^\/]*?$/), '') + bb;
+        };
+
         local.urlParse = function (url) {
         /*
          * this function will parse the url according to the above spec, plus a query param
@@ -7477,6 +7476,16 @@ instruction\n\
         }
         // init cli
         local.cliDict = {};
+        local.cliDict['utility2.ajax'] = function () {
+        /*
+         * <url>
+         * # ajax <url> and print response to stdout
+         */
+            local.ajax({ url: process.argv[3] }, function (error, xhr) {
+                local.onErrorThrow(error);
+                process.stdout.write(xhr.response);
+            });
+        };
         local.cliDict['utility2.browserTest'] = function () {
         /*
          * <url> <mode>
@@ -7581,6 +7590,13 @@ instruction\n\
                 JSON.parse(process.argv[3] || '{}'),
                 local.onErrorThrow
             );
+        };
+        local.cliDict['utility2.m3u8Download'] = function () {
+        /*
+         * <m3u8-url>
+         * # download m3u8-video-segements specified by m3u8-url
+         */
+            local.m3u8Download({ url: process.argv[3] }, local.onErrorThrow);
         };
         local.cliDict['utility2.onParallelListExec'] = function () {
         /*
