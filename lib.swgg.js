@@ -43,18 +43,13 @@
         }());
         // init local
         local = {};
-        // init modeJs
-        (function () {
-            try {
-                local.modeJs = typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            } catch (ignore) {
-            }
-            local.modeJs = local.modeJs || 'browser';
-        }());
+        // init isBrowser
+        local.isBrowser = typeof window === "object" &&
+            typeof window.XMLHttpRequest === "function" &&
+            window.document &&
+            typeof window.document.querySelectorAll === "function";
         // init global
-        local.global = local.modeJs === 'browser'
+        local.global = local.isBrowser
             ? window
             : global;
         // re-init local
@@ -69,7 +64,7 @@
             return;
         };
         // init exports
-        if (local.modeJs === 'browser') {
+        if (local.isBrowser) {
             local.global.utility2_swgg = local;
         } else {
             // require builtins
@@ -116,7 +111,7 @@
 
         /* validateLineSortedReset */
         // init lib utility2
-        local.utility2 = local.global.utility2_rollup || (local.modeJs === 'browser'
+        local.utility2 = local.global.utility2_rollup || (local.isBrowser
             ? local.global.utility2
             : (function () {
                 try {
@@ -2756,7 +2751,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     user = request.swgg.user = {};
                     user.jwtEncrypted = request.headers.authorization &&
                         request.headers.authorization.replace('Bearer ', '');
-                    user.jwtDecrypted = local.jwtA256GcmDecrypt(user.jwtEncrypted);
+                    user.jwtDecrypted = local.jwtAes256GcmDecrypt(user.jwtEncrypted);
                     switch (crud.crudType[0]) {
                     // coverage-hack - test error handling-behavior
                     case 'crudErrorLogin':
@@ -2804,7 +2799,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                         user.jwtDecrypted = {};
                         user.jwtDecrypted.sub = user.data.username;
                         // update jwtEncrypted in client
-                        user.jwtEncrypted = local.jwtA256GcmEncrypt(user.jwtDecrypted);
+                        user.jwtEncrypted = local.jwtAes256GcmEncrypt(user.jwtDecrypted);
                         local.serverRespondHeadSet(request, response, null, {
                             'swgg-jwt-encrypted': user.jwtEncrypted
                         });
@@ -2822,7 +2817,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                             // update jwtEncrypted in client
                             if (data.jwtEncrypted !== user.jwtEncrypted) {
                                 user.jwtEncrypted = data.jwtEncrypted;
-                                user.jwtDecrypted = local.jwtA256GcmDecrypt(user.jwtEncrypted);
+                                user.jwtDecrypted = local.jwtAes256GcmDecrypt(user.jwtEncrypted);
                                 local.serverRespondHeadSet(request, response, null, {
                                     'swgg-jwt-encrypted': user.jwtEncrypted
                                 });
@@ -4739,9 +4734,12 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                         options.targetOperation.querySelector('.responseBody').textContent =
                             data.contentType;
                         options.targetOperation.querySelector('.responseMedia').innerHTML =
-                            '<' + data.mediaType + ' controls src="data:' + data.contentType +
+                            '<' + data.mediaType +
+                            ' class="domOnEventMediaHotkeysInit" controls src="data:' +
+                            data.contentType +
                             ';base64,' + local.base64FromBuffer(data.response) + '"></' +
                             data.mediaType + '>';
+                        window.domOnEventMediaHotkeys('init');
                         break;
                     default:
                         options.targetOperation.querySelector('.responseBody').textContent =
@@ -5237,13 +5235,15 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
             local.serverRespondJsonapi(request, response, error);
         };
     }());
-    switch (local.modeJs) {
 
 
 
     // run node js-env code - init-after
     /* istanbul ignore next */
-    case 'node':
+    (function () {
+        if (local.isBrowser) {
+            return;
+        }
         local.assetsDict['/assets.swagger-ui.logo.medium.png'] = Buffer.from(
             local.templateSwaggerUiLogoMediumBase64,
             'base64'
@@ -5255,6 +5255,5 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
         local.swgg.apiUpdate(JSON.parse(
             local.tryCatchReadFile(local.__dirname + '/assets.swgg.swagger.json') || '{}'
         ));
-        break;
-    }
+    }());
 }());

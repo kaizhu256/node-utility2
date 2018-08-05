@@ -61,15 +61,13 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - add server stress-test using electron
 - none
 
-#### changelog 2018.6.21
-- npm publish 2018.6.21
-- update shell-function shBuildAppSwgg0 to save states shDeployCustom, shDeployGithub, shDeployHeroku, shNpmTestPublished
-- add env var \$npm_config_mode_test_fast
-- make base64 and buffer functions standalone
-- add 'debug' task to travis-ci
-- add cli-command utility2.ajax
-- add functions local.m3u8Download, local.urlJoin
-- add shell-functions shBaseInstallLinode, shCustomOrgRepoCreateSyncCreateNpmdoc, shSsh5022P, shSsh5022R
+#### changelog 2018.8.5
+- npm publish 2018.8.5
+- add shell-functions shMediaHlsFromMp4, shMediaHlsEncrypt
+- add inline-html-script domOnEventMediaHotkeys
+- add functions cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRawEncrypt
+- rename functions jwtA256GcmDecrypt -> jwtAes256GcmDecrypt, jwtA256GcmEncrypt -> jwtAes256GcmEncrypt
+- migrate from modeJs -> isBrowser
 - none
 
 #### this package requires
@@ -148,22 +146,17 @@ instruction
     (function () {
         // init local
         local = {};
-        // init modeJs
-        (function () {
-            try {
-                local.modeJs = typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            } catch (ignore) {
-            }
-            local.modeJs = local.modeJs || 'browser';
-        }());
+        // init isBrowser
+        local.isBrowser = typeof window === "object" &&
+            typeof window.XMLHttpRequest === "function" &&
+            window.document &&
+            typeof window.document.querySelectorAll === "function";
         // init global
-        local.global = local.modeJs === 'browser'
+        local.global = local.isBrowser
             ? window
             : global;
         // re-init local
-        local = local.global.utility2_rollup || (local.modeJs === 'browser'
+        local = local.global.utility2_rollup || (local.isBrowser
             ? local.global.utility2_utility2
             : require('utility2'));
         // init exports
@@ -183,7 +176,7 @@ instruction
         /*
          * this function will test ajax's "200 ok" handling-behavior
          */
-            if (local.modeJs !== 'browser') {
+            if (!local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -204,7 +197,7 @@ instruction
         /*
          * this function will test ajax's "404 not found" handling-behavior
          */
-            if (local.modeJs !== 'browser') {
+            if (!local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -226,7 +219,7 @@ instruction
         /*
          * this function will test webpage's default handling-behavior
          */
-            if (local.env.npm_config_mode_test_fast || local.modeJs !== 'node') {
+            if (local.env.npm_config_mode_test_fast || local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -234,13 +227,15 @@ instruction
             local.browserTest(options, onError);
         };
     }());
-    switch (local.modeJs) {
 
 
 
     // run browser js-env code - init-test
     /* istanbul ignore next */
-    case 'browser':
+    (function () {
+        if (!local.isBrowser) {
+            return;
+        }
         local.testRunBrowser = function (event) {
             if (!event || (event &&
                     event.currentTarget &&
@@ -373,13 +368,16 @@ instruction
         });
         // run tests
         local.testRunBrowser();
-        break;
+    }());
 
 
 
     // run node js-env code - init-test
     /* istanbul ignore next */
-    case 'node':
+    (function () {
+        if (local.isBrowser) {
+            return;
+        }
         // init exports
         module.exports = local;
         // require builtins
@@ -481,20 +479,30 @@ body {\n\
     margin: 0 40px;\n\
 }\n\
 body > div,\n\
+body > form > div,\n\
+body > form > input,\n\
+body > form > pre,\n\
+body > form > textarea,\n\
+body > form > .button,\n\
+body > input,\n\
 body > pre,\n\
 body > textarea,\n\
 body > .button {\n\
     margin-bottom: 20px;\n\
 }\n\
+body > form > input,\n\
+body > form > .button,\n\
+body > input,\n\
+body > .button {\n\
+    width: 20rem;\n\
+}\n\
+body > form > textarea,\n\
 body > textarea {\n\
     height: 10rem;\n\
     width: 100%;\n\
 }\n\
 body > textarea[readonly] {\n\
     background: #ddd;\n\
-}\n\
-body > .button {\n\
-    width: 20rem;\n\
 }\n\
 code,\n\
 pre,\n\
@@ -556,7 +564,6 @@ textarea {\n\
 <body>\n\
 <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
-<code style="display: none;"></code><div class="button colorError uiAnimateShake uiAnimateSlide utility2FooterDiv zeroPixel" style="display: none;"></div><pre style="display: none;"></pre><textarea readonly style="display: none;"></textarea>\n\
 <script>\n\
 /* jslint-utility2 */\n\
 /*jslint\n\
@@ -608,6 +615,87 @@ textarea {\n\
         ajaxProgressUpdate();\n\
     });\n\
 }());\n\
+// init domOnEventMediaHotkeys\n\
+(function () {\n\
+/*\n\
+ * this function will add media-hotkeys to elements with class=".domOnEventMediaHotkeysInit"\n\
+ */\n\
+    "use strict";\n\
+    var input, onEvent;\n\
+    if (window.domOnEventMediaHotkeys) {\n\
+        return;\n\
+    }\n\
+    onEvent = window.domOnEventMediaHotkeys = function (event) {\n\
+        var media;\n\
+        if (event === "init") {\n\
+            Array.from(\n\
+                document.querySelectorAll(".domOnEventMediaHotkeysInit")\n\
+            ).forEach(function (media) {\n\
+                media.classList.remove("domOnEventMediaHotkeysInit");\n\
+                media.classList.add("domOnEventMediaHotkeys");\n\
+                ["play", "pause", "seeking"].forEach(function (event) {\n\
+                    media.addEventListener(event, onEvent);\n\
+                });\n\
+            });\n\
+            return;\n\
+        }\n\
+        if (event.currentTarget.classList.contains("domOnEventMediaHotkeys")) {\n\
+            window.domOnEventMediaHotkeysMedia1 = event.currentTarget;\n\
+            window.domOnEventMediaHotkeysInput.focus();\n\
+            return;\n\
+        }\n\
+        media = window.domOnEventMediaHotkeysMedia1;\n\
+        try {\n\
+            switch (event.key || event.type) {\n\
+            case ",":\n\
+            case ".":\n\
+                media.currentTime += (event.key === "," && -0.03125) || 0.03125;\n\
+                break;\n\
+            case "<":\n\
+            case ">":\n\
+                media.playbackRate *= (event.key === "<" && 0.5) || 2;\n\
+                break;\n\
+            case "ArrowDown":\n\
+            case "ArrowUp":\n\
+                media.volume += (event.key === "ArrowDown" && -0.05) || 0.05;\n\
+                break;\n\
+            case "ArrowLeft":\n\
+            case "ArrowRight":\n\
+                media.currentTime += (event.key === "ArrowLeft" && -5) || 5;\n\
+                break;\n\
+            case "j":\n\
+            case "l":\n\
+                media.currentTime += (event.key === "j" && -10) || 10;\n\
+                break;\n\
+            case "k":\n\
+            case " ":\n\
+                if (media.paused) {\n\
+                    media.play();\n\
+                } else {\n\
+                    media.pause();\n\
+                }\n\
+                break;\n\
+            case "m":\n\
+                media.muted = !media.muted;\n\
+                break;\n\
+            default:\n\
+                if (event.key >= 0) {\n\
+                    media.currentTime = 0.1 * event.key * media.duration;\n\
+                    break;\n\
+                }\n\
+                return;\n\
+            }\n\
+        } catch (ignore) {\n\
+        }\n\
+        event.preventDefault();\n\
+    };\n\
+    input = window.domOnEventMediaHotkeysInput = document.createElement("button");\n\
+    input.style = "border:0;height:0;margin:0;padding:0;position:fixed;width:0;z-index:-1;";\n\
+    input.addEventListener("click", onEvent);\n\
+    input.addEventListener("keydown", onEvent);\n\
+    document.body.appendChild(input);\n\
+    onEvent("init");\n\
+}());\n\
 // init domOnEventSelectAllWithinPre\n\
 (function () {\n\
 /*\n\
@@ -621,7 +709,7 @@ textarea {\n\
     window.domOnEventSelectAllWithinPre = function (event) {\n\
         var range, selection;\n\
         if (event &&\n\
-                event.code === "KeyA" &&\n\
+                event.key === "a" &&\n\
                 (event.ctrlKey || event.metaKey) &&\n\
                 event.target.closest("pre")) {\n\
             range = document.createRange();\n\
@@ -773,7 +861,7 @@ utility2-comment -->\n\
             });
         // init cli
         if (module !== require.main || local.global.utility2_rollup) {
-            break;
+            return;
         }
         local.assetsDict['/assets.example.js'] =
             local.assetsDict['/assets.example.js'] ||
@@ -786,7 +874,7 @@ utility2-comment -->\n\
         }
         // start server
         if (local.global.utility2_serverHttp1) {
-            break;
+            return;
         }
         process.env.PORT = process.env.PORT || '8081';
         console.error('server starting on port ' + process.env.PORT);
@@ -799,8 +887,7 @@ utility2-comment -->\n\
             response.statusCode = 404;
             response.end();
         }).listen(process.env.PORT);
-        break;
-    }
+    }());
 }());
 ```
 
@@ -895,6 +982,7 @@ utility2-comment -->\n\
     },
     "scripts": {
         "build-ci": "./npm_scripts.sh",
+        "env": "env",
         "eval": "./npm_scripts.sh",
         "heroku-postbuild": "./npm_scripts.sh",
         "postinstall": "./npm_scripts.sh",
@@ -902,7 +990,7 @@ utility2-comment -->\n\
         "test": "./npm_scripts.sh",
         "utility2": "./npm_scripts.sh"
     },
-    "version": "2018.6.21"
+    "version": "2018.8.5"
 }
 ```
 
@@ -983,7 +1071,10 @@ RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
     apt-get update; \
     apt-get install --no-install-recommends -y \
+        ffmpeg \
+        imagemagick \
         nginx-extras \
+        sqlite3 \
         transmission-daemon \
         ssh \
         vim \

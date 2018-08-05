@@ -44,18 +44,13 @@
         }());
         // init local
         local = {};
-        // init modeJs
-        (function () {
-            try {
-                local.modeJs = typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            } catch (ignore) {
-            }
-            local.modeJs = local.modeJs || 'browser';
-        }());
+        // init isBrowser
+        local.isBrowser = typeof window === "object" &&
+            typeof window.XMLHttpRequest === "function" &&
+            window.document &&
+            typeof window.document.querySelectorAll === "function";
         // init global
-        local.global = local.modeJs === 'browser'
+        local.global = local.isBrowser
             ? window
             : global;
         // re-init local
@@ -70,7 +65,7 @@
             return;
         };
         // init exports
-        if (local.modeJs === 'browser') {
+        if (local.isBrowser) {
             local.global.utility2_istanbul = local;
         } else {
             // require builtins
@@ -117,7 +112,7 @@
 
         /* validateLineSortedReset */
         // init custom
-        if (local.modeJs === 'node') {
+        if (!local.isBrowser) {
             local._istanbul_module = require('module');
             local.process = process;
             local.require = require;
@@ -293,12 +288,12 @@
         local._istanbul_fs.readFileSync = function (file) {
             // return head.txt or foot.txt
             file = local[file.slice(-8)];
-            if (local.modeJs === 'browser') {
+            if (local.isBrowser) {
                 file = file
                     .replace('<!doctype html>\n', '')
                     .replace((/(<\/?)(?:body|html)/g), '$1div');
             }
-            if (local.modeJs === 'node' && process.env.npm_package_homepage) {
+            if (!local.isBrowser && process.env.npm_package_homepage) {
                 file = file
                     .replace('{{env.npm_package_homepage}}', process.env.npm_package_homepage)
                     .replace('{{env.npm_package_name}}', process.env.npm_package_name)
@@ -323,7 +318,7 @@
 
         local.coverageMerge = function (coverage1, coverage2) {
         /*
-         * this function will merge coverage2 into coverage1
+         * this function will inplace-merge coverage2 into coverage1
          */
             var dict1, dict2;
             coverage1 = coverage1 || {};
@@ -378,7 +373,7 @@
             options = {};
             options.dir = process.cwd() + '/tmp/build/coverage.html';
             // merge previous coverage
-            if (local.modeJs === 'node' && process.env.npm_config_mode_coverage_merge) {
+            if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
                 console.log('merging file ' + options.dir + '/coverage.json to coverage');
                 try {
                     local.coverageMerge(local.global.__coverage__, JSON.parse(
@@ -412,7 +407,7 @@
             // 2. write coverage in html-format to filesystem
             new local.HtmlReport(options).writeReport(local.collector);
             local.writer.writeFile('', local.nop);
-            if (local.modeJs === 'node') {
+            if (!local.isBrowser) {
                 // write coverage.json
                 local.fsWriteFileWithMkdirpSync(
                     options.dir + '/coverage.json',
@@ -442,7 +437,7 @@
             // 3. return coverage in html-format as a single document
             local.coverageReportHtml += '</div>\n</div>\n';
             // write coverage.rollup.html
-            if (local.modeJs === 'node') {
+            if (!local.isBrowser) {
                 local.fsWriteFileWithMkdirpSync(
                     options.dir + '/coverage.rollup.html',
                     local.coverageReportHtml
@@ -2503,7 +2498,7 @@ local['head.txt'] = '\
             },
             writeFile: function (file, onError) {
                 local.coverageReportHtml += local.writerData + '\n\n';
-                if (local.modeJs === 'node' && local.writerFile) {
+                if (!local.isBrowser && local.writerFile) {
                     local.fsWriteFileWithMkdirpSync(local.writerFile, local.writerData);
                 }
                 local.writerData = '';
@@ -2739,16 +2734,18 @@ local.templateCoverageBadgeSvg =
 '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
 /* jslint-ignore-end */
     }());
-    switch (local.modeJs) {
 
 
 
     // run node js-env code - init-after
     /* istanbul ignore next */
-    case 'node':
+    (function () {
+        if (local.isBrowser) {
+            return;
+        }
         // init cli
         if (module !== local.require.main || local.global.utility2_rollup) {
-            break;
+            return;
         }
         local.cliDict = {};
         local.cliDict.cover = function () {
@@ -2824,6 +2821,5 @@ local.templateCoverageBadgeSvg =
             local._istanbul_module.runMain();
         };
         local.cliRun();
-        break;
-    }
+    }());
 }());

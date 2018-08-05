@@ -44,18 +44,13 @@
         }());
         // init local
         local = {};
-        // init modeJs
-        (function () {
-            try {
-                local.modeJs = typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            } catch (ignore) {
-            }
-            local.modeJs = local.modeJs || 'browser';
-        }());
+        // init isBrowser
+        local.isBrowser = typeof window === "object" &&
+            typeof window.XMLHttpRequest === "function" &&
+            window.document &&
+            typeof window.document.querySelectorAll === "function";
         // init global
-        local.global = local.modeJs === 'browser'
+        local.global = local.isBrowser
             ? window
             : global;
         // re-init local
@@ -70,7 +65,7 @@
             return;
         };
         // init exports
-        if (local.modeJs === 'browser') {
+        if (local.isBrowser) {
             local.global.utility2_utility2 = local;
         } else {
             // require builtins
@@ -130,7 +125,7 @@
             'uglifyjs'
         ].forEach(function (key) {
             try {
-                local[key] = local.modeJs === 'browser'
+                local[key] = local.isBrowser
                     ? local.global['utility2_' + key]
                     : require('./lib.' + key + '.js');
             } catch (ignore) {
@@ -191,20 +186,30 @@ body {\n\
     margin: 0 40px;\n\
 }\n\
 body > div,\n\
+body > form > div,\n\
+body > form > input,\n\
+body > form > pre,\n\
+body > form > textarea,\n\
+body > form > .button,\n\
+body > input,\n\
 body > pre,\n\
 body > textarea,\n\
 body > .button {\n\
     margin-bottom: 20px;\n\
 }\n\
+body > form > input,\n\
+body > form > .button,\n\
+body > input,\n\
+body > .button {\n\
+    width: 20rem;\n\
+}\n\
+body > form > textarea,\n\
 body > textarea {\n\
     height: 10rem;\n\
     width: 100%;\n\
 }\n\
 body > textarea[readonly] {\n\
     background: #ddd;\n\
-}\n\
-body > .button {\n\
-    width: 20rem;\n\
 }\n\
 code,\n\
 pre,\n\
@@ -266,7 +271,6 @@ textarea {\n\
 <body>\n\
 <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
-<code style="display: none;"></code><div class="button colorError uiAnimateShake uiAnimateSlide utility2FooterDiv zeroPixel" style="display: none;"></div><pre style="display: none;"></pre><textarea readonly style="display: none;"></textarea>\n\
 <script>\n\
 /* jslint-utility2 */\n\
 /*jslint\n\
@@ -318,6 +322,87 @@ textarea {\n\
         ajaxProgressUpdate();\n\
     });\n\
 }());\n\
+// init domOnEventMediaHotkeys\n\
+(function () {\n\
+/*\n\
+ * this function will add media-hotkeys to elements with class=".domOnEventMediaHotkeysInit"\n\
+ */\n\
+    "use strict";\n\
+    var input, onEvent;\n\
+    if (window.domOnEventMediaHotkeys) {\n\
+        return;\n\
+    }\n\
+    onEvent = window.domOnEventMediaHotkeys = function (event) {\n\
+        var media;\n\
+        if (event === "init") {\n\
+            Array.from(\n\
+                document.querySelectorAll(".domOnEventMediaHotkeysInit")\n\
+            ).forEach(function (media) {\n\
+                media.classList.remove("domOnEventMediaHotkeysInit");\n\
+                media.classList.add("domOnEventMediaHotkeys");\n\
+                ["play", "pause", "seeking"].forEach(function (event) {\n\
+                    media.addEventListener(event, onEvent);\n\
+                });\n\
+            });\n\
+            return;\n\
+        }\n\
+        if (event.currentTarget.classList.contains("domOnEventMediaHotkeys")) {\n\
+            window.domOnEventMediaHotkeysMedia1 = event.currentTarget;\n\
+            window.domOnEventMediaHotkeysInput.focus();\n\
+            return;\n\
+        }\n\
+        media = window.domOnEventMediaHotkeysMedia1;\n\
+        try {\n\
+            switch (event.key || event.type) {\n\
+            case ",":\n\
+            case ".":\n\
+                media.currentTime += (event.key === "," && -0.03125) || 0.03125;\n\
+                break;\n\
+            case "<":\n\
+            case ">":\n\
+                media.playbackRate *= (event.key === "<" && 0.5) || 2;\n\
+                break;\n\
+            case "ArrowDown":\n\
+            case "ArrowUp":\n\
+                media.volume += (event.key === "ArrowDown" && -0.05) || 0.05;\n\
+                break;\n\
+            case "ArrowLeft":\n\
+            case "ArrowRight":\n\
+                media.currentTime += (event.key === "ArrowLeft" && -5) || 5;\n\
+                break;\n\
+            case "j":\n\
+            case "l":\n\
+                media.currentTime += (event.key === "j" && -10) || 10;\n\
+                break;\n\
+            case "k":\n\
+            case " ":\n\
+                if (media.paused) {\n\
+                    media.play();\n\
+                } else {\n\
+                    media.pause();\n\
+                }\n\
+                break;\n\
+            case "m":\n\
+                media.muted = !media.muted;\n\
+                break;\n\
+            default:\n\
+                if (event.key >= 0) {\n\
+                    media.currentTime = 0.1 * event.key * media.duration;\n\
+                    break;\n\
+                }\n\
+                return;\n\
+            }\n\
+        } catch (ignore) {\n\
+        }\n\
+        event.preventDefault();\n\
+    };\n\
+    input = window.domOnEventMediaHotkeysInput = document.createElement("button");\n\
+    input.style = "border:0;height:0;margin:0;padding:0;position:fixed;width:0;z-index:-1;";\n\
+    input.addEventListener("click", onEvent);\n\
+    input.addEventListener("keydown", onEvent);\n\
+    document.body.appendChild(input);\n\
+    onEvent("init");\n\
+}());\n\
 // init domOnEventSelectAllWithinPre\n\
 (function () {\n\
 /*\n\
@@ -331,7 +416,7 @@ textarea {\n\
     window.domOnEventSelectAllWithinPre = function (event) {\n\
         var range, selection;\n\
         if (event &&\n\
-                event.code === "KeyA" &&\n\
+                event.key === "a" &&\n\
                 (event.ctrlKey || event.metaKey) &&\n\
                 event.target.closest("pre")) {\n\
             range = document.createRange();\n\
@@ -444,34 +529,31 @@ instruction\n\
     (function () {\n\
         // init local\n\
         local = {};\n\
-        // init modeJs\n\
-        (function () {\n\
-            try {\n\
-                local.modeJs = typeof process.versions.node === \'string\' &&\n\
-                    typeof require(\'http\').createServer === \'function\' &&\n\
-                    \'node\';\n\
-            } catch (ignore) {\n\
-            }\n\
-            local.modeJs = local.modeJs || \'browser\';\n\
-        }());\n\
+        // init isBrowser\n\
+        local.isBrowser = typeof window === "object" &&\n\
+            typeof window.XMLHttpRequest === "function" &&\n\
+            window.document &&\n\
+            typeof window.document.querySelectorAll === "function";\n\
         // init global\n\
-        local.global = local.modeJs === \'browser\'\n\
+        local.global = local.isBrowser\n\
             ? window\n\
             : global;\n\
         // re-init local\n\
-        local = local.global.utility2_rollup || (local.modeJs === \'browser\'\n\
+        local = local.global.utility2_rollup || (local.isBrowser\n\
             ? local.global.utility2_jslint\n\
             : require(\'jslint-lite\'));\n\
         // init exports\n\
         local.global.local = local;\n\
     }());\n\
-    switch (local.modeJs) {\n\
 \n\
 \n\
 \n\
     // run browser js\-env code - init-test\n\
     /* istanbul ignore next */\n\
-    case \'browser\':\n\
+    (function () {\n\
+        if (!local.isBrowser) {\n\
+            return;\n\
+        }\n\
         local.testRunBrowser = function (event) {\n\
             if (!event || (event &&\n\
                     event.currentTarget &&\n\
@@ -552,13 +634,16 @@ instruction\n\
         });\n\
         // run tests\n\
         local.testRunBrowser();\n\
-        break;\n\
+    }());\n\
 \n\
 \n\
 \n\
     // run node js\-env code - init-test\n\
     /* istanbul ignore next */\n\
-    case \'node\':\n\
+    (function () {\n\
+        if (local.isBrowser) {\n\
+            return;\n\
+        }\n\
         // init exports\n\
         module.exports = local;\n\
         // require builtins\n\
@@ -644,7 +729,7 @@ instruction\n\
             });\n\
         // init cli\n\
         if (module !== require.main || local.global.utility2_rollup) {\n\
-            break;\n\
+            return;\n\
         }\n\
         local.assetsDict[\'/assets.example.js\'] =\n\
             local.assetsDict[\'/assets.example.js\'] ||\n\
@@ -657,7 +742,7 @@ instruction\n\
         }\n\
         // start server\n\
         if (local.global.utility2_serverHttp1) {\n\
-            break;\n\
+            return;\n\
         }\n\
         process.env.PORT = process.env.PORT || \'8081\';\n\
         console.error(\'server starting on port \' + process.env.PORT);\n\
@@ -670,8 +755,7 @@ instruction\n\
             response.statusCode = 404;\n\
             response.end();\n\
         }).listen(process.env.PORT);\n\
-        break;\n\
-    }\n\
+    }());\n\
 }());\n\
 ';
 
@@ -724,18 +808,13 @@ local.assetsDict['/assets.lib.template.js'] = '\
         }());\n\
         // init local\n\
         local = {};\n\
-        // init modeJs\n\
-        (function () {\n\
-            try {\n\
-                local.modeJs = typeof process.versions.node === \'string\' &&\n\
-                    typeof require(\'http\').createServer === \'function\' &&\n\
-                    \'node\';\n\
-            } catch (ignore) {\n\
-            }\n\
-            local.modeJs = local.modeJs || \'browser\';\n\
-        }());\n\
+        // init isBrowser\n\
+        local.isBrowser = typeof window === "object" &&\n\
+            typeof window.XMLHttpRequest === "function" &&\n\
+            window.document &&\n\
+            typeof window.document.querySelectorAll === "function";\n\
         // init global\n\
-        local.global = local.modeJs === \'browser\'\n\
+        local.global = local.isBrowser\n\
             ? window\n\
             : global;\n\
         // re-init local\n\
@@ -750,7 +829,7 @@ local.assetsDict['/assets.lib.template.js'] = '\
             return;\n\
         };\n\
         // init exports\n\
-        if (local.modeJs === \'browser\') {\n\
+        if (local.isBrowser) {\n\
             local.global.utility2_jslint = local;\n\
         } else {\n\
             // require builtins\n\
@@ -976,6 +1055,7 @@ PORT=8081 node ./assets.app.js\n\
     },\n\
     "scripts": {\n\
         "build-ci": "./npm_scripts.sh",\n\
+        "env": "env",\n\
         "eval": "./npm_scripts.sh",\n\
         "heroku-postbuild": "./npm_scripts.sh",\n\
         "postinstall": "./npm_scripts.sh",\n\
@@ -1192,22 +1272,17 @@ instruction\n\
     (function () {\n\
         // init local\n\
         local = {};\n\
-        // init modeJs\n\
-        (function () {\n\
-            try {\n\
-                local.modeJs = typeof process.versions.node === \'string\' &&\n\
-                    typeof require(\'http\').createServer === \'function\' &&\n\
-                    \'node\';\n\
-            } catch (ignore) {\n\
-            }\n\
-            local.modeJs = local.modeJs || \'browser\';\n\
-        }());\n\
+        // init isBrowser\n\
+        local.isBrowser = typeof window === "object" &&\n\
+            typeof window.XMLHttpRequest === "function" &&\n\
+            window.document &&\n\
+            typeof window.document.querySelectorAll === "function";\n\
         // init global\n\
-        local.global = local.modeJs === \'browser\'\n\
+        local.global = local.isBrowser\n\
             ? window\n\
             : global;\n\
         // re-init local\n\
-        local = local.global.utility2_rollup || (local.modeJs === \'browser\'\n\
+        local = local.global.utility2_rollup || (local.isBrowser\n\
             ? local.global.utility2_swgg_github_misc\n\
             : require(\'swgg-github-misc\'));\n\
         // init exports\n\
@@ -1215,14 +1290,15 @@ instruction\n\
         // init assets\n\
         local.assetsDict[\'/assets.index.template.html\'] = local.assetsDict[\'/assets.swgg.html\'];\n\
     }());\n\
-    switch (local.modeJs) {\n\
 \n\
 \n\
 \n\
     // run browser js\-env code - init-test\n\
-    case \'browser\':\n\
-        break;\n\
-    }\n\
+    (function () {\n\
+        if (!local.isBrowser) {\n\
+            return;\n\
+        }\n\
+    }());\n\
 }());\n\
 ```\n\
 \n\
@@ -1282,18 +1358,13 @@ local.assetsDict['/assets.test.template.js'] = '\
     (function () {\n\
         // init local\n\
         local = {};\n\
-        // init modeJs\n\
-        (function () {\n\
-            try {\n\
-                local.modeJs = typeof process.versions.node === \'string\' &&\n\
-                    typeof require(\'http\').createServer === \'function\' &&\n\
-                    \'node\';\n\
-            } catch (ignore) {\n\
-            }\n\
-            local.modeJs = local.modeJs || \'browser\';\n\
-        }());\n\
+        // init isBrowser\n\
+        local.isBrowser = typeof window === "object" &&\n\
+            typeof window.XMLHttpRequest === "function" &&\n\
+            window.document &&\n\
+            typeof window.document.querySelectorAll === "function";\n\
         // init global\n\
-        local.global = local.modeJs === \'browser\'\n\
+        local.global = local.isBrowser\n\
             ? window\n\
             : global;\n\
         // re-init local\n\
@@ -1487,16 +1558,13 @@ local.assetsDict['/assets.utility2.rollup.begin.js'] = '\
     "use strict";\n\
     var local;\n\
     local = {};\n\
-    (function () {\n\
-        try {\n\
-            local.modeJs = typeof process.versions.node === \'string\' &&\n\
-                typeof require(\'http\').createServer === \'function\' &&\n\
-                \'node\';\n\
-        } catch (ignore) {\n\
-        }\n\
-        local.modeJs = local.modeJs || \'browser\';\n\
-    }());\n\
-    local.global = local.modeJs === "browser"\n\
+    // init isBrowser\n\
+    local.isBrowser = typeof window === "object" &&\n\
+        typeof window.XMLHttpRequest === "function" &&\n\
+        window.document &&\n\
+        typeof window.document.querySelectorAll === "function";\n\
+    // init global\n\
+    local.global = local.isBrowser\n\
         ? window\n\
         : global;\n\
     local.local = local.global.utility2_rollup = local.global.utility2_rollup_old || local;\n\
@@ -1526,16 +1594,13 @@ local.assetsDict['/assets.utility2.rollup.end.js'] = '\
     "use strict";\n\
     var local;\n\
     local = {};\n\
-    (function () {\n\
-        try {\n\
-            local.modeJs = typeof process.versions.node === \'string\' &&\n\
-                typeof require(\'http\').createServer === \'function\' &&\n\
-                \'node\';\n\
-        } catch (ignore) {\n\
-        }\n\
-        local.modeJs = local.modeJs || \'browser\';\n\
-    }());\n\
-    local.global = local.modeJs === "browser"\n\
+    // init isBrowser\n\
+    local.isBrowser = typeof window === "object" &&\n\
+        typeof window.XMLHttpRequest === "function" &&\n\
+        window.document &&\n\
+        typeof window.document.querySelectorAll === "function";\n\
+    // init global\n\
+    local.global = local.isBrowser\n\
         ? window\n\
         : global;\n\
     local.global.utility2_rollup_old = local.global.utility2_rollup;\n\
@@ -1555,7 +1620,7 @@ local.assetsDict['/favicon.ico'] = '';
     // run shared js-env code - function
     (function () {
         // init lib Blob
-        local.Blob = local.modeJs === 'browser'
+        local.Blob = local.isBrowser
             ? local.global.Blob
             : function (array, options) {
             /*
@@ -2105,7 +2170,7 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will test buildApidoc's default handling-behavior
          */
-            if (local.env.npm_config_mode_test_fast || local.modeJs !== 'node') {
+            if (local.env.npm_config_mode_test_fast || local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -2116,7 +2181,7 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will test buildApp's default handling-behavior
          */
-            if (local.env.npm_config_mode_test_fast || local.modeJs !== 'node') {
+            if (local.env.npm_config_mode_test_fast || local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -2131,7 +2196,7 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will test buildCustomOrg's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -2142,7 +2207,7 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will test buildLib's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -2153,7 +2218,7 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will test buildReadme's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -2164,7 +2229,7 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will test buildTest's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -2176,7 +2241,7 @@ local.assetsDict['/favicon.ico'] = '';
          * this function will test webpage's default handling-behavior
          */
             local.domStyleValidate();
-            if (local.env.npm_config_mode_test_fast || local.modeJs !== 'node') {
+            if (local.env.npm_config_mode_test_fast || local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -2204,7 +2269,7 @@ local.assetsDict['/favicon.ico'] = '';
                 console.log(xhr.statusCode);
             });
          */
-            var ajaxProgressUpdate, isDone, modeJs, nop, streamCleanup, xhr;
+            var ajaxProgressUpdate, isBrowser, isDone, nop, streamCleanup, xhr;
             // init standalone handling-behavior
             nop = function () {
             /*
@@ -2232,20 +2297,16 @@ local.assetsDict['/favicon.ico'] = '';
                     }
                 }
             };
-            (function () {
-                try {
-                    modeJs = typeof process.versions.node === 'string' &&
-                        typeof require('http').createServer === 'function' &&
-                        'node';
-                } catch (ignore) {
-                }
-            }());
-            modeJs = modeJs || 'browser';
+            // init isBrowser
+            isBrowser = typeof window === 'object' &&
+                typeof window.XMLHttpRequest === 'function' &&
+                window.document &&
+                typeof window.document.querySelectorAll === 'function';
             // init xhr
-            xhr = !options.httpRequest && (modeJs === 'node' ||
+            xhr = !options.httpRequest && (!isBrowser ||
                 (local.serverLocalUrlTest && local.serverLocalUrlTest(options.url)))
                 ? local._http && local._http.XMLHttpRequest && new local._http.XMLHttpRequest()
-                : modeJs === 'browser' && new window.XMLHttpRequest();
+                : isBrowser && new window.XMLHttpRequest();
             if (!xhr) {
                 xhr = require('url').parse(options.url);
                 xhr.headers = options.headers;
@@ -2382,7 +2443,9 @@ local.assetsDict['/favicon.ico'] = '';
                     (xhr.error || {}).statusCode = xhr.statusCode;
                     // debug statusCode / method / url
                     if (local.errorMessagePrepend && xhr.error) {
-                        local.errorMessagePrepend(xhr.error, modeJs + ' - ' +
+                        local.errorMessagePrepend(xhr.error, (isBrowser
+                            ? 'browser'
+                            : 'node') + ' - ' +
                             xhr.statusCode + ' ' + xhr.method + ' ' + xhr.url + '\n' +
                             // try to debug responseText
                             (function () {
@@ -2584,8 +2647,7 @@ local.assetsDict['/favicon.ico'] = '';
          * this function will update ajaxProgress
          */
             var ajaxProgressDiv1;
-            ajaxProgressDiv1 = local.modeJs === 'browser' &&
-                document.querySelector('#ajaxProgressDiv1');
+            ajaxProgressDiv1 = local.isBrowser && document.querySelector('#ajaxProgressDiv1');
             if (!ajaxProgressDiv1) {
                 return;
             }
@@ -2671,7 +2733,7 @@ local.assetsDict['/favicon.ico'] = '';
 
         local.base64FromBuffer = function (bff, mode) {
         /*
-         * this function will convert Uint8Array bff to b64
+         * this function will convert Uint8Array bff to base64
          * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
          */
             var ii, mod3, text, uint24, uint6ToB64;
@@ -2715,7 +2777,7 @@ local.assetsDict['/favicon.ico'] = '';
 
         local.base64FromString = function (text) {
         /*
-         * this function will convert utf8-string text to b64
+         * this function will convert utf8-string text to base64
          */
             return local.base64FromBuffer(text, 'string');
         };
@@ -2731,7 +2793,7 @@ local.assetsDict['/favicon.ico'] = '';
             bff = new Uint8Array(b64.length); // 3/4
             byte = 0;
             jj = 0;
-            map64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+            map64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
             mod4 = 0;
             for (ii = 0; ii < b64.length; ii += 1) {
                 chr = map64.indexOf(b64[ii]);
@@ -2778,7 +2840,7 @@ local.assetsDict['/favicon.ico'] = '';
          * - text
          */
             var data, isDone, reader;
-            if (local.modeJs === 'node') {
+            if (!local.isBrowser) {
                 switch (encoding) {
                 // readAsDataURL
                 case 'dataURL':
@@ -3585,6 +3647,7 @@ local.assetsDict['/favicon.ico'] = '';
                 // reset scripts
                 options.packageJson.scripts = {
                     'build-ci': './npm_scripts.sh',
+                    env: 'env',
                     eval: './npm_scripts.sh',
                     'heroku-postbuild': './npm_scripts.sh',
                     postinstall: './npm_scripts.sh',
@@ -3713,10 +3776,12 @@ local.assetsDict['/favicon.ico'] = '';
                     '$ npm install ' + local.env.npm_package_name,
                     '$ npm install ' + local.env.GITHUB_REPO + '#alpha'
                 );
-                options.dataTo = options.dataTo.replace(
+                [
                     (/\n.*?\bhttps:\/\/www.npmjs.com\/package\/.*?\n/),
-                    '\n'
-                );
+                    (/\n.*?npmPackageDependencyTree.*?\n/)
+                ].forEach(function (rgx) {
+                    options.dataTo = options.dataTo.replace(rgx, '\n');
+                });
             }
             // customize shBuildCiAfter and shBuildCiBefore
             [
@@ -4056,13 +4121,137 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will return xhr.corsForwardProxyHost, if needed
          */
-            return local.modeJs === 'browser' &&
+            return local.isBrowser &&
                 local.env.npm_package_nameLib &&
                 (/^https?:\/\//).test(xhr.url) &&
                 xhr.url.indexOf(xhr.location.protocol + '//' + xhr.location.host) !== 0 &&
                 (/\.github\.io$/).test(xhr.location.host) &&
                 xhr.corsForwardProxyHost !== 'disabled' &&
                 (xhr.corsForwardProxyHost || 'https://h1-proxy1.herokuapp.com');
+        };
+
+        local.cryptoAesXxxCbcRawDecrypt = function (options, onError) {
+        /*
+         * this function will aes-xxx-cbc decrypt with the given options
+         * example usage:
+            data = new Uint8Array([1,2,3]);
+            key = '0123456789abcdef0123456789abcdef';
+            mode = null;
+            local.cryptoAesXxxCbcRawEncrypt({ data: data, key: key, mode: mode }, function (
+                error,
+                data
+            ) {
+                console.assert(!error, error);
+                local.cryptoAesXxxCbcRawDecrypt({ data: data, key: key, mode: mode }, console.log);
+            });
+         */
+            /*globals Uint8Array*/
+            var cipher, crypto, data, ii, iv, key;
+            // init key
+            key = new Uint8Array(0.5 * options.key.length);
+            for (ii = 0; ii < key.byteLength; ii += 2) {
+                key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
+            }
+            data = options.data;
+            // base64
+            if (options.mode === 'base64') {
+                data = local.base64ToBuffer(data);
+            }
+            // normalize data
+            if (!(data instanceof Uint8Array)) {
+                data = new Uint8Array(data);
+            }
+            // init iv
+            iv = data.subarray(0, 16);
+            // optimization - create resized-view of data
+            data = data.subarray(16);
+            crypto = typeof window === 'object' && window.crypto;
+            if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === 'function')) {
+                setTimeout(function () {
+                    crypto = require('crypto');
+                    cipher = crypto.createDecipheriv(
+                        'aes-' + (8 * key.byteLength) + '-cbc',
+                        key,
+                        iv
+                    );
+                    onError(null, Buffer.concat([cipher.update(data), cipher.final()]));
+                });
+                return;
+            }
+            crypto.subtle.importKey('raw', key, {
+                name: 'AES-CBC'
+            }, false, ['decrypt']).then(function (key) {
+                crypto.subtle.decrypt({ iv: iv, name: 'AES-CBC' }, key, data).then(function (data) {
+                    onError(null, new Uint8Array(data));
+                }).catch(onError);
+            }).catch(onError);
+        };
+
+        local.cryptoAesXxxCbcRawEncrypt = function (options, onError) {
+        /*
+         * this function will aes-xxx-cbc encrypt with the given options
+         * example usage:
+            data = new Uint8Array([1,2,3]);
+            key = '0123456789abcdef0123456789abcdef';
+            mode = null;
+            local.cryptoAesXxxCbcRawEncrypt({ data: data, key: key, mode: mode }, function (
+                error,
+                data
+            ) {
+                console.assert(!error, error);
+                local.cryptoAesXxxCbcRawDecrypt({ data: data, key: key, mode: mode }, console.log);
+            });
+         */
+            /*globals Uint8Array*/
+            var cipher, crypto, data, ii, iv, key;
+            // init key
+            key = new Uint8Array(0.5 * options.key.length);
+            for (ii = 0; ii < key.byteLength; ii += 2) {
+                key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
+            }
+            data = options.data;
+            // init iv
+            iv = new Uint8Array((((data.byteLength) >> 4) << 4) + 32);
+            crypto = typeof window === 'object' && window.crypto;
+            if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === 'function')) {
+                setTimeout(function () {
+                    crypto = require('crypto');
+                    // init iv
+                    iv.set(crypto.randomBytes(16));
+                    cipher = crypto.createCipheriv(
+                        'aes-' + (8 * key.byteLength) + '-cbc',
+                        key,
+                        iv.subarray(0, 16)
+                    );
+                    data = cipher.update(data);
+                    iv.set(data, 16);
+                    iv.set(cipher.final(), 16 + data.byteLength);
+                    if (options.mode === 'base64') {
+                        iv = local.base64FromBuffer(iv);
+                        iv += '\n';
+                    }
+                    onError(null, iv);
+                });
+                return;
+            }
+            // init iv
+            iv.set(crypto.getRandomValues(new Uint8Array(16)));
+            crypto.subtle.importKey('raw', key, {
+                name: 'AES-CBC'
+            }, false, ['encrypt']).then(function (key) {
+                crypto.subtle.encrypt({
+                    iv: iv.subarray(0, 16),
+                    name: 'AES-CBC'
+                }, key, data).then(function (data) {
+                    iv.set(new Uint8Array(data), 16);
+                    // base64
+                    if (options.mode === 'base64') {
+                        iv = local.base64FromBuffer(iv);
+                        iv += '\n';
+                    }
+                    onError(null, iv);
+                }).catch(onError);
+            }).catch(onError);
         };
 
         local.dbTableCustomOrgCreate = function (options, onError) {
@@ -4252,7 +4441,12 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will validate the document's style
          */
-            var tmp;
+            var rgx, tmp;
+            rgx = new RegExp('^0 (?:(body > )?(?:form > )?(?:' +
+                '\\.testReportDiv .+|\\.x-istanbul .+|' +
+                '\\.button|\\.colorError|\\.uiAnimateShake|\\.uiAnimateSlide|\\.zeroPixel|' +
+                'a|body|code|div|input|pre|textarea' +
+                ')(?:\\[readonly\\])?(?:,| \\{))');
             tmp = [];
             Array.from(typeof document === 'object' &&
                     document &&
@@ -4267,10 +4461,11 @@ local.assetsDict['/favicon.ico'] = '';
                 });
             });
             tmp
-                .filter(function () {
-                    return true;
+                .filter(function (element) {
+                    return !rgx.test(element);
                 })
                 .sort()
+                .reverse()
                 .forEach(function (element, ii) {
                     console.error('domStyleValidateUnmatched ' + ii + '. ' + element);
                 });
@@ -4300,14 +4495,11 @@ local.assetsDict['/favicon.ico'] = '';
             exitCode = !exitCode || Number(exitCode) === 0
                 ? 0
                 : Number(exitCode) || 1;
-            switch (local.modeJs) {
-            case 'browser':
+            if (local.isBrowser) {
                 console.error(local.global.fileElectronHtml + ' global_test_results ' +
                     JSON.stringify({ global_test_results: local.global.global_test_results }));
-                break;
-            case 'node':
+            } else {
                 process.exit(exitCode);
-                break;
             }
             // reset modeTest
             local.modeTest = null;
@@ -4481,7 +4673,7 @@ local.assetsDict['/favicon.ico'] = '';
                 : obj, replacer, space);
         };
 
-        local.jwtA256GcmDecrypt = function (token, key) {
+        local.jwtAes256GcmDecrypt = function (token, key) {
         /*
          * this function will use json-web-encryption to
          * aes-256-gcm-decrypt the token with the given base64url-encoded key
@@ -4492,20 +4684,21 @@ local.assetsDict['/favicon.ico'] = '';
                     .replace((/-/g), '+')
                     .replace((/_/g), '/')
                     .split('.');
-                token = local.sjcl.decrypt(local.sjcl.codec.base64url.toBits(
-                    local.jwtAes256KeyInit(key)
-                ), JSON.stringify({
-                    adata: token[4],
-                    ct: token[3],
-                    iv: token[2],
-                    ks: 256,
-                    mode: 'gcm'
-                }));
+                token = local.sjcl.decrypt(
+                    local.sjcl.codec.base64url.toBits(local.jwtAes256KeyInit(key)),
+                    JSON.stringify({
+                        adata: token[4],
+                        ct: token[3],
+                        iv: token[2],
+                        ks: 256,
+                        mode: 'gcm'
+                    })
+                );
                 return local.jwtHs256Decode(token, key);
             }, local.nop) || {};
         };
 
-        local.jwtA256GcmEncrypt = function (data, key) {
+        local.jwtAes256GcmEncrypt = function (data, key) {
         /*
          * this function will use json-web-encryption to
          * aes-256-gcm-encrypt the data with the given base64url-encoded key
@@ -4545,7 +4738,7 @@ local.assetsDict['/favicon.ico'] = '';
 
         local.jwtHs256Decode = function (token, key) {
         /*
-         * this function will decode the json-web-token with the given base64-encode key
+         * this function will decode the json-web-token with the given base64-encoded key
          * https://jwt.io/
          */
             var timeNow;
@@ -4574,7 +4767,7 @@ local.assetsDict['/favicon.ico'] = '';
         local.jwtHs256Encode = function (data, key) {
         /*
          * this function will encode the data into a json-web-token
-         * with the given base64-encode key
+         * with the given base64-encoded key
          * https://jwt.io/
          */
             data = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
@@ -4720,7 +4913,7 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will run the middleware that will serve files
          */
-            if (request.method !== 'GET' || local.modeJs === 'browser') {
+            if (request.method !== 'GET' || local.isBrowser) {
                 nextMiddleware();
                 return;
             }
@@ -5581,7 +5774,7 @@ vendor)s{0,1}(\\b|_)\
             var module, script, tmp;
             // init module.exports
             module = {};
-            if (local.modeJs === 'browser') {
+            if (local.isBrowser) {
                 module.exports = local.objectSetDefault(
                     local.global.utility2_rollup || local.global.local,
                     local
@@ -5626,6 +5819,7 @@ vendor)s{0,1}(\\b|_)\
             if (local.global.utility2_rollup || local.env.npm_config_mode_start) {
                 // init assets
                 local.assetsDict['/'] = local.assetsDict['/index.html'] =
+                    local.tryCatchReadFile('index.html') ||
                     local.assetsDict['/index.html'] || local.templateRender(
                         // uncomment utility2-comment
                         local.assetsDict['/assets.index.template.html'].replace(
@@ -6061,7 +6255,7 @@ instruction\n\
                 })
                 // on end event, pass concatenated read buffer to onError
                 .on('end', function () {
-                    onError(null, local.modeJs === 'browser'
+                    onError(null, local.isBrowser
                         ? chunkList[0]
                         : local.bufferConcat(chunkList));
                 })
@@ -6792,12 +6986,10 @@ instruction\n\
                     local._testRunConsoleError.apply(console, arguments);
                 }
             };
-            switch (local.modeJs) {
-            case 'node':
+            if (!local.isBrowser) {
                 // mock proces.exit
                 exit = process.exit;
                 process.exit = local.nop;
-                break;
             }
             // init modeTestCase
             local.modeTestCase = local.modeTestCase || local.env.npm_config_mode_test_case;
@@ -6826,7 +7018,7 @@ instruction\n\
             });
             // visual notification - update test-progress until isDone
             // init testReportDiv1 element
-            if (local.modeJs === 'browser') {
+            if (local.isBrowser) {
                 testReportDiv1 = document.querySelector('#testReportDiv1');
             }
             testReportDiv1 = testReportDiv1 || { style: {} };
@@ -6879,7 +7071,9 @@ instruction\n\
                     }
                     // stop testCase timer
                     local.timeElapsedPoll(testCase);
-                    console.error('[' + local.modeJs + ' test-case ' +
+                    console.error('[' + (local.isBrowser
+                        ? 'browser'
+                        : 'node') + ' test-case ' +
                         testPlatform.testCaseList.filter(function (testCase) {
                             return testCase.isDone;
                         }).length + ' of ' + testPlatform.testCaseList.length + ' ' +
@@ -6908,8 +7102,7 @@ instruction\n\
                 local.timeElapsedPoll(testPlatform);
                 // finalize testReport
                 local.testReportMerge(testReport, {});
-                switch (local.modeJs) {
-                case 'browser':
+                if (local.isBrowser) {
                     // notify saucelabs of test results
                     // https://docs.saucelabs.com/reference/rest-api/#js-unit-testing
                     local.global.global_test_results = {
@@ -6917,8 +7110,7 @@ instruction\n\
                         failed: testReport.testsFailed,
                         testReport: testReport
                     };
-                    break;
-                case 'node':
+                } else {
                     // create test-report.json
                     local.fs.writeFileSync(
                         local.env.npm_config_dir_build + '/test-report.json',
@@ -6927,13 +7119,11 @@ instruction\n\
                     // cleanup $npm_config_dir_tmp
                     local.child_process.spawnSync('rm -f ' + local.env.npm_config_dir_tmp +
                         '/electron.*', { shell: true, stdio: ['ignore', 1, 2] });
-                    break;
                 }
                 setTimeout(function () {
                     // restore serverLog
                     console.error = local._testRunConsoleError;
-                    switch (local.modeJs) {
-                    case 'browser':
+                    if (local.isBrowser) {
                         // update coverageReport
                         local.istanbulCoverageReportCreate({
                             coverage: local.global.__coverage__
@@ -6944,11 +7134,9 @@ instruction\n\
                                     coverage: window.__coverage__
                                 });
                         }
-                        break;
-                    case 'node':
+                    } else {
                         // restore process.exit
                         process.exit = exit;
-                        break;
                     }
                     // exit with number of tests failed
                     local.exit(testReport.testsFailed);
@@ -6970,7 +7158,7 @@ instruction\n\
             });
             // run test
             setTimeout(function () {
-                if (local.modeJs === 'node' || local.global.utility2_serverHttp1) {
+                if (!local.isBrowser || local.global.utility2_serverHttp1) {
                     local.testRunServer(local);
                     return;
                 }
@@ -7219,8 +7407,7 @@ instruction\n\
             // try to parse the url
             local.tryCatchOnError(function () {
                 // resolve host-less url
-                switch (local.modeJs) {
-                case 'browser':
+                if (local.isBrowser) {
                     local.serverLocalHost = local.serverLocalHost ||
                         location.protocol + '//' + location.host;
                     // resolve absolute path
@@ -7237,8 +7424,7 @@ instruction\n\
                         .slice(3)
                         .join('/')
                         .split('#')[0];
-                    break;
-                case 'node':
+                } else {
                     local.env.PORT = local.env.PORT || '8081';
                     local.serverLocalHost = local.serverLocalHost ||
                         ('http://127.0.0.1:' + local.env.PORT);
@@ -7250,7 +7436,6 @@ instruction\n\
                         url = local.serverLocalHost + '/' + url;
                     }
                     urlParsed = local.url.parse(url);
-                    break;
                 }
                 // init query
                 urlParsed.query = {};
@@ -7346,7 +7531,7 @@ instruction\n\
             '.txt': 'text/plain; charset=UTF-8'
         };
         // init env
-        local.env = local.modeJs === 'browser'
+        local.env = local.isBrowser
             ? {}
             : process.env;
         local.objectSetDefault(local.env, {
@@ -7396,7 +7581,7 @@ instruction\n\
         };
         local.taskOnTaskDict = {};
         local.testReport = { testPlatformList: [{
-            name: local.modeJs === 'browser'
+            name: local.isBrowser
                 ? 'browser - ' + location.pathname + ' - ' + navigator.userAgent + ' - ' +
                     new Date().toISOString()
                 : 'node - ' + process.platform + ' ' + process.version + ' - ' +
@@ -7407,8 +7592,7 @@ instruction\n\
         // init serverLocalHost
         local.urlParse('');
         // init timeoutDefault
-        switch (local.modeJs) {
-        case 'browser':
+        if (local.isBrowser) {
             location.search.replace(
                 (/\b(NODE_ENV|mode[A-Z]\w+|timeExit|timeoutDefault)=([^&#]+)/g),
                 function (match0, key, value) {
@@ -7420,10 +7604,8 @@ instruction\n\
                     }, local.nop);
                 }
             );
-            break;
-        case 'node':
+        } else {
             local.timeoutDefault = local.env.npm_config_timeout_default;
-            break;
         }
         // init timeExit
         local.timeExit = Number(local.env.npm_config_time_exit) || local.timeExit ||
@@ -7438,22 +7620,27 @@ instruction\n\
         // init uglify
         local.uglify = local.uglifyjs.uglify || local.echo;
     }());
-    switch (local.modeJs) {
 
 
 
     // run browser js-env code - init-after
-    case 'browser':
+    (function () {
+        if (!local.isBrowser) {
+            return;
+        }
         // require modules
         local.http = local._http;
         local.https = local._http;
-        break;
+    }());
 
 
 
     // run node js-env code - init-after
     /* istanbul ignore next */
-    case 'node':
+    (function () {
+        if (local.isBrowser) {
+            return;
+        }
         local.Module = require('module');
         // init env
         local.objectSetDefault(local.env, {
@@ -7591,13 +7778,6 @@ instruction\n\
                 local.onErrorThrow
             );
         };
-        local.cliDict['utility2.m3u8Download'] = function () {
-        /*
-         * <m3u8-url>
-         * # download m3u8-video-segements specified by m3u8-url
-         */
-            local.m3u8Download({ url: process.argv[3] }, local.onErrorThrow);
-        };
         local.cliDict['utility2.onParallelListExec'] = function () {
         /*
          * <commandList>
@@ -7652,10 +7832,6 @@ instruction\n\
                 return require(local.env.npm_config_dir_build + '/test-report.json');
             }, local.onErrorDefault)).testsFailed);
         };
-        switch (process.argv[2]) {
-        case 'utility2.browserTest':
-            break;
-        }
         if (module === require.main && (!local.global.utility2_rollup || (process.argv[2] &&
                 local.cliDict[process.argv[2]] &&
                 process.argv[2].indexOf('utility2.') === 0))) {
@@ -7692,7 +7868,7 @@ instruction\n\
                 'utf8'
             ).split('\n/* script-end /assets.utility2.rollup.end.js */')[0] +
                 '\n/* script-end /assets.utility2.rollup.end.js */\n';
-            break;
+            return;
         }
         // init assets
         [
@@ -7832,6 +8008,5 @@ instruction\n\
                 local[lib] = require(file);
             }
         });
-        break;
-    }
+    }());
 }());

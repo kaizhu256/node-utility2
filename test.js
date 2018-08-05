@@ -20,18 +20,13 @@
     (function () {
         // init local
         local = {};
-        // init modeJs
-        (function () {
-            try {
-                local.modeJs = typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            } catch (ignore) {
-            }
-            local.modeJs = local.modeJs || 'browser';
-        }());
+        // init isBrowser
+        local.isBrowser = typeof window === "object" &&
+            typeof window.XMLHttpRequest === "function" &&
+            window.document &&
+            typeof window.document.querySelectorAll === "function";
         // init global
-        local.global = local.modeJs === 'browser'
+        local.global = local.isBrowser
             ? window
             : global;
         // re-init local
@@ -139,7 +134,7 @@
         /*
          * this function will test ajaxProgressUpdate's misc handling-behavior
          */
-            if (!(local.modeJs === 'browser' && document.querySelector('#ajaxProgressDiv1'))) {
+            if (!(local.isBrowser && document.querySelector('#ajaxProgressDiv1'))) {
                 onError(null, options);
                 return;
             }
@@ -185,7 +180,7 @@
         /*
          * this function will test ajax's cache handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -353,7 +348,7 @@
             ], function (onError) {
                 // test default handling-behavior
                 local.ajax({
-                    url: local.modeJs === 'browser'
+                    url: local.isBrowser
                         ? location.href
                         : local.serverLocalHost
                 }, function (error, xhr) {
@@ -366,7 +361,7 @@
                 local.ajax({
                     responseType: 'undefined',
                     undefined: undefined,
-                    url: (local.modeJs === 'browser'
+                    url: (local.isBrowser
                         ? location.href
                         : local.serverLocalHost) + '/undefined'
                 }, function (error, xhr) {
@@ -519,7 +514,7 @@
         /*
          * this function will test blobRead's error handling-behavior
          */
-            if (local.modeJs !== 'browser') {
+            if (!local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -541,7 +536,7 @@
         /*
          * this function will test browserTest's electron handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -625,7 +620,7 @@
          * this function will test browserTest's error handling-behavior
          */
             var onParallel;
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -695,7 +690,7 @@
         /*
          * this function will test buildApidoc's default handling-behavior
          */
-            if (local.env.npm_config_mode_test_fast || local.modeJs !== 'node') {
+            if (local.env.npm_config_mode_test_fast || local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -719,7 +714,7 @@
         /*
          * this function will test buildApp's default handling-behavior
          */
-            if (local.env.npm_config_mode_test_fast || local.modeJs !== 'node') {
+            if (local.env.npm_config_mode_test_fast || local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -761,7 +756,7 @@
         /*
          * this function will test buildCustomOrg's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -794,7 +789,7 @@
         /*
          * this function will test buildLib's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -818,7 +813,7 @@
         /*
          * this function will test buildReadme's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -922,7 +917,7 @@
          * this function will test childProcessSpawnWithTimeout's default handling-behavior
          */
             var onParallel;
-            if (local.env.npm_config_mode_test_fast || local.modeJs !== 'node') {
+            if (local.env.npm_config_mode_test_fast || local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -964,7 +959,7 @@
         /*
          * this function will test cliRun's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -991,7 +986,7 @@
         /*
          * this function will test cookieXxx's default handling-behavior
          */
-            if (local.modeJs !== 'browser') {
+            if (!local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -1043,7 +1038,7 @@
         /*
          * this function will corsForwardProxyHostIfNeeded's default handling-behavior
          */
-            if (local.modeJs !== 'browser') {
+            if (!local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -1052,6 +1047,59 @@
                 url: 'https://example.com'
             }).indexOf('.herokuapp.com') >= 0);
             onError(null, options);
+        };
+
+        local.testCase_cryptoAesXxxCbcRawXxx_default = function (options, onError) {
+        /*
+         * this function will cryptoAesXxxCbcRawXxx's default handling-behavior
+         */
+            options = {};
+            local.onNext(options, function (error, data) {
+                switch (options.modeNext) {
+                case 1:
+                    // encrypt data
+                    options.data = local.bufferCreate('aa');
+                    options.key = '0123456789abcdef0123456789abcdef';
+                    options.mode = null;
+                    local.cryptoAesXxxCbcRawEncrypt(options, options.onNext);
+                    break;
+                case 2:
+                    // decrypt data
+                    options.data = data.buffer;
+                    local.cryptoAesXxxCbcRawDecrypt(options, options.onNext);
+                    break;
+                case 3:
+                    // validate data
+                    local.assertJsonEqual(local.bufferToString(data), 'aa');
+                    options.onNext();
+                    break;
+                case 4:
+                    // encrypt data - base64
+                    options.data = local.bufferCreate('aa');
+                    options.key =
+                        '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+                    options.mode = 'base64';
+                    local.cryptoAesXxxCbcRawEncrypt(options, options.onNext);
+                    break;
+                case 5:
+                    // decrypt data - base64
+                    options.data = data;
+                    local.cryptoAesXxxCbcRawDecrypt(options, options.onNext);
+                    break;
+                case 6:
+                    // validate data
+                    local.assertJsonEqual(local.bufferToString(data), 'aa');
+                    options.onNext();
+                    break;
+                default:
+                    onError(
+                        !(local.isBrowser && navigator.userAgent.indexOf('Electron') > 0) && error,
+                        options
+                    );
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
         };
 
         local.testCase_dbTableCustomOrgXxx_default = function (options, onError) {
@@ -1101,7 +1149,7 @@
         /*
          * this function will test domElementRender's default handling-behavior
          */
-            if (local.modeJs !== 'browser') {
+            if (!local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -1115,7 +1163,7 @@
         /*
          * this function will test domQuerySelectorAllTagNameAndPrint's default handling-behavior
          */
-            if (local.modeJs !== 'browser') {
+            if (!local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -1144,7 +1192,7 @@
         /*
          * this function will test fsWriteFileWithMkdirpSync's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -1256,9 +1304,9 @@
             onError(null, options);
         };
 
-        local.testCase_jwtA256GcmXxx_default = function (options, onError) {
+        local.testCase_jwtAes256GcmXxx_default = function (options, onError) {
         /*
-         * this function will test jwtA256GcmXxx's default handling-behavior
+         * this function will test jwtAes256GcmXxx's default handling-behavior
          */
             options = {};
             options.key = local.jwtAes256KeyCreate();
@@ -1267,14 +1315,14 @@
             options.data = local.normalizeJwt(options.data);
             options.data = JSON.parse(local.jsonStringifyOrdered(options.data));
             // encrypt token
-            options.token = local.jwtA256GcmEncrypt(options.data, options.key);
+            options.token = local.jwtAes256GcmEncrypt(options.data, options.key);
             // validate encrypted-token
             local.assertJsonEqual(
-                local.jwtA256GcmDecrypt(options.token, options.key),
+                local.jwtAes256GcmDecrypt(options.token, options.key),
                 options.data
             );
             // test decryption-failed handling-behavior
-            local.assertJsonEqual(local.jwtA256GcmDecrypt(options.token, null), {});
+            local.assertJsonEqual(local.jwtAes256GcmDecrypt(options.token, null), {});
             onError(null, options);
         };
 
@@ -1310,7 +1358,7 @@
         /*
          * this function will test lib.utility2.js's standalone handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -1365,7 +1413,7 @@
         /*
          * this function will localStorageSetItemOrClear's default handling-behavior
          */
-            if (local.modeJs !== 'browser') {
+            if (!local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -1398,7 +1446,7 @@
          * this function will test middlewareForwardProxy's default handling-behavior
          */
             var onParallel;
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -1436,7 +1484,7 @@
         /*
          * this function will test moduleDirname's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -1654,7 +1702,7 @@
          * this function will test onFileModifiedRestart's watchFile handling-behavior
          */
             var onParallel;
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -1864,7 +1912,7 @@
         /*
          * this function will test replStart's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -1913,7 +1961,7 @@
         /*
          * this function will test replStart's tcp handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -1945,7 +1993,7 @@
         /*
          * this function will test requireReadme's start handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -1986,7 +2034,7 @@
         /*
          * this function will test serverRespondTimeoutDefault's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -2335,7 +2383,7 @@
         /*
          * this function will test testReport's default handling-behavior
          */
-            if (local.modeJs !== 'node') {
+            if (local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -2370,7 +2418,7 @@
         /*
          * this function will test testRunInit's testRunButton1 handling-behavior
          */
-            if (local.modeJs !== 'browser') {
+            if (!local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -2427,7 +2475,7 @@
         /*
          * this function will test uiAnimateXxx's default handling-behavior
          */
-            if (local.modeJs !== 'browser') {
+            if (!local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -2528,7 +2576,7 @@
         /*
          * this function will test webpage's error handling-behavior
          */
-            if (local.env.npm_config_mode_test_fast || local.modeJs !== 'node') {
+            if (local.env.npm_config_mode_test_fast || local.isBrowser) {
                 onError(null, options);
                 return;
             }
@@ -2560,9 +2608,7 @@
          * this function will test if the url is local
          */
             url = local.urlParse(url).pathname;
-            return local.modeJs === 'browser' &&
-                !local.env.npm_config_mode_backend &&
-                (/^\/test\./).test(url);
+            return local.isBrowser && !local.env.npm_config_mode_backend && (/^\/test\./).test(url);
         };
     }());
 
@@ -2637,13 +2683,15 @@
             }
         });
     }());
-    switch (local.modeJs) {
 
 
 
     // run node js-env code - init-after
     /* istanbul ignore next */
-    case 'node':
+    (function () {
+        if (local.isBrowser) {
+            return;
+        }
         switch (local.env.HEROKU_APP_NAME) {
         case 'h1-cron1':
             // heroku-keepalive
@@ -2712,6 +2760,5 @@
             process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
             local.Module.runMain();
         }
-        break;
-    }
+    }());
 }());

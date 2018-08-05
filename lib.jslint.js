@@ -44,18 +44,13 @@
         }());
         // init local
         local = {};
-        // init modeJs
-        (function () {
-            try {
-                local.modeJs = typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            } catch (ignore) {
-            }
-            local.modeJs = local.modeJs || 'browser';
-        }());
+        // init isBrowser
+        local.isBrowser = typeof window === "object" &&
+            typeof window.XMLHttpRequest === "function" &&
+            window.document &&
+            typeof window.document.querySelectorAll === "function";
         // init global
-        local.global = local.modeJs === 'browser'
+        local.global = local.isBrowser
             ? window
             : global;
         // re-init local
@@ -70,7 +65,7 @@
             return;
         };
         // init exports
-        if (local.modeJs === 'browser') {
+        if (local.isBrowser) {
             local.global.utility2_jslint = local;
         } else {
             // require builtins
@@ -2282,7 +2277,7 @@ var JSLINT = (function () {
 // comment todo
         tox = /^\W*to\s*do(?:\W|$)/i,
 // token
-        tx = /^\s*([(){}\[\]\?.,:;'"~#@`]|={1,3}|\/(\*(jslint|properties|property|members?|globals?)?|=|\/)?|\*[\/=]?|\+(?:=|\++)?|-(?:=|-+)?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<(?:[\/=!]|\!(\[|--)?|<=?)?|\!(\!|==?)?|[a-zA-Z_$][a-zA-Z0-9_$]*|[0-9]+(?:[xX][0-9a-fA-F]+|\.[0-9]*)?(?:[eE][+\-]?[0-9]+)?)/;
+        tx = /^\s*([(){}\[\]\?.,:;'"~#@`]|={1,3}|\/(\*(jslint|properties|property|members?|globals?)?|=|\/)?|\*[\/=]?|\+(?:=|\++)?|-(?:=|-+)?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<(?:[\/=!]|\!(\[|--)?|<=?)?|\!(\!|==?)?|[a-zA-Z_$][a-zA-Z0-9_$]*|[0-9]+(?:[xX][0-9a-fA-F]+|\.[0-9]*)?(?:[eE][+\-]?[0-9]+)?n?)/;
 
 
     if (typeof String.prototype.entityify !== 'function') {
@@ -2630,7 +2625,7 @@ var JSLINT = (function () {
                 warn('trailing_decimal_a', line, character, snippet);
             }
             digit = +snippet;
-            if (!isFinite(digit)) {
+            if (!isFinite(digit) && !(/^[0-9]+n$/).test(snippet)) {
                 warn('bad_number', line, character, snippet);
             }
             snippet = digit;
@@ -4550,7 +4545,8 @@ klass:              do {
         if (left.identifier) {
             if (left.string.match(/^[A-Z]([A-Z0-9_$]*[a-z][A-Za-z0-9_$]*)?$/)) {
                 if (left.string !== 'Number' && left.string !== 'String' &&
-                        left.string !== 'Boolean' && left.string !== 'Date') {
+                        left.string !== 'Boolean' && left.string !== 'Date' &&
+                        left.string !== 'Symbol' && left.string !== 'BigInt') {
                     if (left.string === 'Math') {
                         left.warn('not_a_function');
                     } else if (left.string === 'Object') {
@@ -6787,7 +6783,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                     return;
                 }
                 if (!(/^(?:| {4}| {8})local\.\S*? =(?: |$)/m).test(line) ||
-                        (/^local\.(?:modeJs|global|local|tmp)\b|\\n\\$/).test(current) ||
+                        (/^local\.(?:global|isBrowser|local|tmp)\b|\\n\\$/).test(current) ||
                         (/ =$/).test(previous)) {
                     return;
                 }
@@ -6829,16 +6825,18 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
             });
         };
     }());
-    switch (local.modeJs) {
 
 
 
     // run node js-env code - init-after
     /* istanbul ignore next */
-    case 'node':
+    (function () {
+        if (local.isBrowser) {
+            return;
+        }
         // init cli
         if (module !== require.main || local.global.utility2_rollup) {
-            break;
+            return;
         }
         local.cliDict = {};
         local.cliDict._default = function () {
@@ -6859,6 +6857,5 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
             process.exit(!!local.errorList.length);
         };
         local.cliRun();
-        break;
-    }
+    }());
 }());

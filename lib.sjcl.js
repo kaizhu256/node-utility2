@@ -19,22 +19,13 @@
     (function () {
         // init local
         local = {};
-        // init modeJs
-        local.modeJs = (function () {
-            try {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    typeof XMLHttpRequest.prototype.open === 'function' &&
-                    'browser';
-            } catch (errorCaughtBrowser) {
-                return module.exports &&
-                    typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            }
-        }());
+        // init isBrowser
+        local.isBrowser = typeof window === "object" &&
+            typeof window.XMLHttpRequest === "function" &&
+            window.document &&
+            typeof window.document.querySelectorAll === "function";
         // init global
-        local.global = local.modeJs === 'browser'
+        local.global = local.isBrowser
             ? window
             : global;
         // init utility2_rollup
@@ -388,6 +379,19 @@ this._S(30,i),i=r,r=n;a[0]=a[0]+r|0,a[1]=a[1]+i|0,a[2]=a[2]+s|0,a[3]=a[3]+o|0,a[
 
 
 
+// init lib sjcl.codec.bytes
+// 2016-05-31T18:26:45Z
+// https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/core/codecBytes.js
+// utility2-uglifyjs https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/core/codecBytes.js
+(function () { var sjcl; sjcl = local.sjcl;
+sjcl.codec.bytes={fromBits:function(e){var t=[],n=sjcl.bitArray.bitLength(e),r,i
+;for(r=0;r<n/8;r++)(r&3)===0&&(i=e[r/4]),t.push(i>>>24),i<<=8;return t},toBits:function(
+e){var t=[],n,r=0;for(n=0;n<e.length;n++)r=r<<8|e[n],(n&3)===3&&(t.push(r),r=0);
+return n&3&&t.push(sjcl.bitArray.partial(8*(n&3),r)),t}}
+}());
+
+
+
 // init lib sjcl.misc.scrypt
 // 2016-05-31T18:10:00Z
 // https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/core/scrypt.js
@@ -422,9 +426,36 @@ t]=n}},sjcl.misc.scrypt.blockcopy=function(e,t,n,r,i){var s;i=i||e.length-t;for(
 s=0;s<i;s++)n[r+s]=e[t+s]|0},sjcl.misc.scrypt.blockxor=function(e,t,n,r,i){var s
 ;i=i||e.length-t;for(s=0;s<i;s++)n[r+s]=n[r+s]^e[t+s]|0}
 }());
+
+
+
+// init lib sjcl.mode.cbc
+// 2016-05-31T18:26:45Z
+// https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/core/cbc.js
+// utility2-uglifyjs https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/core/cbc.js
+(function () { var sjcl; sjcl = local.sjcl;
+sjcl.beware===undefined&&(sjcl.beware={}),sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."
+]=function(){sjcl.mode.cbc={name:"cbc",encrypt:function(e,t,n,r){if(r&&r.length)
+throw new sjcl.exception.invalid("cbc can't authenticate data");if(sjcl.bitArray
+.bitLength(n)!==128)throw new sjcl.exception.invalid("cbc iv must be 128 bits");
+var i,s=sjcl.bitArray,o=s._xor4,u=s.bitLength(t),a=0,f=[];if(u&7)throw new sjcl.
+exception.invalid("pkcs#5 padding only works for multiples of a byte");for(i=0;a+128<=
+u;i+=4,a+=128)n=e.encrypt(o(n,t.slice(i,i+4))),f.splice(i,0,n[0],n[1],n[2],n[3])
+;return u=(16-(u>>3&15))*16843009,n=e.encrypt(o(n,s.concat(t,[u,u,u,u]).slice(i,
+i+4))),f.splice(i,0,n[0],n[1],n[2],n[3]),f},decrypt:function(e,t,n,r){if(r&&r.length
+)throw new sjcl.exception.invalid("cbc can't authenticate data");if(sjcl.bitArray
+.bitLength(n)!==128)throw new sjcl.exception.invalid("cbc iv must be 128 bits");
+if(sjcl.bitArray.bitLength(t)&127||!t.length)throw new sjcl.exception.corrupt("cbc ciphertext must be a positive multiple of the block size"
+);var i,s=sjcl.bitArray,o=s._xor4,u,a,f=[];r=r||[];for(i=0;i<t.length;i+=4)u=t.slice
+(i,i+4),a=o(n,e.decrypt(u)),f.splice(i,0,a[0],a[1],a[2],a[3]),n=u;u=f[i-1]&255;if(
+u===0||u>16)throw new sjcl.exception.corrupt("pkcs#5 padding corrupt");a=u*16843009
+;if(!s.equal(s.bitSlice([a,a,a,a],0,u*8),s.bitSlice(f,f.length*32-u*8,f.length*32
+)))throw new sjcl.exception.corrupt("pkcs#5 padding corrupt");return s.bitSlice(
+f,0,f.length*32-u*8)}}}
+}());
 /* jslint-ignore-end */
         // init exports
-        if (local.modeJs === 'browser') {
+        if (local.isBrowser) {
             local.global.utility2_sjcl = local.sjcl;
         } else {
             module.exports = local.sjcl;

@@ -44,18 +44,13 @@
         }());
         // init local
         local = {};
-        // init modeJs
-        (function () {
-            try {
-                local.modeJs = typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            } catch (ignore) {
-            }
-            local.modeJs = local.modeJs || 'browser';
-        }());
+        // init isBrowser
+        local.isBrowser = typeof window === "object" &&
+            typeof window.XMLHttpRequest === "function" &&
+            window.document &&
+            typeof window.document.querySelectorAll === "function";
         // init global
-        local.global = local.modeJs === 'browser'
+        local.global = local.isBrowser
             ? window
             : global;
         // re-init local
@@ -70,7 +65,7 @@
             return;
         };
         // init exports
-        if (local.modeJs === 'browser') {
+        if (local.isBrowser) {
             local.global.utility2_github_crud = local;
         } else {
             // require builtins
@@ -129,7 +124,7 @@
                 console.log(xhr.statusCode);
             });
          */
-            var ajaxProgressUpdate, bufferToNodeBuffer, isDone, modeJs, nop, streamCleanup, xhr;
+            var ajaxProgressUpdate, isBrowser, isDone, nop, streamCleanup, xhr;
             // init standalone handling-behavior
             nop = function () {
             /*
@@ -138,12 +133,6 @@
                 return;
             };
             ajaxProgressUpdate = local.ajaxProgressUpdate || nop;
-            bufferToNodeBuffer = local.bufferToNodeBuffer || function (arg) {
-            /*
-             * this function will return the arg
-             */
-                return arg;
-            };
             // init onError
             if (local.onErrorWithStack) {
                 onError = local.onErrorWithStack(onError);
@@ -163,20 +152,16 @@
                     }
                 }
             };
-            (function () {
-                try {
-                    modeJs = typeof process.versions.node === 'string' &&
-                        typeof require('http').createServer === 'function' &&
-                        'node';
-                } catch (ignore) {
-                }
-            }());
-            modeJs = modeJs || 'browser';
+            // init isBrowser
+            isBrowser = typeof window === 'object' &&
+                typeof window.XMLHttpRequest === 'function' &&
+                window.document &&
+                typeof window.document.querySelectorAll === 'function';
             // init xhr
-            xhr = !options.httpRequest && (modeJs === 'node' ||
+            xhr = !options.httpRequest && (!isBrowser ||
                 (local.serverLocalUrlTest && local.serverLocalUrlTest(options.url)))
                 ? local._http && local._http.XMLHttpRequest && new local._http.XMLHttpRequest()
-                : modeJs === 'browser' && new window.XMLHttpRequest();
+                : isBrowser && new window.XMLHttpRequest();
             if (!xhr) {
                 xhr = require('url').parse(options.url);
                 xhr.headers = options.headers;
@@ -313,7 +298,9 @@
                     (xhr.error || {}).statusCode = xhr.statusCode;
                     // debug statusCode / method / url
                     if (local.errorMessagePrepend && xhr.error) {
-                        local.errorMessagePrepend(xhr.error, modeJs + ' - ' +
+                        local.errorMessagePrepend(xhr.error, (isBrowser
+                            ? 'browser'
+                            : 'node') + ' - ' +
                             xhr.statusCode + ' ' + xhr.method + ' ' + xhr.url + '\n' +
                             // try to debug responseText
                             (function () {
@@ -362,11 +349,11 @@
                         return;
                     }
                     // send data
-                    xhr.send(bufferToNodeBuffer(data));
+                    xhr.send(data);
                 });
             } else {
                 // send data
-                xhr.send(bufferToNodeBuffer(xhr.data));
+                xhr.send(xhr.data);
             }
             return xhr;
         };
@@ -667,12 +654,14 @@
             return onError;
         };
     }());
-    switch (local.modeJs) {
 
 
 
     // run node js-env code - function
-    case 'node':
+    (function () {
+        if (local.isBrowser) {
+            return;
+        }
         local.githubContentAjax = function (options, onError) {
         /*
          * this function will make a low-level content-request to github
@@ -976,18 +965,19 @@
                 }, onParallel);
             }, onError);
         };
-        break;
-    }
-    switch (local.modeJs) {
+    }());
 
 
 
     // run node js-env code - init-after
     /* istanbul ignore next */
-    case 'node':
+    (function () {
+        if (local.isBrowser) {
+            return;
+        }
         // init cli
         if (module !== require.main || local.global.utility2_rollup) {
-            break;
+            return;
         }
         local.cliDict = {};
         local.cliDict.delete = function () {
@@ -1060,6 +1050,5 @@
             });
         };
         local.cliRun();
-        break;
-    }
+    }());
 }());

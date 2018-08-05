@@ -5,6 +5,7 @@
 # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/test.html
 
 # useful one-liners
+# git fetch origin alpha beta master --tags
 # shSource; git add .; npm test --mode-coverage
 # shSource; git add .; npm test --mode-test-case=testCase_nop_default
 # shSource; git add .; shBuildApp; git diff; git status
@@ -1032,6 +1033,290 @@ shChromeSocks5 () {(set -e
     fi
 )}
 
+shCryptoAesXxxCbcFileDecrypt () {(set -e
+# this function will inplace aes-xxx-cbc decrypt file $2 with the given hex-key $1
+    node -e "
+// <script>
+/* jslint-utility2 */
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 4,
+    maxlen: 100,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+var local;
+local = {};
+(function () {
+    (function () {
+        local.base64ToBuffer = function (b64, mode) {
+        /*
+         * this function will convert b64 to Uint8Array
+         * https://gist.github.com/wang-bin/7332335
+         */
+            /*globals Uint8Array*/
+            var bff, byte, chr, ii, jj, map64, mod4;
+            b64 = b64 || '';
+            bff = new Uint8Array(b64.length); // 3/4
+            byte = 0;
+            jj = 0;
+            map64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+            mod4 = 0;
+            for (ii = 0; ii < b64.length; ii += 1) {
+                chr = map64.indexOf(b64[ii]);
+                if (chr >= 0) {
+                    mod4 %= 4;
+                    if (mod4 === 0) {
+                        byte = chr;
+                    } else {
+                        byte = byte * 64 + chr;
+                        bff[jj] = 255 & (byte >> ((-2 * (mod4 + 1)) & 6));
+                        jj += 1;
+                    }
+                    mod4 += 1;
+                }
+            }
+            // optimization - create resized-view of bff
+            bff = bff.subarray(0, jj);
+            // mode !== 'string'
+            if (mode !== 'string') {
+                return bff;
+            }
+            // mode === 'string' - browser js-env
+            if (typeof window === 'object' && window && typeof window.TextDecoder === 'function') {
+                return new window.TextDecoder().decode(bff);
+            }
+            // mode === 'string' - node js-env
+            Object.setPrototypeOf(bff, Buffer.prototype);
+            return String(bff);
+        };
+        local.cryptoAesXxxCbcRawDecrypt = function (options, onError) {
+        /*
+         * this function will aes-xxx-cbc decrypt with the given options
+         * example usage:
+            data = new Uint8Array([1,2,3]);
+            key = '0123456789abcdef0123456789abcdef';
+            mode = null;
+            local.cryptoAesXxxCbcRawEncrypt({ data: data, key: key, mode: mode }, function (
+                error,
+                data
+            ) {
+                console.assert(!error, error);
+                local.cryptoAesXxxCbcRawDecrypt({ data: data, key: key, mode: mode }, console.log);
+            });
+         */
+            /*globals Uint8Array*/
+            var cipher, crypto, data, ii, iv, key;
+            // init key
+            key = new Uint8Array(0.5 * options.key.length);
+            for (ii = 0; ii < key.byteLength; ii += 2) {
+                key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
+            }
+            data = options.data;
+            // base64
+            if (options.mode === 'base64') {
+                data = local.base64ToBuffer(data);
+            }
+            // normalize data
+            if (!(data instanceof Uint8Array)) {
+                data = new Uint8Array(data);
+            }
+            // init iv
+            iv = data.subarray(0, 16);
+            // optimization - create resized-view of data
+            data = data.subarray(16);
+            crypto = typeof window === 'object' && window.crypto;
+            if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === 'function')) {
+                setTimeout(function () {
+                    crypto = require('crypto');
+                    cipher = crypto.createDecipheriv(
+                        'aes-' + (8 * key.byteLength) + '-cbc',
+                        key,
+                        iv
+                    );
+                    onError(null, Buffer.concat([cipher.update(data), cipher.final()]));
+                });
+                return;
+            }
+            crypto.subtle.importKey('raw', key, {
+                name: 'AES-CBC'
+            }, false, ['decrypt']).then(function (key) {
+                crypto.subtle.decrypt({ iv: iv, name: 'AES-CBC' }, key, data).then(function (data) {
+                    onError(null, new Uint8Array(data));
+                }).catch(onError);
+            }).catch(onError);
+        };
+    }());
+}());
+local.cryptoAesXxxCbcRawDecrypt({
+    data: require('fs').readFileSync(process.argv[2], process.argv[3] === 'base64'
+        ? 'utf8'
+        : ''),
+    key: process.argv[1],
+    mode: process.argv[3]
+}, function (error, data) {
+    console.assert(!error, error);
+    if (process.argv[4]) {
+        require('fs').writeFileSync(process.argv[4], data);
+        return;
+    }
+    process.stdout.write(data);
+});
+// </script>
+" "$@"
+)}
+
+shCryptoAesXxxCbcFileEncrypt () {(set -e
+# this function will inplace aes-xxx-cbc encrypt file $2 with the given hex-key $1
+    node -e "
+// <script>
+/* jslint-utility2 */
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 4,
+    maxlen: 100,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+var local;
+local = {};
+(function () {
+    (function () {
+        local.base64FromBuffer = function (bff, mode) {
+        /*
+         * this function will convert Uint8Array bff to base64
+         * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
+         */
+            var ii, mod3, text, uint24, uint6ToB64;
+            // convert utf8-string bff to Uint8Array
+            if (bff && mode === 'string') {
+                bff = typeof window === 'object' &&
+                    window &&
+                    typeof window.TextEncoder === 'function'
+                    ? new window.TextEncoder().encode(bff)
+                    : Buffer.from(bff);
+            }
+            bff = bff || [];
+            text = '';
+            uint24 = 0;
+            uint6ToB64 = function (uint6) {
+                return uint6 < 26
+                    ? uint6 + 65
+                    : uint6 < 52
+                    ? uint6 + 71
+                    : uint6 < 62
+                    ? uint6 - 4
+                    : uint6 === 62
+                    ? 43
+                    : 47;
+            };
+            for (ii = 0; ii < bff.length; ii += 1) {
+                mod3 = ii % 3;
+                uint24 |= bff[ii] << (16 >>> mod3 & 24);
+                if (mod3 === 2 || bff.length - ii === 1) {
+                    text += String.fromCharCode(
+                        uint6ToB64(uint24 >>> 18 & 63),
+                        uint6ToB64(uint24 >>> 12 & 63),
+                        uint6ToB64(uint24 >>> 6 & 63),
+                        uint6ToB64(uint24 & 63)
+                    );
+                    uint24 = 0;
+                }
+            }
+            return text.replace(/A(?=A$|$)/g, '=');
+        };
+        local.cryptoAesXxxCbcRawEncrypt = function (options, onError) {
+        /*
+         * this function will aes-xxx-cbc encrypt with the given options
+         * example usage:
+            data = new Uint8Array([1,2,3]);
+            key = '0123456789abcdef0123456789abcdef';
+            mode = null;
+            local.cryptoAesXxxCbcRawEncrypt({ data: data, key: key, mode: mode }, function (
+                error,
+                data
+            ) {
+                console.assert(!error, error);
+                local.cryptoAesXxxCbcRawDecrypt({ data: data, key: key, mode: mode }, console.log);
+            });
+         */
+            /*globals Uint8Array*/
+            var cipher, crypto, data, ii, iv, key;
+            // init key
+            key = new Uint8Array(0.5 * options.key.length);
+            for (ii = 0; ii < key.byteLength; ii += 2) {
+                key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
+            }
+            data = options.data;
+            // init iv
+            iv = new Uint8Array((((data.byteLength) >> 4) << 4) + 32);
+            crypto = typeof window === 'object' && window.crypto;
+            if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === 'function')) {
+                setTimeout(function () {
+                    crypto = require('crypto');
+                    // init iv
+                    iv.set(crypto.randomBytes(16));
+                    cipher = crypto.createCipheriv(
+                        'aes-' + (8 * key.byteLength) + '-cbc',
+                        key,
+                        iv.subarray(0, 16)
+                    );
+                    data = cipher.update(data);
+                    iv.set(data, 16);
+                    iv.set(cipher.final(), 16 + data.byteLength);
+                    if (options.mode === 'base64') {
+                        iv = local.base64FromBuffer(iv);
+                        iv += '\n';
+                    }
+                    onError(null, iv);
+                });
+                return;
+            }
+            // init iv
+            iv.set(crypto.getRandomValues(new Uint8Array(16)));
+            crypto.subtle.importKey('raw', key, {
+                name: 'AES-CBC'
+            }, false, ['encrypt']).then(function (key) {
+                crypto.subtle.encrypt({
+                    iv: iv.subarray(0, 16),
+                    name: 'AES-CBC'
+                }, key, data).then(function (data) {
+                    iv.set(new Uint8Array(data), 16);
+                    // base64
+                    if (options.mode === 'base64') {
+                        iv = local.base64FromBuffer(iv);
+                        iv += '\n';
+                    }
+                    onError(null, iv);
+                }).catch(onError);
+            }).catch(onError);
+        };
+    }());
+}());
+local.cryptoAesXxxCbcRawEncrypt({
+    data: require('fs').readFileSync(process.argv[2]),
+    key: process.argv[1],
+    mode: process.argv[3]
+}, function (error, data) {
+    console.assert(!error, error);
+    if (process.argv[4]) {
+        require('fs').writeFileSync(process.argv[4], data);
+        return;
+    }
+    process.stdout.write(data);
+});
+// </script>
+" "$@"
+)}
+
 shCryptoTravisDecrypt () {(set -e
 # this function will use $CRYPTO_AES_KEY to decrypt $SH_ENCRYPTED to stdout
     shBuildInit
@@ -1112,7 +1397,7 @@ shCryptoTravisEncrypt () {(set -e
     # init $IV from random 16 bytes
     IV="$(openssl rand -hex 16)"
     # print base64-encoded $IV to stdout
-    printf "$(printf "$IV" | base64)"
+    printf "$(printf "$IV" | base64 | tr -d "\n")"
     # encrypt $FILE to stdout using aes-256-cbc with base64-encoding
     openssl enc -aes-256-cbc -K "$CRYPTO_AES_KEY" -in "$FILE" -iv "$IV" | base64 | tr -d "\n"
     printf "\n"
@@ -2120,7 +2405,13 @@ shGithubCrudRepoCreate () {(set -e
     URL=https://api.github.com/user/repos
     # init $GITHUB_ORG
     GITHUB_ORG="$(printf "$LIST" | head -n 1 | sed -e "s/\/.*//")"
-    if (printf "$GITHUB_ORG" | grep -q -E '^(npmdoc|npmtest|scrapeitall|swgg-io)$')
+    if (printf "$GITHUB_ORG" | grep -q -E "^(\
+npmdoc|\
+npmtest|\
+projectako|\
+projectbko|\
+scrapeitall|\
+swgg-io)\$")
     then
         URL="https://api.github.com/orgs/$GITHUB_ORG/repos"
     fi
@@ -2142,7 +2433,7 @@ fi"
 shGithubRepoBaseCreate () {(set -e
 # this function will create the base github-repo https://github.com/$GITHUB_REPO
 # example usage:
-# shGithubRepoBaseCreate kaizhu256/sandbox2
+# shCryptoWithGithubOrg kaizhu256 shGithubRepoBaseCreate kaizhu256/node-sandbox2
     GITHUB_REPO="$1"
     export MODE_BUILD="${MODE_BUILD:-shGithubRepoBaseCreate}"
     # init /tmp/githubRepo/kaizhu256/base
@@ -2530,6 +2821,192 @@ shMain () {
     esac
 )}
 
+shMediaHlsEncrypt () {(set -e
+# this function encrypt the hls-media with the given hls.m3u8 file
+# example usage:
+# CRYPTO_AES_KEY_MEDIA=0123456789abcdef0123456789abcdef shMediaHlsEncrypt
+    node -e "
+// <script>
+/* jslint-utility2 */
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 4,
+    maxlen: 100,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+var data, ii, local;
+local = {};
+(function () {
+    (function () {
+        local.base64FromBuffer = function (bff, mode) {
+        /*
+         * this function will convert Uint8Array bff to base64
+         * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
+         */
+            var ii, mod3, text, uint24, uint6ToB64;
+            // convert utf8-string bff to Uint8Array
+            if (bff && mode === 'string') {
+                bff = typeof window === 'object' &&
+                    window &&
+                    typeof window.TextEncoder === 'function'
+                    ? new window.TextEncoder().encode(bff)
+                    : Buffer.from(bff);
+            }
+            bff = bff || [];
+            text = '';
+            uint24 = 0;
+            uint6ToB64 = function (uint6) {
+                return uint6 < 26
+                    ? uint6 + 65
+                    : uint6 < 52
+                    ? uint6 + 71
+                    : uint6 < 62
+                    ? uint6 - 4
+                    : uint6 === 62
+                    ? 43
+                    : 47;
+            };
+            for (ii = 0; ii < bff.length; ii += 1) {
+                mod3 = ii % 3;
+                uint24 |= bff[ii] << (16 >>> mod3 & 24);
+                if (mod3 === 2 || bff.length - ii === 1) {
+                    text += String.fromCharCode(
+                        uint6ToB64(uint24 >>> 18 & 63),
+                        uint6ToB64(uint24 >>> 12 & 63),
+                        uint6ToB64(uint24 >>> 6 & 63),
+                        uint6ToB64(uint24 & 63)
+                    );
+                    uint24 = 0;
+                }
+            }
+            return text.replace(/A(?=A$|$)/g, '=');
+        };
+        local.cryptoAesXxxCbcRawEncrypt = function (options, onError) {
+        /*
+         * this function will aes-xxx-cbc encrypt with the given options
+         * example usage:
+            data = new Uint8Array([1,2,3]);
+            key = '0123456789abcdef0123456789abcdef';
+            mode = null;
+            local.cryptoAesXxxCbcRawEncrypt({ data: data, key: key, mode: mode }, function (
+                error,
+                data
+            ) {
+                console.assert(!error, error);
+                local.cryptoAesXxxCbcRawDecrypt({ data: data, key: key, mode: mode }, console.log);
+            });
+         */
+            /*globals Uint8Array*/
+            var cipher, crypto, data, ii, iv, key;
+            // init key
+            key = new Uint8Array(0.5 * options.key.length);
+            for (ii = 0; ii < key.byteLength; ii += 2) {
+                key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
+            }
+            data = options.data;
+            // init iv
+            iv = new Uint8Array((((data.byteLength) >> 4) << 4) + 32);
+            crypto = typeof window === 'object' && window.crypto;
+            if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === 'function')) {
+                setTimeout(function () {
+                    crypto = require('crypto');
+                    // init iv
+                    iv.set(crypto.randomBytes(16));
+                    cipher = crypto.createCipheriv(
+                        'aes-' + (8 * key.byteLength) + '-cbc',
+                        key,
+                        iv.subarray(0, 16)
+                    );
+                    data = cipher.update(data);
+                    iv.set(data, 16);
+                    iv.set(cipher.final(), 16 + data.byteLength);
+                    if (options.mode === 'base64') {
+                        iv = local.base64FromBuffer(iv);
+                        iv += '\n';
+                    }
+                    onError(null, iv);
+                });
+                return;
+            }
+            // init iv
+            iv.set(crypto.getRandomValues(new Uint8Array(16)));
+            crypto.subtle.importKey('raw', key, {
+                name: 'AES-CBC'
+            }, false, ['encrypt']).then(function (key) {
+                crypto.subtle.encrypt({
+                    iv: iv.subarray(0, 16),
+                    name: 'AES-CBC'
+                }, key, data).then(function (data) {
+                    iv.set(new Uint8Array(data), 16);
+                    // base64
+                    if (options.mode === 'base64') {
+                        iv = local.base64FromBuffer(iv);
+                        iv += '\n';
+                    }
+                    onError(null, iv);
+                }).catch(onError);
+            }).catch(onError);
+        };
+    }());
+}());
+data = require('fs').readFileSync('hls.m3u8', 'utf8');
+ii = 1;
+data = data.replace((/^[^#].*?$/gm), function (match0, match1) {
+    ii += 1;
+    match1 = 'aa.' + ('0000' + ii).slice(-4) + '.bin';
+    require('fs').readFile(match0, function (error, data) {
+        console.assert(!error, error);
+        local.cryptoAesXxxCbcRawEncrypt({
+            data: data,
+            key: process.env.CRYPTO_AES_KEY_MEDIA
+        }, function (error, data) {
+            console.assert(!error, error);
+            require('fs').writeFile(match1, data, function (error) {
+                console.assert(!error, error);
+                console.error('encrypted file ' + match0 + ' -> ' + match1);
+            });
+        });
+    });
+    return match1;
+});
+local.cryptoAesXxxCbcRawEncrypt({
+    data: Buffer.from(data),
+    key: process.env.CRYPTO_AES_KEY_MEDIA,
+    mode: 'base64'
+}, function (
+    error,
+    data
+) {
+    console.assert(!error, error);
+    require('fs').writeFile('aa.0001.bin', data, function (error) {
+        console.assert(!error, error);
+        console.error('encrypted file hls.m3u8 -> aa.0001.bin');
+    });
+});
+// </script>
+" "$@"
+)}
+
+shMediaHlsFromMp4 () {(set -e
+# this function convert the media $1 to hls
+# example usage:
+# shMediaHlsFromMp4 a00.mp4
+    ffmpeg \
+        -i "$1" \
+        -c:v copy \
+        -c:a copy \
+        -hls_list_size 0 \
+        -hls_time 6 \
+        -hls_segment_filename hls.%04d.ts \
+        -y \
+        hls.m3u8
+)}
+
 shModuleDirname () {(set -e
 # this function will print the __dirname of the $MODULE
     MODULE="$1"
@@ -2586,6 +3063,8 @@ console.log(local.moduleDirname('$MODULE', module.paths));
 
 shNpmDeprecateAlias () {(set -e
 # this function will deprecate the npm-package $NAME with the given $MESSAGE
+# example usage:
+# shNpmDeprecateAlias deprecated-package
     shEnvSanitize
     NAME="$1"
     MESSAGE="$2"
@@ -2677,7 +3156,7 @@ Object.keys(dict).forEach(function (key) {
 });
 console.log("true");
 // </script>
-')" "$FILE"
+' "$FILE")"
     npm install "$@"
     shBuildPrint "... npm-installed with peer-dependencies"
 )}
@@ -3293,7 +3772,7 @@ shSsh5022F () {(set -e
 # this function will ssh the reverse-tunnel-client
 # to the middleman $USER_HOST:5022
 # example usage:
-# shSsh5022F travis@procy.com -D 5080
+# shSsh5022F travis@proxy.com -D 5080
     USER_HOST="$1"
     shift
     ssh-keygen -R "[$(printf "$USER_HOST" | sed -e "s/.*\@//")]:5022" > /dev/null 2>&1 || true

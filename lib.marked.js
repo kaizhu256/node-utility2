@@ -19,22 +19,13 @@
     (function () {
         // init local
         local = {};
-        // init modeJs
-        local.modeJs = (function () {
-            try {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    typeof XMLHttpRequest.prototype.open === 'function' &&
-                    'browser';
-            } catch (errorCaughtBrowser) {
-                return module.exports &&
-                    typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            }
-        }());
+        // init isBrowser
+        local.isBrowser = typeof window === "object" &&
+            typeof window.XMLHttpRequest === "function" &&
+            window.document &&
+            typeof window.document.querySelectorAll === "function";
         // init global
-        local.global = local.modeJs === 'browser'
+        local.global = local.isBrowser
             ? window
             : global;
         // init utility2_rollup
@@ -242,7 +233,7 @@ c}).call(function(){return this||(typeof window!="undefined"?window:global)}())
 local.marked = module.exports; }());
 /* jslint-ignore-end */
     // init exports
-    if (local.modeJs === 'browser') {
+    if (local.isBrowser) {
         local.global.utility2_marked = local.marked;
     } else {
         module.exports = local.marked;

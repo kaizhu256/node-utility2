@@ -80,18 +80,13 @@
         }());
         // init local
         local = {};
-        // init modeJs
-        (function () {
-            try {
-                local.modeJs = typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            } catch (ignore) {
-            }
-            local.modeJs = local.modeJs || 'browser';
-        }());
+        // init isBrowser
+        local.isBrowser = typeof window === "object" &&
+            typeof window.XMLHttpRequest === "function" &&
+            window.document &&
+            typeof window.document.querySelectorAll === "function";
         // init global
-        local.global = local.modeJs === 'browser'
+        local.global = local.isBrowser
             ? window
             : global;
         // re-init local
@@ -106,7 +101,7 @@
             return;
         };
         // init exports
-        if (local.modeJs === 'browser') {
+        if (local.isBrowser) {
             local.global.utility2_db = local;
         } else {
             // require builtins
@@ -661,39 +656,28 @@ vendor)s{0,1}(\\b|_)\
             fs,
             getItem,
             init,
+            isBrowser,
             keys,
             length,
-            modeJs,
             os,
             removeItem,
             setItem,
             storage,
             storageDir;
 
-        // init modeJs
-        modeJs = (function () {
-            try {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    typeof XMLHttpRequest.prototype.open === 'function' &&
-                    'browser';
-            } catch (errorCaughtBrowser) {
-                return module.exports &&
-                    typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            }
-        }());
-        storageDir = 'tmp/storage.' + (local.modeJs === 'browser'
+        // init isBrowser
+        isBrowser = typeof window === "object" &&
+            typeof window.XMLHttpRequest === "function" &&
+            window.document &&
+            typeof window.document.querySelectorAll === "function";
+        storageDir = 'tmp/storage.' + (isBrowser
             ? 'undefined'
             : process.env.NODE_ENV);
-        switch (modeJs) {
-        case 'node':
+        if (!isBrowser) {
             // require modules
             child_process = require('child_process');
             fs = require('fs');
             os = require('os');
-            break;
         }
 
         clear = function (onError) {
@@ -719,8 +703,7 @@ vendor)s{0,1}(\\b|_)\
                 init();
                 return;
             }
-            switch (modeJs) {
-            case 'browser':
+            if (isBrowser) {
                 onError2 = function () {
                     /* istanbul ignore next */
                     if (isDone) {
@@ -779,8 +762,7 @@ vendor)s{0,1}(\\b|_)\
                 });
                 // debug request
                 local._debugStorageRequest = request;
-                break;
-            case 'node':
+            } else {
                 switch (options.action) {
                 case 'clear':
                     child_process.spawnSync('rm -f ' + storage + '/*', {
@@ -833,7 +815,6 @@ vendor)s{0,1}(\\b|_)\
                     });
                     break;
                 }
-                break;
             }
         };
 
@@ -854,22 +835,21 @@ vendor)s{0,1}(\\b|_)\
             onError = function (error) {
                 // validate no error occurred
                 local.assert(!error, error);
-                if (modeJs === 'browser') {
+                if (isBrowser) {
                     storage = window[storageDir];
                 }
                 while (deferList.length) {
                     deferList.shift()();
                 }
             };
-            if (modeJs === 'browser') {
+            if (isBrowser) {
                 storage = window[storageDir];
             }
             if (storage) {
                 onError();
                 return;
             }
-            switch (modeJs) {
-            case 'browser':
+            if (isBrowser) {
                 // init indexedDB
                 try {
                     request = window.indexedDB.open(storageDir);
@@ -887,13 +867,11 @@ vendor)s{0,1}(\\b|_)\
                     };
                 } catch (ignore) {
                 }
-                break;
-            case 'node':
+            } else {
                 // mkdirp storage
                 storage = storageDir;
                 child_process.spawnSync('mkdir', ['-p', storage], { stdio: ['ignore', 1, 2] });
                 onError();
-                break;
             }
         };
 
@@ -1949,16 +1927,18 @@ vendor)s{0,1}(\\b|_)\
             return 0;
         };
     }());
-    switch (local.modeJs) {
 
 
 
     // run node js-env code - init-after
     /* istanbul ignore next */
-    case 'node':
+    (function () {
+        if (local.isBrowser) {
+            return;
+        }
         // init cli
         if (module !== require.main || local.global.utility2_rollup) {
-            break;
+            return;
         }
         local.cliDict = {};
         local.cliDict.dbTableCrudGetManyByQuery = function () {
@@ -2092,6 +2072,5 @@ vendor)s{0,1}(\\b|_)\
             });
         };
         local.cliRun();
-        break;
-    }
+    }());
 }());
