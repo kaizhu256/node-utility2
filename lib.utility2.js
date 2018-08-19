@@ -37,7 +37,7 @@
                 context["_" + key + "Arguments"] = arguments;
                 consoleError("\n\n" + key);
                 consoleError.apply(console, arguments);
-                consoleError("\n");
+                consoleError(new Error().stack + "\n");
                 // return arg0 for inspection
                 return arg0;
             };
@@ -73,8 +73,6 @@
             local.buffer = require('buffer');
             local.child_process = require('child_process');
             local.cluster = require('cluster');
-            local.console = require('console');
-            local.constants = require('constants');
             local.crypto = require('crypto');
             local.dgram = require('dgram');
             local.dns = require('dns');
@@ -83,12 +81,9 @@
             local.fs = require('fs');
             local.http = require('http');
             local.https = require('https');
-            local.module = require('module');
             local.net = require('net');
             local.os = require('os');
             local.path = require('path');
-            local.process = require('process');
-            local.punycode = require('punycode');
             local.querystring = require('querystring');
             local.readline = require('readline');
             local.repl = require('repl');
@@ -143,7 +138,7 @@ local.assetsDict['/assets.utility2.template.html'] = '\
 <!doctype html>\n\
 <html lang="en">\n\
 <head>\n\
-<meta charset="UTF-8">\n\
+<meta charset="utf-8">\n\
 <meta name="viewport" content="width=device-width, initial-scale=1">\n\
 <!-- "assets.utility2.template.html" -->\n\
 <title>{{env.npm_package_name}} ({{env.npm_package_version}})</title>\n\
@@ -271,6 +266,8 @@ textarea {\n\
 <body>\n\
 <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
+<a class="zeroPixel" download="db.persistence.json" href="" id="dbExportA1"></a>\n\
+<input class="zeroPixel" id="dbImportInput1" type="file">\n\
 <script>\n\
 /* jslint-utility2 */\n\
 /*jslint\n\
@@ -283,6 +280,25 @@ textarea {\n\
     regexp: true,\n\
     stupid: true\n\
 */\n\
+// init domOnEventWindowOnloadTimeElapsed\n\
+(function () {\n\
+/*\n\
+ * this function will measure and print the time-elapsed for window.onload\n\
+ */\n\
+    "use strict";\n\
+    if (window.domOnEventWindowOnloadTimeElapsed) {\n\
+        return;\n\
+    }\n\
+    window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;\n\
+    window.addEventListener("load", function () {\n\
+        setTimeout(function () {\n\
+            window.domOnEventWindowOnloadTimeElapsed = Date.now() -\n\
+                window.domOnEventWindowOnloadTimeElapsed;\n\
+            console.error("domOnEventWindowOnloadTimeElapsed = " +\n\
+                window.domOnEventWindowOnloadTimeElapsed);\n\
+        }, 100);\n\
+    });\n\
+}());\n\
 // init timerIntervalAjaxProgressUpdate\n\
 (function () {\n\
 /*\n\
@@ -292,7 +308,7 @@ textarea {\n\
     var ajaxProgressDiv1,\n\
         ajaxProgressState,\n\
         ajaxProgressUpdate;\n\
-    if (window.timerIntervalAjaxProgressUpdate) {\n\
+    if (window.timerIntervalAjaxProgressUpdate || !document.querySelector("#ajaxProgressDiv1")) {\n\
         return;\n\
     }\n\
     ajaxProgressDiv1 = document.querySelector("#ajaxProgressDiv1");\n\
@@ -321,87 +337,6 @@ textarea {\n\
         clearInterval(window.timerIntervalAjaxProgressUpdate);\n\
         ajaxProgressUpdate();\n\
     });\n\
-}());\n\
-// init domOnEventMediaHotkeys\n\
-(function () {\n\
-/*\n\
- * this function will add media-hotkeys to elements with class=".domOnEventMediaHotkeysInit"\n\
- */\n\
-    "use strict";\n\
-    var input, onEvent;\n\
-    if (window.domOnEventMediaHotkeys) {\n\
-        return;\n\
-    }\n\
-    onEvent = window.domOnEventMediaHotkeys = function (event) {\n\
-        var media;\n\
-        if (event === "init") {\n\
-            Array.from(\n\
-                document.querySelectorAll(".domOnEventMediaHotkeysInit")\n\
-            ).forEach(function (media) {\n\
-                media.classList.remove("domOnEventMediaHotkeysInit");\n\
-                media.classList.add("domOnEventMediaHotkeys");\n\
-                ["play", "pause", "seeking"].forEach(function (event) {\n\
-                    media.addEventListener(event, onEvent);\n\
-                });\n\
-            });\n\
-            return;\n\
-        }\n\
-        if (event.currentTarget.classList.contains("domOnEventMediaHotkeys")) {\n\
-            window.domOnEventMediaHotkeysMedia1 = event.currentTarget;\n\
-            window.domOnEventMediaHotkeysInput.focus();\n\
-            return;\n\
-        }\n\
-        media = window.domOnEventMediaHotkeysMedia1;\n\
-        try {\n\
-            switch (event.key || event.type) {\n\
-            case ",":\n\
-            case ".":\n\
-                media.currentTime += (event.key === "," && -0.03125) || 0.03125;\n\
-                break;\n\
-            case "<":\n\
-            case ">":\n\
-                media.playbackRate *= (event.key === "<" && 0.5) || 2;\n\
-                break;\n\
-            case "ArrowDown":\n\
-            case "ArrowUp":\n\
-                media.volume += (event.key === "ArrowDown" && -0.05) || 0.05;\n\
-                break;\n\
-            case "ArrowLeft":\n\
-            case "ArrowRight":\n\
-                media.currentTime += (event.key === "ArrowLeft" && -5) || 5;\n\
-                break;\n\
-            case "j":\n\
-            case "l":\n\
-                media.currentTime += (event.key === "j" && -10) || 10;\n\
-                break;\n\
-            case "k":\n\
-            case " ":\n\
-                if (media.paused) {\n\
-                    media.play();\n\
-                } else {\n\
-                    media.pause();\n\
-                }\n\
-                break;\n\
-            case "m":\n\
-                media.muted = !media.muted;\n\
-                break;\n\
-            default:\n\
-                if (event.key >= 0) {\n\
-                    media.currentTime = 0.1 * event.key * media.duration;\n\
-                    break;\n\
-                }\n\
-                return;\n\
-            }\n\
-        } catch (ignore) {\n\
-        }\n\
-        event.preventDefault();\n\
-    };\n\
-    input = window.domOnEventMediaHotkeysInput = document.createElement("button");\n\
-    input.style = "border:0;height:0;margin:0;padding:0;position:fixed;width:0;z-index:-1;";\n\
-    input.addEventListener("click", onEvent);\n\
-    input.addEventListener("keydown", onEvent);\n\
-    document.body.appendChild(input);\n\
-    onEvent("init");\n\
 }());\n\
 // init domOnEventSelectAllWithinPre\n\
 (function () {\n\
@@ -454,7 +389,7 @@ utility2-comment -->\n\
 \n\
 \n\
 <label>stderr and stdout</label>\n\
-<textarea class="resettable" id="outputTextareaStdout1" readonly></textarea>\n\
+<textarea class="resettable" id="outputStdoutTextarea1" readonly></textarea>\n\
 <!-- utility2-comment\n\
 {{#if isRollup}}\n\
 <script src="assets.app.js"></script>\n\
@@ -481,6 +416,7 @@ utility2-comment -->\n\
 
 
 
+/* validateLineSortedReset */
 // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
 local.assetsDict['/assets.buildBadge.template.svg'] =
 '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
@@ -561,9 +497,9 @@ instruction\n\
                     event.currentTarget.className.includes &&\n\
                     event.currentTarget.className.includes(\'onreset\'))) {\n\
                 // reset output\n\
-                Array.from(\n\
-                    document.querySelectorAll(\'body > .resettable\')\n\
-                ).forEach(function (element) {\n\
+                Array.from(document.querySelectorAll(\n\
+                    \'body > .resettable\'\n\
+                )).forEach(function (element) {\n\
                     switch (element.tagName) {\n\
                     case \'INPUT\':\n\
                     case \'TEXTAREA\':\n\
@@ -606,22 +542,22 @@ instruction\n\
                 }\n\
             }\n\
         };\n\
-        // log stderr and stdout to #outputTextareaStdout1\n\
+        // log stderr and stdout to #outputStdoutTextarea1\n\
         [\'error\', \'log\'].forEach(function (key) {\n\
             console[key + \'_original\'] = console[key];\n\
             console[key] = function () {\n\
                 var element;\n\
                 console[key + \'_original\'].apply(console, arguments);\n\
-                element = document.querySelector(\'#outputTextareaStdout1\');\n\
+                element = document.querySelector(\'#outputStdoutTextarea1\');\n\
                 if (!element) {\n\
                     return;\n\
                 }\n\
-                // append text to #outputTextareaStdout1\n\
+                // append text to #outputStdoutTextarea1\n\
                 element.value += Array.from(arguments).map(function (arg) {\n\
                     return typeof arg === \'string\'\n\
                         ? arg\n\
                         : JSON.stringify(arg, null, 4);\n\
-                }).join(\' \') + \'\\n\';\n\
+                }).join(\' \').replace((/\\u001b\\[\\d*m/g), \'\') + \'\\n\';\n\
                 // scroll textarea to bottom\n\
                 element.scrollTop = element.scrollHeight;\n\
             };\n\
@@ -651,8 +587,6 @@ instruction\n\
         local.buffer = require(\'buffer\');\n\
         local.child_process = require(\'child_process\');\n\
         local.cluster = require(\'cluster\');\n\
-        local.console = require(\'console\');\n\
-        local.constants = require(\'constants\');\n\
         local.crypto = require(\'crypto\');\n\
         local.dgram = require(\'dgram\');\n\
         local.dns = require(\'dns\');\n\
@@ -661,12 +595,9 @@ instruction\n\
         local.fs = require(\'fs\');\n\
         local.http = require(\'http\');\n\
         local.https = require(\'https\');\n\
-        local.module = require(\'module\');\n\
         local.net = require(\'net\');\n\
         local.os = require(\'os\');\n\
         local.path = require(\'path\');\n\
-        local.process = require(\'process\');\n\
-        local.punycode = require(\'punycode\');\n\
         local.querystring = require(\'querystring\');\n\
         local.readline = require(\'readline\');\n\
         local.repl = require(\'repl\');\n\
@@ -712,6 +643,7 @@ instruction\n\
         /* validateLineSortedReset */\n\
         local.assetsDict[\'/\'] =\n\
             local.assetsDict[\'/assets.example.html\'] =\n\
+            local.assetsDict[\'/index.html\'] =\n\
             local.assetsDict[\'/assets.index.template.html\']\n\
             .replace((/\\{\\{env\\.(\\w+?)\\}\\}/g), function (match0, match1) {\n\
                 switch (match1) {\n\
@@ -801,7 +733,7 @@ local.assetsDict['/assets.lib.template.js'] = '\
                 context["_" + key + "Arguments"] = arguments;\n\
                 consoleError("\\n\\n" + key);\n\
                 consoleError.apply(console, arguments);\n\
-                consoleError("\\n");\n\
+                consoleError(new Error().stack + "\\n");\n\
                 // return arg0 for inspection\n\
                 return arg0;\n\
             };\n\
@@ -837,8 +769,6 @@ local.assetsDict['/assets.lib.template.js'] = '\
             local.buffer = require(\'buffer\');\n\
             local.child_process = require(\'child_process\');\n\
             local.cluster = require(\'cluster\');\n\
-            local.console = require(\'console\');\n\
-            local.constants = require(\'constants\');\n\
             local.crypto = require(\'crypto\');\n\
             local.dgram = require(\'dgram\');\n\
             local.dns = require(\'dns\');\n\
@@ -847,12 +777,9 @@ local.assetsDict['/assets.lib.template.js'] = '\
             local.fs = require(\'fs\');\n\
             local.http = require(\'http\');\n\
             local.https = require(\'https\');\n\
-            local.module = require(\'module\');\n\
             local.net = require(\'net\');\n\
             local.os = require(\'os\');\n\
             local.path = require(\'path\');\n\
-            local.process = require(\'process\');\n\
-            local.punycode = require(\'punycode\');\n\
             local.querystring = require(\'querystring\');\n\
             local.readline = require(\'readline\');\n\
             local.repl = require(\'repl\');\n\
@@ -1954,62 +1881,10 @@ local.assetsDict['/favicon.ico'] = '';
          * It must be called before any other method calls.
          * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#XMLHttpRequest()
          */
-            var xhr;
-            xhr = this;
-            ['onError', 'onResponse'].forEach(function (key) {
-                xhr[key] = xhr[key].bind(xhr);
-            });
-            xhr.headers = {};
-            xhr.onLoadList = [];
-            /*
-             * The XMLHttpRequest response property returns the response's body content
-             * as an ArrayBuffer, Blob, Document, JavaScript Object, or DOMString,
-             * depending on the value of the request's responseType property.
-             * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/response
-             */
-            xhr.response = null;
-            /*
-             * The read-only XMLHttpRequest property responseText returns the text
-             * received from a server following a request being sent.
-             * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseText
-             */
-            xhr.responseText = '';
-            /*
-             * The XMLHttpRequest property responseType is an enumerated string value
-             * specifying the type of data contained in the response. It also lets the author
-             * change the response type. If an empty string is set as the value of responseType,
-             * the default value of "text" is used.
-             * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType
-             */
-            xhr.responseType = '';
-            /*
-             * The read-only XMLHttpRequest.status property returns the numerical status code
-             * of the response of the XMLHttpRequest. status will be an unsigned short.
-             * Before the request is complete, the value of status will be 0. It is worth noting
-             * that browsers report a status of 0 in case of XMLHttpRequest errors too.
-             * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/status
-             */
-            xhr.status = xhr.statusCode = 0;
-            /*
-             * The read-only XMLHttpRequest.statusText property returns a DOMString
-             * containing the response's status message as returned by the HTTP server.
-             * Unlike XMLHTTPRequest.status which indicates a numerical status code,
-             * this property contains the text of the response status, such as "OK" or "Not Found".
-             * If the request's readyState is in UNSENT or OPENED state,
-             * the value of statusText will be an empty string.
-             * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/statusText
-             */
-            xhr.statusText = '';
-            /*
-             * The XMLHttpRequest.timeout property is an unsigned long representing the number
-             * of milliseconds a request can take before automatically being terminated.
-             * The default value is 0, which means there is no timeout. Timeout shouldn't be used
-             * for synchronous XMLHttpRequests requests used in a document environment
-             * or it will throw an InvalidAccessError exception. When a timeout happens,
-             * a timeout event is fired.
-             * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/timeout
-             */
-            xhr.timeout = local.timeoutDefault;
+            this.headers = {};
+            this.onError = this.onError.bind(this);
+            this.onLoadList = [];
+            this.onResponse = this.onResponse.bind(this);
         };
 
         local._http.XMLHttpRequest.prototype.abort = function () {
@@ -2040,13 +1915,8 @@ local.assetsDict['/favicon.ico'] = '';
             if (this._isDone) {
                 return;
             }
-            data = local.bufferToNodeBuffer(data);
             this.error = error;
             this.response = data;
-            // init responseText
-            if (this.responseType === 'text' || !this.responseType) {
-                this.responseText = local.bufferToString(data);
-            }
             // handle data
             this.onLoadList.forEach(function (onError) {
                 onError({ type: error
@@ -2062,7 +1932,6 @@ local.assetsDict['/favicon.ico'] = '';
             this.responseHeaders = responseStream.headers;
             this.responseStream = responseStream;
             this.status = this.statusCode = responseStream.statusCode;
-            this.statusText = local.http.STATUS_CODES[responseStream.statusCode] || '';
             local.streamReadAll(responseStream, this.onError);
         };
 
@@ -2094,8 +1963,13 @@ local.assetsDict['/favicon.ico'] = '';
          * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#send()
          */
             var xhr;
-            data = local.bufferToNodeBuffer(data);
             xhr = this;
+            if (data instanceof Uint8Array &&
+                    typeof Buffer === 'function' &&
+                    typeof Buffer.isBuffer === 'function' &&
+                    !Buffer.isBuffer(data)) {
+                Object.setPrototypeOf(data, Buffer.prototype);
+            }
             xhr.data = data;
             // asynchronously send data
             setTimeout(function () {
@@ -2252,7 +2126,8 @@ local.assetsDict['/favicon.ico'] = '';
                 url: local.assetsDict['/']
                     .indexOf('<script src="assets.test.js"></script>') >= 0
                     ? local.serverLocalHost + '?modeTest=1&timeoutDefault=' + local.timeoutDefault
-                    : local.serverLocalHost + '/index.html?modeTest=1&timeoutDefault=1'
+                    : local.serverLocalHost +
+                        '/assets.utility2.base.html?modeTest=1&timeoutDefault=1'
             }, onError);
         };
 
@@ -2261,15 +2136,16 @@ local.assetsDict['/favicon.ico'] = '';
          * this function will send an ajax-request with error-handling and timeout
          * example usage:
             local.ajax({
+                data: 'hello world',
                 header: { 'x-header-hello': 'world' },
-                method: 'GET',
+                method: 'POST',
                 url: '/index.html'
             }, function (error, xhr) {
-                console.log(xhr.responseText);
                 console.log(xhr.statusCode);
+                console.log(xhr.responseText);
             });
          */
-            var ajaxProgressUpdate, isBrowser, isDone, nop, streamCleanup, xhr;
+            var ajaxProgressUpdate, bufferToString, isBrowser, isDone, nop, streamCleanup, xhr;
             // init standalone handling-behavior
             nop = function () {
             /*
@@ -2282,6 +2158,7 @@ local.assetsDict['/favicon.ico'] = '';
             if (local.onErrorWithStack) {
                 onError = local.onErrorWithStack(onError);
             }
+            bufferToString = local.bufferToString || String;
             streamCleanup = function (stream) {
             /*
              * this function will try to end or destroy the stream
@@ -2303,8 +2180,8 @@ local.assetsDict['/favicon.ico'] = '';
                 window.document &&
                 typeof window.document.querySelectorAll === 'function';
             // init xhr
-            xhr = !options.httpRequest && (!isBrowser ||
-                (local.serverLocalUrlTest && local.serverLocalUrlTest(options.url)))
+            xhr = !options.httpRequest &&
+                (!isBrowser || (local.serverLocalUrlTest && local.serverLocalUrlTest(options.url)))
                 ? local._http && local._http.XMLHttpRequest && new local._http.XMLHttpRequest()
                 : isBrowser && new window.XMLHttpRequest();
             if (!xhr) {
@@ -2326,9 +2203,6 @@ local.assetsDict['/favicon.ico'] = '';
                         })
                         .on('end', function () {
                             xhr.response = Buffer.concat(chunkList);
-                            if (xhr.responseType === 'text' || !xhr.responseType) {
-                                xhr.responseText = String(xhr.response);
-                            }
                             xhr.onEvent({ type: 'load' });
                         })
                         .on('error', xhr.onEvent);
@@ -2336,7 +2210,6 @@ local.assetsDict['/favicon.ico'] = '';
                 xhr.addEventListener = nop;
                 xhr.open = nop;
                 xhr.requestStream = xhr;
-                xhr.responseText = '';
                 xhr.send = xhr.end;
                 xhr.setRequestHeader = nop;
                 setTimeout(function () {
@@ -2377,7 +2250,7 @@ local.assetsDict['/favicon.ico'] = '';
                     return;
                 }
                 // init statusCode
-                xhr.statusCode = xhr.status;
+                xhr.statusCode = xhr.status || xhr.statusCode || 0;
                 switch (event.type) {
                 case 'abort':
                 case 'error':
@@ -2390,12 +2263,24 @@ local.assetsDict['/favicon.ico'] = '';
                     // update responseHeaders
                     if (xhr.getAllResponseHeaders) {
                         xhr.getAllResponseHeaders().replace((
-                            /(.*?): *?(.*?)\r\n/g
+                            /(.*?): *(.*?)\r\n/g
                         ), function (match0, match1, match2) {
                             match0 = match1;
                             xhr.responseHeaders[match0.toLowerCase()] = match2;
                         });
                     }
+                    // init responseText
+                    if (!(isBrowser && (xhr instanceof XMLHttpRequest)) &&
+                            (xhr.responseType === 'text' || !xhr.responseType)) {
+                        xhr.response = xhr.responseText = bufferToString(xhr.response || '');
+                    }
+                    // init responseBuffer
+                    xhr.responseBuffer = xhr.response;
+                    if (xhr.responseBuffer instanceof ArrayBuffer) {
+                        xhr.responseBuffer = new Uint8Array(xhr.responseBuffer);
+                    }
+                    xhr.responseContentLength =
+                        (xhr.response && (xhr.response.byteLength || xhr.response.length)) || 0;
                     xhr.timeElapsed = Date.now() - xhr.timeStart;
                     // debug ajaxResponse
                     if (xhr.modeDebug) {
@@ -2407,6 +2292,7 @@ local.assetsDict['/favicon.ico'] = '';
                             statusCode: xhr.statusCode,
                             timeElapsed: xhr.timeElapsed,
                             // extra
+                            responseContentLength: xhr.responseContentLength,
                             data: (function () {
                                 try {
                                     return String(xhr.data.slice(0, 256));
@@ -2522,6 +2408,7 @@ local.assetsDict['/favicon.ico'] = '';
                         postProcess: local.echo,
                         rgxCrawl: (/<a\b[\S\s]*?href="(.*?)"/g),
                         rgxParent0: (/z^/),
+                        urlParsed0: {},
                         urlList: []
                     });
                     options.urlList.forEach(function (url) {
@@ -2603,7 +2490,7 @@ local.assetsDict['/favicon.ico'] = '';
                         statusCode: options.xhr.statusCode,
                         timeElapsed: options.xhr.timeElapsed,
                         // extra
-                        responseContentLength: options.xhr.response && options.xhr.response.length,
+                        responseContentLength: options.xhr.responseContentLength,
                         depth: options.depth,
                         ii: options.ii,
                         listLength: options.list.length,
@@ -2731,19 +2618,17 @@ local.assetsDict['/favicon.ico'] = '';
             local.assert(aa !== bb, [aa]);
         };
 
-        local.base64FromBuffer = function (bff, mode) {
+        local.base64FromBuffer = function (bff) {
         /*
          * this function will convert Uint8Array bff to base64
          * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
          */
             var ii, mod3, text, uint24, uint6ToB64;
             // convert utf8-string bff to Uint8Array
-            if (bff && mode === 'string') {
-                bff = typeof window === 'object' &&
-                    window &&
-                    typeof window.TextEncoder === 'function'
-                    ? new window.TextEncoder().encode(bff)
-                    : Buffer.from(bff);
+            if (typeof bff === 'string') {
+                bff = typeof Buffer === 'function' && typeof Buffer.isBuffer === 'function'
+                    ? Buffer.from(bff)
+                    : new window.TextEncoder().encode(bff);
             }
             bff = bff || [];
             text = '';
@@ -2775,19 +2660,11 @@ local.assetsDict['/favicon.ico'] = '';
             return text.replace(/A(?=A$|$)/g, '=');
         };
 
-        local.base64FromString = function (text) {
-        /*
-         * this function will convert utf8-string text to base64
-         */
-            return local.base64FromBuffer(text, 'string');
-        };
-
         local.base64ToBuffer = function (b64, mode) {
         /*
          * this function will convert b64 to Uint8Array
          * https://gist.github.com/wang-bin/7332335
          */
-            /*globals Uint8Array*/
             var bff, byte, chr, ii, jj, map64, mod4;
             b64 = b64 || '';
             bff = new Uint8Array(b64.length); // 3/4
@@ -2811,17 +2688,13 @@ local.assetsDict['/favicon.ico'] = '';
             }
             // optimization - create resized-view of bff
             bff = bff.subarray(0, jj);
-            // mode !== 'string'
-            if (mode !== 'string') {
-                return bff;
-            }
-            // mode === 'string' - browser js-env
-            if (typeof window === 'object' && window && typeof window.TextDecoder === 'function') {
-                return new window.TextDecoder().decode(bff);
-            }
-            // mode === 'string' - node js-env
-            Object.setPrototypeOf(bff, Buffer.prototype);
-            return String(bff);
+            return mode !== 'string'
+                // return Uint8Array
+                ? bff
+                // return utf8-string
+                : typeof Buffer === 'function' && typeof Buffer.isBuffer === 'function'
+                ? String(Object.setPrototypeOf(bff, Buffer.prototype))
+                : new window.TextDecoder().decode(bff);
         };
 
         local.base64ToString = function (b64) {
@@ -2870,7 +2743,7 @@ local.assetsDict['/favicon.ico'] = '';
                     onError(new Error('blobRead - ' + event.type));
                     break;
                 case 'load':
-                    onError(null, reader.result instanceof local.global.ArrayBuffer
+                    onError(null, reader.result instanceof ArrayBuffer
                         // convert ArrayBuffer to Uint8Array
                         ? local.bufferCreate(reader.result)
                         : reader.result);
@@ -3092,6 +2965,24 @@ local.assetsDict['/favicon.ico'] = '';
                     break;
                 // node.electron.browserWindow.webview - init
                 case 31:
+                    // init domOnEventWindowOnloadTimeElapsed
+                    (function () {
+                    /*
+                     * this function will measure and print the time-elapsed for window.onload
+                     */
+                        if (window.domOnEventWindowOnloadTimeElapsed) {
+                            return;
+                        }
+                        window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;
+                        window.addEventListener("load", function () {
+                            setTimeout(function () {
+                                window.domOnEventWindowOnloadTimeElapsed = Date.now() -
+                                    window.domOnEventWindowOnloadTimeElapsed;
+                                console.error("domOnEventWindowOnloadTimeElapsed = " +
+                                    window.domOnEventWindowOnloadTimeElapsed);
+                            }, 100);
+                        });
+                    }());
                     // init fileElectronHtml for testRun
                     if (options.modeBrowserTest === 'test') {
                         options.window.fileElectronHtml = options.fileElectronHtml;
@@ -3239,7 +3130,6 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will emulate node's Buffer.concat for Uint8Array in the browser
          */
-            /*globals UintArray*/
             var ii, jj, length, result;
             length = 0;
             bffList = bffList
@@ -3271,14 +3161,13 @@ local.assetsDict['/favicon.ico'] = '';
          * this function will create a Uint8Array from text,
          * with either 'utf8' (default) or 'base64' encoding
          */
-            /*globals Uint8Array*/
             if (typeof text !== 'string') {
                 return new Uint8Array(text);
             }
-            if (typeof window === 'object' && window && typeof window.TextEncoder === 'function') {
-                return new window.TextEncoder().encode(text);
+            if (typeof Buffer === 'function' && typeof Buffer.isBuffer === 'function') {
+                return Buffer.from(text);
             }
-            return Buffer.from(text);
+            return new window.TextEncoder().encode(text);
         };
 
         local.bufferIndexOfSubBuffer = function (bff, subBff, fromIndex) {
@@ -3304,42 +3193,30 @@ local.assetsDict['/favicon.ico'] = '';
          * this function will create create a Uint8Array with the given length,
          * filled with cryptographically-strong random bytes
          */
-            /*globals Uint8Array, crypto*/
-            return typeof crypto === 'object' && crypto && crypto.getRandomValues
-                ? crypto.getRandomValues(new Uint8Array(length))
+            return typeof window === 'object' &&
+                window.crypto &&
+                typeof window.crypto.getRandomValues === 'function'
+                ? window.crypto.getRandomValues(new Uint8Array(length))
                 : require('crypto').randomBytes(length);
-        };
-
-        local.bufferToNodeBuffer = function (bff) {
-        /*
-         * this function will coerce Uint8Array bff to nodejs Buffer
-         */
-            /*globals Uint8Array*/
-            if (typeof Buffer === 'function' &&
-                    Buffer &&
-                    typeof Buffer.isBuffer === 'function' &&
-                    bff instanceof Uint8Array &&
-                    !Buffer.isBuffer(bff)) {
-                bff = bff.subarray();
-                Object.setPrototypeOf(bff, Buffer.prototype);
-            }
-            return bff;
         };
 
         local.bufferToString = function (bff) {
         /*
          * this function will convert Uint8Array bff to utf8 string
          */
+            // null-case
             bff = bff || '';
             if (typeof bff === 'string') {
                 return bff;
             }
-            // browser js-env
-            if (typeof window === 'object' && window && typeof window.TextDecoder === 'function') {
-                return new window.TextDecoder().decode(bff);
+            // use Buffer api
+            if (typeof Buffer === 'function' && typeof Buffer.isBuffer === 'function') {
+                return String(bff instanceof Uint8Array && !Buffer.isBuffer(bff)
+                    ? Object.setPrototypeOf(bff, Buffer.prototype)
+                    : Buffer.from(bff));
             }
-            // node js-env
-            return String(local.bufferToNodeBuffer(bff));
+            // use TextDecoder api
+            return new window.TextDecoder().decode(bff);
         };
 
         local.buildApidoc = function (options, onError) {
@@ -3362,7 +3239,8 @@ local.assetsDict['/favicon.ico'] = '';
             // create apidoc.html
             local.fsWriteFileWithMkdirpSync(
                 local.env.npm_config_dir_build + '/apidoc.html',
-                local.tryCatchReadFile('apidoc.html', 'utf8') || local.apidocCreate(options)
+                local.fsReadFileOrEmptyStringSync('apidoc.html', 'utf8') ||
+                    local.apidocCreate(options)
             );
             console.error('created apidoc file ' + local.env.npm_config_dir_build +
                 '/apidoc.html\n');
@@ -3376,7 +3254,7 @@ local.assetsDict['/favicon.ico'] = '';
             options = local.objectSetDefault(options, { assetsList: [] });
             // build assets
             local.fsRmrSync(local.env.npm_config_dir_build + '/app');
-            local.onParallelList({ list: options.assetsList.concat([{
+            local.onParallelList({ list: [{
                 file: '/LICENSE',
                 url: '/LICENSE'
             }, {
@@ -3410,15 +3288,24 @@ local.assetsDict['/favicon.ico'] = '';
                 file: '/assets.test.js',
                 url: '/assets.test.js'
             }, {
+                file: '/assets.utility2.html',
+                url: '/assets.utility2.html'
+            }, {
+                file: '/assets.utility2.base.html',
+                url: '/assets.utility2.base.html'
+            }, {
                 file: '/assets.utility2.rollup.js',
                 url: '/assets.utility2.rollup.js'
             }, {
                 file: '/index.html',
                 url: '/index.html'
             }, {
+                file: '/index.rollup.html',
+                url: '/index.rollup.html'
+            }, {
                 file: '/jsonp.utility2.stateInit',
                 url: '/jsonp.utility2.stateInit?callback=window.utility2.stateInit'
-            }]) }, function (options2, onParallel) {
+            }].concat(options.assetsList) }, function (options2, onParallel) {
                 options2 = options2.element;
                 onParallel.counter += 1;
                 local.ajax(options2, function (error, xhr) {
@@ -3537,7 +3424,7 @@ local.assetsDict['/favicon.ico'] = '';
          */
             local.objectSetDefault(options, {
                 customize: local.nop,
-                dataFrom: local.tryCatchReadFile(
+                dataFrom: local.fsReadFileOrEmptyStringSync(
                     'lib.' + local.env.npm_package_nameLib + '.js',
                     'utf8'
                 ),
@@ -3567,7 +3454,7 @@ local.assetsDict['/favicon.ico'] = '';
                     '            local.global.utility2_rollup_old || '
                 );
             }
-            options.customize();
+            options.customize(options);
             // save lib.xxx.js
             local.fs.writeFileSync(
                 'lib.' + local.env.npm_package_nameLib + '.js',
@@ -3579,8 +3466,11 @@ local.assetsDict['/favicon.ico'] = '';
                 'lib.' + local.env.npm_package_nameLib + '.sh',
                 'npm_scripts.sh'
             ].forEach(function (file) {
-                options.dataFunctionBefore = local.tryCatchReadFile(file, 'utf8').replace((
-                    /^ {8}local\.(\w+) = function \([\S\s]+?\n {8}\};$/gm
+                options.dataLib = local.fsReadFileOrEmptyStringSync(
+                    file,
+                    'utf8'
+                ).replace((
+                    /^ {8}local\.(\w+) = function \([\S\s]*?\n {8}\};$/gm
                 ), function (match0, match1) {
                     [local, local.github_crud, local.swgg].some(function (dict) {
                         if (match1[0] !== '_' && typeof dict[match1] === 'function') {
@@ -3591,8 +3481,8 @@ local.assetsDict['/favicon.ico'] = '';
                     return match0;
                 });
                 /* istanbul ignore next */
-                if (options.dataFunctionBefore && !local.env.npm_config_mode_coverage) {
-                    local.fs.writeFileSync(file, options.dataFunctionBefore);
+                if (options.dataLib && !local.env.npm_config_mode_coverage) {
+                    local.fs.writeFileSync(file, options.dataLib);
                 }
             });
             onError();
@@ -3608,12 +3498,11 @@ local.assetsDict['/favicon.ico'] = '';
             }
             local.objectSetDefault(options, {
                 customize: local.nop,
-                dataFrom: local.tryCatchReadFile('README.md', 'utf8')
-                    // reset toc
-                    .replace(
-                        /\n# table of contents$[\S\s]*?\n\n\n\n/m,
-                        '\n# table of contents\n\n\n\n'
-                    ),
+                // reset toc
+                dataFrom: local.fsReadFileOrEmptyStringSync('README.md', 'utf8').replace(
+                    /\n# table of contents$[\S\s]*?\n\n\n\n/m,
+                    '\n# table of contents\n\n\n\n'
+                ),
                 packageJsonRgx: (/\n# package.json\n```json\n([\S\s]*?)\n```\n/)
             });
             // render dataTo
@@ -3702,15 +3591,13 @@ local.assetsDict['/favicon.ico'] = '';
             // customize private-repository
             if (local.env.npm_package_isPrivate) {
                 options.dataTo = options.dataTo
-                    .replace((
-                        /\n\[!\[NPM\]\(https:\/\/nodei.co\/npm\/.*?\n/
-                    ), '\n')
+                    .replace((/\n\[!\[NPM\]\(https:\/\/nodei.co\/npm\/.*?\n/), '\n')
                     .replace(
                         '$ npm install ',
-                        '$ git clone --single-branch -b beta ' +
+                        '$ git clone ' +
                             local.env.npm_package_repository_url
                             .replace('git+https://github.com/', 'git@github.com:') +
-                            ' node_modules/'
+                            ' --single-branch -b beta node_modules/'
                     );
             }
             // customize version
@@ -3730,8 +3617,8 @@ local.assetsDict['/favicon.ico'] = '';
             if (local.assetsDict['/index.html']
                     .indexOf('<script src="assets.example.js"></script>') < 0) {
                 options.dataTo = options.dataTo.replace(
-                    (/\n {4}case 'browser':\n[\S\s]+?\n {8}break;\n/g),
-                    "\n    case 'browser':\n        break;\n"
+                    (/\n {8}if \(!local\.isBrowser\) \{\n[\S\s]*?\n {4}\}\(\)\);\n/g),
+                    "\n        if (!local.isBrowser) {\n            return;\n        }\n    }());\n"
                 );
             }
             // customize comment
@@ -3743,7 +3630,18 @@ local.assetsDict['/favicon.ico'] = '';
                     '\n' + match0 + '\n'
                 );
             });
-            options.customize();
+            // customize - user-defined
+            options.customize(options);
+            // customize assets.index.template.html
+            if (local.assetsDict['/assets.index.template.html']
+                    .indexOf('"assets.utility2.template.html"') < 0) {
+                options.dataTo = options.dataTo.replace(
+                    new RegExp('\\n {8}\\/\\* jslint-ignore-begin \\*\\/\\n' +
+                        ' {8}local.assetsDict\\[\'\\/assets.index.template.html\'\\] = \'\\\\\\n' +
+                        '[\\S\\s]*?\\n {8}\\/\\* jslint-ignore-end \\*\\/\\n'),
+                    '\n'
+                );
+            }
             // customize shDeployCustom
             if (options.dataFrom.indexOf('    shDeployCustom\n') >= 0) {
                 [
@@ -3803,16 +3701,6 @@ local.assetsDict['/favicon.ico'] = '';
                 // customize screenshot
                 options.dataTo = options.dataTo.replace(element[1], '');
             });
-            // customize assets.index.template.html
-            if (local.assetsDict['/assets.index.template.html']
-                    .indexOf('"assets.utility2.template.html"') < 0) {
-                options.dataTo = options.dataTo.replace(
-                    new RegExp('\\n {8}\\/\\* jslint-ignore-begin \\*\\/\\n' +
-                        ' {8}local.assetsDict\\[\'\\/assets.index.template.html\'\\] = \'\\\\\\n' +
-                        '[\\S\\s]*?\\n {8}\\/\\* jslint-ignore-end \\*\\/\\n'),
-                    '\n'
-                );
-            }
             // render dataTo - customizeAfter
             options.customizeAfter = true;
             options.dataTo = local.templateRenderJslintLite(options.dataTo, options);
@@ -3847,7 +3735,8 @@ local.assetsDict['/favicon.ico'] = '';
                     'x-swgg-homepage': options.packageJson.homepage
                 } }, 2);
                 options.dataTo.replace((/\bhttps:\/\/.*?\/assets\.app\.js/), function (match0) {
-                    options.swaggerJson['x-swgg-downloadStandaloneApp'] = match0;
+                    options.swaggerJson['x-swgg-downloadStandaloneApp'] =
+                        !local.env.npm_package_isPrivate && match0;
                 });
                 // save assets.swgg.swagger.json
                 local.fs.writeFileSync('assets.swgg.swagger.json', local.jsonStringifyOrdered(
@@ -3865,7 +3754,7 @@ local.assetsDict['/favicon.ico'] = '';
          */
             local.objectSetDefault(options, {
                 customize: local.nop,
-                dataFrom: local.tryCatchReadFile('test.js', 'utf8'),
+                dataFrom: local.fsReadFileOrEmptyStringSync('test.js', 'utf8'),
                 dataTo: local.templateRenderJslintLite(
                     local.assetsDict['/assets.test.template.js'],
                     {}
@@ -3894,7 +3783,7 @@ local.assetsDict['/favicon.ico'] = '';
                     );
                 }
             });
-            options.customize();
+            options.customize(options);
             // save test.js
             local.fs.writeFileSync('test.js', options.dataTo);
             onError();
@@ -3934,6 +3823,19 @@ local.assetsDict['/favicon.ico'] = '';
                     0.001 * (Number(argList[2] && argList[2].timeout) || local.timeoutDefault) + 2
                 ) + '; kill -9 ' + child.pid + ' 2>/dev/null', { shell: true, stdio: 'ignore' });
             return child;
+        };
+
+        local.childProcessSpawnWithUtility2 = function (script, onError) {
+        /*
+         * this function will run child_process.spawn, with lib.utility2.sh sourced
+         */
+            require('child_process').spawn(
+                '. ' + (process.env.npm_config_dir_utility2 || __dirname) + '/lib.utility2.sh; ' +
+                    script,
+                { shell: true, stdio: ['ignore', 1, 2] }
+            ).on('exit', function (exitCode) {
+                onError(exitCode && Object.assign(new Error(), { exitCode: exitCode }));
+            });
         };
 
         local.cliRun = function (fnc) {
@@ -4145,7 +4047,6 @@ local.assetsDict['/favicon.ico'] = '';
                 local.cryptoAesXxxCbcRawDecrypt({ data: data, key: key, mode: mode }, console.log);
             });
          */
-            /*globals Uint8Array*/
             var cipher, crypto, data, ii, iv, key;
             // init key
             key = new Uint8Array(0.5 * options.key.length);
@@ -4202,7 +4103,6 @@ local.assetsDict['/favicon.ico'] = '';
                 local.cryptoAesXxxCbcRawDecrypt({ data: data, key: key, mode: mode }, console.log);
             });
          */
-            /*globals Uint8Array*/
             var cipher, crypto, data, ii, iv, key;
             // init key
             key = new Uint8Array(0.5 * options.key.length);
@@ -4444,7 +4344,7 @@ local.assetsDict['/favicon.ico'] = '';
             var rgx, tmp;
             rgx = new RegExp('^0 (?:(body > )?(?:form > )?(?:' +
                 '\\.testReportDiv .+|\\.x-istanbul .+|' +
-                '\\.button|\\.colorError|\\.uiAnimateShake|\\.uiAnimateSlide|\\.zeroPixel|' +
+                '\\.button|\\.colorError|\\.uiAnimateShake|\\.uiAnimateSlide|' +
                 'a|body|code|div|input|pre|textarea' +
                 ')(?:\\[readonly\\])?(?:,| \\{))');
             tmp = [];
@@ -4453,12 +4353,14 @@ local.assetsDict['/favicon.ico'] = '';
                     typeof document.querySelectorAll === 'function'
                 ? document.querySelectorAll('style')
                 : []).map(function (element, ii) {
-                element.innerHTML.replace((/^([^\n @].*?)[,\{:].*?$/gm), function (match0, match1) {
-                    ii = document.querySelectorAll(match1).length;
-                    if (!(ii > 1)) {
-                        tmp.push(ii + ' ' + match0);
-                    }
-                });
+                element.innerHTML
+                    .replace((/\/\*[\S\s]*?\*\/|;|\}/g), '\n')
+                    .replace((/^([^\n @].*?)[,\{:].*?$/gm), function (match0, match1) {
+                        ii = document.querySelectorAll(match1).length;
+                        if (!(ii > 1)) {
+                            tmp.push(ii + ' ' + match0);
+                        }
+                    });
             });
             tmp
                 .filter(function (element) {
@@ -4503,6 +4405,18 @@ local.assetsDict['/favicon.ico'] = '';
             }
             // reset modeTest
             local.modeTest = null;
+        };
+
+        local.fsReadFileOrEmptyStringSync = function (file, options) {
+        /*
+         * this function will try to read the file or return an empty string
+         */
+            var data;
+            try {
+                data = local.fs.readFileSync(file, options);
+            } catch (ignore) {
+            }
+            return data || '';
         };
 
         local.fsRmrSync = function (dir) {
@@ -4569,7 +4483,7 @@ local.assetsDict['/favicon.ico'] = '';
             }
             // recurse - csslint <style>...</style>
             script.replace(
-                (/^<style>(?:\\n\\)?\n([\S\s]+?)\n<\/style>(?:\\n\\)?$/gm),
+                (/^<style>(?:\\n\\)?\n([\S\s]*?)\n<\/style>(?:\\n\\)?$/gm),
                 function (match0, match1, ii, text) {
                     match0 = match1;
                     local.jslintAndPrintConditional(
@@ -4585,7 +4499,7 @@ local.assetsDict['/favicon.ico'] = '';
             );
             // recurse - jslint <script>...</script>
             script.replace((
-                /^(?:\/\/ )?<script>(?:\\n\\)?\n([\S\s]+?)\n(?:\/\/ )?<\/script>(?:\\n\\)?$/gm
+                /^(?:\/\/ )?<script>(?:\\n\\)?\n([\S\s]*?)\n(?:\/\/ )?<\/script>(?:\\n\\)?$/gm
             ), function (match0, match1, ii, text) {
                 match0 = match1;
                 local.jslintAndPrintConditional(
@@ -4771,7 +4685,7 @@ local.assetsDict['/favicon.ico'] = '';
          * https://jwt.io/
          */
             data = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
-                local.normalizeJwtBase64Url(local.base64FromString(JSON.stringify(data)));
+                local.normalizeJwtBase64Url(local.base64FromBuffer(JSON.stringify(data)));
             return data + '.' + local.sjcl.codec.base64url.fromBits(
                 new local.sjcl.misc.hmac(local.sjcl.codec.base64url.toBits(
                     local.jwtAes256KeyInit(key)
@@ -4954,7 +4868,7 @@ local.assetsDict['/favicon.ico'] = '';
          * this function will run the middleware that will forward-proxy the request
          * to its destination-host
          */
-            var onError, options, timerTimeout;
+            var isDone, onError, options, timerTimeout;
             // handle preflight-cors
             if (request.method === 'OPTIONS' && (/forward-proxy-url/)
                     .test(request.headers['access-control-request-headers'])) {
@@ -4969,11 +4883,11 @@ local.assetsDict['/favicon.ico'] = '';
             local.serverRespondCors(request, response);
             // init onError
             onError = function (error) {
-                clearTimeout(timerTimeout);
-                if (options.isDone) {
+                if (isDone) {
                     return;
                 }
-                options.isDone = true;
+                isDone = true;
+                clearTimeout(timerTimeout);
                 // debug middlewareForwardProxy
                 console.error('serverLog - ' + JSON.stringify({
                     time: new Date(options.timeStart).toISOString(),
@@ -5048,17 +4962,21 @@ local.assetsDict['/favicon.ico'] = '';
             // set main-page content-type to text/html
             if (request.urlParsed.pathname === '/') {
                 local.serverRespondHeadSet(request, response, null, {
-                    'Content-Type': 'text/html; charset=UTF-8'
+                    'Content-Type': 'text/html; charset=utf-8'
                 });
             }
             // init response.end and response.write to accept Uint8Array instance
             ['end', 'write'].forEach(function (key) {
-                response['_' + key] = response['_' + key] || response[key];
-                response[key] = function () {
-                    var argList;
-                    argList = Array.from(arguments);
-                    argList[0] = local.bufferToNodeBuffer(argList[0]);
-                    response['_' + key].apply(response, argList);
+                var fnc;
+                if (local.isBrowser) {
+                    return;
+                }
+                fnc = response[key].bind(response);
+                response[key] = function (bff, encoding, callback) {
+                    if (bff instanceof Uint8Array && !Buffer.isBuffer(bff)) {
+                        Object.setPrototypeOf(bff, Buffer.prototype);
+                    }
+                    return fnc(bff, encoding, callback);
                 };
             });
             // default to nextMiddleware
@@ -5078,12 +4996,18 @@ local.assetsDict['/favicon.ico'] = '';
             }
             state = { utility2: {
                 assetsDict: {
-                    '/assets.index.template.html': local.assetsDict['/assets.index.template.html'],
-                    '/assets.swgg.swagger.json': local.assetsDict['/assets.swgg.swagger.json']
+                    '/assets.example.html': local.assetsDict['/assets.example.html'],
+                    '/assets.example.js': local.assetsDict['/assets.example.js'],
+                    '/assets.swgg.swagger.json': local.assetsDict['/assets.swgg.swagger.json'],
+                    '/assets.test.js': local.assetsDict['/assets.test.js'],
+                    '/assets.utility2.base.html':
+                        local.assetsDict['/assets.utility2.base.rollup.html'],
+                    '/index.rollup.html': local.assetsDict['/index.rollup.html']
                 },
                 env: {
                     NODE_ENV: local.env.NODE_ENV,
                     npm_config_mode_backend: local.env.npm_config_mode_backend,
+                    npm_package_assetsList: local.env.npm_package_assetsList,
                     npm_package_description: local.env.npm_package_description,
                     npm_package_homepage: local.env.npm_package_homepage,
                     npm_package_name: local.env.npm_package_name,
@@ -5091,6 +5015,11 @@ local.assetsDict['/favicon.ico'] = '';
                     npm_package_version: local.env.npm_package_version
                 }
             } };
+            (local.env.npm_package_assetsList || '').split(' ').forEach(function (file) {
+                state.utility2.assetsDict['/' + file] = local.assetsDict['/' + file] =
+                    local.assetsDict['/' + file] ||
+                    local.fsReadFileOrEmptyStringSync(file, 'utf8');
+            });
             if (request.stateInit) {
                 return state;
             }
@@ -5311,6 +5240,7 @@ local.assetsDict['/favicon.ico'] = '';
             if (error && !local.global.__coverage__) {
                 console.error(error);
             }
+            return error;
         };
 
         local.onErrorThrow = function (error) {
@@ -5320,6 +5250,7 @@ local.assetsDict['/favicon.ico'] = '';
             if (error) {
                 throw error;
             }
+            return error;
         };
 
         local.onErrorWithStack = function (onError) {
@@ -5371,6 +5302,7 @@ local.assetsDict['/favicon.ico'] = '';
          */
             options.onNext = local.onErrorWithStack(function (error, data, meta) {
                 try {
+                    options.modeNext0 = options.modeNext || 0;
                     options.modeNext = error && !options.modeErrorIgnore
                         ? Infinity
                         : options.modeNext + 1;
@@ -5603,47 +5535,53 @@ local.assetsDict['/favicon.ico'] = '';
             self.evalDefault = self.eval;
             // hook custom repl eval function
             self.eval = function (script, context, file, onError) {
-                var match, onError2;
-                match = (/^(\S+)(.*?)\n/).exec(script) || {};
+                var  onError2;
                 onError2 = function (error, data) {
                     // debug error
                     global.utility2_debugReplError = error || global.utility2_debugReplError;
                     onError(error, data);
                 };
-                switch (match[1]) {
-                // syntax sugar to run async shell command
-                case '$':
-                    switch (match[2]) {
-                    // syntax sugar to run git diff
-                    case ' git diff':
-                        match[2] = ' git diff --color | cat';
+                script.replace((/^(\S+)(.*?)\n/), function (match0, match1, match2) {
+                    match0 = match1;
+                    switch (match0) {
+                    // syntax sugar to run async shell command
+                    case '$':
+                        switch (match2) {
+                        // syntax sugar to run git diff
+                        case ' git diff':
+                            match2 = ' git diff --color | cat';
+                            break;
+                        // syntax sugar to run git log
+                        case ' git log':
+                            match2 = ' git log -n 4 | cat';
+                            break;
+                        }
+                        // source lib.utility2.sh
+                        if (process.env.npm_config_dir_utility2 && (match2 !== ' :')) {
+                            match2 = '. ' + process.env.npm_config_dir_utility2 +
+                                '/lib.utility2.sh;' + match2;
+                        }
+                        // run async shell command
+                        require('child_process').spawn(match2, {
+                            shell: true,
+                            stdio: ['ignore', 1, 2]
+                        })
+                            // on shell exit, print return prompt
+                            .on('exit', function (exitCode) {
+                                console.error('exit-code ' + exitCode);
+                                self.evalDefault(
+                                    '\n',
+                                    context,
+                                    file,
+                                    onError2
+                                );
+                            });
+                        script = '\n';
                         break;
-                    // syntax sugar to run git log
-                    case ' git log':
-                        match[2] = ' git log -n 4 | cat';
-                        break;
-                    }
-                    // run async shell command
-                    require('child_process').spawn(match[2], {
-                        shell: true,
-                        stdio: ['ignore', 1, 2]
-                    })
-                        // on shell exit, print return prompt
-                        .on('exit', function (exitCode) {
-                            console.error('exit-code ' + exitCode);
-                            self.evalDefault(
-                                '\n',
-                                context,
-                                file,
-                                onError2
-                            );
-                        });
-                    script = '\n';
-                    break;
-                // syntax sugar to grep current dir
-                case 'grep':
-                    // run async shell command
-                    require('child_process').spawn('find . -type f | grep -v -E ' +
+                    // syntax sugar to grep current dir
+                    case 'grep':
+                        // run async shell command
+                        require('child_process').spawn('find . -type f | grep -v -E ' +
 /* jslint-ignore-begin */
 '"\
 /\\.|(\\b|_)(\\.\\d|\
@@ -5664,32 +5602,33 @@ tmp|\
 vendor)s{0,1}(\\b|_)\
 " ' +
 /* jslint-ignore-end */
-                            '| tr "\\n" "\\000" | xargs -0 grep -HIin -E "' +
-                            match[2].trim() + '"', { shell: true, stdio: ['ignore', 1, 2] })
-                        // on shell exit, print return prompt
-                        .on('exit', function (exitCode) {
-                            console.error('exit-code ' + exitCode);
-                            self.evalDefault(
-                                '\n',
-                                context,
-                                file,
-                                onError2
-                            );
-                        });
-                    script = '\n';
-                    break;
-                // syntax sugar to list object's keys, sorted by item-type
-                case 'keys':
-                    script = 'console.error(Object.keys(' + match[2] +
-                        ').map(function (key) {' +
-                        'return typeof ' + match[2] + '[key] + " " + key + "\\n";' +
-                        '}).sort().join("") + Object.keys(' + match[2] + ').length)\n';
-                    break;
-                // syntax sugar to print stringified arg
-                case 'print':
-                    script = 'console.error(String(' + match[2] + '))\n';
-                    break;
-                }
+                                '| tr "\\n" "\\000" | xargs -0 grep -HIin -E "' +
+                                match2.trim() + '"', { shell: true, stdio: ['ignore', 1, 2] })
+                            // on shell exit, print return prompt
+                            .on('exit', function (exitCode) {
+                                console.error('exit-code ' + exitCode);
+                                self.evalDefault(
+                                    '\n',
+                                    context,
+                                    file,
+                                    onError2
+                                );
+                            });
+                        script = '\n';
+                        break;
+                    // syntax sugar to list object's keys, sorted by item-type
+                    case 'keys':
+                        script = 'console.error(Object.keys(' + match2 +
+                            ').map(function (key) {' +
+                            'return typeof ' + match2 + '[key] + " " + key + "\\n";' +
+                            '}).sort().join("") + Object.keys(' + match2 + ').length)\n';
+                        break;
+                    // syntax sugar to print stringified arg
+                    case 'print':
+                        script = 'console.error(String(' + match2 + '))\n';
+                        break;
+                    }
+                });
                 // eval the script
                 self.evalDefault(script, context, file, onError2);
             };
@@ -5819,21 +5758,10 @@ vendor)s{0,1}(\\b|_)\
             if (local.global.utility2_rollup || local.env.npm_config_mode_start) {
                 // init assets
                 local.assetsDict['/'] = local.assetsDict['/index.html'] =
-                    local.tryCatchReadFile('index.html') ||
-                    local.assetsDict['/index.html'] || local.templateRender(
-                        // uncomment utility2-comment
-                        local.assetsDict['/assets.index.template.html'].replace(
-                            (/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g),
-                            '$1'
-                        ),
-                        { env: local.env, isRollup: true }
-                    );
-                local.assetsDict['/assets.example.js'] =
-                    local.assetsDict['/assets.example.template.js'];
-                local.assetsDict['/assets.app.js'] = local.fs.readFileSync(
-                    __filename,
-                    'utf8'
-                ).replace((/^#!\//), '// ');
+                    local.fsReadFileOrEmptyStringSync('index.html') ||
+                    local.assetsDict['/index.rollup.html'] || '';
+                local.assetsDict['/assets.app.js'] = local.fs.readFileSync(__filename, 'utf8')
+                    .replace((/^#!\//), '// ');
                 // init exports
                 local[local.env.npm_package_nameLib] = local;
                 module.exports = local;
@@ -5851,7 +5779,7 @@ vendor)s{0,1}(\\b|_)\
             );
             local.tryCatchOnError(function () {
                 tmp = !local.env.npm_package_buildCustomOrg &&
-                    (/```\w*?(\n[\W\s]*?example\.js[\n\"][\S\s]+?)\n```/).exec(
+                    (/```\w*?(\n[\W\s]*?example\.js[\n\"][\S\s]*?)\n```/).exec(
                         local.fs.readFileSync('README.md', 'utf8')
                     );
                 script = tmp.input.slice(0, tmp.index).replace((/.+/g), '') + tmp[1];
@@ -5896,28 +5824,24 @@ vendor)s{0,1}(\\b|_)\
                 process.cwd() + '/test.js'
             );
             // init assets index.html
-            local.tryCatchOnError(function () {
-                local.assetsDict['/assets.index.template.html'] = local.fs.readFileSync(
-                    'assets.index.template.html',
-                    'utf8'
-                );
-            }, local.nop);
-            ['index', 'utility2'].forEach(function (element) {
-                local.assetsDict['/' + element + '.html'] =
-                    local.assetsDict['/' + element + '.html'] ||
-                    local.templateRender(
+            ['', '.rollup'].forEach(function (isRollup) {
+                ['index', 'utility2'].forEach(function (file) {
+                    tmp = 'assets.' + file + '.template.html';
+                    local.assetsDict['/' + tmp] = local.fsReadFileOrEmptyStringSync(tmp, 'utf8') ||
+                        local.assetsDict['/' + tmp];
+                    file = file.replace('utility2', 'assets.utility2.base') + isRollup + '.html';
+                    local.assetsDict['/' + file] = local.fsReadFileOrEmptyStringSync(
+                        file,
+                        'utf8'
+                    ) || local.templateRender(
                         // uncomment utility2-comment
-                        local.assetsDict['/assets.' + element + '.template.html'].replace(
-                            (/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g),
+                        local.assetsDict['/' + tmp].replace(
+                            (/<!-- utility2-comment\b([\S\s]*?)\butility2-comment -->/g),
                             '$1'
                         ),
-                        {
-                            env: local.env,
-                            isRollup: local.global.utility2_rollup ||
-                                local.env.NODE_ENV === 'rollup' ||
-                                local.env.NODE_ENV === 'production'
-                        }
+                        { env: local.env, isRollup: isRollup }
                     );
+                });
             });
             local.assetsDict['/'] = local.assetsDict['/index.html'];
             // init assets.app.js
@@ -5960,7 +5884,9 @@ instruction\n\
                     script = local.assetsDict['/assets.utility2.rollup.content.js']
                         .split('/* utility2.rollup.js content */');
                     script.splice(1, 0, 'local.assetsDict["' + tmp + '"] = ' +
-                            JSON.stringify(local.assetsDict[tmp]).replace((/\\n/g), '\\n\\\n'));
+                        JSON.stringify(local.assetsDict[tmp])
+                        .replace((/\\n/g), '\\n\\\n')
+                        .replace((/^\\\\\\n\\\n/gm), ''));
                     script = script.join('');
                     script += '\n';
                     script += local.assetsDict[tmp];
@@ -5974,7 +5900,7 @@ instruction\n\
                     local.fs.readdirSync('.').forEach(function (file) {
                         file = '/' + file;
                         if (file.indexOf('/assets.') === 0 &&
-                                local.fs.readFileSync('.' + file, 'utf8') ===
+                                local.fsReadFileOrEmptyStringSync('.' + file, 'utf8') ===
                                 local.assetsDict[file]) {
                             tmp.utility2.assetsDict[file] = local.assetsDict[file];
                         }
@@ -6074,12 +6000,12 @@ instruction\n\
         /*
          * this function will create a timeout-error-handler for the server-request
          */
-            var onError;
+            var isDone, onError;
             onError = function () {
-                if (response.isDone) {
+                if (isDone) {
                     return;
                 }
-                response.isDone = true;
+                isDone = true;
                 // debug serverResponse
                 console.error('serverLog - ' + JSON.stringify({
                     time: new Date(request.timeStart).toISOString(),
@@ -6285,8 +6211,8 @@ instruction\n\
          * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
          */
             return text
-                .replace((/"/g), '&quot;')
                 .replace((/&/g), '&amp;')
+                .replace((/"/g), '&quot;')
                 .replace((/'/g), '&apos;')
                 .replace((/</g), '&lt;')
                 .replace((/>/g), '&gt;')
@@ -7010,6 +6936,7 @@ instruction\n\
                         ? local.modeTestCase.split(',').indexOf(key) >= 0
                         : key.indexOf('testCase_') === 0)) {
                     testPlatform.testCaseList.push({
+                        isBrowser: local.isBrowser,
                         name: key,
                         status: 'pending',
                         onTestCase: options[key]
@@ -7151,8 +7078,7 @@ instruction\n\
          */
             // init testCase_buildXxx
             Object.keys(local).forEach(function (key) {
-                if (key.indexOf('_testCase_build') === 0 ||
-                        key === '_testCase_webpage_default') {
+                if (key.indexOf('_testCase_build') === 0 || key === '_testCase_webpage_default') {
                     local[key.slice(1)] = local[key.slice(1)] || local[key];
                 }
             });
@@ -7200,11 +7126,7 @@ instruction\n\
                         return;
                     }
                     // recurse with next middleware in middlewareList
-                    local.middlewareList[self.modeNext](
-                        request,
-                        response,
-                        self.onNext
-                    );
+                    local.middlewareList[self.modeNext](request, response, self.onNext);
                 });
                 self.modeNext = -1;
                 self.onNext();
@@ -7265,18 +7187,6 @@ instruction\n\
                 local._debugTryCatchError = errorCaught;
                 return onError(errorCaught);
             }
-        };
-
-        local.tryCatchReadFile = function (file, options) {
-        /*
-         * this function will try to read the file or return an empty string
-         */
-            var data;
-            try {
-                data = local.fs.readFileSync(file, options);
-            } catch (ignore) {
-            }
-            return data || '';
         };
 
         local.uiAnimateShake = function (element, onError) {
@@ -7512,23 +7422,23 @@ instruction\n\
         local.cacheDict = {};
         local.contentTypeDict = {
             // application
-            '.js': 'application/javascript; charset=UTF-8',
-            '.json': 'application/json; charset=UTF-8',
+            '.js': 'application/javascript; charset=utf-8',
+            '.json': 'application/json; charset=utf-8',
             '.pdf': 'application/pdf',
-            '.xml': 'application/xml; charset=UTF-8',
+            '.xml': 'application/xml; charset=utf-8',
             // image
             '.bmp': 'image/bmp',
             '.gif': 'image/gif',
             '.jpeg': 'image/jpeg',
             '.jpg': 'image/jpeg',
             '.png': 'image/png',
-            '.svg': 'image/svg+xml; charset=UTF-8',
+            '.svg': 'image/svg+xml; charset=utf-8',
             // text
-            '.css': 'text/css; charset=UTF-8',
-            '.htm': 'text/html; charset=UTF-8',
-            '.html': 'text/html; charset=UTF-8',
-            '.md': 'text/markdown; charset=UTF-8',
-            '.txt': 'text/plain; charset=UTF-8'
+            '.css': 'text/css; charset=utf-8',
+            '.htm': 'text/html; charset=utf-8',
+            '.html': 'text/html; charset=utf-8',
+            '.md': 'text/markdown; charset=utf-8',
+            '.txt': 'text/plain; charset=utf-8'
         };
         // init env
         local.env = local.isBrowser
@@ -7651,7 +7561,7 @@ instruction\n\
         if (local.env.npm_config_file_test_report_merge) {
             local.testReportMerge(
                 local.testReport,
-                JSON.parse(local.tryCatchReadFile(
+                JSON.parse(local.fsReadFileOrEmptyStringSync(
                     local.env.npm_config_file_test_report_merge,
                     'utf8'
                 ) || '{}')
@@ -7663,15 +7573,12 @@ instruction\n\
         }
         // init cli
         local.cliDict = {};
-        local.cliDict['utility2.ajax'] = function () {
+        local.cliDict['utility2.ajaxCrawl'] = function () {
         /*
-         * <url>
-         * # ajax <url> and print response to stdout
+         * <urlList>
+         * # web-crawl comma-separated <urlList> in parallel
          */
-            local.ajax({ url: process.argv[3] }, function (error, xhr) {
-                local.onErrorThrow(error);
-                process.stdout.write(xhr.response);
-            });
+            local.ajaxCrawl({ urlList: process.argv[3].split(',') }, local.onErrorThrow);
         };
         local.cliDict['utility2.browserTest'] = function () {
         /*
@@ -7679,7 +7586,7 @@ instruction\n\
          * # run browserTest on the url with the given mode
          */
             local.onParallelList({
-                list: process.argv[3].split(/\s+/).filter(function (element) {
+                list: process.argv[3].split(',').filter(function (element) {
                     return element;
                 })
             }, function (options2, onParallel) {
@@ -7689,67 +7596,178 @@ instruction\n\
                 });
             }, local.exit);
         };
-        local.cliDict['utility2.customOrgStarFilterNotBuilt'] = function () {
+        local.cliDict['utility2.customOrgRepoCreate'] = function () {
         /*
-         * <begin> <end>
-         * # filter customOrg
+         * <list>
+         * # create travis-ci-enabled customOrgRepo <list>[ii]
          */
-            (function () {
+            process.env.TRAVIS_DOMAIN = process.env.TRAVIS_DOMAIN || 'travis-ci.org';
+            process.chdir('/tmp');
+            local.child_process.spawnSync([
+                'if [ ! -d /tmp/githubRepo/kaizhu256/base ]; then (',
+                'git clone https://github.com/kaizhu256/base /tmp/githubRepo/kaizhu256/base',
+                'cd /tmp/githubRepo/kaizhu256/base',
+                'git checkout -b alpha origin/alpha',
+                'git checkout -b beta origin/beta',
+                'git checkout -b gh-pages origin/gh-pages',
+                'git checkout -b master origin/master',
+                'git checkout -b publish origin/publish',
+                'git checkout alpha',
+                ') fi'
+            ].join('\n'), { shell: true, stdio: ['ignore', 1, 2] });
+            local.onParallelList({
+                list: process.argv[3].split(/\s+/).filter(local.echo)
+            }, function (options2, onParallel) {
                 var options;
+                onParallel.counter += 1;
                 options = {};
-                options.dict = {};
-                options.list = [];
-                for (options.ii = Number(process.argv[3]);
-                        options.ii < Number(process.argv[4]);
-                        options.ii += 36) {
-                    options.list.push(options.ii);
-                }
-                local.listShuffle(options.list);
-                local.onParallelList(options, function (options2, onParallel) {
-                    onParallel.counter += 1;
-                    local.ajax({
-                        url: 'https://www.npmjs.com/browse/star?offset=' + options2.element
-                    }, function (error, xhr) {
-                        // validate no error occurred
-                        local.assert(!error, error);
-                        console.error('utility2.customOrgStarFilterNotBuilt - fetched ' + xhr.url);
-                        (xhr.responseText || '').toLowerCase().replace((
-                            /href=\"\/package\/(.+?)\"/g
-                        ), function (match0, match1) {
-                            match0 = local.env.GITHUB_ORG + '/node-' + local.env.GITHUB_ORG +
-                                '-' + match1;
-                            if (options.dict[match0]) {
-                                return;
-                            }
-                            onParallel.counter += 1;
-                            local.onParallelList({ list: [{
-                                url: 'https://raw.githubusercontent.com/' + match0 +
-                                    '/gh-pages/build..alpha..travis-ci.org' +
-                                    '/screenshot.npmPackageListing.svg'
-                            // }, {
-                                // url: 'https://registry.npmjs.org/' + local.env.GITHUB_ORG +
-                                    // '-' + match1
-                            }] }, function (options2, onParallel) {
-                                onParallel.counter += 1;
-                                local.ajax(options2.element, function (error) {
-                                    if (error && !options.dict[match0]) {
-                                        options.dict[match0] = true;
-                                        console.error(
-                                            'utility2.customOrgStarFilterNotBuilt - not built - ' +
-                                                match0
-                                        );
-                                        console.log(match0);
-                                    }
-                                    onParallel();
-                                });
-                            }, function () {
-                                onParallel();
-                            });
+                local.onNext(options, function (error, data) {
+                    switch (options.modeNext) {
+                    case 1:
+                        options2.onParallel2 = local.onParallel(options.onNext);
+                        options2.shBuildPrintPrefix =
+                            '\n\u001b[35m[MODE_BUILD=shCustomOrgRepoCreate]\u001b[0m - ';
+                        console.error(options2.shBuildPrintPrefix + new Date().toISOString() +
+                            options2.element + ' - creating ...');
+                        local.childProcessSpawnWithUtility2(
+                            'shGithubRepoBaseCreate ' + options2.element,
+                            options.onNext
+                        );
+                        break;
+                    case 2:
+                        local.ajax({
+                            headers: {
+                                Authorization: 'token ' + process.env.TRAVIS_ACCESS_TOKEN
+                            },
+                            url: 'https://api.' + process.env.TRAVIS_DOMAIN + '/repos/' +
+                                options2.element
+                        }, options.onNext);
+                        break;
+                    case 3:
+                        options2.id = JSON.parse(data.responseText).id;
+                        setTimeout(options.onNext, 5000);
+                        break;
+                    case 4:
+                        local.ajax({
+                            data: '{"hook":{"active":true}}',
+                            headers: {
+                                Authorization: 'token ' + process.env.TRAVIS_ACCESS_TOKEN,
+                                'Content-Type': 'application/json; charset=utf-8'
+                            },
+                            method: 'PUT',
+                            url: 'https://api.' + process.env.TRAVIS_DOMAIN + '/hooks/' +
+                                options2.id
+                        }, options.onNext);
+                        break;
+                    case 5:
+                        setTimeout(options.onNext, 5000);
+                        break;
+                    case 6:
+                        options2.onParallel2.counter += 1;
+                        options2.onParallel2.counter += 1;
+                        local.ajax({
+                            data: '{"setting.value":true}',
+                            headers: {
+                                Authorization: 'token ' + process.env.TRAVIS_ACCESS_TOKEN,
+                                'Content-Type': 'application/json; charset=utf-8',
+                                'Travis-API-Version': 3
+                            },
+                            method: 'PATCH',
+                            url: 'https://api.' + process.env.TRAVIS_DOMAIN + '/repo/' +
+                                options2.id + '/setting/builds_only_with_travis_yml'
+                        }, options2.onParallel2);
+                        options2.onParallel2.counter += 1;
+                        local.ajax({
+                            data: '{"setting.value":true}',
+                            headers: {
+                                Authorization: 'token ' + process.env.TRAVIS_ACCESS_TOKEN,
+                                'Content-Type': 'application/json; charset=utf-8',
+                                'Travis-API-Version': 3
+                            },
+                            method: 'PATCH',
+                            url: 'https://api.' + process.env.TRAVIS_DOMAIN + '/repo/' +
+                                options2.id + '/setting/auto_cancel_pushes'
+                        }, options2.onParallel2);
+                        options2.onParallel2();
+                        break;
+                    case 7:
+                        options2.onParallel2.counter += 1;
+                        options2.onParallel2.counter += 1;
+                        local.ajax({
+                            url: 'https://raw.githubusercontent.com' +
+                                '/kaizhu256/node-utility2/alpha/.gitignore'
+                        }, function (error, xhr) {
+                            local.assert(!error, error);
+                            local.fs.writeFile(
+                                '/tmp/githubRepo/' + options2.element + '/.gitignore',
+                                xhr.responseText,
+                                options2.onParallel2
+                            );
                         });
-                        onParallel();
-                    });
-                }, local.onErrorThrow);
-            }());
+                        options2.onParallel2.counter += 1;
+                        local.ajax({
+                            url: 'https://raw.githubusercontent.com' +
+                                '/kaizhu256/node-utility2/alpha/.travis.yml'
+                        }, function (error, xhr) {
+                            local.assert(!error, error);
+                            local.fs.writeFile(
+                                '/tmp/githubRepo/' + options2.element + '/.travis.yml',
+                                xhr.responseText,
+                                options2.onParallel2
+                            );
+                        });
+                        options2.onParallel2.counter += 1;
+                        local.fs.open('README.md', 'w', function (error, fd) {
+                            local.assert(!error, error);
+                            local.fs.close(fd, options2.onParallel2);
+                        });
+                        options2.onParallel2.counter += 1;
+                        local.fs.writeFile(
+                            '/tmp/githubRepo/' + options2.element + '/package.json',
+                            JSON.stringify({
+                                devDependencies: {
+                                    'electron-lite': 'kaizhu256/node-electron-lite#alpha',
+                                    utility2: 'kaizhu256/node-utility2#alpha'
+                                },
+                                name: options2.element.replace((/.+?\/node-|.+?\//), ''),
+                                homepage: 'https://github.com/' + options2.element,
+                                repository: {
+                                    type: 'git',
+                                    url: 'https://github.com/' + options2.element + '.git'
+                                },
+                                scripts: {
+                                    'build-ci': 'utility2 shBuildCi'
+                                },
+                                version: '0.0.1'
+                            }, null, 4),
+                            options2.onParallel2
+                        );
+                        options2.onParallel2();
+                        break;
+                    case 8:
+                        local.childProcessSpawnWithUtility2([
+                            'cd /tmp/githubRepo/' + options2.element,
+                            'unset GITHUB_ORG',
+                            'unset GITHUB_REPO',
+                            'shBuildInit',
+                            'shCryptoTravisEncrypt > /dev/null',
+                            'git add -f . .gitignore .travis.yml',
+                            'git commit -am "[npm publishAfterCommitAfterBuild]"',
+                            'shGitCommandWithGithubToken push https://github.com/' +
+                                options2.element + ' -f' + ' alpha'
+                        ].join(' &&\n'), options.onNext);
+                        break;
+                    default:
+                        console.error(options2.shBuildPrintPrefix + new Date().toISOString() +
+                            options2.element + (error
+                                ? ' - ... failed to create - modeNext0 = ' + options.modeNext0
+                                : ' - ... created'));
+                        onParallel(local.onErrorDefault(options.modeNext0 !== 2 && error));
+                    }
+                });
+                options.modeNext = 0;
+                options.onNext();
+            }, local.onErrorThrow);
         };
         local.cliDict['utility2.dbTableCustomOrgCrudGetManyByQuery'] = function () {
         /*
@@ -7768,38 +7786,85 @@ instruction\n\
                     .join('\n'));
             });
         };
-        local.cliDict['utility2.dbTableCustomOrgUpdate'] = function () {
+        local.cliDict['utility2.githubCrudContentDelete'] = function () {
         /*
-         * <dbTable>
-         * # update dbTableCustomOrg
+         * <fileRemote|dirRemote> <commitMessage>
+         * # delete <fileRemote|dirRemote> from github
          */
-            local.dbTableCustomOrgUpdate(
-                JSON.parse(process.argv[3] || '{}'),
-                local.onErrorThrow
-            );
+            local.github_crud.githubCrudContentDelete({
+                message: process.argv[4],
+                url: process.argv[3]
+            }, function (error) {
+                process.exit(!!error);
+            });
         };
-        local.cliDict['utility2.onParallelListExec'] = function () {
+        local.cliDict['utility2.githubCrudContentGet'] = function () {
         /*
-         * <commandList>
-         * # run in parallel the list of line-separated shell-commands
+         * <fileRemote>
+         * # get <fileRemote> from github
          */
-            local.onParallelList({
-                list: process.argv[3].split('\n').filter(function (element) {
-                    return element.trim();
-                }),
-                rateLimit: process.argv[4],
-                retryLimit: process.argv[5]
-            }, function (options2, onParallel) {
-                onParallel.counter += 1;
-                local.child_process.spawn(
-                    '. ' + local.__dirname + '/lib.utility2.sh; ' + options2.element,
-                    { shell: true, stdio: ['ignore', 1, 2] }
-                ).on('exit', function (exitCode) {
-                    console.error('onParallelListExec - [' + (onParallel.ii + 1) +
-                        ' of ' + options2.list.length + '] exitCode ' + exitCode);
-                    onParallel(exitCode && new Error(exitCode), options2);
-                });
-            }, local.exit);
+            local.github_crud.githubCrudContentGet({
+                url: process.argv[3]
+            }, function (error, data) {
+                try {
+                    process.stdout.write(data);
+                } catch (ignore) {
+                }
+                process.exit(!!error);
+            });
+        };
+        local.cliDict['utility2.githubCrudContentPut'] = function () {
+        /*
+         * <fileRemote> <fileLocal> <commitMessage>
+         * # put <fileLocal> to <fileRemote> on github
+         */
+            local.github_crud.githubCrudContentPutFile({
+                message: process.argv[5],
+                url: process.argv[3],
+                file: process.argv[4]
+            }, function (error) {
+                process.exit(!!error);
+            });
+        };
+        local.cliDict['utility2.githubCrudContentTouch'] = function () {
+        /*
+         * <fileRemoteList> <commitMessage>
+         * # touch comma-separated <fileRemoteList> on github in parallel
+         */
+            local.github_crud.githubCrudContentTouchList({
+                message: process.argv[4],
+                urlList: process.argv[3].split(',').filter(function (element) {
+                    return element;
+                })
+            }, function (error) {
+                process.exit(!!error);
+            });
+        };
+        local.cliDict['utility2.githubCrudRepoCreate'] = function () {
+        /*
+         * <repoUrlList>
+         * # create comma-separated <repoUrlList> on github in parallel
+         */
+            local.github_crud.githubCrudRepoCreateList({
+                urlList: process.argv[3].split(',').filter(function (element) {
+                    return element;
+                })
+            }, function (error) {
+                process.exit(!!error);
+            });
+        };
+        local.cliDict['utility2.githubCrudRepoDelete'] = function () {
+        /*
+         * <repoUrlList>
+         * # delete comma-separated <repoUrlList> from github in parallel
+         */
+            local.github_crud.githubCrudRepoDeleteList({
+                urlList: process.argv[3].split(',').filter(function (element) {
+                    return element;
+                })
+            }, function (error) {
+                process.exit(!!error);
+            });
         };
         local.cliDict['utility2.start'] = function () {
         /*
@@ -7858,7 +7923,7 @@ instruction\n\
         ].forEach(function (file) {
             local.assetsDict[file] = local.assetsDict[file] || '';
             if (process.argv[2] !== '--help' && local.fs.existsSync(__dirname + file)) {
-                console.error('override assets ' + process.cwd() + file);
+                console.error('override assets ' + __dirname + file);
                 local.assetsDict[file] = local.fs.readFileSync(__dirname + file, 'utf8');
             }
         });
@@ -7919,7 +7984,7 @@ instruction\n\
                             .replace((/npm_package_/g), '')
                             // uncomment utility2-comment
                             .replace(
-                                (/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g),
+                                (/<!-- utility2-comment\b([\S\s]*?)\butility2-comment -->/g),
                                 '$1'
                             ), {
                                 env: local.objectSetDefault({
@@ -7931,18 +7996,21 @@ instruction\n\
                 }, local.nop);
                 break;
             case '/assets.utility2.test.js':
-                local.assetsDict[key] = local.tryCatchReadFile(__dirname + '/test.js', 'utf8');
+                local.assetsDict[key] = local.fsReadFileOrEmptyStringSync(
+                    __dirname + '/test.js',
+                    'utf8'
+                );
                 break;
             case 'lib.swgg.js':
             case 'lib.utility2.js':
                 key = key.replace('lib.', '');
-                local.assetsDict['/assets.' + key] = local.tryCatchReadFile(
+                local.assetsDict['/assets.' + key] = local.fsReadFileOrEmptyStringSync(
                     __dirname + '/lib.' + key,
                     'utf8'
                 ).replace((/^#!\//), '// ');
                 break;
             default:
-                local.assetsDict['/assets.utility2.' + key] = local.tryCatchReadFile(
+                local.assetsDict['/assets.utility2.' + key] = local.fsReadFileOrEmptyStringSync(
                     __dirname + '/' + key,
                     'utf8'
                 ).replace((/^#!\//), '// ');
@@ -7968,27 +8036,30 @@ instruction\n\
         ].map(function (key) {
             var script;
             switch (key) {
-            case '/assets.utility2.example.js':
-            case '/assets.utility2.html':
-            case '/assets.utility2.test.js':
-                script = local.assetsDict['/assets.utility2.rollup.content.js']
-                    .split('/* utility2.rollup.js content */');
-                script.splice(1, 0, 'local.assetsDict["' + key + '"] = ' +
-                    JSON.stringify(local.assetsDict[key]).replace((/\\n/g), '\\n\\\n'));
-                script = script.join('');
-                script += '\n';
-                break;
+            case 'header':
+                return '/* this rollup was created with utility2 ' +
+                    '(https://github.com/kaizhu256/node-utility2) */\n';
             case '/assets.utility2.rollup.begin.js':
             case '/assets.utility2.rollup.end.js':
                 script = local.assetsDict[key];
                 break;
-            case 'header':
-                return '/* this rollup was created with utility2 ' +
-                    '(https://github.com/kaizhu256/node-utility2) */\n';
-            case 'lib.swgg.js':
             case 'lib.utility2.js':
+            case 'lib.swgg.js':
                 key = '/assets.' + key.replace('lib.', '');
                 script = local.assetsDict[key];
+                break;
+            case '/assets.utility2.example.js':
+            case '/assets.utility2.html':
+            case '/assets.utility2.test.js':
+                // handle large string-replace
+                script = local.assetsDict['/assets.utility2.rollup.content.js']
+                    .split('/* utility2.rollup.js content */');
+                script.splice(1, 0, 'local.assetsDict["' + key + '"] = ' +
+                    JSON.stringify(local.assetsDict[key])
+                    .replace((/\\n/g), '\\n\\\n')
+                    .replace((/^\\\\\\n\\\n/gm), ''));
+                script = script.join('');
+                script += '\n';
                 break;
             default:
                 key = '/assets.utility2.' + key;

@@ -193,7 +193,8 @@
                     break;
                 case 2:
                     // validate responseText
-                    local.assertJsonEqual(data.responseText, 'hello\n');
+                    /* jslint-ignore-next-line */
+                    local.assertJsonEqual(data.responseText, 'hello\ud83d\udc4b\u0020\n');
                     // test http GET 304 cache handling-behavior
                     local.ajax({
                         headers: {
@@ -213,6 +214,33 @@
             });
             options.modeNext = 0;
             options.onNext();
+        };
+
+        local.testCase_ajax_echo = function (options, onError) {
+            // test /test.echo handling-behavior
+            local.ajax({
+                data: 'aa',
+                // test request-header handling-behavior
+                headers: { 'X-Request-Header-Test': 'aa' },
+                method: 'POST',
+                // test modeDebug handling-behavior
+                modeDebug: true,
+                url: '/test.echo'
+            }, function (error, xhr) {
+                // validate no error occurred
+                local.assert(!error, error);
+                // validate statusCode
+                local.assertJsonEqual(xhr.statusCode, 200);
+                // validate response
+                local.assert((/\r\naa$/).test(xhr.responseText), xhr.responseText);
+                local.assert(
+                    (/\r\nx-request-header-test: aa\r\n/).test(xhr.responseText),
+                    xhr.responseText
+                );
+                // validate responseHeaders
+                local.assertJsonEqual(xhr.responseHeaders['x-response-header-test'], 'bb');
+                onError(null, options);
+            });
         };
 
         local.testCase_ajax_error = function (options, onError) {
@@ -262,7 +290,6 @@
         /*
          * this function will test ajax's POST handling-behavior
          */
-            options = {};
             // test /test.body handling-behavior
             local.onParallelList({ list: [
                 '',
@@ -273,9 +300,9 @@
                 onParallel.counter += 1;
                 local.ajax({
                     data: responseType === 'arraybuffer'
-                        // test buffer post handling-behavior
+                        // test POST buffer-data handling-behavior
                         ? local.bufferCreate('aa')
-                        // test string post handling-behavior
+                        // test POST string-data handling-behavior
                         : 'aa',
                     method: 'POST',
                     // test nodejs response handling-behavior
@@ -286,67 +313,87 @@
                     local.assert(!error, error);
                     // validate statusCode
                     local.assertJsonEqual(xhr.statusCode, 200);
-                    // validate response
-                    local.assertJsonEqual(xhr.response.length, 2);
-                    local.assertJsonEqual(xhr.response[0], 97);
-                    local.assertJsonEqual(xhr.response[1], 97);
                     // validate responseText
                     switch (responseType) {
                     case 'arraybuffer':
-                        local.assertJsonEqual(xhr.responseText, '');
+                        local.assertJsonEqual(xhr.responseBuffer.byteLength, 2);
+                        local.assertJsonEqual(xhr.responseBuffer[0], 97);
+                        local.assertJsonEqual(xhr.responseBuffer[1], 97);
                         break;
                     default:
                         local.assertJsonEqual(xhr.responseText, 'aa');
                     }
                     onParallel(null, options);
                 });
-            }, function (error) {
-                // validate no error occurred
-                local.assert(!error, error);
-                // test /test.echo handling-behavior
+            }, onError);
+        };
+
+        local.testCase_ajax_responseType = function (options, onError) {
+        /*
+         * this function will test ajax's responseType handling-behavior
+         */
+            // test /test.body handling-behavior
+            local.onParallelList({ list: [
+                '',
+                'arraybuffer',
+                'text'
+            ] }, function (responseType, onParallel) {
+                responseType = responseType.element;
+                onParallel.counter += 1;
                 local.ajax({
-                    data: 'aa',
-                    // test request-header handling-behavior
-                    headers: { 'X-Request-Header-Test': 'aa' },
-                    method: 'POST',
-                    // test modeDebug handling-behavior
-                    modeDebug: true,
-                    url: '/test.echo'
+                    // test nodejs response handling-behavior
+                    responseType: responseType,
+                    url: 'assets.hello'
                 }, function (error, xhr) {
                     // validate no error occurred
                     local.assert(!error, error);
                     // validate statusCode
                     local.assertJsonEqual(xhr.statusCode, 200);
-                    // validate response
-                    options.data = xhr.responseText;
-                    local.assert((/\r\naa$/).test(options.data), options.data);
-                    local.assert(
-                        (/\r\nx-request-header-test: aa\r\n/).test(options.data),
-                        options.data
-                    );
-                    // validate responseHeaders
-                    options.data = xhr.responseHeaders['x-response-header-test'];
-                    local.assertJsonEqual(options.data, 'bb');
-                    onError(null, options);
+                    // validate responseText
+                    switch (responseType) {
+                    case 'arraybuffer':
+                        local.assertJsonEqual(xhr.responseBuffer.byteLength, 11);
+                        local.assertJsonEqual(xhr.responseBuffer[0], 0x68);
+                        local.assertJsonEqual(xhr.responseBuffer[1], 0x65);
+                        local.assertJsonEqual(xhr.responseBuffer[2], 0x6c);
+                        local.assertJsonEqual(xhr.responseBuffer[3], 0x6c);
+                        local.assertJsonEqual(xhr.responseBuffer[4], 0x6f);
+                        local.assertJsonEqual(xhr.responseBuffer[5], 0xf0);
+                        local.assertJsonEqual(xhr.responseBuffer[6], 0x9f);
+                        local.assertJsonEqual(xhr.responseBuffer[7], 0x91);
+                        local.assertJsonEqual(xhr.responseBuffer[8], 0x8b);
+                        local.assertJsonEqual(xhr.responseBuffer[9], 0x20);
+                        local.assertJsonEqual(xhr.responseBuffer[10], 0x0a);
+                        break;
+                    default:
+                        /* jslint-ignore-next-line */
+                        local.assertJsonEqual(xhr.responseText, 'hello\ud83d\udc4b\u0020\n');
+                        break;
+                    }
+                    onParallel(null, options);
                 });
-            });
+            }, onError);
         };
 
         local.testCase_ajax_standalone = function (options, onError) {
         /*
          * this function will test ajax's standalone handling-behavior
          */
+            var onParallel;
+            onParallel = local.onParallel(onError);
             local.testMock([
                 [local, {
                     _http: null,
                     ajaxProgressCounter: null,
                     ajaxProgressUpdate: null,
-                    bufferToNodeBuffer: null,
+                    bufferToString: null,
                     onErrorWithStack: null,
+                    serverLocalUrlTest: null,
                     timeoutDefault: null
                 }]
             ], function (onError) {
                 // test default handling-behavior
+                onParallel.counter += 1;
                 local.ajax({
                     url: local.isBrowser
                         ? location.href
@@ -356,22 +403,25 @@
                     local.assertJsonEqual(xhr.statusCode, 200);
                     // validate no error occurred
                     local.assert(!error, error);
+                    onParallel();
                 });
                 // test error handling-behavior
+                onParallel.counter += 1;
                 local.ajax({
                     responseType: 'undefined',
                     undefined: undefined,
                     url: (local.isBrowser
-                        ? location.href
+                        ? location.href.replace((/\?.*$/), '')
                         : local.serverLocalHost) + '/undefined'
                 }, function (error, xhr) {
                     // validate statusCode
                     local.assertJsonEqual(xhr.statusCode, 404);
                     // validate error occurred
                     local.assert(error, error);
+                    onParallel();
                 });
                 onError(null, options);
-            }, onError);
+            }, local.onErrorThrow);
         };
 
         local.testCase_ajax_timeout = function (options, onError) {
@@ -446,21 +496,20 @@
          * this function will test base64Xxx's default handling-behavior
          */
             options = {};
-            options.base64 = local.base64FromString(local.stringCharsetAscii + '\u1234');
+            options.base64 = local.base64FromBuffer(local.stringCharsetAscii + '\u1234');
             // test null-case handling-behavior
             local.assertJsonEqual(local.base64FromBuffer(), '');
-            local.assertJsonEqual(local.base64FromString(), '');
-            local.assertJsonEqual(local.base64ToBuffer(), {});
+            local.assertJsonEqual(local.bufferToString(local.base64ToBuffer()), '');
             local.assertJsonEqual(local.base64ToString(), '');
             local.assertJsonEqual(local.base64FromBuffer(local.base64ToBuffer()), '');
-            local.assertJsonEqual(local.base64FromString(local.base64ToString()), '');
+            local.assertJsonEqual(local.base64FromBuffer(local.base64ToString()), '');
             // test identity handling-behavior
             local.assertJsonEqual(
                 local.base64FromBuffer(local.base64ToBuffer(options.base64)),
                 options.base64
             );
             local.assertJsonEqual(
-                local.base64FromString(local.base64ToString(options.base64)),
+                local.base64FromBuffer(local.base64ToString(options.base64)),
                 options.base64
             );
             onError(null, options);
@@ -498,10 +547,7 @@
                             local.assertJsonEqual(data, 'aabb\u1234 0');
                             break;
                         default:
-                            local.assertJsonEqual(
-                                local.bufferToString(data),
-                                'aabb\u1234 0'
-                            );
+                            local.assertJsonEqual(local.bufferToString(data), 'aabb\u1234 0');
                         }
                         onParallel(null, options);
                     });
@@ -578,7 +624,11 @@
             options.writeFile = options;
             options.writeFileSync = options;
             local.testMock([
-                [local.global, { clearTimeout: options, setTimeout: options }],
+                [local.global, { clearTimeout: options, setTimeout: options, window: {
+                    addEventListener: function (_, fnc) {
+                        fnc(_);
+                    }
+                } }],
                 [process.versions, { electron: true }],
                 [local, { fs: options, onParallel: options }]
             ], function (onError) {
@@ -676,12 +726,11 @@
                 { buffer: 'aabbaa', subBuffer: 'bb', validate: 2 },
                 { buffer: 'aabbaa', subBuffer: 'ba', validate: 3 }
             ].forEach(function (options) {
-                options.data = local.bufferIndexOfSubBuffer(
+                local.assertJsonEqual(local.bufferIndexOfSubBuffer(
                     local.bufferCreate(options.buffer),
                     local.bufferCreate(options.subBuffer),
                     options.fromIndex
-                );
-                local.assertJsonEqual(options.data, options.validate);
+                ), options.validate);
             });
             onError(null, options);
         };
@@ -721,7 +770,7 @@
             local.testCase_buildReadme_default(options, local.onErrorThrow);
             local.testCase_buildLib_default(options, local.onErrorThrow);
             local.testCase_buildTest_default(options, local.onErrorThrow);
-            options = { assetsList: [{
+            local.buildApp({ assetsList: [{
                 file: '/assets.hello',
                 url: '/assets.hello'
             }, {
@@ -748,8 +797,7 @@
             }, {
                 file: '/assets.utility2.rollup.js',
                 url: '/assets.utility2.rollup.js'
-            }] };
-            local.buildApp(options, onError);
+            }] }, onError);
         };
 
         local.testCase_buildCustomOrg_default = function (options, onError) {
@@ -826,6 +874,7 @@
                     .replace('  shNpmTestPublished', '# shNpmTestPublished')
                     // test no-assets.index.template.html handling-behavior
                     .replace('assets.utility2.template.html', '');
+                local.env.npm_package_isPrivate = '';
             };
             options.fsReadFileSync = local.fs.readFileSync;
             local.testMock([
@@ -955,6 +1004,26 @@
             onParallel(null, options);
         };
 
+        local.testCase_childProcessSpawnWithUtility2_error = function (options, onError) {
+        /*
+         * this function will test childProcessSpawnWithTimeout's error handling-behavior
+         */
+            if (local.env.npm_config_mode_test_fast || local.isBrowser) {
+                onError(null, options);
+                return;
+            }
+            local.testMock([
+                // test __dirname handling-behavior
+                [process.env, { npm_config_dir_utility2: '' }]
+            ], function (onError) {
+                local.local.childProcessSpawnWithUtility2('undefined', function (error) {
+                    // validate error occurred
+                    local.assert(error, error);
+                });
+                onError(null, options);
+            }, onError);
+        };
+
         local.testCase_cliRun_default = function (options, onError) {
         /*
          * this function will test cliRun's default handling-behavior
@@ -1054,6 +1123,11 @@
          * this function will cryptoAesXxxCbcRawXxx's default handling-behavior
          */
             options = {};
+            // bug-workaround - unavailable crypto.subtle
+            setTimeout(function () {
+                onError(null, options);
+                onError = local.nop;
+            }, 5000);
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
@@ -1092,10 +1166,8 @@
                     options.onNext();
                     break;
                 default:
-                    onError(
-                        !(local.isBrowser && navigator.userAgent.indexOf('Electron') > 0) && error,
-                        options
-                    );
+                    onError(!local.isBrowser && error, options);
+                    onError = local.nop;
                 }
             });
             options.modeNext = 0;
@@ -1198,7 +1270,7 @@
             }
             local.fsRmrSync('tmp/build/testCase_fsWriteFileWithMkdirpSync_default');
             // validate data
-            local.assertJsonEqual(local.tryCatchReadFile(
+            local.assertJsonEqual(local.fsReadFileOrEmptyStringSync(
                 'tmp/build/testCase_fsWriteFileWithMkdirpSync_default/aa.txt',
                 'utf8'
             ), '');
@@ -1207,7 +1279,7 @@
                 'aa'
             );
             // validate data
-            local.assertJsonEqual(local.tryCatchReadFile(
+            local.assertJsonEqual(local.fsReadFileOrEmptyStringSync(
                 'tmp/build/testCase_fsWriteFileWithMkdirpSync_default/aa.txt',
                 'utf8'
             ), 'aa');
@@ -1311,9 +1383,11 @@
             options = {};
             options.key = local.jwtAes256KeyCreate();
             // use canonical example at https://jwt.io/
-            options.data = { sub: '1234567890', name: 'John Doe', admin: true };
-            options.data = local.normalizeJwt(options.data);
-            options.data = JSON.parse(local.jsonStringifyOrdered(options.data));
+            options.data = JSON.parse(local.jsonStringifyOrdered(local.normalizeJwt({
+                sub: '1234567890',
+                name: 'John Doe',
+                admin: true
+            })));
             // encrypt token
             options.token = local.jwtAes256GcmEncrypt(options.data, options.key);
             // validate encrypted-token
@@ -1331,7 +1405,7 @@
          * this function will test jwtHs256Xxx's default handling-behavior
          */
             options = {};
-            options.key = local.normalizeJwtBase64Url(local.base64FromString('secret'));
+            options.key = local.normalizeJwtBase64Url(local.base64FromBuffer('secret'));
             // use canonical example at https://jwt.io/
             options.data = { sub: '1234567890', name: 'John Doe', admin: true };
             options.token = local.jwtHs256Encode(options.data, options.key);
@@ -1342,15 +1416,13 @@
                     '.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9' +
                     '.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ'
             );
-            options.data = local.jwtHs256Decode(options.token, options.key);
             // validate decoded-data
             local.assertJsonEqual(
-                options.data,
+                local.jwtHs256Decode(options.token, options.key),
                 { admin: true, name: 'John Doe', sub: '1234567890' }
             );
             // test decoding-failed handling-behavior
-            options.data = local.jwtHs256Decode(options.token, 'undefined');
-            local.assertJsonEqual(options.data, {});
+            local.assertJsonEqual(local.jwtHs256Decode(options.token, 'undefined'), {});
             onError(null, options);
         };
 
@@ -1465,8 +1537,9 @@
                 // validate no error occurred
                 local.assert(!error, error);
                 // validate responseText
-                local.assertJsonEqual(xhr.responseText, 'hello\n');
-                onParallel(null, options);
+                /* jslint-ignore-next-line */
+                local.assertJsonEqual(xhr.responseText, 'hello\ud83d\udc4b\u0020\n');
+                onParallel(null, options, xhr);
             });
             // test error handling-behavior
             onParallel.counter += 1;
@@ -1478,6 +1551,21 @@
                 onParallel(null, options);
             });
             onParallel(null, options);
+        };
+
+        local.testCase_middlewareJsonpStateInit_assetsList = function (options, onError) {
+        /*
+         * this function will middlewareJsonpStateInit's assetsList handling-behavior
+         */
+            local.testMock([
+                [local.env, { npm_package_assetsList: 'undefined' }],
+                [local, { assetsDict: {} }]
+            ], function (onError) {
+                local.middlewareJsonpStateInit({ stateInit: true });
+                // validate data
+                local.assertJsonEqual(local.assetsDict['/undefined'], '');
+                onError(null, options);
+            }, onError);
         };
 
         local.testCase_moduleDirname_default = function (options, onError) {
@@ -1999,7 +2087,7 @@
             }
             local.testMock([
                 [local, {
-                    assetsDict: { '/assets.index.template.html': '' },
+                    assetsDict: {},
                     onFileModifiedRestart: local.nop
                 }],
                 [local.env, {
@@ -2618,7 +2706,7 @@
     (function () {
         // init assets
         local.assetsDict['/assets.swgg.swagger.json'] =
-            local.tryCatchReadFile('assets.swgg.swagger.json') ||
+            local.fsReadFileOrEmptyStringSync('assets.swgg.swagger.json') ||
             local.assetsDict['/assets.swgg.swagger.json'] ||
             local.assetsDict['/assets.swgg.swagger.petstore.json'];
         // coverage-hack - re-run test-server

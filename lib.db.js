@@ -73,7 +73,7 @@
                 context["_" + key + "Arguments"] = arguments;
                 consoleError("\n\n" + key);
                 consoleError.apply(console, arguments);
-                consoleError("\n");
+                consoleError(new Error().stack + "\n");
                 // return arg0 for inspection
                 return arg0;
             };
@@ -109,8 +109,6 @@
             local.buffer = require('buffer');
             local.child_process = require('child_process');
             local.cluster = require('cluster');
-            local.console = require('console');
-            local.constants = require('constants');
             local.crypto = require('crypto');
             local.dgram = require('dgram');
             local.dns = require('dns');
@@ -119,12 +117,9 @@
             local.fs = require('fs');
             local.http = require('http');
             local.https = require('https');
-            local.module = require('module');
             local.net = require('net');
             local.os = require('os');
             local.path = require('path');
-            local.process = require('process');
-            local.punycode = require('punycode');
             local.querystring = require('querystring');
             local.readline = require('readline');
             local.repl = require('repl');
@@ -418,6 +413,7 @@
             if (error && !local.global.__coverage__) {
                 console.error(error);
             }
+            return error;
         };
 
         local.onErrorWithStack = function (onError) {
@@ -516,47 +512,53 @@
             self.evalDefault = self.eval;
             // hook custom repl eval function
             self.eval = function (script, context, file, onError) {
-                var match, onError2;
-                match = (/^(\S+)(.*?)\n/).exec(script) || {};
+                var  onError2;
                 onError2 = function (error, data) {
                     // debug error
                     global.utility2_debugReplError = error || global.utility2_debugReplError;
                     onError(error, data);
                 };
-                switch (match[1]) {
-                // syntax sugar to run async shell command
-                case '$':
-                    switch (match[2]) {
-                    // syntax sugar to run git diff
-                    case ' git diff':
-                        match[2] = ' git diff --color | cat';
+                script.replace((/^(\S+)(.*?)\n/), function (match0, match1, match2) {
+                    match0 = match1;
+                    switch (match0) {
+                    // syntax sugar to run async shell command
+                    case '$':
+                        switch (match2) {
+                        // syntax sugar to run git diff
+                        case ' git diff':
+                            match2 = ' git diff --color | cat';
+                            break;
+                        // syntax sugar to run git log
+                        case ' git log':
+                            match2 = ' git log -n 4 | cat';
+                            break;
+                        }
+                        // source lib.utility2.sh
+                        if (process.env.npm_config_dir_utility2 && (match2 !== ' :')) {
+                            match2 = '. ' + process.env.npm_config_dir_utility2 +
+                                '/lib.utility2.sh;' + match2;
+                        }
+                        // run async shell command
+                        require('child_process').spawn(match2, {
+                            shell: true,
+                            stdio: ['ignore', 1, 2]
+                        })
+                            // on shell exit, print return prompt
+                            .on('exit', function (exitCode) {
+                                console.error('exit-code ' + exitCode);
+                                self.evalDefault(
+                                    '\n',
+                                    context,
+                                    file,
+                                    onError2
+                                );
+                            });
+                        script = '\n';
                         break;
-                    // syntax sugar to run git log
-                    case ' git log':
-                        match[2] = ' git log -n 4 | cat';
-                        break;
-                    }
-                    // run async shell command
-                    require('child_process').spawn(match[2], {
-                        shell: true,
-                        stdio: ['ignore', 1, 2]
-                    })
-                        // on shell exit, print return prompt
-                        .on('exit', function (exitCode) {
-                            console.error('exit-code ' + exitCode);
-                            self.evalDefault(
-                                '\n',
-                                context,
-                                file,
-                                onError2
-                            );
-                        });
-                    script = '\n';
-                    break;
-                // syntax sugar to grep current dir
-                case 'grep':
-                    // run async shell command
-                    require('child_process').spawn('find . -type f | grep -v -E ' +
+                    // syntax sugar to grep current dir
+                    case 'grep':
+                        // run async shell command
+                        require('child_process').spawn('find . -type f | grep -v -E ' +
 /* jslint-ignore-begin */
 '"\
 /\\.|(\\b|_)(\\.\\d|\
@@ -577,32 +579,33 @@ tmp|\
 vendor)s{0,1}(\\b|_)\
 " ' +
 /* jslint-ignore-end */
-                            '| tr "\\n" "\\000" | xargs -0 grep -HIin -E "' +
-                            match[2].trim() + '"', { shell: true, stdio: ['ignore', 1, 2] })
-                        // on shell exit, print return prompt
-                        .on('exit', function (exitCode) {
-                            console.error('exit-code ' + exitCode);
-                            self.evalDefault(
-                                '\n',
-                                context,
-                                file,
-                                onError2
-                            );
-                        });
-                    script = '\n';
-                    break;
-                // syntax sugar to list object's keys, sorted by item-type
-                case 'keys':
-                    script = 'console.error(Object.keys(' + match[2] +
-                        ').map(function (key) {' +
-                        'return typeof ' + match[2] + '[key] + " " + key + "\\n";' +
-                        '}).sort().join("") + Object.keys(' + match[2] + ').length)\n';
-                    break;
-                // syntax sugar to print stringified arg
-                case 'print':
-                    script = 'console.error(String(' + match[2] + '))\n';
-                    break;
-                }
+                                '| tr "\\n" "\\000" | xargs -0 grep -HIin -E "' +
+                                match2.trim() + '"', { shell: true, stdio: ['ignore', 1, 2] })
+                            // on shell exit, print return prompt
+                            .on('exit', function (exitCode) {
+                                console.error('exit-code ' + exitCode);
+                                self.evalDefault(
+                                    '\n',
+                                    context,
+                                    file,
+                                    onError2
+                                );
+                            });
+                        script = '\n';
+                        break;
+                    // syntax sugar to list object's keys, sorted by item-type
+                    case 'keys':
+                        script = 'console.error(Object.keys(' + match2 +
+                            ').map(function (key) {' +
+                            'return typeof ' + match2 + '[key] + " " + key + "\\n";' +
+                            '}).sort().join("") + Object.keys(' + match2 + ').length)\n';
+                        break;
+                    // syntax sugar to print stringified arg
+                    case 'print':
+                        script = 'console.error(String(' + match2 + '))\n';
+                        break;
+                    }
+                });
                 // eval the script
                 self.evalDefault(script, context, file, onError2);
             };
@@ -925,7 +928,6 @@ vendor)s{0,1}(\\b|_)\
         /*
          * this function will create a dbTable
          */
-            options = local.objectSetOverride(options);
             this.name = String(options.name);
             // register dbTable in dbTableDict
             local.dbTableDict[this.name] = this;
@@ -957,12 +959,7 @@ vendor)s{0,1}(\\b|_)\
                 }
             }
             if (this.sizeLimit && this.dbRowList.length >= 1.5 * this.sizeLimit) {
-                this.dbRowList = this._crudGetManyByQuery(
-                    {},
-                    this.sortDefault,
-                    0,
-                    this.sizeLimit
-                );
+                this.dbRowList = this._crudGetManyByQuery({}, this.sortDefault, 0, this.sizeLimit);
             }
         };
 
@@ -984,7 +981,7 @@ vendor)s{0,1}(\\b|_)\
                 result = local.dbRowListGetManyByQuery(this.dbRowList, query);
             }
             // sort
-            Array.from(sort || []).forEach(function (element) {
+            (sort || []).forEach(function (element) {
                 // bug-workaround - v8 does not have stable-sort
                 // optimization - for-loop
                 for (ii = 0; ii < result.length; ii += 1) {
@@ -1182,7 +1179,7 @@ vendor)s{0,1}(\\b|_)\
             this._cleanup();
             self = this;
             return local.setTimeoutOnError(onError, 0, null, local.dbRowProject(
-                Array.from(idDictList || []).map(function (idDict) {
+                (idDictList || []).map(function (idDict) {
                     return self._crudGetOneById(idDict);
                 })
             ));
@@ -1252,10 +1249,7 @@ vendor)s{0,1}(\\b|_)\
             // reset dbTable
             local._DbTable.call(this, this);
             // restore idIndexList
-            local.dbTableCreateOne({
-                name: this.name,
-                idIndexCreateList: idIndexList
-            }, onError);
+            local.dbTableCreateOne({ name: this.name, idIndexCreateList: idIndexList }, onError);
         };
 
         local._DbTable.prototype.crudRemoveManyById = function (idDictList, onError) {
@@ -1265,7 +1259,7 @@ vendor)s{0,1}(\\b|_)\
             var self;
             self = this;
             return local.setTimeoutOnError(onError, 0, null, local.dbRowProject(
-                Array.from(idDictList || []).map(function (dbRow) {
+                (idDictList || []).map(function (dbRow) {
                     return self._crudRemoveOneById(dbRow);
                 })
             ));
@@ -1300,7 +1294,7 @@ vendor)s{0,1}(\\b|_)\
             var self;
             self = this;
             return local.setTimeoutOnError(onError, 0, null, local.dbRowProject(
-                Array.from(dbRowList || []).map(function (dbRow) {
+                (dbRowList || []).map(function (dbRow) {
                     return self._crudSetOneById(dbRow);
                 })
             ));
@@ -1323,7 +1317,7 @@ vendor)s{0,1}(\\b|_)\
             var self;
             self = this;
             return local.setTimeoutOnError(onError, 0, null, local.dbRowProject(
-                Array.from(dbRowList || []).map(function (dbRow) {
+                (dbRowList || []).map(function (dbRow) {
                     return self._crudUpdateOneById(dbRow);
                 })
             ));
@@ -1357,7 +1351,6 @@ vendor)s{0,1}(\\b|_)\
         /*
          * this function will drop the dbTable
          */
-            console.error('dropping dbTable ' + this.name + ' ...');
             // cancel pending save
             this.timerSave = null;
             while (this.onSaveList.length) {
@@ -1367,6 +1360,7 @@ vendor)s{0,1}(\\b|_)\
             local._DbTable.call(this, this);
             // clear persistence
             local.storageRemoveItem('dbTable.' + this.name + '.json', onError);
+            console.error('db - dropped dbTable ' + this.name);
         };
 
         local._DbTable.prototype.export = function (onError) {
@@ -1494,6 +1488,7 @@ vendor)s{0,1}(\\b|_)\
                 onParallel.counter += 1;
                 local.dbTableDict[key].drop(onParallel);
             });
+            console.error('db - dropped database');
             onParallel();
         };
 
@@ -1506,6 +1501,7 @@ vendor)s{0,1}(\\b|_)\
             Object.keys(local.dbTableDict).forEach(function (key) {
                 result += local.dbTableDict[key].export();
                 result += '\n\n';
+                console.error('db - exported dbTable ' + local.dbTableDict[key].name);
             });
             return local.setTimeoutOnError(onError, 0, null, result.trim());
         };
@@ -1514,7 +1510,8 @@ vendor)s{0,1}(\\b|_)\
         /*
          * this function will import the serialized text into the db
          */
-            var dbTable;
+            var dbTable, dbTableDict;
+            dbTableDict = {};
             local.modeImport = true;
             setTimeout(function () {
                 local.modeImport = null;
@@ -1529,23 +1526,32 @@ vendor)s{0,1}(\\b|_)\
                 local.nop(match0);
                 switch (match2) {
                 case 'dbRowSet':
+                    dbTableDict[match1] = true;
                     dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
                     dbTable.crudSetOneById(JSON.parse(match3));
                     break;
                 case 'idIndexCreate':
+                    dbTableDict[match1] = true;
                     dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
                     dbTable.idIndexCreate(JSON.parse(match3));
                     break;
                 case 'sizeLimit':
+                    dbTableDict[match1] = true;
                     dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
                     dbTable.sizeLimit = JSON.parse(match3);
                     break;
                 case 'sortDefault':
+                    dbTableDict[match1] = true;
                     dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
+                    dbTable.sortDefault = JSON.parse(match3);
                     break;
                 default:
-                    local.onErrorDefault(new Error('dbImport - invalid operation - ' + match0));
+                    local.onErrorDefault(new Error('db - dbImport - invalid operation - ' +
+                        match0));
                 }
+            });
+            Object.keys(dbTableDict).forEach(function (name) {
+                console.error('db - imported dbTable ' + name);
             });
             local.modeImport = null;
             return local.setTimeoutOnError(onError);
@@ -1563,7 +1569,7 @@ vendor)s{0,1}(\\b|_)\
                 onParallel.counter += 1;
                 onParallel.counter += 1;
                 onParallel(error);
-                Array.from(data || []).forEach(function (key) {
+                (data || []).forEach(function (key) {
                     if (key.indexOf('dbTable.') !== 0) {
                         return;
                     }
@@ -1576,6 +1582,21 @@ vendor)s{0,1}(\\b|_)\
                 });
                 onParallel();
             });
+        };
+
+        local.dbReset = function (options, onError) {
+        /*
+         * this function will drop and seed the db with options.dbSeedList
+         */
+            var onParallel;
+            options = Object.assign({}, options);
+            // reset db
+            onParallel = options.onResetBefore || local.onParallel(onError);
+            onParallel.counter += 1;
+            local.dbDrop(onParallel);
+            // seed db
+            options.onReadyBefore = options.onReadyBefore || onParallel;
+            local.dbSeed(options);
         };
 
         local.dbRowGetItem = function (dbRow, key) {
@@ -1819,16 +1840,42 @@ vendor)s{0,1}(\\b|_)\
             onParallel();
         };
 
+        local.dbSeed = function (options, onError) {
+        /*
+         * this function will seed the db with options.dbSeedList
+         */
+            var dbTableDict, onParallel;
+            dbTableDict = {};
+            options = Object.assign({
+                dbSeedList: [],
+                onReadyBefore: local.onParallel(onError)
+            }, options);
+            // seed db
+            onParallel = options.onReadyBefore;
+            onParallel.counter += 1;
+            (options.onResetAfter || function (onError) {
+                onError();
+            })(function () {
+                local.dbTableCreateMany(options.dbSeedList, onParallel);
+            });
+            options.dbSeedList.forEach(function (options) {
+                dbTableDict[options.name] = true;
+            });
+            Object.keys(dbTableDict).forEach(function (name) {
+                console.error('db - seeded dbTable ' + name);
+            });
+        };
+
         local.dbTableCreateMany = function (optionsList, onError) {
         /*
-         * this function will set the optionsList into the db
+         * this function will create many dbTables with the given optionsList
          */
             var onParallel, result;
             onParallel = local.onParallel(function (error) {
                 local.setTimeoutOnError(onError, 0, error, result);
             });
             onParallel.counter += 1;
-            result = Array.from(optionsList || []).map(function (options) {
+            result = (optionsList || []).map(function (options) {
                 onParallel.counter += 1;
                 return local.dbTableCreateOne(options, onParallel);
             });
@@ -1848,11 +1895,11 @@ vendor)s{0,1}(\\b|_)\
                 self.sortDefault ||
                 [{ fieldName: '_timeUpdated', isDescending: true }];
             // remove idIndex
-            Array.from(options.idIndexRemoveList || []).forEach(function (idIndex) {
+            (options.idIndexRemoveList || []).forEach(function (idIndex) {
                 self.idIndexRemove(idIndex);
             });
             // create idIndex
-            Array.from(options.idIndexCreateList || []).forEach(function (idIndex) {
+            (options.idIndexCreateList || []).forEach(function (idIndex) {
                 self.idIndexCreate(idIndex);
             });
             // upsert dbRow
@@ -1875,6 +1922,53 @@ vendor)s{0,1}(\\b|_)\
         };
 
         local.dbTableDict = {};
+
+        local.domOnEventDb = function (event) {
+        /*
+         * this function will handle db dom-events
+         */
+            var ajaxProgressUpdate, reader, tmp, utility2;
+            utility2 = local.global.utility2 || {};
+            ajaxProgressUpdate = (utility2 && utility2.ajaxProgressUpdate) || local.nop;
+            switch (event.target.dataset.domOnEventDb || event.target.id) {
+            case 'dbExportButton1':
+                tmp = local.global.URL.createObjectURL(new local.global.Blob([local.dbExport()]));
+                document.querySelector('#dbExportA1').href = tmp;
+                document.querySelector('#dbExportA1').click();
+                setTimeout(function () {
+                    local.global.URL.revokeObjectURL(tmp);
+                }, 30000);
+                break;
+            case 'dbImportButton1':
+                tmp = document.querySelector('#dbImportInput1');
+                if (!tmp.domOnEventDb) {
+                    tmp.domOnEventDb = local.domOnEventDb;
+                    tmp.addEventListener('change', local.domOnEventDb);
+                }
+                tmp.click();
+                break;
+            case 'dbImportInput1':
+                if (event.type !== 'change') {
+                    return;
+                }
+                ajaxProgressUpdate();
+                reader = new local.global.FileReader();
+                tmp = document.querySelector('#dbImportInput1').files[0];
+                if (!tmp) {
+                    return;
+                }
+                reader.addEventListener('load', function () {
+                    local.dbImport(reader.result);
+                    ajaxProgressUpdate();
+                });
+                reader.readAsText(tmp);
+                break;
+            case 'dbResetButton1':
+                ajaxProgressUpdate();
+                local.dbReset(utility2, local.onErrorDefault);
+                break;
+            }
+        };
 
         local.sortCompare = function (aa, bb, ii, jj) {
         /*

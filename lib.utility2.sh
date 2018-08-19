@@ -6,6 +6,7 @@
 
 # useful one-liners
 # git fetch origin alpha beta master --tags
+# shGithubRepoTouch aa/bb "touch" alpha
 # shSource; git add .; npm test --mode-coverage
 # shSource; git add .; npm test --mode-test-case=testCase_nop_default
 # shSource; git add .; shBuildApp; git diff; git status
@@ -170,7 +171,7 @@ shBrowserTest () {(set -e
     export modeBrowserTest="$2"
     shBuildInit
     export MODE_BUILD="${MODE_BUILD:-browserTest}"
-    shBuildPrint "electron.${modeBrowserTest} - $LIST"
+    shBuildPrint "shBrowserTest $*"
     # run browser-test
     lib.utility2.js utility2.browserTest "$LIST"
     if [ "$modeBrowserTest" = test ]
@@ -280,7 +281,7 @@ shBuildAppSwgg0 () {(set -e
 # this function will build the swgg-app from scratch
 # example usage:
 # shBuildAppSwgg0 github-misc
-# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoCreateSyncCreate kaizhu256/node-swgg-github-misc
+# shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoCreateSyncCreate kaizhu256/node-swgg-github-misc
 # shNpmPublishV0 swgg-github-misc
 # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc "[build app] npm_package_swggAll=github-all"
 # update README.md
@@ -344,7 +345,7 @@ shBuildAppSync () {
     fi
     # update npm_scripts.sh
     shFileCustomizeFromToRgx "$npm_config_dir_utility2/npm_scripts.sh" "npm_scripts.sh" \
-        '\n    # run command custom\n[\S\s]*?\n    # run command default\n'
+        '\n    # run command - custom\n[\S\s]*?\n    esac\n'
     # hardlink .gitignore
     if [ -f "$npm_config_dir_utility2/.travis.yml" ]
     then
@@ -379,7 +380,8 @@ shBuildCi () {(set -e
     # init $CI_COMMIT_*
     export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE"
     export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)"
-    export CI_COMMIT_MESSAGE_META="$(printf "$(git log -1 --pretty=%s)" | \
+    export CI_COMMIT_MESSAGE_META="$(git log -1 --pretty=%s | \
+        grep  -E "\[.*\]" | \
         sed -e "s/\].*//" -e "s/\[//")"
     # decrypt and exec encrypted data
     if [ "$CRYPTO_AES_KEY" ]
@@ -420,25 +422,6 @@ shBuildCi () {(set -e
                 npm run apidocRawFetch
                 npm run apidocRawCreate
                 shBuildApp
-                #!! if [ "$npm_package_swggAll" ]
-                #!! then
-                    #!! (set -e
-                    #!! shGitCommandWithGithubToken clone --branch=alpha --depth=50 --single-branch \
-                        #!! "https://github.com/kaizhu256/node-swgg-$npm_package_swggAll" \
-                        #!! "../swgg-$npm_package_swggAll"
-                    #!! cd "../swgg-$npm_package_swggAll"
-                    #!! npm install
-                    #!! npm run apidocRawFetch
-                    #!! npm run apidocRawCreate
-                    #!! shBuildApp
-                    #!! )
-                    #!! shBuildApp
-                    #!! rm -fr "../swgg-$npm_package_swggAll"
-                #!! else
-                    #!! npm run apidocRawFetch
-                    #!! npm run apidocRawCreate
-                    #!! shBuildApp
-                #!! fi
                 ;;
             esac
             node -e '
@@ -630,7 +613,8 @@ local = require("utility2");
         ;;
     master)
         git tag "$npm_package_version" || true
-        shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" "$npm_package_version" || true
+        shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" "$npm_package_version" \
+            || true
         ;;
     publish)
         if (grep -q -E '    shNpmTestPublished' README.md)
@@ -682,7 +666,6 @@ $(node -e 'process.stdout.write(require("./package.json").version)')]"
             fi
         done
     fi
-return 0
 )}
 
 shBuildCiInternal () {(set -e
@@ -769,7 +752,7 @@ shBuildCiInternal () {(set -e
     do
         if [ -f "$npm_config_dir_build/$FILE" ]
         then
-            LIST="$LIST $npm_config_dir_build/$FILE"
+            LIST="$LIST,$npm_config_dir_build/$FILE"
         fi
     done
     MODE_BUILD=buildCi shBrowserTest "$LIST" screenshot
@@ -812,7 +795,7 @@ shBuildCiInternal () {(set -e
     shGitInfo | head -n 4096 || true
     # validate http-links embedded in README.md
     if [ ! "$npm_package_isPrivate" ] &&
-            ! (printf "$CI_COMMIT_MESSAGE_META" | grep -q -E "^npm publishAfterCommitAfterBuild")
+        ! (printf "$CI_COMMIT_MESSAGE_META" | grep -q -E "^npm publishAfterCommitAfterBuild")
     then
         shSleep 60
         shReadmeLinkValidate
@@ -972,7 +955,7 @@ if ((/^[^\/]+\/[^\/]+$/).test(value)) {
 */
 "use strict";
 require("fs").readFileSync("README.md", "utf8").replace((
-    /```\w*?(\n[\W\s]*?(\w\S*?)[\n"][\S\s]+?)\n```/g
+    /```\w*?(\n[\W\s]*?(\w\S*?)[\n"][\S\s]*?)\n```/g
 ), function (match0, match1, match2, ii, text) {
     // preserve lineno
     match0 = text.slice(0, ii).replace((/.+/g), "") + match1
@@ -1033,9 +1016,12 @@ shChromeSocks5 () {(set -e
     fi
 )}
 
-shCryptoAesXxxCbcFileDecrypt () {(set -e
-# this function will inplace aes-xxx-cbc decrypt file $2 with the given hex-key $1
+shCryptoAesXxxCbcRawDecrypt () {(set -e
+# this function will inplace aes-xxx-cbc decrypt stdin with the given hex-key $1
+# example usage:
+# printf 'hello world\n' | shCryptoAesXxxCbcRawEncrypt 0123456789abcdef0123456789abcdef | shCryptoAesXxxCbcRawDecrypt 0123456789abcdef0123456789abcdef
     node -e "
+$UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
@@ -1049,130 +1035,35 @@ shCryptoAesXxxCbcFileDecrypt () {(set -e
     stupid: true
 */
 'use strict';
-var local;
-local = {};
-(function () {
-    (function () {
-        local.base64ToBuffer = function (b64, mode) {
-        /*
-         * this function will convert b64 to Uint8Array
-         * https://gist.github.com/wang-bin/7332335
-         */
-            /*globals Uint8Array*/
-            var bff, byte, chr, ii, jj, map64, mod4;
-            b64 = b64 || '';
-            bff = new Uint8Array(b64.length); // 3/4
-            byte = 0;
-            jj = 0;
-            map64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-            mod4 = 0;
-            for (ii = 0; ii < b64.length; ii += 1) {
-                chr = map64.indexOf(b64[ii]);
-                if (chr >= 0) {
-                    mod4 %= 4;
-                    if (mod4 === 0) {
-                        byte = chr;
-                    } else {
-                        byte = byte * 64 + chr;
-                        bff[jj] = 255 & (byte >> ((-2 * (mod4 + 1)) & 6));
-                        jj += 1;
-                    }
-                    mod4 += 1;
-                }
-            }
-            // optimization - create resized-view of bff
-            bff = bff.subarray(0, jj);
-            // mode !== 'string'
-            if (mode !== 'string') {
-                return bff;
-            }
-            // mode === 'string' - browser js-env
-            if (typeof window === 'object' && window && typeof window.TextDecoder === 'function') {
-                return new window.TextDecoder().decode(bff);
-            }
-            // mode === 'string' - node js-env
-            Object.setPrototypeOf(bff, Buffer.prototype);
-            return String(bff);
-        };
-        local.cryptoAesXxxCbcRawDecrypt = function (options, onError) {
-        /*
-         * this function will aes-xxx-cbc decrypt with the given options
-         * example usage:
-            data = new Uint8Array([1,2,3]);
-            key = '0123456789abcdef0123456789abcdef';
-            mode = null;
-            local.cryptoAesXxxCbcRawEncrypt({ data: data, key: key, mode: mode }, function (
-                error,
-                data
-            ) {
-                console.assert(!error, error);
-                local.cryptoAesXxxCbcRawDecrypt({ data: data, key: key, mode: mode }, console.log);
-            });
-         */
-            /*globals Uint8Array*/
-            var cipher, crypto, data, ii, iv, key;
-            // init key
-            key = new Uint8Array(0.5 * options.key.length);
-            for (ii = 0; ii < key.byteLength; ii += 2) {
-                key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
-            }
-            data = options.data;
-            // base64
-            if (options.mode === 'base64') {
-                data = local.base64ToBuffer(data);
-            }
-            // normalize data
-            if (!(data instanceof Uint8Array)) {
-                data = new Uint8Array(data);
-            }
-            // init iv
-            iv = data.subarray(0, 16);
-            // optimization - create resized-view of data
-            data = data.subarray(16);
-            crypto = typeof window === 'object' && window.crypto;
-            if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === 'function')) {
-                setTimeout(function () {
-                    crypto = require('crypto');
-                    cipher = crypto.createDecipheriv(
-                        'aes-' + (8 * key.byteLength) + '-cbc',
-                        key,
-                        iv
-                    );
-                    onError(null, Buffer.concat([cipher.update(data), cipher.final()]));
-                });
-                return;
-            }
-            crypto.subtle.importKey('raw', key, {
-                name: 'AES-CBC'
-            }, false, ['decrypt']).then(function (key) {
-                crypto.subtle.decrypt({ iv: iv, name: 'AES-CBC' }, key, data).then(function (data) {
-                    onError(null, new Uint8Array(data));
-                }).catch(onError);
-            }).catch(onError);
-        };
-    }());
-}());
-local.cryptoAesXxxCbcRawDecrypt({
-    data: require('fs').readFileSync(process.argv[2], process.argv[3] === 'base64'
-        ? 'utf8'
-        : ''),
-    key: process.argv[1],
-    mode: process.argv[3]
-}, function (error, data) {
-    console.assert(!error, error);
-    if (process.argv[4]) {
-        require('fs').writeFileSync(process.argv[4], data);
-        return;
-    }
-    process.stdout.write(data);
+var local, chunkList;
+local = local || {};
+chunkList = [];
+process.stdin.on('data', function (chunk) {
+    chunkList.push(chunk);
+});
+process.stdin.on('end', function () {
+    local.cryptoAesXxxCbcRawDecrypt({
+        data: process.argv[2] === 'base64'
+            ? Buffer.concat(chunkList).toString()
+            : Buffer.concat(chunkList),
+        key: process.argv[1],
+        mode: process.argv[2]
+    }, function (error, data) {
+        local.assert(!error, error);
+        Object.setPrototypeOf(data, Buffer.prototype);
+        process.stdout.write(data);
+    });
 });
 // </script>
 " "$@"
 )}
 
-shCryptoAesXxxCbcFileEncrypt () {(set -e
-# this function will inplace aes-xxx-cbc encrypt file $2 with the given hex-key $1
+shCryptoAesXxxCbcRawEncrypt () {(set -e
+# this function will inplace aes-xxx-cbc encrypt stdin with the given hex-key $1
+# example usage:
+# printf 'hello world\n' | shCryptoAesXxxCbcRawEncrypt 0123456789abcdef0123456789abcdef | shCryptoAesXxxCbcRawDecrypt 0123456789abcdef0123456789abcdef
     node -e "
+$UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
@@ -1186,132 +1077,22 @@ shCryptoAesXxxCbcFileEncrypt () {(set -e
     stupid: true
 */
 'use strict';
-var local;
-local = {};
-(function () {
-    (function () {
-        local.base64FromBuffer = function (bff, mode) {
-        /*
-         * this function will convert Uint8Array bff to base64
-         * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
-         */
-            var ii, mod3, text, uint24, uint6ToB64;
-            // convert utf8-string bff to Uint8Array
-            if (bff && mode === 'string') {
-                bff = typeof window === 'object' &&
-                    window &&
-                    typeof window.TextEncoder === 'function'
-                    ? new window.TextEncoder().encode(bff)
-                    : Buffer.from(bff);
-            }
-            bff = bff || [];
-            text = '';
-            uint24 = 0;
-            uint6ToB64 = function (uint6) {
-                return uint6 < 26
-                    ? uint6 + 65
-                    : uint6 < 52
-                    ? uint6 + 71
-                    : uint6 < 62
-                    ? uint6 - 4
-                    : uint6 === 62
-                    ? 43
-                    : 47;
-            };
-            for (ii = 0; ii < bff.length; ii += 1) {
-                mod3 = ii % 3;
-                uint24 |= bff[ii] << (16 >>> mod3 & 24);
-                if (mod3 === 2 || bff.length - ii === 1) {
-                    text += String.fromCharCode(
-                        uint6ToB64(uint24 >>> 18 & 63),
-                        uint6ToB64(uint24 >>> 12 & 63),
-                        uint6ToB64(uint24 >>> 6 & 63),
-                        uint6ToB64(uint24 & 63)
-                    );
-                    uint24 = 0;
-                }
-            }
-            return text.replace(/A(?=A$|$)/g, '=');
-        };
-        local.cryptoAesXxxCbcRawEncrypt = function (options, onError) {
-        /*
-         * this function will aes-xxx-cbc encrypt with the given options
-         * example usage:
-            data = new Uint8Array([1,2,3]);
-            key = '0123456789abcdef0123456789abcdef';
-            mode = null;
-            local.cryptoAesXxxCbcRawEncrypt({ data: data, key: key, mode: mode }, function (
-                error,
-                data
-            ) {
-                console.assert(!error, error);
-                local.cryptoAesXxxCbcRawDecrypt({ data: data, key: key, mode: mode }, console.log);
-            });
-         */
-            /*globals Uint8Array*/
-            var cipher, crypto, data, ii, iv, key;
-            // init key
-            key = new Uint8Array(0.5 * options.key.length);
-            for (ii = 0; ii < key.byteLength; ii += 2) {
-                key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
-            }
-            data = options.data;
-            // init iv
-            iv = new Uint8Array((((data.byteLength) >> 4) << 4) + 32);
-            crypto = typeof window === 'object' && window.crypto;
-            if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === 'function')) {
-                setTimeout(function () {
-                    crypto = require('crypto');
-                    // init iv
-                    iv.set(crypto.randomBytes(16));
-                    cipher = crypto.createCipheriv(
-                        'aes-' + (8 * key.byteLength) + '-cbc',
-                        key,
-                        iv.subarray(0, 16)
-                    );
-                    data = cipher.update(data);
-                    iv.set(data, 16);
-                    iv.set(cipher.final(), 16 + data.byteLength);
-                    if (options.mode === 'base64') {
-                        iv = local.base64FromBuffer(iv);
-                        iv += '\n';
-                    }
-                    onError(null, iv);
-                });
-                return;
-            }
-            // init iv
-            iv.set(crypto.getRandomValues(new Uint8Array(16)));
-            crypto.subtle.importKey('raw', key, {
-                name: 'AES-CBC'
-            }, false, ['encrypt']).then(function (key) {
-                crypto.subtle.encrypt({
-                    iv: iv.subarray(0, 16),
-                    name: 'AES-CBC'
-                }, key, data).then(function (data) {
-                    iv.set(new Uint8Array(data), 16);
-                    // base64
-                    if (options.mode === 'base64') {
-                        iv = local.base64FromBuffer(iv);
-                        iv += '\n';
-                    }
-                    onError(null, iv);
-                }).catch(onError);
-            }).catch(onError);
-        };
-    }());
-}());
-local.cryptoAesXxxCbcRawEncrypt({
-    data: require('fs').readFileSync(process.argv[2]),
-    key: process.argv[1],
-    mode: process.argv[3]
-}, function (error, data) {
-    console.assert(!error, error);
-    if (process.argv[4]) {
-        require('fs').writeFileSync(process.argv[4], data);
-        return;
-    }
-    process.stdout.write(data);
+var local, chunkList;
+local = local || {};
+chunkList = [];
+process.stdin.on('data', function (chunk) {
+    chunkList.push(chunk);
+});
+process.stdin.on('end', function () {
+    local.cryptoAesXxxCbcRawEncrypt({
+        data: Buffer.concat(chunkList),
+        key: process.argv[1],
+        mode: process.argv[2]
+    }, function (error, data) {
+        local.assert(!error, error);
+        Object.setPrototypeOf(data, Buffer.prototype);
+        process.stdout.write(data);
+    });
 });
 // </script>
 " "$@"
@@ -1336,16 +1117,11 @@ shCryptoTravisDecrypt () {(set -e
         shBuildPrint "no CRYPTO_AES_KEY"
         return 1
     fi
-    # init $SH_ENCRYPTED
-    SH_ENCRYPTED="${1:-"$(curl -#Lf "https://raw.githubusercontent.com\
-/kaizhu256/node-utility2/gh-pages/CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG")"}"
-    # init $IV from first 44 base64-encoded bytes of $SH_ENCRYPTED
-    IV="$(printf "$SH_ENCRYPTED" | cut -c1-44 | base64 --decode)"
-    # decrypt remaining base64-encoded bytes of $SH_ENCRYPTED to stdout using aes-256-cbc
-    printf "$SH_ENCRYPTED" | \
-        cut -c45-9999 | \
-        base64 --decode | \
-        openssl enc -aes-256-cbc -d -K "$CRYPTO_AES_KEY" -iv "$IV"
+    # decrypt CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG
+    shBuildPrint "CRYPTO_AES_SH_DECRYPTED:"
+    printf "${1:-"$(curl -#Lf "https://raw.githubusercontent.com\
+/kaizhu256/node-utility2/gh-pages/CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG")"}" | \
+        shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
 )}
 
 shCryptoTravisEncrypt () {(set -e
@@ -1366,41 +1142,38 @@ shCryptoTravisEncrypt () {(set -e
     fi
     if [ -f .travis.yml ]
     then
-        URL="https://api.travis-ci.org/repos/$GITHUB_REPO/key"
+        TMPFILE="$(mktemp)"
+        URL="https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/key"
         shBuildPrint "fetch $URL"
-        curl -#Lf "$URL" | \
+        curl -#Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" | \
             sed -n \
                 -e "s/.*-----BEGIN [RSA ]*PUBLIC KEY-----\(.*\)-----END [RSA ]*PUBLIC KEY-----.*/\
 -----BEGIN PUBLIC KEY-----\\1-----END PUBLIC KEY-----/" \
                 -e "s/\\\\n/%/gp" | \
-            tr "%" "\n" > "$npm_config_file_tmp"
+            tr "%" "\n" > "$TMPFILE"
         CRYPTO_AES_KEY_ENCRYPTED="$(printf "CRYPTO_AES_KEY=$CRYPTO_AES_KEY" | \
-            openssl rsautl -encrypt -pubin -inkey "$npm_config_file_tmp" | \
+            openssl rsautl -encrypt -pubin -inkey "$TMPFILE" | \
             base64 | \
             tr -d "\n")"
+        rm "$TMPFILE"
         if [ ! "$CRYPTO_AES_KEY_ENCRYPTED" ]
         then
             shBuildPrint "no CRYPTO_AES_KEY_ENCRYPTED"
-            return 1
+        else
+            sed -in \
+                -e "s|\(- secure: \).*\( # CRYPTO_AES_KEY$\)|\\1$CRYPTO_AES_KEY_ENCRYPTED\\2|" \
+                .travis.yml
+            rm -f .travis.ymln
+            shBuildPrint "updated .travis.yml with CRYPTO_AES_KEY_ENCRYPTED"
         fi
-        sed -in \
-            -e "s|\(- secure: \).*\( # CRYPTO_AES_KEY$\)|\\1$CRYPTO_AES_KEY_ENCRYPTED\\2|" \
-            .travis.yml
-        rm -f .travis.ymln
-        shBuildPrint "updated .travis.yml with CRYPTO_AES_KEY_ENCRYPTED"
     fi
     if [ ! -f "$FILE" ]
     then
         return
     fi
+    # encrypt CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG
     shBuildPrint "CRYPTO_AES_SH_ENCRYPTED:"
-    # init $IV from random 16 bytes
-    IV="$(openssl rand -hex 16)"
-    # print base64-encoded $IV to stdout
-    printf "$(printf "$IV" | base64 | tr -d "\n")"
-    # encrypt $FILE to stdout using aes-256-cbc with base64-encoding
-    openssl enc -aes-256-cbc -K "$CRYPTO_AES_KEY" -in "$FILE" -iv "$IV" | base64 | tr -d "\n"
-    printf "\n"
+    cat "$FILE" | shCryptoAesXxxCbcRawEncrypt "$CRYPTO_AES_KEY" base64
 )}
 
 shCryptoWithGithubOrg () {(set -e
@@ -1412,158 +1185,24 @@ shCryptoWithGithubOrg () {(set -e
 )}
 
 shCustomOrgRepoCreate () {(set -e
-# this function will create and push the customOrg-repo $GITHUB_ORG/node-$GITHUB_ORG-$LIST[ii]
+# this function will create and push the customOrgRepo $LIST[ii]
 # https://docs.travis-ci.com/api
 # example usage:
-# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoCreate "kaizhu256/node-sandbox2 kaizhu256/node-sandbox3"
+# shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoCreate "kaizhu256/node-sandbox2 kaizhu256/node-sandbox3"
 # sleep 5
 # shCryptoWithGithubOrg kaizhu256 shTravisSync
 # sleep 5
-# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoCreate kaizhu256/node-sandbox2
+# shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoCreate "kaizhu256/node-sandbox2 kaizhu256/node-sandbox3"
     LIST="$1"
-    export MODE_BUILD=shCustomOrgRepoCreate
-    cd /tmp
-
-
-
-    if [ ! "$TRAVIS_REPO_CREATE_FORCE" ]
-    then
-        shBuildPrint "filtering non-existent or active travis-repos from $LIST ..."
-        LIST2=""
-        for GITHUB_REPO in $LIST
-        do
-            LIST2="$LIST2
-if (curl -Lfs https://api.travis-ci.org/repos/$GITHUB_REPO | \
-    grep -E ',\"active\":' | \
-    grep -qv -E ',\"active\":true'); \
-then \
-    printf \"$GITHUB_REPO\n\"; \
-fi
-"
-        done
-        LIST="$(shOnParallelListExec "$LIST2")"
-        shBuildPrint "... filtered non-existent or active travis-repos from $LIST"
-    fi
-
-
-
-    if [ ! "$LIST" ]
-    then
-        return
-    fi
-
-
-
-    shBuildPrint "creating github-repos $LIST ..."
-    # init /tmp/githubRepo/kaizhu256/base
-    if [ ! -d /tmp/githubRepo/kaizhu256/base ]
-    then
-    (
-        git clone https://github.com/kaizhu256/base /tmp/githubRepo/kaizhu256/base
-        cd /tmp/githubRepo/kaizhu256/base
-        git checkout -b alpha origin/alpha || true
-        git checkout -b beta origin/beta || true
-        git checkout -b gh-pages origin/gh-pages || true
-        git checkout -b master origin/master || true
-        git checkout -b publish origin/publish || true
-        git checkout alpha
-    )
-    fi
-    LIST2=""
-    for GITHUB_REPO in $LIST
-    do
-        LIST2="$LIST2
-shGithubRepoBaseCreate $GITHUB_REPO"
-    done
-    shOnParallelListExec "$LIST2"
-    shBuildPrint "... created github-repos $LIST"
-
-
-
-    # bug-workaround - travis-ci cannot run node in certain subprocesses
-    shBuildPrint "creating $GITHUB_ORG-repos $LIST ..."
-    shSleep 5
-    LIST2=""
-    for GITHUB_REPO in $LIST
-    do
-        NAME="$(printf "$GITHUB_REPO" | sed -e "s/^$GITHUB_ORG\/node-//")"
-        LIST2="$LIST2
-(set -e; \
-shBuildPrint \"creating $GITHUB_ORG-repo $GITHUB_REPO ...\"; \
-TRAVIS_REPO_ID=\"\$(curl -#Lf https://api.travis-ci.org/repos/$GITHUB_REPO | \
-    grep -o -E '\"id\":[^,]*' | \
-    sed -e 's/.*://')\"; \
-if [ ! \$TRAVIS_REPO_ID ]; \
-then \
-    shBuildPrint \"error - travis-repo not found - $GITHUB_REPO\" 1>&2; \
-    exit; \
-fi; \
-curl -#Lf \
-    -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
-    -H \"Content-Type: application/json; charset=UTF-8\" \
-    -X PUT \
-    -d '{\"hook\":{\"active\":true}}' \
-    \"https://api.travis-ci.org/hooks/\$TRAVIS_REPO_ID\"; \
-sleep 5; \
-curl -#Lf \
-    -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
-    -H \"Content-Type: application/json; charset=UTF-8\" \
-    -H \"Travis-API-Version: 3\" \
-    -X PATCH \
-    -d '{\"setting.value\":true}' \
-    \"https://api.travis-ci.org/repo/\$TRAVIS_REPO_ID/setting/builds_only_with_travis_yml\"; \
-sleep 1; \
-curl -#Lf \
-    -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
-    -H \"Content-Type: application/json; charset=UTF-8\" \
-    -H \"Travis-API-Version: 3\" \
-    -X PATCH \
-    -d '{\"setting.value\":true}' \
-    \"https://api.travis-ci.org/repo/\$TRAVIS_REPO_ID/setting/auto_cancel_pushes\"; \
-sleep 1; \
-if [ ! -d /tmp/githubRepo/$GITHUB_REPO ]; \
-then \
-    shGithubRepoBaseCreate $GITHUB_REPO; \
-fi; \
-cd /tmp/githubRepo/$GITHUB_REPO; \
-curl -Lfs -O https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitignore; \
-curl -Lfs -O https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.travis.yml; \
-touch README.md; \
-printf '{ \
-    \"devDependencies\": { \
-        \"electron-lite\": \"kaizhu256/node-electron-lite#alpha\", \
-        \"utility2\": \"kaizhu256/node-utility2#alpha\" \
-    }, \
-    \"name\":\"$NAME\", \
-    \"homepage\": \"https://github.com/$GITHUB_REPO\", \
-    \"repository\": { \
-        \"type\": \"git\", \
-        \"url\": \"https://github.com/$GITHUB_REPO.git\" \
-    }, \
-    \"scripts\": { \
-        \"build-ci\": \"utility2 shBuildCi\" \
-    }, \
-    \"version\": \"0.0.1\" \
-}' > package.json; \
-sed -in -e 's/kaizhu256-kaizhu256.//' package.json; \
-rm -f package.jsonn; \
-sed -in -e 's/.*CRYPTO_AES_SH_ENCRYPTED.*//' .travis.yml; \
-rm -f .travis.ymln; \
-shCryptoTravisEncrypt; \
-git add -f . .gitignore .travis.yml; \
-git commit -am \"[npm publishAfterCommitAfterBuild]\"; \
-shGitCommandWithGithubToken push https://github.com/$GITHUB_REPO -f alpha; \
-shBuildPrint \"... created $GITHUB_ORG-repo $GITHUB_REPO\"; \
-)"
-    done
-    shOnParallelListExec "$LIST2"
-    shBuildPrint "... created $GITHUB_ORG-repos $LIST"
+    shBuildInit
+    lib.utility2.js utility2.customOrgRepoCreate "$LIST"
 )}
 
 shCustomOrgRepoCreateSyncCreate () {(set -e
-# this function will create, sync, create the customOrg-repo $GITHUB_ORG/node-$GITHUB_ORG-$LIST[ii]
+# this function will create, sync, create the customOrgRepo $LIST[ii]
 # example usage:
-# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoCreateSyncCreate kaizhu256/node-sandbox2
+# shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoCreateSyncCreate kaizhu256/node-sandbox2
+    LIST="$1"
     shCustomOrgRepoCreate "$LIST"
     shSleep 5
     shTravisSync
@@ -1572,7 +1211,7 @@ shCustomOrgRepoCreateSyncCreate () {(set -e
 )}
 
 shCustomOrgRepoCreateSyncCreateNpmdoc () {(set -e
-# this function will create and push the customOrg-repo $GITHUB_ORG/node-$GITHUB_ORG-$LIST[ii]
+# this function will create and push the customOrgRepo $LIST[ii]
 # example usage:
 # shCustomOrgRepoCreateSyncCreateNpmdoc npmdoc/node-npmdoc-mysql
     LIST="$1"
@@ -1584,7 +1223,7 @@ shCustomOrgRepoCreateSyncCreateNpmdoc () {(set -e
         # shCryptoWithGithubOrg npmtest shGithubRepoTouch npmtest/node-npmtest-mysql "[npm publishAfterCommitAfterBuild]"
         LIST="$(printf "$LIST" | sed -e "s/npmdoc/$CUSTOM_ORG/g")"
         shCryptoWithGithubOrg "$CUSTOM_ORG" shCustomOrgRepoCreateSyncCreate "$LIST"
-        TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg "$CUSTOM_ORG" shGithubRepoTouch "$LIST" \
+        shCryptoWithGithubOrg "$CUSTOM_ORG" shGithubRepoTouch "$LIST" \
             "[npm publishAfterCommitAfterBuild]"
     done
 )}
@@ -1627,8 +1266,8 @@ shDeployGithub () {(set -e
 # and run a simple curl check for $TEST_URL
 # and test $TEST_URL
     export MODE_BUILD=deployGithub
-    export TEST_URL=\
-"https://$(printf "$GITHUB_REPO" | sed -e "s/\//.github.io\//")/build..$CI_BRANCH..travis-ci.org/app"
+    export TEST_URL="https://$(printf "$GITHUB_REPO" | \
+        sed -e "s/\//.github.io\//")/build..$CI_BRANCH..travis-ci.org/app"
     shBuildPrint "deployed to $TEST_URL"
     # verify deployed app's main-page returns status-code < 400
     shSleep 15
@@ -1640,7 +1279,7 @@ shDeployGithub () {(set -e
         return 1
     fi
     # screenshot deployed app
-    shBrowserTest "$TEST_URL $TEST_URL/assets.swgg.html" screenshot
+    shBrowserTest "$TEST_URL,$TEST_URL/assets.swgg.html" screenshot
     # test deployed app
     MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" \
         test
@@ -1674,7 +1313,7 @@ shDeployHeroku () {(set -e
         return 1
     fi
     # screenshot deployed app
-    shBrowserTest "$TEST_URL $TEST_URL/assets.swgg.html" screenshot
+    shBrowserTest "$TEST_URL,$TEST_URL/assets.swgg.html" screenshot
     # test deployed app
     MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" \
         test
@@ -2009,6 +1648,7 @@ console.log(Object.keys(process.env).sort().map(function (key) {
 shFileCustomizeFromToRgx () {(set -e
 # this function will customize a segment of file $2 with a segment of file $1, with the given rgx
     node -e "
+$UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
@@ -2023,32 +1663,13 @@ shFileCustomizeFromToRgx () {(set -e
 */
 'use strict';
 var dataFrom, dataTo, local;
-local = {};
-(function () {
-    (function () {
-        local.stringCustomizeFromToRgx = function (textFrom, textTo, rgx) {
-        /*
-         * this function will customize a segment of textTo with a segment of textFrom,
-         * with the given rgx
-         */
-            textFrom.replace(rgx, function (match0) {
-                textTo.replace(rgx, function (match1) {
-                    textTo = textTo.split(match1);
-                    textTo[0] += match0;
-                    textTo[0] += textTo.splice(1, 1)[0];
-                    textTo = textTo.join(match1);
-                });
-            });
-            return textTo;
-        };
-        dataFrom = require('fs').readFileSync(process.argv[2], 'utf8');
-        dataTo = require('fs').readFileSync(process.argv[1], 'utf8');
-        process.argv.slice(3).forEach(function (rgx) {
-            dataTo = local.stringCustomizeFromToRgx(dataFrom, dataTo, new RegExp(rgx));
-        });
-        require('fs').writeFileSync(process.argv[2], dataTo);
-    }());
-}());
+local = local || {};
+dataFrom = require('fs').readFileSync(process.argv[2], 'utf8');
+dataTo = require('fs').readFileSync(process.argv[1], 'utf8');
+process.argv.slice(3).forEach(function (rgx) {
+    dataTo = local.stringCustomizeFromToRgx(dataFrom, dataTo, new RegExp(rgx));
+});
+require('fs').writeFileSync(process.argv[2], dataTo);
 // </script>
 " "$@"
 )}
@@ -2059,6 +1680,7 @@ shFileJsonNormalize () {(set -e
 # 2. normalize the json-data
 # 3. write the normalized json-data back to file $1
     node -e "
+$UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
@@ -2073,143 +1695,7 @@ shFileJsonNormalize () {(set -e
 */
 'use strict';
 var local, tmp;
-local = {};
-(function () {
-    (function () {
-        local.jsonStringifyOrdered = function (obj, replacer, space) {
-        /*
-         * this function will JSON.stringify obj,
-         * with object-keys sorted and circular-references removed
-         */
-            var circularList, stringify, tmp;
-            stringify = function (obj) {
-            /*
-             * this function will recursively JSON.stringify obj,
-             * with object-keys sorted and circular-references removed
-             */
-                // if obj is not an object or function, then JSON.stringify as normal
-                if (!(obj &&
-                        typeof obj === 'object' &&
-                        typeof obj.toJSON !== 'function')) {
-                    return JSON.stringify(obj);
-                }
-                // ignore circular-reference
-                if (circularList.indexOf(obj) >= 0) {
-                    return;
-                }
-                circularList.push(obj);
-                // if obj is an array, then recurse its items
-                if (Array.isArray(obj)) {
-                    return '[' + obj.map(function (obj) {
-                        // recurse
-                        tmp = stringify(obj);
-                        return typeof tmp === 'string'
-                            ? tmp
-                            : 'null';
-                    }).join(',') + ']';
-                }
-                // if obj is not an array, then recurse its items with object-keys sorted
-                return '{' + Object.keys(obj)
-                    // sort object-keys
-                    .sort()
-                    .map(function (key) {
-                        // recurse
-                        tmp = stringify(obj[key]);
-                        if (typeof tmp === 'string') {
-                            return JSON.stringify(key) + ':' + tmp;
-                        }
-                    })
-                    .filter(function (obj) {
-                        return typeof obj === 'string';
-                    })
-                    .join(',') + '}';
-            };
-            circularList = [];
-            // try to derefernce all properties in obj
-            (function () {
-                try {
-                    obj = JSON.parse(JSON.stringify(obj));
-                } catch (ignore) {
-                }
-            }());
-            return JSON.stringify(typeof obj === 'object' && obj
-                // recurse
-                ? JSON.parse(stringify(obj))
-                : obj, replacer, space);
-        };
-        local.objectSetDefault = function (arg0, defaults, depth) {
-        /*
-         * this function will recursively set defaults for undefined-items in arg0
-         */
-            arg0 = arg0 || {};
-            defaults = defaults || {};
-            Object.keys(defaults).forEach(function (key) {
-                var arg2, defaults2;
-                arg2 = arg0[key];
-                // handle misbehaving getter
-                try {
-                    defaults2 = defaults[key];
-                } catch (ignore) {
-                }
-                if (defaults2 === undefined) {
-                    return;
-                }
-                // init arg0[key] to default value defaults[key]
-                switch (arg2) {
-                case '':
-                case null:
-                case undefined:
-                    arg0[key] = defaults2;
-                    return;
-                }
-                // if arg2 and defaults2 are both non-null and non-array objects,
-                // then recurse with arg2 and defaults2
-                if (depth > 1 &&
-                        // arg2 is a non-null and non-array object
-                        typeof arg2 === 'object' && arg2 && !Array.isArray(arg2) &&
-                        // defaults2 is a non-null and non-array object
-                        typeof defaults2 === 'object' && defaults2 && !Array.isArray(defaults2)) {
-                    // recurse
-                    local.objectSetDefault(arg2, defaults2, depth - 1);
-                }
-            });
-            return arg0;
-        };
-        local.objectSetOverride = function (arg0, overrides, depth, env) {
-        /*
-         * this function will recursively set overrides for items in arg0
-         */
-            arg0 = arg0 || {};
-            env = env || (typeof process === 'object' && process.env) || {};
-            overrides = overrides || {};
-            Object.keys(overrides).forEach(function (key) {
-                var arg2, overrides2;
-                arg2 = arg0[key];
-                overrides2 = overrides[key];
-                if (overrides2 === undefined) {
-                    return;
-                }
-                // if both arg2 and overrides2 are non-null and non-array objects,
-                // then recurse with arg2 and overrides2
-                if (depth > 1 &&
-                        // arg2 is a non-null and non-array object
-                        typeof arg2 === 'object' && arg2 && !Array.isArray(arg2) &&
-                        // overrides2 is a non-null and non-array object
-                        typeof overrides2 === 'object' && overrides2 &&
-                        !Array.isArray(overrides2)) {
-                    local.objectSetOverride(arg2, overrides2, depth - 1, env);
-                    return;
-                }
-                // else set arg0[key] with overrides[key]
-                arg0[key] = arg0 === env
-                    // if arg0 is env, then overrides falsey value with empty string
-                    ? overrides2 || ''
-                    : overrides2;
-            });
-            return arg0;
-        };
-    }());
-}());
+local = local || {};
 tmp = JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'));
 if (process.argv[2]) {
     local.objectSetDefault(tmp, JSON.parse(process.argv[2]), Infinity);
@@ -2398,38 +1884,6 @@ shGithubApiRateLimitGet () {(set -e
     curl -I https://api.github.com -H "Authorization: token $GITHUB_TOKEN"
 )}
 
-shGithubCrudRepoCreate () {(set -e
-# this function will create the $GITHUB_REPO in $LIST with $GITHUB_TOKEN
-    LIST="$1"
-    export MODE_BUILD="${MODE_BUILD:-shGithubCrudRepoCreate}"
-    URL=https://api.github.com/user/repos
-    # init $GITHUB_ORG
-    GITHUB_ORG="$(printf "$LIST" | head -n 1 | sed -e "s/\/.*//")"
-    if (printf "$GITHUB_ORG" | grep -q -E "^(\
-npmdoc|\
-npmtest|\
-projectako|\
-projectbko|\
-scrapeitall|\
-swgg-io)\$")
-    then
-        URL="https://api.github.com/orgs/$GITHUB_ORG/repos"
-    fi
-    LIST2=""
-    for GITHUB_REPO in $LIST
-    do
-        NAME="$(printf "$GITHUB_REPO" | sed -e "s/.*\///")"
-        LIST2="$LIST2
-if (! curl -ILfs -o /dev/null https://github.com/$GITHUB_REPO); \
-then \
-    printf 'creating github-repo $GITHUB_REPO\n' 1>&2; \
-    curl -#Lf -H 'Authorization: token $GITHUB_TOKEN' -X POST -d '{\"name\":\"$NAME\"}' \
-        -o /dev/null $URL; \
-fi"
-    done
-    shOnParallelListExec "$LIST2"
-)}
-
 shGithubRepoBaseCreate () {(set -e
 # this function will create the base github-repo https://github.com/$GITHUB_REPO
 # example usage:
@@ -2456,7 +1910,54 @@ shGithubRepoBaseCreate () {(set -e
     cd "/tmp/githubRepo/$GITHUB_REPO"
     curl -Lfs https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig | \
         sed -e "s|kaizhu256/node-utility2|$GITHUB_REPO|" > .git/config
-    (eval shGithubCrudRepoCreate "$GITHUB_REPO") || true
+    # create github-repo
+    node -e "
+$UTILITY2_MACRO_JS
+// <script>
+/* jslint-utility2 */
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 4,
+    maxlen: 100,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+var local;
+local = local || {};
+local.ajax({
+    data: '{\"name\":\"' + process.argv[1].split('/')[1] + '\"}',
+    headers: {
+        Authorization: 'token ' + process.env.GITHUB_TOKEN,
+        'User-Agent': 'undefined'
+    },
+    method: 'POST',
+    url: 'https://api.github.com/orgs/' + process.argv[1].split('/')[0] + '/repos'
+}, function (error, xhr) {
+    if (xhr.statusCode !== 404) {
+        local.onErrorDefault(error && xhr &&
+            ('https://github.com/' + process.argv[1] + ' - ' + xhr.responseText));
+        return;
+    }
+    local.ajax({
+        data: '{\"name\":\"' + process.argv[1].split('/')[1] + '\"}',
+        headers: {
+            Authorization: 'token ' + process.env.GITHUB_TOKEN,
+            'User-Agent': 'undefined'
+        },
+        method: 'POST',
+        url: 'https://api.github.com/user/repos'
+    }, function (error, xhr) {
+        local.onErrorDefault(error && xhr &&
+            ('https://github.com/' + process.argv[1] + ' - ' + xhr.responseText));
+        return;
+    });
+});
+// </script>
+" "$GITHUB_REPO"
     # set default-branch to beta
     shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" beta || true
     # push all branches
@@ -2768,6 +2269,1000 @@ shMain () {
 # this function will run the main program
     export UTILITY2_GIT_BASE_ID=9fe8c2255f4ac330c86af7f624d381d768304183
     export UTILITY2_DEPENDENTS="$(shUtility2Dependents)"
+    export UTILITY2_MACRO_JS="
+// <script>
+/* jslint-utility2 */
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 4,
+    maxlen: 100,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+var local;
+local = {};
+(function () {
+    (function () {
+        // init global
+        local.global = global;
+        // init debug_inline
+        (function () {
+            var consoleError, context, key;
+            context = (typeof window === 'object' && window) || global;
+            key = 'debug_inline'.replace('_i', 'I');
+            if (context[key]) {
+                return;
+            }
+            consoleError = console.error;
+            context[key] = function (arg0) {
+            /*
+             * this function will both print arg0 to stderr and return it
+             */
+                // debug arguments
+                context['_' + key + 'Arguments'] = arguments;
+                consoleError('\n\n' + key);
+                consoleError.apply(console, arguments);
+                consoleError('\n');
+                // return arg0 for inspection
+                return arg0;
+            };
+        }());
+        (function () {
+            // require builtins
+            // local.assert = require('assert');
+            local.buffer = require('buffer');
+            local.child_process = require('child_process');
+            local.cluster = require('cluster');
+            local.console = require('console');
+            local.constants = require('constants');
+            local.crypto = require('crypto');
+            local.dgram = require('dgram');
+            local.dns = require('dns');
+            local.domain = require('domain');
+            local.events = require('events');
+            local.fs = require('fs');
+            local.http = require('http');
+            local.https = require('https');
+            local.module = require('module');
+            local.net = require('net');
+            local.os = require('os');
+            local.path = require('path');
+            local.process = require('process');
+            local.punycode = require('punycode');
+            local.querystring = require('querystring');
+            local.readline = require('readline');
+            local.repl = require('repl');
+            local.stream = require('stream');
+            local.string_decoder = require('string_decoder');
+            local.timers = require('timers');
+            local.tls = require('tls');
+            local.tty = require('tty');
+            local.url = require('url');
+            local.util = require('util');
+            local.v8 = require('v8');
+            local.vm = require('vm');
+            local.zlib = require('zlib');
+        }());
+
+        local.ajax = function (options, onError) {
+        /*
+         * this function will send an ajax-request with error-handling and timeout
+         * example usage:
+            local.ajax({
+                data: 'hello world',
+                header: { 'x-header-hello': 'world' },
+                method: 'POST',
+                url: '/index.html'
+            }, function (error, xhr) {
+                console.log(xhr.statusCode);
+                console.log(xhr.responseText);
+            });
+         */
+            var ajaxProgressUpdate, bufferToString, isBrowser, isDone, nop, streamCleanup, xhr;
+            // init standalone handling-behavior
+            nop = function () {
+            /*
+             * this function will do nothing
+             */
+                return;
+            };
+            ajaxProgressUpdate = local.ajaxProgressUpdate || nop;
+            // init onError
+            if (local.onErrorWithStack) {
+                onError = local.onErrorWithStack(onError);
+            }
+            bufferToString = local.bufferToString || String;
+            streamCleanup = function (stream) {
+            /*
+             * this function will try to end or destroy the stream
+             */
+                // try to end the stream
+                try {
+                    stream.end();
+                } catch (errorCaught) {
+                    // if error, then try to destroy the stream
+                    try {
+                        stream.destroy();
+                    } catch (ignore) {
+                    }
+                }
+            };
+            // init isBrowser
+            isBrowser = typeof window === 'object' &&
+                typeof window.XMLHttpRequest === 'function' &&
+                window.document &&
+                typeof window.document.querySelectorAll === 'function';
+            // init xhr
+            xhr = !options.httpRequest &&
+                (!isBrowser || (local.serverLocalUrlTest && local.serverLocalUrlTest(options.url)))
+                ? local._http && local._http.XMLHttpRequest && new local._http.XMLHttpRequest()
+                : isBrowser && new window.XMLHttpRequest();
+            if (!xhr) {
+                xhr = require('url').parse(options.url);
+                xhr.headers = options.headers;
+                xhr.method = options.method;
+                xhr.timeout = xhr.timeout || local.timeoutDefault || 30000;
+                xhr = (
+                    options.httpRequest || require(xhr.protocol.slice(0, -1)).request
+                )(xhr, function (response) {
+                    var chunkList;
+                    chunkList = [];
+                    xhr.responseStream = response;
+                    xhr.responseHeaders = xhr.responseStream.headers;
+                    xhr.status = xhr.responseStream.statusCode;
+                    xhr.responseStream
+                        .on('data', function (chunk) {
+                            chunkList.push(chunk);
+                        })
+                        .on('end', function () {
+                            xhr.response = Buffer.concat(chunkList);
+                            xhr.onEvent({ type: 'load' });
+                        })
+                        .on('error', xhr.onEvent);
+                });
+                xhr.addEventListener = nop;
+                xhr.open = nop;
+                xhr.requestStream = xhr;
+                xhr.send = xhr.end;
+                xhr.setRequestHeader = nop;
+                setTimeout(function () {
+                    xhr.on('error', xhr.onEvent);
+                });
+            }
+            // debug xhr
+            local._debugXhr = xhr;
+            // init options
+            Object.keys(options).forEach(function (key) {
+                if (options[key] !== undefined) {
+                    xhr[key] = options[key];
+                }
+            });
+            // init properties
+            xhr.headers = {};
+            Object.keys(options.headers || {}).forEach(function (key) {
+                xhr.headers[key.toLowerCase()] = options.headers[key];
+            });
+            xhr.method = xhr.method || 'GET';
+            xhr.responseHeaders = {};
+            xhr.timeStart = Date.now();
+            xhr.timeout = xhr.timeout || local.timeoutDefault || 30000;
+            // init timerTimeout
+            xhr.timerTimeout = setTimeout(function () {
+                xhr.error = xhr.error || new Error('onTimeout - timeout-error - ' +
+                    xhr.timeout + ' ms - ' + 'ajax ' + xhr.method + ' ' + xhr.url);
+                xhr.abort();
+                // cleanup requestStream and responseStream
+                streamCleanup(xhr.requestStream);
+                streamCleanup(xhr.responseStream);
+            }, xhr.timeout);
+            // init event-handling
+            xhr.onEvent = function (event) {
+                if (event instanceof Error) {
+                    xhr.error = xhr.error || event;
+                    xhr.onEvent({ type: 'error' });
+                    return;
+                }
+                // init statusCode
+                xhr.statusCode = xhr.status || xhr.statusCode || 0;
+                switch (event.type) {
+                case 'abort':
+                case 'error':
+                case 'load':
+                    // do not run more than once
+                    if (isDone) {
+                        return;
+                    }
+                    isDone = xhr._isDone = true;
+                    // update responseHeaders
+                    if (xhr.getAllResponseHeaders) {
+                        xhr.getAllResponseHeaders().replace((
+                            /(.*?): *(.*?)\r\n/g
+                        ), function (match0, match1, match2) {
+                            match0 = match1;
+                            xhr.responseHeaders[match0.toLowerCase()] = match2;
+                        });
+                    }
+                    // init responseText
+                    if (!(isBrowser && (xhr instanceof XMLHttpRequest)) &&
+                            (xhr.responseType === 'text' || !xhr.responseType)) {
+                        xhr.response = xhr.responseText = bufferToString(xhr.response || '');
+                    }
+                    // init responseBuffer
+                    xhr.responseBuffer = xhr.response;
+                    if (xhr.responseBuffer instanceof ArrayBuffer) {
+                        xhr.responseBuffer = new Uint8Array(xhr.responseBuffer);
+                    }
+                    xhr.responseContentLength =
+                        (xhr.response && (xhr.response.byteLength || xhr.response.length)) || 0;
+                    xhr.timeElapsed = Date.now() - xhr.timeStart;
+                    // debug ajaxResponse
+                    if (xhr.modeDebug) {
+                        console.error('serverLog - ' + JSON.stringify({
+                            time: new Date(xhr.timeStart).toISOString(),
+                            type: 'ajaxResponse',
+                            method: xhr.method,
+                            url: xhr.url,
+                            statusCode: xhr.statusCode,
+                            timeElapsed: xhr.timeElapsed,
+                            // extra
+                            responseContentLength: xhr.responseContentLength,
+                            data: (function () {
+                                try {
+                                    return String(xhr.data.slice(0, 256));
+                                } catch (ignore) {
+                                }
+                            }()),
+                            responseText: (function () {
+                                try {
+                                    return String(xhr.responseText.slice(0, 256));
+                                } catch (ignore) {
+                                }
+                            }())
+                        }));
+                    }
+                    // cleanup timerTimeout
+                    clearTimeout(xhr.timerTimeout);
+                    // cleanup requestStream and responseStream
+                    setTimeout(function () {
+                        streamCleanup(xhr.requestStream);
+                        streamCleanup(xhr.responseStream);
+                    });
+                    // decrement ajaxProgressCounter
+                    if (local.ajaxProgressCounter) {
+                        local.ajaxProgressCounter -= 1;
+                    }
+                    // handle abort or error event
+                    if (!xhr.error &&
+                            (event.type === 'abort' ||
+                            event.type === 'error' ||
+                            xhr.statusCode >= 400)) {
+                        xhr.error = new Error('ajax - event ' + event.type);
+                    }
+                    // debug statusCode
+                    (xhr.error || {}).statusCode = xhr.statusCode;
+                    // debug statusCode / method / url
+                    if (local.errorMessagePrepend && xhr.error) {
+                        local.errorMessagePrepend(xhr.error, (isBrowser
+                            ? 'browser'
+                            : 'node') + ' - ' +
+                            xhr.statusCode + ' ' + xhr.method + ' ' + xhr.url + '\n' +
+                            // try to debug responseText
+                            (function () {
+                                try {
+                                    return '    ' + JSON.stringify(xhr.responseText.slice(0, 256) +
+                                        '...') + '\n';
+                                } catch (ignore) {
+                                }
+                            }()));
+                    }
+                    onError(xhr.error, xhr);
+                    break;
+                }
+                ajaxProgressUpdate();
+            };
+            // increment ajaxProgressCounter
+            local.ajaxProgressCounter = local.ajaxProgressCounter || 0;
+            local.ajaxProgressCounter += 1;
+            xhr.addEventListener('abort', xhr.onEvent);
+            xhr.addEventListener('error', xhr.onEvent);
+            xhr.addEventListener('load', xhr.onEvent);
+            xhr.addEventListener('loadstart', ajaxProgressUpdate);
+            xhr.addEventListener('progress', ajaxProgressUpdate);
+            if (xhr.upload && xhr.upload.addEventListener) {
+                xhr.upload.addEventListener('progress', ajaxProgressUpdate);
+            }
+            // open url through corsForwardProxyHost
+            xhr.corsForwardProxyHost = xhr.corsForwardProxyHost || local.corsForwardProxyHost;
+            xhr.location = xhr.location || (local.global && local.global.location) || {};
+            if (local.corsForwardProxyHostIfNeeded && local.corsForwardProxyHostIfNeeded(xhr)) {
+                xhr.open(xhr.method, local.corsForwardProxyHostIfNeeded(xhr));
+                xhr.setRequestHeader('forward-proxy-headers', JSON.stringify(xhr.headers));
+                xhr.setRequestHeader('forward-proxy-url', xhr.url);
+            // open url
+            } else {
+                xhr.open(xhr.method, xhr.url);
+            }
+            Object.keys(xhr.headers).forEach(function (key) {
+                xhr.setRequestHeader(key, xhr.headers[key]);
+            });
+            if (local.FormData && xhr.data instanceof local.FormData) {
+                // handle formData
+                xhr.data.read(function (error, data) {
+                    if (error) {
+                        xhr.onEvent(error);
+                        return;
+                    }
+                    // send data
+                    xhr.send(data);
+                });
+            } else {
+                // send data
+                xhr.send(xhr.data);
+            }
+            return xhr;
+        };
+
+        local.assert = function (passed, message, onError) {
+        /*
+         * this function will throw the error message if passed is falsey
+         */
+            var error;
+            if (passed) {
+                return;
+            }
+            error = message && message.message
+                // if message is an error-object, then leave it as is
+                ? message
+                : new Error(typeof message === 'string'
+                    // if message is a string, then leave it as is
+                    ? message
+                    // else JSON.stringify message
+                    : JSON.stringify(message));
+            // debug error
+            local._debugAssertError = error;
+            onError = onError || function (error) {
+                throw error;
+            };
+            onError(error);
+        };
+
+        local.assertJsonEqual = function (aa, bb, message) {
+        /*
+         * this function will assert
+         * jsonStringifyOrdered(aa) === JSON.stringify(bb)
+         */
+            aa = local.jsonStringifyOrdered(aa);
+            bb = JSON.stringify(bb);
+            local.assert(aa === bb, message || [aa, bb]);
+        };
+
+        local.assertJsonNotEqual = function (aa, bb) {
+        /*
+         * this function will assert
+         * jsonStringifyOrdered(aa) !== JSON.stringify(bb)
+         */
+            aa = local.jsonStringifyOrdered(aa);
+            bb = JSON.stringify(bb);
+            local.assert(aa !== bb, [aa]);
+        };
+
+        local.base64FromBuffer = function (bff) {
+        /*
+         * this function will convert Uint8Array bff to base64
+         * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
+         */
+            var ii, mod3, text, uint24, uint6ToB64;
+            // convert utf8-string bff to Uint8Array
+            if (typeof bff === 'string') {
+                bff = typeof Buffer === 'function' && typeof Buffer.isBuffer === 'function'
+                    ? Buffer.from(bff)
+                    : new window.TextEncoder().encode(bff);
+            }
+            bff = bff || [];
+            text = '';
+            uint24 = 0;
+            uint6ToB64 = function (uint6) {
+                return uint6 < 26
+                    ? uint6 + 65
+                    : uint6 < 52
+                    ? uint6 + 71
+                    : uint6 < 62
+                    ? uint6 - 4
+                    : uint6 === 62
+                    ? 43
+                    : 47;
+            };
+            for (ii = 0; ii < bff.length; ii += 1) {
+                mod3 = ii % 3;
+                uint24 |= bff[ii] << (16 >>> mod3 & 24);
+                if (mod3 === 2 || bff.length - ii === 1) {
+                    text += String.fromCharCode(
+                        uint6ToB64(uint24 >>> 18 & 63),
+                        uint6ToB64(uint24 >>> 12 & 63),
+                        uint6ToB64(uint24 >>> 6 & 63),
+                        uint6ToB64(uint24 & 63)
+                    );
+                    uint24 = 0;
+                }
+            }
+            return text.replace(/A(?=A$|$)/g, '=');
+        };
+
+        local.base64ToBuffer = function (b64, mode) {
+        /*
+         * this function will convert b64 to Uint8Array
+         * https://gist.github.com/wang-bin/7332335
+         */
+            var bff, byte, chr, ii, jj, map64, mod4;
+            b64 = b64 || '';
+            bff = new Uint8Array(b64.length); // 3/4
+            byte = 0;
+            jj = 0;
+            map64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+            mod4 = 0;
+            for (ii = 0; ii < b64.length; ii += 1) {
+                chr = map64.indexOf(b64[ii]);
+                if (chr >= 0) {
+                    mod4 %= 4;
+                    if (mod4 === 0) {
+                        byte = chr;
+                    } else {
+                        byte = byte * 64 + chr;
+                        bff[jj] = 255 & (byte >> ((-2 * (mod4 + 1)) & 6));
+                        jj += 1;
+                    }
+                    mod4 += 1;
+                }
+            }
+            // optimization - create resized-view of bff
+            bff = bff.subarray(0, jj);
+            return mode !== 'string'
+                // return Uint8Array
+                ? bff
+                // return utf8-string
+                : typeof Buffer === 'function' && typeof Buffer.isBuffer === 'function'
+                ? String(Object.setPrototypeOf(bff, Buffer.prototype))
+                : new window.TextDecoder().decode(bff);
+        };
+
+        local.childProcessSpawnWithUtility2 = function (script, onError) {
+        /*
+         * this function will run child_process.spawn, with lib.utility2.sh sourced
+         */
+            require('child_process').spawn(
+                '. ' + (process.env.npm_config_dir_utility2 || __dirname) + '/lib.utility2.sh; ' +
+                    script,
+                { shell: true, stdio: ['ignore', 1, 2] }
+            ).on('exit', function (exitCode) {
+                onError(exitCode && Object.assign(new Error(), { exitCode: exitCode }));
+            });
+        };
+
+        local.cryptoAesXxxCbcRawDecrypt = function (options, onError) {
+        /*
+         * this function will aes-xxx-cbc decrypt with the given options
+         * example usage:
+            data = new Uint8Array([1,2,3]);
+            key = '0123456789abcdef0123456789abcdef';
+            mode = null;
+            local.cryptoAesXxxCbcRawEncrypt({ data: data, key: key, mode: mode }, function (
+                error,
+                data
+            ) {
+                console.assert(!error, error);
+                local.cryptoAesXxxCbcRawDecrypt({ data: data, key: key, mode: mode }, console.log);
+            });
+         */
+            var cipher, crypto, data, ii, iv, key;
+            // init key
+            key = new Uint8Array(0.5 * options.key.length);
+            for (ii = 0; ii < key.byteLength; ii += 2) {
+                key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
+            }
+            data = options.data;
+            // base64
+            if (options.mode === 'base64') {
+                data = local.base64ToBuffer(data);
+            }
+            // normalize data
+            if (!(data instanceof Uint8Array)) {
+                data = new Uint8Array(data);
+            }
+            // init iv
+            iv = data.subarray(0, 16);
+            // optimization - create resized-view of data
+            data = data.subarray(16);
+            crypto = typeof window === 'object' && window.crypto;
+            if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === 'function')) {
+                setTimeout(function () {
+                    crypto = require('crypto');
+                    cipher = crypto.createDecipheriv(
+                        'aes-' + (8 * key.byteLength) + '-cbc',
+                        key,
+                        iv
+                    );
+                    onError(null, Buffer.concat([cipher.update(data), cipher.final()]));
+                });
+                return;
+            }
+            crypto.subtle.importKey('raw', key, {
+                name: 'AES-CBC'
+            }, false, ['decrypt']).then(function (key) {
+                crypto.subtle.decrypt({ iv: iv, name: 'AES-CBC' }, key, data).then(function (data) {
+                    onError(null, new Uint8Array(data));
+                }).catch(onError);
+            }).catch(onError);
+        };
+
+        local.cryptoAesXxxCbcRawEncrypt = function (options, onError) {
+        /*
+         * this function will aes-xxx-cbc encrypt with the given options
+         * example usage:
+            data = new Uint8Array([1,2,3]);
+            key = '0123456789abcdef0123456789abcdef';
+            mode = null;
+            local.cryptoAesXxxCbcRawEncrypt({ data: data, key: key, mode: mode }, function (
+                error,
+                data
+            ) {
+                console.assert(!error, error);
+                local.cryptoAesXxxCbcRawDecrypt({ data: data, key: key, mode: mode }, console.log);
+            });
+         */
+            var cipher, crypto, data, ii, iv, key;
+            // init key
+            key = new Uint8Array(0.5 * options.key.length);
+            for (ii = 0; ii < key.byteLength; ii += 2) {
+                key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
+            }
+            data = options.data;
+            // init iv
+            iv = new Uint8Array((((data.byteLength) >> 4) << 4) + 32);
+            crypto = typeof window === 'object' && window.crypto;
+            if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === 'function')) {
+                setTimeout(function () {
+                    crypto = require('crypto');
+                    // init iv
+                    iv.set(crypto.randomBytes(16));
+                    cipher = crypto.createCipheriv(
+                        'aes-' + (8 * key.byteLength) + '-cbc',
+                        key,
+                        iv.subarray(0, 16)
+                    );
+                    data = cipher.update(data);
+                    iv.set(data, 16);
+                    iv.set(cipher.final(), 16 + data.byteLength);
+                    if (options.mode === 'base64') {
+                        iv = local.base64FromBuffer(iv);
+                        iv += '\n';
+                    }
+                    onError(null, iv);
+                });
+                return;
+            }
+            // init iv
+            iv.set(crypto.getRandomValues(new Uint8Array(16)));
+            crypto.subtle.importKey('raw', key, {
+                name: 'AES-CBC'
+            }, false, ['encrypt']).then(function (key) {
+                crypto.subtle.encrypt({
+                    iv: iv.subarray(0, 16),
+                    name: 'AES-CBC'
+                }, key, data).then(function (data) {
+                    iv.set(new Uint8Array(data), 16);
+                    // base64
+                    if (options.mode === 'base64') {
+                        iv = local.base64FromBuffer(iv);
+                        iv += '\n';
+                    }
+                    onError(null, iv);
+                }).catch(onError);
+            }).catch(onError);
+        };
+
+        local.echo = function (arg0) {
+        /*
+         * this function will return arg0
+         */
+            return arg0;
+        };
+
+        local.fsReadFileOrEmptyStringSync = function (file, options) {
+        /*
+         * this function will try to read the file or return an empty string
+         */
+            var data;
+            try {
+                data = local.fs.readFileSync(file, options);
+            } catch (ignore) {
+            }
+            return data || '';
+        };
+
+        local.fsRmrSync = function (dir) {
+        /*
+         * this function will synchronously 'rm -fr' the dir
+         */
+            local.child_process.execFileSync(
+                'rm',
+                ['-fr', local.path.resolve(process.cwd(), dir)],
+                { stdio: ['ignore', 1, 2] }
+            );
+        };
+
+        local.fsWriteFileWithMkdirpSync = function (file, data) {
+        /*
+         * this function will synchronously 'mkdir -p' and write the data to file
+         */
+            // try to write to file
+            try {
+                require('fs').writeFileSync(file, data);
+            } catch (errorCaught) {
+                // mkdir -p
+                require('child_process').spawnSync(
+                    'mkdir',
+                    ['-p', require('path').dirname(file)],
+                    { stdio: ['ignore', 1, 2] }
+                );
+                // re-write to file
+                require('fs').writeFileSync(file, data);
+            }
+        };
+
+        local.jsonCopy = function (obj) {
+        /*
+         * this function will deep-copy obj
+         */
+            return obj === undefined
+                ? undefined
+                : JSON.parse(JSON.stringify(obj));
+        };
+
+        local.jsonStringifyOrdered = function (obj, replacer, space) {
+        /*
+         * this function will JSON.stringify obj,
+         * with object-keys sorted and circular-references removed
+         */
+            var circularList, stringify, tmp;
+            stringify = function (obj) {
+            /*
+             * this function will recursively JSON.stringify obj,
+             * with object-keys sorted and circular-references removed
+             */
+                // if obj is not an object or function, then JSON.stringify as normal
+                if (!(obj &&
+                        typeof obj === 'object' &&
+                        typeof obj.toJSON !== 'function')) {
+                    return JSON.stringify(obj);
+                }
+                // ignore circular-reference
+                if (circularList.indexOf(obj) >= 0) {
+                    return;
+                }
+                circularList.push(obj);
+                // if obj is an array, then recurse its items
+                if (Array.isArray(obj)) {
+                    return '[' + obj.map(function (obj) {
+                        // recurse
+                        tmp = stringify(obj);
+                        return typeof tmp === 'string'
+                            ? tmp
+                            : 'null';
+                    }).join(',') + ']';
+                }
+                // if obj is not an array, then recurse its items with object-keys sorted
+                return '{' + Object.keys(obj)
+                    // sort object-keys
+                    .sort()
+                    .map(function (key) {
+                        // recurse
+                        tmp = stringify(obj[key]);
+                        if (typeof tmp === 'string') {
+                            return JSON.stringify(key) + ':' + tmp;
+                        }
+                    })
+                    .filter(function (obj) {
+                        return typeof obj === 'string';
+                    })
+                    .join(',') + '}';
+            };
+            circularList = [];
+            // try to derefernce all properties in obj
+            (function () {
+                try {
+                    obj = JSON.parse(JSON.stringify(obj));
+                } catch (ignore) {
+                }
+            }());
+            return JSON.stringify(typeof obj === 'object' && obj
+                // recurse
+                ? JSON.parse(stringify(obj))
+                : obj, replacer, space);
+        };
+
+        local.moduleDirname = function (module, modulePathList) {
+        /*
+         * this function will search modulePathList for the module's __dirname
+         */
+            var result;
+            // search process.cwd()
+            if (!module || module === '.' || module.indexOf('/') >= 0) {
+                return require('path').resolve(process.cwd(), module || '');
+            }
+            // search modulePathList
+            ['node_modules']
+                .concat(modulePathList)
+                .concat(require('module').globalPaths)
+                .concat([process.env.HOME + '/node_modules', '/usr/local/lib/node_modules'])
+                .some(function (modulePath) {
+                    try {
+                        result = require('path').resolve(process.cwd(), modulePath + '/' + module);
+                        result = require('fs').statSync(result).isDirectory() && result;
+                        return result;
+                    } catch (errorCaught) {
+                        result = null;
+                    }
+                    return result;
+                });
+            return result || '';
+        };
+
+        local.nop = function () {
+        /*
+         * this function will do nothing
+         */
+            return;
+        };
+
+        local.objectSetDefault = function (arg0, defaults, depth) {
+        /*
+         * this function will recursively set defaults for undefined-items in arg0
+         */
+            arg0 = arg0 || {};
+            defaults = defaults || {};
+            Object.keys(defaults).forEach(function (key) {
+                var arg2, defaults2;
+                arg2 = arg0[key];
+                // handle misbehaving getter
+                try {
+                    defaults2 = defaults[key];
+                } catch (ignore) {
+                }
+                if (defaults2 === undefined) {
+                    return;
+                }
+                // init arg0[key] to default value defaults[key]
+                switch (arg2) {
+                case '':
+                case null:
+                case undefined:
+                    arg0[key] = defaults2;
+                    return;
+                }
+                // if arg2 and defaults2 are both non-null and non-array objects,
+                // then recurse with arg2 and defaults2
+                if (depth > 1 &&
+                        // arg2 is a non-null and non-array object
+                        typeof arg2 === 'object' && arg2 && !Array.isArray(arg2) &&
+                        // defaults2 is a non-null and non-array object
+                        typeof defaults2 === 'object' && defaults2 && !Array.isArray(defaults2)) {
+                    // recurse
+                    local.objectSetDefault(arg2, defaults2, depth - 1);
+                }
+            });
+            return arg0;
+        };
+
+        local.objectSetOverride = function (arg0, overrides, depth, env) {
+        /*
+         * this function will recursively set overrides for items in arg0
+         */
+            arg0 = arg0 || {};
+            env = env || (typeof process === 'object' && process.env) || {};
+            overrides = overrides || {};
+            Object.keys(overrides).forEach(function (key) {
+                var arg2, overrides2;
+                arg2 = arg0[key];
+                overrides2 = overrides[key];
+                if (overrides2 === undefined) {
+                    return;
+                }
+                // if both arg2 and overrides2 are non-null and non-array objects,
+                // then recurse with arg2 and overrides2
+                if (depth > 1 &&
+                        // arg2 is a non-null and non-array object
+                        typeof arg2 === 'object' && arg2 && !Array.isArray(arg2) &&
+                        // overrides2 is a non-null and non-array object
+                        typeof overrides2 === 'object' && overrides2 &&
+                        !Array.isArray(overrides2)) {
+                    local.objectSetOverride(arg2, overrides2, depth - 1, env);
+                    return;
+                }
+                // else set arg0[key] with overrides[key]
+                arg0[key] = arg0 === env
+                    // if arg0 is env, then overrides falsey value with empty string
+                    ? overrides2 || ''
+                    : overrides2;
+            });
+            return arg0;
+        };
+
+        local.onErrorDefault = function (error) {
+        /*
+         * this function will if error exists, then print error.stack to stderr
+         */
+            if (error && !local.global.__coverage__) {
+                console.error(error);
+            }
+            return error;
+        };
+
+        local.onErrorWithStack = function (onError) {
+        /*
+         * this function will create a new callback that will call onError,
+         * and append the current stack to any error
+         */
+            var onError2, stack;
+            stack = new Error().stack.replace((/(.*?)\n.*?$/m), '$1');
+            onError2 = function (error, data, meta) {
+                if (error &&
+                        error !== local.errorDefault &&
+                        String(error.stack).indexOf(stack.split('\n')[2]) < 0) {
+                    // append the current stack to error.stack
+                    error.stack += '\n' + stack;
+                }
+                onError(error, data, meta);
+            };
+            // debug onError
+            onError2.toString = function () {
+                return String(onError);
+            };
+            return onError2;
+        };
+
+        local.onNext = function (options, onError) {
+        /*
+         * this function will wrap onError inside the recursive function options.onNext,
+         * and append the current stack to any error
+         */
+            options.onNext = local.onErrorWithStack(function (error, data, meta) {
+                try {
+                    options.modeNext0 = options.modeNext || 0;
+                    options.modeNext = error && !options.modeErrorIgnore
+                        ? Infinity
+                        : options.modeNext + 1;
+                    onError(error, data, meta);
+                } catch (errorCaught) {
+                    // throw errorCaught to break infinite recursion-loop
+                    if (options.errorCaught) {
+                        throw options.errorCaught;
+                    }
+                    options.errorCaught = errorCaught;
+                    options.onNext(errorCaught, data, meta);
+                }
+            });
+            return options;
+        };
+
+        local.onParallel = function (onError, onEach, onRetry) {
+        /*
+         * this function will create a function that will
+         * 1. run async tasks in parallel
+         * 2. if counter === 0 or error occurred, then call onError with error
+         */
+            var onParallel;
+            onError = local.onErrorWithStack(onError);
+            onEach = onEach || local.nop;
+            onRetry = onRetry || local.nop;
+            onParallel = function (error, data) {
+                if (onRetry(error, data)) {
+                    return;
+                }
+                // decrement counter
+                onParallel.counter -= 1;
+                // validate counter
+                local.assert(
+                    onParallel.counter >= 0 || error || onParallel.error,
+                    'invalid onParallel.counter = ' + onParallel.counter
+                );
+                // ensure onError is run only once
+                if (onParallel.counter < 0) {
+                    return;
+                }
+                // handle error
+                if (error) {
+                    onParallel.error = error;
+                    // ensure counter <= 0
+                    onParallel.counter = -Math.abs(onParallel.counter);
+                }
+                // call onError when isDone
+                if (onParallel.counter <= 0) {
+                    onError(error, data);
+                    return;
+                }
+                onEach();
+            };
+            // init counter
+            onParallel.counter = 0;
+            // return callback
+            return onParallel;
+        };
+
+        local.onParallelList = function (options, onEach, onError) {
+        /*
+         * this function will
+         * 1. async-run onEach in parallel,
+         *    with the given options.rateLimit and options.retryLimit
+         * 2. call onError when onParallel.ii + 1 === options.list.length
+         */
+            var isListEnd, onEach2, onParallel;
+            options.list = options.list || [];
+            onEach2 = function () {
+                while (true) {
+                    if (!(onParallel.ii + 1 < options.list.length)) {
+                        isListEnd = true;
+                        return;
+                    }
+                    if (!(onParallel.counter < options.rateLimit + 1)) {
+                        return;
+                    }
+                    onParallel.ii += 1;
+                    onEach({
+                        element: options.list[onParallel.ii],
+                        ii: onParallel.ii,
+                        list: options.list,
+                        retry: 0
+                    }, onParallel);
+                }
+            };
+            onParallel = local.onParallel(onError, onEach2, function (error, data) {
+                if (error && data && data.retry < options.retryLimit) {
+                    local.onErrorDefault(error);
+                    data.retry += 1;
+                    setTimeout(function () {
+                        onParallel.counter -= 1;
+                        onEach(data, onParallel);
+                    }, 1000);
+                    return true;
+                }
+                // restart if options.list has grown
+                if (isListEnd && (onParallel.ii + 1 < options.list.length)) {
+                    isListEnd = null;
+                    onEach2();
+                }
+            });
+            onParallel.ii = -1;
+            options.rateLimit = Number(options.rateLimit) || 6;
+            options.rateLimit = Math.max(options.rateLimit, 1);
+            options.retryLimit = Number(options.retryLimit) || 2;
+            onParallel.counter += 1;
+            onEach2();
+            onParallel();
+        };
+
+        local.stringCustomizeFromToRgx = function (textFrom, textTo, rgx) {
+        /*
+         * this function will customize a segment of textTo with a segment of textFrom,
+         * with the given rgx
+         */
+            textFrom.replace(rgx, function (match0) {
+                textTo.replace(rgx, function (match1) {
+                    textTo = textTo.split(match1);
+                    textTo[0] += match0;
+                    textTo[0] += textTo.splice(1, 1)[0];
+                    textTo = textTo.join(match1);
+                });
+            });
+            return textTo;
+        };
+    }());
+}());
+// </script>
+"
 (set -e
     if [ ! "$1" ]
     then
@@ -2826,6 +3321,7 @@ shMediaHlsEncrypt () {(set -e
 # example usage:
 # CRYPTO_AES_KEY_MEDIA=0123456789abcdef0123456789abcdef shMediaHlsEncrypt
     node -e "
+$UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
@@ -2840,120 +3336,7 @@ shMediaHlsEncrypt () {(set -e
 */
 'use strict';
 var data, ii, local;
-local = {};
-(function () {
-    (function () {
-        local.base64FromBuffer = function (bff, mode) {
-        /*
-         * this function will convert Uint8Array bff to base64
-         * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
-         */
-            var ii, mod3, text, uint24, uint6ToB64;
-            // convert utf8-string bff to Uint8Array
-            if (bff && mode === 'string') {
-                bff = typeof window === 'object' &&
-                    window &&
-                    typeof window.TextEncoder === 'function'
-                    ? new window.TextEncoder().encode(bff)
-                    : Buffer.from(bff);
-            }
-            bff = bff || [];
-            text = '';
-            uint24 = 0;
-            uint6ToB64 = function (uint6) {
-                return uint6 < 26
-                    ? uint6 + 65
-                    : uint6 < 52
-                    ? uint6 + 71
-                    : uint6 < 62
-                    ? uint6 - 4
-                    : uint6 === 62
-                    ? 43
-                    : 47;
-            };
-            for (ii = 0; ii < bff.length; ii += 1) {
-                mod3 = ii % 3;
-                uint24 |= bff[ii] << (16 >>> mod3 & 24);
-                if (mod3 === 2 || bff.length - ii === 1) {
-                    text += String.fromCharCode(
-                        uint6ToB64(uint24 >>> 18 & 63),
-                        uint6ToB64(uint24 >>> 12 & 63),
-                        uint6ToB64(uint24 >>> 6 & 63),
-                        uint6ToB64(uint24 & 63)
-                    );
-                    uint24 = 0;
-                }
-            }
-            return text.replace(/A(?=A$|$)/g, '=');
-        };
-        local.cryptoAesXxxCbcRawEncrypt = function (options, onError) {
-        /*
-         * this function will aes-xxx-cbc encrypt with the given options
-         * example usage:
-            data = new Uint8Array([1,2,3]);
-            key = '0123456789abcdef0123456789abcdef';
-            mode = null;
-            local.cryptoAesXxxCbcRawEncrypt({ data: data, key: key, mode: mode }, function (
-                error,
-                data
-            ) {
-                console.assert(!error, error);
-                local.cryptoAesXxxCbcRawDecrypt({ data: data, key: key, mode: mode }, console.log);
-            });
-         */
-            /*globals Uint8Array*/
-            var cipher, crypto, data, ii, iv, key;
-            // init key
-            key = new Uint8Array(0.5 * options.key.length);
-            for (ii = 0; ii < key.byteLength; ii += 2) {
-                key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
-            }
-            data = options.data;
-            // init iv
-            iv = new Uint8Array((((data.byteLength) >> 4) << 4) + 32);
-            crypto = typeof window === 'object' && window.crypto;
-            if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === 'function')) {
-                setTimeout(function () {
-                    crypto = require('crypto');
-                    // init iv
-                    iv.set(crypto.randomBytes(16));
-                    cipher = crypto.createCipheriv(
-                        'aes-' + (8 * key.byteLength) + '-cbc',
-                        key,
-                        iv.subarray(0, 16)
-                    );
-                    data = cipher.update(data);
-                    iv.set(data, 16);
-                    iv.set(cipher.final(), 16 + data.byteLength);
-                    if (options.mode === 'base64') {
-                        iv = local.base64FromBuffer(iv);
-                        iv += '\n';
-                    }
-                    onError(null, iv);
-                });
-                return;
-            }
-            // init iv
-            iv.set(crypto.getRandomValues(new Uint8Array(16)));
-            crypto.subtle.importKey('raw', key, {
-                name: 'AES-CBC'
-            }, false, ['encrypt']).then(function (key) {
-                crypto.subtle.encrypt({
-                    iv: iv.subarray(0, 16),
-                    name: 'AES-CBC'
-                }, key, data).then(function (data) {
-                    iv.set(new Uint8Array(data), 16);
-                    // base64
-                    if (options.mode === 'base64') {
-                        iv = local.base64FromBuffer(iv);
-                        iv += '\n';
-                    }
-                    onError(null, iv);
-                }).catch(onError);
-            }).catch(onError);
-        };
-    }());
-}());
+local = local || {};
 data = require('fs').readFileSync('hls.m3u8', 'utf8');
 ii = 1;
 data = data.replace((/^[^#].*?$/gm), function (match0, match1) {
@@ -3011,6 +3394,7 @@ shModuleDirname () {(set -e
 # this function will print the __dirname of the $MODULE
     MODULE="$1"
     node -e "
+$UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
@@ -3025,37 +3409,7 @@ shModuleDirname () {(set -e
 */
 'use strict';
 var local;
-local = {};
-(function () {
-    (function () {
-        local.moduleDirname = function (module, modulePathList) {
-        /*
-         * this function will search modulePathList for the module's __dirname
-         */
-            var result;
-            // search process.cwd()
-            if (!module || module === '.' || module.indexOf('/') >= 0) {
-                return require('path').resolve(process.cwd(), module || '');
-            }
-            // search modulePathList
-            ['node_modules']
-                .concat(modulePathList)
-                .concat(require('module').globalPaths)
-                .concat([process.env.HOME + '/node_modules', '/usr/local/lib/node_modules'])
-                .some(function (modulePath) {
-                    try {
-                        result = require('path').resolve(process.cwd(), modulePath + '/' + module);
-                        result = require('fs').statSync(result).isDirectory() && result;
-                        return result;
-                    } catch (errorCaught) {
-                        result = null;
-                    }
-                    return result;
-                });
-            return result || '';
-        };
-    }());
-}());
+local = local || {};
 console.log(local.moduleDirname('$MODULE', module.paths));
 // </script>
 "
@@ -3421,14 +3775,6 @@ shNpmTestPublished () {(set -e
     npm test --mode-coverage
 )}
 
-shOnParallelListExec () {(set -e
-# this function will async-run the newline-separated tasks in $LIST with the given $RATE_LIMIT
-    LIST="$1"
-    RATE_LIMIT="$2"
-    shBuildInit
-    utility2 utility2.onParallelListExec "$LIST" "$RATE_LIMIT"
-)}
-
 shPasswordRandom () {(set -e
 # this function will create a random password
     openssl rand -base64 32
@@ -3558,6 +3904,9 @@ shReadmeTest () {(set -e
                 "$FILE"
             rm -f "$FILE"n
         fi
+        sed -in -e "s|git clone git@github.com:|git clone https://$GITHUB_TOKEN@github.com/|g" \
+            "$FILE"
+        rm -f "$FILE"n
     fi
     if [ "$FILE" = tmp/README.build_ci.sh ] || [ "$FILE" = example.sh ]
     then
@@ -3589,6 +3938,7 @@ shReadmeTest () {(set -e
     esac
     shSleep 15
     ! shKillallElectron 2>/dev/null
+    shBuildPrint "... finished running command 'shReadmeTest $*'"
 )}
 
 shReplClient () {(set -e
@@ -3664,7 +4014,7 @@ shRunWithScreenshotTxt () {(set -e
     touch "$npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
     (
     printf "0" > "$npm_config_file_tmp"
-    shBuildPrint "(eval shRun $@ 2>&1)"
+    shBuildPrint "(eval shRun $* 2>&1)"
     (eval shRun "$@" 2>&1) || printf $? > "$npm_config_file_tmp"
     ) | tee "$npm_config_dir_tmp/runWithScreenshotTxt"
     EXIT_CODE="$(cat "$npm_config_file_tmp")"
@@ -3808,38 +4158,35 @@ shTravisHookListGet () {(set -e
 # active - false - if true, will only return repositories that are enabled
 # https://docs.travis-ci.com/api#repositories
     curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf \
-        "https://api.travis-ci.org/hooks?$1"
+        "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/hooks?$1"
 )}
 
 shTravisRepoBuildCancel () {(set -e
 # this function will cancel the travis-repo build
 # https://docs.travis-ci.com/api#builds
     GITHUB_REPO="$1"
-    BUILD_ID="$(curl -#Lf "https://api.travis-ci.org/repos/$GITHUB_REPO/builds" | \
-        grep -o -E "\d\d*" | \
-        head -n 1)"
+    BUILD_ID="$(curl -#Lf "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/builds" \
+        | grep -o -E "\d\d*" | head -n 1)"
     curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf \
         -X POST \
-        "https://api.travis-ci.org/builds/$BUILD_ID/cancel"
+        "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/builds/$BUILD_ID/cancel"
 )}
 
 shTravisRepoBuildRestart () {(set -e
 # this function will restart the travis-repo build
 # https://docs.travis-ci.com/api#builds
     GITHUB_REPO="$1"
-    BUILD_ID="$(curl -#Lf "https://api.travis-ci.org/repos/$GITHUB_REPO/builds" | \
-        grep -o -E "\d\d*" | \
-        head -n 1)"
-    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf \
-        -X POST \
-        "https://api.travis-ci.org/builds/$BUILD_ID/cancel"
+    BUILD_ID="$(curl -#Lf "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/builds" \
+        | grep -o -E "\d\d*" | head -n 1)"
+    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
+        "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/builds/$BUILD_ID/cancel"
 )}
 
 shTravisSync () {(set -e
 # this function will sync travis-ci with the given $TRAVIS_ACCESS_TOKEN
 # this is an expensive operation that will use up your github rate-limit quota
     curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
-        "https://api.travis-ci.org/users/sync"
+        "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/users/sync"
 )}
 
 shTravisTaskPush () {(set -e
@@ -3973,21 +4320,12 @@ shUtility2BuildApp () {(set -e
     shUtility2DependentsSync
     cd "$HOME/src"
     # shBuildApp
-    for DIR in \
-apidoc-lite \
-db-lite \
-electron-lite \
-github-crud \
-istanbul-lite \
-jslint-lite \
-swgg \
-uglifyjs-lite \
-utility2
+    for DIR in $UTILITY2_DEPENDENTS
     do
         if [ -d "$DIR" ] && [ "$DIR" != utility2 ]
         then
             printf "\n\n\n\n$DIR\n\n\n\n"
-            (cd "$DIR" && shBuildApp)
+            (cd "$DIR" && rm -fr node_modules && shBuildApp)
         fi
     done
     shUtility2GitDiff | less
@@ -3998,6 +4336,7 @@ shUtility2Dependents () {(set -e
     cd "$HOME/src" 2>/dev/null || true
 printf "
 apidoc-lite
+bootstrap-lite
 db-lite
 electron-lite
 github-crud
@@ -4032,6 +4371,20 @@ shUtility2DependentsSync () {(set -e
             ln -f "utility2/lib.$LIB.js" "$DIR"
         fi
     done
+    for DIR in $(ls -d * 2>/dev/null)
+    do
+        if [ "$DIR" = utility2 ] || [ ! -d "$DIR" ]
+        then
+            continue
+        fi
+        cd "$DIR"
+        # hardlink assets.utility2.rollup.js
+        if [ -f "assets.utility2.rollup.js" ]
+        then
+            ln -f "$HOME/src/utility2/tmp/build/app/assets.utility2.rollup.js" .
+        fi
+        cd ..
+    done
 )}
 
 shUtility2GitCommit () {(set -e
@@ -4061,16 +4414,7 @@ shUtility2GitCommitAndPush () {(set -e
 
 shUtility2GitDiff () {(set -e
 # this function will print the git-status of $UTILITY2_DEPENDENTS to stdout
-    for DIR in \
-apidoc-lite \
-db-lite \
-electron-lite \
-github-crud \
-istanbul-lite \
-jslint-lite \
-swgg \
-uglifyjs-lite \
-utility2
+    for DIR in $UTILITY2_DEPENDENTS
     do
         cd "$HOME/src/$DIR" || continue
         printf "\n\n\n\n$(pwd)\n\n\n\n"

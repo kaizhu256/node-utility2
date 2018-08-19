@@ -36,7 +36,7 @@
                 context["_" + key + "Arguments"] = arguments;
                 consoleError("\n\n" + key);
                 consoleError.apply(console, arguments);
-                consoleError("\n");
+                consoleError(new Error().stack + "\n");
                 // return arg0 for inspection
                 return arg0;
             };
@@ -72,8 +72,6 @@
             local.buffer = require('buffer');
             local.child_process = require('child_process');
             local.cluster = require('cluster');
-            local.console = require('console');
-            local.constants = require('constants');
             local.crypto = require('crypto');
             local.dgram = require('dgram');
             local.dns = require('dns');
@@ -82,12 +80,9 @@
             local.fs = require('fs');
             local.http = require('http');
             local.https = require('https');
-            local.module = require('module');
             local.net = require('net');
             local.os = require('os');
             local.path = require('path');
-            local.process = require('process');
-            local.punycode = require('punycode');
             local.querystring = require('querystring');
             local.readline = require('readline');
             local.repl = require('repl');
@@ -228,7 +223,7 @@ local.swaggerErrorTypeDict = {
     // security-definitions.js:33: `${path} must have required string 'type' param`,
     semanticSecurityDefinitions1: '${path} must have required string "type" param',
     // security-definitions.js:44: "apiKey authorization must have required 'in' param, valid values are 'query' or 'header'.",
-    semanticSecurityDefinitions2: `apiKey authorization must have required "in" param, valid values are "query" or "header".`,
+    semanticSecurityDefinitions2: 'apiKey authorization must have required "in" param, valid values are "query" or "header".',
     // security-definitions.js:52: "apiKey authorization must have required 'name' string param. The name of the header or query parameter to be used.",
     semanticSecurityDefinitions3: "apiKey authorization must have required 'name' string param. The name of the header or query parameter to be used.",
     // security-definitions.js:66: "oauth2 authorization must have required 'flow' string param. Valid values are 'implicit', 'password', 'application' or 'accessCode'",
@@ -954,7 +949,7 @@ local.templateUiMain = '\
     id="swggUiReloadErrorDiv1"\n\
     style="background: none; border: 0;"\n\
 ></div>\n\
-<div class="info reset">\n\
+<div class="eventDelegateChange eventDelegateClick info reset">\n\
     {{#if info}}\n\
     {{#if info.x-swgg-homepage}}\n\
     <h2 class="hx">\n\
@@ -974,6 +969,17 @@ local.templateUiMain = '\
         download standalone app\n\
     </a><br>\n\
     {{/if x-swgg-downloadStandaloneApp}}\n\
+    {{#if x-swgg-domOnEventDb}}\n\
+    <button class="button domOnEventDb" data-dom-on-event-db="dbResetButton1">\n\
+        reset database\n\
+    </button><br>\n\
+    <button class="button domOnEventDb" data-dom-on-event-db="dbExportButton1">\n\
+        export database -&gt; file\n\
+    </button><br>\n\
+    <button class="button domOnEventDb" data-dom-on-event-db="dbImportButton1">\n\
+        import database &lt;- file\n\
+    </button><br>\n\
+    {{/if x-swgg-domOnEventDb}}\n\
     <ul>\n\
         {{#if externalDocs.url}}\n\
         <li>\n\
@@ -1190,9 +1196,7 @@ function (error, data) {\n\
 // https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/resource.handlebars
 local.templateUiResource = '\
 <li\n\
-    class="\n\
-        eventDelegateChange eventDelegateClick eventDelegateKeyup eventDelegateSubmit resource\n\
-    "\n\
+    class="eventDelegateChange eventDelegateClick eventDelegateKeyup eventDelegateSubmit resource"\n\
     data-name="{{name}}"\n\
     id="{{id}}"\n\
 >\n\
@@ -1336,6 +1340,13 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
 .swggUiContainer .td textarea {\n\
     width: 100%;\n\
 }\n\
+.swggUiContainer .zeroPixel {\n\
+    border: 0;\n\
+    height: 0;\n\
+    margin: 0;\n\
+    padding: 0;\n\
+    width: 0;\n\
+}\n\
 /* validateLineSortedReset */\n\
 /* background */\n\
 .swggUiContainer code,\n\
@@ -1379,6 +1390,9 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
 .swggUiContainer > .thead {\n\
     background: #7b7;\n\
 }\n\
+.swggUiContainer > .info > .button {\n\
+    width: 20rem;\n\
+}\n\
 .swggUiContainer > .thead > .td1 {\n\
     background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAqRJREFUeNrEVz1s00AUfnGXii5maMXoEUEHVwIpEkPNgkBdMnQoU5ytiKHJwpp2Q2JIO8DCUDOxIJFIVOoWZyJSh3pp1Q2PVVlcCVBH3ufeVZZ9Zye1Ay86nXV+ue/9fO/lheg/Se02X1rvksmbnTiKvuxQMBNgBnN4a/LCbmnUAP6JV58NCUsBC8CuAJxGPF47OgNqBaA93tolUhnx6jC4NxGwyOEwlccyAs+3kwdzKq0HDn2vEBTi8J2XpyMaywNDE157BhXUE3zJhlq8GKq+Zd2zaWHepPA8oN9XkfLmRdOiJV4XUUg/IyWncLjCYY/SHndV2u7zHr3bPKZtdxgboJOnthvrfGj/oMf3G0r7JVmNlLfKklmrt2MvvcNO7LFOhoFHfuAJI5o6ta10jpt5CQLgwXhXG2YIwvu+34qf78ybOjWTnWwkgR36d7JqJOrW0hHmNrKg9xhiS4+1jFmrxymh03B0w+6kURIAu3yHtOD5oaUNojMnGgbcctNvwdAnyxvxRR+/vaJnjzbpzcZX+nN1SdGv85i9eH8w3qPO+mdm/y4dnQ1iI8Fq6Nf4cxL6GWSjiFDSs0VRnxC5g0xSB2cgHpaseTxfqOv5uoHkNQ6Ha/N1Yz9mNMppEkEkYKj79q6uCq4bCHcSX3fJ0Vk/k9siASjCm1N6gZH6Ec9IXt2WkFES2K/ixoIyktJPAu/ptOA1SgO5zqtr6KASJPF0nMV8dgMsRhRPOcMwqQAOoi0VAIMLAEWJ6YYC1c8ibj1GP51RqwzYwZVMHQuvOzMCBUtb2tGHx5NAdLKqp5AX7Ng4d+Zi8AGDI9z1ijx9yaCH04y3GCP2S+QcvaGl+pcxyUBvinFlawoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=) no-repeat left center;\n\
 }\n\
@@ -1398,7 +1412,7 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
     border-radius: 5px;\n\
 }\n\
 .swggUiContainer .resource > .thead > .td2 {\n\
-    border-left: 1px solid #037;\n\
+    border-left: 1px solid #333;\n\
 }\n\
 /* validateLineSortedReset */\n\
 /* color */\n\
@@ -1611,10 +1625,90 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
     regexp: true,\n\
     stupid: true\n\
 */\n\
-"use strict";\n\
+// init domOnEventMediaHotkeys\n\
+(function () {\n\
+/*\n\
+ * this function will add media-hotkeys to elements with class=".domOnEventMediaHotkeysInit"\n\
+ */\n\
+    "use strict";\n\
+    var input, onEvent;\n\
+    if (window.domOnEventMediaHotkeys) {\n\
+        return;\n\
+    }\n\
+    onEvent = window.domOnEventMediaHotkeys = function (event) {\n\
+        var media;\n\
+        if (event === "init") {\n\
+            Array.from(document.querySelectorAll(\n\
+                ".domOnEventMediaHotkeysInit"\n\
+            )).forEach(function (media) {\n\
+                media.classList.remove("domOnEventMediaHotkeysInit");\n\
+                media.classList.add("domOnEventMediaHotkeys");\n\
+                ["play", "pause", "seeking"].forEach(function (event) {\n\
+                    media.addEventListener(event, onEvent);\n\
+                });\n\
+            });\n\
+            return;\n\
+        }\n\
+        if (event.currentTarget.classList.contains("domOnEventMediaHotkeys")) {\n\
+            window.domOnEventMediaHotkeysMedia1 = event.currentTarget;\n\
+            window.domOnEventMediaHotkeysInput.focus();\n\
+            return;\n\
+        }\n\
+        media = window.domOnEventMediaHotkeysMedia1;\n\
+        try {\n\
+            switch (event.key || event.type) {\n\
+            case ",":\n\
+            case ".":\n\
+                media.currentTime += (event.key === "," && -0.03125) || 0.03125;\n\
+                break;\n\
+            case "<":\n\
+            case ">":\n\
+                media.playbackRate *= (event.key === "<" && 0.5) || 2;\n\
+                break;\n\
+            case "ArrowDown":\n\
+            case "ArrowUp":\n\
+                media.volume += (event.key === "ArrowDown" && -0.05) || 0.05;\n\
+                break;\n\
+            case "ArrowLeft":\n\
+            case "ArrowRight":\n\
+                media.currentTime += (event.key === "ArrowLeft" && -5) || 5;\n\
+                break;\n\
+            case "j":\n\
+            case "l":\n\
+                media.currentTime += (event.key === "j" && -10) || 10;\n\
+                break;\n\
+            case "k":\n\
+            case " ":\n\
+                if (media.paused) {\n\
+                    media.play();\n\
+                } else {\n\
+                    media.pause();\n\
+                }\n\
+                break;\n\
+            case "m":\n\
+                media.muted = !media.muted;\n\
+                break;\n\
+            default:\n\
+                if (event.key >= 0) {\n\
+                    media.currentTime = 0.1 * event.key * media.duration;\n\
+                    break;\n\
+                }\n\
+                return;\n\
+            }\n\
+        } catch (ignore) {\n\
+        }\n\
+        event.preventDefault();\n\
+    };\n\
+    input = window.domOnEventMediaHotkeysInput = document.createElement("button");\n\
+    input.style = "border:0;height:0;margin:0;padding:0;position:fixed;width:0;z-index:-1;";\n\
+    input.addEventListener("click", onEvent);\n\
+    input.addEventListener("keydown", onEvent);\n\
+    document.body.appendChild(input);\n\
+    onEvent("init");\n\
+}());\n\
 document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
     ((/\\bmodeSwaggerJsonUrl=([^&]+)/g).exec(location.search) || {})[1] ||\n\
-        "assets.swgg.swagger.json";\n\
+    "assets.swgg.swagger.json";\n\
 </script>\n\
 <script src="assets.utility2.rollup.js"></script>\n\
 <script>\n\
@@ -1622,6 +1716,8 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
 window.local = window.local || window.swgg;\n\
 window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
 </script>\n\
+<!-- swgg-script-extra-begin -->\n\
+<!-- swgg-script-extra-end -->\n\
 </body>\n\
 </html>\n\
 ');
@@ -2227,7 +2323,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     : ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1);
                 switch (schemaP.format) {
                 case 'byte':
-                    value = local.base64FromString(value);
+                    value = local.base64FromBuffer(value);
                     break;
                 case 'date':
                 case 'date-time':
@@ -3187,7 +3283,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                 // JSON.parse paramDict
                 } else if (local.schemaPType(schemaP) !== 'file' &&
                         local.schemaPType(schemaP) !== 'string' &&
-                        (typeof tmp === 'string' || tmp instanceof local.global.Uint8Array)) {
+                        (typeof tmp === 'string' || tmp instanceof Uint8Array)) {
                     // try to JSON.parse the string
                     local.tryCatchOnError(function () {
                         tmp = JSON.parse(local.bufferToString(tmp));
@@ -4186,7 +4282,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     schema: schema
                 });
                 // 5.4.3. required
-                Array.from(schema.required || []).forEach(function (key) {
+                (schema.required || []).forEach(function (key) {
                     // validate semanticItemsRequiredForArrayObjects2
                     test = !local.isNullOrUndefined(data[key]);
                     local.throwSwaggerError(!test && {
@@ -4283,7 +4379,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                         swaggerJson: options.swaggerJson
                     });
                     // 5.4.5.2.2. Property dependencies
-                    Array.from(schema.dependencies[key]).every(function (key2) {
+                    schema.dependencies[key].every(function (key2) {
                         test = !local.isNullOrUndefined(data[key2]);
                         local.throwSwaggerError(!test && {
                             data: data,
@@ -4434,7 +4530,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     local.jslint.jslintAndPrint(data, options.file);
                     local.assert(
                         !local.jslint.errorText,
-                        local.jslint.errorText.replace((/\u001b\[\d+m/g), '')
+                        local.jslint.errorText.replace((/\u001b\[\d*m/g), '')
                     );
                     // validate
                     local.swgg.swaggerValidate(JSON.parse(data));
@@ -4442,7 +4538,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     break;
                 default:
                     console.error(error
-                        ? 'swagger-validate - failed - ' + options.file + '\n\n' + error.message
+                        ? '\u001b[31mswagger-validate - failed - ' + options.file + '\n' +
+                            error.message + '\u001b[39m'
                         : 'swagger-validate - passed - ' + options.file);
                     onError(error);
                 }
@@ -4504,6 +4601,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
             event.targetOperation = event.target2.closest('.operation');
             Object.keys(local.uiEventListenerDict).sort().some(function (key) {
                 switch (key) {
+                case '.domOnEventDb':
                 case '.onEventOperationDisplayShow':
                     event.target2 = event.target2.closest(key) || event.target2;
                     break;
@@ -4532,6 +4630,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
         };
 
         local.uiEventListenerDict = {};
+
+        local.uiEventListenerDict['.domOnEventDb'] = local.db.domOnEventDb;
 
         local.uiEventListenerDict['.onEventInputTextareaChange'] = function (event) {
         /*
@@ -4737,15 +4837,15 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                             '<' + data.mediaType +
                             ' class="domOnEventMediaHotkeysInit" controls src="data:' +
                             data.contentType +
-                            ';base64,' + local.base64FromBuffer(data.response) + '"></' +
+                            ';base64,' + local.base64FromBuffer(data.responseBuffer) + '"></' +
                             data.mediaType + '>';
-                        window.domOnEventMediaHotkeys('init');
+                        local.global.domOnEventMediaHotkeys('init');
                         break;
                     default:
                         options.targetOperation.querySelector('.responseBody').textContent =
                             data.responseJson
                             ? JSON.stringify(data.responseJson, null, 4)
-                            : data.responseText;
+                            : data.response;
                     }
                     // shake response on error
                     Array.from(options.targetOperation.querySelectorAll(
@@ -4774,9 +4874,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
             // show the operation, but hide all other operations
             local.uiAnimateSlideAccordian(
                 element.querySelector('.operation > form'),
-                Array.from(element.closest('.operationList').querySelectorAll(
-                    '.operation > form'
-                )),
+                Array.from(element.closest('.operationList').querySelectorAll('.operation > form')),
                 function () {
                     // scrollTo operation
                     element.querySelector('[tabIndex]').blur();
@@ -5004,15 +5102,16 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     operation = local.jsonCopy(operation);
                     resource = swaggerJson.resourceDict[tag];
                     local.objectSetDefault(operation, {
+                        description: 'no description',
                         responseList: Object.keys(operation.responses).sort().map(function (key) {
                             return {
                                 key: key,
                                 value: operation.responses[key]
                             };
-                        }),
-                        summary: operation.description
-                            .replace((/\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/g), '')
+                        })
                     });
+                    operation.summary = operation.summary ||
+                        operation.description.replace((/\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/g), '');
                     operation.parameters.forEach(local.uiRenderSchemaP);
                     // templateRender operation
                     swaggerJson.uiFragment.querySelector('#' + resource.id + ' .operationList')
@@ -5046,7 +5145,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                 }
             });
             // init event-handling
-            ['Click', 'Keyup', 'Submit'].forEach(function (eventType) {
+            ['Change', 'Click', 'Keyup', 'Submit'].forEach(function (eventType) {
                 Array.from(document.querySelectorAll(
                     '.swggUiContainer .eventDelegate' + eventType
                 )).forEach(function (element) {
@@ -5252,8 +5351,9 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
             local.templateSwaggerUiLogoSmallBase64,
             'base64'
         );
-        local.swgg.apiUpdate(JSON.parse(
-            local.tryCatchReadFile(local.__dirname + '/assets.swgg.swagger.json') || '{}'
-        ));
+        local.swgg.apiUpdate(JSON.parse(local.fsReadFileOrEmptyStringSync(
+            local.__dirname + '/assets.swgg.swagger.json',
+            'utf8'
+        ) || '{}'));
     }());
 }());

@@ -37,7 +37,7 @@
                 context["_" + key + "Arguments"] = arguments;
                 consoleError("\n\n" + key);
                 consoleError.apply(console, arguments);
-                consoleError("\n");
+                consoleError(new Error().stack + "\n");
                 // return arg0 for inspection
                 return arg0;
             };
@@ -73,8 +73,6 @@
             local.buffer = require('buffer');
             local.child_process = require('child_process');
             local.cluster = require('cluster');
-            local.console = require('console');
-            local.constants = require('constants');
             local.crypto = require('crypto');
             local.dgram = require('dgram');
             local.dns = require('dns');
@@ -83,12 +81,9 @@
             local.fs = require('fs');
             local.http = require('http');
             local.https = require('https');
-            local.module = require('module');
             local.net = require('net');
             local.os = require('os');
             local.path = require('path');
-            local.process = require('process');
-            local.punycode = require('punycode');
             local.querystring = require('querystring');
             local.readline = require('readline');
             local.repl = require('repl');
@@ -562,13 +557,22 @@ substr(0,3),n==="==="||n==="!=="||n===">>>"||n==="<<="||n===">>="?l+=3:(n=n.subs
 n==="++"||n==="--"||n==="<<"||n===">>"||n==="&="||n==="|="||n==="^="||n==="%="||
 n==="<="||n===">="||n==="=>"?l+=2:(n=a[l],"<>=!+-*%&|^/".indexOf(n)>=0&&++l)))}return l===
 e.start&&Lt(),e.end=l,e.value=n,e}function Z(e){var n="";while(l<E){if(!O(a[l]))
-break;n+=a[l++]}return n.length===0&&Lt(),B(a.charCodeAt(l))&&Lt(),{type:t.NumericLiteral
+// break;n+=a[l++]}return n.length===0&&Lt(),B(a.charCodeAt(l))&&Lt(),{type:t.NumericLiteral
+break;n+=a[l++]}return n.length===0&&Lt(),
+a[l]==='n'&&(n+=a[l++]), // Bigint
+B(a.charCodeAt(l))&&Lt(),{type:t.NumericLiteral
 ,value:parseInt("0x"+n,16),lineNumber:c,lineStart:h,start:e,end:l}}function et(e
 ){var n,r;r="";while(l<E){n=a[l];if(n!=="0"&&n!=="1")break;r+=a[l++]}return r.length===0&&
-Lt(),l<E&&(n=a.charCodeAt(l),(B(n)||A(n))&&Lt()),{type:t.NumericLiteral,value:parseInt
+// Lt(),l<E&&(n=a.charCodeAt(l),(B(n)||A(n))&&Lt()),{type:t.NumericLiteral,value:parseInt
+Lt(),
+a[l]==='n'&&(r+=a[l++]), // Bigint
+l<E&&(n=a.charCodeAt(l),(B(n)||A(n))&&Lt()),{type:t.NumericLiteral,value:parseInt
 (r,2),lineNumber:c,lineStart:h,start:e,end:l}}function tt(e,n){var r,i;M(e)?(i=!0
 ,r="0"+a[l++]):(i=!1,++l,r="");while(l<E){if(!M(a[l]))break;r+=a[l++]}return!i&&
-r.length===0&&Lt(),(B(a.charCodeAt(l))||A(a.charCodeAt(l)))&&Lt(),{type:t.NumericLiteral
+// r.length===0&&Lt(),(B(a.charCodeAt(l))||A(a.charCodeAt(l)))&&Lt(),{type:t.NumericLiteral
+r.length===0&&Lt(),
+a[l]==='n'&&(r+=a[l++]), // Bigint
+(B(a.charCodeAt(l))||A(a.charCodeAt(l)))&&Lt(),{type:t.NumericLiteral
 ,value:parseInt(r,8),octal:i,lineNumber:c,lineStart:h,start:n,end:l}}function nt
 (){var e,t;for(e=l+1;e<E;++e){t=a[e];if(t==="8"||t==="9")return!1;if(!M(t))return!0
 }return!0}function rt(){var e,n,r;r=a[l],L(A(r.charCodeAt(0))||r===".","Numeric literal must start with a decimal digit or a decimal point"
@@ -577,7 +581,10 @@ r.length===0&&Lt(),(B(a.charCodeAt(l))||A(a.charCodeAt(l)))&&Lt(),{type:t.Numeri
 M(r)&&nt())return tt(r,n)}while(A(a.charCodeAt(l)))e+=a[l++];r=a[l]}if(r==="."){
 e+=a[l++];while(A(a.charCodeAt(l)))e+=a[l++];r=a[l]}if(r==="e"||r==="E"){e+=a[l++
 ],r=a[l];if(r==="+"||r==="-")e+=a[l++];if(A(a.charCodeAt(l)))while(A(a.charCodeAt
-(l)))e+=a[l++];else Lt()}return B(a.charCodeAt(l))&&Lt(),{type:t.NumericLiteral,
+// (l)))e+=a[l++];else Lt()}return B(a.charCodeAt(l))&&Lt(),{type:t.NumericLiteral,
+(l)))e+=a[l++];else Lt()}
+a[l]==='n'&&(e+=a[l++]) // Bigint
+return B(a.charCodeAt(l))&&Lt(),{type:t.NumericLiteral,
 value:parseFloat(e),lineNumber:c,lineStart:h,start:n,end:l}}function it(){var e=""
 ,n,r,i,s,o,u=!1;n=a[l],L(n==="'"||n==='"',"String literal must starts with a quote"
 ),r=l,++l;while(l<E){i=a[l++];if(i===n){n="";break}if(i==="\\"){i=a[l++];if(!i||!
@@ -2444,7 +2451,7 @@ local['head.txt'] = '\
     window.domOnEventSelectAllWithinPre = function (event) {\n\
         var range, selection;\n\
         if (event &&\n\
-                event.code === "KeyA" &&\n\
+                event.key === "a" &&\n\
                 (event.ctrlKey || event.metaKey) &&\n\
                 event.target.closest("pre")) {\n\
             range = document.createRange();\n\
@@ -2612,19 +2619,35 @@ require("handlebars"),defaults=require("./common/defaults"),path=require("path")
 templateFor("foot"),pathTemplate=handlebars.compile('<div class="path">{{{html}}}</div>'
 ),detailTemplate=handlebars.compile(["<tr>",'<td class="line-count">{{#show_lines}}{{maxLines}}{{/show_lines}}</td>'
 ,'<td class="line-coverage">{{#show_line_execution_counts fileCoverage}}{{maxLines}}{{/show_line_execution_counts}}</td>'
+// ,'<td class="text"><pre class="prettyprint lang-js">{{#show_code structured}}{{/show_code}}</pre></td>'
 ,'<td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code structured}}{{/show_code}}</pre></td>'
 ,"</tr>\n"].join("")),summaryTableHeader=['<div class="coverage-summary">',"<table>"
 ,"<thead>","<tr>",'   <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>'
+// ,'   <th data-col="pic" data-type="number" data-fmt="html" data-html="true" class="pic"></th>'
 ,'   <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>'
+// ,'   <th data-col="statements_raw" data-type="number" data-fmt="html" class="abs"></th>'
 ,'   <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>'
+// ,'   <th data-col="branches_raw" data-type="number" data-fmt="html" class="abs"></th>'
 ,'   <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>'
+// ,'   <th data-col="functions_raw" data-type="number" data-fmt="html" class="abs"></th>'
 ,'   <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>'
+// ,'   <th data-col="lines_raw" data-type="number" data-fmt="html" class="abs"></th>'
 ,"</tr>","</thead>","<tbody>"].join("\n"),summaryLineTemplate=handlebars.compile
 (["<tr>",'<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>'
 ,'<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>'
 ,'<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>'
 ,'<td data-value="{{metrics.functions.pct}}" class="pct {{reportClasses.functions}}">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>'
 ,'<td data-value="{{metrics.lines.pct}}" class="pct {{reportClasses.lines}}">{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>'
+// (["<tr>",'<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}">{{file}}</a></td>'
+// ,'<td data-value="{{metrics.statements.pct}}" class="pic {{reportClasses.statements}}">{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</td>'
+// ,'<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%</td>'
+// ,'<td data-value="{{metrics.statements.total}}" class="abs {{reportClasses.statements}}">({{metrics.statements.covered}}&nbsp;/&nbsp;{{metrics.statements.total}})</td>'
+// ,'<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%</td>'
+// ,'<td data-value="{{metrics.branches.total}}" class="abs {{reportClasses.branches}}">({{metrics.branches.covered}}&nbsp;/&nbsp;{{metrics.branches.total}})</td>'
+// ,'<td data-value="{{metrics.functions.pct}}" class="pct {{reportClasses.functions}}">{{metrics.functions.pct}}%</td>'
+// ,'<td data-value="{{metrics.functions.total}}" class="abs {{reportClasses.functions}}">({{metrics.functions.covered}}&nbsp;/&nbsp;{{metrics.functions.total}})</td>'
+// ,'<td data-value="{{metrics.lines.pct}}" class="pct {{reportClasses.lines}}">{{metrics.lines.pct}}%</td>'
+// ,'<td data-value="{{metrics.lines.total}}" class="abs {{reportClasses.lines}}">({{metrics.lines.covered}}&nbsp;/&nbsp;{{metrics.lines.total}})</td>'
 ,"</tr>\n"].join("\n\t")),summaryTableFooter=["</tbody>","</table>","</div>"].join
 ("\n"),lt="",gt="",RE_LT=/</g,RE_GT=/>/g,RE_AMP=/&/g,RE_lt=/\u0001/g,RE_gt=/\u0002/g
 ;handlebars.registerHelper("show_picture",function(e){var t=Number(e.fn(this)),n
@@ -2634,6 +2657,9 @@ n+'px;"></span>'):""}),handlebars.registerHelper("show_ignores",function(e){var 
 e.statements.skipped,n=e.functions.skipped,r=e.branches.skipped,i;return t===0&&
 n===0&&r===0?'<span class="ignore-none">none</span>':(i=[],r>0&&i.push("branches: "+r),t>0&&i.push(
 "statements: "+t),n>0&&i.push("functions: "+n),i.join("<br>"))}),handlebars.registerHelper("show_lines",function(
+// n===0&&r===0?'<span class="ignore-none">none</span>':(i=[],t>0&&i.push(t===1?"1 statement"
+// :t+" statements"),n>0&&i.push(n===1?"1 function":n+" functions"),r>0&&i.push(r===1?"1 branch"
+// :r+" branches"),i.join(", "))}),handlebars.registerHelper("show_lines",function(
 e){var t=Number(e.fn(this)),n,r=[];for(n=0;n<t;n+=1)r[n]=n+1;return r.join("\n")
 }),handlebars.registerHelper("show_line_execution_counts",function(e,t){var n=e.
 l,r=Number(t.fn(this)),i,s,o=[],u,a="";for(i=0;i<r;i+=1)s=i+1,a="&nbsp;",u="neutral"

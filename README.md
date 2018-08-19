@@ -61,13 +61,21 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - add server stress-test using electron
 - none
 
-#### changelog 2018.8.5
-- npm publish 2018.8.5
-- add shell-functions shMediaHlsFromMp4, shMediaHlsEncrypt
-- add inline-html-script domOnEventMediaHotkeys
-- add functions cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRawEncrypt
-- rename functions jwtA256GcmDecrypt -> jwtAes256GcmDecrypt, jwtA256GcmEncrypt -> jwtAes256GcmEncrypt
-- migrate from modeJs -> isBrowser
+#### changelog 2018.8.19
+- npm publish 2018.8.19
+- merge function base64FromString into base64FromBuffer
+- integrate function db.domOnEventDb with utility2.onResetBefore
+- update function middlewareJsonpStateInit with env-var \$npm_package_assetsList
+- do not require following nodejs builtins by default: console, constants, module, process, punycode
+- support travis-ci.com
+- add benchmark analytics domOnEventWindowOnloadTimeElapsed and _testCase_domOnEventWindowOnloadTimeElapsed_default
+- revamp shell-functions shCryptoTravisDecrypt and shCryptoTravisEncrypt to use shell-functions shCryptoAesXxxCbcRawDecrypt and shCryptoAesXxxCbcRawEncrypt, respectively
+- merge shell-function shGithubCrudRepoCreate into shGithubRepoBaseCreate
+- add BigInt-support for jslint and istanbul
+- move shell-function shCustomOrgRepoCreate to node
+- remove env var \$TRAVIS_REPO_CREATE_FORCE
+- add shell-macro \$UTILITY2_MACRO_JS
+- rename asset /utility2.html -> /assets.utility2.base.html
 - none
 
 #### this package requires
@@ -164,7 +172,8 @@ instruction
         // run test-server
         local.testRunServer(local);
         // init assets
-        local.assetsDict['/assets.hello'] = 'hello\n';
+        /* jslint-ignore-next-line */
+        local.assetsDict['/assets.hello'] = 'hello\ud83d\udc4b\u0020\n';
         local.assetsDict['/assets.index.template.html'] = '';
     }());
 
@@ -188,7 +197,8 @@ instruction
                     local.assert(!error, error);
                     // validate data
                     options.data = xhr.responseText;
-                    local.assert(options.data === 'hello\n', options.data);
+                    /* jslint-ignore-next-line */
+                    local.assert(options.data === 'hello\ud83d\udc4b\u0020\n', options.data);
                     onError();
                 }, onError);
             });
@@ -243,9 +253,9 @@ instruction
                     event.currentTarget.className.includes &&
                     event.currentTarget.className.includes('onreset'))) {
                 // reset output
-                Array.from(
-                    document.querySelectorAll('body > .resettable')
-                ).forEach(function (element) {
+                Array.from(document.querySelectorAll(
+                    'body > .resettable'
+                )).forEach(function (element) {
                     switch (element.tagName) {
                     case 'INPUT':
                     case 'TEXTAREA':
@@ -282,8 +292,8 @@ instruction
                 }
                 // try to JSON.stringify #inputTextareaEval1
                 try {
-                    document.querySelector('#outputPreJsonStringify1').textContent = '';
-                    document.querySelector('#outputPreJsonStringify1').textContent =
+                    document.querySelector('#outputJsonStringifyPre1').textContent = '';
+                    document.querySelector('#outputJsonStringifyPre1').textContent =
                         local.jsonStringifyOrdered(
                             JSON.parse(document.querySelector('#inputTextareaEval1').value),
                             null,
@@ -300,9 +310,9 @@ instruction
                         'inputTextareaEval1.js'
                     );
                 }
-                document.querySelector('#outputPreJslint1').textContent =
+                document.querySelector('#outputJslintPre1').textContent =
                     local.jslint.errorText
-                    .replace((/\u001b\[\d+m/g), '')
+                    .replace((/\u001b\[\d*m/g), '')
                     .trim();
                 // try to cleanup __coverage__
                 try {
@@ -340,22 +350,22 @@ instruction
                 }
             }
         };
-        // log stderr and stdout to #outputTextareaStdout1
+        // log stderr and stdout to #outputStdoutTextarea1
         ['error', 'log'].forEach(function (key) {
             console[key + '_original'] = console[key];
             console[key] = function () {
                 var element;
                 console[key + '_original'].apply(console, arguments);
-                element = document.querySelector('#outputTextareaStdout1');
+                element = document.querySelector('#outputStdoutTextarea1');
                 if (!element) {
                     return;
                 }
-                // append text to #outputTextareaStdout1
+                // append text to #outputStdoutTextarea1
                 element.value += Array.from(arguments).map(function (arg) {
                     return typeof arg === 'string'
                         ? arg
                         : JSON.stringify(arg, null, 4);
-                }).join(' ') + '\n';
+                }).join(' ').replace((/\u001b\[\d*m/g), '') + '\n';
                 // scroll textarea to bottom
                 element.scrollTop = element.scrollHeight;
             };
@@ -385,8 +395,6 @@ instruction
         local.buffer = require('buffer');
         local.child_process = require('child_process');
         local.cluster = require('cluster');
-        local.console = require('console');
-        local.constants = require('constants');
         local.crypto = require('crypto');
         local.dgram = require('dgram');
         local.dns = require('dns');
@@ -395,12 +403,9 @@ instruction
         local.fs = require('fs');
         local.http = require('http');
         local.https = require('https');
-        local.module = require('module');
         local.net = require('net');
         local.os = require('os');
         local.path = require('path');
-        local.process = require('process');
-        local.punycode = require('punycode');
         local.querystring = require('querystring');
         local.readline = require('readline');
         local.repl = require('repl');
@@ -436,7 +441,7 @@ instruction
 <!doctype html>\n\
 <html lang="en">\n\
 <head>\n\
-<meta charset="UTF-8">\n\
+<meta charset="utf-8">\n\
 <meta name="viewport" content="width=device-width, initial-scale=1">\n\
 <!-- "assets.utility2.template.html" -->\n\
 <title>{{env.npm_package_name}} ({{env.npm_package_version}})</title>\n\
@@ -564,6 +569,8 @@ textarea {\n\
 <body>\n\
 <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
+<a class="zeroPixel" download="db.persistence.json" href="" id="dbExportA1"></a>\n\
+<input class="zeroPixel" id="dbImportInput1" type="file">\n\
 <script>\n\
 /* jslint-utility2 */\n\
 /*jslint\n\
@@ -576,6 +583,25 @@ textarea {\n\
     regexp: true,\n\
     stupid: true\n\
 */\n\
+// init domOnEventWindowOnloadTimeElapsed\n\
+(function () {\n\
+/*\n\
+ * this function will measure and print the time-elapsed for window.onload\n\
+ */\n\
+    "use strict";\n\
+    if (window.domOnEventWindowOnloadTimeElapsed) {\n\
+        return;\n\
+    }\n\
+    window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;\n\
+    window.addEventListener("load", function () {\n\
+        setTimeout(function () {\n\
+            window.domOnEventWindowOnloadTimeElapsed = Date.now() -\n\
+                window.domOnEventWindowOnloadTimeElapsed;\n\
+            console.error("domOnEventWindowOnloadTimeElapsed = " +\n\
+                window.domOnEventWindowOnloadTimeElapsed);\n\
+        }, 100);\n\
+    });\n\
+}());\n\
 // init timerIntervalAjaxProgressUpdate\n\
 (function () {\n\
 /*\n\
@@ -585,7 +611,7 @@ textarea {\n\
     var ajaxProgressDiv1,\n\
         ajaxProgressState,\n\
         ajaxProgressUpdate;\n\
-    if (window.timerIntervalAjaxProgressUpdate) {\n\
+    if (window.timerIntervalAjaxProgressUpdate || !document.querySelector("#ajaxProgressDiv1")) {\n\
         return;\n\
     }\n\
     ajaxProgressDiv1 = document.querySelector("#ajaxProgressDiv1");\n\
@@ -614,87 +640,6 @@ textarea {\n\
         clearInterval(window.timerIntervalAjaxProgressUpdate);\n\
         ajaxProgressUpdate();\n\
     });\n\
-}());\n\
-// init domOnEventMediaHotkeys\n\
-(function () {\n\
-/*\n\
- * this function will add media-hotkeys to elements with class=".domOnEventMediaHotkeysInit"\n\
- */\n\
-    "use strict";\n\
-    var input, onEvent;\n\
-    if (window.domOnEventMediaHotkeys) {\n\
-        return;\n\
-    }\n\
-    onEvent = window.domOnEventMediaHotkeys = function (event) {\n\
-        var media;\n\
-        if (event === "init") {\n\
-            Array.from(\n\
-                document.querySelectorAll(".domOnEventMediaHotkeysInit")\n\
-            ).forEach(function (media) {\n\
-                media.classList.remove("domOnEventMediaHotkeysInit");\n\
-                media.classList.add("domOnEventMediaHotkeys");\n\
-                ["play", "pause", "seeking"].forEach(function (event) {\n\
-                    media.addEventListener(event, onEvent);\n\
-                });\n\
-            });\n\
-            return;\n\
-        }\n\
-        if (event.currentTarget.classList.contains("domOnEventMediaHotkeys")) {\n\
-            window.domOnEventMediaHotkeysMedia1 = event.currentTarget;\n\
-            window.domOnEventMediaHotkeysInput.focus();\n\
-            return;\n\
-        }\n\
-        media = window.domOnEventMediaHotkeysMedia1;\n\
-        try {\n\
-            switch (event.key || event.type) {\n\
-            case ",":\n\
-            case ".":\n\
-                media.currentTime += (event.key === "," && -0.03125) || 0.03125;\n\
-                break;\n\
-            case "<":\n\
-            case ">":\n\
-                media.playbackRate *= (event.key === "<" && 0.5) || 2;\n\
-                break;\n\
-            case "ArrowDown":\n\
-            case "ArrowUp":\n\
-                media.volume += (event.key === "ArrowDown" && -0.05) || 0.05;\n\
-                break;\n\
-            case "ArrowLeft":\n\
-            case "ArrowRight":\n\
-                media.currentTime += (event.key === "ArrowLeft" && -5) || 5;\n\
-                break;\n\
-            case "j":\n\
-            case "l":\n\
-                media.currentTime += (event.key === "j" && -10) || 10;\n\
-                break;\n\
-            case "k":\n\
-            case " ":\n\
-                if (media.paused) {\n\
-                    media.play();\n\
-                } else {\n\
-                    media.pause();\n\
-                }\n\
-                break;\n\
-            case "m":\n\
-                media.muted = !media.muted;\n\
-                break;\n\
-            default:\n\
-                if (event.key >= 0) {\n\
-                    media.currentTime = 0.1 * event.key * media.duration;\n\
-                    break;\n\
-                }\n\
-                return;\n\
-            }\n\
-        } catch (ignore) {\n\
-        }\n\
-        event.preventDefault();\n\
-    };\n\
-    input = window.domOnEventMediaHotkeysInput = document.createElement("button");\n\
-    input.style = "border:0;height:0;margin:0;padding:0;position:fixed;width:0;z-index:-1;";\n\
-    input.addEventListener("click", onEvent);\n\
-    input.addEventListener("keydown", onEvent);\n\
-    document.body.appendChild(input);\n\
-    onEvent("init");\n\
 }());\n\
 // init domOnEventSelectAllWithinPre\n\
 (function () {\n\
@@ -796,12 +741,12 @@ utility2-comment -->\n\
     window.utility2.testRunDefault(testCaseDict);\n\
 }());\n\
 </textarea>\n\
-<pre id="outputPreJsonStringify1" tabindex="0"></pre>\n\
-<pre class= "colorError" id="outputPreJslint1" tabindex="0"></pre>\n\
+<pre id="outputJsonStringifyPre1" tabindex="0"></pre>\n\
+<pre class= "colorError" id="outputJslintPre1" tabindex="0"></pre>\n\
 <label>instrumented-code</label>\n\
 <textarea class="resettable" id="outputTextarea1" readonly></textarea>\n\
 <label>stderr and stdout</label>\n\
-<textarea class="resettable" id="outputTextareaStdout1" readonly></textarea>\n\
+<textarea class="resettable" id="outputStdoutTextarea1" readonly></textarea>\n\
 <div class="resettable" id="testReportDiv1"></div>\n\
 <div class="resettable" id="coverageReportDiv1"></div>\n\
 <!-- utility2-comment\n\
@@ -844,6 +789,7 @@ utility2-comment -->\n\
         /* validateLineSortedReset */
         local.assetsDict['/'] =
             local.assetsDict['/assets.example.html'] =
+            local.assetsDict['/index.html'] =
             local.assetsDict['/assets.index.template.html']
             .replace((/\{\{env\.(\w+?)\}\}/g), function (match0, match1) {
                 switch (match1) {
@@ -990,7 +936,7 @@ utility2-comment -->\n\
         "test": "./npm_scripts.sh",
         "utility2": "./npm_scripts.sh"
     },
-    "version": "2018.8.5"
+    "version": "2018.8.19"
 }
 ```
 
@@ -1248,10 +1194,9 @@ shBuildCiBefore () {(set -e
     shNpmTestPublished
     shReadmeTest example.js
     # screenshot
-    MODE_BUILD=testExampleJs shBrowserTest "
-/tmp/app/tmp/build/coverage.html/app/example.js.html
-tmp/build/test-report.html
-" screenshot
+    MODE_BUILD=testExampleJs shBrowserTest \
+        /tmp/app/tmp/build/coverage.html/app/example.js.html,tmp/build/test-report.html \
+        screenshot
 )}
 
 # run shBuildCi
