@@ -59,21 +59,18 @@
         // init debug_inline
         (function () {
             var consoleError, context, key;
-            context = (typeof window === "object" && window) || global;
-            key = "debug_inline".replace("_i", "I");
-            if (context[key]) {
-                return;
-            }
             consoleError = console.error;
-            context[key] = function (arg0) {
+            context = (typeof window === 'object' && window) || global;
+            key = 'debug_inline'.replace('_i', 'I');
+            context[key] = context[key] || function (arg0) {
             /*
              * this function will both print arg0 to stderr and return it
              */
                 // debug arguments
-                context["_" + key + "Arguments"] = arguments;
-                consoleError("\n\n" + key);
+                context['_' + key + 'Arguments'] = arguments;
+                consoleError('\n\n' + key);
                 consoleError.apply(console, arguments);
-                consoleError(new Error().stack + "\n");
+                consoleError(new Error().stack + '\n');
                 // return arg0 for inspection
                 return arg0;
             };
@@ -81,10 +78,10 @@
         // init local
         local = {};
         // init isBrowser
-        local.isBrowser = typeof window === "object" &&
-            typeof window.XMLHttpRequest === "function" &&
+        local.isBrowser = typeof window === 'object' &&
+            typeof window.XMLHttpRequest === 'function' &&
             window.document &&
-            typeof window.document.querySelectorAll === "function";
+            typeof window.document.querySelectorAll === 'function';
         // init global
         local.global = local.isBrowser
             ? window
@@ -93,13 +90,6 @@
         local = local.global.utility2_rollup ||
             // local.global.utility2_rollup_old || require('./assets.utility2.rollup.js') ||
             local;
-        // init nop
-        local.nop = function () {
-        /*
-         * this function will do nothing
-         */
-            return;
-        };
         // init exports
         if (local.isBrowser) {
             local.global.utility2_db = local;
@@ -130,7 +120,6 @@
             local.tty = require('tty');
             local.url = require('url');
             local.util = require('util');
-            local.v8 = require('v8');
             local.vm = require('vm');
             local.zlib = require('zlib');
             module.exports = local;
@@ -150,7 +139,7 @@
             if (passed) {
                 return;
             }
-            error = message && message.message
+            error = message && message.stack
                 // if message is an error-object, then leave it as is
                 ? message
                 : new Error(typeof message === 'string'
@@ -180,7 +169,7 @@
             local.cliDict._eval = local.cliDict._eval || function () {
             /*
              * <code>
-             * # eval code
+             * will eval <code>
              */
                 local.global.local = local;
                 require('vm').runInThisContext(process.argv[3]);
@@ -190,13 +179,17 @@
             local.cliDict._help = local.cliDict._help || function (options) {
             /*
              *
-             * # print help
+             * will print help
              */
                 var commandList, file, packageJson, text, textDict;
                 commandList = [{
-                    arg: '<arg2> ...',
+                    argList: '<arg2>  ...',
                     description: 'usage:',
                     command: ['<arg1>']
+                }, {
+                    argList: '\'console.log("hello world")\'',
+                    description: 'example:',
+                    command: ['--eval']
                 }];
                 file = __filename.replace((/.*\//), '');
                 packageJson = require('./package.json');
@@ -207,9 +200,9 @@
                     }
                     text = String(local.cliDict[key]);
                     if (key === '_default') {
-                        key = '<>';
+                        key = '';
                     }
-                    ii = textDict[text] = textDict[text] || (ii + 1);
+                    ii = textDict[text] = textDict[text] || (ii + 2);
                     if (commandList[ii]) {
                         commandList[ii].command.push(key);
                     } else {
@@ -219,7 +212,7 @@
                             commandList[ii] = commandList[ii] || ['', '', ''];
                         }()));
                         commandList[ii] = {
-                            arg: commandList[ii][1].trim(),
+                            argList: commandList[ii][1].trim(),
                             command: [key],
                             description: commandList[ii][2].trim()
                         };
@@ -227,21 +220,37 @@
                 });
                 (options && options.modeError
                     ? console.error
-                    : console.log)((options && options.modeError
+                    : console.log)(
+                    (options && options.modeError
                     ? '\u001b[31merror: missing <arg1>\u001b[39m\n\n'
-                    : '') + packageJson.name + ' (' + packageJson.version + ')\n\n' + commandList
-                    .filter(function (element) {
-                        return element;
-                    }).map(function (element) {
-                        return (element.description + '\n' +
-                            file + '  ' +
-                            element.command.sort().join('|') + '  ' +
-                            element.arg.replace((/ +/g), '  '))
-                                .replace((/<>\||\|<>|<> {2}/), '')
-                                .trim();
-                    })
-                    .join('\n\n') + '\n\nexample:\n' + file +
-                    '  --eval  \'console.log("hello world")\'');
+                    : '') +
+                        packageJson.name + ' (' + packageJson.version + ')\n\n' +
+                        commandList
+                        .filter(function (element) {
+                            return element;
+                        })
+                        .map(function (element, ii) {
+                            element.command = element.command.filter(function (element) {
+                                return element;
+                            });
+                            switch (ii) {
+                            case 0:
+                            case 1:
+                                element.argList = [element.argList];
+                                break;
+                            default:
+                                element.argList = element.argList.split(' ');
+                                element.description = '# COMMAND ' +
+                                    (element.command[0] || '<none>') + '\n# ' +
+                                    element.description;
+                            }
+                            return element.description + '\n  ' + file +
+                                ('  ' + element.command.sort().join('|') + '  ')
+                                .replace((/^ {4}$/), '  ') +
+                                element.argList.join('  ');
+                        })
+                        .join('\n\n')
+                );
             };
             local.cliDict['--help'] = local.cliDict['--help'] || local.cliDict._help;
             local.cliDict['-h'] = local.cliDict['-h'] || local.cliDict._help;
@@ -250,12 +259,12 @@
             local.cliDict._interactive = local.cliDict._interactive || function () {
             /*
              *
-             * # start interactive-mode
+             * will start interactive-mode
              */
                 local.global.local = local;
                 local.replStart();
             };
-            if (local.replStart) {
+            if (typeof local.replStart === 'function') {
                 local.cliDict['--interactive'] = local.cliDict['--interactive'] ||
                     local.cliDict._interactive;
                 local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
@@ -263,7 +272,7 @@
             local.cliDict._version = local.cliDict._version || function () {
             /*
              *
-             * # print version
+             * will print version
              */
                 console.log(require(__dirname + '/package.json').version);
             };
@@ -359,7 +368,7 @@
 
         local.listShuffle = function (list) {
         /*
-         * this function will inplace shuffle the list, via fisher-yates algorithm
+         * this function will inplace shuffle the list using fisher-yates algorithm
          * https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
          */
             var ii, random, swap;
@@ -372,43 +381,50 @@
             return list;
         };
 
-        local.objectSetOverride = function (arg0, overrides, depth, env) {
+        local.nop = function () {
         /*
-         * this function will recursively set overrides for items in arg0
+         * this function will do nothing
          */
-            arg0 = arg0 || {};
+            return;
+        };
+
+        local.objectSetOverride = function (dict, overrides, depth, env) {
+        /*
+         * this function will recursively set overrides for items in dict
+         */
+            dict = dict || {};
             env = env || (typeof process === 'object' && process.env) || {};
             overrides = overrides || {};
             Object.keys(overrides).forEach(function (key) {
-                var arg2, overrides2;
-                arg2 = arg0[key];
+                var dict2, overrides2;
+                dict2 = dict[key];
                 overrides2 = overrides[key];
                 if (overrides2 === undefined) {
                     return;
                 }
-                // if both arg2 and overrides2 are non-null and non-array objects,
-                // then recurse with arg2 and overrides2
+                // if both dict2 and overrides2 are non-null and non-array objects,
+                // then recurse with dict2 and overrides2
                 if (depth > 1 &&
-                        // arg2 is a non-null and non-array object
-                        typeof arg2 === 'object' && arg2 && !Array.isArray(arg2) &&
+                        // dict2 is a non-null and non-array object
+                        typeof dict2 === 'object' && dict2 && !Array.isArray(dict2) &&
                         // overrides2 is a non-null and non-array object
                         typeof overrides2 === 'object' && overrides2 &&
                         !Array.isArray(overrides2)) {
-                    local.objectSetOverride(arg2, overrides2, depth - 1, env);
+                    local.objectSetOverride(dict2, overrides2, depth - 1, env);
                     return;
                 }
-                // else set arg0[key] with overrides[key]
-                arg0[key] = arg0 === env
-                    // if arg0 is env, then overrides falsey value with empty string
+                // else set dict[key] with overrides[key]
+                dict[key] = dict === env
+                    // if dict is env, then overrides falsey value with empty string
                     ? overrides2 || ''
                     : overrides2;
             });
-            return arg0;
+            return dict;
         };
 
         local.onErrorDefault = function (error) {
         /*
-         * this function will if error exists, then print error.stack to stderr
+         * this function will if error exists, then print it to stderr
          */
             if (error && !local.global.__coverage__) {
                 console.error(error);
@@ -456,12 +472,10 @@
                 // decrement counter
                 onParallel.counter -= 1;
                 // validate counter
-                local.assert(
-                    onParallel.counter >= 0 || error || onParallel.error,
-                    'invalid onParallel.counter = ' + onParallel.counter
-                );
+                if (!(onParallel.counter >= 0 || error || onParallel.error)) {
+                    error = new Error('invalid onParallel.counter = ' + onParallel.counter);
                 // ensure onError is run only once
-                if (onParallel.counter < 0) {
+                } else if (onParallel.counter < 0) {
                     return;
                 }
                 // handle error
@@ -637,7 +651,7 @@ vendor)s{0,1}(\\b|_)\
 
         local.setTimeoutOnError = function (onError, timeout, error, data) {
         /*
-         * this function will async-call onError
+         * this function will after timeout has passed, then call onError(error, data)
          */
             if (typeof onError === 'function') {
                 setTimeout(function () {
@@ -1351,6 +1365,7 @@ vendor)s{0,1}(\\b|_)\
         /*
          * this function will drop the dbTable
          */
+            console.error('db - dropping dbTable ' + this.name + ' ...');
             // cancel pending save
             this.timerSave = null;
             while (this.onSaveList.length) {
@@ -1360,7 +1375,6 @@ vendor)s{0,1}(\\b|_)\
             local._DbTable.call(this, this);
             // clear persistence
             local.storageRemoveItem('dbTable.' + this.name + '.json', onError);
-            console.error('db - dropped dbTable ' + this.name);
         };
 
         local._DbTable.prototype.export = function (onError) {
@@ -1478,6 +1492,7 @@ vendor)s{0,1}(\\b|_)\
          * this function will drop the db
          */
             var onParallel;
+            console.error('db - dropping database ...');
             onParallel = local.onParallel(function (error) {
                 local.setTimeoutOnError(onError, 0, error);
             });
@@ -1488,7 +1503,6 @@ vendor)s{0,1}(\\b|_)\
                 onParallel.counter += 1;
                 local.dbTableDict[key].drop(onParallel);
             });
-            console.error('db - dropped database');
             onParallel();
         };
 
@@ -1499,9 +1513,9 @@ vendor)s{0,1}(\\b|_)\
             var result;
             result = '';
             Object.keys(local.dbTableDict).forEach(function (key) {
+                console.error('db - exporting dbTable ' + local.dbTableDict[key].name + ' ...');
                 result += local.dbTableDict[key].export();
                 result += '\n\n';
-                console.error('db - exported dbTable ' + local.dbTableDict[key].name);
             });
             return local.setTimeoutOnError(onError, 0, null, result.trim());
         };
@@ -1551,7 +1565,7 @@ vendor)s{0,1}(\\b|_)\
                 }
             });
             Object.keys(dbTableDict).forEach(function (name) {
-                console.error('db - imported dbTable ' + name);
+                console.error('db - importing dbTable ' + name + ' ...');
             });
             local.modeImport = null;
             return local.setTimeoutOnError(onError);
@@ -1584,19 +1598,23 @@ vendor)s{0,1}(\\b|_)\
             });
         };
 
-        local.dbReset = function (options, onError) {
+        local.dbReset = function (dbSeedList, onError) {
         /*
-         * this function will drop and seed the db with options.dbSeedList
+         * this function will drop and seed the db with the given dbSeedList
          */
             var onParallel;
-            options = Object.assign({}, options);
-            // reset db
-            onParallel = options.onResetBefore || local.onParallel(onError);
+            onParallel = local.global.utility2_onReadyBefore || local.onParallel(onError);
             onParallel.counter += 1;
-            local.dbDrop(onParallel);
-            // seed db
-            options.onReadyBefore = options.onReadyBefore || onParallel;
-            local.dbSeed(options);
+            // drop db
+            onParallel.counter += 1;
+            local.dbDrop(function (error) {
+                local.onErrorDefault(error);
+                // seed db
+                local.dbSeed(dbSeedList, !local.global.utility2_onReadyBefore && onParallel);
+                (local.global.utility2_onReadyBefore || local.nop)();
+            });
+            (local.global.utility2_onReadyAfter || local.nop)(onError);
+            onParallel();
         };
 
         local.dbRowGetItem = function (dbRow, key) {
@@ -1840,30 +1858,25 @@ vendor)s{0,1}(\\b|_)\
             onParallel();
         };
 
-        local.dbSeed = function (options, onError) {
+        local.dbSeed = function (dbSeedList, onError) {
         /*
-         * this function will seed the db with options.dbSeedList
+         * this function will seed the db with the given dbSeedList
          */
             var dbTableDict, onParallel;
             dbTableDict = {};
-            options = Object.assign({
-                dbSeedList: [],
-                onReadyBefore: local.onParallel(onError)
-            }, options);
-            // seed db
-            onParallel = options.onReadyBefore;
+            onParallel = local.global.utility2_onReadyBefore || local.onParallel(onError);
             onParallel.counter += 1;
-            (options.onResetAfter || function (onError) {
-                onError();
-            })(function () {
-                local.dbTableCreateMany(options.dbSeedList, onParallel);
-            });
-            options.dbSeedList.forEach(function (options) {
+            // seed db
+            onParallel.counter += 1;
+            local.dbTableCreateMany(dbSeedList, onParallel);
+            (dbSeedList || []).forEach(function (options) {
                 dbTableDict[options.name] = true;
             });
             Object.keys(dbTableDict).forEach(function (name) {
-                console.error('db - seeded dbTable ' + name);
+                console.error('db - seeding dbTable ' + name + ' ...');
             });
+            (local.global.utility2_onReadyAfter || local.nop)(onError);
+            onParallel();
         };
 
         local.dbTableCreateMany = function (optionsList, onError) {
@@ -1923,14 +1936,14 @@ vendor)s{0,1}(\\b|_)\
 
         local.dbTableDict = {};
 
-        local.domOnEventDb = function (event) {
+        local.onEventDomDb = function (event) {
         /*
          * this function will handle db dom-events
          */
             var ajaxProgressUpdate, reader, tmp, utility2;
             utility2 = local.global.utility2 || {};
-            ajaxProgressUpdate = (utility2 && utility2.ajaxProgressUpdate) || local.nop;
-            switch (event.target.dataset.domOnEventDb || event.target.id) {
+            ajaxProgressUpdate = utility2.ajaxProgressUpdate || local.nop;
+            switch (event.target.dataset.onEventDomDb || event.target.id) {
             case 'dbExportButton1':
                 tmp = local.global.URL.createObjectURL(new local.global.Blob([local.dbExport()]));
                 document.querySelector('#dbExportA1').href = tmp;
@@ -1941,9 +1954,9 @@ vendor)s{0,1}(\\b|_)\
                 break;
             case 'dbImportButton1':
                 tmp = document.querySelector('#dbImportInput1');
-                if (!tmp.domOnEventDb) {
-                    tmp.domOnEventDb = local.domOnEventDb;
-                    tmp.addEventListener('change', local.domOnEventDb);
+                if (!tmp.onEventDomDb) {
+                    tmp.onEventDomDb = local.onEventDomDb;
+                    tmp.addEventListener('change', local.onEventDomDb);
                 }
                 tmp.click();
                 break;
@@ -1965,7 +1978,10 @@ vendor)s{0,1}(\\b|_)\
                 break;
             case 'dbResetButton1':
                 ajaxProgressUpdate();
-                local.dbReset(utility2, local.onErrorDefault);
+                local.dbReset(local.global.utility2_dbSeedList, function (error) {
+                    local.onErrorDefault(error);
+                    ((utility2.uiEventListenerDict || {})['.onEventUiReload'] || local.nop)();
+                });
                 break;
             }
         };
@@ -2038,7 +2054,7 @@ vendor)s{0,1}(\\b|_)\
         local.cliDict.dbTableCrudGetManyByQuery = function () {
         /*
          * <dbTable> <query>
-         * # get <dbRowList> from <dbTable> with the given json-format <query>
+         * will get from <dbTable> with json <query>, <dbRowList>
          */
             local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
                 // validate no error occurred
@@ -2051,7 +2067,7 @@ vendor)s{0,1}(\\b|_)\
         local.cliDict.dbTableCrudRemoveManyByQuery = function () {
         /*
          * <dbTable> <query>
-         * # remove <dbRowList> from <dbTable> with the given json-format <query>
+         * will remove from <dbTable> with json <query>, <dbRowList>
          */
             local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
                 // validate no error occurred
@@ -2064,7 +2080,7 @@ vendor)s{0,1}(\\b|_)\
         local.cliDict.dbTableCrudSetManyById = function () {
         /*
          * <dbTable> <dbRowList>
-         * # set json-format <dbRowList> into <dbTable>
+         * will set in <dbTable>, <dbRowList>
          */
             local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
                 // validate no error occurred
@@ -2075,7 +2091,7 @@ vendor)s{0,1}(\\b|_)\
         local.cliDict.dbTableHeaderDictGet = function () {
         /*
          * <dbTable>
-         * # get <headerDict> from <dbTable>
+         * will get from <dbTable>, <headerDict>
          */
             local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
                 // validate no error occurred
@@ -2095,7 +2111,7 @@ vendor)s{0,1}(\\b|_)\
         local.cliDict.dbTableHeaderDictSet = function () {
         /*
          * <dbTable> <headerDict>
-         * # set json-format <headerDict> into <dbTable>
+         * will set in <dbTable>, <headerDict>
          */
             local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
                 // validate no error occurred
@@ -2114,7 +2130,7 @@ vendor)s{0,1}(\\b|_)\
         local.cliDict.dbTableIdIndexCreate = function () {
         /*
          * <dbTable> <idIndex>
-         * # create json-format <idIndex> in <dbTable>
+         * will create in <dbTable>, <idIndex>
          */
             local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
                 // validate no error occurred
@@ -2131,7 +2147,7 @@ vendor)s{0,1}(\\b|_)\
         local.cliDict.dbTableIdIndexRemove = function () {
         /*
          * <dbTable> <idIndex>
-         * # remove json-format <idIndex> from <dbTable>
+         * will remove from <dbTable>, <idIndex>
          */
             local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
                 // validate no error occurred
@@ -2144,7 +2160,7 @@ vendor)s{0,1}(\\b|_)\
         local.cliDict.dbTableList = function () {
         /*
          *
-         * # list <dbTable>'s in db
+         * will get from db, <dbTableList>
          */
             local.storageKeys(function (error, data) {
                 // validate no error occurred
@@ -2157,7 +2173,7 @@ vendor)s{0,1}(\\b|_)\
         local.cliDict.dbTableRemove = function () {
         /*
          * <dbTable>
-         * # remove <dbTable> from db
+         * will remove from db, <dbTable>
          */
             local.storageRemoveItem('dbTable.' + process.argv[3] + '.json', function (error) {
                 // validate no error occurred

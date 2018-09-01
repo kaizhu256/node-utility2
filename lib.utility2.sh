@@ -4,13 +4,15 @@
 # POSIX test utility
 # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/test.html
 
-# useful one-liners
+# useful sh one-liners
+# http://sed.sourceforge.net/sed1line.txt
+# git config --global diff.algorithm histogram
 # git fetch origin alpha beta master --tags
-# shGithubRepoTouch aa/bb "touch" alpha
-# shSource; git add .; npm test --mode-coverage
-# shSource; git add .; npm test --mode-test-case=testCase_nop_default
-# shSource; git add .; shBuildApp; git diff; git status
-# shSource; git add .; shUtility2DependentsSync; git diff; git status
+# shCryptoWithGithubOrg aa shGithubRepoTouch aa/bb "touch" alpha
+# shGitAddTee npm test --mode-coverage --mode-test-case2=testCase_webpage_default,testCase_nop_default
+# shGitAddTee shUtility2DependentsSync
+# utility2 electron test.js --enable-logging
+# utility2 shReadmeTest example.js
 
 shBaseInit () {
 # this function will init the base bash-login env, and is intended for aws-ec2 setup
@@ -50,7 +52,7 @@ shBaseInit () {
         fi
     done
     # init ubuntu .bashrc
-    eval shUbuntuInit || return $?
+    shUbuntuInit || return $?
     # init custom alias
     alias lld="ls -adlF" || return $?
 }
@@ -239,7 +241,7 @@ shBuildApp () {(set -e
 var local, tmp;
 local = require(process.env.npm_config_dir_utility2);
 if (!local.fs.existsSync("README.md", "utf8")) {
-    local.fs.writeFileSync("README.md", local.templateRenderJslintLite(
+    local.fs.writeFileSync("README.md", local.templateRenderMyApp(
         local.assetsDict["/assets.readme.template.md"],
         {}
     ));
@@ -254,7 +256,7 @@ if (!local.fs.existsSync("lib." + process.env.npm_package_nameLib + ".js", "utf8
     }
     local.fs.writeFileSync(
         "lib." + process.env.npm_package_nameLib + ".js",
-        local.templateRenderJslintLite(tmp, {})
+        local.templateRenderMyApp(tmp, {})
     );
 }
 if (!local.fs.existsSync("test.js", "utf8")) {
@@ -265,7 +267,7 @@ if (!local.fs.existsSync("test.js", "utf8")) {
             "require(\u0027./assets.utility2.rollup.js\u0027)"
         );
     }
-    local.fs.writeFileSync("test.js", local.templateRenderJslintLite(tmp, {}));
+    local.fs.writeFileSync("test.js", local.templateRenderMyApp(tmp, {}));
 }
 // </script>
 '
@@ -345,7 +347,8 @@ shBuildAppSync () {
     fi
     # update npm_scripts.sh
     shFileCustomizeFromToRgx "$npm_config_dir_utility2/npm_scripts.sh" "npm_scripts.sh" \
-        '\n    # run command - custom\n[\S\s]*?\n    esac\n'
+        '\n    # run command - custom\n[\S\s]*?\n    esac\n' \
+        '\n\)\}\n[\S\s]*?\n# run command\n'
     # hardlink .gitignore
     if [ -f "$npm_config_dir_utility2/.travis.yml" ]
     then
@@ -366,13 +369,11 @@ shBuildCi () {(set -e
     # init travis-ci.org env
     if [ "$TRAVIS" ]
     then
-        export CI_BRANCH="${CI_BRANCH:-$TRAVIS_BRANCH}"
         export CI_HOST="${CI_HOST:-travis-ci.org}"
         git remote remove origin 2>/dev/null || true
         git remote add origin "https://github.com/$GITHUB_REPO"
     fi
     # init default env
-    export CI_BRANCH="${CI_BRANCH:-alpha}"
     export CI_COMMIT_ID="${CI_COMMIT_ID:-$(git rev-parse --verify HEAD)}"
     export CI_HOST="${CI_HOST:-127.0.0.1}"
     # save $CI_BRANCH
@@ -399,31 +400,6 @@ shBuildCi () {(set -e
     alpha)
         case "$CI_COMMIT_MESSAGE" in
         "[build app]"*)
-            case "$npm_package_name" in
-            # build app.swgg
-            "swgg-"*)
-                if [ ! -f assets.swgg.swagger.json ]
-                then
-                    shBuildAppSwgg0 "$(printf "$GITHUB_REPO" | sed -e "s/.*\/node-swgg-//")"
-                    shBuildInit
-                fi
-                if (printf "$CI_COMMIT_MESSAGE" | grep -E " npm_package_swggAll=")
-                then
-                    export npm_package_swggAll="$(printf "$CI_COMMIT_MESSAGE" | \
-                        sed -e "s/.* npm_package_swggAll=//" -e "s/ .*//")"
-                    for FILE in README.md package.json
-                    do
-                        sed -in \
--e "s|    \"swggAll\": \".*\",|    \"swggAll\": \"$npm_package_swggAll\",|" \
-                            "$FILE"
-                        rm -f "$FILE"n
-                    done
-                fi
-                npm run apidocRawFetch
-                npm run apidocRawCreate
-                shBuildApp
-                ;;
-            esac
             node -e '
 // <script>
 /* jslint-utility2 */
@@ -693,7 +669,7 @@ shBuildCiInternal () {(set -e
         scrapeitall)
             ;;
         *)
-            (eval shNpmInstallWithPeerDependencies "$npm_package_buildCustomOrg" --prefix .) || true
+            (shNpmInstallWithPeerDependencies "$npm_package_buildCustomOrg" --prefix .) || true
             if [ ! -d "$(shModuleDirname $npm_package_buildCustomOrg)" ]
             then
                 shBuildPrint "fallback to $npm_package_buildCustomOrg tarball"
@@ -847,6 +823,9 @@ shBuildGithubUpload () {(set -e
 
 shBuildInit () {
 # this function will init the env
+    # init $CI_BRANCH
+    export CI_BRANCH="${CI_BRANCH:-$TRAVIS_BRANCH}"
+    export CI_BRANCH="${CI_BRANCH:-alpha}"
     # init $npm_config_dir_electron
     if [ ! "$npm_config_dir_electron" ]
     then
@@ -925,7 +904,7 @@ if ((/^[^\/]+\/[^\/]+$/).test(value)) {
 // </script>
 ')" || return $?
     else
-        export npm_package_name=my-app || return $?
+        export npm_package_name=my-app-lite || return $?
         export npm_package_version=0.0.1 || return $?
     fi
     export npm_package_nameLib="${npm_package_nameLib:-$(
@@ -996,7 +975,7 @@ shBuildInsideDocker () {(set -e
 
 shBuildPrint () {(set -e
 # this function will print debug info about the build state
-    printf '%b' "\n\033[35m[MODE_BUILD=$MODE_BUILD]\033[0m - $(shDateIso) - $@\n\n" 1>&2
+    printf '%b' "\n\033[35m[MODE_BUILD=$MODE_BUILD]\033[0m - $(shDateIso) - $*\n\n" 1>&2
 )}
 
 shChromeSocks5 () {(set -e
@@ -1118,9 +1097,10 @@ shCryptoTravisDecrypt () {(set -e
         return 1
     fi
     # decrypt CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG
-    shBuildPrint "CRYPTO_AES_SH_DECRYPTED:"
-    printf "${1:-"$(curl -#Lf "https://raw.githubusercontent.com\
-/kaizhu256/node-utility2/gh-pages/CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG")"}" | \
+    URL="https://raw.githubusercontent.com\
+/kaizhu256/node-utility2/gh-pages/CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG"
+    shBuildPrint "decrypting $URL ..."
+    printf "${1:-"$(curl -#Lf "$URL")"}" | \
         shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
 )}
 
@@ -1129,7 +1109,7 @@ shCryptoTravisEncrypt () {(set -e
 # and use $CRYPTO_AES_KEY to encrypt $FILE to stdout
     shBuildInit
     export MODE_BUILD=cryptoTravisEncrypt
-    FILE="$HOME/.ssh/CRYPTO_AES_SH_DECRYPTED_$GITHUB_ORG"
+    FILE="${1:-$HOME/.ssh/CRYPTO_AES_SH_DECRYPTED_$GITHUB_ORG}"
     if [ ! "$CRYPTO_AES_KEY" ] && [ -f "$FILE" ]
     then
         shBuildPrint ". $FILE"
@@ -1140,7 +1120,7 @@ shCryptoTravisEncrypt () {(set -e
         shBuildPrint "no CRYPTO_AES_KEY"
         return 1
     fi
-    if [ -f .travis.yml ]
+    if [ ! "$1" ] && [ -f .travis.yml ]
     then
         TMPFILE="$(mktemp)"
         URL="https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/key"
@@ -1177,7 +1157,7 @@ shCryptoTravisEncrypt () {(set -e
 )}
 
 shCryptoWithGithubOrg () {(set -e
-# this function will run $@ with private $GITHUB_ORG-env
+# this function will run "$@" with private $GITHUB_ORG-env
     export GITHUB_ORG="$1"
     shift
     . "$HOME/.ssh/CRYPTO_AES_SH_DECRYPTED_$GITHUB_ORG"
@@ -1553,7 +1533,7 @@ shDockerRestartTransmission () {(set -e
 )}
 
 shDockerRm () {(set -e
-# this function will rm the docker-containers $@
+# this function will rm the docker-containers "$@"
     docker rm -fv "$@" || true
 )}
 
@@ -1582,7 +1562,7 @@ shDockerSh () {(set -e
 )}
 
 shDockerStart () {(set -e
-# this function will start the docker-container $IMAGE:$NAME with the command $@
+# this function will start the docker-container $IMAGE:$NAME with the command "$@"
     case "$(uname)" in
     Linux)
         LOCALHOST="${LOCALHOST:-127.0.0.1}"
@@ -1710,7 +1690,8 @@ require('fs').writeFileSync(process.argv[1], local.jsonStringifyOrdered(tmp, nul
 
 shFilePackageJsonVersionUpdate () {(set -e
 # this function will increment the package.json version before npm-publish
-    node -e '
+    node -e "
+$UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
@@ -1723,53 +1704,58 @@ shFilePackageJsonVersionUpdate () {(set -e
     regexp: true,
     stupid: true
 */
-"use strict";
-var packageJson, versionList;
-packageJson = require("./package.json");
-// jslint-hack
-versionList = [
-    process.argv[1] || packageJson.version,
-    process.argv[2] || "0.0.0"
-].map(function (element) {
-    if (element === "today") {
-        element = new Date().toISOString().replace((/T.*?$/), "").replace((/-0?/g), ".");
-    }
-    return element.split(/\W/).slice(0, 3)
-        .map(function (element) {
-            return Number(element) || 0;
-        })
-        .concat([element.split("-").slice(1).join("-").replace((/(.)/), "-$1")]);
+'use strict';
+var aa, bb, local, packageJson;
+local = local || {};
+packageJson = require('./package.json');
+aa = (process.argv[1] || packageJson.version).replace(
+    (/^today\$/),
+    new Date().toISOString().replace((/T.*?$/), '').replace((/-0?/g), '.')
+);
+bb = (process.argv[2] || '0.0.0').replace((/^(\d+?\.\d+?\.)(\d+)(\.*?)\$/), function (
+    match0,
+    match1,
+    match2,
+    match3
+) {
+    match0 = match2;
+    return match1 + (Number(match0) + 1) + match3;
 });
-versionList[1][2] += 1;
-if (versionList[0][0] < versionList[1][0] ||
-        (versionList[0][0] === versionList[1][0] &&
-        versionList[0][1] < versionList[1][1]) ||
-        (versionList[0][0] === versionList[1][0] &&
-        versionList[0][1] === versionList[1][1] &&
-        versionList[0][2] < versionList[1][2])) {
-    versionList[0] = versionList[1];
-}
-packageJson.version = versionList[0].slice(0, 3).join(".") + versionList[0][3];
+packageJson.version = local.semverCompare(aa, bb) === 1
+    ? aa
+    : bb;
+console.error([aa, bb, packageJson.version]);
 // update package.json
-require("fs").writeFileSync("package.json", JSON.stringify(packageJson, null, 4) + "\n");
+require('fs').writeFileSync('package.json', JSON.stringify(packageJson, null, 4) + '\n');
 // update README.md
-require("fs").writeFileSync(
-    "README.md",
-    require("fs").readFileSync("README.md", "utf8").replace(
-        (/^(#### changelog |- npm publish | {4}"version": ")\d+?\.\d+?\.\d[^\n",]*/gm),
-        "$1" + packageJson.version
+require('fs').writeFileSync(
+    'README.md',
+    require('fs').readFileSync('README.md', 'utf8').replace(
+        (/^(#### changelog |- npm publish | {4}\"version\": \")\d+?\.\d+?\.\d[^\n\",]*/gm),
+        /* jslint-ignore-next-line */
+        '\$1' + packageJson.version,
+        null
     )
 );
-console.error("shFilePackageJsonVersionUpdate - " + packageJson.version);
+console.error('shFilePackageJsonVersionUpdate - ' + packageJson.version);
 // </script>
-' "$1" "$([ "$2" = publishedIncrement ] && npm info "" version 2>/dev/null)"
+" "$1" "$([ "$2" = publishedIncrement ] && npm info "" version 2>/dev/null)"
 )}
 
 shFileTrimLeft () {(set -e
 # this function will remove all leading blank-lines from top of file $1
 # http://stackoverflow.com/questions/1935081/remove-leading-whitespace-from-file
-    sed -in '/./,$!d' "$1"
+    sed -in -e '/./,$!d' "$1"
     rm -f "$1"n
+)}
+
+shGitAddTee () {(set -e
+# this function will run "git add ." and "$@ 2>&1 | tee -a ..."
+    git add .
+    printf "\n\n\n\n$(shDateIso) - shGitAddTee\n\n" 2>&1 | tee -a /tmp/shGitAddTee.diff
+    "$@" 2>&1 | tee -a /tmp/shGitAddTee.diff
+    git diff 2>&1 | tee -a /tmp/shGitAddTee.diff
+    git status 2>&1 | tee -a /tmp/shGitAddTee.diff
 )}
 
 shGitCommandWithGithubToken () {(set -e
@@ -2223,7 +2209,7 @@ COMMIT
 )}
 
 shIstanbulCover () {(set -e
-# this function will run the command $@ with istanbul-coverage
+# this function will run the command "$@" with istanbul-coverage
     export NODE_BINARY="${NODE_BINARY:-node}"
     if [ ! "$npm_config_mode_coverage" ]
     then
@@ -2289,36 +2275,15 @@ local = {};
     (function () {
         // init global
         local.global = global;
-        // init debug_inline
-        (function () {
-            var consoleError, context, key;
-            context = (typeof window === 'object' && window) || global;
-            key = 'debug_inline'.replace('_i', 'I');
-            if (context[key]) {
-                return;
-            }
-            consoleError = console.error;
-            context[key] = function (arg0) {
-            /*
-             * this function will both print arg0 to stderr and return it
-             */
-                // debug arguments
-                context['_' + key + 'Arguments'] = arguments;
-                consoleError('\n\n' + key);
-                consoleError.apply(console, arguments);
-                consoleError('\n');
-                // return arg0 for inspection
-                return arg0;
-            };
-        }());
-        (function () {
+        // init exports
+        if (local.isBrowser) {
+            local.global.utility2_utility2 = local;
+        } else {
             // require builtins
             // local.assert = require('assert');
             local.buffer = require('buffer');
             local.child_process = require('child_process');
             local.cluster = require('cluster');
-            local.console = require('console');
-            local.constants = require('constants');
             local.crypto = require('crypto');
             local.dgram = require('dgram');
             local.dns = require('dns');
@@ -2327,12 +2292,9 @@ local = {};
             local.fs = require('fs');
             local.http = require('http');
             local.https = require('https');
-            local.module = require('module');
             local.net = require('net');
             local.os = require('os');
             local.path = require('path');
-            local.process = require('process');
-            local.punycode = require('punycode');
             local.querystring = require('querystring');
             local.readline = require('readline');
             local.repl = require('repl');
@@ -2343,11 +2305,31 @@ local = {};
             local.tty = require('tty');
             local.url = require('url');
             local.util = require('util');
-            local.v8 = require('v8');
             local.vm = require('vm');
             local.zlib = require('zlib');
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+        }
+        // init debug_inline
+        (function () {
+            var consoleError, context, key;
+            context = (typeof window === 'object' && window) || global;
+            key = 'debug_inline'.replace('_i', 'I');
+            consoleError = console.error;
+            context[key] = function (arg0) {
+            /*
+             * this function will both print arg0 to stderr and return it
+             */
+                // debug arguments
+                context['_' + key + 'Arguments'] = arguments;
+                consoleError('\n\n' + key);
+                consoleError.apply(console, arguments);
+                consoleError(new Error().stack + '\n');
+                // return arg0 for inspection
+                return arg0;
+            };
         }());
-
+        // init local.<builtin-functions>
         local.ajax = function (options, onError) {
         /*
          * this function will send an ajax-request with error-handling and timeout
@@ -2362,7 +2344,16 @@ local = {};
                 console.log(xhr.responseText);
             });
          */
-            var ajaxProgressUpdate, bufferToString, isBrowser, isDone, nop, streamCleanup, xhr;
+            var ajaxProgressUpdate,
+                bufferToString,
+                isBrowser,
+                isDone,
+                nop,
+                self,
+                streamCleanup,
+                xhr;
+            // init local
+            self = local.utility2 || {};
             // init standalone handling-behavior
             nop = function () {
             /*
@@ -2370,12 +2361,12 @@ local = {};
              */
                 return;
             };
-            ajaxProgressUpdate = local.ajaxProgressUpdate || nop;
+            ajaxProgressUpdate = self.ajaxProgressUpdate || nop;
             // init onError
-            if (local.onErrorWithStack) {
-                onError = local.onErrorWithStack(onError);
+            if (self.onErrorWithStack) {
+                onError = self.onErrorWithStack(onError);
             }
-            bufferToString = local.bufferToString || String;
+            bufferToString = self.bufferToString || String;
             streamCleanup = function (stream) {
             /*
              * this function will try to end or destroy the stream
@@ -2398,14 +2389,14 @@ local = {};
                 typeof window.document.querySelectorAll === 'function';
             // init xhr
             xhr = !options.httpRequest &&
-                (!isBrowser || (local.serverLocalUrlTest && local.serverLocalUrlTest(options.url)))
-                ? local._http && local._http.XMLHttpRequest && new local._http.XMLHttpRequest()
+                (!isBrowser || (self.serverLocalUrlTest && self.serverLocalUrlTest(options.url)))
+                ? self._http && self._http.XMLHttpRequest && new self._http.XMLHttpRequest()
                 : isBrowser && new window.XMLHttpRequest();
             if (!xhr) {
                 xhr = require('url').parse(options.url);
                 xhr.headers = options.headers;
                 xhr.method = options.method;
-                xhr.timeout = xhr.timeout || local.timeoutDefault || 30000;
+                xhr.timeout = xhr.timeout || self.timeoutDefault || 30000;
                 xhr = (
                     options.httpRequest || require(xhr.protocol.slice(0, -1)).request
                 )(xhr, function (response) {
@@ -2434,7 +2425,7 @@ local = {};
                 });
             }
             // debug xhr
-            local._debugXhr = xhr;
+            self._debugXhr = xhr;
             // init options
             Object.keys(options).forEach(function (key) {
                 if (options[key] !== undefined) {
@@ -2449,7 +2440,7 @@ local = {};
             xhr.method = xhr.method || 'GET';
             xhr.responseHeaders = {};
             xhr.timeStart = Date.now();
-            xhr.timeout = xhr.timeout || local.timeoutDefault || 30000;
+            xhr.timeout = xhr.timeout || self.timeoutDefault || 30000;
             // init timerTimeout
             xhr.timerTimeout = setTimeout(function () {
                 xhr.error = xhr.error || new Error('onTimeout - timeout-error - ' +
@@ -2480,7 +2471,7 @@ local = {};
                     // update responseHeaders
                     if (xhr.getAllResponseHeaders) {
                         xhr.getAllResponseHeaders().replace((
-                            /(.*?): *(.*?)\r\n/g
+                            /(.*?): *(.*?)\\r\\n/g
                         ), function (match0, match1, match2) {
                             match0 = match1;
                             xhr.responseHeaders[match0.toLowerCase()] = match2;
@@ -2532,9 +2523,7 @@ local = {};
                         streamCleanup(xhr.responseStream);
                     });
                     // decrement ajaxProgressCounter
-                    if (local.ajaxProgressCounter) {
-                        local.ajaxProgressCounter -= 1;
-                    }
+                    self.ajaxProgressCounter = Math.max(self.ajaxProgressCounter - 1, 0);
                     // handle abort or error event
                     if (!xhr.error &&
                             (event.type === 'abort' ||
@@ -2545,16 +2534,16 @@ local = {};
                     // debug statusCode
                     (xhr.error || {}).statusCode = xhr.statusCode;
                     // debug statusCode / method / url
-                    if (local.errorMessagePrepend && xhr.error) {
-                        local.errorMessagePrepend(xhr.error, (isBrowser
+                    if (self.errorMessagePrepend && xhr.error) {
+                        self.errorMessagePrepend(xhr.error, (isBrowser
                             ? 'browser'
                             : 'node') + ' - ' +
-                            xhr.statusCode + ' ' + xhr.method + ' ' + xhr.url + '\n' +
+                            xhr.statusCode + ' ' + xhr.method + ' ' + xhr.url + '\\n' +
                             // try to debug responseText
                             (function () {
                                 try {
                                     return '    ' + JSON.stringify(xhr.responseText.slice(0, 256) +
-                                        '...') + '\n';
+                                        '...') + '\\n';
                                 } catch (ignore) {
                                 }
                             }()));
@@ -2565,8 +2554,8 @@ local = {};
                 ajaxProgressUpdate();
             };
             // increment ajaxProgressCounter
-            local.ajaxProgressCounter = local.ajaxProgressCounter || 0;
-            local.ajaxProgressCounter += 1;
+            self.ajaxProgressCounter = self.ajaxProgressCounter || 0;
+            self.ajaxProgressCounter += 1;
             xhr.addEventListener('abort', xhr.onEvent);
             xhr.addEventListener('error', xhr.onEvent);
             xhr.addEventListener('load', xhr.onEvent);
@@ -2576,10 +2565,10 @@ local = {};
                 xhr.upload.addEventListener('progress', ajaxProgressUpdate);
             }
             // open url through corsForwardProxyHost
-            xhr.corsForwardProxyHost = xhr.corsForwardProxyHost || local.corsForwardProxyHost;
-            xhr.location = xhr.location || (local.global && local.global.location) || {};
-            if (local.corsForwardProxyHostIfNeeded && local.corsForwardProxyHostIfNeeded(xhr)) {
-                xhr.open(xhr.method, local.corsForwardProxyHostIfNeeded(xhr));
+            xhr.corsForwardProxyHost = xhr.corsForwardProxyHost || self.corsForwardProxyHost;
+            xhr.location = xhr.location || (self.global && self.global.location) || {};
+            if (self.corsForwardProxyHostIfNeeded && self.corsForwardProxyHostIfNeeded(xhr)) {
+                xhr.open(xhr.method, self.corsForwardProxyHostIfNeeded(xhr));
                 xhr.setRequestHeader('forward-proxy-headers', JSON.stringify(xhr.headers));
                 xhr.setRequestHeader('forward-proxy-url', xhr.url);
             // open url
@@ -2589,7 +2578,7 @@ local = {};
             Object.keys(xhr.headers).forEach(function (key) {
                 xhr.setRequestHeader(key, xhr.headers[key]);
             });
-            if (local.FormData && xhr.data instanceof local.FormData) {
+            if (self.FormData && xhr.data instanceof self.FormData) {
                 // handle formData
                 xhr.data.read(function (error, data) {
                     if (error) {
@@ -2614,7 +2603,7 @@ local = {};
             if (passed) {
                 return;
             }
-            error = message && message.message
+            error = message && message.stack
                 // if message is an error-object, then leave it as is
                 ? message
                 : new Error(typeof message === 'string'
@@ -2689,7 +2678,7 @@ local = {};
                     uint24 = 0;
                 }
             }
-            return text.replace(/A(?=A$|$)/g, '=');
+            return text.replace(/A(?=A\$|\$)/g, '=');
         };
 
         local.base64ToBuffer = function (b64, mode) {
@@ -2727,6 +2716,13 @@ local = {};
                 : typeof Buffer === 'function' && typeof Buffer.isBuffer === 'function'
                 ? String(Object.setPrototypeOf(bff, Buffer.prototype))
                 : new window.TextDecoder().decode(bff);
+        };
+
+        local.base64ToString = function (b64) {
+        /*
+         * this function will convert b64 to utf8-string
+         */
+            return local.base64ToBuffer(b64, 'string');
         };
 
         local.childProcessSpawnWithUtility2 = function (script, onError) {
@@ -2838,7 +2834,7 @@ local = {};
                     iv.set(cipher.final(), 16 + data.byteLength);
                     if (options.mode === 'base64') {
                         iv = local.base64FromBuffer(iv);
-                        iv += '\n';
+                        iv += '\\n';
                     }
                     onError(null, iv);
                 });
@@ -2857,7 +2853,7 @@ local = {};
                     // base64
                     if (options.mode === 'base64') {
                         iv = local.base64FromBuffer(iv);
-                        iv += '\n';
+                        iv += '\\n';
                     }
                     onError(null, iv);
                 }).catch(onError);
@@ -2894,10 +2890,13 @@ local = {};
             );
         };
 
-        local.fsWriteFileWithMkdirpSync = function (file, data) {
+        local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
         /*
          * this function will synchronously 'mkdir -p' and write the data to file
          */
+            if (mode === 'noWrite') {
+                return;
+            }
             // try to write to file
             try {
                 require('fs').writeFileSync(file, data);
@@ -2911,6 +2910,13 @@ local = {};
                 // re-write to file
                 require('fs').writeFileSync(file, data);
             }
+        };
+
+        local.isNullOrUndefined = function (arg0) {
+        /*
+         * this function will test if arg0 is null or undefined
+         */
+            return arg0 === null || arg0 === undefined;
         };
 
         local.jsonCopy = function (obj) {
@@ -3018,15 +3024,15 @@ local = {};
             return;
         };
 
-        local.objectSetDefault = function (arg0, defaults, depth) {
+        local.objectSetDefault = function (dict, defaults, depth) {
         /*
-         * this function will recursively set defaults for undefined-items in arg0
+         * this function will recursively set defaults for undefined-items in dict
          */
-            arg0 = arg0 || {};
+            dict = dict || {};
             defaults = defaults || {};
             Object.keys(defaults).forEach(function (key) {
-                var arg2, defaults2;
-                arg2 = arg0[key];
+                var dict2, defaults2;
+                dict2 = dict[key];
                 // handle misbehaving getter
                 try {
                     defaults2 = defaults[key];
@@ -3035,68 +3041,78 @@ local = {};
                 if (defaults2 === undefined) {
                     return;
                 }
-                // init arg0[key] to default value defaults[key]
-                switch (arg2) {
+                // init dict[key] to default value defaults[key]
+                switch (dict2) {
                 case '':
                 case null:
                 case undefined:
-                    arg0[key] = defaults2;
+                    dict[key] = defaults2;
                     return;
                 }
-                // if arg2 and defaults2 are both non-null and non-array objects,
-                // then recurse with arg2 and defaults2
+                // if dict2 and defaults2 are both non-null and non-array objects,
+                // then recurse with dict2 and defaults2
                 if (depth > 1 &&
-                        // arg2 is a non-null and non-array object
-                        typeof arg2 === 'object' && arg2 && !Array.isArray(arg2) &&
+                        // dict2 is a non-null and non-array object
+                        typeof dict2 === 'object' && dict2 && !Array.isArray(dict2) &&
                         // defaults2 is a non-null and non-array object
                         typeof defaults2 === 'object' && defaults2 && !Array.isArray(defaults2)) {
                     // recurse
-                    local.objectSetDefault(arg2, defaults2, depth - 1);
+                    local.objectSetDefault(dict2, defaults2, depth - 1);
                 }
             });
-            return arg0;
+            return dict;
         };
 
-        local.objectSetOverride = function (arg0, overrides, depth, env) {
+        local.objectSetOverride = function (dict, overrides, depth, env) {
         /*
-         * this function will recursively set overrides for items in arg0
+         * this function will recursively set overrides for items in dict
          */
-            arg0 = arg0 || {};
+            dict = dict || {};
             env = env || (typeof process === 'object' && process.env) || {};
             overrides = overrides || {};
             Object.keys(overrides).forEach(function (key) {
-                var arg2, overrides2;
-                arg2 = arg0[key];
+                var dict2, overrides2;
+                dict2 = dict[key];
                 overrides2 = overrides[key];
                 if (overrides2 === undefined) {
                     return;
                 }
-                // if both arg2 and overrides2 are non-null and non-array objects,
-                // then recurse with arg2 and overrides2
+                // if both dict2 and overrides2 are non-null and non-array objects,
+                // then recurse with dict2 and overrides2
                 if (depth > 1 &&
-                        // arg2 is a non-null and non-array object
-                        typeof arg2 === 'object' && arg2 && !Array.isArray(arg2) &&
+                        // dict2 is a non-null and non-array object
+                        typeof dict2 === 'object' && dict2 && !Array.isArray(dict2) &&
                         // overrides2 is a non-null and non-array object
                         typeof overrides2 === 'object' && overrides2 &&
                         !Array.isArray(overrides2)) {
-                    local.objectSetOverride(arg2, overrides2, depth - 1, env);
+                    local.objectSetOverride(dict2, overrides2, depth - 1, env);
                     return;
                 }
-                // else set arg0[key] with overrides[key]
-                arg0[key] = arg0 === env
-                    // if arg0 is env, then overrides falsey value with empty string
+                // else set dict[key] with overrides[key]
+                dict[key] = dict === env
+                    // if dict is env, then overrides falsey value with empty string
                     ? overrides2 || ''
                     : overrides2;
             });
-            return arg0;
+            return dict;
         };
 
         local.onErrorDefault = function (error) {
         /*
-         * this function will if error exists, then print error.stack to stderr
+         * this function will if error exists, then print it to stderr
          */
             if (error && !local.global.__coverage__) {
                 console.error(error);
+            }
+            return error;
+        };
+
+        local.onErrorThrow = function (error) {
+        /*
+         * this function will if error exists, then throw it
+         */
+            if (error) {
+                throw error;
             }
             return error;
         };
@@ -3107,13 +3123,13 @@ local = {};
          * and append the current stack to any error
          */
             var onError2, stack;
-            stack = new Error().stack.replace((/(.*?)\n.*?$/m), '$1');
+            stack = new Error().stack.replace((/(.*?)\\n.*?\$/m), '\$1');
             onError2 = function (error, data, meta) {
                 if (error &&
                         error !== local.errorDefault &&
-                        String(error.stack).indexOf(stack.split('\n')[2]) < 0) {
+                        String(error.stack).indexOf(stack.split('\\n')[2]) < 0) {
                     // append the current stack to error.stack
-                    error.stack += '\n' + stack;
+                    error.stack += '\\n' + stack;
                 }
                 onError(error, data, meta);
             };
@@ -3131,10 +3147,18 @@ local = {};
          */
             options.onNext = local.onErrorWithStack(function (error, data, meta) {
                 try {
-                    options.modeNext0 = options.modeNext || 0;
-                    options.modeNext = error && !options.modeErrorIgnore
-                        ? Infinity
-                        : options.modeNext + 1;
+                    options.modeNext += error && !options.modeErrorIgnore
+                        ? 1000
+                        : 1;
+                    if (options.modeDebug) {
+                        console.error('onNext - ' + JSON.stringify({
+                            modeNext: options.modeNext,
+                            errorMessage: error && error.message
+                        }));
+                        if (error && error.stack) {
+                            console.error(error.stack);
+                        }
+                    }
                     onError(error, data, meta);
                 } catch (errorCaught) {
                     // throw errorCaught to break infinite recursion-loop
@@ -3165,12 +3189,10 @@ local = {};
                 // decrement counter
                 onParallel.counter -= 1;
                 // validate counter
-                local.assert(
-                    onParallel.counter >= 0 || error || onParallel.error,
-                    'invalid onParallel.counter = ' + onParallel.counter
-                );
+                if (!(onParallel.counter >= 0 || error || onParallel.error)) {
+                    error = new Error('invalid onParallel.counter = ' + onParallel.counter);
                 // ensure onError is run only once
-                if (onParallel.counter < 0) {
+                } else if (onParallel.counter < 0) {
                     return;
                 }
                 // handle error
@@ -3244,6 +3266,30 @@ local = {};
             onParallel();
         };
 
+        local.semverCompare = function (aa, bb) {
+        /*
+         * this function will compare semver versions aa ? bb and return
+         * -1 if aa < bb
+         *  0 if aa = bb
+         *  1 if aa > bb
+         * https://semver.org/#spec-item-11
+         */
+            return [aa, bb].map(function (aa) {
+                aa = aa.split('-');
+                return [aa[0], aa.slice(1).join('-') || '\\xff'].map(function (aa) {
+                    return aa.split('.').map(function (aa) {
+                        return ('0000000000000000' + aa).slice(-16);
+                    }).join('.');
+                }).join('-');
+            }).reduce(function (aa, bb) {
+                return aa === bb
+                    ? 0
+                    : aa < bb
+                    ? -1
+                    : 1;
+            });
+        };
+
         local.stringCustomizeFromToRgx = function (textFrom, textTo, rgx) {
         /*
          * this function will customize a segment of textTo with a segment of textFrom,
@@ -3258,6 +3304,45 @@ local = {};
                 });
             });
             return textTo;
+        };
+
+        local.templateRenderMyApp = function (template, options) {
+        /*
+         * this function will render the my-app-lite template with the given options.packageJson
+         */
+            options.packageJson = options.packageJson ||
+                JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
+            local.objectSetDefault(options.packageJson, {
+                nameLib: options.packageJson.name.replace((/\\W/g), '_'),
+                repository: { url: 'https://github.com/kaizhu256/node-' +
+                    options.packageJson.name + '.git' }
+            }, 2);
+            options.githubRepo = options.packageJson.repository.url
+                .replace((/\\.git\$/), '').split('/').slice(-2);
+            template = template.replace(
+                (/kaizhu256(\\.github\\.io\\/|%252F|\\/)/g),
+                options.githubRepo[0] + ('\$1')
+            );
+            template = template.replace((/node-my-app-lite/g), options.githubRepo[1]);
+            template = template.replace(
+                (/\\bh1-my-app\\b/g),
+                options.packageJson.nameHeroku ||
+                    ('h1-' + options.packageJson.nameLib.replace((/_/g), '-'))
+            );
+            template = template.replace(
+                'assets.{{env.npm_package_nameLib}}',
+                'assets.' + options.packageJson.nameLib
+            );
+            template = template.replace((/my-app-lite/g), options.packageJson.name);
+            template = template.replace((/my_app/g), options.packageJson.nameLib);
+            return template;
+        };
+
+        local.throwError = function () {
+        /*
+         * this function will throw a new error
+         */
+            throw new Error();
         };
     }());
 }());
@@ -3476,7 +3561,7 @@ shNpmInstallTarball () {(set -e
 )}
 
 shNpmInstallWithPeerDependencies () {(set -e
-# this function will npm-install $@ with peer-dependencies auto-installed
+# this function will npm-install "$@" with peer-dependencies auto-installed
     shEnvSanitize
     export MODE_BUILD=shNpmInstallWithPeerDependencies
     shBuildPrint "npm-installing with peer-dependencies ..."
@@ -3662,55 +3747,6 @@ shNpmPublishV0 () {(set -e
     npm publish
 )}
 
-shNpmRunApidocRawCommand () {(set -e
-# this function will create the raw-apidoc
-    if [ ! "$npm_lifecycle_event" ]
-    then
-        npm run utility2 shNpmRunApidocRawCommand "$@"
-        return
-    fi
-    export SWGG_TAGS0="${SWGG_TAGS0:-$npm_package_swggTags0}"
-    if [ "$npm_package_swggAll" ] &&
-            [ "$npm_package_swggTags0" ] &&
-            [ "$npm_package_swggAll" != "$npm_package_swggTags0" ]
-    then
-        if [ ! -d "../swgg-$npm_package_swggAll" ]
-        then
-            shGitCommandWithGithubToken clone --branch=alpha --depth=50 --single-branch \
-                "https://github.com/kaizhu256/node-swgg-$npm_package_swggAll" \
-                "../swgg-$npm_package_swggAll"
-        fi
-        cd "../swgg-$npm_package_swggAll"
-        npm run utility2 shNpmRunApidocRawCommand "$@"
-        return
-    fi
-    export npm_package_swggTags0="$SWGG_TAGS0"
-    mkdir -p tmp/apidoc.raw && cd tmp/apidoc.raw
-    case "$1" in
-    create)
-        find . -type f | \
-            grep -v -E '^\.\/\.git\b' | \
-            xargs -I % -n 1 sh -c "[ ! -s % ] && printf 'empty-file %\\n' 1>&2" || true
-        find . -name index.html -type f | \
-            grep -v -E '^\.\/\.git\b' | \
-            sed -e "s/^\.\///" -e "s/\/index.html//" | \
-            sort | \
-            xargs -I % -n 1 sh -c "printf '\\n\\n# curl -L %\\n' && cat %/index.html" | \
-            sed -e "s| *\$||" > ".apidoc.raw.$npm_package_swggTags0.html"
-        cp ".apidoc.raw.$npm_package_swggTags0.html" ../..
-        ;;
-    fetch)
-        find . -maxdepth 1 -type d | grep -E '^\.\/[^.]' | xargs rm -fr
-        rm -f "apidocRawFetch.$npm_package_swggTags0.log"
-        # run node script $2
-        node -e "$2" 2>&1 | tee -a "apidocRawFetch.$npm_config_nameLib.log"
-        find . -path ./.git -prune -o -type f | \
-            xargs -I % -n 1 sh -c "[ ! -s % ] && printf 'empty-file %\\n' 1>&2" | \
-            tee -a "apidocRawFetch.$npm_config_nameLib.log"
-        ;;
-    esac
-)}
-
 shNpmTest () {(set -e
 # this function will npm-test with coverage and create test-report
     shBuildInit
@@ -3726,13 +3762,13 @@ shNpmTest () {(set -e
     # npm-test without coverage
     if [ ! "$npm_config_mode_coverage" ]
     then
-        (eval "$NODE_BINARY" "$@") || EXIT_CODE=$?
+        ("$NODE_BINARY" "$@") || EXIT_CODE=$?
     # npm-test with coverage
     else
         # cleanup old coverage
         rm -f "$npm_config_dir_build/coverage.html/"coverage.*.json
         # npm-test with coverage
-        (eval shIstanbulCover "$@") || EXIT_CODE=$?
+        (shIstanbulCover "$@") || EXIT_CODE=$?
         # if $EXIT_CODE != 0, then debug covered-test by re-running it uncovered
         if [ "$EXIT_CODE" != 0 ] && [ "$EXIT_CODE" != 130 ]
         then
@@ -3740,7 +3776,7 @@ shNpmTest () {(set -e
         fi
     fi
     # create test-report artifacts
-    (eval lib.utility2.js utility2.testReportCreate) || EXIT_CODE=$?
+    (lib.utility2.js utility2.testReportCreate) || EXIT_CODE=$?
     shBuildPrint "EXIT_CODE - $EXIT_CODE"
     return "$EXIT_CODE"
 )}
@@ -3848,6 +3884,7 @@ shReadmeTest () {(set -e
 # this function will extract, save, and test the script $FILE embedded in README.md
     shBuildInit
     export MODE_BUILD=readmeTest
+    shBuildPrint "running command 'shReadmeTest $*' ..."
     case "$(git log -1 --pretty=%s)" in
     "[build app"*)
         shBuildCi
@@ -3885,7 +3922,6 @@ shReadmeTest () {(set -e
         export MODE_BUILD=testExampleSh
         ;;
     esac
-    shBuildPrint "testing $FILE"
     if [ "$FILE" = example.js ] || [ "$FILE" = example.sh ]
     then
         DIR=/tmp/app
@@ -3893,7 +3929,10 @@ shReadmeTest () {(set -e
         # cp script from README.md
         cp "tmp/README.$FILE" "$DIR/$FILE"
         cp "tmp/README.$FILE" "$npm_config_dir_build/$FILE"
-        shFileTrimLeft "$npm_config_dir_build/$FILE"
+        # delete all leading blank lines at top of file
+        # http://sed.sourceforge.net/sed1line.txt
+        sed -in -e '/./,$!d' "$npm_config_dir_build/$FILE"
+        rm -f "$npm_config_dir_build/$FILE"n
         cd "$DIR"
         if [ "$CI_BRANCH" = alpha ]
         then
@@ -3908,12 +3947,6 @@ shReadmeTest () {(set -e
             "$FILE"
         rm -f "$FILE"n
     fi
-    if [ "$FILE" = tmp/README.build_ci.sh ] || [ "$FILE" = example.sh ]
-    then
-        # display shell script
-        # http://stackoverflow.com/questions/1935081/remove-leading-whitespace-from-file
-        sed -e '/./,$!d' "$FILE"
-    fi
     export PORT="${PORT:-8081}"
     export npm_config_timeout_exit="${npm_config_timeout_exit:-30000}"
     # screenshot
@@ -3921,19 +3954,35 @@ shReadmeTest () {(set -e
     shSleep 15
     shBrowserTest "http://127.0.0.1:$PORT" screenshot
     ) &
+    shBuildPrint "testing $FILE ..."
     case "$FILE" in
     example.js)
         SCRIPT="$(cat "$FILE" | grep -E "^ *\\\$ " | grep -o -E "\w.*")" || true
-        printf "$SCRIPT\n\n"
+        # delete all leading blank lines at top of file
+        # delete all trailing blank lines at end of file
+        # http://sed.sourceforge.net/sed1line.txt
+        printf "# file-begin\n"
+        printf "$SCRIPT" | sed -e '/./,$!d' -e :a -e '/^\n*$/{$d;N;ba' -e '}'
+        printf "\n# file-end\n\n\n\n"
         shRunWithScreenshotTxt eval "$SCRIPT"
         ;;
     example.sh)
+        # delete all leading blank lines at top of file
+        # delete all trailing blank lines at end of file
+        # http://sed.sourceforge.net/sed1line.txt
+        printf "# file-begin\n"
+        cat "$FILE" | sed -e '/./,$!d' -e :a -e '/^\n*$/{$d;N;ba' -e '}'
+        printf "\n# file-end\n\n\n\n"
         shRunWithScreenshotTxt /bin/sh "$FILE"
         ;;
     tmp/README.build_ci.sh)
-        unset PORT
-        unset npm_config_timeout_exit
-        /bin/sh "$FILE"
+        # delete all leading blank lines at top of file
+        # delete all trailing blank lines at end of file
+        # http://sed.sourceforge.net/sed1line.txt
+        printf "# file-begin\n"
+        cat "$FILE" | sed -e '/./,$!d' -e :a -e '/^\n*$/{$d;N;ba' -e '}'
+        printf "\n# file-end\n\n\n\n"
+        unset PORT && unset npm_config_timeout_exit && /bin/sh "$FILE"
         ;;
     esac
     shSleep 15
@@ -3977,7 +4026,7 @@ shRmDsStore () {(set -e
 )}
 
 shRun () {(set -e
-# this function will run the command $@ with auto-restart
+# this function will run the command "$@" with auto-restart
     EXIT_CODE=0
     # eval argv and auto-restart on non-zero exit-code, unless exited by SIGINT
     if [ "$npm_config_mode_auto_restart" ] && [ ! "$npm_config_mode_auto_restart_child" ]
@@ -3986,7 +4035,7 @@ shRun () {(set -e
         while true
         do
             printf "(re)starting $*\n"
-            (eval "$@") || EXIT_CODE=$?
+            ("$@") || EXIT_CODE=$?
             printf "process exited with code $EXIT_CODE\n"
             # if $EXIT_CODE != 77, then exit process
             # http://en.wikipedia.org/wiki/Unix_signal
@@ -4006,7 +4055,7 @@ shRun () {(set -e
 )}
 
 shRunWithScreenshotTxt () {(set -e
-# this function will run the command $@ and screenshot the text-output
+# this function will run the command "$@" and screenshot the text-output
 # http://www.cnx-software.com/2011/09/22
 # /how-to-convert-a-command-line-result-into-an-image-in-linux/
     EXIT_CODE=0
@@ -4014,8 +4063,8 @@ shRunWithScreenshotTxt () {(set -e
     touch "$npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
     (
     printf "0" > "$npm_config_file_tmp"
-    shBuildPrint "(eval shRun $* 2>&1)"
-    (eval shRun "$@" 2>&1) || printf $? > "$npm_config_file_tmp"
+    shBuildPrint "(shRun "$*" 2>&1)"
+    (shRun "$@" 2>&1) || printf $? > "$npm_config_file_tmp"
     ) | tee "$npm_config_dir_tmp/runWithScreenshotTxt"
     EXIT_CODE="$(cat "$npm_config_file_tmp")"
     shBuildPrint "EXIT_CODE - $EXIT_CODE"
@@ -4199,6 +4248,7 @@ shTravisTaskPush () {(set -e
 
 shUbuntuInit () {
 # this function will init ubuntu's default .bashrc
+# https://gist.github.com/kaizhu256/15950e6fc4a6fd6f12a8008cb9c46804
     # ~/.bashrc: executed by bash(1) for non-login shells.
     # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
     # for examples
@@ -4238,7 +4288,7 @@ shUbuntuInit () {
 
     # set a fancy prompt (non-color, unless we know we "want" color)
     case "$TERM" in
-        xterm-color) color_prompt=yes;;
+        xterm-color|*-256color) color_prompt=yes;;
     esac
 
     # uncomment for a colored prompt, if the terminal has the capability; turned
@@ -4328,7 +4378,7 @@ shUtility2BuildApp () {(set -e
             (cd "$DIR" && rm -fr node_modules && shBuildApp)
         fi
     done
-    shUtility2GitDiff | less
+    shUtility2GitDiff
 )}
 
 shUtility2Dependents () {(set -e
@@ -4352,8 +4402,9 @@ utility2
 
 shUtility2DependentsSync () {(set -e
 # this function will sync files between utility2 and its dependents
+    CWD="$PWD"
+    cd "$HOME/src/utility2" && shBuildApp
     cd "$HOME/src"
-    (cd utility2 && shBuildApp)
     ln -f "utility2/lib.utility2.sh" "$HOME"
     for DIR in $UTILITY2_DEPENDENTS $(ls -d swgg-* 2>/dev/null)
     do
@@ -4385,6 +4436,7 @@ shUtility2DependentsSync () {(set -e
         fi
         cd ..
     done
+    cd "$CWD" && shBuildApp
 )}
 
 shUtility2GitCommit () {(set -e
@@ -4394,7 +4446,7 @@ shUtility2GitCommit () {(set -e
     for DIR in $UTILITY2_DEPENDENTS
     do
         cd "$HOME/src/$DIR" || continue
-        printf "\n\n\n\n$(pwd)\n"
+        printf "\n\n\n\n$PWD\n"
         git commit -am "'$MESSAGE'" || true
     done
 )}
@@ -4406,22 +4458,24 @@ shUtility2GitCommitAndPush () {(set -e
     for DIR in $UTILITY2_DEPENDENTS
     do
         cd "$HOME/src/$DIR" || continue
-        printf "\n\n\n\n$(pwd)\n"
+        printf "\n\n\n\n$PWD\n"
         git commit -am "'$MESSAGE'" || true
         git push || true
     done
 )}
 
-shUtility2GitDiff () {(set -e
+shUtility2GitDiffHead () {(set -e
 # this function will print the git-status of $UTILITY2_DEPENDENTS to stdout
+    rm -f /tmp/shUtility2GitDiffHead.diff
     for DIR in $UTILITY2_DEPENDENTS
     do
         cd "$HOME/src/$DIR" || continue
-        printf "\n\n\n\n$(pwd)\n\n\n\n"
-        shGitLsTree
-        git status
-        git diff HEAD | cat
+        printf "\n\n\n\n$PWD\n\n\n\n" 2>&1 >> /tmp/shUtility2GitDiffHead.diff
+        shGitLsTree 2>&1 >> /tmp/shUtility2GitDiffHead.diff
+        git status 2>&1 >> /tmp/shUtility2GitDiffHead.diff
+        git diff HEAD 2>&1 >> /tmp/shUtility2GitDiffHead.diff
     done
+    less /tmp/shUtility2GitDiffHead.diff
 )}
 
 shUtility2Grep () {(set -e

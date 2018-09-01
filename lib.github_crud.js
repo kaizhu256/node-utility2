@@ -23,21 +23,18 @@
         // init debug_inline
         (function () {
             var consoleError, context, key;
-            context = (typeof window === "object" && window) || global;
-            key = "debug_inline".replace("_i", "I");
-            if (context[key]) {
-                return;
-            }
             consoleError = console.error;
-            context[key] = function (arg0) {
+            context = (typeof window === 'object' && window) || global;
+            key = 'debug_inline'.replace('_i', 'I');
+            context[key] = context[key] || function (arg0) {
             /*
              * this function will both print arg0 to stderr and return it
              */
                 // debug arguments
-                context["_" + key + "Arguments"] = arguments;
-                consoleError("\n\n" + key);
+                context['_' + key + 'Arguments'] = arguments;
+                consoleError('\n\n' + key);
                 consoleError.apply(console, arguments);
-                consoleError(new Error().stack + "\n");
+                consoleError(new Error().stack + '\n');
                 // return arg0 for inspection
                 return arg0;
             };
@@ -45,10 +42,10 @@
         // init local
         local = {};
         // init isBrowser
-        local.isBrowser = typeof window === "object" &&
-            typeof window.XMLHttpRequest === "function" &&
+        local.isBrowser = typeof window === 'object' &&
+            typeof window.XMLHttpRequest === 'function' &&
             window.document &&
-            typeof window.document.querySelectorAll === "function";
+            typeof window.document.querySelectorAll === 'function';
         // init global
         local.global = local.isBrowser
             ? window
@@ -57,13 +54,6 @@
         local = local.global.utility2_rollup ||
             // local.global.utility2_rollup_old || require('./assets.utility2.rollup.js') ||
             local;
-        // init nop
-        local.nop = function () {
-        /*
-         * this function will do nothing
-         */
-            return;
-        };
         // init exports
         if (local.isBrowser) {
             local.global.utility2_github_crud = local;
@@ -94,7 +84,6 @@
             local.tty = require('tty');
             local.url = require('url');
             local.util = require('util');
-            local.v8 = require('v8');
             local.vm = require('vm');
             local.zlib = require('zlib');
             module.exports = local;
@@ -120,7 +109,16 @@
                 console.log(xhr.responseText);
             });
          */
-            var ajaxProgressUpdate, bufferToString, isBrowser, isDone, nop, streamCleanup, xhr;
+            var ajaxProgressUpdate,
+                bufferToString,
+                isBrowser,
+                isDone,
+                nop,
+                self,
+                streamCleanup,
+                xhr;
+            // init local
+            self = local.utility2 || {};
             // init standalone handling-behavior
             nop = function () {
             /*
@@ -128,12 +126,12 @@
              */
                 return;
             };
-            ajaxProgressUpdate = local.ajaxProgressUpdate || nop;
+            ajaxProgressUpdate = self.ajaxProgressUpdate || nop;
             // init onError
-            if (local.onErrorWithStack) {
-                onError = local.onErrorWithStack(onError);
+            if (self.onErrorWithStack) {
+                onError = self.onErrorWithStack(onError);
             }
-            bufferToString = local.bufferToString || String;
+            bufferToString = self.bufferToString || String;
             streamCleanup = function (stream) {
             /*
              * this function will try to end or destroy the stream
@@ -156,14 +154,14 @@
                 typeof window.document.querySelectorAll === 'function';
             // init xhr
             xhr = !options.httpRequest &&
-                (!isBrowser || (local.serverLocalUrlTest && local.serverLocalUrlTest(options.url)))
-                ? local._http && local._http.XMLHttpRequest && new local._http.XMLHttpRequest()
+                (!isBrowser || (self.serverLocalUrlTest && self.serverLocalUrlTest(options.url)))
+                ? self._http && self._http.XMLHttpRequest && new self._http.XMLHttpRequest()
                 : isBrowser && new window.XMLHttpRequest();
             if (!xhr) {
                 xhr = require('url').parse(options.url);
                 xhr.headers = options.headers;
                 xhr.method = options.method;
-                xhr.timeout = xhr.timeout || local.timeoutDefault || 30000;
+                xhr.timeout = xhr.timeout || self.timeoutDefault || 30000;
                 xhr = (
                     options.httpRequest || require(xhr.protocol.slice(0, -1)).request
                 )(xhr, function (response) {
@@ -192,7 +190,7 @@
                 });
             }
             // debug xhr
-            local._debugXhr = xhr;
+            self._debugXhr = xhr;
             // init options
             Object.keys(options).forEach(function (key) {
                 if (options[key] !== undefined) {
@@ -207,7 +205,7 @@
             xhr.method = xhr.method || 'GET';
             xhr.responseHeaders = {};
             xhr.timeStart = Date.now();
-            xhr.timeout = xhr.timeout || local.timeoutDefault || 30000;
+            xhr.timeout = xhr.timeout || self.timeoutDefault || 30000;
             // init timerTimeout
             xhr.timerTimeout = setTimeout(function () {
                 xhr.error = xhr.error || new Error('onTimeout - timeout-error - ' +
@@ -290,9 +288,7 @@
                         streamCleanup(xhr.responseStream);
                     });
                     // decrement ajaxProgressCounter
-                    if (local.ajaxProgressCounter) {
-                        local.ajaxProgressCounter -= 1;
-                    }
+                    self.ajaxProgressCounter = Math.max(self.ajaxProgressCounter - 1, 0);
                     // handle abort or error event
                     if (!xhr.error &&
                             (event.type === 'abort' ||
@@ -303,8 +299,8 @@
                     // debug statusCode
                     (xhr.error || {}).statusCode = xhr.statusCode;
                     // debug statusCode / method / url
-                    if (local.errorMessagePrepend && xhr.error) {
-                        local.errorMessagePrepend(xhr.error, (isBrowser
+                    if (self.errorMessagePrepend && xhr.error) {
+                        self.errorMessagePrepend(xhr.error, (isBrowser
                             ? 'browser'
                             : 'node') + ' - ' +
                             xhr.statusCode + ' ' + xhr.method + ' ' + xhr.url + '\n' +
@@ -323,8 +319,8 @@
                 ajaxProgressUpdate();
             };
             // increment ajaxProgressCounter
-            local.ajaxProgressCounter = local.ajaxProgressCounter || 0;
-            local.ajaxProgressCounter += 1;
+            self.ajaxProgressCounter = self.ajaxProgressCounter || 0;
+            self.ajaxProgressCounter += 1;
             xhr.addEventListener('abort', xhr.onEvent);
             xhr.addEventListener('error', xhr.onEvent);
             xhr.addEventListener('load', xhr.onEvent);
@@ -334,10 +330,10 @@
                 xhr.upload.addEventListener('progress', ajaxProgressUpdate);
             }
             // open url through corsForwardProxyHost
-            xhr.corsForwardProxyHost = xhr.corsForwardProxyHost || local.corsForwardProxyHost;
-            xhr.location = xhr.location || (local.global && local.global.location) || {};
-            if (local.corsForwardProxyHostIfNeeded && local.corsForwardProxyHostIfNeeded(xhr)) {
-                xhr.open(xhr.method, local.corsForwardProxyHostIfNeeded(xhr));
+            xhr.corsForwardProxyHost = xhr.corsForwardProxyHost || self.corsForwardProxyHost;
+            xhr.location = xhr.location || (self.global && self.global.location) || {};
+            if (self.corsForwardProxyHostIfNeeded && self.corsForwardProxyHostIfNeeded(xhr)) {
+                xhr.open(xhr.method, self.corsForwardProxyHostIfNeeded(xhr));
                 xhr.setRequestHeader('forward-proxy-headers', JSON.stringify(xhr.headers));
                 xhr.setRequestHeader('forward-proxy-url', xhr.url);
             // open url
@@ -347,7 +343,7 @@
             Object.keys(xhr.headers).forEach(function (key) {
                 xhr.setRequestHeader(key, xhr.headers[key]);
             });
-            if (local.FormData && xhr.data instanceof local.FormData) {
+            if (self.FormData && xhr.data instanceof self.FormData) {
                 // handle formData
                 xhr.data.read(function (error, data) {
                     if (error) {
@@ -364,30 +360,6 @@
             return xhr;
         };
 
-        local.assert = function (passed, message, onError) {
-        /*
-         * this function will throw the error message if passed is falsey
-         */
-            var error;
-            if (passed) {
-                return;
-            }
-            error = message && message.message
-                // if message is an error-object, then leave it as is
-                ? message
-                : new Error(typeof message === 'string'
-                    // if message is a string, then leave it as is
-                    ? message
-                    // else JSON.stringify message
-                    : JSON.stringify(message));
-            // debug error
-            local._debugAssertError = error;
-            onError = onError || function (error) {
-                throw error;
-            };
-            onError(error);
-        };
-
         local.cliRun = function (fnc) {
         /*
          * this function will run the cli
@@ -402,7 +374,7 @@
             local.cliDict._eval = local.cliDict._eval || function () {
             /*
              * <code>
-             * # eval code
+             * will eval <code>
              */
                 local.global.local = local;
                 require('vm').runInThisContext(process.argv[3]);
@@ -412,13 +384,17 @@
             local.cliDict._help = local.cliDict._help || function (options) {
             /*
              *
-             * # print help
+             * will print help
              */
                 var commandList, file, packageJson, text, textDict;
                 commandList = [{
-                    arg: '<arg2> ...',
+                    argList: '<arg2>  ...',
                     description: 'usage:',
                     command: ['<arg1>']
+                }, {
+                    argList: '\'console.log("hello world")\'',
+                    description: 'example:',
+                    command: ['--eval']
                 }];
                 file = __filename.replace((/.*\//), '');
                 packageJson = require('./package.json');
@@ -429,9 +405,9 @@
                     }
                     text = String(local.cliDict[key]);
                     if (key === '_default') {
-                        key = '<>';
+                        key = '';
                     }
-                    ii = textDict[text] = textDict[text] || (ii + 1);
+                    ii = textDict[text] = textDict[text] || (ii + 2);
                     if (commandList[ii]) {
                         commandList[ii].command.push(key);
                     } else {
@@ -441,7 +417,7 @@
                             commandList[ii] = commandList[ii] || ['', '', ''];
                         }()));
                         commandList[ii] = {
-                            arg: commandList[ii][1].trim(),
+                            argList: commandList[ii][1].trim(),
                             command: [key],
                             description: commandList[ii][2].trim()
                         };
@@ -449,21 +425,37 @@
                 });
                 (options && options.modeError
                     ? console.error
-                    : console.log)((options && options.modeError
+                    : console.log)(
+                    (options && options.modeError
                     ? '\u001b[31merror: missing <arg1>\u001b[39m\n\n'
-                    : '') + packageJson.name + ' (' + packageJson.version + ')\n\n' + commandList
-                    .filter(function (element) {
-                        return element;
-                    }).map(function (element) {
-                        return (element.description + '\n' +
-                            file + '  ' +
-                            element.command.sort().join('|') + '  ' +
-                            element.arg.replace((/ +/g), '  '))
-                                .replace((/<>\||\|<>|<> {2}/), '')
-                                .trim();
-                    })
-                    .join('\n\n') + '\n\nexample:\n' + file +
-                    '  --eval  \'console.log("hello world")\'');
+                    : '') +
+                        packageJson.name + ' (' + packageJson.version + ')\n\n' +
+                        commandList
+                        .filter(function (element) {
+                            return element;
+                        })
+                        .map(function (element, ii) {
+                            element.command = element.command.filter(function (element) {
+                                return element;
+                            });
+                            switch (ii) {
+                            case 0:
+                            case 1:
+                                element.argList = [element.argList];
+                                break;
+                            default:
+                                element.argList = element.argList.split(' ');
+                                element.description = '# COMMAND ' +
+                                    (element.command[0] || '<none>') + '\n# ' +
+                                    element.description;
+                            }
+                            return element.description + '\n  ' + file +
+                                ('  ' + element.command.sort().join('|') + '  ')
+                                .replace((/^ {4}$/), '  ') +
+                                element.argList.join('  ');
+                        })
+                        .join('\n\n')
+                );
             };
             local.cliDict['--help'] = local.cliDict['--help'] || local.cliDict._help;
             local.cliDict['-h'] = local.cliDict['-h'] || local.cliDict._help;
@@ -472,12 +464,12 @@
             local.cliDict._interactive = local.cliDict._interactive || function () {
             /*
              *
-             * # start interactive-mode
+             * will start interactive-mode
              */
                 local.global.local = local;
                 local.replStart();
             };
-            if (local.replStart) {
+            if (typeof local.replStart === 'function') {
                 local.cliDict['--interactive'] = local.cliDict['--interactive'] ||
                     local.cliDict._interactive;
                 local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
@@ -485,7 +477,7 @@
             local.cliDict._version = local.cliDict._version || function () {
             /*
              *
-             * # print version
+             * will print version
              */
                 console.log(require(__dirname + '/package.json').version);
             };
@@ -508,9 +500,23 @@
             fnc();
         };
 
+        local.echo = function (arg0) {
+        /*
+         * this function will return arg0
+         */
+            return arg0;
+        };
+
+        local.nop = function () {
+        /*
+         * this function will do nothing
+         */
+            return;
+        };
+
         local.onErrorDefault = function (error) {
         /*
-         * this function will if error exists, then print error.stack to stderr
+         * this function will if error exists, then print it to stderr
          */
             if (error && !local.global.__coverage__) {
                 console.error(error);
@@ -548,10 +554,18 @@
          */
             options.onNext = local.onErrorWithStack(function (error, data, meta) {
                 try {
-                    options.modeNext0 = options.modeNext || 0;
-                    options.modeNext = error && !options.modeErrorIgnore
-                        ? Infinity
-                        : options.modeNext + 1;
+                    options.modeNext += error && !options.modeErrorIgnore
+                        ? 1000
+                        : 1;
+                    if (options.modeDebug) {
+                        console.error('onNext - ' + JSON.stringify({
+                            modeNext: options.modeNext,
+                            errorMessage: error && error.message
+                        }));
+                        if (error && error.stack) {
+                            console.error(error.stack);
+                        }
+                    }
                     onError(error, data, meta);
                 } catch (errorCaught) {
                     // throw errorCaught to break infinite recursion-loop
@@ -582,12 +596,10 @@
                 // decrement counter
                 onParallel.counter -= 1;
                 // validate counter
-                local.assert(
-                    onParallel.counter >= 0 || error || onParallel.error,
-                    'invalid onParallel.counter = ' + onParallel.counter
-                );
+                if (!(onParallel.counter >= 0 || error || onParallel.error)) {
+                    error = new Error('invalid onParallel.counter = ' + onParallel.counter);
                 // ensure onError is run only once
-                if (onParallel.counter < 0) {
+                } else if (onParallel.counter < 0) {
                     return;
                 }
                 // handle error
@@ -659,16 +671,6 @@
             onParallel.counter += 1;
             onEach2();
             onParallel();
-        };
-
-        local.onReadyAfter = function (onError) {
-        /*
-         * this function will call onError when onReadyBefore.counter === 0
-         */
-            local.onReadyBefore.counter += 1;
-            local.taskCreate({ key: 'utility2.onReadyAfter' }, null, onError);
-            local.onResetAfter(local.onReadyBefore);
-            return onError;
         };
     }());
 
@@ -1087,40 +1089,14 @@
             return;
         }
         local.cliDict = {};
-        local.cliDict.create_repo = function () {
-        /*
-         * <repoUrlList>
-         * # create comma-separated <repoUrlList> on github in parallel
-         */
-            local.githubCrudRepoCreateList({
-                urlList: process.argv[3].split(',').filter(function (element) {
-                    return element;
-                })
-            }, function (error) {
-                process.exit(!!error);
-            });
-        };
         local.cliDict.delete = function () {
         /*
          * <fileRemote|dirRemote> <commitMessage>
-         * # delete <fileRemote|dirRemote> from github
+         * will delete from github <fileRemote|dirRemote>
          */
-            local.githubCrudContentDelete({
+            local.github_crud.githubCrudContentDelete({
                 message: process.argv[4],
                 url: process.argv[3]
-            }, function (error) {
-                process.exit(!!error);
-            });
-        };
-        local.cliDict.delete_repo = function () {
-        /*
-         * <repoUrlList>
-         * # delete comma-separated <repoUrlList> from github in parallel
-         */
-            local.githubCrudRepoDeleteList({
-                urlList: process.argv[3].split(',').filter(function (element) {
-                    return element;
-                })
             }, function (error) {
                 process.exit(!!error);
             });
@@ -1128,9 +1104,11 @@
         local.cliDict.get = function () {
         /*
          * <fileRemote>
-         * # get <fileRemote> from github
+         * will get from github <fileRemote>
          */
-            local.githubCrudContentGet({ url: process.argv[3] }, function (error, data) {
+            local.github_crud.githubCrudContentGet({
+                url: process.argv[3]
+            }, function (error, data) {
                 try {
                     process.stdout.write(data);
                 } catch (ignore) {
@@ -1141,9 +1119,9 @@
         local.cliDict.put = function () {
         /*
          * <fileRemote> <fileLocal> <commitMessage>
-         * # put <fileLocal> to <fileRemote> on github
+         * will put on github <fileRemote>, <fileLocal>
          */
-            local.githubCrudContentPutFile({
+            local.github_crud.githubCrudContentPutFile({
                 message: process.argv[5],
                 url: process.argv[3],
                 file: process.argv[4]
@@ -1151,16 +1129,36 @@
                 process.exit(!!error);
             });
         };
+        local.cliDict.repo_create = function () {
+        /*
+         * <repoList>
+         * will create on github in parallel, comma-separated <repoList>
+         */
+            local.github_crud.githubCrudRepoCreateList({
+                urlList: process.argv[3].split(/[,\s]/g).filter(local.echo)
+            }, function (error) {
+                process.exit(!!error);
+            });
+        };
+        local.cliDict.repo_delete = function () {
+        /*
+         * <repoList>
+         * will delete from github in parallel, comma-separated <repoList>
+         */
+            local.github_crud.githubCrudRepoDeleteList({
+                urlList: process.argv[3].split(/[,\s]/g).filter(local.echo)
+            }, function (error) {
+                process.exit(!!error);
+            });
+        };
         local.cliDict.touch = function () {
         /*
          * <fileRemoteList> <commitMessage>
-         * # touch comma-separated <fileRemoteList> on github in parallel
+         * will touch on github in parallel, comma-separated <fileRemoteList>
          */
-            local.githubCrudContentTouchList({
+            local.github_crud.githubCrudContentTouchList({
                 message: process.argv[4],
-                urlList: process.argv[3].split(',').filter(function (element) {
-                    return element;
-                })
+                urlList: process.argv[3].split(/[,\s]/g).filter(local.echo)
             }, function (error) {
                 process.exit(!!error);
             });

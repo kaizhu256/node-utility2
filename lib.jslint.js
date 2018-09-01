@@ -23,21 +23,18 @@
         // init debug_inline
         (function () {
             var consoleError, context, key;
-            context = (typeof window === "object" && window) || global;
-            key = "debug_inline".replace("_i", "I");
-            if (context[key]) {
-                return;
-            }
             consoleError = console.error;
-            context[key] = function (arg0) {
+            context = (typeof window === 'object' && window) || global;
+            key = 'debug_inline'.replace('_i', 'I');
+            context[key] = context[key] || function (arg0) {
             /*
              * this function will both print arg0 to stderr and return it
              */
                 // debug arguments
-                context["_" + key + "Arguments"] = arguments;
-                consoleError("\n\n" + key);
+                context['_' + key + 'Arguments'] = arguments;
+                consoleError('\n\n' + key);
                 consoleError.apply(console, arguments);
-                consoleError(new Error().stack + "\n");
+                consoleError(new Error().stack + '\n');
                 // return arg0 for inspection
                 return arg0;
             };
@@ -45,10 +42,10 @@
         // init local
         local = {};
         // init isBrowser
-        local.isBrowser = typeof window === "object" &&
-            typeof window.XMLHttpRequest === "function" &&
+        local.isBrowser = typeof window === 'object' &&
+            typeof window.XMLHttpRequest === 'function' &&
             window.document &&
-            typeof window.document.querySelectorAll === "function";
+            typeof window.document.querySelectorAll === 'function';
         // init global
         local.global = local.isBrowser
             ? window
@@ -57,13 +54,6 @@
         local = local.global.utility2_rollup ||
             // local.global.utility2_rollup_old || require('./assets.utility2.rollup.js') ||
             local;
-        // init nop
-        local.nop = function () {
-        /*
-         * this function will do nothing
-         */
-            return;
-        };
         // init exports
         if (local.isBrowser) {
             local.global.utility2_jslint = local;
@@ -94,7 +84,6 @@
             local.tty = require('tty');
             local.url = require('url');
             local.util = require('util');
-            local.v8 = require('v8');
             local.vm = require('vm');
             local.zlib = require('zlib');
             module.exports = local;
@@ -120,7 +109,7 @@
             local.cliDict._eval = local.cliDict._eval || function () {
             /*
              * <code>
-             * # eval code
+             * will eval <code>
              */
                 local.global.local = local;
                 require('vm').runInThisContext(process.argv[3]);
@@ -130,13 +119,17 @@
             local.cliDict._help = local.cliDict._help || function (options) {
             /*
              *
-             * # print help
+             * will print help
              */
                 var commandList, file, packageJson, text, textDict;
                 commandList = [{
-                    arg: '<arg2> ...',
+                    argList: '<arg2>  ...',
                     description: 'usage:',
                     command: ['<arg1>']
+                }, {
+                    argList: '\'console.log("hello world")\'',
+                    description: 'example:',
+                    command: ['--eval']
                 }];
                 file = __filename.replace((/.*\//), '');
                 packageJson = require('./package.json');
@@ -147,9 +140,9 @@
                     }
                     text = String(local.cliDict[key]);
                     if (key === '_default') {
-                        key = '<>';
+                        key = '';
                     }
-                    ii = textDict[text] = textDict[text] || (ii + 1);
+                    ii = textDict[text] = textDict[text] || (ii + 2);
                     if (commandList[ii]) {
                         commandList[ii].command.push(key);
                     } else {
@@ -159,7 +152,7 @@
                             commandList[ii] = commandList[ii] || ['', '', ''];
                         }()));
                         commandList[ii] = {
-                            arg: commandList[ii][1].trim(),
+                            argList: commandList[ii][1].trim(),
                             command: [key],
                             description: commandList[ii][2].trim()
                         };
@@ -167,21 +160,37 @@
                 });
                 (options && options.modeError
                     ? console.error
-                    : console.log)((options && options.modeError
+                    : console.log)(
+                    (options && options.modeError
                     ? '\u001b[31merror: missing <arg1>\u001b[39m\n\n'
-                    : '') + packageJson.name + ' (' + packageJson.version + ')\n\n' + commandList
-                    .filter(function (element) {
-                        return element;
-                    }).map(function (element) {
-                        return (element.description + '\n' +
-                            file + '  ' +
-                            element.command.sort().join('|') + '  ' +
-                            element.arg.replace((/ +/g), '  '))
-                                .replace((/<>\||\|<>|<> {2}/), '')
-                                .trim();
-                    })
-                    .join('\n\n') + '\n\nexample:\n' + file +
-                    '  --eval  \'console.log("hello world")\'');
+                    : '') +
+                        packageJson.name + ' (' + packageJson.version + ')\n\n' +
+                        commandList
+                        .filter(function (element) {
+                            return element;
+                        })
+                        .map(function (element, ii) {
+                            element.command = element.command.filter(function (element) {
+                                return element;
+                            });
+                            switch (ii) {
+                            case 0:
+                            case 1:
+                                element.argList = [element.argList];
+                                break;
+                            default:
+                                element.argList = element.argList.split(' ');
+                                element.description = '# COMMAND ' +
+                                    (element.command[0] || '<none>') + '\n# ' +
+                                    element.description;
+                            }
+                            return element.description + '\n  ' + file +
+                                ('  ' + element.command.sort().join('|') + '  ')
+                                .replace((/^ {4}$/), '  ') +
+                                element.argList.join('  ');
+                        })
+                        .join('\n\n')
+                );
             };
             local.cliDict['--help'] = local.cliDict['--help'] || local.cliDict._help;
             local.cliDict['-h'] = local.cliDict['-h'] || local.cliDict._help;
@@ -190,12 +199,12 @@
             local.cliDict._interactive = local.cliDict._interactive || function () {
             /*
              *
-             * # start interactive-mode
+             * will start interactive-mode
              */
                 local.global.local = local;
                 local.replStart();
             };
-            if (local.replStart) {
+            if (typeof local.replStart === 'function') {
                 local.cliDict['--interactive'] = local.cliDict['--interactive'] ||
                     local.cliDict._interactive;
                 local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
@@ -203,7 +212,7 @@
             local.cliDict._version = local.cliDict._version || function () {
             /*
              *
-             * # print version
+             * will print version
              */
                 console.log(require(__dirname + '/package.json').version);
             };
@@ -6643,36 +6652,6 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                             return match0.replace((/^.*?$/gm), '');
                         }
                     );
-                ii = 0;
-                scriptParsed.replace((/^.*?$/gm), function (line) {
-                    ii += 1;
-                    jj = 0;
-                    message = '';
-                    // validate 4-space indent
-                    if (!(/^ +(?:\*|\/\/!!)/).test(line) &&
-                            ((/^ */).exec(line)[0].length % 4 !== 0)) {
-                        jj = jj || 1;
-                        message = message || 'non 4-space indent';
-                    }
-                    // validate trailing-whitespace
-                    if ((/ $| \\n\\$/).test(line)) {
-                        jj = jj || line.length;
-                        message = message || 'trailing whitespace';
-                    }
-                    // validate tab
-                    if (line.indexOf('\t') >= 0) {
-                        jj = jj || (line.indexOf('\t') + 1);
-                        message = message || 'tab detected';
-                    }
-                    if (message) {
-                        local.errorList.push({
-                            col: jj,
-                            line: ii,
-                            message: message,
-                            value: JSON.stringify(line)
-                        });
-                    }
-                });
             }
             switch (file.replace((/^.*\./), '.')) {
             // csslint script
@@ -6726,6 +6705,36 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
             });
             if (!local.errorList.length &&
                     (/^\/\* jslint-utility2 \*\/$|^# jslint-utility2$/m).test(script)) {
+                ii = 0;
+                scriptParsed.replace((/^.*?$/gm), function (line) {
+                    ii += 1;
+                    jj = 0;
+                    message = '';
+                    // validate 4-space indent
+                    if (!(/^ +(?:\*|\/\/!!)/).test(line) &&
+                            ((/^ */).exec(line)[0].length % 4 !== 0)) {
+                        jj = jj || 1;
+                        message = message || 'non 4-space indent';
+                    }
+                    // validate trailing-whitespace
+                    if ((/ $| \\n\\$/).test(line)) {
+                        jj = jj || line.length;
+                        message = message || 'trailing whitespace';
+                    }
+                    // validate tab
+                    if (line.indexOf('\t') >= 0) {
+                        jj = jj || (line.indexOf('\t') + 1);
+                        message = message || 'tab detected';
+                    }
+                    if (message) {
+                        local.errorList.push({
+                            col: jj,
+                            line: ii,
+                            message: message,
+                            value: JSON.stringify(line)
+                        });
+                    }
+                });
                 switch (file.replace((/^.*\./), '.')) {
                 case '.css':
                     local.csslintUtility2(script);
@@ -6747,10 +6756,9 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
             local.errorText = '\u001b[1m' + (lintType || 'jslint') + ' ' +  file + '\u001b[22m\n';
             local.errorList.forEach(function (error, ii) {
                 local.errorText += (' #' + String(ii + 1) + ' ').slice(-4) +
-                    '\u001b[31m' + error.message +
-                    '\u001b[39m\n    ' + String(error.value).trim() +
-                    '\u001b[90m \/\/ line ' + (error.line) +
-                    ', col ' + (error.col) + '\u001b[39m\n';
+                    '\u001b[31m' + error.message + '\u001b[39m\n' +
+                    '    ' + String(error.value).trim() +
+                    '\u001b[90m \/\/ line ' + error.line + ', col ' + (error.col) + '\u001b[39m\n';
             });
             local.errorText = local.errorText.trim();
             // print error to stderr
@@ -6780,7 +6788,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                     local.errorList.push({
                         col: 0,
                         line: ii,
-                        message: 'domElement.classList not sorted - ' + tmp,
+                        message: '<domElement>.classList not sorted - ' + tmp,
                         value: line
                     });
                 }
@@ -6851,11 +6859,11 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
          * # jslint <file1> <file2> ... and print result to stdout
          */
             // jslint files
-            process.argv.slice(2).forEach(function (arg) {
-                if (arg[0] !== '-') {
+            process.argv.slice(2).forEach(function (argList) {
+                if (argList[0] !== '-') {
                     local.jslintAndPrint(
-                        local.fs.readFileSync(local.path.resolve(arg), 'utf8'),
-                        arg
+                        local.fs.readFileSync(local.path.resolve(argList), 'utf8'),
+                        argList
                     );
                 }
             });

@@ -61,21 +61,24 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - add server stress-test using electron
 - none
 
-#### changelog 2018.8.19
-- npm publish 2018.8.19
-- merge function base64FromString into base64FromBuffer
-- integrate function db.domOnEventDb with utility2.onResetBefore
-- update function middlewareJsonpStateInit with env-var \$npm_package_assetsList
-- do not require following nodejs builtins by default: console, constants, module, process, punycode
-- support travis-ci.com
-- add benchmark analytics domOnEventWindowOnloadTimeElapsed and _testCase_domOnEventWindowOnloadTimeElapsed_default
-- revamp shell-functions shCryptoTravisDecrypt and shCryptoTravisEncrypt to use shell-functions shCryptoAesXxxCbcRawDecrypt and shCryptoAesXxxCbcRawEncrypt, respectively
-- merge shell-function shGithubCrudRepoCreate into shGithubRepoBaseCreate
-- add BigInt-support for jslint and istanbul
-- move shell-function shCustomOrgRepoCreate to node
-- remove env var \$TRAVIS_REPO_CREATE_FORCE
-- add shell-macro \$UTILITY2_MACRO_JS
-- rename asset /utility2.html -> /assets.utility2.base.html
+#### changelog 2018.9.1
+- npm publish 2018.9.1
+- remove unused functions dbTableXxx
+- update function buildLib to normalize local-function and whitespace
+- rename function templateRenderJslintLite -> templateRenderMyApp
+- revamp templates from jslint-lite -> my\\-app-lite
+- add function stringShellSafe
+- revamp electron mechanism to pass coverage and test-report
+- update testReport with domOnEventWindowOnloadTimeElapsed statistic
+- fix no log output in electron v1.8.x
+- remove unused shell-functions shNpmRunApidocRawCommand
+- remove unused functions cookieRemove, cookieRemoveAll, cookieSet, profile, profileSync
+- do not require following nodejs builtins by default: v8
+- add function semverCompare
+- rename var global_test_results -> utility2_testReport
+- merge env var modeTest and utility2_modeTestRun -> local.global.utility2_modeTest
+- merge function onResetXxx -> utility2_onReadyXxx
+- revamp bootstrap-mechanism before running tests
 - none
 
 #### this package requires
@@ -203,6 +206,7 @@ instruction
                 }, onError);
             });
         };
+
         local.testCase_ajax_404 = function (options, onError) {
         /*
          * this function will test ajax's "404 not found" handling-behavior
@@ -272,7 +276,7 @@ instruction
                 if (document.querySelector('#testReportDiv1').style.maxHeight === '0px') {
                     local.uiAnimateSlideDown(document.querySelector('#testReportDiv1'));
                     document.querySelector('#testRunButton1').textContent = 'hide internal test';
-                    local.modeTest = true;
+                    local.modeTest = 1;
                     local.testRunDefault(local);
                 // hide tests
                 } else {
@@ -283,7 +287,7 @@ instruction
             // custom-case
             case 'testRunButton2':
                 // run tests
-                local.modeTest = true;
+                local.modeTest = 1;
                 local.testRunDefault(local);
                 break;
             default:
@@ -350,9 +354,10 @@ instruction
                 }
             }
         };
+
         // log stderr and stdout to #outputStdoutTextarea1
         ['error', 'log'].forEach(function (key) {
-            console[key + '_original'] = console[key];
+            console[key + '_original'] = console[key + '_original'] || console[key];
             console[key] = function () {
                 var element;
                 console[key + '_original'].apply(console, arguments);
@@ -416,7 +421,6 @@ instruction
         local.tty = require('tty');
         local.url = require('url');
         local.util = require('util');
-        local.v8 = require('v8');
         local.vm = require('vm');
         local.zlib = require('zlib');
         /* validateLineSortedReset */
@@ -685,6 +689,7 @@ utility2-comment -->\n\
 <h3>{{env.npm_package_description}}</h3>\n\
 <!-- utility2-comment\n\
 <a class="button" download href="assets.app.js">download standalone app</a><br>\n\
+<button class="zeroPixel" id="testRunButton1"></button>\n\
 <button class="button onclick onreset" id="testRunButton2">run internal test</button><br>\n\
 utility2-comment -->\n\
 \n\
@@ -702,7 +707,7 @@ utility2-comment -->\n\
     "use strict";\n\
     var testCaseDict;\n\
     testCaseDict = {};\n\
-    testCaseDict.modeTest = true;\n\
+    testCaseDict.modeTest = 1;\n\
 \n\
     // comment this testCase to disable the failed assertion demo\n\
     testCaseDict.testCase_failed_assertion_demo = function (options, onError) {\n\
@@ -761,11 +766,11 @@ utility2-comment -->\n\
 <script src="assets.utility2.lib.sjcl.js"></script>\n\
 <script src="assets.utility2.lib.uglifyjs.js"></script>\n\
 <script src="assets.utility2.js"></script>\n\
-<script>window.utility2.onResetBefore.counter += 1;</script>\n\
+<script>window.utility2_onReadyBefore.counter += 1;</script>\n\
 <script src="jsonp.utility2.stateInit?callback=window.utility2.stateInit"></script>\n\
 <script src="assets.example.js"></script>\n\
 <script src="assets.test.js"></script>\n\
-<script>window.utility2.onResetBefore();</script>\n\
+<script>window.utility2_onReadyBefore();</script>\n\
 <!-- utility2-comment\n\
 {{/if isRollup}}\n\
 utility2-comment -->\n\
@@ -936,7 +941,7 @@ utility2-comment -->\n\
         "test": "./npm_scripts.sh",
         "utility2": "./npm_scripts.sh"
     },
-    "version": "2018.8.19"
+    "version": "2018.9.1"
 }
 ```
 
@@ -1025,59 +1030,6 @@ RUN (set -e; \
         ssh \
         vim \
         wget; \
-)
-```
-
-- Dockerfile.electron
-```shell
-# Dockerfile.electron
-FROM kaizhu256/node-utility2:latest
-MAINTAINER kai zhu <kaizhu256@gmail.com>
-# install electron-lite
-RUN (set -e; \
-    export DEBIAN_FRONTEND=noninteractive; \
-    apt-get update; \
-    apt-get install --no-install-recommends -y \
-        libnotify-dev; \
-    for ELECTRON_VERSION in \
-        v0.24.0 \
-        v0.25.1 \
-        v0.26.1 \
-        v0.27.1 \
-        v0.28.1 \
-        v0.29.1 \
-        v0.30.1 \
-        v0.31.1 \
-        v0.32.1 \
-        v0.33.1 \
-        v0.34.1 \
-        v0.35.1 \
-        v0.36.1 \
-        v0.37.1 \
-        v1.0.1 \
-        v1.1.1 \
-        v1.2.1 \
-        v1.3.1 \
-        v1.4.1 \
-        v1.5.1 \
-        v1.6.1 \
-        v1.7.1 \
-        v1.8.1 \
-        v2.0.1; \
-    do \
-        npm install kaizhu256/node-electron-lite#alpha \
-            --electron-version="$ELECTRON_VERSION"; \
-        mv node_modules/electron-lite/external "/opt/electron-$ELECTRON_VERSION"; \
-        ln -fs "/opt/electron-$ELECTRON_VERSION/electron" "/bin/electron-$ELECTRON_VERSION"; \
-        if [ "$ELECTRON_VERSION" \>= 0.35.0 ]; \
-        then \
-            cd node_modules/electron-lite; \
-            npm install; \
-            npm test; \
-        fi; \
-        cd /tmp; \
-    done; \
-    mv electron-v*.zip /; \
 )
 ```
 
