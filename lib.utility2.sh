@@ -8,6 +8,7 @@
 # http://sed.sourceforge.net/sed1line.txt
 # git config --global diff.algorithm histogram
 # git fetch origin alpha beta master --tags
+# git ls-remote --heads origin
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/bb "touch" alpha
 # shGitAddTee npm test --mode-coverage --mode-test-case2=testCase_webpage_default,testCase_nop_default
 # shGitAddTee shUtility2DependentsSync
@@ -228,47 +229,52 @@ shBuildApp () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
+/*global global*/
 var local, tmp;
-local = require(process.env.npm_config_dir_utility2);
-if (!local.fs.existsSync("README.md", "utf8")) {
-    local.fs.writeFileSync("README.md", local.templateRenderMyApp(
-        local.assetsDict["/assets.readme.template.md"],
-        {}
-    ));
-}
-if (!local.fs.existsSync("lib." + process.env.npm_package_nameLib + ".js", "utf8")) {
-    tmp = local.assetsDict["/assets.my_app.template.js"];
-    if (local.fs.existsSync("assets.utility2.rollup.js")) {
-        tmp = tmp.replace(
-            "            // local.global.utility2_rollup_old || ",
-            "            local.global.utility2_rollup_old || "
+(function () {
+    "use strict";
+    local = require(process.env.npm_config_dir_utility2);
+    if (!local.fs.existsSync("README.md", "utf8")) {
+        local.fs.writeFileSync("README.md", local.templateRenderMyApp(
+            local.assetsDict["/assets.readme.template.md"],
+            {}
+        ));
+    }
+    if (!local.fs.existsSync("lib." + process.env.npm_package_nameLib + ".js", "utf8")) {
+        tmp = local.assetsDict["/assets.my_app.template.js"];
+        if (local.fs.existsSync("assets.utility2.rollup.js")) {
+            tmp = tmp.replace(
+                "            // local.global.utility2_rollup_old || ",
+                "            local.global.utility2_rollup_old || "
+            );
+        }
+        local.fs.writeFileSync(
+            "lib." + process.env.npm_package_nameLib + ".js",
+            local.templateRenderMyApp(tmp, {})
         );
     }
-    local.fs.writeFileSync(
-        "lib." + process.env.npm_package_nameLib + ".js",
-        local.templateRenderMyApp(tmp, {})
-    );
-}
-if (!local.fs.existsSync("test.js", "utf8")) {
-    tmp = local.assetsDict["/assets.test.template.js"];
-    if (local.fs.existsSync("assets.utility2.rollup.js")) {
-        tmp = tmp.replace(
-            "require(\u0027utility2\u0027)",
-            "require(\u0027./assets.utility2.rollup.js\u0027)"
-        );
+    if (!local.fs.existsSync("test.js", "utf8")) {
+        tmp = local.assetsDict["/assets.test.template.js"];
+        if (local.fs.existsSync("assets.utility2.rollup.js")) {
+            tmp = tmp.replace(
+                "require(\u0027utility2\u0027)",
+                "require(\u0027./assets.utility2.rollup.js\u0027)"
+            );
+        }
+        local.fs.writeFileSync("test.js", local.templateRenderMyApp(tmp, {}));
     }
-    local.fs.writeFileSync("test.js", local.templateRenderMyApp(tmp, {}));
-}
+}());
 // </script>
 '
     chmod 755 "lib.$npm_package_nameLib.js" npm_scripts.sh
@@ -296,29 +302,34 @@ shBuildAppSwgg0 () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
+/*global global*/
 var local;
-local = require("utility2");
-// init README.md
-local.fs.writeFileSync(
-    "tmp/README.md",
-    local.assetsDict["/assets.readmeCustomOrg.swgg.template.md"]
-);
-// init assets
-["assets.swgg.swagger.json", "assets.utility2.rollup.js"].forEach(function (file) {
-    if (!local.fs.existsSync(file)) {
-        local.fs.writeFileSync(file, local.assetsDict["/" + file]);
-    }
-});
+(function () {
+    "use strict";
+    local = require("utility2");
+    // init README.md
+    local.fs.writeFileSync(
+        "tmp/README.md",
+        local.assetsDict["/assets.readmeCustomOrg.swgg.template.md"]
+    );
+    // init assets
+    ["assets.swgg.swagger.json", "assets.utility2.rollup.js"].forEach(function (file) {
+        if (!local.fs.existsSync(file)) {
+            local.fs.writeFileSync(file, local.assetsDict["/" + file]);
+        }
+    });
+}());
 // </script>
 '
     sed -in \
@@ -404,23 +415,28 @@ shBuildCi () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
+/*global global*/
 var local;
-local = require("utility2");
-["assets.utility2.rollup.js"].forEach(function (file) {
-    if (local.fs.existsSync(file)) {
-        local.fs.writeFileSync(file, local.assetsDict["/" + file]);
-    }
-});
+(function () {
+    "use strict";
+    local = require("utility2");
+    ["assets.utility2.rollup.js"].forEach(function (file) {
+        if (local.fs.existsSync(file)) {
+            local.fs.writeFileSync(file, local.assetsDict["/" + file]);
+        }
+    });
+}());
 // </script>
 '
             shBuildApp
@@ -449,8 +465,8 @@ local = require("utility2");
             fi
             # shBuildAppSync
             rm -fr "$npm_config_dir_utility2"
-            git clone --branch=alpha --single-branch --depth=50 \
-                https://github.com/kaizhu256/node-utility2 "$npm_config_dir_utility2"
+            git clone https://github.com/kaizhu256/node-utility2 "$npm_config_dir_utility2" \
+                --branch=alpha --single-branch --depth=50
             mkdir -p "$npm_config_dir_utility2/tmp/build/app"
             curl -Lfs https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/build..alpha..travis-ci.org/app/assets.utility2.rollup.js > \
@@ -853,54 +869,60 @@ $HOME/node_modules/utility2}" || return $?
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true,
+    white: true
 */
-"use strict";
+/*global global*/
 var packageJson, value;
-packageJson = require("./package.json");
-Object.keys(packageJson).forEach(function (key) {
-    value = packageJson[key];
-    if (!(/\W/g).test(key) && typeof value === "string" && !(/[\n$]/).test(value)) {
-        process.stdout.write("export npm_package_" + key + "=\u0027" +
-            value.replace((/\u0027/g), "\u0027\"\u0027\"\u0027") + "\u0027;");
+(function () {
+    "use strict";
+    packageJson = require("./package.json");
+    Object.keys(packageJson).forEach(function (key) {
+        value = packageJson[key];
+        if (!(/\W/g).test(key) && typeof value === "string" && !(/[\n$]/).test(value)) {
+            process.stdout.write("export npm_package_" + key + "=\u0027" +
+                value.replace((/\u0027/g), "\u0027\"\u0027\"\u0027") + "\u0027;");
+        }
+    });
+    value = String((packageJson.repository && packageJson.repository.url) ||
+        packageJson.repository ||
+        "")
+        .split(":").slice(-1)[0].toString()
+        .split("/")
+        .slice(-2)
+        .join("/")
+        .replace((/\.git$/), "");
+    if ((/^[^\/]+\/[^\/]+$/).test(value)) {
+        value = value.split("/");
+        if (!process.env.GITHUB_REPO) {
+            process.env.GITHUB_REPO = value.join("/");
+            process.stdout.write("export GITHUB_REPO=" + JSON.stringify(process.env.GITHUB_REPO) +
+                ";");
+        }
+        if (!process.env.GITHUB_ORG) {
+            process.env.GITHUB_ORG = value[0];
+            process.stdout.write("export GITHUB_ORG=" + JSON.stringify(process.env.GITHUB_ORG) +
+                ";");
+        }
+        if (!process.env.npm_package_buildCustomOrg &&
+                value.join("/").indexOf(value[0] + "/node-" + value[0] + "-") === 0) {
+            process.env.npm_package_buildCustomOrg = value
+                .join("/")
+                .replace(value[0] + "/node-" + value[0] + "-", "");
+            process.stdout.write("export npm_package_buildCustomOrg=" +
+                JSON.stringify(process.env.npm_package_buildCustomOrg) + ";");
+        }
     }
-});
-value = String((packageJson.repository && packageJson.repository.url) ||
-    packageJson.repository ||
-    "")
-    .split(":").slice(-1)[0].toString()
-    .split("/")
-    .slice(-2)
-    .join("/")
-    .replace((/\.git$/), "");
-if ((/^[^\/]+\/[^\/]+$/).test(value)) {
-    value = value.split("/");
-    if (!process.env.GITHUB_REPO) {
-        process.env.GITHUB_REPO = value.join("/");
-        process.stdout.write("export GITHUB_REPO=" + JSON.stringify(process.env.GITHUB_REPO) +
-            ";");
-    }
-    if (!process.env.GITHUB_ORG) {
-        process.env.GITHUB_ORG = value[0];
-        process.stdout.write("export GITHUB_ORG=" + JSON.stringify(process.env.GITHUB_ORG) +
-            ";");
-    }
-    if (!process.env.npm_package_buildCustomOrg &&
-            value.join("/").indexOf(value[0] + "/node-" + value[0] + "-") === 0) {
-        process.env.npm_package_buildCustomOrg = value
-            .join("/")
-            .replace(value[0] + "/node-" + value[0] + "-", "");
-        process.stdout.write("export npm_package_buildCustomOrg=" +
-            JSON.stringify(process.env.npm_package_buildCustomOrg) + ";");
-    }
-}
+}());
 // </script>
 ')" || return $?
     else
@@ -923,31 +945,36 @@ if ((/^[^\/]+\/[^\/]+$/).test(value)) {
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
-require("fs").readFileSync("README.md", "utf8").replace((
-    /```\w*?(\n[\W\s]*?(\w\S*?)[\n"][\S\s]*?)\n```/g
-), function (match0, match1, match2, ii, text) {
-    // preserve lineno
-    match0 = text.slice(0, ii).replace((/.+/g), "") + match1
-        // parse "\" line-continuation
-        .replace((/(?:.*\\\n)+.*/g), function (match0) {
-            return match0.replace((/\\\n/g), "") + match0.replace((/.+/g), "");
-        });
-    // trim json-file
-    if (match2.slice(-5) === ".json") {
-        match0 = match0.trim();
-    }
-    require("fs").writeFileSync("tmp/README." + match2, match0.trimRight() + "\n");
-});
+/*global global*/
+(function () {
+    "use strict";
+    require("fs").readFileSync("README.md", "utf8").replace((
+        /```\w*?(\n[\W\s]*?(\w\S*?)[\n"][\S\s]*?)\n```/g
+    ), function (match0, match1, match2, ii, text) {
+        // preserve lineno
+        match0 = text.slice(0, ii).replace((/.+/g), "") + match1
+            // parse "\" line-continuation
+            .replace((/(?:.*\\\n)+.*/g), function (match0) {
+                return match0.replace((/\\\n/g), "") + match0.replace((/.+/g), "");
+            });
+        // trim json-file
+        if (match2.slice(-5) === ".json") {
+            match0 = match0.trim();
+        }
+        require("fs").writeFileSync("tmp/README." + match2, match0.trimRight() + "\n");
+    });
+}());
 // </script>
 '
     fi
@@ -1004,35 +1031,40 @@ $UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
+/*global global*/
 var local, chunkList;
-local = local || {};
-chunkList = [];
-process.stdin.on('data', function (chunk) {
-    chunkList.push(chunk);
-});
-process.stdin.on('end', function () {
-    local.cryptoAesXxxCbcRawDecrypt({
-        data: process.argv[2] === 'base64'
-            ? Buffer.concat(chunkList).toString()
-            : Buffer.concat(chunkList),
-        key: process.argv[1],
-        mode: process.argv[2]
-    }, function (error, data) {
-        local.assert(!error, error);
-        Object.setPrototypeOf(data, Buffer.prototype);
-        process.stdout.write(data);
+(function () {
+    'use strict';
+    local = local || {};
+    chunkList = [];
+    process.stdin.on('data', function (chunk) {
+        chunkList.push(chunk);
     });
-});
+    process.stdin.on('end', function () {
+        local.cryptoAesXxxCbcRawDecrypt({
+            data: process.argv[2] === 'base64'
+                ? Buffer.concat(chunkList).toString()
+                : Buffer.concat(chunkList),
+            key: process.argv[1],
+            mode: process.argv[2]
+        }, function (error, data) {
+            local.assert(!error, error);
+            Object.setPrototypeOf(data, Buffer.prototype);
+            process.stdout.write(data);
+        });
+    });
+}());
 // </script>
 " "$@"
 )}
@@ -1046,33 +1078,38 @@ $UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
+/*global global*/
 var local, chunkList;
-local = local || {};
-chunkList = [];
-process.stdin.on('data', function (chunk) {
-    chunkList.push(chunk);
-});
-process.stdin.on('end', function () {
-    local.cryptoAesXxxCbcRawEncrypt({
-        data: Buffer.concat(chunkList),
-        key: process.argv[1],
-        mode: process.argv[2]
-    }, function (error, data) {
-        local.assert(!error, error);
-        Object.setPrototypeOf(data, Buffer.prototype);
-        process.stdout.write(data);
+(function () {
+    'use strict';
+    local = local || {};
+    chunkList = [];
+    process.stdin.on('data', function (chunk) {
+        chunkList.push(chunk);
     });
-});
+    process.stdin.on('end', function () {
+        local.cryptoAesXxxCbcRawEncrypt({
+            data: Buffer.concat(chunkList),
+            key: process.argv[1],
+            mode: process.argv[2]
+        }, function (error, data) {
+            local.assert(!error, error);
+            Object.setPrototypeOf(data, Buffer.prototype);
+            process.stdout.write(data);
+        });
+    });
+}());
 // </script>
 " "$@"
 )}
@@ -1300,8 +1337,8 @@ shDeployHeroku () {(set -e
 )}
 
 shDiffRaw () {(set -e
-# this function will diff-compare lib.xxx.raw.js -> lib.xxx.js
-    diff -u "$(printf "$1" | sed -e "s/\(\.[^.]*\)$/.raw\1/")" "$1" > /tmp/shDiffRaw.diff || true
+# this function will diff-compare raw.xxx.js -> lib.xxx.js
+    diff -u "$(printf "$1" | sed -e "s/lib/raw/")" "$1" > /tmp/shDiffRaw.diff || true
     vim -R /tmp/shDiffRaw.diff
 )}
 
@@ -1608,25 +1645,29 @@ shEnvSanitize () {
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
-var local;
-local = {};
-console.log(Object.keys(process.env).sort().map(function (key) {
-    return (/(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/i)
-        .test(key) ||
-        (/Crypt|Decrypt|Key|Pass|Private|Secret|Token/).test(key)
-        ? "unset " + key + "; "
-        : "";
-}).join("").trim());
+/*global global*/
+(function () {
+    "use strict";
+    console.log(Object.keys(process.env).sort().map(function (key) {
+        return (
+            (/(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/i).test(key) ||
+            (/Crypt|Decrypt|Key|Pass|Private|Secret|Token/).test(key)
+        )
+            ? "unset " + key + "; "
+            : "";
+    }).join("").trim());
+}());
 // </script>
 ')"
 }
@@ -1638,24 +1679,29 @@ $UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
+/*global global*/
 var dataFrom, dataTo, local;
-local = local || {};
-dataFrom = require('fs').readFileSync(process.argv[2], 'utf8');
-dataTo = require('fs').readFileSync(process.argv[1], 'utf8');
-process.argv.slice(3).forEach(function (rgx) {
-    dataTo = local.stringCustomizeFromToRgx(dataFrom, dataTo, new RegExp(rgx));
-});
-require('fs').writeFileSync(process.argv[2], dataTo);
+(function () {
+    'use strict';
+    local = local || {};
+    dataFrom = require('fs').readFileSync(process.argv[2], 'utf8');
+    dataTo = require('fs').readFileSync(process.argv[1], 'utf8');
+    process.argv.slice(3).forEach(function (rgx) {
+        dataTo = local.stringCustomizeFromToRgx(dataFrom, dataTo, new RegExp(rgx));
+    });
+    require('fs').writeFileSync(process.argv[2], dataTo);
+}());
 // </script>
 " "$@"
 )}
@@ -1670,26 +1716,31 @@ $UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
+/*global global*/
 var local, tmp;
-local = local || {};
-tmp = JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'));
-if (process.argv[2]) {
-    local.objectSetDefault(tmp, JSON.parse(process.argv[2]), Infinity);
-}
-if (process.argv[3]) {
-    local.objectSetOverride(tmp, JSON.parse(process.argv[3]), Infinity);
-}
-require('fs').writeFileSync(process.argv[1], local.jsonStringifyOrdered(tmp, null, 4) + '\n');
+(function () {
+    'use strict';
+    local = local || {};
+    tmp = JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'));
+    if (process.argv[2]) {
+        local.objectSetDefault(tmp, JSON.parse(process.argv[2]), Infinity);
+    }
+    if (process.argv[3]) {
+        local.objectSetOverride(tmp, JSON.parse(process.argv[3]), Infinity);
+    }
+    require('fs').writeFileSync(process.argv[1], local.jsonStringifyOrdered(tmp, null, 4) + '\n');
+}());
 // </script>
 " "$@"
 )}
@@ -1701,49 +1752,53 @@ $UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
+/*global global*/
 var aa, bb, local, packageJson;
-local = local || {};
-packageJson = require('./package.json');
-aa = (process.argv[1] || packageJson.version).replace(
-    (/^today\$/),
-    new Date().toISOString().replace((/T.*?$/), '').replace((/-0?/g), '.')
-);
-bb = (process.argv[2] || '0.0.0').replace((/^(\d+?\.\d+?\.)(\d+)(\.*?)\$/), function (
-    match0,
-    match1,
-    match2,
-    match3
-) {
-    match0 = match2;
-    return match1 + (Number(match0) + 1) + match3;
-});
-packageJson.version = local.semverCompare(aa, bb) === 1
-    ? aa
-    : bb;
-console.error([aa, bb, packageJson.version]);
-// update package.json
-require('fs').writeFileSync('package.json', JSON.stringify(packageJson, null, 4) + '\n');
-// update README.md
-require('fs').writeFileSync(
-    'README.md',
-    require('fs').readFileSync('README.md', 'utf8').replace(
-        (/^(#### changelog |- npm publish | {4}\"version\": \")\d+?\.\d+?\.\d[^\n\",]*/gm),
-        /* jslint-ignore-next-line */
-        '\$1' + packageJson.version,
-        null
-    )
-);
-console.error('shFilePackageJsonVersionUpdate - ' + packageJson.version);
+(function () {
+    'use strict';
+    local = local || {};
+    packageJson = require('./package.json');
+    aa = (process.argv[1] || packageJson.version).replace(
+        (/^today\$/),
+        new Date().toISOString().replace((/T.*?$/), '').replace((/-0?/g), '.')
+    );
+    bb = (process.argv[2] || '0.0.0').replace((/^(\d+?\.\d+?\.)(\d+)(\.*?)\$/), function (
+        match0,
+        match1,
+        match2,
+        match3
+    ) {
+        match0 = match2;
+        return match1 + (Number(match0) + 1) + match3;
+    });
+    packageJson.version = local.semverCompare(aa, bb) === 1
+        ? aa
+        : bb;
+    console.error([aa, bb, packageJson.version]);
+    // update package.json
+    require('fs').writeFileSync('package.json', JSON.stringify(packageJson, null, 4) + '\n');
+    // update README.md
+    require('fs').writeFileSync(
+        'README.md',
+        require('fs').readFileSync('README.md', 'utf8').replace(
+            (/^(#### changelog |- npm publish | {4}\"version\": \")\d+?\.\d+?\.\d[^\n\",]*/gm), // jslint-ignore-line
+            '\$1' + packageJson.version, // jslint-ignore-line
+            null
+        )
+    );
+    console.error('shFilePackageJsonVersionUpdate - ' + packageJson.version);
+}());
 // </script>
 " "$1" "$([ "$2" = publishedIncrement ] && npm info "" version 2>/dev/null)"
 )}
@@ -1764,21 +1819,75 @@ shGitAddTee () {(set -e
     git status 2>&1 | tee -a /tmp/shGitAddTee.diff
 )}
 
+shGitBranchPush () {(set -e
+# this function will run "git push ./origin $COMMIT:$BRANCH"
+    COMMIT="$(printf "$1" | sed -e "s/:.*//")"
+    BRANCH="$(printf "$1" | sed -e "s/.*://")"
+    shift
+    # git push ./origin :$BRANCH
+    if [ ! "$COMMIT" ]
+    then
+        if (git show-ref "$BRANCH" --heads --tags 2>&1 > /dev/null)
+        then
+            shGitCommandWithGithubToken push . ":$BRANCH"
+        fi
+        shGitCommandWithGithubToken push origin ":$BRANCH"
+        return
+    fi
+    if ! (git show-ref "$COMMIT" --heads --tags 2>&1 > /dev/null)
+    then
+        shBuildPrint "commit does not exist - $COMMIT"
+        return 1
+    fi
+    # git tag $BRANCH $COMMIT
+    if (git show-ref "$COMMIT" --tags 2>&1 > /dev/null) ||
+        (git show-ref "$BRANCH" --tags 2>&1 > /dev/null)
+    then
+        shGitCommandWithGithubToken tag "$BRANCH" "$COMMIT" "$@"
+    # git push . $COMMIT:$BRANCH
+    elif (git show-ref "$BRANCH" --heads 2>&1 > /dev/null)
+    then
+        shGitCommandWithGithubToken push . "$COMMIT:$BRANCH" "$@"
+    # git push . $BRANCH
+    else
+        shGitCommandWithGithubToken push . "HEAD:$BRANCH"
+        shGitCommandWithGithubToken push . "$COMMIT:$BRANCH" -f
+    fi
+    # git push origin $BRANCH
+    shGitCommandWithGithubToken push origin "$BRANCH" "$@"
+)}
+
+shGitBranchRename () {(set -e
+# this function will rename in . and origin, $BRANCH1 -> $BRANCH2
+    BRANCH1="$(printf "$1" | sed -e "s/:.*//")"
+    BRANCH2="$(printf "$1" | sed -e "s/.*://")"
+    if [ "$BRANCH1" ]
+    then
+        shGitBranchPush "$BRANCH1:$BRANCH2" -f
+    fi
+    shGitBranchPush ":$BRANCH1"
+)}
+
 shGitCommandWithGithubToken () {(set -e
 # this function will run the git-command using $GITHUB_TOKEN
 # http://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
     export MODE_BUILD="${MODE_BUILD:-shGitCommandWithGithubToken}"
-    shBuildPrint "shGitCommandWithGithubToken $*"
-    if [ ! "$GITHUB_TOKEN" ]
-    then
-        git "$@"
-        return
-    fi
+    # security - filter basic-auth
+    shBuildPrint "$(printf "shGitCommandWithGithubToken $*" | sed -e "s/:\/\/[^@]*@/:\/\/...@/")"
     COMMAND="$1"
     shift
     URL="$1"
     shift
+    if [ ! "$GITHUB_TOKEN" ] || ! (printf "$URL" | grep -q -E "^https:\/\/")
+    then
+        git "$@"
+        return
+    fi
     case "$URL" in
+    .)
+        git "$@"
+        return
+        ;;
     https://github.com/*)
         URL="$(printf "$URL" | sed -e "s/github.com/$GITHUB_TOKEN@github.com/")"
         ;;
@@ -1873,7 +1982,7 @@ shGitSquashShift () {(set -e
     git add .
     git commit -m squash > /dev/null || true
     git cherry-pick -X theirs --allow-empty --strategy=recursive "$BRANCH~$RANGE..$BRANCH"
-    git push -f . "HEAD:$BRANCH"
+    git push . "HEAD:$BRANCH" -f
     git checkout "$BRANCH"
 )}
 
@@ -1914,46 +2023,55 @@ $UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
+/*global global*/
 var local;
-local = local || {};
-local.ajax({
-    data: '{\"name\":\"' + process.argv[1].split('/')[1] + '\"}',
-    headers: {
-        Authorization: 'token ' + process.env.GITHUB_TOKEN,
-        'User-Agent': 'undefined'
-    },
-    method: 'POST',
-    url: 'https://api.github.com/orgs/' + process.argv[1].split('/')[0] + '/repos'
-}, function (error, xhr) {
-    if (xhr.statusCode !== 404) {
-        local.onErrorDefault(error && xhr &&
-            ('https://github.com/' + process.argv[1] + ' - ' + xhr.responseText));
-        return;
-    }
+(function () {
+    'use strict';
+    local = local || {};
     local.ajax({
-        data: '{\"name\":\"' + process.argv[1].split('/')[1] + '\"}',
+        data: '{\"name\":\"' + process.argv[1].split('/')[1] + '\"}',  // jslint-ignore-line
         headers: {
             Authorization: 'token ' + process.env.GITHUB_TOKEN,
             'User-Agent': 'undefined'
         },
         method: 'POST',
-        url: 'https://api.github.com/user/repos'
+        url: 'https://api.github.com/orgs/' + process.argv[1].split('/')[0] + '/repos'
     }, function (error, xhr) {
-        local.onErrorDefault(error && xhr &&
-            ('https://github.com/' + process.argv[1] + ' - ' + xhr.responseText));
-        return;
+        if (xhr.statusCode !== 404) {
+            local.onErrorDefault(
+                error && xhr &&
+                ('https://github.com/' + process.argv[1] + ' - ' + xhr.responseText)
+            );
+            return;
+        }
+        local.ajax({
+            data: '{\"name\":\"' + process.argv[1].split('/')[1] + '\"}', // jslint-ignore-line
+            headers: {
+                Authorization: 'token ' + process.env.GITHUB_TOKEN,
+                'User-Agent': 'undefined'
+            },
+            method: 'POST',
+            url: 'https://api.github.com/user/repos'
+        }, function (error, xhr) {
+            local.onErrorDefault(
+                error && xhr &&
+                ('https://github.com/' + process.argv[1] + ' - ' + xhr.responseText)
+            );
+            return;
+        });
     });
-});
+}());
 // </script>
 " "$GITHUB_REPO"
     # set default-branch to beta
@@ -2042,30 +2160,35 @@ shGrepReplace () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
+/*global global*/
 var dict;
-dict = {};
-require("fs").readFileSync(process.argv[1], "utf8").split("\n").forEach(function (element) {
-    element = (/^(.+?):(\d+?):(.+?)$/).exec(element);
-    if (!element) {
-        return;
-    }
-    dict[element[1]] = dict[element[1]] ||
-        require("fs").readFileSync(element[1], "utf8").split("\n");
-    dict[element[1]][element[2] - 1] = element[3];
-});
-Object.keys(dict).forEach(function (key) {
-    require("fs").writeFileSync(key, dict[key].join("\n"));
-});
+(function () {
+    "use strict";
+    dict = {};
+    require("fs").readFileSync(process.argv[1], "utf8").split("\n").forEach(function (element) {
+        element = (/^(.+?):(\d+?):(.+?)$/).exec(element);
+        if (!element) {
+            return;
+        }
+        dict[element[1]] = dict[element[1]] ||
+                require("fs").readFileSync(element[1], "utf8").split("\n");
+        dict[element[1]][element[2] - 1] = element[3];
+    });
+    Object.keys(dict).forEach(function (key) {
+        require("fs").writeFileSync(key, dict[key].join("\n"));
+    });
+}());
 // </script>
 ' "$@"
 )}
@@ -2083,27 +2206,32 @@ shHttpFileServer () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
-require("http").createServer(function (request, response) {
-    require("fs").readFile(
-        // security - disable parent directory lookup
-        require("path").resolve("/", require("url").parse(request.url).pathname).slice(1),
-        function (error, data) {
-            response.end(error
-                ? error.stack
-                : data);
-        }
-    );
-}).listen(process.env.PORT);
+/*global global*/
+(function () {
+    "use strict";
+    require("http").createServer(function (request, response) {
+        require("fs").readFile(
+            // security - disable parent directory lookup
+            require("path").resolve("/", require("url").parse(request.url).pathname).slice(1),
+            function (error, data) {
+                response.end(error
+                    ? error.stack
+                    : data);
+            }
+        );
+    }).listen(process.env.PORT);
+}());
 // </script>
 '
 )}
@@ -2127,20 +2255,27 @@ shImageToDataUri () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
-console.log("data:image/" +
-    require("path").extname(process.argv[1]).slice(1) +
-    ";base64," +
-    require("fs").readFileSync(process.argv[1]).toString("base64"));
+/*global global*/
+(function () {
+    "use strict";
+    console.log(
+        "data:image/" +
+        require("path").extname(process.argv[1]).slice(1) +
+        ";base64," +
+        require("fs").readFileSync(process.argv[1]).toString("base64")
+    );
+}());
 // </script>
 ' "$FILE"
 )}
@@ -2157,7 +2292,7 @@ shIptablesReset () {(set -e
 # https://wiki.debian.org/iptables
 *filter
 
-# Allows all loopback (lo0) traffic and drop all traffic to 127/8 that doesn"t use lo0
+# Allows all loopback (lo0) traffic and drop all traffic to 127/8 that does not use lo0
 -A INPUT -i lo -j ACCEPT
 -A INPUT ! -i lo -d 127.0.0.0/8 -j REJECT
 
@@ -2271,19 +2406,22 @@ shMain () {
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
+/*global global*/
 var local;
 local = {};
 (function () {
+    'use strict';
     (function () {
         // init global
         local.global = global;
@@ -2322,25 +2460,26 @@ local = {};
             module.exports = local;
             module.exports.__dirname = __dirname;
         }
+/* jslint-ignore-block-beg */
         // init debug_inline
         (function () {
-            var consoleError, context, key;
-            context = (typeof window === 'object' && window) || global;
-            key = 'debug_inline'.replace('_i', 'I');
+            var consoleError, context;
             consoleError = console.error;
-            context[key] = function (arg0) {
+            context = (typeof window === \"object\" && window) || global;
+            context[\"debug\u0049nline\"] = context[\"debug\u0049nline\"] || function (arg0) {
             /*
              * this function will both print arg0 to stderr and return it
              */
                 // debug arguments
-                context['_' + key + 'Arguments'] = arguments;
-                consoleError('\n\n' + key);
+                context[\"debug\u0049nlineArguments\"] = arguments;
+                consoleError(\"\n\ndebug\u0049nline\");
                 consoleError.apply(console, arguments);
-                consoleError(new Error().stack + '\n');
+                consoleError(new Error().stack + \"\n\");
                 // return arg0 for inspection
                 return arg0;
             };
         }());
+/* jslint-ignore-block-end */
         // init local.<builtin-functions>
         local.ajax = function (options, onError) {
         /*
@@ -2503,11 +2642,15 @@ local = {};
             /*
              * this function will try to end or destroy the stream
              */
+                var error;
                 // try to end the stream
                 try {
                     stream.end();
                 } catch (errorCaught) {
-                    // if error, then try to destroy the stream
+                    error = errorCaught;
+                }
+                // if error, then try to destroy the stream
+                if (error) {
                     try {
                         stream.destroy();
                     } catch (ignore) {
@@ -2666,7 +2809,7 @@ local = {};
             if (passed) {
                 return;
             }
-            error = message && message.stack
+            error = (message && message.stack)
                 // if message is an error-object, then leave it as is
                 ? message
                 : new Error(typeof message === 'string'
@@ -2710,7 +2853,7 @@ local = {};
             var ii, mod3, text, uint24, uint6ToB64;
             // convert utf8-string bff to Uint8Array
             if (typeof bff === 'string') {
-                bff = typeof Buffer === 'function' && typeof Buffer.isBuffer === 'function'
+                bff = (typeof Buffer === 'function' && typeof Buffer.isBuffer === 'function')
                     ? Buffer.from(bff)
                     : new window.TextEncoder().encode(bff);
             }
@@ -2741,7 +2884,7 @@ local = {};
                     uint24 = 0;
                 }
             }
-            return text.replace(/A(?=A\$|\$)/g, '=');
+            return text.replace(/A(?=A\$|\$)/gm, '=');
         };
 
         local.base64ToBuffer = function (b64, mode) {
@@ -2974,7 +3117,7 @@ local = {};
                 return options === 'json'
                     ? JSON.parse(local.fs.readFileSync(file, 'utf8'))
                     : local.fs.readFileSync(file, options);
-            } catch (errorCaught) {
+            } catch (ignore) {
                 return options === 'json'
                     ? null
                     : '';
@@ -3002,7 +3145,7 @@ local = {};
             // try to write to file
             try {
                 require('fs').writeFileSync(file, data);
-            } catch (errorCaught) {
+            } catch (ignore) {
                 // mkdir -p
                 require('child_process').spawnSync(
                     'mkdir',
@@ -3086,7 +3229,7 @@ local = {};
                 } catch (ignore) {
                 }
             }());
-            return JSON.stringify(typeof obj === 'object' && obj
+            return JSON.stringify((typeof obj === 'object' && obj)
                 // recurse
                 ? JSON.parse(stringify(obj))
                 : obj, replacer, space);
@@ -3111,7 +3254,7 @@ local = {};
                         result = require('path').resolve(process.cwd(), modulePath + '/' + module);
                         result = require('fs').statSync(result).isDirectory() && result;
                         return result;
-                    } catch (errorCaught) {
+                    } catch (ignore) {
                         result = null;
                     }
                     return result;
@@ -3249,7 +3392,7 @@ local = {};
          */
             options.onNext = local.onErrorWithStack(function (error, data, meta) {
                 try {
-                    options.modeNext += error && !options.modeErrorIgnore
+                    options.modeNext += (error && !options.modeErrorIgnore)
                         ? 1000
                         : 1;
                     if (options.modeDebug) {
@@ -3378,7 +3521,7 @@ local = {};
          */
             return [aa, bb].map(function (aa) {
                 aa = aa.split('-');
-                return [aa[0], aa.slice(1).join('-') || '\\xff'].map(function (aa) {
+                return [aa[0], aa.slice(1).join('-') || '\\u00ff'].map(function (aa) {
                     return aa.split('.').map(function (aa) {
                         return ('0000000000000000' + aa).slice(-16);
                     }).join('.');
@@ -3399,10 +3542,7 @@ local = {};
          */
             textFrom.replace(rgx, function (match0) {
                 textTo.replace(rgx, function (match1) {
-                    textTo = textTo.split(match1);
-                    textTo[0] += match0;
-                    textTo[0] += textTo.splice(1, 1)[0];
-                    textTo = textTo.join(match1);
+                    textTo = local.stringReplaceLiteral(textTo, match1, match0);
                 });
             });
             return textTo;
@@ -3433,7 +3573,7 @@ local = {};
             template = template.replace((/my-app-lite/g), options.packageJson.name);
             template = template.replace((/my_app/g), options.packageJson.nameLib);
             template = template.replace((
-                /\\{\\{\\packageJson\\.(\\S+)\\}\\}/g
+                /\\{\\{packageJson\\.(\\S+)\\}\\}/g
             ), function (match0, match1) {
                 match0 = match1;
                 return options.packageJson[match0];
@@ -3513,52 +3653,57 @@ $UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
+/*global global*/
 var data, ii, local;
-local = local || {};
-data = require('fs').readFileSync('hls.m3u8', 'utf8');
-ii = 1;
-data = data.replace((/^[^#].*?$/gm), function (match0, match1) {
-    ii += 1;
-    match1 = 'aa.' + ('0000' + ii).slice(-4) + '.bin';
-    require('fs').readFile(match0, function (error, data) {
-        console.assert(!error, error);
-        local.cryptoAesXxxCbcRawEncrypt({
-            data: data,
-            key: process.env.CRYPTO_AES_KEY_MEDIA
-        }, function (error, data) {
+(function () {
+    'use strict';
+    local = local || {};
+    data = require('fs').readFileSync('hls.m3u8', 'utf8');
+    ii = 1;
+    data = data.replace((/^[^#].*?$/gm), function (match0, match1) {
+        ii += 1;
+        match1 = 'aa.' + ('0000' + ii).slice(-4) + '.bin';
+        require('fs').readFile(match0, function (error, data) {
             console.assert(!error, error);
-            require('fs').writeFile(match1, data, function (error) {
+            local.cryptoAesXxxCbcRawEncrypt({
+                data: data,
+                key: process.env.CRYPTO_AES_KEY_MEDIA
+            }, function (error, data) {
                 console.assert(!error, error);
-                console.error('encrypted file ' + match0 + ' -> ' + match1);
+                require('fs').writeFile(match1, data, function (error) {
+                    console.assert(!error, error);
+                    console.error('encrypted file ' + match0 + ' -> ' + match1);
+                });
             });
         });
+        return match1;
     });
-    return match1;
-});
-local.cryptoAesXxxCbcRawEncrypt({
-    data: Buffer.from(data),
-    key: process.env.CRYPTO_AES_KEY_MEDIA,
-    mode: 'base64'
-}, function (
-    error,
-    data
-) {
-    console.assert(!error, error);
-    require('fs').writeFile('aa.0001.bin', data, function (error) {
+    local.cryptoAesXxxCbcRawEncrypt({
+        data: Buffer.from(data),
+        key: process.env.CRYPTO_AES_KEY_MEDIA,
+        mode: 'base64'
+    }, function (
+        error,
+        data
+    ) {
         console.assert(!error, error);
-        console.error('encrypted file hls.m3u8 -> aa.0001.bin');
+        require('fs').writeFile('aa.0001.bin', data, function (error) {
+            console.assert(!error, error);
+            console.error('encrypted file hls.m3u8 -> aa.0001.bin');
+        });
     });
-});
+}());
 // </script>
 " "$@"
 )}
@@ -3586,19 +3731,24 @@ $UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
+/*global global*/
 var local;
-local = local || {};
-console.log(local.moduleDirname('$MODULE', module.paths));
+(function () {
+    'use strict';
+    local = local || {};
+    console.log(local.moduleDirname('$MODULE', module.paths));
+}());
 // </script>
 "
 )}
@@ -3629,25 +3779,30 @@ shNpmDeprecateAlias () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
+/*global global*/
 var packageJson;
-packageJson = require("./package.json");
-packageJson.description = process.argv[1];
-Object.keys(packageJson).forEach(function (key) {
-    if (key[0] === "_") {
-        delete packageJson[key];
-    }
-});
-require("fs").writeFileSync("package.json", JSON.stringify(packageJson, null, 4) + "\n");
+(function () {
+    "use strict";
+    packageJson = require("./package.json");
+    packageJson.description = process.argv[1];
+    Object.keys(packageJson).forEach(function (key) {
+        if (key[0] === "_") {
+            delete packageJson[key];
+        }
+    });
+    require("fs").writeFileSync("package.json", JSON.stringify(packageJson, null, 4) + "\n");
+}());
 // </script>
 ' "$MESSAGE"
     shFilePackageJsonVersionUpdate "" publishedIncrement
@@ -3674,29 +3829,34 @@ shNpmInstallWithPeerDependencies () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
+/*global global*/
 var dict;
-dict = {};
-require("fs").readFileSync(process.argv[1], "utf8").replace((
-    / UNMET PEER DEPENDENCY (\S+)/g
-), function (match0, match1) {
-    match0 = match1.split("@");
-    dict[match0[0]] = dict[match0[0]] || (match0[1] || "").trim();
-});
-Object.keys(dict).forEach(function (key) {
-    console.error("npm install " + key + "@" + dict[key]);
-    console.log("npm install " + key + "@" + dict[key]);
-});
-console.log("true");
+(function () {
+    "use strict";
+    dict = {};
+    require("fs").readFileSync(process.argv[1], "utf8").replace((
+        / UNMET PEER DEPENDENCY (\S+)/g
+    ), function (match0, match1) {
+        match0 = match1.split("@");
+        dict[match0[0]] = dict[match0[0]] || (match0[1] || "").trim();
+    });
+    Object.keys(dict).forEach(function (key) {
+        console.error("npm install " + key + "@" + dict[key]);
+        console.log("npm install " + key + "@" + dict[key]);
+    });
+    console.log("true");
+}());
 // </script>
 ' "$FILE")"
     npm install "$@"
@@ -3712,19 +3872,24 @@ shNpmPackageCliHelpCreate () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
+/*global global*/
 var dict;
-dict = require("./package.json").bin || {};
-process.stdout.write(String(dict[Object.keys(dict)[0]]));
+(function () {
+    "use strict";
+    dict = require("./package.json").bin || {};
+    process.stdout.write(String(dict[Object.keys(dict)[0]]));
+}());
 // </script>
 ')"
     shRunWithScreenshotTxt printf none
@@ -3819,24 +3984,29 @@ shNpmPublishAlias () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
+/*global global*/
 var name, packageJson, version;
-name = process.argv[1];
-version = process.argv[2];
-packageJson = require("./package.json");
-packageJson.nameOriginal = packageJson.name;
-packageJson.name = name || packageJson.name;
-packageJson.version = version || packageJson.version;
-require("fs").writeFileSync("package.json", JSON.stringify(packageJson, null, 4) + "\n");
+(function () {
+    "use strict";
+    name = process.argv[1];
+    version = process.argv[2];
+    packageJson = require("./package.json");
+    packageJson.nameOriginal = packageJson.name;
+    packageJson.name = name || packageJson.name;
+    packageJson.version = version || packageJson.version;
+    require("fs").writeFileSync("package.json", JSON.stringify(packageJson, null, 4) + "\n");
+}());
 // </script>
 ' "$NAME" "$VERSION"
     npm publish
@@ -3946,39 +4116,44 @@ shReadmeLinkValidate () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
+/*global global*/
 var request;
-require("fs").readFileSync("README.md", "utf8").replace((
-    /\b(http|https):\/\/.*?[)\]]/g
-), function (match0, match1) {
-    match0 = match0
-        .slice(0, -1)
-        .replace("\u0022", "")
-        .replace("\u0027", "")
-        .replace((/\bbeta\b|\bmaster\b/g), "alpha")
-        .replace((/\/build\//g), "/build..alpha..travis-ci.org/");
-    if (process.env.npm_package_private && match0.indexOf("https://github.com/") === 0) {
-        return;
-    }
-    request = require(match1).request(require("url").parse(match0), function (response) {
-        console.log("shReadmeLinkValidate " + response.statusCode + " " + match0);
-        response.destroy();
-        if (!(response.statusCode < 400)) {
-            throw new Error("shReadmeLinkValidate - invalid link " + match0);
+(function () {
+    "use strict";
+    require("fs").readFileSync("README.md", "utf8").replace((
+        /\b(http|https):\/\/.*?[)\]]/g
+    ), function (match0, match1) {
+        match0 = match0
+            .slice(0, -1)
+            .replace("\u0022", "")
+            .replace("\u0027", "")
+            .replace((/\bbeta\b|\bmaster\b/g), "alpha")
+            .replace((/\/build\//g), "/build..alpha..travis-ci.org/");
+        if (process.env.npm_package_private && match0.indexOf("https://github.com/") === 0) {
+            return;
         }
+        request = require(match1).request(require("url").parse(match0), function (response) {
+            console.log("shReadmeLinkValidate " + response.statusCode + " " + match0);
+            response.destroy();
+            if (!(response.statusCode < 400)) {
+                throw new Error("shReadmeLinkValidate - invalid link " + match0);
+            }
+        });
+        request.setTimeout(30000);
+        request.end();
     });
-    request.setTimeout(30000);
-    request.end();
-});
+}());
 // </script>
 '
 )}
@@ -4100,22 +4275,27 @@ shReplClient () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
+/*global global*/
 var socket;
-console.log("node repl-client connecting to tcp-port " + process.argv[1]);
-socket = require("net").connect(process.argv[1]);
-process.stdin.pipe(socket);
-socket.pipe(process.stdout);
-socket.on("end", process.exit);
+(function () {
+    "use strict";
+    console.log("node repl-client connecting to tcp-port " + process.argv[1]);
+    socket = require("net").connect(process.argv[1]);
+    process.stdin.pipe(socket);
+    socket.pipe(process.stdout);
+    socket.on("end", process.exit);
+}());
 // </script>
 ' "$@"
 )}
@@ -4182,58 +4362,63 @@ shRunWithScreenshotTxt () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true,
+    white: true
 */
-"use strict";
+/*global global*/
 var result, wordwrap, yy;
-wordwrap = function (line, ii) {
-    if (ii && !line) {
-        return "";
-    }
-    yy += 16;
-    return "<tspan x=\"10\" y=\"" + yy + "\">" + line
-        .replace((/&/g), "&amp;")
-        .replace((/</g), "&lt;")
-        .replace((/>/g), "&gt;") + "</tspan>\n";
-};
-yy = 10;
-result = require("fs").readFileSync(
-    process.env.npm_config_dir_tmp + "/runWithScreenshotTxt",
-    "utf8"
-)
-    // remove ansi escape-code
-    .replace((/\u001b.*?m/g), "")
-    // format unicode
-    .replace((/\\u[0-9a-f]{4}/g), function (match0) {
-        return String.fromCharCode("0x" + match0.slice(-4));
-    })
-    .trimRight()
-    .split("\n")
-    .map(function (line) {
-        return line
-            .replace((/.{0,96}/g), wordwrap)
-            /* jslint-ignore-next-line */
-            .replace((/(<\/tspan>\n<tspan)/g), "\\$1")
-            .slice();
-    })
-    .join("\n") + "\n";
-result = "<svg height=\"" + (yy + 20) +
-    "\" width=\"720\" xmlns=\"http://www.w3.org/2000/svg\">\n" +
-    "<rect height=\"" + (yy + 20) + "\" fill=\"#555\" width=\"720\"></rect>\n" +
-    "<text fill=\"#7f7\" font-family=\"Courier New\" font-size=\"12\" " +
-    "xml:space=\"preserve\">\n" +
-    result + "</text>\n</svg>\n";
-require("fs").writeFileSync(
-    process.env.npm_config_dir_build + "/" + process.env.MODE_BUILD_SCREENSHOT_IMG,
-    result
-);
+(function () {
+    "use strict";
+    wordwrap = function (line, ii) {
+        if (ii && !line) {
+            return "";
+        }
+        yy += 16;
+        return "<tspan x=\"10\" y=\"" + yy + "\">" + line
+            .replace((/&/g), "&amp;")
+            .replace((/</g), "&lt;")
+            .replace((/>/g), "&gt;") + "</tspan>\n";
+    };
+    yy = 10;
+    result = require("fs").readFileSync(
+        process.env.npm_config_dir_tmp + "/runWithScreenshotTxt",
+        "utf8"
+    )
+        // remove ansi escape-code
+        .replace((/\u001b.*?m/g), "")
+        // format unicode
+        .replace((/\\u[0-9a-f]{4}/g), function (match0) {
+            return String.fromCharCode("0x" + match0.slice(-4));
+        })
+        .trimRight()
+        .split("\n")
+        .map(function (line) {
+            return line
+                .replace((/.{0,96}/g), wordwrap)
+                .replace((/(<\/tspan>\n<tspan)/g), "\\$1")
+                .slice();
+        })
+        .join("\n") + "\n";
+    result = "<svg height=\"" + (yy + 20) +
+        "\" width=\"720\" xmlns=\"http://www.w3.org/2000/svg\">\n" +
+        "<rect height=\"" + (yy + 20) + "\" fill=\"#555\" width=\"720\"></rect>\n" +
+        "<text fill=\"#7f7\" font-family=\"Courier New\" font-size=\"12\" " +
+        "xml:space=\"preserve\">\n" +
+        result + "</text>\n</svg>\n";
+    require("fs").writeFileSync(
+        process.env.npm_config_dir_build + "/" + process.env.MODE_BUILD_SCREENSHOT_IMG,
+        result
+    );
+}());
 // </script>
 '
     shBuildPrint "created screenshot file $npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"

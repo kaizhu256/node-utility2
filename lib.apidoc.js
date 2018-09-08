@@ -2,15 +2,19 @@
 /* istanbul instrument in package apidoc */
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true,
+    white: true
 */
+/*global global*/
 (function () {
     'use strict';
     var local;
@@ -22,19 +26,18 @@
     (function () {
         // init debug_inline
         (function () {
-            var consoleError, context, key;
+            var consoleError, context;
             consoleError = console.error;
-            context = (typeof window === 'object' && window) || global;
-            key = 'debug_inline'.replace('_i', 'I');
-            context[key] = context[key] || function (arg0) {
+            context = (typeof window === "object" && window) || global;
+            context["debug\u0049nline"] = context["debug\u0049nline"] || function (arg0) {
             /*
              * this function will both print arg0 to stderr and return it
              */
                 // debug arguments
-                context['_' + key + 'Arguments'] = arguments;
-                consoleError('\n\n' + key);
+                context["debug\u0049nlineArguments"] = arguments;
+                consoleError("\n\ndebug\u0049nline");
                 consoleError.apply(console, arguments);
-                consoleError(new Error().stack + '\n');
+                consoleError(new Error().stack + "\n");
                 // return arg0 for inspection
                 return arg0;
             };
@@ -90,7 +93,8 @@
             module.exports.__dirname = __dirname;
         }
         // init lib main
-        local.local = local.apidoc = local;
+        local.local = local;
+        local.apidoc = local;
 
 
 
@@ -103,7 +107,7 @@
             if (passed) {
                 return;
             }
-            error = message && message.stack
+            error = (message && message.stack)
                 // if message is an error-object, then leave it as is
                 ? message
                 : new Error(typeof message === 'string'
@@ -138,7 +142,12 @@
              *
              * will print help
              */
-                var commandList, file, packageJson, rgxComment, text, textDict;
+                var commandList;
+                var file;
+                var packageJson;
+                var rgxComment;
+                var text;
+                var textDict;
                 commandList = [{
                     argList: '<arg2>  ...',
                     description: 'usage:',
@@ -151,12 +160,14 @@
                 file = __filename.replace((/.*\//), '');
                 packageJson = require('./package.json');
                 // validate comment
-                rgxComment = new RegExp('\\) \\{\\n' +
+                rgxComment = new RegExp(
+                    '\\) \\{\\n' +
                     '(?: {8}| {12})\\/\\*\\n' +
                     '(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n' +
                     '(?: {9}| {13})\\* (will .*?\\S)\\n' +
                     '(?: {9}| {13})\\*\\/\\n' +
-                    '(?: {12}| {16})\\S');
+                    '(?: {12}| {16})\\S'
+                );
                 textDict = {};
                 Object.keys(local.cliDict).sort().forEach(function (key, ii) {
                     if (key[0] === '_' && key !== '_default') {
@@ -166,38 +177,38 @@
                     if (key === '_default') {
                         key = '';
                     }
-                    ii = textDict[text] = textDict[text] || (ii + 2);
+                    textDict[text] = textDict[text] || (ii + 2);
+                    ii = textDict[text];
                     if (commandList[ii]) {
                         commandList[ii].command.push(key);
                     } else {
                         try {
                             commandList[ii] = rgxComment.exec(text);
-                        } catch (errorCaught) {
-                            if (!local.env.npm_config_mode_coverage) {
-                                throw new Error('cliRun - cannot parse comment in COMMAND ' +
-                                    key + ':\nnew RegExp(' + JSON.stringify(rgxComment.source) +
-                                    ').exec(' + JSON.stringify(text)
-                                    .replace((/\\\\/g), '\x00')
+                            commandList[ii] = {
+                                argList: (commandList[ii][1] || '').trim(),
+                                command: [key],
+                                description: commandList[ii][2]
+                            };
+                        } catch (ignore) {
+                            throw new Error(
+                                'cliRun - cannot parse comment in COMMAND ' +
+                                key + ':\nnew RegExp(' + JSON.stringify(rgxComment.source) +
+                                ').exec(' + JSON.stringify(text)
+                                    .replace((/\\\\/g), '\u0000')
                                     .replace((/\\n/g), '\\n\\\n')
-                                    .replace((/\x00/g), '\\\\') + ');');
-                            }
+                                    .replace((/\u0000/g), '\\\\') + ');'
+                            );
                         }
-                        commandList[ii] = commandList[ii] || [];
-                        commandList[ii] = {
-                            argList: (commandList[ii][1] || '').trim(),
-                            command: [key],
-                            description: commandList[ii][2] || ''
-                        };
                     }
                 });
-                (options && options.modeError
+                ((options && options.modeError)
                     ? console.error
                     : console.log)(
-                    (options && options.modeError
-                    ? '\u001b[31merror: missing <arg1>\u001b[39m\n\n'
-                    : '') +
-                        packageJson.name + ' (' + packageJson.version + ')\n\n' +
-                        commandList
+                    ((options && options.modeError)
+                        ? '\u001b[31merror: missing <arg1>\u001b[39m\n\n'
+                        : '') +
+                            packageJson.name + ' (' + packageJson.version + ')\n\n' +
+                            commandList
                         .filter(function (element) {
                             return element;
                         })
@@ -213,13 +224,13 @@
                             default:
                                 element.argList = element.argList.split(' ');
                                 element.description = '# COMMAND ' +
-                                    (element.command[0] || '<none>') + '\n# ' +
-                                    element.description;
+                                        (element.command[0] || '<none>') + '\n# ' +
+                                        element.description;
                             }
                             return element.description + '\n  ' + file +
-                                ('  ' + element.command.sort().join('|') + '  ')
+                                    ('  ' + element.command.sort().join('|') + '  ')
                                 .replace((/^ {4}$/), '  ') +
-                                element.argList.join('  ');
+                                        element.argList.join('  ');
                         })
                         .join('\n\n')
                 );
@@ -238,7 +249,7 @@
             };
             if (typeof local.replStart === 'function') {
                 local.cliDict['--interactive'] = local.cliDict['--interactive'] ||
-                    local.cliDict._interactive;
+                        local.cliDict._interactive;
                 local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
             }
             local.cliDict._version = local.cliDict._version || function () {
@@ -254,7 +265,7 @@
             fnc = fnc || function () {
                 // default to --help command if no arguments are given
                 if (process.argv.length <= 2 && !local.cliDict._default.modeNoCommand) {
-                    local.cliDict._help({ modeError: true });
+                    local.cliDict._help({modeError: true});
                     process.exit(1);
                     return;
                 }
@@ -286,7 +297,7 @@
                         result = require('path').resolve(process.cwd(), modulePath + '/' + module);
                         result = require('fs').statSync(result).isDirectory() && result;
                         return result;
-                    } catch (errorCaught) {
+                    } catch (ignore) {
                         result = null;
                     }
                     return result;
@@ -477,7 +488,6 @@
                                 break;
                             }
                             value = value[arg0]();
-                            break;
                         }
                     });
                     value = String(value);
@@ -525,7 +535,7 @@
 
 
     // run shared js-env code - init-before
-/* jslint-ignore-begin */
+/* jslint-ignore-block-beg */
 local.templateApidocHtml = '\
 <div class="apidocDiv">\n\
 <style>\n\
@@ -631,7 +641,7 @@ local.templateApidocHtml = '\
 </div>\n\
 </div>\n\
 ';
-/* jslint-ignore-end */
+/* jslint-ignore-block-end */
 
 
 
@@ -803,7 +813,7 @@ local.templateApidocHtml = '\
                         '" -maxdepth ' + depth + ' -mindepth ' + depth +
                         ' -type f | sed -e "s|' + options.dir +
                         '/||" | grep -iv ' +
-/* jslint-ignore-begin */
+/* jslint-ignore-block-beg */
 '"\
 /\\.\\|\\(\\b\\|_\\)\\(\
 bower_component\\|\
@@ -815,7 +825,7 @@ rollup\\|\
 tmp\\|\
 vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
 " ' +
-/* jslint-ignore-end */
+/* jslint-ignore-block-end */
                             ' | sort | head -n 256').toString()
                         .split('\n')
                 );
@@ -856,10 +866,8 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 }());
             }
             // normalize moduleMain
-            moduleMain = options.moduleDict[options.env.npm_package_name] = local.objectSetDefault(
-                tmp,
-                moduleMain
-            );
+            moduleMain = local.objectSetDefault(tmp, moduleMain);
+            options.moduleDict[options.env.npm_package_name] = moduleMain;
             // init circularList - builtin
             Object.keys(process.binding('natives')).forEach(function (key) {
                 local.tryCatchOnError(function () {
@@ -892,13 +900,15 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             // init swgg.apiDict
             Object.keys((moduleMain.swgg && moduleMain.swgg.apiDict) || {}).forEach(function (key) {
                 tmp = 'swgg.apiDict';
-                tmp = options.moduleDict[tmp] = options.moduleDict[tmp] || {};
+                options.moduleDict[tmp] = options.moduleDict[tmp] || {};
+                tmp = options.moduleDict[tmp];
                 tmp[key + '.ajax'] = moduleMain.swgg.apiDict[key] &&
                     moduleMain.swgg.apiDict[key].ajax;
             });
             // init moduleExtraDict
-            module = options.moduleExtraDict[options.env.npm_package_name] =
+            options.moduleExtraDict[options.env.npm_package_name] =
                 options.moduleExtraDict[options.env.npm_package_name] || {};
+            module = options.moduleExtraDict[options.env.npm_package_name];
             [1, 2, 3, 4].forEach(function (depth) {
                 options.libFileList = options.libFileList.concat(
                     // find . -maxdepth 1 -mindepth 1 -name "*.js" -type f
@@ -907,7 +917,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                         '" -maxdepth ' + depth + ' -mindepth ' + depth +
                         ' -name "*.js" -type f | sed -e "s|' + options.dir +
                         '/||" | grep -iv ' +
-/* jslint-ignore-begin */
+/* jslint-ignore-block-beg */
 '"\
 /\\.\\|\\(\\b\\|_\\)\\(\
 archive\\|artifact\\|asset\\|\
@@ -925,7 +935,7 @@ spec\\|\
 test\\|tmp\\|\
 vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
 " ' +
-/* jslint-ignore-end */
+/* jslint-ignore-block-end */
                             ' | sort | head -n 256').toString()
                         .split('\n')
                 );

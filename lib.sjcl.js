@@ -1,14 +1,18 @@
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true,
+    white: true
 */
+/*global global*/
 (function () {
     'use strict';
     var local;
@@ -37,7 +41,7 @@
 // 2016-09-10T10:34:50Z
 // https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/sjcl.js
 // utility2-uglifyjs https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/sjcl.js
-/* jslint-ignore-begin */
+/* jslint-ignore-block-beg */
 (function () { var module;
 "use strict";function t(e,t,n){if(4!==t.length)throw new sjcl.exception.invalid("invalid aes block size"
 );var r=e.b[n],i=t[0]^r[0],s=t[n?3:1]^r[1],o=t[2]^r[2];t=t[n?1:3]^r[3];var u,a,f
@@ -453,7 +457,7 @@ u===0||u>16)throw new sjcl.exception.corrupt("pkcs#5 padding corrupt");a=u*16843
 )))throw new sjcl.exception.corrupt("pkcs#5 padding corrupt");return s.bitSlice(
 f,0,f.length*32-u*8)}}}
 }());
-/* jslint-ignore-end */
+/* jslint-ignore-block-end */
         // init exports
         if (local.isBrowser) {
             local.global.utility2_sjcl = local.sjcl;

@@ -10,15 +10,19 @@
 /* istanbul instrument in package istanbul */
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true,
+    white: true
 */
+/*global global*/
 (function () {
     'use strict';
     var local;
@@ -30,19 +34,18 @@
     (function () {
         // init debug_inline
         (function () {
-            var consoleError, context, key;
+            var consoleError, context;
             consoleError = console.error;
-            context = (typeof window === 'object' && window) || global;
-            key = 'debug_inline'.replace('_i', 'I');
-            context[key] = context[key] || function (arg0) {
+            context = (typeof window === "object" && window) || global;
+            context["debug\u0049nline"] = context["debug\u0049nline"] || function (arg0) {
             /*
              * this function will both print arg0 to stderr and return it
              */
                 // debug arguments
-                context['_' + key + 'Arguments'] = arguments;
-                consoleError('\n\n' + key);
+                context["debug\u0049nlineArguments"] = arguments;
+                consoleError("\n\ndebug\u0049nline");
                 consoleError.apply(console, arguments);
-                consoleError(new Error().stack + '\n');
+                consoleError(new Error().stack + "\n");
                 // return arg0 for inspection
                 return arg0;
             };
@@ -98,7 +101,8 @@
             module.exports.__dirname = __dirname;
         }
         // init lib main
-        local.local = local.istanbul = local;
+        local.local = local;
+        local.istanbul = local;
 
 
 
@@ -129,7 +133,12 @@
              *
              * will print help
              */
-                var commandList, file, packageJson, rgxComment, text, textDict;
+                var commandList;
+                var file;
+                var packageJson;
+                var rgxComment;
+                var text;
+                var textDict;
                 commandList = [{
                     argList: '<arg2>  ...',
                     description: 'usage:',
@@ -142,12 +151,14 @@
                 file = __filename.replace((/.*\//), '');
                 packageJson = require('./package.json');
                 // validate comment
-                rgxComment = new RegExp('\\) \\{\\n' +
+                rgxComment = new RegExp(
+                    '\\) \\{\\n' +
                     '(?: {8}| {12})\\/\\*\\n' +
                     '(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n' +
                     '(?: {9}| {13})\\* (will .*?\\S)\\n' +
                     '(?: {9}| {13})\\*\\/\\n' +
-                    '(?: {12}| {16})\\S');
+                    '(?: {12}| {16})\\S'
+                );
                 textDict = {};
                 Object.keys(local.cliDict).sort().forEach(function (key, ii) {
                     if (key[0] === '_' && key !== '_default') {
@@ -157,38 +168,38 @@
                     if (key === '_default') {
                         key = '';
                     }
-                    ii = textDict[text] = textDict[text] || (ii + 2);
+                    textDict[text] = textDict[text] || (ii + 2);
+                    ii = textDict[text];
                     if (commandList[ii]) {
                         commandList[ii].command.push(key);
                     } else {
                         try {
                             commandList[ii] = rgxComment.exec(text);
-                        } catch (errorCaught) {
-                            if (!local.env.npm_config_mode_coverage) {
-                                throw new Error('cliRun - cannot parse comment in COMMAND ' +
-                                    key + ':\nnew RegExp(' + JSON.stringify(rgxComment.source) +
-                                    ').exec(' + JSON.stringify(text)
-                                    .replace((/\\\\/g), '\x00')
+                            commandList[ii] = {
+                                argList: (commandList[ii][1] || '').trim(),
+                                command: [key],
+                                description: commandList[ii][2]
+                            };
+                        } catch (ignore) {
+                            throw new Error(
+                                'cliRun - cannot parse comment in COMMAND ' +
+                                key + ':\nnew RegExp(' + JSON.stringify(rgxComment.source) +
+                                ').exec(' + JSON.stringify(text)
+                                    .replace((/\\\\/g), '\u0000')
                                     .replace((/\\n/g), '\\n\\\n')
-                                    .replace((/\x00/g), '\\\\') + ');');
-                            }
+                                    .replace((/\u0000/g), '\\\\') + ');'
+                            );
                         }
-                        commandList[ii] = commandList[ii] || [];
-                        commandList[ii] = {
-                            argList: (commandList[ii][1] || '').trim(),
-                            command: [key],
-                            description: commandList[ii][2] || ''
-                        };
                     }
                 });
-                (options && options.modeError
+                ((options && options.modeError)
                     ? console.error
                     : console.log)(
-                    (options && options.modeError
-                    ? '\u001b[31merror: missing <arg1>\u001b[39m\n\n'
-                    : '') +
-                        packageJson.name + ' (' + packageJson.version + ')\n\n' +
-                        commandList
+                    ((options && options.modeError)
+                        ? '\u001b[31merror: missing <arg1>\u001b[39m\n\n'
+                        : '') +
+                            packageJson.name + ' (' + packageJson.version + ')\n\n' +
+                            commandList
                         .filter(function (element) {
                             return element;
                         })
@@ -204,13 +215,13 @@
                             default:
                                 element.argList = element.argList.split(' ');
                                 element.description = '# COMMAND ' +
-                                    (element.command[0] || '<none>') + '\n# ' +
-                                    element.description;
+                                        (element.command[0] || '<none>') + '\n# ' +
+                                        element.description;
                             }
                             return element.description + '\n  ' + file +
-                                ('  ' + element.command.sort().join('|') + '  ')
+                                    ('  ' + element.command.sort().join('|') + '  ')
                                 .replace((/^ {4}$/), '  ') +
-                                element.argList.join('  ');
+                                        element.argList.join('  ');
                         })
                         .join('\n\n')
                 );
@@ -229,7 +240,7 @@
             };
             if (typeof local.replStart === 'function') {
                 local.cliDict['--interactive'] = local.cliDict['--interactive'] ||
-                    local.cliDict._interactive;
+                        local.cliDict._interactive;
                 local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
             }
             local.cliDict._version = local.cliDict._version || function () {
@@ -245,7 +256,7 @@
             fnc = fnc || function () {
                 // default to --help command if no arguments are given
                 if (process.argv.length <= 2 && !local.cliDict._default.modeNoCommand) {
-                    local.cliDict._help({ modeError: true });
+                    local.cliDict._help({modeError: true});
                     process.exit(1);
                     return;
                 }
@@ -268,7 +279,7 @@
             // try to write to file
             try {
                 require('fs').writeFileSync(file, data);
-            } catch (errorCaught) {
+            } catch (ignore) {
                 // mkdir -p
                 require('child_process').spawnSync(
                     'mkdir',
@@ -341,7 +352,7 @@
         // mock module path
         local._istanbul_path = local.path || {
             dirname: function (file) {
-                return file.replace((/\/[\w\-\.]+?$/), '');
+                return file.replace((/\/[\w\-.]+?$/), '');
             },
             resolve: function () {
                 return arguments[arguments.length - 1];
@@ -485,7 +496,8 @@
          * only if the macro /\* istanbul instrument in package $npm_package_nameLib *\/
          * exists in the code
          */
-            return process.env.npm_config_mode_coverage &&
+            return (
+                process.env.npm_config_mode_coverage &&
                 code.indexOf('/* istanbul ignore all */\n') < 0 && (
                     process.env.npm_config_mode_coverage === 'all' ||
                     code.indexOf('/* istanbul instrument in package ' +
@@ -493,6 +505,7 @@
                     code.indexOf('/* istanbul instrument in package ' +
                             process.env.npm_config_mode_coverage + ' */\n') >= 0
                 )
+            )
                 ? local.instrumentSync(code, file)
                 : code;
         };
@@ -524,7 +537,7 @@
 // https://github.com/jquery/esprima/blob/2.7.3/esprima.js
 // utility2-uglifyjs https://raw.githubusercontent.com/jquery/esprima/2.7.3/esprima.js > /tmp/out.js
 /* istanbul ignore next */
-/* jslint-ignore-begin */
+/* jslint-ignore-block-beg */
 (function () { var exports; exports = local.esprima = {};
 (function(e,t){"use strict";typeof define=="function"&&define.amd?define(["exports"
 ],t):typeof exports!="undefined"?t(exports):t(e.esprima={})})(this,function(e){"use strict"
@@ -1780,7 +1793,7 @@ r=dt(t,r)),i=ot(r).toString(),t.type===e.Program&&!y&&d===""&&i.charAt(i.length-
 ).version,exports.generate=Nt,exports.attachComments=i.attachComments,exports.Precedence=
 G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
 }());
-/* jslint-ignore-end */
+/* jslint-ignore-block-end */
 
 
 
@@ -1906,7 +1919,7 @@ G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 // utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/insertion-text.js > /tmp/out.js
 /* istanbul ignore next */
-/* jslint-ignore-begin */
+/* jslint-ignore-block-beg */
 (function () { var module; module = {};
 function InsertionText(e,t){this.text=e,this.origLength=e.length,this.offsets=[]
 ,this.consumeBlanks=t,this.startPos=this.findFirstNonBlank(),this.endPos=this.findLastNonBlank
@@ -2203,7 +2216,7 @@ r[1]?"high":i>=r[0]?"medium":"low"},colorize:function(e,t){if(process.stdout.isT
 )switch(t){case"low":e="\x1B[91m"+e+"\x1B[0m";break;case"medium":e="\x1B[93m"+e+"\x1B[0m";break;
 case"high":e="\x1B[92m"+e+"\x1B[0m"}return e}}
 local['./common/defaults'] = module.exports; }());
-/* jslint-ignore-end */
+/* jslint-ignore-block-end */
 
 
 
@@ -2222,7 +2235,7 @@ local['./common/defaults'] = module.exports; }());
 // rollup-file istanbul/lib/report/templates/foot.txt
 // 2014-07-04T07:47:53Z
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/foot.txt
-/* jslint-ignore-begin */
+/* jslint-ignore-block-beg */
 local['foot.txt'] = '\
 </div>\n\
 <div class="footer">\n\
@@ -2250,13 +2263,13 @@ local['head.txt'] = '\
     important: false,\n\
     qualified-headings: false,\n\
 */\n\
-/* jslint-ignore-begin */\n\
+/* jslint-ignore-block-beg */\n\
 *,\n\
 *:after,\n\
 *:before {\n\
     box-sizing: border-box;\n\
 }\n\
-/* jslint-ignore-end */\n\
+/* jslint-ignore-block-end */\n\
 .x-istanbul {\n\
     font-family: Helvetica Neue, Helvetica,Arial;\n\
     font-size: 10pt;\n\
@@ -2530,7 +2543,7 @@ local['head.txt'] = '\
 </div>\n\
 <div class="body">\n\
 ';
-/* jslint-ignore-end */
+/* jslint-ignore-block-end */
 
 
 
@@ -2562,7 +2575,7 @@ local['head.txt'] = '\
         (function () {
             var module;
             module = {};
-/* jslint-ignore-begin */
+/* jslint-ignore-block-beg */
 function commonArrayPrefix(e,t){var n=e.length<t.length?e.length:t.length,r,i=[]
 ;for(r=0;r<n;r+=1){if(e[r]!==t[r])break;i.push(e[r])}return i}function findCommonArrayPrefix
 (e){if(e.length===0)return[];var t=e.map(function(e){return e.split(SEP)}),n=t.pop
@@ -2599,7 +2612,7 @@ this;t[e.name]=e,e.children.sort(function(e,t){return e=e.relativeName,t=t.relat
 prototype={addFileCoverageSummary:function(e,t){this.summaryMap[e]=t},getTreeSummary
 :function(){var e=findCommonArrayPrefix(Object.keys(this.summaryMap));return new
 TreeSummary(this.summaryMap,e)}},module.exports=TreeSummarizer
-/* jslint-ignore-end */
+/* jslint-ignore-block-end */
             local['../util/tree-summarizer'] = module.exports;
             module.exports.prototype._getTreeSummary = module.exports.prototype.getTreeSummary;
             module.exports.prototype.getTreeSummary = function () {
@@ -2615,7 +2628,7 @@ TreeSummary(this.summaryMap,e)}},module.exports=TreeSummarizer
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 // utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/html.js > /tmp/out.js
 /* istanbul ignore next */
-/* jslint-ignore-begin */
+/* jslint-ignore-block-beg */
 (function () { var module; module = {};
 function customEscape(e){return e=e.toString(),e.replace(RE_AMP,"&amp;").replace
 (RE_LT,"&lt;").replace(RE_GT,"&gt;").replace(RE_lt,"<").replace(RE_gt,">")}function title
@@ -2797,7 +2810,7 @@ local.TextReport = module.exports; }());
 // https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
 local.templateCoverageBadgeSvg =
 '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
-/* jslint-ignore-end */
+/* jslint-ignore-block-end */
     }());
 
 

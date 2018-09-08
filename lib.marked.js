@@ -1,14 +1,18 @@
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true,
+    white: true
 */
+/*global global*/
 (function () {
     'use strict';
     var local;
@@ -36,7 +40,7 @@
 
 
 
-/* jslint-ignore-begin */
+/* jslint-ignore-block-beg */
 (function () { var exports, module; exports = module = {};
 // rollup-file marked.js
 // 2017-01-19T23:03:37Z
@@ -233,7 +237,7 @@ r.output,c.parse=c,typeof module!="undefined"&&typeof exports=="object"?module.e
 c:typeof define=="function"&&define.amd?define(function(){return c}):this.marked=
 c}).call(function(){return this||(typeof window!="undefined"?window:global)}())
 local.marked = module.exports; }());
-/* jslint-ignore-end */
+/* jslint-ignore-block-end */
     // init exports
     if (local.isBrowser) {
         local.global.utility2_marked = local.marked;

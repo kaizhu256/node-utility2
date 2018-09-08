@@ -1,15 +1,19 @@
 /* istanbul instrument in package utility2 */
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true,
+    white: true
 */
+/*global global*/
 (function () {
     'use strict';
     var local;
@@ -30,8 +34,8 @@
             ? window
             : global;
         // re-init local
-        local = local.global.local = (local.global.utility2 ||
-            require('./lib.utility2.js')).requireReadme();
+        local = (local.global.utility2 || require("./lib.utility2.js")).requireReadme();
+        local.global.local = local;
         // init test
         local.testRunDefault(local);
     }());
@@ -195,7 +199,6 @@
                     break;
                 case 2:
                     // validate responseText
-                    /* jslint-ignore-next-line */
                     local.assertJsonEqual(data.responseText, 'hello\ud83d\ude01\u0020\n');
                     // test http GET 304 cache handling-behavior
                     local.ajax({
@@ -373,9 +376,7 @@
                         local.assertJsonEqual(xhr.responseBuffer[10], 0x0a);
                         break;
                     default:
-                        /* jslint-ignore-next-line */
                         local.assertJsonEqual(xhr.responseText, 'hello\ud83d\ude01\u0020\n');
-                        break;
                     }
                     onParallel(null, options);
                 });
@@ -897,7 +898,7 @@
                 local.env.npm_package_private = '';
             };
             options.dataFrom = local.fs.readFileSync('README.md', 'utf8')
-                .replace('#\!\! shNpmTestPublished', 'shNpmTestPublished');
+                .replace('#\u0021! shNpmTestPublished', 'shNpmTestPublished');
             options.fsReadFileSync = local.fs.readFileSync;
             local.testMock([
                 [local.env, {
@@ -1049,36 +1050,6 @@
             }, onError);
         };
 
-        local.testCase_cliRun_default = function (options, onError) {
-        /*
-         * this function will test cliRun's default handling-behavior
-         */
-            if (local.isBrowser) {
-                onError(null, options);
-                return;
-            }
-            local.testMock([
-                [local, { replStart: null }],
-                [local.cliDict, { _default: null }],
-                [local.vm, { runInThisContext: local.nop }],
-                [process, { argv: [] }]
-            ], function (onError) {
-                local.cliRun();
-                // test command-invalid handling-behavior
-                process.argv[2] = 'undefined';
-                local.cliRun();
-                // test no-command handling-behavior
-                local.cliDict._default = local.nop;
-                local.replStart = local.nop;
-                process.argv[2] = '--help';
-                local.cliRun();
-                ['--eval', '--help', '--interactive', '--version'].forEach(function (key) {
-                    local.cliDict[key]();
-                });
-                onError(null, options);
-            }, onError);
-        };
-
         local.testCase_corsBackendHostInject_default = function (options, onError) {
         /*
          * this function will corsBackendHostInject's default handling-behavior
@@ -1096,7 +1067,7 @@
             local.assertJsonEqual(local.corsBackendHostInject(
                 'cc/dd',
                 'aa-alpha.bb.com/',
-                (/(^cc\/)/),
+                (/(^cc\/)/m),
                 { host: 'github.io', pathname: '/build..beta..travis-ci.org/' }
             ), 'aa-beta.bb.com/cc/dd');
             onError(null, options);
@@ -1122,6 +1093,11 @@
          * this function will cryptoAesXxxCbcRawXxx's default handling-behavior
          */
             options = {};
+            // bug-workaround - electron's (< v2.0) cross-origin webview does not have crypto.subtle
+            if (local.isBrowser) {
+                onError(null, options);
+                onError = local.nop;
+            }
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
@@ -1160,8 +1136,8 @@
                     options.onNext();
                     break;
                 default:
-                    // bug-worrkaround - testCase is flaky in both browser and node
-                    onError(null, options, error);
+                    onError(error, options);
+                    onError = local.nop;
                 }
             });
             options.modeNext = 0;
@@ -1502,7 +1478,6 @@
                 // validate no error occurred
                 local.assert(!error, error);
                 // validate responseText
-                /* jslint-ignore-next-line */
                 local.assertJsonEqual(xhr.responseText, 'hello\ud83d\ude01\u0020\n');
                 onParallel(null, options, xhr);
             });
@@ -1546,10 +1521,10 @@
             // test path handling-behavior
             local.assertJsonEqual(local.moduleDirname('.', module.paths), process.cwd());
             local.assertJsonEqual(local.moduleDirname('./', module.paths), process.cwd());
-            // test module exists handling-behavior
+            // test module-exists handling-behavior
             options = local.moduleDirname('electron-lite', module.paths);
             local.assert((/\/electron-lite$/).test(options), options);
-            // test module does not exists handling-behavior
+            // test module-does-not-exist handling-behavior
             local.assertJsonEqual(local.moduleDirname('syntax error', module.paths), '');
             onError(null, options);
         };
@@ -1560,8 +1535,7 @@
          */
             options = {};
             options.list = [
-            /* jslint-ignore-next-line */
-"","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC","XCI","XCII","XCIII","XCIV","XCV","XCVI","XCVII","XCVIII","XCIX","C"
+"","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC","XCI","XCII","XCIII","XCIV","XCV","XCVI","XCVII","XCVIII","XCIX","C" // jslint-ignore-line
             ];
             for (options.ii = 0; options.ii < 10; options.ii += 1) {
                 local.assertJsonEqual(
@@ -1594,7 +1568,7 @@
             local.assertJsonEqual(local.objectLiteralize({
                 '': '$[]',
                 '$[]1': [1, { '$[]2': [2, 3] }]
-            }), { 1: { 2: 3 }, '': '$[]' });
+            }), { "1": { "2": 3 }, '': '$[]' });
             onError(null, options);
         };
 
@@ -1610,7 +1584,7 @@
                 ['', 0, false, null, undefined].forEach(function (bb) {
                     local.assertJsonEqual(
                         local.objectSetDefault({ data: aa }, { data: bb }).data,
-                        aa === 0 || aa === false || bb === undefined
+                        (aa === 0 || aa === false || bb === undefined)
                             ? aa
                             : bb
                     );
@@ -1961,7 +1935,6 @@
                 onError(null, options);
                 return;
             }
-            /*jslint evil: true*/
             local.replStart();
             // coverage-hack - test replStart's muliple-call handling-behavior
             local.replStart();
@@ -2579,6 +2552,7 @@
                 local.assertJsonEqual(local.urlParse(
                     'https://127.0.0.1:80/foo/bar?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1'
                 ), {
+                    basename: 'bar',
                     hash: '#zz=1',
                     host: '127.0.0.1:80',
                     hostname: '127.0.0.1',
@@ -2592,6 +2566,7 @@
                 });
                 // test error handling-behavior
                 local.assertJsonEqual(local.urlParse(null), {
+                    basename: '',
                     hash: '',
                     host: '',
                     hostname: '',

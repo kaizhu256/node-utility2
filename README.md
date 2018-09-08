@@ -56,6 +56,8 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- add jslint-function jslintPrettify
+- update jslint-function do_var to check if var-statemsnts are sorted
 - update function buildLib to auto-normalize local2-function
 - update jslint-function jslintAndPrint to validate sorted vars
 - update jslint-function jslintAndPrint to validate 3 or more continuous-newlines
@@ -66,19 +68,22 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - add server stress-test using electron
 - none
 
-#### changelog 2018.9.8
-- npm publish 2018.9.8
-- prepare for jslint v2018.05.14
-- add shell-command shGitDateCommitted, shDiffRaw
-- add file lib.istanbul.raw.js, lib.jslint.raw.js, lib.marked.raw.js, lib.uglifyjs.raw.js
-- update function fsReadFileOrEmptyStringSync with 'json' options to auto JSON.parse file or return null
-- update function buildLib to include top-level comment-description
-- rename template assetsDict['/assets.lib.template.js'] -> assetsDict['/assets.my\\_app.template.js']
-- update function testRunDefault to suppress console.error in coverage-mode
-- rename response.headers -> response.responseHeaders
-- make browser-mocked client-request <-> server-response asynchronous
-- revamp Buffer helper-functions
-- merge nodejs-mock of XMLHttpRequest into function ajax
+#### changelog 2018.9.1
+- npm publish 2018.9.1
+- remove old jslint and migrate file lib.utility2.sh to new jslint
+- migrate files lib.xxx.js to new jslint
+- update jslint-function jslintAndPrint to auto-prettify whitespaces in .js files
+- migrate files to new jslint: lib.utility2
+- pre-jslintEs6 file lib.utility2.js
+- re-merge file lib.jslint2.js -> lib.jslint.js
+- update function testRunDefault to show timeElapsed in all logs and periodically print out pending testCases
+- update jslintEs6 to ignore maxlen-warnings in comments
+- update jslintEs6 to accept macros /\* jslint-ignore-block-beg */, /\* jslint-ignore-block-beg */, /\/ jslint-ignore-line
+- add shell-function shGitBranchPush, shGitBranchRename
+- add jslint-function jslint.warn_at_push
+- bootstrapped es6 version of jslint (2018.05.14) to lint lib.jslint2.js
+- update to new jslint v2018.05.14
+- add files lib.jslint2.js, raw.jslint2.js, raw.uglifyjs.js
 - none
 
 #### this package requires
@@ -138,15 +143,19 @@ instruction
 /* istanbul instrument in package utility2 */
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true,
+    white: true
 */
+/*global global*/
 (function () {
     'use strict';
     var local;
@@ -175,7 +184,6 @@ instruction
         // run test-server
         local.testRunServer(local);
         // init assets
-        /* jslint-ignore-next-line */
         local.assetsDict['/assets.hello.txt'] = 'hello\ud83d\ude01\u0020\n';
         local.assetsDict['/assets.index.template.html'] = '';
     }());
@@ -200,7 +208,6 @@ instruction
                     local.assert(!error, error);
                     // validate data
                     options.data = xhr.responseText;
-                    /* jslint-ignore-next-line */
                     local.assert(options.data === 'hello\ud83d\ude01\u0020\n', options.data);
                     onError();
                 }, onError);
@@ -244,8 +251,8 @@ instruction
 
 
 
-    // run browser js-env code - init-test
     /* istanbul ignore next */
+    // run browser js-env code - init-test
     (function () {
         if (!local.isBrowser) {
             return;
@@ -325,19 +332,20 @@ instruction
                 }
                 // try to cover and eval input-code
                 try {
-                    /*jslint evil: true*/
                     document.querySelector('#outputTextarea1').value =
                         local.istanbul.instrumentSync(
                             document.querySelector('#inputTextareaEval1').value,
                             '/inputTextareaEval1.js'
                         );
-                    eval(document.querySelector('#outputTextarea1').value);
+                    eval( // jslint-ignore-line
+                        document.querySelector('#outputTextarea1').value.replace((/^#!\//), '// ')
+                    );
                     document.querySelector('#coverageReportDiv1').innerHTML =
                         local.istanbul.coverageReportCreate({
                             coverage: window.__coverage__
                         });
-                } catch (errorCaught) {
-                    console.error(errorCaught);
+                } catch (errorCaught2) {
+                    console.error(errorCaught2);
                 }
             }
             if (document.querySelector('#inputTextareaEval1') && (!event || (event &&
@@ -347,8 +355,9 @@ instruction
                     event.currentTarget.className.includes('oneval')))) {
                 // try to eval input-code
                 try {
-                    /*jslint evil: true*/
-                    eval(document.querySelector('#inputTextareaEval1').value);
+                    eval( // jslint-ignore-line
+                        document.querySelector('#inputTextareaEval1').value
+                    );
                 } catch (errorCaught) {
                     console.error(errorCaught);
                 }
@@ -387,8 +396,8 @@ instruction
 
 
 
-    // run node js-env code - init-test
     /* istanbul ignore next */
+    // run node js-env code - init-test
     (function () {
         if (local.isBrowser) {
             return;
@@ -440,7 +449,7 @@ instruction
                 );
             }
         });
-        /* jslint-ignore-begin */
+/* jslint-ignore-block-beg */
         local.assetsDict['/assets.index.template.html'] = '\
 <!doctype html>\n\
 <html lang="en">\n\
@@ -453,13 +462,13 @@ instruction
 /* jslint-utility2 */\n\
 /*csslint\n\
 */\n\
-/* jslint-ignore-begin */\n\
+/* jslint-ignore-block-beg */\n\
 *,\n\
 *:after,\n\
 *:before {\n\
     box-sizing: border-box;\n\
 }\n\
-/* jslint-ignore-end */\n\
+/* jslint-ignore-block-end */\n\
 @keyframes uiAnimateShake {\n\
     0%, 50% {\n\
         transform: translateX(10px);\n\
@@ -578,15 +587,19 @@ textarea {\n\
 <script>\n\
 /* jslint-utility2 */\n\
 /*jslint\n\
+    es6: true,\n\
     bitwise: true,\n\
     browser: true,\n\
+    for: true,\n\
     maxerr: 4,\n\
     maxlen: 100,\n\
+    multivar: true,\n\
     node: true,\n\
-    nomen: true,\n\
-    regexp: true,\n\
-    stupid: true\n\
+    single: true,\n\
+    this: true,\n\
+    white: true\n\
 */\n\
+/*global global*/\n\
 // init domOnEventWindowOnloadTimeElapsed\n\
 (function () {\n\
 /*\n\
@@ -761,6 +774,7 @@ utility2-comment -->\n\
 utility2-comment -->\n\
 <script src="assets.utility2.lib.istanbul.js"></script>\n\
 <script src="assets.utility2.lib.jslint.js"></script>\n\
+<script src="assets.utility2.lib.jslint2.js"></script>\n\
 <script src="assets.utility2.lib.db.js"></script>\n\
 <script src="assets.utility2.lib.marked.js"></script>\n\
 <script src="assets.utility2.lib.sjcl.js"></script>\n\
@@ -782,20 +796,17 @@ utility2-comment -->\n\
 </body>\n\
 </html>\n\
 ';
-        /* jslint-ignore-end */
+/* jslint-ignore-block-end */
         /* validateLineSortedReset */
-        /* jslint-ignore-begin */
+/* jslint-ignore-block-beg */
         // bug-workaround - long $npm_package_buildCustomOrg
         local.assetsDict['/assets.utility2.js'] =
             local.assetsDict['/assets.utility2.js'] ||
             local.fs.readFileSync(local.__dirname + '/lib.utility2.js', 'utf8'
         ).replace((/^#!\//), '// ');
-        /* jslint-ignore-end */
+/* jslint-ignore-block-end */
         /* validateLineSortedReset */
-        local.assetsDict['/'] =
-            local.assetsDict['/assets.example.html'] =
-            local.assetsDict['/index.html'] =
-            local.assetsDict['/assets.index.template.html']
+        local.assetsDict['/'] = local.assetsDict['/assets.index.template.html']
             .replace((/\{\{env\.(\w+?)\}\}/g), function (match0, match1) {
                 switch (match1) {
                 case 'npm_package_description':
@@ -810,10 +821,13 @@ utility2-comment -->\n\
                     return match0;
                 }
             });
+        local.assetsDict['/assets.example.html'] = local.assetsDict['/'];
+        local.assetsDict['/index.html'] = local.assetsDict['/'];
         // init cli
         if (module !== require.main || local.global.utility2_rollup) {
             return;
         }
+        /* validateLineSortedReset */
         local.assetsDict['/assets.example.js'] =
             local.assetsDict['/assets.example.js'] ||
             local.fs.readFileSync(__filename, 'utf8');
@@ -941,7 +955,7 @@ utility2-comment -->\n\
         "test": "./npm_scripts.sh",
         "utility2": "./npm_scripts.sh"
     },
-    "version": "2018.9.8"
+    "version": "2018.9.1"
 }
 ```
 

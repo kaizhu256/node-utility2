@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
- * lib.swgg.js (2018.9.8)
- * https://github.com/kaizhu256/node-swgg
+ * swgg
+ * https://github.com/kaizhu256/node-swgg/blob/beta/lib.swgg.js
  * this zero-dependency package will run a virtual swagger-ui server with persistent-storage in the browser, that your webapp can use (in-place of a real backend), with a working web-demo
  *
  */
@@ -11,15 +11,20 @@
 /* istanbul instrument in package swgg */
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    debug: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true,
+    white: true
 */
+/*global global*/
 (function () {
     'use strict';
     var local;
@@ -31,19 +36,18 @@
     (function () {
         // init debug_inline
         (function () {
-            var consoleError, context, key;
+            var consoleError, context;
             consoleError = console.error;
-            context = (typeof window === 'object' && window) || global;
-            key = 'debug_inline'.replace('_i', 'I');
-            context[key] = context[key] || function (arg0) {
+            context = (typeof window === "object" && window) || global;
+            context["debug\u0049nline"] = context["debug\u0049nline"] || function (arg0) {
             /*
              * this function will both print arg0 to stderr and return it
              */
                 // debug arguments
-                context['_' + key + 'Arguments'] = arguments;
-                consoleError('\n\n' + key);
+                context["debug\u0049nlineArguments"] = arguments;
+                consoleError("\n\ndebug\u0049nline");
                 consoleError.apply(console, arguments);
-                consoleError(new Error().stack + '\n');
+                consoleError(new Error().stack + "\n");
                 // return arg0 for inspection
                 return arg0;
             };
@@ -110,7 +114,7 @@
             : (function () {
                 try {
                     return require('./lib.utility2.js');
-                } catch (errorCaught) {
+                } catch (ignore) {
                     return require('./assets.utility2.rollup.js');
                 }
             }()));
@@ -120,7 +124,7 @@
         /* validateLineSortedReset */
         // init assets and templates
 // https://github.com/json-schema-org/json-schema-org.github.io/blob/eb4805e94c3e27932352344767d19cc4c3c3381c/draft-04/schema
-/* jslint-ignore-begin */
+/* jslint-ignore-block-beg */
 // curl -Ls https://raw.githubusercontent.com/json-schema-org/json-schema-org.github.io/eb4805e94c3e27932352344767d19cc4c3c3381c/draft-04/schema > /tmp/aa.json; node -e "console.log(JSON.stringify(require('/tmp/aa.json')));"
 local.assetsDict['/assets.swgg.json-schema.json'] = JSON.stringify(
 {"id":"http://json-schema.org/draft-04/schema#","$schema":"http://json-schema.org/draft-04/schema#","description":"Core schema meta-schema","definitions":{"schemaArray":{"type":"array","minItems":1,"items":{"$ref":"#"}},"positiveInteger":{"type":"integer","minimum":0},"positiveIntegerDefault0":{"allOf":[{"$ref":"#/definitions/positiveInteger"},{"default":0}]},"simpleTypes":{"enum":["array","boolean","integer","null","number","object","string"]},"stringArray":{"type":"array","items":{"type":"string"},"minItems":1,"uniqueItems":true}},"type":"object","properties":{"id":{"type":"string","format":"uri"},"$schema":{"type":"string","format":"uri"},"title":{"type":"string"},"description":{"type":"string"},"default":{},"multipleOf":{"type":"number","minimum":0,"exclusiveMinimum":true},"maximum":{"type":"number"},"exclusiveMaximum":{"type":"boolean","default":false},"minimum":{"type":"number"},"exclusiveMinimum":{"type":"boolean","default":false},"maxLength":{"$ref":"#/definitions/positiveInteger"},"minLength":{"$ref":"#/definitions/positiveIntegerDefault0"},"pattern":{"type":"string","format":"regex"},"additionalItems":{"anyOf":[{"type":"boolean"},{"$ref":"#"}],"default":{}},"items":{"anyOf":[{"$ref":"#"},{"$ref":"#/definitions/schemaArray"}],"default":{}},"maxItems":{"$ref":"#/definitions/positiveInteger"},"minItems":{"$ref":"#/definitions/positiveIntegerDefault0"},"uniqueItems":{"type":"boolean","default":false},"maxProperties":{"$ref":"#/definitions/positiveInteger"},"minProperties":{"$ref":"#/definitions/positiveIntegerDefault0"},"required":{"$ref":"#/definitions/stringArray"},"additionalProperties":{"anyOf":[{"type":"boolean"},{"$ref":"#"}],"default":{}},"definitions":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"properties":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"patternProperties":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"dependencies":{"type":"object","additionalProperties":{"anyOf":[{"$ref":"#"},{"$ref":"#/definitions/stringArray"}]}},"enum":{"type":"array","minItems":1,"uniqueItems":true},"type":{"anyOf":[{"$ref":"#/definitions/simpleTypes"},{"type":"array","items":{"$ref":"#/definitions/simpleTypes"},"minItems":1,"uniqueItems":true}]},"allOf":{"$ref":"#/definitions/schemaArray"},"anyOf":{"$ref":"#/definitions/schemaArray"},"oneOf":{"$ref":"#/definitions/schemaArray"},"not":{"$ref":"#"}},"dependencies":{"exclusiveMaximum":["maximum"],"exclusiveMinimum":["minimum"]},"default":{}}
@@ -1244,7 +1248,7 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
 /* jslint-utility2 */\n\
 /*csslint\n\
 */\n\
-/* jslint-ignore-begin */\n\
+/* jslint-ignore-block-beg */\n\
 .swggUiContainer,\n\
 .swggUiContainer * {\n\
     border: 0;\n\
@@ -1264,7 +1268,7 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
 .swggUiContainer .description > *:first-child {\n\
     margin-top: 0;\n\
 }\n\
-/* jslint-ignore-end */\n\
+/* jslint-ignore-block-end */\n\
 /* validateLineSortedReset */\n\
 /* general */\n\
 .swggUiContainer code,\n\
@@ -1615,15 +1619,19 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
 </div>\n\
 <script>\n\
 /*jslint\n\
+    es6: true,\n\
     bitwise: true,\n\
     browser: true,\n\
+    for: true,\n\
     maxerr: 4,\n\
     maxlen: 100,\n\
+    multivar: true,\n\
     node: true,\n\
-    nomen: true,\n\
-    regexp: true,\n\
-    stupid: true\n\
+    single: true,\n\
+    this: true,\n\
+    white: true\n\
 */\n\
+/*global global*/\n\
 // init domOnEventMediaHotkeys\n\
 (function () {\n\
 /*\n\
@@ -1713,14 +1721,14 @@ document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
 <script>\n\
 /*jslint browser: true*/\n\
 window.local = window.local || window.swgg;\n\
-window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
+window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
 </script>\n\
 <!-- swgg-script-extra-begin -->\n\
 <!-- swgg-script-extra-end -->\n\
 </body>\n\
 </html>\n\
 ');
-/* jslint-ignore-end */
+/* jslint-ignore-block-end */
         local.assetsDict['/assets.swgg.swagger.schema.json'] = local.jsonStringifyOrdered(
             local.objectSetOverride(
                 JSON.parse(local.assetsDict['/assets.swgg.json-schema.json'].replace(
@@ -2059,7 +2067,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                         swaggerJson: local.swaggerJson
                     })), 2);
                 });
-                tmp.allOf = undefined;
+                delete tmp.allOf;
             });
             // init apiDict from paths
             Object.keys(swaggerJson.paths).forEach(function (path) {
@@ -2122,7 +2130,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     _schemaPDict: {},
                     consumes: [],
                     parameters: [],
-                    responses: { 200: {
+                    responses: { "200": {
                         description: 'ok - ' + 'http://jsonapi.org/format/#document-top-level',
                         schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
                     } },
@@ -2141,14 +2149,14 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                 self.parameters.forEach(function (schemaP) {
                     // dereference schemaP
                     String(schemaP['x-swgg-$ref'] || schemaP.$ref).replace((
-                        /#\/parameters\/(.+?$)/
+                        /#\/parameters\/(.+?$)/m
                     ), function (match0, match1) {
                         match0 = match1;
                         local.objectSetDefault(
                             schemaP,
                             local.jsonCopy(swaggerJson.parameters[match0])
                         );
-                        schemaP.$ref = undefined;
+                        delete schemaP.$ref;
                     });
                     // init _idName.format and _idName.type
                     if (self._schemaName && schemaP.name === self._idName) {
@@ -2166,7 +2174,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     self['x-swgg-required']
                 ].forEach(function (element, ii) {
                     (element || []).forEach(function (name) {
-                        self._schemaPDict[name].required = !!ii;
+                        self._schemaPDict[name].required = Boolean(ii);
                     });
                 });
                 switch (self._crudType[0]) {
@@ -2556,9 +2564,9 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     name = name && name[1];
                     request.swgg.bodyMeta[name] = {
                         contentType: ((/^content-type:(.*)/im)
-                        .exec(header) || {1: ''})[1].trim() || null,
+                        .exec(header) || {"1": ''})[1].trim() || null,
                         filename: ((/^content-disposition:.*?\bfilename="([^"]+)/im)
-                        .exec(header) || {1: ''})[1].trim() || null,
+                        .exec(header) || {"1": ''})[1].trim() || null,
                         name: name
                     };
                     ii = local.bufferIndexOfSubBuffer(
@@ -2602,15 +2610,15 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                         break;
                     case 'crudSetOneById':
                         // replace idName with idBackend in body
-                        crud.body.id = undefined;
-                        crud.body[crud.idName] = undefined;
+                        delete crud.body.id;
+                        delete crud.body[crud.idName];
                         crud.body[crud.idBackend] = crud.data[crud.idName];
                         crud.dbTable.crudSetOneById(crud.body, options.onNext);
                         break;
                     case 'crudUpdateOneById':
                         // replace idName with idBackend in body
-                        crud.body.id = undefined;
-                        crud.body[crud.idName] = undefined;
+                        delete crud.body.id;
+                        delete crud.body[crud.idName];
                         crud.body[crud.idBackend] = crud.data[crud.idName];
                         crud.dbTable.crudUpdateOneById(crud.body, options.onNext);
                         break;
@@ -2732,7 +2740,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                         break;
                     case 'fileUploadManyByForm':
                         options.onNext(null, data.map(function (element) {
-                            element.fileBlob = undefined;
+                            delete element.fileBlob;
                             return element;
                         }));
                         break;
@@ -3760,14 +3768,14 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                     (operation.parameters || []).forEach(function (schemaP, ii) {
                         // dereference schemaP
                         String(schemaP['x-swgg-$ref'] || schemaP.$ref).replace((
-                            /#\/parameters\/(.+?$)/
+                            /#\/parameters\/(.+?$)/m
                         ), function (match0, match1) {
                             match0 = match1;
                             schemaP = local.objectSetDefault(
                                 local.jsonCopy(schemaP),
                                 local.jsonCopy(swaggerJson.parameters[match0])
                             );
-                            schemaP.$ref = undefined;
+                            delete schemaP.$ref;
                         });
                         // validate semanticOperations2
                         test = !(tmp.in.body && schemaP.in === 'body');
@@ -4119,7 +4127,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                 // Clarify 'byte' format #50
                 // https://github.com/swagger-api/swagger-spec/issues/50
                 case 'byte':
-                    test = !(/[^\n\r\+\/0-9\=A-Za-z]/).test(data);
+                    test = !(/[^\n\r+\/0-9=A-Za-z]/).test(data);
                     break;
                 case 'date':
                 case 'date-time':
@@ -5280,7 +5288,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({ swggInit: true });\n\
                 ? local.apiKeyValue
                 : schemaP.default === null
                 ? ''
-                : schemaP.required || schemaP.isTextarea
+                : (schemaP.required || schemaP.isTextarea)
                 ? schemaP.placeholder
                 : '';
             // templateRender schemaP

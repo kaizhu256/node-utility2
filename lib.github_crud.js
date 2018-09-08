@@ -11,15 +11,19 @@
 /* istanbul instrument in package github_crud */
 /* jslint-utility2 */
 /*jslint
+    es6: true,
     bitwise: true,
     browser: true,
+    for: true,
     maxerr: 4,
     maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true,
+    white: true
 */
+/*global global*/
 (function () {
     'use strict';
     var local;
@@ -31,19 +35,18 @@
     (function () {
         // init debug_inline
         (function () {
-            var consoleError, context, key;
+            var consoleError, context;
             consoleError = console.error;
-            context = (typeof window === 'object' && window) || global;
-            key = 'debug_inline'.replace('_i', 'I');
-            context[key] = context[key] || function (arg0) {
+            context = (typeof window === "object" && window) || global;
+            context["debug\u0049nline"] = context["debug\u0049nline"] || function (arg0) {
             /*
              * this function will both print arg0 to stderr and return it
              */
                 // debug arguments
-                context['_' + key + 'Arguments'] = arguments;
-                consoleError('\n\n' + key);
+                context["debug\u0049nlineArguments"] = arguments;
+                consoleError("\n\ndebug\u0049nline");
                 consoleError.apply(console, arguments);
-                consoleError(new Error().stack + '\n');
+                consoleError(new Error().stack + "\n");
                 // return arg0 for inspection
                 return arg0;
             };
@@ -99,7 +102,8 @@
             module.exports.__dirname = __dirname;
         }
         // init lib main
-        local.local = local.github_crud = local;
+        local.local = local;
+        local.github_crud = local;
 
 
 
@@ -265,11 +269,15 @@
             /*
              * this function will try to end or destroy the stream
              */
+                var error;
                 // try to end the stream
                 try {
                     stream.end();
                 } catch (errorCaught) {
-                    // if error, then try to destroy the stream
+                    error = errorCaught;
+                }
+                // if error, then try to destroy the stream
+                if (error) {
                     try {
                         stream.destroy();
                     } catch (ignore) {
@@ -439,7 +447,12 @@
              *
              * will print help
              */
-                var commandList, file, packageJson, rgxComment, text, textDict;
+                var commandList;
+                var file;
+                var packageJson;
+                var rgxComment;
+                var text;
+                var textDict;
                 commandList = [{
                     argList: '<arg2>  ...',
                     description: 'usage:',
@@ -452,12 +465,14 @@
                 file = __filename.replace((/.*\//), '');
                 packageJson = require('./package.json');
                 // validate comment
-                rgxComment = new RegExp('\\) \\{\\n' +
+                rgxComment = new RegExp(
+                    '\\) \\{\\n' +
                     '(?: {8}| {12})\\/\\*\\n' +
                     '(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n' +
                     '(?: {9}| {13})\\* (will .*?\\S)\\n' +
                     '(?: {9}| {13})\\*\\/\\n' +
-                    '(?: {12}| {16})\\S');
+                    '(?: {12}| {16})\\S'
+                );
                 textDict = {};
                 Object.keys(local.cliDict).sort().forEach(function (key, ii) {
                     if (key[0] === '_' && key !== '_default') {
@@ -467,38 +482,38 @@
                     if (key === '_default') {
                         key = '';
                     }
-                    ii = textDict[text] = textDict[text] || (ii + 2);
+                    textDict[text] = textDict[text] || (ii + 2);
+                    ii = textDict[text];
                     if (commandList[ii]) {
                         commandList[ii].command.push(key);
                     } else {
                         try {
                             commandList[ii] = rgxComment.exec(text);
-                        } catch (errorCaught) {
-                            if (!local.env.npm_config_mode_coverage) {
-                                throw new Error('cliRun - cannot parse comment in COMMAND ' +
-                                    key + ':\nnew RegExp(' + JSON.stringify(rgxComment.source) +
-                                    ').exec(' + JSON.stringify(text)
-                                    .replace((/\\\\/g), '\x00')
+                            commandList[ii] = {
+                                argList: (commandList[ii][1] || '').trim(),
+                                command: [key],
+                                description: commandList[ii][2]
+                            };
+                        } catch (ignore) {
+                            throw new Error(
+                                'cliRun - cannot parse comment in COMMAND ' +
+                                key + ':\nnew RegExp(' + JSON.stringify(rgxComment.source) +
+                                ').exec(' + JSON.stringify(text)
+                                    .replace((/\\\\/g), '\u0000')
                                     .replace((/\\n/g), '\\n\\\n')
-                                    .replace((/\x00/g), '\\\\') + ');');
-                            }
+                                    .replace((/\u0000/g), '\\\\') + ');'
+                            );
                         }
-                        commandList[ii] = commandList[ii] || [];
-                        commandList[ii] = {
-                            argList: (commandList[ii][1] || '').trim(),
-                            command: [key],
-                            description: commandList[ii][2] || ''
-                        };
                     }
                 });
-                (options && options.modeError
+                ((options && options.modeError)
                     ? console.error
                     : console.log)(
-                    (options && options.modeError
-                    ? '\u001b[31merror: missing <arg1>\u001b[39m\n\n'
-                    : '') +
-                        packageJson.name + ' (' + packageJson.version + ')\n\n' +
-                        commandList
+                    ((options && options.modeError)
+                        ? '\u001b[31merror: missing <arg1>\u001b[39m\n\n'
+                        : '') +
+                            packageJson.name + ' (' + packageJson.version + ')\n\n' +
+                            commandList
                         .filter(function (element) {
                             return element;
                         })
@@ -514,13 +529,13 @@
                             default:
                                 element.argList = element.argList.split(' ');
                                 element.description = '# COMMAND ' +
-                                    (element.command[0] || '<none>') + '\n# ' +
-                                    element.description;
+                                        (element.command[0] || '<none>') + '\n# ' +
+                                        element.description;
                             }
                             return element.description + '\n  ' + file +
-                                ('  ' + element.command.sort().join('|') + '  ')
+                                    ('  ' + element.command.sort().join('|') + '  ')
                                 .replace((/^ {4}$/), '  ') +
-                                element.argList.join('  ');
+                                        element.argList.join('  ');
                         })
                         .join('\n\n')
                 );
@@ -539,7 +554,7 @@
             };
             if (typeof local.replStart === 'function') {
                 local.cliDict['--interactive'] = local.cliDict['--interactive'] ||
-                    local.cliDict._interactive;
+                        local.cliDict._interactive;
                 local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
             }
             local.cliDict._version = local.cliDict._version || function () {
@@ -555,7 +570,7 @@
             fnc = fnc || function () {
                 // default to --help command if no arguments are given
                 if (process.argv.length <= 2 && !local.cliDict._default.modeNoCommand) {
-                    local.cliDict._help({ modeError: true });
+                    local.cliDict._help({modeError: true});
                     process.exit(1);
                     return;
                 }
@@ -622,7 +637,7 @@
          */
             options.onNext = local.onErrorWithStack(function (error, data, meta) {
                 try {
-                    options.modeNext += error && !options.modeErrorIgnore
+                    options.modeNext += (error && !options.modeErrorIgnore)
                         ? 1000
                         : 1;
                     if (options.modeDebug) {
@@ -769,7 +784,7 @@
                 url: options.url
             };
             options.url = options.url
-/* jslint-ignore-begin */
+/* jslint-ignore-block-beg */
 // parse https://github.com/:owner/:repo/blob/:branch/:path
 .replace(
     (/^https:\/\/github.com\/([^\/]+?\/[^\/]+?)\/blob\/([^\/]+?)\/(.+)/),
@@ -795,7 +810,7 @@
     (/^([^\/]+?\/[^\/]+?)$/),
     'https://github.com/$1'
 )
-/* jslint-ignore-end */
+/* jslint-ignore-block-end */
                 .replace((/\?branch=(.*)/), function (match0, match1) {
                     options.branch = match1;
                     if (options.method === 'GET') {
@@ -1166,7 +1181,7 @@
                 message: process.argv[4],
                 url: process.argv[3]
             }, function (error) {
-                process.exit(!!error);
+                process.exit(Boolean(error));
             });
         };
 
@@ -1182,7 +1197,7 @@
                     process.stdout.write(data);
                 } catch (ignore) {
                 }
-                process.exit(!!error);
+                process.exit(Boolean(error));
             });
         };
 
@@ -1196,7 +1211,7 @@
                 url: process.argv[3],
                 file: process.argv[4]
             }, function (error) {
-                process.exit(!!error);
+                process.exit(Boolean(error));
             });
         };
 
@@ -1208,7 +1223,7 @@
             local.github_crud.githubCrudRepoCreateList({
                 urlList: process.argv[3].split(/[,\s]/g).filter(local.echo)
             }, function (error) {
-                process.exit(!!error);
+                process.exit(Boolean(error));
             });
         };
 
@@ -1220,7 +1235,7 @@
             local.github_crud.githubCrudRepoDeleteList({
                 urlList: process.argv[3].split(/[,\s]/g).filter(local.echo)
             }, function (error) {
-                process.exit(!!error);
+                process.exit(Boolean(error));
             });
         };
 
@@ -1233,7 +1248,7 @@
                 message: process.argv[4],
                 urlList: process.argv[3].split(/[,\s]/g).filter(local.echo)
             }, function (error) {
-                process.exit(!!error);
+                process.exit(Boolean(error));
             });
         };
 
