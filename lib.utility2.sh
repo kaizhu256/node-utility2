@@ -247,7 +247,7 @@ if (!local.fs.existsSync("README.md", "utf8")) {
     ));
 }
 if (!local.fs.existsSync("lib." + process.env.npm_package_nameLib + ".js", "utf8")) {
-    tmp = local.assetsDict["/assets.lib.template.js"];
+    tmp = local.assetsDict["/assets.my_app.template.js"];
     if (local.fs.existsSync("assets.utility2.rollup.js")) {
         tmp = tmp.replace(
             "            // local.global.utility2_rollup_old || ",
@@ -770,7 +770,7 @@ shBuildCiInternal () {(set -e
     fi
     shGitInfo | head -n 4096 || true
     # validate http-links embedded in README.md
-    if [ ! "$npm_package_isPrivate" ] &&
+    if [ ! "$npm_package_private" ] &&
         ! (printf "$CI_COMMIT_MESSAGE_META" | grep -q -E "^npm publishAfterCommitAfterBuild")
     then
         shSleep 60
@@ -1299,6 +1299,12 @@ shDeployHeroku () {(set -e
         test
 )}
 
+shDiffRaw () {(set -e
+# this function will diff-compare lib.xxx.raw.js -> lib.xxx.js
+    diff -u "$(printf "$1" | sed -e "s/\(\.[^.]*\)$/.raw\1/")" "$1" > /tmp/shDiffRaw.diff || true
+    vim -R /tmp/shDiffRaw.diff
+)}
+
 shDockerBuildCleanup () {(set -e
 # this function will cleanup the docker build
 # apt list --installed
@@ -1782,6 +1788,12 @@ shGitCommandWithGithubToken () {(set -e
     esac
     # hide $GITHUB_TOKEN in case of error
     git "$COMMAND" "$URL" "$@" 2>/dev/null
+)}
+
+shGitDateCommitted () {(set -e
+# this function will print the commit-date for commit $1
+# https://stackoverflow.com/questions/21363187/git-show-dates-in-utc
+    TZ=UTC git show --quiet --date='format-local:%Y-%m-%dT%H:%M:%SZ' --format="%cd" "$1"
 )}
 
 shGitGc () {(set -e
@@ -2332,7 +2344,8 @@ local = {};
         // init local.<builtin-functions>
         local.ajax = function (options, onError) {
         /*
-         * this function will send an ajax-request with error-handling and timeout
+         * this function will send an ajax-request with the given options.url,
+         * with error-handling and timeout
          * example usage:
             local.ajax({
                 data: 'hello world',
@@ -2345,28 +2358,147 @@ local = {};
             });
          */
             var ajaxProgressUpdate,
-                bufferToString,
+                bufferValidateAndCoerce,
                 isBrowser,
                 isDone,
+                onEvent,
                 nop,
-                self,
+                local2,
                 streamCleanup,
-                xhr;
-            // init local
-            self = local.utility2 || {};
-            // init standalone handling-behavior
+                xhr,
+                xhrInit;
+            // init local2
+            local2 = local.utility2 || {};
+            // init function
             nop = function () {
             /*
              * this function will do nothing
              */
                 return;
             };
-            ajaxProgressUpdate = self.ajaxProgressUpdate || nop;
-            // init onError
-            if (self.onErrorWithStack) {
-                onError = self.onErrorWithStack(onError);
-            }
-            bufferToString = self.bufferToString || String;
+            ajaxProgressUpdate = local2.ajaxProgressUpdate || nop;
+            bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (bff, mode) {
+            /*
+             * this function will validate and coerce/convert
+             * ArrayBuffer, String, or Uint8Array -> Buffer or String
+             */
+                // validate instanceof ArrayBuffer, String, or Uint8Array
+                if (!((isBrowser && (typeof bff === 'string' || bff instanceof ArrayBuffer)) ||
+                        (!isBrowser && Buffer.isBuffer(bff)))) {
+                    throw new Error(
+                        'ajax - xhr.response is not instanceof ArrayBuffer, String, or Buffer'
+                    );
+                }
+                // coerce to ArrayBuffer -> Buffer
+                if (bff instanceof ArrayBuffer) {
+                    return new Uint8Array(bff);
+                }
+                // coerce/convert String -> Buffer or String
+                if (typeof bff === 'string') {
+                    return mode === 'string'
+                        ? bff
+                        : isBrowser
+                        ? new window.TextEncoder().encode(bff)
+                        : Buffer.from(bff);
+                }
+                // coerce/convert Buffer -> Buffer or String
+                return mode === 'string'
+                    ? String(bff)
+                    : bff;
+            };
+            onEvent = function (event) {
+            /*
+             * this function will handle events
+             */
+                if (event instanceof Error) {
+                    xhr.error = xhr.error || event;
+                    xhr.onEvent({ type: 'error' });
+                    return;
+                }
+                // init statusCode
+                xhr.statusCode = (xhr.statusCode || xhr.status) | 0;
+                switch (event.type) {
+                case 'abort':
+                case 'error':
+                case 'load':
+                    if (isDone) {
+                        return;
+                    }
+                    isDone = true;
+                    // decrement ajaxProgressCounter
+                    local2.ajaxProgressCounter = Math.max(local2.ajaxProgressCounter - 1, 0);
+                    ajaxProgressUpdate();
+                    // handle abort or error event
+                    switch (!xhr.error && event.type) {
+                    case 'abort':
+                    case 'error':
+                        xhr.error = new Error('ajax - event ' + event.type);
+                        break;
+                    case 'load':
+                        if (xhr.statusCode >= 400) {
+                            xhr.error = new Error('ajax - statusCode ' + xhr.statusCode);
+                        }
+                        break;
+                    }
+                    // debug statusCode / method / url
+                    if (xhr.error) {
+                        xhr.error.statusCode = xhr.statusCode;
+                        (local2.errorMessagePrepend || nop)(xhr.error, (isBrowser
+                            ? 'browser'
+                            : 'node') + ' - ' +
+                            xhr.statusCode + ' ' + xhr.method + ' ' + xhr.url + '\\n');
+                    }
+                    // update responseHeaders
+                    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders
+                    if (xhr.getAllResponseHeaders) {
+                        xhr.getAllResponseHeaders().replace((
+                            /(.*?): *(.*?)\\r\\n/g
+                        ), function (match0, match1, match2) {
+                            match0 = match1;
+                            xhr.responseHeaders[match0.toLowerCase()] = match2;
+                        });
+                    }
+                    // debug ajaxResponse
+                    xhr.responseContentLength =
+                        (xhr.response && (xhr.response.byteLength || xhr.response.length)) | 0;
+                    xhr.timeElapsed = Date.now() - xhr.timeStart;
+                    if (xhr.modeDebug) {
+                        console.error('serverLog - ' + JSON.stringify({
+                            time: new Date(xhr.timeStart).toISOString(),
+                            type: 'ajaxResponse',
+                            method: xhr.method,
+                            url: xhr.url,
+                            statusCode: xhr.statusCode,
+                            timeElapsed: xhr.timeElapsed,
+                            // extra
+                            responseContentLength: xhr.responseContentLength
+                        }));
+                    }
+                    // init responseType
+                    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType
+                    switch (xhr.response && xhr.responseType) {
+                    // init responseText
+                    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseText
+                    case '':
+                    case 'text':
+                        if (typeof xhr.responseText === 'string') {
+                            break;
+                        }
+                        xhr.responseText = bufferValidateAndCoerce(xhr.response, 'string');
+                        break;
+                    case 'arraybuffer':
+                        xhr.responseBuffer = bufferValidateAndCoerce(xhr.response);
+                        break;
+                    }
+                    // cleanup timerTimeout
+                    clearTimeout(xhr.timerTimeout);
+                    // cleanup requestStream and responseStream
+                    streamCleanup(xhr.requestStream);
+                    streamCleanup(xhr.responseStream);
+                    onError(xhr.error, xhr);
+                    break;
+                }
+            };
             streamCleanup = function (stream) {
             /*
              * this function will try to end or destroy the stream
@@ -2382,65 +2514,95 @@ local = {};
                     }
                 }
             };
+            xhrInit = function () {
+            /*
+             * this function will init xhr
+             */
+                // init options
+                Object.keys(options).forEach(function (key) {
+                    if (key[0] !== '_') {
+                        xhr[key] = options[key];
+                    }
+                });
+                Object.assign(xhr, {
+                    corsForwardProxyHost: xhr.corsForwardProxyHost || local2.corsForwardProxyHost,
+                    headers: xhr.headers || {},
+                    location: xhr.location || (isBrowser && location) || {},
+                    method: xhr.method || 'GET',
+                    responseType: xhr.responseType || '',
+                    timeout: xhr.timeout || local2.timeoutDefault || 30000
+                });
+                Object.keys(xhr.headers).forEach(function (key) {
+                    xhr.headers[key.toLowerCase()] = xhr.headers[key];
+                });
+                // init misc
+                local2._debugXhr = xhr;
+                xhr.onEvent = onEvent;
+                xhr.responseHeaders = {};
+                xhr.timeStart = xhr.timeStart || Date.now();
+            };
             // init isBrowser
             isBrowser = typeof window === 'object' &&
                 typeof window.XMLHttpRequest === 'function' &&
                 window.document &&
                 typeof window.document.querySelectorAll === 'function';
-            // init xhr
-            xhr = !options.httpRequest &&
-                (!isBrowser || (self.serverLocalUrlTest && self.serverLocalUrlTest(options.url)))
-                ? self._http && self._http.XMLHttpRequest && new self._http.XMLHttpRequest()
-                : isBrowser && new window.XMLHttpRequest();
+            // init onError
+            if (local2.onErrorWithStack) {
+                onError = local2.onErrorWithStack(onError);
+            }
+            // init xhr - XMLHttpRequest
+            xhr = isBrowser &&
+                !options.httpRequest &&
+                !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(options.url)) &&
+                new XMLHttpRequest();
+            // init xhr - http.request
             if (!xhr) {
-                xhr = require('url').parse(options.url);
-                xhr.headers = options.headers;
-                xhr.method = options.method;
-                xhr.timeout = xhr.timeout || self.timeoutDefault || 30000;
+                xhr = (local2.urlParse || require('url').parse)(options.url);
+                // init xhr
+                xhrInit();
+                // init xhr - http.request
                 xhr = (
-                    options.httpRequest || require(xhr.protocol.slice(0, -1)).request
-                )(xhr, function (response) {
+                    options.httpRequest ||
+                        (isBrowser && local2.http.request) ||
+                        require(xhr.protocol.slice(0, -1)).request
+                )(xhr, function (responseStream) {
+                /*
+                 * this function will read the responseStream
+                 */
                     var chunkList;
                     chunkList = [];
-                    xhr.responseStream = response;
-                    xhr.responseHeaders = xhr.responseStream.headers;
-                    xhr.status = xhr.responseStream.statusCode;
-                    xhr.responseStream
-                        .on('data', function (chunk) {
-                            chunkList.push(chunk);
-                        })
-                        .on('end', function () {
-                            xhr.response = Buffer.concat(chunkList);
-                            xhr.onEvent({ type: 'load' });
-                        })
-                        .on('error', xhr.onEvent);
+                    xhr.responseHeaders = responseStream.responseHeaders || responseStream.headers;
+                    xhr.responseStream = responseStream;
+                    xhr.statusCode = responseStream.statusCode;
+                    responseStream.dataLength = 0;
+                    responseStream.on('data', function (chunk) {
+                        chunkList.push(chunk);
+                    });
+                    responseStream.on('end', function () {
+                        xhr.response = isBrowser
+                            ? chunkList[0]
+                            : Buffer.concat(chunkList);
+                        responseStream.dataLength = xhr.response.byteLength || xhr.response.length;
+                        xhr.onEvent({ type: 'load' });
+                    });
+                    responseStream.on('error', xhr.onEvent);
                 });
+                xhr.abort = function () {
+                /*
+                 * this function will abort the xhr-request
+                 * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/abort
+                 */
+                    xhr.onEvent({ type: 'abort' });
+                };
                 xhr.addEventListener = nop;
                 xhr.open = nop;
                 xhr.requestStream = xhr;
                 xhr.send = xhr.end;
                 xhr.setRequestHeader = nop;
-                setTimeout(function () {
-                    xhr.on('error', xhr.onEvent);
-                });
+                xhr.on('error', onEvent);
             }
-            // debug xhr
-            self._debugXhr = xhr;
-            // init options
-            Object.keys(options).forEach(function (key) {
-                if (options[key] !== undefined) {
-                    xhr[key] = options[key];
-                }
-            });
-            // init properties
-            xhr.headers = {};
-            Object.keys(options.headers || {}).forEach(function (key) {
-                xhr.headers[key.toLowerCase()] = options.headers[key];
-            });
-            xhr.method = xhr.method || 'GET';
-            xhr.responseHeaders = {};
-            xhr.timeStart = Date.now();
-            xhr.timeout = xhr.timeout || self.timeoutDefault || 30000;
+            // init xhr
+            xhrInit();
             // init timerTimeout
             xhr.timerTimeout = setTimeout(function () {
                 xhr.error = xhr.error || new Error('onTimeout - timeout-error - ' +
@@ -2450,135 +2612,35 @@ local = {};
                 streamCleanup(xhr.requestStream);
                 streamCleanup(xhr.responseStream);
             }, xhr.timeout);
-            // init event-handling
-            xhr.onEvent = function (event) {
-                if (event instanceof Error) {
-                    xhr.error = xhr.error || event;
-                    xhr.onEvent({ type: 'error' });
-                    return;
-                }
-                // init statusCode
-                xhr.statusCode = xhr.status || xhr.statusCode || 0;
-                switch (event.type) {
-                case 'abort':
-                case 'error':
-                case 'load':
-                    // do not run more than once
-                    if (isDone) {
-                        return;
-                    }
-                    isDone = xhr._isDone = true;
-                    // update responseHeaders
-                    if (xhr.getAllResponseHeaders) {
-                        xhr.getAllResponseHeaders().replace((
-                            /(.*?): *(.*?)\\r\\n/g
-                        ), function (match0, match1, match2) {
-                            match0 = match1;
-                            xhr.responseHeaders[match0.toLowerCase()] = match2;
-                        });
-                    }
-                    // init responseText
-                    if (!(isBrowser && (xhr instanceof XMLHttpRequest)) &&
-                            (xhr.responseType === 'text' || !xhr.responseType)) {
-                        xhr.response = xhr.responseText = bufferToString(xhr.response || '');
-                    }
-                    // init responseBuffer
-                    xhr.responseBuffer = xhr.response;
-                    if (xhr.responseBuffer instanceof ArrayBuffer) {
-                        xhr.responseBuffer = new Uint8Array(xhr.responseBuffer);
-                    }
-                    xhr.responseContentLength =
-                        (xhr.response && (xhr.response.byteLength || xhr.response.length)) || 0;
-                    xhr.timeElapsed = Date.now() - xhr.timeStart;
-                    // debug ajaxResponse
-                    if (xhr.modeDebug) {
-                        console.error('serverLog - ' + JSON.stringify({
-                            time: new Date(xhr.timeStart).toISOString(),
-                            type: 'ajaxResponse',
-                            method: xhr.method,
-                            url: xhr.url,
-                            statusCode: xhr.statusCode,
-                            timeElapsed: xhr.timeElapsed,
-                            // extra
-                            responseContentLength: xhr.responseContentLength,
-                            data: (function () {
-                                try {
-                                    return String(xhr.data.slice(0, 256));
-                                } catch (ignore) {
-                                }
-                            }()),
-                            responseText: (function () {
-                                try {
-                                    return String(xhr.responseText.slice(0, 256));
-                                } catch (ignore) {
-                                }
-                            }())
-                        }));
-                    }
-                    // cleanup timerTimeout
-                    clearTimeout(xhr.timerTimeout);
-                    // cleanup requestStream and responseStream
-                    setTimeout(function () {
-                        streamCleanup(xhr.requestStream);
-                        streamCleanup(xhr.responseStream);
-                    });
-                    // decrement ajaxProgressCounter
-                    self.ajaxProgressCounter = Math.max(self.ajaxProgressCounter - 1, 0);
-                    // handle abort or error event
-                    if (!xhr.error &&
-                            (event.type === 'abort' ||
-                            event.type === 'error' ||
-                            xhr.statusCode >= 400)) {
-                        xhr.error = new Error('ajax - event ' + event.type);
-                    }
-                    // debug statusCode
-                    (xhr.error || {}).statusCode = xhr.statusCode;
-                    // debug statusCode / method / url
-                    if (self.errorMessagePrepend && xhr.error) {
-                        self.errorMessagePrepend(xhr.error, (isBrowser
-                            ? 'browser'
-                            : 'node') + ' - ' +
-                            xhr.statusCode + ' ' + xhr.method + ' ' + xhr.url + '\\n' +
-                            // try to debug responseText
-                            (function () {
-                                try {
-                                    return '    ' + JSON.stringify(xhr.responseText.slice(0, 256) +
-                                        '...') + '\\n';
-                                } catch (ignore) {
-                                }
-                            }()));
-                    }
-                    onError(xhr.error, xhr);
-                    break;
-                }
-                ajaxProgressUpdate();
-            };
             // increment ajaxProgressCounter
-            self.ajaxProgressCounter = self.ajaxProgressCounter || 0;
-            self.ajaxProgressCounter += 1;
+            local2.ajaxProgressCounter = local2.ajaxProgressCounter || 0;
+            local2.ajaxProgressCounter += 1;
+            // init event-handling
             xhr.addEventListener('abort', xhr.onEvent);
             xhr.addEventListener('error', xhr.onEvent);
             xhr.addEventListener('load', xhr.onEvent);
             xhr.addEventListener('loadstart', ajaxProgressUpdate);
             xhr.addEventListener('progress', ajaxProgressUpdate);
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
             if (xhr.upload && xhr.upload.addEventListener) {
                 xhr.upload.addEventListener('progress', ajaxProgressUpdate);
             }
-            // open url through corsForwardProxyHost
-            xhr.corsForwardProxyHost = xhr.corsForwardProxyHost || self.corsForwardProxyHost;
-            xhr.location = xhr.location || (self.global && self.global.location) || {};
-            if (self.corsForwardProxyHostIfNeeded && self.corsForwardProxyHostIfNeeded(xhr)) {
-                xhr.open(xhr.method, self.corsForwardProxyHostIfNeeded(xhr));
+            // open url - corsForwardProxyHost
+            if (local2.corsForwardProxyHostIfNeeded && local2.corsForwardProxyHostIfNeeded(xhr)) {
+                xhr.open(xhr.method, local2.corsForwardProxyHostIfNeeded(xhr));
                 xhr.setRequestHeader('forward-proxy-headers', JSON.stringify(xhr.headers));
                 xhr.setRequestHeader('forward-proxy-url', xhr.url);
-            // open url
+            // open url - default
             } else {
                 xhr.open(xhr.method, xhr.url);
             }
+            // send headers
             Object.keys(xhr.headers).forEach(function (key) {
                 xhr.setRequestHeader(key, xhr.headers[key]);
             });
-            if (self.FormData && xhr.data instanceof self.FormData) {
+            // send data - FormData
+            // https://developer.mozilla.org/en-US/docs/Web/API/FormData
+            if (local2.FormData && xhr.data instanceof local2.FormData) {
                 // handle formData
                 xhr.data.read(function (error, data) {
                     if (error) {
@@ -2588,6 +2650,7 @@ local = {};
                     // send data
                     xhr.send(data);
                 });
+            // send data - default
             } else {
                 // send data
                 xhr.send(xhr.data);
@@ -2597,7 +2660,7 @@ local = {};
 
         local.assert = function (passed, message, onError) {
         /*
-         * this function will throw the error message if passed is falsey
+         * this function will throw the error message if passed is falsy
          */
             var error;
             if (passed) {
@@ -2709,13 +2772,7 @@ local = {};
             }
             // optimization - create resized-view of bff
             bff = bff.subarray(0, jj);
-            return mode !== 'string'
-                // return Uint8Array
-                ? bff
-                // return utf8-string
-                : typeof Buffer === 'function' && typeof Buffer.isBuffer === 'function'
-                ? String(Object.setPrototypeOf(bff, Buffer.prototype))
-                : new window.TextDecoder().decode(bff);
+            return local.bufferValidateAndCoerce(bff, mode);
         };
 
         local.base64ToString = function (b64) {
@@ -2723,6 +2780,47 @@ local = {};
          * this function will convert b64 to utf8-string
          */
             return local.base64ToBuffer(b64, 'string');
+        };
+
+        local.bufferValidateAndCoerce = function (bff, mode) {
+        /*
+         * this function will validate and coerce/convert
+         * ArrayBuffer, String, or Uint8Array -> Buffer or String
+         */
+            var isBuffer;
+            // validate not typeof number
+            if (typeof bff === 'number') {
+                throw new Error('bufferValidateAndCoerce - value cannot be typeof number');
+            }
+            bff = bff || '';
+            isBuffer = typeof Buffer === 'function' && typeof Buffer.isBuffer === 'function';
+            // convert String -> Buffer
+            if (typeof bff === 'string') {
+                return mode === 'string'
+                    ? bff
+                    : isBuffer
+                    ? Buffer.from(bff)
+                    : new window.TextEncoder().encode(bff);
+            }
+            if (bff instanceof ArrayBuffer) {
+                bff = new Uint8Array(bff);
+            }
+            // validate instanceof Uint8Array
+            if (!(bff instanceof Uint8Array)) {
+                throw new Error('bufferValidateAndCoerce - value is not instanceof ' +
+                    'ArrayBuffer, String, or Uint8Array');
+            }
+            // coerce Uint8Array -> Buffer
+            if (isBuffer) {
+                Object.setPrototypeOf(bff, Buffer.prototype);
+            }
+            if (mode !== 'string') {
+                return bff;
+            }
+            // convert Buffer -> String
+            return isBuffer
+                ? String(bff)
+                : new window.TextDecoder().decode(bff);
         };
 
         local.childProcessSpawnWithUtility2 = function (script, onError) {
@@ -2869,14 +2967,18 @@ local = {};
 
         local.fsReadFileOrEmptyStringSync = function (file, options) {
         /*
-         * this function will try to read the file or return an empty string
+         * this function will try to read the file or return empty-string
+         * if options === 'json', then try to JSON.parse the file or return null
          */
-            var data;
             try {
-                data = local.fs.readFileSync(file, options);
-            } catch (ignore) {
+                return options === 'json'
+                    ? JSON.parse(local.fs.readFileSync(file, 'utf8'))
+                    : local.fs.readFileSync(file, options);
+            } catch (errorCaught) {
+                return options === 'json'
+                    ? null
+                    : '';
             }
-            return data || '';
         };
 
         local.fsRmrSync = function (dir) {
@@ -3090,7 +3192,7 @@ local = {};
                 }
                 // else set dict[key] with overrides[key]
                 dict[key] = dict === env
-                    // if dict is env, then overrides falsey value with empty string
+                    // if dict is env, then overrides falsy-value with empty-string
                     ? overrides2 || ''
                     : overrides2;
             });
@@ -3101,7 +3203,7 @@ local = {};
         /*
          * this function will if error exists, then print it to stderr
          */
-            if (error && !local.global.__coverage__) {
+            if (error) {
                 console.error(error);
             }
             return error;
@@ -3310,8 +3412,7 @@ local = {};
         /*
          * this function will render the my-app-lite template with the given options.packageJson
          */
-            options.packageJson = options.packageJson ||
-                JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
+            options.packageJson = local.fsReadFileOrEmptyStringSync('package.json', 'json');
             local.objectSetDefault(options.packageJson, {
                 nameLib: options.packageJson.name.replace((/\\W/g), '_'),
                 repository: { url: 'https://github.com/kaizhu256/node-' +
@@ -3329,12 +3430,14 @@ local = {};
                 options.packageJson.nameHeroku ||
                     ('h1-' + options.packageJson.nameLib.replace((/_/g), '-'))
             );
-            template = template.replace(
-                'assets.{{env.npm_package_nameLib}}',
-                'assets.' + options.packageJson.nameLib
-            );
             template = template.replace((/my-app-lite/g), options.packageJson.name);
             template = template.replace((/my_app/g), options.packageJson.nameLib);
+            template = template.replace((
+                /\\{\\{\\packageJson\\.(\\S+)\\}\\}/g
+            ), function (match0, match1) {
+                match0 = match1;
+                return options.packageJson[match0];
+            });
             return template;
         };
 
@@ -3863,7 +3966,7 @@ require("fs").readFileSync("README.md", "utf8").replace((
         .replace("\u0027", "")
         .replace((/\bbeta\b|\bmaster\b/g), "alpha")
         .replace((/\/build\//g), "/build..alpha..travis-ci.org/");
-    if (process.env.npm_package_isPrivate && match0.indexOf("https://github.com/") === 0) {
+    if (process.env.npm_package_private && match0.indexOf("https://github.com/") === 0) {
         return;
     }
     request = require(match1).request(require("url").parse(match0), function (response) {

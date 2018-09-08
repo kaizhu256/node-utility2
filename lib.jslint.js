@@ -1,11 +1,20 @@
 #!/usr/bin/env node
+/*
+ * lib.jslint.js (2018.8.21)
+ * https://github.com/kaizhu256/node-jslint-lite
+ * this zero-dependency package will provide browser-compatible versions of jslint (v2014.7.8 and v2016.10.24) and csslint (v1.0.5), with a working web-demo
+ *
+ */
+
+
+
 /* istanbul instrument in package jslint */
 /* jslint-utility2 */
 /*jslint
     bitwise: true,
     browser: true,
     maxerr: 4,
-    maxlen: 100,
+
     node: true,
     nomen: true,
     regexp: true,
@@ -95,23 +104,36 @@
 
 
         /* validateLineSortedReset */
+        local.cliDict = {};
+
+        local.cliDict._default = function () {
+        /*
+         * <file1> <file2> ...
+         * will jslint <file1> <file2> ... and print result to stdout
+         */
+            // jslint files
+            process.argv.slice(2).forEach(function (argList) {
+                if (argList[0] !== '-') {
+                    local.jslintAndPrint(
+                        local.fs.readFileSync(local.path.resolve(argList), 'utf8'),
+                        argList
+                    );
+                }
+            });
+            // if error occurred, then exit with non-zero code
+            process.exit(!!local.errorList.length);
+        };
+
         local.cliRun = function (fnc) {
         /*
          * this function will run the cli
          */
-            var nop;
-            nop = function () {
-            /*
-             * this function will do nothing
-             */
-                return;
-            };
             local.cliDict._eval = local.cliDict._eval || function () {
             /*
              * <code>
              * will eval <code>
              */
-                local.global.local = local;
+                global.local = local;
                 require('vm').runInThisContext(process.argv[3]);
             };
             local.cliDict['--eval'] = local.cliDict['--eval'] || local.cliDict._eval;
@@ -121,7 +143,7 @@
              *
              * will print help
              */
-                var commandList, file, packageJson, text, textDict;
+                var commandList, file, packageJson, rgxComment, text, textDict;
                 commandList = [{
                     argList: '<arg2>  ...',
                     description: 'usage:',
@@ -133,6 +155,13 @@
                 }];
                 file = __filename.replace((/.*\//), '');
                 packageJson = require('./package.json');
+                // validate comment
+                rgxComment = new RegExp('\\) \\{\\n' +
+                    '(?: {8}| {12})\\/\\*\\n' +
+                    '(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n' +
+                    '(?: {9}| {13})\\* (will .*?\\S)\\n' +
+                    '(?: {9}| {13})\\*\\/\\n' +
+                    '(?: {12}| {16})\\S');
                 textDict = {};
                 Object.keys(local.cliDict).sort().forEach(function (key, ii) {
                     if (key[0] === '_' && key !== '_default') {
@@ -146,15 +175,23 @@
                     if (commandList[ii]) {
                         commandList[ii].command.push(key);
                     } else {
-                        commandList[ii] = (/\n +?\*(.*?)\n +?\*(.*?)\n/).exec(text);
-                        // coverage-hack - ignore else-statement
-                        nop(local.global.__coverage__ && (function () {
-                            commandList[ii] = commandList[ii] || ['', '', ''];
-                        }()));
+                        try {
+                            commandList[ii] = rgxComment.exec(text);
+                        } catch (errorCaught) {
+                            if (!local.env.npm_config_mode_coverage) {
+                                throw new Error('cliRun - cannot parse comment in COMMAND ' +
+                                    key + ':\nnew RegExp(' + JSON.stringify(rgxComment.source) +
+                                    ').exec(' + JSON.stringify(text)
+                                    .replace((/\\\\/g), '\x00')
+                                    .replace((/\\n/g), '\\n\\\n')
+                                    .replace((/\x00/g), '\\\\') + ');');
+                            }
+                        }
+                        commandList[ii] = commandList[ii] || [];
                         commandList[ii] = {
-                            argList: commandList[ii][1].trim(),
+                            argList: (commandList[ii][1] || '').trim(),
                             command: [key],
-                            description: commandList[ii][2].trim()
+                            description: commandList[ii][2] || ''
                         };
                     }
                 });
@@ -201,7 +238,7 @@
              *
              * will start interactive-mode
              */
-                local.global.local = local;
+                global.local = local;
                 local.replStart();
             };
             if (typeof local.replStart === 'function') {
@@ -238,13 +275,356 @@
 
 
 
-// init lib csslint
-// 2013-08-15T10:18:30Z
+    // run shared js-env code - function
+    (function () {
+        local.csslintUtility2 = function (script) {
+        /*
+         * this function will csslint the script with utility2-specific rules
+         */
+            var current1, current2, ii, jj, message, previous1, previous2;
+            // ignore comments
+            script = script.replace((/^ *?\/\*[\S\s]*?\*\/ *?$/gm), function (match0) {
+                if (match0 === '/* validateLineSortedReset */') {
+                    return match0;
+                }
+                // preserve lineno
+                return match0.replace((/^.*?$/gm), '');
+            });
+            ii = 0;
+            current1 = '';
+            current2 = '';
+            previous1 = '';
+            previous2 = '';
+            script.replace((/^.*?$/gm), function (line) {
+                current1 = line;
+                ii += 1;
+                jj = 0;
+                message = '';
+                if (!current1) {
+                    return;
+                }
+                // validate whitespace-before-comma
+                if ((/ ,/).test(current1)) {
+                    jj = jj || ((/ ,/).exec(current1).index + 2);
+                    message = message || 'whitespace-before-comma';
+                }
+                // validate double-whitespace
+                if ((/\S {2}/).test(current1)) {
+                    jj = jj || ((/\S {2}/).exec(current1).index + 2);
+                    message = message || 'double-whitespace';
+                }
+                // ignore indent
+                if (!message && current1[0] === ' ') {
+                    return;
+                }
+                // validate multi-line-statement
+                if ((/[,;\{\}]./).test(current1)) {
+                    jj = jj || ((/[,;\{\}]./).exec(current1).index + 1);
+                    message = message || 'multi-line-statement';
+                }
+                // validateLineSortedReset
+                if (current1 === '/* validateLineSortedReset */') {
+                    current1 = '';
+                    current2 = '';
+                    previous1 = '';
+                    previous2 = '';
+                    return;
+                }
+                // validate previous1 < current1
+                current1 = current1
+                    .replace((/^#/gm), '|')
+                    .replace((/,$/gm), '   ,')
+                    .replace((/( \{$|:)/gm), '  $1')
+                    .replace((/(^[\w*@]| \w)/gm), ' $1');
+                if (!(previous1 < current1)) {
+                    jj = jj || 1;
+                    message = message ||
+                        ('lines not sorted\n' + previous1 + '\n' + current1).trim();
+                }
+                previous1 = current1;
+                // validate previous2 < current2
+                current2 += current1 + '\n';
+                if (current1 === '}') {
+                    current2 = current2.slice(0, -3);
+                    if (!(previous2 < current2)) {
+                        jj = jj || 1;
+                        message = message ||
+                            ('lines not sorted\n' + previous2 + '\n' + current2)
+                                .replace((/\n\|/g), '\n#')
+                                .trim();
+                    }
+                    previous1 = '';
+                    previous2 = current2;
+                    current2 = '';
+                }
+                if (!message) {
+                    return;
+                }
+                local.errorList.push({
+                    col: jj,
+                    line: ii,
+                    message: message,
+                    value: line
+                });
+            });
+        };
+
+        local.jslintAndPrint = function (script, file) {
+        /*
+         * this function will jslint / csslint the script and print any errors to stderr
+         */
+            var ii, jj, lintType, message, scriptParsed;
+            // cleanup errors
+            local.errorList = [];
+            local.errorText = '';
+            // do nothing for empty script
+            if (!(script && script.length)) {
+                return script;
+            }
+            scriptParsed = script;
+            if ((/^\/\* jslint-utility2 \*\/$|^# jslint-utility2$/m).test(scriptParsed)) {
+                scriptParsed = scriptParsed
+                    // ignore shebang
+                    .replace((/^#!\/.*/), '')
+                    // ignore comment
+                    .replace((
+                        /^ *?(?:#!! |\/\/!! |(?: \*|\/\/) (?:utility2-uglifyjs )?https?:\/\/).*?$/gm
+                    ), '')
+                    // ignore text-block
+                    .replace(
+/* jslint-ignore-begin */
+(/^ *?\/\* jslint-ignore-begin \*\/$[\S\s]+?^ *?\/\* jslint-ignore-end \*\/$/gm),
+/* jslint-ignore-end */
+                        function (match0) {
+                            return match0.replace((/^.*?$/gm), '');
+                        }
+                    )
+                    // ignore next-line
+                    .replace(
+/* jslint-ignore-next-line */
+(/^ *?\/\* jslint-ignore-next-line \*\/\n.*/gm),
+                        function (match0) {
+                            return match0.replace((/^.*?$/gm), '');
+                        }
+                    );
+            }
+            switch (file.replace((/^.*\./), '.')) {
+            // csslint script
+            case '.css':
+                lintType = 'csslint';
+                local.CSSLint.errors = local.CSSLint.verify(scriptParsed).messages;
+                local.CSSLint.errors.forEach(function (error) {
+                    local.errorList.push(error && {
+                        col: error.col,
+                        line: error.line,
+                        message: error.type + ' - ' + error.rule.id + ' - ' + error.message +
+                            '\n    ' + error.rule.desc,
+                        value: error.evidence
+                    });
+                });
+                break;
+            // shlint script
+            case '.sh':
+                lintType = 'shlint';
+                break;
+            // jslint script
+            default:
+                // jslint es6-script
+                if ((/^\/\*jslint\b[\s\w,:]*?\bes6: true\b/m)
+                        .test(scriptParsed.slice(0, 0x1000))) {
+                    local.jslintEs6.errors = local.jslintEs6(scriptParsed).warnings;
+                    local.jslintEs6.errors.forEach(function (error) {
+                        local.errorList.push(error && {
+                            col: error.column + 1,
+                            line: error.line + 1,
+                            message: error.message,
+                            value: error.a
+                        });
+                    });
+                    break;
+                }
+                // jslint es5 script
+                local.JSLINT(scriptParsed);
+                local.JSLINT.errors.forEach(function (error) {
+                    local.errorList.push(error && {
+                        col: error.character,
+                        line: error.line,
+                        message: error.reason,
+                        value: error.evidence
+                    });
+                });
+            }
+            // jslint the script with utiity2-specific rules
+            local.errorList = local.errorList.filter(function (error) {
+                return error && error.message;
+            });
+            if (!local.errorList.length &&
+                    (/^\/\* jslint-utility2 \*\/$|^# jslint-utility2$/m).test(script)) {
+                ii = 0;
+                scriptParsed.replace((/^.*?$/gm), function (line) {
+                    ii += 1;
+                    jj = 0;
+                    message = '';
+                    // validate 4-space indent
+                    if (!(/^ +(?:\*|\/\/!!)/).test(line) &&
+                            ((/^ */).exec(line)[0].length % 4 !== 0)) {
+                        jj = jj || 1;
+                        message = message || 'non 4-space indent';
+                    }
+                    // validate trailing-whitespace
+                    if ((/ $| \\n\\$/).test(line)) {
+                        jj = jj || line.length;
+                        message = message || 'trailing whitespace';
+                    }
+                    // validate tab
+                    if (line.indexOf('\t') >= 0) {
+                        jj = jj || (line.indexOf('\t') + 1);
+                        message = message || 'tab detected';
+                    }
+                    if (message) {
+                        local.errorList.push({
+                            col: jj,
+                            line: ii,
+                            message: message,
+                            value: JSON.stringify(line)
+                        });
+                    }
+                });
+                switch (file.replace((/^.*\./), '.')) {
+                case '.css':
+                    local.csslintUtility2(script);
+                    break;
+                case '.sh':
+                    local.shlintUtility2(script);
+                    break;
+                default:
+                    local.jslintUtility2(script);
+                }
+            }
+            // if error occurred, then print colorized error messages
+            local.errorList = local.errorList.filter(function (error) {
+                return error && error.message;
+            });
+            if (!local.errorList.length) {
+                return script;
+            }
+            local.errorText = '\u001b[1m' + (lintType || 'jslint') + ' ' +  file + '\u001b[22m\n';
+            local.errorList.forEach(function (error, ii) {
+                local.errorText += (' #' + String(ii + 1) + ' ').slice(-4) +
+                    '\u001b[31m' + error.message + '\u001b[39m\n' +
+                    '    ' + String(error.value).trim() +
+                    '\u001b[90m \/\/ line ' + error.line + ', col ' + (error.col) + '\u001b[39m\n';
+            });
+            local.errorText = local.errorText.trim();
+            // print error to stderr
+            console.error(local.errorText);
+            return script;
+        };
+
+        local.jslintUtility2 = function (script) {
+        /*
+         * this function will jslint the script with utiity2-specific rules
+         */
+            var current, lineno, previous, rgx, tmp;
+            lineno = 0;
+            rgx = new RegExp('^ *?\\/\\* validateLineSortedReset \\*\\/$|' +
+                '^ {4}\\/\\/ run .*?\\bjs\\\\?-env code\\b|' +
+                '^\\/\\/ rollup-file ');
+            previous = '';
+            script.replace((/^.*?$/gm), function (line) {
+                current = line.trim();
+                lineno += 1;
+                // validate <domElement>.classList sorted
+                tmp = (/\bclass=\\?"([^"]+?)\\?"/g).exec(current);
+                tmp = JSON.stringify((tmp && tmp[1].replace((/^ /), 'zSpace').match(
+                    / {2}| $|\w\S*?\{\{[^}]*?\}\}|\w\S*|\{\{[^}]*?\}\}/g
+                )) || []);
+                if (JSON.stringify(JSON.parse(tmp).sort()) !== tmp) {
+                    local.errorList.push({
+                        col: 0,
+                        line: lineno,
+                        message: '<domElement>.classList not sorted - ' + tmp,
+                        value: line
+                    });
+                }
+                // validate line-sorted
+                if (rgx.test(line)) {
+                    previous = '';
+                    return;
+                }
+                if (!(/^(?:| {4}| {8})local\.\S*? =(?: |$)/m).test(line) ||
+                        (/^local\.(?:global|isBrowser|local|tmp)\b|\\n\\$/).test(current)) {
+                    return;
+                }
+                // validate previous < current
+                if (!(previous < current || (/ =$/).test(previous))) {
+                    local.errorList.push({
+                        col: 0,
+                        line: lineno,
+                        message: 'lines not sorted\n' + previous + '\n' + current,
+                        value: line
+                    });
+                }
+                previous = current;
+            });
+            // validate var-elements sorted
+            lineno = 0;
+            rgx = (/^/gm);
+            script.replace((/^.*?\bvar(\s+?[$,\w\s]*?);/gm), function (match0, match1, ii) {
+                while (rgx.lastIndex <= ii) {
+                    lineno += 1;
+                    rgx.lastIndex += 1;
+                    rgx.test(script);
+                }
+                if (!(/^ [$A-Z_a-z]/).test(match1)) {
+                    console.error(match1);
+                    local.errorList.push({
+                        col: 0,
+                        line: lineno,
+                        message: 'var is not separated by single-space variable-name',
+                        value: match0
+                    });
+                }
+            });
+        };
+
+        local.shlintUtility2 = function (script) {
+        /*
+         * this function will shlint the script with utility2-specific rules
+         */
+            var lineno, previous;
+            lineno = 0;
+            previous = '';
+            script.replace((/^.*?$/gm), function (line) {
+                lineno += 1;
+                if (!(/^sh\w+? \(\) \{/).test(line)) {
+                    return;
+                }
+                // validate previous < line
+                if (!(previous < line)) {
+                    local.errorList.push({
+                        col: 0,
+                        line: lineno,
+                        message: 'lines not sorted\n' + previous + '\n' + line,
+                        value: line
+                    });
+                }
+                previous = line;
+            });
+        };
+    }());
+}());
+/* jslint-ignore-next-line */
+(function (local) { 'use strict'; (function () {
+
+
+
+// rollup-file csslint.js
+// 2016-12-06T08:50:07Z shGitDateCommitted v1.0.5
 // https://github.com/CSSLint/csslint/blob/v1.0.5/dist/csslint.js
-// utility2-uglifyjs https://raw.githubusercontent.com/CSSLint/csslint/v1.0.5/dist/csslint.js
+// utility2-uglifyjs https://raw.githubusercontent.com/CSSLint/csslint/v1.0.5/dist/csslint.js > /tmp/out.js
 /* istanbul ignore next */
 /* jslint-ignore-begin */
-(function () {
 var CSSLint=function(){function s(e,t,n,r){"use strict";this.messages=[],this.stats=
 [],this.lines=e,this.ruleset=t,this.allow=n,this.allow||(this.allow={}),this.ignore=
 r,this.ignore||(this.ignore=[])}var e=e||{},t=t||{},n=function(){var e;return e=
@@ -1660,9 +2040,10 @@ t+1)+": "+e.type+" at line "+e.line+", col "+e.col,s+="\n"+e.message,s+="\n"+e.e
 
 
 
-// init lib jslint
-// 2014-07-08T19:15:40Z
+// rollup-file jslint.js
+// 2014-07-08T19:15:40Z shGitDateCommitted 394bf291bfa3881bb9827b9fc7b7d1112d83f313
 // https://github.com/douglascrockford/JSLint/blob/394bf291bfa3881bb9827b9fc7b7d1112d83f313/jslint.js
+// curl https://raw.githubusercontent.com/douglascrockford/JSLint/394bf291bfa3881bb9827b9fc7b7d1112d83f313/jslint.js > /tmp/out.js
 /* istanbul ignore next */
 // jslint.js
 // 2014-07-08
@@ -1878,7 +2259,7 @@ t+1)+": "+e.type+" at line "+e.line+", col "+e.col,s+="\n"+e.message,s+="\n"+e.e
 
 // For example:
 
-/*properties
+/*\properties
     '\b', '\t', '\n', '\f', '\r', '!', '!=', '!==', '"', '%', '\'', '(begin)',
     '(error)', '*', '+', '-', '/', '<', '<=', '==', '===', '>', '>=', '\\', a,
     a_label, a_scope, already_defined, and, apply, arguments, arity, ass,
@@ -2010,7 +2391,6 @@ var JSLINT = (function () {
             'clearInterval', 'clearTimeout', 'document', 'event', 'FormData',
             'frames', 'history', 'Image', 'localStorage', 'location', 'name',
             'navigator', 'Option', 'parent', 'screen', 'sessionStorage',
-            // 'setInterval', 'setTimeout', 'Storage', 'window', 'XMLHttpRequest'
             'setInterval', 'setTimeout', 'Storage', 'window', 'XMLHttpRequest',
             'ArrayBuffer', 'Uint8Array'
         ], false),
@@ -2220,7 +2600,6 @@ var JSLINT = (function () {
             'Buffer', 'clearImmediate', 'clearInterval', 'clearTimeout',
             'console', 'exports', 'global', 'module', 'process',
             'require', 'setImmediate', 'setInterval', 'setTimeout',
-            // '__dirname', '__filename'
             '__dirname', '__filename',
             'ArrayBuffer', 'Uint8Array'
         ], false),
@@ -2233,7 +2612,6 @@ var JSLINT = (function () {
         prev_token,
         property,
         protosymbol,
-        // regexp_flag = array_to_object(['g', 'i', 'm'], true),
         regexp_flag = array_to_object(['g', 'i', 'm', 'u', 'y'], true),
         return_this = function return_this() {
             return this;
@@ -2528,7 +2906,6 @@ var JSLINT = (function () {
                 character += 1;
             }
             stop('unexpected_char_a', line, character, c);
-
         }
 
         function string(x) {
@@ -2635,7 +3012,6 @@ var JSLINT = (function () {
                 warn('trailing_decimal_a', line, character, snippet);
             }
             digit = +snippet;
-            // if (!isFinite(digit)) {
             if (!isFinite(digit) && !(/^[0-9]+n$/).test(snippet)) {
                 warn('bad_number', line, character, snippet);
             }
@@ -3103,7 +3479,6 @@ klass:              do {
                     }
 
 // If the token is not an edge, but is the first token on the line.
-
                 } else if (next_token.line !== token.line) {
                     if (next_token.from < indent.at + (indent.mode ===
                             'expression' ? 0 : option.indent)) {
@@ -4144,7 +4519,6 @@ klass:              do {
 
 // But if the variable is not in scope, and is not predefined, and if we are not
 // in the global scope, then we have an undefined variable error.
-
                 } else {
                     token.warn('used_before_a');
                 }
@@ -4556,7 +4930,6 @@ klass:              do {
         if (left.identifier) {
             if (left.string.match(/^[A-Z]([A-Z0-9_$]*[a-z][A-Za-z0-9_$]*)?$/)) {
                 if (left.string !== 'Number' && left.string !== 'String' &&
-                        // left.string !== 'Boolean' && left.string !== 'Date') {
                         left.string !== 'Boolean' && left.string !== 'Date' &&
                         left.string !== 'Symbol' && left.string !== 'BigInt') {
                     if (left.string === 'Math') {
@@ -5491,7 +5864,6 @@ klass:              do {
             }
         }
         return that;
-
     }
 
     disrupt_stmt('break', function () {
@@ -5964,10 +6336,10 @@ klass:              do {
 
 
 
-// init lib jslintEs6
+// rollup-file jslint.js
 // 2016-10-24T18:30:02Z
 // https://github.com/douglascrockford/JSLint/blob/4075c9955e6eefdfafc1a6d9c1183e6147cd73f1/jslint.js
-// utility2-uglifyjs https://raw.githubusercontent.com/douglascrockford/JSLint/4075c9955e6eefdfafc1a6d9c1183e6147cd73f1/jslint.js
+// utility2-uglifyjs https://raw.githubusercontent.com/douglascrockford/JSLint/4075c9955e6eefdfafc1a6d9c1183e6147cd73f1/jslint.js > /tmp/out.js
 /* istanbul ignore next */
 var jslint=function(){"use strict";function t(){return Object.create(null)}function n
 (e,t,n){t.forEach(function(t){e[t]=n})}function D(e){return e>="a"&&e<="z\uffff"||
@@ -6316,7 +6688,7 @@ n.open,delete n.used,n=l}})}var r={bitwise:!0,browser:["Audio","clearInterval","
 ,wrap_parameter:"Wrap the parameter in parens.",wrap_regexp:"Wrap this regexp in parens to avoid confusion."
 ,wrap_unary:"Wrap the unary expression in parens."},l=/\{([^{}]*)\}/g,c=/\n|\r\n?/
 ,h=/[\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/
-,p=/^([a-zA-Z_$][a-zA-Z0-9_$]*)$/,d=/^[a-zA-Z0-9_$:.@\-\/]+$/,v=/Sync\$/
+,p=/^([a-zA-Z_$][a-zA-Z0-9_$]*)$/,d=/^[a-zA-Z0-9_$:.@\-\/]+$/,v=/^_|\$|Sync\$|_$/
 ,m=/\*\//,g=/\/\*/,y=/\/\*|\/$/,b=/\b(?:todo|TO\s?DO|HACK)\b/,w=/\t/g,E=/^(jslint|property|global)\s+(.*)$/
 ,S=/^([a-zA-Z$_][a-zA-Z0-9$_]*)\s*(?::\s*(true|false|[0-9]+)\s*)?(?:,\s*)?(.*)$/
 ,x=/^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\]?,:;'"~`]|=(?:==?|>)?|\.+|\/[=*\/]?|\*[\/=]?|\+(?:=|\++)?|-(?:=|-+)?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!={0,2}|(0|[1-9][0-9]*))(.*)$/
@@ -6515,361 +6887,17 @@ ft.push(o)}return{directives:I,edition:"2016-10-24",exports:U,froms:z,functions:
 V,global:$,id:"(JSLint)",json:J,lines:K,module:Q===!0,ok:ft.length===0&&!R,option
 :Y,property:Z,stop:R,tokens:st,tree:ut,warnings:ft.sort(function(e,t){return e.line-
 t.line||e.column-t.column})}}}()
+/* validateLineSortedReset */
 local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
 /* jslint-ignore-end */
-
-
-
-    // run shared js-env code - function
-    (function () {
-        local.csslintUtility2 = function (script) {
-        /*
-         * this function will csslint the script with utiity2-specific rules
-         */
-            var current1, current2, ii, jj, message, previous1, previous2;
-            // ignore comments
-            script = script.replace((/^ *?\/\*[\S\s]*?\*\/ *?$/gm), function (match0) {
-                if (match0 === '/* validateLineSortedReset */') {
-                    return match0;
-                }
-                // preserve lineno
-                return match0.replace((/^.*?$/gm), '');
-            });
-            ii = 0;
-            current1 = '';
-            current2 = '';
-            previous1 = '';
-            previous2 = '';
-            script.replace((/^.*?$/gm), function (line) {
-                current1 = line;
-                ii += 1;
-                jj = 0;
-                message = '';
-                if (!current1) {
-                    return;
-                }
-                // validate whitespace-before-comma
-                if ((/ ,/).test(current1)) {
-                    jj = jj || ((/ ,/).exec(current1).index + 2);
-                    message = message || 'whitespace-before-comma';
-                }
-                // validate double-whitespace
-                if ((/\S {2}/).test(current1)) {
-                    jj = jj || ((/\S {2}/).exec(current1).index + 2);
-                    message = message || 'double-whitespace';
-                }
-                // ignore indent
-                if (!message && current1[0] === ' ') {
-                    return;
-                }
-                // validate multi-line-statement
-                if ((/[,;\{\}]./).test(current1)) {
-                    jj = jj || ((/[,;\{\}]./).exec(current1).index + 1);
-                    message = message || 'multi-line-statement';
-                }
-                // validateLineSortedReset
-                if (current1 === '/* validateLineSortedReset */') {
-                    current1 = '';
-                    current2 = '';
-                    previous1 = '';
-                    previous2 = '';
-                    return;
-                }
-                // validate previous1 < current1
-                current1 = current1
-                    .replace((/^#/gm), '|')
-                    .replace((/,$/gm), '   ,')
-                    .replace((/( \{$|:)/gm), '  $1')
-                    .replace((/(^[\w*@]| \w)/gm), ' $1');
-                if (!(previous1 < current1)) {
-                    jj = jj || 1;
-                    message = message ||
-                        ('lines not sorted\n' + previous1 + '\n' + current1).trim();
-                }
-                previous1 = current1;
-                // validate previous2 < current2
-                current2 += current1 + '\n';
-                if (current1 === '}') {
-                    current2 = current2.slice(0, -3);
-                    if (!(previous2 < current2)) {
-                        jj = jj || 1;
-                        message = message ||
-                            ('lines not sorted\n' + previous2 + '\n' + current2)
-                                .replace((/\n\|/g), '\n#')
-                                .trim();
-                    }
-                    previous1 = '';
-                    previous2 = current2;
-                    current2 = '';
-                }
-                if (!message) {
-                    return;
-                }
-                local.errorList.push({
-                    col: jj,
-                    line: ii,
-                    message: message,
-                    value: line
-                });
-            });
-        };
-
-        local.jslintAndPrint = function (script, file) {
-        /*
-         * this function will jslint / csslint the script and print any errors to stderr
-         */
-            var ii, jj, lintType, message, scriptParsed;
-            // cleanup errors
-            local.errorList = [];
-            local.errorText = '';
-            // do nothing for empty script
-            if (!(script && script.length)) {
-                return script;
-            }
-            scriptParsed = script;
-            if ((/^\/\* jslint-utility2 \*\/$|^# jslint-utility2$/m).test(scriptParsed)) {
-                scriptParsed = scriptParsed
-                    // ignore shebang
-                    .replace((/^#!\/.*/), '')
-                    // ignore comment
-                    .replace((
-                        /^ *?(?:#!! |\/\/!! |(?: \*|\/\/) (?:utility2-uglifyjs )?https?:\/\/).*?$/gm
-                    ), '')
-                    // ignore text-block
-                    .replace(
-/* jslint-ignore-begin */
-(/^ *?\/\* jslint-ignore-begin \*\/$[\S\s]+?^ *?\/\* jslint-ignore-end \*\/$/gm),
-/* jslint-ignore-end */
-                        function (match0) {
-                            return match0.replace((/^.*?$/gm), '');
-                        }
-                    )
-                    // ignore next-line
-                    .replace(
+/* istanbul ignore next */
+(function (local) {
+    'use strict';
+    // init cli
+    if (local.isBrowser || module !== require.main || local.global.utility2_rollup) {
+        return;
+    }
+    local.cliRun();
 /* jslint-ignore-next-line */
-(/^ *?\/\* jslint-ignore-next-line \*\/\n.*/gm),
-                        function (match0) {
-                            return match0.replace((/^.*?$/gm), '');
-                        }
-                    );
-            }
-            switch (file.replace((/^.*\./), '.')) {
-            // csslint script
-            case '.css':
-                lintType = 'csslint';
-                local.CSSLint.errors = local.CSSLint.verify(scriptParsed).messages;
-                local.CSSLint.errors.forEach(function (error) {
-                    local.errorList.push(error && {
-                        col: error.col,
-                        line: error.line,
-                        message: error.type + ' - ' + error.rule.id + ' - ' + error.message +
-                            '\n    ' + error.rule.desc,
-                        value: error.evidence
-                    });
-                });
-                break;
-            // shlint script
-            case '.sh':
-                lintType = 'shlint';
-                break;
-            // jslint script
-            default:
-                // jslint es6-script
-                if ((/^\/\*jslint\b[\s\w,:]*?\bes6: true\b/m)
-                        .test(scriptParsed.slice(0, 0x1000))) {
-                    local.jslintEs6.errors = local.jslintEs6(scriptParsed).warnings;
-                    local.jslintEs6.errors.forEach(function (error) {
-                        local.errorList.push(error && {
-                            col: error.column + 1,
-                            line: error.line + 1,
-                            message: error.message,
-                            value: error.a
-                        });
-                    });
-                    break;
-                }
-                // jslint es5 script
-                local.JSLINT(scriptParsed);
-                local.JSLINT.errors.forEach(function (error) {
-                    local.errorList.push(error && {
-                        col: error.character,
-                        line: error.line,
-                        message: error.reason,
-                        value: error.evidence
-                    });
-                });
-            }
-            // jslint the script with utiity2-specific rules
-            local.errorList = local.errorList.filter(function (error) {
-                return error && error.message;
-            });
-            if (!local.errorList.length &&
-                    (/^\/\* jslint-utility2 \*\/$|^# jslint-utility2$/m).test(script)) {
-                ii = 0;
-                scriptParsed.replace((/^.*?$/gm), function (line) {
-                    ii += 1;
-                    jj = 0;
-                    message = '';
-                    // validate 4-space indent
-                    if (!(/^ +(?:\*|\/\/!!)/).test(line) &&
-                            ((/^ */).exec(line)[0].length % 4 !== 0)) {
-                        jj = jj || 1;
-                        message = message || 'non 4-space indent';
-                    }
-                    // validate trailing-whitespace
-                    if ((/ $| \\n\\$/).test(line)) {
-                        jj = jj || line.length;
-                        message = message || 'trailing whitespace';
-                    }
-                    // validate tab
-                    if (line.indexOf('\t') >= 0) {
-                        jj = jj || (line.indexOf('\t') + 1);
-                        message = message || 'tab detected';
-                    }
-                    if (message) {
-                        local.errorList.push({
-                            col: jj,
-                            line: ii,
-                            message: message,
-                            value: JSON.stringify(line)
-                        });
-                    }
-                });
-                switch (file.replace((/^.*\./), '.')) {
-                case '.css':
-                    local.csslintUtility2(script);
-                    break;
-                case '.sh':
-                    local.shlintUtility2(script);
-                    break;
-                default:
-                    local.jslintUtility2(script);
-                }
-            }
-            // if error occurred, then print colorized error messages
-            local.errorList = local.errorList.filter(function (error) {
-                return error && error.message;
-            });
-            if (!local.errorList.length) {
-                return script;
-            }
-            local.errorText = '\u001b[1m' + (lintType || 'jslint') + ' ' +  file + '\u001b[22m\n';
-            local.errorList.forEach(function (error, ii) {
-                local.errorText += (' #' + String(ii + 1) + ' ').slice(-4) +
-                    '\u001b[31m' + error.message + '\u001b[39m\n' +
-                    '    ' + String(error.value).trim() +
-                    '\u001b[90m \/\/ line ' + error.line + ', col ' + (error.col) + '\u001b[39m\n';
-            });
-            local.errorText = local.errorText.trim();
-            // print error to stderr
-            console.error(local.errorText);
-            return script;
-        };
-
-        local.jslintUtility2 = function (script) {
-        /*
-         * this function will jslint the script with utiity2-specific rules
-         */
-            var ii, current, previous, rgx, tmp;
-            ii = 0;
-            rgx = new RegExp('^ *?\\/\\* validateLineSortedReset \\*\\/$|' +
-                '^ {4}\\/\\/ run .*?\\bjs\\\\?-env code\\b|' +
-                '^\\/\\/ init lib ');
-            previous = '';
-            script.replace((/^.*?$/gm), function (line) {
-                current = line.trim();
-                ii += 1;
-                // validate domElement.classList sorted
-                tmp = (/class=\\?"([^"]+?)\\?"/g).exec(current);
-                tmp = JSON.stringify((tmp && tmp[1].replace((/^ /), 'zSpace').match(
-                    / {2}| $|\w\S*?\{\{[^}]*?\}\}|\w\S*|\{\{[^}]*?\}\}/g
-                )) || []);
-                if (JSON.stringify(JSON.parse(tmp).sort()) !== tmp) {
-                    local.errorList.push({
-                        col: 0,
-                        line: ii,
-                        message: '<domElement>.classList not sorted - ' + tmp,
-                        value: line
-                    });
-                }
-                // validate line-sorted
-                if (rgx.test(line)) {
-                    previous = '';
-                    return;
-                }
-                if (!(/^(?:| {4}| {8})local\.\S*? =(?: |$)/m).test(line) ||
-                        (/^local\.(?:global|isBrowser|local|tmp)\b|\\n\\$/).test(current)) {
-                    return;
-                }
-                // validate previous < current
-                if (!(previous < current || (/ =$/).test(previous))) {
-                    local.errorList.push({
-                        col: 0,
-                        line: ii,
-                        message: 'lines not sorted\n' + previous + '\n' + current,
-                        value: line
-                    });
-                }
-                previous = current;
-            });
-        };
-
-        local.shlintUtility2 = function (script) {
-        /*
-         * this function will shlint the script with utiity2-specific rules
-         */
-            var ii, previous;
-            ii = 0;
-            previous = '';
-            script.replace((/^.*?$/gm), function (line) {
-                ii += 1;
-                if (!(/^sh\w+? \(\) \{/).test(line)) {
-                    return;
-                }
-                // validate previous < line
-                if (!(previous < line)) {
-                    local.errorList.push({
-                        col: 0,
-                        line: ii,
-                        message: 'lines not sorted\n' + previous + '\n' + line,
-                        value: line
-                    });
-                }
-                previous = line;
-            });
-        };
-    }());
-
-
-
-    // run node js-env code - init-after
-    /* istanbul ignore next */
-    (function () {
-        if (local.isBrowser) {
-            return;
-        }
-        // init cli
-        if (module !== require.main || local.global.utility2_rollup) {
-            return;
-        }
-        local.cliDict = {};
-        local.cliDict._default = function () {
-        /*
-         * <file1> <file2> ...
-         * # jslint <file1> <file2> ... and print result to stdout
-         */
-            // jslint files
-            process.argv.slice(2).forEach(function (argList) {
-                if (argList[0] !== '-') {
-                    local.jslintAndPrint(
-                        local.fs.readFileSync(local.path.resolve(argList), 'utf8'),
-                        argList
-                    );
-                }
-            });
-            // if error occurred, then exit with non-zero code
-            process.exit(!!local.errorList.length);
-        };
-        local.cliRun();
-    }());
-}());
+}(local));
+}((typeof window === 'object' && window && window.utility2_jslint) || module.exports));

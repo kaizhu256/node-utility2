@@ -20,26 +20,28 @@
         // init local
         local = {};
         // init isBrowser
-        local.isBrowser = typeof window === "object" &&
-            typeof window.XMLHttpRequest === "function" &&
+        local.isBrowser = typeof window === 'object' &&
+            typeof window.XMLHttpRequest === 'function' &&
             window.document &&
-            typeof window.document.querySelectorAll === "function";
+            typeof window.document.querySelectorAll === 'function';
         // init global
         local.global = local.isBrowser
             ? window
             : global;
-        // init utility2_rollup
-        local = local.global.utility2_rollup || local;
+        // re-init local
+        local = local.global.utility2_rollup ||
+            // local.global.utility2_rollup_old || require('./assets.utility2.rollup.js') ||
+            local;
     }());
 
 
 
 /* jslint-ignore-begin */
 (function () { var exports, module; exports = module = {};
-// init lib marked
+// rollup-file marked.js
 // 2017-01-19T23:03:37Z
-// https://github.com/chjj/marked/blob/v0.3.7/lib/marked.js
-// utility2-uglifyjs https://raw.githubusercontent.com/chjj/marked/v0.3.7/lib/marked.js
+// https://github.com/markedjs/marked/blob/v0.3.7/lib/marked.js
+// utility2-uglifyjs https://raw.githubusercontent.com/chjj/marked/v0.3.7/lib/marked.js > /tmp/out.js
 (function(){function t(t){this.tokens=[],this.tokens.links={},this.options=t||c.
 defaults,this.rules=e.normal,this.options.gfm&&(this.options.tables?this.rules=e
 .tables:this.rules=e.gfm)}function r(e,t){this.options=t||c.defaults,this.links=

@@ -1,4 +1,12 @@
 #!/usr/bin/env node
+/*
+ * assets.istanbul.js
+ * this zero-dependency package will provide a browser-compatible version of the istanbul (v0.4.5) coverage-tool, with a working web-demo
+ *
+ */
+
+
+
 /* istanbul instrument in package istanbul */
 /* jslint-utility2 */
 /*jslint
@@ -106,19 +114,12 @@
         /*
          * this function will run the cli
          */
-            var nop;
-            nop = function () {
-            /*
-             * this function will do nothing
-             */
-                return;
-            };
             local.cliDict._eval = local.cliDict._eval || function () {
             /*
              * <code>
              * will eval <code>
              */
-                local.global.local = local;
+                global.local = local;
                 require('vm').runInThisContext(process.argv[3]);
             };
             local.cliDict['--eval'] = local.cliDict['--eval'] || local.cliDict._eval;
@@ -128,7 +129,7 @@
              *
              * will print help
              */
-                var commandList, file, packageJson, text, textDict;
+                var commandList, file, packageJson, rgxComment, text, textDict;
                 commandList = [{
                     argList: '<arg2>  ...',
                     description: 'usage:',
@@ -140,6 +141,13 @@
                 }];
                 file = __filename.replace((/.*\//), '');
                 packageJson = require('./package.json');
+                // validate comment
+                rgxComment = new RegExp('\\) \\{\\n' +
+                    '(?: {8}| {12})\\/\\*\\n' +
+                    '(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n' +
+                    '(?: {9}| {13})\\* (will .*?\\S)\\n' +
+                    '(?: {9}| {13})\\*\\/\\n' +
+                    '(?: {12}| {16})\\S');
                 textDict = {};
                 Object.keys(local.cliDict).sort().forEach(function (key, ii) {
                     if (key[0] === '_' && key !== '_default') {
@@ -153,15 +161,23 @@
                     if (commandList[ii]) {
                         commandList[ii].command.push(key);
                     } else {
-                        commandList[ii] = (/\n +?\*(.*?)\n +?\*(.*?)\n/).exec(text);
-                        // coverage-hack - ignore else-statement
-                        nop(local.global.__coverage__ && (function () {
-                            commandList[ii] = commandList[ii] || ['', '', ''];
-                        }()));
+                        try {
+                            commandList[ii] = rgxComment.exec(text);
+                        } catch (errorCaught) {
+                            if (!local.env.npm_config_mode_coverage) {
+                                throw new Error('cliRun - cannot parse comment in COMMAND ' +
+                                    key + ':\nnew RegExp(' + JSON.stringify(rgxComment.source) +
+                                    ').exec(' + JSON.stringify(text)
+                                    .replace((/\\\\/g), '\x00')
+                                    .replace((/\\n/g), '\\n\\\n')
+                                    .replace((/\x00/g), '\\\\') + ');');
+                            }
+                        }
+                        commandList[ii] = commandList[ii] || [];
                         commandList[ii] = {
-                            argList: commandList[ii][1].trim(),
+                            argList: (commandList[ii][1] || '').trim(),
                             command: [key],
-                            description: commandList[ii][2].trim()
+                            description: commandList[ii][2] || ''
                         };
                     }
                 });
@@ -208,7 +224,7 @@
              *
              * will start interactive-mode
              */
-                local.global.local = local;
+                global.local = local;
                 local.replStart();
             };
             if (typeof local.replStart === 'function') {
@@ -317,9 +333,11 @@
             }
             return file;
         };
+
         local._istanbul_fs.readdirSync = function () {
             return [];
         };
+
         // mock module path
         local._istanbul_path = local.path || {
             dirname: function (file) {
@@ -501,10 +519,10 @@
 
 
 
-// init lib esprima
+// rollup-file esprima/esprima.js
 // 2016-08-24T04:32:49Z
 // https://github.com/jquery/esprima/blob/2.7.3/esprima.js
-// utility2-uglifyjs https://raw.githubusercontent.com/jquery/esprima/2.7.3/esprima.js
+// utility2-uglifyjs https://raw.githubusercontent.com/jquery/esprima/2.7.3/esprima.js > /tmp/out.js
 /* istanbul ignore next */
 /* jslint-ignore-begin */
 (function () { var exports; exports = local.esprima = {};
@@ -1222,10 +1240,10 @@ Object.freeze=="function"&&Object.freeze(t),t}()})
 
 
 
-// init lib estraverse
+// rollup-file estraverse/estraverse.js
 // 2015-03-05T15:18:29Z
 // https://github.com/estools/estraverse/blob/1.9.3/estraverse.js
-// utility2-uglifyjs https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js
+// utility2-uglifyjs https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > /tmp/out.js
 /* istanbul ignore next */
 (function () { var exports; exports = local.estraverse = {};
 (function(e,t){"use strict";typeof define=="function"&&define.amd?define(["exports"
@@ -1360,10 +1378,10 @@ i,t.Controller=b,t.cloneEnvironment=function(){return e({})},t})
 
 
 
-// init lib esutils.code
+// rollup-file esutils/lib/code.js
 // 2015-03-14T16:42:41Z
 // https://github.com/estools/esutils/blob/2.0.2/lib/code.js
-// utility2-uglifyjs https://raw.githubusercontent.com/estools/esutils/2.0.2/lib/code.js
+// utility2-uglifyjs https://raw.githubusercontent.com/estools/esutils/2.0.2/lib/code.js > /tmp/out.js
 /* istanbul ignore next */
 (function () { var module; module = {};
 (function(){"use strict";function o(e){return 48<=e&&e<=57}function u(e){return 48<=
@@ -1389,10 +1407,10 @@ local.esutils = { code: module.exports }; }());
 
 
 
-// init lib escodegen
+// rollup-file escodegen/escodegen.js
 // 2016-08-05T16:02:12Z
 // https://github.com/estools/escodegen/blob/1.8.1/escodegen.js
-// utility2-uglifyjs https://raw.githubusercontent.com/estools/escodegen/1.8.1/escodegen.js
+// utility2-uglifyjs https://raw.githubusercontent.com/estools/escodegen/1.8.1/escodegen.js > /tmp/out.js
 /* istanbul ignore next */
 (function () { var exports; exports = local.escodegen = {};
 (function(){"use strict";function k(e){return bt.Expression.hasOwnProperty(e.type
@@ -1766,7 +1784,7 @@ G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
 
 
 
-// init lib handlebars
+// rollup-file handlebars.js/handlebars.js
 // 2013-12-26T22:37:39Z
 // https://github.com/components/handlebars.js/blob/v1.2.1/handlebars.js
         local.handlebars = {};
@@ -1831,6 +1849,7 @@ G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
                 return result;
             };
         };
+
         local.handlebars.registerHelper = function (key, helper) {
         /*
          * this function will register the helper-function
@@ -1842,6 +1861,7 @@ G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
                 }
             };
         };
+
         local.handlebars.replace = function (template, dict, withPrefix) {
         /*
          * this function will replace the keys in the template with the dict's key / value
@@ -1860,9 +1880,7 @@ G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
             });
         };
 
-
-
-// init lib istanbul.collector
+// rollup-file istanbul/lib/collector.js
 // 2013-12-17T03:00:58Z
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/collector.js
         local.collector = {
@@ -1883,10 +1901,10 @@ G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
 
 
 
-// init lib istanbul.insertion-text
+// rollup-file istanbul/lib/util/insertion-text.js
 // 2012-09-12T06:39:52Z
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
-// utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/insertion-text.js
+// utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/insertion-text.js > /tmp/out.js
 /* istanbul ignore next */
 /* jslint-ignore-begin */
 (function () { var module; module = {};
@@ -1910,10 +1928,10 @@ local['../util/insertion-text'] = module.exports; }());
 
 
 
-// init lib istanbul.instrumenter
+// rollup-file istanbul/lib/instrumenter.js
 // 2016-06-26T22:12:08Z
 // https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
-// utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.4.5/lib/instrumenter.js
+// utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.4.5/lib/instrumenter.js > /tmp/out.js
 // replace '(t?"":r)' with 'Math.random().toString(16).slice(2)'
 /* istanbul ignore next */
 (function () { var escodegen, esprima, module, window; escodegen = local.escodegen; esprima = local.esprima; module = undefined; window = local;
@@ -2129,10 +2147,10 @@ module.exports!="undefined"&&typeof exports!="undefined")
 
 
 
-// init lib istanbul.object-utils
+// rollup-file istanbul/lib/object-utils.js
 // 2013-12-19T03:39:58Z
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
-// utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/object-utils.js
+// utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/object-utils.js > /tmp/out.js
 /* istanbul ignore next */
 (function () { var module, window; module = undefined; window = local;
 (function(e){function t(e){var t=e.statementMap,n=e.s,r;e.l||(e.l=r={},Object.keys
@@ -2173,10 +2191,10 @@ local['../object-utils'] = window.coverageUtils; }());
 
 
 
-// init lib istanbul.report.common.defaults
+// rollup-file istanbul/lib/report/common/defaults.js
 // 2013-12-28T06:33:02Z
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/common/defaults.js
-// utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/common/defaults.js
+// utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/common/defaults.js > /tmp/out.js
 /* istanbul ignore next */
 (function () { var module; module = {};
 module.exports={watermarks:function(){return{statements:[50,80],lines:[50,80],functions
@@ -2189,7 +2207,7 @@ local['./common/defaults'] = module.exports; }());
 
 
 
-// init lib istanbul.report.index
+// rollup-file istanbul/lib/report/index.js
 // 2012-10-30T23:48:18Z
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/index.js
         local['./index'] = {
@@ -2201,7 +2219,7 @@ local['./common/defaults'] = module.exports; }());
 
 
 
-// init lib istanbul.report.templates.foot
+// rollup-file istanbul/lib/report/templates/foot.txt
 // 2014-07-04T07:47:53Z
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/foot.txt
 /* jslint-ignore-begin */
@@ -2216,7 +2234,7 @@ local['foot.txt'] = '\
 
 
 
-// init lib istanbul.report.templates.head
+// rollup-file istanbul/lib/report/templates/head.txt
 // 2014-07-04T07:47:53Z
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
 local['head.txt'] = '\
@@ -2516,7 +2534,7 @@ local['head.txt'] = '\
 
 
 
-// init lib istanbul.util.file-writer
+// rollup-file istanbul/lib/util/file-writer.js
 // 2013-03-31T22:11:41Z
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
         local.writer = {
@@ -2536,15 +2554,14 @@ local['head.txt'] = '\
 
 
 
-// init lib istanbul.util.tree-summarizer
+// rollup-file istanbul/lib/util/tree-summarizer.js
 // 2014-03-05T18:58:42Z
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
+// utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/tree-summarizer.js > /tmp/out.js
         /* istanbul ignore next */
         (function () {
             var module;
             module = {};
-// https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
-// utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/tree-summarizer.js
 /* jslint-ignore-begin */
 function commonArrayPrefix(e,t){var n=e.length<t.length?e.length:t.length,r,i=[]
 ;for(r=0;r<n;r+=1){if(e[r]!==t[r])break;i.push(e[r])}return i}function findCommonArrayPrefix
@@ -2593,10 +2610,10 @@ TreeSummary(this.summaryMap,e)}},module.exports=TreeSummarizer
 
 
 
-// init lib istanbul.report.html
+// rollup-file istanbul/lib/report/html.js
 // 2014-01-17T21:08:38Z
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
-// utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/html.js
+// utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/html.js > /tmp/out.js
 /* istanbul ignore next */
 /* jslint-ignore-begin */
 (function () { var module; module = {};
@@ -2734,10 +2751,10 @@ local.HtmlReport = module.exports; }());
 
 
 
-// init lib istanbul.report.text
+// rollup-file istanbul/lib/report/text.js
 // 2014-06-26T02:15:16Z
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
-// utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/text.js
+// utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/text.js > /tmp/out.js
 /* istanbul ignore next */
 (function () { var module; module = {};
 function TextReport(e){Report.call(this),e=e||{},this.dir=e.dir||process.cwd(),this
@@ -2839,6 +2856,7 @@ local.templateCoverageBadgeSvg =
             // re-init cli
             local._istanbul_module.runMain();
         };
+
         local.cliDict.instrument = function () {
         /*
          * <script>
@@ -2850,6 +2868,7 @@ local.templateCoverageBadgeSvg =
                 process.argv[3]
             ));
         };
+
         //
         local.cliDict.test = function () {
         /*
@@ -2868,6 +2887,7 @@ local.templateCoverageBadgeSvg =
             // re-init cli
             local._istanbul_module.runMain();
         };
+
         local.cliRun();
     }());
 }());

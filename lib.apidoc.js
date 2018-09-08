@@ -97,7 +97,7 @@
         /* validateLineSortedReset */
         local.assert = function (passed, message, onError) {
         /*
-         * this function will throw the error message if passed is falsey
+         * this function will throw the error message if passed is falsy
          */
             var error;
             if (passed) {
@@ -123,19 +123,12 @@
         /*
          * this function will run the cli
          */
-            var nop;
-            nop = function () {
-            /*
-             * this function will do nothing
-             */
-                return;
-            };
             local.cliDict._eval = local.cliDict._eval || function () {
             /*
              * <code>
              * will eval <code>
              */
-                local.global.local = local;
+                global.local = local;
                 require('vm').runInThisContext(process.argv[3]);
             };
             local.cliDict['--eval'] = local.cliDict['--eval'] || local.cliDict._eval;
@@ -145,7 +138,7 @@
              *
              * will print help
              */
-                var commandList, file, packageJson, text, textDict;
+                var commandList, file, packageJson, rgxComment, text, textDict;
                 commandList = [{
                     argList: '<arg2>  ...',
                     description: 'usage:',
@@ -157,6 +150,13 @@
                 }];
                 file = __filename.replace((/.*\//), '');
                 packageJson = require('./package.json');
+                // validate comment
+                rgxComment = new RegExp('\\) \\{\\n' +
+                    '(?: {8}| {12})\\/\\*\\n' +
+                    '(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n' +
+                    '(?: {9}| {13})\\* (will .*?\\S)\\n' +
+                    '(?: {9}| {13})\\*\\/\\n' +
+                    '(?: {12}| {16})\\S');
                 textDict = {};
                 Object.keys(local.cliDict).sort().forEach(function (key, ii) {
                     if (key[0] === '_' && key !== '_default') {
@@ -170,15 +170,23 @@
                     if (commandList[ii]) {
                         commandList[ii].command.push(key);
                     } else {
-                        commandList[ii] = (/\n +?\*(.*?)\n +?\*(.*?)\n/).exec(text);
-                        // coverage-hack - ignore else-statement
-                        nop(local.global.__coverage__ && (function () {
-                            commandList[ii] = commandList[ii] || ['', '', ''];
-                        }()));
+                        try {
+                            commandList[ii] = rgxComment.exec(text);
+                        } catch (errorCaught) {
+                            if (!local.env.npm_config_mode_coverage) {
+                                throw new Error('cliRun - cannot parse comment in COMMAND ' +
+                                    key + ':\nnew RegExp(' + JSON.stringify(rgxComment.source) +
+                                    ').exec(' + JSON.stringify(text)
+                                    .replace((/\\\\/g), '\x00')
+                                    .replace((/\\n/g), '\\n\\\n')
+                                    .replace((/\x00/g), '\\\\') + ');');
+                            }
+                        }
+                        commandList[ii] = commandList[ii] || [];
                         commandList[ii] = {
-                            argList: commandList[ii][1].trim(),
+                            argList: (commandList[ii][1] || '').trim(),
                             command: [key],
-                            description: commandList[ii][2].trim()
+                            description: commandList[ii][2] || ''
                         };
                     }
                 });
@@ -225,7 +233,7 @@
              *
              * will start interactive-mode
              */
-                local.global.local = local;
+                global.local = local;
                 local.replStart();
             };
             if (typeof local.replStart === 'function') {
@@ -1087,6 +1095,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 modulePathList: module.paths
             }));
         };
+
         local.cliRun();
     }());
 }());

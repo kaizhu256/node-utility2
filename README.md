@@ -56,29 +56,29 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- update function buildLib to auto-normalize local2-function
+- update jslint-function jslintAndPrint to validate sorted vars
+- update jslint-function jslintAndPrint to validate 3 or more continuous-newlines
+- add default testCase _testCase_cliRun_help
+- merge class _http.IncomingMessage -> _http.ServerResponse
 - add test-coverage for function ajaxCrawl
 - integrate db-lite and github-crud into a cloud-based db on github
 - add server stress-test using electron
 - none
 
-#### changelog 2018.9.1
-- npm publish 2018.9.1
-- remove unused functions dbTableXxx
-- update function buildLib to normalize local-function and whitespace
-- rename function templateRenderJslintLite -> templateRenderMyApp
-- revamp templates from jslint-lite -> my\\-app-lite
-- add function stringShellSafe
-- revamp electron mechanism to pass coverage and test-report
-- update testReport with domOnEventWindowOnloadTimeElapsed statistic
-- fix no log output in electron v1.8.x
-- remove unused shell-functions shNpmRunApidocRawCommand
-- remove unused functions cookieRemove, cookieRemoveAll, cookieSet, profile, profileSync
-- do not require following nodejs builtins by default: v8
-- add function semverCompare
-- rename var global_test_results -> utility2_testReport
-- merge env var modeTest and utility2_modeTestRun -> local.global.utility2_modeTest
-- merge function onResetXxx -> utility2_onReadyXxx
-- revamp bootstrap-mechanism before running tests
+#### changelog 2018.9.8
+- npm publish 2018.9.8
+- prepare for jslint v2018.05.14
+- add shell-command shGitDateCommitted, shDiffRaw
+- add file lib.istanbul.raw.js, lib.jslint.raw.js, lib.marked.raw.js, lib.uglifyjs.raw.js
+- update function fsReadFileOrEmptyStringSync with 'json' options to auto JSON.parse file or return null
+- update function buildLib to include top-level comment-description
+- rename template assetsDict['/assets.lib.template.js'] -> assetsDict['/assets.my\\_app.template.js']
+- update function testRunDefault to suppress console.error in coverage-mode
+- rename response.headers -> response.responseHeaders
+- make browser-mocked client-request <-> server-response asynchronous
+- revamp Buffer helper-functions
+- merge nodejs-mock of XMLHttpRequest into function ajax
 - none
 
 #### this package requires
@@ -176,7 +176,7 @@ instruction
         local.testRunServer(local);
         // init assets
         /* jslint-ignore-next-line */
-        local.assetsDict['/assets.hello'] = 'hello\ud83d\udc4b\u0020\n';
+        local.assetsDict['/assets.hello.txt'] = 'hello\ud83d\ude01\u0020\n';
         local.assetsDict['/assets.index.template.html'] = '';
     }());
 
@@ -193,15 +193,15 @@ instruction
                 return;
             }
             options = {};
-            // test ajax-path 'assets.hello'
-            local.ajax({ url: 'assets.hello' }, function (error, xhr) {
+            // test ajax-path 'assets.hello.txt'
+            local.ajax({ url: 'assets.hello.txt' }, function (error, xhr) {
                 local.tryCatchOnError(function () {
                     // validate no error occurred
                     local.assert(!error, error);
                     // validate data
                     options.data = xhr.responseText;
                     /* jslint-ignore-next-line */
-                    local.assert(options.data === 'hello\ud83d\udc4b\u0020\n', options.data);
+                    local.assert(options.data === 'hello\ud83d\ude01\u0020\n', options.data);
                     onError();
                 }, onError);
             });
@@ -941,7 +941,7 @@ utility2-comment -->\n\
         "test": "./npm_scripts.sh",
         "utility2": "./npm_scripts.sh"
     },
-    "version": "2018.9.1"
+    "version": "2018.9.8"
 }
 ```
 

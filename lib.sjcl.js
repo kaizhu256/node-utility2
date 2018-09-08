@@ -33,7 +33,7 @@
 
 
 
-// init lib sjcl
+// rollup-file sjcl.js
 // 2016-09-10T10:34:50Z
 // https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/sjcl.js
 // utility2-uglifyjs https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/sjcl.js
@@ -346,7 +346,7 @@ local.sjcl = sjcl; }());
 
 
 
-// init lib sjcl.hash.sha1
+// rollup-file core/sha1.js
 // 2016-06-09T23:25:22Z
 // https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/core/sha1.js
 // utility2-uglifyjs https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/core/sha1.js
@@ -379,7 +379,7 @@ this._S(30,i),i=r,r=n;a[0]=a[0]+r|0,a[1]=a[1]+i|0,a[2]=a[2]+s|0,a[3]=a[3]+o|0,a[
 
 
 
-// init lib sjcl.codec.bytes
+// rollup-file core/codecBytes.js
 // 2016-05-31T18:26:45Z
 // https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/core/codecBytes.js
 // utility2-uglifyjs https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/core/codecBytes.js
@@ -392,7 +392,7 @@ return n&3&&t.push(sjcl.bitArray.partial(8*(n&3),r)),t}}
 
 
 
-// init lib sjcl.misc.scrypt
+// rollup-file core/scrypt.js
 // 2016-05-31T18:10:00Z
 // https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/core/scrypt.js
 // utility2-uglifyjs https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/core/scrypt.js
@@ -429,7 +429,7 @@ s=0;s<i;s++)n[r+s]=e[t+s]|0},sjcl.misc.scrypt.blockxor=function(e,t,n,r,i){var s
 
 
 
-// init lib sjcl.mode.cbc
+// rollup-file core/cbc.js
 // 2016-05-31T18:26:45Z
 // https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/core/cbc.js
 // utility2-uglifyjs https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/core/cbc.js

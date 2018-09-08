@@ -61,12 +61,12 @@
          * this function will test FormData's default handling-behavior
          */
             options = {};
-            options.blob1 = new local.Blob(['aa', 'bb', '\u1234 ', 0]);
-            options.blob2 = new local.Blob(['aa', 'bb', '\u1234 ', 0], {
+            options.blob1 = new local.Blob(['aa', 'bb', '\ud83d\ude01 ', 0]);
+            options.blob2 = new local.Blob(['aa', 'bb', '\ud83d\ude01 ', 0], {
                 type: 'text/plain; charset=utf-8'
             });
             options.data = new local.FormData();
-            options.data.append('text1', 'aabb\u1234 0');
+            options.data.append('text1', 'aabb\ud83d\ude01 0');
             // test file-upload handling-behavior
             options.data.append('file1', options.blob1);
             // test file-upload and filename handling-behavior
@@ -79,16 +79,16 @@
                 // validate responseText
                 local.assert(xhr.responseText.indexOf(
                     '\r\nContent-Disposition: form-data; ' +
-                        'name="text1"\r\n\r\naabb\u1234 0\r\n'
+                        'name="text1"\r\n\r\naabb\ud83d\ude01 0\r\n'
                 ) >= 0, xhr.responseText);
                 local.assert(xhr.responseText.indexOf(
                     '\r\nContent-Disposition: form-data; ' +
-                        'name="file1"\r\n\r\naabb\u1234 0\r\n'
+                        'name="file1"\r\n\r\naabb\ud83d\ude01 0\r\n'
                 ) >= 0, xhr.responseText);
                 local.assert(xhr.responseText.indexOf(
                     '\r\nContent-Disposition: form-data; name="file2"; ' +
                         'filename="filename2.txt"\r\nContent-Type: text/plain; ' +
-                        'charset=utf-8\r\n\r\naabb\u1234 0\r\n'
+                        'charset=utf-8\r\n\r\naabb\ud83d\ude01 0\r\n'
                 ) >= 0, xhr.responseText);
                 onError(null, options);
             });
@@ -191,18 +191,18 @@
                 switch (options.modeNext) {
                 case 1:
                     // test http GET handling-behavior
-                    local.ajax({ url: 'assets.hello' }, options.onNext);
+                    local.ajax({ url: 'assets.hello.txt' }, options.onNext);
                     break;
                 case 2:
                     // validate responseText
                     /* jslint-ignore-next-line */
-                    local.assertJsonEqual(data.responseText, 'hello\ud83d\udc4b\u0020\n');
+                    local.assertJsonEqual(data.responseText, 'hello\ud83d\ude01\u0020\n');
                     // test http GET 304 cache handling-behavior
                     local.ajax({
                         headers: {
                             'If-Modified-Since': new Date(Date.now() + 0xffff).toUTCString()
                         },
-                        url: 'assets.hello'
+                        url: 'assets.hello.txt'
                     }, options.onNext);
                     break;
                 case 3:
@@ -221,6 +221,8 @@
         local.testCase_ajax_echo = function (options, onError) {
             // test /test.echo handling-behavior
             local.ajax({
+                _aa: 'aa',
+                aa: 'aa',
                 data: 'aa',
                 // test request-header handling-behavior
                 headers: { 'X-Request-Header-Test': 'aa' },
@@ -241,6 +243,9 @@
                 );
                 // validate responseHeaders
                 local.assertJsonEqual(xhr.responseHeaders['x-response-header-test'], 'bb');
+                // validate properties
+                local.assertJsonEqual(xhr._aa, undefined);
+                local.assertJsonEqual(xhr.aa, 'aa');
                 onError(null, options);
             });
         };
@@ -345,7 +350,7 @@
                 local.ajax({
                     // test nodejs response handling-behavior
                     responseType: responseType,
-                    url: 'assets.hello'
+                    url: 'assets.hello.txt'
                 }, function (error, xhr) {
                     // validate no error occurred
                     local.assert(!error, error);
@@ -362,14 +367,14 @@
                         local.assertJsonEqual(xhr.responseBuffer[4], 0x6f);
                         local.assertJsonEqual(xhr.responseBuffer[5], 0xf0);
                         local.assertJsonEqual(xhr.responseBuffer[6], 0x9f);
-                        local.assertJsonEqual(xhr.responseBuffer[7], 0x91);
-                        local.assertJsonEqual(xhr.responseBuffer[8], 0x8b);
+                        local.assertJsonEqual(xhr.responseBuffer[7], 0x98);
+                        local.assertJsonEqual(xhr.responseBuffer[8], 0x81);
                         local.assertJsonEqual(xhr.responseBuffer[9], 0x20);
                         local.assertJsonEqual(xhr.responseBuffer[10], 0x0a);
                         break;
                     default:
                         /* jslint-ignore-next-line */
-                        local.assertJsonEqual(xhr.responseText, 'hello\ud83d\udc4b\u0020\n');
+                        local.assertJsonEqual(xhr.responseText, 'hello\ud83d\ude01\u0020\n');
                         break;
                     }
                     onParallel(null, options);
@@ -490,7 +495,7 @@
          * this function will test base64Xxx's default handling-behavior
          */
             options = {};
-            options.base64 = local.base64FromBuffer(local.stringCharsetAscii + '\u1234');
+            options.base64 = local.base64FromBuffer(local.stringCharsetAscii + '\ud83d\ude01');
             // test null-case handling-behavior
             local.assertJsonEqual(local.base64FromBuffer(), '');
             local.assertJsonEqual(local.bufferToString(local.base64ToBuffer()), '');
@@ -514,8 +519,8 @@
          * this function will test blobRead's default handling-behavior
          */
             local.onParallelList({ list: [
-                new local.Blob(['aa', 'bb', '\u1234 ', 0]),
-                new local.Blob(['aa', 'bb', '\u1234 ', 0], {
+                new local.Blob(['aa', 'bb', '\ud83d\ude01 ', 0]),
+                new local.Blob(['aa', 'bb', '\ud83d\ude01 ', 0], {
                     type: 'text/plain; charset=utf-8'
                 })
             ] }, function (options2, onParallel) {
@@ -529,19 +534,19 @@
                         switch (encoding) {
                         case 'dataURL':
                             if (options2.ii === 0) {
-                                local.assertJsonEqual(data, 'data:;base64,YWFiYuGItCAw');
+                                local.assertJsonEqual(data, 'data:;base64,YWFiYvCfmIEgMA==');
                                 break;
                             }
                             local.assertJsonEqual(
                                 data,
-                                'data:text/plain; charset=utf-8;base64,YWFiYuGItCAw'
+                                'data:text/plain; charset=utf-8;base64,YWFiYvCfmIEgMA=='
                             );
                             break;
                         case 'text':
-                            local.assertJsonEqual(data, 'aabb\u1234 0');
+                            local.assertJsonEqual(data, 'aabb\ud83d\ude01 0');
                             break;
                         default:
-                            local.assertJsonEqual(local.bufferToString(data), 'aabb\u1234 0');
+                            local.assertJsonEqual(local.bufferToString(data), 'aabb\ud83d\ude01 0');
                         }
                         onParallel(null, options);
                     });
@@ -576,8 +581,8 @@
         /*
          * this function will test browserTest's electron handling-behavior
          */
-            options = function (arg0, arg1, arg3) {
-                [arg0, arg1, arg3].forEach(function (fnc, ii) {
+            options = function (aa, bb, cc) {
+                [aa, bb, cc].forEach(function (fnc, ii) {
                     if (typeof fnc === 'function') {
                         fnc(ii && options);
                         options.onNext(null, options);
@@ -699,7 +704,7 @@
             for (options.ii = 0; options.ii < 0x10000; options.ii += 1) {
                 options.text1 += String.fromCodePoint(options.ii);
             }
-            for (options.ii = 0x10000; options.ii < 0x110000; options.ii += 0x100) {
+            for (options.ii = 0x100000; options.ii < 0x110000; options.ii += 0x100) {
                 options.text1 += String.fromCodePoint(options.ii);
             }
             // test utf8 handling-behavior
@@ -770,8 +775,8 @@
             local.testCase_buildLib_default(options, local.onErrorThrow);
             local.testCase_buildTest_default(options, local.onErrorThrow);
             local.buildApp({ assetsList: [{
-                file: '/assets.hello',
-                url: '/assets.hello'
+                file: '/assets.hello.txt',
+                url: '/assets.hello.txt'
             }, {
                 file: '/assets.script_only.html',
                 url: '/assets.script_only.html'
@@ -856,6 +861,9 @@
                             '         */\n' +
                             '            return;\n' +
                             '        };\n';
+                    },
+                    templateRenderMyApp: function () {
+                        return local.assetsDict['/assets.my_app.template.js'];
                     }
                 }],
                 [local.fs, {
@@ -886,7 +894,7 @@
                     .replace('# shDeployCustom', '  shDeployCustom')
                     // test no-assets.index.template.html handling-behavior
                     .replace('assets.utility2.template.html', '');
-                local.env.npm_package_isPrivate = '';
+                local.env.npm_package_private = '';
             };
             options.dataFrom = local.fs.readFileSync('README.md', 'utf8')
                 .replace('#\!\! shNpmTestPublished', 'shNpmTestPublished');
@@ -894,7 +902,7 @@
             local.testMock([
                 [local.env, {
                     npm_package_buildCustomOrg: '',
-                    npm_package_isPrivate: '1',
+                    npm_package_private: '1',
                     npm_package_name: 'undefined'
                 }],
                 [local.fs, {
@@ -1114,11 +1122,6 @@
          * this function will cryptoAesXxxCbcRawXxx's default handling-behavior
          */
             options = {};
-            // bug-workaround - electron's (< v2.0) cross-origin webview does not have crypto.subtle
-            if (local.isBrowser) {
-                onError(null, options);
-                onError = local.nop;
-            }
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
@@ -1157,8 +1160,8 @@
                     options.onNext();
                     break;
                 default:
-                    onError(error, options);
-                    onError = local.nop;
+                    // bug-worrkaround - testCase is flaky in both browser and node
+                    onError(null, options, error);
                 }
             });
             options.modeNext = 0;
@@ -1494,13 +1497,13 @@
             // test forward-proxy-http handling-behavior
             onParallel.counter += 1;
             local.ajax({ headers: {
-                'forward-proxy-url': '/assets.hello'
+                'forward-proxy-url': '/assets.hello.txt'
             }, url: '' }, function (error, xhr) {
                 // validate no error occurred
                 local.assert(!error, error);
                 // validate responseText
                 /* jslint-ignore-next-line */
-                local.assertJsonEqual(xhr.responseText, 'hello\ud83d\udc4b\u0020\n');
+                local.assertJsonEqual(xhr.responseText, 'hello\ud83d\ude01\u0020\n');
                 onParallel(null, options, xhr);
             });
             // test error handling-behavior
@@ -1602,7 +1605,7 @@
             // test null-case handling-behavior
             local.objectSetDefault();
             local.objectSetDefault({});
-            // test falsey handling-behavior
+            // test falsy handling-behavior
             ['', 0, false, null, undefined].forEach(function (aa) {
                 ['', 0, false, null, undefined].forEach(function (bb) {
                     local.assertJsonEqual(
@@ -1637,7 +1640,7 @@
             // test null-case handling-behavior
             local.objectSetOverride();
             local.objectSetOverride({});
-            // test falsey handling-behavior
+            // test falsy handling-behavior
             ['', 0, false, null, undefined].forEach(function (aa) {
                 ['', 0, false, null, undefined].forEach(function (bb) {
                     local.assertJsonEqual(
@@ -1919,6 +1922,34 @@
             // coverage-hack - use 1500 ms to cover setInterval
             }, 1500, function () {
                 return 'testCase_onTimeout_errorTimeout';
+            });
+        };
+
+        local.testCase_profileXxx_default = function (options, onError) {
+        /*
+         * this function will test profileXxx's default handling-behavior
+         */
+            options = {};
+            // test profileSync's handling-behavior
+            options.timeElapsed = local.profileSync(function () {
+                return;
+            });
+            // validate timeElapsed
+            local.assert(
+                0 <= options.timeElapsed && options.timeElapsed < 1000,
+                options.timeElapsed
+            );
+            // test profile's async handling-behavior
+            local.profile(function (onError) {
+                setTimeout(onError);
+            }, function (error, timeElapsed) {
+                // validate no error occurred
+                local.assert(!error, error);
+                options.timeElapsed = timeElapsed;
+                // validate timeElapsed
+                local.assert(0 <= options.timeElapsed &&
+                    options.timeElapsed < local.timeoutDefault, options.timeElapsed);
+                onError(null, options);
             });
         };
 

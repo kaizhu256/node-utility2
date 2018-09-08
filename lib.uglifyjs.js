@@ -1,4 +1,12 @@
 #!/usr/bin/env node
+/*
+ * assets.uglifyjs.js
+ * this zero-dependency package will provide a browser-compatible version of the uglifyjs (v1.3.5) javascript-minifier, with a working web-demo
+ *
+ */
+
+
+
 /* istanbul instrument in package uglifyjs */
 /* jslint-utility2 */
 /*jslint
@@ -99,19 +107,12 @@
         /*
          * this function will run the cli
          */
-            var nop;
-            nop = function () {
-            /*
-             * this function will do nothing
-             */
-                return;
-            };
             local.cliDict._eval = local.cliDict._eval || function () {
             /*
              * <code>
              * will eval <code>
              */
-                local.global.local = local;
+                global.local = local;
                 require('vm').runInThisContext(process.argv[3]);
             };
             local.cliDict['--eval'] = local.cliDict['--eval'] || local.cliDict._eval;
@@ -121,7 +122,7 @@
              *
              * will print help
              */
-                var commandList, file, packageJson, text, textDict;
+                var commandList, file, packageJson, rgxComment, text, textDict;
                 commandList = [{
                     argList: '<arg2>  ...',
                     description: 'usage:',
@@ -133,6 +134,13 @@
                 }];
                 file = __filename.replace((/.*\//), '');
                 packageJson = require('./package.json');
+                // validate comment
+                rgxComment = new RegExp('\\) \\{\\n' +
+                    '(?: {8}| {12})\\/\\*\\n' +
+                    '(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n' +
+                    '(?: {9}| {13})\\* (will .*?\\S)\\n' +
+                    '(?: {9}| {13})\\*\\/\\n' +
+                    '(?: {12}| {16})\\S');
                 textDict = {};
                 Object.keys(local.cliDict).sort().forEach(function (key, ii) {
                     if (key[0] === '_' && key !== '_default') {
@@ -146,15 +154,23 @@
                     if (commandList[ii]) {
                         commandList[ii].command.push(key);
                     } else {
-                        commandList[ii] = (/\n +?\*(.*?)\n +?\*(.*?)\n/).exec(text);
-                        // coverage-hack - ignore else-statement
-                        nop(local.global.__coverage__ && (function () {
-                            commandList[ii] = commandList[ii] || ['', '', ''];
-                        }()));
+                        try {
+                            commandList[ii] = rgxComment.exec(text);
+                        } catch (errorCaught) {
+                            if (!local.env.npm_config_mode_coverage) {
+                                throw new Error('cliRun - cannot parse comment in COMMAND ' +
+                                    key + ':\nnew RegExp(' + JSON.stringify(rgxComment.source) +
+                                    ').exec(' + JSON.stringify(text)
+                                    .replace((/\\\\/g), '\x00')
+                                    .replace((/\\n/g), '\\n\\\n')
+                                    .replace((/\x00/g), '\\\\') + ');');
+                            }
+                        }
+                        commandList[ii] = commandList[ii] || [];
                         commandList[ii] = {
-                            argList: commandList[ii][1].trim(),
+                            argList: (commandList[ii][1] || '').trim(),
                             command: [key],
-                            description: commandList[ii][2].trim()
+                            description: commandList[ii][2] || ''
                         };
                     }
                 });
@@ -201,7 +217,7 @@
              *
              * will start interactive-mode
              */
-                local.global.local = local;
+                global.local = local;
                 local.replStart();
             };
             if (typeof local.replStart === 'function') {
@@ -253,9 +269,10 @@
 
 
 /* jslint-ignore-begin */
-// init lib parse-js
+// rollup-file parse-js.js
+// 2012-10-20T07:19:24Z
 // https://github.com/mishoo/UglifyJS/blob/v1.3.5/lib/parse-js.js
-// utility2-uglifyjs https://raw.githubusercontent.com/mishoo/UglifyJS/v1.3.5/lib/parse-js.js
+// utility2-uglifyjs https://raw.githubusercontent.com/mishoo/UglifyJS/v1.3.5/lib/parse-js.js > /tmp/out.js
 function is_letter(e){return UNICODE.letter.test(e)}function is_digit(e){return e=
 e.charCodeAt(0),e>=48&&e<=57}function is_unicode_digit(e){return UNICODE.digit.test
 (e)}function is_alphanumeric_char(e){return is_digit(e)||is_letter(e)}function is_unicode_combining_mark
@@ -455,9 +472,10 @@ RESERVED_WORDS,exports.KEYWORDS=KEYWORDS,exports.ATOMIC_START_TOKEN=ATOMIC_START
 
 
 
-// init lib process
+// rollup-file process.js
+// 2012-11-01T07:27:58Z
 // https://github.com/mishoo/UglifyJS/blob/v1.3.5/lib/process.js
-// utility2-uglifyjs https://raw.githubusercontent.com/mishoo/UglifyJS/v1.3.5/lib/process.js
+// utility2-uglifyjs https://raw.githubusercontent.com/mishoo/UglifyJS/v1.3.5/lib/process.js > /tmp/out.js
 function ast_walker(){function e(e){return[this[0],MAP(e,function(e){var t=[e[0]
 ];return e.length>1&&(t[1]=s(e[1])),t})]}function t(e){var t=[this[0]];return e!=
 null&&t.push(MAP(e,s)),t}function s(e){if(e==null)return null;try{i.push(e);var t=
@@ -901,6 +919,7 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
                 'utf8'
             ), process.argv[2]));
         };
+
         local.cliRun();
     }());
 }());

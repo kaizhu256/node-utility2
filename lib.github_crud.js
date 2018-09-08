@@ -1,4 +1,13 @@
 #!/usr/bin/env node
+/*
+ * lib.github_crud.js (2018.8.8)
+ * https://github.com/kaizhu256/node-github-crud
+ * this zero-dependency package will provide a simple cli-tool to PUT / GET / DELETE github files
+ *
+ */
+
+
+
 /* istanbul instrument in package github_crud */
 /* jslint-utility2 */
 /*jslint
@@ -97,7 +106,8 @@
         /* validateLineSortedReset */
         local.ajax = function (options, onError) {
         /*
-         * this function will send an ajax-request with error-handling and timeout
+         * this function will send an ajax-request with the given options.url,
+         * with error-handling and timeout
          * example usage:
             local.ajax({
                 data: 'hello world',
@@ -110,28 +120,147 @@
             });
          */
             var ajaxProgressUpdate,
-                bufferToString,
+                bufferValidateAndCoerce,
                 isBrowser,
                 isDone,
+                onEvent,
                 nop,
-                self,
+                local2,
                 streamCleanup,
-                xhr;
-            // init local
-            self = local.utility2 || {};
-            // init standalone handling-behavior
+                xhr,
+                xhrInit;
+            // init local2
+            local2 = local.utility2 || {};
+            // init function
             nop = function () {
             /*
              * this function will do nothing
              */
                 return;
             };
-            ajaxProgressUpdate = self.ajaxProgressUpdate || nop;
-            // init onError
-            if (self.onErrorWithStack) {
-                onError = self.onErrorWithStack(onError);
-            }
-            bufferToString = self.bufferToString || String;
+            ajaxProgressUpdate = local2.ajaxProgressUpdate || nop;
+            bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (bff, mode) {
+            /*
+             * this function will validate and coerce/convert
+             * ArrayBuffer, String, or Uint8Array -> Buffer or String
+             */
+                // validate instanceof ArrayBuffer, String, or Uint8Array
+                if (!((isBrowser && (typeof bff === 'string' || bff instanceof ArrayBuffer)) ||
+                        (!isBrowser && Buffer.isBuffer(bff)))) {
+                    throw new Error(
+                        'ajax - xhr.response is not instanceof ArrayBuffer, String, or Buffer'
+                    );
+                }
+                // coerce to ArrayBuffer -> Buffer
+                if (bff instanceof ArrayBuffer) {
+                    return new Uint8Array(bff);
+                }
+                // coerce/convert String -> Buffer or String
+                if (typeof bff === 'string') {
+                    return mode === 'string'
+                        ? bff
+                        : isBrowser
+                        ? new window.TextEncoder().encode(bff)
+                        : Buffer.from(bff);
+                }
+                // coerce/convert Buffer -> Buffer or String
+                return mode === 'string'
+                    ? String(bff)
+                    : bff;
+            };
+            onEvent = function (event) {
+            /*
+             * this function will handle events
+             */
+                if (event instanceof Error) {
+                    xhr.error = xhr.error || event;
+                    xhr.onEvent({ type: 'error' });
+                    return;
+                }
+                // init statusCode
+                xhr.statusCode = (xhr.statusCode || xhr.status) | 0;
+                switch (event.type) {
+                case 'abort':
+                case 'error':
+                case 'load':
+                    if (isDone) {
+                        return;
+                    }
+                    isDone = true;
+                    // decrement ajaxProgressCounter
+                    local2.ajaxProgressCounter = Math.max(local2.ajaxProgressCounter - 1, 0);
+                    ajaxProgressUpdate();
+                    // handle abort or error event
+                    switch (!xhr.error && event.type) {
+                    case 'abort':
+                    case 'error':
+                        xhr.error = new Error('ajax - event ' + event.type);
+                        break;
+                    case 'load':
+                        if (xhr.statusCode >= 400) {
+                            xhr.error = new Error('ajax - statusCode ' + xhr.statusCode);
+                        }
+                        break;
+                    }
+                    // debug statusCode / method / url
+                    if (xhr.error) {
+                        xhr.error.statusCode = xhr.statusCode;
+                        (local2.errorMessagePrepend || nop)(xhr.error, (isBrowser
+                            ? 'browser'
+                            : 'node') + ' - ' +
+                            xhr.statusCode + ' ' + xhr.method + ' ' + xhr.url + '\n');
+                    }
+                    // update responseHeaders
+                    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders
+                    if (xhr.getAllResponseHeaders) {
+                        xhr.getAllResponseHeaders().replace((
+                            /(.*?): *(.*?)\r\n/g
+                        ), function (match0, match1, match2) {
+                            match0 = match1;
+                            xhr.responseHeaders[match0.toLowerCase()] = match2;
+                        });
+                    }
+                    // debug ajaxResponse
+                    xhr.responseContentLength =
+                        (xhr.response && (xhr.response.byteLength || xhr.response.length)) | 0;
+                    xhr.timeElapsed = Date.now() - xhr.timeStart;
+                    if (xhr.modeDebug) {
+                        console.error('serverLog - ' + JSON.stringify({
+                            time: new Date(xhr.timeStart).toISOString(),
+                            type: 'ajaxResponse',
+                            method: xhr.method,
+                            url: xhr.url,
+                            statusCode: xhr.statusCode,
+                            timeElapsed: xhr.timeElapsed,
+                            // extra
+                            responseContentLength: xhr.responseContentLength
+                        }));
+                    }
+                    // init responseType
+                    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType
+                    switch (xhr.response && xhr.responseType) {
+                    // init responseText
+                    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseText
+                    case '':
+                    case 'text':
+                        if (typeof xhr.responseText === 'string') {
+                            break;
+                        }
+                        xhr.responseText = bufferValidateAndCoerce(xhr.response, 'string');
+                        break;
+                    case 'arraybuffer':
+                        xhr.responseBuffer = bufferValidateAndCoerce(xhr.response);
+                        break;
+                    }
+                    // cleanup timerTimeout
+                    clearTimeout(xhr.timerTimeout);
+                    // cleanup requestStream and responseStream
+                    streamCleanup(xhr.requestStream);
+                    streamCleanup(xhr.responseStream);
+                    onError(xhr.error, xhr);
+                    break;
+                }
+            };
             streamCleanup = function (stream) {
             /*
              * this function will try to end or destroy the stream
@@ -147,65 +276,95 @@
                     }
                 }
             };
+            xhrInit = function () {
+            /*
+             * this function will init xhr
+             */
+                // init options
+                Object.keys(options).forEach(function (key) {
+                    if (key[0] !== '_') {
+                        xhr[key] = options[key];
+                    }
+                });
+                Object.assign(xhr, {
+                    corsForwardProxyHost: xhr.corsForwardProxyHost || local2.corsForwardProxyHost,
+                    headers: xhr.headers || {},
+                    location: xhr.location || (isBrowser && location) || {},
+                    method: xhr.method || 'GET',
+                    responseType: xhr.responseType || '',
+                    timeout: xhr.timeout || local2.timeoutDefault || 30000
+                });
+                Object.keys(xhr.headers).forEach(function (key) {
+                    xhr.headers[key.toLowerCase()] = xhr.headers[key];
+                });
+                // init misc
+                local2._debugXhr = xhr;
+                xhr.onEvent = onEvent;
+                xhr.responseHeaders = {};
+                xhr.timeStart = xhr.timeStart || Date.now();
+            };
             // init isBrowser
             isBrowser = typeof window === 'object' &&
                 typeof window.XMLHttpRequest === 'function' &&
                 window.document &&
                 typeof window.document.querySelectorAll === 'function';
-            // init xhr
-            xhr = !options.httpRequest &&
-                (!isBrowser || (self.serverLocalUrlTest && self.serverLocalUrlTest(options.url)))
-                ? self._http && self._http.XMLHttpRequest && new self._http.XMLHttpRequest()
-                : isBrowser && new window.XMLHttpRequest();
+            // init onError
+            if (local2.onErrorWithStack) {
+                onError = local2.onErrorWithStack(onError);
+            }
+            // init xhr - XMLHttpRequest
+            xhr = isBrowser &&
+                !options.httpRequest &&
+                !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(options.url)) &&
+                new XMLHttpRequest();
+            // init xhr - http.request
             if (!xhr) {
-                xhr = require('url').parse(options.url);
-                xhr.headers = options.headers;
-                xhr.method = options.method;
-                xhr.timeout = xhr.timeout || self.timeoutDefault || 30000;
+                xhr = (local2.urlParse || require('url').parse)(options.url);
+                // init xhr
+                xhrInit();
+                // init xhr - http.request
                 xhr = (
-                    options.httpRequest || require(xhr.protocol.slice(0, -1)).request
-                )(xhr, function (response) {
+                    options.httpRequest ||
+                        (isBrowser && local2.http.request) ||
+                        require(xhr.protocol.slice(0, -1)).request
+                )(xhr, function (responseStream) {
+                /*
+                 * this function will read the responseStream
+                 */
                     var chunkList;
                     chunkList = [];
-                    xhr.responseStream = response;
-                    xhr.responseHeaders = xhr.responseStream.headers;
-                    xhr.status = xhr.responseStream.statusCode;
-                    xhr.responseStream
-                        .on('data', function (chunk) {
-                            chunkList.push(chunk);
-                        })
-                        .on('end', function () {
-                            xhr.response = Buffer.concat(chunkList);
-                            xhr.onEvent({ type: 'load' });
-                        })
-                        .on('error', xhr.onEvent);
+                    xhr.responseHeaders = responseStream.responseHeaders || responseStream.headers;
+                    xhr.responseStream = responseStream;
+                    xhr.statusCode = responseStream.statusCode;
+                    responseStream.dataLength = 0;
+                    responseStream.on('data', function (chunk) {
+                        chunkList.push(chunk);
+                    });
+                    responseStream.on('end', function () {
+                        xhr.response = isBrowser
+                            ? chunkList[0]
+                            : Buffer.concat(chunkList);
+                        responseStream.dataLength = xhr.response.byteLength || xhr.response.length;
+                        xhr.onEvent({ type: 'load' });
+                    });
+                    responseStream.on('error', xhr.onEvent);
                 });
+                xhr.abort = function () {
+                /*
+                 * this function will abort the xhr-request
+                 * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/abort
+                 */
+                    xhr.onEvent({ type: 'abort' });
+                };
                 xhr.addEventListener = nop;
                 xhr.open = nop;
                 xhr.requestStream = xhr;
                 xhr.send = xhr.end;
                 xhr.setRequestHeader = nop;
-                setTimeout(function () {
-                    xhr.on('error', xhr.onEvent);
-                });
+                xhr.on('error', onEvent);
             }
-            // debug xhr
-            self._debugXhr = xhr;
-            // init options
-            Object.keys(options).forEach(function (key) {
-                if (options[key] !== undefined) {
-                    xhr[key] = options[key];
-                }
-            });
-            // init properties
-            xhr.headers = {};
-            Object.keys(options.headers || {}).forEach(function (key) {
-                xhr.headers[key.toLowerCase()] = options.headers[key];
-            });
-            xhr.method = xhr.method || 'GET';
-            xhr.responseHeaders = {};
-            xhr.timeStart = Date.now();
-            xhr.timeout = xhr.timeout || self.timeoutDefault || 30000;
+            // init xhr
+            xhrInit();
             // init timerTimeout
             xhr.timerTimeout = setTimeout(function () {
                 xhr.error = xhr.error || new Error('onTimeout - timeout-error - ' +
@@ -215,135 +374,35 @@
                 streamCleanup(xhr.requestStream);
                 streamCleanup(xhr.responseStream);
             }, xhr.timeout);
-            // init event-handling
-            xhr.onEvent = function (event) {
-                if (event instanceof Error) {
-                    xhr.error = xhr.error || event;
-                    xhr.onEvent({ type: 'error' });
-                    return;
-                }
-                // init statusCode
-                xhr.statusCode = xhr.status || xhr.statusCode || 0;
-                switch (event.type) {
-                case 'abort':
-                case 'error':
-                case 'load':
-                    // do not run more than once
-                    if (isDone) {
-                        return;
-                    }
-                    isDone = xhr._isDone = true;
-                    // update responseHeaders
-                    if (xhr.getAllResponseHeaders) {
-                        xhr.getAllResponseHeaders().replace((
-                            /(.*?): *(.*?)\r\n/g
-                        ), function (match0, match1, match2) {
-                            match0 = match1;
-                            xhr.responseHeaders[match0.toLowerCase()] = match2;
-                        });
-                    }
-                    // init responseText
-                    if (!(isBrowser && (xhr instanceof XMLHttpRequest)) &&
-                            (xhr.responseType === 'text' || !xhr.responseType)) {
-                        xhr.response = xhr.responseText = bufferToString(xhr.response || '');
-                    }
-                    // init responseBuffer
-                    xhr.responseBuffer = xhr.response;
-                    if (xhr.responseBuffer instanceof ArrayBuffer) {
-                        xhr.responseBuffer = new Uint8Array(xhr.responseBuffer);
-                    }
-                    xhr.responseContentLength =
-                        (xhr.response && (xhr.response.byteLength || xhr.response.length)) || 0;
-                    xhr.timeElapsed = Date.now() - xhr.timeStart;
-                    // debug ajaxResponse
-                    if (xhr.modeDebug) {
-                        console.error('serverLog - ' + JSON.stringify({
-                            time: new Date(xhr.timeStart).toISOString(),
-                            type: 'ajaxResponse',
-                            method: xhr.method,
-                            url: xhr.url,
-                            statusCode: xhr.statusCode,
-                            timeElapsed: xhr.timeElapsed,
-                            // extra
-                            responseContentLength: xhr.responseContentLength,
-                            data: (function () {
-                                try {
-                                    return String(xhr.data.slice(0, 256));
-                                } catch (ignore) {
-                                }
-                            }()),
-                            responseText: (function () {
-                                try {
-                                    return String(xhr.responseText.slice(0, 256));
-                                } catch (ignore) {
-                                }
-                            }())
-                        }));
-                    }
-                    // cleanup timerTimeout
-                    clearTimeout(xhr.timerTimeout);
-                    // cleanup requestStream and responseStream
-                    setTimeout(function () {
-                        streamCleanup(xhr.requestStream);
-                        streamCleanup(xhr.responseStream);
-                    });
-                    // decrement ajaxProgressCounter
-                    self.ajaxProgressCounter = Math.max(self.ajaxProgressCounter - 1, 0);
-                    // handle abort or error event
-                    if (!xhr.error &&
-                            (event.type === 'abort' ||
-                            event.type === 'error' ||
-                            xhr.statusCode >= 400)) {
-                        xhr.error = new Error('ajax - event ' + event.type);
-                    }
-                    // debug statusCode
-                    (xhr.error || {}).statusCode = xhr.statusCode;
-                    // debug statusCode / method / url
-                    if (self.errorMessagePrepend && xhr.error) {
-                        self.errorMessagePrepend(xhr.error, (isBrowser
-                            ? 'browser'
-                            : 'node') + ' - ' +
-                            xhr.statusCode + ' ' + xhr.method + ' ' + xhr.url + '\n' +
-                            // try to debug responseText
-                            (function () {
-                                try {
-                                    return '    ' + JSON.stringify(xhr.responseText.slice(0, 256) +
-                                        '...') + '\n';
-                                } catch (ignore) {
-                                }
-                            }()));
-                    }
-                    onError(xhr.error, xhr);
-                    break;
-                }
-                ajaxProgressUpdate();
-            };
             // increment ajaxProgressCounter
-            self.ajaxProgressCounter = self.ajaxProgressCounter || 0;
-            self.ajaxProgressCounter += 1;
+            local2.ajaxProgressCounter = local2.ajaxProgressCounter || 0;
+            local2.ajaxProgressCounter += 1;
+            // init event-handling
             xhr.addEventListener('abort', xhr.onEvent);
             xhr.addEventListener('error', xhr.onEvent);
             xhr.addEventListener('load', xhr.onEvent);
             xhr.addEventListener('loadstart', ajaxProgressUpdate);
             xhr.addEventListener('progress', ajaxProgressUpdate);
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
             if (xhr.upload && xhr.upload.addEventListener) {
                 xhr.upload.addEventListener('progress', ajaxProgressUpdate);
             }
-            // open url through corsForwardProxyHost
-            xhr.corsForwardProxyHost = xhr.corsForwardProxyHost || self.corsForwardProxyHost;
-            xhr.location = xhr.location || (self.global && self.global.location) || {};
-            if (self.corsForwardProxyHostIfNeeded && self.corsForwardProxyHostIfNeeded(xhr)) {
-                xhr.open(xhr.method, self.corsForwardProxyHostIfNeeded(xhr));
+            // open url - corsForwardProxyHost
+            if (local2.corsForwardProxyHostIfNeeded && local2.corsForwardProxyHostIfNeeded(xhr)) {
+                xhr.open(xhr.method, local2.corsForwardProxyHostIfNeeded(xhr));
                 xhr.setRequestHeader('forward-proxy-headers', JSON.stringify(xhr.headers));
                 xhr.setRequestHeader('forward-proxy-url', xhr.url);
-            // open url
+            // open url - default
             } else {
                 xhr.open(xhr.method, xhr.url);
             }
+            // send headers
             Object.keys(xhr.headers).forEach(function (key) {
                 xhr.setRequestHeader(key, xhr.headers[key]);
             });
-            if (self.FormData && xhr.data instanceof self.FormData) {
+            // send data - FormData
+            // https://developer.mozilla.org/en-US/docs/Web/API/FormData
+            if (local2.FormData && xhr.data instanceof local2.FormData) {
                 // handle formData
                 xhr.data.read(function (error, data) {
                     if (error) {
@@ -353,6 +412,7 @@
                     // send data
                     xhr.send(data);
                 });
+            // send data - default
             } else {
                 // send data
                 xhr.send(xhr.data);
@@ -364,19 +424,12 @@
         /*
          * this function will run the cli
          */
-            var nop;
-            nop = function () {
-            /*
-             * this function will do nothing
-             */
-                return;
-            };
             local.cliDict._eval = local.cliDict._eval || function () {
             /*
              * <code>
              * will eval <code>
              */
-                local.global.local = local;
+                global.local = local;
                 require('vm').runInThisContext(process.argv[3]);
             };
             local.cliDict['--eval'] = local.cliDict['--eval'] || local.cliDict._eval;
@@ -386,7 +439,7 @@
              *
              * will print help
              */
-                var commandList, file, packageJson, text, textDict;
+                var commandList, file, packageJson, rgxComment, text, textDict;
                 commandList = [{
                     argList: '<arg2>  ...',
                     description: 'usage:',
@@ -398,6 +451,13 @@
                 }];
                 file = __filename.replace((/.*\//), '');
                 packageJson = require('./package.json');
+                // validate comment
+                rgxComment = new RegExp('\\) \\{\\n' +
+                    '(?: {8}| {12})\\/\\*\\n' +
+                    '(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n' +
+                    '(?: {9}| {13})\\* (will .*?\\S)\\n' +
+                    '(?: {9}| {13})\\*\\/\\n' +
+                    '(?: {12}| {16})\\S');
                 textDict = {};
                 Object.keys(local.cliDict).sort().forEach(function (key, ii) {
                     if (key[0] === '_' && key !== '_default') {
@@ -411,15 +471,23 @@
                     if (commandList[ii]) {
                         commandList[ii].command.push(key);
                     } else {
-                        commandList[ii] = (/\n +?\*(.*?)\n +?\*(.*?)\n/).exec(text);
-                        // coverage-hack - ignore else-statement
-                        nop(local.global.__coverage__ && (function () {
-                            commandList[ii] = commandList[ii] || ['', '', ''];
-                        }()));
+                        try {
+                            commandList[ii] = rgxComment.exec(text);
+                        } catch (errorCaught) {
+                            if (!local.env.npm_config_mode_coverage) {
+                                throw new Error('cliRun - cannot parse comment in COMMAND ' +
+                                    key + ':\nnew RegExp(' + JSON.stringify(rgxComment.source) +
+                                    ').exec(' + JSON.stringify(text)
+                                    .replace((/\\\\/g), '\x00')
+                                    .replace((/\\n/g), '\\n\\\n')
+                                    .replace((/\x00/g), '\\\\') + ');');
+                            }
+                        }
+                        commandList[ii] = commandList[ii] || [];
                         commandList[ii] = {
-                            argList: commandList[ii][1].trim(),
+                            argList: (commandList[ii][1] || '').trim(),
                             command: [key],
-                            description: commandList[ii][2].trim()
+                            description: commandList[ii][2] || ''
                         };
                     }
                 });
@@ -466,7 +534,7 @@
              *
              * will start interactive-mode
              */
-                local.global.local = local;
+                global.local = local;
                 local.replStart();
             };
             if (typeof local.replStart === 'function') {
@@ -518,7 +586,7 @@
         /*
          * this function will if error exists, then print it to stderr
          */
-            if (error && !local.global.__coverage__) {
+            if (error) {
                 console.error(error);
             }
             return error;
@@ -1101,6 +1169,7 @@
                 process.exit(!!error);
             });
         };
+
         local.cliDict.get = function () {
         /*
          * <fileRemote>
@@ -1116,6 +1185,7 @@
                 process.exit(!!error);
             });
         };
+
         local.cliDict.put = function () {
         /*
          * <fileRemote> <fileLocal> <commitMessage>
@@ -1129,6 +1199,7 @@
                 process.exit(!!error);
             });
         };
+
         local.cliDict.repo_create = function () {
         /*
          * <repoList>
@@ -1140,6 +1211,7 @@
                 process.exit(!!error);
             });
         };
+
         local.cliDict.repo_delete = function () {
         /*
          * <repoList>
@@ -1151,6 +1223,7 @@
                 process.exit(!!error);
             });
         };
+
         local.cliDict.touch = function () {
         /*
          * <fileRemoteList> <commitMessage>
@@ -1163,6 +1236,7 @@
                 process.exit(!!error);
             });
         };
+
         local.cliRun();
     }());
 }());

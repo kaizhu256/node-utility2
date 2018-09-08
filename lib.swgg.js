@@ -1,4 +1,13 @@
 #!/usr/bin/env node
+/*
+ * lib.swgg.js (2018.9.8)
+ * https://github.com/kaizhu256/node-swgg
+ * this zero-dependency package will run a virtual swagger-ui server with persistent-storage in the browser, that your webapp can use (in-place of a real backend), with a working web-demo
+ *
+ */
+
+
+
 /* istanbul instrument in package swgg */
 /* jslint-utility2 */
 /*jslint

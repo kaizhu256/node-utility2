@@ -48,5 +48,5 @@
         "test": "./npm_scripts.sh",
         "utility2": "./npm_scripts.sh"
     },
-    "version": "2018.9.1"
+    "version": "2018.9.8"
 }
