@@ -10,7 +10,7 @@
 # git fetch origin alpha beta master --tags
 # git ls-remote --heads origin
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/bb "touch" alpha
-# shGitAddTee npm test --mode-coverage --mode-test-case2=testCase_webpage_default,testCase_nop_default
+# shGitAddTee npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
 # shGitAddTee shUtility2DependentsSync
 # utility2 electron test.js --enable-logging
 # utility2 shReadmeTest example.js
@@ -229,12 +229,9 @@ shBuildApp () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -302,12 +299,9 @@ shBuildAppSwgg0 () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -415,12 +409,9 @@ shBuildCi () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -869,12 +860,9 @@ $HOME/node_modules/utility2}" || return $?
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -945,12 +933,9 @@ var packageJson, value;
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -964,10 +949,10 @@ var packageJson, value;
     ), function (match0, match1, match2, ii, text) {
         // preserve lineno
         match0 = text.slice(0, ii).replace((/.+/g), "") + match1
-            // parse "\" line-continuation
-            .replace((/(?:.*\\\n)+.*/g), function (match0) {
-                return match0.replace((/\\\n/g), "") + match0.replace((/.+/g), "");
-            });
+        // parse "\" line-continuation
+        .replace((/(?:.*\\\n)+.*/g), function (match0) {
+            return match0.replace((/\\\n/g), "") + match0.replace((/.+/g), "");
+        });
         // trim json-file
         if (match2.slice(-5) === ".json") {
             match0 = match0.trim();
@@ -1031,12 +1016,9 @@ $UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -1054,8 +1036,8 @@ var local, chunkList;
     process.stdin.on('end', function () {
         local.cryptoAesXxxCbcRawDecrypt({
             data: process.argv[2] === 'base64'
-                ? Buffer.concat(chunkList).toString()
-                : Buffer.concat(chunkList),
+            ? Buffer.concat(chunkList).toString()
+            : Buffer.concat(chunkList),
             key: process.argv[1],
             mode: process.argv[2]
         }, function (error, data) {
@@ -1078,12 +1060,9 @@ $UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -1645,12 +1624,9 @@ shEnvSanitize () {
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -1664,8 +1640,8 @@ shEnvSanitize () {
             (/(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/i).test(key) ||
             (/Crypt|Decrypt|Key|Pass|Private|Secret|Token/).test(key)
         )
-            ? "unset " + key + "; "
-            : "";
+        ? "unset " + key + "; "
+        : "";
     }).join("").trim());
 }());
 // </script>
@@ -1679,12 +1655,9 @@ $UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -1698,7 +1671,7 @@ var dataFrom, dataTo, local;
     dataFrom = require('fs').readFileSync(process.argv[2], 'utf8');
     dataTo = require('fs').readFileSync(process.argv[1], 'utf8');
     process.argv.slice(3).forEach(function (rgx) {
-        dataTo = local.stringCustomizeFromToRgx(dataFrom, dataTo, new RegExp(rgx));
+        dataTo = local.stringMerge(dataTo, dataFrom, new RegExp(rgx));
     });
     require('fs').writeFileSync(process.argv[2], dataTo);
 }());
@@ -1716,12 +1689,9 @@ $UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -1752,12 +1722,9 @@ $UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -1774,17 +1741,16 @@ var aa, bb, local, packageJson;
         new Date().toISOString().replace((/T.*?$/), '').replace((/-0?/g), '.')
     );
     bb = (process.argv[2] || '0.0.0').replace((/^(\d+?\.\d+?\.)(\d+)(\.*?)\$/), function (
-        match0,
+        ignore,
         match1,
         match2,
         match3
     ) {
-        match0 = match2;
-        return match1 + (Number(match0) + 1) + match3;
+        return match1 + (Number(match2) + 1) + match3;
     });
     packageJson.version = local.semverCompare(aa, bb) === 1
-        ? aa
-        : bb;
+    ? aa
+    : bb;
     console.error([aa, bb, packageJson.version]);
     // update package.json
     require('fs').writeFileSync('package.json', JSON.stringify(packageJson, null, 4) + '\n');
@@ -1899,12 +1865,6 @@ shGitCommandWithGithubToken () {(set -e
     git "$COMMAND" "$URL" "$@" 2>/dev/null
 )}
 
-shGitDateCommitted () {(set -e
-# this function will print the commit-date for commit $1
-# https://stackoverflow.com/questions/21363187/git-show-dates-in-utc
-    TZ=UTC git show --quiet --date='format-local:%Y-%m-%dT%H:%M:%SZ' --format="%cd" "$1"
-)}
-
 shGitGc () {(set -e
 # this function will gc unreachable .git objects
 # http://stackoverflow.com/questions/3797907/how-to-remove-unused-objects-from-a-git-repository
@@ -1991,6 +1951,13 @@ shGithubApiRateLimitGet () {(set -e
     curl -I https://api.github.com -H "Authorization: token $GITHUB_TOKEN"
 )}
 
+shGithubDateCommitted () {(set -e
+# this function will fetch the commit-date for the github-commit-url $1
+# example usage:
+# shGithubDateCommitted https://github.com/kaizhu256/node-utility2/commits/master
+    curl -Lfs "$1" | grep -m 1 -o -E "\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ"
+)}
+
 shGithubRepoBaseCreate () {(set -e
 # this function will create the base github-repo https://github.com/$GITHUB_REPO
 # example usage:
@@ -2023,12 +1990,9 @@ $UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -2160,12 +2124,9 @@ shGrepReplace () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -2206,12 +2167,9 @@ shHttpFileServer () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -2225,9 +2183,11 @@ shHttpFileServer () {(set -e
             // security - disable parent directory lookup
             require("path").resolve("/", require("url").parse(request.url).pathname).slice(1),
             function (error, data) {
-                response.end(error
+                response.end(
+                    error
                     ? error.stack
-                    : data);
+                    : data
+                );
             }
         );
     }).listen(process.env.PORT);
@@ -2255,12 +2215,9 @@ shImageToDataUri () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -2406,12 +2363,9 @@ shMain () {
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -2488,7 +2442,7 @@ local = {};
          * example usage:
             local.ajax({
                 data: 'hello world',
-                header: { 'x-header-hello': 'world' },
+                header: {'x-header-hello': 'world'},
                 method: 'POST',
                 url: '/index.html'
             }, function (error, xhr) {
@@ -2521,29 +2475,15 @@ local = {};
              * this function will validate and coerce/convert
              * ArrayBuffer, String, or Uint8Array -> Buffer or String
              */
-                // validate instanceof ArrayBuffer, String, or Uint8Array
-                if (!((isBrowser && (typeof bff === 'string' || bff instanceof ArrayBuffer)) ||
-                        (!isBrowser && Buffer.isBuffer(bff)))) {
-                    throw new Error(
-                        'ajax - xhr.response is not instanceof ArrayBuffer, String, or Buffer'
-                    );
-                }
-                // coerce to ArrayBuffer -> Buffer
+                // coerce ArrayBuffer -> Buffer
                 if (bff instanceof ArrayBuffer) {
-                    return new Uint8Array(bff);
+                    bff = new Uint8Array(bff);
                 }
-                // coerce/convert String -> Buffer or String
-                if (typeof bff === 'string') {
-                    return mode === 'string'
-                        ? bff
-                        : isBrowser
-                        ? new window.TextEncoder().encode(bff)
-                        : Buffer.from(bff);
+                // convert Buffer -> String
+                if (mode === \"string\" && typeof bff !== \"string\") {
+                    bff = String(bff);
                 }
-                // coerce/convert Buffer -> Buffer or String
-                return mode === 'string'
-                    ? String(bff)
-                    : bff;
+                return bff;
             };
             onEvent = function (event) {
             /*
@@ -2551,15 +2491,15 @@ local = {};
              */
                 if (event instanceof Error) {
                     xhr.error = xhr.error || event;
-                    xhr.onEvent({ type: 'error' });
+                    xhr.onEvent({type: \"error\"});
                     return;
                 }
                 // init statusCode
                 xhr.statusCode = (xhr.statusCode || xhr.status) | 0;
                 switch (event.type) {
-                case 'abort':
-                case 'error':
-                case 'load':
+                case \"abort\":
+                case \"error\":
+                case \"load\":
                     if (isDone) {
                         return;
                     }
@@ -2569,42 +2509,46 @@ local = {};
                     ajaxProgressUpdate();
                     // handle abort or error event
                     switch (!xhr.error && event.type) {
-                    case 'abort':
-                    case 'error':
-                        xhr.error = new Error('ajax - event ' + event.type);
+                    case \"abort\":
+                    case \"error\":
+                        xhr.error = new Error(\"ajax - event \" + event.type);
                         break;
-                    case 'load':
+                    case \"load\":
                         if (xhr.statusCode >= 400) {
-                            xhr.error = new Error('ajax - statusCode ' + xhr.statusCode);
+                            xhr.error = new Error(\"ajax - statusCode \" + xhr.statusCode);
                         }
                         break;
                     }
                     // debug statusCode / method / url
                     if (xhr.error) {
                         xhr.error.statusCode = xhr.statusCode;
-                        (local2.errorMessagePrepend || nop)(xhr.error, (isBrowser
-                            ? 'browser'
-                            : 'node') + ' - ' +
-                            xhr.statusCode + ' ' + xhr.method + ' ' + xhr.url + '\\n');
+                        (local2.errorMessagePrepend || nop)(
+                            xhr.error,
+                            (
+                                isBrowser
+                                ? \"browser\"
+                                : \"node\"
+                            ) + \" - \" +
+                                    xhr.statusCode + \" \" + xhr.method + \" \" + xhr.url + \"\\n\"
+                        );
                     }
                     // update responseHeaders
                     // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders
                     if (xhr.getAllResponseHeaders) {
                         xhr.getAllResponseHeaders().replace((
-                            /(.*?): *(.*?)\\r\\n/g
-                        ), function (match0, match1, match2) {
-                            match0 = match1;
-                            xhr.responseHeaders[match0.toLowerCase()] = match2;
+                            /(.*?):\\u0020*(.*?)\\r\\n/g
+                        ), function (ignore, match1, match2) {
+                            xhr.responseHeaders[match1.toLowerCase()] = match2;
                         });
                     }
                     // debug ajaxResponse
                     xhr.responseContentLength =
-                        (xhr.response && (xhr.response.byteLength || xhr.response.length)) | 0;
+                            (xhr.response && (xhr.response.byteLength || xhr.response.length)) | 0;
                     xhr.timeElapsed = Date.now() - xhr.timeStart;
                     if (xhr.modeDebug) {
-                        console.error('serverLog - ' + JSON.stringify({
+                        console.error(\"serverLog - \" + JSON.stringify({
                             time: new Date(xhr.timeStart).toISOString(),
-                            type: 'ajaxResponse',
+                            type: \"ajaxResponse\",
                             method: xhr.method,
                             url: xhr.url,
                             statusCode: xhr.statusCode,
@@ -2618,14 +2562,14 @@ local = {};
                     switch (xhr.response && xhr.responseType) {
                     // init responseText
                     // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseText
-                    case '':
-                    case 'text':
-                        if (typeof xhr.responseText === 'string') {
+                    case \"\":
+                    case \"text\":
+                        if (typeof xhr.responseText === \"string\") {
                             break;
                         }
-                        xhr.responseText = bufferValidateAndCoerce(xhr.response, 'string');
+                        xhr.responseText = bufferValidateAndCoerce(xhr.response, \"string\");
                         break;
-                    case 'arraybuffer':
+                    case \"arraybuffer\":
                         xhr.responseBuffer = bufferValidateAndCoerce(xhr.response);
                         break;
                     }
@@ -2663,7 +2607,7 @@ local = {};
              */
                 // init options
                 Object.keys(options).forEach(function (key) {
-                    if (key[0] !== '_') {
+                    if (key[0] !== \"_\") {
                         xhr[key] = options[key];
                     }
                 });
@@ -2671,8 +2615,8 @@ local = {};
                     corsForwardProxyHost: xhr.corsForwardProxyHost || local2.corsForwardProxyHost,
                     headers: xhr.headers || {},
                     location: xhr.location || (isBrowser && location) || {},
-                    method: xhr.method || 'GET',
-                    responseType: xhr.responseType || '',
+                    method: xhr.method || \"GET\",
+                    responseType: xhr.responseType || \"\",
                     timeout: xhr.timeout || local2.timeoutDefault || 30000
                 });
                 Object.keys(xhr.headers).forEach(function (key) {
@@ -2685,29 +2629,29 @@ local = {};
                 xhr.timeStart = xhr.timeStart || Date.now();
             };
             // init isBrowser
-            isBrowser = typeof window === 'object' &&
-                typeof window.XMLHttpRequest === 'function' &&
-                window.document &&
-                typeof window.document.querySelectorAll === 'function';
+            isBrowser = typeof window === \"object\" &&
+                    typeof window.XMLHttpRequest === \"function\" &&
+                    window.document &&
+                    typeof window.document.querySelectorAll === \"function\";
             // init onError
             if (local2.onErrorWithStack) {
                 onError = local2.onErrorWithStack(onError);
             }
             // init xhr - XMLHttpRequest
             xhr = isBrowser &&
-                !options.httpRequest &&
-                !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(options.url)) &&
-                new XMLHttpRequest();
+                    !options.httpRequest &&
+                    !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(options.url)) &&
+                    new XMLHttpRequest();
             // init xhr - http.request
             if (!xhr) {
-                xhr = (local2.urlParse || require('url').parse)(options.url);
+                xhr = (local2.urlParse || require(\"url\").parse)(options.url);
                 // init xhr
                 xhrInit();
                 // init xhr - http.request
                 xhr = (
                     options.httpRequest ||
-                        (isBrowser && local2.http.request) ||
-                        require(xhr.protocol.slice(0, -1)).request
+                    (isBrowser && local2.http.request) ||
+                    require(xhr.protocol.slice(0, -1)).request
                 )(xhr, function (responseStream) {
                 /*
                  * this function will read the responseStream
@@ -2718,38 +2662,40 @@ local = {};
                     xhr.responseStream = responseStream;
                     xhr.statusCode = responseStream.statusCode;
                     responseStream.dataLength = 0;
-                    responseStream.on('data', function (chunk) {
+                    responseStream.on(\"data\", function (chunk) {
                         chunkList.push(chunk);
                     });
-                    responseStream.on('end', function () {
+                    responseStream.on(\"end\", function () {
                         xhr.response = isBrowser
-                            ? chunkList[0]
-                            : Buffer.concat(chunkList);
+                        ? chunkList[0]
+                        : Buffer.concat(chunkList);
                         responseStream.dataLength = xhr.response.byteLength || xhr.response.length;
-                        xhr.onEvent({ type: 'load' });
+                        xhr.onEvent({type: \"load\"});
                     });
-                    responseStream.on('error', xhr.onEvent);
+                    responseStream.on(\"error\", xhr.onEvent);
                 });
                 xhr.abort = function () {
                 /*
                  * this function will abort the xhr-request
                  * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/abort
                  */
-                    xhr.onEvent({ type: 'abort' });
+                    xhr.onEvent({type: \"abort\"});
                 };
                 xhr.addEventListener = nop;
                 xhr.open = nop;
                 xhr.requestStream = xhr;
                 xhr.send = xhr.end;
                 xhr.setRequestHeader = nop;
-                xhr.on('error', onEvent);
+                xhr.on(\"error\", onEvent);
             }
             // init xhr
             xhrInit();
             // init timerTimeout
             xhr.timerTimeout = setTimeout(function () {
-                xhr.error = xhr.error || new Error('onTimeout - timeout-error - ' +
-                    xhr.timeout + ' ms - ' + 'ajax ' + xhr.method + ' ' + xhr.url);
+                xhr.error = xhr.error || new Error(
+                    \"onTimeout - timeout-error - \" +
+                    xhr.timeout + \" ms - \" + \"ajax \" + xhr.method + \" \" + xhr.url
+                );
                 xhr.abort();
                 // cleanup requestStream and responseStream
                 streamCleanup(xhr.requestStream);
@@ -2759,20 +2705,20 @@ local = {};
             local2.ajaxProgressCounter = local2.ajaxProgressCounter || 0;
             local2.ajaxProgressCounter += 1;
             // init event-handling
-            xhr.addEventListener('abort', xhr.onEvent);
-            xhr.addEventListener('error', xhr.onEvent);
-            xhr.addEventListener('load', xhr.onEvent);
-            xhr.addEventListener('loadstart', ajaxProgressUpdate);
-            xhr.addEventListener('progress', ajaxProgressUpdate);
+            xhr.addEventListener(\"abort\", xhr.onEvent);
+            xhr.addEventListener(\"error\", xhr.onEvent);
+            xhr.addEventListener(\"load\", xhr.onEvent);
+            xhr.addEventListener(\"loadstart\", ajaxProgressUpdate);
+            xhr.addEventListener(\"progress\", ajaxProgressUpdate);
             // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
             if (xhr.upload && xhr.upload.addEventListener) {
-                xhr.upload.addEventListener('progress', ajaxProgressUpdate);
+                xhr.upload.addEventListener(\"progress\", ajaxProgressUpdate);
             }
             // open url - corsForwardProxyHost
             if (local2.corsForwardProxyHostIfNeeded && local2.corsForwardProxyHostIfNeeded(xhr)) {
                 xhr.open(xhr.method, local2.corsForwardProxyHostIfNeeded(xhr));
-                xhr.setRequestHeader('forward-proxy-headers', JSON.stringify(xhr.headers));
-                xhr.setRequestHeader('forward-proxy-url', xhr.url);
+                xhr.setRequestHeader(\"forward-proxy-headers\", JSON.stringify(xhr.headers));
+                xhr.setRequestHeader(\"forward-proxy-url\", xhr.url);
             // open url - default
             } else {
                 xhr.open(xhr.method, xhr.url);
@@ -2811,12 +2757,14 @@ local = {};
             }
             error = (message && message.stack)
                 // if message is an error-object, then leave it as is
+            ? message
+            : new Error(
+                typeof message === \"string\"
+                // if message is a string, then leave it as is
                 ? message
-                : new Error(typeof message === 'string'
-                    // if message is a string, then leave it as is
-                    ? message
-                    // else JSON.stringify message
-                    : JSON.stringify(message));
+                // else JSON.stringify message
+                : JSON.stringify(message)
+            );
             // debug error
             local._debugAssertError = error;
             onError = onError || function (error) {
@@ -2852,24 +2800,24 @@ local = {};
          */
             var ii, mod3, text, uint24, uint6ToB64;
             // convert utf8-string bff to Uint8Array
-            if (typeof bff === 'string') {
-                bff = (typeof Buffer === 'function' && typeof Buffer.isBuffer === 'function')
-                    ? Buffer.from(bff)
-                    : new window.TextEncoder().encode(bff);
+            if (typeof bff === \"string\") {
+                bff = (typeof Buffer === \"function\" && typeof Buffer.isBuffer === \"function\")
+                ? Buffer.from(bff)
+                : new window.TextEncoder().encode(bff);
             }
             bff = bff || [];
-            text = '';
+            text = \"\";
             uint24 = 0;
             uint6ToB64 = function (uint6) {
                 return uint6 < 26
-                    ? uint6 + 65
-                    : uint6 < 52
-                    ? uint6 + 71
-                    : uint6 < 62
-                    ? uint6 - 4
-                    : uint6 === 62
-                    ? 43
-                    : 47;
+                ? uint6 + 65
+                : uint6 < 52
+                ? uint6 + 71
+                : uint6 < 62
+                ? uint6 - 4
+                : uint6 === 62
+                ? 43
+                : 47;
             };
             for (ii = 0; ii < bff.length; ii += 1) {
                 mod3 = ii % 3;
@@ -2884,7 +2832,7 @@ local = {};
                     uint24 = 0;
                 }
             }
-            return text.replace(/A(?=A\$|\$)/gm, '=');
+            return text.replace(/A(?=A\$|\$)/gm, \"=\");
         };
 
         local.base64ToBuffer = function (b64, mode) {
@@ -2893,11 +2841,11 @@ local = {};
          * https://gist.github.com/wang-bin/7332335
          */
             var bff, byte, chr, ii, jj, map64, mod4;
-            b64 = b64 || '';
+            b64 = b64 || \"\";
             bff = new Uint8Array(b64.length); // 3/4
             byte = 0;
             jj = 0;
-            map64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+            map64 = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\";
             mod4 = 0;
             for (ii = 0; ii < b64.length; ii += 1) {
                 chr = map64.indexOf(b64[ii]);
@@ -2922,7 +2870,7 @@ local = {};
         /*
          * this function will convert b64 to utf8-string
          */
-            return local.base64ToBuffer(b64, 'string');
+            return local.base64ToBuffer(b64, \"string\");
         };
 
         local.bufferValidateAndCoerce = function (bff, mode) {
@@ -2932,50 +2880,52 @@ local = {};
          */
             var isBuffer;
             // validate not typeof number
-            if (typeof bff === 'number') {
-                throw new Error('bufferValidateAndCoerce - value cannot be typeof number');
+            if (typeof bff === \"number\") {
+                throw new Error(\"bufferValidateAndCoerce - value cannot be typeof number\");
             }
-            bff = bff || '';
-            isBuffer = typeof Buffer === 'function' && typeof Buffer.isBuffer === 'function';
+            bff = bff || \"\";
+            isBuffer = typeof Buffer === \"function\" && typeof Buffer.isBuffer === \"function\";
             // convert String -> Buffer
-            if (typeof bff === 'string') {
-                return mode === 'string'
-                    ? bff
-                    : isBuffer
-                    ? Buffer.from(bff)
-                    : new window.TextEncoder().encode(bff);
+            if (typeof bff === \"string\") {
+                return mode === \"string\"
+                ? bff
+                : isBuffer
+                ? Buffer.from(bff)
+                : new window.TextEncoder().encode(bff);
             }
             if (bff instanceof ArrayBuffer) {
                 bff = new Uint8Array(bff);
             }
             // validate instanceof Uint8Array
             if (!(bff instanceof Uint8Array)) {
-                throw new Error('bufferValidateAndCoerce - value is not instanceof ' +
-                    'ArrayBuffer, String, or Uint8Array');
+                throw new Error(
+                    \"bufferValidateAndCoerce - value is not instanceof \" +
+                    \"ArrayBuffer, String, or Uint8Array\"
+                );
             }
             // coerce Uint8Array -> Buffer
             if (isBuffer) {
                 Object.setPrototypeOf(bff, Buffer.prototype);
             }
-            if (mode !== 'string') {
+            if (mode !== \"string\") {
                 return bff;
             }
             // convert Buffer -> String
             return isBuffer
-                ? String(bff)
-                : new window.TextDecoder().decode(bff);
+            ? String(bff)
+            : new window.TextDecoder().decode(bff);
         };
 
         local.childProcessSpawnWithUtility2 = function (script, onError) {
         /*
          * this function will run child_process.spawn, with lib.utility2.sh sourced
          */
-            require('child_process').spawn(
-                '. ' + (process.env.npm_config_dir_utility2 || __dirname) + '/lib.utility2.sh; ' +
-                    script,
-                { shell: true, stdio: ['ignore', 1, 2] }
-            ).on('exit', function (exitCode) {
-                onError(exitCode && Object.assign(new Error(), { exitCode: exitCode }));
+            require(\"child_process\").spawn(
+                \". \" + (process.env.npm_config_dir_utility2 || __dirname) + \"/lib.utility2.sh; \" +
+                        script,
+                {shell: true, stdio: [\"ignore\", 1, 2]}
+            ).on(\"exit\", function (exitCode) {
+                onError(exitCode && Object.assign(new Error(), {exitCode: exitCode}));
             });
         };
 
@@ -2986,12 +2936,12 @@ local = {};
             data = new Uint8Array([1,2,3]);
             key = '0123456789abcdef0123456789abcdef';
             mode = null;
-            local.cryptoAesXxxCbcRawEncrypt({ data: data, key: key, mode: mode }, function (
+            local.cryptoAesXxxCbcRawEncrypt({data: data, key: key, mode: mode}, function (
                 error,
                 data
             ) {
                 console.assert(!error, error);
-                local.cryptoAesXxxCbcRawDecrypt({ data: data, key: key, mode: mode }, console.log);
+                local.cryptoAesXxxCbcRawDecrypt({data: data, key: key, mode: mode}, console.log);
             });
          */
             var cipher, crypto, data, ii, iv, key;
@@ -3002,7 +2952,7 @@ local = {};
             }
             data = options.data;
             // base64
-            if (options.mode === 'base64') {
+            if (options.mode === \"base64\") {
                 data = local.base64ToBuffer(data);
             }
             // normalize data
@@ -3013,12 +2963,12 @@ local = {};
             iv = data.subarray(0, 16);
             // optimization - create resized-view of data
             data = data.subarray(16);
-            crypto = typeof window === 'object' && window.crypto;
-            if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === 'function')) {
+            crypto = typeof window === \"object\" && window.crypto;
+            if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === \"function\")) {
                 setTimeout(function () {
-                    crypto = require('crypto');
+                    crypto = require(\"crypto\");
                     cipher = crypto.createDecipheriv(
-                        'aes-' + (8 * key.byteLength) + '-cbc',
+                        \"aes-\" + (8 * key.byteLength) + \"-cbc\",
                         key,
                         iv
                     );
@@ -3026,10 +2976,10 @@ local = {};
                 });
                 return;
             }
-            crypto.subtle.importKey('raw', key, {
-                name: 'AES-CBC'
-            }, false, ['decrypt']).then(function (key) {
-                crypto.subtle.decrypt({ iv: iv, name: 'AES-CBC' }, key, data).then(function (data) {
+            crypto.subtle.importKey(\"raw\", key, {
+                name: \"AES-CBC\"
+            }, false, [\"decrypt\"]).then(function (key) {
+                crypto.subtle.decrypt({iv: iv, name: \"AES-CBC\"}, key, data).then(function (data) {
                     onError(null, new Uint8Array(data));
                 }).catch(onError);
             }).catch(onError);
@@ -3042,12 +2992,12 @@ local = {};
             data = new Uint8Array([1,2,3]);
             key = '0123456789abcdef0123456789abcdef';
             mode = null;
-            local.cryptoAesXxxCbcRawEncrypt({ data: data, key: key, mode: mode }, function (
+            local.cryptoAesXxxCbcRawEncrypt({data: data, key: key, mode: mode}, function (
                 error,
                 data
             ) {
                 console.assert(!error, error);
-                local.cryptoAesXxxCbcRawDecrypt({ data: data, key: key, mode: mode }, console.log);
+                local.cryptoAesXxxCbcRawDecrypt({data: data, key: key, mode: mode}, console.log);
             });
          */
             var cipher, crypto, data, ii, iv, key;
@@ -3059,23 +3009,23 @@ local = {};
             data = options.data;
             // init iv
             iv = new Uint8Array((((data.byteLength) >> 4) << 4) + 32);
-            crypto = typeof window === 'object' && window.crypto;
-            if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === 'function')) {
+            crypto = typeof window === \"object\" && window.crypto;
+            if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === \"function\")) {
                 setTimeout(function () {
-                    crypto = require('crypto');
+                    crypto = require(\"crypto\");
                     // init iv
                     iv.set(crypto.randomBytes(16));
                     cipher = crypto.createCipheriv(
-                        'aes-' + (8 * key.byteLength) + '-cbc',
+                        \"aes-\" + (8 * key.byteLength) + \"-cbc\",
                         key,
                         iv.subarray(0, 16)
                     );
                     data = cipher.update(data);
                     iv.set(data, 16);
                     iv.set(cipher.final(), 16 + data.byteLength);
-                    if (options.mode === 'base64') {
+                    if (options.mode === \"base64\") {
                         iv = local.base64FromBuffer(iv);
-                        iv += '\\n';
+                        iv += \"\\n\";
                     }
                     onError(null, iv);
                 });
@@ -3083,18 +3033,18 @@ local = {};
             }
             // init iv
             iv.set(crypto.getRandomValues(new Uint8Array(16)));
-            crypto.subtle.importKey('raw', key, {
-                name: 'AES-CBC'
-            }, false, ['encrypt']).then(function (key) {
+            crypto.subtle.importKey(\"raw\", key, {
+                name: \"AES-CBC\"
+            }, false, [\"encrypt\"]).then(function (key) {
                 crypto.subtle.encrypt({
                     iv: iv.subarray(0, 16),
-                    name: 'AES-CBC'
+                    name: \"AES-CBC\"
                 }, key, data).then(function (data) {
                     iv.set(new Uint8Array(data), 16);
                     // base64
-                    if (options.mode === 'base64') {
+                    if (options.mode === \"base64\") {
                         iv = local.base64FromBuffer(iv);
-                        iv += '\\n';
+                        iv += \"\\n\";
                     }
                     onError(null, iv);
                 }).catch(onError);
@@ -3114,13 +3064,13 @@ local = {};
          * if options === 'json', then try to JSON.parse the file or return null
          */
             try {
-                return options === 'json'
-                    ? JSON.parse(local.fs.readFileSync(file, 'utf8'))
-                    : local.fs.readFileSync(file, options);
+                return options === \"json\"
+                ? JSON.parse(local.fs.readFileSync(file, \"utf8\"))
+                : local.fs.readFileSync(file, options);
             } catch (ignore) {
-                return options === 'json'
-                    ? null
-                    : '';
+                return options === \"json\"
+                ? {}
+                : \"\";
             }
         };
 
@@ -3129,9 +3079,9 @@ local = {};
          * this function will synchronously 'rm -fr' the dir
          */
             local.child_process.execFileSync(
-                'rm',
-                ['-fr', local.path.resolve(process.cwd(), dir)],
-                { stdio: ['ignore', 1, 2] }
+                \"rm\",
+                [\"-fr\", local.path.resolve(process.cwd(), dir)],
+                {stdio: [\"ignore\", 1, 2]}
             );
         };
 
@@ -3139,21 +3089,21 @@ local = {};
         /*
          * this function will synchronously 'mkdir -p' and write the data to file
          */
-            if (mode === 'noWrite') {
+            if (mode === \"noWrite\") {
                 return;
             }
             // try to write to file
             try {
-                require('fs').writeFileSync(file, data);
+                require(\"fs\").writeFileSync(file, data);
             } catch (ignore) {
                 // mkdir -p
-                require('child_process').spawnSync(
-                    'mkdir',
-                    ['-p', require('path').dirname(file)],
-                    { stdio: ['ignore', 1, 2] }
+                require(\"child_process\").spawnSync(
+                    \"mkdir\",
+                    [\"-p\", require(\"path\").dirname(file)],
+                    {stdio: [\"ignore\", 1, 2]}
                 );
                 // re-write to file
-                require('fs').writeFileSync(file, data);
+                require(\"fs\").writeFileSync(file, data);
             }
         };
 
@@ -3169,8 +3119,8 @@ local = {};
          * this function will deep-copy obj
          */
             return obj === undefined
-                ? undefined
-                : JSON.parse(JSON.stringify(obj));
+            ? undefined
+            : JSON.parse(JSON.stringify(obj));
         };
 
         local.jsonStringifyOrdered = function (obj, replacer, space) {
@@ -3185,9 +3135,11 @@ local = {};
              * with object-keys sorted and circular-references removed
              */
                 // if obj is not an object or function, then JSON.stringify as normal
-                if (!(obj &&
-                        typeof obj === 'object' &&
-                        typeof obj.toJSON !== 'function')) {
+                if (!(
+                    obj &&
+                    typeof obj === \"object\" &&
+                    typeof obj.toJSON !== \"function\"
+                )) {
                     return JSON.stringify(obj);
                 }
                 // ignore circular-reference
@@ -3197,29 +3149,29 @@ local = {};
                 circularList.push(obj);
                 // if obj is an array, then recurse its items
                 if (Array.isArray(obj)) {
-                    return '[' + obj.map(function (obj) {
+                    return \"[\" + obj.map(function (obj) {
                         // recurse
                         tmp = stringify(obj);
-                        return typeof tmp === 'string'
-                            ? tmp
-                            : 'null';
-                    }).join(',') + ']';
+                        return typeof tmp === \"string\"
+                        ? tmp
+                        : \"null\";
+                    }).join(\",\") + \"]\";
                 }
                 // if obj is not an array, then recurse its items with object-keys sorted
-                return '{' + Object.keys(obj)
+                return \"{\" + Object.keys(obj)
                     // sort object-keys
-                    .sort()
-                    .map(function (key) {
+                .sort()
+                .map(function (key) {
                         // recurse
-                        tmp = stringify(obj[key]);
-                        if (typeof tmp === 'string') {
-                            return JSON.stringify(key) + ':' + tmp;
-                        }
-                    })
-                    .filter(function (obj) {
-                        return typeof obj === 'string';
-                    })
-                    .join(',') + '}';
+                    tmp = stringify(obj[key]);
+                    if (typeof tmp === \"string\") {
+                        return JSON.stringify(key) + \":\" + tmp;
+                    }
+                })
+                .filter(function (obj) {
+                    return typeof obj === \"string\";
+                })
+                .join(\",\") + \"}\";
             };
             circularList = [];
             // try to derefernce all properties in obj
@@ -3229,10 +3181,14 @@ local = {};
                 } catch (ignore) {
                 }
             }());
-            return JSON.stringify((typeof obj === 'object' && obj)
+            return JSON.stringify(
+                (typeof obj === \"object\" && obj)
                 // recurse
                 ? JSON.parse(stringify(obj))
-                : obj, replacer, space);
+                : obj,
+                replacer,
+                space
+            );
         };
 
         local.moduleDirname = function (module, modulePathList) {
@@ -3241,25 +3197,25 @@ local = {};
          */
             var result;
             // search process.cwd()
-            if (!module || module === '.' || module.indexOf('/') >= 0) {
-                return require('path').resolve(process.cwd(), module || '');
+            if (!module || module === \".\" || module.indexOf(\"/\") >= 0) {
+                return require(\"path\").resolve(process.cwd(), module || \"\");
             }
             // search modulePathList
-            ['node_modules']
-                .concat(modulePathList)
-                .concat(require('module').globalPaths)
-                .concat([process.env.HOME + '/node_modules', '/usr/local/lib/node_modules'])
-                .some(function (modulePath) {
-                    try {
-                        result = require('path').resolve(process.cwd(), modulePath + '/' + module);
-                        result = require('fs').statSync(result).isDirectory() && result;
-                        return result;
-                    } catch (ignore) {
-                        result = null;
-                    }
+            [\"node_modules\"]
+            .concat(modulePathList)
+            .concat(require(\"module\").globalPaths)
+            .concat([process.env.HOME + \"/node_modules\", \"/usr/local/lib/node_modules\"])
+            .some(function (modulePath) {
+                try {
+                    result = require(\"path\").resolve(process.cwd(), modulePath + \"/\" + module);
+                    result = require(\"fs\").statSync(result).isDirectory() && result;
                     return result;
-                });
-            return result || '';
+                } catch (ignore) {
+                    result = null;
+                }
+                return result;
+            });
+            return result || \"\";
         };
 
         local.nop = function () {
@@ -3288,7 +3244,7 @@ local = {};
                 }
                 // init dict[key] to default value defaults[key]
                 switch (dict2) {
-                case '':
+                case \"\":
                 case null:
                 case undefined:
                     dict[key] = defaults2;
@@ -3296,11 +3252,13 @@ local = {};
                 }
                 // if dict2 and defaults2 are both non-null and non-array objects,
                 // then recurse with dict2 and defaults2
-                if (depth > 1 &&
+                if (
+                    depth > 1 &&
                         // dict2 is a non-null and non-array object
-                        typeof dict2 === 'object' && dict2 && !Array.isArray(dict2) &&
+                    typeof dict2 === \"object\" && dict2 && !Array.isArray(dict2) &&
                         // defaults2 is a non-null and non-array object
-                        typeof defaults2 === 'object' && defaults2 && !Array.isArray(defaults2)) {
+                    typeof defaults2 === \"object\" && defaults2 && !Array.isArray(defaults2)
+                ) {
                     // recurse
                     local.objectSetDefault(dict2, defaults2, depth - 1);
                 }
@@ -3313,7 +3271,7 @@ local = {};
          * this function will recursively set overrides for items in dict
          */
             dict = dict || {};
-            env = env || (typeof process === 'object' && process.env) || {};
+            env = env || (typeof process === \"object\" && process.env) || {};
             overrides = overrides || {};
             Object.keys(overrides).forEach(function (key) {
                 var dict2, overrides2;
@@ -3324,20 +3282,22 @@ local = {};
                 }
                 // if both dict2 and overrides2 are non-null and non-array objects,
                 // then recurse with dict2 and overrides2
-                if (depth > 1 &&
+                if (
+                    depth > 1 &&
                         // dict2 is a non-null and non-array object
-                        typeof dict2 === 'object' && dict2 && !Array.isArray(dict2) &&
+                    typeof dict2 === \"object\" && dict2 && !Array.isArray(dict2) &&
                         // overrides2 is a non-null and non-array object
-                        typeof overrides2 === 'object' && overrides2 &&
-                        !Array.isArray(overrides2)) {
+                    typeof overrides2 === \"object\" && overrides2 &&
+                    !Array.isArray(overrides2)
+                ) {
                     local.objectSetOverride(dict2, overrides2, depth - 1, env);
                     return;
                 }
                 // else set dict[key] with overrides[key]
                 dict[key] = dict === env
                     // if dict is env, then overrides falsy-value with empty-string
-                    ? overrides2 || ''
-                    : overrides2;
+                ? overrides2 || \"\"
+                : overrides2;
             });
             return dict;
         };
@@ -3368,13 +3328,16 @@ local = {};
          * and append the current stack to any error
          */
             var onError2, stack;
-            stack = new Error().stack.replace((/(.*?)\\n.*?\$/m), '\$1');
+            stack = new Error().stack.replace((/(.*?)\\n.*?\$/m), \"\$1\");
             onError2 = function (error, data, meta) {
-                if (error &&
-                        error !== local.errorDefault &&
-                        String(error.stack).indexOf(stack.split('\\n')[2]) < 0) {
+                if (
+                    error &&
+                    typeof error.stack === \"string\" &&
+                    error !== local.errorDefault &&
+                    String(error.stack).indexOf(stack.split(\"\\n\")[2]) < 0
+                ) {
                     // append the current stack to error.stack
-                    error.stack += '\\n' + stack;
+                    error.stack += \"\\n\" + stack;
                 }
                 onError(error, data, meta);
             };
@@ -3393,10 +3356,10 @@ local = {};
             options.onNext = local.onErrorWithStack(function (error, data, meta) {
                 try {
                     options.modeNext += (error && !options.modeErrorIgnore)
-                        ? 1000
-                        : 1;
+                    ? 1000
+                    : 1;
                     if (options.modeDebug) {
-                        console.error('onNext - ' + JSON.stringify({
+                        console.error(\"onNext - \" + JSON.stringify({
                             modeNext: options.modeNext,
                             errorMessage: error && error.message
                         }));
@@ -3435,7 +3398,7 @@ local = {};
                 onParallel.counter -= 1;
                 // validate counter
                 if (!(onParallel.counter >= 0 || error || onParallel.error)) {
-                    error = new Error('invalid onParallel.counter = ' + onParallel.counter);
+                    error = new Error(\"invalid onParallel.counter = \" + onParallel.counter);
                 // ensure onError is run only once
                 } else if (onParallel.counter < 0) {
                     return;
@@ -3520,63 +3483,73 @@ local = {};
          * https://semver.org/#spec-item-11
          */
             return [aa, bb].map(function (aa) {
-                aa = aa.split('-');
-                return [aa[0], aa.slice(1).join('-') || '\\u00ff'].map(function (aa) {
-                    return aa.split('.').map(function (aa) {
-                        return ('0000000000000000' + aa).slice(-16);
-                    }).join('.');
-                }).join('-');
+                aa = aa.split(\"-\");
+                return [aa[0], aa.slice(1).join(\"-\") || \"\\u00ff\"].map(function (aa) {
+                    return aa.split(\".\").map(function (aa) {
+                        return (\"0000000000000000\" + aa).slice(-16);
+                    }).join(\".\");
+                }).join(\"-\");
             }).reduce(function (aa, bb) {
                 return aa === bb
-                    ? 0
-                    : aa < bb
-                    ? -1
-                    : 1;
+                ? 0
+                : aa < bb
+                ? -1
+                : 1;
             });
         };
 
-        local.stringCustomizeFromToRgx = function (textFrom, textTo, rgx) {
+        local.stringReplaceLiteral = function (text, aa, bb) {
         /*
-         * this function will customize a segment of textTo with a segment of textFrom,
-         * with the given rgx
+         * this function will replace in text, the literal-string aa -> bb
          */
-            textFrom.replace(rgx, function (match0) {
-                textTo.replace(rgx, function (match1) {
-                    textTo = local.stringReplaceLiteral(textTo, match1, match0);
+            text.replace(aa, function (ignore, ii) {
+                text = text.slice(0, ii) + bb + text.slice(ii + aa.length);
+            });
+            return text;
+        };
+
+        local.stringMerge = function (str1, str2, rgx) {
+        /*
+         * this function will merge str2 -> str1, for sections where both match rgx
+         */
+            str2.replace(rgx, function (match2) {
+                str1.replace(rgx, function (match1) {
+                    str1 = local.stringReplaceLiteral(str1, match1, match2);
                 });
             });
-            return textTo;
+            return str1;
         };
 
         local.templateRenderMyApp = function (template, options) {
         /*
          * this function will render the my-app-lite template with the given options.packageJson
          */
-            options.packageJson = local.fsReadFileOrEmptyStringSync('package.json', 'json');
+            options.packageJson = local.fsReadFileOrEmptyStringSync(\"package.json\", \"json\");
             local.objectSetDefault(options.packageJson, {
-                nameLib: options.packageJson.name.replace((/\\W/g), '_'),
-                repository: { url: 'https://github.com/kaizhu256/node-' +
-                    options.packageJson.name + '.git' }
+                nameLib: options.packageJson.name.replace((/\\W/g), \"_\"),
+                repository: {
+                    url: \"https://github.com/kaizhu256/node-\" +
+                            options.packageJson.name + \".git\"
+                }
             }, 2);
             options.githubRepo = options.packageJson.repository.url
-                .replace((/\\.git\$/), '').split('/').slice(-2);
+            .replace((/\\.git\$/), \"\").split(\"/\").slice(-2);
             template = template.replace(
                 (/kaizhu256(\\.github\\.io\\/|%252F|\\/)/g),
-                options.githubRepo[0] + ('\$1')
+                options.githubRepo[0] + (\"\$1\")
             );
             template = template.replace((/node-my-app-lite/g), options.githubRepo[1]);
             template = template.replace(
                 (/\\bh1-my-app\\b/g),
                 options.packageJson.nameHeroku ||
-                    ('h1-' + options.packageJson.nameLib.replace((/_/g), '-'))
+                        (\"h1-\" + options.packageJson.nameLib.replace((/_/g), \"-\"))
             );
             template = template.replace((/my-app-lite/g), options.packageJson.name);
             template = template.replace((/my_app/g), options.packageJson.nameLib);
             template = template.replace((
                 /\\{\\{packageJson\\.(\\S+)\\}\\}/g
-            ), function (match0, match1) {
-                match0 = match1;
-                return options.packageJson[match0];
+            ), function (ignore, match1) {
+                return options.packageJson[match1];
             });
             return template;
         };
@@ -3653,12 +3626,9 @@ $UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -3731,12 +3701,9 @@ $UTILITY2_MACRO_JS
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -3779,12 +3746,9 @@ shNpmDeprecateAlias () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -3829,12 +3793,9 @@ shNpmInstallWithPeerDependencies () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -3846,10 +3807,10 @@ var dict;
     "use strict";
     dict = {};
     require("fs").readFileSync(process.argv[1], "utf8").replace((
-        / UNMET PEER DEPENDENCY (\S+)/g
-    ), function (match0, match1) {
-        match0 = match1.split("@");
-        dict[match0[0]] = dict[match0[0]] || (match0[1] || "").trim();
+        /\u0020UNMET\u0020PEER\u0020DEPENDENCY\u0020(\S+)/g
+    ), function (ignore, match1) {
+        match1 = match1.split("@");
+        dict[match1[0]] = dict[match1[0]] || (match1[1] || "").trim();
     });
     Object.keys(dict).forEach(function (key) {
         console.error("npm install " + key + "@" + dict[key]);
@@ -3872,12 +3833,9 @@ shNpmPackageCliHelpCreate () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -3984,12 +3942,9 @@ shNpmPublishAlias () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -4116,12 +4071,9 @@ shReadmeLinkValidate () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -4135,11 +4087,11 @@ var request;
         /\b(http|https):\/\/.*?[)\]]/g
     ), function (match0, match1) {
         match0 = match0
-            .slice(0, -1)
-            .replace("\u0022", "")
-            .replace("\u0027", "")
-            .replace((/\bbeta\b|\bmaster\b/g), "alpha")
-            .replace((/\/build\//g), "/build..alpha..travis-ci.org/");
+        .slice(0, -1)
+        .replace("\u0022", "")
+        .replace("\u0027", "")
+        .replace((/\bbeta\b|\bmaster\b/g), "alpha")
+        .replace((/\/build\//g), "/build..alpha..travis-ci.org/");
         if (process.env.npm_package_private && match0.indexOf("https://github.com/") === 0) {
             return;
         }
@@ -4275,12 +4227,9 @@ shReplClient () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,
@@ -4362,12 +4311,9 @@ shRunWithScreenshotTxt () {(set -e
 // <script>
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
     single: true,

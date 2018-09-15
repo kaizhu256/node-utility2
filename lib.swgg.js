@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
- * swgg
- * https://github.com/kaizhu256/node-swgg/blob/beta/lib.swgg.js
+ * lib.swgg.js (2018.9.8)
+ * https://github.com/kaizhu256/node-swgg
  * this zero-dependency package will run a virtual swagger-ui server with persistent-storage in the browser, that your webapp can use (in-place of a real backend), with a working web-demo
  *
  */
@@ -11,28 +11,22 @@
 /* istanbul instrument in package swgg */
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
-    debug: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
-    single: true,
     this: true,
-    white: true
 */
 /*global global*/
 (function () {
-    'use strict';
+    "use strict";
     var local;
 
 
 
-    // run shared js-env code - init-before
     /* istanbul ignore next */
+    // run shared js-env code - init-before
     (function () {
         // init debug_inline
         (function () {
@@ -55,72 +49,76 @@
         // init local
         local = {};
         // init isBrowser
-        local.isBrowser = typeof window === 'object' &&
-            typeof window.XMLHttpRequest === 'function' &&
-            window.document &&
-            typeof window.document.querySelectorAll === 'function';
+        local.isBrowser = typeof window === "object" &&
+                typeof window.XMLHttpRequest === "function" &&
+                window.document &&
+                typeof window.document.querySelectorAll === "function";
         // init global
         local.global = local.isBrowser
-            ? window
-            : global;
+        ? window
+        : global;
         // re-init local
         local = local.global.utility2_rollup ||
-            // local.global.utility2_rollup_old || require('./assets.utility2.rollup.js') ||
-            local;
+                // local.global.utility2_rollup_old || require("./assets.utility2.rollup.js") ||
+                local;
         // init exports
         if (local.isBrowser) {
             local.global.utility2_swgg = local;
         } else {
             // require builtins
-            // local.assert = require('assert');
-            local.buffer = require('buffer');
-            local.child_process = require('child_process');
-            local.cluster = require('cluster');
-            local.crypto = require('crypto');
-            local.dgram = require('dgram');
-            local.dns = require('dns');
-            local.domain = require('domain');
-            local.events = require('events');
-            local.fs = require('fs');
-            local.http = require('http');
-            local.https = require('https');
-            local.net = require('net');
-            local.os = require('os');
-            local.path = require('path');
-            local.querystring = require('querystring');
-            local.readline = require('readline');
-            local.repl = require('repl');
-            local.stream = require('stream');
-            local.string_decoder = require('string_decoder');
-            local.timers = require('timers');
-            local.tls = require('tls');
-            local.tty = require('tty');
-            local.url = require('url');
-            local.util = require('util');
-            local.vm = require('vm');
-            local.zlib = require('zlib');
+            // local.assert = require("assert");
+            local.buffer = require("buffer");
+            local.child_process = require("child_process");
+            local.cluster = require("cluster");
+            local.crypto = require("crypto");
+            local.dgram = require("dgram");
+            local.dns = require("dns");
+            local.domain = require("domain");
+            local.events = require("events");
+            local.fs = require("fs");
+            local.http = require("http");
+            local.https = require("https");
+            local.net = require("net");
+            local.os = require("os");
+            local.path = require("path");
+            local.querystring = require("querystring");
+            local.readline = require("readline");
+            local.repl = require("repl");
+            local.stream = require("stream");
+            local.string_decoder = require("string_decoder");
+            local.timers = require("timers");
+            local.tls = require("tls");
+            local.tty = require("tty");
+            local.url = require("url");
+            local.util = require("util");
+            local.vm = require("vm");
+            local.zlib = require("zlib");
             module.exports = local;
             module.exports.__dirname = __dirname;
         }
         // init lib main
-        local.local = local.swgg = local;
+        local.local = local;
+        local.swgg = local;
 
 
 
         /* validateLineSortedReset */
         // init lib utility2
-        local.utility2 = local.global.utility2_rollup || (local.isBrowser
+        local.utility2 = local.global.utility2_rollup || (
+            local.isBrowser
             ? local.global.utility2
             : (function () {
                 try {
-                    return require('./lib.utility2.js');
+                    return require("./lib.utility2.js");
                 } catch (ignore) {
-                    return require('./assets.utility2.rollup.js');
+                    return require("./assets.utility2.rollup.js");
                 }
-            }()));
+            }())
+        );
         local.utility2.objectSetDefault(local, local.utility2);
         // init lib swgg
-        local.global.swgg = local.utility2.swgg = local;
+        local.global.swgg = local;
+        local.utility2.swgg = local;
         /* validateLineSortedReset */
         // init assets and templates
 // https://github.com/json-schema-org/json-schema-org.github.io/blob/eb4805e94c3e27932352344767d19cc4c3c3381c/draft-04/schema
@@ -1248,7 +1246,7 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
 /* jslint-utility2 */\n\
 /*csslint\n\
 */\n\
-/* jslint-ignore-block-beg */\n\
+/* csslint ignore:start */\n\
 .swggUiContainer,\n\
 .swggUiContainer * {\n\
     border: 0;\n\
@@ -1268,7 +1266,7 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
 .swggUiContainer .description > *:first-child {\n\
     margin-top: 0;\n\
 }\n\
-/* jslint-ignore-block-end */\n\
+/* csslint ignore:end */\n\
 /* validateLineSortedReset */\n\
 /* general */\n\
 .swggUiContainer code,\n\
@@ -1618,18 +1616,14 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
 }) + '\
 </div>\n\
 <script>\n\
+/* jslint-utility2 */\n\
 /*jslint\n\
-    es6: true,\n\
     bitwise: true,\n\
     browser: true,\n\
     for: true,\n\
-    maxerr: 4,\n\
-    maxlen: 100,\n\
     multivar: true,\n\
     node: true,\n\
-    single: true,\n\
-    this: true,\n\
-    white: true\n\
+    this: true\n\
 */\n\
 /*global global*/\n\
 // init domOnEventMediaHotkeys\n\
@@ -1642,7 +1636,7 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
     if (window.domOnEventMediaHotkeys) {\n\
         return;\n\
     }\n\
-    onEvent = window.domOnEventMediaHotkeys = function (event) {\n\
+    window.domOnEventMediaHotkeys = function (event) {\n\
         var media;\n\
         if (event === "init") {\n\
             Array.from(document.querySelectorAll(\n\
@@ -1706,7 +1700,9 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
         }\n\
         event.preventDefault();\n\
     };\n\
-    input = window.domOnEventMediaHotkeysInput = document.createElement("button");\n\
+    onEvent = window.domOnEventMediaHotkeys;\n\
+    input = document.createElement("button");\n\
+    window.domOnEventMediaHotkeysInput = input;\n\
     input.style = "border:0;height:0;margin:0;padding:0;position:fixed;width:0;z-index:-1;";\n\
     input.addEventListener("click", onEvent);\n\
     input.addEventListener("keydown", onEvent);\n\
@@ -1714,8 +1710,8 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
     onEvent("init");\n\
 }());\n\
 document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
-    ((/\\bmodeSwaggerJsonUrl=([^&]+)/g).exec(location.search) || {})[1] ||\n\
-    "assets.swgg.swagger.json";\n\
+        ((/\\bmodeSwaggerJsonUrl=([^&]+)/g).exec(location.search) || {})[1] ||\n\
+        "assets.swgg.swagger.json";\n\
 </script>\n\
 <script src="assets.utility2.rollup.js"></script>\n\
 <script>\n\
@@ -1729,20 +1725,20 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
 </html>\n\
 ');
 /* jslint-ignore-block-end */
-        local.assetsDict['/assets.swgg.swagger.schema.json'] = local.jsonStringifyOrdered(
+        local.assetsDict["/assets.swgg.swagger.schema.json"] = local.jsonStringifyOrdered(
             local.objectSetOverride(
-                JSON.parse(local.assetsDict['/assets.swgg.json-schema.json'].replace(
+                JSON.parse(local.assetsDict["/assets.swgg.json-schema.json"].replace(
                     (/"\$ref":".*?#/g),
-                    '"$ref":"http://json-schema.org/draft-04/schema#'
+                    "\"$ref\":\"http://json-schema.org/draft-04/schema#"
                 )),
-                JSON.parse(local.assetsDict['/assets.swgg.schema.json'].replace(
+                JSON.parse(local.assetsDict["/assets.swgg.schema.json"].replace(
                     (/"\$ref":".*?#/g),
-                    '"$ref":"http://json-schema.org/draft-04/schema#'
+                    "\"$ref\":\"http://json-schema.org/draft-04/schema#"
                 )),
                 2
             )
         );
-        local.swaggerSchemaJson = JSON.parse(local.assetsDict['/assets.swgg.swagger.schema.json']);
+        local.swaggerSchemaJson = JSON.parse(local.assetsDict["/assets.swgg.swagger.schema.json"]);
     }());
 
 
@@ -1754,7 +1750,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
          * this function will send a swagger-api ajax-request with the operation self
          */
             var tmp;
-            local.objectSetDefault(options, { data: '', operation: self, paramDict: {}, url: '' });
+            local.objectSetDefault(options, {data: "", operation: self, paramDict: {}, url: ""});
             if (options.modeDefault) {
                 local.normalizeSwaggerParamDict(options);
             }
@@ -1767,23 +1763,23 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     paramDict: local.jsonCopy(options.paramDict)
                 }).paramDict,
                 dataReadonlyRemove: options.paramDict,
-                prefix: ['operation', self._methodPath],
+                prefix: ["operation", self._methodPath],
                 parameters: self.parameters,
                 swaggerJson: local.swaggerJson
             })[0];
             // init options-defaults
             local.objectSetDefault(options, {
-                inForm: self._consumes0 === 'multipart/form-data'
-                    ? new local.FormData()
-                    : '',
+                inForm: self._consumes0 === "multipart/form-data"
+                ? new local.FormData()
+                : "",
                 inHeader: {},
-                inPath: self._path.replace((/#.*?$/), ''),
-                inQuery: '',
+                inPath: self._path.replace((/#.*?$/), ""),
+                inQuery: "",
                 headers: {},
                 method: self._method,
-                responseType: self._consumes0.indexOf('application/octet-stream') === 0
-                    ? 'arraybuffer'
-                    : ''
+                responseType: self._consumes0.indexOf("application/octet-stream") === 0
+                ? "arraybuffer"
+                : ""
             });
             // init paramDict
             self.parameters.forEach(function (schemaP) {
@@ -1792,72 +1788,75 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     return;
                 }
                 // serialize array
-                if (Array.isArray(tmp) && schemaP.in !== 'body') {
-                    switch (schemaP.collectionFormat || schemaP['x-swgg-collectionFormat']) {
-                    case 'json':
+                if (Array.isArray(tmp) && schemaP.in !== "body") {
+                    switch (schemaP.collectionFormat || schemaP["x-swgg-collectionFormat"]) {
+                    case "json":
                         tmp = JSON.stringify(tmp);
                         break;
-                    case 'multi':
+                    case "multi":
                         tmp.forEach(function (value) {
-                            options[schemaP.in === 'formData'
-                                ? 'inForm'
-                                : 'inQuery'] += '&' + encodeURIComponent(schemaP.name) + '=' +
-                                encodeURIComponent(local.schemaPItemsType(schemaP) === 'string'
-                                    ? value
-                                    : JSON.stringify(value));
+                            options[
+                                schemaP.in === "formData"
+                                ? "inForm"
+                                : "inQuery"
+                            ] += "&" + encodeURIComponent(schemaP.name) + "=" + encodeURIComponent(
+                                local.schemaPItemsType(schemaP) === "string"
+                                ? value
+                                : JSON.stringify(value)
+                            );
                         });
                         return;
-                    case 'pipes':
-                        tmp = tmp.join('|');
+                    case "pipes":
+                        tmp = tmp.join("|");
                         break;
-                    case 'ssv':
-                        tmp = tmp.join(' ');
+                    case "ssv":
+                        tmp = tmp.join(" ");
                         break;
-                    case 'tsv':
-                        tmp = tmp.join('\t');
+                    case "tsv":
+                        tmp = tmp.join("\t");
                         break;
                     // default to csv
                     default:
-                        tmp = tmp.join(',');
+                        tmp = tmp.join(",");
                     }
-                } else if (typeof tmp !== 'string' && !(tmp instanceof local.Blob)) {
+                } else if (typeof tmp !== "string" && !(tmp instanceof local.Blob)) {
                     tmp = JSON.stringify(tmp);
                 }
                 switch (schemaP.in) {
-                case 'body':
+                case "body":
                     options.inBody = tmp;
                     break;
-                case 'formData':
+                case "formData":
                     switch (self._consumes0) {
-                    case 'multipart/form-data':
+                    case "multipart/form-data":
                         options.inForm.append(schemaP.name, tmp, tmp && tmp.name);
                         break;
-                    case 'application/xml':
+                    case "application/xml":
                         // init xml header
                         if (!options.inForm) {
-                            options.inForm += '<?xml version="1.0"?>';
+                            options.inForm += "<?xml version=\"1.0\"?>";
                         }
-                        options.inForm += '\n<' + schemaP.name + '>' + '<![CDATA[' +
-                            tmp.replace((/\]\]>/g), ']]&#x3e;') + ']]></' + schemaP.name + '>';
+                        options.inForm += "\n<" + schemaP.name + ">" + "<![CDATA[" +
+                                tmp.replace((/\]\]>/g), "]]&#x3e;") + "]]></" + schemaP.name + ">";
                         break;
                     default:
                         if (options.inForm) {
-                            options.inForm += '&';
+                            options.inForm += "&";
                         }
-                        options.inForm += encodeURIComponent(schemaP.name) + '=' +
-                            encodeURIComponent(tmp);
+                        options.inForm += encodeURIComponent(schemaP.name) + "=" +
+                                encodeURIComponent(tmp);
                     }
                     break;
-                case 'header':
+                case "header":
                     options.inHeader[encodeURIComponent(schemaP.name.toLowerCase())] = tmp;
                     break;
-                case 'query':
-                    options.inQuery += '&' + encodeURIComponent(schemaP.name) + '=' +
-                        encodeURIComponent(tmp);
+                case "query":
+                    options.inQuery += "&" + encodeURIComponent(schemaP.name) + "=" +
+                            encodeURIComponent(tmp);
                     break;
-                case 'path':
+                case "path":
                     options.inPath = options.inPath
-                        .replace('{' + schemaP.name + '}', encodeURIComponent(tmp));
+                    .replace("{" + schemaP.name + "}", encodeURIComponent(tmp));
                     break;
                 }
             });
@@ -1866,23 +1865,23 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             // init headers
             local.objectSetOverride(options.headers, options.inHeader);
             // init headers - Content-Type
-            options.headers['Content-Type'] = self._consumes0;
+            options.headers["Content-Type"] = self._consumes0;
             // init headers - Authorization
             options.jwtEncrypted = options.jwtEncrypted || local.userJwtEncrypted;
             if (options.jwtEncrypted) {
                 options.headers.Authorization = options.headers.Authorization ||
-                    'Bearer ' + options.jwtEncrypted;
+                        "Bearer " + options.jwtEncrypted;
             }
             // init url
-            options.url = '';
-            options.url += (self['x-swgg-schemes'] || local.swaggerJson.schemes || [])[0] ||
-                local.urlParse('').protocol.slice(0, -1);
-            options.url += '://';
-            options.url += self['x-swgg-host'] || local.swaggerJson.host || local.urlParse('').host;
+            options.url = "";
+            options.url += (self["x-swgg-schemes"] || local.swaggerJson.schemes || [])[0] ||
+                    local.urlParse("").protocol.slice(0, -1);
+            options.url += "://";
+            options.url += self["x-swgg-host"] || local.swaggerJson.host || local.urlParse("").host;
             options.url += local.swaggerJsonBasePath;
-            options.url += options.inPath + '?' + options.inQuery.slice(1);
-            options.url = options.url.replace((/\?$/), '');
-            if (options.modeAjax === 'validate' || (options.error && options.modeAjax !== 'ajax')) {
+            options.url += options.inPath + "?" + options.inQuery.slice(1);
+            options.url = options.url.replace((/\?$/), "");
+            if (options.modeAjax === "validate" || (options.error && options.modeAjax !== "ajax")) {
                 onError(options.error);
                 return;
             }
@@ -1894,8 +1893,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     xhr.responseJson = JSON.parse(xhr.responseText);
                 }, local.nop);
                 // init userJwtEncrypted
-                local.userJwtEncrypted = xhr.responseHeaders['swgg-jwt-encrypted'] ||
-                    local.userJwtEncrypted;
+                local.userJwtEncrypted = xhr.responseHeaders["swgg-jwt-encrypted"] ||
+                        local.userJwtEncrypted;
                 onError(error, xhr);
             });
         };
@@ -1909,12 +1908,12 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             // normalize swaggerJson
             swaggerJson = local.normalizeSwaggerJson(swaggerJson, {
                 objectSetDescription: function (dict) {
-                    if (typeof dict === 'object' && dict && !dict.$ref) {
-                        if (Array.isArray(dict['x-swgg-descriptionLineList'])) {
-                            dict.description = dict['x-swgg-descriptionLineList'].join('\n');
+                    if (typeof dict === "object" && dict && !dict.$ref) {
+                        if (Array.isArray(dict["x-swgg-descriptionLineList"])) {
+                            dict.description = dict["x-swgg-descriptionLineList"].join("\n");
                         }
                         if (!(dict === swaggerJson.externalDocs || dict === swaggerJson.info)) {
-                            dict.description = dict.description || 'no description';
+                            dict.description = dict.description || "no description";
                         }
                     }
                 }
@@ -2036,8 +2035,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     tmp[tag.name] = local.objectSetOverride(tmp[tag.name], tag);
                 });
             });
-            local.swaggerJson['x-swgg-tagNameList'] = Object.keys(tmp).sort();
-            tmp = local.swaggerJson['x-swgg-tagNameList'].map(function (key) {
+            local.swaggerJson["x-swgg-tagNameList"] = Object.keys(tmp).sort();
+            tmp = local.swaggerJson["x-swgg-tagNameList"].map(function (key) {
                 return tmp[key];
             });
             // merge swaggerJson into local.swaggerJson
@@ -2045,24 +2044,25 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             // restore tags
             local.swaggerJson.tags = tmp;
             // init swaggerJsonBasePath
-            local.swaggerJsonBasePath = local.swaggerJson.basePath === '/'
-                ? ''
-                : local.swaggerJson.basePath;
+            local.swaggerJsonBasePath = local.swaggerJson.basePath === "/"
+            ? ""
+            : local.swaggerJson.basePath;
             Object.keys(swaggerJson.definitions).forEach(function (schemaName) {
-                tmp = swaggerJson.definitions[schemaName] = local.jsonCopy(
+                swaggerJson.definitions[schemaName] = local.jsonCopy(
                     local.swaggerValidateDataSchema({
                         // dereference definition
                         modeDereference: true,
-                        prefix: ['swaggerJson', 'definitions', schemaName],
+                        prefix: ["swaggerJson", "definitions", schemaName],
                         schema: swaggerJson.definitions[schemaName],
                         swaggerJson: local.swaggerJson
                     })
                 );
+                tmp = swaggerJson.definitions[schemaName];
                 (tmp.allOf || []).forEach(function (element) {
                     local.objectSetDefault(tmp, local.jsonCopy(local.swaggerValidateDataSchema({
                         // dereference definition.allOf
                         modeDereference: true,
-                        prefix: ['swaggerJson', 'definitions', schemaName, 'allOf'],
+                        prefix: ["swaggerJson", "definitions", schemaName, "allOf"],
                         schema: element,
                         swaggerJson: local.swaggerJson
                     })), 2);
@@ -2076,37 +2076,37 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     self = local.jsonCopy(swaggerJson.paths[path][method]);
                     self._method = method.toUpperCase();
                     self._path = path;
-                    tmp = 'operationId.' + self.operationId;
+                    tmp = "operationId." + self.operationId;
                     local.apiDict[tmp] = local.objectSetOverride(local.apiDict[tmp], self);
                 });
             });
             // init apiDict from x-swgg-apiDict
-            Object.keys(swaggerJson['x-swgg-apiDict'] || {}).forEach(function (key) {
+            Object.keys(swaggerJson["x-swgg-apiDict"] || {}).forEach(function (key) {
                 // init self
                 local.apiDict[key] = local.objectSetOverride(
                     local.apiDict[key],
-                    local.jsonCopy(swaggerJson['x-swgg-apiDict'][key])
+                    local.jsonCopy(swaggerJson["x-swgg-apiDict"][key])
                 );
             });
             // init apiDict
             Object.keys(local.apiDict).forEach(function (key) {
                 var self;
-                if (key.indexOf('operationId.') !== 0) {
+                if (key.indexOf("operationId.") !== 0) {
                     return;
                 }
-                key = key.split('.');
-                self = local.apiDict[key.join('.')];
+                key = key.split(".");
+                self = local.apiDict[key.join(".")];
                 // init operationId
-                self.operationId = self.operationId || key.slice(1).join('.');
+                self.operationId = self.operationId || key.slice(1).join(".");
                 // init _crudType
                 self._crudType = self._crudType || key.slice(2);
                 self._crudType[0] = self._crudType[0] || self.operationId;
                 // init _fileUploadNumber
                 self._fileUploadNumber = Number(
-                    self._crudType[0] === 'fileUploadManyByForm' && self._crudType[1]
+                    self._crudType[0] === "fileUploadManyByForm" && self._crudType[1]
                 ) || 1;
                 // init _idBackend and _idName
-                tmp = local.idNameInit({ crudType: self._crudType });
+                tmp = local.idNameInit({crudType: self._crudType});
                 self._idBackend = tmp.idBackend;
                 self._idName = tmp.idName;
                 // init tags
@@ -2117,12 +2117,12 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     local.objectSetDefault(
                         self,
                         JSON.parse(local.templateApiDict[self._crudType[0]]
-                            .replace((/\{\{_fileUploadNumber\}\}/g), self._fileUploadNumber)
-                            .replace((/\{\{_idBackend\}\}/g), self._idBackend)
-                            .replace((/\{\{_idName\}\}/g), self._idName)
-                            .replace((/\{\{_operationId\}\}/g), self.operationId)
-                            .replace((/\{\{_schemaName\}\}/g), self._schemaName)
-                            .replace((/\{\{_tags0\}\}/g), self.tags[0]))
+                        .replace((/\{\{_fileUploadNumber\}\}/g), self._fileUploadNumber)
+                        .replace((/\{\{_idBackend\}\}/g), self._idBackend)
+                        .replace((/\{\{_idName\}\}/g), self._idName)
+                        .replace((/\{\{_operationId\}\}/g), self.operationId)
+                        .replace((/\{\{_schemaName\}\}/g), self._schemaName)
+                        .replace((/\{\{_tags0\}\}/g), self.tags[0]))
                     );
                 }
                 // init default
@@ -2130,48 +2130,50 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     _schemaPDict: {},
                     consumes: [],
                     parameters: [],
-                    responses: { "200": {
-                        description: 'ok - ' + 'http://jsonapi.org/format/#document-top-level',
-                        schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                    } },
+                    responses: {"200": {
+                        description: "ok - " + "http://jsonapi.org/format/#document-top-level",
+                        schema: {$ref: "#/definitions/BuiltinJsonapiResponse"}
+                    }},
                     tags: []
                 });
                 // init _consumes0
-                tmp = self['x-swgg-consumes0'] || (self.consumes && self.consumes[0]);
+                tmp = self["x-swgg-consumes0"] || (self.consumes && self.consumes[0]);
                 self.parameters.some(function (schemaP) {
-                    tmp = tmp ||
-                        (schemaP.in === 'body' && schemaP.schema.type === 'string' && 'text/plain');
+                    tmp = tmp || (
+                        schemaP.in === "body"
+                        && schemaP.schema.type === "string"
+                        && "text/plain"
+                    );
                     return tmp;
                 });
-                self._consumes0 = tmp || 'application/json';
+                self._consumes0 = tmp || "application/json";
                 // init _methodPath
-                self._methodPath = self._method + ' ' + self._path.replace((/\{.*?\}/g), '{}');
+                self._methodPath = self._method + " " + self._path.replace((/\{.*?\}/g), "{}");
                 self.parameters.forEach(function (schemaP) {
                     // dereference schemaP
-                    String(schemaP['x-swgg-$ref'] || schemaP.$ref).replace((
+                    String(schemaP["x-swgg-$ref"] || schemaP.$ref).replace((
                         /#\/parameters\/(.+?$)/m
-                    ), function (match0, match1) {
-                        match0 = match1;
+                    ), function (ignore, match1) {
                         local.objectSetDefault(
                             schemaP,
-                            local.jsonCopy(swaggerJson.parameters[match0])
+                            local.jsonCopy(swaggerJson.parameters[match1])
                         );
                         delete schemaP.$ref;
                     });
                     // init _idName.format and _idName.type
                     if (self._schemaName && schemaP.name === self._idName) {
                         schemaP.format = swaggerJson.definitions[self._schemaName]
-                            .properties[self._idBackend].format;
+                        .properties[self._idBackend].format;
                         schemaP.type = local.schemaPType(swaggerJson.definitions[self._schemaName]
-                            .properties[self._idBackend]);
+                        .properties[self._idBackend]);
                     }
                     // init _schemaPDict
                     self._schemaPDict[schemaP.name] = schemaP;
                 });
                 // init required
                 [
-                    self['x-swgg-notRequired'],
-                    self['x-swgg-required']
+                    self["x-swgg-notRequired"],
+                    self["x-swgg-required"]
                 ].forEach(function (element, ii) {
                     (element || []).forEach(function (name) {
                         self._schemaPDict[name].required = Boolean(ii);
@@ -2179,53 +2181,58 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 });
                 switch (self._crudType[0]) {
                 // add extra file-upload forms
-                case 'fileUploadManyByForm':
+                case "fileUploadManyByForm":
                     for (tmp = 1; tmp <= self._fileUploadNumber; tmp += 1) {
                         self.parameters[tmp] = local.jsonCopy(self.parameters[1]);
-                        self.parameters[tmp].name = 'file' + tmp;
+                        self.parameters[tmp].name = "file" + tmp;
                     }
                     break;
                 }
                 // update apiDict
-                self = local.apiDict[key.join('.')] = local.apiDict[self._methodPath] =
-                    local.jsonCopy(self);
+                self = local.jsonCopy(self);
+                local.apiDict[key.join(".")] = self;
+                local.apiDict[self._methodPath] = self;
                 // init ajax
                 self.ajax = function (swaggerJson, onError) {
                     return local.apiAjax(self, swaggerJson, onError);
                 };
                 self._ajaxToString = self.ajax.toString()
-                    .replace('{', ('{\n' +
-                        '/*\n' +
-                        ' * this function will run the api-call ' +
-                        JSON.stringify(self._methodPath) + '\n' +
-                        ' * example usage:' + ('\n' +
-                        'swgg.apiDict[' + JSON.stringify(key.join('.')) + '].ajax(' +
+                .replace("{", (
+                    "{\n" +
+                    "/*\n" +
+                    " * this function will run the api-call " +
+                    JSON.stringify(self._methodPath) + "\n" +
+                    " * example usage:" + (
+                        "\n" +
+                        "swgg.apiDict[" + JSON.stringify(key.join(".")) + "].ajax(" +
                         JSON.stringify(local.normalizeSwaggerParamDict({
-                                modeDefault: true,
-                                operation: self,
-                                paramDict: {}
-                            }).paramDict, null, 4) +
-                        ', function (error, data) {\n' +
-                        '    if (error) {\n' +
-                        '        console.error(error);\n' +
-                        '        return;\n' +
-                        '    }\n' +
-                        '    console.log(data.responseJson || data.responseText);\n' +
-                        '});').replace((/\n/g), '\n    ') + '\n */')
-                        .replace((/\n/g), '\n                '));
+                            modeDefault: true,
+                            operation: self,
+                            paramDict: {}
+                        }).paramDict, null, 4) +
+                        ", function (error, data) {\n" +
+                        "    if (error) {\n" +
+                        "        console.error(error);\n" +
+                        "        return;\n" +
+                        "    }\n" +
+                        "    console.log(data.responseJson || data.responseText);\n" +
+                        "});"
+                    ).replace((/\n/g), "\n    ") + "\n */"
+                )
+                        .replace((/\n/g), "\n                "));
                 self.ajax.toString = function () {
                     return self._ajaxToString;
                 };
                 // remove underscored keys from self
                 tmp = local.jsonCopy(self);
                 Object.keys(tmp).forEach(function (key) {
-                    if (key[0] === '_') {
+                    if (key[0] === "_") {
                         tmp[key] = undefined;
                     }
                 });
                 // update paths
                 local.objectSetOverride(swaggerJson, local.objectLiteralize({
-                    paths: { '$[]': [self._path, { '$[]': [self._method.toLowerCase(), tmp] }] }
+                    paths: {"$[]": [self._path, {"$[]": [self._method.toLowerCase(), tmp]}]}
                 }), 3);
             });
             // normalize swaggerJson
@@ -2236,9 +2243,9 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             }, local.onErrorDefault);
             // init corsForwardProxyHost
             local.corsForwardProxyHost = local.corsForwardProxyHost ||
-                local.swaggerJson['x-swgg-corsForwardProxyHost'];
+                    local.swaggerJson["x-swgg-corsForwardProxyHost"];
             // init assets.swgg.swagger.server.json
-            local.assetsDict['/assets.swgg.swagger.server.json'] = JSON.stringify(
+            local.assetsDict["/assets.swgg.swagger.server.json"] = JSON.stringify(
                 local.swaggerJson
             );
         };
@@ -2249,8 +2256,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
          */
             var depth, ii, max, min, schemaP, value;
             depth = Number.isFinite(options.depth)
-                ? options.depth
-                : 3;
+            ? options.depth
+            : 3;
             schemaP = options.schemaP;
             schemaP = schemaP.schema || schemaP;
             if (schemaP.readOnly) {
@@ -2263,31 +2270,29 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             // init enum-value
             if (schemaP.enum) {
                 value = options.modeNotRandom
-                    ? schemaP.enum[0]
-                    : local.listGetElementRandom(schemaP.enum);
-                return local.schemaPType(schemaP) === 'array'
-                    ? [value]
-                    : value;
+                ? schemaP.enum[0]
+                : local.listGetElementRandom(schemaP.enum);
+                return local.schemaPType(schemaP) === "array"
+                ? [value]
+                : value;
             }
             // init default-value
             value = null;
             switch (local.schemaPType(schemaP)) {
-            case 'boolean':
+            case "boolean":
                 value = options.modeNotRandom
-                    ? false
-                    : Math.random() > 0.5
-                    ? false
-                    : true;
+                ? false
+                : Boolean(Math.random() > 0.5);
                 break;
             // 5.1. Validation keywords for numeric instances (number and integer)
-            case 'integer':
-            case 'number':
+            case "integer":
+            case "number":
                 max = schemaP.maximum;
                 min = schemaP.minimum;
                 if (options.modeNotRandom) {
                     value = !(0 < min || max < 0)
-                        ? 0
-                        : min || max;
+                    ? 0
+                    : min || max;
                 } else {
                     if (!(Number.isFinite(max) && Number.isFinite(min))) {
                         if (!Number.isFinite(max) && !Number.isFinite(min)) {
@@ -2301,7 +2306,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     }
                     // exclusiveMaximum and exclusiveMinimum for float
                     value = min + (max - min) * Math.max(Math.random(), min * 0.000000000000001);
-                    if (local.schemaPType(schemaP) === 'integer') {
+                    if (local.schemaPType(schemaP) === "integer") {
                         value = Math.round(value);
                     }
                 }
@@ -2324,30 +2329,30 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 }
                 break;
             // 5.2. Validation keywords for strings
-            case 'string':
+            case "string":
                 value = options.modeNotRandom
-                    ? 'abcd1234'
-                    : ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1);
+                ? "abcd1234"
+                : ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1);
                 switch (schemaP.format) {
-                case 'byte':
+                case "byte":
                     value = local.base64FromBuffer(value);
                     break;
-                case 'date':
-                case 'date-time':
+                case "date":
+                case "date-time":
                     value = new Date().toISOString();
                     break;
-                case 'email':
-                    value = value + '@example.com';
+                case "email":
+                    value = value + "@example.com";
                     break;
-                case 'json':
-                    value = JSON.stringify({ foo: value });
+                case "json":
+                    value = JSON.stringify({foo: value});
                     break;
-                case 'phone':
+                case "phone":
                     value = options.modeNotRandom
-                        ? '+123 (1234) 1234-1234'
-                        : '+' + Math.random().toString().slice(-3) +
-                            ' (' + Math.random().toString().slice(-4) + ') ' +
-                            Math.random().toString().slice(-4) + '-' +
+                    ? "+123 (1234) 1234-1234"
+                    : "+" + Math.random().toString().slice(-3) +
+                            " (" + Math.random().toString().slice(-4) + ") " +
+                            Math.random().toString().slice(-4) + "-" +
                             Math.random().toString().slice(-4);
                     break;
                 }
@@ -2357,21 +2362,21 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 value = value.slice(0, schemaP.maxLength || Infinity);
                 break;
             // 5.3. Validation keywords for arrays
-            case 'array':
+            case "array":
                 if (depth <= 0) {
                     break;
                 }
                 value = [];
                 for (ii = 0; ii < Math.min(
                         // 5.3.2. maxItems
-                        schemaP.maxItems || 2,
+                    schemaP.maxItems || 2,
                         // 5.3.3. minItems
-                        schemaP.minItems || 2,
+                    schemaP.minItems || 2,
                         // 5.3.4. uniqueItems
-                        schemaP.uniqueItems
-                            ? 2
-                            : 1
-                    ); ii += 1) {
+                    schemaP.uniqueItems
+                    ? 2
+                    : 1
+                ); ii += 1) {
                     // recurse dbFieldRandomCreate
                     value.push(local.dbFieldRandomCreate({
                         depth: depth - 1,
@@ -2389,10 +2394,9 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 value = local.dbRowRandomCreate({
                     depth: depth - 1,
                     modeNotRandom: options.modeNotRandom,
-                    prefix: ['schema<' + JSON.stringify(schemaP) + '>'],
+                    prefix: ["schema<" + JSON.stringify(schemaP) + ">"],
                     schema: schemaP
                 });
-                break;
             }
             return value;
         };
@@ -2414,7 +2418,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
          */
             var ii, dbRow, properties;
             dbRow = {};
-            options = local.objectSetDefault(options, { override: local.nop, prefix: ['dbRow'] });
+            options = local.objectSetDefault(options, {override: local.nop, prefix: ["dbRow"]});
             properties = local.swaggerValidateDataSchema({
                 // dereference property
                 modeDereference: true,
@@ -2423,10 +2427,12 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 swaggerJson: local.swaggerJson
             });
             properties = local.jsonCopy((properties && properties.properties) || {});
-            for (ii = Object.keys(properties).length;
-                    ii < (options.schema && options.schema.minProperties);
-                    ii += 1) {
-                properties['property' + ii] = { type: 'string' };
+            for (
+                ii = Object.keys(properties).length;
+                ii < (options.schema && options.schema.minProperties);
+                ii += 1
+            ) {
+                properties["property" + ii] = {type: "string"};
             }
             Object.keys(properties).forEach(function (key) {
                 dbRow[key] = local.dbFieldRandomCreate({
@@ -2461,8 +2467,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
          */
             local.idDomElementDict[seed] = (local.idDomElementDict[seed] || 0) + 1;
             return encodeURIComponent(
-                seed + '_' + local.idDomElementDict[seed]
-            ).replace((/\W/g), '_');
+                seed + "_" + local.idDomElementDict[seed]
+            ).replace((/\W/g), "_");
         };
 
         local.idNameInit = function (options) {
@@ -2471,9 +2477,11 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
          */
             var idBackend, idName;
             // init idName
-            idName = options.idName = options.crudType[1] || 'id';
+            idName = options.crudType[1] || "id";
+            options.idName = idName;
             // init idBackend
-            idBackend = options.idBackend = options.crudType[2] || options.idName;
+            idBackend = options.crudType[2] || options.idName;
+            options.idBackend = idBackend;
             // invert queryById
             if (options.modeQueryByIdInvert) {
                 idBackend = options.idName;
@@ -2499,11 +2507,11 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             switch (request.swgg.operation._consumes0) {
             // parse application/x-www-form-urlencoded, e.g.
             // aa=hello%20world&bb=bye%20world
-            case 'application/x-www-form-urlencoded':
+            case "application/x-www-form-urlencoded":
                 request.swgg.bodyParsed = local.bufferToString(request.bodyRaw);
-                request.swgg.bodyParsed = local.urlParse('?' + request.swgg.bodyParsed, true).query;
+                request.swgg.bodyParsed = local.urlParse("?" + request.swgg.bodyParsed, true).query;
                 break;
-            case 'application/xml':
+            case "application/xml":
                 request.swgg.bodyParsed = {};
                 local.bufferToString(request.bodyRaw).replace(
                     (/<(.+?)><!\[CDATA\[([\S\s]+?)\]\]>/g),
@@ -2512,9 +2520,9 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                         name = decodeURIComponent(name);
                         request.swgg.bodyParsed[name] = local.schemaPType(
                             request.swgg.operation._schemaPDict[name]
-                        ) === 'string'
-                            ? value
-                            : JSON.parse(value);
+                        ) === "string"
+                        ? value
+                        : JSON.parse(value);
                     }
                 );
                 break;
@@ -2537,7 +2545,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
              * --Boundary--\r\n
              * https://tools.ietf.org/html/rfc7578
              */
-            case 'multipart/form-data':
+            case "multipart/form-data":
                 request.swgg.bodyParsed = {};
                 request.swgg.bodyMeta = {};
                 crlf = local.bufferCreate([0x0d, 0x0a]);
@@ -2559,14 +2567,14 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                         break;
                     }
                     header = local.bufferToString(request.bodyRaw.slice(ii, ii + 1024))
-                        .split('\r\n').slice(0, 2).join('\r\n');
+                    .split("\r\n").slice(0, 2).join("\r\n");
                     name = (/^content-disposition:.*?\bname="([^"]+)/im).exec(header);
                     name = name && name[1];
                     request.swgg.bodyMeta[name] = {
                         contentType: ((/^content-type:(.*)/im)
-                        .exec(header) || {"1": ''})[1].trim() || null,
+                        .exec(header) || {"1": ""})[1].trim() || null,
                         filename: ((/^content-disposition:.*?\bfilename="([^"]+)/im)
-                        .exec(header) || {"1": ''})[1].trim() || null,
+                        .exec(header) || {"1": ""})[1].trim() || null,
                         name: name
                     };
                     ii = local.bufferIndexOfSubBuffer(
@@ -2602,20 +2610,20 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     crud = request.swgg.crud;
                     user = request.swgg.user;
                     switch (crud.crudType[0]) {
-                    case 'crudCountManyByQuery':
+                    case "crudCountManyByQuery":
                         crud.dbTable.crudCountManyByQuery(crud.queryWhere, options.onNext);
                         break;
-                    case 'crudSetManyById':
+                    case "crudSetManyById":
                         crud.dbTable.crudSetManyById(crud.body, options.onNext);
                         break;
-                    case 'crudSetOneById':
+                    case "crudSetOneById":
                         // replace idName with idBackend in body
                         delete crud.body.id;
                         delete crud.body[crud.idName];
                         crud.body[crud.idBackend] = crud.data[crud.idName];
                         crud.dbTable.crudSetOneById(crud.body, options.onNext);
                         break;
-                    case 'crudUpdateOneById':
+                    case "crudUpdateOneById":
                         // replace idName with idBackend in body
                         delete crud.body.id;
                         delete crud.body[crud.idName];
@@ -2623,16 +2631,16 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                         crud.dbTable.crudUpdateOneById(crud.body, options.onNext);
                         break;
                     // coverage-hack - test error handling-behavior
-                    case 'crudErrorDelete':
-                    case 'crudErrorGet':
-                    case 'crudErrorHead':
-                    case 'crudErrorOptions':
-                    case 'crudErrorPatch':
-                    case 'crudErrorPost':
-                    case 'crudErrorPut':
+                    case "crudErrorDelete":
+                    case "crudErrorGet":
+                    case "crudErrorHead":
+                    case "crudErrorOptions":
+                    case "crudErrorPatch":
+                    case "crudErrorPost":
+                    case "crudErrorPut":
                         options.onNext(local.errorDefault);
                         break;
-                    case 'crudGetManyByQuery':
+                    case "crudGetManyByQuery":
                         onParallel = local.onParallel(options.onNext);
                         onParallel.counter += 1;
                         crud.dbTable.crudGetManyByQuery({
@@ -2651,67 +2659,67 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                             onParallel(error);
                         });
                         break;
-                    case 'crudGetOneById':
+                    case "crudGetOneById":
                         crud.dbTable.crudGetOneById(crud.queryById, options.onNext);
                         break;
-                    case 'crudGetOneByQuery':
+                    case "crudGetOneByQuery":
                         crud.dbTable.crudGetOneByQuery({
                             query: crud.queryWhere
                         }, options.onNext);
                         break;
-                    case 'crudNullDelete':
-                    case 'crudNullGet':
-                    case 'crudNullHead':
-                    case 'crudNullOptions':
-                    case 'crudNullPatch':
-                    case 'crudNullPost':
-                    case 'crudNullPut':
+                    case "crudNullDelete":
+                    case "crudNullGet":
+                    case "crudNullHead":
+                    case "crudNullOptions":
+                    case "crudNullPatch":
+                    case "crudNullPost":
+                    case "crudNullPut":
                         options.onNext();
                         break;
-                    case 'crudRemoveManyByQuery':
+                    case "crudRemoveManyByQuery":
                         crud.dbTable.crudRemoveManyByQuery(crud.queryWhere, options.onNext);
                         break;
-                    case 'crudRemoveOneById':
+                    case "crudRemoveOneById":
                         crud.dbTable.crudRemoveOneById(crud.queryById, options.onNext);
                         break;
-                    case 'fileGetOneById':
-                        local.dbTableFile = local.db.dbTableCreateOne({ name: 'File' });
+                    case "fileGetOneById":
+                        local.dbTableFile = local.db.dbTableCreateOne({name: "File"});
                         crud.dbTable.crudGetOneById(crud.queryById, options.onNext);
                         break;
-                    case 'fileUploadManyByForm':
-                        local.dbTableFile = local.db.dbTableCreateOne({ name: 'File' });
+                    case "fileUploadManyByForm":
+                        local.dbTableFile = local.db.dbTableCreateOne({name: "File"});
                         request.swgg.paramDict = {};
                         Object.keys(request.swgg.bodyMeta).forEach(function (key) {
-                            if (typeof request.swgg.bodyMeta[key].filename !== 'string') {
+                            if (typeof request.swgg.bodyMeta[key].filename !== "string") {
                                 request.swgg.paramDict[key] = local.bufferToString(
                                     request.swgg.bodyParsed[key]
                                 );
                             }
                         });
                         crud.body = Object.keys(request.swgg.bodyMeta)
-                            .filter(function (key) {
-                                return typeof request.swgg.bodyMeta[key].filename === 'string';
-                            })
-                            .map(function (key) {
-                                tmp = local.jsonCopy(request.swgg.paramDict);
-                                tmp.id = tmp.id ||
-                                    ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1);
-                                local.objectSetOverride(tmp, {
-                                    fileBlob: local.base64FromBuffer(request.swgg.bodyParsed[key]),
-                                    fileContentType: request.swgg.bodyMeta[key].contentType,
-                                    fileFilename: request.swgg.bodyMeta[key].filename,
-                                    fileInputName: request.swgg.bodyMeta[key].name,
-                                    fileSize: request.swgg.bodyParsed[key].length,
-                                    fileUrl: local.swaggerJsonBasePath +
-                                        '/' + request.swgg.operation.tags[0] +
-                                        '/fileGetOneById/' + tmp.id
-                                });
-                                return tmp;
+                        .filter(function (key) {
+                            return typeof request.swgg.bodyMeta[key].filename === "string";
+                        })
+                        .map(function (key) {
+                            tmp = local.jsonCopy(request.swgg.paramDict);
+                            tmp.id = tmp.id || ((1 + Math.random()) * 0x10000000000000)
+                                    .toString(36).slice(1);
+                            local.objectSetOverride(tmp, {
+                                fileBlob: local.base64FromBuffer(request.swgg.bodyParsed[key]),
+                                fileContentType: request.swgg.bodyMeta[key].contentType,
+                                fileFilename: request.swgg.bodyMeta[key].filename,
+                                fileInputName: request.swgg.bodyMeta[key].name,
+                                fileSize: request.swgg.bodyParsed[key].length,
+                                fileUrl: local.swaggerJsonBasePath +
+                                        "/" + request.swgg.operation.tags[0] +
+                                        "/fileGetOneById/" + tmp.id
                             });
+                            return tmp;
+                        });
                         local.dbTableFile.crudSetManyById(crud.body, options.onNext);
                         break;
-                    case 'userLoginByPassword':
-                    case 'userLogout':
+                    case "userLoginByPassword":
+                    case "userLogout":
                         // respond with 401 Unauthorized
                         if (!user.isAuthenticated) {
                             local.serverRespondHeadSet(request, response, 401, {});
@@ -2729,25 +2737,25 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     break;
                 case 2:
                     switch (crud.crudType[0]) {
-                    case 'crudSetOneById':
-                    case 'crudUpdateOneById':
+                    case "crudSetOneById":
+                    case "crudUpdateOneById":
                         options.onNext(null, data);
                         break;
-                    case 'crudGetManyByQuery':
+                    case "crudGetManyByQuery":
                         options.onNext(null, crud.queryData, {
                             paginationCountTotal: crud.paginationCountTotal
                         });
                         break;
-                    case 'fileUploadManyByForm':
+                    case "fileUploadManyByForm":
                         options.onNext(null, data.map(function (element) {
                             delete element.fileBlob;
                             return element;
                         }));
                         break;
-                    case 'userLoginByPassword':
-                        options.onNext(null, { jwtEncrypted: user.jwtEncrypted });
+                    case "userLoginByPassword":
+                        options.onNext(null, {jwtEncrypted: user.jwtEncrypted});
                         break;
-                    case 'userLogout':
+                    case "userLogout":
                         crud.dbTable.crudUpdateOneById({
                             jwtEncrypted: null,
                             username: user.username
@@ -2759,17 +2767,17 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     break;
                 case 3:
                     switch (crud.crudType[0]) {
-                    case 'fileGetOneById':
+                    case "fileGetOneById":
                         if (!data) {
                             local.serverRespondDefault(request, response, 404);
                             return;
                         }
                         local.serverRespondHeadSet(request, response, null, {
-                            'Content-Type': data.fileContentType
+                            "Content-Type": data.fileContentType
                         });
                         response.end(local.base64ToBuffer(data.fileBlob));
                         break;
-                    case 'userLogout':
+                    case "userLogout":
                         options.onNext();
                         break;
                     default:
@@ -2806,7 +2814,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
          */
             var tmp;
             // init swgg object
-            local.objectSetDefault(request, { swgg: { crud: { crudType: [] }, user: {} } }, 3);
+            local.objectSetDefault(request, {swgg: {crud: {crudType: []}, user: {}}}, 3);
             // if request.url is not prefixed with swaggerJsonBasePath,
             // then default to nextMiddleware
             if (request.urlParsed.pathname.indexOf(local.swaggerJsonBasePath) !== 0) {
@@ -2814,15 +2822,15 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 return;
             }
             // init methodPath
-            request.swgg.methodPath = request.method + ' ' +
-                request.urlParsed.pathname.replace(local.swaggerJsonBasePath, '');
+            request.swgg.methodPath = request.method + " " +
+                    request.urlParsed.pathname.replace(local.swaggerJsonBasePath, "");
             // init operation
             while (request.swgg.methodPath !== tmp) {
                 request.swgg.operation = local.apiDict[request.swgg.methodPath] ||
                     // handle /foo/{id}/bar case
-                    local.apiDict[
-                        request.swgg.methodPath.replace((/\/[^\/]+\/([^\/]*?)$/), '/{}/$1')
-                    ];
+                        local.apiDict[
+                    request.swgg.methodPath.replace((/\/[^\/]+\/([^\/]*?)$/), "/{}/$1")
+                ];
                 // if operation exists, then break
                 if (request.swgg.operation) {
                     request.swgg.operation = local.jsonCopy(request.swgg.operation);
@@ -2834,7 +2842,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 // handle /foo/{id} case
                 request.swgg.methodPath = request.swgg.methodPath.replace(
                     (/\/[^\/]+?(\/*?)$/),
-                    '/$1{}'
+                    "/$1{}"
                 );
             }
             nextMiddleware(null, request, response);
@@ -2849,18 +2857,19 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
-                    local.dbTableUser = local.db.dbTableCreateOne({ name: 'User' });
+                    local.dbTableUser = local.db.dbTableCreateOne({name: "User"});
                     crud = request.swgg.crud;
-                    user = request.swgg.user = {};
+                    user = {};
+                    request.swgg.user = user;
                     user.jwtEncrypted = request.headers.authorization &&
-                        request.headers.authorization.replace('Bearer ', '');
+                            request.headers.authorization.replace("Bearer ", "");
                     user.jwtDecrypted = local.jwtAes256GcmDecrypt(user.jwtEncrypted);
                     switch (crud.crudType[0]) {
                     // coverage-hack - test error handling-behavior
-                    case 'crudErrorLogin':
+                    case "crudErrorLogin":
                         options.onNext(local.errorDefault);
                         return;
-                    case 'userLoginByPassword':
+                    case "userLoginByPassword":
                         user.password = request.urlParsed.query.password;
                         user.username = request.urlParsed.query.username;
                         if (user.password && user.username) {
@@ -2885,12 +2894,12 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     break;
                 case 2:
                     switch (crud.crudType[0]) {
-                    case 'userLoginByPassword':
+                    case "userLoginByPassword":
                         user.data = data;
                         if (!local.sjclHashScryptValidate(
-                                user.password,
-                                user.data && user.data.password
-                            )) {
+                            user.password,
+                            user.data && user.data.password
+                        )) {
                             options.modeNext = Infinity;
                             options.onNext();
                             return;
@@ -2904,7 +2913,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                         // update jwtEncrypted in client
                         user.jwtEncrypted = local.jwtAes256GcmEncrypt(user.jwtDecrypted);
                         local.serverRespondHeadSet(request, response, null, {
-                            'swgg-jwt-encrypted': user.jwtEncrypted
+                            "swgg-jwt-encrypted": user.jwtEncrypted
                         });
                         // update jwtEncrypted in dbTableUser
                         local.dbTableUser.crudUpdateOneById({
@@ -2913,7 +2922,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                         }, options.onNext);
                         return;
                     default:
-                        data = user.data = data || {};
+                        data = data || {};
+                        user.data = data;
                         if (data.jwtEncrypted) {
                             // init isAuthenticated
                             user.isAuthenticated = true;
@@ -2922,7 +2932,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                                 user.jwtEncrypted = data.jwtEncrypted;
                                 user.jwtDecrypted = local.jwtAes256GcmDecrypt(user.jwtEncrypted);
                                 local.serverRespondHeadSet(request, response, null, {
-                                    'swgg-jwt-encrypted': user.jwtEncrypted
+                                    "swgg-jwt-encrypted": user.jwtEncrypted
                                 });
                             }
                         }
@@ -2955,9 +2965,9 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     request.swgg.paramDict = {};
                     // parse path param
                     tmp = request.urlParsed.pathname
-                        .replace(local.swaggerJsonBasePath, '')
-                        .split('/');
-                    request.swgg.operation._path.split('/').forEach(function (key, ii) {
+                    .replace(local.swaggerJsonBasePath, "")
+                    .split("/");
+                    request.swgg.operation._path.split("/").forEach(function (key, ii) {
                         if ((/^\{\S*?\}$/).test(key)) {
                             request.swgg.paramDict[key.slice(1, -1)] = decodeURIComponent(tmp[ii]);
                         }
@@ -2965,44 +2975,52 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     request.swgg.operation.parameters.forEach(function (schemaP) {
                         switch (schemaP.in) {
                         // parse body param
-                        case 'body':
+                        case "body":
                             request.swgg.paramDict[schemaP.name] = request.swgg.bodyParsed ||
-                                undefined;
+                                    undefined;
                             break;
                         // parse formData param
-                        case 'formData':
+                        case "formData":
                             switch (request.swgg.operation._consumes0) {
-                            case 'application/x-www-form-urlencoded':
-                            case 'application/xml':
+                            case "application/x-www-form-urlencoded":
+                            case "application/xml":
                                 request.swgg.paramDict[schemaP.name] =
-                                    request.swgg.bodyParsed[schemaP.name];
+                                        request.swgg.bodyParsed[schemaP.name];
                                 break;
                             }
                             break;
                         // parse header param
-                        case 'header':
+                        case "header":
                             request.swgg.paramDict[schemaP.name] =
-                                request.headers[schemaP.name.toLowerCase()];
+                                    request.headers[schemaP.name.toLowerCase()];
                             break;
                         // parse query param
-                        case 'query':
+                        case "query":
                             request.swgg.paramDict[schemaP.name] =
-                                request.urlParsed.query[schemaP.name];
+                                    request.urlParsed.query[schemaP.name];
                             break;
                         }
                         // parse array-multi
                         tmp = request.swgg.paramDict[schemaP.name];
-                        if (tmp &&
-                                local.schemaPType(schemaP) === 'array' &&
-                                schemaP.collectionFormat === 'multi') {
-                            request.swgg.paramDict[schemaP.name] =
-                                encodeURIComponent(schemaP.name) + '=' + (Array.isArray(tmp)
-                                ? tmp
-                                : [tmp]).join('&' + encodeURIComponent(schemaP.name) + '=');
+                        if (
+                            tmp &&
+                            local.schemaPType(schemaP) === "array" &&
+                            schemaP.collectionFormat === "multi"
+                        ) {
+                            request.swgg.paramDict[schemaP.name] = (
+                                encodeURIComponent(schemaP.name)
+                                + "=" + (
+                                    Array.isArray(tmp)
+                                    ? tmp
+                                    : [tmp]
+                                ).join("&" + encodeURIComponent(schemaP.name) + "=")
+                            );
                         }
                         // init default param
-                        if (local.isNullOrUndefined(request.swgg.paramDict[schemaP.name]) &&
-                                schemaP.default !== undefined) {
+                        if (
+                            local.isNullOrUndefined(request.swgg.paramDict[schemaP.name]) &&
+                            schemaP.default !== undefined
+                        ) {
                             request.swgg.paramDict[schemaP.name] = local.jsonCopy(
                                 schemaP.default
                             );
@@ -3013,7 +3031,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     // validate paramDict
                     error = local.swaggerValidateDataParameters({
                         data: request.swgg.paramDict,
-                        prefix: ['operation', request.swgg.methodPath],
+                        prefix: ["operation", request.swgg.methodPath],
                         parameters: request.swgg.operation.parameters,
                         swaggerJson: local.swaggerJson
                     })[0];
@@ -3024,53 +3042,55 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     crud = request.swgg.crud;
                     // init crud.dbTable
                     crud.dbTable = request.swgg.operation &&
-                        request.swgg.operation._schemaName &&
-                        local.db.dbTableCreateOne({ name: request.swgg.operation._schemaName });
+                            request.swgg.operation._schemaName &&
+                            local.db.dbTableCreateOne({name: request.swgg.operation._schemaName});
                     if (!crud.dbTable) {
                         nextMiddleware();
                         return;
                     }
                     // init crud.body
-                    if (request.swgg.operation._consumes0 !== 'multipart/form-data') {
+                    if (request.swgg.operation._consumes0 !== "multipart/form-data") {
                         crud.body = local.jsonCopy(request.swgg.bodyParsed);
                     }
                     // init crud.data
                     crud.data = local.jsonCopy(request.swgg.paramDict);
                     request.swgg.operation.parameters.forEach(function (schemaP) {
                         // JSON.parse json-string
-                        if (schemaP.format === 'json' &&
-                                local.schemaPType(schemaP) === 'string' &&
-                                crud.data[schemaP.name]) {
+                        if (
+                            schemaP.format === "json" &&
+                            local.schemaPType(schemaP) === "string" &&
+                            crud.data[schemaP.name]
+                        ) {
                             crud.data[schemaP.name] = JSON.parse(crud.data[schemaP.name]);
                         }
                     });
                     // init crud.query*
                     [{
-                        key: 'queryFields',
+                        key: "queryFields",
                         value: {}
                     }, {
-                        key: 'queryLimit',
+                        key: "queryLimit",
                         value: 100
                     }, {
-                        key: 'querySkip',
+                        key: "querySkip",
                         value: 0
                     }, {
-                        key: 'querySort',
+                        key: "querySort",
                         value: [{
-                            fieldName: 'id'
+                            fieldName: "id"
                         }, {
-                            fieldName: '_timeUpdated',
+                            fieldName: "_timeUpdated",
                             isDescending: true
                         }]
                     }, {
-                        key: 'queryWhere',
+                        key: "queryWhere",
                         value: {}
                     }].forEach(function (element) {
-                        crud[element.key] = crud.data['_' + element.key] || JSON.parse(
+                        crud[element.key] = crud.data["_" + element.key] || JSON.parse(
                             local.templateRender(
-                                request.swgg.operation['_' + element.key] || 'null',
+                                request.swgg.operation["_" + element.key] || "null",
                                 request.swgg.paramDict,
-                                { notHtmlSafe: true }
+                                {notHtmlSafe: true}
                             )
                         ) || element.value;
                     });
@@ -3079,8 +3099,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     local.idNameInit(crud);
                     // init crud.data.id
                     switch (crud.crudType[0]) {
-                    case 'crudSetOneById':
-                    case 'crudUpdateOneById':
+                    case "crudSetOneById":
+                    case "crudUpdateOneById":
                         if (!local.isNullOrUndefined(crud.data[crud.idName])) {
                             break;
                         }
@@ -3107,26 +3127,28 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             var pathDict, tmp;
             options = local.objectSetDefault(options, {
                 objectSetDescription: function (dict) {
-                    if (dict &&
-                            dict.description &&
-                            Array.isArray(dict['x-swgg-descriptionLineList'])) {
+                    if (
+                        dict &&
+                        dict.description &&
+                        Array.isArray(dict["x-swgg-descriptionLineList"])
+                    ) {
                         delete dict.description;
                     }
                 }
             });
-            local.objectSetDefault(swaggerJson, { paths: {}, tags: [] });
+            local.objectSetDefault(swaggerJson, {paths: {}, tags: []});
             // fix error - semanticPaths2
             pathDict = {};
             Object.keys(swaggerJson.paths).forEach(function (path) {
-                tmp = path.replace((/\{.*?\}/g), '{}');
+                tmp = path.replace((/\{.*?\}/g), "{}");
                 pathDict[tmp] = pathDict[tmp] || {};
                 pathDict[tmp][path] = true;
             });
             Object.keys(pathDict).forEach(function (key) {
                 Object.keys(pathDict[key]).sort().forEach(function (path, ii) {
                     // fix error.semanticUniquePath
-                    if (ii && swaggerJson['x-swgg-fixErrorSemanticUniquePath']) {
-                        swaggerJson.paths[path + '#' + ii] = swaggerJson.paths[path];
+                    if (ii && swaggerJson["x-swgg-fixErrorSemanticUniquePath"]) {
+                        swaggerJson.paths[path + "#" + ii] = swaggerJson.paths[path];
                         delete swaggerJson.paths[path];
                     }
                 });
@@ -3135,10 +3157,12 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 Object.keys(swaggerJson.paths[path]).forEach(function (method) {
                     tmp = swaggerJson.paths[path][method];
                     // auto-create operationId from path
-                    if (swaggerJson['x-swgg-operationIdFromPath'] ||
-                            tmp['x-swgg-operationIdFromPath'] ||
-                            !tmp.operationId) {
-                        tmp.operationId = local.operationIdFromAjax({ method: method, url: path });
+                    if (
+                        swaggerJson["x-swgg-operationIdFromPath"] ||
+                        tmp["x-swgg-operationIdFromPath"] ||
+                        !tmp.operationId
+                    ) {
+                        tmp.operationId = local.operationIdFromAjax({method: method, url: path});
                     }
                     // normalize parameter.required
                     (tmp.parameters || []).forEach(function (schemaP) {
@@ -3149,14 +3173,14 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 });
             });
             // override tag.description with x-swgg-tags0-override
-            if (swaggerJson['x-swgg-tags0-override']) {
+            if (swaggerJson["x-swgg-tags0-override"]) {
                 swaggerJson.tags.forEach(function (tag) {
-                    tmp = local.objectSetDefault(swaggerJson['x-swgg-tags0-override'][tag.name], {
+                    tmp = local.objectSetDefault(swaggerJson["x-swgg-tags0-override"][tag.name], {
                         description: tag.description,
-                        'x-swgg-descriptionLineList': tag['x-swgg-descriptionLineList']
+                        "x-swgg-descriptionLineList": tag["x-swgg-descriptionLineList"]
                     });
                     tag.description = tmp.description;
-                    tag['x-swgg-descriptionLineList'] = tmp['x-swgg-descriptionLineList'];
+                    tag["x-swgg-descriptionLineList"] = tmp["x-swgg-descriptionLineList"];
                     // objectSetDescription
                     options.objectSetDescription(tmp);
                     options.objectSetDescription(tag);
@@ -3191,19 +3215,25 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     });
                 });
             });
-            if (!local.env.npm_package_swggTags0 ||
-                    (/-all$/).test(local.env.npm_package_swggTags0)) {
+            if (
+                !local.env.npm_package_swggTags0 ||
+                (/-all$/).test(local.env.npm_package_swggTags0)
+            ) {
                 return swaggerJson;
             }
             // override swaggerJson with x-swgg-tags0-override
-            local.objectSetOverride(swaggerJson, swaggerJson['x-swgg-tags0-override'] &&
-                swaggerJson['x-swgg-tags0-override'][local.env.npm_package_swggTags0], 10);
+            local.objectSetOverride(
+                swaggerJson,
+                swaggerJson["x-swgg-tags0-override"] &&
+                        swaggerJson["x-swgg-tags0-override"][local.env.npm_package_swggTags0],
+                10
+            );
             // filter $npm_package_swggTags0 - definitions and parameters
-            ['definitions', 'parameters', 'responses'].forEach(function (schema) {
+            ["definitions", "parameters", "responses"].forEach(function (schema) {
                 schema = swaggerJson[schema] || {};
                 Object.keys(schema).forEach(function (key) {
-                    tmp = schema[key]['x-swgg-tags0'];
-                    if (tmp && tmp !== 'all' && tmp !== local.env.npm_package_swggTags0) {
+                    tmp = schema[key]["x-swgg-tags0"];
+                    if (tmp && tmp !== "all" && tmp !== local.env.npm_package_swggTags0) {
                         delete schema[key];
                     }
                 });
@@ -3211,8 +3241,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             // filter $npm_package_swggTags0 - paths
             Object.keys(swaggerJson.paths).forEach(function (path) {
                 Object.keys(swaggerJson.paths[path]).forEach(function (method) {
-                    tmp = swaggerJson.paths[path][method]['x-swgg-tags0'];
-                    if (tmp && tmp !== 'all' && tmp !== local.env.npm_package_swggTags0) {
+                    tmp = swaggerJson.paths[path][method]["x-swgg-tags0"];
+                    if (tmp && tmp !== "all" && tmp !== local.env.npm_package_swggTags0) {
                         delete swaggerJson.paths[path][method];
                         return;
                     }
@@ -3223,9 +3253,9 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             });
             // filter $npm_package_swggTags0 - tags
             swaggerJson.tags = swaggerJson.tags.filter(function (tag) {
-                return !tag['x-swgg-tags0'] ||
-                    tmp['x-swgg-tags0'] === 'all' ||
-                    tag['x-swgg-tags0'] === local.env.npm_package_swggTags0;
+                return !tag["x-swgg-tags0"] ||
+                        tmp["x-swgg-tags0"] === "all" ||
+                        tag["x-swgg-tags0"] === local.env.npm_package_swggTags0;
             });
             return swaggerJson;
         };
@@ -3238,9 +3268,11 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             options.operation.parameters.forEach(function (schemaP) {
                 tmp = options.paramDict[schemaP.name];
                 // init default value
-                if (!options.modeNoDefault &&
-                        (options.modeDefault || schemaP.required) &&
-                        local.isNullOrUndefined(tmp)) {
+                if (
+                    !options.modeNoDefault &&
+                    (options.modeDefault || schemaP.required) &&
+                    local.isNullOrUndefined(tmp)
+                ) {
                     tmp = local.jsonCopy(schemaP.default);
                 }
                 if (options.modeDefault && local.isNullOrUndefined(tmp)) {
@@ -3250,35 +3282,35 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     });
                 }
                 // parse array
-                if (local.schemaPType(schemaP) === 'array' && schemaP.in !== 'body') {
-                    if (typeof tmp === 'string') {
-                        switch (schemaP.collectionFormat || schemaP['x-swgg-collectionFormat']) {
-                        case 'json':
+                if (local.schemaPType(schemaP) === "array" && schemaP.in !== "body") {
+                    if (typeof tmp === "string") {
+                        switch (schemaP.collectionFormat || schemaP["x-swgg-collectionFormat"]) {
+                        case "json":
                             local.tryCatchOnError(function () {
                                 tmp = JSON.parse(tmp);
                             }, local.nop);
                             options.paramDict[schemaP.name] = tmp;
                             return;
-                        case 'multi':
-                            tmp = local.urlParse('?' + tmp, true).query[schemaP.name];
+                        case "multi":
+                            tmp = local.urlParse("?" + tmp, true).query[schemaP.name];
                             if (!Array.isArray(tmp)) {
                                 tmp = [tmp];
                             }
                             break;
-                        case 'pipes':
-                            tmp = tmp.split('|');
+                        case "pipes":
+                            tmp = tmp.split("|");
                             break;
-                        case 'ssv':
-                            tmp = tmp.split(' ');
+                        case "ssv":
+                            tmp = tmp.split(" ");
                             break;
-                        case 'tsv':
-                            tmp = tmp.split('\t');
+                        case "tsv":
+                            tmp = tmp.split("\t");
                             break;
                         // default to csv
                         default:
-                            tmp = tmp.split(',');
+                            tmp = tmp.split(",");
                         }
-                        if (local.schemaPItemsType(schemaP) !== 'string') {
+                        if (local.schemaPItemsType(schemaP) !== "string") {
                             // try to JSON.parse the string
                             local.tryCatchOnError(function () {
                                 tmp = tmp.map(function (element) {
@@ -3288,9 +3320,11 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                         }
                     }
                 // JSON.parse paramDict
-                } else if (local.schemaPType(schemaP) !== 'file' &&
-                        local.schemaPType(schemaP) !== 'string' &&
-                        (typeof tmp === 'string' || tmp instanceof Uint8Array)) {
+                } else if (
+                    local.schemaPType(schemaP) !== "file" &&
+                    local.schemaPType(schemaP) !== "string" &&
+                    (typeof tmp === "string" || tmp instanceof Uint8Array)
+                ) {
                     // try to JSON.parse the string
                     local.tryCatchOnError(function () {
                         tmp = JSON.parse(local.bufferToString(tmp));
@@ -3311,9 +3345,11 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             return function (error, data, meta) {
                 data = [error, data].map(function (data, ii) {
                     // if no error occurred, then return
-                    if ((ii === 0 && !data) ||
+                    if (
+                        (ii === 0 && !data) ||
                             // if data is already normalized, then return it
-                            (data && data.meta && data.meta.isJsonapiResponse)) {
+                        (data && data.meta && data.meta.isJsonapiResponse)
+                    ) {
                         return data;
                     }
                     // normalize data-list
@@ -3328,8 +3364,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                             data.push(null);
                         }
                         data = data.map(function (element) {
-                            if (!(typeof element === 'object' && element)) {
-                                element = { message: String(element) };
+                            if (!(typeof element === "object" && element)) {
+                                element = {message: String(element)};
                             }
                             // normalize error-object to plain json-object
                             return {
@@ -3343,7 +3379,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                         error.errors = data;
                         return error;
                     }
-                    return { data: data };
+                    return {data: data};
                 });
                 // init data.meta
                 data.forEach(function (data, ii) {
@@ -3358,8 +3394,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                         data.meta.errorsLength = data.errors.length;
                     }
                     data.meta.statusCode = Number(data.meta.statusCode) ||
-                        Number(data.statusCode) ||
-                        0;
+                            Number(data.statusCode) ||
+                            0;
                 });
                 onError(data[0], data[1]);
             };
@@ -3373,15 +3409,15 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             var urlParsed;
             urlParsed = local.urlParseWithBraket(options.url);
             return encodeURIComponent(
-                urlParsed.pathname + urlParsed.hash + ' ' + options.method.toUpperCase()
-            ).replace((/[^\w\-.]/g), '_');
+                urlParsed.pathname + urlParsed.hash + " " + options.method.toUpperCase()
+            ).replace((/[^\w\-.]/g), "_");
         };
 
         local.schemaPItems = function (schemaP) {
         /*
          * this function will return schemaP.items
          */
-            return schemaP['x-swgg-items'] || schemaP.items;
+            return schemaP["x-swgg-items"] || schemaP.items;
         };
 
         local.schemaPItemsType = function (schemaP) {
@@ -3395,7 +3431,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
         /*
          * this function will return schemaP.type
          */
-            return schemaP && (schemaP['x-swgg-type'] || schemaP.type);
+            return schemaP && (schemaP["x-swgg-type"] || schemaP.type);
         };
 
         local.serverRespondJsonapi = function (request, response, error, data, meta) {
@@ -3406,18 +3442,21 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
          */
             local.onErrorJsonapi(function (error, data) {
                 local.serverRespondHeadSet(request, response, error && error.statusCode, {
-                    'Content-Type': 'application/json'
+                    "Content-Type": "application/json"
                 });
                 if (error) {
                     // debug statusCode / method / url
-                    local.errorMessagePrepend(error, response.statusCode + ' ' + request.method +
-                        ' ' + request.url + '\n');
+                    local.errorMessagePrepend(
+                        error,
+                        response.statusCode + " " + request.method +
+                                " " + request.url + "\n"
+                    );
                     // print error.stack to stderr
                     local.onErrorDefault(error);
                 }
                 data = error || data;
-                data.meta.statusCode = response.statusCode = data.meta.statusCode ||
-                    response.statusCode;
+                response.statusCode = data.meta.statusCode || response.statusCode;
+                data.meta.statusCode = response.statusCode;
                 response.end(JSON.stringify(data));
             })(error, data, meta);
         };
@@ -3430,54 +3469,54 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             var data, isArray, operation, type, upsertSchemaP, urlParsed;
             upsertSchemaP = function (schemaP) {
                 if (!operation.parameters.some(function (element) {
-                        if (element.in === schemaP.in && element.name === schemaP.name) {
-                            ['default', 'items', 'schema'].forEach(function (key) {
-                                if (!local.isNullOrUndefined(schemaP[key])) {
-                                    element[key] = schemaP[key];
-                                }
-                            });
-                            return true;
-                        }
-                    })) {
+                    if (element.in === schemaP.in && element.name === schemaP.name) {
+                        ["default", "items", "schema"].forEach(function (key) {
+                            if (!local.isNullOrUndefined(schemaP[key])) {
+                                element[key] = schemaP[key];
+                            }
+                        });
+                        return true;
+                    }
+                })) {
                     operation.parameters.push(schemaP);
                 }
             };
             // init swaggerJson
             swaggerJson = local.objectSetDefault(swaggerJson, {
-                basePath: '/',
+                basePath: "/",
                 definitions: {},
-                info: { title: '', version: '' },
+                info: {title: "", version: ""},
                 paths: {},
-                swagger: '2.0'
+                swagger: "2.0"
             });
             // init options
-            options = local.objectSetDefault(options, { headers: {}, method: 'GET' });
+            options = local.objectSetDefault(options, {headers: {}, method: "GET"});
             // init urlParsed
             urlParsed = local.urlParseWithBraket(options.url);
             // init operation
             operation = {
                 operationId: options.operationId || local.operationIdFromAjax(options),
                 parameters: [],
-                responses: { default: { description: 'default response' } },
-                tags: options.tags || ['undefined'],
-                'x-swgg-tags0': options['x-swgg-tags0']
+                responses: {default: {description: "default response"}},
+                tags: options.tags || ["undefined"],
+                "x-swgg-tags0": options["x-swgg-tags0"]
             };
             if ((/^(?:http|https):\/\//).test(options.url)) {
-                operation['x-swgg-host'] = urlParsed.host;
-                operation['x-swgg-schemes'] = [urlParsed.protocol.slice(0, -1)];
+                operation["x-swgg-host"] = urlParsed.host;
+                operation["x-swgg-schemes"] = [urlParsed.protocol.slice(0, -1)];
             }
-            local.objectSetDefault(swaggerJson, local.objectLiteralize({ paths: {
-                '$[]': [urlParsed.pathname + urlParsed.hash, {
-                    '$[]': [options.method.toLowerCase(), operation]
+            local.objectSetDefault(swaggerJson, local.objectLiteralize({paths: {
+                "$[]": [urlParsed.pathname + urlParsed.hash, {
+                    "$[]": [options.method.toLowerCase(), operation]
                 }]
-            } }), 4);
+            }}), 4);
             // init param in header
             Object.keys(options.headers).forEach(function (key) {
                 upsertSchemaP({
                     default: options.headers[key],
-                    in: 'header',
+                    in: "header",
                     name: key,
-                    type: 'string'
+                    type: "string"
                 });
             });
             // init param in path
@@ -3485,19 +3524,19 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 match0 = match0.slice(1, -1);
                 upsertSchemaP({
                     default: match0,
-                    in: 'path',
+                    in: "path",
                     name: match0,
                     required: true,
-                    type: 'string'
+                    type: "string"
                 });
             });
             // init param in query
             Object.keys(urlParsed.query).forEach(function (key) {
                 upsertSchemaP({
                     default: urlParsed.query[key],
-                    in: 'query',
+                    in: "query",
                     name: key,
-                    type: 'string'
+                    type: "string"
                 });
             });
             data = options.data;
@@ -3506,33 +3545,33 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             }
             // init param in body - text-data
             upsertSchemaP({
-                in: 'body',
-                name: 'body',
-                schema: { type: 'string' }
+                in: "body",
+                name: "body",
+                schema: {type: "string"}
             });
             local.tryCatchOnError(function () {
                 data = JSON.parse(data);
             }, local.nop);
-            if (typeof data !== 'object') {
+            if (typeof data !== "object") {
                 return swaggerJson;
             }
             // init param in body - json-data
             isArray = Array.isArray(data);
             type = local.swaggerJsonFromPostBody(swaggerJson, {
                 data: isArray
-                    ? data[0]
-                    : data,
+                ? data[0]
+                : data,
                 depth: 2,
-                key: 'body',
+                key: "body",
                 prefix: operation.operationId,
-                'x-swgg-tags0': options['x-swgg-tags0']
+                "x-swgg-tags0": options["x-swgg-tags0"]
             });
             upsertSchemaP({
-                in: 'body',
-                name: 'body',
+                in: "body",
+                name: "body",
                 schema: isArray
-                    ? { items: type, type: 'array' }
-                    : type
+                ? {items: type, type: "array"}
+                : type
             });
             return swaggerJson;
         };
@@ -3543,13 +3582,13 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
          * with definitions and paths created from the given curl-command-text
          */
             var arg, argList, doubleBackslash, quote, options;
-            arg = '';
+            arg = "";
             argList = [];
             doubleBackslash = local.stringUniqueKey(text);
             // parse doubleBackslash
             text = text.replace((/\\\\/g), doubleBackslash);
             // parse line-continuation
-            text = text.replace((/\\\n/g), '');
+            text = text.replace((/\\\n/g), "");
             // parse quotes
             text.replace((/(\s*?)(\S+)/g), function (match0, line, word) {
                 line = match0;
@@ -3565,8 +3604,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                         switch (quote) {
                         // parse escapes in double-quotes
                         // https://www.gnu.org/software/bash/manual/html_node/Double-Quotes.html
-                        case '"':
-                            arg = arg.replace((/\\([$`"\n])/g), '$1');
+                        case "\"":
+                            arg = arg.replace((/\\([$`"\n])/g), "$1");
                             arg = arg.slice(1, -1);
                             break;
                         // parse escapes in single-quotes
@@ -3576,42 +3615,42 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                             break;
                         }
                         argList.push(arg);
-                        arg = '';
-                        quote = '';
+                        arg = "";
+                        quote = "";
                     }
                 });
             });
             // un-parse doubleBackslash
             argList = argList.map(function (arg) {
-                return arg.replace(new RegExp(doubleBackslash, 'g'), '\\\\');
+                return arg.replace(new RegExp(doubleBackslash, "g"), "\\\\");
             });
-            argList.push('curl');
+            argList.push("curl");
             argList.forEach(function (arg, ii) {
                 switch (argList[ii - 1]) {
-                case '--data':
-                case '--data-ascii':
-                case '--data-binary':
-                case '--data-raw':
-                case '-d':
+                case "--data":
+                case "--data-ascii":
+                case "--data-binary":
+                case "--data-raw":
+                case "-d":
                     options.data = arg;
                     return;
-                case '--request':
-                case '-X':
+                case "--request":
+                case "-X":
                     options.method = arg;
                     return;
-                case '--header':
-                case '-H':
-                    arg = arg.split(':');
-                    arg[1] = arg.slice(1).join(':').trim();
+                case "--header":
+                case "-H":
+                    arg = arg.split(":");
+                    arg[1] = arg.slice(1).join(":").trim();
                     options.headers[arg[0].toLowerCase()] = arg[1];
                     return;
                 }
-                if (arg === 'curl') {
+                if (arg === "curl") {
                     if (options) {
                         options.url = options.url || argList[ii - 1];
                         swaggerJson = local.swaggerJsonFromAjax(swaggerJson, options);
                     }
-                    options = { headers: {}, method: 'GET' };
+                    options = {headers: {}, method: "GET"};
                 }
                 if ((/^(?:http|https):\/\//).test(arg)) {
                     options.url = arg;
@@ -3626,11 +3665,12 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
          * with definitions created from the post-body-data
          */
             var definition, isArray, prefix, schemaP, type, value;
-            prefix = options.prefix + '.' + encodeURIComponent(options.key);
-            definition = swaggerJson.definitions[prefix] = {
+            prefix = options.prefix + "." + encodeURIComponent(options.key);
+            definition = {
                 properties: {},
-                'x-swgg-tags0': options['x-swgg-tags0']
+                "x-swgg-tags0": options["x-swgg-tags0"]
             };
+            swaggerJson.definitions[prefix] = definition;
             Object.keys(options.data).forEach(function (key) {
                 value = options.data[key];
                 isArray = Array.isArray(value);
@@ -3638,12 +3678,13 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     value = value[0];
                 }
                 type = local.isNullOrUndefined(value)
-                    ? 'string'
-                    : typeof value;
-                schemaP = definition.properties[key] = isArray
-                    ? { default: options.data[key], items: { type: type }, type: 'array' }
-                    : { default: value, type: type };
-                if (!(type === 'object' && options.depth > 1)) {
+                ? "string"
+                : typeof value;
+                schemaP = isArray
+                ? {default: options.data[key], items: {type: type}, type: "array"}
+                : {default: value, type: type};
+                definition.properties[key] = schemaP;
+                if (!(type === "object" && options.depth > 1)) {
                     return;
                 }
                 // recurse
@@ -3652,7 +3693,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     depth: options.depth - 1,
                     key: key,
                     prefix: prefix,
-                    'x-swgg-tags0': options['x-swgg-tags0']
+                    "x-swgg-tags0": options["x-swgg-tags0"]
                 });
                 if (isArray) {
                     schemaP.items = type;
@@ -3660,7 +3701,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     definition.properties[key] = type;
                 }
             });
-            return { $ref: '#/definitions/' + prefix };
+            return {$ref: "#/definitions/" + prefix};
         };
 
         local.swaggerValidate = function (swaggerJson) {
@@ -3673,24 +3714,24 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             local.swaggerValidateDataSchema({
                 data: swaggerJson,
                 modeSchema: true,
-                prefix: ['swaggerJson'],
+                prefix: ["swaggerJson"],
                 schema: local.swaggerSchemaJson,
                 swaggerJson: swaggerJson
             });
             pathDict = {};
             Object.keys(swaggerJson.paths).forEach(function (path) {
-                prefix = ['swaggerJson', 'paths', path];
+                prefix = ["swaggerJson", "paths", path];
                 // validate semanticPaths1
-                test = path.indexOf('?') < 0;
+                test = path.indexOf("?") < 0;
                 local.throwSwaggerError(!test && {
-                    errorType: 'semanticPaths1',
+                    errorType: "semanticPaths1",
                     prefix: prefix
                 });
-                tmp = path.replace((/\{.*?\}/g), '{}');
+                tmp = path.replace((/\{.*?\}/g), "{}");
                 // validate semanticPaths2
                 test = !pathDict[tmp];
                 local.throwSwaggerError(!test && {
-                    errorType: 'semanticPaths2',
+                    errorType: "semanticPaths2",
                     pathList: [pathDict[tmp], path],
                     prefix: prefix
                 });
@@ -3700,16 +3741,16 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 path.replace((/\{.*?\}/g), function (match0) {
                     test = !tmp[match0];
                     local.throwSwaggerError(!test && {
-                        errorType: 'semanticPaths3',
+                        errorType: "semanticPaths3",
                         name: match0,
                         prefix: prefix
                     });
                     tmp[match0] = true;
                 });
                 // validate semanticPaths5
-                test = path.indexOf('{}') < 0;
+                test = path.indexOf("{}") < 0;
                 local.throwSwaggerError(!test && {
-                    errorType: 'semanticPaths5',
+                    errorType: "semanticPaths5",
                     prefix: prefix
                 });
             });
@@ -3718,14 +3759,14 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 tmp = local.swaggerValidateDataSchema({
                     // dereference definition
                     modeDereference: true,
-                    prefix: ['swaggerJson', 'definitions', schemaName],
+                    prefix: ["swaggerJson", "definitions", schemaName],
                     schema: swaggerJson.definitions[schemaName],
                     swaggerJson: swaggerJson
                 });
                 Object.keys(tmp.properties || {}).forEach(function (key) {
                     local.swaggerValidateDataSchema({
                         modeDefault: true,
-                        prefix: ['swaggerJson', 'definitions', schemaName, 'properties', key],
+                        prefix: ["swaggerJson", "definitions", schemaName, "properties", key],
                         schema: tmp.properties[key],
                         swaggerJson: swaggerJson
                     });
@@ -3735,7 +3776,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             Object.keys(swaggerJson.parameters || []).forEach(function (key) {
                 local.swaggerValidateDataSchema({
                     modeDefault: true,
-                    prefix: ['swaggerJson', 'parameters', key],
+                    prefix: ["swaggerJson", "parameters", key],
                     schema: swaggerJson.parameters[key],
                     swaggerJson: swaggerJson
                 });
@@ -3743,7 +3784,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             // validate swaggerJson.paths[key][key].parameters[ii].default
             Object.keys(swaggerJson.paths).forEach(function (path) {
                 Object.keys(swaggerJson.paths[path]).forEach(function (method) {
-                    prefix = ['swaggerJson', 'paths', path, method];
+                    prefix = ["swaggerJson", "paths", path, method];
                     operation = local.swaggerValidateDataSchema({
                         // dereference operation
                         modeDereference: true,
@@ -3755,11 +3796,11 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     test = !operationIdDict[operation.operationId];
                     local.throwSwaggerError(!test && {
                         data: operation.operationId,
-                        errorType: 'semanticOperationIds1',
-                        prefix: prefix.concat(['operationId'])
+                        errorType: "semanticOperationIds1",
+                        prefix: prefix.concat(["operationId"])
                     });
                     operationIdDict[operation.operationId] = true;
-                    tmp = { in: {}, name: {}, path: {}, type: {} };
+                    tmp = {in: {}, name: {}, path: {}, type: {}};
                     path.replace((/\{.*?\}/g), function (match0) {
                         match0 = match0.slice(1, -1);
                         tmp.path[match0] = tmp.path[match0] || [];
@@ -3767,59 +3808,58 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     });
                     (operation.parameters || []).forEach(function (schemaP, ii) {
                         // dereference schemaP
-                        String(schemaP['x-swgg-$ref'] || schemaP.$ref).replace((
+                        String(schemaP["x-swgg-$ref"] || schemaP.$ref).replace((
                             /#\/parameters\/(.+?$)/m
-                        ), function (match0, match1) {
-                            match0 = match1;
+                        ), function (ignore, match1) {
                             schemaP = local.objectSetDefault(
                                 local.jsonCopy(schemaP),
-                                local.jsonCopy(swaggerJson.parameters[match0])
+                                local.jsonCopy(swaggerJson.parameters[match1])
                             );
                             delete schemaP.$ref;
                         });
                         // validate semanticOperations2
-                        test = !(tmp.in.body && schemaP.in === 'body');
+                        test = !(tmp.in.body && schemaP.in === "body");
                         local.throwSwaggerError(!test && {
                             data: operation,
-                            errorType: 'semanticOperations2',
+                            errorType: "semanticOperations2",
                             prefix: prefix,
                             schema: operation
                         });
                         // validate semanticOperations3
                         test = schemaP.name === undefined ||
-                            schemaP.in === undefined ||
-                            !tmp.name[schemaP.name + ' ' + schemaP.in];
+                                schemaP.in === undefined ||
+                                !tmp.name[schemaP.name + " " + schemaP.in];
                         local.throwSwaggerError(!test && {
                             data: operation.parameters,
-                            errorType: 'semanticOperations3',
-                            prefix: prefix.concat(['parameters'])
+                            errorType: "semanticOperations3",
+                            prefix: prefix.concat(["parameters"])
                         });
                         tmp.in[schemaP.in] = true;
-                        tmp.name[schemaP.name + ' ' + schemaP.in] = true;
+                        tmp.name[schemaP.name + " " + schemaP.in] = true;
                         tmp.type[schemaP.type] = true;
                         // validate semanticOperations1
                         test = !(tmp.in.body && tmp.in.formData);
                         local.throwSwaggerError(!test && {
                             data: operation,
-                            errorType: 'semanticOperations1',
+                            errorType: "semanticOperations1",
                             prefix: prefix
                         });
                         // validate schemaP
                         local.swaggerValidateDataSchema({
                             modeDefault: true,
-                            prefix: prefix.concat(['parameters', schemaP.name]),
+                            prefix: prefix.concat(["parameters", schemaP.name]),
                             schema: schemaP,
                             swaggerJson: swaggerJson
                         });
-                        if (schemaP.in === 'path') {
+                        if (schemaP.in === "path") {
                             tmp.path[schemaP.name] = tmp.path[schemaP.name] || [];
                             tmp.path[schemaP.name][1] = true;
                             // validate semanticPaths7
                             test = tmp.path[schemaP.name][0];
                             local.throwSwaggerError(!test && {
                                 data: schemaP,
-                                errorType: 'semanticPaths7',
-                                prefix: prefix.concat(['parameters', ii])
+                                errorType: "semanticPaths7",
+                                prefix: prefix.concat(["parameters", ii])
                             });
                         }
                     });
@@ -3827,28 +3867,28 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                         // validate semanticPaths6
                         test = tmp.path[name][1];
                         local.throwSwaggerError(!test && {
-                            errorType: 'semanticPaths6',
+                            errorType: "semanticPaths6",
                             name: name,
-                            prefix: prefix.concat(['parameters', 'ii'])
+                            prefix: prefix.concat(["parameters", "ii"])
                         });
                     });
                     // validate semanticFormData4
                     test = !tmp.type.file ||
-                        (operation.consumes || []).indexOf('multipart/form-data') >= 0;
+                            (operation.consumes || []).indexOf("multipart/form-data") >= 0;
                     local.throwSwaggerError(!test && {
                         data: operation,
-                        errorType: 'semanticFormData4',
+                        errorType: "semanticFormData4",
                         prefix: prefix
                     });
                     // validate semanticFormData5
                     test = !tmp.in.formData ||
-                        (operation.consumes || []).indexOf(
-                            'application/x-www-form-urlencoded'
-                        ) >= 0 ||
-                        (operation.consumes || []).indexOf('multipart/form-data') >= 0;
+                            (operation.consumes || []).indexOf(
+                        "application/x-www-form-urlencoded"
+                    ) >= 0 ||
+                            (operation.consumes || []).indexOf("multipart/form-data") >= 0;
                     local.throwSwaggerError(!test && {
                         data: operation,
-                        errorType: 'semanticFormData5',
+                        errorType: "semanticFormData5",
                         prefix: prefix,
                         schema: operation
                     });
@@ -3904,7 +3944,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 return;
             }
             data = options.data;
-            options.dataReadonlyRemove = options.dataReadonlyRemove || [{}, '', null];
+            options.dataReadonlyRemove = options.dataReadonlyRemove || [{}, "", null];
             dataReadonlyRemove2 = options.dataReadonlyRemove[2] || {};
             schema = options.schema;
             circularList = [];
@@ -3917,20 +3957,20 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 oneOf = (data && schema.oneOf) || [];
                 for (ii = 0; ii < oneOf.length; ii += 1) {
                     tmp = String(oneOf[ii] && oneOf[ii].$ref)
-                        .replace('http://json-schema.org/draft-04/schema#', '#');
-                    switch (tmp + ' ' + (!local.isNullOrUndefined(data.$ref) || data.in)) {
-                    case '#/definitions/bodyParameter body':
-                    case '#/definitions/formDataParameterSubSchema formData':
-                    case '#/definitions/headerParameterSubSchema header':
-                    case '#/definitions/jsonReference true':
-                    case '#/definitions/pathParameterSubSchema path':
-                    case '#/definitions/queryParameterSubSchema query':
-                        schema = local.swaggerSchemaJson.definitions[tmp.split('/')[2]];
+                    .replace("http://json-schema.org/draft-04/schema#", "#");
+                    switch (tmp + " " + (!local.isNullOrUndefined(data.$ref) || data.in)) {
+                    case "#/definitions/bodyParameter body":
+                    case "#/definitions/formDataParameterSubSchema formData":
+                    case "#/definitions/headerParameterSubSchema header":
+                    case "#/definitions/jsonReference true":
+                    case "#/definitions/pathParameterSubSchema path":
+                    case "#/definitions/queryParameterSubSchema query":
+                        schema = local.swaggerSchemaJson.definitions[tmp.split("/")[2]];
                         break;
                     default:
                         switch (tmp) {
-                        case '#/definitions/bodyParameter':
-                        case '#/definitions/jsonReference':
+                        case "#/definitions/bodyParameter":
+                        case "#/definitions/jsonReference":
                             schema = oneOf[ii ^ 1];
                             break;
                         }
@@ -3947,97 +3987,99 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 test = circularList.indexOf($ref) < 0;
                 local.throwSwaggerError(!test && {
                     data: data,
-                    errorType: 'schemaDereferenceCircular',
+                    errorType: "schemaDereferenceCircular",
                     prefix: options.prefix,
                     schema: schema
                 });
                 circularList.push($ref);
                 // validate semanticWalker6
-                test = $ref.indexOf('#/') === 0 ||
-                    $ref.indexOf('http://json-schema.org/draft-04/schema#/') === 0;
+                test = $ref.indexOf("#/") === 0 ||
+                        $ref.indexOf("http://json-schema.org/draft-04/schema#/") === 0;
                 local.throwSwaggerError(!test && {
                     data: $ref,
-                    errorType: 'semanticWalker6',
-                    prefix: options.prefix.concat(['$ref'])
+                    errorType: "semanticWalker6",
+                    prefix: options.prefix.concat(["$ref"])
                 });
                 switch (options.modeSchema && $ref) {
-                case 'http://json-schema.org/draft-04/schema#/definitions/parameter':
+                case "http://json-schema.org/draft-04/schema#/definitions/parameter":
                     // validate semanticFormData1
-                    test = data.in !== 'formdata';
+                    test = data.in !== "formdata";
                     local.throwSwaggerError(!test && {
                         data: data.in,
-                        errorType: 'semanticFormData1',
-                        prefix: options.prefix.concat(['in'])
+                        errorType: "semanticFormData1",
+                        prefix: options.prefix.concat(["in"])
                     });
                     // validate semanticFormData3
-                    test = data.type !== 'file' || data.in === 'formData';
+                    test = data.type !== "file" || data.in === "formData";
                     local.throwSwaggerError(!test && {
                         data: data,
-                        errorType: 'semanticFormData3',
+                        errorType: "semanticFormData3",
                         prefix: options.prefix
                     });
                     // validate semanticParameters2
-                    test = data.in === 'body' || !local.isNullOrUndefined(data.type);
+                    test = data.in === "body" || !local.isNullOrUndefined(data.type);
                     local.throwSwaggerError(!test && {
                         data: data,
-                        errorType: 'semanticParameters2',
+                        errorType: "semanticParameters2",
                         prefix: options.prefix
                     });
                     break;
-                case 'http://json-schema.org/draft-04/schema#/definitions/schema':
+                case "http://json-schema.org/draft-04/schema#/definitions/schema":
                     list = data.required || [];
                     for (ii = 0; ii < list.length; ii += 1) {
                         tmp = list[ii];
                         // validate semanticSchema1
-                        test = !(data.properties &&
+                        test = !(
+                            data.properties &&
                             data.properties[tmp] &&
-                            data.properties[tmp].readOnly);
+                            data.properties[tmp].readOnly
+                        );
                         local.throwSwaggerError(!test && {
                             data: data.properties[tmp],
-                            errorType: 'semanticSchema1',
-                            prefix: options.prefix.concat(['properties', tmp])
+                            errorType: "semanticSchema1",
+                            prefix: options.prefix.concat(["properties", tmp])
                         });
                     }
                     // validate semanticWalker1
-                    test = local.isNullOrUndefined(data.type) || typeof data.type === 'string';
+                    test = local.isNullOrUndefined(data.type) || typeof data.type === "string";
                     local.throwSwaggerError(!test && {
                         data: data.type,
-                        errorType: 'semanticWalker1',
-                        prefix: options.prefix.concat(['type'])
+                        errorType: "semanticWalker1",
+                        prefix: options.prefix.concat(["type"])
                     });
                     // validate semanticWalker2
                     test = !(data.maximum < data.minimum);
                     local.throwSwaggerError(!test && {
                         data: data,
-                        errorType: 'semanticWalker2',
+                        errorType: "semanticWalker2",
                         prefix: options.prefix
                     });
                     // validate semanticWalker3
                     test = !(data.maxProperties < data.minProperties);
                     local.throwSwaggerError(!test && {
                         data: data,
-                        errorType: 'semanticWalker3',
+                        errorType: "semanticWalker3",
                         prefix: options.prefix
                     });
                     // validate semanticWalker4
                     test = !(data.maxLength < data.minLength);
                     local.throwSwaggerError(!test && {
                         data: data,
-                        errorType: 'semanticWalker4',
+                        errorType: "semanticWalker4",
                         prefix: options.prefix,
                         schema: schema
                     });
                     break;
                 }
-                tmp = $ref.split('/').slice(-2);
-                schema = $ref.indexOf('http://json-schema.org/draft-04/schema#/') === 0
-                    ? local.swaggerSchemaJson[tmp[0]]
-                    : options.swaggerJson[tmp[0]];
+                tmp = $ref.split("/").slice(-2);
+                schema = $ref.indexOf("http://json-schema.org/draft-04/schema#/") === 0
+                ? local.swaggerSchemaJson[tmp[0]]
+                : options.swaggerJson[tmp[0]];
                 schema = schema && schema[tmp[1]];
                 test = schema;
                 local.throwSwaggerError(!test && {
                     data: data,
-                    errorType: 'schemaDereference',
+                    errorType: "schemaDereference",
                     prefix: options.prefix,
                     schema: options.schema
                 });
@@ -4050,7 +4092,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                             // dereference property
                             modeDereference: true,
                             modeDereferenceDepth: options.modeDereferenceDepth - 1,
-                            prefix: options.prefix.concat(['properties', key]),
+                            prefix: options.prefix.concat(["properties", key]),
                             schema: schema.properties[key],
                             swaggerJson: options.swaggerJson
                         });
@@ -4064,12 +4106,12 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             }
             // validate schema.required
             test = options.modeDefault ||
-                !local.isNullOrUndefined(data) ||
-                schema.required !== true ||
-                schema['x-swgg-notRequired'];
+                    !local.isNullOrUndefined(data) ||
+                    schema.required !== true ||
+                    schema["x-swgg-notRequired"];
             local.throwSwaggerError(!test && {
                 data: data,
-                errorType: 'objectRequired',
+                errorType: "objectRequired",
                 prefix: options.prefix,
                 schema: schema
             });
@@ -4077,10 +4119,10 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 return;
             }
             // validate semanticItemsRequiredForArrayObjects1
-            test = !options.modeSchema || local.schemaPType(data) !== 'array' ||
-                (typeof local.schemaPItems(data) === 'object' && local.schemaPItems(data));
+            test = !options.modeSchema || local.schemaPType(data) !== "array" ||
+                    (typeof local.schemaPItems(data) === "object" && local.schemaPItems(data));
             local.throwSwaggerError(!test && {
-                errorType: 'semanticItemsRequiredForArrayObjects1',
+                errorType: "semanticItemsRequiredForArrayObjects1",
                 prefix: options.prefix,
                 schema: data
             });
@@ -4093,126 +4135,129 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             // https://swagger.io/docs/specification/data-models/data-types/
             // https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#data-types
             switch (local.schemaPType(schema)) {
-            case 'array':
+            case "array":
                 test = Array.isArray(data);
                 break;
-            case 'boolean':
-                test = typeof data === 'boolean';
+            case "boolean":
+                test = typeof data === "boolean";
                 break;
-            case 'file':
+            case "file":
                 test = !options.modeSchema;
                 break;
-            case 'integer':
+            case "integer":
                 test = Number.isInteger(data);
                 switch (schema.format) {
-                case 'int32':
+                case "int32":
                     break;
-                case 'int64':
+                case "int64":
                     break;
                 }
                 break;
-            case 'number':
+            case "number":
                 test = Number.isFinite(data);
                 switch (schema.format) {
-                case 'double':
+                case "double":
                     break;
-                case 'float':
+                case "float":
                     break;
                 }
                 break;
-            case 'string':
-                test = typeof data === 'string' ||
-                    (!options.modeSchema && schema.format === 'binary');
+            case "string":
+                test = typeof data === "string" ||
+                        (!options.modeSchema && schema.format === "binary");
                 switch (test && !options.modeSchema && schema.format) {
                 // Clarify 'byte' format #50
                 // https://github.com/swagger-api/swagger-spec/issues/50
-                case 'byte':
+                case "byte":
                     test = !(/[^\n\r+\/0-9=A-Za-z]/).test(data);
                     break;
-                case 'date':
-                case 'date-time':
-                    test = JSON.stringify(new Date(data)) !== 'null';
+                case "date":
+                case "date-time":
+                    test = JSON.stringify(new Date(data)) !== "null";
                     break;
-                case 'email':
+                case "email":
                     test = local.regexpValidateEmail.test(data);
                     break;
-                case 'json':
+                case "json":
                     test = local.tryCatchOnError(function () {
                         JSON.parse(data);
                         return true;
                     }, local.nop);
                     break;
-                case 'phone':
+                case "phone":
                     test = local.regexpValidatePhone.test(data);
                     break;
                 }
                 break;
             default:
-                test = options.modeSchema || typeof data === 'object';
-                break;
+                test = options.modeSchema || typeof data === "object";
             }
             local.throwSwaggerError(!test && {
                 data: data,
-                errorType: 'itemType',
+                errorType: "itemType",
                 prefix: options.prefix,
                 schema: schema,
                 typeof: typeof data
             });
             tmp = typeof data;
-            if (tmp === 'object' && Array.isArray(data)) {
-                tmp = 'array';
+            if (tmp === "object" && Array.isArray(data)) {
+                tmp = "array";
             }
             switch (tmp) {
             // 5.1. Validation keywords for numeric instances (number and integer)
-            case 'number':
+            case "number":
                 // 5.1.1. multipleOf
-                test = typeof schema.multipleOf !== 'number' || data % schema.multipleOf === 0;
+                test = typeof schema.multipleOf !== "number" || data % schema.multipleOf === 0;
                 local.throwSwaggerError(!test && {
                     data: data,
-                    errorType: 'numberMultipleOf',
+                    errorType: "numberMultipleOf",
                     prefix: options.prefix,
                     schema: schema
                 });
                 // 5.1.2. maximum and exclusiveMaximum
-                test = typeof schema.maximum !== 'number' || (schema.exclusiveMaximum
+                test = typeof schema.maximum !== "number" || (
+                    schema.exclusiveMaximum
                     ? data < schema.maximum
-                    : data <= schema.maximum);
+                    : data <= schema.maximum
+                );
                 local.throwSwaggerError(!test && {
                     data: data,
                     errorType: schema.exclusiveMaximum
-                        ? 'numberExclusiveMaximum'
-                        : 'numberMaximum',
+                    ? "numberExclusiveMaximum"
+                    : "numberMaximum",
                     prefix: options.prefix,
                     schema: schema
                 });
                 // 5.1.3. minimum and exclusiveMinimum
-                test = typeof schema.minimum !== 'number' || (schema.exclusiveMinimum
+                test = typeof schema.minimum !== "number" || (
+                    schema.exclusiveMinimum
                     ? data > schema.minimum
-                    : data >= schema.minimum);
+                    : data >= schema.minimum
+                );
                 local.throwSwaggerError(!test && {
                     data: data,
                     errorType: schema.exclusiveMinimum
-                        ? 'numberExclusiveMinimum'
-                        : 'numberMinimum',
+                    ? "numberExclusiveMinimum"
+                    : "numberMinimum",
                     prefix: options.prefix,
                     schema: schema
                 });
                 break;
             // 5.2. Validation keywords for strings
-            case 'string':
+            case "string":
                 // 5.2.1. maxLength
-                test = typeof schema.maxLength !== 'number' || data.length <= schema.maxLength;
+                test = typeof schema.maxLength !== "number" || data.length <= schema.maxLength;
                 local.throwSwaggerError(!test && {
                     data: data,
-                    errorType: 'stringMaxLength',
+                    errorType: "stringMaxLength",
                     prefix: options.prefix,
                     schema: schema
                 });
                 // 5.2.2. minLength
-                test = typeof schema.minLength !== 'number' || data.length >= schema.minLength;
+                test = typeof schema.minLength !== "number" || data.length >= schema.minLength;
                 local.throwSwaggerError(!test && {
                     data: data,
-                    errorType: 'stringMinLength',
+                    errorType: "stringMinLength",
                     prefix: options.prefix,
                     schema: schema
                 });
@@ -4220,13 +4265,13 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 test = !schema.pattern || new RegExp(schema.pattern).test(data);
                 local.throwSwaggerError(!test && {
                     data: data,
-                    errorType: 'stringPattern',
+                    errorType: "stringPattern",
                     prefix: options.prefix,
                     schema: schema
                 });
                 break;
             // 5.3. Validation keywords for arrays
-            case 'array':
+            case "array":
                 // 5.3.1. additionalItems and items
                 // swagger disallows array items
                 data.forEach(function (element, ii) {
@@ -4241,18 +4286,18 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     });
                 });
                 // 5.3.2. maxItems
-                test = typeof schema.maxItems !== 'number' || data.length <= schema.maxItems;
+                test = typeof schema.maxItems !== "number" || data.length <= schema.maxItems;
                 local.throwSwaggerError(!test && {
                     data: data,
-                    errorType: 'arrayMaxItems',
+                    errorType: "arrayMaxItems",
                     prefix: options.prefix,
                     schema: schema
                 });
                 // 5.3.3. minItems
-                test = typeof schema.minItems !== 'number' || data.length >= schema.minItems;
+                test = typeof schema.minItems !== "number" || data.length >= schema.minItems;
                 local.throwSwaggerError(!test && {
                     data: data,
-                    errorType: 'arrayMinItems',
+                    errorType: "arrayMinItems",
                     prefix: options.prefix,
                     schema: schema
                 });
@@ -4263,29 +4308,29 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 });
                 local.throwSwaggerError(!test && {
                     data: data,
-                    errorType: 'arrayUniqueItems',
+                    errorType: "arrayUniqueItems",
                     prefix: options.prefix,
                     schema: schema,
                     tmp: tmp
                 });
                 break;
             // 5.4. Validation keywords for objects
-            case 'object':
+            case "object":
                 // 5.4.1. maxProperties
-                test = typeof schema.maxProperties !== 'number' ||
-                    Object.keys(data).length <= schema.maxProperties;
+                test = typeof schema.maxProperties !== "number" ||
+                        Object.keys(data).length <= schema.maxProperties;
                 local.throwSwaggerError(!test && {
                     data: data,
-                    errorType: 'objectMaxProperties',
+                    errorType: "objectMaxProperties",
                     prefix: options.prefix,
                     schema: schema
                 });
                 // 5.4.2. minProperties
-                test = typeof schema.minProperties !== 'number' ||
-                    Object.keys(data).length >= schema.minProperties;
+                test = typeof schema.minProperties !== "number" ||
+                        Object.keys(data).length >= schema.minProperties;
                 local.throwSwaggerError(!test && {
                     data: data,
-                    errorType: 'objectMinProperties',
+                    errorType: "objectMinProperties",
                     prefix: options.prefix,
                     schema: schema
                 });
@@ -4295,7 +4340,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     test = !local.isNullOrUndefined(data[key]);
                     local.throwSwaggerError(!test && {
                         data: data,
-                        errorType: 'semanticItemsRequiredForArrayObjects2',
+                        errorType: "semanticItemsRequiredForArrayObjects2",
                         key: key,
                         prefix: options.prefix,
                         schema: schema
@@ -4358,7 +4403,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     test = tmp || schema.additionalProperties !== false;
                     local.throwSwaggerError(!test && {
                         data: data,
-                        errorType: 'objectAdditionalProperties',
+                        errorType: "objectAdditionalProperties",
                         key: key,
                         prefix: options.prefix,
                         schema: schema
@@ -4391,7 +4436,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                         test = !local.isNullOrUndefined(data[key2]);
                         local.throwSwaggerError(!test && {
                             data: data,
-                            errorType: 'objectDependencies',
+                            errorType: "objectDependencies",
                             key: key,
                             key2: key2,
                             prefix: options.prefix,
@@ -4404,14 +4449,16 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             // 5.5. Validation keywords for any instance type
             // 5.5.1. enum
             tmp = schema.enum || (!options.modeSchema && (local.schemaPItems(schema) || {}).enum);
-            test = !tmp || (Array.isArray(data)
+            test = !tmp || (
+                Array.isArray(data)
                 ? data
-                : [data]).every(function (element) {
+                : [data]
+            ).every(function (element) {
                 return tmp.indexOf(element) >= 0;
             });
             local.throwSwaggerError(!test && {
                 data: data,
-                errorType: 'itemEnum',
+                errorType: "itemEnum",
                 prefix: options.prefix,
                 schema: schema,
                 tmp: tmp
@@ -4448,15 +4495,15 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             });
             local.throwSwaggerError(!test && {
                 data: data,
-                errorType: 'itemOneOf',
+                errorType: "itemOneOf",
                 prefix: options.prefix,
                 schema: schema,
                 tmp: tmp
             });
             // 5.5.5. oneOf
             tmp = !schema.oneOf
-                ? 1
-                : 0;
+            ? 1
+            : 0;
             (schema.oneOf || []).some(function (element) {
                 local.tryCatchOnError(function () {
                     // recurse - schema.oneOf
@@ -4474,7 +4521,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             test = tmp === 1;
             local.throwSwaggerError(!test && {
                 data: data,
-                errorType: 'itemOneOf',
+                errorType: "itemOneOf",
                 prefix: options.prefix,
                 schema: schema,
                 tmp: tmp
@@ -4493,7 +4540,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             }, local.nop);
             local.throwSwaggerError(!test && {
                 data: data,
-                errorType: 'itemNot',
+                errorType: "itemNot",
                 prefix: options.prefix,
                 schema: schema
             });
@@ -4519,36 +4566,38 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
-                    if (typeof options.data === 'string') {
+                    if (typeof options.data === "string") {
                         options.onNext(null, options.data);
                         return;
                     }
                     // fetch url
                     if ((/^(?:http|https):\/\//).test(options.file)) {
-                        local.ajax({ url: options.file }, function (error, xhr) {
+                        local.ajax({url: options.file}, function (error, xhr) {
                             options.onNext(error, xhr && xhr.responseText);
                         });
                         return;
                     }
                     // read file
-                    local.fs.readFile(options.file, 'utf8', options.onNext);
+                    local.fs.readFile(options.file, "utf8", options.onNext);
                     break;
                 case 2:
                     // jslint
                     local.jslint.jslintAndPrint(data, options.file);
                     local.assert(
                         !local.jslint.errorText,
-                        local.jslint.errorText.replace((/\u001b\[\d*m/g), '')
+                        local.jslint.errorText.replace((/\u001b\[\d*m/g), "")
                     );
                     // validate
                     local.swgg.swaggerValidate(JSON.parse(data));
                     options.onNext();
                     break;
                 default:
-                    console.error(error
-                        ? '\u001b[31mswagger-validate - failed - ' + options.file + '\n' +
-                            error.message + '\u001b[39m'
-                        : 'swagger-validate - passed - ' + options.file);
+                    console.error(
+                        error
+                        ? "\u001b[31mswagger-validate - failed - " + options.file + "\n" +
+                        error.message + "\u001b[39m"
+                        : "swagger-validate - passed - " + options.file
+                    );
                     onError(error);
                 }
             });
@@ -4565,33 +4614,33 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 return;
             }
             [0, 2].forEach(function (ii) {
-                options['prefix' + ii] = options.prefix[ii] + options.prefix.slice(
+                options["prefix" + ii] = options.prefix[ii] + options.prefix.slice(
                     ii + 1
                 ).map(function (element) {
-                    return '[' + JSON.stringify(element) + ']';
-                }).join('');
+                    return "[" + JSON.stringify(element) + "]";
+                }).join("");
             });
-            options.prefix0 += ' = ' + local.stringTruncate(
-                JSON.stringify(options.data) || 'undefined',
+            options.prefix0 += " = " + local.stringTruncate(
+                JSON.stringify(options.data) || "undefined",
                 100
             );
             options.schema2 = local.stringTruncate(
-                JSON.stringify(options.schema) || 'undefined',
+                JSON.stringify(options.schema) || "undefined",
                 500
             );
-            options.type2 = (options.schema && local.schemaPType(options.schema)) || 'object';
+            options.type2 = (options.schema && local.schemaPType(options.schema)) || "object";
             if (options.schema && options.schema.format) {
-                options.type2 += ' (' + options.schema.format + ')';
+                options.type2 += " (" + options.schema.format + ")";
             }
-            error = new Error('error.' + options.errorType + ' - ' + local.templateRender(
+            error = new Error("error." + options.errorType + " - " + local.templateRender(
                 local.swaggerErrorTypeDict[options.errorType],
                 options,
-                { notHtmlSafe: true }
+                {notHtmlSafe: true}
             ));
             error.messageShort = local.templateRender(
-                local.swaggerErrorTypeDict[options.errorType].replace('{{prefix0}}', '{{prefix2}}'),
+                local.swaggerErrorTypeDict[options.errorType].replace("{{prefix0}}", "{{prefix2}}"),
                 options,
-                { notHtmlSafe: true }
+                {notHtmlSafe: true}
             );
             error.options = options;
             error.statusCode = 400;
@@ -4599,11 +4648,15 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
         };
 
         local.uiEventDelegate = function (event) {
-            event.targetOnEvent = event.target.closest('.onEvent');
+            event.targetOnEvent = event.target.closest(".onEvent");
             // filter non-input keyup-event
-            if (!event.targetOnEvent ||
-                    (event.type === 'keyup' &&
-                    !event.target.closest('input, option, select, textarea'))) {
+            if (
+                !event.targetOnEvent ||
+                (
+                    event.type === "keyup" &&
+                    !event.target.closest("input, option, select, textarea")
+                )
+            ) {
                 return;
             }
             Object.keys(local.uiEventListenerDict).sort().some(function (key) {
@@ -4611,8 +4664,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     return;
                 }
                 switch (event.targetOnEvent.tagName) {
-                case 'BUTTON':
-                case 'FORM':
+                case "BUTTON":
+                case "FORM":
                     event.preventDefault();
                     break;
                 }
@@ -4624,27 +4677,27 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
 
         local.uiEventListenerDict = {};
 
-        local.uiEventListenerDict['.onEventDomDb'] = local.db.onEventDomDb;
+        local.uiEventListenerDict[".onEventDomDb"] = local.db.onEventDomDb;
 
-        local.uiEventListenerDict['.onEventInputTextareaChange'] = function (event) {
+        local.uiEventListenerDict[".onEventInputTextareaChange"] = function (event) {
         /*
          * this function will show/hide the textarea's multiline placeholder
          */
             var isTransparent, value;
-            isTransparent = event.targetOnEvent.style.background.indexOf('transparent') >= 0;
+            isTransparent = event.targetOnEvent.style.background.indexOf("transparent") >= 0;
             value = event.targetOnEvent.value;
             if (value && isTransparent) {
-                event.targetOnEvent.style.background = '';
+                event.targetOnEvent.style.background = "";
             }
             if (!value && !isTransparent) {
-                event.targetOnEvent.style.background = 'transparent';
+                event.targetOnEvent.style.background = "transparent";
             }
-            local.uiEventListenerDict['.onEventInputValidateAndAjax']({
+            local.uiEventListenerDict[".onEventInputValidateAndAjax"]({
                 targetOnEvent: event.targetOnEvent
             });
         };
 
-        local.uiEventListenerDict['.onEventInputValidateAndAjax'] = function (options, onError) {
+        local.uiEventListenerDict[".onEventInputValidateAndAjax"] = function (options, onError) {
         /*
          * this function will validate the input parameters
          * against the schemas in options.parameters
@@ -4660,21 +4713,21 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     return text;
                 });
             };
-            options.targetOnEvent = options.targetOnEvent.closest('.operation');
+            options.targetOnEvent = options.targetOnEvent.closest(".operation");
             options.api = local.apiDict[options.targetOnEvent.dataset._methodPath];
             options.headers = {};
-            options.modeAjax = options.modeAjax || 'validate';
+            options.modeAjax = options.modeAjax || "validate";
             options.modeNoDefault = true;
             options.paramDict = {};
-            options.url = '';
+            options.url = "";
             options.api.parameters.forEach(function (schemaP) {
                 tmp = options.targetOnEvent.querySelector(
-                    '.schemaP[data-name=' + JSON.stringify(schemaP.name) + '] .input'
+                    ".schemaP[data-name=" + JSON.stringify(schemaP.name) + "] .input"
                 );
                 switch (tmp.tagName) {
-                case 'INPUT':
+                case "INPUT":
                     // parse file
-                    if (local.schemaPType(tmp) === 'file') {
+                    if (local.schemaPType(tmp) === "file") {
                         tmp = tmp.files && tmp.files[0];
                         break;
                     }
@@ -4683,51 +4736,53 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                         return;
                     }
                     // parse string
-                    if (local.schemaPType(schemaP) !== 'string') {
+                    if (local.schemaPType(schemaP) !== "string") {
                         tmp = jsonParse(tmp);
                     }
                     break;
-                case 'SELECT':
+                case "SELECT":
                     tmp = Array.from(tmp.options)
-                        .filter(function (element) {
-                            return element.selected;
-                        })
-                        .map(function (element) {
-                            return jsonParse(decodeURIComponent(
-                                element.dataset.valueSelectOption
-                            ));
-                        });
-                    if (!tmp.length || tmp[0] === '$swggUndefined') {
+                    .filter(function (element) {
+                        return element.selected;
+                    })
+                    .map(function (element) {
+                        return jsonParse(decodeURIComponent(
+                            element.dataset.valueSelectOption
+                        ));
+                    });
+                    if (!tmp.length || tmp[0] === "$swggUndefined") {
                         return;
                     }
-                    if (local.schemaPType(schemaP) !== 'array') {
+                    if (local.schemaPType(schemaP) !== "array") {
                         tmp = tmp[0];
                     }
                     break;
-                case 'TEXTAREA':
+                case "TEXTAREA":
                     tmp = tmp.value;
                     if (!tmp) {
                         return;
                     }
                     // ignore string (json)
-                    if (schemaP.format === 'json' && local.schemaPType(schemaP) === 'string') {
+                    if (schemaP.format === "json" && local.schemaPType(schemaP) === "string") {
                         break;
                     }
-                    if (schemaP.schema &&
-                            local.schemaPType(schemaP.schema) === 'string' &&
-                            typeof tmp === 'string') {
+                    if (
+                        schemaP.schema &&
+                        local.schemaPType(schemaP.schema) === "string" &&
+                        typeof tmp === "string"
+                    ) {
                         break;
                     }
                     // parse schema
-                    if (schemaP.in === 'body') {
+                    if (schemaP.in === "body") {
                         tmp = jsonParse(tmp);
                         break;
                     }
                     // parse array
-                    tmp = tmp.split('\n').map(function (element) {
-                        return local.schemaPItemsType(schemaP) === 'string'
-                            ? element
-                            : jsonParse(element);
+                    tmp = tmp.split("\n").map(function (element) {
+                        return local.schemaPItemsType(schemaP) === "string"
+                        ? element
+                        : jsonParse(element);
                     });
                     break;
                 }
@@ -4741,144 +4796,144 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             });
             // shake input on error
             Array.from(options.targetOnEvent.querySelectorAll(
-                '.schemaP[data-name]'
+                ".schemaP[data-name]"
             )).forEach(function (element) {
                 tmp = errorDict[element.dataset.name];
-                local.uiAnimateShakeIfError(tmp, element.querySelector('.input'));
-                element.querySelector('.colorError').textContent = tmp
-                    ? tmp.messageShort
-                    : '';
+                local.uiAnimateShakeIfError(tmp, element.querySelector(".input"));
+                element.querySelector(".colorError").textContent = tmp
+                ? tmp.messageShort
+                : "";
             });
             // shake submit-button on error
             local.uiAnimateShakeIfError(
                 options.error,
-                options.targetOnEvent.querySelector('.onEventOperationAjax')
+                options.targetOnEvent.querySelector(".onEventOperationAjax")
             );
             // init requestCurl
             tmp = options.data;
             local.tryCatchOnError(function () {
                 tmp = JSON.stringify(JSON.parse(options.data), null, 4);
             }, local.nop);
-            tmp = 'curl \\\n' + '--request ' + options.api._method + ' \\\n' +
-                Object.keys(options.headers).map(function (key) {
-                    return "--header '" + key + ': ' + options.headers[key] + "' \\\n";
-                }).join('') + '--data-binary ' + (typeof tmp === 'string'
-                    ? "'" + tmp.replace(/'/g, "'\"'\"'") + "'"
-                    : '<blob>') + ' \\\n"' + options.url.replace((/&/g), '&\\\n') + '"';
-            options.targetOnEvent.querySelector('.requestCurl').textContent = tmp;
+            tmp = "curl \\\n" + "--request " + options.api._method + " \\\n" +
+                    Object.keys(options.headers).map(function (key) {
+                return "--header '" + key + ": " + options.headers[key] + "' \\\n";
+            }).join("") + "--data-binary " + (
+                typeof tmp === "string"
+                ? "'" + tmp.replace(/'/g, "'\"'\"'") + "'"
+                : "<blob>"
+            ) + " \\\n\"" + options.url.replace((/&/g), "&\\\n") + "\"";
+            options.targetOnEvent.querySelector(".requestCurl").textContent = tmp;
             // init requestJavascript
-            options.targetOnEvent.querySelector('.requestJavascript').textContent =
-                local.templateRender(local.templateUiRequestJavascript, {
-                    options: options,
-                    optionsJson: JSON.stringify({
-                        paramDict: options.paramDict
-                    }, null, 4)
-                }, { notHtmlSafe: true });
+            options.targetOnEvent.querySelector(".requestJavascript").textContent =
+                    local.templateRender(local.templateUiRequestJavascript, {
+                options: options,
+                optionsJson: JSON.stringify({
+                    paramDict: options.paramDict
+                }, null, 4)
+            }, {notHtmlSafe: true});
         };
 
-        local.uiEventListenerDict['.onEventOperationAjax'] = function (options) {
+        local.uiEventListenerDict[".onEventOperationAjax"] = function (options) {
         /*
          * this function will submit the operation to the backend
          */
             // ensure options is stateless
-            options = { targetOnEvent: options.targetOnEvent.closest('.operation') };
+            options = {targetOnEvent: options.targetOnEvent.closest(".operation")};
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
                     // force ajax
-                    options.modeAjax = 'ajax';
+                    options.modeAjax = "ajax";
                     // validate input
-                    local.uiEventListenerDict['.onEventInputValidateAndAjax'](
+                    local.uiEventListenerDict[".onEventInputValidateAndAjax"](
                         options,
                         options.onNext
                     );
                     // reset response output
                     Array.from(options.targetOnEvent.querySelectorAll(
-                        '.responseBody, .responseHeaders, .responseStatusCode'
+                        ".responseBody, .responseHeaders, .responseStatusCode"
                     )).forEach(function (element) {
-                        element.classList.remove('hasError');
-                        element.textContent = 'loading ...';
+                        element.classList.remove("hasError");
+                        element.textContent = "loading ...";
                     });
-                    options.targetOnEvent.querySelector('.responseMedia').innerHTML = '';
+                    options.targetOnEvent.querySelector(".responseMedia").innerHTML = "";
                     // scrollTo response
-                    options.targetOnEvent.querySelector('.responseStatusCode').focus();
+                    options.targetOnEvent.querySelector(".responseStatusCode").focus();
                     break;
                 default:
                     local.onErrorDefault(error);
                     data = local.objectSetDefault(data, {
-                        contentType: 'undefined',
-                        statusCode: 'undefined'
+                        contentType: "undefined",
+                        statusCode: "undefined"
                     });
                     // init responseStatusCode
-                    options.targetOnEvent.querySelector('.responseStatusCode').textContent =
-                        data.statusCode;
+                    options.targetOnEvent.querySelector(".responseStatusCode").textContent =
+                            data.statusCode;
                     // init responseHeaders
-                    options.targetOnEvent.querySelector('.responseHeaders').textContent =
-                        Object.keys(data.responseHeaders).map(function (key) {
-                            return key + ': ' + data.responseHeaders[key] + '\r\n';
-                        }).join('');
+                    options.targetOnEvent.querySelector(".responseHeaders").textContent =
+                            Object.keys(data.responseHeaders).map(function (key) {
+                        return key + ": " + data.responseHeaders[key] + "\r\n";
+                    }).join("");
                     // init responseBody
-                    options.targetOnEvent.querySelector('.responseHeaders').textContent.replace((
+                    options.targetOnEvent.querySelector(".responseHeaders").textContent.replace((
                         /^content-type:(.*?)$/im
-                    ), function (match0, match1) {
-                        match0 = match1;
-                        data.contentType = match0.trim();
+                    ), function (ignore, match1) {
+                        data.contentType = match1.trim();
                     });
-                    data.mediaType = data.contentType.split('/')[0].replace('image', 'img');
+                    data.mediaType = data.contentType.split("/")[0].replace("image", "img");
                     switch (data.mediaType) {
-                    case 'audio':
-                    case 'img':
-                    case 'video':
-                        options.targetOnEvent.querySelector('.responseBody').textContent =
-                            data.contentType;
-                        options.targetOnEvent.querySelector('.responseMedia').innerHTML =
-                            '<' + data.mediaType +
-                            ' class="domOnEventMediaHotkeysInit" controls src="data:' +
-                            data.contentType +
-                            ';base64,' + local.base64FromBuffer(data.responseBuffer) + '"></' +
-                            data.mediaType + '>';
-                        local.global.domOnEventMediaHotkeys('init');
+                    case "audio":
+                    case "img":
+                    case "video":
+                        options.targetOnEvent.querySelector(".responseBody").textContent =
+                                data.contentType;
+                        options.targetOnEvent.querySelector(".responseMedia").innerHTML =
+                                "<" + data.mediaType +
+                                " class=\"domOnEventMediaHotkeysInit\" controls src=\"data:" +
+                                data.contentType +
+                                ";base64," + local.base64FromBuffer(data.responseBuffer) + "\"></" +
+                                data.mediaType + ">";
+                        local.global.domOnEventMediaHotkeys("init");
                         break;
                     default:
-                        options.targetOnEvent.querySelector('.responseBody').textContent =
-                            data.responseJson
-                            ? JSON.stringify(data.responseJson, null, 4)
-                            : data.response;
+                        options.targetOnEvent.querySelector(".responseBody").textContent =
+                                data.responseJson
+                        ? JSON.stringify(data.responseJson, null, 4)
+                        : data.response;
                     }
                     // shake response on error
                     Array.from(options.targetOnEvent.querySelectorAll(
-                        '.responseBody, .responseHeaders, .responseStatusCode'
+                        ".responseBody, .responseHeaders, .responseStatusCode"
                     )).forEach(function (element) {
                         local.uiAnimateShakeIfError(data.statusCode >= 400, element);
                     });
-                    break;
                 }
             });
             options.modeNext = 0;
             options.onNext();
         };
 
-        local.uiEventListenerDict['.onEventOperationDisplayShow'] = function (event, onError) {
+        local.uiEventListenerDict[".onEventOperationDisplayShow"] = function (event, onError) {
         /*
          * this function will toggle the display of the operation
          */
             var element;
             element = event.targetOnEvent;
-            element = element.querySelector('.operation') || element.closest('.operation');
-            location.hash = '!' + element.id;
-            element.closest('.resource').classList.remove('expanded');
+            element = element.querySelector(".operation") || element.closest(".operation");
+            location.hash = "!" + element.id;
+            element.closest(".resource").classList.remove("expanded");
             // show parent resource
-            local.uiAnimateSlideDown(element.closest('.resource').querySelector('.operationList'));
+            local.uiAnimateSlideDown(element.closest(".resource").querySelector(".operationList"));
             // show the operation, but hide all other operations
             local.uiAnimateSlideAccordian(
-                element.querySelector('.operation > form'),
-                Array.from(element.closest('.operationList').querySelectorAll('.operation > form')),
+                element.querySelector(".operation > form"),
+                Array.from(element.closest(".operationList").querySelectorAll(".operation > form")),
                 function () {
                     // scrollTo operation
-                    element.querySelector('[tabIndex]').blur();
-                    element.querySelector('[tabIndex]').focus();
+                    element.querySelector("[tabIndex]").blur();
+                    element.querySelector("[tabIndex]").focus();
                     // validate input
-                    local.uiEventListenerDict['.onEventInputValidateAndAjax']({
+                    local.uiEventListenerDict[".onEventInputValidateAndAjax"]({
                         targetOnEvent: element
                     });
                     local.setTimeoutOnError(onError, 0, null, element);
@@ -4886,49 +4941,49 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             );
         };
 
-        local.uiEventListenerDict['.onEventResourceDisplayAction'] = function (event) {
+        local.uiEventListenerDict[".onEventResourceDisplayAction"] = function (event) {
         /*
          * this function will toggle the display of the resource
          */
-            location.hash = '!' + event.currentTarget.id;
-            event.targetOnEvent.className.split(' ').some(function (className) {
+            location.hash = "!" + event.currentTarget.id;
+            event.targetOnEvent.className.split(" ").some(function (className) {
                 switch (className) {
-                case 'td1':
+                case "td1":
                     // show the resource, but hide all other resources
                     local.uiAnimateSlideAccordian(
-                        event.currentTarget.querySelector('.operationList'),
-                        Array.from(document.querySelectorAll('.swggUiContainer .operationList'))
+                        event.currentTarget.querySelector(".operationList"),
+                        Array.from(document.querySelectorAll(".swggUiContainer .operationList"))
                     );
                     // show at least one operation in the resource
-                    local.uiEventListenerDict['.onEventOperationDisplayShow']({
+                    local.uiEventListenerDict[".onEventOperationDisplayShow"]({
                         targetOnEvent: event.currentTarget.querySelector(
-                            '.operation .uiAnimateSlide[style*="max-height: 100%"]'
-                        ) || event.currentTarget.querySelector('.operation')
+                            ".operation .uiAnimateSlide[style*=\"max-height: 100%\"]"
+                        ) || event.currentTarget.querySelector(".operation")
                     });
                     return true;
-                case 'td2':
+                case "td2":
                     // show the resource, but hide all other resources
                     local.uiAnimateSlideAccordian(
-                        event.currentTarget.querySelector('.operationList'),
-                        Array.from(document.querySelectorAll('.swggUiContainer .operationList'))
+                        event.currentTarget.querySelector(".operationList"),
+                        Array.from(document.querySelectorAll(".swggUiContainer .operationList"))
                     );
                     // collapse all operations in the resource
-                    if (event.currentTarget.classList.contains('expanded')) {
-                        event.currentTarget.classList.remove('expanded');
+                    if (event.currentTarget.classList.contains("expanded")) {
+                        event.currentTarget.classList.remove("expanded");
                         Array.from(event.currentTarget.querySelectorAll(
-                            '.operation > form'
+                            ".operation > form"
                         )).forEach(function (element) {
                             local.uiAnimateSlideUp(element);
                         });
                     // expand all operations in the resource
                     } else {
-                        event.currentTarget.classList.add('expanded');
+                        event.currentTarget.classList.add("expanded");
                         Array.from(event.currentTarget.querySelectorAll(
-                            '.operation > form'
+                            ".operation > form"
                         )).forEach(function (element) {
                             local.uiAnimateSlideDown(element);
                             // validate input
-                            local.uiEventListenerDict['.onEventInputValidateAndAjax']({
+                            local.uiEventListenerDict[".onEventInputValidateAndAjax"]({
                                 targetOnEvent: element
                             });
                         });
@@ -4938,62 +4993,67 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             });
         };
 
-        local.uiEventListenerDict['.onEventUiReload'] = function (options, onError) {
+        local.uiEventListenerDict[".onEventUiReload"] = function (options, onError) {
         /*
          * this function will reload the ui
          */
             var resource, swaggerJson;
-            options = swaggerJson = options || {};
+            options = options || {};
+            swaggerJson = options;
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
-                    options.inputUrl = document.querySelector('.swggUiContainer > .thead > .td2');
+                    options.inputUrl = document.querySelector(".swggUiContainer > .thead > .td2");
                     // clear all apiKeyValue's from localStorage
-                    if (options.targetOnEvent &&
-                            options.targetOnEvent.id === 'swggApiKeyClearButton1') {
-                        local.apiKeyValue = '';
+                    if (
+                        options.targetOnEvent &&
+                        options.targetOnEvent.id === "swggApiKeyClearButton1"
+                    ) {
+                        local.apiKeyValue = "";
                         Object.keys(localStorage).forEach(function (key) {
-                            if (key.indexOf('utility2_swgg_apiKeyKey_') === 0) {
+                            if (key.indexOf("utility2_swgg_apiKeyKey_") === 0) {
                                 localStorage.removeItem(key);
                             }
                         });
                     // restore apiKeyValue
                     } else if (options.swggInit) {
-                        local.apiKeyKey = 'utility2_swgg_apiKeyKey_' + encodeURIComponent(
-                            local.urlParse(options.inputUrl.value.replace((/^\//), '')).href
+                        local.apiKeyKey = "utility2_swgg_apiKeyKey_" + encodeURIComponent(
+                            local.urlParse(options.inputUrl.value.replace((/^\//), "")).href
                         );
-                        local.apiKeyValue = localStorage.getItem(local.apiKeyKey) || '';
+                        local.apiKeyValue = localStorage.getItem(local.apiKeyKey) || "";
                     // save apiKeyValue
                     } else {
-                        local.apiKeyValue = document.querySelector('#swggApiKeyInput1').value;
+                        local.apiKeyValue = document.querySelector("#swggApiKeyInput1").value;
                         local.localStorageSetItemOrClear(local.apiKeyKey, local.apiKeyValue);
                     }
                     // if keyup-event is not return-key, then return
-                    if ((options.type === 'keyup' && options.code !== 'Enter') ||
+                    if (
+                        (options.type === "keyup" && options.code !== "Enter") ||
                             // do not reload ui during test
-                            local.global.utility2_modeTest >= 4) {
+                        local.global.utility2_modeTest >= 4
+                    ) {
                         options.modeNext = Infinity;
                         options.onNext();
                         return;
                     }
                     // reset ui
-                    document.querySelector('#swggUiReloadErrorDiv1').textContent = '';
+                    document.querySelector("#swggUiReloadErrorDiv1").textContent = "";
                     Array.from(document.querySelectorAll(
-                        '.swggUiContainer > .reset'
+                        ".swggUiContainer > .reset"
                     )).forEach(function (element) {
                         element.remove();
                     });
                     // normalize swaggerJsonUrl
                     options.inputUrl.value = local.urlParse(
-                        options.inputUrl.value.replace((/^\//), '')
+                        options.inputUrl.value.replace((/^\//), "")
                     ).href;
-                    document.querySelector('#swggAjaxProgressDiv1 span').innerHTML =
-                        'loading swagger.json';
+                    document.querySelector("#swggAjaxProgressDiv1 span").innerHTML =
+                            "loading swagger.json";
                     options.onNext();
                     break;
                 case 2:
                     // fetch swagger.json file
-                    local.ajax({ url: options.inputUrl.value }, options.onNext);
+                    local.ajax({url: options.inputUrl.value}, options.onNext);
                     break;
                 case 3:
                     // JSON.parse swagger.json string
@@ -5003,37 +5063,39 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     break;
                 case 4:
                     // reset state
-                    local.apiDict = local.swaggerJson = null;
+                    local.apiDict = null;
+                    local.swaggerJson = null;
                     // apiUpdate swagger.json object
                     local.apiUpdate(data);
-                    swaggerJson = local.uiState = local.jsonCopy(local.swaggerJson);
+                    swaggerJson = local.jsonCopy(local.swaggerJson);
+                    local.uiState = swaggerJson;
                     // init ajaxProgressText
-                    swaggerJson.ajaxProgressText = 'rendering swagger.json';
+                    swaggerJson.ajaxProgressText = "rendering swagger.json";
                     // init apiKeyValue
                     swaggerJson.apiKeyValue = local.apiKeyValue;
                     // templateRender title
-                    document.querySelector('head > title').textContent = local.templateRender(
+                    document.querySelector("head > title").textContent = local.templateRender(
                         local.templateUiTitle,
                         swaggerJson
                     ).trim();
                     // init urlSwaggerJson
                     swaggerJson.urlSwaggerJson = options.inputUrl.value;
                     // templateRender main
-                    document.querySelector('.swggUiContainer').innerHTML = local.templateRender(
+                    document.querySelector(".swggUiContainer").innerHTML = local.templateRender(
                         local.templateUiMain,
                         swaggerJson
                     );
                     setTimeout(function () {
                         // recurse - render .resourceList
-                        local.uiEventListenerDict['.onEventUiReload'](swaggerJson, options.onNext);
+                        local.uiEventListenerDict[".onEventUiReload"](swaggerJson, options.onNext);
                     }, 100);
                     break;
                 default:
                     local.onErrorDefault(error);
                     // debug error
                     local._debugOnEventUiReload = error || local._debugOnEventUiReload;
-                    document.querySelector('#swggUiReloadErrorDiv1').textContent =
-                        (error || { message: '' }).message;
+                    document.querySelector("#swggUiReloadErrorDiv1").textContent =
+                            (error || {message: ""}).message;
                     local.setTimeoutOnError(onError, 0, error);
                 }
             });
@@ -5062,16 +5124,17 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 operation.tags.forEach(function (tag) {
                     swaggerJson.operationDict[operation._methodPath] = operation;
                     // init resource
-                    resource = swaggerJson.resourceDict[tag] = local.objectSetDefault(
+                    swaggerJson.resourceDict[tag] = local.objectSetDefault(
                         swaggerJson.resourceDict[tag] || swaggerJson.tagDict[tag],
                         {
-                            description: 'no description',
+                            description: "no description",
                             name: tag
                         }
                     );
-                    resource.id = resource.id || local.idDomElementCreate('swgg_id_' + tag);
+                    resource = swaggerJson.resourceDict[tag];
+                    resource.id = resource.id || local.idDomElementCreate("swgg_id_" + tag);
                     resource.summary = resource.summary || String(resource.description)
-                        .replace((/\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/g), '');
+                    .replace((/\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/g), "");
                 });
             });
             // init uiFragment
@@ -5085,21 +5148,21 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             });
             Object.keys(swaggerJson.operationDict).sort(function (aa, bb) {
                 aa = swaggerJson.operationDict[aa];
-                aa = aa['x-swgg-sortValue'] || (aa._path + ' ' + aa._method);
+                aa = aa["x-swgg-sortValue"] || (aa._path + " " + aa._method);
                 bb = swaggerJson.operationDict[bb];
-                bb = bb['x-swgg-sortValue'] || (bb._path + ' ' + bb._method);
+                bb = bb["x-swgg-sortValue"] || (bb._path + " " + bb._method);
                 return aa < bb
-                    ? -1
-                    : 1;
+                ? -1
+                : 1;
             }).forEach(function (operation) {
                 operation = swaggerJson.operationDict[operation];
-                operation.id = local.idDomElementCreate('swgg_id_' + operation.operationId);
+                operation.id = local.idDomElementCreate("swgg_id_" + operation.operationId);
                 operation.tags.forEach(function (tag) {
                     // create new operation for each tag
                     operation = local.jsonCopy(operation);
                     resource = swaggerJson.resourceDict[tag];
                     local.objectSetDefault(operation, {
-                        description: 'no description',
+                        description: "no description",
                         responseList: Object.keys(operation.responses).sort().map(function (key) {
                             return {
                                 key: key,
@@ -5107,55 +5170,55 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                             };
                         })
                     });
-                    operation.summary = operation.summary ||
-                        operation.description.replace((/\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/g), '');
+                    operation.summary = operation.summary || operation.description
+                    .replace((/\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/g), "");
                     operation.parameters.forEach(local.uiRenderSchemaP);
                     // templateRender operation
-                    swaggerJson.uiFragment.querySelector('#' + resource.id + ' .operationList')
-                        .appendChild(local.domElementRender(local.templateUiOperation, operation));
+                    swaggerJson.uiFragment.querySelector("#" + resource.id + " .operationList")
+                    .appendChild(local.domElementRender(local.templateUiOperation, operation));
                 });
             });
             // emulate <ol></ol> for operations
             Array.from(swaggerJson.uiFragment.querySelectorAll(
-                '.operationList'
+                ".operationList"
             )).forEach(function (element) {
                 Array.from(element.querySelectorAll(
-                    '.operation > .thead > .td1'
+                    ".operation > .thead > .td1"
                 )).forEach(function (element, ii) {
-                    element.textContent = ii + 1 + '.';
+                    element.textContent = ii + 1 + ".";
                 });
             });
             // append uiFragment to swggUiContainer
-            document.querySelector('#swggAjaxProgressDiv1').style.display = 'none';
-            document.querySelector('.swggUiContainer .resourceList').appendChild(
+            document.querySelector("#swggAjaxProgressDiv1").style.display = "none";
+            document.querySelector(".swggUiContainer .resourceList").appendChild(
                 swaggerJson.uiFragment
             );
             Array.from(document.querySelectorAll(
-                '.swggUiContainer [data-value-text]'
+                ".swggUiContainer [data-value-text]"
             )).forEach(function (element) {
                 // render valueText
                 element.value = decodeURIComponent(element.dataset.valueText);
                 delete element.dataset.valueText;
                 // init textarea's multiline placeholder
-                if (element.tagName === 'TEXTAREA') {
-                    local.uiEventListenerDict['.onEventInputTextareaChange']({
+                if (element.tagName === "TEXTAREA") {
+                    local.uiEventListenerDict[".onEventInputTextareaChange"]({
                         targetOnEvent: element
                     });
                 }
             });
             // init event-handling
-            ['Change', 'Click', 'Keyup', 'Submit'].forEach(function (eventType) {
+            ["Change", "Click", "Keyup", "Submit"].forEach(function (eventType) {
                 Array.from(document.querySelectorAll(
-                    '.swggUiContainer .eventDelegate' + eventType
+                    ".swggUiContainer .eventDelegate" + eventType
                 )).forEach(function (element) {
                     element.addEventListener(eventType.toLowerCase(), local.uiEventDelegate);
                 });
             });
             // scrollTo location.hash
-            local.uiEventListenerDict['.onEventOperationDisplayShow']({
+            local.uiEventListenerDict[".onEventOperationDisplayShow"]({
                 targetOnEvent:
-                    document.querySelector('#' + (location.hash.slice(2) || 'undefined')) ||
-                    document.querySelector('.swggUiContainer .operation')
+                        document.querySelector("#" + (location.hash.slice(2) || "undefined")) ||
+                        document.querySelector(".swggUiContainer .operation")
             });
             local.setTimeoutOnError(onError);
         };
@@ -5165,66 +5228,68 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
          * this function will render schemaP
          */
             // init schemaP.id
-            schemaP.id = local.idDomElementCreate('swgg_id_' + schemaP.name);
+            schemaP.id = local.idDomElementCreate("swgg_id_" + schemaP.name);
             // init enum
             schemaP.enum2 = schemaP.enum ||
-                (local.schemaPItems(schemaP) || {}).enum ||
-                (local.schemaPType(schemaP) === 'boolean' && [false, true]);
+                    (local.schemaPItems(schemaP) || {}).enum ||
+                    (local.schemaPType(schemaP) === "boolean" && [false, true]);
             // init input - file
-            if (local.schemaPType(schemaP) === 'file') {
+            if (local.schemaPType(schemaP) === "file") {
                 schemaP.isFile = true;
             // init input - textarea
-            } else if (schemaP.in === 'body') {
+            } else if (schemaP.in === "body") {
                 schemaP.isTextarea = true;
             // init input - select
             } else if (schemaP.enum2) {
                 // init enumDefault
                 schemaP.enumDefault = [];
                 if (schemaP.required && schemaP.default !== undefined) {
-                    schemaP.enumDefault = local.schemaPType(schemaP) === 'array'
-                        ? schemaP.default
-                        : [schemaP.default];
+                    schemaP.enumDefault = local.schemaPType(schemaP) === "array"
+                    ? schemaP.default
+                    : [schemaP.default];
                 }
-                schemaP.isSelectMultiple = local.schemaPType(schemaP) === 'array';
+                schemaP.isSelectMultiple = local.schemaPType(schemaP) === "array";
                 schemaP.selectOptionList = schemaP.enum2.map(function (element) {
                     // init hasDefault
                     schemaP.hasDefault = schemaP.hasDefault ||
-                        schemaP.enumDefault.indexOf(element) >= 0;
+                            schemaP.enumDefault.indexOf(element) >= 0;
                     return {
-                        id: local.idDomElementCreate('swgg_id_' + schemaP.name),
+                        id: local.idDomElementCreate("swgg_id_" + schemaP.name),
                         selected: schemaP.enumDefault.indexOf(element) >= 0
-                            ? 'selected'
-                            : '',
+                        ? "selected"
+                        : "",
                         type: local.schemaPItemsType(schemaP) || local.schemaPType(schemaP),
-                        placeholder: typeof element === 'string'
-                            ? element
-                            : JSON.stringify(element),
+                        placeholder: typeof element === "string"
+                        ? element
+                        : JSON.stringify(element),
                         valueSelectOption: element
                     };
                 });
                 // init 'undefined' value
                 if (!schemaP.required && !schemaP.hasDefault) {
                     schemaP.selectOptionList.unshift({
-                        id: local.idDomElementCreate('swgg_id_' + schemaP.name),
-                        selected: 'selected',
+                        id: local.idDomElementCreate("swgg_id_" + schemaP.name),
+                        selected: "selected",
                         type: local.schemaPType(schemaP),
-                        placeholder: '<none>',
-                        valueSelectOption: '$swggUndefined'
+                        placeholder: "<none>",
+                        valueSelectOption: "$swggUndefined"
                     });
                 }
                 // select at least one value
                 schemaP.selectOptionList.some(function (element, ii) {
                     if (ii === 0 || element.selected) {
-                        element.selected = 'selected';
+                        element.selected = "selected";
                         if (ii !== 0) {
-                            schemaP.selectOptionList[0].selected = '';
+                            schemaP.selectOptionList[0].selected = "";
                             return true;
                         }
                     }
                 });
             // init input - textarea
-            } else if (local.schemaPType(schemaP) === 'array' || (schemaP.format === 'json' &&
-                    local.schemaPType(schemaP) === 'string')) {
+            } else if (local.schemaPType(schemaP) === "array" || (
+                schemaP.format === "json" &&
+                local.schemaPType(schemaP) === "string"
+            )) {
                 schemaP.isTextarea = true;
             // init input - text
             } else {
@@ -5238,7 +5303,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 });
                 return schemaP.type2;
             });
-            schemaP.type2 = schemaP.type2 || 'object';
+            schemaP.type2 = schemaP.type2 || "object";
             // init schema2
             [
                 schemaP,
@@ -5250,47 +5315,51 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     // dereference schemaP
                     modeDereference: true,
                     modeDereferenceDepth: 2,
-                    prefix: ['parameters', schemaP.name],
+                    prefix: ["parameters", schemaP.name],
                     schema: element,
                     swaggerJson: local.swaggerJson
                 }) || {});
                 return schemaP.schema2.properties;
             });
             if (schemaP.schema2.properties) {
-                schemaP.schemaText = JSON.stringify(schemaP.type2 === 'array'
+                schemaP.schemaText = JSON.stringify(
+                    schemaP.type2 === "array"
                     ? [schemaP.schema2.properties]
-                    : schemaP.schema2.properties, null, 4);
+                    : schemaP.schema2.properties,
+                    null,
+                    4
+                );
             }
             // init placeholder
             schemaP.placeholder = !local.isNullOrUndefined(schemaP.default)
-                ? schemaP.default
-                : local.dbFieldRandomCreate({
-                    modeNotRandom: true,
-                    schemaP: schemaP
-                });
-            if (typeof schemaP.placeholder !== 'string') {
-                if (schemaP.in === 'body') {
+            ? schemaP.default
+            : local.dbFieldRandomCreate({
+                modeNotRandom: true,
+                schemaP: schemaP
+            });
+            if (typeof schemaP.placeholder !== "string") {
+                if (schemaP.in === "body") {
                     schemaP.placeholder = JSON.stringify(schemaP.placeholder, null, 4);
                 } else if (Array.isArray(schemaP.placeholder)) {
                     schemaP.placeholder = schemaP.placeholder.map(function (element) {
-                        return typeof element === 'string'
-                            ? element
-                            : JSON.stringify(element);
-                    }).join('\n');
+                        return typeof element === "string"
+                        ? element
+                        : JSON.stringify(element);
+                    }).join("\n");
                 } else {
                     schemaP.placeholder = JSON.stringify(schemaP.placeholder);
                 }
-            } else if (schemaP.format === 'json') {
+            } else if (schemaP.format === "json") {
                 schemaP.placeholder = JSON.stringify(JSON.parse(schemaP.placeholder), null, 4);
             }
             // init valueText
-            schemaP.valueText = schemaP['x-swgg-apiKey']
-                ? local.apiKeyValue
-                : schemaP.default === null
-                ? ''
-                : (schemaP.required || schemaP.isTextarea)
-                ? schemaP.placeholder
-                : '';
+            schemaP.valueText = schemaP["x-swgg-apiKey"]
+            ? local.apiKeyValue
+            : schemaP.default === null
+            ? ""
+            : (schemaP.required || schemaP.isTextarea)
+            ? schemaP.placeholder
+            : "";
             // templateRender schemaP
             schemaP.innerHTML = local.templateRender(local.templateUiParameter, schemaP);
         };
@@ -5303,7 +5372,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
             tmp = local.stringUniqueKey(url);
             return JSON.parse(JSON.stringify(
                 local.urlParse(url.replace((/\{/g), tmp + 1).replace((/\}/g), tmp + 2))
-            ).replace(new RegExp(tmp + 1, 'g'), '{').replace(new RegExp(tmp + 2, 'g'), '}'));
+            ).replace(new RegExp(tmp + 1, "g"), "{").replace(new RegExp(tmp + 2, "g"), "}"));
         };
 
         local.userLoginByPassword = function (options, onError) {
@@ -5311,7 +5380,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
          * this function will send a login-by-password request
          */
             local.apiDict["GET /user/userLoginByPassword"].ajax({
-                paramDict: { password: options.password, username: options.username }
+                paramDict: {password: options.password, username: options.username}
             }, onError);
         };
 
@@ -5331,17 +5400,16 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
         if (local.isBrowser) {
             return;
         }
-        local.assetsDict['/assets.swagger-ui.logo.medium.png'] = Buffer.from(
+        local.assetsDict["/assets.swagger-ui.logo.medium.png"] = Buffer.from(
             local.templateSwaggerUiLogoMediumBase64,
-            'base64'
+            "base64"
         );
-        local.assetsDict['/assets.swagger-ui.logo.small.png'] = Buffer.from(
+        local.assetsDict["/assets.swagger-ui.logo.small.png"] = Buffer.from(
             local.templateSwaggerUiLogoSmallBase64,
-            'base64'
+            "base64"
         );
-        local.swgg.apiUpdate(JSON.parse(local.fsReadFileOrEmptyStringSync(
-            local.__dirname + '/assets.swgg.swagger.json',
-            'utf8'
-        ) || '{}'));
+        local.swgg.apiUpdate(
+            local.fsReadFileOrEmptyStringSync(local.__dirname + "/assets.swgg.swagger.json", "json")
+        );
     }());
 }());

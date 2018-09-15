@@ -11,27 +11,22 @@
 /* istanbul instrument in package github_crud */
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
-    single: true,
     this: true,
-    white: true
 */
 /*global global*/
 (function () {
-    'use strict';
+    "use strict";
     var local;
 
 
 
-    // run shared js-env code - init-before
     /* istanbul ignore next */
+    // run shared js-env code - init-before
     (function () {
         // init debug_inline
         (function () {
@@ -54,50 +49,50 @@
         // init local
         local = {};
         // init isBrowser
-        local.isBrowser = typeof window === 'object' &&
-            typeof window.XMLHttpRequest === 'function' &&
-            window.document &&
-            typeof window.document.querySelectorAll === 'function';
+        local.isBrowser = typeof window === "object" &&
+                typeof window.XMLHttpRequest === "function" &&
+                window.document &&
+                typeof window.document.querySelectorAll === "function";
         // init global
         local.global = local.isBrowser
-            ? window
-            : global;
+        ? window
+        : global;
         // re-init local
         local = local.global.utility2_rollup ||
-            // local.global.utility2_rollup_old || require('./assets.utility2.rollup.js') ||
-            local;
+                // local.global.utility2_rollup_old || require("./assets.utility2.rollup.js") ||
+                local;
         // init exports
         if (local.isBrowser) {
             local.global.utility2_github_crud = local;
         } else {
             // require builtins
-            // local.assert = require('assert');
-            local.buffer = require('buffer');
-            local.child_process = require('child_process');
-            local.cluster = require('cluster');
-            local.crypto = require('crypto');
-            local.dgram = require('dgram');
-            local.dns = require('dns');
-            local.domain = require('domain');
-            local.events = require('events');
-            local.fs = require('fs');
-            local.http = require('http');
-            local.https = require('https');
-            local.net = require('net');
-            local.os = require('os');
-            local.path = require('path');
-            local.querystring = require('querystring');
-            local.readline = require('readline');
-            local.repl = require('repl');
-            local.stream = require('stream');
-            local.string_decoder = require('string_decoder');
-            local.timers = require('timers');
-            local.tls = require('tls');
-            local.tty = require('tty');
-            local.url = require('url');
-            local.util = require('util');
-            local.vm = require('vm');
-            local.zlib = require('zlib');
+            // local.assert = require("assert");
+            local.buffer = require("buffer");
+            local.child_process = require("child_process");
+            local.cluster = require("cluster");
+            local.crypto = require("crypto");
+            local.dgram = require("dgram");
+            local.dns = require("dns");
+            local.domain = require("domain");
+            local.events = require("events");
+            local.fs = require("fs");
+            local.http = require("http");
+            local.https = require("https");
+            local.net = require("net");
+            local.os = require("os");
+            local.path = require("path");
+            local.querystring = require("querystring");
+            local.readline = require("readline");
+            local.repl = require("repl");
+            local.stream = require("stream");
+            local.string_decoder = require("string_decoder");
+            local.timers = require("timers");
+            local.tls = require("tls");
+            local.tty = require("tty");
+            local.url = require("url");
+            local.util = require("util");
+            local.vm = require("vm");
+            local.zlib = require("zlib");
             module.exports = local;
             module.exports.__dirname = __dirname;
         }
@@ -115,7 +110,7 @@
          * example usage:
             local.ajax({
                 data: 'hello world',
-                header: { 'x-header-hello': 'world' },
+                header: {'x-header-hello': 'world'},
                 method: 'POST',
                 url: '/index.html'
             }, function (error, xhr) {
@@ -148,29 +143,15 @@
              * this function will validate and coerce/convert
              * ArrayBuffer, String, or Uint8Array -> Buffer or String
              */
-                // validate instanceof ArrayBuffer, String, or Uint8Array
-                if (!((isBrowser && (typeof bff === 'string' || bff instanceof ArrayBuffer)) ||
-                        (!isBrowser && Buffer.isBuffer(bff)))) {
-                    throw new Error(
-                        'ajax - xhr.response is not instanceof ArrayBuffer, String, or Buffer'
-                    );
-                }
-                // coerce to ArrayBuffer -> Buffer
+                // coerce ArrayBuffer -> Buffer
                 if (bff instanceof ArrayBuffer) {
-                    return new Uint8Array(bff);
+                    bff = new Uint8Array(bff);
                 }
-                // coerce/convert String -> Buffer or String
-                if (typeof bff === 'string') {
-                    return mode === 'string'
-                        ? bff
-                        : isBrowser
-                        ? new window.TextEncoder().encode(bff)
-                        : Buffer.from(bff);
+                // convert Buffer -> String
+                if (mode === "string" && typeof bff !== "string") {
+                    bff = String(bff);
                 }
-                // coerce/convert Buffer -> Buffer or String
-                return mode === 'string'
-                    ? String(bff)
-                    : bff;
+                return bff;
             };
             onEvent = function (event) {
             /*
@@ -178,15 +159,15 @@
              */
                 if (event instanceof Error) {
                     xhr.error = xhr.error || event;
-                    xhr.onEvent({ type: 'error' });
+                    xhr.onEvent({type: "error"});
                     return;
                 }
                 // init statusCode
                 xhr.statusCode = (xhr.statusCode || xhr.status) | 0;
                 switch (event.type) {
-                case 'abort':
-                case 'error':
-                case 'load':
+                case "abort":
+                case "error":
+                case "load":
                     if (isDone) {
                         return;
                     }
@@ -196,42 +177,46 @@
                     ajaxProgressUpdate();
                     // handle abort or error event
                     switch (!xhr.error && event.type) {
-                    case 'abort':
-                    case 'error':
-                        xhr.error = new Error('ajax - event ' + event.type);
+                    case "abort":
+                    case "error":
+                        xhr.error = new Error("ajax - event " + event.type);
                         break;
-                    case 'load':
+                    case "load":
                         if (xhr.statusCode >= 400) {
-                            xhr.error = new Error('ajax - statusCode ' + xhr.statusCode);
+                            xhr.error = new Error("ajax - statusCode " + xhr.statusCode);
                         }
                         break;
                     }
                     // debug statusCode / method / url
                     if (xhr.error) {
                         xhr.error.statusCode = xhr.statusCode;
-                        (local2.errorMessagePrepend || nop)(xhr.error, (isBrowser
-                            ? 'browser'
-                            : 'node') + ' - ' +
-                            xhr.statusCode + ' ' + xhr.method + ' ' + xhr.url + '\n');
+                        (local2.errorMessagePrepend || nop)(
+                            xhr.error,
+                            (
+                                isBrowser
+                                ? "browser"
+                                : "node"
+                            ) + " - " +
+                                    xhr.statusCode + " " + xhr.method + " " + xhr.url + "\n"
+                        );
                     }
                     // update responseHeaders
                     // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders
                     if (xhr.getAllResponseHeaders) {
                         xhr.getAllResponseHeaders().replace((
-                            /(.*?): *(.*?)\r\n/g
-                        ), function (match0, match1, match2) {
-                            match0 = match1;
-                            xhr.responseHeaders[match0.toLowerCase()] = match2;
+                            /(.*?):\u0020*(.*?)\r\n/g
+                        ), function (ignore, match1, match2) {
+                            xhr.responseHeaders[match1.toLowerCase()] = match2;
                         });
                     }
                     // debug ajaxResponse
                     xhr.responseContentLength =
-                        (xhr.response && (xhr.response.byteLength || xhr.response.length)) | 0;
+                            (xhr.response && (xhr.response.byteLength || xhr.response.length)) | 0;
                     xhr.timeElapsed = Date.now() - xhr.timeStart;
                     if (xhr.modeDebug) {
-                        console.error('serverLog - ' + JSON.stringify({
+                        console.error("serverLog - " + JSON.stringify({
                             time: new Date(xhr.timeStart).toISOString(),
-                            type: 'ajaxResponse',
+                            type: "ajaxResponse",
                             method: xhr.method,
                             url: xhr.url,
                             statusCode: xhr.statusCode,
@@ -245,14 +230,14 @@
                     switch (xhr.response && xhr.responseType) {
                     // init responseText
                     // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseText
-                    case '':
-                    case 'text':
-                        if (typeof xhr.responseText === 'string') {
+                    case "":
+                    case "text":
+                        if (typeof xhr.responseText === "string") {
                             break;
                         }
-                        xhr.responseText = bufferValidateAndCoerce(xhr.response, 'string');
+                        xhr.responseText = bufferValidateAndCoerce(xhr.response, "string");
                         break;
-                    case 'arraybuffer':
+                    case "arraybuffer":
                         xhr.responseBuffer = bufferValidateAndCoerce(xhr.response);
                         break;
                     }
@@ -290,7 +275,7 @@
              */
                 // init options
                 Object.keys(options).forEach(function (key) {
-                    if (key[0] !== '_') {
+                    if (key[0] !== "_") {
                         xhr[key] = options[key];
                     }
                 });
@@ -298,8 +283,8 @@
                     corsForwardProxyHost: xhr.corsForwardProxyHost || local2.corsForwardProxyHost,
                     headers: xhr.headers || {},
                     location: xhr.location || (isBrowser && location) || {},
-                    method: xhr.method || 'GET',
-                    responseType: xhr.responseType || '',
+                    method: xhr.method || "GET",
+                    responseType: xhr.responseType || "",
                     timeout: xhr.timeout || local2.timeoutDefault || 30000
                 });
                 Object.keys(xhr.headers).forEach(function (key) {
@@ -312,29 +297,29 @@
                 xhr.timeStart = xhr.timeStart || Date.now();
             };
             // init isBrowser
-            isBrowser = typeof window === 'object' &&
-                typeof window.XMLHttpRequest === 'function' &&
-                window.document &&
-                typeof window.document.querySelectorAll === 'function';
+            isBrowser = typeof window === "object" &&
+                    typeof window.XMLHttpRequest === "function" &&
+                    window.document &&
+                    typeof window.document.querySelectorAll === "function";
             // init onError
             if (local2.onErrorWithStack) {
                 onError = local2.onErrorWithStack(onError);
             }
             // init xhr - XMLHttpRequest
             xhr = isBrowser &&
-                !options.httpRequest &&
-                !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(options.url)) &&
-                new XMLHttpRequest();
+                    !options.httpRequest &&
+                    !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(options.url)) &&
+                    new XMLHttpRequest();
             // init xhr - http.request
             if (!xhr) {
-                xhr = (local2.urlParse || require('url').parse)(options.url);
+                xhr = (local2.urlParse || require("url").parse)(options.url);
                 // init xhr
                 xhrInit();
                 // init xhr - http.request
                 xhr = (
                     options.httpRequest ||
-                        (isBrowser && local2.http.request) ||
-                        require(xhr.protocol.slice(0, -1)).request
+                    (isBrowser && local2.http.request) ||
+                    require(xhr.protocol.slice(0, -1)).request
                 )(xhr, function (responseStream) {
                 /*
                  * this function will read the responseStream
@@ -345,38 +330,40 @@
                     xhr.responseStream = responseStream;
                     xhr.statusCode = responseStream.statusCode;
                     responseStream.dataLength = 0;
-                    responseStream.on('data', function (chunk) {
+                    responseStream.on("data", function (chunk) {
                         chunkList.push(chunk);
                     });
-                    responseStream.on('end', function () {
+                    responseStream.on("end", function () {
                         xhr.response = isBrowser
-                            ? chunkList[0]
-                            : Buffer.concat(chunkList);
+                        ? chunkList[0]
+                        : Buffer.concat(chunkList);
                         responseStream.dataLength = xhr.response.byteLength || xhr.response.length;
-                        xhr.onEvent({ type: 'load' });
+                        xhr.onEvent({type: "load"});
                     });
-                    responseStream.on('error', xhr.onEvent);
+                    responseStream.on("error", xhr.onEvent);
                 });
                 xhr.abort = function () {
                 /*
                  * this function will abort the xhr-request
                  * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/abort
                  */
-                    xhr.onEvent({ type: 'abort' });
+                    xhr.onEvent({type: "abort"});
                 };
                 xhr.addEventListener = nop;
                 xhr.open = nop;
                 xhr.requestStream = xhr;
                 xhr.send = xhr.end;
                 xhr.setRequestHeader = nop;
-                xhr.on('error', onEvent);
+                xhr.on("error", onEvent);
             }
             // init xhr
             xhrInit();
             // init timerTimeout
             xhr.timerTimeout = setTimeout(function () {
-                xhr.error = xhr.error || new Error('onTimeout - timeout-error - ' +
-                    xhr.timeout + ' ms - ' + 'ajax ' + xhr.method + ' ' + xhr.url);
+                xhr.error = xhr.error || new Error(
+                    "onTimeout - timeout-error - " +
+                    xhr.timeout + " ms - " + "ajax " + xhr.method + " " + xhr.url
+                );
                 xhr.abort();
                 // cleanup requestStream and responseStream
                 streamCleanup(xhr.requestStream);
@@ -386,20 +373,20 @@
             local2.ajaxProgressCounter = local2.ajaxProgressCounter || 0;
             local2.ajaxProgressCounter += 1;
             // init event-handling
-            xhr.addEventListener('abort', xhr.onEvent);
-            xhr.addEventListener('error', xhr.onEvent);
-            xhr.addEventListener('load', xhr.onEvent);
-            xhr.addEventListener('loadstart', ajaxProgressUpdate);
-            xhr.addEventListener('progress', ajaxProgressUpdate);
+            xhr.addEventListener("abort", xhr.onEvent);
+            xhr.addEventListener("error", xhr.onEvent);
+            xhr.addEventListener("load", xhr.onEvent);
+            xhr.addEventListener("loadstart", ajaxProgressUpdate);
+            xhr.addEventListener("progress", ajaxProgressUpdate);
             // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
             if (xhr.upload && xhr.upload.addEventListener) {
-                xhr.upload.addEventListener('progress', ajaxProgressUpdate);
+                xhr.upload.addEventListener("progress", ajaxProgressUpdate);
             }
             // open url - corsForwardProxyHost
             if (local2.corsForwardProxyHostIfNeeded && local2.corsForwardProxyHostIfNeeded(xhr)) {
                 xhr.open(xhr.method, local2.corsForwardProxyHostIfNeeded(xhr));
-                xhr.setRequestHeader('forward-proxy-headers', JSON.stringify(xhr.headers));
-                xhr.setRequestHeader('forward-proxy-url', xhr.url);
+                xhr.setRequestHeader("forward-proxy-headers", JSON.stringify(xhr.headers));
+                xhr.setRequestHeader("forward-proxy-url", xhr.url);
             // open url - default
             } else {
                 xhr.open(xhr.method, xhr.url);
@@ -428,7 +415,7 @@
             return xhr;
         };
 
-        local.cliRun = function (fnc) {
+        local.cliRun = function (options) {
         /*
          * this function will run the cli
          */
@@ -438,11 +425,11 @@
              * will eval <code>
              */
                 global.local = local;
-                require('vm').runInThisContext(process.argv[3]);
+                local.vm.runInThisContext(process.argv[3]);
             };
-            local.cliDict['--eval'] = local.cliDict['--eval'] || local.cliDict._eval;
-            local.cliDict['-e'] = local.cliDict['-e'] || local.cliDict._eval;
-            local.cliDict._help = local.cliDict._help || function (options) {
+            local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
+            local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
+            local.cliDict._help = local.cliDict._help || function () {
             /*
              *
              * will print help
@@ -450,98 +437,90 @@
                 var commandList;
                 var file;
                 var packageJson;
-                var rgxComment;
                 var text;
                 var textDict;
                 commandList = [{
-                    argList: '<arg2>  ...',
-                    description: 'usage:',
-                    command: ['<arg1>']
+                    argList: "<arg2>  ...",
+                    description: "usage:",
+                    command: ["<arg1>"]
                 }, {
-                    argList: '\'console.log("hello world")\'',
-                    description: 'example:',
-                    command: ['--eval']
+                    argList: "'console.log(\"hello world\")'",
+                    description: "example:",
+                    command: ["--eval"]
                 }];
-                file = __filename.replace((/.*\//), '');
-                packageJson = require('./package.json');
+                file = __filename.replace((/.*\//), "");
+                options = Object.assign({}, options);
+                packageJson = require("./package.json");
                 // validate comment
-                rgxComment = new RegExp(
-                    '\\) \\{\\n' +
-                    '(?: {8}| {12})\\/\\*\\n' +
-                    '(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n' +
-                    '(?: {9}| {13})\\* (will .*?\\S)\\n' +
-                    '(?: {9}| {13})\\*\\/\\n' +
-                    '(?: {12}| {16})\\S'
+                options.rgxComment = options.rgxComment || new RegExp(
+                    "\\) \\{\\n" +
+                    "(?: {8}| {12})\\/\\*\\n" +
+                    "(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n" +
+                    "(?: {9}| {13})\\* (will .*?\\S)\\n" +
+                    "(?: {9}| {13})\\*\\/\\n" +
+                    "(?: {12}| {16})\\S"
                 );
                 textDict = {};
                 Object.keys(local.cliDict).sort().forEach(function (key, ii) {
-                    if (key[0] === '_' && key !== '_default') {
+                    if (key[0] === "_" && key !== "_default") {
                         return;
                     }
                     text = String(local.cliDict[key]);
-                    if (key === '_default') {
-                        key = '';
+                    if (key === "_default") {
+                        key = "";
                     }
                     textDict[text] = textDict[text] || (ii + 2);
                     ii = textDict[text];
                     if (commandList[ii]) {
                         commandList[ii].command.push(key);
-                    } else {
-                        try {
-                            commandList[ii] = rgxComment.exec(text);
-                            commandList[ii] = {
-                                argList: (commandList[ii][1] || '').trim(),
-                                command: [key],
-                                description: commandList[ii][2]
-                            };
-                        } catch (ignore) {
-                            throw new Error(
-                                'cliRun - cannot parse comment in COMMAND ' +
-                                key + ':\nnew RegExp(' + JSON.stringify(rgxComment.source) +
-                                ').exec(' + JSON.stringify(text)
-                                    .replace((/\\\\/g), '\u0000')
-                                    .replace((/\\n/g), '\\n\\\n')
-                                    .replace((/\u0000/g), '\\\\') + ');'
-                            );
-                        }
+                        return;
+                    }
+                    try {
+                        commandList[ii] = options.rgxComment.exec(text);
+                        commandList[ii] = {
+                            argList: (commandList[ii][1] || "").trim(),
+                            command: [key],
+                            description: commandList[ii][2]
+                        };
+                    } catch (ignore) {
+                        throw new Error(
+                            "cliRun - cannot parse comment in COMMAND " +
+                            key + ":\nnew RegExp(" + JSON.stringify(options.rgxComment.source) +
+                            ").exec(" + JSON.stringify(text)
+                            .replace((/\\\\/g), "\u0000")
+                            .replace((/\\n/g), "\\n\\\n")
+                            .replace((/\u0000/g), "\\\\") + ");"
+                        );
                     }
                 });
-                ((options && options.modeError)
-                    ? console.error
-                    : console.log)(
-                    ((options && options.modeError)
-                        ? '\u001b[31merror: missing <arg1>\u001b[39m\n\n'
-                        : '') +
-                            packageJson.name + ' (' + packageJson.version + ')\n\n' +
-                            commandList
-                        .filter(function (element) {
-                            return element;
-                        })
-                        .map(function (element, ii) {
-                            element.command = element.command.filter(function (element) {
-                                return element;
-                            });
-                            switch (ii) {
-                            case 0:
-                            case 1:
-                                element.argList = [element.argList];
-                                break;
-                            default:
-                                element.argList = element.argList.split(' ');
-                                element.description = '# COMMAND ' +
-                                        (element.command[0] || '<none>') + '\n# ' +
-                                        element.description;
-                            }
-                            return element.description + '\n  ' + file +
-                                    ('  ' + element.command.sort().join('|') + '  ')
-                                .replace((/^ {4}$/), '  ') +
-                                        element.argList.join('  ');
-                        })
-                        .join('\n\n')
-                );
+                console.log(packageJson.name + " (" + packageJson.version + ")\n\n" + commandList
+                .filter(function (element) {
+                    return element;
+                })
+                .map(function (element, ii) {
+                    element.command = element.command.filter(function (element) {
+                        return element;
+                    });
+                    switch (ii) {
+                    case 0:
+                    case 1:
+                        element.argList = [element.argList];
+                        break;
+                    default:
+                        element.argList = element.argList.split(" ");
+                        element.description = "# COMMAND " +
+                                (element.command[0] || "<none>") + "\n# " +
+                                element.description;
+                    }
+                    return element.description + "\n  " + file +
+                            ("  " + element.command.sort().join("|") + "  ")
+                            .replace((/^\u0020{4}$/), "  ") +
+                            element.argList.join("  ");
+                })
+                .join("\n\n"));
             };
-            local.cliDict['--help'] = local.cliDict['--help'] || local.cliDict._help;
-            local.cliDict['-h'] = local.cliDict['-h'] || local.cliDict._help;
+            local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
+            local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
             local.cliDict._default = local.cliDict._default || local.cliDict._help;
             local.cliDict.help = local.cliDict.help || local.cliDict._help;
             local.cliDict._interactive = local.cliDict._interactive || function () {
@@ -550,37 +529,30 @@
              * will start interactive-mode
              */
                 global.local = local;
-                local.replStart();
+                (local.replStart || require("repl").start)({useGlobal: true});
             };
-            if (typeof local.replStart === 'function') {
-                local.cliDict['--interactive'] = local.cliDict['--interactive'] ||
-                        local.cliDict._interactive;
-                local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
-            }
+            local.cliDict["--interactive"] = local.cliDict["--interactive"] ||
+                    local.cliDict._interactive;
+            local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
             local.cliDict._version = local.cliDict._version || function () {
             /*
              *
              * will print version
              */
-                console.log(require(__dirname + '/package.json').version);
+                console.log(require(__dirname + "/package.json").version);
             };
-            local.cliDict['--version'] = local.cliDict['--version'] || local.cliDict._version;
-            local.cliDict['-v'] = local.cliDict['-v'] || local.cliDict._version;
-            // run fnc()
-            fnc = fnc || function () {
-                // default to --help command if no arguments are given
-                if (process.argv.length <= 2 && !local.cliDict._default.modeNoCommand) {
-                    local.cliDict._help({modeError: true});
-                    process.exit(1);
-                    return;
-                }
-                if (local.cliDict[process.argv[2]]) {
-                    local.cliDict[process.argv[2]]();
-                    return;
-                }
-                local.cliDict._default();
-            };
-            fnc();
+            local.cliDict["--version"] = local.cliDict["--version"] || local.cliDict._version;
+            local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
+            // default to --help command if no arguments are given
+            if (process.argv.length <= 2) {
+                local.cliDict._help();
+                return;
+            }
+            if (local.cliDict[process.argv[2]]) {
+                local.cliDict[process.argv[2]]();
+                return;
+            }
+            local.cliDict._default();
         };
 
         local.echo = function (arg0) {
@@ -613,13 +585,16 @@
          * and append the current stack to any error
          */
             var onError2, stack;
-            stack = new Error().stack.replace((/(.*?)\n.*?$/m), '$1');
+            stack = new Error().stack.replace((/(.*?)\n.*?$/m), "$1");
             onError2 = function (error, data, meta) {
-                if (error &&
-                        error !== local.errorDefault &&
-                        String(error.stack).indexOf(stack.split('\n')[2]) < 0) {
+                if (
+                    error &&
+                    typeof error.stack === "string" &&
+                    error !== local.errorDefault &&
+                    String(error.stack).indexOf(stack.split("\n")[2]) < 0
+                ) {
                     // append the current stack to error.stack
-                    error.stack += '\n' + stack;
+                    error.stack += "\n" + stack;
                 }
                 onError(error, data, meta);
             };
@@ -638,10 +613,10 @@
             options.onNext = local.onErrorWithStack(function (error, data, meta) {
                 try {
                     options.modeNext += (error && !options.modeErrorIgnore)
-                        ? 1000
-                        : 1;
+                    ? 1000
+                    : 1;
                     if (options.modeDebug) {
-                        console.error('onNext - ' + JSON.stringify({
+                        console.error("onNext - " + JSON.stringify({
                             modeNext: options.modeNext,
                             errorMessage: error && error.message
                         }));
@@ -680,7 +655,7 @@
                 onParallel.counter -= 1;
                 // validate counter
                 if (!(onParallel.counter >= 0 || error || onParallel.error)) {
-                    error = new Error('invalid onParallel.counter = ' + onParallel.counter);
+                    error = new Error("invalid onParallel.counter = " + onParallel.counter);
                 // ensure onError is run only once
                 } else if (onParallel.counter < 0) {
                     return;
@@ -771,14 +746,14 @@
                 content: options.content,
                 headers: Object.assign({
                     // github oauth authentication
-                    Authorization: 'token ' +
-                        (typeof process === 'object' && process && process.env.GITHUB_TOKEN),
+                    Authorization: "token " +
+                            (typeof process === "object" && process && process.env.GITHUB_TOKEN),
                     // bug-workaround - https://developer.github.com/v3/#user-agent-required
-                    'User-Agent': 'undefined'
+                    "User-Agent": "undefined"
                 }, options.headers),
                 httpRequest: options.httpRequest,
                 message: options.message,
-                method: options.method || 'GET',
+                method: options.method || "GET",
                 responseJson: {},
                 sha: options.sha,
                 url: options.url
@@ -811,70 +786,72 @@
     'https://github.com/$1'
 )
 /* jslint-ignore-block-end */
-                .replace((/\?branch=(.*)/), function (match0, match1) {
-                    options.branch = match1;
-                    if (options.method === 'GET') {
-                        match0 = match0.replace('branch', 'ref');
-                    }
-                    return match0;
-                });
+            .replace((/\?branch=(.*)/), function (match0, match1) {
+                options.branch = match1;
+                if (options.method === "GET") {
+                    match0 = match0.replace("branch", "ref");
+                }
+                return match0;
+            });
             if ((/^https:\/\/github\.com\/[^\/]+?\/[^\/]+?$/).test(options.url)) {
-                options.data = JSON.stringify({ name: options.url.split('/')[4] });
+                options.data = JSON.stringify({name: options.url.split("/")[4]});
                 switch (options.method) {
-                case 'DELETE':
-                    options.url = 'https://api.github.com/repos/' +
-                        options.url.split('/').slice(3).join('/');
+                case "DELETE":
+                    options.url = "https://api.github.com/repos/" +
+                            options.url.split("/").slice(3).join("/");
                     break;
-                case 'POST_ORG':
-                    options.url = 'https://api.github.com/orgs/' +
-                        options.url.split('/')[3] + '/repos';
+                case "POST_ORG":
+                    options.url = "https://api.github.com/orgs/" +
+                            options.url.split("/")[3] + "/repos";
                     break;
-                case 'POST_USER':
-                    options.url = 'https://api.github.com/user/repos';
+                case "POST_USER":
+                    options.url = "https://api.github.com/user/repos";
                     break;
                 }
-                options.method = options.method.split('_')[0];
+                options.method = options.method.split("_")[0];
             } else {
-                if (options.url.indexOf('https://api.github.com/repos/') !== 0) {
-                    console.error('githubCrud - invalid url ' + options.url);
-                    onError(new Error('invalid url ' + options.url));
+                if (options.url.indexOf("https://api.github.com/repos/") !== 0) {
+                    console.error("githubCrud - invalid url " + options.url);
+                    onError(new Error("invalid url " + options.url));
                     return;
                 }
-                if (options.method !== 'GET') {
+                if (options.method !== "GET") {
                     options.message = options.message ||
-                        '[ci skip] ' + options.method + ' file ' +
-                        options.url.replace((/\?.*/), '');
-                    options.url += '&message=' + encodeURIComponent(options.message);
+                            "[ci skip] " + options.method + " file " +
+                            options.url.replace((/\?.*/), "");
+                    options.url += "&message=" + encodeURIComponent(options.message);
                     if (options.sha) {
-                        options.url += '&sha=' + options.sha;
+                        options.url += "&sha=" + options.sha;
                     }
                     options.data = JSON.stringify({
                         branch: options.branch,
-                        content: Buffer.from(options.content || '').toString('base64'),
+                        content: Buffer.from(options.content || "").toString("base64"),
                         message: options.message,
                         sha: options.sha
                     });
                 }
             }
             local.ajax(options, function (error, xhr) {
-                console.error('serverLog - ' + JSON.stringify({
+                console.error("serverLog - " + JSON.stringify({
                     time: new Date(xhr.timeStart).toISOString(),
-                    type: 'githubCrudResponse',
+                    type: "githubCrudResponse",
                     method: xhr.method,
                     url: xhr.url,
                     statusCode: xhr.statusCode,
                     timeElapsed: xhr.timeElapsed
                 }));
-                local.onErrorDefault(error &&
+                local.onErrorDefault(
+                    error &&
                     error.statusCode !== 404 &&
                     xhr &&
-                    ('githubCrud - ' + xhr.responseText));
+                    ("githubCrud - " + xhr.responseText)
+                );
                 try {
                     options.responseJson = JSON.parse(xhr.responseText);
                 } catch (ignore) {
                 }
                 onError(
-                    !(options.method === 'DELETE' && xhr.statusCode === 404) && error,
+                    !(options.method === "DELETE" && xhr.statusCode === 404) && error,
                     options.responseJson
                 );
             });
@@ -905,14 +882,14 @@
                         local.githubCrudAjax({
                             httpRequest: options.httpRequest,
                             message: options.message,
-                            method: 'DELETE',
+                            method: "DELETE",
                             sha: data.sha,
                             url: options.url
                         }, options.onNext);
                         return;
                     }
                     // delete tree
-                    local.onParallelList({ list: data }, function (options2, onParallel) {
+                    local.onParallelList({list: data}, function (options2, onParallel) {
                         onParallel.counter += 1;
                         // recurse
                         local.githubCrudContentDelete({
@@ -935,7 +912,7 @@
          * this function will get the github-file options.url
          * https://developer.github.com/v3/repos/contents/#get-contents
          */
-            options = { httpRequest: options.httpRequest, url: options.url };
+            options = {httpRequest: options.httpRequest, url: options.url};
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
@@ -945,7 +922,7 @@
                     }, options.onNext);
                     break;
                 case 2:
-                    options.onNext(null, Buffer.from(data.content || '', 'base64'));
+                    options.onNext(null, Buffer.from(data.content || "", "base64"));
                     break;
                 default:
                     onError(error, !error && data);
@@ -983,7 +960,7 @@
                         content: options.content,
                         httpRequest: options.httpRequest,
                         message: options.message,
-                        method: 'PUT',
+                        method: "PUT",
                         sha: data.sha,
                         url: options.url
                     }, options.onNext);
@@ -1030,8 +1007,8 @@
                         message: options.message,
                         // resolve file in url
                         url: (/\/$/).test(options.url)
-                            ? options.url + local.path.basename(options.file)
-                            : options.url
+                        ? options.url + local.path.basename(options.file)
+                        : options.url
                     }, options.onNext);
                     break;
                 default:
@@ -1065,10 +1042,10 @@
                 case 2:
                     // put file with sha
                     local.githubCrudAjax({
-                        content: Buffer.from(data.content || '', 'base64'),
+                        content: Buffer.from(data.content || "", "base64"),
                         httpRequest: options.httpRequest,
                         message: options.message,
-                        method: 'PUT',
+                        method: "PUT",
                         sha: data.sha,
                         url: options.url
                     }, options.onNext);
@@ -1086,7 +1063,7 @@
          * this function will touch the github-files options.urlList in parallel
          * https://developer.github.com/v3/repos/contents/#update-a-file
          */
-            local.onParallelList({ list: options.urlList }, function (options2, onParallel) {
+            local.onParallelList({list: options.urlList}, function (options2, onParallel) {
                 onParallel.counter += 1;
                 local.githubCrudContentTouch({
                     httpRequest: options.httpRequest,
@@ -1103,7 +1080,7 @@
          */
             local.githubCrudAjax({
                 httpRequest: options.httpRequest,
-                method: 'POST_ORG',
+                method: "POST_ORG",
                 url: options.url
             }, function (error, data) {
                 if (!(error && error.statusCode === 404)) {
@@ -1112,7 +1089,7 @@
                 }
                 local.githubCrudAjax({
                     httpRequest: options.httpRequest,
-                    method: 'POST_USER',
+                    method: "POST_USER",
                     url: options.url
                 }, onError);
             });
@@ -1123,7 +1100,7 @@
          * this function will create the github-repos options.urlList in parallel
          * https://developer.github.com/v3/repos/#create
          */
-            local.onParallelList({ list: options.urlList }, function (options2, onParallel) {
+            local.onParallelList({list: options.urlList}, function (options2, onParallel) {
                 onParallel.counter += 1;
                 local.githubCrudRepoCreate({
                     httpRequest: options.httpRequest,
@@ -1139,7 +1116,7 @@
          */
             local.githubCrudAjax({
                 httpRequest: options.httpRequest,
-                method: 'DELETE',
+                method: "DELETE",
                 url: options.url
             }, onError);
         };
@@ -1149,7 +1126,7 @@
          * this function will delete the github-repos options.urlList in parallel
          * https://developer.github.com/v3/repos/#delete-a-repository
          */
-            local.onParallelList({ list: options.urlList }, function (options2, onParallel) {
+            local.onParallelList({list: options.urlList}, function (options2, onParallel) {
                 onParallel.counter += 1;
                 local.githubCrudRepoDelete({
                     httpRequest: options.httpRequest,

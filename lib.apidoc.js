@@ -2,27 +2,22 @@
 /* istanbul instrument in package apidoc */
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
-    single: true,
     this: true,
-    white: true
 */
 /*global global*/
 (function () {
-    'use strict';
+    "use strict";
     var local;
 
 
 
-    // run shared js-env code - init-before
     /* istanbul ignore next */
+    // run shared js-env code - init-before
     (function () {
         // init debug_inline
         (function () {
@@ -45,50 +40,50 @@
         // init local
         local = {};
         // init isBrowser
-        local.isBrowser = typeof window === 'object' &&
-            typeof window.XMLHttpRequest === 'function' &&
-            window.document &&
-            typeof window.document.querySelectorAll === 'function';
+        local.isBrowser = typeof window === "object" &&
+                typeof window.XMLHttpRequest === "function" &&
+                window.document &&
+                typeof window.document.querySelectorAll === "function";
         // init global
         local.global = local.isBrowser
-            ? window
-            : global;
+        ? window
+        : global;
         // re-init local
         local = local.global.utility2_rollup ||
-            // local.global.utility2_rollup_old || require('./assets.utility2.rollup.js') ||
-            local;
+                // local.global.utility2_rollup_old || require("./assets.utility2.rollup.js") ||
+                local;
         // init exports
         if (local.isBrowser) {
             local.global.utility2_apidoc = local;
         } else {
             // require builtins
-            // local.assert = require('assert');
-            local.buffer = require('buffer');
-            local.child_process = require('child_process');
-            local.cluster = require('cluster');
-            local.crypto = require('crypto');
-            local.dgram = require('dgram');
-            local.dns = require('dns');
-            local.domain = require('domain');
-            local.events = require('events');
-            local.fs = require('fs');
-            local.http = require('http');
-            local.https = require('https');
-            local.net = require('net');
-            local.os = require('os');
-            local.path = require('path');
-            local.querystring = require('querystring');
-            local.readline = require('readline');
-            local.repl = require('repl');
-            local.stream = require('stream');
-            local.string_decoder = require('string_decoder');
-            local.timers = require('timers');
-            local.tls = require('tls');
-            local.tty = require('tty');
-            local.url = require('url');
-            local.util = require('util');
-            local.vm = require('vm');
-            local.zlib = require('zlib');
+            // local.assert = require("assert");
+            local.buffer = require("buffer");
+            local.child_process = require("child_process");
+            local.cluster = require("cluster");
+            local.crypto = require("crypto");
+            local.dgram = require("dgram");
+            local.dns = require("dns");
+            local.domain = require("domain");
+            local.events = require("events");
+            local.fs = require("fs");
+            local.http = require("http");
+            local.https = require("https");
+            local.net = require("net");
+            local.os = require("os");
+            local.path = require("path");
+            local.querystring = require("querystring");
+            local.readline = require("readline");
+            local.repl = require("repl");
+            local.stream = require("stream");
+            local.string_decoder = require("string_decoder");
+            local.timers = require("timers");
+            local.tls = require("tls");
+            local.tty = require("tty");
+            local.url = require("url");
+            local.util = require("util");
+            local.vm = require("vm");
+            local.zlib = require("zlib");
             module.exports = local;
             module.exports.__dirname = __dirname;
         }
@@ -109,12 +104,14 @@
             }
             error = (message && message.stack)
                 // if message is an error-object, then leave it as is
+            ? message
+            : new Error(
+                typeof message === "string"
+                // if message is a string, then leave it as is
                 ? message
-                : new Error(typeof message === 'string'
-                    // if message is a string, then leave it as is
-                    ? message
-                    // else JSON.stringify message
-                    : JSON.stringify(message));
+                // else JSON.stringify message
+                : JSON.stringify(message)
+            );
             // debug error
             local._debugAssertError = error;
             onError = onError || function (error) {
@@ -123,7 +120,7 @@
             onError(error);
         };
 
-        local.cliRun = function (fnc) {
+        local.cliRun = function (options) {
         /*
          * this function will run the cli
          */
@@ -133,11 +130,11 @@
              * will eval <code>
              */
                 global.local = local;
-                require('vm').runInThisContext(process.argv[3]);
+                local.vm.runInThisContext(process.argv[3]);
             };
-            local.cliDict['--eval'] = local.cliDict['--eval'] || local.cliDict._eval;
-            local.cliDict['-e'] = local.cliDict['-e'] || local.cliDict._eval;
-            local.cliDict._help = local.cliDict._help || function (options) {
+            local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
+            local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
+            local.cliDict._help = local.cliDict._help || function () {
             /*
              *
              * will print help
@@ -145,98 +142,90 @@
                 var commandList;
                 var file;
                 var packageJson;
-                var rgxComment;
                 var text;
                 var textDict;
                 commandList = [{
-                    argList: '<arg2>  ...',
-                    description: 'usage:',
-                    command: ['<arg1>']
+                    argList: "<arg2>  ...",
+                    description: "usage:",
+                    command: ["<arg1>"]
                 }, {
-                    argList: '\'console.log("hello world")\'',
-                    description: 'example:',
-                    command: ['--eval']
+                    argList: "'console.log(\"hello world\")'",
+                    description: "example:",
+                    command: ["--eval"]
                 }];
-                file = __filename.replace((/.*\//), '');
-                packageJson = require('./package.json');
+                file = __filename.replace((/.*\//), "");
+                options = Object.assign({}, options);
+                packageJson = require("./package.json");
                 // validate comment
-                rgxComment = new RegExp(
-                    '\\) \\{\\n' +
-                    '(?: {8}| {12})\\/\\*\\n' +
-                    '(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n' +
-                    '(?: {9}| {13})\\* (will .*?\\S)\\n' +
-                    '(?: {9}| {13})\\*\\/\\n' +
-                    '(?: {12}| {16})\\S'
+                options.rgxComment = options.rgxComment || new RegExp(
+                    "\\) \\{\\n" +
+                    "(?: {8}| {12})\\/\\*\\n" +
+                    "(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n" +
+                    "(?: {9}| {13})\\* (will .*?\\S)\\n" +
+                    "(?: {9}| {13})\\*\\/\\n" +
+                    "(?: {12}| {16})\\S"
                 );
                 textDict = {};
                 Object.keys(local.cliDict).sort().forEach(function (key, ii) {
-                    if (key[0] === '_' && key !== '_default') {
+                    if (key[0] === "_" && key !== "_default") {
                         return;
                     }
                     text = String(local.cliDict[key]);
-                    if (key === '_default') {
-                        key = '';
+                    if (key === "_default") {
+                        key = "";
                     }
                     textDict[text] = textDict[text] || (ii + 2);
                     ii = textDict[text];
                     if (commandList[ii]) {
                         commandList[ii].command.push(key);
-                    } else {
-                        try {
-                            commandList[ii] = rgxComment.exec(text);
-                            commandList[ii] = {
-                                argList: (commandList[ii][1] || '').trim(),
-                                command: [key],
-                                description: commandList[ii][2]
-                            };
-                        } catch (ignore) {
-                            throw new Error(
-                                'cliRun - cannot parse comment in COMMAND ' +
-                                key + ':\nnew RegExp(' + JSON.stringify(rgxComment.source) +
-                                ').exec(' + JSON.stringify(text)
-                                    .replace((/\\\\/g), '\u0000')
-                                    .replace((/\\n/g), '\\n\\\n')
-                                    .replace((/\u0000/g), '\\\\') + ');'
-                            );
-                        }
+                        return;
+                    }
+                    try {
+                        commandList[ii] = options.rgxComment.exec(text);
+                        commandList[ii] = {
+                            argList: (commandList[ii][1] || "").trim(),
+                            command: [key],
+                            description: commandList[ii][2]
+                        };
+                    } catch (ignore) {
+                        throw new Error(
+                            "cliRun - cannot parse comment in COMMAND " +
+                            key + ":\nnew RegExp(" + JSON.stringify(options.rgxComment.source) +
+                            ").exec(" + JSON.stringify(text)
+                            .replace((/\\\\/g), "\u0000")
+                            .replace((/\\n/g), "\\n\\\n")
+                            .replace((/\u0000/g), "\\\\") + ");"
+                        );
                     }
                 });
-                ((options && options.modeError)
-                    ? console.error
-                    : console.log)(
-                    ((options && options.modeError)
-                        ? '\u001b[31merror: missing <arg1>\u001b[39m\n\n'
-                        : '') +
-                            packageJson.name + ' (' + packageJson.version + ')\n\n' +
-                            commandList
-                        .filter(function (element) {
-                            return element;
-                        })
-                        .map(function (element, ii) {
-                            element.command = element.command.filter(function (element) {
-                                return element;
-                            });
-                            switch (ii) {
-                            case 0:
-                            case 1:
-                                element.argList = [element.argList];
-                                break;
-                            default:
-                                element.argList = element.argList.split(' ');
-                                element.description = '# COMMAND ' +
-                                        (element.command[0] || '<none>') + '\n# ' +
-                                        element.description;
-                            }
-                            return element.description + '\n  ' + file +
-                                    ('  ' + element.command.sort().join('|') + '  ')
-                                .replace((/^ {4}$/), '  ') +
-                                        element.argList.join('  ');
-                        })
-                        .join('\n\n')
-                );
+                console.log(packageJson.name + " (" + packageJson.version + ")\n\n" + commandList
+                .filter(function (element) {
+                    return element;
+                })
+                .map(function (element, ii) {
+                    element.command = element.command.filter(function (element) {
+                        return element;
+                    });
+                    switch (ii) {
+                    case 0:
+                    case 1:
+                        element.argList = [element.argList];
+                        break;
+                    default:
+                        element.argList = element.argList.split(" ");
+                        element.description = "# COMMAND " +
+                                (element.command[0] || "<none>") + "\n# " +
+                                element.description;
+                    }
+                    return element.description + "\n  " + file +
+                            ("  " + element.command.sort().join("|") + "  ")
+                            .replace((/^\u0020{4}$/), "  ") +
+                            element.argList.join("  ");
+                })
+                .join("\n\n"));
             };
-            local.cliDict['--help'] = local.cliDict['--help'] || local.cliDict._help;
-            local.cliDict['-h'] = local.cliDict['-h'] || local.cliDict._help;
+            local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
+            local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
             local.cliDict._default = local.cliDict._default || local.cliDict._help;
             local.cliDict.help = local.cliDict.help || local.cliDict._help;
             local.cliDict._interactive = local.cliDict._interactive || function () {
@@ -245,37 +234,30 @@
              * will start interactive-mode
              */
                 global.local = local;
-                local.replStart();
+                (local.replStart || require("repl").start)({useGlobal: true});
             };
-            if (typeof local.replStart === 'function') {
-                local.cliDict['--interactive'] = local.cliDict['--interactive'] ||
-                        local.cliDict._interactive;
-                local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
-            }
+            local.cliDict["--interactive"] = local.cliDict["--interactive"] ||
+                    local.cliDict._interactive;
+            local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
             local.cliDict._version = local.cliDict._version || function () {
             /*
              *
              * will print version
              */
-                console.log(require(__dirname + '/package.json').version);
+                console.log(require(__dirname + "/package.json").version);
             };
-            local.cliDict['--version'] = local.cliDict['--version'] || local.cliDict._version;
-            local.cliDict['-v'] = local.cliDict['-v'] || local.cliDict._version;
-            // run fnc()
-            fnc = fnc || function () {
-                // default to --help command if no arguments are given
-                if (process.argv.length <= 2 && !local.cliDict._default.modeNoCommand) {
-                    local.cliDict._help({modeError: true});
-                    process.exit(1);
-                    return;
-                }
-                if (local.cliDict[process.argv[2]]) {
-                    local.cliDict[process.argv[2]]();
-                    return;
-                }
-                local.cliDict._default();
-            };
-            fnc();
+            local.cliDict["--version"] = local.cliDict["--version"] || local.cliDict._version;
+            local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
+            // default to --help command if no arguments are given
+            if (process.argv.length <= 2) {
+                local.cliDict._help();
+                return;
+            }
+            if (local.cliDict[process.argv[2]]) {
+                local.cliDict[process.argv[2]]();
+                return;
+            }
+            local.cliDict._default();
         };
 
         local.moduleDirname = function (module, modulePathList) {
@@ -284,25 +266,25 @@
          */
             var result;
             // search process.cwd()
-            if (!module || module === '.' || module.indexOf('/') >= 0) {
-                return require('path').resolve(process.cwd(), module || '');
+            if (!module || module === "." || module.indexOf("/") >= 0) {
+                return require("path").resolve(process.cwd(), module || "");
             }
             // search modulePathList
-            ['node_modules']
-                .concat(modulePathList)
-                .concat(require('module').globalPaths)
-                .concat([process.env.HOME + '/node_modules', '/usr/local/lib/node_modules'])
-                .some(function (modulePath) {
-                    try {
-                        result = require('path').resolve(process.cwd(), modulePath + '/' + module);
-                        result = require('fs').statSync(result).isDirectory() && result;
-                        return result;
-                    } catch (ignore) {
-                        result = null;
-                    }
+            ["node_modules"]
+            .concat(modulePathList)
+            .concat(require("module").globalPaths)
+            .concat([process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"])
+            .some(function (modulePath) {
+                try {
+                    result = require("path").resolve(process.cwd(), modulePath + "/" + module);
+                    result = require("fs").statSync(result).isDirectory() && result;
                     return result;
-                });
-            return result || '';
+                } catch (ignore) {
+                    result = null;
+                }
+                return result;
+            });
+            return result || "";
         };
 
         local.nop = function () {
@@ -331,7 +313,7 @@
                 }
                 // init dict[key] to default value defaults[key]
                 switch (dict2) {
-                case '':
+                case "":
                 case null:
                 case undefined:
                     dict[key] = defaults2;
@@ -339,11 +321,13 @@
                 }
                 // if dict2 and defaults2 are both non-null and non-array objects,
                 // then recurse with dict2 and defaults2
-                if (depth > 1 &&
+                if (
+                    depth > 1 &&
                         // dict2 is a non-null and non-array object
-                        typeof dict2 === 'object' && dict2 && !Array.isArray(dict2) &&
+                    typeof dict2 === "object" && dict2 && !Array.isArray(dict2) &&
                         // defaults2 is a non-null and non-array object
-                        typeof defaults2 === 'object' && defaults2 && !Array.isArray(defaults2)) {
+                    typeof defaults2 === "object" && defaults2 && !Array.isArray(defaults2)
+                ) {
                     // recurse
                     local.objectSetDefault(dict2, defaults2, depth - 1);
                 }
@@ -357,12 +341,12 @@
          * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
          */
             return text
-                .replace((/&/g), '&amp;')
-                .replace((/"/g), '&quot;')
-                .replace((/'/g), '&apos;')
-                .replace((/</g), '&lt;')
-                .replace((/>/g), '&gt;')
-                .replace((/&amp;(amp;|apos;|gt;|lt;|quot;)/ig), '&$1');
+            .replace((/&/g), "&amp;")
+            .replace((/"/g), "&quot;")
+            .replace((/'/g), "&apos;")
+            .replace((/</g), "&lt;")
+            .replace((/>/g), "&gt;")
+            .replace((/&amp;(amp;|apos;|gt;|lt;|quot;)/ig), "&$1");
         };
 
         local.templateRender = function (template, dict, options) {
@@ -373,46 +357,46 @@
             dict = dict || {};
             options = options || {};
             getValue = function (key) {
-                argList = key.split(' ');
+                argList = key.split(" ");
                 value = dict;
-                if (argList[0] === '#this/') {
+                if (argList[0] === "#this/") {
                     return;
                 }
                 // iteratively lookup nested values in the dict
-                argList[0].split('.').forEach(function (key) {
+                argList[0].split(".").forEach(function (key) {
                     value = value && value[key];
                 });
                 return value;
             };
             renderPartial = function (match0, helper, key, partial) {
                 switch (helper) {
-                case 'each':
-                case 'eachTrimRightComma':
+                case "each":
+                case "eachTrimRightComma":
                     value = getValue(key);
                     value = Array.isArray(value)
-                        ? value.map(function (dict) {
+                    ? value.map(function (dict) {
                             // recurse with partial
-                            return local.templateRender(partial, dict, options);
-                        }).join('')
-                        : '';
+                        return local.templateRender(partial, dict, options);
+                    }).join("")
+                    : "";
                     // remove trailing-comma from last element
-                    if (helper === 'eachTrimRightComma') {
-                        value = value.trimRight().replace((/,$/), '');
+                    if (helper === "eachTrimRightComma") {
+                        value = value.trimRight().replace((/,$/), "");
                     }
                     return value;
-                case 'if':
-                    partial = partial.split('{{#unless ' + key + '}}');
+                case "if":
+                    partial = partial.split("{{#unless " + key + "}}");
                     partial = getValue(key)
-                        ? partial[0]
+                    ? partial[0]
                         // handle 'unless' case
-                        : partial.slice(1).join('{{#unless ' + key + '}}');
+                    : partial.slice(1).join("{{#unless " + key + "}}");
                     // recurse with partial
                     return local.templateRender(partial, dict, options);
-                case 'unless':
+                case "unless":
                     return getValue(key)
-                        ? ''
+                    ? ""
                         // recurse with partial
-                        : local.templateRender(partial, dict, options);
+                    : local.templateRender(partial, dict, options);
                 default:
                     // recurse with partial
                     return match0[0] + local.templateRender(match0.slice(1), dict, options);
@@ -430,14 +414,16 @@
                 }
             };
             // render partials
-            rgx = (/\{\{#(\w+) ([^}]+?)\}\}/g);
-            template = template || '';
+            rgx = (/\{\{#(\w+)\u0020([^}]+?)\}\}/g);
+            template = template || "";
             for (match = rgx.exec(template); match; match = rgx.exec(template)) {
                 rgx.lastIndex += 1 - match[0].length;
                 template = template.replace(
-                    new RegExp('\\{\\{#(' + match[1] + ') (' + match[2] +
-                        ')\\}\\}([\\S\\s]*?)\\{\\{/' + match[1] + ' ' + match[2] +
-                        '\\}\\}'),
+                    new RegExp(
+                        "\\{\\{#(" + match[1] + ") (" + match[2] +
+                        ")\\}\\}([\\S\\s]*?)\\{\\{/" + match[1] + " " + match[2] +
+                        "\\}\\}"
+                    ),
                     renderPartial
                 );
             }
@@ -452,34 +438,34 @@
                     }
                     argList.slice(1).forEach(function (arg0, ii, list) {
                         switch (arg0) {
-                        case 'alphanumeric':
-                            value = value.replace((/\W/g), '_');
+                        case "alphanumeric":
+                            value = value.replace((/\W/g), "_");
                             break;
-                        case 'decodeURIComponent':
+                        case "decodeURIComponent":
                             value = decodeURIComponent(value);
                             break;
-                        case 'encodeURIComponent':
+                        case "encodeURIComponent":
                             value = encodeURIComponent(value);
                             break;
-                        case 'jsonStringify':
+                        case "jsonStringify":
                             value = JSON.stringify(value);
                             break;
-                        case 'jsonStringify4':
+                        case "jsonStringify4":
                             value = JSON.stringify(value, null, 4);
                             break;
-                        case 'markdownSafe':
-                            value = value.replace((/`/g), '\'');
+                        case "markdownSafe":
+                            value = value.replace((/`/g), "'");
                             break;
-                        case 'markdownToHtml':
+                        case "markdownToHtml":
                             markdownToHtml = true;
                             break;
-                        case 'notHtmlSafe':
+                        case "notHtmlSafe":
                             notHtmlSafe = true;
                             break;
-                        case 'truncate':
+                        case "truncate":
                             skip = ii + 1;
                             if (value.length > list[skip]) {
-                                value = value.slice(0, list[skip] - 3).trimRight() + '...';
+                                value = value.slice(0, list[skip] - 3).trimRight() + "...";
                             }
                             break;
                         // default to String.prototype[arg0]()
@@ -494,19 +480,21 @@
                     // default to htmlSafe
                     if (!notHtmlSafe) {
                         value = value
-                            .replace((/&/g), '&amp;')
-                            .replace((/"/g), '&quot;')
-                            .replace((/'/g), '&apos;')
-                            .replace((/</g), '&lt;')
-                            .replace((/>/g), '&gt;')
-                            .replace((/&amp;(amp;|apos;|gt;|lt;|quot;)/ig), '&$1');
+                        .replace((/&/g), "&amp;")
+                        .replace((/"/g), "&quot;")
+                        .replace((/'/g), "&apos;")
+                        .replace((/</g), "&lt;")
+                        .replace((/>/g), "&gt;")
+                        .replace((/&amp;(amp;|apos;|gt;|lt;|quot;)/ig), "&$1");
                     }
-                    if (markdownToHtml && typeof local.marked === 'function') {
-                        value = local.marked(value)
-                            .replace((/&amp;(amp;|apos;|gt;|lt;|quot;)/ig), '&$1');
+                    markdownToHtml = markdownToHtml &&
+                            (typeof local.marked === "function" && local.marked);
+                    if (markdownToHtml) {
+                        value = markdownToHtml(value)
+                        .replace((/&amp;(amp;|apos;|gt;|lt;|quot;)/ig), "&$1");
                     }
                     return value;
-                }, 'templateRender could not render expression ' + JSON.stringify(match0) + '\n');
+                }, "templateRender could not render expression " + JSON.stringify(match0) + "\n");
             });
         };
 
@@ -517,7 +505,7 @@
          */
             var result;
             // validate onError
-            local.assert(typeof onError === 'function', typeof onError);
+            local.assert(typeof onError === "function", typeof onError);
             try {
                 // reset errorCaught
                 local._debugTryCatchError = null;
@@ -661,53 +649,57 @@ local.templateApidocHtml = '\
                     return element;
                 }
                 element = {};
-                element.moduleName = prefix.split('.');
+                element.moduleName = prefix.split(".");
                 // handle case where module is a function
                 if (element.moduleName.slice(-1)[0] === key) {
                     element.moduleName.pop();
                 }
-                element.moduleName = element.moduleName.join('.');
-                element.id = encodeURIComponent('apidoc.element.' + prefix + '.' + key);
+                element.moduleName = element.moduleName.join(".");
+                element.id = encodeURIComponent("apidoc.element." + prefix + "." + key);
                 element.typeof = typeof module[key];
-                element.name = (element.typeof + ' <span class="apidocSignatureSpan">' +
-                    element.moduleName + '.</span>' + key)
+                element.name = (
+                    element.typeof + " <span class=\"apidocSignatureSpan\">" +
+                    element.moduleName + ".</span>" + key
+                )
                     // handle case where module is a function
-                    .replace('>.<', '><');
-                if (element.typeof !== 'function') {
+                    .replace(">.<", "><");
+                if (element.typeof !== "function") {
                     return element;
                 }
                 // init source
-                element.source = local.stringHtmlSafe(trimLeft(toString(module[key])) || 'n/a')
-                    .replace((/\([\S\s]*?\)/), function (match0) {
+                element.source = local.stringHtmlSafe(trimLeft(toString(module[key])) || "n/a")
+                .replace((/\([\S\s]*?\)/), function (match0) {
                         // init signature
-                        element.signature = match0
-                            .replace((/ *?\/\*[\S\s]*?\*\/ */g), '')
-                            .replace((/,/g), ', ')
-                            .replace((/\s+/g), ' ');
-                        return element.signature;
-                    })
-                    .replace(
-                        (/( *?\/\*[\S\s]*?\*\/\n)/),
-                        '<span class="apidocCodeCommentSpan">$1</span>'
-                    )
-                    .replace((/^function \(/), key + ' = function (');
+                    element.signature = match0
+                    .replace((/\u0020*?\/\*[\S\s]*?\*\/\u0020*/g), "")
+                    .replace((/,/g), ", ")
+                    .replace((/\s+/g), " ");
+                    return element.signature;
+                })
+                .replace(
+                    (/(\u0020*?\/\*[\S\s]*?\*\/\n)/),
+                    "<span class=\"apidocCodeCommentSpan\">$1</span>"
+                )
+                .replace((/^function\u0020\(/), key + " = function (");
                 // init example
                 options.exampleList.some(function (example) {
                     example.replace(
-                        new RegExp('((?:\n.*?){8}\\.)(' + key + ')(\\((?:.*?\n){8})'),
+                        new RegExp("((?:\n.*?){8}\\.)(" + key + ")(\\((?:.*?\n){8})"),
                         function (match0, match1, match2, match3) {
                             // jslint-hack
                             local.nop(match0);
-                            element.example = '...' + trimLeft(local.stringHtmlSafe(match1) +
-                                '<span class="apidocCodeKeywordSpan">' +
+                            element.example = "..." + trimLeft(
+                                local.stringHtmlSafe(match1) +
+                                "<span class=\"apidocCodeKeywordSpan\">" +
                                 local.stringHtmlSafe(match2) +
-                                '</span>' +
-                                local.stringHtmlSafe(match3)).trimRight() + '\n...';
+                                "</span>" +
+                                local.stringHtmlSafe(match3)
+                            ).trimRight() + "\n...";
                         }
                     );
                     return element.example;
                 });
-                element.example = element.example || 'n/a';
+                element.example = element.example || "n/a";
                 return element;
             };
             readExample = function (file) {
@@ -717,12 +709,14 @@ local.templateApidocHtml = '\
                 var result;
                 local.tryCatchOnError(function () {
                     file = local.path.resolve(options.dir, file);
-                    console.error('apidocCreate - readExample ' + file);
-                    result = '';
-                    result = ('\n\n\n\n\n\n\n\n' +
+                    console.error("apidocCreate - readExample " + file);
+                    result = "";
+                    result = (
+                        "\n\n\n\n\n\n\n\n" +
                         // bug-workaround - truncate example to manageable size
-                        local.fs.readFileSync(file, 'utf8').slice(0, 262144) +
-                        '\n\n\n\n\n\n\n\n').replace((/\r\n*/g), '\n');
+                        local.fs.readFileSync(file, "utf8").slice(0, 262144) +
+                        "\n\n\n\n\n\n\n\n"
+                    ).replace((/\r\n*/g), "\n");
                 }, console.error);
                 return result;
             };
@@ -732,7 +726,7 @@ local.templateApidocHtml = '\
              */
                 var result;
                 local.tryCatchOnError(function () {
-                    result = '';
+                    result = "";
                     result = String(value);
                 }, console.error);
                 return result;
@@ -742,27 +736,27 @@ local.templateApidocHtml = '\
              * this function will normalize the whitespace around the text
              */
                 var whitespace;
-                whitespace = '';
-                text.trim().replace((/^ */gm), function (match0) {
+                whitespace = "";
+                text.trim().replace((/^\u0020*/gm), function (match0) {
                     if (!whitespace || match0.length < whitespace.length) {
                         whitespace = match0;
                     }
                 });
-                text = text.replace(new RegExp('^' + whitespace, 'gm'), '');
+                text = text.replace(new RegExp("^" + whitespace, "gm"), "");
                 // enforce 128 character column limit
                 text = text.replace((/^.{128}[^\\\n]+/gm), function (match0) {
-                    return match0.replace((/(.{128}(?:\b|\w+))/g), '$1\n').trimRight();
+                    return match0.replace((/(.{128}(?:\b|\w+))/g), "$1\n").trimRight();
                 });
                 return text;
             };
             // init options
             options.dir = local.moduleDirname(
                 options.dir,
-                options.modulePathList || require('module').paths
+                options.modulePathList || require("module").paths
             );
             local.objectSetDefault(options, {
-                env: { npm_package_description: '' },
-                packageJson: JSON.parse(readExample('package.json')),
+                env: {npm_package_description: ""},
+                packageJson: JSON.parse(readExample("package.json")),
                 require: function (file) {
                     return local.tryCatchOnError(function () {
                         return require(file);
@@ -785,22 +779,22 @@ local.templateApidocHtml = '\
                         });
                     }
                 }
-                if (key[0] === '_' || key === 'readme') {
+                if (key[0] === "_" || key === "readme") {
                     delete options.packageJson[key];
-                } else if (typeof tmp === 'string') {
-                    options.env['npm_package_' + key] = tmp;
+                } else if (typeof tmp === "string") {
+                    options.env["npm_package_" + key] = tmp;
                 }
             });
             local.objectSetDefault(options, {
-                blacklistDict: { global: global },
+                blacklistDict: {global: global},
                 circularList: [global],
                 exampleDict: {},
                 exampleList: [],
-                html: '',
+                html: "",
                 libFileList: [],
                 moduleDict: {},
                 moduleExtraDict: {},
-                packageJson: { bin: {} },
+                packageJson: {bin: {}},
                 template: local.templateApidocHtml,
                 whitelistDict: {}
             }, 2);
@@ -809,10 +803,11 @@ local.templateApidocHtml = '\
                 options.exampleList = options.exampleList.concat(
                     // find . -maxdepth 1 -mindepth 1 -name "*.js" -type f
                     // http://stackoverflow.com/questions/4509624/how-to-limit-depth-for-recursive-file-list
-                    local.child_process.execSync('find "' + options.dir +
-                        '" -maxdepth ' + depth + ' -mindepth ' + depth +
-                        ' -type f | sed -e "s|' + options.dir +
-                        '/||" | grep -iv ' +
+                    local.child_process.execSync(
+                        "find \"" + options.dir +
+                        "\" -maxdepth " + depth + " -mindepth " + depth +
+                        " -type f | sed -e \"s|" + options.dir +
+                        "/||\" | grep -iv " +
 /* jslint-ignore-block-beg */
 '"\
 /\\.\\|\\(\\b\\|_\\)\\(\
@@ -826,8 +821,9 @@ tmp\\|\
 vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
 " ' +
 /* jslint-ignore-block-end */
-                            ' | sort | head -n 256').toString()
-                        .split('\n')
+                        " | sort | head -n 256"
+                    ).toString()
+                    .split("\n")
                 );
             });
             options.exampleList = options.exampleList.filter(function (file) {
@@ -838,18 +834,20 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             }).slice(0, 256).map(readExample);
             // init moduleMain
             local.tryCatchOnError(function () {
-                console.error('apidocCreate - requiring ' + options.dir + ' ...');
+                console.error("apidocCreate - requiring " + options.dir + " ...");
                 moduleMain = {};
                 moduleMain = options.moduleDict[options.env.npm_package_name] ||
-                    options.require(options.dir) ||
-                    options.require(options.dir + '/' +
-                        (options.packageJson.bin)[Object.keys(options.packageJson.bin)[0]]) || {};
+                        options.require(options.dir) ||
+                        options.require(
+                    options.dir + "/" +
+                    (options.packageJson.bin)[Object.keys(options.packageJson.bin)[0]]
+                ) || {};
                 options.circularList.push(moduleMain);
-                console.error('apidocCreate - ... required ' + options.dir);
+                console.error("apidocCreate - ... required " + options.dir);
             }, console.error);
             tmp = {};
             // handle case where module is a function
-            if (typeof moduleMain === 'function') {
+            if (typeof moduleMain === "function") {
                 (function () {
                     var text;
                     text = toString(moduleMain);
@@ -858,18 +856,18 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                     };
                     // coverage-hack
                     tmp();
-                    Object.defineProperties(tmp, { toString: { get: function () {
+                    Object.defineProperties(tmp, {toString: {get: function () {
                         return function () {
                             return text;
                         };
-                    } } });
+                    }}});
                 }());
             }
             // normalize moduleMain
             moduleMain = local.objectSetDefault(tmp, moduleMain);
             options.moduleDict[options.env.npm_package_name] = moduleMain;
             // init circularList - builtin
-            Object.keys(process.binding('natives')).forEach(function (key) {
+            Object.keys(process.binding("natives")).forEach(function (key) {
                 local.tryCatchOnError(function () {
                     options.circularList.push(require(key));
                 }, local.nop);
@@ -899,24 +897,25 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             local.apidocModuleDictAdd(options, options.moduleDict);
             // init swgg.apiDict
             Object.keys((moduleMain.swgg && moduleMain.swgg.apiDict) || {}).forEach(function (key) {
-                tmp = 'swgg.apiDict';
+                tmp = "swgg.apiDict";
                 options.moduleDict[tmp] = options.moduleDict[tmp] || {};
                 tmp = options.moduleDict[tmp];
-                tmp[key + '.ajax'] = moduleMain.swgg.apiDict[key] &&
-                    moduleMain.swgg.apiDict[key].ajax;
+                tmp[key + ".ajax"] = moduleMain.swgg.apiDict[key] &&
+                        moduleMain.swgg.apiDict[key].ajax;
             });
             // init moduleExtraDict
             options.moduleExtraDict[options.env.npm_package_name] =
-                options.moduleExtraDict[options.env.npm_package_name] || {};
+                    options.moduleExtraDict[options.env.npm_package_name] || {};
             module = options.moduleExtraDict[options.env.npm_package_name];
             [1, 2, 3, 4].forEach(function (depth) {
                 options.libFileList = options.libFileList.concat(
                     // find . -maxdepth 1 -mindepth 1 -name "*.js" -type f
                     // http://stackoverflow.com/questions/4509624/how-to-limit-depth-for-recursive-file-list
-                    local.child_process.execSync('find "' + options.dir +
-                        '" -maxdepth ' + depth + ' -mindepth ' + depth +
-                        ' -name "*.js" -type f | sed -e "s|' + options.dir +
-                        '/||" | grep -iv ' +
+                    local.child_process.execSync(
+                        "find \"" + options.dir +
+                        "\" -maxdepth " + depth + " -mindepth " + depth +
+                        " -name \"*.js\" -type f | sed -e \"s|" + options.dir +
+                        "/||\" | grep -iv " +
 /* jslint-ignore-block-beg */
 '"\
 /\\.\\|\\(\\b\\|_\\)\\(\
@@ -936,8 +935,9 @@ test\\|tmp\\|\
 vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
 " ' +
 /* jslint-ignore-block-end */
-                            ' | sort | head -n 256').toString()
-                        .split('\n')
+                        " | sort | head -n 256"
+                    ).toString()
+                    .split("\n")
                 );
             });
             options.ii = 256;
@@ -945,23 +945,25 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 local.tryCatchOnError(function () {
                     tmp = {};
                     tmp.name = local.path.basename(file)
-                        .replace('lib.', '')
-                        .replace((/\.[^.]*?$/), '')
-                        .replace((/\W/g), '_');
+                    .replace("lib.", "")
+                    .replace((/\.[^.]*?$/), "")
+                    .replace((/\W/g), "_");
                     [
                         tmp.name,
                         tmp.name.slice(0, 1).toUpperCase() + tmp.name.slice(1)
                     ].some(function (name) {
-                        tmp.isFiltered = name && (!options.packageJson.main ||
-                                ('./' + file).indexOf(options.packageJson.main) < 0) &&
-                            !module[name];
+                        tmp.isFiltered = name && (
+                            !options.packageJson.main ||
+                            ("./" + file).indexOf(options.packageJson.main) < 0
+                        ) &&
+                                !module[name];
                         return !tmp.isFiltered;
                     });
                     if (!tmp.isFiltered) {
                         return;
                     }
-                    console.error('apidocCreate - libFile ' + file);
-                    tmp.module = options.require(options.dir + '/' + file);
+                    console.error("apidocCreate - libFile " + file);
+                    tmp.module = options.require(options.dir + "/" + file);
                     // filter circular-reference
                     if (!(tmp.module && options.circularList.indexOf(tmp.module) < 0)) {
                         return;
@@ -973,51 +975,53 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             });
             local.apidocModuleDictAdd(options, options.moduleExtraDict);
             Object.keys(options.moduleDict).forEach(function (key) {
-                if (key.indexOf(options.env.npm_package_name + '.') !== 0) {
+                if (key.indexOf(options.env.npm_package_name + ".") !== 0) {
                     return;
                 }
-                tmp = key.split('.').slice(1).join('.');
+                tmp = key.split(".").slice(1).join(".");
                 moduleMain[tmp] = moduleMain[tmp] || options.moduleDict[key];
             });
             // init moduleList
             options.moduleList = Object.keys(options.moduleDict)
-                .sort()
-                .map(function (prefix) {
-                    module = options.moduleDict[prefix];
+            .sort()
+            .map(function (prefix) {
+                module = options.moduleDict[prefix];
                     // handle case where module is a function
-                    if (typeof module === 'function') {
-                        local.tryCatchOnError(function () {
-                            module[prefix.split('.').slice(-1)[0]] =
-                                module[prefix.split('.').slice(-1)[0]] || module;
+                if (typeof module === "function") {
+                    local.tryCatchOnError(function () {
+                        module[prefix.split(".").slice(-1)[0]] =
+                                module[prefix.split(".").slice(-1)[0]] || module;
+                    }, console.error);
+                }
+                return {
+                    elementList: Object.keys(module)
+                    .filter(function (key) {
+                        return local.tryCatchOnError(function () {
+                            return key &&
+                                    (/^\w[\w\-.]*?$/).test(key) &&
+                                    key.indexOf("testCase_") !== 0 &&
+                                    (
+                                module[key] !== options.blacklistDict[key]
+                                || options.whitelistDict[key]
+                            );
                         }, console.error);
-                    }
-                    return {
-                        elementList: Object.keys(module)
-                            .filter(function (key) {
-                                return local.tryCatchOnError(function () {
-                                    return key &&
-                                        (/^\w[\w\-.]*?$/).test(key) &&
-                                        key.indexOf('testCase_') !== 0 &&
-                                        (module[key] !== options.blacklistDict[key]
-                                            || options.whitelistDict[key]);
-                                }, console.error);
-                            })
-                            .map(function (key) {
-                                return elementCreate(module, prefix, key);
-                            })
-                            .sort(function (aa, bb) {
-                                return aa.name > bb.name
-                                    ? 1
-                                    : -1;
-                            }),
-                        id: encodeURIComponent('apidoc.module.' + prefix),
-                        name: prefix
-                    };
-                });
+                    })
+                    .map(function (key) {
+                        return elementCreate(module, prefix, key);
+                    })
+                    .sort(function (aa, bb) {
+                        return aa.name > bb.name
+                        ? 1
+                        : -1;
+                    }),
+                    id: encodeURIComponent("apidoc.module." + prefix),
+                    name: prefix
+                };
+            });
             // render apidoc
-            options.result = local.templateRender(options.template, options, { notHtmlSafe: true })
-                .trim()
-                .replace((/ +$/gm), '') + '\n';
+            options.result = local.templateRender(options.template, options, {notHtmlSafe: true})
+            .trim()
+            .replace((/\u0020+$/gm), "") + "\n";
             return options.result;
         };
 
@@ -1036,7 +1040,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                     }, local.nop);
                 });
             };
-            ['child', 'prototype', 'grandchild', 'prototype'].forEach(function (element) {
+            ["child", "prototype", "grandchild", "prototype"].forEach(function (element) {
                 objectKeys(moduleDict).forEach(function (prefix) {
                     if (!(/^\w[\w\-.]*?$/).test(prefix)) {
                         return;
@@ -1045,21 +1049,25 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                         if (!(/^\w[\w\-.]*?$/).test(key) || !moduleDict[prefix][key]) {
                             return;
                         }
-                        tmp = element === 'prototype'
-                            ? {
-                                module: moduleDict[prefix][key].prototype,
-                                name: prefix + '.' + key + '.prototype'
-                            }
-                            : {
-                                module: moduleDict[prefix][key],
-                                name: prefix + '.' + key
-                            };
-                        if (!tmp.module ||
-                                !(typeof tmp.module === 'function' ||
-                                typeof tmp.module === 'object') ||
-                                Array.isArray(tmp.module) ||
-                                options.moduleDict[tmp.name] ||
-                                options.circularList.indexOf(tmp.module) >= 0) {
+                        tmp = element === "prototype"
+                        ? {
+                            module: moduleDict[prefix][key].prototype,
+                            name: prefix + "." + key + ".prototype"
+                        }
+                        : {
+                            module: moduleDict[prefix][key],
+                            name: prefix + "." + key
+                        };
+                        if (
+                            !tmp.module ||
+                            !(
+                                typeof tmp.module === "function" ||
+                                typeof tmp.module === "object"
+                            ) ||
+                            Array.isArray(tmp.module) ||
+                            options.moduleDict[tmp.name] ||
+                            options.circularList.indexOf(tmp.module) >= 0
+                        ) {
                             return;
                         }
                         isModule = [
@@ -1067,7 +1075,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                             tmp.module.prototype
                         ].some(function (dict) {
                             return objectKeys(dict || {}).some(function (key) {
-                                return typeof dict[key] === 'function';
+                                return typeof dict[key] === "function";
                             });
                         });
                         if (!isModule) {

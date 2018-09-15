@@ -38,27 +38,22 @@
 /* istanbul instrument in package db */
 /* jslint-utility2 */
 /*jslint
-    es6: true,
     bitwise: true,
     browser: true,
     for: true,
-    maxerr: 4,
-    maxlen: 100,
     multivar: true,
     node: true,
-    single: true,
     this: true,
-    white: true
 */
 /*global global*/
 (function () {
-    'use strict';
+    "use strict";
     var local;
 
 
 
-    // run shared js-env code - init-before
     /* istanbul ignore next */
+    // run shared js-env code - init-before
     (function () {
         // init debug_inline
         (function () {
@@ -81,50 +76,50 @@
         // init local
         local = {};
         // init isBrowser
-        local.isBrowser = typeof window === 'object' &&
-            typeof window.XMLHttpRequest === 'function' &&
-            window.document &&
-            typeof window.document.querySelectorAll === 'function';
+        local.isBrowser = typeof window === "object" &&
+                typeof window.XMLHttpRequest === "function" &&
+                window.document &&
+                typeof window.document.querySelectorAll === "function";
         // init global
         local.global = local.isBrowser
-            ? window
-            : global;
+        ? window
+        : global;
         // re-init local
         local = local.global.utility2_rollup ||
-            // local.global.utility2_rollup_old || require('./assets.utility2.rollup.js') ||
-            local;
+                // local.global.utility2_rollup_old || require("./assets.utility2.rollup.js") ||
+                local;
         // init exports
         if (local.isBrowser) {
             local.global.utility2_db = local;
         } else {
             // require builtins
-            // local.assert = require('assert');
-            local.buffer = require('buffer');
-            local.child_process = require('child_process');
-            local.cluster = require('cluster');
-            local.crypto = require('crypto');
-            local.dgram = require('dgram');
-            local.dns = require('dns');
-            local.domain = require('domain');
-            local.events = require('events');
-            local.fs = require('fs');
-            local.http = require('http');
-            local.https = require('https');
-            local.net = require('net');
-            local.os = require('os');
-            local.path = require('path');
-            local.querystring = require('querystring');
-            local.readline = require('readline');
-            local.repl = require('repl');
-            local.stream = require('stream');
-            local.string_decoder = require('string_decoder');
-            local.timers = require('timers');
-            local.tls = require('tls');
-            local.tty = require('tty');
-            local.url = require('url');
-            local.util = require('util');
-            local.vm = require('vm');
-            local.zlib = require('zlib');
+            // local.assert = require("assert");
+            local.buffer = require("buffer");
+            local.child_process = require("child_process");
+            local.cluster = require("cluster");
+            local.crypto = require("crypto");
+            local.dgram = require("dgram");
+            local.dns = require("dns");
+            local.domain = require("domain");
+            local.events = require("events");
+            local.fs = require("fs");
+            local.http = require("http");
+            local.https = require("https");
+            local.net = require("net");
+            local.os = require("os");
+            local.path = require("path");
+            local.querystring = require("querystring");
+            local.readline = require("readline");
+            local.repl = require("repl");
+            local.stream = require("stream");
+            local.string_decoder = require("string_decoder");
+            local.timers = require("timers");
+            local.tls = require("tls");
+            local.tty = require("tty");
+            local.url = require("url");
+            local.util = require("util");
+            local.vm = require("vm");
+            local.zlib = require("zlib");
             module.exports = local;
             module.exports.__dirname = __dirname;
         }
@@ -145,12 +140,14 @@
             }
             error = (message && message.stack)
                 // if message is an error-object, then leave it as is
+            ? message
+            : new Error(
+                typeof message === "string"
+                // if message is a string, then leave it as is
                 ? message
-                : new Error(typeof message === 'string'
-                    // if message is a string, then leave it as is
-                    ? message
-                    // else JSON.stringify message
-                    : JSON.stringify(message));
+                // else JSON.stringify message
+                : JSON.stringify(message)
+            );
             // debug error
             local._debugAssertError = error;
             onError = onError || function (error) {
@@ -159,7 +156,7 @@
             onError(error);
         };
 
-        local.cliRun = function (fnc) {
+        local.cliRun = function (options) {
         /*
          * this function will run the cli
          */
@@ -169,11 +166,11 @@
              * will eval <code>
              */
                 global.local = local;
-                require('vm').runInThisContext(process.argv[3]);
+                local.vm.runInThisContext(process.argv[3]);
             };
-            local.cliDict['--eval'] = local.cliDict['--eval'] || local.cliDict._eval;
-            local.cliDict['-e'] = local.cliDict['-e'] || local.cliDict._eval;
-            local.cliDict._help = local.cliDict._help || function (options) {
+            local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
+            local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
+            local.cliDict._help = local.cliDict._help || function () {
             /*
              *
              * will print help
@@ -181,98 +178,90 @@
                 var commandList;
                 var file;
                 var packageJson;
-                var rgxComment;
                 var text;
                 var textDict;
                 commandList = [{
-                    argList: '<arg2>  ...',
-                    description: 'usage:',
-                    command: ['<arg1>']
+                    argList: "<arg2>  ...",
+                    description: "usage:",
+                    command: ["<arg1>"]
                 }, {
-                    argList: '\'console.log("hello world")\'',
-                    description: 'example:',
-                    command: ['--eval']
+                    argList: "'console.log(\"hello world\")'",
+                    description: "example:",
+                    command: ["--eval"]
                 }];
-                file = __filename.replace((/.*\//), '');
-                packageJson = require('./package.json');
+                file = __filename.replace((/.*\//), "");
+                options = Object.assign({}, options);
+                packageJson = require("./package.json");
                 // validate comment
-                rgxComment = new RegExp(
-                    '\\) \\{\\n' +
-                    '(?: {8}| {12})\\/\\*\\n' +
-                    '(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n' +
-                    '(?: {9}| {13})\\* (will .*?\\S)\\n' +
-                    '(?: {9}| {13})\\*\\/\\n' +
-                    '(?: {12}| {16})\\S'
+                options.rgxComment = options.rgxComment || new RegExp(
+                    "\\) \\{\\n" +
+                    "(?: {8}| {12})\\/\\*\\n" +
+                    "(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n" +
+                    "(?: {9}| {13})\\* (will .*?\\S)\\n" +
+                    "(?: {9}| {13})\\*\\/\\n" +
+                    "(?: {12}| {16})\\S"
                 );
                 textDict = {};
                 Object.keys(local.cliDict).sort().forEach(function (key, ii) {
-                    if (key[0] === '_' && key !== '_default') {
+                    if (key[0] === "_" && key !== "_default") {
                         return;
                     }
                     text = String(local.cliDict[key]);
-                    if (key === '_default') {
-                        key = '';
+                    if (key === "_default") {
+                        key = "";
                     }
                     textDict[text] = textDict[text] || (ii + 2);
                     ii = textDict[text];
                     if (commandList[ii]) {
                         commandList[ii].command.push(key);
-                    } else {
-                        try {
-                            commandList[ii] = rgxComment.exec(text);
-                            commandList[ii] = {
-                                argList: (commandList[ii][1] || '').trim(),
-                                command: [key],
-                                description: commandList[ii][2]
-                            };
-                        } catch (ignore) {
-                            throw new Error(
-                                'cliRun - cannot parse comment in COMMAND ' +
-                                key + ':\nnew RegExp(' + JSON.stringify(rgxComment.source) +
-                                ').exec(' + JSON.stringify(text)
-                                    .replace((/\\\\/g), '\u0000')
-                                    .replace((/\\n/g), '\\n\\\n')
-                                    .replace((/\u0000/g), '\\\\') + ');'
-                            );
-                        }
+                        return;
+                    }
+                    try {
+                        commandList[ii] = options.rgxComment.exec(text);
+                        commandList[ii] = {
+                            argList: (commandList[ii][1] || "").trim(),
+                            command: [key],
+                            description: commandList[ii][2]
+                        };
+                    } catch (ignore) {
+                        throw new Error(
+                            "cliRun - cannot parse comment in COMMAND " +
+                            key + ":\nnew RegExp(" + JSON.stringify(options.rgxComment.source) +
+                            ").exec(" + JSON.stringify(text)
+                            .replace((/\\\\/g), "\u0000")
+                            .replace((/\\n/g), "\\n\\\n")
+                            .replace((/\u0000/g), "\\\\") + ");"
+                        );
                     }
                 });
-                ((options && options.modeError)
-                    ? console.error
-                    : console.log)(
-                    ((options && options.modeError)
-                        ? '\u001b[31merror: missing <arg1>\u001b[39m\n\n'
-                        : '') +
-                            packageJson.name + ' (' + packageJson.version + ')\n\n' +
-                            commandList
-                        .filter(function (element) {
-                            return element;
-                        })
-                        .map(function (element, ii) {
-                            element.command = element.command.filter(function (element) {
-                                return element;
-                            });
-                            switch (ii) {
-                            case 0:
-                            case 1:
-                                element.argList = [element.argList];
-                                break;
-                            default:
-                                element.argList = element.argList.split(' ');
-                                element.description = '# COMMAND ' +
-                                        (element.command[0] || '<none>') + '\n# ' +
-                                        element.description;
-                            }
-                            return element.description + '\n  ' + file +
-                                    ('  ' + element.command.sort().join('|') + '  ')
-                                .replace((/^ {4}$/), '  ') +
-                                        element.argList.join('  ');
-                        })
-                        .join('\n\n')
-                );
+                console.log(packageJson.name + " (" + packageJson.version + ")\n\n" + commandList
+                .filter(function (element) {
+                    return element;
+                })
+                .map(function (element, ii) {
+                    element.command = element.command.filter(function (element) {
+                        return element;
+                    });
+                    switch (ii) {
+                    case 0:
+                    case 1:
+                        element.argList = [element.argList];
+                        break;
+                    default:
+                        element.argList = element.argList.split(" ");
+                        element.description = "# COMMAND " +
+                                (element.command[0] || "<none>") + "\n# " +
+                                element.description;
+                    }
+                    return element.description + "\n  " + file +
+                            ("  " + element.command.sort().join("|") + "  ")
+                            .replace((/^\u0020{4}$/), "  ") +
+                            element.argList.join("  ");
+                })
+                .join("\n\n"));
             };
-            local.cliDict['--help'] = local.cliDict['--help'] || local.cliDict._help;
-            local.cliDict['-h'] = local.cliDict['-h'] || local.cliDict._help;
+            local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
+            local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
             local.cliDict._default = local.cliDict._default || local.cliDict._help;
             local.cliDict.help = local.cliDict.help || local.cliDict._help;
             local.cliDict._interactive = local.cliDict._interactive || function () {
@@ -281,37 +270,30 @@
              * will start interactive-mode
              */
                 global.local = local;
-                local.replStart();
+                (local.replStart || require("repl").start)({useGlobal: true});
             };
-            if (typeof local.replStart === 'function') {
-                local.cliDict['--interactive'] = local.cliDict['--interactive'] ||
-                        local.cliDict._interactive;
-                local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
-            }
+            local.cliDict["--interactive"] = local.cliDict["--interactive"] ||
+                    local.cliDict._interactive;
+            local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
             local.cliDict._version = local.cliDict._version || function () {
             /*
              *
              * will print version
              */
-                console.log(require(__dirname + '/package.json').version);
+                console.log(require(__dirname + "/package.json").version);
             };
-            local.cliDict['--version'] = local.cliDict['--version'] || local.cliDict._version;
-            local.cliDict['-v'] = local.cliDict['-v'] || local.cliDict._version;
-            // run fnc()
-            fnc = fnc || function () {
-                // default to --help command if no arguments are given
-                if (process.argv.length <= 2 && !local.cliDict._default.modeNoCommand) {
-                    local.cliDict._help({modeError: true});
-                    process.exit(1);
-                    return;
-                }
-                if (local.cliDict[process.argv[2]]) {
-                    local.cliDict[process.argv[2]]();
-                    return;
-                }
-                local.cliDict._default();
-            };
-            fnc();
+            local.cliDict["--version"] = local.cliDict["--version"] || local.cliDict._version;
+            local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
+            // default to --help command if no arguments are given
+            if (process.argv.length <= 2) {
+                local.cliDict._help();
+                return;
+            }
+            if (local.cliDict[process.argv[2]]) {
+                local.cliDict[process.argv[2]]();
+                return;
+            }
+            local.cliDict._default();
         };
 
         local.jsonCopy = function (obj) {
@@ -319,8 +301,8 @@
          * this function will deep-copy obj
          */
             return obj === undefined
-                ? undefined
-                : JSON.parse(JSON.stringify(obj));
+            ? undefined
+            : JSON.parse(JSON.stringify(obj));
         };
 
         local.jsonStringifyOrdered = function (obj, replacer, space) {
@@ -335,9 +317,11 @@
              * with object-keys sorted and circular-references removed
              */
                 // if obj is not an object or function, then JSON.stringify as normal
-                if (!(obj &&
-                        typeof obj === 'object' &&
-                        typeof obj.toJSON !== 'function')) {
+                if (!(
+                    obj &&
+                    typeof obj === "object" &&
+                    typeof obj.toJSON !== "function"
+                )) {
                     return JSON.stringify(obj);
                 }
                 // ignore circular-reference
@@ -347,29 +331,29 @@
                 circularList.push(obj);
                 // if obj is an array, then recurse its items
                 if (Array.isArray(obj)) {
-                    return '[' + obj.map(function (obj) {
+                    return "[" + obj.map(function (obj) {
                         // recurse
                         tmp = stringify(obj);
-                        return typeof tmp === 'string'
-                            ? tmp
-                            : 'null';
-                    }).join(',') + ']';
+                        return typeof tmp === "string"
+                        ? tmp
+                        : "null";
+                    }).join(",") + "]";
                 }
                 // if obj is not an array, then recurse its items with object-keys sorted
-                return '{' + Object.keys(obj)
+                return "{" + Object.keys(obj)
                     // sort object-keys
-                    .sort()
-                    .map(function (key) {
+                .sort()
+                .map(function (key) {
                         // recurse
-                        tmp = stringify(obj[key]);
-                        if (typeof tmp === 'string') {
-                            return JSON.stringify(key) + ':' + tmp;
-                        }
-                    })
-                    .filter(function (obj) {
-                        return typeof obj === 'string';
-                    })
-                    .join(',') + '}';
+                    tmp = stringify(obj[key]);
+                    if (typeof tmp === "string") {
+                        return JSON.stringify(key) + ":" + tmp;
+                    }
+                })
+                .filter(function (obj) {
+                    return typeof obj === "string";
+                })
+                .join(",") + "}";
             };
             circularList = [];
             // try to derefernce all properties in obj
@@ -379,10 +363,14 @@
                 } catch (ignore) {
                 }
             }());
-            return JSON.stringify((typeof obj === 'object' && obj)
+            return JSON.stringify(
+                (typeof obj === "object" && obj)
                 // recurse
                 ? JSON.parse(stringify(obj))
-                : obj, replacer, space);
+                : obj,
+                replacer,
+                space
+            );
         };
 
         local.listShuffle = function (list) {
@@ -412,7 +400,7 @@
          * this function will recursively set overrides for items in dict
          */
             dict = dict || {};
-            env = env || (typeof process === 'object' && process.env) || {};
+            env = env || (typeof process === "object" && process.env) || {};
             overrides = overrides || {};
             Object.keys(overrides).forEach(function (key) {
                 var dict2, overrides2;
@@ -423,20 +411,22 @@
                 }
                 // if both dict2 and overrides2 are non-null and non-array objects,
                 // then recurse with dict2 and overrides2
-                if (depth > 1 &&
+                if (
+                    depth > 1 &&
                         // dict2 is a non-null and non-array object
-                        typeof dict2 === 'object' && dict2 && !Array.isArray(dict2) &&
+                    typeof dict2 === "object" && dict2 && !Array.isArray(dict2) &&
                         // overrides2 is a non-null and non-array object
-                        typeof overrides2 === 'object' && overrides2 &&
-                        !Array.isArray(overrides2)) {
+                    typeof overrides2 === "object" && overrides2 &&
+                    !Array.isArray(overrides2)
+                ) {
                     local.objectSetOverride(dict2, overrides2, depth - 1, env);
                     return;
                 }
                 // else set dict[key] with overrides[key]
                 dict[key] = dict === env
                     // if dict is env, then overrides falsy-value with empty-string
-                    ? overrides2 || ''
-                    : overrides2;
+                ? overrides2 || ""
+                : overrides2;
             });
             return dict;
         };
@@ -457,13 +447,16 @@
          * and append the current stack to any error
          */
             var onError2, stack;
-            stack = new Error().stack.replace((/(.*?)\n.*?$/m), '$1');
+            stack = new Error().stack.replace((/(.*?)\n.*?$/m), "$1");
             onError2 = function (error, data, meta) {
-                if (error &&
-                        error !== local.errorDefault &&
-                        String(error.stack).indexOf(stack.split('\n')[2]) < 0) {
+                if (
+                    error &&
+                    typeof error.stack === "string" &&
+                    error !== local.errorDefault &&
+                    String(error.stack).indexOf(stack.split("\n")[2]) < 0
+                ) {
                     // append the current stack to error.stack
-                    error.stack += '\n' + stack;
+                    error.stack += "\n" + stack;
                 }
                 onError(error, data, meta);
             };
@@ -492,7 +485,7 @@
                 onParallel.counter -= 1;
                 // validate counter
                 if (!(onParallel.counter >= 0 || error || onParallel.error)) {
-                    error = new Error('invalid onParallel.counter = ' + onParallel.counter);
+                    error = new Error("invalid onParallel.counter = " + onParallel.counter);
                 // ensure onError is run only once
                 } else if (onParallel.counter < 0) {
                     return;
@@ -525,7 +518,7 @@
                 return;
             }
             // start replServer
-            self = require('repl').start({ useGlobal: true });
+            self = require("repl").start({useGlobal: true});
             global.utility2_serverRepl1 = self;
             self.nop = function () {
             /*
@@ -551,47 +544,47 @@
                     global.utility2_debugReplError = error || global.utility2_debugReplError;
                     onError(error, data);
                 };
-                script.replace((/^(\S+)(.*?)\n/), function (match0, match1, match2) {
-                    match0 = match1;
-                    switch (match0) {
+                script.replace((/^(\S+)(.*?)\n/), function (ignore, match1, match2) {
+                    switch (match1) {
                     // syntax sugar to run async shell command
-                    case '$':
+                    case "$":
                         switch (match2) {
                         // syntax sugar to run git diff
-                        case ' git diff':
-                            match2 = ' git diff --color | cat';
+                        case " git diff":
+                            match2 = " git diff --color | cat";
                             break;
                         // syntax sugar to run git log
-                        case ' git log':
-                            match2 = ' git log -n 4 | cat';
+                        case " git log":
+                            match2 = " git log -n 4 | cat";
                             break;
                         }
                         // source lib.utility2.sh
-                        if (process.env.npm_config_dir_utility2 && (match2 !== ' :')) {
-                            match2 = '. ' + process.env.npm_config_dir_utility2 +
-                                '/lib.utility2.sh;' + match2;
+                        if (process.env.npm_config_dir_utility2 && (match2 !== " :")) {
+                            match2 = ". " + process.env.npm_config_dir_utility2 +
+                                    "/lib.utility2.sh;" + match2;
                         }
                         // run async shell command
-                        require('child_process').spawn(match2, {
+                        require("child_process").spawn(match2, {
                             shell: true,
-                            stdio: ['ignore', 1, 2]
+                            stdio: ["ignore", 1, 2]
                         })
                             // on shell exit, print return prompt
-                            .on('exit', function (exitCode) {
-                                console.error('exit-code ' + exitCode);
-                                self.evalDefault(
-                                    '\n',
-                                    context,
-                                    file,
-                                    onError2
-                                );
-                            });
-                        script = '\n';
+                        .on("exit", function (exitCode) {
+                            console.error("exit-code " + exitCode);
+                            self.evalDefault(
+                                "\n",
+                                context,
+                                file,
+                                onError2
+                            );
+                        });
+                        script = "\n";
                         break;
                     // syntax sugar to grep current dir
-                    case 'grep':
+                    case "grep":
                         // run async shell command
-                        require('child_process').spawn('find . -type f | grep -v -E ' +
+                        require("child_process").spawn(
+                            "find . -type f | grep -v -E " +
 /* jslint-ignore-block-beg */
 '"\
 /\\.|(\\b|_)(\\.\\d|\
@@ -612,40 +605,42 @@ tmp|\
 vendor)s{0,1}(\\b|_)\
 " ' +
 /* jslint-ignore-block-end */
-                                '| tr "\\n" "\\000" | xargs -0 grep -HIin -E "' +
-                                match2.trim() + '"', { shell: true, stdio: ['ignore', 1, 2] })
+                                    "| tr \"\\n\" \"\\000\" | xargs -0 grep -HIin -E \"" +
+                                    match2.trim() + "\"",
+                            {shell: true, stdio: ["ignore", 1, 2]}
+                        )
                             // on shell exit, print return prompt
-                            .on('exit', function (exitCode) {
-                                console.error('exit-code ' + exitCode);
-                                self.evalDefault(
-                                    '\n',
-                                    context,
-                                    file,
-                                    onError2
-                                );
-                            });
-                        script = '\n';
+                        .on("exit", function (exitCode) {
+                            console.error("exit-code " + exitCode);
+                            self.evalDefault(
+                                "\n",
+                                context,
+                                file,
+                                onError2
+                            );
+                        });
+                        script = "\n";
                         break;
                     // syntax sugar to list object's keys, sorted by item-type
-                    case 'keys':
-                        script = 'console.error(Object.keys(' + match2 +
-                            ').map(function (key) {' +
-                            'return typeof ' + match2 + '[key] + " " + key + "\\n";' +
-                            '}).sort().join("") + Object.keys(' + match2 + ').length)\n';
+                    case "keys":
+                        script = "console.error(Object.keys(" + match2 +
+                                ").map(function (key) {" +
+                                "return typeof " + match2 + "[key] + \" \" + key + \"\\n\";" +
+                                "}).sort().join(\"\") + Object.keys(" + match2 + ").length)\n";
                         break;
                     // syntax sugar to print stringified arg
-                    case 'print':
-                        script = 'console.error(String(' + match2 + '))\n';
+                    case "print":
+                        script = "console.error(String(" + match2 + "))\n";
                         break;
                     }
                 });
                 // eval the script
                 self.evalDefault(script, context, file, onError2);
             };
-            self.socket = { end: self.nop, on: self.nop, write: self.nop };
+            self.socket = {end: self.nop, on: self.nop, write: self.nop};
             // init process.stdout
             process.stdout._writeDefault = process.stdout._writeDefault ||
-                process.stdout._write;
+                    process.stdout._write;
             process.stdout._write = function (chunk, encoding, callback) {
                 process.stdout._writeDefault(chunk, encoding, callback);
                 // coverage-hack - ignore else-statement
@@ -654,16 +649,16 @@ vendor)s{0,1}(\\b|_)\
                 }()));
             };
             // start tcp-server
-            global.utility2_serverReplTcp1 = require('net').createServer(function (socket) {
+            global.utility2_serverReplTcp1 = require("net").createServer(function (socket) {
                 // init socket
                 self.socket = socket;
-                self.socket.on('data', self.write.bind(self));
-                self.socket.on('error', self.onError);
+                self.socket.on("data", self.write.bind(self));
+                self.socket.on("error", self.onError);
                 self.socket.setKeepAlive(true);
             });
             // coverage-hack - ignore else-statement
             self.nop(process.env.PORT_REPL && (function () {
-                console.error('repl-server listening on tcp-port ' + process.env.PORT_REPL);
+                console.error("repl-server listening on tcp-port " + process.env.PORT_REPL);
                 global.utility2_serverReplTcp1.listen(process.env.PORT_REPL);
             }()));
         };
@@ -672,7 +667,7 @@ vendor)s{0,1}(\\b|_)\
         /*
          * this function will after timeout has passed, then call onError(error, data)
          */
-            if (typeof onError === 'function') {
+            if (typeof onError === "function") {
                 setTimeout(function () {
                     onError(error, data);
                 }, timeout);
@@ -703,24 +698,26 @@ vendor)s{0,1}(\\b|_)\
 
         // init isBrowser
         isBrowser = typeof window === "object" &&
-            typeof window.XMLHttpRequest === "function" &&
-            window.document &&
-            typeof window.document.querySelectorAll === "function";
-        storageDir = 'tmp/storage.' + (isBrowser
-            ? 'undefined'
-            : process.env.NODE_ENV);
+                typeof window.XMLHttpRequest === "function" &&
+                window.document &&
+                typeof window.document.querySelectorAll === "function";
+        storageDir = "tmp/storage." + (
+            isBrowser
+            ? "undefined"
+            : process.env.NODE_ENV
+        );
         if (!isBrowser) {
             // require modules
-            child_process = require('child_process');
-            fs = require('fs');
-            os = require('os');
+            child_process = require("child_process");
+            fs = require("fs");
+            os = require("os");
         }
 
         clear = function (onError) {
         /*
          * this function will clear storage
          */
-            defer({ action: 'clear' }, onError);
+            defer({action: "clear"}, onError);
         };
 
         defer = function (options, onError) {
@@ -748,30 +745,30 @@ vendor)s{0,1}(\\b|_)\
                     isDone = true;
                     onError(
                         request && (request.error || request.transaction.error),
-                        data || request.result || ''
+                        data || request.result || ""
                     );
                 };
                 switch (options.action) {
-                case 'clear':
-                case 'removeItem':
-                case 'setItem':
+                case "clear":
+                case "removeItem":
+                case "setItem":
                     objectStore = storage
-                        .transaction(storageDir, 'readwrite')
-                        .objectStore(storageDir);
+                    .transaction(storageDir, "readwrite")
+                    .objectStore(storageDir);
                     break;
                 default:
                     objectStore = storage
-                        .transaction(storageDir, 'readonly')
-                        .objectStore(storageDir);
+                    .transaction(storageDir, "readonly")
+                    .objectStore(storageDir);
                 }
                 switch (options.action) {
-                case 'clear':
+                case "clear":
                     request = objectStore.clear();
                     break;
-                case 'getItem':
+                case "getItem":
                     request = objectStore.get(String(options.key));
                     break;
-                case 'keys':
+                case "keys":
                     data = [];
                     request = objectStore.openCursor();
                     request.onsuccess = function () {
@@ -783,61 +780,60 @@ vendor)s{0,1}(\\b|_)\
                         request.result.continue();
                     };
                     break;
-                case 'length':
+                case "length":
                     request = objectStore.count();
                     break;
-                case 'removeItem':
+                case "removeItem":
                     request = objectStore.delete(String(options.key));
                     break;
-                case 'setItem':
+                case "setItem":
                     request = objectStore.put(options.value, String(options.key));
                     break;
                 }
-                ['onabort', 'onerror', 'onsuccess'].forEach(function (handler) {
+                ["onabort", "onerror", "onsuccess"].forEach(function (handler) {
                     request[handler] = request[handler] || onError2;
                 });
                 // debug request
                 local._debugStorageRequest = request;
             } else {
                 switch (options.action) {
-                case 'clear':
-                    child_process.spawnSync('rm -f ' + storage + '/*', {
+                case "clear":
+                    child_process.spawnSync("rm -f " + storage + "/*", {
                         shell: true,
-                        stdio: ['ignore', 1, 2]
+                        stdio: ["ignore", 1, 2]
                     });
                     setTimeout(onError);
                     break;
-                case 'getItem':
+                case "getItem":
                     fs.readFile(
-                        storage + '/' + encodeURIComponent(String(options.key)),
-                        'utf8',
-                        // ignore error
-                        function (error, data) {
-                            onError(error && null, data || '');
+                        storage + "/" + encodeURIComponent(String(options.key)),
+                        "utf8",
+                        function (ignore, data) {
+                            onError(null, data || "");
                         }
                     );
                     break;
-                case 'keys':
+                case "keys":
                     fs.readdir(storage, function (error, data) {
                         onError(error, data && data.map(decodeURIComponent));
                     });
                     break;
-                case 'length':
+                case "length":
                     fs.readdir(storage, function (error, data) {
                         onError(error, data && data.length);
                     });
                     break;
-                case 'removeItem':
+                case "removeItem":
                     fs.unlink(
-                        storage + '/' + encodeURIComponent(String(options.key)),
+                        storage + "/" + encodeURIComponent(String(options.key)),
                         // ignore error
                         function () {
                             onError();
                         }
                     );
                     break;
-                case 'setItem':
-                    tmp = os.tmpdir() + '/' + Date.now() + Math.random();
+                case "setItem":
+                    tmp = os.tmpdir() + "/" + Date.now() + Math.random();
                     // save to tmp
                     fs.writeFile(tmp, options.value, function (error) {
                         // validate no error occurred
@@ -845,7 +841,7 @@ vendor)s{0,1}(\\b|_)\
                         // rename tmp to key
                         fs.rename(
                             tmp,
-                            storage + '/' + encodeURIComponent(String(options.key)),
+                            storage + "/" + encodeURIComponent(String(options.key)),
                             onError
                         );
                     });
@@ -860,7 +856,7 @@ vendor)s{0,1}(\\b|_)\
         /*
          * this function will get the item with the given key from storage
          */
-            defer({ action: 'getItem', key: key }, onError);
+            defer({action: "getItem", key: key}, onError);
         };
 
         init = function () {
@@ -906,7 +902,7 @@ vendor)s{0,1}(\\b|_)\
             } else {
                 // mkdirp storage
                 storage = storageDir;
-                child_process.spawnSync('mkdir', ['-p', storage], { stdio: ['ignore', 1, 2] });
+                child_process.spawnSync("mkdir", ["-p", storage], {stdio: ["ignore", 1, 2]});
                 onError();
             }
         };
@@ -915,28 +911,28 @@ vendor)s{0,1}(\\b|_)\
         /*
          * this function will get all the keys in storage
          */
-            defer({ action: 'keys' }, onError);
+            defer({action: "keys"}, onError);
         };
 
         length = function (onError) {
         /*
          * this function will get the number of items in storage
          */
-            defer({ action: 'length' }, onError);
+            defer({action: "length"}, onError);
         };
 
         removeItem = function (key, onError) {
         /*
          * this function will remove the item with the given key from storage
          */
-            defer({ action: 'removeItem', key: key }, onError);
+            defer({action: "removeItem", key: key}, onError);
         };
 
         setItem = function (key, value, onError) {
         /*
          * this function will set the item with the given key and value to storage
          */
-            defer({ action: 'setItem', key: key, value: value }, onError);
+            defer({action: "setItem", key: key, value: value}, onError);
         };
 
         // init local
@@ -966,7 +962,7 @@ vendor)s{0,1}(\\b|_)\
             local.dbTableDict[this.name] = this;
             this.dbRowList = [];
             this.isDirty = null;
-            this.idIndexList = [{ isInteger: false, name: '_id', dict: {} }];
+            this.idIndexList = [{isInteger: false, name: "_id", dict: {}}];
             this.onSaveList = [];
             this.sizeLimit = options.sizeLimit || 0;
         };
@@ -987,7 +983,7 @@ vendor)s{0,1}(\\b|_)\
             for (ii = 0; ii < list.length; ii += 1) {
                 dbRow = list[ii];
                 // cleanup isRemoved
-                if (!dbRow.$meta.isRemoved) {
+                if (!dbRow.$isRemoved) {
                     this.dbRowList.push(dbRow);
                 }
             }
@@ -1018,26 +1014,18 @@ vendor)s{0,1}(\\b|_)\
                 // bug-workaround - v8 does not have stable-sort
                 // optimization - for-loop
                 for (ii = 0; ii < result.length; ii += 1) {
-                    result[ii].$meta.ii = ii;
+                    result[ii].$ii = ii;
                 }
+                result.sort(function (aa, bb) {
+                    return local.sortCompare(
+                        local.dbRowGetItem(aa, element.fieldName),
+                        local.dbRowGetItem(bb, element.fieldName),
+                        aa.$ii,
+                        bb.$ii
+                    );
+                });
                 if (element.isDescending) {
-                    result.sort(function (aa, bb) {
-                        return -local.sortCompare(
-                            local.dbRowGetItem(aa, element.fieldName),
-                            local.dbRowGetItem(bb, element.fieldName),
-                            aa.$meta.ii,
-                            bb.$meta.ii
-                        );
-                    });
-                } else {
-                    result.sort(function (aa, bb) {
-                        return local.sortCompare(
-                            local.dbRowGetItem(aa, element.fieldName),
-                            local.dbRowGetItem(bb, element.fieldName),
-                            aa.$meta.ii,
-                            bb.$meta.ii
-                        );
-                    });
+                    result.reverse();
                 }
             });
             // skip
@@ -1087,7 +1075,7 @@ vendor)s{0,1}(\\b|_)\
                 result = idIndex.dict[id];
                 delete idIndex.dict[id];
                 // optimization - soft-delete
-                result.$meta.isRemoved = true;
+                result.$isRemoved = true;
                 self.isDirty = true;
                 if (circularList.indexOf(result) >= 0) {
                     return;
@@ -1110,22 +1098,32 @@ vendor)s{0,1}(\\b|_)\
             /*
              * this function will recursively normalize dbRow
              */
-                if (typeof dbRow === 'object' && dbRow) {
-                    Object.keys(dbRow).forEach(function (key) {
-                        // remove invalid property
-                        if (key[0] === '$' || key.indexOf('.') >= 0 || dbRow[key] === null) {
-                            // optimization - soft-delete
-                            dbRow[key] = undefined;
-                            return;
-                        }
-                        // recurse
-                        normalize(dbRow[key]);
-                    });
+                switch (typeof dbRow) {
+                case "boolean":
+                case "string":
+                    return dbRow;
+                case "number":
+                    return Number.isFinite(dbRow)
+                    ? dbRow
+                    : undefined;
+                case "object":
+                    if (!dbRow) {
+                        return;
+                    }
+                    break;
+                default:
+                    return;
                 }
+                Object.keys(dbRow).forEach(function (key) {
+                    dbRow[key] = (key[0] === "$" || key.indexOf(".") >= 0)
+                        // invalid-property
+                    ? undefined
+                        // recurse
+                    : normalize(dbRow[key]);
+                });
+                return dbRow;
             };
-            dbRow = (local.jsonCopy(typeof dbRow === 'object' && dbRow)
-                ? dbRow
-                : {});
+            dbRow = local.jsonCopy(local.objectSetOverride(dbRow));
             // update timestamp
             timeNow = new Date().toISOString();
             dbRow._timeCreated = dbRow._timeCreated || timeNow;
@@ -1133,12 +1131,10 @@ vendor)s{0,1}(\\b|_)\
                 dbRow._timeUpdated = timeNow;
             }
             // normalize
-            normalize(dbRow);
+            dbRow = normalize(dbRow);
             dbRow = local.jsonCopy(dbRow);
             // remove existing dbRow
             existing = this._crudRemoveOneById(dbRow) || dbRow;
-            // init meta
-            dbRow.$meta = { isRemoved: null };
             this.idIndexList.forEach(function (idIndex) {
                 // auto-set id
                 id = local.dbRowSetId(existing, idIndex);
@@ -1163,7 +1159,7 @@ vendor)s{0,1}(\\b|_)\
          */
             var id, result;
             dbRow = local.jsonCopy(local.objectSetOverride(dbRow));
-            result = null;
+            result = {};
             this.idIndexList.some(function (idIndex) {
                 id = dbRow[idIndex.name];
                 // optimization - hasOwnProperty
@@ -1172,9 +1168,8 @@ vendor)s{0,1}(\\b|_)\
                     return true;
                 }
             });
-            result = result || {};
             // remove existing dbRow
-            this._crudRemoveOneById(result);
+            result = local.jsonCopy(this._crudRemoveOneById(result)) || result;
             // update dbRow
             delete dbRow._timeCreated;
             local.objectSetOverride(result, dbRow, 10);
@@ -1282,7 +1277,7 @@ vendor)s{0,1}(\\b|_)\
             // reset dbTable
             local._DbTable.call(this, this);
             // restore idIndexList
-            local.dbTableCreateOne({ name: this.name, idIndexCreateList: idIndexList }, onError);
+            local.dbTableCreateOne({name: this.name, idIndexCreateList: idIndexList}, onError);
         };
 
         local._DbTable.prototype.crudRemoveManyById = function (idDictList, onError) {
@@ -1384,7 +1379,7 @@ vendor)s{0,1}(\\b|_)\
         /*
          * this function will drop the dbTable
          */
-            console.error('db - dropping dbTable ' + this.name + ' ...');
+            console.error("db - dropping dbTable " + this.name + " ...");
             // cancel pending save
             this.timerSave = null;
             while (this.onSaveList.length) {
@@ -1393,7 +1388,7 @@ vendor)s{0,1}(\\b|_)\
             // reset dbTable
             local._DbTable.call(this, this);
             // clear persistence
-            local.storageRemoveItem('dbTable.' + this.name + '.json', onError);
+            local.storageRemoveItem("dbTable." + this.name + ".json", onError);
         };
 
         local._DbTable.prototype.export = function (onError) {
@@ -1403,17 +1398,17 @@ vendor)s{0,1}(\\b|_)\
             var result, self;
             this._cleanup();
             self = this;
-            result = '';
+            result = "";
             self.idIndexList.forEach(function (idIndex) {
-                result += self.name + ' idIndexCreate ' + JSON.stringify({
+                result += self.name + " idIndexCreate " + JSON.stringify({
                     isInteger: idIndex.isInteger,
                     name: idIndex.name
-                }) + '\n';
+                }) + "\n";
             });
-            result += self.name + ' sizeLimit ' + self.sizeLimit + '\n';
-            result += self.name + ' sortDefault ' + JSON.stringify(self.sortDefault) + '\n';
+            result += self.name + " sizeLimit " + self.sizeLimit + "\n";
+            result += self.name + " sortDefault " + JSON.stringify(self.sortDefault) + "\n";
             self.crudGetManyByQuery({}).forEach(function (dbRow) {
-                result += self.name + ' dbRowSet ' + JSON.stringify(dbRow) + '\n';
+                result += self.name + " dbRowSet " + JSON.stringify(dbRow) + "\n";
             });
             return local.setTimeoutOnError(onError, 0, null, result.trim());
         };
@@ -1426,7 +1421,7 @@ vendor)s{0,1}(\\b|_)\
             options = local.objectSetOverride(options);
             name = String(options.name);
             // disallow idIndex with dot-name
-            if (name.indexOf('.') >= 0 || name === '_id') {
+            if (name.indexOf(".") >= 0 || name === "_id") {
                 return local.setTimeoutOnError(onError);
             }
             // remove existing idIndex
@@ -1443,7 +1438,7 @@ vendor)s{0,1}(\\b|_)\
             for (ii = 0; ii < this.dbRowList.length; ii += 1) {
                 dbRow = this.dbRowList[ii];
                 // auto-set id
-                if (!dbRow.$meta.isRemoved) {
+                if (!dbRow.$isRemoved) {
                     idIndex.dict[local.dbRowSetId(dbRow, idIndex)] = dbRow;
                 }
             }
@@ -1459,7 +1454,7 @@ vendor)s{0,1}(\\b|_)\
             options = local.objectSetOverride(options);
             name = String(options.name);
             this.idIndexList = this.idIndexList.filter(function (idIndex) {
-                return idIndex.name !== name || idIndex.name === '_id';
+                return idIndex.name !== name || idIndex.name === "_id";
             });
             this.save();
             return local.setTimeoutOnError(onError);
@@ -1480,7 +1475,7 @@ vendor)s{0,1}(\\b|_)\
             // throttle storage-writes to once every 1000 ms
             self.timerSave = self.timerSave || setTimeout(function () {
                 self.timerSave = null;
-                local.storageSetItem('dbTable.' + self.name + '.json', self.export(), function (
+                local.storageSetItem("dbTable." + self.name + ".json", self.export(), function (
                     error
                 ) {
                     while (self.onSaveList.length) {
@@ -1511,7 +1506,7 @@ vendor)s{0,1}(\\b|_)\
          * this function will drop the db
          */
             var onParallel;
-            console.error('db - dropping database ...');
+            console.error("db - dropping database ...");
             onParallel = local.onParallel(function (error) {
                 local.setTimeoutOnError(onError, 0, error);
             });
@@ -1530,11 +1525,11 @@ vendor)s{0,1}(\\b|_)\
          * this function will export the db as serialized text
          */
             var result;
-            result = '';
+            result = "";
             Object.keys(local.dbTableDict).forEach(function (key) {
-                console.error('db - exporting dbTable ' + local.dbTableDict[key].name + ' ...');
+                console.error("db - exporting dbTable " + local.dbTableDict[key].name + " ...");
                 result += local.dbTableDict[key].export();
-                result += '\n\n';
+                result += "\n\n";
             });
             return local.setTimeoutOnError(onError, 0, null, result.trim());
         };
@@ -1549,7 +1544,7 @@ vendor)s{0,1}(\\b|_)\
             setTimeout(function () {
                 local.modeImport = null;
             });
-            text.replace((/^(\w\S*?) (\S+?) (\S.*?)$/gm), function (
+            text.replace((/^(\w\S*?)\u0020(\S+?)\u0020(\S.*?)$/gm), function (
                 match0,
                 match1,
                 match2,
@@ -1558,33 +1553,35 @@ vendor)s{0,1}(\\b|_)\
                 // jslint-hack
                 local.nop(match0);
                 switch (match2) {
-                case 'dbRowSet':
+                case "dbRowSet":
                     dbTableDict[match1] = true;
-                    dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
+                    dbTable = local.dbTableCreateOne({isLoaded: true, name: match1});
                     dbTable.crudSetOneById(JSON.parse(match3));
                     break;
-                case 'idIndexCreate':
+                case "idIndexCreate":
                     dbTableDict[match1] = true;
-                    dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
+                    dbTable = local.dbTableCreateOne({isLoaded: true, name: match1});
                     dbTable.idIndexCreate(JSON.parse(match3));
                     break;
-                case 'sizeLimit':
+                case "sizeLimit":
                     dbTableDict[match1] = true;
-                    dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
+                    dbTable = local.dbTableCreateOne({isLoaded: true, name: match1});
                     dbTable.sizeLimit = JSON.parse(match3);
                     break;
-                case 'sortDefault':
+                case "sortDefault":
                     dbTableDict[match1] = true;
-                    dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
+                    dbTable = local.dbTableCreateOne({isLoaded: true, name: match1});
                     dbTable.sortDefault = JSON.parse(match3);
                     break;
                 default:
-                    local.onErrorDefault(new Error('db - dbImport - invalid operation - ' +
-                        match0));
+                    local.onErrorDefault(new Error(
+                        "db - dbImport - invalid operation - " +
+                        match0
+                    ));
                 }
             });
             Object.keys(dbTableDict).forEach(function (name) {
-                console.error('db - importing dbTable ' + name + ' ...');
+                console.error("db - importing dbTable " + name + " ...");
             });
             local.modeImport = null;
             return local.setTimeoutOnError(onError);
@@ -1603,7 +1600,7 @@ vendor)s{0,1}(\\b|_)\
                 onParallel.counter += 1;
                 onParallel(error);
                 (data || []).forEach(function (key) {
-                    if (key.indexOf('dbTable.') !== 0) {
+                    if (key.indexOf("dbTable.") !== 0) {
                         return;
                     }
                     onParallel.counter += 1;
@@ -1642,14 +1639,14 @@ vendor)s{0,1}(\\b|_)\
          */
             var ii, value;
             value = dbRow;
-            key = String(key).split('.');
+            key = String(key).split(".");
             // optimization - for-loop
-            for (ii = 0; ii < key.length && typeof value === 'object' && value; ii += 1) {
+            for (ii = 0; ii < key.length && typeof value === "object" && value; ii += 1) {
                 value = value[key[ii]];
             }
             return value === undefined
-                ? null
-                : value;
+            ? null
+            : value;
         };
 
         local.dbRowListGetManyByOperator = function (dbRowList, fieldName, operator, bb, not) {
@@ -1659,41 +1656,41 @@ vendor)s{0,1}(\\b|_)\
             var ii, jj, result, fieldValue, test, typeof2;
             result = [];
             typeof2 = typeof bb;
-            if (bb && typeof2 === 'object') {
+            if (bb && typeof2 === "object") {
                 switch (operator) {
-                case '$in':
-                case '$nin':
-                case '$regex':
+                case "$in":
+                case "$nin":
+                case "$regex":
                     break;
                 default:
                     return result;
                 }
             }
             switch (operator) {
-            case '$eq':
+            case "$eq":
                 test = function (aa, bb) {
                     return aa === bb;
                 };
                 break;
-            case '$exists':
+            case "$exists":
                 bb = !bb;
                 test = function (aa, bb) {
-                    return !((aa === null) ^ bb);
+                    return !((aa === null) ^ bb); // jslint-ignore-line
                 };
                 break;
-            case '$gt':
+            case "$gt":
                 test = function (aa, bb, typeof1, typeof2) {
                     return typeof1 === typeof2 && aa > bb;
                 };
                 break;
-            case '$gte':
+            case "$gte":
                 test = function (aa, bb, typeof1, typeof2) {
                     return typeof1 === typeof2 && aa >= bb;
                 };
                 break;
-            case '$in':
-                if (bb && typeof bb.indexOf === 'function') {
-                    if (typeof2 === 'string') {
+            case "$in":
+                if (bb && typeof bb.indexOf === "function") {
+                    if (typeof2 === "string") {
                         test = function (aa, bb, typeof1, typeof2) {
                             return typeof1 === typeof2 && bb.indexOf(aa) >= 0;
                         };
@@ -1704,24 +1701,24 @@ vendor)s{0,1}(\\b|_)\
                     }
                 }
                 break;
-            case '$lt':
+            case "$lt":
                 test = function (aa, bb, typeof1, typeof2) {
                     return typeof1 === typeof2 && aa < bb;
                 };
                 break;
-            case '$lte':
+            case "$lte":
                 test = function (aa, bb, typeof1, typeof2) {
                     return typeof1 === typeof2 && aa <= bb;
                 };
                 break;
-            case '$ne':
+            case "$ne":
                 test = function (aa, bb) {
                     return aa !== bb;
                 };
                 break;
-            case '$nin':
-                if (bb && typeof bb.indexOf === 'function') {
-                    if (typeof2 === 'string') {
+            case "$nin":
+                if (bb && typeof bb.indexOf === "function") {
+                    if (typeof2 === "string") {
                         test = function (aa, bb, typeof1, typeof2) {
                             return typeof1 === typeof2 && bb.indexOf(aa) < 0;
                         };
@@ -1732,14 +1729,14 @@ vendor)s{0,1}(\\b|_)\
                     }
                 }
                 break;
-            case '$regex':
-                if (bb && typeof bb.test === 'function') {
+            case "$regex":
+                if (bb && typeof bb.test === "function") {
                     test = function (aa, bb) {
                         return bb.test(aa);
                     };
                 }
                 break;
-            case '$typeof':
+            case "$typeof":
                 test = function (aa, bb, typeof1) {
                     // jslint-hack
                     local.nop(aa);
@@ -1776,18 +1773,18 @@ vendor)s{0,1}(\\b|_)\
             // optimization - convert to boolean
             not = Boolean(not);
             result = dbRowList;
-            if (!(typeof query === 'object' && query)) {
-                result = local.dbRowListGetManyByOperator(result, fieldName, '$eq', query, not);
+            if (!(typeof query === "object" && query)) {
+                result = local.dbRowListGetManyByOperator(result, fieldName, "$eq", query, not);
                 return result;
             }
             Object.keys(query).some(function (key) {
                 bb = query[key];
                 switch (key) {
-                case '$not':
+                case "$not":
                     key = fieldName;
                     not = !not;
                     break;
-                case '$or':
+                case "$or":
                     if (!Array.isArray(bb)) {
                         break;
                     }
@@ -1803,7 +1800,7 @@ vendor)s{0,1}(\\b|_)\
                     });
                     return !result.length;
                 }
-                if (key[0] === '$') {
+                if (key[0] === "$") {
                     result = local.dbRowListGetManyByOperator(result, fieldName, key, bb, not);
                     return !result.length;
                 }
@@ -1835,7 +1832,7 @@ vendor)s{0,1}(\\b|_)\
             }
             result = {};
             fieldList.forEach(function (key) {
-                if (key[0] !== '$') {
+                if (key[0] !== "$") {
                     result[key] = dbRow[key];
                 }
             });
@@ -1849,11 +1846,11 @@ vendor)s{0,1}(\\b|_)\
          */
             var id;
             id = dbRow[idIndex.name];
-            if (typeof id !== 'number' && typeof id !== 'string') {
+            if (typeof id !== "number" && typeof id !== "string") {
                 do {
                     id = idIndex.isInteger
-                        ? (1 + Math.random()) * 0x10000000000000
-                        : 'a' + ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1);
+                    ? (1 + Math.random()) * 0x10000000000000
+                    : "a" + ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1);
                 // optimization - hasOwnProperty
                 } while (idIndex.dict.hasOwnProperty(id));
                 dbRow[idIndex.name] = id;
@@ -1892,7 +1889,7 @@ vendor)s{0,1}(\\b|_)\
                 dbTableDict[options.name] = true;
             });
             Object.keys(dbTableDict).forEach(function (name) {
-                console.error('db - seeding dbTable ' + name + ' ...');
+                console.error("db - seeding dbTable " + name + " ...");
             });
             (local.global.utility2_onReadyAfter || local.nop)(onError);
             onParallel();
@@ -1922,10 +1919,10 @@ vendor)s{0,1}(\\b|_)\
             options = local.objectSetOverride(options);
             // register dbTable
             self = local.dbTableDict[options.name] =
-                local.dbTableDict[options.name] || new local._DbTable(options);
+                    local.dbTableDict[options.name] || new local._DbTable(options);
             self.sortDefault = options.sortDefault ||
-                self.sortDefault ||
-                [{ fieldName: '_timeUpdated', isDescending: true }];
+                    self.sortDefault ||
+                    [{fieldName: "_timeUpdated", isDescending: true}];
             // remove idIndex
             (options.idIndexRemoveList || []).forEach(function (idIndex) {
                 self.idIndexRemove(idIndex);
@@ -1939,7 +1936,7 @@ vendor)s{0,1}(\\b|_)\
             // restore dbTable from persistent-storage
             self.isLoaded = self.isLoaded || options.isLoaded;
             if (!self.isLoaded) {
-                local.storageGetItem('dbTable.' + self.name + '.json', function (error, data) {
+                local.storageGetItem("dbTable." + self.name + ".json", function (error, data) {
                     // validate no error occurred
                     local.assert(!error, error);
                     if (!self.isLoaded) {
@@ -1963,43 +1960,43 @@ vendor)s{0,1}(\\b|_)\
             utility2 = local.global.utility2 || {};
             ajaxProgressUpdate = utility2.ajaxProgressUpdate || local.nop;
             switch (event.target.dataset.onEventDomDb || event.target.id) {
-            case 'dbExportButton1':
+            case "dbExportButton1":
                 tmp = local.global.URL.createObjectURL(new local.global.Blob([local.dbExport()]));
-                document.querySelector('#dbExportA1').href = tmp;
-                document.querySelector('#dbExportA1').click();
+                document.querySelector("#dbExportA1").href = tmp;
+                document.querySelector("#dbExportA1").click();
                 setTimeout(function () {
                     local.global.URL.revokeObjectURL(tmp);
                 }, 30000);
                 break;
-            case 'dbImportButton1':
-                tmp = document.querySelector('#dbImportInput1');
+            case "dbImportButton1":
+                tmp = document.querySelector("#dbImportInput1");
                 if (!tmp.onEventDomDb) {
                     tmp.onEventDomDb = local.onEventDomDb;
-                    tmp.addEventListener('change', local.onEventDomDb);
+                    tmp.addEventListener("change", local.onEventDomDb);
                 }
                 tmp.click();
                 break;
-            case 'dbImportInput1':
-                if (event.type !== 'change') {
+            case "dbImportInput1":
+                if (event.type !== "change") {
                     return;
                 }
                 ajaxProgressUpdate();
                 reader = new local.global.FileReader();
-                tmp = document.querySelector('#dbImportInput1').files[0];
+                tmp = document.querySelector("#dbImportInput1").files[0];
                 if (!tmp) {
                     return;
                 }
-                reader.addEventListener('load', function () {
+                reader.addEventListener("load", function () {
                     local.dbImport(reader.result);
                     ajaxProgressUpdate();
                 });
                 reader.readAsText(tmp);
                 break;
-            case 'dbResetButton1':
+            case "dbResetButton1":
                 ajaxProgressUpdate();
                 local.dbReset(local.global.utility2_dbSeedList, function (error) {
                     local.onErrorDefault(error);
-                    ((utility2.uiEventListenerDict || {})['.onEventUiReload'] || local.nop)();
+                    ((utility2.uiEventListenerDict || {})[".onEventUiReload"] || local.nop)();
                 });
                 break;
             }
@@ -2017,8 +2014,8 @@ vendor)s{0,1}(\\b|_)\
             var typeof1, typeof2;
             if (aa === bb) {
                 return ii < jj
-                    ? -1
-                    : 1;
+                ? -1
+                : 1;
             }
             if (aa === null) {
                 return -1;
@@ -2029,28 +2026,28 @@ vendor)s{0,1}(\\b|_)\
             typeof1 = typeof aa;
             typeof2 = typeof bb;
             if (typeof1 === typeof2) {
-                return typeof1 === 'object'
-                    ? 0
-                    : aa > bb
-                    ? 1
-                    : -1;
+                return typeof1 === "object"
+                ? 0
+                : aa > bb
+                ? 1
+                : -1;
             }
-            if (typeof1 === 'boolean') {
+            if (typeof1 === "boolean") {
                 return -1;
             }
-            if (typeof2 === 'boolean') {
+            if (typeof2 === "boolean") {
                 return 1;
             }
-            if (typeof1 === 'number') {
+            if (typeof1 === "number") {
                 return -1;
             }
-            if (typeof2 === 'number') {
+            if (typeof2 === "number") {
                 return 1;
             }
-            if (typeof1 === 'string') {
+            if (typeof1 === "string") {
                 return -1;
             }
-            if (typeof2 === 'string') {
+            if (typeof2 === "string") {
                 return 1;
             }
             return 0;
@@ -2075,11 +2072,11 @@ vendor)s{0,1}(\\b|_)\
          * <dbTable> <query>
          * will get from <dbTable> with json <query>, <dbRowList>
          */
-            local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
+            local.dbTableCreateOne({name: process.argv[3]}, function (error, self) {
                 // validate no error occurred
                 local.assert(!error, error);
                 console.log(JSON.stringify(self.crudGetManyByQuery(
-                    JSON.parse(process.argv[4] || '{}')
+                    JSON.parse(process.argv[4] || "{}")
                 ), null, 4));
             });
         };
@@ -2089,7 +2086,7 @@ vendor)s{0,1}(\\b|_)\
          * <dbTable> <query>
          * will remove from <dbTable> with json <query>, <dbRowList>
          */
-            local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
+            local.dbTableCreateOne({name: process.argv[3]}, function (error, self) {
                 // validate no error occurred
                 local.assert(!error, error);
                 console.log(JSON.stringify(self.crudRemoveManyByQuery(
@@ -2103,7 +2100,7 @@ vendor)s{0,1}(\\b|_)\
          * <dbTable> <dbRowList>
          * will set in <dbTable>, <dbRowList>
          */
-            local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
+            local.dbTableCreateOne({name: process.argv[3]}, function (error, self) {
                 // validate no error occurred
                 local.assert(!error, error);
                 self.crudSetManyById(JSON.parse(process.argv[4]));
@@ -2115,13 +2112,13 @@ vendor)s{0,1}(\\b|_)\
          * <dbTable>
          * will get from <dbTable>, <headerDict>
          */
-            local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
+            local.dbTableCreateOne({name: process.argv[3]}, function (error, self) {
                 // validate no error occurred
                 local.assert(!error, error);
                 var tmp;
                 tmp = [];
                 self.idIndexList.forEach(function (idIndex) {
-                    tmp.push({ isInteger: idIndex.isInteger, name: idIndex.name });
+                    tmp.push({isInteger: idIndex.isInteger, name: idIndex.name});
                 });
                 console.log(JSON.stringify({
                     idIndexList: tmp,
@@ -2136,7 +2133,7 @@ vendor)s{0,1}(\\b|_)\
          * <dbTable> <headerDict>
          * will set in <dbTable>, <headerDict>
          */
-            local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
+            local.dbTableCreateOne({name: process.argv[3]}, function (error, self) {
                 // validate no error occurred
                 local.assert(!error, error);
                 local.tmp = JSON.parse(process.argv[4]);
@@ -2145,7 +2142,7 @@ vendor)s{0,1}(\\b|_)\
                 self.save();
                 local.tmp = [];
                 self.idIndexList.forEach(function (idIndex) {
-                    local.tmp.push({ isInteger: idIndex.isInteger, name: idIndex.name });
+                    local.tmp.push({isInteger: idIndex.isInteger, name: idIndex.name});
                 });
                 local.cliDict.dbTableHeaderDictGet();
             });
@@ -2156,14 +2153,14 @@ vendor)s{0,1}(\\b|_)\
          * <dbTable> <idIndex>
          * will create in <dbTable>, <idIndex>
          */
-            local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
+            local.dbTableCreateOne({name: process.argv[3]}, function (error, self) {
                 // validate no error occurred
                 local.assert(!error, error);
                 self.idIndexCreate(JSON.parse(process.argv[4]));
                 self.save();
                 local.tmp = [];
                 self.idIndexList.forEach(function (idIndex) {
-                    local.tmp.push({ isInteger: idIndex.isInteger, name: idIndex.name });
+                    local.tmp.push({isInteger: idIndex.isInteger, name: idIndex.name});
                 });
                 local.cliDict.dbTableHeaderDictGet();
             });
@@ -2174,7 +2171,7 @@ vendor)s{0,1}(\\b|_)\
          * <dbTable> <idIndex>
          * will remove from <dbTable>, <idIndex>
          */
-            local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
+            local.dbTableCreateOne({name: process.argv[3]}, function (error, self) {
                 // validate no error occurred
                 local.assert(!error, error);
                 self.idIndexRemove(JSON.parse(process.argv[4]));
@@ -2192,7 +2189,7 @@ vendor)s{0,1}(\\b|_)\
                 // validate no error occurred
                 local.assert(!error, error);
                 console.log(JSON.stringify(data.map(function (element) {
-                    return element.split('.').slice(1, -1).join('.');
+                    return element.split(".").slice(1, -1).join(".");
                 }), null, 4));
             });
         };
@@ -2202,7 +2199,7 @@ vendor)s{0,1}(\\b|_)\
          * <dbTable>
          * will remove from db, <dbTable>
          */
-            local.storageRemoveItem('dbTable.' + process.argv[3] + '.json', function (error) {
+            local.storageRemoveItem("dbTable." + process.argv[3] + ".json", function (error) {
                 // validate no error occurred
                 local.assert(!error, error);
                 local.cliDict.dbTableList();

@@ -1,534 +1,7 @@
-#!/usr/bin/env node
-/*
- * lib.istanbul.js (2018.9.10)
- * https://github.com/kaizhu256/node-istanbul-lite
- * this zero-dependency package will provide a browser-compatible version of the istanbul (v0.4.5) coverage-tool, with a working web-demo
- *
- */
-
-
-
-/* istanbul instrument in package istanbul */
-/* jslint-utility2 */
-/*jslint
-    bitwise: true,
-    browser: true,
-    for: true,
-    multivar: true,
-    node: true,
-    this: true,
-*/
-/*global global*/
-(function () {
-    "use strict";
-    var local;
-
-
-
-    /* istanbul ignore next */
-    // run shared js-env code - init-before
-    (function () {
-        // init debug_inline
-        (function () {
-            var consoleError, context;
-            consoleError = console.error;
-            context = (typeof window === "object" && window) || global;
-            context["debug\u0049nline"] = context["debug\u0049nline"] || function (arg0) {
-            /*
-             * this function will both print arg0 to stderr and return it
-             */
-                // debug arguments
-                context["debug\u0049nlineArguments"] = arguments;
-                consoleError("\n\ndebug\u0049nline");
-                consoleError.apply(console, arguments);
-                consoleError(new Error().stack + "\n");
-                // return arg0 for inspection
-                return arg0;
-            };
-        }());
-        // init local
-        local = {};
-        // init isBrowser
-        local.isBrowser = typeof window === "object" &&
-                typeof window.XMLHttpRequest === "function" &&
-                window.document &&
-                typeof window.document.querySelectorAll === "function";
-        // init global
-        local.global = local.isBrowser
-        ? window
-        : global;
-        // re-init local
-        local = local.global.utility2_rollup ||
-                // local.global.utility2_rollup_old || require("./assets.utility2.rollup.js") ||
-                local;
-        // init exports
-        if (local.isBrowser) {
-            local.global.utility2_istanbul = local;
-        } else {
-            // require builtins
-            // local.assert = require("assert");
-            local.buffer = require("buffer");
-            local.child_process = require("child_process");
-            local.cluster = require("cluster");
-            local.crypto = require("crypto");
-            local.dgram = require("dgram");
-            local.dns = require("dns");
-            local.domain = require("domain");
-            local.events = require("events");
-            local.fs = require("fs");
-            local.http = require("http");
-            local.https = require("https");
-            local.net = require("net");
-            local.os = require("os");
-            local.path = require("path");
-            local.querystring = require("querystring");
-            local.readline = require("readline");
-            local.repl = require("repl");
-            local.stream = require("stream");
-            local.string_decoder = require("string_decoder");
-            local.timers = require("timers");
-            local.tls = require("tls");
-            local.tty = require("tty");
-            local.url = require("url");
-            local.util = require("util");
-            local.vm = require("vm");
-            local.zlib = require("zlib");
-            module.exports = local;
-            module.exports.__dirname = __dirname;
-        }
-        // init lib main
-        local.local = local;
-        local.istanbul = local;
-
-
-
-        /* validateLineSortedReset */
-        // init custom
-        if (!local.isBrowser) {
-            local._istanbul_module = require("module");
-            local.process = process;
-            local.require = require;
-        }
-
-        local.cliRun = function (options) {
-        /*
-         * this function will run the cli
-         */
-            local.cliDict._eval = local.cliDict._eval || function () {
-            /*
-             * <code>
-             * will eval <code>
-             */
-                global.local = local;
-                local.vm.runInThisContext(process.argv[3]);
-            };
-            local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
-            local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
-            local.cliDict._help = local.cliDict._help || function () {
-            /*
-             *
-             * will print help
-             */
-                var commandList;
-                var file;
-                var packageJson;
-                var text;
-                var textDict;
-                commandList = [{
-                    argList: "<arg2>  ...",
-                    description: "usage:",
-                    command: ["<arg1>"]
-                }, {
-                    argList: "'console.log(\"hello world\")'",
-                    description: "example:",
-                    command: ["--eval"]
-                }];
-                file = __filename.replace((/.*\//), "");
-                options = Object.assign({}, options);
-                packageJson = require("./package.json");
-                // validate comment
-                options.rgxComment = options.rgxComment || new RegExp(
-                    "\\) \\{\\n" +
-                    "(?: {8}| {12})\\/\\*\\n" +
-                    "(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n" +
-                    "(?: {9}| {13})\\* (will .*?\\S)\\n" +
-                    "(?: {9}| {13})\\*\\/\\n" +
-                    "(?: {12}| {16})\\S"
-                );
-                textDict = {};
-                Object.keys(local.cliDict).sort().forEach(function (key, ii) {
-                    if (key[0] === "_" && key !== "_default") {
-                        return;
-                    }
-                    text = String(local.cliDict[key]);
-                    if (key === "_default") {
-                        key = "";
-                    }
-                    textDict[text] = textDict[text] || (ii + 2);
-                    ii = textDict[text];
-                    if (commandList[ii]) {
-                        commandList[ii].command.push(key);
-                        return;
-                    }
-                    try {
-                        commandList[ii] = options.rgxComment.exec(text);
-                        commandList[ii] = {
-                            argList: (commandList[ii][1] || "").trim(),
-                            command: [key],
-                            description: commandList[ii][2]
-                        };
-                    } catch (ignore) {
-                        throw new Error(
-                            "cliRun - cannot parse comment in COMMAND " +
-                            key + ":\nnew RegExp(" + JSON.stringify(options.rgxComment.source) +
-                            ").exec(" + JSON.stringify(text)
-                            .replace((/\\\\/g), "\u0000")
-                            .replace((/\\n/g), "\\n\\\n")
-                            .replace((/\u0000/g), "\\\\") + ");"
-                        );
-                    }
-                });
-                console.log(packageJson.name + " (" + packageJson.version + ")\n\n" + commandList
-                .filter(function (element) {
-                    return element;
-                })
-                .map(function (element, ii) {
-                    element.command = element.command.filter(function (element) {
-                        return element;
-                    });
-                    switch (ii) {
-                    case 0:
-                    case 1:
-                        element.argList = [element.argList];
-                        break;
-                    default:
-                        element.argList = element.argList.split(" ");
-                        element.description = "# COMMAND " +
-                                (element.command[0] || "<none>") + "\n# " +
-                                element.description;
-                    }
-                    return element.description + "\n  " + file +
-                            ("  " + element.command.sort().join("|") + "  ")
-                            .replace((/^\u0020{4}$/), "  ") +
-                            element.argList.join("  ");
-                })
-                .join("\n\n"));
-            };
-            local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
-            local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
-            local.cliDict._default = local.cliDict._default || local.cliDict._help;
-            local.cliDict.help = local.cliDict.help || local.cliDict._help;
-            local.cliDict._interactive = local.cliDict._interactive || function () {
-            /*
-             *
-             * will start interactive-mode
-             */
-                global.local = local;
-                (local.replStart || require("repl").start)({useGlobal: true});
-            };
-            local.cliDict["--interactive"] = local.cliDict["--interactive"] ||
-                    local.cliDict._interactive;
-            local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
-            local.cliDict._version = local.cliDict._version || function () {
-            /*
-             *
-             * will print version
-             */
-                console.log(require(__dirname + "/package.json").version);
-            };
-            local.cliDict["--version"] = local.cliDict["--version"] || local.cliDict._version;
-            local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
-            // default to --help command if no arguments are given
-            if (process.argv.length <= 2) {
-                local.cliDict._help();
-                return;
-            }
-            if (local.cliDict[process.argv[2]]) {
-                local.cliDict[process.argv[2]]();
-                return;
-            }
-            local.cliDict._default();
-        };
-
-        local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
-        /*
-         * this function will synchronously 'mkdir -p' and write the data to file
-         */
-            if (mode === "noWrite") {
-                return;
-            }
-            // try to write to file
-            try {
-                require("fs").writeFileSync(file, data);
-            } catch (ignore) {
-                // mkdir -p
-                require("child_process").spawnSync(
-                    "mkdir",
-                    ["-p", require("path").dirname(file)],
-                    {stdio: ["ignore", 1, 2]}
-                );
-                // re-write to file
-                require("fs").writeFileSync(file, data);
-            }
-        };
-
-        local.nop = function () {
-        /*
-         * this function will do nothing
-         */
-            return;
-        };
-    }());
-
-
-
-    // run shared js-env code - function
-    (function () {
-        var __dirname, process, require;
-        // jslint-hack
-        local.nop(__dirname, require);
-        /* istanbul ignore next */
-        local.global.__coverageCodeDict__ = local.global.__coverageCodeDict__ || {};
-        // mock builtins
-        __dirname = "";
-        process = local.process || {
-            cwd: function () {
-                return "";
-            },
-            env: {},
-            stdout: {}
-        };
-        require = function (key) {
-            try {
-                return local["_istanbul_" + key] || local[key] || local.require(key);
-            } catch (ignore) {
-            }
-        };
-        local["./package.json"] = {};
-        // mock module fs
-        local._istanbul_fs = {};
-        local._istanbul_fs.readFileSync = function (file) {
-            // return head.txt or foot.txt
-            file = local[file.slice(-8)];
-            if (local.isBrowser) {
-                file = file
-                .replace("<!doctype html>\n", "")
-                .replace((/(<\/?)(?:body|html)/g), "$1div");
-            }
-            if (!local.isBrowser && process.env.npm_package_homepage) {
-                file = file
-                .replace("{{env.npm_package_homepage}}", process.env.npm_package_homepage)
-                .replace("{{env.npm_package_name}}", process.env.npm_package_name)
-                .replace("{{env.npm_package_version}}", process.env.npm_package_version);
-            } else {
-                file = file.replace((/<h1\u0020[\S\s]*<\/h1>/), "");
-            }
-            return file;
-        };
-
-        local._istanbul_fs.readdirSync = function () {
-            return [];
-        };
-
-        // mock module path
-        local._istanbul_path = local.path || {
-            dirname: function (file) {
-                return file.replace((/\/[\w\-.]+?$/), "");
-            },
-            resolve: function () {
-                return arguments[arguments.length - 1];
-            }
-        };
-
-        local.coverageMerge = function (coverage1, coverage2) {
-        /*
-         * this function will inplace-merge coverage2 into coverage1
-         */
-            var dict1, dict2;
-            coverage1 = coverage1 || {};
-            coverage2 = coverage2 || {};
-            Object.keys(coverage2).forEach(function (file) {
-                if (!coverage2[file]) {
-                    return;
-                }
-                // if file is undefined in coverage1, then add it
-                if (!coverage1[file]) {
-                    coverage1[file] = coverage2[file];
-                    return;
-                }
-                // merge file from coverage2 into coverage1
-                ["b", "f", "s"].forEach(function (key) {
-                    dict1 = coverage1[file][key];
-                    dict2 = coverage2[file][key];
-                    switch (key) {
-                    // increment coverage for branch lines
-                    case "b":
-                        Object.keys(dict2).forEach(function (key) {
-                            dict2[key].forEach(function (count, ii) {
-                                dict1[key][ii] += count;
-                            });
-                        });
-                        break;
-                    // increment coverage for function and statement lines
-                    case "f":
-                    case "s":
-                        Object.keys(dict2).forEach(function (key) {
-                            dict1[key] += dict2[key];
-                        });
-                        break;
-                    }
-                });
-            });
-            return coverage1;
-        };
-
-        local.coverageReportCreate = function () {
-        /*
-         * this function will
-         * 1. print coverage in text-format to stdout
-         * 2. write coverage in html-format to filesystem
-         * 3. return coverage in html-format as single document
-         */
-            var options;
-            /* istanbul ignore next */
-            if (!local.global.__coverage__) {
-                return "";
-            }
-            options = {};
-            options.dir = process.cwd() + "/tmp/build/coverage.html";
-            // merge previous coverage
-            if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
-                console.log("merging file " + options.dir + "/coverage.json to coverage");
-                try {
-                    local.coverageMerge(local.global.__coverage__, JSON.parse(
-                        local.fs.readFileSync(options.dir + "/coverage.json", "utf8")
-                    ));
-                } catch (ignore) {
-                }
-                try {
-                    options.coverageCodeDict = JSON.parse(local.fs.readFileSync(
-                        options.dir + "/coverage.code-dict.json",
-                        "utf8"
-                    ));
-                    Object.keys(options.coverageCodeDict).forEach(function (key) {
-                        local.global.__coverageCodeDict__[key] =
-                                local.global.__coverageCodeDict__[key] ||
-                                options.coverageCodeDict[key];
-                    });
-                } catch (ignore) {
-                }
-            }
-            // init writer
-            local.coverageReportHtml = "";
-            local.coverageReportHtml += "<div class=\"coverageReportDiv\">\n" +
-                    "<h1>coverage-report</h1>\n" +
-                    "<div style=\"background: #fff; border: 1px solid #000; margin 0; padding: 0;" +
-                    "\">\n";
-            local.writerData = "";
-            options.sourceStore = {};
-            options.writer = local.writer;
-            // 1. print coverage in text-format to stdout
-            new local.TextReport(options).writeReport(local.collector);
-            // 2. write coverage in html-format to filesystem
-            new local.HtmlReport(options).writeReport(local.collector);
-            local.writer.writeFile("", local.nop);
-            if (!local.isBrowser) {
-                // write coverage.json
-                local.fsWriteFileWithMkdirpSync(
-                    options.dir + "/coverage.json",
-                    JSON.stringify(local.global.__coverage__)
-                );
-                // write coverage.code-dict.json
-                local.fsWriteFileWithMkdirpSync(
-                    options.dir + "/coverage.code-dict.json",
-                    JSON.stringify(local.global.__coverageCodeDict__)
-                );
-                // write coverage.badge.svg
-                options.pct = local.coverageReportSummary.root.metrics.lines.pct;
-                local.fsWriteFileWithMkdirpSync(
-                    local._istanbul_path.dirname(options.dir) + "/coverage.badge.svg",
-                    local.templateCoverageBadgeSvg
-                        // edit coverage badge percent
-                    .replace((/100.0/g), options.pct)
-                        // edit coverage badge color
-                    .replace(
-                        (/0d0/g),
-                        ("0" + Math.round((100 - options.pct) * 2.21).toString(16)).slice(-2) +
-                                ("0" + Math.round(options.pct * 2.21).toString(16)).slice(-2) +
-                                "00"
-                    )
-                );
-            }
-            console.log("created coverage file " + options.dir + "/index.html");
-            // 3. return coverage in html-format as a single document
-            local.coverageReportHtml += "</div>\n</div>\n";
-            // write coverage.rollup.html
-            if (!local.isBrowser) {
-                local.fsWriteFileWithMkdirpSync(
-                    options.dir + "/coverage.rollup.html",
-                    local.coverageReportHtml
-                );
-            }
-            return local.coverageReportHtml;
-        };
-
-        /* istanbul ignore next */
-        local.instrumentInPackage = function (code, file) {
-        /*
-         * this function will instrument the code
-         * only if the macro /\* istanbul instrument in package $npm_package_nameLib *\/
-         * exists in the code
-         */
-            return (
-                process.env.npm_config_mode_coverage &&
-                code.indexOf("/* istanbul ignore all */\n") < 0 && (
-                    process.env.npm_config_mode_coverage === "all" ||
-                    code.indexOf(
-                        "/* istanbul instrument in package " +
-                        process.env.npm_package_nameLib + " */\n"
-                    ) >= 0 ||
-                    code.indexOf(
-                        "/* istanbul instrument in package " +
-                        process.env.npm_config_mode_coverage + " */\n"
-                    ) >= 0
-                )
-            )
-            ? local.instrumentSync(code, file)
-            : code;
-        };
-
-        local.instrumentSync = function (code, file) {
-        /*
-         * this function will
-         * 1. normalize the file
-         * 2. save code to __coverageCodeDict__[file] for future html-report
-         * 3. return instrumented code
-         */
-            // 1. normalize the file
-            file = local._istanbul_path.resolve("/", file);
-            // 2. save code to __coverageCodeDict__[file] for future html-report
-            local.global.__coverageCodeDict__[file] = code;
-            // 3. return instrumented code
-            return new local.Instrumenter({
-                embedSource: true,
-                esModules: true,
-                noAutoWrap: true
-            }).instrumentSync(code, file).trimLeft();
-        };
-
-        local.util = {inherits: local.nop};
-
-
-
 /*
 file esprima/esprima.js
-2016-08-22T15:14:14Z - shGithubDateCommitted https://github.com/jquery/esprima/commits/2.7.3
-https://github.com/jquery/esprima/blob/2.7.3/esprima.js
 utility2-uglifyjs https://raw.githubusercontent.com/jquery/esprima/2.7.3/esprima.js > /tmp/aa.js
 */
-/* istanbul ignore next */
-/* jslint-ignore-block-beg */
-(function () { var exports; exports = local.esprima = {};
 (function(e,t){"use strict";typeof define=="function"&&define.amd?define(["exports"
 ],t):typeof exports!="undefined"?t(exports):t(e.esprima={})})(this,function(e){"use strict"
 ;function L(e,t){if(!e)throw new Error("ASSERT: "+t)}function A(e){return e>=48&&
@@ -598,19 +71,13 @@ substr(0,3),n==="==="||n==="!=="||n===">>>"||n==="<<="||n===">>="?l+=3:(n=n.subs
 n==="++"||n==="--"||n==="<<"||n===">>"||n==="&="||n==="|="||n==="^="||n==="%="||
 n==="<="||n===">="||n==="=>"?l+=2:(n=a[l],"<>=!+-*%&|^/".indexOf(n)>=0&&++l)))}return l===
 e.start&&Lt(),e.end=l,e.value=n,e}function Z(e){var n="";while(l<E){if(!O(a[l]))
-break;n+=a[l++]}return n.length===0&&Lt(),
-a[l]==='n'&&(n+=a[l++]), // BigInt
-B(a.charCodeAt(l))&&Lt(),{type:t.NumericLiteral
+break;n+=a[l++]}return n.length===0&&Lt(),B(a.charCodeAt(l))&&Lt(),{type:t.NumericLiteral
 ,value:parseInt("0x"+n,16),lineNumber:c,lineStart:h,start:e,end:l}}function et(e
 ){var n,r;r="";while(l<E){n=a[l];if(n!=="0"&&n!=="1")break;r+=a[l++]}return r.length===0&&
-Lt(),
-a[l]==='n'&&(r+=a[l++]), // BigInt
-l<E&&(n=a.charCodeAt(l),(B(n)||A(n))&&Lt()),{type:t.NumericLiteral,value:parseInt
+Lt(),l<E&&(n=a.charCodeAt(l),(B(n)||A(n))&&Lt()),{type:t.NumericLiteral,value:parseInt
 (r,2),lineNumber:c,lineStart:h,start:e,end:l}}function tt(e,n){var r,i;M(e)?(i=!0
 ,r="0"+a[l++]):(i=!1,++l,r="");while(l<E){if(!M(a[l]))break;r+=a[l++]}return!i&&
-r.length===0&&Lt(),
-a[l]==='n'&&(r+=a[l++]), // BigInt
-(B(a.charCodeAt(l))||A(a.charCodeAt(l)))&&Lt(),{type:t.NumericLiteral
+r.length===0&&Lt(),(B(a.charCodeAt(l))||A(a.charCodeAt(l)))&&Lt(),{type:t.NumericLiteral
 ,value:parseInt(r,8),octal:i,lineNumber:c,lineStart:h,start:n,end:l}}function nt
 (){var e,t;for(e=l+1;e<E;++e){t=a[e];if(t==="8"||t==="9")return!1;if(!M(t))return!0
 }return!0}function rt(){var e,n,r;r=a[l],L(A(r.charCodeAt(0))||r===".","Numeric literal must start with a decimal digit or a decimal point"
@@ -619,9 +86,7 @@ a[l]==='n'&&(r+=a[l++]), // BigInt
 M(r)&&nt())return tt(r,n)}while(A(a.charCodeAt(l)))e+=a[l++];r=a[l]}if(r==="."){
 e+=a[l++];while(A(a.charCodeAt(l)))e+=a[l++];r=a[l]}if(r==="e"||r==="E"){e+=a[l++
 ],r=a[l];if(r==="+"||r==="-")e+=a[l++];if(A(a.charCodeAt(l)))while(A(a.charCodeAt
-(l)))e+=a[l++];else Lt()}
-a[l]==='n'&&(e+=a[l++]) // BigInt
-return B(a.charCodeAt(l))&&Lt(),{type:t.NumericLiteral,
+(l)))e+=a[l++];else Lt()}return B(a.charCodeAt(l))&&Lt(),{type:t.NumericLiteral,
 value:parseFloat(e),lineNumber:c,lineStart:h,start:n,end:l}}function it(){var e=""
 ,n,r,i,s,o,u=!1;n=a[l],L(n==="'"||n==='"',"String literal must starts with a quote"
 ),r=l,++l;while(l<E){i=a[l++];if(i===n){n="";break}if(i==="\\"){i=a[l++];if(!i||!
@@ -1235,18 +700,13 @@ t,this.finish(),this},finishYieldExpression:function(e,t){return this.type=i.Yie
 Tr,e.parse=Nr,e.Syntax=function(){var e,t={};typeof Object.create=="function"&&(
 t=Object.create(null));for(e in i)i.hasOwnProperty(e)&&(t[e]=i[e]);return typeof
 Object.freeze=="function"&&Object.freeze(t),t}()})
-}());
 
 
 
 /*
 file estraverse/estraverse.js
-2015-03-05T15:18:29Z - shGithubDateCommitted https://github.com/estools/estraverse/commits/1.9.3
-https://github.com/estools/estraverse/blob/1.9.3/estraverse.js
 utility2-uglifyjs https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > /tmp/aa.js
 */
-/* istanbul ignore next */
-(function () { var exports; exports = local.estraverse = {};
 (function(e,t){"use strict";typeof define=="function"&&define.amd?define(["exports"
 ],t):typeof exports!="undefined"?t(exports):t(e.estraverse={})})(this,function e
 (t){"use strict";function c(){}function h(e){var t={},n,r;for(n in e)e.hasOwnProperty
@@ -1375,18 +835,13 @@ m));else{if(!w(S[m]))continue;d=new y(S[m],[N,m],null,new g(S,m))}s.push(d)}}els
 (S)&&s.push(new y(S,N,null,new g(c,N)))}}return T.root},t.version="1.8.1-dev",t.
 Syntax=n,t.traverse=S,t.replace=x,t.attachComments=N,t.VisitorKeys=s,t.VisitorOption=
 i,t.Controller=b,t.cloneEnvironment=function(){return e({})},t})
-}());
 
 
 
 /*
 file esutils/lib/code.js
-2015-03-14T17:10:47Z - shGithubDateCommitted https://github.com/estools/esutils/commits/2.0.2
-https://github.com/estools/esutils/blob/2.0.2/lib/code.js
 utility2-uglifyjs https://raw.githubusercontent.com/estools/esutils/2.0.2/lib/code.js > /tmp/aa.js
 */
-/* istanbul ignore next */
-(function () { var module; module = {};
 (function(){"use strict";function o(e){return 48<=e&&e<=57}function u(e){return 48<=
 e&&e<=57||97<=e&&e<=102||65<=e&&e<=70}function a(e){return e>=48&&e<=55}function f
 (e){return e===32||e===9||e===11||e===12||e===160||e>=5760&&n.indexOf(e)>=0}function l
@@ -1406,18 +861,13 @@ s===95;i=new Array(128);for(s=0;s<128;++s)i[s]=s>=97&&s<=122||s>=65&&s<=90||s>=4
 s<=57||s===36||s===95;module.exports={isDecimalDigit:o,isHexDigit:u,isOctalDigit
 :a,isWhiteSpace:f,isLineTerminator:l,isIdentifierStartES5:h,isIdentifierPartES5:
 p,isIdentifierStartES6:d,isIdentifierPartES6:v}})()
-local.esutils = { code: module.exports }; }());
 
 
 
 /*
 file escodegen/escodegen.js
-2016-08-06T18:04:07Z - shGithubDateCommitted https://github.com/estools/escodegen/commits/1.8.1
-https://github.com/estools/escodegen/blob/1.8.1/escodegen.js
 utility2-uglifyjs https://raw.githubusercontent.com/estools/escodegen/1.8.1/escodegen.js > /tmp/aa.js
 */
-/* istanbul ignore next */
-(function () { var exports; exports = local.escodegen = {};
 (function(){"use strict";function k(e){return bt.Expression.hasOwnProperty(e.type
 )}function L(e){return bt.Statement.hasOwnProperty(e.type)}function V(){return{indent
 :null,base:null,parse:null,comment:!1,format:{indent:{style:"    ",base:0,adjustMultilineComment
@@ -1784,150 +1234,148 @@ r=dt(t,r)),i=ot(r).toString(),t.type===e.Program&&!y&&d===""&&i.charAt(i.length-
 :!0,parentheses:!1,semicolons:!1},C=V().format,exports.version=require("./package.json"
 ).version,exports.generate=Nt,exports.attachComments=i.attachComments,exports.Precedence=
 G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
-}());
-/* jslint-ignore-block-end */
 
 
 
 /*
 file handlebars.js/handlebars.js
-2013-12-26T22:37:39Z - shGithubDateCommitted https://github.com/components/handlebars.js/commits/v1.2.1
-https://github.com/components/handlebars.js/blob/v1.2.1/handlebars.js
 curl https://raw.githubusercontent.com/components/handlebars.js/v1.2.1/handlebars.js > /tmp/aa.js
 */
-        /* validateLineSortedReset */
-        local.handlebars = {};
-        local.handlebars.compile = function (template) {
-        /*
-         * this function will return a function that will render the template with a given dict
-         */
-            return function (dict) {
-                var result;
-                result = template;
-                // render triple-curly-brace
-                result = result.replace((/\{\{\{/g), "{{").replace((/\}\}\}/g), "}}");
-                // render with-statement
-                result = result.replace(
-                    (/\{\{#with\u0020(.+?)\}\}([\S\s]+?)\{\{\/with\}\}/g),
-                    function (match0, match1, match2) {
-                        // jslint-hack
-                        local.nop(match0);
-                        return local.handlebars.replace(match2, dict, match1 + ".");
-                    }
-                );
-                // render helper
-                result = result.replace(
-                    "{{#show_ignores metrics}}{{/show_ignores}}",
-                    function () {
-                        return local.handlebars.show_ignores(dict.metrics);
-                    }
-                );
-                result = result.replace(
-                    "{{#show_line_execution_counts fileCoverage}}" +
-                            "{{maxLines}}{{/show_line_execution_counts}}",
-                    function () {
-                        return local.handlebars.show_line_execution_counts(
-                            dict.fileCoverage,
-                            {fn: function () {
-                                return dict.maxLines;
-                            }}
-                        );
-                    }
-                );
-                result = result.replace(
-                    "{{#show_lines}}{{maxLines}}{{/show_lines}}",
-                    function () {
-                        return local.handlebars.show_lines({fn: function () {
-                            return dict.maxLines;
-                        }});
-                    }
-                );
-                result = result.replace(
-                    "{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}",
-                    function () {
-                        return local.handlebars.show_picture({fn: function () {
-                            return dict.metrics.statements.pct;
-                        }});
-                    }
-                );
-                result = local.handlebars.replace(result, dict, "");
-                // show code last
-                result = result.replace(
-                    "{{#show_code structured}}{{/show_code}}",
-                    function () {
-                        return local.handlebars.show_code(dict.structured);
-                    }
-                );
-                return result;
-            };
-        };
 
-        local.handlebars.registerHelper = function (key, helper) {
-        /*
-         * this function will register the helper-function
-         */
-            local.handlebars[key] = function () {
-                try {
-                    return helper.apply(null, arguments);
-                } catch (ignore) {
-                }
-            };
-        };
 
-        local.handlebars.replace = function (template, dict, withPrefix) {
-        /*
-         * this function will replace the keys in the template with the dict's key / value
-         */
-            var value;
-            // search for keys in the template
-            return template.replace((/\{\{.+?\}\}/g), function (match0) {
-                value = dict;
-                // iteratively lookup nested values in the dict
-                (withPrefix + match0.slice(2, -2)).split(".").forEach(function (key) {
-                    value = value && value[key];
-                });
-                return value === undefined
-                ? match0
-                : String(value);
-            });
-        };
 
 /*
 file istanbul/lib/collector.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/collector.js
 curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/collector.js > /tmp/aa.js
 */
-        /* validateLineSortedReset */
-        local.collector = {
-            fileCoverageFor: function (file) {
-                return local.global.__coverage__[file];
-            },
-            files: function () {
-                return Object.keys(local.global.__coverage__).filter(function (key) {
-                    if (
-                        local.global.__coverage__[key] &&
-                        local.global.__coverageCodeDict__[key]
-                    ) {
-                        // reset derived info
-                        local.global.__coverage__[key].l = null;
-                        return true;
-                    }
-                });
+/*
+ Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
+ Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
+ */
+"use strict";
+var MemoryStore = require('./store/memory'),
+    utils = require('./object-utils');
+
+/**
+ * a mechanism to merge multiple coverage objects into one. Handles the use case
+ * of overlapping coverage information for the same files in multiple coverage
+ * objects and does not double-count in this situation. For example, if
+ * you pass the same coverage object multiple times, the final merged object will be
+ * no different that any of the objects passed in (except for execution counts).
+ *
+ * The `Collector` is built for scale to handle thousands of coverage objects.
+ * By default, all processing is done in memory since the common use-case is of
+ * one or a few coverage objects. You can work around memory
+ * issues by passing in a `Store` implementation that stores temporary computations
+ * on disk (the `tmp` store, for example).
+ *
+ * The `getFinalCoverage` method returns an object with merged coverage information
+ * and is provided as a convenience for implementors working with coverage information
+ * that can fit into memory. Reporters, in the interest of generality, should *not* use this method for
+ * creating reports.
+ *
+ * Usage
+ * -----
+ *
+ *      var collector = new require('istanbul').Collector();
+ *
+ *      files.forEach(function (f) {
+ *          //each coverage object can have overlapping information about multiple files
+ *          collector.add(JSON.parse(fs.readFileSync(f, 'utf8')));
+ *      });
+ *
+ *      collector.files().forEach(function(file) {
+ *          var fileCoverage = collector.fileCoverageFor(file);
+ *          console.log('Coverage for ' + file + ' is:' + JSON.stringify(fileCoverage));
+ *      });
+ *
+ *      // convenience method: do not use this when dealing with a large number of files
+ *      var finalCoverage = collector.getFinalCoverage();
+ *
+ * @class Collector
+ * @constructor
+ * @param {Object} options Optional. Configuration options.
+ * @param {Store} options.store - an implementation of `Store` to use for temporary
+ *      calculations.
+ */
+function Collector(options) {
+    options = options || {};
+    this.store = options.store || new MemoryStore();
+}
+
+Collector.prototype = {
+    /**
+     * adds a coverage object to the collector.
+     *
+     * @method add
+     * @param {Object} coverage the coverage object.
+     * @param {String} testName Optional. The name of the test used to produce the object.
+     *      This is currently not used.
+     */
+    add: function (coverage /*, testName */) {
+        var store = this.store;
+        Object.keys(coverage).forEach(function (key) {
+            var fileCoverage = coverage[key];
+            if (store.hasKey(key)) {
+                store.setObject(key, utils.mergeFileCoverage(fileCoverage, store.getObject(key)));
+            } else {
+                store.setObject(key, fileCoverage);
             }
-        };
+        });
+    },
+    /**
+     * returns a list of unique file paths for which coverage information has been added.
+     * @method files
+     * @return {Array} an array of file paths for which coverage information is present.
+     */
+    files: function () {
+        return this.store.keys();
+    },
+    /**
+     * return file coverage information for a single file
+     * @method fileCoverageFor
+     * @param {String} fileName the path for the file for which coverage information is
+     *      required. Must be one of the values returned in the `files()` method.
+     * @return {Object} the coverage information for the specified file.
+     */
+    fileCoverageFor: function (fileName) {
+        var ret = this.store.getObject(fileName);
+        utils.addDerivedInfoForFile(ret);
+        return ret;
+    },
+    /**
+     * returns file coverage information for all files. This has the same format as
+     * any of the objects passed in to the `add` method. The number of keys in this
+     * object will be a superset of all keys found in the objects passed to `add()`
+     * @method getFinalCoverage
+     * @return {Object} the merged coverage information
+     */
+    getFinalCoverage: function () {
+        var ret = {},
+            that = this;
+        this.files().forEach(function (file) {
+            ret[file] = that.fileCoverageFor(file);
+        });
+        return ret;
+    },
+    /**
+     * disposes this collector and reclaims temporary resources used in the
+     * computation. Calls `dispose()` on the underlying store.
+     * @method dispose
+     */
+    dispose: function () {
+        this.store.dispose();
+    }
+};
+
+module.exports = Collector;
 
 
 
 /*
 file istanbul/lib/util/insertion-text.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/insertion-text.js > /tmp/aa.js
 */
-/* istanbul ignore next */
-/* jslint-ignore-block-beg */
-(function () { var module; module = {};
 function InsertionText(e,t){this.text=e,this.origLength=e.length,this.offsets=[]
 ,this.consumeBlanks=t,this.startPos=this.findFirstNonBlank(),this.endPos=this.findLastNonBlank
 ()}var WHITE_RE=/[ \f\n\r\t\v\u00A0\u2028\u2029]/;InsertionText.prototype={findFirstNonBlank
@@ -1944,22 +1392,17 @@ len;if(i.pos>=e)break}return i&&i.pos===e?i.len+=t:r.splice(o,0,{pos:e,len:t}),s
 },wrap:function(e,t,n,r,i){return this.insertAt(e,t,!0,i),this.insertAt(n,r,!1,i
 ),this},wrapLine:function(e,t){this.wrap(0,e,this.originalLength(),t)},toString:
 function(){return this.text}},module.exports=InsertionText
-local['../util/insertion-text'] = module.exports; }());
 
 
 
 /*
 file istanbul/lib/instrumenter.js
-2016-08-21T19:53:22Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.4.5
-https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.4.5/lib/instrumenter.js > /tmp/aa.js
 */
-/* istanbul ignore next */
-(function () { var escodegen, esprima, module, window; escodegen = local.escodegen; esprima = local.esprima; module = undefined; window = local;
 (function(e){"use strict";function p(e,t){var n,r;return s!==null?(n=s.createHash
 ("md5"),n.update(e),r=n.digest("base64"),r=r.replace(new RegExp("=","g"),"").replace
 (new RegExp("\\+","g"),"_").replace(new RegExp("/","g"),"$")):(window.__cov_seq=
-window.__cov_seq||0,window.__cov_seq+=1,r=window.__cov_seq),"__cov_"+Math.random().toString(16).slice(2)}function d
+window.__cov_seq||0,window.__cov_seq+=1,r=window.__cov_seq),"__cov_"+(t?"":r)}function d
 (e,t){h(t)||(t=[t]),Array.prototype.push.apply(e,t)}function v(e,t,n,r){this.walkMap=
 e,this.preprocessor=t,this.scope=n,this.debug=r,this.debug&&(this.level=0,this.seq=!0
 )}function m(e,n){var r=e.type,i,s,o=t[r],u=!!e.loc||e.type===t.Program.name,a=u?
@@ -2164,18 +1607,13 @@ e,n,r,i){e.type===t.LogicalExpression.name?(this.findLeaves(e.left,n,e,"left"),t
 :function(e){var n=e.properties,r,i;for(r=0;r<n.length;r+=1)i=n[r],i.type||(i.type=
 t.Property.name)}},e?module.exports=g:window.Instrumenter=g})(typeof module!="undefined"&&typeof
 module.exports!="undefined"&&typeof exports!="undefined")
-}());
 
 
 
 /*
 file istanbul/lib/object-utils.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
 utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/object-utils.js > /tmp/aa.js
 */
-/* istanbul ignore next */
-(function () { var module, window; module = undefined; window = local;
 (function(e){function t(e){var t=e.statementMap,n=e.s,r;e.l||(e.l=r={},Object.keys
 (n).forEach(function(e){var i=t[e].start.line,s=n[e],o=r[i];s===0&&t[e].skip&&(s=1
 );if(typeof o=="undefined"||o<s)r[i]=s}))}function n(e){Object.keys(e).forEach(function(
@@ -2210,398 +1648,564 @@ n){e[n].total+=t[n].total,e[n].covered+=t[n].covered,e[n].skipped+=t[n].skipped}
 :a,summarizeCoverage:c,mergeFileCoverage:f,mergeSummaryObjects:l,toYUICoverage:h
 };e?module.exports=p:window.coverageUtils=p})(typeof module!="undefined"&&typeof
 module.exports!="undefined"&&typeof exports!="undefined")
-local['../object-utils'] = window.coverageUtils; }());
 
 
 
 /*
 file istanbul/lib/report/common/defaults.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/common/defaults.js
 utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/common/defaults.js > /tmp/aa.js
 */
-/* istanbul ignore next */
-(function () { var module; module = {};
 module.exports={watermarks:function(){return{statements:[50,80],lines:[50,80],functions
 :[50,80],branches:[50,80]}},classFor:function(e,t,n){var r=n[e],i=t[e].pct;return i>=
 r[1]?"high":i>=r[0]?"medium":"low"},colorize:function(e,t){if(process.stdout.isTTY
 )switch(t){case"low":e="\u001b[91m"+e+"\u001b[0m";break;case"medium":e="\u001b[93m"+
 e+"\u001b[0m";break;case"high":e="\u001b[92m"+e+"\u001b[0m"}return e}}
-local['./common/defaults'] = module.exports; }());
-/* jslint-ignore-block-end */
 
 
 
 /*
 file istanbul/lib/report/index.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/index.js
 curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/index.js > /tmp/aa.js
 */
-        local["./index"] = {
-            call: local.nop,
-            mix: function (klass, prototype) {
-                klass.prototype = prototype;
-            }
-        };
+/*
+ Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
+ Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
+ */
+
+var Factory = require('../util/factory'),
+    factory = new Factory('report', __dirname, false);
+/**
+ * abstract report class for producing coverage reports.
+ *
+ * Usage
+ * -----
+ *
+ *      var Report = require('istanbul').Report,
+ *          report = Report.create('html'),
+ *          collector = new require('istanbul').Collector;
+ *
+ *      collector.add(coverageObject);
+ *      report.writeReport(collector);
+ *
+ * @class Report
+ * @constructor
+ * @protected
+ * @param {Object} options Optional. The options supported by a specific store implementation.
+ */
+function Report(/* options */) {}
+//add register, create, mix, loadAll, getStoreList as class methods
+factory.bindClassMethods(Report);
+
+/**
+ * registers a new report implementation.
+ * @method register
+ * @static
+ * @param {Function} constructor the constructor function for the report. This function must have a
+ *  `TYPE` property of type String, that will be used in `Report.create()`
+ */
+/**
+ * returns a report implementation of the specified type.
+ * @method create
+ * @static
+ * @param {String} type the type of report to create
+ * @param {Object} opts Optional. Options specific to the report implementation
+ * @return {Report} a new store of the specified type
+ */
+
+Report.prototype = {
+    /**
+     * writes the report for a set of coverage objects added to a collector.
+     * @method writeReport
+     * @param {Collector} collector the collector for getting the set of files and coverage
+     * @param {Boolean} sync true if reports must be written synchronously, false if they can be written using asynchronous means (e.g. stream.write)
+     */
+    writeReport: function (/* collector, sync */) {
+        throw new Error('writeReport: must be overridden');
+    }
+};
+
+module.exports = Report;
 
 
 
 /*
 file istanbul/lib/report/templates/foot.txt
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/foot.txt
 curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/templates/foot.txt > /tmp/aa.js
 */
-/* jslint-ignore-block-beg */
-local['foot.txt'] = '\
-</div>\n\
-<div class="footer">\n\
-    <div class="meta">Generated by <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a> at {{datetime}}</div>\n\
-</div>\n\
-</body>\n\
-</html>\n\
-';
+/*
+</div>
+<div class="footer">
+    <div class="meta">Generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at {{datetime}}</div>
+</div>
+{{#if prettify}}
+<script src="{{prettify.js}}"></script>
+{{/if}}
+<script src="https://yui-s.yahooapis.com/3.6.0/build/yui/yui-min.js"></script>
+<script>
+
+    YUI().use('datatable', function (Y) {
+
+        var formatters = {
+          pct: function (o) {
+              o.className += o.record.get('classes')[o.column.key];
+              try {
+                  return o.value.toFixed(2) + '%';
+              } catch (ex) { return o.value + '%'; }
+          },
+          html: function (o) {
+              o.className += o.record.get('classes')[o.column.key];
+              return o.record.get(o.column.key + '_html');
+          }
+        },
+          defaultFormatter = function (o) {
+              o.className += o.record.get('classes')[o.column.key];
+              return o.value;
+          };
+
+        function getColumns(theadNode) {
+            var colNodes = theadNode.all('tr th'),
+                cols = [],
+                col;
+            colNodes.each(function (colNode) {
+                col = {
+                    key: colNode.getAttribute('data-col'),
+                    label: colNode.get('innerHTML') || ' ',
+                    sortable: !colNode.getAttribute('data-nosort'),
+                    className: colNode.getAttribute('class'),
+                    type: colNode.getAttribute('data-type'),
+                    allowHTML: colNode.getAttribute('data-html') === 'true' || colNode.getAttribute('data-fmt') === 'html'
+                };
+                col.formatter = formatters[colNode.getAttribute('data-fmt')] || defaultFormatter;
+                cols.push(col);
+            });
+            return cols;
+        }
+
+        function getRowData(trNode, cols) {
+            var tdNodes = trNode.all('td'),
+                    i,
+                    row = { classes: {} },
+                    node,
+                    name;
+            for (i = 0; i < cols.length; i += 1) {
+                name = cols[i].key;
+                node = tdNodes.item(i);
+                row[name] = node.getAttribute('data-value') || node.get('innerHTML');
+                row[name + '_html'] = node.get('innerHTML');
+                row.classes[name] = node.getAttribute('class');
+                //Y.log('Name: ' + name + '; Value: ' + row[name]);
+                if (cols[i].type === 'number') { row[name] = row[name] * 1; }
+            }
+            //Y.log(row);
+            return row;
+        }
+
+        function getData(tbodyNode, cols) {
+            var data = [];
+            tbodyNode.all('tr').each(function (trNode) {
+                data.push(getRowData(trNode, cols));
+            });
+            return data;
+        }
+
+        function replaceTable(node) {
+            if (!node) { return; }
+            var cols = getColumns(node.one('thead')),
+                data = getData(node.one('tbody'), cols),
+                table,
+                parent = node.get('parentNode');
+
+            table = new Y.DataTable({
+                columns: cols,
+                data: data,
+                sortBy: 'file'
+            });
+            parent.set('innerHTML', '');
+            table.render(parent);
+        }
+
+        Y.on('domready', function () {
+            replaceTable(Y.one('div.coverage-summary table'));
+            if (typeof prettyPrint === 'function') {
+                prettyPrint();
+            }
+        });
+    });
+</script>
+</body>
+</html>
+*/
 
 
 
 /*
 file istanbul/lib/report/templates/head.txt
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
 curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/templates/head.txt > /tmp/aa.js
 */
-local['head.txt'] = '\
-<!doctype html>\n\
-<html lang="en" class="x-istanbul">\n\
-<head>\n\
-    <title>Code coverage report for {{entity}}</title>\n\
-    <meta charset="utf-8">\n\
-<style>\n\
-/* jslint-utility2 */\n\
-/*csslint\n\
-    box-model: false,\n\
-    important: false,\n\
-    qualified-headings: false,\n\
-*/\n\
-/* csslint ignore:start */\n\
-*,\n\
-*:after,\n\
-*:before {\n\
-    box-sizing: border-box;\n\
-}\n\
-/* csslint ignore:end */\n\
-.x-istanbul {\n\
-    font-family: Helvetica Neue, Helvetica,Arial;\n\
-    font-size: 10pt;\n\
-    margin: 0;\n\
-    padding: 0;\n\
-}\n\
-.x-istanbul h1 {\n\
-    font-size: large;\n\
-}\n\
-.x-istanbul pre {\n\
-    font-family: Consolas, Menlo, Monaco, monospace;\n\
-    font-size: 14px;\n\
-    margin: 0;\n\
-    padding: 0;\n\
-    tab-size: 2;\n\
-}\n\
-.x-istanbul .cbranch-no {\n\
-    background: yellow !important;\n\
-    color: #111;\n\
-}\n\
-.x-istanbul .cbranch-skip {\n\
-    background: #ddd !important;\n\
-    color: #111;\n\
-}\n\
-.x-istanbul .com {\n\
-    color: #999 !important;\n\
-}\n\
-.x-istanbul .cover-empty,\n\
-.x-istanbul .cover-fill {\n\
-    background: white;\n\
-    border: 1px solid #444;\n\
-    display: inline-block;\n\
-    height: 12px;\n\
-}\n\
-.x-istanbul .cover-empty {\n\
-    background: white;\n\
-    border-left: none;\n\
-}\n\
-.x-istanbul .cover-fill {\n\
-    background: #ccc;\n\
-    border-right: 1px solid #444;\n\
-}\n\
-.x-istanbul .cover-full {\n\
-    border-right: none !important;\n\
-}\n\
-.x-istanbul .coverage {\n\
-    border-collapse: collapse;\n\
-    margin: 0;\n\
-    padding: 0\n\
-}\n\
-.x-istanbul .coverage td {\n\
-    color: #111;\n\
-    margin: 0;\n\
-    padding: 0;\n\
-    vertical-align: top;\n\
-}\n\
-.x-istanbul .coverage td .cline-any {\n\
-    display: inline-block;\n\
-    padding: 0 5px;\n\
-    width: 60px;\n\
-}\n\
-.x-istanbul .coverage td .cline-neutral {\n\
-    background: #eee;\n\
-}\n\
-.x-istanbul .coverage td .cline-no {\n\
-    background: #fc8c84;\n\
-}\n\
-.x-istanbul .coverage td .cline-yes {\n\
-    background: #b5d592;\n\
-    color: #999;\n\
-}\n\
-.x-istanbul .coverage .line-count {\n\
-    padding-right: 5px;\n\
-    text-align: right;\n\
-    width: 50px;\n\
-}\n\
-.x-istanbul .coverage .line-coverage {\n\
-    border-left: 1px solid #666;\n\
-    border-right: 1px solid #666;\n\
-    color: #777 !important;\n\
-    text-align: right;\n\
-}\n\
-.x-istanbul .coverage-summary {\n\
-    padding: 20px;\n\
-}\n\
-.x-istanbul .coverage-summary table {\n\
-    border-collapse: collapse;\n\
-    margin: auto;\n\
-    table-layout: fixed;\n\
-    text-align: left;\n\
-    width: 100%\n\
-}\n\
-.x-istanbul .coverage-summary td {\n\
-    border: 1px solid #666;\n\
-    margin: 0;\n\
-    padding: 5px;\n\
-    white-space: nowrap;\n\
-}\n\
-.x-istanbul .coverage-summary th {\n\
-    margin: 0;\n\
-    padding: 0 0 2px 0;\n\
-}\n\
-.x-istanbul .cstat-no {\n\
-    background: #fc8c84;\n\
-    color: #111;\n\
-}\n\
-.x-istanbul .cstat-skip {\n\
-    background: #ddd;\n\
-    color: #111;\n\
-}\n\
-.x-istanbul .cstat-yes {\n\
-    color: #111;\n\
-}\n\
-.x-istanbul .entity,\n\
-.x-istanbul .metric {\n\
-    font-weight: bold;\n\
-}\n\
-.x-istanbul .footer,\n\
-.x-istanbul .header {\n\
-    background: #eee;\n\
-    padding: 20px;\n\
-}\n\
-.x-istanbul .footer {\n\
-    border-top: 1px solid #666;\n\
-}\n\
-.x-istanbul .fstat-no {\n\
-    background: #ffc520;\n\
-    color: #111 !important;\n\
-}\n\
-.x-istanbul .fstat-skip {\n\
-    background: #ddd;\n\
-    color: #111 !important;\n\
-}\n\
-.x-istanbul .header {\n\
-    border-bottom: 1px solid #666;\n\
-    top: 0;\n\
-    width: 100%;\n\
-}\n\
-.x-istanbul .high {\n\
-    background: #b5d592 !important;\n\
-}\n\
-.x-istanbul .ignore-none {\n\
-    color: #999;\n\
-    font-weight: normal;\n\
-}\n\
-.x-istanbul .low {\n\
-    background: #fc8c84 !important;\n\
-}\n\
-.x-istanbul .medium {\n\
-    background: #ffe87c !important;\n\
-}\n\
-.x-istanbul .meta {\n\
-    text-align: center;\n\
-}\n\
-.x-istanbul .metric {\n\
-    background: white;\n\
-    border: 1px solid #333;\n\
-    display: inline-block;\n\
-    padding: .3em;\n\
-}\n\
-.x-istanbul .missing-if-branch {\n\
-    background: black;\n\
-    color: yellow;\n\
-    display: inline-block;\n\
-    margin-right: 10px;\n\
-    padding: 0 4px;\n\
-    position: relative;\n\
-}\n\
-.x-istanbul .missing-if-branch .typ,\n\
-.x-istanbul .skip-if-branch .typ {\n\
-    color: inherit !important;\n\
-}\n\
-.x-istanbul .prettyprint {\n\
-    border: none !important;\n\
-    margin: 0 !important;\n\
-    padding: 0 !important;\n\
-}\n\
-.x-istanbul .skip-if-branch {\n\
-    background: #ccc;\n\
-    color: white;\n\
-    display: none;\n\
-    margin-right: 10px;\n\
-    padding: 0 4px;\n\
-    position: relative;\n\
-}\n\
-/* validateLineSortedReset */\n\
-.x-istanbul a {\n\
-    color: #00d;\n\
-    text-decoration: underline;\n\
-}\n\
-.x-istanbul pre {\n\
-    overflow: visible;\n\
-    white-space: pre\n\
-}\n\
-.x-istanbul .file div {\n\
-    margin-bottom: 2px;\n\
-    overflow-wrap: break-word;\n\
-    white-space: normal;\n\
-    width: 100%;\n\
-}\n\
-.x-istanbul .tableHeader {\n\
-    border-collapse: collapse;\n\
-    margin: 0 auto 10px auto;\n\
-    table-layout: fixed;\n\
-    text-align: left;\n\
-    width: 100%;\n\
-}\n\
-.x-istanbul .tableHeader td {\n\
-    background: #fff;\n\
-    border: 1px solid #666;\n\
-    padding: 5px;\n\
-}\n\
-.x-istanbul .tableHeader th {\n\
-    padding: 0 0 2px 0;\n\
-}\n\
-</style>\n\
-</head>\n\
-<body class="x-istanbul">\n\
-<script>\n\
-// init domOnEventSelectAllWithinPre\n\
-(function () {\n\
-/*\n\
- * this function will limit select-all within <pre tabIndex="0"> elements\n\
- * https://stackoverflow.com/questions/985272/selecting-text-in-an-element-akin-to-highlighting-with-your-mouse\n\
- */\n\
-    "use strict";\n\
-    if (window.domOnEventSelectAllWithinPre) {\n\
-        return;\n\
-    }\n\
-    window.domOnEventSelectAllWithinPre = function (event) {\n\
-        var range, selection;\n\
-        if (event &&\n\
-                event.key === "a" &&\n\
-                (event.ctrlKey || event.metaKey) &&\n\
-                event.target.closest("pre")) {\n\
-            range = document.createRange();\n\
-            range.selectNodeContents(event.target.closest("pre"));\n\
-            selection = window.getSelection();\n\
-            selection.removeAllRanges();\n\
-            selection.addRange(range);\n\
-            event.preventDefault();\n\
-        }\n\
-    };\n\
-    document.addEventListener("keydown", window.domOnEventSelectAllWithinPre);\n\
-}());\n\
-</script>\n\
-<div class="header {{reportClass}}">\n\
-    <h1 style="font-weight: bold;">\n\
-        <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} ({{env.npm_package_version}})</a>\n\
-    </h1>\n\
-    <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
-    <table class="tableHeader">\n\
-    <thead>\n\
-    <tr>\n\
-        <th>Ignored</th>\n\
-        <th>Statements</th>\n\
-        <th>Branches</th>\n\
-        <th>Functions</th>\n\
-        <th>Lines</th>\n\
-    </tr>\n\
-    </thead>\n\
-    <tbody>\n\
-        <td>{{#show_ignores metrics}}{{/show_ignores}}</td>\n\
-        <td>{{#with metrics.statements}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>\n\
-        <td>{{#with metrics.branches}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>\n\
-        <td>{{#with metrics.functions}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>\n\
-        <td>{{#with metrics.lines}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>\n\
-    </tbody>\n\
-    </table>\n\
-    {{{pathHtml}}}\n\
-</div>\n\
-<div class="body">\n\
-';
-/* jslint-ignore-block-end */
+/*
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for {{entity}}</title>
+    <meta charset="utf-8">
+{{#if prettify}}
+    <link rel="stylesheet" href="{{prettify.css}}">
+{{/if}}
+    <style>
+        body, html {
+            margin:0; padding: 0;
+        }
+        body {
+            font-family: Helvetica Neue, Helvetica,Arial;
+            font-size: 10pt;
+        }
+        div.header, div.footer {
+            background: #eee;
+            padding: 1em;
+        }
+        div.header {
+            z-index: 100;
+            position: fixed;
+            top: 0;
+            border-bottom: 1px solid #666;
+            width: 100%;
+        }
+        div.footer {
+            border-top: 1px solid #666;
+        }
+        div.body {
+            margin-top: 10em;
+        }
+        div.meta {
+            font-size: 90%;
+            text-align: center;
+        }
+        h1, h2, h3 {
+            font-weight: normal;
+        }
+        h1 {
+            font-size: 12pt;
+        }
+        h2 {
+            font-size: 10pt;
+        }
+        pre {
+            font-family: Consolas, Menlo, Monaco, monospace;
+            margin: 0;
+            padding: 0;
+            line-height: 14px;
+            font-size: 14px;
+            -moz-tab-size: 2;
+            -o-tab-size:  2;
+            tab-size: 2;
+        }
+
+        div.path { font-size: 110%; }
+        div.path a:link, div.path a:visited { color: #000; }
+        table.coverage { border-collapse: collapse; margin:0; padding: 0 }
+
+        table.coverage td {
+            margin: 0;
+            padding: 0;
+            color: #111;
+            vertical-align: top;
+        }
+        table.coverage td.line-count {
+            width: 50px;
+            text-align: right;
+            padding-right: 5px;
+        }
+        table.coverage td.line-coverage {
+            color: #777 !important;
+            text-align: right;
+            border-left: 1px solid #666;
+            border-right: 1px solid #666;
+        }
+
+        table.coverage td.text {
+        }
+
+        table.coverage td span.cline-any {
+            display: inline-block;
+            padding: 0 5px;
+            width: 40px;
+        }
+        table.coverage td span.cline-neutral {
+            background: #eee;
+        }
+        table.coverage td span.cline-yes {
+            background: #b5d592;
+            color: #999;
+        }
+        table.coverage td span.cline-no {
+            background: #fc8c84;
+        }
+
+        .cstat-yes { color: #111; }
+        .cstat-no { background: #fc8c84; color: #111; }
+        .fstat-no { background: #ffc520; color: #111 !important; }
+        .cbranch-no { background:  yellow !important; color: #111; }
+
+        .cstat-skip { background: #ddd; color: #111; }
+        .fstat-skip { background: #ddd; color: #111 !important; }
+        .cbranch-skip { background: #ddd !important; color: #111; }
+
+        .missing-if-branch {
+            display: inline-block;
+            margin-right: 10px;
+            position: relative;
+            padding: 0 4px;
+            background: black;
+            color: yellow;
+        }
+
+        .skip-if-branch {
+            display: none;
+            margin-right: 10px;
+            position: relative;
+            padding: 0 4px;
+            background: #ccc;
+            color: white;
+        }
+
+        .missing-if-branch .typ, .skip-if-branch .typ {
+            color: inherit !important;
+        }
+
+        .entity, .metric { font-weight: bold; }
+        .metric { display: inline-block; border: 1px solid #333; padding: 0.3em; background: white; }
+        .metric small { font-size: 80%; font-weight: normal; color: #666; }
+
+        div.coverage-summary table { border-collapse: collapse; margin: 3em; font-size: 110%; }
+        div.coverage-summary td, div.coverage-summary table  th { margin: 0; padding: 0.25em 1em; border-top: 1px solid #666; border-bottom: 1px solid #666; }
+        div.coverage-summary th { text-align: left; border: 1px solid #666; background: #eee; font-weight: normal; }
+        div.coverage-summary th.file { border-right: none !important; }
+        div.coverage-summary th.pic { border-left: none !important; text-align: right; }
+        div.coverage-summary th.pct { border-right: none !important; }
+        div.coverage-summary th.abs { border-left: none !important; text-align: right; }
+        div.coverage-summary td.pct { text-align: right; border-left: 1px solid #666; }
+        div.coverage-summary td.abs { text-align: right; font-size: 90%; color: #444; border-right: 1px solid #666; }
+        div.coverage-summary td.file { text-align: right; border-left: 1px solid #666; white-space: nowrap;  }
+        div.coverage-summary td.pic { min-width: 120px !important;  }
+        div.coverage-summary a:link { text-decoration: none; color: #000; }
+        div.coverage-summary a:visited { text-decoration: none; color: #333; }
+        div.coverage-summary a:hover { text-decoration: underline; }
+        div.coverage-summary tfoot td { border-top: 1px solid #666; }
+
+        div.coverage-summary .yui3-datatable-sort-indicator, div.coverage-summary .dummy-sort-indicator {
+            height: 10px;
+            width: 7px;
+            display: inline-block;
+            margin-left: 0.5em;
+        }
+        div.coverage-summary .yui3-datatable-sort-indicator {
+            background: url("https://yui-s.yahooapis.com/3.6.0/build/datatable-sort/assets/skins/sam/sort-arrow-sprite.png") no-repeat scroll 0 0 transparent;
+        }
+        div.coverage-summary .yui3-datatable-sorted .yui3-datatable-sort-indicator {
+            background-position: 0 -20px;
+        }
+        div.coverage-summary .yui3-datatable-sorted-desc .yui3-datatable-sort-indicator {
+            background-position: 0 -10px;
+        }
+
+        .high { background: #b5d592 !important; }
+        .medium { background: #ffe87c !important; }
+        .low { background: #fc8c84 !important; }
+
+        span.cover-fill, span.cover-empty {
+            display:inline-block;
+            border:1px solid #444;
+            background: white;
+            height: 12px;
+        }
+        span.cover-fill {
+            background: #ccc;
+            border-right: 1px solid #444;
+        }
+        span.cover-empty {
+            background: white;
+            border-left: none;
+        }
+        span.cover-full {
+            border-right: none !important;
+        }
+        pre.prettyprint {
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .com { color: #999 !important; }
+        .ignore-none { color: #999; font-weight: normal; }
+
+    </style>
+</head>
+<body>
+<div class="header {{reportClass}}">
+    <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>
+    <h2>
+        {{#with metrics.statements}}
+        Statements: <span class="metric">{{pct}}% <small>({{covered}} / {{total}})</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        {{/with}}
+        {{#with metrics.branches}}
+        Branches: <span class="metric">{{pct}}% <small>({{covered}} / {{total}})</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        {{/with}}
+        {{#with metrics.functions}}
+        Functions: <span class="metric">{{pct}}% <small>({{covered}} / {{total}})</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        {{/with}}
+        {{#with metrics.lines}}
+        Lines: <span class="metric">{{pct}}% <small>({{covered}} / {{total}})</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        {{/with}}
+        Ignored: <span class="metric">{{#show_ignores metrics}}{{/show_ignores}}</span> &nbsp;&nbsp;&nbsp;&nbsp;
+    </h2>
+    {{{pathHtml}}}
+</div>
+<div class="body">
+*/
 
 
 
 /*
 file istanbul/lib/util/file-writer.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
 curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/file-writer.js > /tmp/aa.js
 */
-        local.writer = {
-            write: function (data) {
-                local.writerData += data;
-            },
-            writeFile: function (file, onError) {
-                local.coverageReportHtml += local.writerData + "\n\n";
-                if (!local.isBrowser && local.writerFile) {
-                    local.fsWriteFileWithMkdirpSync(local.writerFile, local.writerData);
-                }
-                local.writerData = "";
-                local.writerFile = file;
-                onError(local.writer);
-            }
-        };
+/*
+ Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
+ Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
+ */
+
+var path = require('path'),
+    util = require('util'),
+    fs = require('fs'),
+    async = require('async'),
+    mkdirp = require('mkdirp'),
+    writer = require('./writer'),
+    Writer = writer.Writer,
+    ContentWriter = writer.ContentWriter;
+
+function extend(cons, proto) {
+    Object.keys(proto).forEach(function (k) {
+        cons.prototype[k] = proto[k];
+    });
+}
+
+function BufferedContentWriter() {
+    ContentWriter.call(this);
+    this.content = '';
+}
+util.inherits(BufferedContentWriter, ContentWriter);
+
+extend(BufferedContentWriter, {
+    write: function (str) {
+        this.content += str;
+    },
+    getContent: function () {
+        return this.content;
+    }
+});
+
+function StreamContentWriter(stream) {
+    ContentWriter.call(this);
+    this.stream = stream;
+}
+util.inherits(StreamContentWriter, ContentWriter);
+
+extend(StreamContentWriter, {
+    write: function (str) {
+        this.stream.write(str);
+    }
+});
+
+function SyncFileWriter() {
+    Writer.call(this);
+}
+util.inherits(SyncFileWriter, Writer);
+
+extend(SyncFileWriter, {
+    writeFile: function (file, callback) {
+        mkdirp.sync(path.dirname(file));
+        var cw = new BufferedContentWriter();
+        callback(cw);
+        fs.writeFileSync(file, cw.getContent(), 'utf8');
+    },
+    done: function () {
+        this.emit('done'); //everything already done
+    }
+});
+
+function AsyncFileWriter() {
+    this.queue = async.queue(this.processFile.bind(this), 20);
+    this.openFileMap = {};
+}
+
+util.inherits(AsyncFileWriter, Writer);
+
+extend(AsyncFileWriter, {
+    writeFile: function (file, callback) {
+        this.openFileMap[file] = true;
+        this.queue.push({ file: file, callback: callback });
+    },
+    processFile: function (task, cb) {
+        var file = task.file,
+            userCallback = task.callback,
+            that = this,
+            stream,
+            contentWriter;
+
+        mkdirp.sync(path.dirname(file));
+        stream = fs.createWriteStream(file);
+        stream.on('close', function () {
+            delete that.openFileMap[file];
+            cb();
+            that.checkDone();
+        });
+        stream.on('error', function (err) { that.emit('error', err); });
+        contentWriter = new StreamContentWriter(stream);
+        userCallback(contentWriter);
+        stream.end();
+    },
+    done: function () {
+        this.doneCalled = true;
+        this.checkDone();
+    },
+    checkDone: function () {
+        if (!this.doneCalled) { return; }
+        if (Object.keys(this.openFileMap).length === 0) {
+            this.emit('done');
+        }
+    }
+});
+
+function FileWriter(sync) {
+    Writer.call(this);
+    var that = this;
+    this.delegate = sync ? new SyncFileWriter() : new AsyncFileWriter();
+    this.delegate.on('error', function (err) { that.emit('error', err); });
+    this.delegate.on('done', function () { that.emit('done'); });
+}
+
+util.inherits(FileWriter, Writer);
+
+extend(FileWriter, {
+    copyFile: function (source, dest) {
+        mkdirp.sync(path.dirname(dest));
+        fs.writeFileSync(dest, fs.readFileSync(source));
+    },
+    writeFile: function (file, callback) {
+        this.delegate.writeFile(file, callback);
+    },
+    done: function () {
+        this.delegate.done();
+    }
+});
+
+module.exports = FileWriter;
 
 
 
 /*
 file istanbul/lib/util/tree-summarizer.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
 utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/tree-summarizer.js > /tmp/aa.js
 */
-        /* istanbul ignore next */
-        (function () {
-            var module;
-            module = {};
-/* jslint-ignore-block-beg */
 function commonArrayPrefix(e,t){var n=e.length<t.length?e.length:t.length,r,i=[]
 ;for(r=0;r<n;r+=1){if(e[r]!==t[r])break;i.push(e[r])}return i}function findCommonArrayPrefix
 (e){if(e.length===0)return[];var t=e.map(function(e){return e.split(SEP)}),n=t.pop
@@ -2638,26 +2242,13 @@ this;t[e.name]=e,e.children.sort(function(e,t){return e=e.relativeName,t=t.relat
 prototype={addFileCoverageSummary:function(e,t){this.summaryMap[e]=t},getTreeSummary
 :function(){var e=findCommonArrayPrefix(Object.keys(this.summaryMap));return new
 TreeSummary(this.summaryMap,e)}},module.exports=TreeSummarizer
-/* jslint-ignore-block-end */
-            local["../util/tree-summarizer"] = module.exports;
-            module.exports.prototype._getTreeSummary = module.exports.prototype.getTreeSummary;
-            module.exports.prototype.getTreeSummary = function () {
-                local.coverageReportSummary = this._getTreeSummary();
-                return local.coverageReportSummary;
-            };
-        }());
 
 
 
 /*
 file istanbul/lib/report/html.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/html.js > /tmp/aa.js
 */
-/* istanbul ignore next */
-/* jslint-ignore-block-beg */
-(function () { var module; module = {};
 function customEscape(e){return e=e.toString(),e.replace(RE_AMP,"&amp;").replace
 (RE_LT,"&lt;").replace(RE_GT,"&gt;").replace(RE_lt,"<").replace(RE_gt,">")}function title
 (e){return' title="'+e+'" '}function annotateLines(e,t){var n=e.l;if(!n)return;Object
@@ -2686,8 +2277,8 @@ t){var n=e.pct,r=1;return n*r===n?n>=t[1]?"high":n>=t[0]?"medium":"low":""}funct
 (e){Report.call(this),this.opts=e||{},this.opts.dir=this.opts.dir||path.resolve(
 process.cwd(),"html-report"),this.opts.sourceStore=this.opts.sourceStore||Store.
 create("fslookup"),this.opts.linkMapper=this.opts.linkMapper||this.standardLinkMapper
-(),this.opts.writer=this.opts.writer||null,this.opts.templateData={datetime:new Date
-().toGMTString()},this.opts.watermarks=this.opts.watermarks||defaults.watermarks()}var handlebars=
+(),this.opts.writer=this.opts.writer||null,this.opts.templateData={datetime:Date
+()},this.opts.watermarks=this.opts.watermarks||defaults.watermarks()}var handlebars=
 require("handlebars"),defaults=require("./common/defaults"),path=require("path")
 ,SEP=path.sep||"/",fs=require("fs"),util=require("util"),FileWriter=require("../util/file-writer"
 ),Report=require("./index"),Store=require("../store"),InsertionText=require("../util/insertion-text"
@@ -2697,19 +2288,29 @@ require("handlebars"),defaults=require("./common/defaults"),path=require("path")
 templateFor("foot"),pathTemplate=handlebars.compile('<div class="path">{{{html}}}</div>'
 ),detailTemplate=handlebars.compile(["<tr>",'<td class="line-count">{{#show_lines}}{{maxLines}}{{/show_lines}}</td>'
 ,'<td class="line-coverage">{{#show_line_execution_counts fileCoverage}}{{maxLines}}{{/show_line_execution_counts}}</td>'
-,'<td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code structured}}{{/show_code}}</pre></td>'
+,'<td class="text"><pre class="prettyprint lang-js">{{#show_code structured}}{{/show_code}}</pre></td>'
 ,"</tr>\n"].join("")),summaryTableHeader=['<div class="coverage-summary">',"<table>"
 ,"<thead>","<tr>",'   <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>'
+,'   <th data-col="pic" data-type="number" data-fmt="html" data-html="true" class="pic"></th>'
 ,'   <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>'
+,'   <th data-col="statements_raw" data-type="number" data-fmt="html" class="abs"></th>'
 ,'   <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>'
+,'   <th data-col="branches_raw" data-type="number" data-fmt="html" class="abs"></th>'
 ,'   <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>'
+,'   <th data-col="functions_raw" data-type="number" data-fmt="html" class="abs"></th>'
 ,'   <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>'
+,'   <th data-col="lines_raw" data-type="number" data-fmt="html" class="abs"></th>'
 ,"</tr>","</thead>","<tbody>"].join("\n"),summaryLineTemplate=handlebars.compile
-(["<tr>",'<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>'
-,'<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>'
-,'<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>'
-,'<td data-value="{{metrics.functions.pct}}" class="pct {{reportClasses.functions}}">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>'
-,'<td data-value="{{metrics.lines.pct}}" class="pct {{reportClasses.lines}}">{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>'
+(["<tr>",'<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}">{{file}}</a></td>'
+,'<td data-value="{{metrics.statements.pct}}" class="pic {{reportClasses.statements}}">{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</td>'
+,'<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%</td>'
+,'<td data-value="{{metrics.statements.total}}" class="abs {{reportClasses.statements}}">({{metrics.statements.covered}}&nbsp;/&nbsp;{{metrics.statements.total}})</td>'
+,'<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%</td>'
+,'<td data-value="{{metrics.branches.total}}" class="abs {{reportClasses.branches}}">({{metrics.branches.covered}}&nbsp;/&nbsp;{{metrics.branches.total}})</td>'
+,'<td data-value="{{metrics.functions.pct}}" class="pct {{reportClasses.functions}}">{{metrics.functions.pct}}%</td>'
+,'<td data-value="{{metrics.functions.total}}" class="abs {{reportClasses.functions}}">({{metrics.functions.covered}}&nbsp;/&nbsp;{{metrics.functions.total}})</td>'
+,'<td data-value="{{metrics.lines.pct}}" class="pct {{reportClasses.lines}}">{{metrics.lines.pct}}%</td>'
+,'<td data-value="{{metrics.lines.total}}" class="abs {{reportClasses.lines}}">({{metrics.lines.covered}}&nbsp;/&nbsp;{{metrics.lines.total}})</td>'
 ,"</tr>\n"].join("\n\t")),summaryTableFooter=["</tbody>","</table>","</div>"].join
 ("\n"),lt="\u0001",gt="\u0002",RE_LT=/</g,RE_GT=/>/g,RE_AMP=/&/g,RE_lt=/\u0001/g
 ,RE_gt=/\u0002/g;handlebars.registerHelper("show_picture",function(e){var t=Number
@@ -2717,8 +2318,9 @@ templateFor("foot"),pathTemplate=handlebars.compile('<div class="path">{{{html}}
 t),n=100-t,'<span class="cover-fill'+r+'" style="width: '+t+'px;"></span>'+'<span class="cover-empty" style="width:'+
 n+'px;"></span>'):""}),handlebars.registerHelper("show_ignores",function(e){var t=
 e.statements.skipped,n=e.functions.skipped,r=e.branches.skipped,i;return t===0&&
-n===0&&r===0?'<span class="ignore-none">none</span>':(i=[],r>0&&i.push("branches: "+r),t>0&&i.push(
-"statements: "+t),n>0&&i.push("functions: "+n),i.join("<br>"))}),handlebars.registerHelper("show_lines",function(
+n===0&&r===0?'<span class="ignore-none">none</span>':(i=[],t>0&&i.push(t===1?"1 statement"
+:t+" statements"),n>0&&i.push(n===1?"1 function":n+" functions"),r>0&&i.push(r===1?"1 branch"
+:r+" branches"),i.join(", "))}),handlebars.registerHelper("show_lines",function(
 e){var t=Number(e.fn(this)),n,r=[];for(n=0;n<t;n+=1)r[n]=n+1;return r.join("\n")
 }),handlebars.registerHelper("show_line_execution_counts",function(e,t){var n=e.
 l,r=Number(t.fn(this)),i,s,o=[],u,a="";for(i=0;i<r;i+=1)s=i+1,a="&nbsp;",u="neutral"
@@ -2767,18 +2369,13 @@ o;e.files().forEach(function(t){i.addFileCoverageSummary(t,utils.summarizeFileCo
 ,"..","vendor")).forEach(function(e){var t=path.resolve(__dirname,"..","vendor",
 e),i=path.resolve(r,e),o=fs.statSync(t);o.isFile()&&(n.verbose&&console.log("Write asset: "+
 i),s.copyFile(t,i))}),this.writeFiles(s,o.root,r,e)}}),module.exports=HtmlReport
-local.HtmlReport = module.exports; }());
 
 
 
 /*
 file istanbul/lib/report/text.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/text.js > /tmp/aa.js
 */
-/* istanbul ignore next */
-(function () { var module; module = {};
 function TextReport(e){Report.call(this),e=e||{},this.dir=e.dir||process.cwd(),this
 .file=e.file,this.summary=e.summary,this.maxCols=e.maxCols||0,this.watermarks=e.
 watermarks||defaults.watermarks()}function padding(e,t){var n="",r;t=t||" ";for(
@@ -2812,111 +2409,14 @@ TAB_SIZE=3,DELIM=" |",COL_DELIM="-|";TextReport.TYPE="text",Report.mix(TextRepor
 maxCols>0&&(o=this.maxCols-s-2,i>o&&(i=o)),walk(r,i,u,0,this.watermarks),a=u.join
 ("\n")+"\n",this.file?(mkdirp.sync(this.dir),fs.writeFileSync(path.join(this.dir
 ,this.file),a,"utf8")):console.log(a)}}),module.exports=TextReport
-local.TextReport = module.exports; }());
 
 
 
 /*
+file badge.svg - coverage
 https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
 */
-local.templateCoverageBadgeSvg =
 '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
 /*
 file none
 */
-/* jslint-ignore-block-end */
-    }());
-
-
-
-    // run node js-env code - init-after
-    /* istanbul ignore next */
-    (function () {
-        if (local.isBrowser) {
-            return;
-        }
-        // init cli
-        if (module !== local.require.main || local.global.utility2_rollup) {
-            return;
-        }
-        local.cliDict = {};
-        local.cliDict.cover = function () {
-        /*
-         * <script>
-         * will run and cover <script>
-         */
-            var tmp;
-            try {
-                tmp = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
-                process.env.npm_package_nameLib = process.env.npm_package_nameLib ||
-                        tmp.nameLib ||
-                        tmp.name.replace((/-/g), "_");
-            } catch (ignore) {
-            }
-            process.env.npm_config_mode_coverage = process.env.npm_config_mode_coverage ||
-                    process.env.npm_package_nameLib ||
-                    "all";
-            // add coverage hook to require
-            local._istanbul_moduleExtensionsJs = local._istanbul_module._extensions[".js"];
-            local._istanbul_module._extensions[".js"] = function (module, file) {
-                if (typeof file === "string" && (
-                    file.indexOf(process.env.npm_config_mode_coverage_dir) === 0 ||
-                    (
-                        file.indexOf(process.cwd()) === 0 &&
-                        file.indexOf(process.cwd() + "/node_modules/") !== 0
-                    )
-                )) {
-                    module._compile(local.instrumentInPackage(
-                        local.fs.readFileSync(file, "utf8"),
-                        file
-                    ), file);
-                    return;
-                }
-                local._istanbul_moduleExtensionsJs(module, file);
-            };
-            // init process.argv
-            process.argv.splice(1, 2);
-            process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
-            console.log("\ncovering $ " + process.argv.join(" "));
-            // create coverage on exit
-            process.on("exit", function () {
-                local.coverageReportCreate({coverage: local.global.__coverage__});
-            });
-            // re-init cli
-            local._istanbul_module.runMain();
-        };
-
-        local.cliDict.instrument = function () {
-        /*
-         * <script>
-         * will instrument <script> and print result to stdout
-         */
-            process.argv[3] = local.path.resolve(process.cwd(), process.argv[3]);
-            process.stdout.write(local.instrumentSync(
-                local.fs.readFileSync(process.argv[3], "utf8"),
-                process.argv[3]
-            ));
-        };
-
-        //
-        local.cliDict.test = function () {
-        /*
-         * <script>
-         * will run and cover <script> if env var $npm_config_mode_coverage is set
-         */
-            if (process.env.npm_config_mode_coverage) {
-                process.argv[2] = "cover";
-                // re-init cli
-                local.cliDict[process.argv[2]]();
-                return;
-            }
-            // restart node with __filename removed from process.argv
-            process.argv.splice(1, 2);
-            process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
-            // re-init cli
-            local._istanbul_module.runMain();
-        };
-
-        local.cliRun();
-    }());
-}());
