@@ -56,6 +56,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- jslint - refactor files to 80 chr column-limit
 - rate-limit keyup events
 - add default testCase _testCase_cliRun_help
 - merge class _http.IncomingMessage -> _http.ServerResponse
@@ -69,7 +70,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - restore const and let expressions in jslint.js
 - update jslint-function jslintAndPrint to ignore too_long-warnings in comments and regexp,
 - jslint-autofix whitespace, double-quote, and regexp for files: lib.xxx.js, test.js
-- refactor files with new jslint (v2018.08.15)
+- refactor files with new jslint (v2018-09-17)
 - replace unused function-arguments with ignore
 - update uglify-function uglify to escape non-ascii characters: (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\uffff]/)
 - add files raw.istanbul.js, raw.jslint.js, raw.uglify.js
@@ -133,7 +134,7 @@ instruction
 
 
 /* istanbul instrument in package utility2 */
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -326,7 +327,7 @@ instruction
                         document.querySelector("#inputTextareaEval1").value,
                         "/inputTextareaEval1.js"
                     );
-                    eval( // jslint-ignore-line
+                    eval( // jslint ignore:line
                         document.querySelector("#outputTextarea1").value.replace((/^#!\//), "// ")
                     );
                     document.querySelector("#coverageReportDiv1").innerHTML =
@@ -424,7 +425,7 @@ instruction
                 );
             }
         });
-        /* jslint-ignore-block-beg */
+        /* jslint ignore:start */
         local.assetsDict["/assets.index.template.html"] = '\
 <!doctype html>\n\
 <html lang="en">\n\
@@ -434,7 +435,7 @@ instruction
 <!-- "assets.utility2.template.html" -->\n\
 <title>{{env.npm_package_name}} ({{env.npm_package_version}})</title>\n\
 <style>\n\
-/* jslint-utility2 */\n\
+/* jslint utility2:true */\n\
 /*csslint\n\
 */\n\
 /* csslint ignore:start */\n\
@@ -560,7 +561,7 @@ textarea {\n\
 <a class="zeroPixel" download="db.persistence.json" href="" id="dbExportA1"></a>\n\
 <input class="zeroPixel" id="dbImportInput1" type="file">\n\
 <script>\n\
-/* jslint-utility2 */\n\
+/* jslint utility2:true */\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
@@ -769,15 +770,15 @@ utility2-comment -->\n\
 </body>\n\
 </html>\n\
 ';
-        /* jslint-ignore-block-end */
+        /* jslint ignore:end */
         /* validateLineSortedReset */
-        /* jslint-ignore-block-beg */
+        /* jslint ignore:start */
         // bug-workaround - long $npm_package_buildCustomOrg
         local.assetsDict["/assets.utility2.js"] =
             local.assetsDict["/assets.utility2.js"] ||
             local.fs.readFileSync(local.__dirname + "/lib.utility2.js", "utf8"
         ).replace((/^#!\//), "// ");
-        /* jslint-ignore-block-end */
+        /* jslint ignore:end */
         /* validateLineSortedReset */
         local.assetsDict["/"] = local.assetsDict["/assets.index.template.html"]
         .replace((/\{\{env\.(\w+?)\}\}/g), function (match0, match1) {

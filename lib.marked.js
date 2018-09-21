@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* istanbul instrument in package marked */
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -98,7 +98,7 @@
 
 
 
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
 (function () { var exports, module; exports = module = {};
 // rollup-file marked.js
 // 2017-01-19T23:03:37Z
@@ -295,7 +295,7 @@ r.output,c.parse=c,typeof module!="undefined"&&typeof exports=="object"?module.e
 c:typeof define=="function"&&define.amd?define(function(){return c}):this.marked=
 c}).call(function(){return this||(typeof window!="undefined"?window:global)}())
 local.marked = module.exports; }());
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
     // init exports
     if (local.isBrowser) {
         local.global.utility2_marked = local.marked;

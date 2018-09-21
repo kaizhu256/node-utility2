@@ -9,7 +9,7 @@
 
 
 /* istanbul instrument in package jslint */
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -265,7 +265,7 @@ file CSSLint/csslint.js
 https://github.com/CSSLint/csslint/blob/v1.0.5/dist/csslint.js
 utility2-uglifyjs https://raw.githubusercontent.com/CSSLint/csslint/v1.0.5/dist/csslint.js > /tmp/aa.js
 */
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
 var CSSLint=function(){function s(e,t,n,r){"use strict";this.messages=[],this.stats=
 [],this.lines=e,this.ruleset=t,this.allow=n,this.allow||(this.allow={}),this.ignore=
 r,this.ignore||(this.ignore=[])}var e=e||{},t=t||{},n=function(){var e;return e=
@@ -1679,13 +1679,12 @@ t,n){"use strict";var r=e.messages,s="";n=n||{};if(r.length===0)return n.quiet?"
 t+1)+": "+e.type+" at line "+e.line+", col "+e.col,s+="\n"+e.message,s+="\n"+e.evidence
 )}),s}}),i}()
 local.CSSLint = CSSLint;
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
 
 
 
 // jslint-hack - let
 let indent_offset;
-let jslint_extra;
 let jslint_result;
 let line_ignore;
 let lines_extra;
@@ -2232,7 +2231,8 @@ function warn(code, the_token, a, b, c, d) {
             a || artifact(the_token),
             b,
             c,
-            d
+            // jslint-hack - the_token
+            d || the_token
         );
         return the_token.warning;
     }
@@ -2289,8 +2289,12 @@ function tokenize(source) {
         line = 0;
         shebang = true;
     }
-    // jslint-hack - jslint_extra
-    jslint_extra();
+    // jslint-hack - init
+    indent_offset = 0;
+    line_ignore = null;
+    lines_extra = lines.map(function () {
+        return {};
+    });
 
     function next_line() {
 
@@ -6568,6 +6572,7 @@ function jslint(
         if (option.autofix && !option.autofix_subroutine) {
             let ii;
             option.autofix_subroutine = true;
+            option.utility2 = true;
             jslint_result = {};
             jslint_result.source_autofix = source;
             source = "";
@@ -6670,44 +6675,31 @@ file none
 */
 allowed_option.debug = false;
 local.jslintEs6 = jslint;
-jslint_extra = function () {
-/*
- * this function will run with extra-features inside jslint-function jslint()
- */
-    // init
-    indent_offset = 0;
-    line_ignore = null;
-    lines_extra = lines.map(function () {
-        return {};
-    });
-};
 next_line_extra = function (source_line, line) {
 /*
  * this function will run with extra-features inside jslint-function next_line()
  */
-    var line_extra, tmp;
+    let line_extra, tmp;
     tmp = (
-        source_line.match(
-            /^\u0020*?\/\*\u0020jslint-(ignore-block-beg|ignore-block-end|utility2)\u0020\*\/$/m
-        )
+        source_line.match(/^\u0020*?\/\*\u0020jslint\u0020(ignore:start|ignore:end|utility2:true)\u0020\*\/$/m)
         || source_line.match(/^\u0020*?\/\*\u0020jslint-(indent-offset)\u0020(\d+)\u0020?\*\/$/m)
-        || source_line.slice(-100).match(/\u0020\/\/\u0020jslint-(ignore-line)$/m)
+        || source_line.slice(-100).match(/\u0020\/\/\u0020jslint\u0020(ignore:line)$/m)
     );
     switch (tmp && tmp[1]) {
-    case "utility2":
-        option.utility2 = true;
-        break;
-    case "ignore-block-beg":
+    case "ignore:start":
         line_ignore = true;
         break;
-    case "ignore-block-end":
+    case "ignore:end":
         line_ignore = null;
         break;
-    case "ignore-line":
-        line_ignore = "ignore-line";
+    case "ignore:line":
+        line_ignore = "ignore:line";
         break;
     case "indent-offset":
         indent_offset = Number(tmp[2]);
+        break;
+    case "utility2:true":
+        option.utility2 = true;
         break;
     }
     line_extra = {};
@@ -6730,7 +6722,7 @@ warn_at_extra = function (warning, warnings, supplant, bundle) {
 /*
  * this function will run with extra-features inside jslint-function warn_at()
  */
-    var tmp;
+    let tmp;
     Object.assign(warning, lines_extra[warning.line]);
     // indent - normalize
     ["column", "b", "c"].forEach(function (key) {
@@ -6766,10 +6758,16 @@ warn_at_extra = function (warning, warnings, supplant, bundle) {
     case "Weird condition '&&'.":
     case "Weird expression 'self[...]'.":
     case "Weird expression 'window[...]'.":
+        if (warning.d && warning.d.warning === warning) {
+            delete warning.d.warning;
+        }
         return;
     }
     switch (warning.code) {
     case "bad_property_a":
+        if (warning.d && warning.d.warning === warning) {
+            delete warning.d.warning;
+        }
         return;
     case "unexpected_a":
         switch (
@@ -6779,13 +6777,16 @@ warn_at_extra = function (warning, warnings, supplant, bundle) {
         case "true .":
         case "true [":
         case "\"[\" .":
+            if (warning.d && warning.d.warning === warning) {
+                delete warning.d.warning;
+            }
             return;
         }
         break;
     }
     // jslint-warning - accept
     warning.a = warning.a || warning.source.trim();
-    switch (option.autofix && warning.code) {
+    switch (warning.message) {
     case "Expected '\\s' and instead saw ' '.":
         // autofix regexp - replace " " -> "\u0020"
         lines_extra[warning.line].source_autofix = (
@@ -6794,7 +6795,7 @@ warn_at_extra = function (warning, warnings, supplant, bundle) {
         );
         break;
     }
-    switch (option.autofix && warning.code) {
+    switch (warning.code) {
     case "expected_a_at_b_c":
         tmp = warning.b - warning.c;
         // autofix indent - increment
@@ -6886,8 +6887,8 @@ warnings_remove_too_long = function (line1, line2) {
 /*
  * this function will remove too_long warnings in the inclusive-range [line1, line2]
  */
-    var ii;
-    var warning;
+    let ii;
+    let warning;
     // loop backwards in warnings-list to keep index-counter ii invariant,
     // as we mutate it
     ii = warnings.length;
@@ -7058,15 +7059,15 @@ warnings_remove_too_long = function (line1, line2) {
             // jslint the script with utiity2-specific rules
             if (
                 !local.errorList.length &&
-                (/^\/\*\u0020jslint-utility2\u0020\*\/$|^#\u0020jslint-utility2$/m).test(script)
+                (/^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$|^#\u0020jslint\u0020utility2:true$/m).test(script)
             ) {
                 ii = 0;
                 script
                     // ignore text-block
                 .replace(
-/* jslint-ignore-block-beg */
-(/^ *?\/\* jslint-ignore-block-beg \*\/$[\S\s]+?^ *?\/\* jslint-ignore-block-end \*\/$/gm),
-/* jslint-ignore-block-end */
+/* jslint ignore:start */
+(/^ *?\/\* jslint ignore:start \*\/$[\S\s]+?^ *?\/\* jslint ignore:end \*\/$/gm),
+/* jslint ignore:end */
                     function (match0) {
                         return match0.replace((/^.*?$/gm), "");
                     }
@@ -7127,7 +7128,7 @@ warnings_remove_too_long = function (line1, line2) {
                     (" #" + (ii + 1)).slice(-3)
                     + " \u001b[31m" + error.message + "\u001b[39m"
                     + " \u001b[90m\/\/ line " + error.line + ", col " + error.col + "\u001b[39m\n"
-                    + "    " + error.evidence.trim().slice(0, 76) + "\n"
+                    + "    " + String(error.evidence).trim().slice(0, 76) + "\n"
                 );
                 if (!ii && error.stack) {
                     ii = error.stack;

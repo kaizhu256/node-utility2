@@ -36,7 +36,7 @@
 
 
 /* istanbul instrument in package db */
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -586,7 +586,7 @@
                         // run async shell command
                         require("child_process").spawn(
                             "find . -type f | grep -v -E " +
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
 '"\
 /\\.|(\\b|_)(\\.\\d|\
 archive|artifact|\
@@ -605,7 +605,7 @@ swp|\
 tmp|\
 vendor)s{0,1}(\\b|_)\
 " ' +
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
                                     "| tr \"\\n\" \"\\000\" | xargs -0 grep -HIin -E \"" +
                                     match2.trim() + "\"",
                             {shell: true, stdio: ["ignore", 1, 2]}
@@ -1686,7 +1686,7 @@ vendor)s{0,1}(\\b|_)\
             case "$exists":
                 bb = !bb;
                 test = function (aa, bb) {
-                    return !((aa === null) ^ bb); // jslint-ignore-line
+                    return !((aa === null) ^ bb); // jslint ignore:line
                 };
                 break;
             case "$gt":

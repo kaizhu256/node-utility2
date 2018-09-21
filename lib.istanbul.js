@@ -9,7 +9,7 @@
 
 
 /* istanbul instrument in package istanbul */
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -526,7 +526,7 @@ https://github.com/jquery/esprima/blob/2.7.3/esprima.js
 utility2-uglifyjs https://raw.githubusercontent.com/jquery/esprima/2.7.3/esprima.js > /tmp/aa.js
 */
 /* istanbul ignore next */
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
 (function () { var exports; exports = local.esprima = {};
 (function(e,t){"use strict";typeof define=="function"&&define.amd?define(["exports"
 ],t):typeof exports!="undefined"?t(exports):t(e.esprima={})})(this,function(e){"use strict"
@@ -1784,7 +1784,7 @@ r=dt(t,r)),i=ot(r).toString(),t.type===e.Program&&!y&&d===""&&i.charAt(i.length-
 ).version,exports.generate=Nt,exports.attachComments=i.attachComments,exports.Precedence=
 G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
 }());
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
 
 
 
@@ -1925,7 +1925,7 @@ https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/insertion-text.js > /tmp/aa.js
 */
 /* istanbul ignore next */
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
 (function () { var module; module = {};
 function InsertionText(e,t){this.text=e,this.origLength=e.length,this.offsets=[]
 ,this.consumeBlanks=t,this.startPos=this.findFirstNonBlank(),this.endPos=this.findLastNonBlank
@@ -2227,7 +2227,7 @@ r[1]?"high":i>=r[0]?"medium":"low"},colorize:function(e,t){if(process.stdout.isT
 )switch(t){case"low":e="\u001b[91m"+e+"\u001b[0m";break;case"medium":e="\u001b[93m"+
 e+"\u001b[0m";break;case"high":e="\u001b[92m"+e+"\u001b[0m"}return e}}
 local['./common/defaults'] = module.exports; }());
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
 
 
 
@@ -2252,7 +2252,7 @@ file istanbul/lib/report/templates/foot.txt
 https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/foot.txt
 curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/templates/foot.txt > /tmp/aa.js
 */
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
 local['foot.txt'] = '\
 </div>\n\
 <div class="footer">\n\
@@ -2277,7 +2277,7 @@ local['head.txt'] = '\
     <title>Code coverage report for {{entity}}</title>\n\
     <meta charset="utf-8">\n\
 <style>\n\
-/* jslint-utility2 */\n\
+/* jslint utility2:true */\n\
 /*csslint\n\
     box-model: false,\n\
     important: false,\n\
@@ -2563,7 +2563,7 @@ local['head.txt'] = '\
 </div>\n\
 <div class="body">\n\
 ';
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
 
 
 
@@ -2600,7 +2600,7 @@ utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/
         (function () {
             var module;
             module = {};
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
 function commonArrayPrefix(e,t){var n=e.length<t.length?e.length:t.length,r,i=[]
 ;for(r=0;r<n;r+=1){if(e[r]!==t[r])break;i.push(e[r])}return i}function findCommonArrayPrefix
 (e){if(e.length===0)return[];var t=e.map(function(e){return e.split(SEP)}),n=t.pop
@@ -2637,7 +2637,7 @@ this;t[e.name]=e,e.children.sort(function(e,t){return e=e.relativeName,t=t.relat
 prototype={addFileCoverageSummary:function(e,t){this.summaryMap[e]=t},getTreeSummary
 :function(){var e=findCommonArrayPrefix(Object.keys(this.summaryMap));return new
 TreeSummary(this.summaryMap,e)}},module.exports=TreeSummarizer
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
             local["../util/tree-summarizer"] = module.exports;
             module.exports.prototype._getTreeSummary = module.exports.prototype.getTreeSummary;
             module.exports.prototype.getTreeSummary = function () {
@@ -2655,7 +2655,7 @@ https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/html.js > /tmp/aa.js
 */
 /* istanbul ignore next */
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
 (function () { var module; module = {};
 function customEscape(e){return e=e.toString(),e.replace(RE_AMP,"&amp;").replace
 (RE_LT,"&lt;").replace(RE_GT,"&gt;").replace(RE_lt,"<").replace(RE_gt,">")}function title
@@ -2823,7 +2823,7 @@ local.templateCoverageBadgeSvg =
 /*
 file none
 */
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
     }());
 
 

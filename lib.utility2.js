@@ -9,7 +9,7 @@
 
 
 /* istanbul instrument in package utility2 */
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -128,7 +128,7 @@
 
 
 
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
 local.assetsDict["/assets.index.template.html"] =
 local.assetsDict["/assets.utility2.template.html"] = '\
 <!doctype html>\n\
@@ -139,7 +139,7 @@ local.assetsDict["/assets.utility2.template.html"] = '\
 <!-- "assets.utility2.template.html" -->\n\
 <title>{{env.npm_package_name}} ({{env.npm_package_version}})</title>\n\
 <style>\n\
-/* jslint-utility2 */\n\
+/* jslint utility2:true */\n\
 /*csslint\n\
 */\n\
 /* csslint ignore:start */\n\
@@ -265,7 +265,7 @@ textarea {\n\
 <a class="zeroPixel" download="db.persistence.json" href="" id="dbExportA1"></a>\n\
 <input class="zeroPixel" id="dbImportInput1" type="file">\n\
 <script>\n\
-/* jslint-utility2 */\n\
+/* jslint utility2:true */\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
@@ -443,7 +443,7 @@ instruction\n\
 \n\
 \n\
 /* istanbul instrument in package my_app */\n\
-/* jslint-utility2 */\n\
+/* jslint utility2:true */\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
@@ -536,7 +536,7 @@ instruction\n\
             ))) {\n\
                 // try to eval input-code\n\
                 try {\n\
-                    eval( // jslint-ignore-line\n\
+                    eval( // jslint ignore:line\n\
                         document.querySelector("#inputTextareaEval1").value\n\
                     );\n\
                 } catch (errorCaught) {\n\
@@ -630,18 +630,18 @@ instruction\n\
                 );\n\
             }\n\
         });\n\
-        /* jslint-ignore-block-beg */\n\
+        /* jslint ignore:start */\n\
         local.assetsDict["/assets.index.template.html"] = \'\\\n\
 ' + local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') + '\';\n\
-        /* jslint-ignore-block-end */\n\
+        /* jslint ignore:end */\n\
         /* validateLineSortedReset */\n\
-        /* jslint-ignore-block-beg */\n\
+        /* jslint ignore:start */\n\
         // bug-workaround - long $npm_package_buildCustomOrg\n\
         local.assetsDict["/assets.my_app.js"] =\n\
             local.assetsDict["/assets.my_app.js"] ||\n\
             local.fs.readFileSync(local.__dirname + "/lib.my_app.js", "utf8"\n\
         ).replace((/^#!\\//), "// ");\n\
-        /* jslint-ignore-block-end */\n\
+        /* jslint ignore:end */\n\
         /* validateLineSortedReset */\n\
         local.assetsDict["/"] = local.assetsDict["/assets.index.template.html"]\n\
         .replace((/\\{\\{env\\.(\\w+?)\\}\\}/g), function (match0, match1) {\n\
@@ -706,7 +706,7 @@ local.assetsDict['/assets.my_app.template.js'] = '\
 \n\
 \n\
 /* istanbul instrument in package my_app */\n\
-/* jslint-utility2 */\n\
+/* jslint utility2:true */\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
@@ -1175,7 +1175,7 @@ instruction\n\
 \n\
 \n\
 /* istanbul instrument in package swgg_github_misc */\n\
-/* jslint-utility2 */\n\
+/* jslint utility2:true */\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
@@ -1261,7 +1261,7 @@ instruction\n\
 
 local.assetsDict['/assets.test.template.js'] = '\
 /* istanbul instrument in package my_app */\n\
-/* jslint-utility2 */\n\
+/* jslint utility2:true */\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
@@ -1313,7 +1313,7 @@ local.assetsDict['/assets.testReport.template.html'] =
     .replace((/<title>.*?<\/title>/), '<title>test-report</title>')
     .replace('</style>\n', '\
 <style>\n\
-/* jslint-utility2 */\n\
+/* jslint utility2:true */\n\
 /*csslint\n\
 */\n\
 .testReportDiv img {\n\
@@ -1468,7 +1468,7 @@ local.assetsDict['/assets.testReportBadge.template.svg'] =
 local.assetsDict['/assets.utility2.rollup.begin.js'] = '\
 /* utility2.rollup.js begin */\n\
 /* istanbul ignore all */\n\
-/* jslint-utility2 */\n\
+/* jslint utility2:true */\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
@@ -1505,9 +1505,9 @@ local.assetsDict['/assets.utility2.rollup.content.js'] = '\
     local = (typeof window === "object" && window && window.utility2_rollup) ||\n\
         global.utility2_rollup;\n\
     local.local = local;\n\
-/* jslint-ignore-block-beg */\n\
+/* jslint ignore:start */\n\
 /* utility2.rollup.js content */\n\
-/* jslint-ignore-block-end */\n\
+/* jslint ignore:end */\n\
 }());\n\
 ';
 
@@ -1536,7 +1536,7 @@ local.assetsDict['/assets.utility2.rollup.end.js'] = '\
 
 
 local.assetsDict['/favicon.ico'] = '';
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
 
 
 
@@ -2714,7 +2714,7 @@ local.assetsDict['/favicon.ico'] = '';
                         ? ""
                         : "/index.html"
                     ))
-                        .replace((/^https?:\/\//), options.dir + "/")
+                    .replace((/^https?:\/\//), options.dir + "/")
                     .replace((/\/{2,}/g), "/");
                     // optimization - hasOwnProperty
                     if (options.dict.hasOwnProperty(options.file)) {
@@ -3911,17 +3911,17 @@ local.assetsDict['/favicon.ico'] = '';
                 // normalize whitespace
                 [
                     (/^$/),
-                    (/^[\S\s]*?\n\u0020*?\/\*\u0020jslint-ignore-block-beg\u0020\*\/\n/),
+                    (/^[\S\s]*?\n\u0020*?\/\*\u0020jslint\u0020ignore:start\u0020\*\/\n/),
                     new RegExp(
-                        "\\n *?\\/\\* jslint-ignore-block-end \\*\\/\\n" +
-                                "[\\S\\s]*?\\n *?\\/\\* jslint-ignore-block-beg \\*\\/\\n",
+                        "\\n *?\\/\\* jslint ignore:end \\*\\/\\n" +
+                                "[\\S\\s]*?\\n *?\\/\\* jslint ignore:start \\*\\/\\n",
                         "g"
                     ),
-                    (/\n\u0020*?\/\*\u0020jslint-ignore-block-end\u0020\*\/\n[\S\s]*?$/)
+                    (/\n\u0020*?\/\*\u0020jslint\u0020ignore:end\u0020\*\/\n[\S\s]*?$/)
                 ].forEach(function (rgx) {
                     if (
                         rgx.source === "^$" &&
-                        !(/\n\u0020*?\/\*\u0020jslint-ignore-block-beg\u0020\*\/\n/).test(dataLib)
+                        !(/\n\u0020*?\/\*\u0020jslint\u0020ignore:start\u0020\*\/\n/).test(dataLib)
                     ) {
                         rgx = (/^[\S\s]*?$/);
                     }
@@ -4154,9 +4154,9 @@ local.assetsDict['/favicon.ico'] = '';
             .indexOf("\"assets.utility2.template.html\"") < 0) {
                 options.dataTo = options.dataTo.replace(
                     new RegExp(
-                        "\\n {8}\\/\\* jslint-ignore-block-beg \\*\\/\\n" +
+                        "\\n {8}\\/\\* jslint ignore:start \\*\\/\\n" +
                         " {8}local.assetsDict\\[\"\\/assets.index.template.html\"\\] = '\\\\\\n" +
-                        "[\\S\\s]*?\\n {8}\\/\\* jslint-ignore-block-end \\*\\/\\n"
+                        "[\\S\\s]*?\\n {8}\\/\\* jslint ignore:end \\*\\/\\n"
                     ),
                     "\n"
                 );
@@ -4835,7 +4835,7 @@ local.assetsDict['/favicon.ico'] = '';
                 }
                 break;
             case ".sh":
-                if (file.slice(0, 4) !== "raw." && (/^#\u0020jslint-utility2$/m).test(scriptParsed)) {
+                if (file.slice(0, 4) !== "raw." && (/^#\u0020jslint\u0020utility2:true$/m).test(scriptParsed)) {
                     // local-function - ignore shell-escapes
                     scriptParsed = scriptParsed.replace(
                         (/^\u0020{8}local\.(\w+)\u0020=\u0020function\u0020\([\S\s]*?\n\u0020{8}\};\n/gm),
@@ -5954,7 +5954,7 @@ local.assetsDict['/favicon.ico'] = '';
                         // run async shell command
                         require("child_process").spawn(
                             "find . -type f | grep -v -E " +
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
 '"\
 /\\.|(\\b|_)(\\.\\d|\
 archive|artifact|\
@@ -5973,7 +5973,7 @@ swp|\
 tmp|\
 vendor)s{0,1}(\\b|_)\
 " ' +
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
                                     "| tr \"\\n\" \"\\000\" | xargs -0 grep -HIin -E \"" +
                                     match2.trim() + "\"",
                             {shell: true, stdio: ["ignore", 1, 2]}
@@ -6231,7 +6231,7 @@ vendor)s{0,1}(\\b|_)\
                 "/assets.utility2.rollup.end.js"
             ].map(function (key) {
                 switch (key) {
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
 case 'header':
 return '\
 /* this rollup was created with utility2 (https://github.com/kaizhu256/node-utility2) */\n\
@@ -6252,7 +6252,7 @@ instruction\n\
 */\n\
 ' + local.assetsDict['/assets.utility2.rollup.begin.js']
     .replace((/utility2_rollup/g), 'utility2_app');
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
                 case "/assets.my_app.js":
                     // handle large string-replace
                     tmp = "/assets." + local.env.npm_package_nameLib + ".js";
@@ -7371,10 +7371,8 @@ instruction\n\
             /*
              * this function will ignore serverLog-messages during test-run
              */
-                if (
-                    !local.env.npm_config_mode_coverage
-                    && !(/^serverLog\u0020-\u0020\{/).test(arg0)
-                ) {
+                /* istanbul ignore next */
+                if (!local.global.__coverage__ && !(/^serverLog\u0020-\u0020\{/).test(arg0)) {
                     local._testRunConsoleError.apply(console, arguments);
                 }
             };

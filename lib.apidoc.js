@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* istanbul instrument in package apidoc */
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -524,7 +524,7 @@
 
 
     // run shared js-env code - init-before
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
 local.templateApidocHtml = '\
 <div class="apidocDiv">\n\
 <style>\n\
@@ -630,7 +630,7 @@ local.templateApidocHtml = '\
 </div>\n\
 </div>\n\
 ';
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
 
 
 
@@ -809,7 +809,7 @@ local.templateApidocHtml = '\
                         "\" -maxdepth " + depth + " -mindepth " + depth +
                         " -type f | sed -e \"s|" + options.dir +
                         "/||\" | grep -iv " +
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
 '"\
 /\\.\\|\\(\\b\\|_\\)\\(\
 bower_component\\|\
@@ -821,7 +821,7 @@ rollup\\|\
 tmp\\|\
 vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
 " ' +
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
                         " | sort | head -n 256"
                     ).toString()
                     .split("\n")
@@ -917,7 +917,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                         "\" -maxdepth " + depth + " -mindepth " + depth +
                         " -name \"*.js\" -type f | sed -e \"s|" + options.dir +
                         "/||\" | grep -iv " +
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
 '"\
 /\\.\\|\\(\\b\\|_\\)\\(\
 archive\\|artifact\\|asset\\|\
@@ -935,7 +935,7 @@ spec\\|\
 test\\|tmp\\|\
 vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
 " ' +
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
                         " | sort | head -n 256"
                     ).toString()
                     .split("\n")

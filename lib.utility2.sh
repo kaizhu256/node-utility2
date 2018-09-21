@@ -1,5 +1,5 @@
 #!/bin/sh
-# jslint-utility2
+# jslint utility2:true
 
 # POSIX test utility
 # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/test.html
@@ -229,7 +229,7 @@ shBuildApp () {(set -e
     # create files README.md, lib.$npm_package.nameLib.js, test.js
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -298,7 +298,7 @@ shBuildAppSwgg0 () {(set -e
     # init swgg files
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -407,7 +407,7 @@ shBuildCi () {(set -e
         "[build app]"*)
             node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -857,7 +857,7 @@ $HOME/node_modules/utility2}" || return $?
     then
         eval "$(node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -929,7 +929,7 @@ var packageJson, value;
     then
         node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -1011,7 +1011,7 @@ shCryptoAesXxxCbcRawDecrypt () {(set -e
     node -e "
 $UTILITY2_MACRO_JS
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -1054,7 +1054,7 @@ shCryptoAesXxxCbcRawEncrypt () {(set -e
     node -e "
 $UTILITY2_MACRO_JS
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -1617,7 +1617,7 @@ shEnvSanitize () {
 # undefined
     eval "$(node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -1647,7 +1647,7 @@ shFileCustomizeFromToRgx () {(set -e
     node -e "
 $UTILITY2_MACRO_JS
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -1680,7 +1680,7 @@ shFileJsonNormalize () {(set -e
     node -e "
 $UTILITY2_MACRO_JS
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -1712,7 +1712,7 @@ shFilePackageJsonVersionUpdate () {(set -e
     node -e "
 $UTILITY2_MACRO_JS
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -1749,8 +1749,8 @@ var aa, bb, local, packageJson;
     require('fs').writeFileSync(
         'README.md',
         require('fs').readFileSync('README.md', 'utf8').replace(
-            (/^(#### changelog |- npm publish | {4}\"version\": \")\d+?\.\d+?\.\d[^\n\",]*/gm), // jslint-ignore-line
-            '\$1' + packageJson.version, // jslint-ignore-line
+            (/^(#### changelog |- npm publish | {4}\"version\": \")\d+?\.\d+?\.\d[^\n\",]*/gm), // jslint ignore:line
+            '\$1' + packageJson.version, // jslint ignore:line
             null
         )
     );
@@ -1979,7 +1979,7 @@ shGithubRepoBaseCreate () {(set -e
     node -e "
 $UTILITY2_MACRO_JS
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -1994,7 +1994,7 @@ var local;
     'use strict';
     local = local || {};
     local.ajax({
-        data: '{\"name\":\"' + process.argv[1].split('/')[1] + '\"}',  // jslint-ignore-line
+        data: '{\"name\":\"' + process.argv[1].split('/')[1] + '\"}',  // jslint ignore:line
         headers: {
             Authorization: 'token ' + process.env.GITHUB_TOKEN,
             'User-Agent': 'undefined'
@@ -2010,7 +2010,7 @@ var local;
             return;
         }
         local.ajax({
-            data: '{\"name\":\"' + process.argv[1].split('/')[1] + '\"}', // jslint-ignore-line
+            data: '{\"name\":\"' + process.argv[1].split('/')[1] + '\"}', // jslint ignore:line
             headers: {
                 Authorization: 'token ' + process.env.GITHUB_TOKEN,
                 'User-Agent': 'undefined'
@@ -2112,7 +2112,7 @@ shGrepReplace () {(set -e
 # this function will save the grep-and-replace lines in file $1
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -2154,7 +2154,7 @@ shHttpFileServer () {(set -e
 # this function will run a simple node http-file-server on http-port $PORT
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -2201,7 +2201,7 @@ shImageToDataUri () {(set -e
     esac
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -2348,7 +2348,7 @@ shMain () {
     export UTILITY2_DEPENDENTS="$(shUtility2Dependents)"
     export UTILITY2_MACRO_JS="
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -2400,7 +2400,7 @@ local = {};
             module.exports = local;
             module.exports.__dirname = __dirname;
         }
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
         // init debug_inline
         (function () {
             var consoleError, context;
@@ -2419,7 +2419,7 @@ local = {};
                 return arg0;
             };
         }());
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
         // init local.<builtin-functions>
         local.ajax = function (options, onError) {
         /*
@@ -3618,7 +3618,7 @@ shMediaHlsEncrypt () {(set -e
     node -e "
 $UTILITY2_MACRO_JS
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -3692,7 +3692,7 @@ shModuleDirname () {(set -e
     node -e "
 $UTILITY2_MACRO_JS
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -3736,7 +3736,7 @@ shNpmDeprecateAlias () {(set -e
     # update package.json
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -3782,7 +3782,7 @@ shNpmInstallWithPeerDependencies () {(set -e
     npm install "$@" | tee "$FILE"
     eval "$(node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -3821,7 +3821,7 @@ shNpmPackageCliHelpCreate () {(set -e
     shBuildPrint "creating npmPackageCliHelp ..."
     FILE="$(node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -3929,7 +3929,7 @@ shNpmPublishAlias () {(set -e
     cd "$DIR"
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -4057,7 +4057,7 @@ shReadmeLinkValidate () {(set -e
 # this function will validate http-links embedded in README.md
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -4212,7 +4212,7 @@ shReplClient () {(set -e
 # https://gist.github.com/TooTallNate/2209310
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -4295,7 +4295,7 @@ shRunWithScreenshotTxt () {(set -e
     # format text-output
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,

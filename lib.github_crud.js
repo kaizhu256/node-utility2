@@ -9,7 +9,7 @@
 
 
 /* istanbul instrument in package github_crud */
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -758,7 +758,7 @@
                 url: options.url
             };
             options.url = options.url
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
 // parse https://github.com/:owner/:repo/blob/:branch/:path
 .replace(
     (/^https:\/\/github.com\/([^\/]+?\/[^\/]+?)\/blob\/([^\/]+?)\/(.+)/),
@@ -784,7 +784,7 @@
     (/^([^\/]+?\/[^\/]+?)$/),
     'https://github.com/$1'
 )
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
             .replace((/\?branch=(.*)/), function (match0, match1) {
                 options.branch = match1;
                 if (options.method === "GET") {

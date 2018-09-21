@@ -9,7 +9,7 @@
 
 
 /* istanbul instrument in package uglifyjs */
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
@@ -259,7 +259,7 @@
 
 
 
-/* jslint-ignore-block-beg */
+/* jslint ignore:start */
 /*
 file UglifyJS/parse-js.js
 2013-06-07T11:23:05Z - shGithubDateCommitted https://github.com/mishoo/UglifyJS/commits/v1.3.5
@@ -814,7 +814,7 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
 /*
 file none
 */
-/* jslint-ignore-block-end */
+/* jslint ignore:end */
 
 
 
