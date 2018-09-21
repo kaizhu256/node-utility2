@@ -13,7 +13,6 @@
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     this: true,
@@ -270,7 +269,6 @@ textarea {\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
-    for: true,\n\
     multivar: true,\n\
     node: true,\n\
     this: true,\n\
@@ -449,7 +447,6 @@ instruction\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
-    for: true,\n\
     multivar: true,\n\
     node: true,\n\
     this: true,\n\
@@ -713,7 +710,6 @@ local.assetsDict['/assets.my_app.template.js'] = '\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
-    for: true,\n\
     multivar: true,\n\
     node: true,\n\
     this: true,\n\
@@ -1183,7 +1179,6 @@ instruction\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
-    for: true,\n\
     multivar: true,\n\
     node: true,\n\
     this: true,\n\
@@ -1270,7 +1265,6 @@ local.assetsDict['/assets.test.template.js'] = '\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
-    for: true,\n\
     multivar: true,\n\
     node: true,\n\
     this: true,\n\
@@ -1478,7 +1472,6 @@ local.assetsDict['/assets.utility2.rollup.begin.js'] = '\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
-    for: true,\n\
     multivar: true,\n\
     node: true,\n\
     this: true,\n\
@@ -2937,7 +2930,8 @@ local.assetsDict['/favicon.ico'] = '';
                 ? 43
                 : 47;
             };
-            for (ii = 0; ii < bff.length; ii += 1) {
+            ii = 0;
+            while (ii < bff.length) {
                 mod3 = ii % 3;
                 uint24 |= bff[ii] << (16 >>> mod3 & 24);
                 if (mod3 === 2 || bff.length - ii === 1) {
@@ -2949,6 +2943,7 @@ local.assetsDict['/favicon.ico'] = '';
                     );
                     uint24 = 0;
                 }
+                ii += 1;
             }
             return text.replace(/A(?=A$|$)/gm, "=");
         };
@@ -2965,7 +2960,8 @@ local.assetsDict['/favicon.ico'] = '';
             jj = 0;
             map64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
             mod4 = 0;
-            for (ii = 0; ii < b64.length; ii += 1) {
+            ii = 0;
+            while (ii < b64.length) {
                 chr = map64.indexOf(b64[ii]);
                 if (chr >= 0) {
                     mod4 %= 4;
@@ -2978,6 +2974,7 @@ local.assetsDict['/favicon.ico'] = '';
                     }
                     mod4 += 1;
                 }
+                ii += 1;
             }
             // optimization - create resized-view of bff
             bff = bff.subarray(0, jj);
@@ -3463,9 +3460,11 @@ local.assetsDict['/favicon.ico'] = '';
             result = new Uint8Array(bffList[0].byteLength + byteLength);
             ii = 0;
             bffList.forEach(function (bff) {
-                for (jj = 0; jj < bff.byteLength; jj += 1) {
+                jj = 0;
+                while (jj < bff.byteLength) {
                     result[ii] = bff[jj];
                     ii += 1;
+                    jj += 1;
                 }
             });
             return local.bufferValidateAndCoerce(result);
@@ -3494,17 +3493,21 @@ local.assetsDict['/favicon.ico'] = '';
          * this function will search bff for the indexOf-like position of the subBff
          */
             var ii, jj, kk;
-            for (ii = fromIndex || 0; ii < bff.length; ii += 1) {
+            ii = fromIndex || 0;
+            while (ii < bff.length) {
                 kk = ii;
-                for (jj = 0; jj < subBff.length; jj += 1) {
+                jj = 0;
+                while (jj < subBff.length) {
                     if (subBff[jj] !== bff[kk]) {
                         break;
                     }
                     kk += 1;
+                    jj += 1;
                 }
                 if (jj === subBff.length) {
                     return kk - jj;
                 }
+                ii += 1;
             }
             return subBff.length && -1;
         };
@@ -4541,8 +4544,10 @@ local.assetsDict['/favicon.ico'] = '';
             var cipher, crypto, data, ii, iv, key;
             // init key
             key = new Uint8Array(0.5 * options.key.length);
-            for (ii = 0; ii < key.byteLength; ii += 2) {
+            ii = 0;
+            while (ii < key.byteLength) {
                 key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
+                ii += 2;
             }
             data = options.data;
             // base64
@@ -4598,8 +4603,10 @@ local.assetsDict['/favicon.ico'] = '';
             var cipher, crypto, data, ii, iv, key;
             // init key
             key = new Uint8Array(0.5 * options.key.length);
-            for (ii = 0; ii < key.byteLength; ii += 2) {
+            ii = 0;
+            while (ii < key.byteLength) {
                 key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
+                ii += 2;
             }
             data = options.data;
             // init iv
@@ -5084,7 +5091,9 @@ local.assetsDict['/favicon.ico'] = '';
          * https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
          */
             var ii, random, swap;
-            for (ii = list.length - 1; ii > 0; ii -= 1) {
+            ii = list.length;
+            while (ii > 1) {
+                ii -= 1;
                 random = Math.floor(Math.random() * (ii + 1));
                 swap = list[ii];
                 list[ii] = list[random];
@@ -6861,7 +6870,8 @@ instruction\n\
             // render partials
             rgx = (/\{\{#(\w+)\u0020([^}]+?)\}\}/g);
             template = template || "";
-            for (match = rgx.exec(template); match; match = rgx.exec(template)) {
+            match = rgx.exec(template);
+            while (match) {
                 rgx.lastIndex += 1 - match[0].length;
                 template = template.replace(
                     new RegExp(
@@ -6871,6 +6881,7 @@ instruction\n\
                     ),
                     renderPartial
                 );
+                match = rgx.exec(template);
             }
             // search for keys in the template
             return template.replace((/\{\{[^}]+?\}\}/g), function (match0) {
@@ -7360,7 +7371,10 @@ instruction\n\
             /*
              * this function will ignore serverLog-messages during test-run
              */
-                if (!local.env.npm_config_mode_coverage && !(/^serverLog\u0020-\u0020\{/).test(arg0)) {
+                if (
+                    !local.env.npm_config_mode_coverage
+                    && !(/^serverLog\u0020-\u0020\{/).test(arg0)
+                ) {
                     local._testRunConsoleError.apply(console, arguments);
                 }
             };
@@ -7843,7 +7857,8 @@ instruction\n\
             // code derived from http://jsperf.com/uuid4
             var id, ii;
             id = "";
-            for (ii = 0; ii < 32; ii += 1) {
+            ii = 0;
+            while (ii < 32) {
                 switch (ii) {
                 case 8:
                 case 20:
@@ -7863,6 +7878,7 @@ instruction\n\
                     // coerce to finite integer
                     id += ((Math.random() * 16) | 0).toString(16);
                 }
+                ii += 1;
             }
             return id;
         };

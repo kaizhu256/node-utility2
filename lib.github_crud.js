@@ -13,7 +13,6 @@
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     this: true,

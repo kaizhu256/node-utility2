@@ -66,6 +66,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 
 #### changelog 2018.9.1
 - npm publish 2018.9.1
+- restore const and let expressions in jslint.js
 - update jslint-function jslintAndPrint to ignore too_long-warnings in comments and regexp,
 - jslint-autofix whitespace, double-quote, and regexp for files: lib.xxx.js, test.js
 - refactor files with new jslint (v2018.08.15)
@@ -136,7 +137,6 @@ instruction
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     this: true,
@@ -564,7 +564,6 @@ textarea {\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
-    for: true,\n\
     multivar: true,\n\
     node: true,\n\
     this: true,\n\

@@ -13,7 +13,6 @@
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     this: true,
@@ -1620,7 +1619,6 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
-    for: true,\n\
     multivar: true,\n\
     node: true,\n\
     this: true\n\
@@ -2182,9 +2180,11 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 switch (self._crudType[0]) {
                 // add extra file-upload forms
                 case "fileUploadManyByForm":
-                    for (tmp = 1; tmp <= self._fileUploadNumber; tmp += 1) {
+                    tmp = 1;
+                    while (tmp <= self._fileUploadNumber) {
                         self.parameters[tmp] = local.jsonCopy(self.parameters[1]);
                         self.parameters[tmp].name = "file" + tmp;
+                        tmp += 1;
                     }
                     break;
                 }
@@ -2367,22 +2367,24 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     break;
                 }
                 value = [];
-                for (ii = 0; ii < Math.min(
-                        // 5.3.2. maxItems
+                ii = 0;
+                while (ii < Math.min(
+                    // 5.3.2. maxItems
                     schemaP.maxItems || 2,
-                        // 5.3.3. minItems
+                    // 5.3.3. minItems
                     schemaP.minItems || 2,
-                        // 5.3.4. uniqueItems
+                    // 5.3.4. uniqueItems
                     schemaP.uniqueItems
                     ? 2
                     : 1
-                ); ii += 1) {
+                )) {
                     // recurse dbFieldRandomCreate
                     value.push(local.dbFieldRandomCreate({
                         depth: depth - 1,
                         modeNotRandom: options.modeNotRandom,
                         schemaP: local.schemaPItems(schemaP)
                     }));
+                    ii += 1;
                 }
                 break;
             // 5.4. Validation keywords for objects
@@ -2406,8 +2408,10 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
          * this function will create a dbRowList of options.length random dbRow's
          */
             var ii;
-            for (ii = 0; ii < options.length; ii += 1) {
+            ii = 0;
+            while (ii < options.length) {
                 options.dbRowList.push(local.dbRowRandomCreate(options));
+                ii += 1;
             }
             return options.dbRowList;
         };
@@ -2427,12 +2431,10 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 swaggerJson: local.swaggerJson
             });
             properties = local.jsonCopy((properties && properties.properties) || {});
-            for (
-                ii = Object.keys(properties).length;
-                ii < (options.schema && options.schema.minProperties);
-                ii += 1
-            ) {
+            ii = Object.keys(properties).length;
+            while (ii < (options.schema && options.schema.minProperties)) {
                 properties["property" + ii] = {type: "string"};
+                ii += 1;
             }
             Object.keys(properties).forEach(function (key) {
                 dbRow[key] = local.dbFieldRandomCreate({
@@ -3955,7 +3957,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                 }
                 // dereference schema.oneOf
                 oneOf = (data && schema.oneOf) || [];
-                for (ii = 0; ii < oneOf.length; ii += 1) {
+                ii = 0;
+                while (ii < oneOf.length) {
                     tmp = String(oneOf[ii] && oneOf[ii].$ref)
                     .replace("http://json-schema.org/draft-04/schema#", "#");
                     switch (tmp + " " + (!local.isNullOrUndefined(data.$ref) || data.in)) {
@@ -3978,6 +3981,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     if (!schema.oneOf) {
                         break;
                     }
+                    ii += 1;
                 }
                 // dereference schema.$ref
                 $ref = schema && schema.$ref;
@@ -4026,7 +4030,8 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                     break;
                 case "http://json-schema.org/draft-04/schema#/definitions/schema":
                     list = data.required || [];
-                    for (ii = 0; ii < list.length; ii += 1) {
+                    ii = 0;
+                    while (ii < list.length) {
                         tmp = list[ii];
                         // validate semanticSchema1
                         test = !(
@@ -4039,6 +4044,7 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
                             errorType: "semanticSchema1",
                             prefix: options.prefix.concat(["properties", tmp])
                         });
+                        ii += 1;
                     }
                     // validate semanticWalker1
                     test = local.isNullOrUndefined(data.type) || typeof data.type === "string";

@@ -40,7 +40,6 @@
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     this: true,
@@ -379,7 +378,9 @@
          * https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
          */
             var ii, random, swap;
-            for (ii = list.length - 1; ii > 0; ii -= 1) {
+            ii = list.length;
+            while (ii > 1) {
+                ii -= 1;
                 random = Math.floor(Math.random() * (ii + 1));
                 swap = list[ii];
                 list[ii] = list[random];
@@ -979,13 +980,15 @@ vendor)s{0,1}(\\b|_)\
             // cleanup dbRowList
             list = this.dbRowList;
             this.dbRowList = [];
-            // optimization - for-loop
-            for (ii = 0; ii < list.length; ii += 1) {
+            // optimization - while-loop
+            ii = 0;
+            while (ii < list.length) {
                 dbRow = list[ii];
                 // cleanup isRemoved
                 if (!dbRow.$isRemoved) {
                     this.dbRowList.push(dbRow);
                 }
+                ii += 1;
             }
             if (this.sizeLimit && this.dbRowList.length >= 1.5 * this.sizeLimit) {
                 this.dbRowList = this._crudGetManyByQuery({}, this.sortDefault, 0, this.sizeLimit);
@@ -1012,9 +1015,11 @@ vendor)s{0,1}(\\b|_)\
             // sort
             (sort || []).forEach(function (element) {
                 // bug-workaround - v8 does not have stable-sort
-                // optimization - for-loop
-                for (ii = 0; ii < result.length; ii += 1) {
+                // optimization - while-loop
+                ii = 0;
+                while (ii < result.length) {
                     result[ii].$ii = ii;
+                    ii += 1;
                 }
                 result.sort(function (aa, bb) {
                     return local.sortCompare(
@@ -1247,12 +1252,14 @@ vendor)s{0,1}(\\b|_)\
          */
             var ii, result;
             this._cleanup();
-            // optimization - for-loop
-            for (ii = 0; ii < this.dbRowList.length; ii += 1) {
+            // optimization - while-loop
+            ii = 0;
+            while (ii < this.dbRowList.length) {
                 result = local.dbRowListGetManyByQuery([this.dbRowList[ii]], query)[0];
                 if (result) {
                     break;
                 }
+                ii += 1;
             }
             return local.setTimeoutOnError(onError, 0, null, local.dbRowProject(result));
         };
@@ -1434,13 +1441,15 @@ vendor)s{0,1}(\\b|_)\
             };
             this.idIndexList.push(idIndex);
             // populate idIndex with dbRowList
-            // optimization - for-loop
-            for (ii = 0; ii < this.dbRowList.length; ii += 1) {
+            // optimization - while-loop
+            ii = 0;
+            while (ii < this.dbRowList.length) {
                 dbRow = this.dbRowList[ii];
                 // auto-set id
                 if (!dbRow.$isRemoved) {
                     idIndex.dict[local.dbRowSetId(dbRow, idIndex)] = dbRow;
                 }
+                ii += 1;
             }
             this.save();
             return local.setTimeoutOnError(onError);
@@ -1640,9 +1649,11 @@ vendor)s{0,1}(\\b|_)\
             var ii, value;
             value = dbRow;
             key = String(key).split(".");
-            // optimization - for-loop
-            for (ii = 0; ii < key.length && typeof value === "object" && value; ii += 1) {
+            // optimization - while-loop
+            ii = 0;
+            while (ii < key.length && typeof value === "object" && value) {
                 value = value[key[ii]];
+                ii += 1;
             }
             return value === undefined
             ? null
@@ -1747,15 +1758,19 @@ vendor)s{0,1}(\\b|_)\
             if (!test) {
                 return result;
             }
-            // optimization - for-loop
-            for (ii = dbRowList.length - 1; ii >= 0; ii -= 1) {
+            // optimization - while-loop
+            ii = dbRowList.length;
+            while (ii >= 1) {
+                ii -= 1;
                 fieldValue = local.dbRowGetItem(dbRowList[ii], fieldName);
                 // normalize to list
                 if (!Array.isArray(fieldValue)) {
                     fieldValue = [fieldValue];
                 }
-                // optimization - for-loop
-                for (jj = fieldValue.length - 1; jj >= 0; jj -= 1) {
+                // optimization - while-loop
+                jj = fieldValue.length;
+                while (jj >= 1) {
+                    jj -= 1;
                     if (not ^ test(fieldValue[jj], bb, typeof fieldValue[jj], typeof2)) {
                         result.push(dbRowList[ii]);
                         break;

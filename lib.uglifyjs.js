@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /*
- * assets.uglifyjs.js
+ * lib.uglifyjs.js (2018.8.15)
+ * https://github.com/kaizhu256/node-uglifyjs-lite
  * this zero-dependency package will provide a browser-compatible version of the uglifyjs (v1.3.5) javascript-minifier, with a working web-demo
  *
  */
@@ -12,7 +13,6 @@
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     this: true,

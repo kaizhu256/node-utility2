@@ -3,7 +3,6 @@
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     this: true,
@@ -713,11 +712,15 @@
          */
             options = {};
             options.text1 = "";
-            for (options.ii = 0; options.ii < 0x10000; options.ii += 1) {
+            options.ii = 0;
+            while (options.ii < 0x10000) {
                 options.text1 += String.fromCodePoint(options.ii);
+                options.ii += 1;
             }
-            for (options.ii = 0x100000; options.ii < 0x110000; options.ii += 0x100) {
+            options.ii = 0x100000;
+            while (options.ii < 0x110000) {
                 options.text1 += String.fromCodePoint(options.ii);
+                options.ii += 0x100;
             }
             // test utf8 handling-behavior
             options.bff1 = local.bufferCreate(options.text1);
@@ -1446,9 +1449,11 @@
             // init list
             options.list = ["aa", "bb", "cc", "dd"];
             options.elementDict = {};
-            // get 100 random elements from list
-            for (options.ii = 0; options.ii < 1024; options.ii += 1) {
+            // get 1000 random elements from list
+            options.ii = 0;
+            while (options.ii < 1000) {
                 options.elementDict[local.listGetElementRandom(options.list)] = true;
+                options.ii += 1;
             }
             // validate all elements were retrieved from list
             local.assertJsonEqual(
@@ -1466,11 +1471,13 @@
             // init list
             options.list = "[0,1]";
             // shuffle list 100 times
-            for (options.ii = 0; options.ii < 100; options.ii += 1) {
+            options.ii = 0;
+            while (options.ii < 100) {
                 options.listShuffled = JSON.stringify(local.listShuffle(JSON.parse(options.list)));
                 // validate shuffled list
                 local.assertJsonEqual(options.listShuffled.length, options.list.length);
                 options.changed = options.changed || options.listShuffled !== options.list;
+                options.ii += 1;
             }
             // validate list changed at least once during the shuffle
             local.assert(options.changed, options);
@@ -1592,11 +1599,13 @@
             options.list = [
 "","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC","XCI","XCII","XCIII","XCIV","XCV","XCVI","XCVII","XCVIII","XCIX","C" // jslint-ignore-line
             ];
-            for (options.ii = 0; options.ii < 10; options.ii += 1) {
+            options.ii = 0;
+            while (options.ii < 10) {
                 local.assertJsonEqual(
                     local.numberToRomanNumerals(options.ii),
                     options.list[options.ii]
                 );
+                options.ii += 1;
             }
             onError(null, options);
         };

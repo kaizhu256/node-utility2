@@ -4,7 +4,6 @@
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     this: true,
@@ -416,7 +415,8 @@
             // render partials
             rgx = (/\{\{#(\w+)\u0020([^}]+?)\}\}/g);
             template = template || "";
-            for (match = rgx.exec(template); match; match = rgx.exec(template)) {
+            match = rgx.exec(template);
+            while (match) {
                 rgx.lastIndex += 1 - match[0].length;
                 template = template.replace(
                     new RegExp(
@@ -426,6 +426,7 @@
                     ),
                     renderPartial
                 );
+                match = rgx.exec(template);
             }
             // search for keys in the template
             return template.replace((/\{\{[^}]+?\}\}/g), function (match0) {

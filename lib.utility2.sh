@@ -10,6 +10,8 @@
 # git fetch origin alpha beta master --tags
 # git ls-remote --heads origin
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/bb "touch" alpha
+# shCryptoWithGithubOrg npmdoc shCustomOrgRepoCreateSyncCreate npmdoc/node-npmdoc-mysql
+# shCryptoWithGithubOrg npmdoc shGithubRepoTouch npmdoc/node-npmdoc-mysql "[npm publishAfterCommitAfterBuild]"
 # shGitAddTee npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
 # shGitAddTee shUtility2DependentsSync
 # utility2 electron test.js --enable-logging
@@ -231,7 +233,6 @@ shBuildApp () {(set -e
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -301,7 +302,6 @@ shBuildAppSwgg0 () {(set -e
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -411,7 +411,6 @@ shBuildCi () {(set -e
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -862,7 +861,6 @@ $HOME/node_modules/utility2}" || return $?
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -935,7 +933,6 @@ var packageJson, value;
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -1018,7 +1015,6 @@ $UTILITY2_MACRO_JS
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -1062,7 +1058,6 @@ $UTILITY2_MACRO_JS
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -1626,7 +1621,6 @@ shEnvSanitize () {
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -1657,7 +1651,6 @@ $UTILITY2_MACRO_JS
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -1691,7 +1684,6 @@ $UTILITY2_MACRO_JS
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -1724,7 +1716,6 @@ $UTILITY2_MACRO_JS
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -1846,12 +1837,12 @@ shGitCommandWithGithubToken () {(set -e
     shift
     if [ ! "$GITHUB_TOKEN" ] || ! (printf "$URL" | grep -q -E "^https:\/\/")
     then
-        git "$@"
+        git "$COMMAND" "$URL" "$@"
         return
     fi
     case "$URL" in
     .)
-        git "$@"
+        git "$COMMAND" "$URL" "$@"
         return
         ;;
     https://github.com/*)
@@ -1992,7 +1983,6 @@ $UTILITY2_MACRO_JS
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -2126,7 +2116,6 @@ shGrepReplace () {(set -e
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -2169,7 +2158,6 @@ shHttpFileServer () {(set -e
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -2217,7 +2205,6 @@ shImageToDataUri () {(set -e
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -2365,7 +2352,6 @@ shMain () {
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -2819,7 +2805,8 @@ local = {};
                 ? 43
                 : 47;
             };
-            for (ii = 0; ii < bff.length; ii += 1) {
+            ii = 0;
+            while (ii < bff.length) {
                 mod3 = ii % 3;
                 uint24 |= bff[ii] << (16 >>> mod3 & 24);
                 if (mod3 === 2 || bff.length - ii === 1) {
@@ -2831,6 +2818,7 @@ local = {};
                     );
                     uint24 = 0;
                 }
+                ii += 1;
             }
             return text.replace(/A(?=A\$|\$)/gm, \"=\");
         };
@@ -2847,7 +2835,8 @@ local = {};
             jj = 0;
             map64 = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\";
             mod4 = 0;
-            for (ii = 0; ii < b64.length; ii += 1) {
+            ii = 0;
+            while (ii < b64.length) {
                 chr = map64.indexOf(b64[ii]);
                 if (chr >= 0) {
                     mod4 %= 4;
@@ -2860,6 +2849,7 @@ local = {};
                     }
                     mod4 += 1;
                 }
+                ii += 1;
             }
             // optimization - create resized-view of bff
             bff = bff.subarray(0, jj);
@@ -2947,8 +2937,10 @@ local = {};
             var cipher, crypto, data, ii, iv, key;
             // init key
             key = new Uint8Array(0.5 * options.key.length);
-            for (ii = 0; ii < key.byteLength; ii += 2) {
+            ii = 0;
+            while (ii < key.byteLength) {
                 key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
+                ii += 2;
             }
             data = options.data;
             // base64
@@ -3003,8 +2995,10 @@ local = {};
             var cipher, crypto, data, ii, iv, key;
             // init key
             key = new Uint8Array(0.5 * options.key.length);
-            for (ii = 0; ii < key.byteLength; ii += 2) {
+            ii = 0;
+            while (ii < key.byteLength) {
                 key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
+                ii += 2;
             }
             data = options.data;
             // init iv
@@ -3628,7 +3622,6 @@ $UTILITY2_MACRO_JS
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -3703,7 +3696,6 @@ $UTILITY2_MACRO_JS
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -3748,7 +3740,6 @@ shNpmDeprecateAlias () {(set -e
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -3795,7 +3786,6 @@ shNpmInstallWithPeerDependencies () {(set -e
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -3835,7 +3825,6 @@ shNpmPackageCliHelpCreate () {(set -e
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -3944,7 +3933,6 @@ shNpmPublishAlias () {(set -e
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -4073,7 +4061,6 @@ shReadmeLinkValidate () {(set -e
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -4229,7 +4216,6 @@ shReplClient () {(set -e
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
@@ -4313,7 +4299,6 @@ shRunWithScreenshotTxt () {(set -e
 /*jslint
     bitwise: true,
     browser: true,
-    for: true,
     multivar: true,
     node: true,
     single: true,
