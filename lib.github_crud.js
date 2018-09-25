@@ -210,7 +210,7 @@ local.ajax = function (options, onError) {
             // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders
             if (xhr.getAllResponseHeaders) {
                 xhr.getAllResponseHeaders().replace((
-                    /(.*?):\u0020*(.*?)\r\n/g
+                    /(.*?): *(.*?)\r\n/g
                 ), function (ignore, match1, match2) {
                     xhr.responseHeaders[match1.toLowerCase()] = match2;
                 });
@@ -522,7 +522,7 @@ local.cliRun = function (options) {
             }
             return element.description + "\n  " + file
                     + ("  " + element.command.sort().join("|") + "  ")
-                    .replace((/^\u0020{4}$/), "  ")
+                    .replace((/^ {4}$/), "  ")
                     + element.argList.join("  ");
         })
         .join("\n\n"));

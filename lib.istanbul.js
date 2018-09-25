@@ -215,7 +215,7 @@ local.cliRun = function (options) {
             }
             return element.description + "\n  " + file
                     + ("  " + element.command.sort().join("|") + "  ")
-                    .replace((/^\u0020{4}$/), "  ")
+                    .replace((/^ {4}$/), "  ")
                     + element.argList.join("  ");
         })
         .join("\n\n"));
@@ -330,7 +330,7 @@ local._istanbul_fs.readFileSync = function (file) {
         .replace("{{env.npm_package_name}}", process.env.npm_package_name)
         .replace("{{env.npm_package_version}}", process.env.npm_package_version);
     } else {
-        file = file.replace((/<h1\u0020[\S\s]*<\/h1>/), "");
+        file = file.replace((/<h1 [\S\s]*<\/h1>/), "");
     }
     return file;
 };
@@ -1817,7 +1817,7 @@ local.handlebars.compile = function (template) {
         result = result.replace((/\{\{\{/g), "{{").replace((/\}\}\}/g), "}}");
         // render with-statement
         result = result.replace(
-            (/\{\{#with\u0020(.+?)\}\}([\S\s]+?)\{\{\/with\}\}/g),
+            (/\{\{#with (.+?)\}\}([\S\s]+?)\{\{\/with\}\}/g),
             function (match0, match1, match2) {
                 // jslint-hack
                 local.nop(match0);

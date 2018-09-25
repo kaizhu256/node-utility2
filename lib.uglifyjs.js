@@ -208,7 +208,7 @@ local.cliRun = function (options) {
             }
             return element.description + "\n  " + file
                     + ("  " + element.command.sort().join("|") + "  ")
-                    .replace((/^\u0020{4}$/), "  ")
+                    .replace((/^ {4}$/), "  ")
                     + element.argList.join("  ");
         })
         .join("\n\n"));
@@ -842,8 +842,8 @@ local.uglify = function (code, file) {
         .replace((/\/\/.*?$/gm), "")
             // remove whitespace
         .replace((/\t/g), " ")
-        .replace((/\u0020{2,}/g), " ")
-        .replace((/\u0020*?([\n,:;{}])\u0020*/g), "$1")
+        .replace((/ {2,}/g), " ")
+        .replace((/ *?([\n,:;{}]) */g), "$1")
         .replace((/\n\n+/g), "\n")
         .trim();
     case ".htm":

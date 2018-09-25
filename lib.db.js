@@ -261,7 +261,7 @@ local.cliRun = function (options) {
             }
             return element.description + "\n  " + file
                     + ("  " + element.command.sort().join("|") + "  ")
-                    .replace((/^\u0020{4}$/), "  ")
+                    .replace((/^ {4}$/), "  ")
                     + element.argList.join("  ");
         })
         .join("\n\n"));
@@ -1566,7 +1566,7 @@ local.dbImport = function (text, onError) {
     setTimeout(function () {
         local.modeImport = null;
     });
-    text.replace((/^(\w\S*?)\u0020(\S+?)\u0020(\S.*?)$/gm), function (
+    text.replace((/^(\w\S*?) (\S+?) (\S.*?)$/gm), function (
         match0,
         match1,
         match2,

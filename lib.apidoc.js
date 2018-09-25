@@ -225,7 +225,7 @@ local.cliRun = function (options) {
             }
             return element.description + "\n  " + file
                     + ("  " + element.command.sort().join("|") + "  ")
-                    .replace((/^\u0020{4}$/), "  ")
+                    .replace((/^ {4}$/), "  ")
                     + element.argList.join("  ");
         })
         .join("\n\n"));
@@ -420,7 +420,7 @@ local.templateRender = function (template, dict, options) {
         }
     };
     // render partials
-    rgx = (/\{\{#(\w+)\u0020([^}]+?)\}\}/g);
+    rgx = (/\{\{#(\w+) ([^}]+?)\}\}/g);
     template = template || "";
     match = rgx.exec(template);
     while (match) {
@@ -682,16 +682,16 @@ local.apidocCreate = function (options) {
         .replace((/\([\S\s]*?\)/), function (match0) {
                 // init signature
             element.signature = match0
-            .replace((/\u0020*?\/\*[\S\s]*?\*\/\u0020*/g), "")
+            .replace((/ *?\/\*[\S\s]*?\*\/ */g), "")
             .replace((/,/g), ", ")
             .replace((/\s+/g), " ");
             return element.signature;
         })
         .replace(
-            (/(\u0020*?\/\*[\S\s]*?\*\/\n)/),
+            (/( *?\/\*[\S\s]*?\*\/\n)/),
             "<span class=\"apidocCodeCommentSpan\">$1</span>"
         )
-        .replace((/^function\u0020\(/), key + " = function (");
+        .replace((/^function \(/), key + " = function (");
         // init example
         options.exampleList.some(function (example) {
             example.replace(
@@ -748,7 +748,7 @@ local.apidocCreate = function (options) {
      */
         var whitespace;
         whitespace = "";
-        text.trim().replace((/^\u0020*/gm), function (match0) {
+        text.trim().replace((/^ */gm), function (match0) {
             if (!whitespace || match0.length < whitespace.length) {
                 whitespace = match0;
             }
@@ -1032,7 +1032,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
     // render apidoc
     options.result = local.templateRender(options.template, options, {notHtmlSafe: true})
     .trim()
-    .replace((/\u0020+$/gm), "") + "\n";
+    .replace((/ +$/gm), "") + "\n";
     return options.result;
 };
 
