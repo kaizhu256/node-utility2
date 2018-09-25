@@ -208,7 +208,7 @@ local.cliRun = function (options) {
             }
             return element.description + "\n  " + file
                     + ("  " + element.command.sort().join("|") + "  ")
-                    .replace((/^ {4}$/), "  ")
+                    .replace((/^\u0020{4}$/), "  ")
                     + element.argList.join("  ");
         })
         .join("\n\n"));
@@ -6661,7 +6661,7 @@ function jslint(
         source_autofix: lines_extra.map(function (line, ii) {
             return line.source_autofix || lines[ii];
         // remove trailine-whitespace
-        }).join("\n").replace((/ +$/gm), ""),
+        }).join("\n").replace((/\u0020+$/gm), ""),
         module: module_mode === true,
         ok: warnings.length === 0 && !early_stop,
         option,
@@ -6694,8 +6694,8 @@ next_line_extra = function (source_line, line) {
     line_extra.source = lines[line];
     lines_extra[line] = line_extra;
     tmp = (
-        source_line.match(/^ *?\/\* jslint (ignore:start|ignore:end|utility2:true) \*\/$/m)
-        || source_line.slice(-50).match(/ \/\/ jslint (ignore:line)$/m)
+        source_line.match(/^\u0020*?\/\*\u0020jslint\u0020(ignore:start|ignore:end|utility2:true)\u0020\*\/$/m)
+        || source_line.slice(-50).match(/\u0020\/\/\u0020jslint\u0020(ignore:line)$/m)
     );
     switch (tmp && tmp[1]) {
     case "ignore:start":
@@ -6749,8 +6749,6 @@ warn_at_extra = function (warning, warnings, supplant, bundle) {
     // jslint-warning - ignore
     switch (Boolean(warning.ignore) || warning.message) {
     case true:
-    case "Expected '\\s' and instead saw ' '.":
-    case "Expected '\\u0020' and instead saw ' '.":
     case "Expected 'var' and instead saw 'let'.":
     case "Unexpected 'arguments'.":
     case "Unexpected 'instanceof'.":
@@ -6786,6 +6784,15 @@ warn_at_extra = function (warning, warnings, supplant, bundle) {
     }
     // jslint-warning - accept
     warning.a = warning.a || warning.source.trim();
+    switch (warning.message) {
+    case "Expected '\\s' and instead saw ' '.":
+        // autofix regexp - replace " " -> "\u0020"
+        lines_extra[warning.line].source_autofix = (
+            warning.source.slice(0, warning.column) + "\\u0020"
+            + warning.source.slice(warning.column + 1)
+        );
+        break;
+    }
     switch (warning.code) {
     case "expected_a_at_b_c":
         tmp = warning.b - warning.c;
@@ -6798,7 +6805,7 @@ warn_at_extra = function (warning, warnings, supplant, bundle) {
         }
         tmp = -tmp;
         // autofix indent - decrement
-        if ((/^ *?$/m).test(warning.source.slice(0, warning.column))) {
+        if ((/^\u0020*?$/m).test(warning.source.slice(0, warning.column))) {
             lines_extra[warning.line].source_autofix = (
                 warning.source.slice(tmp)
             );
@@ -6862,7 +6869,7 @@ warn_at_extra = function (warning, warnings, supplant, bundle) {
     // autofix tab - replace tab -> space
     case "use_spaces":
         lines_extra[warning.line].source_autofix = (
-            warning.source.replace((/^( *?)\t/), "$1   ")
+            warning.source.replace((/^(\u0020*?)\t/), "$1   ")
         );
         break;
     }
@@ -6900,7 +6907,7 @@ local.csslintUtility2 = function (script) {
     var previous1;
     var previous2;
     // ignore comments
-    script = script.replace((/^ *?\/\*[\S\s]*?\*\/ *?$/gm), function (match0) {
+    script = script.replace((/^\u0020*?\/\*[\S\s]*?\*\/\u0020*?$/gm), function (match0) {
         if (match0 === "/* validateLineSortedReset */") {
             return match0;
         }
@@ -6921,13 +6928,13 @@ local.csslintUtility2 = function (script) {
             return;
         }
         // validate whitespace-before-comma
-        if ((/ ,/).test(current1)) {
-            jj = jj || ((/ ,/).exec(current1).index + 2);
+        if ((/\u0020,/).test(current1)) {
+            jj = jj || ((/\u0020,/).exec(current1).index + 2);
             message = message || "whitespace-before-comma";
         }
         // validate double-whitespace
-        if ((/\S {2}/).test(current1)) {
-            jj = jj || ((/\S {2}/).exec(current1).index + 2);
+        if ((/\S\u0020{2}/).test(current1)) {
+            jj = jj || ((/\S\u0020{2}/).exec(current1).index + 2);
             message = message || "double-whitespace";
         }
         // ignore indent
@@ -6951,8 +6958,8 @@ local.csslintUtility2 = function (script) {
         current1 = current1
         .replace((/^#/gm), "|")
         .replace((/,$/gm), "   ,")
-        .replace((/( \{$|:)/gm), "  $1")
-        .replace((/(^[\w*@]| \w)/gm), " $1");
+        .replace((/(\u0020\{$|:)/gm), "  $1")
+        .replace((/(^[\w*@]|\u0020\w)/gm), " $1");
         if (!(previous1 < current1)) {
             jj = jj || 1;
             message = message ||
@@ -7030,7 +7037,7 @@ local.jslintAndPrint = function (script, file, options) {
     // jslint the script with utiity2-specific rules
     if (
         !local.errorList.length
-        && (/^\/\* jslint utility2:true \*\/$|^# jslint utility2:true$/m).test(script)
+        && (/^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$|^#\u0020jslint\u0020utility2:true$/m).test(script)
     ) {
         ii = 0;
         script
@@ -7049,14 +7056,14 @@ local.jslintAndPrint = function (script, file, options) {
             message = "";
                 // validate 4-space indent
             if (
-                !(/^ +(?:\*|\/\/!!)/).test(line)
-                && ((/^ */).exec(line)[0].length % 4 !== 0)
+                !(/^\u0020+(?:\*|\/\/!!)/).test(line)
+                && ((/^\u0020*/).exec(line)[0].length % 4 !== 0)
             ) {
                 jj = jj || 1;
                 message = message || "non 4-space indent";
             }
                 // validate trailing-whitespace
-            if ((/ $| \\n\\$/m).test(line)) {
+            if ((/\u0020$|\u0020\\n\\$/m).test(line)) {
                 jj = jj || line.length;
                 message = message || "trailing whitespace";
             }
@@ -7136,8 +7143,8 @@ local.jslintAndPrint = function (script, file, options) {
         //!! lineno += 1;
         //!! // validate <domElement>.classList sorted
         //!! tmp = (/\bclass=\\?"([^"]+?)\\?"/gm).exec(current);
-        //!! tmp = JSON.stringify((tmp && tmp[1].replace((/^ /), "zSpace").match(
-            //!! / {2}| $|\w\S*?\{\{[^}]*?\}\}|\w\S*|\{\{[^}]*?\}\}/gm
+        //!! tmp = JSON.stringify((tmp && tmp[1].replace((/^\u0020/), "zSpace").match(
+            //!! /\u0020{2}|\u0020$|\w\S*?\{\{[^}]*?\}\}|\w\S*|\{\{[^}]*?\}\}/gm
         //!! )) || []);
         //!! if (JSON.stringify(JSON.parse(tmp).sort()) !== tmp) {
             //!! local.errorList.push({
@@ -7153,13 +7160,13 @@ local.jslintAndPrint = function (script, file, options) {
             //!! return;
         //!! }
         //!! if (
-            //!! !(/^(?: {4}| {8})local\.\S*? =(?: |$)/m).test(line) ||
+            //!! !(/^(?:\u0020{4}|\u0020{8})local\.\S*?\u0020=(?:\u0020|$)/m).test(line) ||
             //!! (/^local\.(?:global|isBrowser|local|tmp)\b|\\n\\$/).test(current)
         //!! ) {
             //!! return;
         //!! }
         //!! // validate previous < current
-        //!! if (!(previous < current || (/ =$/).test(previous))) {
+        //!! if (!(previous < current || (/\u0020=$/).test(previous))) {
             //!! local.errorList.push({
                 //!! col: 0,
                 //!! line: lineno,
@@ -7225,7 +7232,7 @@ local.shlintUtility2 = function (script) {
     previous = "";
     script.replace((/^.*?$/gm), function (line) {
         lineno += 1;
-        if (!(/^sh\w+? \(\) \{/).test(line)) {
+        if (!(/^sh\w+?\u0020\(\)\u0020\{/).test(line)) {
             return;
         }
         // validate previous < line

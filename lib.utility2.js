@@ -2492,7 +2492,7 @@ local.ajax = function (options, onError) {
             // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders
             if (xhr.getAllResponseHeaders) {
                 xhr.getAllResponseHeaders().replace((
-                    /(.*?): *(.*?)\r\n/g
+                    /(.*?):\u0020*(.*?)\r\n/g
                 ), function (ignore, match1, match2) {
                     xhr.responseHeaders[match1.toLowerCase()] = match2;
                 });
@@ -3847,9 +3847,9 @@ local.buildLib = function (options, onError) {
     // search-and-replace - customize dataTo
     [
         // customize top-level comment-description
-        (/\n \*\n(?:[\S\s]*?\n)? \*\/\n/),
+        (/\n\u0020\*\n(?:[\S\s]*?\n)?\u0020\*\/\n/),
         // customize body after /* validateLineSortedReset */
-        (/\n\/\* validateLineSortedReset \*\/\n[\S\s]*?$/)
+        (/\n\/\*\u0020validateLineSortedReset\u0020\*\/\n[\S\s]*?$/)
     ].forEach(function (rgx) {
         options.dataTo = local.stringMerge(options.dataTo, options.dataFrom, rgx);
     });
@@ -3929,7 +3929,7 @@ local.buildLib = function (options, onError) {
             )
         );
         dataLib = dataLib.replace((
-            /^local\.(.*?) = (function \([\S\s]*?\n\});\n+/gm
+            /^local\.(.*?)\u0020=\u0020(function\u0020\([\S\s]*?\n\});\n+/gm
         ), function (match0, key, match2, match3) {
             // local-function - duplicate
             if (dictFnc[key]) {
@@ -3956,22 +3956,22 @@ local.buildLib = function (options, onError) {
         // normalize whitespace
         [
             (/^$/),
-            (/^[\S\s]*?\n *?\/\* jslint ignore:start \*\/\n/),
+            (/^[\S\s]*?\n\u0020*?\/\*\u0020jslint\u0020ignore:start\u0020\*\/\n/),
             new RegExp(
                 "\\n *?\\/\\* jslint ignore:end \\*\\/\\n" +
                         "[\\S\\s]*?\\n *?\\/\\* jslint ignore:start \\*\\/\\n",
                 "g"
             ),
-            (/\n *?\/\* jslint ignore:end \*\/\n[\S\s]*?$/)
+            (/\n\u0020*?\/\*\u0020jslint\u0020ignore:end\u0020\*\/\n[\S\s]*?$/)
         ].forEach(function (rgx) {
             if (
                 rgx.source === "^$" &&
-                !(/\n *?\/\* jslint ignore:start \*\/\n/).test(dataLib)
+                !(/\n\u0020*?\/\*\u0020jslint\u0020ignore:start\u0020\*\/\n/).test(dataLib)
             ) {
                 rgx = (/^[\S\s]*?$/);
             }
             dataLib = dataLib.replace(rgx, function (match0) {
-                return match0.replace((/\n\n+?( *?[)\]}])/g), "\n$1");
+                return match0.replace((/\n\n+?(\u0020*?[)\]}])/g), "\n$1");
             });
         });
         // save dataLib
@@ -3982,11 +3982,11 @@ local.buildLib = function (options, onError) {
         );
         // comment dataLib
         dataLib = dataLib
-        .replace((/^ *?\/\*[\S\s]*?\*\//gm), "")
-        .replace((/^ *?(?:\/\/.*?|.*?\\)$/gm), "");
+        .replace((/^\u0020*?\/\*[\S\s]*?\*\//gm), "")
+        .replace((/^\u0020*?(?:\/\/.*?|.*?\\)$/gm), "");
         // local-function - update dictFnc and dictProp
         dataLib.replace((
-            /\blocal\.(\w+?\b)(?: (===|=|\|\|)(?: "function" && local\.\w| |$))?/gm
+            /\blocal\.(\w+?\b)(?:\u0020(===|=|\|\|)(?:\u0020"function"\u0020&&\u0020local\.\w|\u0020|$))?/gm
         ), function (ignore, match1, match2) {
             switch (match2) {
             case "=":
@@ -4054,10 +4054,10 @@ local.buildReadme = function (options, onError) {
         customize: local.nop,
         // reset toc
         dataFrom: local.fsReadFileOrEmptyStringSync("README.md", "utf8").replace(
-            (/\n# table of contents$[\S\s]*?\n\n\n\n/m),
+            (/\n#\u0020table\u0020of\u0020contents$[\S\s]*?\n\n\n\n/m),
             "\n# table of contents\n\n\n\n"
         ),
-        packageJsonRgx: (/\n# package.json\n```json\n([\S\s]*?)\n```\n/)
+        packageJsonRgx: (/\n#\u0020package.json\n```json\n([\S\s]*?)\n```\n/)
     });
     // render dataTo
     options.dataTo = local.templateRenderMyApp(
@@ -4067,7 +4067,7 @@ local.buildReadme = function (options, onError) {
     // init package.json
     options.dataFrom.replace(options.packageJsonRgx, function (match0, match1) {
         // remove null-items from package.json
-        options.packageJson = JSON.parse(match1.replace((/ {4}".*?": null,?$/gm), ""));
+        options.packageJson = JSON.parse(match1.replace((/\u0020{4}".*?":\u0020null,?$/gm), ""));
         options.packageJson.description = options.dataFrom.split("\n")[1];
         local.tryCatchOnError(function () {
             local.objectSetDefault(options.packageJson, {
@@ -4121,21 +4121,21 @@ local.buildReadme = function (options, onError) {
         // customize name and description
         (/.*?\n.*?\n/),
         // customize cdn-download
-        (/\n# cdn download\n[\S\s]*?\n\n\n\n/),
+        (/\n#\u0020cdn\u0020download\n[\S\s]*?\n\n\n\n/),
         // customize live web demo
-        (/\n# live web demo\n[\S\s]*?\n\n\n\n/),
+        (/\n#\u0020live\u0020web\u0020demo\n[\S\s]*?\n\n\n\n/),
         // customize to-do
-        (/\n#### todo\n[\S\s]*?\n\n\n\n/),
+        (/\n####\u0020todo\n[\S\s]*?\n\n\n\n/),
         // customize quickstart-example-js
-        (/\nlocal\.global\.local = local;\n[^`]*?\n\/\/ run browser js\-env code - init-test\n/),
-        (/\nlocal\.testRunBrowser = function \(event\) \{\n[^`]*?^ {4}if \(!event \|\| \(event &&\n/m),
-        (/\n {4}\/\/ custom-case\n[^`]*?\n {4}\}\n/),
+        (/\nlocal\.global\.local\u0020=\u0020local;\n[^`]*?\n\/\/\u0020run\u0020browser\u0020js\-env\u0020code\u0020-\u0020init-test\n/),
+        (/\nlocal\.testRunBrowser\u0020=\u0020function\u0020\(event\)\u0020\{\n[^`]*?^\u0020{4}if\u0020\(!event\u0020\|\|\u0020\(event\u0020&&\n/m),
+        (/\n\u0020{4}\/\/\u0020custom-case\n[^`]*?\n\u0020{4}\}\n/),
         // customize quickstart-html-body
-        (/\nutility2-comment -->(?:\\n\\\n){4}[^`]*?^<!-- utility2-comment\\n\\\n/m),
+        (/\nutility2-comment\u0020-->(?:\\n\\\n){4}[^`]*?^<!--\u0020utility2-comment\\n\\\n/m),
         // customize build script
-        (/\n# internal build script\n[\S\s]*?^- build_ci\.sh\n/m),
-        (/\nshBuildCiAfter \(\) \{\(set -e\n[\S\s]*?\n\)\}\n/),
-        (/\nshBuildCiBefore \(\) \{\(set -e\n[\S\s]*?\n\)\}\n/)
+        (/\n#\u0020internal\u0020build\u0020script\n[\S\s]*?^-\u0020build_ci\.sh\n/m),
+        (/\nshBuildCiAfter\u0020\(\)\u0020\{\(set\u0020-e\n[\S\s]*?\n\)\}\n/),
+        (/\nshBuildCiBefore\u0020\(\)\u0020\{\(set\u0020-e\n[\S\s]*?\n\)\}\n/)
     ].forEach(function (rgx) {
         options.dataTo = local.stringMerge(options.dataTo, options.dataFrom, rgx);
     });
@@ -4154,7 +4154,7 @@ local.buildReadme = function (options, onError) {
     // customize version
     ["dataFrom", "dataTo"].forEach(function (element) {
         options[element] = options[element].replace((
-            /\n(#### changelog |- npm publish )\d+?\.\d+?\.\d+?.*?\n/g
+            /\n(####\u0020changelog\u0020|-\u0020npm\u0020publish\u0020)\d+?\.\d+?\.\d+?.*?\n/g
         ), "\n$1" + options.packageJson.version + "\n");
     });
     // customize swaggerdoc
@@ -4164,7 +4164,7 @@ local.buildReadme = function (options, onError) {
         || local.env.npm_package_name === "utility2"
     ) {
         options.dataTo = options.dataTo.replace(
-            (/\n#### swagger doc\n[\S\s]*?\n#### /),
+            (/\n####\u0020swagger\u0020doc\n[\S\s]*?\n####\u0020/),
             "\n#### "
         );
     }
@@ -4174,13 +4174,13 @@ local.buildReadme = function (options, onError) {
         .indexOf("<script src=\"assets.example.js\"></script>") < 0
     ) {
         options.dataTo = options.dataTo.replace(
-            (/\nif \(!local\.isBrowser\) \{\n[\S\s]*?\n\}\(\)\);\n/g),
+            (/\nif\u0020\(!local\.isBrowser\)\u0020\{\n[\S\s]*?\n\}\(\)\);\n/g),
             "\nif (!local.isBrowser) {\n    return;\n}\n}());\n"
         );
     }
     // customize comment
     options.dataFrom.replace((
-        /^( *?)(?:#\!\! |#\/\/ |\/\/\!\! |<!-- )(.*?)(?: -->)?$/gm
+        /^(\u0020*?)(?:#\!\!\u0020|#\/\/\u0020|\/\/\!\!\u0020|<!--\u0020)(.*?)(?:\u0020-->)?$/gm
     ), function (match0, match1, match2) {
         options.dataTo = options.dataTo.replace(
             "\n" + match1 + match2 + "\n",
@@ -4190,12 +4190,14 @@ local.buildReadme = function (options, onError) {
     // customize - user-defined
     options.customize(options);
     // customize assets.index.template.html
-    if (
-        local.assetsDict["/assets.index.template.html"]
-        .indexOf("\"assets.utility2.template.html\"") < 0
-    ) {
+    if (local.assetsDict["/assets.index.template.html"]
+    .indexOf("\"assets.utility2.template.html\"") < 0) {
         options.dataTo = options.dataTo.replace(
-            (/\n\/\* jslint ignore:start \*\/\nlocal.assetsDict\["\/assets.index.template.html"\] = '\\\n[\S\s]*?\n\/\* jslint ignore:end \*\/\n/),
+            new RegExp(
+                "\\n {8}\\/\\* jslint ignore:start \\*\\/\\n"
+                + " {8}local.assetsDict\\[\"\\/assets.index.template.html\"\\] = '\\\\\\n"
+                + "[\\S\\s]*?\\n {8}\\/\\* jslint ignore:end \\*\\/\\n"
+            ),
             "\n"
         );
     }
@@ -4203,9 +4205,9 @@ local.buildReadme = function (options, onError) {
     if (options.dataFrom.indexOf("    shDeployCustom\n") >= 0) {
         [
             // customize quickstart
-            (/\n#### changelog [\S\s]*\n# quickstart example.js\n/),
+            (/\n####\u0020changelog\u0020[\S\s]*\n#\u0020quickstart\u0020example.js\n/),
             options.dataFrom.indexOf("\"assets.utility2.template.html\"") < 0
-                    && (/\n# quickstart [\S\s]*?\n# extra screenshots\n/)
+                    && (/\n#\u0020quickstart\u0020[\S\s]*?\n#\u0020extra\u0020screenshots\n/)
         ].forEach(function (rgx) {
             options.dataTo = local.stringMerge(options.dataTo, options.dataFrom, rgx);
         });
@@ -4262,12 +4264,12 @@ local.buildReadme = function (options, onError) {
     options.dataTo = local.templateRenderMyApp(options.dataTo, options);
     // customize toc
     options.toc = "\n# table of contents\n";
-    options.dataTo.replace(/\n\n\n\n# (.*)/g, function (ignore, match1) {
+    options.dataTo.replace(/\n\n\n\n#\u0020(.*)/g, function (ignore, match1) {
         if (match1 === "table of contents") {
             return;
         }
         options.toc += "1. [" + match1 + "](#" + match1.toLowerCase()
-        .replace(/[^ \-0-9A-Z_a-z]/g, "").replace(/ /g, "-") + ")\n";
+        .replace(/[^\u0020\-0-9A-Z_a-z]/g, "").replace(/\u0020/g, "-") + ")\n";
     });
     options.dataTo = options.dataTo.replace("\n# table of contents\n", options.toc);
     // normalize whitespace
@@ -4316,7 +4318,7 @@ local.buildTest = function (options, onError) {
     // search-and-replace - customize dataTo
     [
         // customize shared js\-env code - function
-        (/\n\}\(\)\);\n\n\n\n\/\/ run shared js\-env code - function\n[\S\s]*?$/)
+        (/\n\}\(\)\);\n\n\n\n\/\/\u0020run\u0020shared\u0020js\-env\u0020code\u0020-\u0020function\n[\S\s]*?$/)
     ].forEach(function (rgx) {
         options.dataTo = local.stringMerge(options.dataTo, options.dataFrom, rgx);
     });
@@ -4491,7 +4493,7 @@ local.cliRun = function (options) {
             }
             return element.description + "\n  " + file
                     + ("  " + element.command.sort().join("|") + "  ")
-                    .replace((/^ {4}$/), "  ")
+                    .replace((/^\u0020{4}$/), "  ")
                     + element.argList.join("  ");
         })
         .join("\n\n"));
@@ -4737,7 +4739,7 @@ local.domStyleValidate = function () {
     ).map(function (element, ii) {
         element.innerHTML
         .replace((/\/\*[\S\s]*?\*\/|;|\}/g), "\n")
-        .replace((/^([^\n @].*?)[,{:].*?$/gm), function (match0, match1) {
+        .replace((/^([^\n\u0020@].*?)[,{:].*?$/gm), function (match0, match1) {
             ii = document.querySelectorAll(match1).length;
             if (!(ii > 1)) {
                 tmp.push(ii + " " + match0);
@@ -4873,10 +4875,10 @@ local.jslintAndPrintConditional = function (script, file, mode) {
         }
         break;
     case ".sh":
-        if (file.slice(0, 4) !== "raw." && (/^# jslint utility2:true$/m).test(scriptParsed)) {
+        if (file.slice(0, 4) !== "raw." && (/^#\u0020jslint\u0020utility2:true$/m).test(scriptParsed)) {
             // local-function - ignore shell-escapes
             scriptParsed = scriptParsed.replace(
-                (/^local\.(\w+) = function \([\S\s]*?\n\};\n/gm),
+                (/^local\.(\w+)\u0020=\u0020function\u0020\([\S\s]*?\n\};\n/gm),
                 function (match0, match1) {
                     return typeof local[match1] === "function"
                     ? match0.replace((/.*?\n/g), "//\n")
@@ -4905,14 +4907,14 @@ local.jslintAndPrintConditional = function (script, file, mode) {
                     // filter \\n\\
                 .replace((/\\n\\$/gm), "")
                     // filter ' + ... + '\\
-                .replace((/^' \+ .*? \+ '\\$/gm), ""),
+                .replace((/^'\u0020\+\u0020.*?\u0020\+\u0020'\\$/gm), ""),
                 file + ".css"
             );
         }
     );
     // recurse - jslint <script>...</script>
     scriptParsed.replace((
-        /^(?:\/\/ )?<script>(?:\\n\\)?\n([\S\s]*?)\n(?:\/\/ )?<\/script>(?:\\n\\)?$/gm
+        /^(?:\/\/\u0020)?<script>(?:\\n\\)?\n([\S\s]*?)\n(?:\/\/\u0020)?<\/script>(?:\\n\\)?$/gm
     ), function (ignore, match1, ii, text) {
         local.jslintAndPrintConditional(
             // preserve lineno
@@ -4920,7 +4922,7 @@ local.jslintAndPrintConditional = function (script, file, mode) {
                 // filter \\n\\
             .replace((/\\n\\$/gm), "")
                 // filter ' + ... + '\\
-            .replace((/^' \+ .*? \+ '\\$/gm), ""),
+            .replace((/^'\u0020\+\u0020.*?\u0020\+\u0020'\\$/gm), ""),
             file + ".js",
             mode
         );
@@ -6249,7 +6251,7 @@ local.requireReadme = function () {
             ) || local.templateRender(
                 // uncomment utility2-comment
                 local.assetsDict["/" + tmp].replace(
-                    (/<!-- utility2-comment\b([\S\s]*?)\butility2-comment -->/g),
+                    (/<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g),
                     "$1"
                 ),
                 {env: local.env, isRollup: isRollup}
@@ -6906,7 +6908,7 @@ local.templateRender = function (template, dict, options) {
         }
     };
     // render partials
-    rgx = (/\{\{#(\w+) ([^}]+?)\}\}/g);
+    rgx = (/\{\{#(\w+)\u0020([^}]+?)\}\}/g);
     template = template || "";
     match = rgx.exec(template);
     while (match) {
@@ -7410,7 +7412,7 @@ local.testRunDefault = function (options) {
      * this function will ignore serverLog-messages during test-run
      */
         /* istanbul ignore next */
-        if (!local.global.__coverage__ && !(/^serverLog - \{/).test(arg0)) {
+        if (!local.global.__coverage__ && !(/^serverLog\u0020-\u0020\{/).test(arg0)) {
             local._testRunConsoleError.apply(console, arguments);
         }
     };
@@ -8026,7 +8028,7 @@ local.regexpValidateEmail = new RegExp(
 );
 // https://en.wikipedia.org/wiki/E.164
 local.regexpValidatePhone = (
-    /^(?:\+\d{1,3}[ \-]?)?(?:\(\d{1,4}\)[ \-]?)?\d[\d \-]{7,17}$/
+    /^(?:\+\d{1,3}[\u0020\-]?)?(?:\(\d{1,4}\)[\u0020\-]?)?\d[\d\u0020\-]{7,17}$/
 );
 local.regexpValidateUuid =
         (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
@@ -8208,7 +8210,7 @@ if (local.global.utility2_rollup) {
         local.assetsDict[key] = "";
         local.tryCatchOnError(function () {
             local.fs.readFileSync(__dirname + "/README.md", "utf8").replace((
-                /<!doctype html>[\S\s]*?<\/html>\\n\\\n/
+                /<!doctype\u0020html>[\S\s]*?<\/html>\\n\\\n/
             ), function (match0) {
                 local.assetsDict[key] = local.templateRender(match0
                 .replace((/\\n\\$/gm), "")
@@ -8223,7 +8225,7 @@ if (local.global.utility2_rollup) {
                 .replace((/npm_package_/g), "")
                     // uncomment utility2-comment
                 .replace(
-                    (/<!-- utility2-comment\b([\S\s]*?)\butility2-comment -->/g),
+                    (/<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g),
                     "$1"
                 ), {
                     env: local.objectSetDefault({

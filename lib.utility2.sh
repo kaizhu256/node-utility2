@@ -2522,7 +2522,7 @@ local.ajax = function (options, onError) {
             // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders
             if (xhr.getAllResponseHeaders) {
                 xhr.getAllResponseHeaders().replace((
-                    /(.*?): *(.*?)\\r\\n/g
+                    /(.*?):\\u0020*(.*?)\\r\\n/g
                 ), function (ignore, match1, match2) {
                     xhr.responseHeaders[match1.toLowerCase()] = match2;
                 });
@@ -3799,7 +3799,7 @@ var dict;
     "use strict";
     dict = {};
     require("fs").readFileSync(process.argv[1], "utf8").replace((
-        / UNMET PEER DEPENDENCY (\S+)/g
+        /\u0020UNMET\u0020PEER\u0020DEPENDENCY\u0020(\S+)/g
     ), function (ignore, match1) {
         match1 = match1.split("@");
         dict[match1[0]] = dict[match1[0]] || (match1[1] || "").trim();

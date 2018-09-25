@@ -251,7 +251,7 @@ local.testCase_ajax_echo = function (options, onError) {
         // validate response
         local.assert((/\r\naa$/).test(xhr.responseText), xhr.responseText);
         local.assert(
-            (/\r\nx-request-header-test: aa\r\n/).test(xhr.responseText),
+            (/\r\nx-request-header-test:\u0020aa\r\n/).test(xhr.responseText),
             xhr.responseText
         );
         // validate responseHeaders
@@ -969,12 +969,12 @@ local.testCase_buildReadme_default = function (options, onError) {
         // search-and-replace - customize dataTo
         [
             // customize quickstart example.js
-            (/# quickstart example.js[\S\s]*?istanbul instrument in package/),
+            (/#\u0020quickstart\u0020example.js[\S\s]*?istanbul\u0020instrument\u0020in\u0020package/),
             // customize quickstart-footer
-            (/>download standalone app<[^`]*?"utility2FooterDiv"/),
-            (/```[^`]*?\n# extra screenshots/),
+            (/>download\u0020standalone\u0020app<[^`]*?"utility2FooterDiv"/),
+            (/```[^`]*?\n#\u0020extra\u0020screenshots/),
             // customize build-script
-            (/# run shBuildCi[^`]*?```/)
+            (/#\u0020run\u0020shBuildCi[^`]*?```/)
         ].forEach(function (rgx) {
             options.dataFrom.replace(rgx, function (match0) {
                 options.dataTo = options.dataTo.replace(rgx, match0);
