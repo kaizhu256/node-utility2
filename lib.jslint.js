@@ -19,246 +19,255 @@
 */
 /*global global*/
 (function () {
-    "use strict";
-    var local;
+"use strict";
+var local;
 
 
 
-    /* istanbul ignore next */
-    // run shared js-env code - init-before
-    (function () {
-        // init debug_inline
-        (function () {
-            var consoleError, context;
-            consoleError = console.error;
-            context = (typeof window === "object" && window) || global;
-            context["debug\u0049nline"] = context["debug\u0049nline"] || function (arg0) {
-            /*
-             * this function will both print arg0 to stderr and return it
-             */
-                // debug arguments
-                context["debug\u0049nlineArguments"] = arguments;
-                consoleError("\n\ndebug\u0049nline");
-                consoleError.apply(console, arguments);
-                consoleError(new Error().stack + "\n");
-                // return arg0 for inspection
-                return arg0;
-            };
-        }());
-        // init local
-        local = {};
-        // init isBrowser
-        local.isBrowser = typeof window === "object" &&
-                typeof window.XMLHttpRequest === "function" &&
-                window.document &&
-                typeof window.document.querySelectorAll === "function";
-        // init global
-        local.global = local.isBrowser
-        ? window
-        : global;
-        // re-init local
-        local = local.global.utility2_rollup ||
-                // local.global.utility2_rollup_old || require("./assets.utility2.rollup.js") ||
-                local;
-        // init exports
-        if (local.isBrowser) {
-            local.global.utility2_jslint = local;
-        } else {
-            // require builtins
-            // local.assert = require("assert");
-            local.buffer = require("buffer");
-            local.child_process = require("child_process");
-            local.cluster = require("cluster");
-            local.crypto = require("crypto");
-            local.dgram = require("dgram");
-            local.dns = require("dns");
-            local.domain = require("domain");
-            local.events = require("events");
-            local.fs = require("fs");
-            local.http = require("http");
-            local.https = require("https");
-            local.net = require("net");
-            local.os = require("os");
-            local.path = require("path");
-            local.querystring = require("querystring");
-            local.readline = require("readline");
-            local.repl = require("repl");
-            local.stream = require("stream");
-            local.string_decoder = require("string_decoder");
-            local.timers = require("timers");
-            local.tls = require("tls");
-            local.tty = require("tty");
-            local.url = require("url");
-            local.util = require("util");
-            local.vm = require("vm");
-            local.zlib = require("zlib");
-            module.exports = local;
-            module.exports.__dirname = __dirname;
-        }
-        // init lib main
-        local.local = local;
-        local.jslint = local;
+/* istanbul ignore next */
+// run shared js-env code - init-before
+(function () {
 
 
 
-        /* validateLineSortedReset */
-        local.cliRun = function (options) {
-        /*
-         * this function will run the cli
-         */
-            local.cliDict._eval = local.cliDict._eval || function () {
-            /*
-             * <code>
-             * will eval <code>
-             */
-                global.local = local;
-                local.vm.runInThisContext(process.argv[3]);
-            };
-            local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
-            local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
-            local.cliDict._help = local.cliDict._help || function () {
-            /*
-             *
-             * will print help
-             */
-                var commandList;
-                var file;
-                var packageJson;
-                var text;
-                var textDict;
-                commandList = [{
-                    argList: "<arg2>  ...",
-                    description: "usage:",
-                    command: ["<arg1>"]
-                }, {
-                    argList: "'console.log(\"hello world\")'",
-                    description: "example:",
-                    command: ["--eval"]
-                }];
-                file = __filename.replace((/.*\//), "");
-                options = Object.assign({}, options);
-                packageJson = require("./package.json");
-                // validate comment
-                options.rgxComment = options.rgxComment || new RegExp(
-                    "\\) \\{\\n" +
-                    "(?: {8}| {12})\\/\\*\\n" +
-                    "(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n" +
-                    "(?: {9}| {13})\\* (will .*?\\S)\\n" +
-                    "(?: {9}| {13})\\*\\/\\n" +
-                    "(?: {12}| {16})\\S"
+// init debug_inline
+(function () {
+    var consoleError, context;
+    consoleError = console.error;
+    context = (typeof window === "object" && window) || global;
+    context["debug\u0049nline"] = context["debug\u0049nline"] || function (arg0) {
+    /*
+     * this function will both print arg0 to stderr and return it
+     */
+        // debug arguments
+        context["debug\u0049nlineArguments"] = arguments;
+        consoleError("\n\ndebug\u0049nline");
+        consoleError.apply(console, arguments);
+        consoleError(new Error().stack + "\n");
+        // return arg0 for inspection
+        return arg0;
+    };
+}());
+// init local
+local = {};
+// init isBrowser
+local.isBrowser = (
+    typeof window === "object"
+    && typeof window.XMLHttpRequest === "function"
+    && window.document
+    && typeof window.document.querySelectorAll === "function"
+);
+// init global
+local.global = local.isBrowser
+? window
+: global;
+// re-init local
+local = (
+    local.global.utility2_rollup
+    // || local.global.utility2_rollup_old || require("./assets.utility2.rollup.js")
+    || local
+);
+// init exports
+if (local.isBrowser) {
+    local.global.utility2_jslint = local;
+} else {
+    // require builtins
+    // local.assert = require("assert");
+    local.buffer = require("buffer");
+    local.child_process = require("child_process");
+    local.cluster = require("cluster");
+    local.crypto = require("crypto");
+    local.dgram = require("dgram");
+    local.dns = require("dns");
+    local.domain = require("domain");
+    local.events = require("events");
+    local.fs = require("fs");
+    local.http = require("http");
+    local.https = require("https");
+    local.net = require("net");
+    local.os = require("os");
+    local.path = require("path");
+    local.querystring = require("querystring");
+    local.readline = require("readline");
+    local.repl = require("repl");
+    local.stream = require("stream");
+    local.string_decoder = require("string_decoder");
+    local.timers = require("timers");
+    local.tls = require("tls");
+    local.tty = require("tty");
+    local.url = require("url");
+    local.util = require("util");
+    local.vm = require("vm");
+    local.zlib = require("zlib");
+    module.exports = local;
+    module.exports.__dirname = __dirname;
+}
+// init lib main
+local.local = local;
+local.jslint = local;
+
+
+
+/* validateLineSortedReset */
+local.cliRun = function (options) {
+/*
+ * this function will run the cli
+ */
+    local.cliDict._eval = local.cliDict._eval || function () {
+    /*
+     * <code>
+     * will eval <code>
+     */
+        global.local = local;
+        local.vm.runInThisContext(process.argv[3]);
+    };
+    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
+    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
+    local.cliDict._help = local.cliDict._help || function () {
+    /*
+     *
+     * will print help
+     */
+        var commandList;
+        var file;
+        var packageJson;
+        var text;
+        var textDict;
+        commandList = [{
+            argList: "<arg2>  ...",
+            description: "usage:",
+            command: ["<arg1>"]
+        }, {
+            argList: "'console.log(\"hello world\")'",
+            description: "example:",
+            command: ["--eval"]
+        }];
+        file = __filename.replace((/.*\//), "");
+        options = Object.assign({}, options);
+        packageJson = require("./package.json");
+        // validate comment
+        options.rgxComment = options.rgxComment || new RegExp(
+            "\\) \\{\\n"
+            + "(?:| {4})\\/\\*\\n"
+            + "(?: | {5})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n"
+            + "(?: | {5})\\* (will .*?\\S)\\n"
+            + "(?: | {5})\\*\\/\\n"
+            + "(?: {4}| {8})\\S"
+        );
+        textDict = {};
+        Object.keys(local.cliDict).sort().forEach(function (key, ii) {
+            if (key[0] === "_" && key !== "_default") {
+                return;
+            }
+            text = String(local.cliDict[key]);
+            if (key === "_default") {
+                key = "";
+            }
+            textDict[text] = textDict[text] || (ii + 2);
+            ii = textDict[text];
+            if (commandList[ii]) {
+                commandList[ii].command.push(key);
+                return;
+            }
+            try {
+                commandList[ii] = options.rgxComment.exec(text);
+                commandList[ii] = {
+                    argList: (commandList[ii][1] || "").trim(),
+                    command: [key],
+                    description: commandList[ii][2]
+                };
+            } catch (ignore) {
+                throw new Error(
+                    "cliRun - cannot parse comment in COMMAND "
+                    + key + ":\nnew RegExp(" + JSON.stringify(options.rgxComment.source)
+                    + ").exec(" + JSON.stringify(text)
+                    .replace((/\\\\/g), "\u0000")
+                    .replace((/\\n/g), "\\n\\\n")
+                    .replace((/\u0000/g), "\\\\") + ");"
                 );
-                textDict = {};
-                Object.keys(local.cliDict).sort().forEach(function (key, ii) {
-                    if (key[0] === "_" && key !== "_default") {
-                        return;
-                    }
-                    text = String(local.cliDict[key]);
-                    if (key === "_default") {
-                        key = "";
-                    }
-                    textDict[text] = textDict[text] || (ii + 2);
-                    ii = textDict[text];
-                    if (commandList[ii]) {
-                        commandList[ii].command.push(key);
-                        return;
-                    }
-                    try {
-                        commandList[ii] = options.rgxComment.exec(text);
-                        commandList[ii] = {
-                            argList: (commandList[ii][1] || "").trim(),
-                            command: [key],
-                            description: commandList[ii][2]
-                        };
-                    } catch (ignore) {
-                        throw new Error(
-                            "cliRun - cannot parse comment in COMMAND " +
-                            key + ":\nnew RegExp(" + JSON.stringify(options.rgxComment.source) +
-                            ").exec(" + JSON.stringify(text)
-                            .replace((/\\\\/g), "\u0000")
-                            .replace((/\\n/g), "\\n\\\n")
-                            .replace((/\u0000/g), "\\\\") + ");"
-                        );
-                    }
-                });
-                console.log(packageJson.name + " (" + packageJson.version + ")\n\n" + commandList
-                .filter(function (element) {
-                    return element;
-                })
-                .map(function (element, ii) {
-                    element.command = element.command.filter(function (element) {
-                        return element;
-                    });
-                    switch (ii) {
-                    case 0:
-                    case 1:
-                        element.argList = [element.argList];
-                        break;
-                    default:
-                        element.argList = element.argList.split(" ");
-                        element.description = "# COMMAND " +
-                                (element.command[0] || "<none>") + "\n# " +
-                                element.description;
-                    }
-                    return element.description + "\n  " + file +
-                            ("  " + element.command.sort().join("|") + "  ")
-                            .replace((/^\u0020{4}$/), "  ") +
-                            element.argList.join("  ");
-                })
-                .join("\n\n"));
-            };
-            local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
-            local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
-            local.cliDict._default = local.cliDict._default || local.cliDict._help;
-            local.cliDict.help = local.cliDict.help || local.cliDict._help;
-            local.cliDict._interactive = local.cliDict._interactive || function () {
-            /*
-             *
-             * will start interactive-mode
-             */
-                global.local = local;
-                (local.replStart || require("repl").start)({useGlobal: true});
-            };
-            local.cliDict["--interactive"] = local.cliDict["--interactive"] ||
-                    local.cliDict._interactive;
-            local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
-            local.cliDict._version = local.cliDict._version || function () {
-            /*
-             *
-             * will print version
-             */
-                console.log(require(__dirname + "/package.json").version);
-            };
-            local.cliDict["--version"] = local.cliDict["--version"] || local.cliDict._version;
-            local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
-            // default to --help command if no arguments are given
-            if (process.argv.length <= 2) {
-                local.cliDict._help();
-                return;
             }
-            if (local.cliDict[process.argv[2]]) {
-                local.cliDict[process.argv[2]]();
-                return;
+        });
+        console.log(packageJson.name + " (" + packageJson.version + ")\n\n" + commandList
+        .filter(function (element) {
+            return element;
+        })
+        .map(function (element, ii) {
+            element.command = element.command.filter(function (element) {
+                return element;
+            });
+            switch (ii) {
+            case 0:
+            case 1:
+                element.argList = [element.argList];
+                break;
+            default:
+                element.argList = element.argList.split(" ");
+                element.description = "# COMMAND "
+                        + (element.command[0] || "<none>") + "\n# "
+                        + element.description;
             }
-            local.cliDict._default();
-        };
+            return element.description + "\n  " + file
+                    + ("  " + element.command.sort().join("|") + "  ")
+                    .replace((/^\u0020{4}$/), "  ")
+                    + element.argList.join("  ");
+        })
+        .join("\n\n"));
+    };
+    local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
+    local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
+    local.cliDict._default = local.cliDict._default || local.cliDict._help;
+    local.cliDict.help = local.cliDict.help || local.cliDict._help;
+    local.cliDict._interactive = local.cliDict._interactive || function () {
+    /*
+     *
+     * will start interactive-mode
+     */
+        global.local = local;
+        (local.replStart || require("repl").start)({useGlobal: true});
+    };
+    local.cliDict["--interactive"] = local.cliDict["--interactive"]
+            || local.cliDict._interactive;
+    local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
+    local.cliDict._version = local.cliDict._version || function () {
+    /*
+     *
+     * will print version
+     */
+        console.log(require(__dirname + "/package.json").version);
+    };
+    local.cliDict["--version"] = local.cliDict["--version"] || local.cliDict._version;
+    local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
+    // default to --help command if no arguments are given
+    if (process.argv.length <= 2) {
+        local.cliDict._help();
+        return;
+    }
+    if (local.cliDict[process.argv[2]]) {
+        local.cliDict[process.argv[2]]();
+        return;
+    }
+    local.cliDict._default();
+};
 
-        local.onErrorDefault = function (error) {
-        /*
-         * this function will if error exists, then print it to stderr
-         */
-            if (error) {
-                console.error(error);
-            }
-            return error;
-        };
-    }());
+local.onErrorDefault = function (error) {
+/*
+ * this function will if error exists, then print it to stderr
+ */
+    if (error) {
+        console.error(error);
+    }
+    return error;
+};
+}());
 
 
 
-    /* istanbul ignore next */
-    // run shared js-env code - function
-    (function () {
-/* jslint-indent-offset 8 */
+/* istanbul ignore next */
+// run shared js-env code - function
+(function () {
+
+
+
 /*
 file CSSLint/csslint.js
 2016-12-06T08:50:07Z - shGithubDateCommitted https://github.com/CSSLint/csslint/commits/v1.0.5
@@ -1684,21 +1693,19 @@ local.CSSLint = CSSLint;
 
 
 // jslint-hack - let
-let indent_offset;
 let jslint_result;
 let line_ignore;
 let lines_extra;
 let next_line_extra;
 let warn_at_extra;
-let warnings_remove_too_long;
 /*
 file JSLint/jslint.js - es6
-2018-09-17T16:16:43Z - shGithubDateCommitted https://github.com/douglascrockford/JSLint/commits/4a03abbd80bab8cb79c079449dcbe95393be538c
-https://github.com/douglascrockford/JSLint/blob/4a03abbd80bab8cb79c079449dcbe95393be538c/jslint.js
-curl https://raw.githubusercontent.com/douglascrockford/JSLint/4a03abbd80bab8cb79c079449dcbe95393be538c/jslint.js > /tmp/aa.js
+2018-09-24T16:19:19Z - shGithubDateCommitted https://github.com/douglascrockford/JSLint/commits/ef932a5130322295d7ae871113ff55ecb97edcfa
+https://github.com/douglascrockford/JSLint/blob/ef932a5130322295d7ae871113ff55ecb97edcfa/jslint.js
+curl https://raw.githubusercontent.com/douglascrockford/JSLint/ef932a5130322295d7ae871113ff55ecb97edcfa/jslint.js > /tmp/aa.js
 */
 // jslint.js
-// 2018-09-17
+// 2018-09-24
 // Copyright (c) 2015 Douglas Crockford  (www.JSLint.com)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -2282,15 +2289,16 @@ function tokenize(source) {
     let prior = global;         // the previous token excluding comments
     let mega_from;              // the starting column of megastring
     let mega_line;              // the starting line of megastring
+    let regexp_seen;            // regular expression literal seen on this line
     let snippet;                // a piece of string
-    let source_line;            // the current line source string
+    let source_line = "";       // the remaining line source string
+    let whole_line = "";        // the whole line source string
 
     if (lines[0].startsWith("#!")) {
         line = 0;
         shebang = true;
     }
     // jslint-hack - init
-    indent_offset = 0;
     line_ignore = null;
     lines_extra = lines.map(function () {
         return {};
@@ -2303,13 +2311,28 @@ function tokenize(source) {
 // unsafe characters or is too damn long.
 
         let at;
+        if (
+            !option.long
+            // jslint-hack - 100
+            && whole_line.length > (
+                option.utility2
+                ? 100
+                : 80
+            )
+            && !json_mode
+            && first
+            && !regexp_seen
+        ) {
+            warn_at("too_long", line, 80);
+        }
         column = 0;
         line += 1;
-        source_line = lines[line];
+        regexp_seen = false;
+        whole_line = lines[line];
+        source_line = whole_line;
         if (source_line !== undefined) {
             // jslint-hack - next_line_extra
             source_line = next_line_extra(source_line, line);
-            column += indent_offset;
             at = source_line.search(rx_tab);
             if (at >= 0) {
                 if (!option.white) {
@@ -2332,19 +2355,6 @@ function tokenize(source) {
                     line,
                     source_line.length - 1
                 );
-            }
-            if (
-                !option.long
-                // jslint-hack - 100
-                && source_line.length > (
-                    option.utility2
-                    ? 100
-                    : 80
-                )
-                && !json_mode
-                && first
-            ) {
-                warn_at("too_long", line, 80);
             }
         }
         return source_line;
@@ -2589,13 +2599,6 @@ function tokenize(source) {
 // Make a comment object. Comments are not allowed in JSON text. Comments can
 // include directives and notices of incompletion.
 
-        // jslint-hack - warnings_remove_too_long
-        warnings_remove_too_long(
-            typeof snippet === "string"
-            ? line
-            : line - snippet.length + 1,
-            line
-        );
         const the_comment = make("(comment)", snippet);
         if (Array.isArray(snippet)) {
             snippet = snippet.join(" ");
@@ -2620,11 +2623,10 @@ function tokenize(source) {
 
 // Parse a regular expression literal.
 
-        // jslint-hack - warnings_remove_too_long
-        warnings_remove_too_long(line, line);
         let multi_mode = false;
         let result;
         let value;
+        regexp_seen = true;
 
         function quantifier() {
 
@@ -3111,6 +3113,8 @@ function tokenize(source) {
 // The token is a // comment.
 
         if (snippet === "//") {
+            // jslint-hack - too_long
+            regexp_seen = true;
             snippet = source_line;
             source_line = "";
             the_token = comment(snippet);
@@ -3139,6 +3143,8 @@ function tokenize(source) {
                     }
                 }
                 array.push(source_line);
+                // jslint-hack - too_long
+                regexp_seen = true;
                 source_line = next_line();
                 if (source_line === undefined) {
                     return stop_at("unclosed_comment", line, column);
@@ -6306,7 +6312,10 @@ function whitage() {
                     if (left.line !== right.line) {
                         free = closer === ")" && left.free;
                         open = true;
-                        margin += 4;
+                        // jslint-hack - indent
+                        if (!option.utility2 || lines[right.line].startsWith(" ")) {
+                            margin += 4;
+                        }
                         if (right.role === "label") {
                             if (right.from !== 0) {
                                 expected_at(0);
@@ -6639,7 +6648,7 @@ function jslint(
     }
     return {
         directives,
-        edition: "2018-09-17",
+        edition: "2018-09-24",
         exports,
         froms,
         functions,
@@ -6680,10 +6689,13 @@ next_line_extra = function (source_line, line) {
  * this function will run with extra-features inside jslint-function next_line()
  */
     let line_extra, tmp;
+    line_extra = {};
+    line_extra.line = line;
+    line_extra.source = lines[line];
+    lines_extra[line] = line_extra;
     tmp = (
         source_line.match(/^\u0020*?\/\*\u0020jslint\u0020(ignore:start|ignore:end|utility2:true)\u0020\*\/$/m)
-        || source_line.match(/^\u0020*?\/\*\u0020jslint-(indent-offset)\u0020(\d+)\u0020?\*\/$/m)
-        || source_line.slice(-100).match(/\u0020\/\/\u0020jslint\u0020(ignore:line)$/m)
+        || source_line.slice(-50).match(/\u0020\/\/\u0020jslint\u0020(ignore:line)$/m)
     );
     switch (tmp && tmp[1]) {
     case "ignore:start":
@@ -6695,19 +6707,11 @@ next_line_extra = function (source_line, line) {
     case "ignore:line":
         line_ignore = "ignore:line";
         break;
-    case "indent-offset":
-        indent_offset = Number(tmp[2]);
-        break;
     case "utility2:true":
         option.utility2 = true;
         break;
     }
-    line_extra = {};
     line_extra.ignore = line_ignore;
-    line_extra.indent_offset = indent_offset;
-    line_extra.line = line;
-    line_extra.source = lines[line];
-    lines_extra[line] = line_extra;
     switch (line_ignore) {
     case true:
         source_line = "";
@@ -6724,12 +6728,6 @@ warn_at_extra = function (warning, warnings, supplant, bundle) {
  */
     let tmp;
     Object.assign(warning, lines_extra[warning.line]);
-    // indent - normalize
-    ["column", "b", "c"].forEach(function (key) {
-        if (typeof warning[key] === "number") {
-            warning[key] = Math.max(warning[key] - warning.indent_offset, 0);
-        }
-    });
     // left, right
     ["c", "d"].forEach(function (key) {
         if (warning[key] === null || warning[key] === undefined) {
@@ -6883,447 +6881,429 @@ warn_at_extra = function (warning, warnings, supplant, bundle) {
     }
     warnings.push(warning);
 };
-warnings_remove_too_long = function (line1, line2) {
+}());
+
+
+
+// run shared js-env code - function
+(function () {
+
+
+
+var jslint;
+jslint = local.jslintEs6;
+
+
+
+local.csslintUtility2 = function (script) {
 /*
- * this function will remove too_long warnings in the inclusive-range [line1, line2]
+ * this function will csslint the script with utility2-specific rules
  */
-    let ii;
-    let warning;
-    // loop backwards in warnings-list to keep index-counter ii invariant,
-    // as we mutate it
-    ii = warnings.length;
-    while (true) {
-        ii -= 1;
-        warning = warnings[ii];
-        // optimization - break early when we move out of range [line1, line2]
-        if (!(warning && warning.line >= line1)) {
-            break;
+    var current1;
+    var current2;
+    var ii;
+    var jj;
+    var message;
+    var previous1;
+    var previous2;
+    // ignore comments
+    script = script.replace((/^\u0020*?\/\*[\S\s]*?\*\/\u0020*?$/gm), function (match0) {
+        if (match0 === "/* validateLineSortedReset */") {
+            return match0;
         }
-        // remove too_long warning in inclusive-range [line1, line2]
-        if (warning.line <= line2 && warnings[ii].code === "too_long") {
-            warnings.splice(ii, 1);
+        // preserve lineno
+        return match0.replace((/^.*?$/gm), "");
+    });
+    ii = 0;
+    current1 = "";
+    current2 = "";
+    previous1 = "";
+    previous2 = "";
+    script.replace((/^.*?$/gm), function (line) {
+        current1 = line;
+        ii += 1;
+        jj = 0;
+        message = "";
+        if (!current1) {
+            return;
         }
-    }
-};
-/* jslint-indent-offset 0 */
-    }());
-
-
-
-    // run shared js-env code - function
-    (function () {
-        var jslint;
-        jslint = local.jslintEs6;
-
-
-
-        local.csslintUtility2 = function (script) {
-        /*
-         * this function will csslint the script with utility2-specific rules
-         */
-            var current1;
-            var current2;
-            var ii;
-            var jj;
-            var message;
-            var previous1;
-            var previous2;
-            // ignore comments
-            script = script.replace((/^\u0020*?\/\*[\S\s]*?\*\/\u0020*?$/gm), function (match0) {
-                if (match0 === "/* validateLineSortedReset */") {
-                    return match0;
-                }
-                // preserve lineno
-                return match0.replace((/^.*?$/gm), "");
-            });
-            ii = 0;
+        // validate whitespace-before-comma
+        if ((/\u0020,/).test(current1)) {
+            jj = jj || ((/\u0020,/).exec(current1).index + 2);
+            message = message || "whitespace-before-comma";
+        }
+        // validate double-whitespace
+        if ((/\S\u0020{2}/).test(current1)) {
+            jj = jj || ((/\S\u0020{2}/).exec(current1).index + 2);
+            message = message || "double-whitespace";
+        }
+        // ignore indent
+        if (!message && current1[0] === " ") {
+            return;
+        }
+        // validate multi-line-statement
+        if ((/[,;{}]./).test(current1)) {
+            jj = jj || ((/[,;{}]./).exec(current1).index + 1);
+            message = message || "multi-line-statement";
+        }
+        // validateLineSortedReset
+        if (current1 === "/* validateLineSortedReset */") {
             current1 = "";
             current2 = "";
             previous1 = "";
             previous2 = "";
-            script.replace((/^.*?$/gm), function (line) {
-                current1 = line;
-                ii += 1;
-                jj = 0;
-                message = "";
-                if (!current1) {
-                    return;
-                }
-                // validate whitespace-before-comma
-                if ((/\u0020,/).test(current1)) {
-                    jj = jj || ((/\u0020,/).exec(current1).index + 2);
-                    message = message || "whitespace-before-comma";
-                }
-                // validate double-whitespace
-                if ((/\S\u0020{2}/).test(current1)) {
-                    jj = jj || ((/\S\u0020{2}/).exec(current1).index + 2);
-                    message = message || "double-whitespace";
-                }
-                // ignore indent
-                if (!message && current1[0] === " ") {
-                    return;
-                }
-                // validate multi-line-statement
-                if ((/[,;{}]./).test(current1)) {
-                    jj = jj || ((/[,;{}]./).exec(current1).index + 1);
-                    message = message || "multi-line-statement";
-                }
-                // validateLineSortedReset
-                if (current1 === "/* validateLineSortedReset */") {
-                    current1 = "";
-                    current2 = "";
-                    previous1 = "";
-                    previous2 = "";
-                    return;
-                }
-                // validate previous1 < current1
-                current1 = current1
-                .replace((/^#/gm), "|")
-                .replace((/,$/gm), "   ,")
-                .replace((/(\u0020\{$|:)/gm), "  $1")
-                .replace((/(^[\w*@]|\u0020\w)/gm), " $1");
-                if (!(previous1 < current1)) {
-                    jj = jj || 1;
-                    message = message ||
-                            ("lines not sorted\n" + previous1 + "\n" + current1).trim();
-                }
-                previous1 = current1;
-                // validate previous2 < current2
-                current2 += current1 + "\n";
-                if (current1 === "}") {
-                    current2 = current2.slice(0, -3);
-                    if (!(previous2 < current2)) {
-                        jj = jj || 1;
-                        message = message ||
-                                ("lines not sorted\n" + previous2 + "\n" + current2)
-                            .replace((/\n\|/g), "\n#")
-                        .trim();
-                    }
-                    previous1 = "";
-                    previous2 = current2;
-                    current2 = "";
-                }
-                if (!message) {
-                    return;
-                }
-                local.errorList.push({col: jj, line: ii, message: message, value: line});
-            });
-        };
+            return;
+        }
+        // validate previous1 < current1
+        current1 = current1
+        .replace((/^#/gm), "|")
+        .replace((/,$/gm), "   ,")
+        .replace((/(\u0020\{$|:)/gm), "  $1")
+        .replace((/(^[\w*@]|\u0020\w)/gm), " $1");
+        if (!(previous1 < current1)) {
+            jj = jj || 1;
+            message = message ||
+                    ("lines not sorted\n" + previous1 + "\n" + current1).trim();
+        }
+        previous1 = current1;
+        // validate previous2 < current2
+        current2 += current1 + "\n";
+        if (current1 === "}") {
+            current2 = current2.slice(0, -3);
+            if (!(previous2 < current2)) {
+                jj = jj || 1;
+                message = message ||
+                        ("lines not sorted\n" + previous2 + "\n" + current2)
+                    .replace((/\n\|/g), "\n#")
+                .trim();
+            }
+            previous1 = "";
+            previous2 = current2;
+            current2 = "";
+        }
+        if (!message) {
+            return;
+        }
+        local.errorList.push({col: jj, line: ii, message: message, value: line});
+    });
+};
 
-        local.jslintAndPrint = function (script, file, options) {
-        /*
-         * this function will jslint / csslint the script and print any errors to stderr
-         */
-            var ii;
-            var jj;
-            var lintType;
-            var message;
-            // init options
-            options = Object.assign({}, options);
-            options.file = file;
-            // cleanup error
-            local.errorList = [];
-            local.errorText = "";
-            // null-case
-            if (!(script && script.length)) {
-                return "";
-            }
-            switch ((/\.\w+?$|$/m).exec(file)[0]) {
-            // csslint script
-            case ".css":
-                lintType = "csslint";
-                local.CSSLint.errors = local.CSSLint.verify(script).messages;
-                local.CSSLint.errors.forEach(function (error) {
-                    error.message = error.type + " - " + error.rule.id + " - " + error.message +
-                            "\n    " + error.rule.desc;
-                    local.errorList.push(error);
-                });
-                break;
-            // shlint script
-            case ".sh":
-                lintType = "shlint";
-                break;
-            // jslint script
-            default:
-                local.result = jslint(script, options);
-                script = local.result.source_autofix || script;
-                local.errorList = local.result.warnings.filter(function (error) {
-                    return error && error.message;
-                }).map(function (error) {
-                    error.col = error.column + 1;
-                    error.evidence = error.source;
-                    error.line = error.line + 1;
-                    return error;
-                });
-            }
-            // jslint the script with utiity2-specific rules
-            if (
-                !local.errorList.length &&
-                (/^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$|^#\u0020jslint\u0020utility2:true$/m).test(script)
-            ) {
-                ii = 0;
-                script
-                    // ignore text-block
-                .replace(
+local.jslintAndPrint = function (script, file, options) {
+/*
+ * this function will jslint / csslint the script and print any errors to stderr
+ */
+    var ii;
+    var jj;
+    var lintType;
+    var message;
+    // init options
+    options = Object.assign({}, options);
+    options.file = file;
+    // cleanup error
+    local.errorList = [];
+    local.errorText = "";
+    // null-case
+    if (!(script && script.length)) {
+        return "";
+    }
+    switch ((/\.\w+?$|$/m).exec(file)[0]) {
+    // csslint script
+    case ".css":
+        lintType = "csslint";
+        local.CSSLint.errors = local.CSSLint.verify(script).messages;
+        local.CSSLint.errors.forEach(function (error) {
+            error.message = error.type + " - " + error.rule.id + " - " + error.message +
+                    "\n    " + error.rule.desc;
+            local.errorList.push(error);
+        });
+        break;
+    // shlint script
+    case ".sh":
+        lintType = "shlint";
+        break;
+    // jslint script
+    default:
+        local.result = jslint(script, options);
+        script = local.result.source_autofix || script;
+        local.errorList = local.result.warnings.filter(function (error) {
+            return error && error.message;
+        }).map(function (error) {
+            error.col = error.column + 1;
+            error.evidence = error.source;
+            error.line = error.line + 1;
+            return error;
+        });
+    }
+    // jslint the script with utiity2-specific rules
+    if (
+        !local.errorList.length
+        && (/^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$|^#\u0020jslint\u0020utility2:true$/m).test(script)
+    ) {
+        ii = 0;
+        script
+            // ignore text-block
+        .replace(
 /* jslint ignore:start */
 (/^ *?\/\* jslint ignore:start \*\/$[\S\s]+?^ *?\/\* jslint ignore:end \*\/$/gm),
 /* jslint ignore:end */
-                    function (match0) {
-                        return match0.replace((/^.*?$/gm), "");
-                    }
-                )
-                .replace((/^.*?$/gm), function (line) {
-                    ii += 1;
-                    jj = 0;
-                    message = "";
-                        // validate 4-space indent
-                    if (
-                        !(/^\u0020+(?:\*|\/\/!!)/).test(line)
-                        && ((/^\u0020*/).exec(line)[0].length % 4 !== 0)
-                    ) {
-                        jj = jj || 1;
-                        message = message || "non 4-space indent";
-                    }
-                        // validate trailing-whitespace
-                    if ((/\u0020$|\u0020\\n\\$/m).test(line)) {
-                        jj = jj || line.length;
-                        message = message || "trailing whitespace";
-                    }
-                        // validate tab
-                    if (line.indexOf("\t") >= 0) {
-                        jj = jj || (line.indexOf("\t") + 1);
-                        message = message || "tab detected";
-                    }
-                    if (message) {
-                        local.errorList.push({
-                            col: jj,
-                            line: ii,
-                            message: message,
-                            value: JSON.stringify(line)
-                        });
-                    }
+            function (match0) {
+                return match0.replace((/^.*?$/gm), "");
+            }
+        )
+        .replace((/^.*?$/gm), function (line) {
+            ii += 1;
+            jj = 0;
+            message = "";
+                // validate 4-space indent
+            if (
+                !(/^\u0020+(?:\*|\/\/!!)/).test(line)
+                && ((/^\u0020*/).exec(line)[0].length % 4 !== 0)
+            ) {
+                jj = jj || 1;
+                message = message || "non 4-space indent";
+            }
+                // validate trailing-whitespace
+            if ((/\u0020$|\u0020\\n\\$/m).test(line)) {
+                jj = jj || line.length;
+                message = message || "trailing whitespace";
+            }
+                // validate tab
+            if (line.indexOf("\t") >= 0) {
+                jj = jj || (line.indexOf("\t") + 1);
+                message = message || "tab detected";
+            }
+            if (message) {
+                local.errorList.push({
+                    col: jj,
+                    line: ii,
+                    message: message,
+                    value: JSON.stringify(line)
                 });
-                switch (file.replace((/^.*\./), ".")) {
-                case ".css":
-                    local.csslintUtility2(script);
-                    break;
-                case ".sh":
-                    local.shlintUtility2(script);
-                    break;
-                default:
-                    local.jslintUtility2(script);
-                }
             }
-            // print colorized error-messages to stderr
-            // https://github.com/kaizhu256/JSLint/blob/cli/cli.js#L99
-            local.errorList
-            .filter(function (warning) {
-                return warning && warning.message;
-            })
-            // print only first 10 warnings
-            .slice(0, 10)
-            .forEach(function (error, ii) {
-                local.errorText = local.errorText || (lintType || "jslint") + " " + file + "\n";
-                local.errorText += (
-                    (" #" + (ii + 1)).slice(-3)
-                    + " \u001b[31m" + error.message + "\u001b[39m"
-                    + " \u001b[90m\/\/ line " + error.line + ", col " + error.col + "\u001b[39m\n"
-                    + "    " + String(error.evidence).trim().slice(0, 76) + "\n"
-                );
-                if (!ii && error.stack) {
-                    ii = error.stack;
-                    error.stack = null;
-                    local.errorText += JSON.stringify(error, null, 4) + "\n" + ii.trim() + "\n";
-                }
-            });
-            local.errorText = local.errorText.trim();
-            // print error to stderr
-            if (local.errorText) {
-                console.error(local.errorText);
-            }
-            return script;
-        };
+        });
+        switch (file.replace((/^.*\./), ".")) {
+        case ".css":
+            local.csslintUtility2(script);
+            break;
+        case ".sh":
+            local.shlintUtility2(script);
+            break;
+        //!! default:
+            //!! local.jslintUtility2(script);
+        }
+    }
+    // print colorized error-messages to stderr
+    // https://github.com/kaizhu256/JSLint/blob/cli/cli.js#L99
+    local.errorList
+    .filter(function (warning) {
+        return warning && warning.message;
+    })
+    // print only first 10 warnings
+    .slice(0, 10)
+    .forEach(function (error, ii) {
+        local.errorText = local.errorText || (lintType || "jslint") + " " + file + "\n";
+        local.errorText += (
+            (" #" + (ii + 1)).slice(-3)
+            + " \u001b[31m" + error.message + "\u001b[39m"
+            + " \u001b[90m\/\/ line " + error.line + ", col " + error.col + "\u001b[39m\n"
+            + "    " + String(error.evidence).trim().slice(0, 76) + "\n"
+        );
+        if (!ii && error.stack) {
+            ii = error.stack;
+            error.stack = null;
+            local.errorText += JSON.stringify(error, null, 4) + "\n" + ii.trim() + "\n";
+        }
+    });
+    local.errorText = local.errorText.trim();
+    // print error to stderr
+    if (local.errorText) {
+        console.error(local.errorText);
+    }
+    return script;
+};
 
-        local.jslintUtility2 = function (script) {
-        /*
-         * this function will jslint the script with utiity2-specific rules
-         */
-            var current;
-            var lineno;
-            var previous;
-            var rgx;
-            var tmp;
-            lineno = 0;
-            rgx = new RegExp(
-                "^ *?\\/\\* validateLineSortedReset \\*\\/$|" +
-                "^ {4}\\/\\/ run .*?\\bjs\\\\?-env code\\b|" +
-                "^\\/\\/ rollup-file "
-            );
-            previous = "";
-            script.replace((/^.*?$/gm), function (line) {
-                current = line.trim();
-                lineno += 1;
-                // validate <domElement>.classList sorted
-                tmp = (/\bclass=\\?"([^"]+?)\\?"/gm).exec(current);
-                tmp = JSON.stringify((tmp && tmp[1].replace((/^\u0020/), "zSpace").match(
-                    /\u0020{2}|\u0020$|\w\S*?\{\{[^}]*?\}\}|\w\S*|\{\{[^}]*?\}\}/gm
-                )) || []);
-                if (JSON.stringify(JSON.parse(tmp).sort()) !== tmp) {
-                    local.errorList.push({
-                        col: 0,
-                        line: lineno,
-                        message: "<domElement>.classList not sorted - " + tmp,
-                        value: line
-                    });
-                }
-                // validate line-sorted
-                if (rgx.test(line)) {
-                    previous = "";
-                    return;
-                }
-                if (
-                    !(/^(?:\u0020{4}|\u0020{8})local\.\S*?\u0020=(?:\u0020|$)/m).test(line) ||
-                    (/^local\.(?:global|isBrowser|local|tmp)\b|\\n\\$/).test(current)
-                ) {
-                    return;
-                }
-                // validate previous < current
-                if (!(previous < current || (/\u0020=$/).test(previous))) {
-                    local.errorList.push({
-                        col: 0,
-                        line: lineno,
-                        message: "lines not sorted\n" + previous + "\n" + current,
-                        value: line
-                    });
-                }
-                previous = current;
-            });
-        };
+//!! local.jslintUtility2 = function (script) {
+//!! /*
+ //!! * this function will jslint the script with utiity2-specific rules
+ //!! */
+    //!! var current;
+    //!! var lineno;
+    //!! var previous;
+    //!! var rgx;
+    //!! var tmp;
+    //!! lineno = 0;
+    //!! rgx = new RegExp(
+        //!! "^ *?\\/\\* validateLineSortedReset \\*\\/$|" +
+        //!! "^ {4}\\/\\/ run .*?\\bjs\\\\?-env code\\b|" +
+        //!! "^\\/\\/ rollup-file "
+    //!! );
+    //!! previous = "";
+    //!! script.replace((/^.*?$/gm), function (line) {
+        //!! current = line.trim();
+        //!! lineno += 1;
+        //!! // validate <domElement>.classList sorted
+        //!! tmp = (/\bclass=\\?"([^"]+?)\\?"/gm).exec(current);
+        //!! tmp = JSON.stringify((tmp && tmp[1].replace((/^\u0020/), "zSpace").match(
+            //!! /\u0020{2}|\u0020$|\w\S*?\{\{[^}]*?\}\}|\w\S*|\{\{[^}]*?\}\}/gm
+        //!! )) || []);
+        //!! if (JSON.stringify(JSON.parse(tmp).sort()) !== tmp) {
+            //!! local.errorList.push({
+                //!! col: 0,
+                //!! line: lineno,
+                //!! message: "<domElement>.classList not sorted - " + tmp,
+                //!! value: line
+            //!! });
+        //!! }
+        //!! // validate line-sorted
+        //!! if (rgx.test(line)) {
+            //!! previous = "";
+            //!! return;
+        //!! }
+        //!! if (
+            //!! !(/^(?:\u0020{4}|\u0020{8})local\.\S*?\u0020=(?:\u0020|$)/m).test(line) ||
+            //!! (/^local\.(?:global|isBrowser|local|tmp)\b|\\n\\$/).test(current)
+        //!! ) {
+            //!! return;
+        //!! }
+        //!! // validate previous < current
+        //!! if (!(previous < current || (/\u0020=$/).test(previous))) {
+            //!! local.errorList.push({
+                //!! col: 0,
+                //!! line: lineno,
+                //!! message: "lines not sorted\n" + previous + "\n" + current,
+                //!! value: line
+            //!! });
+        //!! }
+        //!! previous = current;
+    //!! });
+//!! };
 
-        local.jslintUtility22 = function (str) {
-        /*
-         * this function will parse the js str
-         */
-            // \u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007
-            // \b\t\n\u000b\f\r\u000e\u000f
-            // \u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017
-            // \u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f
-            // !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNO
-            // PQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~
-            // aa = local.stringParseJs(local.assetsDict["/assets.example.js"]); console.log(aa);
-            var element, ii, match, result, rgx, rgxDict;
-            rgxDict = {
-                "\"": (/[\S\s]*?"/g),
-                "'": (/[\S\s]*?'/g),
-                "/": (/.*?\//g),
-                "/*": (/[\S\s]*?\*\//g),
-                "//": (/.*?$/gm),
-                "`": (/[\S\s]*?`/g)
-            };
-            str = str
-            .replace((/[^\n\u0020-\u007e]/g), " ")
-            .replace((/\\\\/g), "  ")
-            .replace((/\\[^\n]/g), "  ");
-            ii = 0;
-            result = [];
-            rgx = (/\/\*|\/\/|["'\/`]/g);
-            while (true) {
-                match = rgx.exec(str);
-                if (!match) {
-                    break;
-                }
-                result.push({src: str.slice(ii, match.index), type: ""});
-                element = {src: match[0], type: match[0]};
-                result.push(element);
-                rgxDict[match[0]].lastIndex = rgx.lastIndex;
-                element.src += rgxDict[match[0]].exec(str)[0];
-                ii = rgxDict[match[0]].lastIndex;
-                rgx.lastIndex = ii;
-            }
-            result.push({src: str.slice(ii)});
-            return result;
-        };
+local.jslintUtility22 = function (str) {
+/*
+ * this function will parse the js str
+ */
+    // \u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007
+    // \b\t\n\u000b\f\r\u000e\u000f
+    // \u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017
+    // \u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f
+    // !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNO
+    // PQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+    // aa = local.stringParseJs(local.assetsDict["/assets.example.js"]); console.log(aa);
+    var element, ii, match, result, rgx, rgxDict;
+    rgxDict = {
+        "\"": (/[\S\s]*?"/g),
+        "'": (/[\S\s]*?'/g),
+        "/": (/.*?\//g),
+        "/*": (/[\S\s]*?\*\//g),
+        "//": (/.*?$/gm),
+        "`": (/[\S\s]*?`/g)
+    };
+    str = str
+    .replace((/[^\n\u0020-\u007e]/g), " ")
+    .replace((/\\\\/g), "  ")
+    .replace((/\\[^\n]/g), "  ");
+    ii = 0;
+    result = [];
+    rgx = (/\/\*|\/\/|["'\/`]/g);
+    while (true) {
+        match = rgx.exec(str);
+        if (!match) {
+            break;
+        }
+        result.push({src: str.slice(ii, match.index), type: ""});
+        element = {src: match[0], type: match[0]};
+        result.push(element);
+        rgxDict[match[0]].lastIndex = rgx.lastIndex;
+        element.src += rgxDict[match[0]].exec(str)[0];
+        ii = rgxDict[match[0]].lastIndex;
+        rgx.lastIndex = ii;
+    }
+    result.push({src: str.slice(ii)});
+    return result;
+};
 
-        local.shlintUtility2 = function (script) {
-        /*
-         * this function will shlint the script with utility2-specific rules
-         */
-            var lineno;
-            var previous;
-            lineno = 0;
-            previous = "";
-            script.replace((/^.*?$/gm), function (line) {
-                lineno += 1;
-                if (!(/^sh\w+?\u0020\(\)\u0020\{/).test(line)) {
-                    return;
-                }
-                // validate previous < line
-                if (!(previous < line)) {
-                    local.errorList.push({
-                        col: 0,
-                        line: lineno,
-                        message: "lines not sorted\n" + previous + "\n" + line,
-                        value: line
-                    });
-                }
-                previous = line;
-            });
-        };
-    }());
-
-
-
-    /* istanbul ignore next */
-    // run node js-env code - init-after
-    (function () {
-        if (local.isBrowser) {
+local.shlintUtility2 = function (script) {
+/*
+ * this function will shlint the script with utility2-specific rules
+ */
+    var lineno;
+    var previous;
+    lineno = 0;
+    previous = "";
+    script.replace((/^.*?$/gm), function (line) {
+        lineno += 1;
+        if (!(/^sh\w+?\u0020\(\)\u0020\{/).test(line)) {
             return;
         }
-
-        local.cliDict = {};
-
-        local.cliDict._default = function () {
-        /*
-         * <file1> <file2> ...
-         * will jslint <file1> <file2> ... and print errors to stderr
-         */
-            // jslint files
-            process.argv.slice(2).forEach(function (file) {
-                if (file[0] === "-") {
-                    return;
-                }
-                local.jslintAndPrint(local.fs.readFileSync(local.path.resolve(file), "utf8"), file);
+        // validate previous < line
+        if (!(previous < line)) {
+            local.errorList.push({
+                col: 0,
+                line: lineno,
+                message: "lines not sorted\n" + previous + "\n" + line,
+                value: line
             });
-            // if error occurred, then exit with non-zero code
-            process.exit(Boolean(local.errorList.length));
-        };
-
-        local.cliDict.autofix = function () {
-        /*
-         * <file1> <file2> ...
-         * will try to inplace autofix <file1> <file2> ...
-         */
-            // jslint files
-            process.argv.slice(3).forEach(function (file) {
-                if (file[0] === "-") {
-                    return;
-                }
-                local.fs.writeFileSync(
-                    file + ".autofix.js",
-                    local.jslintAndPrint(
-                        local.fs.readFileSync(local.path.resolve(file), "utf8"),
-                        file,
-                        {autofix: true}
-                    )
-                );
-            });
-            // if error occurred, then exit with non-zero code
-            process.exit(Boolean(local.errorList.length));
-        };
-
-        // run cli
-        if (module === require.main && !local.global.utility2_rollup) {
-            local.cliRun();
         }
-    }());
+        previous = line;
+    });
+};
+}());
+
+
+
+/* istanbul ignore next */
+// run node js-env code - init-after
+(function () {
+if (local.isBrowser) {
+    return;
+}
+
+
+
+local.cliDict = {};
+
+local.cliDict._default = function () {
+/*
+ * <file1> <file2> ...
+ * will jslint <file1> <file2> ... and print errors to stderr
+ */
+    // jslint files
+    process.argv.slice(2).forEach(function (file) {
+        if (file[0] === "-") {
+            return;
+        }
+        local.jslintAndPrint(local.fs.readFileSync(local.path.resolve(file), "utf8"), file);
+    });
+    // if error occurred, then exit with non-zero code
+    process.exit(Boolean(local.errorList.length));
+};
+
+local.cliDict.autofix = function () {
+/*
+ * <file1> <file2> ...
+ * will try to inplace autofix <file1> <file2> ...
+ */
+    // jslint files
+    process.argv.slice(3).forEach(function (file) {
+        if (file[0] === "-") {
+            return;
+        }
+        local.fs.writeFileSync(
+            file + ".autofix.js",
+            local.jslintAndPrint(
+                local.fs.readFileSync(local.path.resolve(file), "utf8"),
+                file,
+                {autofix: true}
+            )
+        );
+    });
+    // if error occurred, then exit with non-zero code
+    process.exit(Boolean(local.errorList.length));
+};
+
+// run cli
+if (module === require.main && !local.global.utility2_rollup) {
+    local.cliRun();
+}
+}());
 }());

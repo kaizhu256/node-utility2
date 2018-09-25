@@ -19,243 +19,253 @@
 */
 /*global global*/
 (function () {
-    "use strict";
-    var local;
+"use strict";
+var local;
 
 
 
-    /* istanbul ignore next */
-    // run shared js-env code - init-before
-    (function () {
-        // init debug_inline
-        (function () {
-            var consoleError, context;
-            consoleError = console.error;
-            context = (typeof window === "object" && window) || global;
-            context["debug\u0049nline"] = context["debug\u0049nline"] || function (arg0) {
-            /*
-             * this function will both print arg0 to stderr and return it
-             */
-                // debug arguments
-                context["debug\u0049nlineArguments"] = arguments;
-                consoleError("\n\ndebug\u0049nline");
-                consoleError.apply(console, arguments);
-                consoleError(new Error().stack + "\n");
-                // return arg0 for inspection
-                return arg0;
-            };
-        }());
-        // init local
-        local = {};
-        // init isBrowser
-        local.isBrowser = typeof window === "object" &&
-                typeof window.XMLHttpRequest === "function" &&
-                window.document &&
-                typeof window.document.querySelectorAll === "function";
-        // init global
-        local.global = local.isBrowser
-        ? window
-        : global;
-        // re-init local
-        local = local.global.utility2_rollup ||
-                // local.global.utility2_rollup_old || require("./assets.utility2.rollup.js") ||
-                local;
-        // init exports
-        if (local.isBrowser) {
-            local.global.utility2_uglifyjs = local;
-        } else {
-            // require builtins
-            // local.assert = require("assert");
-            local.buffer = require("buffer");
-            local.child_process = require("child_process");
-            local.cluster = require("cluster");
-            local.crypto = require("crypto");
-            local.dgram = require("dgram");
-            local.dns = require("dns");
-            local.domain = require("domain");
-            local.events = require("events");
-            local.fs = require("fs");
-            local.http = require("http");
-            local.https = require("https");
-            local.net = require("net");
-            local.os = require("os");
-            local.path = require("path");
-            local.querystring = require("querystring");
-            local.readline = require("readline");
-            local.repl = require("repl");
-            local.stream = require("stream");
-            local.string_decoder = require("string_decoder");
-            local.timers = require("timers");
-            local.tls = require("tls");
-            local.tty = require("tty");
-            local.url = require("url");
-            local.util = require("util");
-            local.vm = require("vm");
-            local.zlib = require("zlib");
-            module.exports = local;
-            module.exports.__dirname = __dirname;
-        }
-        // init lib main
-        local.local = local;
-        local.uglifyjs = local;
+/* istanbul ignore next */
+// run shared js-env code - init-before
+(function () {
 
 
 
-        /* validateLineSortedReset */
-        local.cliRun = function (options) {
-        /*
-         * this function will run the cli
-         */
-            local.cliDict._eval = local.cliDict._eval || function () {
-            /*
-             * <code>
-             * will eval <code>
-             */
-                global.local = local;
-                local.vm.runInThisContext(process.argv[3]);
-            };
-            local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
-            local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
-            local.cliDict._help = local.cliDict._help || function () {
-            /*
-             *
-             * will print help
-             */
-                var commandList;
-                var file;
-                var packageJson;
-                var text;
-                var textDict;
-                commandList = [{
-                    argList: "<arg2>  ...",
-                    description: "usage:",
-                    command: ["<arg1>"]
-                }, {
-                    argList: "'console.log(\"hello world\")'",
-                    description: "example:",
-                    command: ["--eval"]
-                }];
-                file = __filename.replace((/.*\//), "");
-                options = Object.assign({}, options);
-                packageJson = require("./package.json");
-                // validate comment
-                options.rgxComment = options.rgxComment || new RegExp(
-                    "\\) \\{\\n" +
-                    "(?: {8}| {12})\\/\\*\\n" +
-                    "(?: {9}| {13})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n" +
-                    "(?: {9}| {13})\\* (will .*?\\S)\\n" +
-                    "(?: {9}| {13})\\*\\/\\n" +
-                    "(?: {12}| {16})\\S"
+// init debug_inline
+(function () {
+    var consoleError, context;
+    consoleError = console.error;
+    context = (typeof window === "object" && window) || global;
+    context["debug\u0049nline"] = context["debug\u0049nline"] || function (arg0) {
+    /*
+     * this function will both print arg0 to stderr and return it
+     */
+        // debug arguments
+        context["debug\u0049nlineArguments"] = arguments;
+        consoleError("\n\ndebug\u0049nline");
+        consoleError.apply(console, arguments);
+        consoleError(new Error().stack + "\n");
+        // return arg0 for inspection
+        return arg0;
+    };
+}());
+// init local
+local = {};
+// init isBrowser
+local.isBrowser = (
+    typeof window === "object"
+    && typeof window.XMLHttpRequest === "function"
+    && window.document
+    && typeof window.document.querySelectorAll === "function"
+);
+// init global
+local.global = local.isBrowser
+? window
+: global;
+// re-init local
+local = (
+    local.global.utility2_rollup
+    // || local.global.utility2_rollup_old || require("./assets.utility2.rollup.js")
+    || local
+);
+// init exports
+if (local.isBrowser) {
+    local.global.utility2_uglifyjs = local;
+} else {
+    // require builtins
+    // local.assert = require("assert");
+    local.buffer = require("buffer");
+    local.child_process = require("child_process");
+    local.cluster = require("cluster");
+    local.crypto = require("crypto");
+    local.dgram = require("dgram");
+    local.dns = require("dns");
+    local.domain = require("domain");
+    local.events = require("events");
+    local.fs = require("fs");
+    local.http = require("http");
+    local.https = require("https");
+    local.net = require("net");
+    local.os = require("os");
+    local.path = require("path");
+    local.querystring = require("querystring");
+    local.readline = require("readline");
+    local.repl = require("repl");
+    local.stream = require("stream");
+    local.string_decoder = require("string_decoder");
+    local.timers = require("timers");
+    local.tls = require("tls");
+    local.tty = require("tty");
+    local.url = require("url");
+    local.util = require("util");
+    local.vm = require("vm");
+    local.zlib = require("zlib");
+    module.exports = local;
+    module.exports.__dirname = __dirname;
+}
+// init lib main
+local.local = local;
+local.uglifyjs = local;
+
+
+
+/* validateLineSortedReset */
+local.cliRun = function (options) {
+/*
+ * this function will run the cli
+ */
+    local.cliDict._eval = local.cliDict._eval || function () {
+    /*
+     * <code>
+     * will eval <code>
+     */
+        global.local = local;
+        local.vm.runInThisContext(process.argv[3]);
+    };
+    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
+    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
+    local.cliDict._help = local.cliDict._help || function () {
+    /*
+     *
+     * will print help
+     */
+        var commandList;
+        var file;
+        var packageJson;
+        var text;
+        var textDict;
+        commandList = [{
+            argList: "<arg2>  ...",
+            description: "usage:",
+            command: ["<arg1>"]
+        }, {
+            argList: "'console.log(\"hello world\")'",
+            description: "example:",
+            command: ["--eval"]
+        }];
+        file = __filename.replace((/.*\//), "");
+        options = Object.assign({}, options);
+        packageJson = require("./package.json");
+        // validate comment
+        options.rgxComment = options.rgxComment || new RegExp(
+            "\\) \\{\\n"
+            + "(?:| {4})\\/\\*\\n"
+            + "(?: | {5})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n"
+            + "(?: | {5})\\* (will .*?\\S)\\n"
+            + "(?: | {5})\\*\\/\\n"
+            + "(?: {4}| {8})\\S"
+        );
+        textDict = {};
+        Object.keys(local.cliDict).sort().forEach(function (key, ii) {
+            if (key[0] === "_" && key !== "_default") {
+                return;
+            }
+            text = String(local.cliDict[key]);
+            if (key === "_default") {
+                key = "";
+            }
+            textDict[text] = textDict[text] || (ii + 2);
+            ii = textDict[text];
+            if (commandList[ii]) {
+                commandList[ii].command.push(key);
+                return;
+            }
+            try {
+                commandList[ii] = options.rgxComment.exec(text);
+                commandList[ii] = {
+                    argList: (commandList[ii][1] || "").trim(),
+                    command: [key],
+                    description: commandList[ii][2]
+                };
+            } catch (ignore) {
+                throw new Error(
+                    "cliRun - cannot parse comment in COMMAND "
+                    + key + ":\nnew RegExp(" + JSON.stringify(options.rgxComment.source)
+                    + ").exec(" + JSON.stringify(text)
+                    .replace((/\\\\/g), "\u0000")
+                    .replace((/\\n/g), "\\n\\\n")
+                    .replace((/\u0000/g), "\\\\") + ");"
                 );
-                textDict = {};
-                Object.keys(local.cliDict).sort().forEach(function (key, ii) {
-                    if (key[0] === "_" && key !== "_default") {
-                        return;
-                    }
-                    text = String(local.cliDict[key]);
-                    if (key === "_default") {
-                        key = "";
-                    }
-                    textDict[text] = textDict[text] || (ii + 2);
-                    ii = textDict[text];
-                    if (commandList[ii]) {
-                        commandList[ii].command.push(key);
-                        return;
-                    }
-                    try {
-                        commandList[ii] = options.rgxComment.exec(text);
-                        commandList[ii] = {
-                            argList: (commandList[ii][1] || "").trim(),
-                            command: [key],
-                            description: commandList[ii][2]
-                        };
-                    } catch (ignore) {
-                        throw new Error(
-                            "cliRun - cannot parse comment in COMMAND " +
-                            key + ":\nnew RegExp(" + JSON.stringify(options.rgxComment.source) +
-                            ").exec(" + JSON.stringify(text)
-                            .replace((/\\\\/g), "\u0000")
-                            .replace((/\\n/g), "\\n\\\n")
-                            .replace((/\u0000/g), "\\\\") + ");"
-                        );
-                    }
-                });
-                console.log(packageJson.name + " (" + packageJson.version + ")\n\n" + commandList
-                .filter(function (element) {
-                    return element;
-                })
-                .map(function (element, ii) {
-                    element.command = element.command.filter(function (element) {
-                        return element;
-                    });
-                    switch (ii) {
-                    case 0:
-                    case 1:
-                        element.argList = [element.argList];
-                        break;
-                    default:
-                        element.argList = element.argList.split(" ");
-                        element.description = "# COMMAND " +
-                                (element.command[0] || "<none>") + "\n# " +
-                                element.description;
-                    }
-                    return element.description + "\n  " + file +
-                            ("  " + element.command.sort().join("|") + "  ")
-                            .replace((/^\u0020{4}$/), "  ") +
-                            element.argList.join("  ");
-                })
-                .join("\n\n"));
-            };
-            local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
-            local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
-            local.cliDict._default = local.cliDict._default || local.cliDict._help;
-            local.cliDict.help = local.cliDict.help || local.cliDict._help;
-            local.cliDict._interactive = local.cliDict._interactive || function () {
-            /*
-             *
-             * will start interactive-mode
-             */
-                global.local = local;
-                (local.replStart || require("repl").start)({useGlobal: true});
-            };
-            local.cliDict["--interactive"] = local.cliDict["--interactive"] ||
-                    local.cliDict._interactive;
-            local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
-            local.cliDict._version = local.cliDict._version || function () {
-            /*
-             *
-             * will print version
-             */
-                console.log(require(__dirname + "/package.json").version);
-            };
-            local.cliDict["--version"] = local.cliDict["--version"] || local.cliDict._version;
-            local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
-            // default to --help command if no arguments are given
-            if (process.argv.length <= 2) {
-                local.cliDict._help();
-                return;
             }
-            if (local.cliDict[process.argv[2]]) {
-                local.cliDict[process.argv[2]]();
-                return;
+        });
+        console.log(packageJson.name + " (" + packageJson.version + ")\n\n" + commandList
+        .filter(function (element) {
+            return element;
+        })
+        .map(function (element, ii) {
+            element.command = element.command.filter(function (element) {
+                return element;
+            });
+            switch (ii) {
+            case 0:
+            case 1:
+                element.argList = [element.argList];
+                break;
+            default:
+                element.argList = element.argList.split(" ");
+                element.description = "# COMMAND "
+                        + (element.command[0] || "<none>") + "\n# "
+                        + element.description;
             }
-            local.cliDict._default();
-        };
-    }());
+            return element.description + "\n  " + file
+                    + ("  " + element.command.sort().join("|") + "  ")
+                    .replace((/^\u0020{4}$/), "  ")
+                    + element.argList.join("  ");
+        })
+        .join("\n\n"));
+    };
+    local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
+    local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
+    local.cliDict._default = local.cliDict._default || local.cliDict._help;
+    local.cliDict.help = local.cliDict.help || local.cliDict._help;
+    local.cliDict._interactive = local.cliDict._interactive || function () {
+    /*
+     *
+     * will start interactive-mode
+     */
+        global.local = local;
+        (local.replStart || require("repl").start)({useGlobal: true});
+    };
+    local.cliDict["--interactive"] = local.cliDict["--interactive"]
+            || local.cliDict._interactive;
+    local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
+    local.cliDict._version = local.cliDict._version || function () {
+    /*
+     *
+     * will print version
+     */
+        console.log(require(__dirname + "/package.json").version);
+    };
+    local.cliDict["--version"] = local.cliDict["--version"] || local.cliDict._version;
+    local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
+    // default to --help command if no arguments are given
+    if (process.argv.length <= 2) {
+        local.cliDict._help();
+        return;
+    }
+    if (local.cliDict[process.argv[2]]) {
+        local.cliDict[process.argv[2]]();
+        return;
+    }
+    local.cliDict._default();
+};
+}());
 
 
 
-    /* istanbul ignore next */
-    // run shared js-env code - function
-    (function () {
-        var exports, require;
-        // init exports
-        exports = local;
-        require = function () {
-            return exports;
-        };
-        // jslint-hack
-        require();
+/* istanbul ignore next */
+// run shared js-env code - function
+(function () {
+
+
+
+var exports, require;
+// init exports
+exports = local;
+require = function () {
+    return exports;
+};
+// jslint-hack
+require();
 
 
 
@@ -818,111 +828,114 @@ file none
 
 
 
-        local.uglify = function (code, file) {
-        /*
-         * this function will uglify the js-code
-         */
-            var tmp;
-            switch ((/\.\w+?$|$/m).exec(file)[0]) {
-            case ".css":
-                return code
-                    // remove comment /**/
-                .replace((/\/\*[\S\s]*?\*\//g), "")
-                    // remove comment //
-                .replace((/\/\/.*?$/gm), "")
-                    // remove whitespace
-                .replace((/\t/g), " ")
-                .replace((/\u0020{2,}/g), " ")
-                .replace((/\u0020*?([\n,:;{}])\u0020*/g), "$1")
-                .replace((/\n\n+/g), "\n")
-                .trim();
-            case ".htm":
-            case ".html":
-                return code
-                    // remove comment /**/
-                .replace((/\/\*[\S\s]*?\*\//g), "")
-                    // remove comment //
-                .replace((/\/\/.*?$/gm), "")
-                    // save whitespace in <pre></pre>
-                .replace((/<pre>[\S\s]*?<\/pre>/g), function (match0) {
-                    return match0.replace((/\n/g), "\u0000");
-                })
-                    // remove whitespace
-                .replace((/\s*?\n\s*/g), " ")
-                    // restore whitespace in <pre></pre>
-                .replace((/\u0000/g), "\n")
-                .trim();
-            case ".json":
-                return JSON.stringify(JSON.parse(code));
-            }
-            // parse code and get the initial AST
-            tmp = local.parse(code
-            .trim()
-                // comment shebang
-            .replace((/^#!\//), "// "));
-            // get a new AST with mangled names
-            tmp = local.ast_mangle(tmp);
-            // get an AST with compression optimizations
-            tmp = local.ast_squeeze(tmp);
-            // compressed code here
-            tmp = local.split_lines(local.gen_code(tmp, {ascii_only: true}), 79);
-            // escape \r and \t
-            tmp = tmp.replace((/\r/g), "\\r").replace((/\t/g), "\\t");
-            return tmp;
-        };
-    }());
+local.uglify = function (code, file) {
+/*
+ * this function will uglify the js-code
+ */
+    var tmp;
+    switch ((/\.\w+?$|$/m).exec(file)[0]) {
+    case ".css":
+        return code
+            // remove comment /**/
+        .replace((/\/\*[\S\s]*?\*\//g), "")
+            // remove comment //
+        .replace((/\/\/.*?$/gm), "")
+            // remove whitespace
+        .replace((/\t/g), " ")
+        .replace((/\u0020{2,}/g), " ")
+        .replace((/\u0020*?([\n,:;{}])\u0020*/g), "$1")
+        .replace((/\n\n+/g), "\n")
+        .trim();
+    case ".htm":
+    case ".html":
+        return code
+            // remove comment /**/
+        .replace((/\/\*[\S\s]*?\*\//g), "")
+            // remove comment //
+        .replace((/\/\/.*?$/gm), "")
+            // save whitespace in <pre></pre>
+        .replace((/<pre>[\S\s]*?<\/pre>/g), function (match0) {
+            return match0.replace((/\n/g), "\u0000");
+        })
+            // remove whitespace
+        .replace((/\s*?\n\s*/g), " ")
+            // restore whitespace in <pre></pre>
+        .replace((/\u0000/g), "\n")
+        .trim();
+    case ".json":
+        return JSON.stringify(JSON.parse(code));
+    }
+    // parse code and get the initial AST
+    tmp = local.parse(code
+    .trim()
+        // comment shebang
+    .replace((/^#!\//), "// "));
+    // get a new AST with mangled names
+    tmp = local.ast_mangle(tmp);
+    // get an AST with compression optimizations
+    tmp = local.ast_squeeze(tmp);
+    // compressed code here
+    tmp = local.split_lines(local.gen_code(tmp, {ascii_only: true}), 79);
+    // escape \r and \t
+    tmp = tmp.replace((/\r/g), "\\r").replace((/\t/g), "\\t");
+    return tmp;
+};
+}());
 
 
 
-    /* istanbul ignore next */
-    // run node js-env code - init-after
-    (function () {
-        if (local.isBrowser) {
-            return;
-        }
-        // init cli
-        if (module !== require.main || local.global.utility2_rollup) {
-            return;
-        }
-        local.cliDict = {};
-        local.cliDict._default = function () {
-        /*
-         * <file>
-         * will uglify <file> and print result to stdout
-         */
-            if ((/^(?:http|https):\/\//).test(process.argv[2])) {
-                // uglify url
-                (
-                    process.argv[2].indexOf("https") === 0
-                    ? local.https
-                    : local.http
-                ).request(local.url.parse(process.argv[2]), function (response) {
-                    local.chunkList = [];
-                    response
-                    .on("data", function (chunk) {
-                        local.chunkList.push(chunk);
-                    })
-                    .on("end", function () {
-                        console.log(local.uglify(
-                            Buffer.concat(local.chunkList).toString(),
-                            local.url.parse(process.argv[2]).pathname
-                        ));
-                    });
-                })
-                .end();
-                return;
-            }
-            // uglify file
-            try {
-                console.log(local.uglify(local.fs.readFileSync(
-                    local.path.resolve(process.cwd(), process.argv[2]),
-                    "utf8"
-                ), process.argv[2]));
-            } catch (errorCaught) {
-                console.error(errorCaught);
-            }
-        };
+/* istanbul ignore next */
+// run node js-env code - init-after
+(function () {
+if (local.isBrowser) {
+    return;
+}
 
-        local.cliRun();
-    }());
+
+
+// init cli
+if (module !== require.main || local.global.utility2_rollup) {
+    return;
+}
+local.cliDict = {};
+local.cliDict._default = function () {
+/*
+ * <file>
+ * will uglify <file> and print result to stdout
+ */
+    if ((/^(?:http|https):\/\//).test(process.argv[2])) {
+        // uglify url
+        (
+            process.argv[2].indexOf("https") === 0
+            ? local.https
+            : local.http
+        ).request(local.url.parse(process.argv[2]), function (response) {
+            local.chunkList = [];
+            response
+            .on("data", function (chunk) {
+                local.chunkList.push(chunk);
+            })
+            .on("end", function () {
+                console.log(local.uglify(
+                    Buffer.concat(local.chunkList).toString(),
+                    local.url.parse(process.argv[2]).pathname
+                ));
+            });
+        })
+        .end();
+        return;
+    }
+    // uglify file
+    try {
+        console.log(local.uglify(local.fs.readFileSync(
+            local.path.resolve(process.cwd(), process.argv[2]),
+            "utf8"
+        ), process.argv[2]));
+    } catch (errorCaught) {
+        console.error(errorCaught);
+    }
+};
+
+local.cliRun();
+}());
 }());

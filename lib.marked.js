@@ -10,91 +10,98 @@
 */
 /*global global*/
 (function () {
-    "use strict";
-    var local;
+"use strict";
+var local;
 
 
 
-    /* istanbul ignore next */
-    // run shared js-env code - init-before
-    (function () {
-        // init debug_inline
-        (function () {
-            var consoleError, context;
-            consoleError = console.error;
-            context = (typeof window === "object" && window) || global;
-            context["debug\u0049nline"] = context["debug\u0049nline"] || function (arg0) {
-            /*
-             * this function will both print arg0 to stderr and return it
-             */
-                // debug arguments
-                context["debug\u0049nlineArguments"] = arguments;
-                consoleError("\n\ndebug\u0049nline");
-                consoleError.apply(console, arguments);
-                consoleError(new Error().stack + "\n");
-                // return arg0 for inspection
-                return arg0;
-            };
-        }());
-        // init local
-        local = {};
-        // init isBrowser
-        local.isBrowser = typeof window === "object" &&
-                typeof window.XMLHttpRequest === "function" &&
-                window.document &&
-                typeof window.document.querySelectorAll === "function";
-        // init global
-        local.global = local.isBrowser
-        ? window
-        : global;
-        // re-init local
-        local = local.global.utility2_rollup ||
-                // local.global.utility2_rollup_old || require("./assets.utility2.rollup.js") ||
-                local;
-        // init exports
-        if (local.isBrowser) {
-            local.global.utility2_marked = local;
-        } else {
-            // require builtins
-            // local.assert = require("assert");
-            local.buffer = require("buffer");
-            local.child_process = require("child_process");
-            local.cluster = require("cluster");
-            local.crypto = require("crypto");
-            local.dgram = require("dgram");
-            local.dns = require("dns");
-            local.domain = require("domain");
-            local.events = require("events");
-            local.fs = require("fs");
-            local.http = require("http");
-            local.https = require("https");
-            local.net = require("net");
-            local.os = require("os");
-            local.path = require("path");
-            local.querystring = require("querystring");
-            local.readline = require("readline");
-            local.repl = require("repl");
-            local.stream = require("stream");
-            local.string_decoder = require("string_decoder");
-            local.timers = require("timers");
-            local.tls = require("tls");
-            local.tty = require("tty");
-            local.url = require("url");
-            local.util = require("util");
-            local.vm = require("vm");
-            local.zlib = require("zlib");
-            module.exports = local;
-            module.exports.__dirname = __dirname;
-        }
-        // init lib main
-        local.local = local;
-        local.marked = local;
+/* istanbul ignore next */
+// run shared js-env code - init-before
+(function () {
 
 
 
-        /* validateLineSortedReset */
-        return;
-    }());
+// init debug_inline
+(function () {
+    var consoleError, context;
+    consoleError = console.error;
+    context = (typeof window === "object" && window) || global;
+    context["debug\u0049nline"] = context["debug\u0049nline"] || function (arg0) {
+    /*
+     * this function will both print arg0 to stderr and return it
+     */
+        // debug arguments
+        context["debug\u0049nlineArguments"] = arguments;
+        consoleError("\n\ndebug\u0049nline");
+        consoleError.apply(console, arguments);
+        consoleError(new Error().stack + "\n");
+        // return arg0 for inspection
+        return arg0;
+    };
+}());
+// init local
+local = {};
+// init isBrowser
+local.isBrowser = (
+    typeof window === "object"
+    && typeof window.XMLHttpRequest === "function"
+    && window.document
+    && typeof window.document.querySelectorAll === "function"
+);
+// init global
+local.global = local.isBrowser
+? window
+: global;
+// re-init local
+local = (
+    local.global.utility2_rollup
+    // || local.global.utility2_rollup_old || require("./assets.utility2.rollup.js")
+    || local
+);
+// init exports
+if (local.isBrowser) {
+    local.global.utility2_marked = local;
+} else {
+    // require builtins
+    // local.assert = require("assert");
+    local.buffer = require("buffer");
+    local.child_process = require("child_process");
+    local.cluster = require("cluster");
+    local.crypto = require("crypto");
+    local.dgram = require("dgram");
+    local.dns = require("dns");
+    local.domain = require("domain");
+    local.events = require("events");
+    local.fs = require("fs");
+    local.http = require("http");
+    local.https = require("https");
+    local.net = require("net");
+    local.os = require("os");
+    local.path = require("path");
+    local.querystring = require("querystring");
+    local.readline = require("readline");
+    local.repl = require("repl");
+    local.stream = require("stream");
+    local.string_decoder = require("string_decoder");
+    local.timers = require("timers");
+    local.tls = require("tls");
+    local.tty = require("tty");
+    local.url = require("url");
+    local.util = require("util");
+    local.vm = require("vm");
+    local.zlib = require("zlib");
+    module.exports = local;
+    module.exports.__dirname = __dirname;
+}
+// init lib main
+local.local = local;
+local.marked = local;
+
+
+
+/* validateLineSortedReset */
+return;
+}());
 
 
 
@@ -296,10 +303,10 @@ c:typeof define=="function"&&define.amd?define(function(){return c}):this.marked
 c}).call(function(){return this||(typeof window!="undefined"?window:global)}())
 local.marked = module.exports; }());
 /* jslint ignore:end */
-    // init exports
-    if (local.isBrowser) {
-        local.global.utility2_marked = local.marked;
-    } else {
-        module.exports = local.marked;
-    }
+// init exports
+if (local.isBrowser) {
+    local.global.utility2_marked = local.marked;
+} else {
+    module.exports = local.marked;
+}
 }());

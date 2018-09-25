@@ -1419,10 +1419,10 @@ t+1)+": "+e.type+" at line "+e.line+", col "+e.col,s+="\n"+e.message,s+="\n"+e.e
 
 /*
 file JSLint/jslint.js - es6
-curl https://raw.githubusercontent.com/douglascrockford/JSLint/4a03abbd80bab8cb79c079449dcbe95393be538c/jslint.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/douglascrockford/JSLint/ef932a5130322295d7ae871113ff55ecb97edcfa/jslint.js > /tmp/aa.js
 */
 // jslint.js
-// 2018-09-17
+// 2018-09-24
 // Copyright (c) 2015 Douglas Crockford  (www.JSLint.com)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -2003,8 +2003,10 @@ function tokenize(source) {
     let prior = global;         // the previous token excluding comments
     let mega_from;              // the starting column of megastring
     let mega_line;              // the starting line of megastring
+    let regexp_seen;            // regular expression literal seen on this line
     let snippet;                // a piece of string
-    let source_line;            // the current line source string
+    let source_line = "";       // the remaining line source string
+    let whole_line = "";        // the whole line source string
 
     if (lines[0].startsWith("#!")) {
         line = 0;
@@ -2018,9 +2020,20 @@ function tokenize(source) {
 // unsafe characters or is too damn long.
 
         let at;
+        if (
+            !option.long
+            && whole_line.length > 80
+            && !json_mode
+            && first
+            && !regexp_seen
+        ) {
+            warn_at("too_long", line, 80);
+        }
         column = 0;
         line += 1;
-        source_line = lines[line];
+        regexp_seen = false;
+        whole_line = lines[line];
+        source_line = whole_line;
         if (source_line !== undefined) {
             at = source_line.search(rx_tab);
             if (at >= 0) {
@@ -2044,14 +2057,6 @@ function tokenize(source) {
                     line,
                     source_line.length - 1
                 );
-            }
-            if (
-                !option.long
-                && source_line.length > 80
-                && !json_mode
-                && first
-            ) {
-                warn_at("too_long", line, 80);
             }
         }
         return source_line;
@@ -2323,6 +2328,7 @@ function tokenize(source) {
         let multi_mode = false;
         let result;
         let value;
+        regexp_seen = true;
 
         function quantifier() {
 
@@ -6320,7 +6326,7 @@ export default function jslint(
     }
     return {
         directives,
-        edition: "2018-09-17",
+        edition: "2018-09-24",
         exports,
         froms,
         functions,
