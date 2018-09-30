@@ -1,5 +1,5 @@
 #!/bin/sh
-# jslint-utility2
+# jslint utility2:true
 
 shMain () {(set -e
 # this function will run the main program

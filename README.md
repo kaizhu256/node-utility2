@@ -56,9 +56,10 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- update function buildLib to auto-normalize local2-function
-- update jslint-function jslintAndPrint to validate sorted vars
-- update jslint-function jslintAndPrint to validate 3 or more continuous-newlines
+- global2 - polyfill https://github.com/tc39/proposal-global
+- jslint - merge function jslintAndPrintConditional -> jslintAndPrint
+- jslint - refactor files to 80 chr column-limit
+- rate-limit keyup events
 - add default testCase _testCase_cliRun_help
 - merge class _http.IncomingMessage -> _http.ServerResponse
 - add test-coverage for function ajaxCrawl
@@ -66,19 +67,25 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - add server stress-test using electron
 - none
 
-#### changelog 2018.9.8
-- npm publish 2018.9.8
-- prepare for jslint v2018.05.14
-- add shell-command shGitDateCommitted, shDiffRaw
-- add file lib.istanbul.raw.js, lib.jslint.raw.js, lib.marked.raw.js, lib.uglifyjs.raw.js
-- update function fsReadFileOrEmptyStringSync with 'json' options to auto JSON.parse file or return null
-- update function buildLib to include top-level comment-description
-- rename template assetsDict['/assets.lib.template.js'] -> assetsDict['/assets.my\\_app.template.js']
-- update function testRunDefault to suppress console.error in coverage-mode
-- rename response.headers -> response.responseHeaders
-- make browser-mocked client-request <-> server-response asynchronous
-- revamp Buffer helper-functions
-- merge nodejs-mock of XMLHttpRequest into function ajax
+#### changelog 2018.9.29
+- npm publish 2018.9.29
+- jslint - merge function jslintAutofix -> jslintAndPrint
+- jslint - bug-workaround - v8 tail-call issue
+- jslint - merge directive /*jslint ...*/ -> /* jslint utility2:true */
+- jslint - multivar - apply vim-command ",$s/^\( *\)\(\(var\) .*\), \([^\\]*\)\(\\n\\\)*$/\1\2;\5\r\1\3 \4\5/gc" to file lib.xxx.js
+- jslint - prefix-operator - apply vim-command ",$s/ \(&&\|+\|||\)\n\( *\)/\r\2\1 /gc" to file lib.xxx.js
+- jslint - revamp indent
+- restore const and let expressions in jslint.js
+- update jslint-function jslintAndPrint to ignore too_long-warnings in comments and regexp,
+- jslint-autofix whitespace, double-quote, and regexp for files: lib.xxx.js, test.js
+- refactor files with new jslint (v2018-09-17)
+- replace unused function-arguments with ignore
+- update uglify-function uglify to escape non-ascii characters: (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\uffff]/)
+- add files raw.istanbul.js, raw.jslint.js, raw.uglify.js
+- rename function stringCustomizeFromToRgx -> stringMerge
+- update function testRunDefault to show timeElapsed in all logs and periodically print out pending testCases
+- add shell-function shGitBranchPush, shGitBranchRename, shGithubDateCommitted
+- migrate to new jslint (2018-09)
 - none
 
 #### this package requires
@@ -136,312 +143,307 @@ instruction
 
 
 /* istanbul instrument in package utility2 */
-/* jslint-utility2 */
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 4,
-    maxlen: 100,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
+/* jslint utility2:true */
 (function () {
-    'use strict';
-    var local;
+"use strict";
+var local;
 
 
 
-    // run shared js-env code - init-before
-    (function () {
-        // init local
-        local = {};
-        // init isBrowser
-        local.isBrowser = typeof window === "object" &&
-            typeof window.XMLHttpRequest === "function" &&
-            window.document &&
-            typeof window.document.querySelectorAll === "function";
-        // init global
-        local.global = local.isBrowser
-            ? window
-            : global;
-        // re-init local
-        local = local.global.utility2_rollup || (local.isBrowser
-            ? local.global.utility2_utility2
-            : require('utility2'));
-        // init exports
-        local.global.local = local;
-        // run test-server
-        local.testRunServer(local);
-        // init assets
-        /* jslint-ignore-next-line */
-        local.assetsDict['/assets.hello.txt'] = 'hello\ud83d\ude01\u0020\n';
-        local.assetsDict['/assets.index.template.html'] = '';
-    }());
+// run shared js-env code - init-before
+(function () {
 
 
 
-    // run shared js-env code - function
-    (function () {
-        local.testCase_ajax_200 = function (options, onError) {
-        /*
-         * this function will test ajax's "200 ok" handling-behavior
-         */
-            if (!local.isBrowser) {
-                onError(null, options);
-                return;
-            }
-            options = {};
-            // test ajax-path 'assets.hello.txt'
-            local.ajax({ url: 'assets.hello.txt' }, function (error, xhr) {
-                local.tryCatchOnError(function () {
-                    // validate no error occurred
-                    local.assert(!error, error);
-                    // validate data
-                    options.data = xhr.responseText;
-                    /* jslint-ignore-next-line */
-                    local.assert(options.data === 'hello\ud83d\ude01\u0020\n', options.data);
-                    onError();
-                }, onError);
-            });
-        };
-
-        local.testCase_ajax_404 = function (options, onError) {
-        /*
-         * this function will test ajax's "404 not found" handling-behavior
-         */
-            if (!local.isBrowser) {
-                onError(null, options);
-                return;
-            }
-            options = {};
-            // test ajax-path '/undefined'
-            local.ajax({ url: '/undefined' }, function (error) {
-                local.tryCatchOnError(function () {
-                    // validate error occurred
-                    local.assert(error, error);
-                    options.statusCode = error.statusCode;
-                    // validate 404 http statusCode
-                    local.assert(options.statusCode === 404, options.statusCode);
-                    onError();
-                }, onError);
-            });
-        };
-
-        local.testCase_webpage_default = function (options, onError) {
-        /*
-         * this function will test webpage's default handling-behavior
-         */
-            if (local.env.npm_config_mode_test_fast || local.isBrowser) {
-                onError(null, options);
-                return;
-            }
-            options = { modeCoverageMerge: true, url: local.serverLocalHost + '?modeTest=1' };
-            local.browserTest(options, onError);
-        };
-    }());
+// init local
+local = {};
+// init isBrowser
+local.isBrowser = (
+    typeof window === "object"
+    && typeof window.XMLHttpRequest === "function"
+    && window.document
+    && typeof window.document.querySelectorAll === "function"
+);
+// init global
+local.global = local.isBrowser
+? window
+: global;
+// re-init local
+local = local.global.utility2_rollup || (
+    local.isBrowser
+    ? local.global.utility2_utility2
+    : require("utility2")
+);
+// init exports
+local.global.local = local;
+// run test-server
+local.testRunServer(local);
+// init assets
+local.assetsDict["/assets.hello.txt"] = "hello \ud83d\ude01\n";
+local.assetsDict["/assets.index.template.html"] = "";
+}());
 
 
 
-    // run browser js-env code - init-test
-    /* istanbul ignore next */
-    (function () {
-        if (!local.isBrowser) {
-            return;
-        }
-        local.testRunBrowser = function (event) {
-            if (!event || (event &&
-                    event.currentTarget &&
-                    event.currentTarget.className &&
-                    event.currentTarget.className.includes &&
-                    event.currentTarget.className.includes('onreset'))) {
-                // reset output
-                Array.from(document.querySelectorAll(
-                    'body > .resettable'
-                )).forEach(function (element) {
-                    switch (element.tagName) {
-                    case 'INPUT':
-                    case 'TEXTAREA':
-                        element.value = '';
-                        break;
-                    default:
-                        element.textContent = '';
-                    }
-                });
-            }
-            switch (event && event.currentTarget && event.currentTarget.id) {
-            case 'testRunButton1':
-                // show tests
-                if (document.querySelector('#testReportDiv1').style.maxHeight === '0px') {
-                    local.uiAnimateSlideDown(document.querySelector('#testReportDiv1'));
-                    document.querySelector('#testRunButton1').textContent = 'hide internal test';
-                    local.modeTest = 1;
-                    local.testRunDefault(local);
-                // hide tests
-                } else {
-                    local.uiAnimateSlideUp(document.querySelector('#testReportDiv1'));
-                    document.querySelector('#testRunButton1').textContent = 'run internal test';
-                }
-                break;
-            // custom-case
-            case 'testRunButton2':
-                // run tests
-                local.modeTest = 1;
-                local.testRunDefault(local);
+// run shared js-env code - function
+(function () {
+
+
+
+local.testCase_ajax_200 = function (options, onError) {
+/*
+ * this function will test ajax's "200 ok" handling-behavior
+ */
+    if (!local.isBrowser) {
+        onError(null, options);
+        return;
+    }
+    options = {};
+    // test ajax-path "assets.hello.txt"
+    local.ajax({url: "assets.hello.txt"}, function (error, xhr) {
+        local.tryCatchOnError(function () {
+            // validate no error occurred
+            local.assert(!error, error);
+            // validate data
+            options.data = xhr.responseText;
+            local.assert(options.data === "hello \ud83d\ude01\n", options.data);
+            onError();
+        }, onError);
+    });
+};
+
+local.testCase_ajax_404 = function (options, onError) {
+/*
+ * this function will test ajax's "404 not found" handling-behavior
+ */
+    if (!local.isBrowser) {
+        onError(null, options);
+        return;
+    }
+    options = {};
+    // test ajax-path "/undefined"
+    local.ajax({url: "/undefined"}, function (error) {
+        local.tryCatchOnError(function () {
+            // validate error occurred
+            local.assert(error, error);
+            options.statusCode = error.statusCode;
+            // validate 404 http statusCode
+            local.assert(options.statusCode === 404, options.statusCode);
+            onError();
+        }, onError);
+    });
+};
+
+local.testCase_webpage_default = function (options, onError) {
+/*
+ * this function will test webpage's default handling-behavior
+ */
+    if (local.isBrowser) {
+        onError(null, options);
+        return;
+    }
+    options = {modeCoverageMerge: true, url: local.serverLocalHost + "?modeTest=1"};
+    local.browserTest(options, onError);
+};
+}());
+
+
+
+/* istanbul ignore next */
+// run browser js-env code - init-test
+(function () {
+if (!local.isBrowser) {
+    return;
+}
+
+
+
+local.testRunBrowser = function (event) {
+    if (!event || (
+        event &&
+        event.currentTarget &&
+        event.currentTarget.className &&
+        event.currentTarget.className.includes &&
+        event.currentTarget.className.includes("onreset")
+    )) {
+        // reset output
+        Array.from(document.querySelectorAll(
+            "body > .resettable"
+        )).forEach(function (element) {
+            switch (element.tagName) {
+            case "INPUT":
+            case "TEXTAREA":
+                element.value = "";
                 break;
             default:
-                if (location.href.indexOf("modeTest=") >= 0) {
-                    return;
-                }
-                // try to JSON.stringify #inputTextareaEval1
-                try {
-                    document.querySelector('#outputJsonStringifyPre1').textContent = '';
-                    document.querySelector('#outputJsonStringifyPre1').textContent =
-                        local.jsonStringifyOrdered(
-                            JSON.parse(document.querySelector('#inputTextareaEval1').value),
-                            null,
-                            4
-                        );
-                } catch (ignore) {
-                }
-                // jslint #inputTextareaEval1
-                local.jslint.errorText = '';
-                if (document.querySelector('#inputTextareaEval1').value
-                        .indexOf('/*jslint') >= 0) {
-                    local.jslint.jslintAndPrint(
-                        document.querySelector('#inputTextareaEval1').value,
-                        'inputTextareaEval1.js'
-                    );
-                }
-                document.querySelector('#outputJslintPre1').textContent =
-                    local.jslint.errorText
-                    .replace((/\u001b\[\d*m/g), '')
-                    .trim();
-                // try to cleanup __coverage__
-                try {
-                    delete local.global.__coverage__['/inputTextareaEval1.js'];
-                } catch (ignore) {
-                }
-                // try to cover and eval input-code
-                try {
-                    /*jslint evil: true*/
-                    document.querySelector('#outputTextarea1').value =
-                        local.istanbul.instrumentSync(
-                            document.querySelector('#inputTextareaEval1').value,
-                            '/inputTextareaEval1.js'
-                        );
-                    eval(document.querySelector('#outputTextarea1').value);
-                    document.querySelector('#coverageReportDiv1').innerHTML =
-                        local.istanbul.coverageReportCreate({
-                            coverage: window.__coverage__
-                        });
-                } catch (errorCaught) {
-                    console.error(errorCaught);
-                }
+                element.textContent = "";
             }
-            if (document.querySelector('#inputTextareaEval1') && (!event || (event &&
-                    event.currentTarget &&
-                    event.currentTarget.className &&
-                    event.currentTarget.className.includes &&
-                    event.currentTarget.className.includes('oneval')))) {
-                // try to eval input-code
-                try {
-                    /*jslint evil: true*/
-                    eval(document.querySelector('#inputTextareaEval1').value);
-                } catch (errorCaught) {
-                    console.error(errorCaught);
-                }
-            }
-        };
-
-        // log stderr and stdout to #outputStdoutTextarea1
-        ['error', 'log'].forEach(function (key) {
-            console[key + '_original'] = console[key + '_original'] || console[key];
-            console[key] = function () {
-                var element;
-                console[key + '_original'].apply(console, arguments);
-                element = document.querySelector('#outputStdoutTextarea1');
-                if (!element) {
-                    return;
-                }
-                // append text to #outputStdoutTextarea1
-                element.value += Array.from(arguments).map(function (arg) {
-                    return typeof arg === 'string'
-                        ? arg
-                        : JSON.stringify(arg, null, 4);
-                }).join(' ').replace((/\u001b\[\d*m/g), '') + '\n';
-                // scroll textarea to bottom
-                element.scrollTop = element.scrollHeight;
-            };
         });
-        // init event-handling
-        ['change', 'click', 'keyup'].forEach(function (event) {
-            Array.from(document.querySelectorAll('.on' + event)).forEach(function (element) {
-                element.addEventListener(event, local.testRunBrowser);
-            });
-        });
+    }
+    switch (event && event.currentTarget && event.currentTarget.id) {
+    case "testRunButton1":
+        // show tests
+        if (document.querySelector("#testReportDiv1").style.maxHeight === "0px") {
+            local.uiAnimateSlideDown(document.querySelector("#testReportDiv1"));
+            document.querySelector("#testRunButton1").textContent = "hide internal test";
+            local.modeTest = 1;
+            local.testRunDefault(local);
+        // hide tests
+        } else {
+            local.uiAnimateSlideUp(document.querySelector("#testReportDiv1"));
+            document.querySelector("#testRunButton1").textContent = "run internal test";
+        }
+        break;
+    // custom-case
+    case "testRunButton2":
         // run tests
-        local.testRunBrowser();
-    }());
-
-
-
-    // run node js-env code - init-test
-    /* istanbul ignore next */
-    (function () {
-        if (local.isBrowser) {
+        local.modeTest = 1;
+        local.testRunDefault(local);
+        break;
+    default:
+        if (location.href.indexOf("modeTest=") >= 0) {
             return;
         }
-        // init exports
-        module.exports = local;
-        // require builtins
-        // local.assert = require('assert');
-        local.buffer = require('buffer');
-        local.child_process = require('child_process');
-        local.cluster = require('cluster');
-        local.crypto = require('crypto');
-        local.dgram = require('dgram');
-        local.dns = require('dns');
-        local.domain = require('domain');
-        local.events = require('events');
-        local.fs = require('fs');
-        local.http = require('http');
-        local.https = require('https');
-        local.net = require('net');
-        local.os = require('os');
-        local.path = require('path');
-        local.querystring = require('querystring');
-        local.readline = require('readline');
-        local.repl = require('repl');
-        local.stream = require('stream');
-        local.string_decoder = require('string_decoder');
-        local.timers = require('timers');
-        local.tls = require('tls');
-        local.tty = require('tty');
-        local.url = require('url');
-        local.util = require('util');
-        local.vm = require('vm');
-        local.zlib = require('zlib');
-        /* validateLineSortedReset */
-        // init assets
-        local.assetsDict = local.assetsDict || {};
-        [
-            'assets.index.template.html',
-            'assets.swgg.swagger.json',
-            'assets.swgg.swagger.server.json'
-        ].forEach(function (file) {
-            file = '/' + file;
-            local.assetsDict[file] = local.assetsDict[file] || '';
-            if (local.fs.existsSync(local.__dirname + file)) {
-                local.assetsDict[file] = local.fs.readFileSync(
-                    local.__dirname + file,
-                    'utf8'
-                );
-            }
-        });
-        /* jslint-ignore-begin */
-        local.assetsDict['/assets.index.template.html'] = '\
+        // try to JSON.stringify #inputTextareaEval1
+        try {
+            document.querySelector("#outputJsonStringifyPre1").textContent = "";
+            document.querySelector("#outputJsonStringifyPre1").textContent =
+                    local.jsonStringifyOrdered(
+                JSON.parse(document.querySelector("#inputTextareaEval1").value),
+                null,
+                4
+            );
+        } catch (ignore) {
+        }
+        // jslint #inputTextareaEval1
+        local.jslint.errorText = "";
+        if (document.querySelector("#inputTextareaEval1").value
+        .indexOf("/*jslint") >= 0) {
+            local.jslint.jslintAndPrint(
+                document.querySelector("#inputTextareaEval1").value,
+                "inputTextareaEval1.js"
+            );
+        }
+        document.querySelector("#outputJslintPre1").textContent = local.jslint.errorText
+        .replace((/\u001b\[\d*m/g), "")
+        .trim();
+        // try to cleanup __coverage__
+        try {
+            delete local.global.__coverage__["/inputTextareaEval1.js"];
+        } catch (ignore) {
+        }
+        // try to cover and eval input-code
+        try {
+            document.querySelector("#outputTextarea1").value =
+                    local.istanbul.instrumentSync(
+                document.querySelector("#inputTextareaEval1").value,
+                "/inputTextareaEval1.js"
+            );
+            eval( // jslint ignore:line
+                document.querySelector("#outputTextarea1").value.replace((/^#!\//), "// ")
+            );
+            document.querySelector("#coverageReportDiv1").innerHTML =
+                    local.istanbul.coverageReportCreate({
+                coverage: window.__coverage__
+            });
+        } catch (errorCaught2) {
+            console.error(errorCaught2);
+        }
+    }
+};
+
+// log stderr and stdout to #outputStdoutTextarea1
+["error", "log"].forEach(function (key) {
+    console[key + "_original"] = console[key + "_original"] || console[key];
+    console[key] = function () {
+        var argList;
+        var element;
+        argList = Array.from(arguments); // jslint ignore:line
+        console[key + "_original"].apply(console, argList);
+        element = document.querySelector("#outputStdoutTextarea1");
+        if (!element) {
+            return;
+        }
+        // append text to #outputStdoutTextarea1
+        element.value += argList.map(function (arg) {
+            return typeof arg === "string"
+            ? arg
+            : JSON.stringify(arg, null, 4);
+        }).join(" ").replace((/\u001b\[\d*m/g), "") + "\n";
+        // scroll textarea to bottom
+        element.scrollTop = element.scrollHeight;
+    };
+});
+// init event-handling
+["change", "click", "keyup"].forEach(function (event) {
+    Array.from(document.querySelectorAll(".on" + event)).forEach(function (element) {
+        element.addEventListener(event, local.testRunBrowser);
+    });
+});
+// run tests
+local.testRunBrowser();
+}());
+
+
+
+/* istanbul ignore next */
+// run node js-env code - init-test
+(function () {
+if (local.isBrowser) {
+    return;
+}
+
+
+
+// init exports
+module.exports = local;
+// require builtins
+// local.assert = require("assert");
+local.buffer = require("buffer");
+local.child_process = require("child_process");
+local.cluster = require("cluster");
+local.crypto = require("crypto");
+local.dgram = require("dgram");
+local.dns = require("dns");
+local.domain = require("domain");
+local.events = require("events");
+local.fs = require("fs");
+local.http = require("http");
+local.https = require("https");
+local.net = require("net");
+local.os = require("os");
+local.path = require("path");
+local.querystring = require("querystring");
+local.readline = require("readline");
+local.repl = require("repl");
+local.stream = require("stream");
+local.string_decoder = require("string_decoder");
+local.timers = require("timers");
+local.tls = require("tls");
+local.tty = require("tty");
+local.url = require("url");
+local.util = require("util");
+local.vm = require("vm");
+local.zlib = require("zlib");
+/* validateLineSortedReset */
+// init assets
+local.assetsDict = local.assetsDict || {};
+[
+    "assets.index.template.html",
+    "assets.swgg.swagger.json",
+    "assets.swgg.swagger.server.json"
+].forEach(function (file) {
+    file = "/" + file;
+    local.assetsDict[file] = local.assetsDict[file] || "";
+    if (local.fs.existsSync(local.__dirname + file)) {
+        local.assetsDict[file] = local.fs.readFileSync(
+            local.__dirname + file,
+            "utf8"
+        );
+    }
+});
+/* jslint ignore:start */
+local.assetsDict["/assets.index.template.html"] = '\
 <!doctype html>\n\
 <html lang="en">\n\
 <head>\n\
@@ -450,16 +452,16 @@ instruction
 <!-- "assets.utility2.template.html" -->\n\
 <title>{{env.npm_package_name}} ({{env.npm_package_version}})</title>\n\
 <style>\n\
-/* jslint-utility2 */\n\
+/* jslint utility2:true */\n\
 /*csslint\n\
 */\n\
-/* jslint-ignore-begin */\n\
+/* csslint ignore:start */\n\
 *,\n\
 *:after,\n\
 *:before {\n\
     box-sizing: border-box;\n\
 }\n\
-/* jslint-ignore-end */\n\
+/* csslint ignore:end */\n\
 @keyframes uiAnimateShake {\n\
     0%, 50% {\n\
         transform: translateX(10px);\n\
@@ -576,17 +578,7 @@ textarea {\n\
 <a class="zeroPixel" download="db.persistence.json" href="" id="dbExportA1"></a>\n\
 <input class="zeroPixel" id="dbImportInput1" type="file">\n\
 <script>\n\
-/* jslint-utility2 */\n\
-/*jslint\n\
-    bitwise: true,\n\
-    browser: true,\n\
-    maxerr: 4,\n\
-    maxlen: 100,\n\
-    node: true,\n\
-    nomen: true,\n\
-    regexp: true,\n\
-    stupid: true\n\
-*/\n\
+/* jslint utility2:true */\n\
 // init domOnEventWindowOnloadTimeElapsed\n\
 (function () {\n\
 /*\n\
@@ -600,9 +592,10 @@ textarea {\n\
     window.addEventListener("load", function () {\n\
         setTimeout(function () {\n\
             window.domOnEventWindowOnloadTimeElapsed = Date.now() -\n\
-                window.domOnEventWindowOnloadTimeElapsed;\n\
-            console.error("domOnEventWindowOnloadTimeElapsed = " +\n\
-                window.domOnEventWindowOnloadTimeElapsed);\n\
+                    window.domOnEventWindowOnloadTimeElapsed;\n\
+            console.error(\n\
+                "domOnEventWindowOnloadTimeElapsed = " + window.domOnEventWindowOnloadTimeElapsed\n\
+            );\n\
         }, 100);\n\
     });\n\
 }());\n\
@@ -623,15 +616,17 @@ textarea {\n\
         ajaxProgressDiv1.style.width = "25%";\n\
     });\n\
     ajaxProgressState = 0;\n\
-    ajaxProgressUpdate = (window.local &&\n\
-        window.local.ajaxProgressUpdate) || function () {\n\
+    ajaxProgressUpdate = (\n\
+        window.local &&\n\
+        window.local.ajaxProgressUpdate\n\
+    ) || function () {\n\
         ajaxProgressDiv1.style.width = "100%";\n\
         setTimeout(function () {\n\
             ajaxProgressDiv1.style.background = "transparent";\n\
             setTimeout(function () {\n\
                 ajaxProgressDiv1.style.width = "0%";\n\
             }, 500);\n\
-        }, 1500);\n\
+        }, 1000);\n\
     };\n\
     window.timerIntervalAjaxProgressUpdate = setInterval(function () {\n\
         ajaxProgressState += 1;\n\
@@ -656,11 +651,14 @@ textarea {\n\
         return;\n\
     }\n\
     window.domOnEventSelectAllWithinPre = function (event) {\n\
-        var range, selection;\n\
-        if (event &&\n\
-                event.key === "a" &&\n\
-                (event.ctrlKey || event.metaKey) &&\n\
-                event.target.closest("pre")) {\n\
+        var range;\n\
+        var selection;\n\
+        if (\n\
+            event &&\n\
+            event.key === "a" &&\n\
+            (event.ctrlKey || event.metaKey) &&\n\
+            event.target.closest("pre")\n\
+        ) {\n\
             range = document.createRange();\n\
             range.selectNodeContents(event.target.closest("pre"));\n\
             selection = window.getSelection();\n\
@@ -700,7 +698,6 @@ utility2-comment -->\n\
 // remove comment below to disable jslint\n\
 /*jslint\n\
     browser: true,\n\
-    es6: true\n\
 */\n\
 /*global window*/\n\
 (function () {\n\
@@ -761,6 +758,7 @@ utility2-comment -->\n\
 utility2-comment -->\n\
 <script src="assets.utility2.lib.istanbul.js"></script>\n\
 <script src="assets.utility2.lib.jslint.js"></script>\n\
+<script src="assets.utility2.lib.jslint2.js"></script>\n\
 <script src="assets.utility2.lib.db.js"></script>\n\
 <script src="assets.utility2.lib.marked.js"></script>\n\
 <script src="assets.utility2.lib.sjcl.js"></script>\n\
@@ -782,63 +780,62 @@ utility2-comment -->\n\
 </body>\n\
 </html>\n\
 ';
-        /* jslint-ignore-end */
-        /* validateLineSortedReset */
-        /* jslint-ignore-begin */
-        // bug-workaround - long $npm_package_buildCustomOrg
-        local.assetsDict['/assets.utility2.js'] =
-            local.assetsDict['/assets.utility2.js'] ||
-            local.fs.readFileSync(local.__dirname + '/lib.utility2.js', 'utf8'
-        ).replace((/^#!\//), '// ');
-        /* jslint-ignore-end */
-        /* validateLineSortedReset */
-        local.assetsDict['/'] =
-            local.assetsDict['/assets.example.html'] =
-            local.assetsDict['/index.html'] =
-            local.assetsDict['/assets.index.template.html']
-            .replace((/\{\{env\.(\w+?)\}\}/g), function (match0, match1) {
-                switch (match1) {
-                case 'npm_package_description':
-                    return 'the greatest app in the world!';
-                case 'npm_package_name':
-                    return 'utility2';
-                case 'npm_package_nameLib':
-                    return 'utility2';
-                case 'npm_package_version':
-                    return '0.0.1';
-                default:
-                    return match0;
-                }
-            });
-        // init cli
-        if (module !== require.main || local.global.utility2_rollup) {
-            return;
-        }
-        local.assetsDict['/assets.example.js'] =
-            local.assetsDict['/assets.example.js'] ||
-            local.fs.readFileSync(__filename, 'utf8');
-        local.assetsDict['/favicon.ico'] = local.assetsDict['/favicon.ico'] || '';
-        // if $npm_config_timeout_exit exists,
-        // then exit this process after $npm_config_timeout_exit ms
-        if (Number(process.env.npm_config_timeout_exit)) {
-            setTimeout(process.exit, Number(process.env.npm_config_timeout_exit));
-        }
-        // start server
-        if (local.global.utility2_serverHttp1) {
-            return;
-        }
-        process.env.PORT = process.env.PORT || '8081';
-        console.error('server starting on port ' + process.env.PORT);
-        local.http.createServer(function (request, response) {
-            request.urlParsed = local.url.parse(request.url);
-            if (local.assetsDict[request.urlParsed.pathname] !== undefined) {
-                response.end(local.assetsDict[request.urlParsed.pathname]);
-                return;
-            }
-            response.statusCode = 404;
-            response.end();
-        }).listen(process.env.PORT);
-    }());
+/* jslint ignore:end */
+/* validateLineSortedReset */
+/* jslint ignore:start */
+// bug-workaround - long $npm_package_buildCustomOrg
+local.assetsDict["/assets.utility2.js"] =
+    local.assetsDict["/assets.utility2.js"] ||
+    local.fs.readFileSync(local.__dirname + "/lib.utility2.js", "utf8"
+).replace((/^#!\//), "// ");
+/* jslint ignore:end */
+/* validateLineSortedReset */
+local.assetsDict["/"] = local.assetsDict["/assets.index.template.html"]
+.replace((/\{\{env\.(\w+?)\}\}/g), function (match0, match1) {
+    switch (match1) {
+    case "npm_package_description":
+        return "the greatest app in the world!";
+    case "npm_package_name":
+        return "utility2";
+    case "npm_package_nameLib":
+        return "utility2";
+    case "npm_package_version":
+        return "0.0.1";
+    default:
+        return match0;
+    }
+});
+local.assetsDict["/assets.example.html"] = local.assetsDict["/"];
+local.assetsDict["/index.html"] = local.assetsDict["/"];
+// init cli
+if (module !== require.main || local.global.utility2_rollup) {
+    return;
+}
+/* validateLineSortedReset */
+local.assetsDict["/assets.example.js"] = local.assetsDict["/assets.example.js"] ||
+        local.fs.readFileSync(__filename, "utf8");
+local.assetsDict["/favicon.ico"] = local.assetsDict["/favicon.ico"] || "";
+// if $npm_config_timeout_exit exists,
+// then exit this process after $npm_config_timeout_exit ms
+if (Number(process.env.npm_config_timeout_exit)) {
+    setTimeout(process.exit, Number(process.env.npm_config_timeout_exit));
+}
+// start server
+if (local.global.utility2_serverHttp1) {
+    return;
+}
+process.env.PORT = process.env.PORT || "8081";
+console.error("server starting on port " + process.env.PORT);
+local.http.createServer(function (request, response) {
+    request.urlParsed = local.url.parse(request.url);
+    if (local.assetsDict[request.urlParsed.pathname] !== undefined) {
+        response.end(local.assetsDict[request.urlParsed.pathname]);
+        return;
+    }
+    response.statusCode = 404;
+    response.end();
+}).listen(process.env.PORT);
+}());
 }());
 ```
 
@@ -907,7 +904,7 @@ utility2-comment -->\n\
         "electron-lite": "kaizhu256/node-electron-lite#alpha"
     },
     "engines": {
-        "node": ">=4.0"
+        "node": ">=8.0"
     },
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
@@ -941,7 +938,7 @@ utility2-comment -->\n\
         "test": "./npm_scripts.sh",
         "utility2": "./npm_scripts.sh"
     },
-    "version": "2018.9.8"
+    "version": "2018.9.29"
 }
 ```
 

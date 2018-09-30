@@ -1,42 +1,106 @@
-/* jslint-utility2 */
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 4,
-    maxlen: 100,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
+#!/usr/bin/env node
+/* istanbul instrument in package marked */
+/* jslint utility2:true */
 (function () {
-    'use strict';
-    var local;
+"use strict";
+var local;
 
 
 
-    // run shared js-env code - init-before
-    (function () {
-        // init local
-        local = {};
-        // init isBrowser
-        local.isBrowser = typeof window === 'object' &&
-            typeof window.XMLHttpRequest === 'function' &&
-            window.document &&
-            typeof window.document.querySelectorAll === 'function';
-        // init global
-        local.global = local.isBrowser
-            ? window
-            : global;
-        // re-init local
-        local = local.global.utility2_rollup ||
-            // local.global.utility2_rollup_old || require('./assets.utility2.rollup.js') ||
-            local;
-    }());
+/* istanbul ignore next */
+// run shared js-env code - init-before
+(function () {
 
 
 
-/* jslint-ignore-begin */
+// init debug_inline
+(function () {
+    var consoleError;
+    var context;
+    consoleError = console.error;
+    context = (typeof window === "object" && window) || global;
+    context["debug\u0049nline"] = context["debug\u0049nline"] || function () {
+    /*
+     * this function will both print arg0 to stderr and return it
+     */
+        var argList;
+        argList = arguments; // jslint ignore:line
+        // debug arguments
+        context["debug\u0049nlineArguments"] = argList;
+        consoleError("\n\ndebug\u0049nline");
+        consoleError.apply(console, argList);
+        consoleError("\n");
+        // return arg0 for inspection
+        return argList[0];
+    };
+}());
+// init local
+local = {};
+// init isBrowser
+local.isBrowser = (
+    typeof window === "object"
+    && typeof window.XMLHttpRequest === "function"
+    && window.document
+    && typeof window.document.querySelectorAll === "function"
+);
+// init global
+local.global = local.isBrowser
+? window
+: global;
+// re-init local
+local = (
+    local.global.utility2_rollup
+    // || local.global.utility2_rollup_old || require("./assets.utility2.rollup.js")
+    || local
+);
+// init exports
+if (local.isBrowser) {
+    local.global.utility2_marked = local;
+} else {
+    // require builtins
+    // local.assert = require("assert");
+    local.buffer = require("buffer");
+    local.child_process = require("child_process");
+    local.cluster = require("cluster");
+    local.crypto = require("crypto");
+    local.dgram = require("dgram");
+    local.dns = require("dns");
+    local.domain = require("domain");
+    local.events = require("events");
+    local.fs = require("fs");
+    local.http = require("http");
+    local.https = require("https");
+    local.net = require("net");
+    local.os = require("os");
+    local.path = require("path");
+    local.querystring = require("querystring");
+    local.readline = require("readline");
+    local.repl = require("repl");
+    local.stream = require("stream");
+    local.string_decoder = require("string_decoder");
+    local.timers = require("timers");
+    local.tls = require("tls");
+    local.tty = require("tty");
+    local.url = require("url");
+    local.util = require("util");
+    local.vm = require("vm");
+    local.zlib = require("zlib");
+    module.exports = local;
+    module.exports.__dirname = __dirname;
+}
+// init lib main
+local.local = local;
+local.marked = local;
+
+
+
+/* validateLineSortedReset */
+return;
+}());
+
+
+
+/* jslint ignore:start */
 (function () { var exports, module; exports = module = {};
 // rollup-file marked.js
 // 2017-01-19T23:03:37Z
@@ -233,11 +297,11 @@ r.output,c.parse=c,typeof module!="undefined"&&typeof exports=="object"?module.e
 c:typeof define=="function"&&define.amd?define(function(){return c}):this.marked=
 c}).call(function(){return this||(typeof window!="undefined"?window:global)}())
 local.marked = module.exports; }());
-/* jslint-ignore-end */
-    // init exports
-    if (local.isBrowser) {
-        local.global.utility2_marked = local.marked;
-    } else {
-        module.exports = local.marked;
-    }
+/* jslint ignore:end */
+// init exports
+if (local.isBrowser) {
+    local.global.utility2_marked = local.marked;
+} else {
+    module.exports = local.marked;
+}
 }());

@@ -1,5 +1,5 @@
 #!/bin/sh
-# jslint-utility2
+# jslint utility2:true
 
 # POSIX test utility
 # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/test.html
@@ -8,8 +8,11 @@
 # http://sed.sourceforge.net/sed1line.txt
 # git config --global diff.algorithm histogram
 # git fetch origin alpha beta master --tags
+# git ls-remote --heads origin
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/bb "touch" alpha
-# shGitAddTee npm test --mode-coverage --mode-test-case2=testCase_webpage_default,testCase_nop_default
+# shCryptoWithGithubOrg npmdoc shCustomOrgRepoCreateSyncCreate npmdoc/node-npmdoc-mysql
+# shCryptoWithGithubOrg npmdoc shGithubRepoTouch npmdoc/node-npmdoc-mysql "[npm publishAfterCommitAfterBuild]"
+# shGitAddTee npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
 # shGitAddTee shUtility2DependentsSync
 # utility2 electron test.js --enable-logging
 # utility2 shReadmeTest example.js
@@ -226,49 +229,42 @@ shBuildApp () {(set -e
     # create files README.md, lib.$npm_package.nameLib.js, test.js
     node -e '
 // <script>
-/* jslint-utility2 */
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 4,
-    maxlen: 100,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-"use strict";
-var local, tmp;
-local = require(process.env.npm_config_dir_utility2);
-if (!local.fs.existsSync("README.md", "utf8")) {
-    local.fs.writeFileSync("README.md", local.templateRenderMyApp(
-        local.assetsDict["/assets.readme.template.md"],
-        {}
-    ));
-}
-if (!local.fs.existsSync("lib." + process.env.npm_package_nameLib + ".js", "utf8")) {
-    tmp = local.assetsDict["/assets.my_app.template.js"];
-    if (local.fs.existsSync("assets.utility2.rollup.js")) {
-        tmp = tmp.replace(
-            "            // local.global.utility2_rollup_old || ",
-            "            local.global.utility2_rollup_old || "
+/* jslint utility2:true */
+var local;
+var tmp;
+(function () {
+    "use strict";
+    local = require(process.env.npm_config_dir_utility2);
+    if (!local.fs.existsSync("README.md", "utf8")) {
+        local.fs.writeFileSync("README.md", local.templateRenderMyApp(
+            local.assetsDict["/assets.readme.template.md"],
+            {}
+        ));
+    }
+    if (!local.fs.existsSync("lib." + process.env.npm_package_nameLib + ".js", "utf8")) {
+        tmp = local.assetsDict["/assets.my_app.template.js"];
+        if (local.fs.existsSync("assets.utility2.rollup.js")) {
+            tmp = tmp.replace(
+                "            // local.global.utility2_rollup_old || ",
+                "            local.global.utility2_rollup_old || "
+            );
+        }
+        local.fs.writeFileSync(
+            "lib." + process.env.npm_package_nameLib + ".js",
+            local.templateRenderMyApp(tmp, {})
         );
     }
-    local.fs.writeFileSync(
-        "lib." + process.env.npm_package_nameLib + ".js",
-        local.templateRenderMyApp(tmp, {})
-    );
-}
-if (!local.fs.existsSync("test.js", "utf8")) {
-    tmp = local.assetsDict["/assets.test.template.js"];
-    if (local.fs.existsSync("assets.utility2.rollup.js")) {
-        tmp = tmp.replace(
-            "require(\u0027utility2\u0027)",
-            "require(\u0027./assets.utility2.rollup.js\u0027)"
-        );
+    if (!local.fs.existsSync("test.js", "utf8")) {
+        tmp = local.assetsDict["/assets.test.template.js"];
+        if (local.fs.existsSync("assets.utility2.rollup.js")) {
+            tmp = tmp.replace(
+                "require(\u0027utility2\u0027)",
+                "require(\u0027./assets.utility2.rollup.js\u0027)"
+            );
+        }
+        local.fs.writeFileSync("test.js", local.templateRenderMyApp(tmp, {}));
     }
-    local.fs.writeFileSync("test.js", local.templateRenderMyApp(tmp, {}));
-}
+}());
 // </script>
 '
     chmod 755 "lib.$npm_package_nameLib.js" npm_scripts.sh
@@ -294,31 +290,23 @@ shBuildAppSwgg0 () {(set -e
     # init swgg files
     node -e '
 // <script>
-/* jslint-utility2 */
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 4,
-    maxlen: 100,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-"use strict";
+/* jslint utility2:true */
 var local;
-local = require("utility2");
-// init README.md
-local.fs.writeFileSync(
-    "tmp/README.md",
-    local.assetsDict["/assets.readmeCustomOrg.swgg.template.md"]
-);
-// init assets
-["assets.swgg.swagger.json", "assets.utility2.rollup.js"].forEach(function (file) {
-    if (!local.fs.existsSync(file)) {
-        local.fs.writeFileSync(file, local.assetsDict["/" + file]);
-    }
-});
+(function () {
+    "use strict";
+    local = require("utility2");
+    // init README.md
+    local.fs.writeFileSync(
+        "tmp/README.md",
+        local.assetsDict["/assets.readmeCustomOrg.swgg.template.md"]
+    );
+    // init assets
+    ["assets.swgg.swagger.json", "assets.utility2.rollup.js"].forEach(function (file) {
+        if (!local.fs.existsSync(file)) {
+            local.fs.writeFileSync(file, local.assetsDict["/" + file]);
+        }
+    });
+}());
 // </script>
 '
     sed -in \
@@ -402,25 +390,17 @@ shBuildCi () {(set -e
         "[build app]"*)
             node -e '
 // <script>
-/* jslint-utility2 */
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 4,
-    maxlen: 100,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-"use strict";
+/* jslint utility2:true */
 var local;
-local = require("utility2");
-["assets.utility2.rollup.js"].forEach(function (file) {
-    if (local.fs.existsSync(file)) {
-        local.fs.writeFileSync(file, local.assetsDict["/" + file]);
-    }
-});
+(function () {
+    "use strict";
+    local = require("utility2");
+    ["assets.utility2.rollup.js"].forEach(function (file) {
+        if (local.fs.existsSync(file)) {
+            local.fs.writeFileSync(file, local.assetsDict["/" + file]);
+        }
+    });
+}());
 // </script>
 '
             shBuildApp
@@ -449,8 +429,8 @@ local = require("utility2");
             fi
             # shBuildAppSync
             rm -fr "$npm_config_dir_utility2"
-            git clone --branch=alpha --single-branch --depth=50 \
-                https://github.com/kaizhu256/node-utility2 "$npm_config_dir_utility2"
+            git clone https://github.com/kaizhu256/node-utility2 "$npm_config_dir_utility2" \
+                --branch=alpha --single-branch --depth=50
             mkdir -p "$npm_config_dir_utility2/tmp/build/app"
             curl -Lfs https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/build..alpha..travis-ci.org/app/assets.utility2.rollup.js > \
@@ -851,56 +831,59 @@ $HOME/node_modules/utility2}" || return $?
     then
         eval "$(node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true,
+    white: true
 */
-"use strict";
-var packageJson, value;
-packageJson = require("./package.json");
-Object.keys(packageJson).forEach(function (key) {
-    value = packageJson[key];
-    if (!(/\W/g).test(key) && typeof value === "string" && !(/[\n$]/).test(value)) {
-        process.stdout.write("export npm_package_" + key + "=\u0027" +
-            value.replace((/\u0027/g), "\u0027\"\u0027\"\u0027") + "\u0027;");
+/*global global*/
+var packageJson;
+var value;
+(function () {
+    "use strict";
+    packageJson = require("./package.json");
+    Object.keys(packageJson).forEach(function (key) {
+        value = packageJson[key];
+        if (!(/\W/g).test(key) && typeof value === "string" && !(/[\n$]/).test(value)) {
+            process.stdout.write("export npm_package_" + key + "=\u0027" +
+                value.replace((/\u0027/g), "\u0027\"\u0027\"\u0027") + "\u0027;");
+        }
+    });
+    value = String((packageJson.repository && packageJson.repository.url) ||
+        packageJson.repository ||
+        "")
+        .split(":").slice(-1)[0].toString()
+        .split("/")
+        .slice(-2)
+        .join("/")
+        .replace((/\.git$/), "");
+    if ((/^[^\/]+\/[^\/]+$/).test(value)) {
+        value = value.split("/");
+        if (!process.env.GITHUB_REPO) {
+            process.env.GITHUB_REPO = value.join("/");
+            process.stdout.write("export GITHUB_REPO=" + JSON.stringify(process.env.GITHUB_REPO) +
+                ";");
+        }
+        if (!process.env.GITHUB_ORG) {
+            process.env.GITHUB_ORG = value[0];
+            process.stdout.write("export GITHUB_ORG=" + JSON.stringify(process.env.GITHUB_ORG) +
+                ";");
+        }
+        if (!process.env.npm_package_buildCustomOrg &&
+                value.join("/").indexOf(value[0] + "/node-" + value[0] + "-") === 0) {
+            process.env.npm_package_buildCustomOrg = value
+                .join("/")
+                .replace(value[0] + "/node-" + value[0] + "-", "");
+            process.stdout.write("export npm_package_buildCustomOrg=" +
+                JSON.stringify(process.env.npm_package_buildCustomOrg) + ";");
+        }
     }
-});
-value = String((packageJson.repository && packageJson.repository.url) ||
-    packageJson.repository ||
-    "")
-    .split(":").slice(-1)[0].toString()
-    .split("/")
-    .slice(-2)
-    .join("/")
-    .replace((/\.git$/), "");
-if ((/^[^\/]+\/[^\/]+$/).test(value)) {
-    value = value.split("/");
-    if (!process.env.GITHUB_REPO) {
-        process.env.GITHUB_REPO = value.join("/");
-        process.stdout.write("export GITHUB_REPO=" + JSON.stringify(process.env.GITHUB_REPO) +
-            ";");
-    }
-    if (!process.env.GITHUB_ORG) {
-        process.env.GITHUB_ORG = value[0];
-        process.stdout.write("export GITHUB_ORG=" + JSON.stringify(process.env.GITHUB_ORG) +
-            ";");
-    }
-    if (!process.env.npm_package_buildCustomOrg &&
-            value.join("/").indexOf(value[0] + "/node-" + value[0] + "-") === 0) {
-        process.env.npm_package_buildCustomOrg = value
-            .join("/")
-            .replace(value[0] + "/node-" + value[0] + "-", "");
-        process.stdout.write("export npm_package_buildCustomOrg=" +
-            JSON.stringify(process.env.npm_package_buildCustomOrg) + ";");
-    }
-}
+}());
 // </script>
 ')" || return $?
     else
@@ -921,33 +904,25 @@ if ((/^[^\/]+\/[^\/]+$/).test(value)) {
     then
         node -e '
 // <script>
-/* jslint-utility2 */
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 4,
-    maxlen: 100,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-"use strict";
-require("fs").readFileSync("README.md", "utf8").replace((
-    /```\w*?(\n[\W\s]*?(\w\S*?)[\n"][\S\s]*?)\n```/g
-), function (match0, match1, match2, ii, text) {
-    // preserve lineno
-    match0 = text.slice(0, ii).replace((/.+/g), "") + match1
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    require("fs").readFileSync("README.md", "utf8").replace((
+        /```\w*?(\n[\W\s]*?(\w\S*?)[\n"][\S\s]*?)\n```/g
+    ), function (match0, match1, match2, ii, text) {
+        // preserve lineno
+        match0 = text.slice(0, ii).replace((/.+/g), "") + match1
         // parse "\" line-continuation
         .replace((/(?:.*\\\n)+.*/g), function (match0) {
             return match0.replace((/\\\n/g), "") + match0.replace((/.+/g), "");
         });
-    // trim json-file
-    if (match2.slice(-5) === ".json") {
-        match0 = match0.trim();
-    }
-    require("fs").writeFileSync("tmp/README." + match2, match0.trimRight() + "\n");
-});
+        // trim json-file
+        if (match2.slice(-5) === ".json") {
+            match0 = match0.trim();
+        }
+        require("fs").writeFileSync("tmp/README." + match2, match0.trimRight() + "\n");
+    });
+}());
 // </script>
 '
     fi
@@ -1002,37 +977,39 @@ shCryptoAesXxxCbcRawDecrypt () {(set -e
     node -e "
 $UTILITY2_MACRO_JS
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
-var local, chunkList;
-local = local || {};
-chunkList = [];
-process.stdin.on('data', function (chunk) {
-    chunkList.push(chunk);
-});
-process.stdin.on('end', function () {
-    local.cryptoAesXxxCbcRawDecrypt({
-        data: process.argv[2] === 'base64'
+/*global global*/
+var local;
+var chunkList;
+(function () {
+    'use strict';
+    local = local || {};
+    chunkList = [];
+    process.stdin.on('data', function (chunk) {
+        chunkList.push(chunk);
+    });
+    process.stdin.on('end', function () {
+        local.cryptoAesXxxCbcRawDecrypt({
+            data: process.argv[2] === 'base64'
             ? Buffer.concat(chunkList).toString()
             : Buffer.concat(chunkList),
-        key: process.argv[1],
-        mode: process.argv[2]
-    }, function (error, data) {
-        local.assert(!error, error);
-        Object.setPrototypeOf(data, Buffer.prototype);
-        process.stdout.write(data);
+            key: process.argv[1],
+            mode: process.argv[2]
+        }, function (error, data) {
+            local.assert(!error, error);
+            Object.setPrototypeOf(data, Buffer.prototype);
+            process.stdout.write(data);
+        });
     });
-});
+}());
 // </script>
 " "$@"
 )}
@@ -1044,35 +1021,37 @@ shCryptoAesXxxCbcRawEncrypt () {(set -e
     node -e "
 $UTILITY2_MACRO_JS
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
-var local, chunkList;
-local = local || {};
-chunkList = [];
-process.stdin.on('data', function (chunk) {
-    chunkList.push(chunk);
-});
-process.stdin.on('end', function () {
-    local.cryptoAesXxxCbcRawEncrypt({
-        data: Buffer.concat(chunkList),
-        key: process.argv[1],
-        mode: process.argv[2]
-    }, function (error, data) {
-        local.assert(!error, error);
-        Object.setPrototypeOf(data, Buffer.prototype);
-        process.stdout.write(data);
+/*global global*/
+var local;
+var chunkList;
+(function () {
+    'use strict';
+    local = local || {};
+    chunkList = [];
+    process.stdin.on('data', function (chunk) {
+        chunkList.push(chunk);
     });
-});
+    process.stdin.on('end', function () {
+        local.cryptoAesXxxCbcRawEncrypt({
+            data: Buffer.concat(chunkList),
+            key: process.argv[1],
+            mode: process.argv[2]
+        }, function (error, data) {
+            local.assert(!error, error);
+            Object.setPrototypeOf(data, Buffer.prototype);
+            process.stdout.write(data);
+        });
+    });
+}());
 // </script>
 " "$@"
 )}
@@ -1300,8 +1279,8 @@ shDeployHeroku () {(set -e
 )}
 
 shDiffRaw () {(set -e
-# this function will diff-compare lib.xxx.raw.js -> lib.xxx.js
-    diff -u "$(printf "$1" | sed -e "s/\(\.[^.]*\)$/.raw\1/")" "$1" > /tmp/shDiffRaw.diff || true
+# this function will diff-compare raw.xxx.js -> lib.xxx.js
+    diff -u "$(printf "$1" | sed -e "s/lib/raw/")" "$1" > /tmp/shDiffRaw.diff || true
     vim -R /tmp/shDiffRaw.diff
 )}
 
@@ -1606,27 +1585,27 @@ shEnvSanitize () {
 # undefined
     eval "$(node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
-var local;
-local = {};
-console.log(Object.keys(process.env).sort().map(function (key) {
-    return (/(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/i)
-        .test(key) ||
-        (/Crypt|Decrypt|Key|Pass|Private|Secret|Token/).test(key)
+/*global global*/
+(function () {
+    "use strict";
+    console.log(Object.keys(process.env).sort().map(function (key) {
+        return (
+            (/(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/i).test(key) ||
+            (/Crypt|Decrypt|Key|Pass|Private|Secret|Token/).test(key)
+        )
         ? "unset " + key + "; "
         : "";
-}).join("").trim());
+    }).join("").trim());
+}());
 // </script>
 ')"
 }
@@ -1636,26 +1615,29 @@ shFileCustomizeFromToRgx () {(set -e
     node -e "
 $UTILITY2_MACRO_JS
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
-var dataFrom, dataTo, local;
-local = local || {};
-dataFrom = require('fs').readFileSync(process.argv[2], 'utf8');
-dataTo = require('fs').readFileSync(process.argv[1], 'utf8');
-process.argv.slice(3).forEach(function (rgx) {
-    dataTo = local.stringCustomizeFromToRgx(dataFrom, dataTo, new RegExp(rgx));
-});
-require('fs').writeFileSync(process.argv[2], dataTo);
+/*global global*/
+var dataFrom;
+var dataTo;
+var local;
+(function () {
+    'use strict';
+    local = local || {};
+    dataFrom = require('fs').readFileSync(process.argv[2], 'utf8');
+    dataTo = require('fs').readFileSync(process.argv[1], 'utf8');
+    process.argv.slice(3).forEach(function (rgx) {
+        dataTo = local.stringMerge(dataTo, dataFrom, new RegExp(rgx));
+    });
+    require('fs').writeFileSync(process.argv[2], dataTo);
+}());
 // </script>
 " "$@"
 )}
@@ -1668,28 +1650,30 @@ shFileJsonNormalize () {(set -e
     node -e "
 $UTILITY2_MACRO_JS
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
-var local, tmp;
-local = local || {};
-tmp = JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'));
-if (process.argv[2]) {
-    local.objectSetDefault(tmp, JSON.parse(process.argv[2]), Infinity);
-}
-if (process.argv[3]) {
-    local.objectSetOverride(tmp, JSON.parse(process.argv[3]), Infinity);
-}
-require('fs').writeFileSync(process.argv[1], local.jsonStringifyOrdered(tmp, null, 4) + '\n');
+/*global global*/
+var local;
+var tmp;
+(function () {
+    'use strict';
+    local = local || {};
+    tmp = JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'));
+    if (process.argv[2]) {
+        local.objectSetDefault(tmp, JSON.parse(process.argv[2]), Infinity);
+    }
+    if (process.argv[3]) {
+        local.objectSetOverride(tmp, JSON.parse(process.argv[3]), Infinity);
+    }
+    require('fs').writeFileSync(process.argv[1], local.jsonStringifyOrdered(tmp, null, 4) + '\n');
+}());
 // </script>
 " "$@"
 )}
@@ -1699,51 +1683,53 @@ shFilePackageJsonVersionUpdate () {(set -e
     node -e "
 $UTILITY2_MACRO_JS
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
-var aa, bb, local, packageJson;
-local = local || {};
-packageJson = require('./package.json');
-aa = (process.argv[1] || packageJson.version).replace(
-    (/^today\$/),
-    new Date().toISOString().replace((/T.*?$/), '').replace((/-0?/g), '.')
-);
-bb = (process.argv[2] || '0.0.0').replace((/^(\d+?\.\d+?\.)(\d+)(\.*?)\$/), function (
-    match0,
-    match1,
-    match2,
-    match3
-) {
-    match0 = match2;
-    return match1 + (Number(match0) + 1) + match3;
-});
-packageJson.version = local.semverCompare(aa, bb) === 1
+/*global global*/
+var aa;
+var bb;
+var local;
+var packageJson;
+(function () {
+    'use strict';
+    local = local || {};
+    packageJson = require('./package.json');
+    aa = (process.argv[1] || packageJson.version).replace(
+        (/^today\$/),
+        new Date().toISOString().replace((/T.*?$/), '').replace((/-0?/g), '.')
+    );
+    bb = (process.argv[2] || '0.0.0').replace((/^(\d+?\.\d+?\.)(\d+)(\.*?)\$/), function (
+        ignore,
+        match1,
+        match2,
+        match3
+    ) {
+        return match1 + (Number(match2) + 1) + match3;
+    });
+    packageJson.version = local.semverCompare(aa, bb) === 1
     ? aa
     : bb;
-console.error([aa, bb, packageJson.version]);
-// update package.json
-require('fs').writeFileSync('package.json', JSON.stringify(packageJson, null, 4) + '\n');
-// update README.md
-require('fs').writeFileSync(
-    'README.md',
-    require('fs').readFileSync('README.md', 'utf8').replace(
-        (/^(#### changelog |- npm publish | {4}\"version\": \")\d+?\.\d+?\.\d[^\n\",]*/gm),
-        /* jslint-ignore-next-line */
-        '\$1' + packageJson.version,
-        null
-    )
-);
-console.error('shFilePackageJsonVersionUpdate - ' + packageJson.version);
+    console.error([aa, bb, packageJson.version]);
+    // update package.json
+    require('fs').writeFileSync('package.json', JSON.stringify(packageJson, null, 4) + '\n');
+    // update README.md
+    require('fs').writeFileSync(
+        'README.md',
+        require('fs').readFileSync('README.md', 'utf8').replace(
+            (/^(#### changelog |- npm publish | {4}\"version\": \")\d+?\.\d+?\.\d[^\n\",]*/gm), // jslint ignore:line
+            '\$1' + packageJson.version, // jslint ignore:line
+            null
+        )
+    );
+    console.error('shFilePackageJsonVersionUpdate - ' + packageJson.version);
+}());
 // </script>
 " "$1" "$([ "$2" = publishedIncrement ] && npm info "" version 2>/dev/null)"
 )}
@@ -1764,21 +1750,75 @@ shGitAddTee () {(set -e
     git status 2>&1 | tee -a /tmp/shGitAddTee.diff
 )}
 
+shGitBranchPush () {(set -e
+# this function will run "git push ./origin $COMMIT:$BRANCH"
+    COMMIT="$(printf "$1" | sed -e "s/:.*//")"
+    BRANCH="$(printf "$1" | sed -e "s/.*://")"
+    shift
+    # git push ./origin :$BRANCH
+    if [ ! "$COMMIT" ]
+    then
+        if (git show-ref "$BRANCH" --heads --tags 2>&1 > /dev/null)
+        then
+            shGitCommandWithGithubToken push . ":$BRANCH"
+        fi
+        shGitCommandWithGithubToken push origin ":$BRANCH"
+        return
+    fi
+    if ! (git show-ref "$COMMIT" --heads --tags 2>&1 > /dev/null)
+    then
+        shBuildPrint "commit does not exist - $COMMIT"
+        return 1
+    fi
+    # git tag $BRANCH $COMMIT
+    if (git show-ref "$COMMIT" --tags 2>&1 > /dev/null) ||
+        (git show-ref "$BRANCH" --tags 2>&1 > /dev/null)
+    then
+        shGitCommandWithGithubToken tag "$BRANCH" "$COMMIT" "$@"
+    # git push . $COMMIT:$BRANCH
+    elif (git show-ref "$BRANCH" --heads 2>&1 > /dev/null)
+    then
+        shGitCommandWithGithubToken push . "$COMMIT:$BRANCH" "$@"
+    # git push . $BRANCH
+    else
+        shGitCommandWithGithubToken push . "HEAD:$BRANCH"
+        shGitCommandWithGithubToken push . "$COMMIT:$BRANCH" -f
+    fi
+    # git push origin $BRANCH
+    shGitCommandWithGithubToken push origin "$BRANCH" "$@"
+)}
+
+shGitBranchRename () {(set -e
+# this function will rename in . and origin, $BRANCH1 -> $BRANCH2
+    BRANCH1="$(printf "$1" | sed -e "s/:.*//")"
+    BRANCH2="$(printf "$1" | sed -e "s/.*://")"
+    if [ "$BRANCH1" ]
+    then
+        shGitBranchPush "$BRANCH1:$BRANCH2" -f
+    fi
+    shGitBranchPush ":$BRANCH1"
+)}
+
 shGitCommandWithGithubToken () {(set -e
 # this function will run the git-command using $GITHUB_TOKEN
 # http://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
     export MODE_BUILD="${MODE_BUILD:-shGitCommandWithGithubToken}"
-    shBuildPrint "shGitCommandWithGithubToken $*"
-    if [ ! "$GITHUB_TOKEN" ]
-    then
-        git "$@"
-        return
-    fi
+    # security - filter basic-auth
+    shBuildPrint "$(printf "shGitCommandWithGithubToken $*" | sed -e "s/:\/\/[^@]*@/:\/\/...@/")"
     COMMAND="$1"
     shift
     URL="$1"
     shift
+    if [ ! "$GITHUB_TOKEN" ] || ! (printf "$URL" | grep -q -E "^https:\/\/")
+    then
+        git "$COMMAND" "$URL" "$@"
+        return
+    fi
     case "$URL" in
+    .)
+        git "$COMMAND" "$URL" "$@"
+        return
+        ;;
     https://github.com/*)
         URL="$(printf "$URL" | sed -e "s/github.com/$GITHUB_TOKEN@github.com/")"
         ;;
@@ -1788,12 +1828,6 @@ shGitCommandWithGithubToken () {(set -e
     esac
     # hide $GITHUB_TOKEN in case of error
     git "$COMMAND" "$URL" "$@" 2>/dev/null
-)}
-
-shGitDateCommitted () {(set -e
-# this function will print the commit-date for commit $1
-# https://stackoverflow.com/questions/21363187/git-show-dates-in-utc
-    TZ=UTC git show --quiet --date='format-local:%Y-%m-%dT%H:%M:%SZ' --format="%cd" "$1"
 )}
 
 shGitGc () {(set -e
@@ -1873,13 +1907,20 @@ shGitSquashShift () {(set -e
     git add .
     git commit -m squash > /dev/null || true
     git cherry-pick -X theirs --allow-empty --strategy=recursive "$BRANCH~$RANGE..$BRANCH"
-    git push -f . "HEAD:$BRANCH"
+    git push . "HEAD:$BRANCH" -f
     git checkout "$BRANCH"
 )}
 
 shGithubApiRateLimitGet () {(set -e
 # this function will the rate-limit for the $GITHUB_TOKEN
     curl -I https://api.github.com -H "Authorization: token $GITHUB_TOKEN"
+)}
+
+shGithubDateCommitted () {(set -e
+# this function will fetch the commit-date for the github-commit-url $1
+# example usage:
+# shGithubDateCommitted https://github.com/kaizhu256/node-utility2/commits/master
+    curl -Lfs "$1" | grep -m 1 -o -E "\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ"
 )}
 
 shGithubRepoBaseCreate () {(set -e
@@ -1912,48 +1953,53 @@ shGithubRepoBaseCreate () {(set -e
     node -e "
 $UTILITY2_MACRO_JS
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
+/*global global*/
 var local;
-local = local || {};
-local.ajax({
-    data: '{\"name\":\"' + process.argv[1].split('/')[1] + '\"}',
-    headers: {
-        Authorization: 'token ' + process.env.GITHUB_TOKEN,
-        'User-Agent': 'undefined'
-    },
-    method: 'POST',
-    url: 'https://api.github.com/orgs/' + process.argv[1].split('/')[0] + '/repos'
-}, function (error, xhr) {
-    if (xhr.statusCode !== 404) {
-        local.onErrorDefault(error && xhr &&
-            ('https://github.com/' + process.argv[1] + ' - ' + xhr.responseText));
-        return;
-    }
+(function () {
+    'use strict';
+    local = local || {};
     local.ajax({
-        data: '{\"name\":\"' + process.argv[1].split('/')[1] + '\"}',
+        data: '{\"name\":\"' + process.argv[1].split('/')[1] + '\"}',  // jslint ignore:line
         headers: {
             Authorization: 'token ' + process.env.GITHUB_TOKEN,
             'User-Agent': 'undefined'
         },
         method: 'POST',
-        url: 'https://api.github.com/user/repos'
+        url: 'https://api.github.com/orgs/' + process.argv[1].split('/')[0] + '/repos'
     }, function (error, xhr) {
-        local.onErrorDefault(error && xhr &&
-            ('https://github.com/' + process.argv[1] + ' - ' + xhr.responseText));
-        return;
+        if (xhr.statusCode !== 404) {
+            local.onErrorDefault(
+                error && xhr &&
+                ('https://github.com/' + process.argv[1] + ' - ' + xhr.responseText)
+            );
+            return;
+        }
+        local.ajax({
+            data: '{\"name\":\"' + process.argv[1].split('/')[1] + '\"}', // jslint ignore:line
+            headers: {
+                Authorization: 'token ' + process.env.GITHUB_TOKEN,
+                'User-Agent': 'undefined'
+            },
+            method: 'POST',
+            url: 'https://api.github.com/user/repos'
+        }, function (error, xhr) {
+            local.onErrorDefault(
+                error && xhr &&
+                ('https://github.com/' + process.argv[1] + ' - ' + xhr.responseText)
+            );
+            return;
+        });
     });
-});
+}());
 // </script>
 " "$GITHUB_REPO"
     # set default-branch to beta
@@ -2040,32 +2086,33 @@ shGrepReplace () {(set -e
 # this function will save the grep-and-replace lines in file $1
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
+/*global global*/
 var dict;
-dict = {};
-require("fs").readFileSync(process.argv[1], "utf8").split("\n").forEach(function (element) {
-    element = (/^(.+?):(\d+?):(.+?)$/).exec(element);
-    if (!element) {
-        return;
-    }
-    dict[element[1]] = dict[element[1]] ||
-        require("fs").readFileSync(element[1], "utf8").split("\n");
-    dict[element[1]][element[2] - 1] = element[3];
-});
-Object.keys(dict).forEach(function (key) {
-    require("fs").writeFileSync(key, dict[key].join("\n"));
-});
+(function () {
+    "use strict";
+    dict = {};
+    require("fs").readFileSync(process.argv[1], "utf8").split("\n").forEach(function (element) {
+        element = (/^(.+?):(\d+?):(.+?)$/).exec(element);
+        if (!element) {
+            return;
+        }
+        dict[element[1]] = dict[element[1]] ||
+                require("fs").readFileSync(element[1], "utf8").split("\n");
+        dict[element[1]][element[2] - 1] = element[3];
+    });
+    Object.keys(dict).forEach(function (key) {
+        require("fs").writeFileSync(key, dict[key].join("\n"));
+    });
+}());
 // </script>
 ' "$@"
 )}
@@ -2081,29 +2128,32 @@ shHttpFileServer () {(set -e
 # this function will run a simple node http-file-server on http-port $PORT
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
-require("http").createServer(function (request, response) {
-    require("fs").readFile(
-        // security - disable parent directory lookup
-        require("path").resolve("/", require("url").parse(request.url).pathname).slice(1),
-        function (error, data) {
-            response.end(error
-                ? error.stack
-                : data);
-        }
-    );
-}).listen(process.env.PORT);
+/*global global*/
+(function () {
+    "use strict";
+    require("http").createServer(function (request, response) {
+        require("fs").readFile(
+            // security - disable parent directory lookup
+            require("path").resolve("/", require("url").parse(request.url).pathname).slice(1),
+            function (error, data) {
+                response.end(
+                    error
+                    ? error.stack
+                    : data
+                );
+            }
+        );
+    }).listen(process.env.PORT);
+}());
 // </script>
 '
 )}
@@ -2125,22 +2175,25 @@ shImageToDataUri () {(set -e
     esac
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
-console.log("data:image/" +
-    require("path").extname(process.argv[1]).slice(1) +
-    ";base64," +
-    require("fs").readFileSync(process.argv[1]).toString("base64"));
+/*global global*/
+(function () {
+    "use strict";
+    console.log(
+        "data:image/" +
+        require("path").extname(process.argv[1]).slice(1) +
+        ";base64," +
+        require("fs").readFileSync(process.argv[1]).toString("base64")
+    );
+}());
 // </script>
 ' "$FILE"
 )}
@@ -2157,7 +2210,7 @@ shIptablesReset () {(set -e
 # https://wiki.debian.org/iptables
 *filter
 
-# Allows all loopback (lo0) traffic and drop all traffic to 127/8 that doesn"t use lo0
+# Allows all loopback (lo0) traffic and drop all traffic to 127/8 that does not use lo0
 -A INPUT -i lo -j ACCEPT
 -A INPUT ! -i lo -d 127.0.0.0/8 -j REJECT
 
@@ -2269,1185 +2322,1232 @@ shMain () {
     export UTILITY2_DEPENDENTS="$(shUtility2Dependents)"
     export UTILITY2_MACRO_JS="
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
+/*global global*/
 var local;
 local = {};
 (function () {
-    (function () {
-        // init global
-        local.global = global;
-        // init exports
-        if (local.isBrowser) {
-            local.global.utility2_utility2 = local;
-        } else {
-            // require builtins
-            // local.assert = require('assert');
-            local.buffer = require('buffer');
-            local.child_process = require('child_process');
-            local.cluster = require('cluster');
-            local.crypto = require('crypto');
-            local.dgram = require('dgram');
-            local.dns = require('dns');
-            local.domain = require('domain');
-            local.events = require('events');
-            local.fs = require('fs');
-            local.http = require('http');
-            local.https = require('https');
-            local.net = require('net');
-            local.os = require('os');
-            local.path = require('path');
-            local.querystring = require('querystring');
-            local.readline = require('readline');
-            local.repl = require('repl');
-            local.stream = require('stream');
-            local.string_decoder = require('string_decoder');
-            local.timers = require('timers');
-            local.tls = require('tls');
-            local.tty = require('tty');
-            local.url = require('url');
-            local.util = require('util');
-            local.vm = require('vm');
-            local.zlib = require('zlib');
-            module.exports = local;
-            module.exports.__dirname = __dirname;
+'use strict';
+(function () {
+// init global
+local.global = global;
+// init exports
+if (local.isBrowser) {
+    local.global.utility2_utility2 = local;
+} else {
+    // require builtins
+    // local.assert = require('assert');
+    local.buffer = require('buffer');
+    local.child_process = require('child_process');
+    local.cluster = require('cluster');
+    local.crypto = require('crypto');
+    local.dgram = require('dgram');
+    local.dns = require('dns');
+    local.domain = require('domain');
+    local.events = require('events');
+    local.fs = require('fs');
+    local.http = require('http');
+    local.https = require('https');
+    local.net = require('net');
+    local.os = require('os');
+    local.path = require('path');
+    local.querystring = require('querystring');
+    local.readline = require('readline');
+    local.repl = require('repl');
+    local.stream = require('stream');
+    local.string_decoder = require('string_decoder');
+    local.timers = require('timers');
+    local.tls = require('tls');
+    local.tty = require('tty');
+    local.url = require('url');
+    local.util = require('util');
+    local.vm = require('vm');
+    local.zlib = require('zlib');
+    module.exports = local;
+    module.exports.__dirname = __dirname;
+}
+/* jslint ignore:start */
+// init debug_inline
+(function () {
+    var consoleError;
+    var context;
+    consoleError = console.error;
+    context = (typeof window === \"object\" && window) || global;
+    context[\"debug\u0049nline\"] = context[\"debug\u0049nline\"] || function (arg0) {
+    /*
+     * this function will both print arg0 to stderr and return it
+     */
+        // debug arguments
+        context[\"debug\u0049nlineArguments\"] = arguments;
+        consoleError(\"\n\ndebug\u0049nline\");
+        consoleError.apply(console, arguments);
+        consoleError(new Error().stack + \"\n\");
+        // return arg0 for inspection
+        return arg0;
+    };
+}());
+/* jslint ignore:end */
+// init local.<builtin-functions>
+local.ajax = function (options, onError) {
+/*
+ * this function will send an ajax-request with the given options.url,
+ * with error-handling and timeout
+ * example usage:
+    local.ajax({
+        data: \"hello world\",
+        header: {\"x-header-hello\": \"world\"},
+        method: \"POST\",
+        url: \"/index.html\"
+    }, function (error, xhr) {
+        console.log(xhr.statusCode);
+        console.log(xhr.responseText);
+    });
+ */
+    var ajaxProgressUpdate;
+    var bufferValidateAndCoerce;
+    var isBrowser;
+    var isDone;
+    var onEvent;
+    var nop;
+    var local2;
+    var streamCleanup;
+    var xhr;
+    var xhrInit;
+    // init local2
+    local2 = local.utility2 || {};
+    // init function
+    nop = function () {
+    /*
+     * this function will do nothing
+     */
+        return;
+    };
+    ajaxProgressUpdate = local2.ajaxProgressUpdate || nop;
+    bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (bff, mode) {
+    /*
+     * this function will validate and coerce/convert
+     * ArrayBuffer, String, or Uint8Array -> Buffer or String
+     */
+        // coerce ArrayBuffer -> Buffer
+        if (bff instanceof ArrayBuffer) {
+            bff = new Uint8Array(bff);
         }
-        // init debug_inline
-        (function () {
-            var consoleError, context, key;
-            context = (typeof window === 'object' && window) || global;
-            key = 'debug_inline'.replace('_i', 'I');
-            consoleError = console.error;
-            context[key] = function (arg0) {
-            /*
-             * this function will both print arg0 to stderr and return it
-             */
-                // debug arguments
-                context['_' + key + 'Arguments'] = arguments;
-                consoleError('\n\n' + key);
-                consoleError.apply(console, arguments);
-                consoleError(new Error().stack + '\n');
-                // return arg0 for inspection
-                return arg0;
-            };
-        }());
-        // init local.<builtin-functions>
-        local.ajax = function (options, onError) {
-        /*
-         * this function will send an ajax-request with the given options.url,
-         * with error-handling and timeout
-         * example usage:
-            local.ajax({
-                data: 'hello world',
-                header: { 'x-header-hello': 'world' },
-                method: 'POST',
-                url: '/index.html'
-            }, function (error, xhr) {
-                console.log(xhr.statusCode);
-                console.log(xhr.responseText);
-            });
-         */
-            var ajaxProgressUpdate,
-                bufferValidateAndCoerce,
-                isBrowser,
-                isDone,
-                onEvent,
-                nop,
-                local2,
-                streamCleanup,
-                xhr,
-                xhrInit;
-            // init local2
-            local2 = local.utility2 || {};
-            // init function
-            nop = function () {
-            /*
-             * this function will do nothing
-             */
+        // convert Buffer -> String
+        if (mode === \"string\" && typeof bff !== \"string\") {
+            bff = String(bff);
+        }
+        return bff;
+    };
+    onEvent = function (event) {
+    /*
+     * this function will handle events
+     */
+        if (event instanceof Error) {
+            xhr.error = xhr.error || event;
+            xhr.onEvent({type: \"error\"});
+            return;
+        }
+        // init statusCode
+        xhr.statusCode = (xhr.statusCode || xhr.status) | 0;
+        switch (event.type) {
+        case \"abort\":
+        case \"error\":
+        case \"load\":
+            if (isDone) {
                 return;
-            };
-            ajaxProgressUpdate = local2.ajaxProgressUpdate || nop;
-            bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (bff, mode) {
-            /*
-             * this function will validate and coerce/convert
-             * ArrayBuffer, String, or Uint8Array -> Buffer or String
-             */
-                // validate instanceof ArrayBuffer, String, or Uint8Array
-                if (!((isBrowser && (typeof bff === 'string' || bff instanceof ArrayBuffer)) ||
-                        (!isBrowser && Buffer.isBuffer(bff)))) {
-                    throw new Error(
-                        'ajax - xhr.response is not instanceof ArrayBuffer, String, or Buffer'
-                    );
+            }
+            isDone = true;
+            // decrement ajaxProgressCounter
+            local2.ajaxProgressCounter = Math.max(local2.ajaxProgressCounter - 1, 0);
+            ajaxProgressUpdate();
+            // handle abort or error event
+            switch (!xhr.error && event.type) {
+            case \"abort\":
+            case \"error\":
+                xhr.error = new Error(\"ajax - event \" + event.type);
+                break;
+            case \"load\":
+                if (xhr.statusCode >= 400) {
+                    xhr.error = new Error(\"ajax - statusCode \" + xhr.statusCode);
                 }
-                // coerce to ArrayBuffer -> Buffer
-                if (bff instanceof ArrayBuffer) {
-                    return new Uint8Array(bff);
-                }
-                // coerce/convert String -> Buffer or String
-                if (typeof bff === 'string') {
-                    return mode === 'string'
-                        ? bff
-                        : isBrowser
-                        ? new window.TextEncoder().encode(bff)
-                        : Buffer.from(bff);
-                }
-                // coerce/convert Buffer -> Buffer or String
-                return mode === 'string'
-                    ? String(bff)
-                    : bff;
-            };
-            onEvent = function (event) {
-            /*
-             * this function will handle events
-             */
-                if (event instanceof Error) {
-                    xhr.error = xhr.error || event;
-                    xhr.onEvent({ type: 'error' });
-                    return;
-                }
-                // init statusCode
-                xhr.statusCode = (xhr.statusCode || xhr.status) | 0;
-                switch (event.type) {
-                case 'abort':
-                case 'error':
-                case 'load':
-                    if (isDone) {
-                        return;
-                    }
-                    isDone = true;
-                    // decrement ajaxProgressCounter
-                    local2.ajaxProgressCounter = Math.max(local2.ajaxProgressCounter - 1, 0);
-                    ajaxProgressUpdate();
-                    // handle abort or error event
-                    switch (!xhr.error && event.type) {
-                    case 'abort':
-                    case 'error':
-                        xhr.error = new Error('ajax - event ' + event.type);
-                        break;
-                    case 'load':
-                        if (xhr.statusCode >= 400) {
-                            xhr.error = new Error('ajax - statusCode ' + xhr.statusCode);
-                        }
-                        break;
-                    }
-                    // debug statusCode / method / url
-                    if (xhr.error) {
-                        xhr.error.statusCode = xhr.statusCode;
-                        (local2.errorMessagePrepend || nop)(xhr.error, (isBrowser
-                            ? 'browser'
-                            : 'node') + ' - ' +
-                            xhr.statusCode + ' ' + xhr.method + ' ' + xhr.url + '\\n');
-                    }
-                    // update responseHeaders
-                    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders
-                    if (xhr.getAllResponseHeaders) {
-                        xhr.getAllResponseHeaders().replace((
-                            /(.*?): *(.*?)\\r\\n/g
-                        ), function (match0, match1, match2) {
-                            match0 = match1;
-                            xhr.responseHeaders[match0.toLowerCase()] = match2;
-                        });
-                    }
-                    // debug ajaxResponse
-                    xhr.responseContentLength =
-                        (xhr.response && (xhr.response.byteLength || xhr.response.length)) | 0;
-                    xhr.timeElapsed = Date.now() - xhr.timeStart;
-                    if (xhr.modeDebug) {
-                        console.error('serverLog - ' + JSON.stringify({
-                            time: new Date(xhr.timeStart).toISOString(),
-                            type: 'ajaxResponse',
-                            method: xhr.method,
-                            url: xhr.url,
-                            statusCode: xhr.statusCode,
-                            timeElapsed: xhr.timeElapsed,
-                            // extra
-                            responseContentLength: xhr.responseContentLength
-                        }));
-                    }
-                    // init responseType
-                    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType
-                    switch (xhr.response && xhr.responseType) {
-                    // init responseText
-                    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseText
-                    case '':
-                    case 'text':
-                        if (typeof xhr.responseText === 'string') {
-                            break;
-                        }
-                        xhr.responseText = bufferValidateAndCoerce(xhr.response, 'string');
-                        break;
-                    case 'arraybuffer':
-                        xhr.responseBuffer = bufferValidateAndCoerce(xhr.response);
-                        break;
-                    }
-                    // cleanup timerTimeout
-                    clearTimeout(xhr.timerTimeout);
-                    // cleanup requestStream and responseStream
-                    streamCleanup(xhr.requestStream);
-                    streamCleanup(xhr.responseStream);
-                    onError(xhr.error, xhr);
+                break;
+            }
+            // debug statusCode / method / url
+            if (xhr.error) {
+                xhr.error.statusCode = xhr.statusCode;
+                (local2.errorMessagePrepend || nop)(
+                    xhr.error,
+                    (
+                        isBrowser
+                        ? \"browser\"
+                        : \"node\"
+                    ) + \" - \"
+                            + xhr.statusCode + \" \" + xhr.method + \" \" + xhr.url + \"\\n\"
+                );
+            }
+            // update responseHeaders
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders
+            if (xhr.getAllResponseHeaders) {
+                xhr.getAllResponseHeaders().replace((
+                    /(.*?):\\u0020*(.*?)\\r\\n/g
+                ), function (ignore, match1, match2) {
+                    xhr.responseHeaders[match1.toLowerCase()] = match2;
+                });
+            }
+            // debug ajaxResponse
+            xhr.responseContentLength =
+                    (xhr.response && (xhr.response.byteLength || xhr.response.length)) | 0;
+            xhr.timeElapsed = Date.now() - xhr.timeStart;
+            if (xhr.modeDebug) {
+                console.error(\"serverLog - \" + JSON.stringify({
+                    time: new Date(xhr.timeStart).toISOString(),
+                    type: \"ajaxResponse\",
+                    method: xhr.method,
+                    url: xhr.url,
+                    statusCode: xhr.statusCode,
+                    timeElapsed: xhr.timeElapsed,
+                    // extra
+                    responseContentLength: xhr.responseContentLength
+                }));
+            }
+            // init responseType
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType
+            switch (xhr.response && xhr.responseType) {
+            // init responseText
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseText
+            case \"\":
+            case \"text\":
+                if (typeof xhr.responseText === \"string\") {
                     break;
                 }
-            };
-            streamCleanup = function (stream) {
-            /*
-             * this function will try to end or destroy the stream
-             */
-                // try to end the stream
-                try {
-                    stream.end();
-                } catch (errorCaught) {
-                    // if error, then try to destroy the stream
-                    try {
-                        stream.destroy();
-                    } catch (ignore) {
-                    }
-                }
-            };
-            xhrInit = function () {
-            /*
-             * this function will init xhr
-             */
-                // init options
-                Object.keys(options).forEach(function (key) {
-                    if (key[0] !== '_') {
-                        xhr[key] = options[key];
-                    }
-                });
-                Object.assign(xhr, {
-                    corsForwardProxyHost: xhr.corsForwardProxyHost || local2.corsForwardProxyHost,
-                    headers: xhr.headers || {},
-                    location: xhr.location || (isBrowser && location) || {},
-                    method: xhr.method || 'GET',
-                    responseType: xhr.responseType || '',
-                    timeout: xhr.timeout || local2.timeoutDefault || 30000
-                });
-                Object.keys(xhr.headers).forEach(function (key) {
-                    xhr.headers[key.toLowerCase()] = xhr.headers[key];
-                });
-                // init misc
-                local2._debugXhr = xhr;
-                xhr.onEvent = onEvent;
-                xhr.responseHeaders = {};
-                xhr.timeStart = xhr.timeStart || Date.now();
-            };
-            // init isBrowser
-            isBrowser = typeof window === 'object' &&
-                typeof window.XMLHttpRequest === 'function' &&
-                window.document &&
-                typeof window.document.querySelectorAll === 'function';
-            // init onError
-            if (local2.onErrorWithStack) {
-                onError = local2.onErrorWithStack(onError);
+                xhr.responseText = bufferValidateAndCoerce(xhr.response, \"string\");
+                break;
+            case \"arraybuffer\":
+                xhr.responseBuffer = bufferValidateAndCoerce(xhr.response);
+                break;
             }
-            // init xhr - XMLHttpRequest
-            xhr = isBrowser &&
-                !options.httpRequest &&
-                !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(options.url)) &&
-                new XMLHttpRequest();
-            // init xhr - http.request
-            if (!xhr) {
-                xhr = (local2.urlParse || require('url').parse)(options.url);
-                // init xhr
-                xhrInit();
-                // init xhr - http.request
-                xhr = (
-                    options.httpRequest ||
-                        (isBrowser && local2.http.request) ||
-                        require(xhr.protocol.slice(0, -1)).request
-                )(xhr, function (responseStream) {
-                /*
-                 * this function will read the responseStream
-                 */
-                    var chunkList;
-                    chunkList = [];
-                    xhr.responseHeaders = responseStream.responseHeaders || responseStream.headers;
-                    xhr.responseStream = responseStream;
-                    xhr.statusCode = responseStream.statusCode;
-                    responseStream.dataLength = 0;
-                    responseStream.on('data', function (chunk) {
-                        chunkList.push(chunk);
-                    });
-                    responseStream.on('end', function () {
-                        xhr.response = isBrowser
-                            ? chunkList[0]
-                            : Buffer.concat(chunkList);
-                        responseStream.dataLength = xhr.response.byteLength || xhr.response.length;
-                        xhr.onEvent({ type: 'load' });
-                    });
-                    responseStream.on('error', xhr.onEvent);
-                });
-                xhr.abort = function () {
-                /*
-                 * this function will abort the xhr-request
-                 * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/abort
-                 */
-                    xhr.onEvent({ type: 'abort' });
-                };
-                xhr.addEventListener = nop;
-                xhr.open = nop;
-                xhr.requestStream = xhr;
-                xhr.send = xhr.end;
-                xhr.setRequestHeader = nop;
-                xhr.on('error', onEvent);
+            // cleanup timerTimeout
+            clearTimeout(xhr.timerTimeout);
+            // cleanup requestStream and responseStream
+            streamCleanup(xhr.requestStream);
+            streamCleanup(xhr.responseStream);
+            onError(xhr.error, xhr);
+            break;
+        }
+    };
+    streamCleanup = function (stream) {
+    /*
+     * this function will try to end or destroy the stream
+     */
+        var error;
+        // try to end the stream
+        try {
+            stream.end();
+        } catch (errorCaught) {
+            error = errorCaught;
+        }
+        // if error, then try to destroy the stream
+        if (error) {
+            try {
+                stream.destroy();
+            } catch (ignore) {
             }
-            // init xhr
-            xhrInit();
-            // init timerTimeout
-            xhr.timerTimeout = setTimeout(function () {
-                xhr.error = xhr.error || new Error('onTimeout - timeout-error - ' +
-                    xhr.timeout + ' ms - ' + 'ajax ' + xhr.method + ' ' + xhr.url);
-                xhr.abort();
-                // cleanup requestStream and responseStream
-                streamCleanup(xhr.requestStream);
-                streamCleanup(xhr.responseStream);
-            }, xhr.timeout);
-            // increment ajaxProgressCounter
-            local2.ajaxProgressCounter = local2.ajaxProgressCounter || 0;
-            local2.ajaxProgressCounter += 1;
-            // init event-handling
-            xhr.addEventListener('abort', xhr.onEvent);
-            xhr.addEventListener('error', xhr.onEvent);
-            xhr.addEventListener('load', xhr.onEvent);
-            xhr.addEventListener('loadstart', ajaxProgressUpdate);
-            xhr.addEventListener('progress', ajaxProgressUpdate);
-            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
-            if (xhr.upload && xhr.upload.addEventListener) {
-                xhr.upload.addEventListener('progress', ajaxProgressUpdate);
+        }
+    };
+    xhrInit = function () {
+    /*
+     * this function will init xhr
+     */
+        // init options
+        Object.keys(options).forEach(function (key) {
+            if (key[0] !== \"_\") {
+                xhr[key] = options[key];
             }
-            // open url - corsForwardProxyHost
-            if (local2.corsForwardProxyHostIfNeeded && local2.corsForwardProxyHostIfNeeded(xhr)) {
-                xhr.open(xhr.method, local2.corsForwardProxyHostIfNeeded(xhr));
-                xhr.setRequestHeader('forward-proxy-headers', JSON.stringify(xhr.headers));
-                xhr.setRequestHeader('forward-proxy-url', xhr.url);
-            // open url - default
-            } else {
-                xhr.open(xhr.method, xhr.url);
-            }
-            // send headers
-            Object.keys(xhr.headers).forEach(function (key) {
-                xhr.setRequestHeader(key, xhr.headers[key]);
-            });
-            // send data - FormData
-            // https://developer.mozilla.org/en-US/docs/Web/API/FormData
-            if (local2.FormData && xhr.data instanceof local2.FormData) {
-                // handle formData
-                xhr.data.read(function (error, data) {
-                    if (error) {
-                        xhr.onEvent(error);
-                        return;
-                    }
-                    // send data
-                    xhr.send(data);
-                });
-            // send data - default
-            } else {
-                // send data
-                xhr.send(xhr.data);
-            }
-            return xhr;
-        };
-
-        local.assert = function (passed, message, onError) {
+        });
+        Object.assign(xhr, {
+            corsForwardProxyHost: xhr.corsForwardProxyHost || local2.corsForwardProxyHost,
+            headers: xhr.headers || {},
+            location: xhr.location || (isBrowser && location) || {},
+            method: xhr.method || \"GET\",
+            responseType: xhr.responseType || \"\",
+            timeout: xhr.timeout || local2.timeoutDefault || 30000
+        });
+        Object.keys(xhr.headers).forEach(function (key) {
+            xhr.headers[key.toLowerCase()] = xhr.headers[key];
+        });
+        // init misc
+        local2._debugXhr = xhr;
+        xhr.onEvent = onEvent;
+        xhr.responseHeaders = {};
+        xhr.timeStart = xhr.timeStart || Date.now();
+    };
+    // init isBrowser
+    isBrowser = (
+        typeof window === \"object\"
+        && typeof window.XMLHttpRequest === \"function\"
+        && window.document
+        && typeof window.document.querySelectorAll === \"function\"
+    );
+    // init onError
+    if (local2.onErrorWithStack) {
+        onError = local2.onErrorWithStack(onError);
+    }
+    // init xhr - XMLHttpRequest
+    xhr = isBrowser
+            && !options.httpRequest
+            && !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(options.url))
+            && new XMLHttpRequest();
+    // init xhr - http.request
+    if (!xhr) {
+        xhr = (local2.urlParse || require(\"url\").parse)(options.url);
+        // init xhr
+        xhrInit();
+        // init xhr - http.request
+        xhr = (
+            options.httpRequest
+            || (isBrowser && local2.http.request)
+            || require(xhr.protocol.slice(0, -1)).request
+        )(xhr, function (responseStream) {
         /*
-         * this function will throw the error message if passed is falsy
+         * this function will read the responseStream
          */
-            var error;
-            if (passed) {
+            var chunkList;
+            chunkList = [];
+            xhr.responseHeaders = responseStream.responseHeaders || responseStream.headers;
+            xhr.responseStream = responseStream;
+            xhr.statusCode = responseStream.statusCode;
+            responseStream.dataLength = 0;
+            responseStream.on(\"data\", function (chunk) {
+                chunkList.push(chunk);
+            });
+            responseStream.on(\"end\", function () {
+                xhr.response = isBrowser
+                ? chunkList[0]
+                : Buffer.concat(chunkList);
+                responseStream.dataLength = xhr.response.byteLength || xhr.response.length;
+                xhr.onEvent({type: \"load\"});
+            });
+            responseStream.on(\"error\", xhr.onEvent);
+        });
+        xhr.abort = function () {
+        /*
+         * this function will abort the xhr-request
+         * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/abort
+         */
+            xhr.onEvent({type: \"abort\"});
+        };
+        xhr.addEventListener = nop;
+        xhr.open = nop;
+        xhr.requestStream = xhr;
+        xhr.send = xhr.end;
+        xhr.setRequestHeader = nop;
+        xhr.on(\"error\", onEvent);
+    }
+    // init xhr
+    xhrInit();
+    // init timerTimeout
+    xhr.timerTimeout = setTimeout(function () {
+        xhr.error = xhr.error || new Error(
+            \"onTimeout - timeout-error - \"
+            + xhr.timeout + \" ms - \" + \"ajax \" + xhr.method + \" \" + xhr.url
+        );
+        xhr.abort();
+        // cleanup requestStream and responseStream
+        streamCleanup(xhr.requestStream);
+        streamCleanup(xhr.responseStream);
+    }, xhr.timeout);
+    // increment ajaxProgressCounter
+    local2.ajaxProgressCounter = local2.ajaxProgressCounter || 0;
+    local2.ajaxProgressCounter += 1;
+    // init event-handling
+    xhr.addEventListener(\"abort\", xhr.onEvent);
+    xhr.addEventListener(\"error\", xhr.onEvent);
+    xhr.addEventListener(\"load\", xhr.onEvent);
+    xhr.addEventListener(\"loadstart\", ajaxProgressUpdate);
+    xhr.addEventListener(\"progress\", ajaxProgressUpdate);
+    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
+    if (xhr.upload && xhr.upload.addEventListener) {
+        xhr.upload.addEventListener(\"progress\", ajaxProgressUpdate);
+    }
+    // open url - corsForwardProxyHost
+    if (local2.corsForwardProxyHostIfNeeded && local2.corsForwardProxyHostIfNeeded(xhr)) {
+        xhr.open(xhr.method, local2.corsForwardProxyHostIfNeeded(xhr));
+        xhr.setRequestHeader(\"forward-proxy-headers\", JSON.stringify(xhr.headers));
+        xhr.setRequestHeader(\"forward-proxy-url\", xhr.url);
+    // open url - default
+    } else {
+        xhr.open(xhr.method, xhr.url);
+    }
+    // send headers
+    Object.keys(xhr.headers).forEach(function (key) {
+        xhr.setRequestHeader(key, xhr.headers[key]);
+    });
+    // send data - FormData
+    // https://developer.mozilla.org/en-US/docs/Web/API/FormData
+    if (local2.FormData && xhr.data instanceof local2.FormData) {
+        // handle formData
+        xhr.data.read(function (error, data) {
+            if (error) {
+                xhr.onEvent(error);
                 return;
             }
-            error = message && message.stack
-                // if message is an error-object, then leave it as is
-                ? message
-                : new Error(typeof message === 'string'
-                    // if message is a string, then leave it as is
-                    ? message
-                    // else JSON.stringify message
-                    : JSON.stringify(message));
-            // debug error
-            local._debugAssertError = error;
-            onError = onError || function (error) {
-                throw error;
-            };
-            onError(error);
-        };
+            // send data
+            xhr.send(data);
+        });
+    // send data - default
+    } else {
+        // send data
+        xhr.send(xhr.data);
+    }
+    return xhr;
+};
 
-        local.assertJsonEqual = function (aa, bb, message) {
-        /*
-         * this function will assert
-         * jsonStringifyOrdered(aa) === JSON.stringify(bb)
-         */
-            aa = local.jsonStringifyOrdered(aa);
-            bb = JSON.stringify(bb);
-            local.assert(aa === bb, message || [aa, bb]);
-        };
+local.assert = function (passed, message, onError) {
+/*
+ * this function will throw the error <message> if <passed> is falsy
+ */
+    var error;
+    if (passed) {
+        return;
+    }
+    error = (message && message.stack)
+    // if message is an error-object, then leave it as is
+    ? message
+    : new Error(
+        typeof message === \"string\"
+        // if message is a string, then leave it as is
+        ? message
+        // else JSON.stringify message
+        : JSON.stringify(message, null, 4)
+    );
+    onError = onError || function (error) {
+        throw error;
+    };
+    onError(error);
+};
 
-        local.assertJsonNotEqual = function (aa, bb) {
-        /*
-         * this function will assert
-         * jsonStringifyOrdered(aa) !== JSON.stringify(bb)
-         */
-            aa = local.jsonStringifyOrdered(aa);
-            bb = JSON.stringify(bb);
-            local.assert(aa !== bb, [aa]);
-        };
+local.assertJsonEqual = function (aa, bb, message) {
+/*
+ * this function will assert jsonStringifyOrdered(aa) === JSON.stringify(bb)
+ */
+    aa = local.jsonStringifyOrdered(aa);
+    bb = JSON.stringify(bb);
+    local.assert(aa === bb, message || [aa, bb]);
+};
 
-        local.base64FromBuffer = function (bff) {
-        /*
-         * this function will convert Uint8Array bff to base64
-         * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
-         */
-            var ii, mod3, text, uint24, uint6ToB64;
-            // convert utf8-string bff to Uint8Array
-            if (typeof bff === 'string') {
-                bff = typeof Buffer === 'function' && typeof Buffer.isBuffer === 'function'
-                    ? Buffer.from(bff)
-                    : new window.TextEncoder().encode(bff);
-            }
-            bff = bff || [];
-            text = '';
+local.assertJsonNotEqual = function (aa, bb, message) {
+/*
+ * this function will assert jsonStringifyOrdered(aa) !== JSON.stringify(bb)
+ */
+    aa = local.jsonStringifyOrdered(aa);
+    bb = JSON.stringify(bb);
+    local.assert(aa !== bb, [aa], message || aa);
+};
+
+local.base64FromBuffer = function (bff) {
+/*
+ * this function will convert Uint8Array bff to base64
+ * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
+ */
+    var ii;
+    var mod3;
+    var text;
+    var uint24;
+    var uint6ToB64;
+    // convert utf8-string bff to Uint8Array
+    if (typeof bff === \"string\") {
+        bff = (typeof Buffer === \"function\" && typeof Buffer.isBuffer === \"function\")
+        ? Buffer.from(bff)
+        : new window.TextEncoder().encode(bff);
+    }
+    bff = bff || [];
+    text = \"\";
+    uint24 = 0;
+    uint6ToB64 = function (uint6) {
+        return uint6 < 26
+        ? uint6 + 65
+        : uint6 < 52
+        ? uint6 + 71
+        : uint6 < 62
+        ? uint6 - 4
+        : uint6 === 62
+        ? 43
+        : 47;
+    };
+    ii = 0;
+    while (ii < bff.length) {
+        mod3 = ii % 3;
+        uint24 |= bff[ii] << (16 >>> mod3 & 24);
+        if (mod3 === 2 || bff.length - ii === 1) {
+            text += String.fromCharCode(
+                uint6ToB64(uint24 >>> 18 & 63),
+                uint6ToB64(uint24 >>> 12 & 63),
+                uint6ToB64(uint24 >>> 6 & 63),
+                uint6ToB64(uint24 & 63)
+            );
             uint24 = 0;
-            uint6ToB64 = function (uint6) {
-                return uint6 < 26
-                    ? uint6 + 65
-                    : uint6 < 52
-                    ? uint6 + 71
-                    : uint6 < 62
-                    ? uint6 - 4
-                    : uint6 === 62
-                    ? 43
-                    : 47;
-            };
-            for (ii = 0; ii < bff.length; ii += 1) {
-                mod3 = ii % 3;
-                uint24 |= bff[ii] << (16 >>> mod3 & 24);
-                if (mod3 === 2 || bff.length - ii === 1) {
-                    text += String.fromCharCode(
-                        uint6ToB64(uint24 >>> 18 & 63),
-                        uint6ToB64(uint24 >>> 12 & 63),
-                        uint6ToB64(uint24 >>> 6 & 63),
-                        uint6ToB64(uint24 & 63)
-                    );
-                    uint24 = 0;
-                }
-            }
-            return text.replace(/A(?=A\$|\$)/g, '=');
-        };
+        }
+        ii += 1;
+    }
+    return text.replace(/A(?=A\$|\$)/gm, \"=\");
+};
 
-        local.base64ToBuffer = function (b64, mode) {
-        /*
-         * this function will convert b64 to Uint8Array
-         * https://gist.github.com/wang-bin/7332335
-         */
-            var bff, byte, chr, ii, jj, map64, mod4;
-            b64 = b64 || '';
-            bff = new Uint8Array(b64.length); // 3/4
-            byte = 0;
-            jj = 0;
-            map64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-            mod4 = 0;
-            for (ii = 0; ii < b64.length; ii += 1) {
-                chr = map64.indexOf(b64[ii]);
-                if (chr >= 0) {
-                    mod4 %= 4;
-                    if (mod4 === 0) {
-                        byte = chr;
-                    } else {
-                        byte = byte * 64 + chr;
-                        bff[jj] = 255 & (byte >> ((-2 * (mod4 + 1)) & 6));
-                        jj += 1;
-                    }
-                    mod4 += 1;
-                }
+local.base64ToBuffer = function (b64, mode) {
+/*
+ * this function will convert b64 to Uint8Array
+ * https://gist.github.com/wang-bin/7332335
+ */
+    var bff;
+    var byte;
+    var chr;
+    var ii;
+    var jj;
+    var map64;
+    var mod4;
+    b64 = b64 || \"\";
+    bff = new Uint8Array(b64.length); // 3/4
+    byte = 0;
+    jj = 0;
+    map64 = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\";
+    mod4 = 0;
+    ii = 0;
+    while (ii < b64.length) {
+        chr = map64.indexOf(b64[ii]);
+        if (chr >= 0) {
+            mod4 %= 4;
+            if (mod4 === 0) {
+                byte = chr;
+            } else {
+                byte = byte * 64 + chr;
+                bff[jj] = 255 & (byte >> ((-2 * (mod4 + 1)) & 6));
+                jj += 1;
             }
-            // optimization - create resized-view of bff
-            bff = bff.subarray(0, jj);
-            return local.bufferValidateAndCoerce(bff, mode);
-        };
+            mod4 += 1;
+        }
+        ii += 1;
+    }
+    // optimization - create resized-view of bff
+    bff = bff.subarray(0, jj);
+    return local.bufferValidateAndCoerce(bff, mode);
+};
 
-        local.base64ToString = function (b64) {
-        /*
-         * this function will convert b64 to utf8-string
-         */
-            return local.base64ToBuffer(b64, 'string');
-        };
+local.base64ToString = function (b64) {
+/*
+ * this function will convert b64 to utf8-string
+ */
+    return local.base64ToBuffer(b64, \"string\");
+};
 
-        local.bufferValidateAndCoerce = function (bff, mode) {
-        /*
-         * this function will validate and coerce/convert
-         * ArrayBuffer, String, or Uint8Array -> Buffer or String
-         */
-            var isBuffer;
-            // validate not typeof number
-            if (typeof bff === 'number') {
-                throw new Error('bufferValidateAndCoerce - value cannot be typeof number');
-            }
-            bff = bff || '';
-            isBuffer = typeof Buffer === 'function' && typeof Buffer.isBuffer === 'function';
-            // convert String -> Buffer
-            if (typeof bff === 'string') {
-                return mode === 'string'
-                    ? bff
-                    : isBuffer
-                    ? Buffer.from(bff)
-                    : new window.TextEncoder().encode(bff);
-            }
-            if (bff instanceof ArrayBuffer) {
-                bff = new Uint8Array(bff);
-            }
-            // validate instanceof Uint8Array
-            if (!(bff instanceof Uint8Array)) {
-                throw new Error('bufferValidateAndCoerce - value is not instanceof ' +
-                    'ArrayBuffer, String, or Uint8Array');
-            }
-            // coerce Uint8Array -> Buffer
-            if (isBuffer) {
-                Object.setPrototypeOf(bff, Buffer.prototype);
-            }
-            if (mode !== 'string') {
-                return bff;
-            }
-            // convert Buffer -> String
-            return isBuffer
-                ? String(bff)
-                : new window.TextDecoder().decode(bff);
-        };
+local.bufferValidateAndCoerce = function (bff, mode) {
+/*
+ * this function will validate and coerce/convert
+ * ArrayBuffer, String, or Uint8Array -> Buffer or String
+ */
+    var isBuffer;
+    // validate not typeof number
+    if (typeof bff === \"number\") {
+        throw new Error(\"bufferValidateAndCoerce - value cannot be typeof number\");
+    }
+    bff = bff || \"\";
+    isBuffer = typeof Buffer === \"function\" && typeof Buffer.isBuffer === \"function\";
+    // convert String -> Buffer
+    if (typeof bff === \"string\") {
+        return mode === \"string\"
+        ? bff
+        : isBuffer
+        ? Buffer.from(bff)
+        : new window.TextEncoder().encode(bff);
+    }
+    if (bff instanceof ArrayBuffer) {
+        bff = new Uint8Array(bff);
+    }
+    // validate instanceof Uint8Array
+    if (!(bff instanceof Uint8Array)) {
+        throw new Error(
+            \"bufferValidateAndCoerce - value is not instanceof \"
+            + \"ArrayBuffer, String, or Uint8Array\"
+        );
+    }
+    // coerce Uint8Array -> Buffer
+    if (isBuffer) {
+        Object.setPrototypeOf(bff, Buffer.prototype);
+    }
+    if (mode !== \"string\") {
+        return bff;
+    }
+    // convert Buffer -> String
+    return isBuffer
+    ? String(bff)
+    : new window.TextDecoder().decode(bff);
+};
 
-        local.childProcessSpawnWithUtility2 = function (script, onError) {
-        /*
-         * this function will run child_process.spawn, with lib.utility2.sh sourced
-         */
-            require('child_process').spawn(
-                '. ' + (process.env.npm_config_dir_utility2 || __dirname) + '/lib.utility2.sh; ' +
-                    script,
-                { shell: true, stdio: ['ignore', 1, 2] }
-            ).on('exit', function (exitCode) {
-                onError(exitCode && Object.assign(new Error(), { exitCode: exitCode }));
-            });
-        };
+local.childProcessSpawnWithUtility2 = function (script, onError) {
+/*
+ * this function will run child_process.spawn, with lib.utility2.sh sourced
+ */
+    require(\"child_process\").spawn(
+        \". \" + (process.env.npm_config_dir_utility2 || __dirname) + \"/lib.utility2.sh; \"
+                + script,
+        {shell: true, stdio: [\"ignore\", 1, 2]}
+    ).on(\"exit\", function (exitCode) {
+        onError(exitCode && Object.assign(new Error(), {exitCode: exitCode}));
+    });
+};
 
-        local.cryptoAesXxxCbcRawDecrypt = function (options, onError) {
-        /*
-         * this function will aes-xxx-cbc decrypt with the given options
-         * example usage:
-            data = new Uint8Array([1,2,3]);
-            key = '0123456789abcdef0123456789abcdef';
-            mode = null;
-            local.cryptoAesXxxCbcRawEncrypt({ data: data, key: key, mode: mode }, function (
-                error,
-                data
-            ) {
-                console.assert(!error, error);
-                local.cryptoAesXxxCbcRawDecrypt({ data: data, key: key, mode: mode }, console.log);
-            });
-         */
-            var cipher, crypto, data, ii, iv, key;
-            // init key
-            key = new Uint8Array(0.5 * options.key.length);
-            for (ii = 0; ii < key.byteLength; ii += 2) {
-                key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
+local.cryptoAesXxxCbcRawDecrypt = function (options, onError) {
+/*
+ * this function will aes-xxx-cbc decrypt with the given options
+ * example usage:
+    data = new Uint8Array([1,2,3]);
+    key = '0123456789abcdef0123456789abcdef';
+    mode = null;
+    local.cryptoAesXxxCbcRawEncrypt({data: data, key: key, mode: mode}, function (
+        error,
+        data
+    ) {
+        console.assert(!error, error);
+        local.cryptoAesXxxCbcRawDecrypt({data: data, key: key, mode: mode}, console.log);
+    });
+ */
+    var cipher;
+    var crypto;
+    var data;
+    var ii;
+    var iv;
+    var key;
+    // init key
+    key = new Uint8Array(0.5 * options.key.length);
+    ii = 0;
+    while (ii < key.byteLength) {
+        key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
+        ii += 2;
+    }
+    data = options.data;
+    // base64
+    if (options.mode === \"base64\") {
+        data = local.base64ToBuffer(data);
+    }
+    // normalize data
+    if (!(data instanceof Uint8Array)) {
+        data = new Uint8Array(data);
+    }
+    // init iv
+    iv = data.subarray(0, 16);
+    // optimization - create resized-view of data
+    data = data.subarray(16);
+    crypto = typeof window === \"object\" && window.crypto;
+    if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === \"function\")) {
+        setTimeout(function () {
+            crypto = require(\"crypto\");
+            cipher = crypto.createDecipheriv(
+                \"aes-\" + (8 * key.byteLength) + \"-cbc\",
+                key,
+                iv
+            );
+            onError(null, Buffer.concat([cipher.update(data), cipher.final()]));
+        });
+        return;
+    }
+    crypto.subtle.importKey(\"raw\", key, {
+        name: \"AES-CBC\"
+    }, false, [\"decrypt\"]).then(function (key) {
+        crypto.subtle.decrypt({iv: iv, name: \"AES-CBC\"}, key, data).then(function (data) {
+            onError(null, new Uint8Array(data));
+        }).catch(onError);
+    }).catch(onError);
+};
+
+local.cryptoAesXxxCbcRawEncrypt = function (options, onError) {
+/*
+ * this function will aes-xxx-cbc encrypt with the given options
+ * example usage:
+    data = new Uint8Array([1,2,3]);
+    key = '0123456789abcdef0123456789abcdef';
+    mode = null;
+    local.cryptoAesXxxCbcRawEncrypt({data: data, key: key, mode: mode}, function (
+        error,
+        data
+    ) {
+        console.assert(!error, error);
+        local.cryptoAesXxxCbcRawDecrypt({data: data, key: key, mode: mode}, console.log);
+    });
+ */
+    var cipher;
+    var crypto;
+    var data;
+    var ii;
+    var iv;
+    var key;
+    // init key
+    key = new Uint8Array(0.5 * options.key.length);
+    ii = 0;
+    while (ii < key.byteLength) {
+        key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
+        ii += 2;
+    }
+    data = options.data;
+    // init iv
+    iv = new Uint8Array((((data.byteLength) >> 4) << 4) + 32);
+    crypto = typeof window === \"object\" && window.crypto;
+    if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === \"function\")) {
+        setTimeout(function () {
+            crypto = require(\"crypto\");
+            // init iv
+            iv.set(crypto.randomBytes(16));
+            cipher = crypto.createCipheriv(
+                \"aes-\" + (8 * key.byteLength) + \"-cbc\",
+                key,
+                iv.subarray(0, 16)
+            );
+            data = cipher.update(data);
+            iv.set(data, 16);
+            iv.set(cipher.final(), 16 + data.byteLength);
+            if (options.mode === \"base64\") {
+                iv = local.base64FromBuffer(iv);
+                iv += \"\\n\";
             }
-            data = options.data;
+            onError(null, iv);
+        });
+        return;
+    }
+    // init iv
+    iv.set(crypto.getRandomValues(new Uint8Array(16)));
+    crypto.subtle.importKey(\"raw\", key, {
+        name: \"AES-CBC\"
+    }, false, [\"encrypt\"]).then(function (key) {
+        crypto.subtle.encrypt({
+            iv: iv.subarray(0, 16),
+            name: \"AES-CBC\"
+        }, key, data).then(function (data) {
+            iv.set(new Uint8Array(data), 16);
             // base64
-            if (options.mode === 'base64') {
-                data = local.base64ToBuffer(data);
+            if (options.mode === \"base64\") {
+                iv = local.base64FromBuffer(iv);
+                iv += \"\\n\";
             }
-            // normalize data
-            if (!(data instanceof Uint8Array)) {
-                data = new Uint8Array(data);
-            }
-            // init iv
-            iv = data.subarray(0, 16);
-            // optimization - create resized-view of data
-            data = data.subarray(16);
-            crypto = typeof window === 'object' && window.crypto;
-            if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === 'function')) {
-                setTimeout(function () {
-                    crypto = require('crypto');
-                    cipher = crypto.createDecipheriv(
-                        'aes-' + (8 * key.byteLength) + '-cbc',
-                        key,
-                        iv
-                    );
-                    onError(null, Buffer.concat([cipher.update(data), cipher.final()]));
-                });
-                return;
-            }
-            crypto.subtle.importKey('raw', key, {
-                name: 'AES-CBC'
-            }, false, ['decrypt']).then(function (key) {
-                crypto.subtle.decrypt({ iv: iv, name: 'AES-CBC' }, key, data).then(function (data) {
-                    onError(null, new Uint8Array(data));
-                }).catch(onError);
-            }).catch(onError);
-        };
+            onError(null, iv);
+        }).catch(onError);
+    }).catch(onError);
+};
 
-        local.cryptoAesXxxCbcRawEncrypt = function (options, onError) {
-        /*
-         * this function will aes-xxx-cbc encrypt with the given options
-         * example usage:
-            data = new Uint8Array([1,2,3]);
-            key = '0123456789abcdef0123456789abcdef';
-            mode = null;
-            local.cryptoAesXxxCbcRawEncrypt({ data: data, key: key, mode: mode }, function (
-                error,
-                data
-            ) {
-                console.assert(!error, error);
-                local.cryptoAesXxxCbcRawDecrypt({ data: data, key: key, mode: mode }, console.log);
-            });
-         */
-            var cipher, crypto, data, ii, iv, key;
-            // init key
-            key = new Uint8Array(0.5 * options.key.length);
-            for (ii = 0; ii < key.byteLength; ii += 2) {
-                key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
-            }
-            data = options.data;
-            // init iv
-            iv = new Uint8Array((((data.byteLength) >> 4) << 4) + 32);
-            crypto = typeof window === 'object' && window.crypto;
-            if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === 'function')) {
-                setTimeout(function () {
-                    crypto = require('crypto');
-                    // init iv
-                    iv.set(crypto.randomBytes(16));
-                    cipher = crypto.createCipheriv(
-                        'aes-' + (8 * key.byteLength) + '-cbc',
-                        key,
-                        iv.subarray(0, 16)
-                    );
-                    data = cipher.update(data);
-                    iv.set(data, 16);
-                    iv.set(cipher.final(), 16 + data.byteLength);
-                    if (options.mode === 'base64') {
-                        iv = local.base64FromBuffer(iv);
-                        iv += '\\n';
-                    }
-                    onError(null, iv);
-                });
-                return;
-            }
-            // init iv
-            iv.set(crypto.getRandomValues(new Uint8Array(16)));
-            crypto.subtle.importKey('raw', key, {
-                name: 'AES-CBC'
-            }, false, ['encrypt']).then(function (key) {
-                crypto.subtle.encrypt({
-                    iv: iv.subarray(0, 16),
-                    name: 'AES-CBC'
-                }, key, data).then(function (data) {
-                    iv.set(new Uint8Array(data), 16);
-                    // base64
-                    if (options.mode === 'base64') {
-                        iv = local.base64FromBuffer(iv);
-                        iv += '\\n';
-                    }
-                    onError(null, iv);
-                }).catch(onError);
-            }).catch(onError);
-        };
+local.echo = function (arg) {
+/*
+ * this function will return <arg>
+ */
+    return arg;
+};
 
-        local.echo = function (arg0) {
-        /*
-         * this function will return arg0
-         */
-            return arg0;
-        };
+local.fsReadFileOrEmptyStringSync = function (file, options) {
+/*
+ * this function will try to read the file or return empty-string
+ * if options === 'json', then try to JSON.parse the file or return null
+ */
+    try {
+        return options === \"json\"
+        ? JSON.parse(local.fs.readFileSync(file, \"utf8\"))
+        : local.fs.readFileSync(file, options);
+    } catch (ignore) {
+        return options === \"json\"
+        ? {}
+        : \"\";
+    }
+};
 
-        local.fsReadFileOrEmptyStringSync = function (file, options) {
-        /*
-         * this function will try to read the file or return empty-string
-         * if options === 'json', then try to JSON.parse the file or return null
-         */
-            try {
-                return options === 'json'
-                    ? JSON.parse(local.fs.readFileSync(file, 'utf8'))
-                    : local.fs.readFileSync(file, options);
-            } catch (errorCaught) {
-                return options === 'json'
-                    ? null
-                    : '';
-            }
-        };
+local.fsRmrSync = function (dir) {
+/*
+ * this function will synchronously 'rm -fr' the dir
+ */
+    local.child_process.execFileSync(
+        \"rm\",
+        [\"-fr\", local.path.resolve(process.cwd(), dir)],
+        {stdio: [\"ignore\", 1, 2]}
+    );
+};
 
-        local.fsRmrSync = function (dir) {
-        /*
-         * this function will synchronously 'rm -fr' the dir
-         */
-            local.child_process.execFileSync(
-                'rm',
-                ['-fr', local.path.resolve(process.cwd(), dir)],
-                { stdio: ['ignore', 1, 2] }
-            );
-        };
+local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
+/*
+ * this function will synchronously 'mkdir -p' and write the data to file
+ */
+    if (mode === \"noWrite\") {
+        return;
+    }
+    // try to write to file
+    try {
+        require(\"fs\").writeFileSync(file, data);
+    } catch (ignore) {
+        // mkdir -p
+        require(\"child_process\").spawnSync(
+            \"mkdir\",
+            [\"-p\", require(\"path\").dirname(file)],
+            {stdio: [\"ignore\", 1, 2]}
+        );
+        // re-write to file
+        require(\"fs\").writeFileSync(file, data);
+    }
+};
 
-        local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
-        /*
-         * this function will synchronously 'mkdir -p' and write the data to file
-         */
-            if (mode === 'noWrite') {
-                return;
-            }
-            // try to write to file
-            try {
-                require('fs').writeFileSync(file, data);
-            } catch (errorCaught) {
-                // mkdir -p
-                require('child_process').spawnSync(
-                    'mkdir',
-                    ['-p', require('path').dirname(file)],
-                    { stdio: ['ignore', 1, 2] }
-                );
-                // re-write to file
-                require('fs').writeFileSync(file, data);
-            }
-        };
+local.isNullOrUndefined = function (arg0) {
+/*
+ * this function will test if arg0 is null or undefined
+ */
+    return arg0 === null || arg0 === undefined;
+};
 
-        local.isNullOrUndefined = function (arg0) {
-        /*
-         * this function will test if arg0 is null or undefined
-         */
-            return arg0 === null || arg0 === undefined;
-        };
+local.jsonCopy = function (obj) {
+/*
+ * this function will deep-copy obj
+ */
+    return obj === undefined
+    ? undefined
+    : JSON.parse(JSON.stringify(obj));
+};
 
-        local.jsonCopy = function (obj) {
-        /*
-         * this function will deep-copy obj
-         */
-            return obj === undefined
-                ? undefined
-                : JSON.parse(JSON.stringify(obj));
-        };
-
-        local.jsonStringifyOrdered = function (obj, replacer, space) {
-        /*
-         * this function will JSON.stringify obj,
-         * with object-keys sorted and circular-references removed
-         */
-            var circularList, stringify, tmp;
-            stringify = function (obj) {
-            /*
-             * this function will recursively JSON.stringify obj,
-             * with object-keys sorted and circular-references removed
-             */
-                // if obj is not an object or function, then JSON.stringify as normal
-                if (!(obj &&
-                        typeof obj === 'object' &&
-                        typeof obj.toJSON !== 'function')) {
-                    return JSON.stringify(obj);
-                }
-                // ignore circular-reference
-                if (circularList.indexOf(obj) >= 0) {
-                    return;
-                }
-                circularList.push(obj);
-                // if obj is an array, then recurse its items
-                if (Array.isArray(obj)) {
-                    return '[' + obj.map(function (obj) {
-                        // recurse
-                        tmp = stringify(obj);
-                        return typeof tmp === 'string'
-                            ? tmp
-                            : 'null';
-                    }).join(',') + ']';
-                }
-                // if obj is not an array, then recurse its items with object-keys sorted
-                return '{' + Object.keys(obj)
-                    // sort object-keys
-                    .sort()
-                    .map(function (key) {
-                        // recurse
-                        tmp = stringify(obj[key]);
-                        if (typeof tmp === 'string') {
-                            return JSON.stringify(key) + ':' + tmp;
-                        }
-                    })
-                    .filter(function (obj) {
-                        return typeof obj === 'string';
-                    })
-                    .join(',') + '}';
-            };
-            circularList = [];
-            // try to derefernce all properties in obj
-            (function () {
-                try {
-                    obj = JSON.parse(JSON.stringify(obj));
-                } catch (ignore) {
-                }
-            }());
-            return JSON.stringify(typeof obj === 'object' && obj
-                // recurse
-                ? JSON.parse(stringify(obj))
-                : obj, replacer, space);
-        };
-
-        local.moduleDirname = function (module, modulePathList) {
-        /*
-         * this function will search modulePathList for the module's __dirname
-         */
-            var result;
-            // search process.cwd()
-            if (!module || module === '.' || module.indexOf('/') >= 0) {
-                return require('path').resolve(process.cwd(), module || '');
-            }
-            // search modulePathList
-            ['node_modules']
-                .concat(modulePathList)
-                .concat(require('module').globalPaths)
-                .concat([process.env.HOME + '/node_modules', '/usr/local/lib/node_modules'])
-                .some(function (modulePath) {
-                    try {
-                        result = require('path').resolve(process.cwd(), modulePath + '/' + module);
-                        result = require('fs').statSync(result).isDirectory() && result;
-                        return result;
-                    } catch (errorCaught) {
-                        result = null;
-                    }
-                    return result;
-                });
-            return result || '';
-        };
-
-        local.nop = function () {
-        /*
-         * this function will do nothing
-         */
+local.jsonStringifyOrdered = function (obj, replacer, space) {
+/*
+ * this function will JSON.stringify <obj>,
+ * with object-keys sorted and circular-references removed
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Syntax
+ */
+    var circularList;
+    var stringify;
+    var tmp;
+    stringify = function (obj) {
+    /*
+     * this function will recursively JSON.stringify obj,
+     * with object-keys sorted and circular-references removed
+     */
+        // if obj is not an object or function, then JSON.stringify as normal
+        if (!(
+            obj
+            && typeof obj === \"object\"
+            && typeof obj.toJSON !== \"function\"
+        )) {
+            return JSON.stringify(obj);
+        }
+        // ignore circular-reference
+        if (circularList.indexOf(obj) >= 0) {
             return;
-        };
-
-        local.objectSetDefault = function (dict, defaults, depth) {
-        /*
-         * this function will recursively set defaults for undefined-items in dict
-         */
-            dict = dict || {};
-            defaults = defaults || {};
-            Object.keys(defaults).forEach(function (key) {
-                var dict2, defaults2;
-                dict2 = dict[key];
-                // handle misbehaving getter
-                try {
-                    defaults2 = defaults[key];
-                } catch (ignore) {
-                }
-                if (defaults2 === undefined) {
-                    return;
-                }
-                // init dict[key] to default value defaults[key]
-                switch (dict2) {
-                case '':
-                case null:
-                case undefined:
-                    dict[key] = defaults2;
-                    return;
-                }
-                // if dict2 and defaults2 are both non-null and non-array objects,
-                // then recurse with dict2 and defaults2
-                if (depth > 1 &&
-                        // dict2 is a non-null and non-array object
-                        typeof dict2 === 'object' && dict2 && !Array.isArray(dict2) &&
-                        // defaults2 is a non-null and non-array object
-                        typeof defaults2 === 'object' && defaults2 && !Array.isArray(defaults2)) {
-                    // recurse
-                    local.objectSetDefault(dict2, defaults2, depth - 1);
-                }
-            });
-            return dict;
-        };
-
-        local.objectSetOverride = function (dict, overrides, depth, env) {
-        /*
-         * this function will recursively set overrides for items in dict
-         */
-            dict = dict || {};
-            env = env || (typeof process === 'object' && process.env) || {};
-            overrides = overrides || {};
-            Object.keys(overrides).forEach(function (key) {
-                var dict2, overrides2;
-                dict2 = dict[key];
-                overrides2 = overrides[key];
-                if (overrides2 === undefined) {
-                    return;
-                }
-                // if both dict2 and overrides2 are non-null and non-array objects,
-                // then recurse with dict2 and overrides2
-                if (depth > 1 &&
-                        // dict2 is a non-null and non-array object
-                        typeof dict2 === 'object' && dict2 && !Array.isArray(dict2) &&
-                        // overrides2 is a non-null and non-array object
-                        typeof overrides2 === 'object' && overrides2 &&
-                        !Array.isArray(overrides2)) {
-                    local.objectSetOverride(dict2, overrides2, depth - 1, env);
-                    return;
-                }
-                // else set dict[key] with overrides[key]
-                dict[key] = dict === env
-                    // if dict is env, then overrides falsy-value with empty-string
-                    ? overrides2 || ''
-                    : overrides2;
-            });
-            return dict;
-        };
-
-        local.onErrorDefault = function (error) {
-        /*
-         * this function will if error exists, then print it to stderr
-         */
-            if (error) {
-                console.error(error);
+        }
+        circularList.push(obj);
+        // if obj is an array, then recurse its items
+        if (Array.isArray(obj)) {
+            return \"[\" + obj.map(function (obj) {
+                // recurse
+                tmp = stringify(obj);
+                return typeof tmp === \"string\"
+                ? tmp
+                : \"null\";
+            }).join(\",\") + \"]\";
+        }
+        // if obj is not an array, then recurse its items with object-keys sorted
+        return \"{\" + Object.keys(obj)
+        // sort object-keys
+        .sort()
+        .map(function (key) {
+            // recurse
+            tmp = stringify(obj[key]);
+            if (typeof tmp === \"string\") {
+                return JSON.stringify(key) + \":\" + tmp;
             }
-            return error;
-        };
-
-        local.onErrorThrow = function (error) {
-        /*
-         * this function will if error exists, then throw it
-         */
-            if (error) {
-                throw error;
-            }
-            return error;
-        };
-
-        local.onErrorWithStack = function (onError) {
-        /*
-         * this function will create a new callback that will call onError,
-         * and append the current stack to any error
-         */
-            var onError2, stack;
-            stack = new Error().stack.replace((/(.*?)\\n.*?\$/m), '\$1');
-            onError2 = function (error, data, meta) {
-                if (error &&
-                        error !== local.errorDefault &&
-                        String(error.stack).indexOf(stack.split('\\n')[2]) < 0) {
-                    // append the current stack to error.stack
-                    error.stack += '\\n' + stack;
-                }
-                onError(error, data, meta);
-            };
-            // debug onError
-            onError2.toString = function () {
-                return String(onError);
-            };
-            return onError2;
-        };
-
-        local.onNext = function (options, onError) {
-        /*
-         * this function will wrap onError inside the recursive function options.onNext,
-         * and append the current stack to any error
-         */
-            options.onNext = local.onErrorWithStack(function (error, data, meta) {
-                try {
-                    options.modeNext += error && !options.modeErrorIgnore
-                        ? 1000
-                        : 1;
-                    if (options.modeDebug) {
-                        console.error('onNext - ' + JSON.stringify({
-                            modeNext: options.modeNext,
-                            errorMessage: error && error.message
-                        }));
-                        if (error && error.stack) {
-                            console.error(error.stack);
-                        }
-                    }
-                    onError(error, data, meta);
-                } catch (errorCaught) {
-                    // throw errorCaught to break infinite recursion-loop
-                    if (options.errorCaught) {
-                        throw options.errorCaught;
-                    }
-                    options.errorCaught = errorCaught;
-                    options.onNext(errorCaught, data, meta);
-                }
-            });
-            return options;
-        };
-
-        local.onParallel = function (onError, onEach, onRetry) {
-        /*
-         * this function will create a function that will
-         * 1. run async tasks in parallel
-         * 2. if counter === 0 or error occurred, then call onError with error
-         */
-            var onParallel;
-            onError = local.onErrorWithStack(onError);
-            onEach = onEach || local.nop;
-            onRetry = onRetry || local.nop;
-            onParallel = function (error, data) {
-                if (onRetry(error, data)) {
-                    return;
-                }
-                // decrement counter
-                onParallel.counter -= 1;
-                // validate counter
-                if (!(onParallel.counter >= 0 || error || onParallel.error)) {
-                    error = new Error('invalid onParallel.counter = ' + onParallel.counter);
-                // ensure onError is run only once
-                } else if (onParallel.counter < 0) {
-                    return;
-                }
-                // handle error
-                if (error) {
-                    onParallel.error = error;
-                    // ensure counter <= 0
-                    onParallel.counter = -Math.abs(onParallel.counter);
-                }
-                // call onError when isDone
-                if (onParallel.counter <= 0) {
-                    onError(error, data);
-                    return;
-                }
-                onEach();
-            };
-            // init counter
-            onParallel.counter = 0;
-            // return callback
-            return onParallel;
-        };
-
-        local.onParallelList = function (options, onEach, onError) {
-        /*
-         * this function will
-         * 1. async-run onEach in parallel,
-         *    with the given options.rateLimit and options.retryLimit
-         * 2. call onError when onParallel.ii + 1 === options.list.length
-         */
-            var isListEnd, onEach2, onParallel;
-            options.list = options.list || [];
-            onEach2 = function () {
-                while (true) {
-                    if (!(onParallel.ii + 1 < options.list.length)) {
-                        isListEnd = true;
-                        return;
-                    }
-                    if (!(onParallel.counter < options.rateLimit + 1)) {
-                        return;
-                    }
-                    onParallel.ii += 1;
-                    onEach({
-                        element: options.list[onParallel.ii],
-                        ii: onParallel.ii,
-                        list: options.list,
-                        retry: 0
-                    }, onParallel);
-                }
-            };
-            onParallel = local.onParallel(onError, onEach2, function (error, data) {
-                if (error && data && data.retry < options.retryLimit) {
-                    local.onErrorDefault(error);
-                    data.retry += 1;
-                    setTimeout(function () {
-                        onParallel.counter -= 1;
-                        onEach(data, onParallel);
-                    }, 1000);
-                    return true;
-                }
-                // restart if options.list has grown
-                if (isListEnd && (onParallel.ii + 1 < options.list.length)) {
-                    isListEnd = null;
-                    onEach2();
-                }
-            });
-            onParallel.ii = -1;
-            options.rateLimit = Number(options.rateLimit) || 6;
-            options.rateLimit = Math.max(options.rateLimit, 1);
-            options.retryLimit = Number(options.retryLimit) || 2;
-            onParallel.counter += 1;
-            onEach2();
-            onParallel();
-        };
-
-        local.semverCompare = function (aa, bb) {
-        /*
-         * this function will compare semver versions aa ? bb and return
-         * -1 if aa < bb
-         *  0 if aa = bb
-         *  1 if aa > bb
-         * https://semver.org/#spec-item-11
-         */
-            return [aa, bb].map(function (aa) {
-                aa = aa.split('-');
-                return [aa[0], aa.slice(1).join('-') || '\\xff'].map(function (aa) {
-                    return aa.split('.').map(function (aa) {
-                        return ('0000000000000000' + aa).slice(-16);
-                    }).join('.');
-                }).join('-');
-            }).reduce(function (aa, bb) {
-                return aa === bb
-                    ? 0
-                    : aa < bb
-                    ? -1
-                    : 1;
-            });
-        };
-
-        local.stringCustomizeFromToRgx = function (textFrom, textTo, rgx) {
-        /*
-         * this function will customize a segment of textTo with a segment of textFrom,
-         * with the given rgx
-         */
-            textFrom.replace(rgx, function (match0) {
-                textTo.replace(rgx, function (match1) {
-                    textTo = textTo.split(match1);
-                    textTo[0] += match0;
-                    textTo[0] += textTo.splice(1, 1)[0];
-                    textTo = textTo.join(match1);
-                });
-            });
-            return textTo;
-        };
-
-        local.templateRenderMyApp = function (template, options) {
-        /*
-         * this function will render the my-app-lite template with the given options.packageJson
-         */
-            options.packageJson = local.fsReadFileOrEmptyStringSync('package.json', 'json');
-            local.objectSetDefault(options.packageJson, {
-                nameLib: options.packageJson.name.replace((/\\W/g), '_'),
-                repository: { url: 'https://github.com/kaizhu256/node-' +
-                    options.packageJson.name + '.git' }
-            }, 2);
-            options.githubRepo = options.packageJson.repository.url
-                .replace((/\\.git\$/), '').split('/').slice(-2);
-            template = template.replace(
-                (/kaizhu256(\\.github\\.io\\/|%252F|\\/)/g),
-                options.githubRepo[0] + ('\$1')
-            );
-            template = template.replace((/node-my-app-lite/g), options.githubRepo[1]);
-            template = template.replace(
-                (/\\bh1-my-app\\b/g),
-                options.packageJson.nameHeroku ||
-                    ('h1-' + options.packageJson.nameLib.replace((/_/g), '-'))
-            );
-            template = template.replace((/my-app-lite/g), options.packageJson.name);
-            template = template.replace((/my_app/g), options.packageJson.nameLib);
-            template = template.replace((
-                /\\{\\{\\packageJson\\.(\\S+)\\}\\}/g
-            ), function (match0, match1) {
-                match0 = match1;
-                return options.packageJson[match0];
-            });
-            return template;
-        };
-
-        local.throwError = function () {
-        /*
-         * this function will throw a new error
-         */
-            throw new Error();
-        };
+        })
+        .filter(function (obj) {
+            return typeof obj === \"string\";
+        })
+        .join(\",\") + \"}\";
+    };
+    circularList = [];
+    // try to derefernce all properties in obj
+    (function () {
+        try {
+            obj = JSON.parse(JSON.stringify(obj));
+        } catch (ignore) {
+        }
     }());
+    return JSON.stringify(
+        (typeof obj === \"object\" && obj)
+        // recurse
+        ? JSON.parse(stringify(obj))
+        : obj,
+        replacer,
+        space
+    );
+};
+
+local.moduleDirname = function (module, modulePathList) {
+/*
+ * this function will search modulePathList for the module's __dirname
+ */
+    var result;
+    // search process.cwd()
+    if (!module || module === \".\" || module.indexOf(\"/\") >= 0) {
+        return require(\"path\").resolve(process.cwd(), module || \"\");
+    }
+    // search modulePathList
+    [\"node_modules\"]
+    .concat(modulePathList)
+    .concat(require(\"module\").globalPaths)
+    .concat([process.env.HOME + \"/node_modules\", \"/usr/local/lib/node_modules\"])
+    .some(function (modulePath) {
+        try {
+            result = require(\"path\").resolve(process.cwd(), modulePath + \"/\" + module);
+            result = require(\"fs\").statSync(result).isDirectory() && result;
+            return result;
+        } catch (ignore) {
+            result = null;
+        }
+        return result;
+    });
+    return result || \"\";
+};
+
+local.nop = function () {
+/*
+ * this function will do nothing
+ */
+    return;
+};
+
+local.objectSetDefault = function (dict, defaults, depth) {
+/*
+ * this function will recursively set defaults for undefined-items in dict
+ */
+    dict = dict || {};
+    defaults = defaults || {};
+    Object.keys(defaults).forEach(function (key) {
+        var dict2;
+        var defaults2;
+        dict2 = dict[key];
+        // handle misbehaving getter
+        try {
+            defaults2 = defaults[key];
+        } catch (ignore) {
+        }
+        if (defaults2 === undefined) {
+            return;
+        }
+        // init dict[key] to default value defaults[key]
+        switch (dict2) {
+        case \"\":
+        case null:
+        case undefined:
+            dict[key] = defaults2;
+            return;
+        }
+        // if dict2 and defaults2 are both non-null and non-array objects,
+        // then recurse with dict2 and defaults2
+        if (
+            depth > 1
+            // dict2 is a non-null and non-array object
+            && typeof dict2 === \"object\" && dict2 && !Array.isArray(dict2)
+            // defaults2 is a non-null and non-array object
+            && typeof defaults2 === \"object\" && defaults2 && !Array.isArray(defaults2)
+        ) {
+            // recurse
+            local.objectSetDefault(dict2, defaults2, depth - 1);
+        }
+    });
+    return dict;
+};
+
+local.objectSetOverride = function (dict, overrides, depth, env) {
+/*
+ * this function will recursively set overrides for items in dict
+ */
+    dict = dict || {};
+    env = env || (typeof process === \"object\" && process.env) || {};
+    overrides = overrides || {};
+    Object.keys(overrides).forEach(function (key) {
+        var dict2;
+        var overrides2;
+        dict2 = dict[key];
+        overrides2 = overrides[key];
+        if (overrides2 === undefined) {
+            return;
+        }
+        // if both dict2 and overrides2 are non-null and non-array objects,
+        // then recurse with dict2 and overrides2
+        if (
+            depth > 1
+            // dict2 is a non-null and non-array object
+            && typeof dict2 === \"object\" && dict2 && !Array.isArray(dict2)
+            // overrides2 is a non-null and non-array object
+            && typeof overrides2 === \"object\" && overrides2
+            && !Array.isArray(overrides2)
+        ) {
+            local.objectSetOverride(dict2, overrides2, depth - 1, env);
+            return;
+        }
+        // else set dict[key] with overrides[key]
+        dict[key] = dict === env
+        // if dict is env, then overrides falsy-value with empty-string
+        ? overrides2 || \"\"
+        : overrides2;
+    });
+    return dict;
+};
+
+local.onErrorDefault = function (error) {
+/*
+ * this function will if <error> exists, then print it to stderr
+ */
+    if (error) {
+        console.error(error);
+    }
+    return error;
+};
+
+local.onErrorThrow = function (error) {
+/*
+ * this function will if error exists, then throw it
+ */
+    if (error) {
+        throw error;
+    }
+    return error;
+};
+
+local.onErrorWithStack = function (onError) {
+/*
+ * this function will create a new callback that will call onError,
+ * and append the current stack to any error
+ */
+    var onError2;
+    var stack;
+    stack = new Error().stack.replace((/(.*?)\\n.*?\$/m), \"\$1\");
+    onError2 = function (error, data, meta) {
+        if (
+            error
+            && typeof error.stack === \"string\"
+            && error !== local.errorDefault
+            && String(error.stack).indexOf(stack.split(\"\\n\")[2]) < 0
+        ) {
+            // append the current stack to error.stack
+            error.stack += \"\\n\" + stack;
+        }
+        onError(error, data, meta);
+    };
+    // debug onError
+    onError2.toString = function () {
+        return String(onError);
+    };
+    return onError2;
+};
+
+local.onNext = function (options, onError) {
+/*
+ * this function will wrap onError inside the recursive function options.onNext,
+ * and append the current stack to any error
+ */
+    options.onNext = local.onErrorWithStack(function (error, data, meta) {
+        try {
+            options.modeNext += (error && !options.modeErrorIgnore)
+            ? 1000
+            : 1;
+            if (options.modeDebug) {
+                console.error(\"onNext - \" + JSON.stringify({
+                    modeNext: options.modeNext,
+                    errorMessage: error && error.message
+                }));
+                if (error && error.stack) {
+                    console.error(error.stack);
+                }
+            }
+            onError(error, data, meta);
+        } catch (errorCaught) {
+            // throw errorCaught to break infinite recursion-loop
+            if (options.errorCaught) {
+                throw options.errorCaught;
+            }
+            options.errorCaught = errorCaught;
+            options.onNext(errorCaught, data, meta);
+        }
+    });
+    return options;
+};
+
+local.onParallel = function (onError, onEach, onRetry) {
+/*
+ * this function will create a function that will
+ * 1. run async tasks in parallel
+ * 2. if counter === 0 or error occurred, then call onError with error
+ */
+    var onParallel;
+    onError = local.onErrorWithStack(onError);
+    onEach = onEach || local.nop;
+    onRetry = onRetry || local.nop;
+    onParallel = function (error, data) {
+        if (onRetry(error, data)) {
+            return;
+        }
+        // decrement counter
+        onParallel.counter -= 1;
+        // validate counter
+        if (!(onParallel.counter >= 0 || error || onParallel.error)) {
+            error = new Error(\"invalid onParallel.counter = \" + onParallel.counter);
+        // ensure onError is run only once
+        } else if (onParallel.counter < 0) {
+            return;
+        }
+        // handle error
+        if (error) {
+            onParallel.error = error;
+            // ensure counter <= 0
+            onParallel.counter = -Math.abs(onParallel.counter);
+        }
+        // call onError when isDone
+        if (onParallel.counter <= 0) {
+            onError(error, data);
+            return;
+        }
+        onEach();
+    };
+    // init counter
+    onParallel.counter = 0;
+    // return callback
+    return onParallel;
+};
+
+local.onParallelList = function (options, onEach, onError) {
+/*
+ * this function will
+ * 1. async-run onEach in parallel,
+ *    with the given options.rateLimit and options.retryLimit
+ * 2. call onError when onParallel.ii + 1 === options.list.length
+ */
+    var isListEnd;
+    var onEach2;
+    var onParallel;
+    options.list = options.list || [];
+    onEach2 = function () {
+        while (true) {
+            if (!(onParallel.ii + 1 < options.list.length)) {
+                isListEnd = true;
+                return;
+            }
+            if (!(onParallel.counter < options.rateLimit + 1)) {
+                return;
+            }
+            onParallel.ii += 1;
+            onEach({
+                element: options.list[onParallel.ii],
+                ii: onParallel.ii,
+                list: options.list,
+                retry: 0
+            }, onParallel);
+        }
+    };
+    onParallel = local.onParallel(onError, onEach2, function (error, data) {
+        if (error && data && data.retry < options.retryLimit) {
+            local.onErrorDefault(error);
+            data.retry += 1;
+            setTimeout(function () {
+                onParallel.counter -= 1;
+                onEach(data, onParallel);
+            }, 1000);
+            return true;
+        }
+        // restart if options.list has grown
+        if (isListEnd && (onParallel.ii + 1 < options.list.length)) {
+            isListEnd = null;
+            onEach2();
+        }
+    });
+    onParallel.ii = -1;
+    options.rateLimit = Number(options.rateLimit) || 6;
+    options.rateLimit = Math.max(options.rateLimit, 1);
+    options.retryLimit = Number(options.retryLimit) || 2;
+    onParallel.counter += 1;
+    onEach2();
+    onParallel();
+};
+
+local.semverCompare = function (aa, bb) {
+/*
+ * this function will compare semver versions aa ? bb and return
+ * -1 if aa < bb
+ *  0 if aa = bb
+ *  1 if aa > bb
+ * https://semver.org/#spec-item-11
+ */
+    return [aa, bb].map(function (aa) {
+        aa = aa.split(\"-\");
+        return [aa[0], aa.slice(1).join(\"-\") || \"\\u00ff\"].map(function (aa) {
+            return aa.split(\".\").map(function (aa) {
+                return (\"0000000000000000\" + aa).slice(-16);
+            }).join(\".\");
+        }).join(\"-\");
+    }).reduce(function (aa, bb) {
+        return aa === bb
+        ? 0
+        : aa < bb
+        ? -1
+        : 1;
+    });
+};
+
+local.stringMerge = function (str1, str2, rgx) {
+/*
+ * this function will merge <str2> -> <str1>, for sections where both match <rgx>
+ */
+    str2.replace(rgx, function (match2) {
+        str1.replace(rgx, function (match1) {
+            str1 = str1.replace(match1, function () {
+                return match2;
+            });
+        });
+    });
+    return str1;
+};
+
+local.templateRenderMyApp = function (template, options) {
+/*
+ * this function will render the my-app-lite template with the given options.packageJson
+ */
+    options.packageJson = local.fsReadFileOrEmptyStringSync(\"package.json\", \"json\");
+    local.objectSetDefault(options.packageJson, {
+        nameLib: options.packageJson.name.replace((/\\W/g), \"_\"),
+        repository: {
+            url: \"https://github.com/kaizhu256/node-\"
+                    + options.packageJson.name + \".git\"
+        }
+    }, 2);
+    options.githubRepo = options.packageJson.repository.url
+    .replace((/\\.git\$/), \"\").split(\"/\").slice(-2);
+    template = template.replace(
+        (/kaizhu256(\\.github\\.io\\/|%252F|\\/)/g),
+        options.githubRepo[0] + (\"\$1\")
+    );
+    template = template.replace((/node-my-app-lite/g), options.githubRepo[1]);
+    template = template.replace(
+        (/\\bh1-my-app\\b/g),
+        options.packageJson.nameHeroku
+                || (\"h1-\" + options.packageJson.nameLib.replace((/_/g), \"-\"))
+    );
+    template = template.replace((/my-app-lite/g), options.packageJson.name);
+    template = template.replace((/my_app/g), options.packageJson.nameLib);
+    template = template.replace((
+        /\\{\\{packageJson\\.(\\S+)\\}\\}/g
+    ), function (ignore, match1) {
+        return options.packageJson[match1];
+    });
+    return template;
+};
+
+local.throwError = function () {
+/*
+ * this function will throw a new error
+ */
+    throw new Error();
+};
+}());
 }());
 // </script>
 "
@@ -3511,54 +3611,57 @@ shMediaHlsEncrypt () {(set -e
     node -e "
 $UTILITY2_MACRO_JS
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
-var data, ii, local;
-local = local || {};
-data = require('fs').readFileSync('hls.m3u8', 'utf8');
-ii = 1;
-data = data.replace((/^[^#].*?$/gm), function (match0, match1) {
-    ii += 1;
-    match1 = 'aa.' + ('0000' + ii).slice(-4) + '.bin';
-    require('fs').readFile(match0, function (error, data) {
-        console.assert(!error, error);
-        local.cryptoAesXxxCbcRawEncrypt({
-            data: data,
-            key: process.env.CRYPTO_AES_KEY_MEDIA
-        }, function (error, data) {
+/*global global*/
+var data;
+var ii;
+var local;
+(function () {
+    'use strict';
+    local = local || {};
+    data = require('fs').readFileSync('hls.m3u8', 'utf8');
+    ii = 1;
+    data = data.replace((/^[^#].*?$/gm), function (match0, match1) {
+        ii += 1;
+        match1 = 'aa.' + ('0000' + ii).slice(-4) + '.bin';
+        require('fs').readFile(match0, function (error, data) {
             console.assert(!error, error);
-            require('fs').writeFile(match1, data, function (error) {
+            local.cryptoAesXxxCbcRawEncrypt({
+                data: data,
+                key: process.env.CRYPTO_AES_KEY_MEDIA
+            }, function (error, data) {
                 console.assert(!error, error);
-                console.error('encrypted file ' + match0 + ' -> ' + match1);
+                require('fs').writeFile(match1, data, function (error) {
+                    console.assert(!error, error);
+                    console.error('encrypted file ' + match0 + ' -> ' + match1);
+                });
             });
         });
+        return match1;
     });
-    return match1;
-});
-local.cryptoAesXxxCbcRawEncrypt({
-    data: Buffer.from(data),
-    key: process.env.CRYPTO_AES_KEY_MEDIA,
-    mode: 'base64'
-}, function (
-    error,
-    data
-) {
-    console.assert(!error, error);
-    require('fs').writeFile('aa.0001.bin', data, function (error) {
+    local.cryptoAesXxxCbcRawEncrypt({
+        data: Buffer.from(data),
+        key: process.env.CRYPTO_AES_KEY_MEDIA,
+        mode: 'base64'
+    }, function (
+        error,
+        data
+    ) {
         console.assert(!error, error);
-        console.error('encrypted file hls.m3u8 -> aa.0001.bin');
+        require('fs').writeFile('aa.0001.bin', data, function (error) {
+            console.assert(!error, error);
+            console.error('encrypted file hls.m3u8 -> aa.0001.bin');
+        });
     });
-});
+}());
 // </script>
 " "$@"
 )}
@@ -3584,21 +3687,22 @@ shModuleDirname () {(set -e
     node -e "
 $UTILITY2_MACRO_JS
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-'use strict';
+/*global global*/
 var local;
-local = local || {};
-console.log(local.moduleDirname('$MODULE', module.paths));
+(function () {
+    'use strict';
+    local = local || {};
+    console.log(local.moduleDirname('$MODULE', module.paths));
+}());
 // </script>
 "
 )}
@@ -3627,27 +3731,28 @@ shNpmDeprecateAlias () {(set -e
     # update package.json
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
+/*global global*/
 var packageJson;
-packageJson = require("./package.json");
-packageJson.description = process.argv[1];
-Object.keys(packageJson).forEach(function (key) {
-    if (key[0] === "_") {
-        delete packageJson[key];
-    }
-});
-require("fs").writeFileSync("package.json", JSON.stringify(packageJson, null, 4) + "\n");
+(function () {
+    "use strict";
+    packageJson = require("./package.json");
+    packageJson.description = process.argv[1];
+    Object.keys(packageJson).forEach(function (key) {
+        if (key[0] === "_") {
+            delete packageJson[key];
+        }
+    });
+    require("fs").writeFileSync("package.json", JSON.stringify(packageJson, null, 4) + "\n");
+}());
 // </script>
 ' "$MESSAGE"
     shFilePackageJsonVersionUpdate "" publishedIncrement
@@ -3672,31 +3777,32 @@ shNpmInstallWithPeerDependencies () {(set -e
     npm install "$@" | tee "$FILE"
     eval "$(node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
+/*global global*/
 var dict;
-dict = {};
-require("fs").readFileSync(process.argv[1], "utf8").replace((
-    / UNMET PEER DEPENDENCY (\S+)/g
-), function (match0, match1) {
-    match0 = match1.split("@");
-    dict[match0[0]] = dict[match0[0]] || (match0[1] || "").trim();
-});
-Object.keys(dict).forEach(function (key) {
-    console.error("npm install " + key + "@" + dict[key]);
-    console.log("npm install " + key + "@" + dict[key]);
-});
-console.log("true");
+(function () {
+    "use strict";
+    dict = {};
+    require("fs").readFileSync(process.argv[1], "utf8").replace((
+        /\u0020UNMET\u0020PEER\u0020DEPENDENCY\u0020(\S+)/g
+    ), function (ignore, match1) {
+        match1 = match1.split("@");
+        dict[match1[0]] = dict[match1[0]] || (match1[1] || "").trim();
+    });
+    Object.keys(dict).forEach(function (key) {
+        console.error("npm install " + key + "@" + dict[key]);
+        console.log("npm install " + key + "@" + dict[key]);
+    });
+    console.log("true");
+}());
 // </script>
 ' "$FILE")"
     npm install "$@"
@@ -3710,21 +3816,22 @@ shNpmPackageCliHelpCreate () {(set -e
     shBuildPrint "creating npmPackageCliHelp ..."
     FILE="$(node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
+/*global global*/
 var dict;
-dict = require("./package.json").bin || {};
-process.stdout.write(String(dict[Object.keys(dict)[0]]));
+(function () {
+    "use strict";
+    dict = require("./package.json").bin || {};
+    process.stdout.write(String(dict[Object.keys(dict)[0]]));
+}());
 // </script>
 ')"
     shRunWithScreenshotTxt printf none
@@ -3817,26 +3924,29 @@ shNpmPublishAlias () {(set -e
     cd "$DIR"
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
-var name, packageJson, version;
-name = process.argv[1];
-version = process.argv[2];
-packageJson = require("./package.json");
-packageJson.nameOriginal = packageJson.name;
-packageJson.name = name || packageJson.name;
-packageJson.version = version || packageJson.version;
-require("fs").writeFileSync("package.json", JSON.stringify(packageJson, null, 4) + "\n");
+/*global global*/
+var name;
+var packageJson;
+var version;
+(function () {
+    "use strict";
+    name = process.argv[1];
+    version = process.argv[2];
+    packageJson = require("./package.json");
+    packageJson.nameOriginal = packageJson.name;
+    packageJson.name = name || packageJson.name;
+    packageJson.version = version || packageJson.version;
+    require("fs").writeFileSync("package.json", JSON.stringify(packageJson, null, 4) + "\n");
+}());
 // </script>
 ' "$NAME" "$VERSION"
     npm publish
@@ -3944,41 +4054,42 @@ shReadmeLinkValidate () {(set -e
 # this function will validate http-links embedded in README.md
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
+/*global global*/
 var request;
-require("fs").readFileSync("README.md", "utf8").replace((
-    /\b(http|https):\/\/.*?[)\]]/g
-), function (match0, match1) {
-    match0 = match0
+(function () {
+    "use strict";
+    require("fs").readFileSync("README.md", "utf8").replace((
+        /\b(http|https):\/\/.*?[)\]]/g
+    ), function (match0, match1) {
+        match0 = match0
         .slice(0, -1)
         .replace("\u0022", "")
         .replace("\u0027", "")
         .replace((/\bbeta\b|\bmaster\b/g), "alpha")
         .replace((/\/build\//g), "/build..alpha..travis-ci.org/");
-    if (process.env.npm_package_private && match0.indexOf("https://github.com/") === 0) {
-        return;
-    }
-    request = require(match1).request(require("url").parse(match0), function (response) {
-        console.log("shReadmeLinkValidate " + response.statusCode + " " + match0);
-        response.destroy();
-        if (!(response.statusCode < 400)) {
-            throw new Error("shReadmeLinkValidate - invalid link " + match0);
+        if (process.env.npm_package_private && match0.indexOf("https://github.com/") === 0) {
+            return;
         }
+        request = require(match1).request(require("url").parse(match0), function (response) {
+            console.log("shReadmeLinkValidate " + response.statusCode + " " + match0);
+            response.destroy();
+            if (!(response.statusCode < 400)) {
+                throw new Error("shReadmeLinkValidate - invalid link " + match0);
+            }
+        });
+        request.setTimeout(30000);
+        request.end();
     });
-    request.setTimeout(30000);
-    request.end();
-});
+}());
 // </script>
 '
 )}
@@ -4098,24 +4209,25 @@ shReplClient () {(set -e
 # https://gist.github.com/TooTallNate/2209310
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true
 */
-"use strict";
+/*global global*/
 var socket;
-console.log("node repl-client connecting to tcp-port " + process.argv[1]);
-socket = require("net").connect(process.argv[1]);
-process.stdin.pipe(socket);
-socket.pipe(process.stdout);
-socket.on("end", process.exit);
+(function () {
+    "use strict";
+    console.log("node repl-client connecting to tcp-port " + process.argv[1]);
+    socket = require("net").connect(process.argv[1]);
+    process.stdin.pipe(socket);
+    socket.pipe(process.stdout);
+    socket.on("end", process.exit);
+}());
 // </script>
 ' "$@"
 )}
@@ -4180,60 +4292,63 @@ shRunWithScreenshotTxt () {(set -e
     # format text-output
     node -e '
 // <script>
-/* jslint-utility2 */
+/* jslint utility2:true */
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
-    maxlen: 100,
+    multivar: true,
     node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
+    single: true,
+    this: true,
+    white: true
 */
-"use strict";
-var result, wordwrap, yy;
-wordwrap = function (line, ii) {
-    if (ii && !line) {
-        return "";
-    }
-    yy += 16;
-    return "<tspan x=\"10\" y=\"" + yy + "\">" + line
-        .replace((/&/g), "&amp;")
-        .replace((/</g), "&lt;")
-        .replace((/>/g), "&gt;") + "</tspan>\n";
-};
-yy = 10;
-result = require("fs").readFileSync(
-    process.env.npm_config_dir_tmp + "/runWithScreenshotTxt",
-    "utf8"
-)
-    // remove ansi escape-code
-    .replace((/\u001b.*?m/g), "")
-    // format unicode
-    .replace((/\\u[0-9a-f]{4}/g), function (match0) {
-        return String.fromCharCode("0x" + match0.slice(-4));
-    })
-    .trimRight()
-    .split("\n")
-    .map(function (line) {
-        return line
-            .replace((/.{0,96}/g), wordwrap)
-            /* jslint-ignore-next-line */
-            .replace((/(<\/tspan>\n<tspan)/g), "\\$1")
-            .slice();
-    })
-    .join("\n") + "\n";
-result = "<svg height=\"" + (yy + 20) +
-    "\" width=\"720\" xmlns=\"http://www.w3.org/2000/svg\">\n" +
-    "<rect height=\"" + (yy + 20) + "\" fill=\"#555\" width=\"720\"></rect>\n" +
-    "<text fill=\"#7f7\" font-family=\"Courier New\" font-size=\"12\" " +
-    "xml:space=\"preserve\">\n" +
-    result + "</text>\n</svg>\n";
-require("fs").writeFileSync(
-    process.env.npm_config_dir_build + "/" + process.env.MODE_BUILD_SCREENSHOT_IMG,
-    result
-);
+/*global global*/
+var result;
+var wordwrap;
+var yy;
+(function () {
+    "use strict";
+    wordwrap = function (line, ii) {
+        if (ii && !line) {
+            return "";
+        }
+        yy += 16;
+        return "<tspan x=\"10\" y=\"" + yy + "\">" + line
+            .replace((/&/g), "&amp;")
+            .replace((/</g), "&lt;")
+            .replace((/>/g), "&gt;") + "</tspan>\n";
+    };
+    yy = 10;
+    result = require("fs").readFileSync(
+        process.env.npm_config_dir_tmp + "/runWithScreenshotTxt",
+        "utf8"
+    )
+        // remove ansi escape-code
+        .replace((/\u001b.*?m/g), "")
+        // format unicode
+        .replace((/\\u[0-9a-f]{4}/g), function (match0) {
+            return String.fromCharCode("0x" + match0.slice(-4));
+        })
+        .trimRight()
+        .split("\n")
+        .map(function (line) {
+            return line
+                .replace((/.{0,96}/g), wordwrap)
+                .replace((/(<\/tspan>\n<tspan)/g), "\\$1")
+                .slice();
+        })
+        .join("\n") + "\n";
+    result = "<svg height=\"" + (yy + 20) +
+        "\" width=\"720\" xmlns=\"http://www.w3.org/2000/svg\">\n" +
+        "<rect height=\"" + (yy + 20) + "\" fill=\"#555\" width=\"720\"></rect>\n" +
+        "<text fill=\"#7f7\" font-family=\"Courier New\" font-size=\"12\" " +
+        "xml:space=\"preserve\">\n" +
+        result + "</text>\n</svg>\n";
+    require("fs").writeFileSync(
+        process.env.npm_config_dir_build + "/" + process.env.MODE_BUILD_SCREENSHOT_IMG,
+        result
+    );
+}());
 // </script>
 '
     shBuildPrint "created screenshot file $npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
