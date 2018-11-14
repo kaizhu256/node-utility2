@@ -1,73 +1,130 @@
 #!/usr/bin/env node
 /*
- * lib.jslint.js (2018.9.29)
+ * lib.jslint.js (2018.11.14)
  * https://github.com/kaizhu256/node-jslint-lite
- * this zero-dependency package will provide browser-compatible versions of jslint (v2014.7.8 and v2016.10.24) and csslint (v1.0.5), with a working web-demo
+ * this zero-dependency package will provide browser-compatible versions of jslint (v2018.10.26) and csslint (v1.0.5), with a working web-demo
  *
  */
 
 
 
 /* istanbul instrument in package jslint */
+/* istanbul ignore next */
 /* jslint utility2:true */
-(function () {
+(function (globalThis) {
+    "use strict";
+    var consoleError;
+    var local;
+    // init globalThis
+    (function () {
+        try {
+            globalThis = Function("return this")(); // jslint ignore:line
+        } catch (ignore) {}
+    }());
+    globalThis.globalThis = globalThis;
+    // init local
+    local = {};
+    // init isBrowser
+    local.isBrowser = (
+        typeof window === "object"
+        && window === globalThis
+        && typeof window.XMLHttpRequest === "function"
+        && window.document
+        && typeof window.document.querySelectorAll === "function"
+    );
+    globalThis.globalLocal = local;
+    // init function
+    local.assertThrow = function (passed, message) {
+    /*
+     * this function will throw the error <message> if <passed> is falsy
+     */
+        var error;
+        if (passed) {
+            return;
+        }
+        error = (
+            // ternary-operator
+            (
+                message
+                && typeof message.message === "string"
+                && typeof message.stack === "string"
+            )
+            // if message is an error-object, then leave it as is
+            ? message
+            : new Error(
+                typeof message === "string"
+                // if message is a string, then leave it as is
+                ? message
+                // else JSON.stringify message
+                : JSON.stringify(message, null, 4)
+            )
+        );
+        throw error;
+    };
+    local.functionOrNop = function (fnc) {
+    /*
+     * this function will if <fnc> exists,
+     * them return <fnc>,
+     * else return <nop>
+     */
+        return fnc || local.nop;
+    };
+    local.identity = function (value) {
+    /*
+     * this function will return <value>
+     */
+        return value;
+    };
+    local.nop = function () {
+    /*
+     * this function will do nothing
+     */
+        return;
+    };
+    // init debug_inline
+    if (!globalThis["debug\u0049nline"]) {
+        consoleError = console.error;
+        globalThis["debug\u0049nline"] = function () {
+        /*
+         * this function will both print <arguments> to stderr
+         * and return <arguments>[0]
+         */
+            var argList;
+            argList = Array.from(arguments); // jslint ignore:line
+            // debug arguments
+            globalThis["debug\u0049nlineArguments"] = argList;
+            consoleError("\n\ndebug\u0049nline");
+            consoleError.apply(console, argList);
+            consoleError("\n");
+            // return arg0 for inspection
+            return argList[0];
+        };
+    }
+}(this));
+
+
+
+(function (local) {
 "use strict";
-var local;
 
 
 
 /* istanbul ignore next */
 // run shared js-env code - init-before
 (function () {
-
-
-
-// init debug_inline
-(function () {
-    var consoleError;
-    var context;
-    consoleError = console.error;
-    context = (typeof window === "object" && window) || global;
-    context["debug\u0049nline"] = context["debug\u0049nline"] || function () {
-    /*
-     * this function will both print arg0 to stderr and return it
-     */
-        var argList;
-        argList = arguments; // jslint ignore:line
-        // debug arguments
-        context["debug\u0049nlineArguments"] = argList;
-        consoleError("\n\ndebug\u0049nline");
-        consoleError.apply(console, argList);
-        consoleError("\n");
-        // return arg0 for inspection
-        return argList[0];
-    };
-}());
 // init local
-local = {};
-// init isBrowser
-local.isBrowser = (
-    typeof window === "object"
-    && typeof window.XMLHttpRequest === "function"
-    && window.document
-    && typeof window.document.querySelectorAll === "function"
-);
-// init global
-local.global = local.isBrowser
-? window
-: global;
-// re-init local
 local = (
-    local.global.utility2_rollup
-    // || local.global.utility2_rollup_old || require("./assets.utility2.rollup.js")
-    || local
+    globalThis.utility2_rollup
+    // || globalThis.utility2_rollup_old
+    // || require("./assets.utility2.rollup.js")
+    || globalThis.globalLocal
 );
 // init exports
 if (local.isBrowser) {
-    local.global.utility2_jslint = local;
+    globalThis.utility2_jslint = local;
 } else {
     // require builtins
-    // local.assert = require("assert");
+    local.assert = require("assert");
     local.buffer = require("buffer");
     local.child_process = require("child_process");
     local.cluster = require("cluster");
@@ -113,7 +170,7 @@ local.cliRun = function (options) {
      * <code>
      * will eval <code>
      */
-        global.local = local;
+        globalThis.local = local;
         local.vm.runInThisContext(process.argv[3]);
     };
     local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
@@ -137,17 +194,14 @@ local.cliRun = function (options) {
             description: "example:",
             command: ["--eval"]
         }];
-        file = __filename.replace((/.*\//), "");
+        file = __filename.replace((
+            /.*\//
+        ), "");
         options = Object.assign({}, options);
         packageJson = require("./package.json");
         // validate comment
-        options.rgxComment = options.rgxComment || new RegExp(
-            "\\) \\{\\n"
-            + "(?:| {4})\\/\\*\\n"
-            + "(?: | {5})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n"
-            + "(?: | {5})\\* (will .*?\\S)\\n"
-            + "(?: | {5})\\*\\/\\n"
-            + "(?: {4}| {8})\\S"
+        options.rgxComment = options.rgxComment || (
+            /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         textDict = {};
         Object.keys(local.cliDict).sort().forEach(function (key, ii) {
@@ -172,14 +226,20 @@ local.cliRun = function (options) {
                     description: commandList[ii][2]
                 };
             } catch (ignore) {
-                throw new Error(
+                local.assertThrow(null, new Error(
                     "cliRun - cannot parse comment in COMMAND "
                     + key + ":\nnew RegExp(" + JSON.stringify(options.rgxComment.source)
                     + ").exec(" + JSON.stringify(text)
-                    .replace((/\\\\/g), "\u0000")
-                    .replace((/\\n/g), "\\n\\\n")
-                    .replace((/\u0000/g), "\\\\") + ");"
-                );
+                    .replace((
+                        /\\\\/g
+                    ), "\u0000")
+                    .replace((
+                        /\\n/g
+                    ), "\\n\\\n")
+                    .replace((
+                        /\u0000/g
+                    ), "\\\\") + ");"
+                ));
             }
         });
         console.log(packageJson.name + " (" + packageJson.version + ")\n\n" + commandList
@@ -197,14 +257,20 @@ local.cliRun = function (options) {
                 break;
             default:
                 element.argList = element.argList.split(" ");
-                element.description = "# COMMAND "
-                        + (element.command[0] || "<none>") + "\n# "
-                        + element.description;
+                element.description = (
+                    "# COMMAND "
+                    + (element.command[0] || "<none>") + "\n# "
+                    + element.description
+                );
             }
-            return element.description + "\n  " + file
-                    + ("  " + element.command.sort().join("|") + "  ")
-                    .replace((/^\u0020{4}$/), "  ")
-                    + element.argList.join("  ");
+            return (
+                element.description + "\n  " + file
+                + ("  " + element.command.sort().join("|") + "  ")
+                    .replace((
+                    /^\u0020{4}$/
+                ), "  ")
+                + element.argList.join("  ")
+            );
         })
         .join("\n\n"));
     };
@@ -217,11 +283,15 @@ local.cliRun = function (options) {
      *
      * will start interactive-mode
      */
-        global.local = local;
-        (local.replStart || require("repl").start)({useGlobal: true});
+        globalThis.local = local;
+        local.functionOrNop(local.replStart || require("repl").start)({
+            useGlobal: true
+        });
     };
-    local.cliDict["--interactive"] = local.cliDict["--interactive"]
-            || local.cliDict._interactive;
+    local.cliDict["--interactive"] = (
+        local.cliDict["--interactive"]
+        || local.cliDict._interactive
+    );
     local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
     local.cliDict._version = local.cliDict._version || function () {
     /*
@@ -250,7 +320,7 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
  * with object-keys sorted and circular-references removed
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Syntax
  */
-    var circularList;
+    var circularSet;
     var stringify;
     var tmp;
     stringify = function (obj) {
@@ -267,22 +337,26 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
             return JSON.stringify(obj);
         }
         // ignore circular-reference
-        if (circularList.indexOf(obj) >= 0) {
+        if (circularSet.has(obj)) {
             return;
         }
-        circularList.push(obj);
+        circularSet.add(obj);
         // if obj is an array, then recurse its items
         if (Array.isArray(obj)) {
-            return "[" + obj.map(function (obj) {
+            tmp = "[" + obj.map(function (obj) {
                 // recurse
                 tmp = stringify(obj);
-                return typeof tmp === "string"
-                ? tmp
-                : "null";
+                return (
+                    typeof tmp === "string"
+                    ? tmp
+                    : "null"
+                );
             }).join(",") + "]";
+            circularSet.delete(obj);
+            return tmp;
         }
         // if obj is not an array, then recurse its items with object-keys sorted
-        return "{" + Object.keys(obj)
+        tmp = "{" + Object.keys(obj)
         // sort object-keys
         .sort()
         .map(function (key) {
@@ -296,15 +370,10 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
             return typeof obj === "string";
         })
         .join(",") + "}";
+        circularSet.delete(obj);
+        return tmp;
     };
-    circularList = [];
-    // try to derefernce all properties in obj
-    (function () {
-        try {
-            obj = JSON.parse(JSON.stringify(obj));
-        } catch (ignore) {
-        }
-    }());
+    circularSet = new Set();
     return JSON.stringify(
         (typeof obj === "object" && obj)
         // recurse
@@ -321,9 +390,6 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
 /* istanbul ignore next */
 // run shared js-env code - function
 (function () {
-
-
-
 /*
 file CSSLint/csslint.js
 2016-12-06T08:50:07Z - shGithubDateCommitted https://github.com/CSSLint/csslint/commits/v1.0.5
@@ -1748,35 +1814,167 @@ local.CSSLint = CSSLint;
 
 
 
-// jslint-hack - let
-let jslint_result;
-let line_ignore;
-let lines_extra;
-let next_line_extra;
-let warn_at_extra;
+// jslint-hack - var
+var jslint;
+var jslint_result;
+var line_ignore;
+var lines_extra;
 /*
 file JSLint/jslint.js - es6
-2018-09-26T23:21:41Z - shGithubDateCommitted https://github.com/douglascrockford/JSLint/commits/a9f822d2cea0e37b6ee720ede44bd81257f8e78f
-https://github.com/douglascrockford/JSLint/blob/a9f822d2cea0e37b6ee720ede44bd81257f8e78f/jslint.js
-node -e 'console.log(
-    process.argv[1]
-    .replace("/\*property", "/\*\\property // jslint-hack")
-    .replace("warnings.push(warning);", "warn_at_extra(warning, warnings); // jslint-hack")
-    .replace("\n            d\n", "\n            d || the_token // jslint-hack\n")
-    .replace((/(\n *)(at = source_line.search\(rx_tab\);)/), "$1source_line = next_line_extra(source_line, line); // jslint-hack$1$2")
-    .replace("warn_at(\"use_double\", line, column);", "warn_at(\"use_double\", line, column, result); // jslint-hack")
-    .replace((/(\n *)(snippet = source_line;)/), "$1regexp_seen = true; // jslint-hack$1$2")
-    .replace((/(\n *)(array.push\(source_line\);)/), "$1$2$1regexp_seen = true; // jslint-hack")
-    .replace("warn(\"unexpected_a\", right);", "warn(\"unexpected_a\", right, null, null, left, right); // jslint-hack")
-    .replace((/right.from < (.*)/g), "right.from !== $1 // jslint-hack")
-    .replace("export default function jslint(", "function jslint( // jslint-hack")
-    .replace((/;$/), " // jslint-hack")
-    .replace((/\n+?(\n *?[)\]}])/g), "$1")
-    .replace((/ {2,}\/\//g), " //")
-)' "$(curl https://raw.githubusercontent.com/douglascrockford/JSLint/a9f822d2cea0e37b6ee720ede44bd81257f8e78f/jslint.js)" > /tmp/aa.js
+2018-10-26T15:59:47Z - shGithubDateCommitted https://github.com/douglascrockford/JSLint/commits/813d1fb157076ef9df1d773a084c971705e57a84
+https://github.com/douglascrockford/JSLint/blob/813d1fb157076ef9df1d773a084c971705e57a84/jslint.js
+node -e '
+"use strict";
+process.argv[1].replace((
+    /\\u002f/gm
+), "\u002f").replace((
+    /^(-[\S\s]*?\n)(\+[\S\s]*?\n)\n/gm
+), function (ignore, match1, match2) {
+    process.argv[2] = process.argv[2].replace(
+        match1.replace((
+            /^-/gm
+        ), ""),
+        match2.replace((
+            /^\+/gm
+        ), "")
+    );
+});
+process.argv[2] = process.argv[2].replace((
+    /(\n\u0020*?)throw\u0020/g
+), "$1// jslint-hack - early_stop = true$1early_stop = true;$&").replace((
+    /(\n\u0020*?)if\u0020\(right.from\u0020\S+/g
+), "$1// jslint-hack - expected_at$1if (right.from !==").replace((
+    /\bconst\u0020|\blet\u0020/g
+), "var ");
+console.log(process.argv[2]);
+' '
+-// jslint.js
++\u002f* jslint utility2:true *\u002f
++var next_line_extra = null;
++var warn_at_extra = null;
++// jslint.js
+
+-\u002f*property
++// jslint-hack - property
++\u002f*\property
+
+-    warnings.push(warning);
++    // jslint-hack - warn_at_extra
++    warn_at_extra(warning, warnings);
+
+-            d
++            // jslint-hack - the_token
++            d || the_token
+
+-        if (source_line !== undefined) {
++        if (source_line !== undefined) {
++            // jslint-hack - next_line_extra
++            source_line = next_line_extra(source_line, line);
+
+-        if (!source_line) {
+-            source_line = next_line();
+-            from = 0;
+-            return (
+-                source_line === undefined
+-                ? (
+-                    mega_mode
+-                    ? stop_at("unclosed_mega", mega_line, mega_from)
+-                    : make("(end)")
+-                )
+-                : lex()
+-            );
+-        }
++        // jslint-hack - un-recurse
++        while (!source_line) {
++            source_line = next_line();
++            from = 0;
++            if (source_line === undefined) {
++                return (
++                    mega_mode
++                    ? stop_at("unclosed_mega", mega_line, mega_from)
++                    : make("(end)")
++                );
++            }
++        }
+
+-        if (snippet === "//") {
++        if (snippet === "//") {
++            // jslint-hack - too_long
++            regexp_seen = true;
+
+-                array.push(source_line);
++                array.push(source_line);
++                // jslint-hack - too_long
++                regexp_seen = true;
+
+-        warn("unexpected_a", right);
++        // jslint-hack - unexpected_a
++        warn("unexpected_a", right, null, null, left, right);
+
+-                const mislaid = (
+-                    stack.length > 0
+-                    ? stack[stack.length - 1].right
+-                    : undefined
+-                );
+-                if (!open && mislaid !== undefined) {
+-                    warn(
+-                        "expected_a_next_at_b",
+-                        mislaid,
+-                        artifact(mislaid.id),
+-                        margin + 4 + fudge
+-                    );
+-                } else if (right.from !== margin + 8) {
+-                    expected_at(margin + 8);
+-                }
++                // jslint-hack - expected_space_a_b
++                warn(
++                    "expected_space_a_b",
++                    right,
++                    artifact(left),
++                    artifact(right)
++                );
+
+-                        margin += 4;
++                        // jslint-hack - conditional-margin
++                        if (
++                            !option.utility2
++                            || lines[right.line].startsWith(" ")
++                        ) {
++                            margin += 4;
++                        }
+
+-                    } else if (right.id === "." || right.id === "?.") {
+-                        no_space_only();
++                    } else if (right.id === "." || right.id === "?.") {
++                        // jslint-hack - method-chain
++                        // https://github.com/douglascrockford/JSLint/commit/752c82d860ac14d35d492dc5c6ad0a0ed8227e76#diff-01d3d81a6eb6d82af3c377b55dc4fa28L4692
++                        if (left.line === right.line) {
++                            no_space();
++                        } else {
++                            at_margin(0);
++                        }
+
+-        early_stop = true;
++        // jslint-hack - early_stop = false
++        early_stop = false;
+
+-            if (warnings.length === 0) {
++            // jslint-hack - !early_stop
++            if (!early_stop) {
+
+-    } catch (e) {
++    } catch (e) {
++        // jslint-hack - e.early_stop = true
++        e.early_stop = true;
+
+' \
+"$(curl https://raw.githubusercontent.com/douglascrockford/JSLint/813d1fb157076ef9df1d773a084c971705e57a84/jslint.js)" > /tmp/aa.js; utility2-jslint autofix /tmp/aa.js
 */
+/* jslint utility2:true */
+var next_line_extra = null;
+var warn_at_extra = null;
 // jslint.js
-// 2018-09-26
+// 2018-10-26
 // Copyright (c) 2015 Douglas Crockford  (www.JSLint.com)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -1862,7 +2060,8 @@ node -e 'console.log(
 
 // WARNING: JSLint will hurt your feelings.
 
-/*\property // jslint-hack
+// jslint-hack - property
+/*\property
     a, and, arity, assign, b, bad_assignment_a, bad_directive_a, bad_get,
     bad_module_name_a, bad_option_a, bad_property_a, bad_set, bitwise, block,
     body, browser, c, calls, catch, charCodeAt, closer, closure, code, column,
@@ -1874,35 +2073,35 @@ node -e 'console.log(
     expected_identifier_a, expected_line_break_a_b, expected_regexp_factor_a,
     expected_space_a_b, expected_statements_a, expected_string_a,
     expected_type_string_a, exports, expression, extra, finally, flag, for,
-    forEach, free, from, froms, fud, fudge, function_in_loop, functions, g,
-    getset, global, i, id, identifier, import, inc, indexOf, infix_in, init,
-    initial, isArray, isNaN, join, json, keys, label, label_a, lbp, led, length,
-    level, line, lines, live, long, loop, m, margin, match, message,
-    misplaced_a, misplaced_directive_a, missing_browser, missing_m, module,
-    multivar, naked_block, name, names, nested_comment, new, node, not_label_a,
-    nr, nud, number_isNaN, ok, open, option, out_of_scope_a, parameters, parent,
-    pop, property, push, quote, redefinition_a_b, replace,
-    required_a_optional_b, reserved_a, right, role, search, shebang, signature,
-    single, slice, some, sort, split, startsWith, statement, stop, strict,
-    subscript_a, switch, test, this, thru, toString, todo_comment, tokens,
-    too_long, too_many_digits, tree, try, type, u, unclosed_comment,
-    unclosed_mega, unclosed_string, undeclared_a, unexpected_a,
-    unexpected_a_after_b, unexpected_a_before_b, unexpected_at_top_level_a,
-    unexpected_char_a, unexpected_comment, unexpected_directive_a,
-    unexpected_expression_a, unexpected_label_a, unexpected_parens,
-    unexpected_space_a_b, unexpected_statement_a, unexpected_trailing_space,
-    unexpected_typeof_a, uninitialized_a, unreachable_a,
-    unregistered_property_a, unsafe, unused_a, use_double, use_open, use_spaces,
-    use_strict, used, value, var_loop, var_switch, variable, warning, warnings,
-    weird_condition_a, weird_expression_a, weird_loop, weird_relation_a, white,
-    wrap_assignment, wrap_condition, wrap_immediate, wrap_parameter,
-    wrap_regexp, wrap_unary, wrapped, writable, y
+    forEach, free, freeze, freeze_exports, from, froms, fud, fudge,
+    function_in_loop, functions, g, getset, global, i, id, identifier, import,
+    inc, indexOf, infix_in, init, initial, isArray, isNaN, join, json, keys,
+    label, label_a, lbp, led, length, level, line, lines, live, long, loop, m,
+    margin, match, message, misplaced_a, misplaced_directive_a, missing_browser,
+    missing_m, module, multivar, naked_block, name, names, nested_comment, new,
+    node, not_label_a, nr, nud, number_isNaN, ok, open, opening, option,
+    out_of_scope_a, parameters, parent, pop, property, push, quote,
+    redefinition_a_b, replace, required_a_optional_b, reserved_a, right, role,
+    search, shebang, signature, single, slice, some, sort, split, startsWith,
+    statement, stop, strict, subscript_a, switch, test, this, thru, toString,
+    todo_comment, tokens, too_long, too_many_digits, tree, try, type, u,
+    unclosed_comment, unclosed_mega, unclosed_string, undeclared_a,
+    unexpected_a, unexpected_a_after_b, unexpected_a_before_b,
+    unexpected_at_top_level_a, unexpected_char_a, unexpected_comment,
+    unexpected_directive_a, unexpected_expression_a, unexpected_label_a,
+    unexpected_parens, unexpected_space_a_b, unexpected_statement_a,
+    unexpected_trailing_space, unexpected_typeof_a, uninitialized_a,
+    unreachable_a, unregistered_property_a, unsafe, unused_a, use_double,
+    use_open, use_spaces, use_strict, used, value, var_loop, var_switch,
+    variable, warning, warnings, weird_condition_a, weird_expression_a,
+    weird_loop, weird_relation_a, white, wrap_condition, wrap_immediate,
+    wrap_parameter, wrap_regexp, wrap_unary, wrapped, writable, y
 */
 
 function empty() {
 
 // The empty function produces a new empty object that inherits nothing. This is
-// much better than {} because confusions around accidental method names like
+// much better than '{}' because confusions around accidental method names like
 // 'constructor' are completely avoided.
 
     return Object.create(null);
@@ -1918,7 +2117,7 @@ function populate(array, object = empty(), value = true) {
     return object;
 }
 
-const allowed_option = {
+var allowed_option = {
 
 // These are the options that are recognized in the option object or that may
 // appear in a /*jslint*/ directive. Most options will have a boolean value,
@@ -1931,7 +2130,8 @@ const allowed_option = {
         "Element", "Event", "event", "FileReader", "FormData", "history",
         "localStorage", "location", "MutationObserver", "name", "navigator",
         "screen", "sessionStorage", "setInterval", "setTimeout", "Storage",
-        "URL", "window", "Worker", "XMLHttpRequest"
+        "TextDecoder", "TextEncoder", "URL", "window", "Worker",
+        "XMLHttpRequest"
     ],
     couch: [
         "emit", "getRow", "isArray", "log", "provides", "registerType",
@@ -1950,31 +2150,31 @@ const allowed_option = {
     node: [
         "Buffer", "clearImmediate", "clearInterval", "clearTimeout",
         "console", "exports", "module", "process", "require",
-        "setImmediate", "setInterval", "setTimeout", "URL",
-        "URLSearchParams", "__dirname", "__filename"
+        "setImmediate", "setInterval", "setTimeout", "TextDecoder",
+        "TextEncoder", "URL", "URLSearchParams", "__dirname", "__filename"
     ],
     single: true,
     this: true,
     white: true
 };
 
-const anticondition = populate([
+var anticondition = populate([
     "?", "~", "&", "|", "^", "<<", ">>", ">>>", "+", "-", "*", "/", "%",
     "typeof", "(number)", "(string)"
 ]);
 
 // These are the bitwise operators.
 
-const bitwiseop = populate([
+var bitwiseop = populate([
     "~", "^", "^=", "&", "&=", "|", "|=", "<<", "<<=", ">>", ">>=",
     ">>>", ">>>="
 ]);
 
-const escapeable = populate([
+var escapeable = populate([
     "\\", "/", "`", "b", "f", "n", "r", "t"
 ]);
 
-const opener = {
+var opener = {
 
 // The open and close pairs.
 
@@ -1986,19 +2186,19 @@ const opener = {
 
 // The relational operators.
 
-const relationop = populate([
+var relationop = populate([
     "!=", "!==", "==", "===", "<", "<=", ">", ">="
 ]);
 
 // This is the set of infix operators that require a space on each side.
 
-const spaceop = populate([
+var spaceop = populate([
     "!=", "!==", "%", "%=", "&", "&=", "&&", "*", "*=", "+=", "-=", "/",
     "/=", "<", "<=", "<<", "<<=", "=", "==", "===", "=>", ">", ">=",
     ">>", ">>=", ">>>", ">>>=", "^", "^=", "|", "|=", "||"
 ]);
 
-const standard = [
+var standard = [
 
 // These are the globals that are provided by the language standard.
 
@@ -2013,7 +2213,7 @@ const standard = [
     "URIError", "WeakMap", "WeakSet"
 ];
 
-const bundle = {
+var bundle = {
 
 // The bundle contains the raw text messages that are generated by jslint. It
 // seems that they are all error messages and warnings. There are no "Atta
@@ -2050,6 +2250,9 @@ const bundle = {
     expected_statements_a: "Expected statements before '{a}'.",
     expected_string_a: "Expected a string and instead saw '{a}'.",
     expected_type_string_a: "Expected a type string and instead saw '{a}'.",
+    freeze_exports: (
+        "Expected 'Object.freeze('. All export values should be frozen."
+    ),
     function_in_loop: "Don't make functions within a loop.",
     infix_in: (
         "Unexpected 'in'. Compare with undefined, "
@@ -2118,7 +2321,6 @@ const bundle = {
     weird_expression_a: "Weird expression '{a}'.",
     weird_loop: "Weird loop.",
     weird_relation_a: "Weird relation '{a}'.",
-    wrap_assignment: "Don't wrap assignment statements in parens.",
     wrap_condition: "Wrap the condition in parens.",
     wrap_immediate: (
         "Wrap an immediate function invocation in parentheses to assist "
@@ -2133,40 +2335,82 @@ const bundle = {
 // Regular expression literals:
 
 // supplant {variables}
-const rx_supplant = /\{([^{}]*)\}/g;
+var rx_supplant = (
+    /\{([^{}]*)\}/g
+);
 // carriage return, carriage return linefeed, or linefeed
-const rx_crlf = /\n|\r\n?/;
+var rx_crlf = (
+    /\n|\r\n?/
+);
 // unsafe characters that are silently deleted by one or more browsers
-const rx_unsafe = /[\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/;
+var rx_unsafe = (
+    /[\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/
+);
 // identifier
-const rx_identifier = /^([a-zA-Z_$][a-zA-Z0-9_$]*)$/;
-const rx_module = /^[a-zA-Z0-9_$:.@\-\/]+$/;
-const rx_bad_property = /^_|\$|Sync\$|_$/;
+var rx_identifier = (
+    /^([a-zA-Z_$][a-zA-Z0-9_$]*)$/
+);
+var rx_module = (
+    /^[a-zA-Z0-9_$:.@\-\/]+$/
+);
+var rx_bad_property = (
+    /^_|\$|Sync\$|_$/
+);
 // star slash
-const rx_star_slash = /\*\//;
+var rx_star_slash = (
+    /\*\//
+);
 // slash star
-const rx_slash_star = /\/\*/;
+var rx_slash_star = (
+    /\/\*/
+);
 // slash star or ending slash
-const rx_slash_star_or_slash = /\/\*|\/$/;
+var rx_slash_star_or_slash = (
+    /\/\*|\/$/
+);
 // uncompleted work comment
-const rx_todo = /\b(?:todo|TO\s?DO|HACK)\b/;
+var rx_todo = (
+    /\b(?:todo|TO\s?DO|HACK)\b/
+);
 // tab
-const rx_tab = /\t/g;
+var rx_tab = (
+    /\t/g
+);
 // directive
-const rx_directive = /^(jslint|property|global)\s+(.*)$/;
-const rx_directive_part = /^([a-zA-Z$_][a-zA-Z0-9$_]*)(?::\s*(true|false))?,?\s*(.*)$/;
+var rx_directive = (
+    /^(jslint|property|global)\s+(.*)$/
+);
+var rx_directive_part = (
+    /^([a-zA-Z$_][a-zA-Z0-9$_]*)(?::\s*(true|false))?,?\s*(.*)$/
+);
 // token (sorry it is so long)
-const rx_token = /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\]?,:;'"~`]|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0|[1-9][0-9]*))(.*)$/;
-const rx_digits = /^([0-9]+)(.*)$/;
-const rx_hexs = /^([0-9a-fA-F]+)(.*)$/;
-const rx_octals = /^([0-7]+)(.*)$/;
-const rx_bits = /^([01]+)(.*)$/;
+var rx_token = (
+    /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0|[1-9][0-9]*))(.*)$/
+);
+var rx_digits = (
+    /^([0-9]+)(.*)$/
+);
+var rx_hexs = (
+    /^([0-9a-fA-F]+)(.*)$/
+);
+var rx_octals = (
+    /^([0-7]+)(.*)$/
+);
+var rx_bits = (
+    /^([01]+)(.*)$/
+);
 // mega
-const rx_mega = /[`\\]|\$\{/;
+var rx_mega = (
+    /[`\\]|\$\{/
+);
 // JSON number
-const rx_JSON_number = /^-?\d+(?:\.\d*)?(?:e[\-+]?\d+)?$/i;
+var rx_JSON_number = (
+    /^-?\d+(?:\.\d*)?(?:e[\-+]?\d+)?$/i
+);
 // initial cap
-const rx_cap = /^[A-Z]/;
+var rx_cap = (
+    /^[A-Z]/
+);
 
 function is_letter(string) {
     return (
@@ -2177,7 +2421,7 @@ function is_letter(string) {
 
 function supplant(string, object) {
     return string.replace(rx_supplant, function (found, filling) {
-        const replacement = object[filling];
+        var replacement = object[filling];
         return (
             replacement !== undefined
             ? replacement
@@ -2186,36 +2430,36 @@ function supplant(string, object) {
     });
 }
 
-let anon; // The guessed name for anonymous functions.
-let blockage; // The current block.
-let block_stack; // The stack of blocks.
-let declared_globals; // The object containing the global declarations.
-let directives; // The directive comments.
-let directive_mode; // true if directives are still allowed.
-let early_stop; // true if JSLint cannot finish.
-let exports; // The exported names and values.
-let froms; // The array collecting all import-from strings.
-let fudge; // true if the natural numbers start with 1.
-let functionage; // The current function.
-let functions; // The array containing all of the functions.
-let global; // The global object; the outermost context.
-let json_mode; // true if parsing JSON.
-let lines; // The array containing source lines.
-let module_mode; // true if import or export was used.
-let next_token; // The next token to be examined in the parse.
-let option; // The options parameter.
-let property; // The object containing the tallied property names.
-let mega_mode; // true if currently parsing a megastring literal.
-let shebang; // true if a #! was seen on the first line.
-let stack; // The stack of functions.
-let syntax; // The object containing the parser.
-let token; // The current token being examined in the parse.
-let token_nr; // The number of the next token.
-let tokens; // The array of tokens.
-let tenure; // The predefined property registry.
-let tree; // The abstract parse tree.
-let var_mode; // "var" if using var; "let" if using let.
-let warnings; // The array collecting all generated warnings.
+var anon; // The guessed name for anonymous functions.
+var block_stack; // The stack of blocks.
+var blockage; // The current block.
+var declared_globals; // The object containing the global declarations.
+var directive_mode; // true if directives are still allowed.
+var directives; // The directive comments.
+var early_stop; // true if JSLint cannot finish.
+var exports; // The exported names and values.
+var froms; // The array collecting all import-from strings.
+var fudge; // true if the natural numbers start with 1.
+var functionage; // The current function.
+var functions; // The array containing all of the functions.
+var global; // The global object; the outermost context.
+var json_mode; // true if parsing JSON.
+var lines; // The array containing source lines.
+var mega_mode; // true if currently parsing a megastring literal.
+var module_mode; // true if import or export was used.
+var next_token; // The next token to be examined in the parse.
+var option; // The options parameter.
+var property; // The object containing the tallied property names.
+var shebang; // true if a #! was seen on the first line.
+var stack; // The stack of functions.
+var syntax; // The object containing the parser.
+var tenure; // The predefined property registry.
+var token; // The current token being examined in the parse.
+var token_nr; // The number of the next token.
+var tokens; // The array of tokens.
+var tree; // The abstract parse tree.
+var var_mode; // "var" if using var; "let" if using let.
+var warnings; // The array collecting all generated warnings.
 
 // Error reportage functions:
 
@@ -2258,7 +2502,7 @@ function warn_at(code, line, column, a, b, c, d) {
 // Report an error at some line and column of the program. The warning object
 // resembles an exception.
 
-    const warning = { // ~~
+    var warning = { // ~~
         name: "JSLintError",
         column: column,
         line: line,
@@ -2277,7 +2521,8 @@ function warn_at(code, line, column, a, b, c, d) {
         warning.d = d;
     }
     warning.message = supplant(bundle[code] || code, warning);
-    warn_at_extra(warning, warnings); // jslint-hack
+    // jslint-hack - warn_at_extra
+    warn_at_extra(warning, warnings);
     return warning;
 }
 
@@ -2285,6 +2530,8 @@ function stop_at(code, line, column, a, b, c, d) {
 
 // Same as warn_at, except that it stops the analysis.
 
+    // jslint-hack - early_stop = true
+    early_stop = true;
     throw warn_at(code, line, column, a, b, c, d);
 }
 
@@ -2305,7 +2552,8 @@ function warn(code, the_token, a, b, c, d) {
             a || artifact(the_token),
             b,
             c,
-            d || the_token // jslint-hack
+            // jslint-hack - the_token
+            d || the_token
         );
         return the_token.warning;
     }
@@ -2321,6 +2569,8 @@ function stop(code, the_token, a, b, c, d) {
         the_token = next_token;
     }
     delete the_token.warning;
+    // jslint-hack - early_stop = true
+    early_stop = true;
     throw warn(code, the_token, a, b, c, d);
 }
 
@@ -2345,30 +2595,25 @@ function tokenize(source) {
     );
     tokens = [];
 
-    let char; // a popular character
-    let column = 0; // the column number of the next character
-    let first; // the first token
-    let from; // the starting column number of the token
-    let line = -1; // the line number of the next character
-    let nr = 0; // the next token number
-    let previous = global; // the previous token including comments
-    let prior = global; // the previous token excluding comments
-    let mega_from; // the starting column of megastring
-    let mega_line; // the starting line of megastring
-    let regexp_seen; // regular expression literal seen on this line
-    let snippet; // a piece of string
-    let source_line = ""; // the remaining line source string
-    let whole_line = ""; // the whole line source string
+    var char; // a popular character
+    var column = 0; // the column number of the next character
+    var first; // the first token
+    var from; // the starting column number of the token
+    var line = -1; // the line number of the next character
+    var nr = 0; // the next token number
+    var previous = global; // the previous token including comments
+    var prior = global; // the previous token excluding comments
+    var mega_from; // the starting column of megastring
+    var mega_line; // the starting line of megastring
+    var regexp_seen; // regular expression literal seen on this line
+    var snippet; // a piece of string
+    var source_line = ""; // the remaining line source string
+    var whole_line = ""; // the whole line source string
 
     if (lines[0].startsWith("#!")) {
         line = 0;
         shebang = true;
     }
-    // jslint-hack - init
-    line_ignore = null;
-    lines_extra = lines.map(function () {
-        return {};
-    });
 
     function next_line() {
 
@@ -2376,9 +2621,10 @@ function tokenize(source) {
 // replace them with spaces and give a warning. Also warn if the line contains
 // unsafe characters or is too damn long.
 
-        let at;
+        var at;
         if (
             !option.long
+            //!! && whole_line.length > 80
             // jslint-hack - 100
             && whole_line.length > (
                 option.utility2
@@ -2394,10 +2640,11 @@ function tokenize(source) {
         column = 0;
         line += 1;
         regexp_seen = false;
-        whole_line = lines[line];
-        source_line = whole_line;
+        source_line = lines[line];
+        whole_line = source_line || "";
         if (source_line !== undefined) {
-            source_line = next_line_extra(source_line, line); // jslint-hack
+            // jslint-hack - next_line_extra
+            source_line = next_line_extra(source_line, line);
             at = source_line.search(rx_tab);
             if (at >= 0) {
                 if (!option.white) {
@@ -2446,17 +2693,11 @@ function tokenize(source) {
 // matched an expected value.
 
         if (match !== undefined && char !== match) {
-            return stop_at(
-                (
-                    char === ""
-                    ? "expected_a"
-                    : "expected_a_b"
-                ),
-                line,
-                column - 1,
-                match,
-                char
-            );
+            return stop_at((
+                char === ""
+                ? "expected_a"
+                : "expected_a_b"
+            ), line, column - 1, match, char);
         }
         if (source_line) {
             char = source_line[0];
@@ -2487,7 +2728,7 @@ function tokenize(source) {
     }
 
     function some_digits(rx, quiet) {
-        const result = source_line.match(rx);
+        var result = source_line.match(rx);
         if (result) {
             char = result[1];
             column += char.length;
@@ -2544,7 +2785,7 @@ function tokenize(source) {
 
 // Make the token object and append it to the tokens list.
 
-        const the_token = {
+        var the_token = {
             from: from,
             id: id,
             identifier: Boolean(identifier),
@@ -2612,11 +2853,11 @@ function tokenize(source) {
 // function processes one item, and calls itself recursively to process the
 // next one.
 
-        const result = body.match(rx_directive_part);
+        var result = body.match(rx_directive_part);
         if (result) {
-            let allowed;
-            const name = result[1];
-            const value = result[2];
+            var allowed;
+            var name = result[1];
+            var value = result[2];
             if (the_comment.directive === "jslint") {
                 allowed = allowed_option[name];
                 if (
@@ -2664,14 +2905,14 @@ function tokenize(source) {
 // Make a comment object. Comments are not allowed in JSON text. Comments can
 // include directives and notices of incompletion.
 
-        const the_comment = make("(comment)", snippet);
+        var the_comment = make("(comment)", snippet);
         if (Array.isArray(snippet)) {
             snippet = snippet.join(" ");
         }
         if (!option.devel && rx_todo.test(snippet)) {
             warn("todo_comment", the_comment);
         }
-        const result = snippet.match(rx_directive);
+        var result = snippet.match(rx_directive);
         if (result) {
             if (!directive_mode) {
                 warn_at("misplaced_directive_a", line, from, result[1]);
@@ -2688,9 +2929,9 @@ function tokenize(source) {
 
 // Parse a regular expression literal.
 
-        let multi_mode = false;
-        let result;
-        let value;
+        var multi_mode = false;
+        var result;
+        var value;
         regexp_seen = true;
 
         function quantifier() {
@@ -2906,14 +3147,14 @@ function tokenize(source) {
 
 // Process dangling flag letters.
 
-        const allowed = {
+        var allowed = {
             g: true,
             i: true,
             m: true,
             u: true,
             y: true
         };
-        const flag = empty();
+        var flag = empty();
         (function make_flag() {
             if (is_letter(char)) {
                 if (allowed[char] !== true) {
@@ -2942,7 +3183,7 @@ function tokenize(source) {
 
 // Make a string token.
 
-        let the_token;
+        var the_token;
         snippet = "";
         next_char();
 
@@ -3026,24 +3267,23 @@ function tokenize(source) {
     }
 
     function lex() {
-        let array;
-        let i = 0;
-        let j = 0;
-        let last;
-        let result;
-        let the_token;
-        if (!source_line) {
+        var array;
+        var i = 0;
+        var j = 0;
+        var last;
+        var result;
+        var the_token;
+        // jslint-hack - un-recurse
+        while (!source_line) {
             source_line = next_line();
             from = 0;
-            return (
-                source_line === undefined
-                ? (
+            if (source_line === undefined) {
+                return (
                     mega_mode
                     ? stop_at("unclosed_mega", mega_line, mega_from)
                     : make("(end)")
-                )
-                : lex()
-            );
+                );
+            }
         }
         from = column;
         result = source_line.match(rx_token);
@@ -3092,7 +3332,7 @@ function tokenize(source) {
         }
         if (snippet === "'") {
             if (!option.single) {
-                warn_at("use_double", line, column, result); // jslint-hack
+                warn_at("use_double", line, column);
             }
             return string(snippet);
         }
@@ -3118,7 +3358,7 @@ function tokenize(source) {
 // string.
 
             (function part() {
-                const at = source_line.search(rx_mega);
+                var at = source_line.search(rx_mega);
 
 // If neither ` nor ${ is seen, then the whole line joins the snippet.
 
@@ -3151,7 +3391,7 @@ function tokenize(source) {
                     make("${");
                     source_line = source_line.slice(2);
                     (function expr() {
-                        const id = lex().id;
+                        var id = lex().id;
                         if (id === "{") {
                             return stop_at(
                                 "expected_a_b",
@@ -3177,7 +3417,8 @@ function tokenize(source) {
 // The token is a // comment.
 
         if (snippet === "//") {
-            regexp_seen = true; // jslint-hack
+            // jslint-hack - too_long
+            regexp_seen = true;
             snippet = source_line;
             source_line = "";
             the_token = comment(snippet);
@@ -3206,7 +3447,8 @@ function tokenize(source) {
                     }
                 }
                 array.push(source_line);
-                regexp_seen = true; // jslint-hack
+                // jslint-hack - too_long
+                regexp_seen = true;
                 source_line = next_line();
                 if (source_line === undefined) {
                     return stop_at("unclosed_comment", line, column);
@@ -3306,7 +3548,7 @@ function tokenize(source) {
 // Specialized tokens may have additional properties.
 
 function survey(name) {
-    let id = name.id;
+    var id = name.id;
 
 // Tally the property name. If it is a string, only tally strings that conform
 // to the identifier rules.
@@ -3354,7 +3596,7 @@ function dispense() {
 
 // Deliver the next token, skipping the comments.
 
-    const cadet = tokens[token_nr];
+    var cadet = tokens[token_nr];
     token_nr += 1;
     if (cadet.id === "(comment)") {
         if (json_mode) {
@@ -3370,8 +3612,8 @@ function lookahead() {
 
 // Look ahead one token without advancing.
 
-    const old_token_nr = token_nr;
-    const cadet = dispense(true);
+    var old_token_nr = token_nr;
+    var cadet = dispense(true);
     token_nr = old_token_nr;
     return cadet;
 }
@@ -3417,18 +3659,18 @@ function advance(id, match) {
 // Parsing of JSON is simple:
 
 function json_value() {
-    let negative;
+    var negative;
     if (next_token.id === "{") {
         return (function json_object() {
-            const brace = next_token;
-            const object = empty();
-            const properties = [];
+            var brace = next_token;
+            var object = empty();
+            var properties = [];
             brace.expression = properties;
             advance("{");
             if (next_token.id !== "}") {
                 (function next() {
-                    let name;
-                    let value;
+                    var name;
+                    var value;
                     if (next_token.quote !== "\"") {
                         warn(
                             "unexpected_a",
@@ -3461,8 +3703,8 @@ function json_value() {
     }
     if (next_token.id === "[") {
         return (function json_array() {
-            const bracket = next_token;
-            const elements = [];
+            var bracket = next_token;
+            var elements = [];
             bracket.expression = elements;
             advance("[");
             if (next_token.id !== "]") {
@@ -3519,7 +3761,7 @@ function enroll(name, role, readonly) {
 // function, label, parameter, or variable. We look for variable redefinition
 // because it causes confusion.
 
-    const id = name.id;
+    var id = name.id;
 
 // Reserved words may not be enrolled.
 
@@ -3529,7 +3771,7 @@ function enroll(name, role, readonly) {
 
 // Has the name been enrolled in this context?
 
-        let earlier = functionage.context[id];
+        var earlier = functionage.context[id];
         if (earlier) {
             warn(
                 "redefinition_a_b",
@@ -3541,7 +3783,7 @@ function enroll(name, role, readonly) {
 // Has the name been enrolled in an outer context?
         } else {
             stack.forEach(function (value) {
-                const item = value.context[id];
+                var item = value.context[id];
                 if (item !== undefined) {
                     earlier = item;
                 }
@@ -3552,14 +3794,10 @@ function enroll(name, role, readonly) {
                         warn("unexpected_a", name);
                     }
                 } else {
-                    if (
-                        (
-                            role !== "exception"
-                            || earlier.role !== "exception"
-                        )
-                        && role !== "parameter"
-                        && role !== "function"
-                    ) {
+                    if ((
+                        role !== "exception"
+                        || earlier.role !== "exception"
+                    ) && role !== "parameter" && role !== "function") {
                         warn(
                             "redefinition_a_b",
                             name,
@@ -3597,8 +3835,8 @@ function expression(rbp, initial) {
 // process leds (infix operators) until the bind powers cause it to stop. It
 // returns the expression's parse tree.
 
-    let left;
-    let the_symbol;
+    var left;
+    var the_symbol;
 
 // Statements will have already advanced, so advance now only if the token is
 // not the first of a statement,
@@ -3634,8 +3872,8 @@ function condition() {
 
 // Parse the condition part of a do, if, while.
 
-    const the_paren = next_token;
-    let the_value;
+    var the_paren = next_token;
+    var the_value;
     the_paren.free = true;
     advance("(");
     the_value = expression(0);
@@ -3678,8 +3916,8 @@ function are_similar(a, b) {
     if (a.id === "(number)" && b.id === "(number)") {
         return a.value === b.value;
     }
-    let a_string;
-    let b_string;
+    var a_string;
+    var b_string;
     if (a.id === "(string)") {
         a_string = a.value;
     } else if (a.id === "`" && a.constant) {
@@ -3752,10 +3990,10 @@ function statement() {
 // have use for one. A statement can be one of the standard statements, or
 // an assignment expression, or an invocation expression.
 
-    let first;
-    let the_label;
-    let the_statement;
-    let the_symbol;
+    var first;
+    var the_label;
+    var the_statement;
+    var the_symbol;
     advance();
     if (token.identifier && next_token.id === ":") {
         the_label = token;
@@ -3811,7 +4049,7 @@ function statements() {
 // Parse a list of statements. Give a warning if an unreachable statement
 // follows a disruptive statement.
 
-    const array = [];
+    var array = [];
     (function next(disrupt) {
         if (
             next_token.id !== "}"
@@ -3820,7 +4058,7 @@ function statements() {
             && next_token.id !== "else"
             && next_token.id !== "(end)"
         ) {
-            let a_statement = statement();
+            var a_statement = statement();
             array.push(a_statement);
             if (disrupt) {
                 warn("unreachable_a", a_statement);
@@ -3857,8 +4095,8 @@ function block(special) {
 //          "naked"     No advance.
 //          undefined   An ordinary block.
 
-    let stmts;
-    let the_block;
+    var stmts;
+    var the_block;
     if (special !== "naked") {
         advance("{");
     }
@@ -3924,7 +4162,7 @@ function left_check(left, right) {
 //      ?:
 //      identifier
 
-    const id = left.id;
+    var id = left.id;
     if (
         !left.identifier
         && (
@@ -3939,7 +4177,8 @@ function left_check(left, right) {
             || (id !== "." && id !== "(" && id !== "[")
         )
     ) {
-        warn("unexpected_a", right, null, null, left, right); // jslint-hack
+        // jslint-hack - unexpected_a
+        warn("unexpected_a", right, null, null, left, right);
         return false;
     }
     return true;
@@ -3951,7 +4190,7 @@ function symbol(id, bp) {
 
 // Make a symbol if it does not already exist in the language's syntax.
 
-    let the_symbol = syntax[id];
+    var the_symbol = syntax[id];
     if (the_symbol === undefined) {
         the_symbol = empty();
         the_symbol.id = id;
@@ -3968,10 +4207,10 @@ function assignment(id) {
 // That case is special because that is when a variable gets initialized. The
 // other assignment operators can modify, but they cannot initialize.
 
-    const the_symbol = symbol(id, 20);
+    var the_symbol = symbol(id, 20);
     the_symbol.led = function (left) {
-        const the_token = token;
-        let right;
+        var the_token = token;
+        var right;
         the_token.arity = "assignment";
         right = expression(20 - 1);
         if (id === "=" && left.arity === "variable") {
@@ -3997,7 +4236,7 @@ function constant(id, type, value) {
 
 // Make a constant symbol.
 
-    const the_symbol = symbol(id);
+    var the_symbol = symbol(id);
     the_symbol.constant = true;
     the_symbol.nud = (
         typeof value === "function"
@@ -4019,9 +4258,9 @@ function infix(id, bp, f) {
 
 // Make an infix operator.
 
-    const the_symbol = symbol(id, bp);
+    var the_symbol = symbol(id, bp);
     the_symbol.led = function (left) {
-        const the_token = token;
+        var the_token = token;
         the_token.arity = "binary";
         if (f !== undefined) {
             return f(left);
@@ -4036,9 +4275,9 @@ function infixr(id, bp) {
 
 // Make a right associative infix operator.
 
-    const the_symbol = symbol(id, bp);
+    var the_symbol = symbol(id, bp);
     the_symbol.led = function (left) {
-        const the_token = token;
+        var the_token = token;
         the_token.arity = "binary";
         the_token.expression = [left, expression(bp - 1)];
         return the_token;
@@ -4050,7 +4289,7 @@ function post(id) {
 
 // Make one of the post operators.
 
-    const the_symbol = symbol(id, 150);
+    var the_symbol = symbol(id, 150);
     the_symbol.led = function (left) {
         token.expression = left;
         token.arity = "post";
@@ -4064,9 +4303,9 @@ function pre(id) {
 
 // Make one of the pre operators.
 
-    const the_symbol = symbol(id);
+    var the_symbol = symbol(id);
     the_symbol.nud = function () {
-        const the_token = token;
+        var the_token = token;
         the_token.arity = "pre";
         the_token.expression = expression(150);
         mutation_check(the_token.expression);
@@ -4079,9 +4318,9 @@ function prefix(id, f) {
 
 // Make a prefix operator.
 
-    const the_symbol = symbol(id);
+    var the_symbol = symbol(id);
     the_symbol.nud = function () {
-        const the_token = token;
+        var the_token = token;
         the_token.arity = "unary";
         if (typeof f === "function") {
             return f();
@@ -4096,7 +4335,7 @@ function stmt(id, f) {
 
 // Make a statement.
 
-    const the_symbol = symbol(id);
+    var the_symbol = symbol(id);
     the_symbol.fud = function () {
         token.arity = "statement";
         return f();
@@ -4108,10 +4347,10 @@ function ternary(id1, id2) {
 
 // Make a ternary operator.
 
-    const the_symbol = symbol(id1, 30);
+    var the_symbol = symbol(id1, 30);
     the_symbol.led = function (left) {
-        const the_token = token;
-        const second = expression(20);
+        var the_token = token;
+        var second = expression(20);
         advance(id2);
         token.arity = "ternary";
         the_token.arity = "ternary";
@@ -4237,8 +4476,8 @@ infix("/", 140);
 infix("%", 140);
 infixr("**", 150);
 infix("(", 160, function (left) {
-    const the_paren = token;
-    let the_argument;
+    var the_paren = token;
+    var the_argument;
     if (left.id !== "function") {
         left_check(left, the_paren);
     }
@@ -4248,7 +4487,7 @@ infix("(", 160, function (left) {
     the_paren.expression = [left];
     if (next_token.id !== ")") {
         (function next() {
-            let ellipsis;
+            var ellipsis;
             if (next_token.id === "...") {
                 ellipsis = true;
                 advance("...");
@@ -4279,28 +4518,55 @@ infix("(", 160, function (left) {
     return the_paren;
 });
 infix(".", 170, function (left) {
-    const the_token = token;
-    const name = next_token;
-    if (
-        (
-            left.id !== "(string)"
-            || (name.id !== "indexOf" && name.id !== "repeat")
+    var the_token = token;
+    var name = next_token;
+    if ((
+        left.id !== "(string)"
+        || (name.id !== "indexOf" && name.id !== "repeat")
+    ) && (
+        left.id !== "["
+        || (
+            name.id !== "concat"
+            && name.id !== "forEach"
+            && name.id !== "join"
+            && name.id !== "map"
         )
-        && (
-            left.id !== "["
-            || (
-                name.id !== "concat"
-                && name.id !== "forEach"
-                && name.id !== "join"
-                && name.id !== "map"
-            )
+    ) && (left.id !== "+" || name.id !== "slice") && (
+        left.id !== "(regexp)"
+        || (name.id !== "exec" && name.id !== "test")
+    )) {
+        left_check(left, the_token);
+    }
+    if (!name.identifier) {
+        stop("expected_identifier_a");
+    }
+    advance();
+    survey(name);
+
+// The property name is not an expression.
+
+    the_token.name = name;
+    the_token.expression = left;
+    return the_token;
+});
+infix("?.", 170, function (left) {
+    var the_token = token;
+    var name = next_token;
+    if ((
+        left.id !== "(string)"
+        || (name.id !== "indexOf" && name.id !== "repeat")
+    ) && (
+        left.id !== "["
+        || (
+            name.id !== "concat"
+            && name.id !== "forEach"
+            && name.id !== "join"
+            && name.id !== "map"
         )
-        && (left.id !== "+" || name.id !== "slice")
-        && (
-            left.id !== "(regexp)"
-            || (name.id !== "exec" && name.id !== "test")
-        )
-    ) {
+    ) && (left.id !== "+" || name.id !== "slice") && (
+        left.id !== "(regexp)"
+        || (name.id !== "exec" && name.id !== "test")
+    )) {
         left_check(left, the_token);
     }
     if (!name.identifier) {
@@ -4316,10 +4582,10 @@ infix(".", 170, function (left) {
     return the_token;
 });
 infix("[", 170, function (left) {
-    const the_token = token;
-    const the_subscript = expression(0);
+    var the_token = token;
+    var the_subscript = expression(0);
     if (the_subscript.id === "(string)" || the_subscript.id === "`") {
-        const name = survey(the_subscript);
+        var name = survey(the_subscript);
         if (rx_identifier.test(name)) {
             warn("subscript_a", the_subscript, name);
         }
@@ -4334,7 +4600,7 @@ infix("=>", 170, function (left) {
 });
 
 function do_tick() {
-    const the_tick = token;
+    var the_tick = token;
     the_tick.value = [];
     the_tick.expression = [];
     if (next_token.id !== "`") {
@@ -4354,7 +4620,7 @@ function do_tick() {
 }
 
 infix("`", 160, function (left) {
-    const the_tick = do_tick();
+    var the_tick = do_tick();
     left_check(left, the_tick);
     the_tick.expression = [left].concat(the_tick.expression);
     return the_tick;
@@ -4371,12 +4637,12 @@ prefix("~");
 prefix("!");
 prefix("!!");
 prefix("[", function () {
-    const the_token = token;
+    var the_token = token;
     the_token.expression = [];
     if (next_token.id !== "]") {
         (function next() {
-            let element;
-            let ellipsis = false;
+            var element;
+            var ellipsis = false;
             if (next_token.id === "...") {
                 ellipsis = true;
                 advance("...");
@@ -4402,8 +4668,8 @@ prefix("=>", function () {
     return stop("expected_a_before_b", token, "()", "=>");
 });
 prefix("new", function () {
-    const the_new = token;
-    const right = expression(160);
+    var the_new = token;
+    var right = expression(160);
     if (next_token.id !== "(") {
         warn("expected_a_before_b", next_token, "()", artifact(next_token));
     }
@@ -4412,21 +4678,21 @@ prefix("new", function () {
 });
 prefix("typeof");
 prefix("void", function () {
-    const the_void = token;
+    var the_void = token;
     warn("unexpected_a", the_void);
     the_void.expression = expression(0);
     return the_void;
 });
 
 function parameter_list() {
-    let complex = false;
-    const list = [];
-    let optional;
-    const signature = ["("];
+    var complex = false;
+    var list = [];
+    var optional;
+    var signature = ["("];
     if (next_token.id !== ")" && next_token.id !== "(end)") {
         (function parameter() {
-            let ellipsis = false;
-            let param;
+            var ellipsis = false;
+            var param;
             if (next_token.id === "{") {
                 complex = true;
                 if (optional !== undefined) {
@@ -4442,7 +4708,7 @@ function parameter_list() {
                 advance("{");
                 signature.push("{");
                 (function subparameter() {
-                    let subparam = next_token;
+                    var subparam = next_token;
                     if (!subparam.identifier) {
                         return stop("expected_identifier_a");
                     }
@@ -4488,7 +4754,7 @@ function parameter_list() {
                 advance("[");
                 signature.push("[]");
                 (function subparameter() {
-                    const subparam = next_token;
+                    var subparam = next_token;
                     if (!subparam.identifier) {
                         return stop("expected_identifier_a");
                     }
@@ -4561,7 +4827,7 @@ function parameter_list() {
 }
 
 function do_function(the_function) {
-    let name;
+    var name;
     if (the_function === undefined) {
         the_function = token;
 
@@ -4630,7 +4896,7 @@ function do_function(the_function) {
     advance("(");
     token.free = false;
     token.arity = "function";
-    const pl = parameter_list();
+    var pl = parameter_list();
     functionage.parameters = pl[0];
     functionage.signature = pl[1];
     functionage.complex = pl[2];
@@ -4651,7 +4917,11 @@ function do_function(the_function) {
     ) {
         return stop("unexpected_a", next_token);
     }
-    if (next_token.id === "." || next_token.id === "[") {
+    if (
+        next_token.id === "."
+        || next_token.id === "?."
+        || next_token.id === "["
+    ) {
         warn("unexpected_a");
     }
 
@@ -4664,11 +4934,8 @@ function do_function(the_function) {
 prefix("function", do_function);
 
 function fart(pl) {
-    if (next_token.id === ";") {
-        stop("wrap_assignment", token);
-    }
     advance("=>");
-    const the_fart = token;
+    var the_fart = token;
     the_fart.arity = "binary";
     the_fart.name = "=>";
     the_fart.level = functionage.level + 1;
@@ -4707,9 +4974,9 @@ function fart(pl) {
 }
 
 prefix("(", function () {
-    const the_paren = token;
-    let the_value;
-    const cadet = lookahead().id;
+    var the_paren = token;
+    var the_value;
+    var cadet = lookahead().id;
 
 // We can distinguish between a parameter list for => and a wrapped expression
 // with one token of lookahead.
@@ -4744,16 +5011,16 @@ prefix("(", function () {
 });
 prefix("`", do_tick);
 prefix("{", function () {
-    const the_brace = token;
-    const seen = empty();
+    var the_brace = token;
+    var seen = empty();
     the_brace.expression = [];
     if (next_token.id !== "}") {
         (function member() {
-            let extra;
-            let full;
-            let id;
-            let name = next_token;
-            let value;
+            var extra;
+            var full;
+            var id;
+            var name = next_token;
+            var value;
             advance();
             if (
                 (name.id === "get" || name.id === "set")
@@ -4835,8 +5102,8 @@ stmt("{", function () {
     return block("naked");
 });
 stmt("break", function () {
-    const the_break = token;
-    let the_label;
+    var the_break = token;
+    var the_label;
     if (
         (functionage.loop < 1 && functionage.switch < 1)
         || functionage.finally > 0
@@ -4867,8 +5134,8 @@ stmt("break", function () {
 });
 
 function do_var() {
-    const the_statement = token;
-    const is_const = the_statement.id === "const";
+    var the_statement = token;
+    var is_const = the_statement.id === "const";
     the_statement.names = [];
 
 // A program may use var or let, but not both.
@@ -4896,14 +5163,14 @@ function do_var() {
     }
     (function next() {
         if (next_token.id === "{" && the_statement.id !== "var") {
-            const the_brace = next_token;
+            var the_brace = next_token;
             the_brace.names = [];
             advance("{");
             (function pair() {
                 if (!next_token.identifier) {
                     return stop("expected_identifier_a", next_token);
                 }
-                const name = next_token;
+                var name = next_token;
                 survey(name);
                 advance();
                 if (next_token.id === ":") {
@@ -4929,11 +5196,11 @@ function do_var() {
             the_brace.expression = expression(0);
             the_statement.names.push(the_brace);
         } else if (next_token.id === "[" && the_statement.id !== "var") {
-            const the_bracket = next_token;
+            var the_bracket = next_token;
             the_bracket.names = [];
             advance("[");
             (function element() {
-                let ellipsis;
+                var ellipsis;
                 if (next_token.id === "...") {
                     ellipsis = true;
                     advance("...");
@@ -4941,7 +5208,7 @@ function do_var() {
                 if (!next_token.identifier) {
                     return stop("expected_identifier_a", next_token);
                 }
-                const name = next_token;
+                var name = next_token;
                 advance();
                 the_bracket.names.push(name);
                 enroll(name, "variable", the_statement.id === "const");
@@ -4957,7 +5224,7 @@ function do_var() {
             the_bracket.expression = expression(0);
             the_statement.names.push(the_bracket);
         } else if (next_token.identifier) {
-            const name = next_token;
+            var name = next_token;
             advance();
             if (name.id === "ignore") {
                 warn("unexpected_a", name);
@@ -4990,7 +5257,7 @@ function do_var() {
 
 stmt("const", do_var);
 stmt("continue", function () {
-    const the_continue = token;
+    var the_continue = token;
     if (functionage.loop < 1 || functionage.finally > 0) {
         warn("unexpected_a", the_continue);
     }
@@ -5001,7 +5268,7 @@ stmt("continue", function () {
     return the_continue;
 });
 stmt("debugger", function () {
-    const the_debug = token;
+    var the_debug = token;
     if (!option.devel) {
         warn("unexpected_a", the_debug);
     }
@@ -5009,8 +5276,8 @@ stmt("debugger", function () {
     return the_debug;
 });
 stmt("delete", function () {
-    const the_token = token;
-    const the_value = expression(0);
+    var the_token = token;
+    var the_value = expression(0);
     if (
         (the_value.id !== "." && the_value.id !== "[")
         || the_value.arity !== "binary"
@@ -5022,7 +5289,7 @@ stmt("delete", function () {
     return the_token;
 });
 stmt("do", function () {
-    const the_do = token;
+    var the_do = token;
     not_top_level(the_do);
     functionage.loop += 1;
     the_do.block = block();
@@ -5036,10 +5303,10 @@ stmt("do", function () {
     return the_do;
 });
 stmt("export", function () {
-    const the_export = token;
-    let the_id;
-    let the_name;
-    let the_thing;
+    var the_export = token;
+    var the_id;
+    var the_name;
+    var the_thing;
 
     function export_id() {
         if (!next_token.identifier) {
@@ -5067,11 +5334,22 @@ stmt("export", function () {
         }
         advance("default");
         the_thing = expression(0);
-        semicolon();
+        if (
+            the_thing.id !== "("
+            || the_thing.expression[0].id !== "."
+            || the_thing.expression[0].expression.id !== "Object"
+            || the_thing.expression[0].name.id !== "freeze"
+        ) {
+            warn("freeze_exports", the_thing);
+        }
+        if (next_token.id === ";") {
+            semicolon();
+        }
         exports.default = the_thing;
         the_export.expression.push(the_thing);
     } else {
         if (next_token.id === "function") {
+            warn("freeze_exports");
             the_thing = statement();
             the_name = the_thing.name;
             the_id = the_name.id;
@@ -5088,7 +5366,8 @@ stmt("export", function () {
             || next_token.id === "let"
             || next_token.id === "const"
         ) {
-            warn("unexpected_a");
+            warn("unexpected_a", next_token);
+            statement();
         } else if (next_token.id === "{") {
             advance("{");
             (function loop() {
@@ -5101,19 +5380,15 @@ stmt("export", function () {
             advance("}");
             semicolon();
         } else {
-            export_id();
-            if (the_name.writable !== true) {
-                warn("unexpected_a", token);
-            }
-            semicolon();
+            stop("unexpected_a");
         }
     }
     module_mode = true;
     return the_export;
 });
 stmt("for", function () {
-    let first;
-    const the_for = token;
+    var first;
+    var the_for = token;
     if (!option.for) {
         warn("unexpected_a", the_for);
     }
@@ -5159,8 +5434,8 @@ stmt("for", function () {
 });
 stmt("function", do_function);
 stmt("if", function () {
-    let the_else;
-    const the_if = token;
+    var the_else;
+    var the_if = token;
     the_if.expression = condition();
     the_if.block = block();
     if (next_token.id === "else") {
@@ -5182,8 +5457,8 @@ stmt("if", function () {
     return the_if;
 });
 stmt("import", function () {
-    const the_import = token;
-    let name;
+    var the_import = token;
+    var name;
     if (typeof module_mode === "object") {
         warn("unexpected_directive_a", module_mode, module_mode.directive);
     }
@@ -5197,7 +5472,7 @@ stmt("import", function () {
         enroll(name, "variable", true);
         the_import.name = name;
     } else {
-        const names = [];
+        var names = [];
         advance("{");
         if (next_token.id !== "}") {
             while (true) {
@@ -5232,7 +5507,7 @@ stmt("import", function () {
 });
 stmt("let", do_var);
 stmt("return", function () {
-    const the_return = token;
+    var the_return = token;
     not_top_level(the_return);
     if (functionage.finally > 0) {
         warn("unexpected_a", the_return);
@@ -5245,12 +5520,12 @@ stmt("return", function () {
     return the_return;
 });
 stmt("switch", function () {
-    let dups = [];
-    let last;
-    let stmts;
-    const the_cases = [];
-    let the_disrupt = true;
-    const the_switch = token;
+    var dups = [];
+    var last;
+    var stmts;
+    var the_cases = [];
+    var the_disrupt = true;
+    var the_switch = token;
     not_top_level(the_switch);
     if (functionage.finally > 0) {
         warn("unexpected_a", the_switch);
@@ -5263,13 +5538,13 @@ stmt("switch", function () {
     advance(")");
     advance("{");
     (function major() {
-        const the_case = next_token;
+        var the_case = next_token;
         the_case.arity = "statement";
         the_case.expression = [];
         (function minor() {
             advance("case");
             token.switch = true;
-            const exp = expression(0);
+            var exp = expression(0);
             if (dups.some(function (thing) {
                 return are_similar(thing, exp);
             })) {
@@ -5308,7 +5583,7 @@ stmt("switch", function () {
     }());
     dups = undefined;
     if (next_token.id === "default") {
-        const the_default = next_token;
+        var the_default = next_token;
         advance("default");
         token.switch = true;
         advance(":");
@@ -5317,7 +5592,7 @@ stmt("switch", function () {
             warn("unexpected_a", the_default);
             the_disrupt = false;
         } else {
-            const the_last = the_switch.else[the_switch.else.length - 1];
+            var the_last = the_switch.else[the_switch.else.length - 1];
             if (the_last.id === "break" && the_last.label === undefined) {
                 warn("unexpected_a", the_last);
                 the_last.disrupt = false;
@@ -5333,7 +5608,7 @@ stmt("switch", function () {
     return the_switch;
 });
 stmt("throw", function () {
-    const the_throw = token;
+    var the_throw = token;
     the_throw.disrupt = true;
     the_throw.expression = expression(10);
     semicolon();
@@ -5343,9 +5618,9 @@ stmt("throw", function () {
     return the_throw;
 });
 stmt("try", function () {
-    let the_catch;
-    let the_disrupt;
-    const the_try = token;
+    var the_catch;
+    var the_disrupt;
+    var the_try = token;
     if (functionage.try > 0) {
         warn("unexpected_a", the_try);
     }
@@ -5353,21 +5628,23 @@ stmt("try", function () {
     the_try.block = block();
     the_disrupt = the_try.block.disrupt;
     if (next_token.id === "catch") {
-        let ignored = "ignore";
+        var ignored = "ignore";
         the_catch = next_token;
         the_try.catch = the_catch;
         advance("catch");
-        advance("(");
-        if (!next_token.identifier) {
-            return stop("expected_identifier_a", next_token);
+        if (next_token.id === "(") {
+            advance("(");
+            if (!next_token.identifier) {
+                return stop("expected_identifier_a", next_token);
+            }
+            if (next_token.id !== "ignore") {
+                ignored = undefined;
+                the_catch.name = next_token;
+                enroll(next_token, "exception", true);
+            }
+            advance();
+            advance(")");
         }
-        if (next_token.id !== "ignore") {
-            ignored = undefined;
-            the_catch.name = next_token;
-            enroll(next_token, "exception", true);
-        }
-        advance();
-        advance(")");
         the_catch.block = block(ignored);
         if (the_catch.block.disrupt !== true) {
             the_disrupt = false;
@@ -5393,7 +5670,7 @@ stmt("try", function () {
 });
 stmt("var", do_var);
 stmt("while", function () {
-    const the_while = token;
+    var the_while = token;
     not_top_level(the_while);
     functionage.loop += 1;
     the_while.expression = condition();
@@ -5418,8 +5695,8 @@ function action(when) {
 // the tree is traversed.
 
     return function (arity, id, task) {
-        let a_set = when[arity];
-        let i_set;
+        var a_set = when[arity];
+        var i_set;
 
 // The id parameter is optional. If excluded, the task will be applied to all
 // ids.
@@ -5461,8 +5738,8 @@ function amble(when) {
 // Given a task set that was built by an action function, run all of the
 // relevant tasks on the token.
 
-        let a_set = when[the_token.arity];
-        let i_set;
+        var a_set = when[the_token.arity];
+        var i_set;
 
 // If there are tasks associated with the token's arity...
 
@@ -5489,12 +5766,12 @@ function amble(when) {
     };
 }
 
-const posts = empty();
-const pres = empty();
-const preaction = action(pres);
-const postaction = action(posts);
-const preamble = amble(pres);
-const postamble = amble(posts);
+var posts = empty();
+var pres = empty();
+var preaction = action(pres);
+var postaction = action(posts);
+var preamble = amble(pres);
+var postamble = amble(posts);
 
 function walk_expression(thing) {
     if (thing) {
@@ -5553,14 +5830,14 @@ function lookup(thing) {
 
 // Look up the variable in the current context.
 
-        let the_variable = functionage.context[thing.id];
+        var the_variable = functionage.context[thing.id];
 
 // If it isn't local, search all the other contexts. If there are name
 // collisions, take the most recent.
 
         if (the_variable === undefined) {
             stack.forEach(function (outer) {
-                const a_variable = outer.context[thing.id];
+                var a_variable = outer.context[thing.id];
                 if (
                     a_variable !== undefined
                     && a_variable.role !== "label"
@@ -5709,8 +5986,8 @@ preaction("assignment", bitwise_check);
 preaction("binary", bitwise_check);
 preaction("binary", function (thing) {
     if (relationop[thing.id] === true) {
-        const left = thing.expression[0];
-        const right = thing.expression[1];
+        var left = thing.expression[0];
+        var right = thing.expression[1];
         if (left.id === "NaN" || right.id === "NaN") {
             warn("number_isNaN", thing);
         } else if (left.id === "typeof") {
@@ -5719,7 +5996,7 @@ preaction("binary", function (thing) {
                     warn("expected_string_a", right);
                 }
             } else {
-                const value = right.value;
+                var value = right.value;
                 if (value === "null" || value === "undefined") {
                     warn("unexpected_typeof_a", right, value);
                 } else if (
@@ -5751,15 +6028,15 @@ preaction("binary", "||", function (thing) {
     });
 });
 preaction("binary", "(", function (thing) {
-    const left = thing.expression[0];
+    var left = thing.expression[0];
     if (
         left.identifier
         && functionage.context[left.id] === undefined
         && typeof functionage.name === "object"
     ) {
-        const parent = functionage.name.parent;
+        var parent = functionage.name.parent;
         if (parent) {
-            const left_variable = parent.context[left.id];
+            var left_variable = parent.context[left.id];
             if (
                 left_variable !== undefined
                 && left_variable.dead
@@ -5790,7 +6067,7 @@ preaction("statement", "{", function (thing) {
 });
 preaction("statement", "for", function (thing) {
     if (thing.name !== undefined) {
-        const the_variable = lookup(thing.name);
+        var the_variable = lookup(thing.name);
         if (the_variable !== undefined) {
             the_variable.init = true;
             if (!the_variable.writable) {
@@ -5804,7 +6081,7 @@ preaction("statement", "function", preaction_function);
 preaction("unary", "~", bitwise_check);
 preaction("unary", "function", preaction_function);
 preaction("variable", function (thing) {
-    const the_variable = lookup(thing);
+    var the_variable = lookup(thing);
     if (the_variable !== undefined) {
         thing.variable = the_variable;
         the_variable.used += 1;
@@ -5812,7 +6089,7 @@ preaction("variable", function (thing) {
 });
 
 function init_variable(name) {
-    const the_variable = lookup(name);
+    var the_variable = lookup(name);
     if (the_variable !== undefined) {
         if (the_variable.writable) {
             the_variable.init = true;
@@ -5823,7 +6100,7 @@ function init_variable(name) {
 }
 
 postaction("assignment", "+=", function (thing) {
-    let right = thing.expression[1];
+    var right = thing.expression[1];
     if (right.constant) {
         if (
             right.value === ""
@@ -5843,7 +6120,7 @@ postaction("assignment", function (thing) {
 // operator can do this. A = token keeps that variable (or array of variables
 // in case of destructuring) in its name property.
 
-    const lvalue = thing.expression[0];
+    var lvalue = thing.expression[0];
     if (thing.id === "=") {
         if (thing.names !== undefined) {
             if (Array.isArray(thing.names)) {
@@ -5876,7 +6153,7 @@ postaction("assignment", function (thing) {
                 warn("bad_assignment_a", lvalue);
             }
         }
-        const right = syntax[thing.expression[1].id];
+        var right = syntax[thing.expression[1].id];
         if (
             right !== undefined
             && (
@@ -5907,7 +6184,7 @@ function postaction_function(thing) {
 }
 
 postaction("binary", function (thing) {
-    let right;
+    var right;
     if (relationop[thing.id]) {
         if (
             is_weird(thing.expression[0])
@@ -5936,7 +6213,7 @@ postaction("binary", function (thing) {
         if (thing.expression[0].id === "self") {
             warn("weird_expression_a", thing, "self[...]");
         }
-    } else if (thing.id === ".") {
+    } else if (thing.id === "." || thing.id === "?.") {
         if (thing.expression.id === "RegExp") {
             warn("weird_expression_a", thing);
         }
@@ -5979,9 +6256,9 @@ postaction("binary", "||", function (thing) {
 });
 postaction("binary", "=>", postaction_function);
 postaction("binary", "(", function (thing) {
-    let left = thing.expression[0];
-    let the_new;
-    let arg;
+    var left = thing.expression[0];
+    var arg;
+    var the_new;
     if (left.id === "new") {
         the_new = left;
         left = left.expression;
@@ -6035,7 +6312,7 @@ postaction("binary", "(", function (thing) {
             }
         }
     } else if (left.id === ".") {
-        let cack = the_new !== undefined;
+        var cack = the_new !== undefined;
         if (left.expression.id === "Date" && left.name.id === "UTC") {
             cack = !cack;
         }
@@ -6052,11 +6329,11 @@ postaction("binary", "(", function (thing) {
             }
         }
         if (left.name.id === "getTime") {
-            const paren = left.expression;
+            var paren = left.expression;
             if (paren.id === "(") {
-                const array = paren.expression;
+                var array = paren.expression;
                 if (array.length === 1) {
-                    const new_date = array[0];
+                    var new_date = array[0];
                     if (
                         new_date.id === "new"
                         && new_date.expression.id === "Date"
@@ -6089,7 +6366,7 @@ postaction("statement", "for", function (thing) {
 });
 postaction("statement", "function", postaction_function);
 postaction("statement", "import", function (the_thing) {
-    const name = the_thing.name;
+    var name = the_thing.name;
     if (Array.isArray(name)) {
         name.forEach(function (name) {
             name.dead = false;
@@ -6106,9 +6383,9 @@ postaction("statement", "import", function (the_thing) {
 postaction("statement", "let", action_var);
 postaction("statement", "try", function (thing) {
     if (thing.catch !== undefined) {
-        const the_name = thing.catch.name;
+        var the_name = thing.catch.name;
         if (the_name !== undefined) {
-            const the_variable = functionage.context[the_name.id];
+            var the_variable = functionage.context[the_name.id];
             the_variable.dead = false;
             the_variable.init = true;
         }
@@ -6178,7 +6455,7 @@ postaction("unary", "+", function (thing) {
     if (!option.convert) {
         warn("expected_a_b", thing, "Number(...)", "+");
     }
-    const right = thing.expression;
+    var right = thing.expression;
     if (right.id === "(" && right.expression[0].id === "new") {
         warn("unexpected_a_before_b", thing, "+", "new");
     } else if (
@@ -6193,7 +6470,7 @@ postaction("unary", "+", function (thing) {
 function delve(the_function) {
     Object.keys(the_function.context).forEach(function (id) {
         if (id !== "ignore") {
-            const name = the_function.context[id];
+            var name = the_function.context[id];
             if (name.parent === the_function) {
                 if (
                     name.used === 0
@@ -6226,13 +6503,33 @@ function uninitialized_and_unused() {
 // Go through the token list, looking at usage of whitespace.
 
 function whitage() {
-    let closer = "(end)";
-    let free = false;
-    let left = global;
-    let margin = 0;
-    let nr_comments_skipped = 0;
-    let open = true;
-    let right;
+    var closer = "(end)";
+    var free = false;
+    var left = global;
+    var margin = 0;
+    var nr_comments_skipped = 0;
+    var open = true;
+    var opening = true;
+    var right;
+
+    function pop() {
+        var previous = stack.pop();
+        closer = previous.closer;
+        free = previous.free;
+        margin = previous.margin;
+        open = previous.open;
+        opening = previous.opening;
+    }
+
+    function push() {
+        stack.push({
+            closer,
+            free,
+            margin,
+            open,
+            opening
+        });
+    }
 
     function expected_at(at) {
         warn(
@@ -6245,7 +6542,8 @@ function whitage() {
     }
 
     function at_margin(fit) {
-        const at = margin + fit;
+        var at = margin + fit;
+        // jslint-hack - expected_at
         if (right.from !== at) {
             return expected_at(at);
         }
@@ -6281,15 +6579,17 @@ function whitage() {
             }
         } else {
             if (open) {
-                const at = (
+                var at = (
                     free
                     ? margin
                     : margin + 8
                 );
-                if (right.from !== at) { // jslint-hack
+                // jslint-hack - expected_at
+                if (right.from !== at) {
                     expected_at(at);
                 }
             } else {
+                // jslint-hack - expected_at
                 if (right.from !== margin + 8) {
                     expected_at(margin + 8);
                 }
@@ -6320,25 +6620,18 @@ function whitage() {
             }
         } else {
             if (free) {
-                if (right.from !== margin) { // jslint-hack
+                // jslint-hack - expected_at
+                if (right.from !== margin) {
                     expected_at(margin);
                 }
             } else {
-                const mislaid = (
-                    stack.length > 0
-                    ? stack[stack.length - 1].right
-                    : undefined
+                // jslint-hack - expected_space_a_b
+                warn(
+                    "expected_space_a_b",
+                    right,
+                    artifact(left),
+                    artifact(right)
                 );
-                if (!open && mislaid !== undefined) {
-                    warn(
-                        "expected_a_next_at_b",
-                        mislaid,
-                        artifact(mislaid.id),
-                        margin + 4 + fudge
-                    );
-                } else if (right.from !== margin + 8) {
-                    expected_at(margin + 8);
-                }
             }
         }
     }
@@ -6357,25 +6650,24 @@ function whitage() {
 // etc) starting on its own line. Closed form is more compact. Statement blocks
 // are always in open form.
 
-            const new_closer = opener[left.id];
+            var new_closer = opener[left.id];
             if (typeof new_closer === "string") {
                 if (new_closer !== right.id) {
-                    stack.push({
-                        closer: closer,
-                        free: free,
-                        margin: margin,
-                        open: open,
-                        right: right
-                    });
+                    opening = left.line !== right.line;
+                    push();
                     closer = new_closer;
-                    if (left.line !== right.line) {
+                    if (opening) {
                         free = closer === ")" && left.free;
                         open = true;
-                        // jslint-hack - indent
-                        if (!option.utility2 || lines[right.line].startsWith(" ")) {
+                        // jslint-hack - conditional-margin
+                        if (
+                            !option.utility2
+                            || lines[right.line].startsWith(" ")
+                        ) {
                             margin += 4;
                         }
                         if (right.role === "label") {
+                            // jslint-hack - expected_at
                             if (right.from !== 0) {
                                 expected_at(0);
                             }
@@ -6400,7 +6692,7 @@ function whitage() {
                 } else {
 
 // If left and right are opener and closer, then the placement of right depends
-// on the openness. Illegal pairs (like {]) have already been detected.
+// on the openness. Illegal pairs (like '{]') have already been detected.
 
                     if (left.line === right.line) {
                         no_space();
@@ -6409,20 +6701,22 @@ function whitage() {
                     }
                 }
             } else {
+                if (right.statement === true) {
+                    if (left.id === "else") {
+                        one_space_only();
+                    } else {
+                        at_margin(0);
+                        open = false;
+                    }
 
 // If right is a closer, then pop the previous state.
-
-                if (right.id === closer) {
-                    const previous = stack.pop();
-                    margin = previous.margin;
-                    if (open && right.id !== ";") {
+                } else if (right.id === closer) {
+                    pop();
+                    if (opening && right.id !== ";") {
                         at_margin(0);
                     } else {
                         no_space_only();
                     }
-                    closer = previous.closer;
-                    free = previous.free;
-                    open = previous.open;
                 } else {
 
 // Left is not an opener, and right is not a closer.
@@ -6434,6 +6728,7 @@ function whitage() {
                     if (right.switch) {
                         at_margin(-4);
                     } else if (right.role === "label") {
+                        // jslint-hack - expected_at
                         if (right.from !== 0) {
                             expected_at(0);
                         }
@@ -6462,6 +6757,7 @@ function whitage() {
                         no_space();
                     } else if (
                         left.id === "."
+                        || left.id === "?."
                         || left.id === "..."
                         || right.id === ","
                         || right.id === ";"
@@ -6476,8 +6772,9 @@ function whitage() {
                         )
                     ) {
                         no_space_only();
-                    } else if (right.id === ".") {
-                        // jslint-hack - at_margin
+                    } else if (right.id === "." || right.id === "?.") {
+                        // jslint-hack - method-chain
+                        // https://github.com/douglascrockford/JSLint/commit/752c82d860ac14d35d492dc5c6ad0a0ed8227e76#diff-01d3d81a6eb6d82af3c377b55dc4fa28L4692
                         if (left.line === right.line) {
                             no_space();
                         } else {
@@ -6503,23 +6800,12 @@ function whitage() {
                         || (left.id === ")" && right.id === "{")
                     ) {
                         one_space_only();
-                    } else if (right.statement === true) {
-                        if (open) {
-                            at_margin(0);
-                        } else {
-                            one_space();
-                        }
                     } else if (
                         left.id === "var"
                         || left.id === "const"
                         || left.id === "let"
                     ) {
-                        stack.push({
-                            closer: closer,
-                            free: free,
-                            margin: margin,
-                            open: open
-                        });
+                        push();
                         closer = ";";
                         free = false;
                         open = left.open;
@@ -6545,18 +6831,15 @@ function whitage() {
                         )
                         || left.id === "function"
                         || left.id === ":"
-                        || (
-                            (
-                                left.identifier
-                                || left.id === "(string)"
-                                || left.id === "(number)"
-                            )
-                            && (
-                                right.identifier
-                                || right.id === "(string)"
-                                || right.id === "(number)"
-                            )
-                        )
+                        || ((
+                            left.identifier
+                            || left.id === "(string)"
+                            || left.id === "(number)"
+                        ) && (
+                            right.identifier
+                            || right.id === "(string)"
+                            || right.id === "(number)"
+                        ))
                         || (left.arity === "statement" && right.id !== ";")
                     ) {
                         one_space();
@@ -6579,7 +6862,8 @@ function whitage() {
 
 // The jslint function itself.
 
-function jslint( // jslint-hack
+// jslint-hack - jslint0
+var jslint0 = Object.freeze(function (
     source = "",
     option_object = empty(),
     global_array = []
@@ -6592,7 +6876,8 @@ function jslint( // jslint-hack
         declared_globals = empty();
         directive_mode = true;
         directives = [];
-        early_stop = true;
+        // jslint-hack - early_stop = false
+        early_stop = false;
         exports = empty();
         froms = [];
         fudge = (
@@ -6630,28 +6915,12 @@ function jslint( // jslint-hack
         populate(global_array, declared_globals, false);
         Object.keys(option).forEach(function (name) {
             if (option[name] === true) {
-                const allowed = allowed_option[name];
+                var allowed = allowed_option[name];
                 if (Array.isArray(allowed)) {
                     populate(allowed, declared_globals, false);
                 }
             }
         });
-        // jslint-hack - autofix
-        if (option.autofix && !option.autofix_subroutine) {
-            let ii;
-            option.autofix_subroutine = true;
-            option.utility2 = true;
-            jslint_result = {};
-            jslint_result.source_autofix = source;
-            source = "";
-            ii = 0;
-            while (ii < 10 && jslint_result.source_autofix !== source) {
-                source = jslint_result.source_autofix;
-                jslint_result = jslint(jslint_result.source_autofix, option, global_array);
-                ii += 1;
-            }
-            return jslint_result;
-        }
         tokenize(source);
         advance();
         if (json_mode) {
@@ -6685,7 +6954,8 @@ function jslint( // jslint-hack
             if (module_mode && global.strict !== undefined) {
                 warn("unexpected_a", global.strict);
             }
-            if (warnings.length === 0) {
+            // jslint-hack - !early_stop
+            if (!early_stop) {
                 uninitialized_and_unused();
                 if (!option.white) {
                     whitage();
@@ -6701,13 +6971,15 @@ function jslint( // jslint-hack
         }
         early_stop = false;
     } catch (e) {
+        // jslint-hack - e.early_stop = true
+        e.early_stop = true;
         if (e.name !== "JSLintError") {
             warnings.push(e);
         }
     }
     return {
         directives,
-        edition: "2018-09-26",
+        edition: "2018-10-26",
         exports,
         froms,
         functions,
@@ -6715,12 +6987,6 @@ function jslint( // jslint-hack
         id: "(JSLint)",
         json: json_mode,
         lines,
-        // jslint-hack - lines_extra
-        lines_extra,
-        source_autofix: lines_extra.map(function (line, ii) {
-            return line.source_autofix || lines[ii];
-        // remove trailine-whitespace
-        }).join("\n").replace((/\u0020+$/gm), ""),
         module: module_mode === true,
         ok: warnings.length === 0 && !early_stop,
         option,
@@ -6737,21 +7003,82 @@ function jslint( // jslint-hack
             return a.line - b.line || a.column - b.column;
         })
     };
-} // jslint-hack
+});
 /*
 file none
 */
 // jslint-hack - extra
+jslint = function (source, option, global_array) {
+/*
+ * this function will run with extra-features inside jslint-function jslint()
+ */
+    var ii;
+    var jj;
+    var source0;
+    option = option || {};
+    // autofix
+    if (option.autofix && !option.autofix_subroutine) {
+        option.autofix_subroutine = true;
+        return jslint(source, option, global_array);
+    }
+    // init
+    ii = 0;
+    source = source || "";
+    while (true) {
+        ii += 1;
+        line_ignore = null;
+        lines = (
+            Array.isArray(source)
+            ? source
+            : source.split(rx_crlf)
+        );
+        jj = 0;
+        lines_extra = [];
+        while (jj < lines.length) {
+            lines_extra.push({});
+            jj += 1;
+        }
+        jslint_result = jslint0(source, option, global_array);
+        source0 = source;
+        source = "";
+        jj = 0;
+        while (jj < lines.length) {
+            source += (lines_extra[jj].source_autofix || lines[jj]) + "\n";
+            jj += 1;
+        }
+        source = source.slice(0, -1)
+        // expected_space_a_b: "Expected one space between '{a}' and '{b}'.",
+        // unexpected_space_a_b: "Unexpected space between '{a}' and '{b}'.",
+        .replace((
+            /\s+?\u0000/g
+        ), "\u0000")
+        .replace((
+            /(\n\u0020+)(.*?)\n\u0020*?(\/\/.*?)\u0000/g
+        ), "$1$3$1$2\u0000")
+        .replace((
+            /\u0000expected_space_a_b\u0000/g
+        ), " ")
+        .replace((
+            /\u0000unexpected_space_a_b\u0000/g
+        ), "");
+        if (ii >= 10 || jslint_result.stop || source === source0) {
+            break;
+        }
+    }
+    jslint_result.lines_extra = lines_extra;
+    jslint_result.source_autofix = source;
+    return jslint_result;
+};
 local.jslintEs6 = jslint;
 next_line_extra = function (source_line, line) {
 /*
  * this function will run with extra-features inside jslint-function next_line()
  */
-    let line_extra;
-    let tmp;
+    var line_extra;
+    var tmp;
     line_extra = {};
     line_extra.line = line;
-    line_extra.source = lines[line];
+    line_extra.source = source_line;
     lines_extra[line] = line_extra;
     tmp = (
         source_line.match(
@@ -6780,7 +7107,7 @@ next_line_extra = function (source_line, line) {
         [
             allowed_option.browser,
             allowed_option.node,
-            ["global"]
+            ["globalThis"]
         ].forEach(function (list) {
             list.forEach(function (key) {
                 declared_globals[key] = false;
@@ -6803,7 +7130,7 @@ warn_at_extra = function (warning, warnings) {
 /*
  * this function will run with extra-features inside jslint-function warn_at()
  */
-    let tmp;
+    var tmp;
     Object.assign(warning, lines_extra[warning.line]);
     // left, right
     ["c", "d"].forEach(function (key) {
@@ -6816,58 +7143,40 @@ warn_at_extra = function (warning, warnings) {
             });
         }
     });
-    // jslint-warning - default
-    if (!option.utility2) {
+    // early_stop
+    if (early_stop) {
+        if (option.utility2) {
+            warning.stack = warning.stack || new Error().stack;
+        }
         warnings.push(warning);
         return;
     }
-    // jslint-warning - ignore
-    switch (Boolean(warning.ignore) || warning.message) {
-    case true:
-    case "Expected 'var' and instead saw 'let'.":
-    case "Unexpected 'instanceof'.":
-    case "Unexpected 'throw'.":
-    case "Weird condition '&&'.":
-    case "Weird expression 'self[...]'.":
-    case "Weird expression 'window[...]'.":
-        if (warning.d && warning.d.warning === warning) {
-            delete warning.d.warning;
-        }
+    // ignore
+    if (warning.ignore) {
+        delete warning.d.warning;
         return;
     }
-    switch (warning.code) {
+    switch (option.utility2 && warning.code) {
+    // bad_property_a: "Bad property name '{a}'.",
     case "bad_property_a":
-        if (warning.d && warning.d.warning === warning) {
-            delete warning.d.warning;
-        }
+        delete warning.d.warning;
         return;
+    // unexpected_a: "Unexpected '{a}'.",
     case "unexpected_a":
         switch (
-            JSON.stringify(warning.c.wrapped || warning.c.id) + " " + warning.d.id
+            JSON.stringify(warning.c.wrapped || warning.c.id)
+            + " " + warning.d.id
         ) {
-        case "true (":
         case "true .":
-        case "true [":
-        case "\"[\" .":
-            if (warning.d && warning.d.warning === warning) {
-                delete warning.d.warning;
-            }
+            delete warning.d.warning;
             return;
         }
         break;
     }
-    // jslint-warning - accept
+    // autofix
     warning.a = warning.a || warning.source.trim();
-    switch (warning.message) {
-    case "Expected '\\s' and instead saw ' '.":
-        // autofix regexp - replace " " -> "\u0020"
-        lines_extra[warning.line].source_autofix = (
-            warning.source.slice(0, warning.column) + "\\u0020"
-            + warning.source.slice(warning.column + 1)
-        );
-        break;
-    }
-    switch (warning.code) {
+    switch (option.autofix && warning.code) {
+    // expected_a_at_b_c: "Expected '{a}' at column {b}, not column {c}.",
     case "expected_a_at_b_c":
         tmp = warning.b - warning.c;
         // autofix indent - increment
@@ -6879,7 +7188,9 @@ warn_at_extra = function (warning, warnings) {
         }
         tmp = -tmp;
         // autofix indent - decrement
-        if ((/^\u0020*?$/m).test(warning.source.slice(0, warning.column))) {
+        if ((
+            /^\u0020*?$/m
+        ).test(warning.source.slice(0, warning.column))) {
             lines_extra[warning.line].source_autofix = (
                 warning.source.slice(tmp)
             );
@@ -6891,19 +7202,11 @@ warn_at_extra = function (warning, warnings) {
             + " ".repeat(warning.b) + warning.source.slice(warning.column)
         );
         break;
-    // autofix indent - newline
-    case "expected_a_next_at_b":
-        lines_extra[warning.line].source_autofix = (
-            warning.source.slice(0, warning.column) + "\n"
-            + " ".repeat(warning.b) + warning.source.slice(warning.column)
-        );
-        break;
-    // autofix key - replace 100: ... -> "100": ...
+    // expected_identifier_a: "Expected an identifier and instead saw '{a}'.",
     case "expected_identifier_a":
-        if (!(
-            (/^\d+$/m).test(warning.a)
-            && warning.source[warning.column + warning.a.length] === ":"
-        )) {
+        if (!((
+            /^\d+$/m
+        ).test(warning.a) && warning.source[warning.column + warning.a.length] === ":")) {
             break;
         }
         lines_extra[warning.line].source_autofix = (
@@ -6911,51 +7214,39 @@ warn_at_extra = function (warning, warnings) {
             + warning.source.slice(warning.column + warning.a.length)
         );
         break;
-    // autofix whitespace - remove
+    // expected_space_a_b: "Expected one space between '{a}' and '{b}'.",
+    // unexpected_space_a_b: "Unexpected space between '{a}' and '{b}'.",
+    case "expected_space_a_b":
     case "unexpected_space_a_b":
-        if (warning.source.slice(0, warning.column).trim()) {
-            lines_extra[warning.line].source_autofix = (
-                warning.source.slice(0, warning.column - 1)
-                + warning.source.slice(warning.column)
-            );
-        }
-        break;
-    // autofix quote - replace single -> double
-    case "use_double":
-        if (warning.a[0].indexOf("\u0000") >= 0) {
-            break;
-        }
-        tmp = warning.a[0]
-        .replace((/\\\\/g), "\u0000\u0000")
-        .replace((/\\'/g), "\u0000\u0001")
-        .match(/^'.*?'/);
-        if (!tmp) {
-            break;
-        }
         lines_extra[warning.line].source_autofix = (
-            warning.source.slice(0, warning.column - 1) + "\""
-        ) + tmp[0].slice(1, -1)
-        .replace((/\\?"/g), "\\\"")
-        .replace((/\u0000\u0000/g), "\\\\")
-        .replace((/\u0000\u0001/g), "'")
-                + "\"" + warning.source.slice(warning.column + tmp[0].length - 1);
+            warning.source.slice(0, warning.column) + "\u0000" + warning.code + "\u0000"
+            + warning.source.slice(warning.column)
+        );
         break;
-    // autofix tab - replace tab -> space
+    // use_spaces: "Use spaces, not tabs.",
     case "use_spaces":
         lines_extra[warning.line].source_autofix = (
-            warning.source.replace((/^(\u0020*?)\t/), "$1   ")
+            warning.source.replace((
+                /^(\u0020*?)\t/
+            ), "$1   ")
         );
         break;
     }
-    if (warnings[0] && warnings[0].line < warning.line) {
+    if (warnings.length && warnings[warnings.length - 1].line < warning.line) {
         warnings.push(warning);
         return;
     }
     // debug
     if (option.utility2) {
         warning.option = Object.assign({}, option);
-        warning.option.code = null;
-        warning.option.code0 = null;
+        Object.keys(warning.option).forEach(function (key) {
+            if (
+                typeof warning.option[key] === "object"
+                || (warning.option[key] || "").length >= 100
+            ) {
+                delete warning.option[key];
+            }
+        });
         warning.source_autofix = (
             lines_extra[warning.line] && lines_extra[warning.line].source_autofix
         );
@@ -6969,9 +7260,6 @@ warn_at_extra = function (warning, warnings) {
 
 // run shared js-env code - function
 (function () {
-
-
-
 var jslint;
 jslint = local.jslintEs6;
 
@@ -6989,19 +7277,25 @@ local.csslintUtility2 = function (code) {
     var previous1;
     var previous2;
     // ignore comments
-    code = code.replace((/^\u0020*?\/\*[\S\s]*?\*\/\u0020*?$/gm), function (match0) {
+    code = code.replace((
+        /^\u0020*?\/\*[\S\s]*?\*\/\u0020*?$/gm
+    ), function (match0) {
         if (match0 === "/* validateLineSortedReset */") {
             return match0;
         }
         // preserve lineno
-        return match0.replace((/^.*?$/gm), "");
+        return match0.replace((
+            /^.*?$/gm
+        ), "");
     });
     ii = 0;
     current1 = "";
     current2 = "";
     previous1 = "";
     previous2 = "";
-    code.replace((/^.*?$/gm), function (line) {
+    code.replace((
+        /^.*?$/gm
+    ), function (line) {
         current1 = line;
         ii += 1;
         jj = 0;
@@ -7010,13 +7304,21 @@ local.csslintUtility2 = function (code) {
             return;
         }
         // validate whitespace-before-comma
-        if ((/\u0020,/).test(current1)) {
-            jj = jj || ((/\u0020,/).exec(current1).index + 2);
+        if ((
+            /\u0020,/
+        ).test(current1)) {
+            jj = jj || ((
+                /\u0020,/
+            ).exec(current1).index + 2);
             message = message || "whitespace-before-comma";
         }
         // validate double-whitespace
-        if ((/\S\u0020{2}/).test(current1)) {
-            jj = jj || ((/\S\u0020{2}/).exec(current1).index + 2);
+        if ((
+            /\S\u0020{2}/
+        ).test(current1)) {
+            jj = jj || ((
+                /\S\u0020{2}/
+            ).exec(current1).index + 2);
             message = message || "double-whitespace";
         }
         // ignore indent
@@ -7024,8 +7326,12 @@ local.csslintUtility2 = function (code) {
             return;
         }
         // validate multi-line-statement
-        if ((/[,;{}]./).test(current1)) {
-            jj = jj || ((/[,;{}]./).exec(current1).index + 1);
+        if ((
+            /[,;{}]./
+        ).test(current1)) {
+            jj = jj || ((
+                /[,;{}]./
+            ).exec(current1).index + 1);
             message = message || "multi-line-statement";
         }
         // validateLineSortedReset
@@ -7038,14 +7344,24 @@ local.csslintUtility2 = function (code) {
         }
         // validate previous1 < current1
         current1 = current1
-        .replace((/^#/gm), "|")
-        .replace((/,$/gm), "   ,")
-        .replace((/(\u0020\{$|:)/gm), "  $1")
-        .replace((/(^[\w*@]|\u0020\w)/gm), " $1");
+        .replace((
+            /^#/gm
+        ), "|")
+        .replace((
+            /,$/gm
+        ), "   ,")
+        .replace((
+            /\u0020\{$|:/gm
+        ), "  $&")
+        .replace((
+            /^[\w*@]|\u0020\w/gm
+        ), " $&");
         if (!(previous1 < current1)) {
             jj = jj || 1;
-            message = message ||
-                    ("lines not sorted\n" + previous1 + "\n" + current1).trim();
+            message = (
+                message
+                || ("lines not sorted\n" + previous1 + "\n" + current1)
+            );
         }
         previous1 = current1;
         // validate previous2 < current2
@@ -7054,10 +7370,13 @@ local.csslintUtility2 = function (code) {
             current2 = current2.slice(0, -3);
             if (!(previous2 < current2)) {
                 jj = jj || 1;
-                message = message ||
-                        ("lines not sorted\n" + previous2 + "\n" + current2)
-                    .replace((/\n\|/g), "\n#")
-                .trim();
+                message = (
+                    message
+                    || ("lines not sorted\n" + previous2 + "\n" + current2)
+                    .replace((
+                        /\n\|/g
+                    ), "\n#")
+                );
             }
             previous1 = "";
             previous2 = current2;
@@ -7066,7 +7385,12 @@ local.csslintUtility2 = function (code) {
         if (!message) {
             return;
         }
-        local.result.errorList.push({col: jj, line: ii, message: message, value: line});
+        local.jslintResult.errorList.push({
+            col: jj,
+            line: ii,
+            message: message.trim(),
+            value: line
+        });
     });
 };
 
@@ -7081,246 +7405,185 @@ local.jslintAndPrint = function (code, file, options) {
     var rgx1;
     var rgx2;
     var tmp;
-    options = Object.assign(options || {}, {code: code, file: file});
-    options.modeNext = options.modeNext || 0;
+    if (!(options && options.modeNext)) {
+        local.jslintResult = {
+            modeNext: 0
+        };
+    }
+    code = code || "";
+    file = file || "undefined";
+    options = Object.assign(local.jslintResult, options || {}, {
+        code: code,
+        file: file
+    });
     options.modeNext += 1;
     switch (options.modeNext) {
     // jslint - all
     case 1:
+        options.modeNext = Infinity;
         // cleanup
-        local.result = {code: code, errorList: [], errorText: "", file: file};
-        // null-case
-        if (!code || !code.length) {
-            return "";
+        options.errorList = [];
+        options.errorText = "";
+        // fileType0
+        switch (options.fileType0) {
+        case ".\\n\\":
+            code = code.replace((
+                /\\n\\$|\\(.)/gm
+            ), function (match0) {
+                return (
+                    match0 === "\\n\\"
+                    ? ""
+                    : match0[1]
+                );
+            });
+            break;
+        case ".sh":
+            code = code.replace((
+                /'"'"'/g
+            ), "'");
+            break;
         }
         // init
         options = Object.assign(options, {
-            ".css": (/^\/\*csslint\b|(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$)/m),
-            ".html": (/(^<!--\u0020jslint\u0020utility2:true\u0020-->$)/m),
-            ".js": (/^\/\*jslint\b|(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$)/m),
-            ".json": (/^(.)/),
-            ".sh": (/(^#\u0020jslint\u0020utility2:true$)/m),
+            ".css": (
+                /^\/\*csslint\b|(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$)/m
+            ),
+            ".html": (
+                /(^<!--\u0020jslint\u0020utility2:true\u0020-->$)/m
+            ),
+            ".js": (
+                /^\/\*jslint\b|(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$)/m
+            ),
+            ".json": (
+                /^(.)/
+            ),
+            ".md": (
+                /(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$)/m
+            ),
+            ".sh": (
+                /(^#\u0020jslint\u0020utility2:true$)/m
+            ),
             code0: code,
-            fileType: (/\.\w+?$|$/m).exec(file)[0]
+            fileType: (
+                /\.\w+?$|$/m
+            ).exec(file)[0]
         });
-        options.isConditional = (
-            options[options.fileType] instanceof RegExp
+        if (options.fileType === ".js" && (
+            /^\s*?[\[{]/
+        ).test(code)) {
+            options.fileType = ".json";
+        }
+        options.conditionalPassed = (
+            Object.prototype.toString.call(options[options.fileType]) === "[object RegExp]"
             && options[options.fileType].exec(code)
         );
-        options.utility2 = options.isConditional && options.isConditional[1];
-        if (options.conditional && (!options.isConditional || options.coverage)) {
-            return code;
+        options.utility2 = options.conditionalPassed && options.conditionalPassed[1];
+        if (options.conditional && (!options.conditionalPassed || options.coverage)) {
+            break;
         }
-        switch (options.fileType) {
-        case ".css":
-            // csslint
-            Object.assign(local.result, local.CSSLint.verify(code));
-            // init errorList
-            local.result.errorList = local.result.messages.map(function (error) {
-                error.message = (
-                    error.type + " - " + error.rule.id + " - " + error.message
-                    + "\n    " + error.rule.desc
-                );
-                return error;
-            });
-            break;
-        case ".html":
-            break;
-        case ".sh":
-            break;
-        default:
-            if (
-                options.conditional
-                && options.fileType !== ".js"
-                && options.fileType !== ".json"
-            ) {
-                return "code";
-            }
-            // jslint
-            Object.assign(local.result, jslint(
-                code,
-                options.fileType === ".json"
-                ? {}
-                : options
-            ));
-            options.fileType = options.json
-            ? ".json"
-            : ".js";
-            code = local.result.source_autofix || code;
-            // init errorList
-            local.result.errorList = local.result.warnings.filter(function (error) {
-                return (
-                    error
-                    && error.message
-                    // bug-workaround - v8 tail-call issue
-                    // https://bugs.chromium.org/p/v8/issues/detail?id=8234
-                    && !(
-                        local.result.json
-                        && error.message === "Maximum call stack size exceeded"
-                    )
-                );
-            }).map(function (error) {
-                error.col = error.column + 1;
-                error.evidence = error.source;
-                error.line = error.line + 1;
-                return error;
-            });
-        }
-        options.modeNext = (
-            local.result.errorList.length
-            || (!options.autofix && !options.utility2)
-        )
-        ? Infinity
-        : options.autofix
-        ? 10
-        : options.modeNext;
+        options.modeNext = 10;
         break;
-    // jslint-utility2 - all
-    case 2:
-        if (options.fileType === ".json") {
-            break;
-        }
-        ii = 0;
-        code
-        // ignore text-block
-        .replace((
-            /^\/\*\u0020jslint\u0020ignore:start\u0020\*\/$[\S\s]+?^\/\*\u0020jslint\u0020ignore:end\u0020\*\/$/gm
-        ), function (match0) {
-            return match0.replace((/^.*?$/gm), "");
-        })
-        .replace((/^.*?$/gm), function (line) {
-            ii += 1;
-            jj = 0;
-            tmp = "";
-            // validate 4-space indent
-            if (
-                !(/^\u0020+(?:\*|\/\/!!)/).test(line)
-                && ((/^\u0020*/).exec(line)[0].length % 4 !== 0)
-            ) {
-                jj = jj || 1;
-                tmp = tmp || "non 4-space indent";
-            }
-            // validate trailing-whitespace
-            if ((/\u0020$|\u0020\\n\\$/m).test(line)) {
-                jj = jj || line.length;
-                tmp = tmp || "trailing whitespace";
-            }
-            // validate tab
-            if (line.indexOf("\t") >= 0) {
-                jj = jj || (line.indexOf("\t") + 1);
-                tmp = tmp || "tab detected";
-            }
-            if (tmp) {
-                local.result.errorList.push({
-                    col: jj,
-                    line: ii,
-                    message: tmp,
-                    value: JSON.stringify(line)
-                });
-            }
-        });
-        break;
-    // jslint-utility2 - .css
-    case 3:
-        if (options.fileType !== ".css") {
-            break;
-        }
-        local.csslintUtility2(code);
-        break;
-    // jslint-utility2 - .html
-    case 4:
-        if (options.fileType !== ".html") {
-            break;
-        }
-        break;
-    // jslint-utility2 - .js
-    case 5:
-        if (options.fileType !== ".js") {
-            break;
-        }
-        break;
-    // jslint-utility2 - .json
-    case 6:
-        if (options.fileType !== ".json") {
-            break;
-        }
-        break;
-    // jslint-utility2 - .sh
-    case 7:
-        options.modeNext = options.autofix
-        ? 10
-        : Infinity;
-        if (options.fileType !== ".sh") {
-            break;
-        }
-        ii = 0;
-        tmp = "";
-        code.replace((/^.*?$/gm), function (line) {
-            ii += 1;
-            if (!(/^sh\w+?\u0020\(\)\u0020\{/).test(line)) {
-                return;
-            }
-            // validate tmp < line
-            if (!(tmp < line)) {
-                local.result.errorList.push({
-                    col: 0,
-                    line: ii,
-                    message: "lines not sorted\n" + tmp + "\n" + line,
-                    value: line
-                });
-            }
-            tmp = line;
-        });
-        break;
-    // jslint-autofix - all
+    // autofix - all
     case 11:
+        if (!options.autofix) {
+            break;
+        }
+        // autofix - local-function
+        if (typeof(
+            globalThis.utility2
+            && globalThis.utility2.jslintAutofixLocalFunction
+        ) === "function") {
+            code = globalThis.utility2.jslintAutofixLocalFunction(code, file);
+        }
+        // autofix - trailing-whitespace
+        code = code.replace((
+            /\u0020+$/gm
+        ), "");
         // autofix - whitespace
         code = code
-        .replace((/\n+?(\n\u0020*?[)\]}])/g), "$1")
-        .replace((/([^\n])\n{3}([^\n])/g), "$1\n\n$2")
-        .replace((/\n{5,}/g), "\n\n\n\n");
+        // autofix - whitespace - "\s*)]}"
+        .replace((
+            /\n+?(\n\u0020*?[)\]}])/g
+        ), "$1")
+        // autofix - whitespace - "\n{2}"
+        .replace((
+            /([^\n])\n{3}([^\n])/g
+        ), "$1\n\n$2")
+        // autofix - whitespace - "\n{4}"
+        .replace((
+            /\n{5,}/g
+        ), "\n\n\n\n");
+        // autofix - recurse <script>...</script>, <style>...</style>
+        code = code.replace((
+            /(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/\\n\\\n(?:^.*?\\n\\\n)*?)(^(?:\/\/\u0020)?<\/(?:script|style)>\\n\\\n)/gm
+        ), function (ignore, match1, match2, ii) {
+            return local.jslintAndPrint(
+                match1,
+                file + (
+                    match2.indexOf("style") >= 0
+                    ? ".<style>.css"
+                    : ".<script>.js"
+                ),
+                Object.assign({}, options, {
+                    fileType0: ".\\n\\",
+                    lineOffset: (options.lineOffset | 0) + code.slice(0, ii)
+                    .replace((
+                        /.+/g
+                    ), "").length,
+                    modeNext: 0
+                })
+            ) + match2;
+        });
+        local.jslintResult = options;
         break;
-    // jslint-autofix - .css
+    // autofix - .css
     case 12:
-        if (options.fileType !== ".css") {
+        if (!options.autofix || options.fileType !== ".css") {
             break;
         }
         break;
-    // jslint-autofix - .html
+    // autofix - .html
     case 13:
-        if (options.fileType !== ".html") {
+        if (!options.autofix || options.fileType !== ".html") {
             break;
         }
         break;
-    // jslint-autofix - .js
+    // autofix - .js
     case 14:
-        if (options.fileType !== ".js") {
+        if (!options.autofix || options.fileType !== ".js") {
             break;
         }
+        // autofix - ascii
+        code = code.replace((
+            /[^\n\r\t\u0020-\u007e]/g
+        ), function (match0) {
+            return "\\u" + ("0000" + match0.charCodeAt(0).toString(16)).slice(-4);
+        });
         // demux - code -> code2, dataList
-        dataList = [];
         code2 = "";
-        rgx1 = (/\\.|^\/\*\u0020jslint\u0020ignore:start\u0020\*\/$|^\/\*\u0020jslint\u0020ignore:end\u0020\*\/$|\/\*|\*\/|\/\/!!|\/\/|["'\/`]|$/gm);
+        dataList = [];
+        ii = 0;
+        rgx1 = (
+            /\\.|^\/\*\u0020jslint\u0020ignore:start\u0020\*\/$|^\/\*\u0020jslint\u0020ignore:end\u0020\*\/$|\/\*|\*\/|\/\/!!|\/\/|["'\/`]|$/gm
+        );
         // parse rgx
         // https://github.com/douglascrockford/JSLint/blob/557afd32bcaa35480d31a86f02d3a8c06a4e5b5c/jslint.js#L1383
-        rgx2 = new RegExp(
-            (
-                "(?:"
-                + "[^.]\\b"
-                + "(?:case|delete|in|instanceof|new|return|typeof|void|yield)"
-                + "|[!%&\\u0028*+,\\-:;<=>?\\[\\^{|}~]"
-                + ")[\\s\\u0028]*?\\/[^\\*\\/]"
-            ),
-            "g"
+        rgx2 = (
+            /(?:[^.]\b(?:case|delete|in|instanceof|new|return|typeof|void|yield)|[!%&\u0028*+,\-:;<=>?\[\^{|}~])[\s\u0028]*?\/[^*\/]/g
         );
         tmp = "";
         // shebang
-        code.replace((/^#!.*/), function (match0) {
+        code.replace((
+            /^#!.*/
+        ), function (match0) {
             code2 += "#!";
-            dataList.push(match0);
+            dataList.push({
+                data: match0,
+                type: "#_"
+            });
             rgx1.lastIndex = match0.length;
+            ii = rgx1.lastIndex;
         });
-        ii = rgx1.lastIndex;
         while (rgx1.lastIndex < code.length) {
             tmp = rgx1.exec(code);
             if (!tmp) {
@@ -7338,7 +7601,7 @@ local.jslintAndPrint = function (code, file, options) {
             case "//!!":
             case "//":
             case "`":
-                // case "/"
+                // case "/_/"
                 rgx2.lastIndex = ii;
                 if (rgx2.test(code) && rgx2.lastIndex - 2 <= tmp.index) {
                     rgx1.lastIndex = rgx2.lastIndex - 1;
@@ -7359,7 +7622,10 @@ local.jslintAndPrint = function (code, file, options) {
                     case "/_/":
                     case "`_`":
                         code2 += "_" + tmp[1];
-                        dataList.push(tmp[0] + code.slice(ii, rgx1.lastIndex));
+                        dataList.push({
+                            data: tmp[0] + code.slice(ii, rgx1.lastIndex),
+                            type: (tmp[0] + "_" + tmp[1]).replace("/_*/", "/_/")
+                        });
                         ii = 0;
                         break;
                     case "/_":
@@ -7379,93 +7645,515 @@ local.jslintAndPrint = function (code, file, options) {
             }
         }
         code2 += code.slice(ii);
-        code2 = code2.replace((/\/_\*\//g), "/_/");
-        // autofix - comment
-        tmp = "";
+        code2 = code2.replace((
+            /\/_\*\//g
+        ), "/_/");
+        code2 = code2.replace((
+            /\/\*\u0020jslint\u0020ignore:start\u0020\*\/_\/\*\u0020jslint\u0020ignore:end\u0020\*\//g
+        ), "/* jslint ignore */");
+        options.codeDemux = code2;
+        // autofix - comment - left-align
+        tmp = null;
         code2 = code2.split("\n").reverse().map(function (line) {
-            if ((/^\u0020+?\/\/_/).test(line)) {
-                return tmp
-                ? tmp + line.trimLeft()
-                : line;
+            if ((
+                /^\u0020+?\/\/_/
+            ).test(line)) {
+                return (
+                    tmp
+                    ? tmp[0].slice(0, -1) + line.trimLeft()
+                    : line
+                );
             }
-            tmp = (/^\u0020*/).exec(line)[0];
+            tmp = (
+                /^\u0020*?\S/
+            ).exec(line);
             return line;
         }).reverse().join("\n");
-        // autofix - whitespace
+        // autofix - prefix-operator
+        // https://stackoverflow.com/questions/12122293/list-of-all-binary-operators-in-javascript
         code2 = code2
-        .replace((/(\S\u0020)\u0020+/g), "$1");
+        .replace((
+            /(\S)\u0020+?(!=|!==|%|&|&&|-|:|<|<<|<=|==|===|>|>=|>>|>>>|\*|\+|\/|\?|\^|\||\|\|)((?:\s*?\/\*_\*\/|\s*?\/\/_)*)\s*?\n/g
+        ), "$1$3\n$2");
+        // autofix - braket
+        code2 = code2
+        // autofix - braket - rgx
+        .replace((
+            /\/_\/[\w\s]*(\S)/g
+        ), function (match0, match1) {
+            return match1 === ")"
+            ? match0
+            : match0.replace((
+                /\/_\/\w*/
+            ), "($&)");
+        })
+        .replace((
+            /\((\/_\/\w*)\)/g
+        ), "(\n$1\n)")
+        // autofix - braket - open-form
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators#Assignment
+        .replace((
+            /\u0020(%=|&=|-=|<<=|=|>>=|>>>=|\*=|\*\*=|\+=|\/=|\^=|\|=)\n/g
+        ), " $1  \n")
+        .replace((
+            /\u0020(%=|&=|-=|<<=|=|>>=|>>>=|\*=|\*\*=|\+=|\/=|\^=|\|=|return)\u0020([^\n;]*?[^\n(;\[{]\n[\S\s]*?);/g
+        ), function (match0, match1, match2) {
+            if (!(
+                /^\u0020\n|\u0020{4}(?:!=|!==|%|&|&&|-|:|<|<<|<=|==|===|>|>=|>>|>>>|\*|\+|\/|\?|\^|\||\|\|)\u0020/
+            ).test(match2) || (
+                /\bfunction\u0020\(/
+            ).test(match2)) {
+                return match0;
+            }
+            return " " + match1 + " (\n    " + match2.trim() + "\n);";
+        })
+        .replace((
+            /(\(\n)(\S)/g
+        ), "$1    $2")
+        // autofix - braket - "\s{0}bra"
+        .replace((
+            /\n+\s*?([(\[{])\n/g
+        ), "\u0000$1\n")
+        // autofix - braket - "//...\nbra"
+        .replace((
+            /\/\*_\*\/\u0000|\/\/_\u0000/g
+        ), "$&\n")
+        .replace((
+            /\u0000/g
+        ), "")
+        // autofix - braket - "{\n    ..."
+        .replace((
+            /^(\u0020*)(.*?\{)(\S)/gm
+        ), "$1$2\n$1    $3")
+        // autofix - braket - "{}"
+        .replace((
+            /[(\[{]\s+[)\]}]/g
+        ), "{}");
+        // autofix - trailing-whitespace
+        code = code.replace((
+            /\u0020+$/gm
+        ), "");
+        // autofix - whitespace
+        // autofix - whitespace - "^ {8,}"
+        tmp = "";
+        code2 = code2.replace((
+            /^\u0020+/gm
+        ), function (match0) {
+            if (match0.length > tmp.length + 4) {
+                match0 = tmp;
+            }
+            tmp = match0;
+            return match0;
+        });
+        code2 = ("\n" + code2 + "\n")
+        // autofix - whitespace - "//...\n"
+        .replace((
+            /\/\/_([^\n])/g
+        ), "//_\n$1")
+        // autofix - whitespace - "\n\n\n\n(function () {...}());"
+        .replace((
+            /\n+((?:\/\*_\*\/\n|\/\/_\n)*?\(function\u0020.*?)\n+/g
+        ), "\n\n\n\n$1\n")
+        // autofix - whitespace - "...}());\n\n\n\n"
+        .replace((
+            /\n+(\}\(.*\)\);)\n+/g
+        ), "\n$1\n\n\n\n")
+        // autofix - whitespace - "\S {1}"
+        .replace((
+            /(\S\u0020)\u0020+/g
+        ), "$1")
+        // autofix - whitespace - "^/* jslint ignore */$"
+        .replace((
+            /^\u0020+(\/\*\u0020jslint\u0020ignore\u0020\*\/)$/gm
+        ), "$1")
+        .trim();
+        dataList.forEach(function (data) {
+            switch (data.type) {
+            case "'_'":
+                // autofix - single-quote -> double-quote
+                if (data.data[0] === "'") {
+                    data.data = (
+                        "\"" + data.data.slice(1, -1)
+                        .replace((
+                            /\\.|"/g
+                        ), function (match0) {
+                            return (
+                                match0[1] === ""
+                                ? "\\\""
+                                : match0[1] === "'"
+                                ? "'"
+                                : match0
+                            );
+                        }) + "\""
+                    );
+                }
+                break;
+            case "/*_*/":
+                // autofix - comment - "/*" -> "/\*"
+                data.data = "/*" + data.data.slice(2).replace((
+                    /\/\*/g
+                ), "/\\*");
+                break;
+            case "/_/":
+                // autofix - rgx - " " -> "\\u0020"
+                data.data = data.data.replace((
+                    /\u0020/g
+                ), "\\u0020");
+                // autofix - rgx - "-]" -> "\-]"
+                data.data = data.data.replace((
+                    /\\.|-\]/g
+                ), function (match0) {
+                    return (
+                        match0[0] === "-"
+                        ? "\\" + match0
+                        : match0
+                    );
+                });
+                break;
+            }
+            if (data.type !== "/* jslint ignore:start */_/* jslint ignore:end */") {
+                // autofix - ascii
+                data.data = data.data.replace((
+                    /\r/g
+                ), "\\r").replace((
+                    /\t/g
+                ), "\\t");
+            }
+        });
         // mux - code2, dataList -> code2
         code2 = code2
         // shebang
-        .replace((/^#!/), function () {
-            return dataList.shift();
+        .replace((
+            /^#!/
+        ), function () {
+            return dataList.shift().data;
         })
         .replace((
-            /"_"|'_'|\/\*\u0020jslint\u0020ignore:start\u0020\*\/_\/\*\u0020jslint\u0020ignore:end\u0020\*\/|\/\*_\*\/|\/\/!!_|\/\/_|\/_\/|`_`/g
+            /"_"|'_'|\/\*\u0020jslint\u0020ignore\u0020\*\/|\/\*_\*\/|\/\/!!_|\/\/_|\/_\/|`_`/g
+        ), function (match0) {
+            // delay regexp
+            if (match0 === "/_/") {
+                dataList.push(dataList.shift());
+                return "/\u0000/";
+            }
+            return dataList.shift().data;
+        });
+        // autofix - jslint
+        Object.assign(options, jslint(code2, options));
+        // mux - code2, dataList.</_/> -> code2
+        code2 = code2
+        .replace((
+            /\/\u0000\//g
         ), function () {
-            return dataList.shift();
+            return dataList.shift().data;
         });
         code = code2;
+        if (!options.utility2) {
+            break;
+        }
+        // autofix - sort const, let, var
+        code = code.replace((
+            /(?:^\u0020*?(?:const|let|var)\u0020[\w$]*?;.*?\n)+/gm
+        ), function (match0) {
+            return match0.split("\n").slice(0, -1).sort().join("\n") + "\n";
+        });
         break;
-    // jslint-autofix - .json
+    // autofix - .json
     case 15:
-        if (options.fileType !== ".json") {
+        if (!options.autofix || options.fileType !== ".json") {
             break;
         }
         try {
             code = local.jsonStringifyOrdered(JSON.parse(code), null, 4);
-        } catch (ignore) {
+        } catch (ignore) {}
+        break;
+    // autofix - .md
+    case 16:
+        if (!options.autofix || options.fileType !== ".md") {
+            break;
+        }
+        // autofix - recurse ```javascript...```
+        code = code.replace((
+            /(```javascript\n)([\S\s]*?)(\n```)/g
+        ), function (ignore, match1, match2, match3, ii) {
+            return match1 + local.jslintAndPrint(
+                match2,
+                file + ".<```javascript>.js",
+                Object.assign({}, options, {
+                    fileType0: options.fileType,
+                    lineOffset: code.slice(0, ii).replace((
+                        /.+/g
+                    ), "").length + 1,
+                    modeNext: 0
+                })
+            ) + match3;
+        });
+        local.jslintResult = options;
+        break;
+    // autofix - .sh
+    case 17:
+        options.modeNext = 20;
+        if (!options.autofix || options.fileType !== ".sh") {
+            break;
+        }
+        // autofix - recurse node -e '...'
+        code = code.replace((
+            /(\bUTILITY2_MACRO_JS='\n|\bnode\u0020-e\u0020(?:"\$UTILITY2_MACRO_JS")?'\n)([\S\s]*?)(\n')/g
+        ), function (ignore, match1, match2, match3, ii) {
+            return match1 + local.jslintAndPrint(
+                match2,
+                file + ".<node -e>.js",
+                Object.assign({}, options, {
+                    fileType0: options.fileType,
+                    lineOffset: code.slice(0, ii).replace((
+                        /.+/g
+                    ), "").length + 1,
+                    modeNext: 0
+                })
+            ) + match3;
+        });
+        local.jslintResult = options;
+        break;
+    // jslint - all
+    case 21:
+        // lineOffset
+        code = "\n".repeat(options.lineOffset | 0) + code;
+        switch (options.fileType) {
+        case ".css":
+            // csslint
+            Object.assign(options, local.CSSLint.verify(code));
+            // init errorList
+            options.errorList = options.messages.map(function (error) {
+                error.message = (
+                    error.type + " - " + error.rule.id + " - " + error.message
+                    + "\n    " + error.rule.desc
+                );
+                return error;
+            });
+            break;
+        case ".html":
+        case ".md":
+        case ".sh":
+            break;
+        default:
+            // jslint
+            Object.assign(options, jslint(
+                code,
+                options.fileType === ".json"
+                ? {}
+                : options
+            ));
+            options.fileType = (
+                options.json
+                ? ".json"
+                : ".js"
+            );
+            code = options.source_autofix || code;
+            // prioritize fatal error
+            options.warnings.forEach(function (error, ii) {
+                if (error.early_stop) {
+                    error.message = "[JSLint was unable to finish] - " + error.message;
+                    options.warnings.unshift(error);
+                    options.warnings.splice(ii, 1);
+                }
+            });
+            // init errorList
+            options.errorList = options.warnings.filter(function (error) {
+                // bug-workaround - v8 tail-call issue
+                // https://bugs.chromium.org/p/v8/issues/detail?id=8234
+                if (options.json && (error && error.name === "RangeError")) {
+                    options.stop = false;
+                    return;
+                }
+                return error && error.message;
+            }).map(function (error) {
+                error.col = error.column + 1;
+                error.evidence = error.source;
+                error.line = error.line + 1;
+                return error;
+            });
         }
         break;
-    // jslint-autofix - .sh
-    case 16:
-        if (options.fileType !== ".sh") {
+    // jslint-utility2 - all
+    case 22:
+        if (options.fileType === ".json") {
+            break;
+        }
+        ii = 0;
+        code
+        // ignore text-block
+        .replace((
+            /^\/\*\u0020jslint\u0020ignore:start\u0020\*\/$[\S\s]+?^\/\*\u0020jslint\u0020ignore:end\u0020\*\/$/gm
+        ), function (match0) {
+            return match0.replace((
+                /^.*?$/gm
+            ), "");
+        })
+        .replace((
+            /^.*?$/gm
+        ), function (line) {
+            ii += 1;
+            jj = 0;
+            tmp = "";
+            // validate 4-space indent
+            if (
+                !(
+                    /^\u0020+(?:\*|\/\/!!)/
+                ).test(line)
+                && ((
+                    /^\u0020*/
+                ).exec(line)[0].length % 4 !== 0)
+            ) {
+                jj = jj || 1;
+                tmp = tmp || "non 4-space indent";
+            }
+            // validate tab
+            if (line.indexOf("\t") >= 0) {
+                jj = jj || (line.indexOf("\t") + 1);
+                tmp = tmp || "tab detected";
+            }
+            if (tmp) {
+                options.errorList.push({
+                    col: jj,
+                    line: ii,
+                    message: tmp,
+                    value: JSON.stringify(line)
+                });
+            }
+        });
+        break;
+    // jslint-utility2 - .css
+    case 23:
+        if (!options.utility2 || options.fileType !== ".css") {
+            break;
+        }
+        local.csslintUtility2(code);
+        break;
+    // jslint-utility2 - .html
+    case 24:
+        if (!options.utility2 || options.fileType !== ".html") {
             break;
         }
         break;
-    // jslint-autofix - save
-    case 17:
+    // jslint-utility2 - .js
+    case 25:
+        if (!options.utility2 || options.fileType !== ".js") {
+            break;
+        }
+        break;
+    // jslint-utility2 - .json
+    case 26:
+        if (!options.utility2 || options.fileType !== ".json") {
+            break;
+        }
+        break;
+    // jslint-utility2 - .sh
+    case 27:
+        if (!options.utility2 || options.fileType !== ".sh") {
+            break;
+        }
+        ii = 0;
+        tmp = "";
+        code.replace((
+            /^.*?$/gm
+        ), function (line) {
+            ii += 1;
+            if (!(
+                /^sh\w+?\u0020\(\)\u0020\{/
+            ).test(line)) {
+                return;
+            }
+            // validate tmp < line
+            if (!(tmp < line)) {
+                options.errorList.push({
+                    col: 0,
+                    line: ii,
+                    message: "lines not sorted\n" + tmp + "\n" + line,
+                    value: line
+                });
+            }
+            tmp = line;
+        });
+        break;
+    default:
+        // fileType0
+        if (options.fileType0) {
+            code = code.trim();
+        } else {
+            code = code.trimRight() + "\n";
+        }
+        switch (options.fileType0) {
+        case ".\\n\\":
+            code = code
+            .replace((
+                /\\/g
+            ), "\\\\")
+            .replace((
+                /$/gm
+            ), "\\n\\")
+            .replace((
+                /'/g
+            ), "\\'") + "\n";
+            break;
+        case ".sh":
+            code = code.replace((
+                /'/g
+            ), "'\"'\"'");
+            break;
+        }
+        // autofix - save
         if (
             !local.isBrowser
-            && code.trimRight() !== options.code0.trimRight()
+            && options.autofix
+            && !options.fileType0
+            && !options.stop
+            && code !== options.code0
+            && local.fs.existsSync(file)
         ) {
+            local.fs.writeFileSync(file, code);
+            local.fs.writeFileSync(file + ".autofix.old", options.code0);
+            local.child_process.spawnSync("diff", ["-u", file + ".autofix.old", file], {
+                stdio: ["ignore", 1, "ignore"]
+            });
+            local.fs.unlinkSync(file + ".autofix.old");
             console.error(
                 "\u001b[1mjslint-autofix - modified and saved file " + file
                 + "\u001b[22m"
             );
-            local.fs.writeFileSync(file, code.trimRight() + "\n");
         }
-        break;
-    default:
         // print colorized error-messages to stderr
         // https://github.com/kaizhu256/JSLint/blob/cli/cli.js#L99
-        local.result.errorList
+        options.errorList
         .filter(function (warning) {
             return warning && warning.message;
         })
         // print only first 10 warnings
         .slice(0, 10)
         .forEach(function (error, ii) {
-            local.result.errorText = (
-                local.result.errorText
+            options.errorText = (
+                options.errorText
                 || " \u001b[1mjslint " + file + "\u001b[22m\n"
             );
-            local.result.errorText += (
+            options.errorText += (
                 ("  " + String(ii + 1)).slice(-3)
                 + " \u001b[31m" + error.message + "\u001b[39m"
                 + " \u001b[90m\/\/ line " + error.line + ", col " + error.col + "\u001b[39m\n"
-                + "    " + String(error.evidence).trim().slice(0, 76) + "\n"
+                + "    " + String(error.evidence).trim() + "\n"
             );
             if (!ii && error.stack && error.a !== "debug\u0049nline") {
                 tmp = error.stack;
                 error.stack = null;
-                local.result.errorText += JSON.stringify(error, null, 4) + "\n" + tmp.trim() + "\n";
+                options.errorText += (
+                    JSON.stringify(error, null, 4) + "\n" + tmp.trim() + "\n"
+                );
             }
         });
-        local.result.errorText = local.result.errorText.trim();
-        // print error to stderr
-        if (local.result.errorText) {
-            console.error(local.result.errorText);
+        options.errorText = options.errorText.trim();
+        if (options.errorText) {
+            // debug jslintResult
+            local._debugJslintResult = local.jslintResult;
+            // print error to stderr
+            console.error(options.errorText);
         }
         return code;
     }
@@ -7482,22 +8170,26 @@ local.jslintUtility2 = function (code) {
     var rgx;
     var tmp;
     lineno = 0;
-    rgx = new RegExp(
-        "^ *?\\/\\* validateLineSortedReset \\*\\/$|" +
-        "^ {4}\\/\\/ run .*?\\bjs\\\\?-env code\\b|" +
-        "^\\/\\/ rollup-file "
+    rgx = (
+        /^\u0020*?\/\*\u0020validateLineSortedReset\u0020\*\/$|^\u0020{4}\/\/\u0020run\u0020.*?\bjs\\?-env\u0020code\b|^\/\/\u0020rollup-file\u0020/m
     );
     previous = "";
-    code.replace((/^.*?$/gm), function (line) {
+    code.replace((
+        /^.*?$/gm
+    ), function (line) {
         current = line.trim();
         lineno += 1;
         // validate <domElement>.classList sorted
-        tmp = (/\bclass=\\?"([^"]+?)\\?"/gm).exec(current);
-        tmp = JSON.stringify((tmp && tmp[1].replace((/^\u0020/), "zSpace").match(
+        tmp = (
+            /\bclass=\\?"([^"]+?)\\?"/gm
+        ).exec(current);
+        tmp = JSON.stringify((tmp && tmp[1].replace((
+            /^\u0020/
+        ), "zSpace").match(
             /\u0020{2}|\u0020$|\w\S*?\{\{[^}]*?\}\}|\w\S*|\{\{[^}]*?\}\}/gm
         )) || []);
         if (JSON.stringify(JSON.parse(tmp).sort()) !== tmp) {
-            local.result.errorList.push({
+            local.jslintResult.errorList.push({
                 col: 0,
                 line: lineno,
                 message: "<domElement>.classList not sorted - " + tmp,
@@ -7510,14 +8202,19 @@ local.jslintUtility2 = function (code) {
             return;
         }
         if (
-            !(/^(?:\u0020{4}|\u0020{8})local\.\S*?\u0020=(?:\u0020|$)/m).test(line) ||
-            (/^local\.(?:global|isBrowser|local|tmp)\b|\\n\\$/).test(current)
+            !(
+                /^(?:\u0020{4}|\u0020{8})local\.\S*?\u0020=(?:\u0020|$)/m
+            ).test(line) || (
+                /^local\.(?:local|tmp)\b|\\n\\$/
+            ).test(current)
         ) {
             return;
         }
         // validate previous < current
-        if (!(previous < current || (/\u0020=$/).test(previous))) {
-            local.result.errorList.push({
+        if (!(previous < current || (
+            /\u0020=$/
+        ).test(previous))) {
+            local.jslintResult.errorList.push({
                 col: 0,
                 line: lineno,
                 message: "lines not sorted\n" + previous + "\n" + current,
@@ -7528,85 +8225,8 @@ local.jslintUtility2 = function (code) {
     });
 };
 
-local.jslintAndPrintConditional = function (script, file, mode) {
-/*
- * this function will jslint / csslint the script and print any errors to stderr
- * conditionally, depending on macros
- */
-    var scriptParsed;
-    scriptParsed = script;
-    // optimization - ignore uglified/rollup files
-    if (!scriptParsed || scriptParsed.length >= 0x100000) {
-        return script;
-    }
-    switch (
-        file.replace((/.*\//), "").slice(0, 4) !== "raw."
-        && (/\.\w+?$|$/m).exec(file)[0]
-    ) {
-    case ".css":
-        if ((/^\/\*csslint\b/m).test(scriptParsed)) {
-            local.jslintAndPrint(scriptParsed, file);
-        }
-        break;
-    case ".sh":
-        if (
-            file.slice(0, 4) !== "raw."
-            && (/^#\u0020jslint\u0020utility2:true$/m).test(scriptParsed)
-        ) {
-            // local-function - ignore shell-escapes
-            scriptParsed = scriptParsed.replace(
-                (/^local\.\w+\u0020=\u0020function\u0020\([\S\s]*?\n\};\n/gm),
-                function (match0) {
-                    return match0.replace((/.*?\n/g), "//\n");
-                }
-            );
-            local.jslintAndPrint(scriptParsed, file);
-        }
-        break;
-    case ".js":
-        if (
-            ((/^\/\*\u0020?jslint\b/m).test(scriptParsed) && !local.global.__coverage__)
-            || mode === "force"
-        ) {
-            local.jslintAndPrint(scriptParsed, file);
-        }
-        break;
-    }
-    // recurse - csslint <style>...</style>
-    scriptParsed.replace(
-        (/^<style>(?:\\n\\)?\n([\S\s]*?)\n<\/style>(?:\\n\\)?$/gm),
-        function (ignore, match1, ii, text) {
-            local.jslintAndPrintConditional(
-                // preserve lineno
-                text.slice(0, ii).replace((/.+/g), "") + "\n" + match1
-                // filter \\n\\
-                .replace((/\\n\\$/gm), "")
-                // filter ' + ... + '\\
-                .replace((/^'\u0020\+\u0020.*?\u0020\+\u0020'\\$/gm), ""),
-                file + ".css"
-            );
-        }
-    );
-    // recurse - jslint <script>...</script>
-    scriptParsed.replace((
-        /^(?:\/\/\u0020)?<script>(?:\\n\\)?\n([\S\s]*?)\n(?:\/\/\u0020)?<\/script>(?:\\n\\)?$/gm
-    ), function (ignore, match1, ii, text) {
-        local.jslintAndPrintConditional(
-            // preserve lineno
-            text.slice(0, ii).replace((/.+/g), "") + "\n" + match1
-            // filter \\n\\
-            .replace((/\\n\\$/gm), "")
-            // filter ' + ... + '\\
-            .replace((/^'\u0020\+\u0020.*?\u0020\+\u0020'\\$/gm), ""),
-            file + ".js",
-            mode
-        );
-    });
-    return script;
-};
-
 // run shared js-env code - init-after
-local.result = {};
+local.jslintResult = {};
 }());
 
 
@@ -7635,7 +8255,7 @@ local.cliDict._default = function () {
         local.jslintAndPrint(local.fs.readFileSync(local.path.resolve(file), "utf8"), file);
     });
     // if error occurred, then exit with non-zero code
-    process.exit(Boolean(local.result.errorList.length));
+    process.exit(Boolean(local.jslintResult.errorList.length));
 };
 
 local.cliDict.autofix = function () {
@@ -7651,16 +8271,21 @@ local.cliDict.autofix = function () {
         local.jslintAndPrint(
             local.fs.readFileSync(local.path.resolve(file), "utf8"),
             file,
-            {autofix: true}
+            {
+                autofix: true
+            }
         );
     });
     // if error occurred, then exit with non-zero code
-    process.exit(Boolean(local.result.errorList.length));
+    process.exit(Boolean(local.jslintResult.errorList.length));
 };
 
 // run cli
-if (module === require.main && !local.global.utility2_rollup) {
+if (module === require.main && !globalThis.utility2_rollup) {
     local.cliRun();
 }
 }());
+
+
+
 }());

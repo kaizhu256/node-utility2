@@ -1,64 +1,124 @@
 #!/usr/bin/env node
+
+
+
 /* istanbul instrument in package marked */
+/* istanbul ignore next */
 /* jslint utility2:true */
-(function () {
+(function (globalThis) {
+    "use strict";
+    var consoleError;
+    var local;
+    // init globalThis
+    (function () {
+        try {
+            globalThis = Function("return this")(); // jslint ignore:line
+        } catch (ignore) {}
+    }());
+    globalThis.globalThis = globalThis;
+    // init local
+    local = {};
+    // init isBrowser
+    local.isBrowser = (
+        typeof window === "object"
+        && window === globalThis
+        && typeof window.XMLHttpRequest === "function"
+        && window.document
+        && typeof window.document.querySelectorAll === "function"
+    );
+    globalThis.globalLocal = local;
+    // init function
+    local.assertThrow = function (passed, message) {
+    /*
+     * this function will throw the error <message> if <passed> is falsy
+     */
+        var error;
+        if (passed) {
+            return;
+        }
+        error = (
+            // ternary-operator
+            (
+                message
+                && typeof message.message === "string"
+                && typeof message.stack === "string"
+            )
+            // if message is an error-object, then leave it as is
+            ? message
+            : new Error(
+                typeof message === "string"
+                // if message is a string, then leave it as is
+                ? message
+                // else JSON.stringify message
+                : JSON.stringify(message, null, 4)
+            )
+        );
+        throw error;
+    };
+    local.functionOrNop = function (fnc) {
+    /*
+     * this function will if <fnc> exists,
+     * them return <fnc>,
+     * else return <nop>
+     */
+        return fnc || local.nop;
+    };
+    local.identity = function (value) {
+    /*
+     * this function will return <value>
+     */
+        return value;
+    };
+    local.nop = function () {
+    /*
+     * this function will do nothing
+     */
+        return;
+    };
+    // init debug_inline
+    if (!globalThis["debug\u0049nline"]) {
+        consoleError = console.error;
+        globalThis["debug\u0049nline"] = function () {
+        /*
+         * this function will both print <arguments> to stderr
+         * and return <arguments>[0]
+         */
+            var argList;
+            argList = Array.from(arguments); // jslint ignore:line
+            // debug arguments
+            globalThis["debug\u0049nlineArguments"] = argList;
+            consoleError("\n\ndebug\u0049nline");
+            consoleError.apply(console, argList);
+            consoleError("\n");
+            // return arg0 for inspection
+            return argList[0];
+        };
+    }
+}(this));
+
+
+
+(function (local) {
 "use strict";
-var local;
 
 
 
 /* istanbul ignore next */
 // run shared js-env code - init-before
 (function () {
-
-
-
-// init debug_inline
-(function () {
-    var consoleError;
-    var context;
-    consoleError = console.error;
-    context = (typeof window === "object" && window) || global;
-    context["debug\u0049nline"] = context["debug\u0049nline"] || function () {
-    /*
-     * this function will both print arg0 to stderr and return it
-     */
-        var argList;
-        argList = arguments; // jslint ignore:line
-        // debug arguments
-        context["debug\u0049nlineArguments"] = argList;
-        consoleError("\n\ndebug\u0049nline");
-        consoleError.apply(console, argList);
-        consoleError("\n");
-        // return arg0 for inspection
-        return argList[0];
-    };
-}());
 // init local
-local = {};
-// init isBrowser
-local.isBrowser = (
-    typeof window === "object"
-    && typeof window.XMLHttpRequest === "function"
-    && window.document
-    && typeof window.document.querySelectorAll === "function"
-);
-// init global
-local.global = local.isBrowser
-? window
-: global;
-// re-init local
 local = (
-    local.global.utility2_rollup
-    // || local.global.utility2_rollup_old || require("./assets.utility2.rollup.js")
-    || local
+    globalThis.utility2_rollup
+    // || globalThis.utility2_rollup_old
+    // || require("./assets.utility2.rollup.js")
+    || globalThis.globalLocal
 );
 // init exports
 if (local.isBrowser) {
-    local.global.utility2_marked = local;
+    globalThis.utility2_marked = local;
 } else {
     // require builtins
-    // local.assert = require("assert");
+    local.assert = require("assert");
     local.buffer = require("buffer");
     local.child_process = require("child_process");
     local.cluster = require("cluster");
@@ -300,7 +360,7 @@ local.marked = module.exports; }());
 /* jslint ignore:end */
 // init exports
 if (local.isBrowser) {
-    local.global.utility2_marked = local.marked;
+    globalThis.utility2_marked = local.marked;
 } else {
     module.exports = local.marked;
 }

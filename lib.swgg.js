@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.swgg.js (2018.9.8)
+ * lib.swgg.js (2018.11.14)
  * https://github.com/kaizhu256/node-swgg
  * this zero-dependency package will run a virtual swagger-ui server with persistent-storage in the browser, that your webapp can use (in-place of a real backend), with a working web-demo
  *
@@ -9,65 +9,122 @@
 
 
 /* istanbul instrument in package swgg */
+/* istanbul ignore next */
 /* jslint utility2:true */
-(function () {
+(function (globalThis) {
+    "use strict";
+    var consoleError;
+    var local;
+    // init globalThis
+    (function () {
+        try {
+            globalThis = Function("return this")(); // jslint ignore:line
+        } catch (ignore) {}
+    }());
+    globalThis.globalThis = globalThis;
+    // init local
+    local = {};
+    // init isBrowser
+    local.isBrowser = (
+        typeof window === "object"
+        && window === globalThis
+        && typeof window.XMLHttpRequest === "function"
+        && window.document
+        && typeof window.document.querySelectorAll === "function"
+    );
+    globalThis.globalLocal = local;
+    // init function
+    local.assertThrow = function (passed, message) {
+    /*
+     * this function will throw the error <message> if <passed> is falsy
+     */
+        var error;
+        if (passed) {
+            return;
+        }
+        error = (
+            // ternary-operator
+            (
+                message
+                && typeof message.message === "string"
+                && typeof message.stack === "string"
+            )
+            // if message is an error-object, then leave it as is
+            ? message
+            : new Error(
+                typeof message === "string"
+                // if message is a string, then leave it as is
+                ? message
+                // else JSON.stringify message
+                : JSON.stringify(message, null, 4)
+            )
+        );
+        throw error;
+    };
+    local.functionOrNop = function (fnc) {
+    /*
+     * this function will if <fnc> exists,
+     * them return <fnc>,
+     * else return <nop>
+     */
+        return fnc || local.nop;
+    };
+    local.identity = function (value) {
+    /*
+     * this function will return <value>
+     */
+        return value;
+    };
+    local.nop = function () {
+    /*
+     * this function will do nothing
+     */
+        return;
+    };
+    // init debug_inline
+    if (!globalThis["debug\u0049nline"]) {
+        consoleError = console.error;
+        globalThis["debug\u0049nline"] = function () {
+        /*
+         * this function will both print <arguments> to stderr
+         * and return <arguments>[0]
+         */
+            var argList;
+            argList = Array.from(arguments); // jslint ignore:line
+            // debug arguments
+            globalThis["debug\u0049nlineArguments"] = argList;
+            consoleError("\n\ndebug\u0049nline");
+            consoleError.apply(console, argList);
+            consoleError("\n");
+            // return arg0 for inspection
+            return argList[0];
+        };
+    }
+}(this));
+
+
+
+(function (local) {
 "use strict";
-var local;
 
 
 
 /* istanbul ignore next */
 // run shared js-env code - init-before
 (function () {
-
-
-
-// init debug_inline
-(function () {
-    var consoleError;
-    var context;
-    consoleError = console.error;
-    context = (typeof window === "object" && window) || global;
-    context["debug\u0049nline"] = context["debug\u0049nline"] || function () {
-    /*
-     * this function will both print arg0 to stderr and return it
-     */
-        var argList;
-        argList = arguments; // jslint ignore:line
-        // debug arguments
-        context["debug\u0049nlineArguments"] = argList;
-        consoleError("\n\ndebug\u0049nline");
-        consoleError.apply(console, argList);
-        consoleError("\n");
-        // return arg0 for inspection
-        return argList[0];
-    };
-}());
 // init local
-local = {};
-// init isBrowser
-local.isBrowser = (
-    typeof window === "object"
-    && typeof window.XMLHttpRequest === "function"
-    && window.document
-    && typeof window.document.querySelectorAll === "function"
-);
-// init global
-local.global = local.isBrowser
-? window
-: global;
-// re-init local
 local = (
-    local.global.utility2_rollup
-    // || local.global.utility2_rollup_old || require("./assets.utility2.rollup.js")
-    || local
+    globalThis.utility2_rollup
+    // || globalThis.utility2_rollup_old
+    // || require("./assets.utility2.rollup.js")
+    || globalThis.globalLocal
 );
 // init exports
 if (local.isBrowser) {
-    local.global.utility2_swgg = local;
+    globalThis.utility2_swgg = local;
 } else {
     // require builtins
-    // local.assert = require("assert");
+    local.assert = require("assert");
     local.buffer = require("buffer");
     local.child_process = require("child_process");
     local.cluster = require("cluster");
@@ -105,9 +162,9 @@ local.swgg = local;
 
 /* validateLineSortedReset */
 // init lib utility2
-local.utility2 = local.global.utility2_rollup || (
+local.utility2 = globalThis.utility2_rollup || (
     local.isBrowser
-    ? local.global.utility2
+    ? globalThis.utility2
     : (function () {
         try {
             return require("./lib.utility2.js");
@@ -118,14 +175,14 @@ local.utility2 = local.global.utility2_rollup || (
 );
 local.utility2.objectSetDefault(local, local.utility2);
 // init lib swgg
-local.global.swgg = local;
+globalThis.swgg = local;
 local.utility2.swgg = local;
 /* validateLineSortedReset */
 // init assets and templates
 // https://github.com/json-schema-org/json-schema-org.github.io/blob/eb4805e94c3e27932352344767d19cc4c3c3381c/draft-04/schema
 /* jslint ignore:start */
 // curl -Ls https://raw.githubusercontent.com/json-schema-org/json-schema-org.github.io/eb4805e94c3e27932352344767d19cc4c3c3381c/draft-04/schema > /tmp/aa.json; node -e "console.log(JSON.stringify(require('/tmp/aa.json')));"
-local.assetsDict['/assets.swgg.json-schema.json'] = JSON.stringify(
+local.assetsDict["/assets.swgg.json-schema.json"] = JSON.stringify(
 {"id":"http://json-schema.org/draft-04/schema#","$schema":"http://json-schema.org/draft-04/schema#","description":"Core schema meta-schema","definitions":{"schemaArray":{"type":"array","minItems":1,"items":{"$ref":"#"}},"positiveInteger":{"type":"integer","minimum":0},"positiveIntegerDefault0":{"allOf":[{"$ref":"#/definitions/positiveInteger"},{"default":0}]},"simpleTypes":{"enum":["array","boolean","integer","null","number","object","string"]},"stringArray":{"type":"array","items":{"type":"string"},"minItems":1,"uniqueItems":true}},"type":"object","properties":{"id":{"type":"string","format":"uri"},"$schema":{"type":"string","format":"uri"},"title":{"type":"string"},"description":{"type":"string"},"default":{},"multipleOf":{"type":"number","minimum":0,"exclusiveMinimum":true},"maximum":{"type":"number"},"exclusiveMaximum":{"type":"boolean","default":false},"minimum":{"type":"number"},"exclusiveMinimum":{"type":"boolean","default":false},"maxLength":{"$ref":"#/definitions/positiveInteger"},"minLength":{"$ref":"#/definitions/positiveIntegerDefault0"},"pattern":{"type":"string","format":"regex"},"additionalItems":{"anyOf":[{"type":"boolean"},{"$ref":"#"}],"default":{}},"items":{"anyOf":[{"$ref":"#"},{"$ref":"#/definitions/schemaArray"}],"default":{}},"maxItems":{"$ref":"#/definitions/positiveInteger"},"minItems":{"$ref":"#/definitions/positiveIntegerDefault0"},"uniqueItems":{"type":"boolean","default":false},"maxProperties":{"$ref":"#/definitions/positiveInteger"},"minProperties":{"$ref":"#/definitions/positiveIntegerDefault0"},"required":{"$ref":"#/definitions/stringArray"},"additionalProperties":{"anyOf":[{"type":"boolean"},{"$ref":"#"}],"default":{}},"definitions":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"properties":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"patternProperties":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"dependencies":{"type":"object","additionalProperties":{"anyOf":[{"$ref":"#"},{"$ref":"#/definitions/stringArray"}]}},"enum":{"type":"array","minItems":1,"uniqueItems":true},"type":{"anyOf":[{"$ref":"#/definitions/simpleTypes"},{"type":"array","items":{"$ref":"#/definitions/simpleTypes"},"minItems":1,"uniqueItems":true}]},"allOf":{"$ref":"#/definitions/schemaArray"},"anyOf":{"$ref":"#/definitions/schemaArray"},"oneOf":{"$ref":"#/definitions/schemaArray"},"not":{"$ref":"#"}},"dependencies":{"exclusiveMaximum":["maximum"],"exclusiveMinimum":["minimum"]},"default":{}}
 );
 
@@ -133,19 +190,19 @@ local.assetsDict['/assets.swgg.json-schema.json'] = JSON.stringify(
 
 // https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/schemas/v2.0/schema.json
 // curl -Ls https://raw.githubusercontent.com/OAI/OpenAPI-Specification/3.0.0/schemas/v2.0/schema.json > /tmp/aa.json; node -e "console.log(JSON.stringify(require('/tmp/aa.json')));"
-local.assetsDict['/assets.swgg.schema.json'] = JSON.stringify(
+local.assetsDict["/assets.swgg.schema.json"] = JSON.stringify(
 {"title":"A JSON Schema for Swagger 2.0 API.","id":"http://swagger.io/v2/schema.json#","$schema":"http://json-schema.org/draft-04/schema#","type":"object","required":["swagger","info","paths"],"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"swagger":{"type":"string","enum":["2.0"],"description":"The Swagger version of this document."},"info":{"$ref":"#/definitions/info"},"host":{"type":"string","pattern":"^[^{}/ :\\\\]+(?::\\d+)?$","description":"The host (name or ip) of the API. Example: 'swagger.io'"},"basePath":{"type":"string","pattern":"^/","description":"The base path to the API. Example: '/api'."},"schemes":{"$ref":"#/definitions/schemesList"},"consumes":{"description":"A list of MIME types accepted by the API.","allOf":[{"$ref":"#/definitions/mediaTypeList"}]},"produces":{"description":"A list of MIME types the API can produce.","allOf":[{"$ref":"#/definitions/mediaTypeList"}]},"paths":{"$ref":"#/definitions/paths"},"definitions":{"$ref":"#/definitions/definitions"},"parameters":{"$ref":"#/definitions/parameterDefinitions"},"responses":{"$ref":"#/definitions/responseDefinitions"},"security":{"$ref":"#/definitions/security"},"securityDefinitions":{"$ref":"#/definitions/securityDefinitions"},"tags":{"type":"array","items":{"$ref":"#/definitions/tag"},"uniqueItems":true},"externalDocs":{"$ref":"#/definitions/externalDocs"}},"definitions":{"info":{"type":"object","description":"General information about the API.","required":["version","title"],"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"title":{"type":"string","description":"A unique and precise title of the API."},"version":{"type":"string","description":"A semantic version number of the API."},"description":{"type":"string","description":"A longer description of the API. Should be different from the title.  GitHub Flavored Markdown is allowed."},"termsOfService":{"type":"string","description":"The terms of service for the API."},"contact":{"$ref":"#/definitions/contact"},"license":{"$ref":"#/definitions/license"}}},"contact":{"type":"object","description":"Contact information for the owners of the API.","additionalProperties":false,"properties":{"name":{"type":"string","description":"The identifying name of the contact person/organization."},"url":{"type":"string","description":"The URL pointing to the contact information.","format":"uri"},"email":{"type":"string","description":"The email address of the contact person/organization.","format":"email"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"license":{"type":"object","required":["name"],"additionalProperties":false,"properties":{"name":{"type":"string","description":"The name of the license type. It's encouraged to use an OSI compatible license."},"url":{"type":"string","description":"The URL pointing to the license.","format":"uri"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"paths":{"type":"object","description":"Relative paths to the individual endpoints. They must be relative to the 'basePath'.","patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"},"^/":{"$ref":"#/definitions/pathItem"}},"additionalProperties":false},"definitions":{"type":"object","additionalProperties":{"$ref":"#/definitions/schema"},"description":"One or more JSON objects describing the schemas being consumed and produced by the API."},"parameterDefinitions":{"type":"object","additionalProperties":{"$ref":"#/definitions/parameter"},"description":"One or more JSON representations for parameters"},"responseDefinitions":{"type":"object","additionalProperties":{"$ref":"#/definitions/response"},"description":"One or more JSON representations for parameters"},"externalDocs":{"type":"object","additionalProperties":false,"description":"information about external documentation","required":["url"],"properties":{"description":{"type":"string"},"url":{"type":"string","format":"uri"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"examples":{"type":"object","additionalProperties":true},"mimeType":{"type":"string","description":"The MIME type of the HTTP message."},"operation":{"type":"object","required":["responses"],"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"tags":{"type":"array","items":{"type":"string"},"uniqueItems":true},"summary":{"type":"string","description":"A brief summary of the operation."},"description":{"type":"string","description":"A longer description of the operation, GitHub Flavored Markdown is allowed."},"externalDocs":{"$ref":"#/definitions/externalDocs"},"operationId":{"type":"string","description":"A unique identifier of the operation."},"produces":{"description":"A list of MIME types the API can produce.","allOf":[{"$ref":"#/definitions/mediaTypeList"}]},"consumes":{"description":"A list of MIME types the API can consume.","allOf":[{"$ref":"#/definitions/mediaTypeList"}]},"parameters":{"$ref":"#/definitions/parametersList"},"responses":{"$ref":"#/definitions/responses"},"schemes":{"$ref":"#/definitions/schemesList"},"deprecated":{"type":"boolean","default":false},"security":{"$ref":"#/definitions/security"}}},"pathItem":{"type":"object","additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"$ref":{"type":"string"},"get":{"$ref":"#/definitions/operation"},"put":{"$ref":"#/definitions/operation"},"post":{"$ref":"#/definitions/operation"},"delete":{"$ref":"#/definitions/operation"},"options":{"$ref":"#/definitions/operation"},"head":{"$ref":"#/definitions/operation"},"patch":{"$ref":"#/definitions/operation"},"parameters":{"$ref":"#/definitions/parametersList"}}},"responses":{"type":"object","description":"Response objects names can either be any valid HTTP status code or 'default'.","minProperties":1,"additionalProperties":false,"patternProperties":{"^([0-9]{3})$|^(default)$":{"$ref":"#/definitions/responseValue"},"^x-":{"$ref":"#/definitions/vendorExtension"}},"not":{"type":"object","additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}}},"responseValue":{"oneOf":[{"$ref":"#/definitions/response"},{"$ref":"#/definitions/jsonReference"}]},"response":{"type":"object","required":["description"],"properties":{"description":{"type":"string"},"schema":{"oneOf":[{"$ref":"#/definitions/schema"},{"$ref":"#/definitions/fileSchema"}]},"headers":{"$ref":"#/definitions/headers"},"examples":{"$ref":"#/definitions/examples"}},"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"headers":{"type":"object","additionalProperties":{"$ref":"#/definitions/header"}},"header":{"type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"type":"string","enum":["string","number","integer","boolean","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormat"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"vendorExtension":{"description":"Any property starting with x- is valid.","additionalProperties":true,"additionalItems":true},"bodyParameter":{"type":"object","required":["name","in","schema"],"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["body"]},"required":{"type":"boolean","description":"Determines whether or not this parameter is required or optional.","default":false},"schema":{"$ref":"#/definitions/schema"}},"additionalProperties":false},"headerParameterSubSchema":{"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"required":{"type":"boolean","description":"Determines whether or not this parameter is required or optional.","default":false},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["header"]},"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"type":{"type":"string","enum":["string","number","boolean","integer","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormat"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}}},"queryParameterSubSchema":{"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"required":{"type":"boolean","description":"Determines whether or not this parameter is required or optional.","default":false},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["query"]},"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"allowEmptyValue":{"type":"boolean","default":false,"description":"allows sending a parameter by name only or with an empty value."},"type":{"type":"string","enum":["string","number","boolean","integer","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormatWithMulti"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}}},"formDataParameterSubSchema":{"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"required":{"type":"boolean","description":"Determines whether or not this parameter is required or optional.","default":false},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["formData"]},"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"allowEmptyValue":{"type":"boolean","default":false,"description":"allows sending a parameter by name only or with an empty value."},"type":{"type":"string","enum":["string","number","boolean","integer","array","file"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormatWithMulti"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}}},"pathParameterSubSchema":{"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"required":["required"],"properties":{"required":{"type":"boolean","enum":[true],"description":"Determines whether or not this parameter is required or optional."},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["path"]},"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"type":{"type":"string","enum":["string","number","boolean","integer","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormat"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}}},"nonBodyParameter":{"type":"object","required":["name","in","type"],"oneOf":[{"$ref":"#/definitions/headerParameterSubSchema"},{"$ref":"#/definitions/formDataParameterSubSchema"},{"$ref":"#/definitions/queryParameterSubSchema"},{"$ref":"#/definitions/pathParameterSubSchema"}]},"parameter":{"oneOf":[{"$ref":"#/definitions/bodyParameter"},{"$ref":"#/definitions/nonBodyParameter"}]},"schema":{"type":"object","description":"A deterministic version of a JSON Schema object.","patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"$ref":{"type":"string"},"format":{"type":"string"},"title":{"$ref":"http://json-schema.org/draft-04/schema#/properties/title"},"description":{"$ref":"http://json-schema.org/draft-04/schema#/properties/description"},"default":{"$ref":"http://json-schema.org/draft-04/schema#/properties/default"},"multipleOf":{"$ref":"http://json-schema.org/draft-04/schema#/properties/multipleOf"},"maximum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/maximum"},"exclusiveMaximum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/exclusiveMaximum"},"minimum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/minimum"},"exclusiveMinimum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/exclusiveMinimum"},"maxLength":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minLength":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"pattern":{"$ref":"http://json-schema.org/draft-04/schema#/properties/pattern"},"maxItems":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minItems":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"uniqueItems":{"$ref":"http://json-schema.org/draft-04/schema#/properties/uniqueItems"},"maxProperties":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minProperties":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"required":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/stringArray"},"enum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/enum"},"additionalProperties":{"anyOf":[{"$ref":"#/definitions/schema"},{"type":"boolean"}],"default":{}},"type":{"$ref":"http://json-schema.org/draft-04/schema#/properties/type"},"items":{"anyOf":[{"$ref":"#/definitions/schema"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/schema"}}],"default":{}},"allOf":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/schema"}},"properties":{"type":"object","additionalProperties":{"$ref":"#/definitions/schema"},"default":{}},"discriminator":{"type":"string"},"readOnly":{"type":"boolean","default":false},"xml":{"$ref":"#/definitions/xml"},"externalDocs":{"$ref":"#/definitions/externalDocs"},"example":{}},"additionalProperties":false},"fileSchema":{"type":"object","description":"A deterministic version of a JSON Schema object.","patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"required":["type"],"properties":{"format":{"type":"string"},"title":{"$ref":"http://json-schema.org/draft-04/schema#/properties/title"},"description":{"$ref":"http://json-schema.org/draft-04/schema#/properties/description"},"default":{"$ref":"http://json-schema.org/draft-04/schema#/properties/default"},"required":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/stringArray"},"type":{"type":"string","enum":["file"]},"readOnly":{"type":"boolean","default":false},"externalDocs":{"$ref":"#/definitions/externalDocs"},"example":{}},"additionalProperties":false},"primitivesItems":{"type":"object","additionalProperties":false,"properties":{"type":{"type":"string","enum":["string","number","integer","boolean","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormat"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"security":{"type":"array","items":{"$ref":"#/definitions/securityRequirement"},"uniqueItems":true},"securityRequirement":{"type":"object","additionalProperties":{"type":"array","items":{"type":"string"},"uniqueItems":true}},"xml":{"type":"object","additionalProperties":false,"properties":{"name":{"type":"string"},"namespace":{"type":"string"},"prefix":{"type":"string"},"attribute":{"type":"boolean","default":false},"wrapped":{"type":"boolean","default":false}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"tag":{"type":"object","additionalProperties":false,"required":["name"],"properties":{"name":{"type":"string"},"description":{"type":"string"},"externalDocs":{"$ref":"#/definitions/externalDocs"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"securityDefinitions":{"type":"object","additionalProperties":{"oneOf":[{"$ref":"#/definitions/basicAuthenticationSecurity"},{"$ref":"#/definitions/apiKeySecurity"},{"$ref":"#/definitions/oauth2ImplicitSecurity"},{"$ref":"#/definitions/oauth2PasswordSecurity"},{"$ref":"#/definitions/oauth2ApplicationSecurity"},{"$ref":"#/definitions/oauth2AccessCodeSecurity"}]}},"basicAuthenticationSecurity":{"type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"type":"string","enum":["basic"]},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"apiKeySecurity":{"type":"object","additionalProperties":false,"required":["type","name","in"],"properties":{"type":{"type":"string","enum":["apiKey"]},"name":{"type":"string"},"in":{"type":"string","enum":["header","query"]},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2ImplicitSecurity":{"type":"object","additionalProperties":false,"required":["type","flow","authorizationUrl"],"properties":{"type":{"type":"string","enum":["oauth2"]},"flow":{"type":"string","enum":["implicit"]},"scopes":{"$ref":"#/definitions/oauth2Scopes"},"authorizationUrl":{"type":"string","format":"uri"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2PasswordSecurity":{"type":"object","additionalProperties":false,"required":["type","flow","tokenUrl"],"properties":{"type":{"type":"string","enum":["oauth2"]},"flow":{"type":"string","enum":["password"]},"scopes":{"$ref":"#/definitions/oauth2Scopes"},"tokenUrl":{"type":"string","format":"uri"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2ApplicationSecurity":{"type":"object","additionalProperties":false,"required":["type","flow","tokenUrl"],"properties":{"type":{"type":"string","enum":["oauth2"]},"flow":{"type":"string","enum":["application"]},"scopes":{"$ref":"#/definitions/oauth2Scopes"},"tokenUrl":{"type":"string","format":"uri"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2AccessCodeSecurity":{"type":"object","additionalProperties":false,"required":["type","flow","authorizationUrl","tokenUrl"],"properties":{"type":{"type":"string","enum":["oauth2"]},"flow":{"type":"string","enum":["accessCode"]},"scopes":{"$ref":"#/definitions/oauth2Scopes"},"authorizationUrl":{"type":"string","format":"uri"},"tokenUrl":{"type":"string","format":"uri"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2Scopes":{"type":"object","additionalProperties":{"type":"string"}},"mediaTypeList":{"type":"array","items":{"$ref":"#/definitions/mimeType"},"uniqueItems":true},"parametersList":{"type":"array","description":"The parameters needed to send a valid API call.","additionalItems":false,"items":{"oneOf":[{"$ref":"#/definitions/parameter"},{"$ref":"#/definitions/jsonReference"}]},"uniqueItems":true},"schemesList":{"type":"array","description":"The transfer protocol of the API.","items":{"type":"string","enum":["http","https","ws","wss"]},"uniqueItems":true},"collectionFormat":{"type":"string","enum":["csv","ssv","tsv","pipes"],"default":"csv"},"collectionFormatWithMulti":{"type":"string","enum":["csv","ssv","tsv","pipes","multi"],"default":"csv"},"title":{"$ref":"http://json-schema.org/draft-04/schema#/properties/title"},"description":{"$ref":"http://json-schema.org/draft-04/schema#/properties/description"},"default":{"$ref":"http://json-schema.org/draft-04/schema#/properties/default"},"multipleOf":{"$ref":"http://json-schema.org/draft-04/schema#/properties/multipleOf"},"maximum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/maximum"},"exclusiveMaximum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/exclusiveMaximum"},"minimum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/minimum"},"exclusiveMinimum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/exclusiveMinimum"},"maxLength":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minLength":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"pattern":{"$ref":"http://json-schema.org/draft-04/schema#/properties/pattern"},"maxItems":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minItems":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"uniqueItems":{"$ref":"http://json-schema.org/draft-04/schema#/properties/uniqueItems"},"enum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/enum"},"jsonReference":{"type":"object","required":["$ref"],"additionalProperties":false,"properties":{"$ref":{"type":"string"}}}}}
 );
 
 
 
-local.assetsDict['/assets.swgg.swagger.json'] = local.assetsDict['/assets.swgg.swagger.json'] || '';
+local.assetsDict["/assets.swgg.swagger.json"] = local.assetsDict["/assets.swgg.swagger.json"] || "";
 
 
 
 // https://petstore.swagger.io/v2/swagger.json
 // curl -Ls https://petstore.swagger.io/v2/swagger.json > /tmp/aa.json; node -e "console.log(JSON.stringify(require('/tmp/aa.json')));"
-local.assetsDict['/assets.swgg.swagger.petstore.json'] = JSON.stringify(
+local.assetsDict["/assets.swgg.swagger.petstore.json"] = JSON.stringify(
 {"swagger":"2.0","info":{"description":"This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.","version":"1.0.0","title":"Swagger Petstore","termsOfService":"http://swagger.io/terms/","contact":{"email":"apiteam@swagger.io"},"license":{"name":"Apache 2.0","url":"http://www.apache.org/licenses/LICENSE-2.0.html"}},"host":"petstore.swagger.io","basePath":"/v2","tags":[{"name":"pet","description":"Everything about your Pets","externalDocs":{"description":"Find out more","url":"http://swagger.io"}},{"name":"store","description":"Access to Petstore orders"},{"name":"user","description":"Operations about user","externalDocs":{"description":"Find out more about our store","url":"http://swagger.io"}}],"schemes":["http"],"paths":{"/pet":{"post":{"tags":["pet"],"summary":"Add a new pet to the store","description":"","operationId":"addPet","consumes":["application/json","application/xml"],"produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"Pet object that needs to be added to the store","required":true,"schema":{"$ref":"#/definitions/Pet"}}],"responses":{"405":{"description":"Invalid input"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]},"put":{"tags":["pet"],"summary":"Update an existing pet","description":"","operationId":"updatePet","consumes":["application/json","application/xml"],"produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"Pet object that needs to be added to the store","required":true,"schema":{"$ref":"#/definitions/Pet"}}],"responses":{"400":{"description":"Invalid ID supplied"},"404":{"description":"Pet not found"},"405":{"description":"Validation exception"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]}},"/pet/findByStatus":{"get":{"tags":["pet"],"summary":"Finds Pets by status","description":"Multiple status values can be provided with comma separated strings","operationId":"findPetsByStatus","produces":["application/xml","application/json"],"parameters":[{"name":"status","in":"query","description":"Status values that need to be considered for filter","required":true,"type":"array","items":{"type":"string","enum":["available","pending","sold"],"default":"available"},"collectionFormat":"multi"}],"responses":{"200":{"description":"successful operation","schema":{"type":"array","items":{"$ref":"#/definitions/Pet"}}},"400":{"description":"Invalid status value"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]}},"/pet/findByTags":{"get":{"tags":["pet"],"summary":"Finds Pets by tags","description":"Muliple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.","operationId":"findPetsByTags","produces":["application/xml","application/json"],"parameters":[{"name":"tags","in":"query","description":"Tags to filter by","required":true,"type":"array","items":{"type":"string"},"collectionFormat":"multi"}],"responses":{"200":{"description":"successful operation","schema":{"type":"array","items":{"$ref":"#/definitions/Pet"}}},"400":{"description":"Invalid tag value"}},"security":[{"petstore_auth":["write:pets","read:pets"]}],"deprecated":true}},"/pet/{petId}":{"get":{"tags":["pet"],"summary":"Find pet by ID","description":"Returns a single pet","operationId":"getPetById","produces":["application/xml","application/json"],"parameters":[{"name":"petId","in":"path","description":"ID of pet to return","required":true,"type":"integer","format":"int64"}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/Pet"}},"400":{"description":"Invalid ID supplied"},"404":{"description":"Pet not found"}},"security":[{"api_key":[]}]},"post":{"tags":["pet"],"summary":"Updates a pet in the store with form data","description":"","operationId":"updatePetWithForm","consumes":["application/x-www-form-urlencoded"],"produces":["application/xml","application/json"],"parameters":[{"name":"petId","in":"path","description":"ID of pet that needs to be updated","required":true,"type":"integer","format":"int64"},{"name":"name","in":"formData","description":"Updated name of the pet","required":false,"type":"string"},{"name":"status","in":"formData","description":"Updated status of the pet","required":false,"type":"string"}],"responses":{"405":{"description":"Invalid input"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]},"delete":{"tags":["pet"],"summary":"Deletes a pet","description":"","operationId":"deletePet","produces":["application/xml","application/json"],"parameters":[{"name":"api_key","in":"header","required":false,"type":"string"},{"name":"petId","in":"path","description":"Pet id to delete","required":true,"type":"integer","format":"int64"}],"responses":{"400":{"description":"Invalid ID supplied"},"404":{"description":"Pet not found"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]}},"/pet/{petId}/uploadImage":{"post":{"tags":["pet"],"summary":"uploads an image","description":"","operationId":"uploadFile","consumes":["multipart/form-data"],"produces":["application/json"],"parameters":[{"name":"petId","in":"path","description":"ID of pet to update","required":true,"type":"integer","format":"int64"},{"name":"additionalMetadata","in":"formData","description":"Additional data to pass to server","required":false,"type":"string"},{"name":"file","in":"formData","description":"file to upload","required":false,"type":"file"}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/ApiResponse"}}},"security":[{"petstore_auth":["write:pets","read:pets"]}]}},"/store/inventory":{"get":{"tags":["store"],"summary":"Returns pet inventories by status","description":"Returns a map of status codes to quantities","operationId":"getInventory","produces":["application/json"],"parameters":[],"responses":{"200":{"description":"successful operation","schema":{"type":"object","additionalProperties":{"type":"integer","format":"int32"}}}},"security":[{"api_key":[]}]}},"/store/order":{"post":{"tags":["store"],"summary":"Place an order for a pet","description":"","operationId":"placeOrder","produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"order placed for purchasing the pet","required":true,"schema":{"$ref":"#/definitions/Order"}}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/Order"}},"400":{"description":"Invalid Order"}}}},"/store/order/{orderId}":{"get":{"tags":["store"],"summary":"Find purchase order by ID","description":"For valid response try integer IDs with value >= 1 and <= 10. Other values will generated exceptions","operationId":"getOrderById","produces":["application/xml","application/json"],"parameters":[{"name":"orderId","in":"path","description":"ID of pet that needs to be fetched","required":true,"type":"integer","maximum":10,"minimum":1,"format":"int64"}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/Order"}},"400":{"description":"Invalid ID supplied"},"404":{"description":"Order not found"}}},"delete":{"tags":["store"],"summary":"Delete purchase order by ID","description":"For valid response try integer IDs with positive integer value. Negative or non-integer values will generate API errors","operationId":"deleteOrder","produces":["application/xml","application/json"],"parameters":[{"name":"orderId","in":"path","description":"ID of the order that needs to be deleted","required":true,"type":"integer","minimum":1,"format":"int64"}],"responses":{"400":{"description":"Invalid ID supplied"},"404":{"description":"Order not found"}}}},"/user":{"post":{"tags":["user"],"summary":"Create user","description":"This can only be done by the logged in user.","operationId":"createUser","produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"Created user object","required":true,"schema":{"$ref":"#/definitions/User"}}],"responses":{"default":{"description":"successful operation"}}}},"/user/createWithArray":{"post":{"tags":["user"],"summary":"Creates list of users with given input array","description":"","operationId":"createUsersWithArrayInput","produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"List of user object","required":true,"schema":{"type":"array","items":{"$ref":"#/definitions/User"}}}],"responses":{"default":{"description":"successful operation"}}}},"/user/createWithList":{"post":{"tags":["user"],"summary":"Creates list of users with given input array","description":"","operationId":"createUsersWithListInput","produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"List of user object","required":true,"schema":{"type":"array","items":{"$ref":"#/definitions/User"}}}],"responses":{"default":{"description":"successful operation"}}}},"/user/login":{"get":{"tags":["user"],"summary":"Logs user into the system","description":"","operationId":"loginUser","produces":["application/xml","application/json"],"parameters":[{"name":"username","in":"query","description":"The user name for login","required":true,"type":"string"},{"name":"password","in":"query","description":"The password for login in clear text","required":true,"type":"string"}],"responses":{"200":{"description":"successful operation","schema":{"type":"string"},"headers":{"X-Rate-Limit":{"type":"integer","format":"int32","description":"calls per hour allowed by the user"},"X-Expires-After":{"type":"string","format":"date-time","description":"date in UTC when token expires"}}},"400":{"description":"Invalid username/password supplied"}}}},"/user/logout":{"get":{"tags":["user"],"summary":"Logs out current logged in user session","description":"","operationId":"logoutUser","produces":["application/xml","application/json"],"parameters":[],"responses":{"default":{"description":"successful operation"}}}},"/user/{username}":{"get":{"tags":["user"],"summary":"Get user by user name","description":"","operationId":"getUserByName","produces":["application/xml","application/json"],"parameters":[{"name":"username","in":"path","description":"The name that needs to be fetched. Use user1 for testing. ","required":true,"type":"string"}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/User"}},"400":{"description":"Invalid username supplied"},"404":{"description":"User not found"}}},"put":{"tags":["user"],"summary":"Updated user","description":"This can only be done by the logged in user.","operationId":"updateUser","produces":["application/xml","application/json"],"parameters":[{"name":"username","in":"path","description":"name that need to be updated","required":true,"type":"string"},{"in":"body","name":"body","description":"Updated user object","required":true,"schema":{"$ref":"#/definitions/User"}}],"responses":{"400":{"description":"Invalid user supplied"},"404":{"description":"User not found"}}},"delete":{"tags":["user"],"summary":"Delete user","description":"This can only be done by the logged in user.","operationId":"deleteUser","produces":["application/xml","application/json"],"parameters":[{"name":"username","in":"path","description":"The name that needs to be deleted","required":true,"type":"string"}],"responses":{"400":{"description":"Invalid username supplied"},"404":{"description":"User not found"}}}}},"securityDefinitions":{"petstore_auth":{"type":"oauth2","authorizationUrl":"http://petstore.swagger.io/oauth/dialog","flow":"implicit","scopes":{"write:pets":"modify pets in your account","read:pets":"read your pets"}},"api_key":{"type":"apiKey","name":"api_key","in":"header"}},"definitions":{"Order":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"petId":{"type":"integer","format":"int64"},"quantity":{"type":"integer","format":"int32"},"shipDate":{"type":"string","format":"date-time"},"status":{"type":"string","description":"Order Status","enum":["placed","approved","delivered"]},"complete":{"type":"boolean","default":false}},"xml":{"name":"Order"}},"Category":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"name":{"type":"string"}},"xml":{"name":"Category"}},"User":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"username":{"type":"string"},"firstName":{"type":"string"},"lastName":{"type":"string"},"email":{"type":"string"},"password":{"type":"string"},"phone":{"type":"string"},"userStatus":{"type":"integer","format":"int32","description":"User Status"}},"xml":{"name":"User"}},"Tag":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"name":{"type":"string"}},"xml":{"name":"Tag"}},"Pet":{"type":"object","required":["name","photoUrls"],"properties":{"id":{"type":"integer","format":"int64"},"category":{"$ref":"#/definitions/Category"},"name":{"type":"string","example":"doggie"},"photoUrls":{"type":"array","xml":{"name":"photoUrl","wrapped":true},"items":{"type":"string"}},"tags":{"type":"array","xml":{"name":"tag","wrapped":true},"items":{"$ref":"#/definitions/Tag"}},"status":{"type":"string","description":"pet status in the store","enum":["available","pending","sold"]}},"xml":{"name":"Pet"}},"ApiResponse":{"type":"object","properties":{"code":{"type":"integer","format":"int32"},"type":{"type":"string"},"message":{"type":"string"}}}},"externalDocs":{"description":"Find out more about Swagger","url":"http://swagger.io"}}
 );
 
@@ -923,7 +980,7 @@ awoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=\
 // https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/main.handlebars
 local.templateUiMain = '\
 <!-- <div class="swggUiContainer"> -->\n\
-<h2 class="eventDelegateSubmit hx onEvent onEventUiReload thead">\n\
+<h2 class="eventDelegateSubmit hXxx thead" data-event="onEventUiReload">\n\
     <a class="td td1" href="https://github.com/kaizhu256/node-swgg" target="_blank">swgg</a>\n\
     <input\n\
         class="td td2"\n\
@@ -938,9 +995,9 @@ local.templateUiMain = '\
         type="text"\n\
         value="{{apiKeyValue}}"\n\
     >\n\
-    <button class="button eventDelegateClick onEvent onEventUiReload td td4">explore</button>\n\
+    <button class="button eventDelegateClick td td4" data-event="onEventUiReload">explore</button>\n\
     <button\n\
-        class="button eventDelegateClick onEvent onEventUiReload td td5"\n\
+        class="button eventDelegateClick td td5" data-event="onEventUiReload"\n\
         id="swggApiKeyClearButton1"\n\
     >\n\
         clear api-keys\n\
@@ -954,11 +1011,11 @@ local.templateUiMain = '\
 <div class="eventDelegateClick info reset">\n\
     {{#if info}}\n\
     {{#if info.x-swgg-homepage}}\n\
-    <h2 class="hx">\n\
+    <h2 class="hXxx">\n\
         <a href="{{info.x-swgg-homepage}}" target="_blank">{{info.title}} ({{info.version}})</a>\n\
     </h2>\n\
     {{#unless info.x-swgg-homepage}}\n\
-    <h2 class="hx">{{info.title}} ({{info.version}})</h2>\n\
+    <h2 class="hXxx">{{info.title}} ({{info.version}})</h2>\n\
     {{/if info.x-swgg-homepage}}\n\
     {{#if info.x-swgg-description}}\n\
     <div class="markdown">{{info.x-swgg-description markdownToHtml}}</div>\n\
@@ -972,13 +1029,13 @@ local.templateUiMain = '\
     </a><br>\n\
     {{/if x-swgg-downloadStandaloneApp}}\n\
     {{#if x-swgg-onEventDomDb}}\n\
-    <button class="button onEvent onEventDomDb" data-dom-on-event-db="dbResetButton1">\n\
+    <button class="button" data-event="onEventDomDb" data-on-event-dom-db="dbResetButton1">\n\
         reset database\n\
     </button><br>\n\
-    <button class="button onEvent onEventDomDb" data-dom-on-event-db="dbExportButton1">\n\
+    <button class="button" data-event="onEventDomDb" data-on-event-dom-db="dbExportButton1">\n\
         export database -&gt; file\n\
     </button><br>\n\
-    <button class="button onEvent onEventDomDb" data-dom-on-event-db="dbImportButton1">\n\
+    <button class="button" data-event="onEventDomDb" data-on-event-dom-db="dbImportButton1">\n\
         import database &lt;- file\n\
     </button><br>\n\
     {{/if x-swgg-onEventDomDb}}\n\
@@ -1060,7 +1117,7 @@ console.log("initialized nodejs swgg-client");\n\
 // https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/operation.handlebars
 local.templateUiOperation = '\
 <div class="operation" data-_method-path="{{_methodPath}}" id="{{id}}">\n\
-<div class="onEvent onEventOperationDisplayShow thead" tabindex="0">\n\
+<div class="thead" data-event="onEventOperationDisplayShow" tabindex="0">\n\
     <span class="td td1"></span>\n\
     <span class="method{{_method}} td td2">{{_method}}</span>\n\
     <span\n\
@@ -1105,7 +1162,7 @@ local.templateUiOperation = '\
         <span class="markdown td td2">{{value.description markdownToHtml}}</span>\n\
     </div>\n\
     {{/each responseList}}\n\
-    <button class="button onEvent onEventOperationAjax">try it out!</button>\n\
+    <button class="button" data-event="onEventOperationAjax">try it out!</button>\n\
     <h4 class="label">nodejs request</h4>\n\
     <pre class="requestJavascript" tabIndex="0"></pre>\n\
     <h4 class="label">curl request</h4>\n\
@@ -1135,12 +1192,12 @@ local.templateUiParameter = '\
     {{/if description}}\n\
 </span>\n\
 <span class="td td2">{{type2}}{{#if format2}}<br>({{format2}}){{/if format2}}</span>\n\
-<span class="onEvent onEventInputValidateAndAjax td td3">\n\
+<span class="td td3" data-event="onEventInputValidateAndAjax">\n\
     {{#if isTextarea}}\n\
     <div class="multilinePlaceholderContainer">\n\
         <pre class="multilinePlaceholderPre">{{placeholder}}</pre>\n\
         <textarea\n\
-            class="input multilinePlaceholderTextarea onEvent onEventInputTextareaChange"\n\
+            class="input multilinePlaceholderTextarea" data-event="onEventInputTextareaChange"\n\
             data-value-text="{{valueText encodeURIComponent notHtmlSafe}}"\n\
         ></textarea>\n\
     </div>\n\
@@ -1203,10 +1260,10 @@ local.templateUiResource = '\
     id="{{id}}"\n\
 >\n\
 <h3 class="thead">\n\
-    <span class="onEvent onEventResourceDisplayAction td td1 textOverflowEllipsis" tabindex="0">\n\
+    <span class="td td1 textOverflowEllipsis" data-event="onEventResourceDisplayAction" tabindex="0">\n\
         {{name}}:&nbsp;&nbsp;{{summary}}\n\
     </span>\n\
-    <span class="onEvent onEventResourceDisplayAction td td2" tabindex="0">\n\
+    <span class="td td2" data-event="onEventResourceDisplayAction" tabindex="0">\n\
     expand / collapse operations\n\
     </span>\n\
 </h3>\n\
@@ -1236,11 +1293,11 @@ swgg\n\
 
 
 /* validateLineSortedReset */
-local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.template.html']
-    .replace('assets.utility2.template.html', '')
-    .replace((/<title>.*?<\/title>/), '<title>swgg</title>')
-    .replace('\n<!-- utility2-comment\n', '\n')
-    .replace('\n</style>\n', '\
+local.assetsDict["/assets.swgg.html"] = local.assetsDict["/assets.utility2.template.html"]
+    .replace("assets.utility2.template.html", "")
+    .replace((/<title>.*?<\/title>/), "<title>swgg</title>")
+    .replace("\n<!-- utility2-comment\n", "\n")
+    .replace("\n</style>\n", '\
 \n\
 </style>\n\
 <style>\n\
@@ -1502,7 +1559,7 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
 .swggUiContainer > .info > div,\n\
 .swggUiContainer > .info > ul,\n\
 .swggUiContainer > .info > .button,\n\
-.swggUiContainer > .info > .hx {\n\
+.swggUiContainer > .info > .hXxx {\n\
     margin-top: 20px;\n\
 }\n\
 .swggUiContainer .label {\n\
@@ -1611,9 +1668,9 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
 </script>\n\
 <div class="swggUiContainer" style="margin: 0 auto; max-width: 1200px;">\n\
 ' + local.templateRender(local.templateUiMain, {
-    ajaxProgressText: 'loading script',
-    apiKeyValue: '',
-    urlSwaggerJson: ''
+    ajaxProgressText: "loading script",
+    apiKeyValue: "",
+    urlSwaggerJson: ""
 }) + '\
 </div>\n\
 <script>\n\
@@ -1624,11 +1681,18 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
  * this function will add media-hotkeys to elements with class=".domOnEventMediaHotkeysInit"\n\
  */\n\
     "use strict";\n\
+    var identity;\n\
     var input;\n\
     var onEvent;\n\
     if (window.domOnEventMediaHotkeys) {\n\
         return;\n\
     }\n\
+    identity = function (value) {\n\
+    /*\n\
+     * this function will return <value>\n\
+     */\n\
+        return value;\n\
+    };\n\
     window.domOnEventMediaHotkeys = function (event) {\n\
         var media;\n\
         if (event === "init") {\n\
@@ -1653,23 +1717,23 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
             switch (event.key || event.type) {\n\
             case ",":\n\
             case ".":\n\
-                media.currentTime += (event.key === "," && -0.03125) || 0.03125;\n\
+                media.currentTime += (event.key === "," && identity(-0.03125)) || 0.03125;\n\
                 break;\n\
             case "<":\n\
             case ">":\n\
-                media.playbackRate *= (event.key === "<" && 0.5) || 2;\n\
+                media.playbackRate *= (event.key === "<" && identity(0.5)) || 2;\n\
                 break;\n\
             case "ArrowDown":\n\
             case "ArrowUp":\n\
-                media.volume += (event.key === "ArrowDown" && -0.05) || 0.05;\n\
+                media.volume += (event.key === "ArrowDown" && identity(-0.05)) || 0.05;\n\
                 break;\n\
             case "ArrowLeft":\n\
             case "ArrowRight":\n\
-                media.currentTime += (event.key === "ArrowLeft" && -5) || 5;\n\
+                media.currentTime += (event.key === "ArrowLeft" && identity(-5)) || 5;\n\
                 break;\n\
             case "j":\n\
             case "l":\n\
-                media.currentTime += (event.key === "j" && -10) || 10;\n\
+                media.currentTime += (event.key === "j" && identity(-10)) || 10;\n\
                 break;\n\
             case "k":\n\
             case " ":\n\
@@ -1689,8 +1753,7 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
                 }\n\
                 return;\n\
             }\n\
-        } catch (ignore) {\n\
-        }\n\
+        } catch (ignore) {}\n\
         event.preventDefault();\n\
     };\n\
     onEvent = window.domOnEventMediaHotkeys;\n\
@@ -1702,15 +1765,18 @@ local.assetsDict['/assets.swgg.html'] = local.assetsDict['/assets.utility2.templ
     document.body.appendChild(input);\n\
     onEvent("init");\n\
 }());\n\
-document.querySelector(".swggUiContainer > .thead > .td2").value =\n\
-        ((/\\bmodeSwaggerJsonUrl=([^&]+)/g).exec(location.search) || {})[1] ||\n\
-        "assets.swgg.swagger.json";\n\
+\n\
+\n\
+\n\
+document.querySelector(".swggUiContainer > .thead > .td2").value = ((\n\
+    /\\bmodeSwaggerJsonUrl=([^&]+)|$/gm\n\
+).exec(location.search)[1] || "assets.swgg.swagger.json");\n\
 </script>\n\
 <script src="assets.utility2.rollup.js"></script>\n\
 <script>\n\
 /*jslint browser: true*/\n\
 window.local = window.local || window.swgg;\n\
-window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
+window.swgg.uiEventListenerDict.onEventUiReload({swggInit: true});\n\
 </script>\n\
 <!-- swgg-script-extra-begin -->\n\
 <!-- swgg-script-extra-end -->\n\
@@ -1720,14 +1786,12 @@ window.swgg.uiEventListenerDict[".onEventUiReload"]({swggInit: true});\n\
 /* jslint ignore:end */
 local.assetsDict["/assets.swgg.swagger.schema.json"] = local.jsonStringifyOrdered(
     local.objectSetOverride(
-        JSON.parse(local.assetsDict["/assets.swgg.json-schema.json"].replace(
-            (/"\$ref":".*?#/g),
-            "\"$ref\":\"http://json-schema.org/draft-04/schema#"
-        )),
-        JSON.parse(local.assetsDict["/assets.swgg.schema.json"].replace(
-            (/"\$ref":".*?#/g),
-            "\"$ref\":\"http://json-schema.org/draft-04/schema#"
-        )),
+        JSON.parse(local.assetsDict["/assets.swgg.json-schema.json"].replace((
+            /"\$ref":".*?#/g
+        ), "\"$ref\":\"http://json-schema.org/draft-04/schema#")),
+        JSON.parse(local.assetsDict["/assets.swgg.schema.json"].replace((
+            /"\$ref":".*?#/g
+        ), "\"$ref\":\"http://json-schema.org/draft-04/schema#")),
         2
     )
 );
@@ -1738,15 +1802,17 @@ local.swaggerSchemaJson = JSON.parse(local.assetsDict["/assets.swgg.swagger.sche
 
 // run shared js-env code - function
 (function () {
-
-
-
-local.apiAjax = function (self, options, onError) {
+local.apiAjax = function (that, options, onError) {
 /*
- * this function will send a swagger-api ajax-request with the operation self
+ * this function will send a swagger-api ajax-request with the operation that
  */
     var tmp;
-    local.objectSetDefault(options, {data: "", operation: self, paramDict: {}, url: ""});
+    local.objectSetDefault(options, {
+        data: "",
+        operation: that,
+        paramDict: {},
+        url: ""
+    });
     if (options.modeDefault) {
         local.normalizeSwaggerParamDict(options);
     }
@@ -1755,30 +1821,32 @@ local.apiAjax = function (self, options, onError) {
         // normalize paramDict
         data: local.normalizeSwaggerParamDict({
             modeNoDefault: options.modeNoDefault,
-            operation: self,
+            operation: that,
             paramDict: local.jsonCopy(options.paramDict)
         }).paramDict,
         dataReadonlyRemove: options.paramDict,
-        prefix: ["operation", self._methodPath],
-        parameters: self.parameters,
+        prefix: ["operation", that._methodPath],
+        parameters: that.parameters,
         swaggerJson: local.swaggerJson
     })[0];
     // init options-defaults
     local.objectSetDefault(options, {
-        inForm: self._consumes0 === "multipart/form-data"
+        inForm: that._consumes0 === "multipart/form-data"
         ? new local.FormData()
         : "",
         inHeader: {},
-        inPath: self._path.replace((/#.*?$/), ""),
+        inPath: that._path.replace((
+            /#.*?$/
+        ), ""),
         inQuery: "",
         headers: {},
-        method: self._method,
-        responseType: self._consumes0.indexOf("application/octet-stream") === 0
+        method: that._method,
+        responseType: that._consumes0.indexOf("application/octet-stream") === 0
         ? "arraybuffer"
         : ""
     });
     // init paramDict
-    self.parameters.forEach(function (schemaP) {
+    that.parameters.forEach(function (schemaP) {
         tmp = options.paramDict[schemaP.name];
         if (local.isNullOrUndefined(tmp)) {
             return;
@@ -1815,7 +1883,7 @@ local.apiAjax = function (self, options, onError) {
             default:
                 tmp = tmp.join(",");
             }
-        } else if (typeof tmp !== "string" && !(tmp instanceof local.Blob)) {
+        } else if (typeof tmp !== "string" && !(tmp && tmp.constructor === local.Blob)) {
             tmp = JSON.stringify(tmp);
         }
         switch (schemaP.in) {
@@ -1823,7 +1891,7 @@ local.apiAjax = function (self, options, onError) {
             options.inBody = tmp;
             break;
         case "formData":
-            switch (self._consumes0) {
+            switch (that._consumes0) {
             case "multipart/form-data":
                 options.inForm.append(schemaP.name, tmp, tmp && tmp.name);
                 break;
@@ -1832,23 +1900,31 @@ local.apiAjax = function (self, options, onError) {
                 if (!options.inForm) {
                     options.inForm += "<?xml version=\"1.0\"?>";
                 }
-                options.inForm += "\n<" + schemaP.name + ">" + "<![CDATA[" +
-                        tmp.replace((/\]\]>/g), "]]&#x3e;") + "]]></" + schemaP.name + ">";
+                options.inForm += (
+                    "\n<" + schemaP.name + ">" + "<![CDATA["
+                    + tmp.replace((
+                        /\]\]>/g
+                    ), "]]&#x3e;") + "]]></" + schemaP.name + ">"
+                );
                 break;
             default:
                 if (options.inForm) {
                     options.inForm += "&";
                 }
-                options.inForm += encodeURIComponent(schemaP.name) + "=" +
-                        encodeURIComponent(tmp);
+                options.inForm += (
+                    encodeURIComponent(schemaP.name) + "="
+                    + encodeURIComponent(tmp)
+                );
             }
             break;
         case "header":
             options.inHeader[encodeURIComponent(schemaP.name.toLowerCase())] = tmp;
             break;
         case "query":
-            options.inQuery += "&" + encodeURIComponent(schemaP.name) + "=" +
-                    encodeURIComponent(tmp);
+            options.inQuery += (
+                "&" + encodeURIComponent(schemaP.name) + "="
+                + encodeURIComponent(tmp)
+            );
             break;
         case "path":
             options.inPath = options.inPath
@@ -1861,22 +1937,28 @@ local.apiAjax = function (self, options, onError) {
     // init headers
     local.objectSetOverride(options.headers, options.inHeader);
     // init headers - Content-Type
-    options.headers["Content-Type"] = self._consumes0;
+    options.headers["Content-Type"] = that._consumes0;
     // init headers - Authorization
     options.jwtEncrypted = options.jwtEncrypted || local.userJwtEncrypted;
     if (options.jwtEncrypted) {
-        options.headers.Authorization = options.headers.Authorization ||
-                "Bearer " + options.jwtEncrypted;
+        options.headers.Authorization = (
+            options.headers.Authorization
+            || "Bearer " + options.jwtEncrypted
+        );
     }
     // init url
     options.url = "";
-    options.url += (self["x-swgg-schemes"] || local.swaggerJson.schemes || [])[0] ||
-            local.urlParse("").protocol.slice(0, -1);
+    options.url += (
+        local.identity(that["x-swgg-schemes"] || local.swaggerJson.schemes || [])[0]
+        || local.urlParse("").protocol.slice(0, -1)
+    );
     options.url += "://";
-    options.url += self["x-swgg-host"] || local.swaggerJson.host || local.urlParse("").host;
+    options.url += that["x-swgg-host"] || local.swaggerJson.host || local.urlParse("").host;
     options.url += local.swaggerJsonBasePath;
     options.url += options.inPath + "?" + options.inQuery.slice(1);
-    options.url = options.url.replace((/\?$/), "");
+    options.url = options.url.replace((
+        /\?$/
+    ), "");
     if (options.modeAjax === "validate" || (options.error && options.modeAjax !== "ajax")) {
         onError(options.error);
         return;
@@ -1889,8 +1971,10 @@ local.apiAjax = function (self, options, onError) {
             xhr.responseJson = JSON.parse(xhr.responseText);
         }, local.nop);
         // init userJwtEncrypted
-        local.userJwtEncrypted = xhr.responseHeaders["swgg-jwt-encrypted"] ||
-                local.userJwtEncrypted;
+        local.userJwtEncrypted = (
+            xhr.responseHeaders["swgg-jwt-encrypted"]
+            || local.userJwtEncrypted
+        );
         onError(error, xhr);
     });
 };
@@ -2040,9 +2124,11 @@ local.apiUpdate = function (swaggerJson) {
     // restore tags
     local.swaggerJson.tags = tmp;
     // init swaggerJsonBasePath
-    local.swaggerJsonBasePath = local.swaggerJson.basePath === "/"
-    ? ""
-    : local.swaggerJson.basePath;
+    local.swaggerJsonBasePath = (
+        local.swaggerJson.basePath === "/"
+        ? ""
+        : local.swaggerJson.basePath
+    );
     Object.keys(swaggerJson.definitions).forEach(function (schemaName) {
         swaggerJson.definitions[schemaName] = local.jsonCopy(
             local.swaggerValidateDataSchema({
@@ -2068,17 +2154,16 @@ local.apiUpdate = function (swaggerJson) {
     // init apiDict from paths
     Object.keys(swaggerJson.paths).forEach(function (path) {
         Object.keys(swaggerJson.paths[path]).forEach(function (method) {
-            var self;
-            self = local.jsonCopy(swaggerJson.paths[path][method]);
-            self._method = method.toUpperCase();
-            self._path = path;
-            tmp = "operationId." + self.operationId;
-            local.apiDict[tmp] = local.objectSetOverride(local.apiDict[tmp], self);
+            var that;
+            that = local.jsonCopy(swaggerJson.paths[path][method]);
+            that._method = method.toUpperCase();
+            that._path = path;
+            tmp = "operationId." + that.operationId;
+            local.apiDict[tmp] = local.objectSetOverride(local.apiDict[tmp], that);
         });
     });
     // init apiDict from x-swgg-apiDict
     Object.keys(swaggerJson["x-swgg-apiDict"] || {}).forEach(function (key) {
-        // init self
         local.apiDict[key] = local.objectSetOverride(
             local.apiDict[key],
             local.jsonCopy(swaggerJson["x-swgg-apiDict"][key])
@@ -2086,66 +2171,86 @@ local.apiUpdate = function (swaggerJson) {
     });
     // init apiDict
     Object.keys(local.apiDict).forEach(function (key) {
-        var self;
+        var that;
         if (key.indexOf("operationId.") !== 0) {
             return;
         }
         key = key.split(".");
-        self = local.apiDict[key.join(".")];
+        that = local.apiDict[key.join(".")];
         // init operationId
-        self.operationId = self.operationId || key.slice(1).join(".");
+        that.operationId = that.operationId || key.slice(1).join(".");
         // init _crudType
-        self._crudType = self._crudType || key.slice(2);
-        self._crudType[0] = self._crudType[0] || self.operationId;
+        that._crudType = that._crudType || key.slice(2);
+        that._crudType[0] = that._crudType[0] || that.operationId;
         // init _fileUploadNumber
-        self._fileUploadNumber = Number(
-            self._crudType[0] === "fileUploadManyByForm" && self._crudType[1]
+        that._fileUploadNumber = Number(
+            that._crudType[0] === "fileUploadManyByForm" && that._crudType[1]
         ) || 1;
         // init _idBackend and _idName
-        tmp = local.idNameInit({crudType: self._crudType});
-        self._idBackend = tmp.idBackend;
-        self._idName = tmp.idName;
+        tmp = local.idNameInit({
+            crudType: that._crudType
+        });
+        that._idBackend = tmp.idBackend;
+        that._idName = tmp.idName;
         // init tags
-        self.tags = self.tags || [];
-        self.tags[0] = self.tags[0] || key[1];
+        that.tags = that.tags || [];
+        that.tags[0] = that.tags[0] || key[1];
         // init templateApiDict
-        if (local.templateApiDict[self._crudType[0]]) {
+        if (local.templateApiDict[that._crudType[0]]) {
             local.objectSetDefault(
-                self,
-                JSON.parse(local.templateApiDict[self._crudType[0]]
-                .replace((/\{\{_fileUploadNumber\}\}/g), self._fileUploadNumber)
-                .replace((/\{\{_idBackend\}\}/g), self._idBackend)
-                .replace((/\{\{_idName\}\}/g), self._idName)
-                .replace((/\{\{_operationId\}\}/g), self.operationId)
-                .replace((/\{\{_schemaName\}\}/g), self._schemaName)
-                .replace((/\{\{_tags0\}\}/g), self.tags[0]))
+                that,
+                JSON.parse(local.templateApiDict[that._crudType[0]]
+                .replace((
+                    /\{\{_fileUploadNumber\}\}/g
+                ), that._fileUploadNumber)
+                .replace((
+                    /\{\{_idBackend\}\}/g
+                ), that._idBackend)
+                .replace((
+                    /\{\{_idName\}\}/g
+                ), that._idName)
+                .replace((
+                    /\{\{_operationId\}\}/g
+                ), that.operationId)
+                .replace((
+                    /\{\{_schemaName\}\}/g
+                ), that._schemaName)
+                .replace((
+                    /\{\{_tags0\}\}/g
+                ), that.tags[0]))
             );
         }
         // init default
-        local.objectSetDefault(self, {
+        local.objectSetDefault(that, {
             _schemaPDict: {},
             consumes: [],
             parameters: [],
-            responses: {"200": {
-                description: "ok - " + "http://jsonapi.org/format/#document-top-level",
-                schema: {$ref: "#/definitions/BuiltinJsonapiResponse"}
-            }},
+            responses: {
+                "200": {
+                    description: "ok - " + "http://jsonapi.org/format/#document-top-level",
+                    schema: {
+                        $ref: "#/definitions/BuiltinJsonapiResponse"
+                    }
+                }
+            },
             tags: []
         });
         // init _consumes0
-        tmp = self["x-swgg-consumes0"] || (self.consumes && self.consumes[0]);
-        self.parameters.some(function (schemaP) {
+        tmp = that["x-swgg-consumes0"] || (that.consumes && that.consumes[0]);
+        that.parameters.some(function (schemaP) {
             tmp = tmp || (
                 schemaP.in === "body"
                 && schemaP.schema.type === "string"
-                && "text/plain"
+                && local.identity("text/plain")
             );
             return tmp;
         });
-        self._consumes0 = tmp || "application/json";
+        that._consumes0 = tmp || "application/json";
         // init _methodPath
-        self._methodPath = self._method + " " + self._path.replace((/\{.*?\}/g), "{}");
-        self.parameters.forEach(function (schemaP) {
+        that._methodPath = that._method + " " + that._path.replace((
+            /\{.*?\}/g
+        ), "{}");
+        that.parameters.forEach(function (schemaP) {
             // dereference schemaP
             String(schemaP["x-swgg-$ref"] || schemaP.$ref).replace((
                 /#\/parameters\/(.+?$)/m
@@ -2157,72 +2262,78 @@ local.apiUpdate = function (swaggerJson) {
                 delete schemaP.$ref;
             });
             // init _idName.format and _idName.type
-            if (self._schemaName && schemaP.name === self._idName) {
-                schemaP.format = swaggerJson.definitions[self._schemaName]
-                .properties[self._idBackend].format;
-                schemaP.type = local.schemaPType(swaggerJson.definitions[self._schemaName]
-                .properties[self._idBackend]);
+            if (that._schemaName && schemaP.name === that._idName) {
+                schemaP.format = swaggerJson.definitions[that._schemaName]
+                .properties[that._idBackend].format;
+                schemaP.type = local.schemaPType(swaggerJson.definitions[that._schemaName]
+                .properties[that._idBackend]);
             }
             // init _schemaPDict
-            self._schemaPDict[schemaP.name] = schemaP;
+            that._schemaPDict[schemaP.name] = schemaP;
         });
         // init required
         [
-            self["x-swgg-notRequired"],
-            self["x-swgg-required"]
+            that["x-swgg-notRequired"],
+            that["x-swgg-required"]
         ].forEach(function (element, ii) {
             (element || []).forEach(function (name) {
-                self._schemaPDict[name].required = Boolean(ii);
+                that._schemaPDict[name].required = Boolean(ii);
             });
         });
-        switch (self._crudType[0]) {
+        switch (that._crudType[0]) {
         // add extra file-upload forms
         case "fileUploadManyByForm":
             tmp = 1;
-            while (tmp <= self._fileUploadNumber) {
-                self.parameters[tmp] = local.jsonCopy(self.parameters[1]);
-                self.parameters[tmp].name = "file" + tmp;
+            while (tmp <= that._fileUploadNumber) {
+                that.parameters[tmp] = local.jsonCopy(that.parameters[1]);
+                that.parameters[tmp].name = "file" + tmp;
                 tmp += 1;
             }
             break;
         }
         // update apiDict
-        self = local.jsonCopy(self);
-        local.apiDict[key.join(".")] = self;
-        local.apiDict[self._methodPath] = self;
+        that = local.jsonCopy(that);
+        local.apiDict[key.join(".")] = that;
+        local.apiDict[that._methodPath] = that;
         // init ajax
-        self.ajax = function (swaggerJson, onError) {
-            return local.apiAjax(self, swaggerJson, onError);
+        that.ajax = function (swaggerJson, onError) {
+            return local.apiAjax(that, swaggerJson, onError);
         };
-        self._ajaxToString = self.ajax.toString()
-        .replace("{", (
-            "{\n" +
-            "/*\n" +
-            " * this function will run the api-call " +
-            JSON.stringify(self._methodPath) + "\n" +
-            " * example usage:" + (
-                "\n" +
-                "swgg.apiDict[" + JSON.stringify(key.join(".")) + "].ajax(" +
-                JSON.stringify(local.normalizeSwaggerParamDict({
-                    modeDefault: true,
-                    operation: self,
-                    paramDict: {}
-                }).paramDict, null, 4) +
-                ", function (error, data) {\n" +
-                "    if (error) {\n" +
-                "        console.error(error);\n" +
-                "        return;\n" +
-                "    }\n" +
-                "    console.log(data.responseJson || data.responseText);\n" +
-                "});"
-            ).replace((/\n/g), "\n    ") + "\n */"
-        )
-                .replace((/\n/g), "\n                "));
-        self.ajax.toString = function () {
-            return self._ajaxToString;
+        that._ajaxToString = (
+            that.ajax.toString()
+            .replace("{", (
+                "{\n"
+                + "/*\n"
+                + " * this function will run the api-call "
+                + JSON.stringify(that._methodPath) + "\n"
+                + " * example usage:" + (
+                    "\n"
+                    + "swgg.apiDict[" + JSON.stringify(key.join(".")) + "].ajax("
+                    + JSON.stringify(local.normalizeSwaggerParamDict({
+                        modeDefault: true,
+                        operation: that,
+                        paramDict: {}
+                    }).paramDict, null, 4)
+                    + ", function (error, data) {\n"
+                    + "    if (error) {\n"
+                    + "        console.error(error);\n"
+                    + "        return;\n"
+                    + "    }\n"
+                    + "    console.log(data.responseJson || data.responseText);\n"
+                    + "});"
+                ).replace((
+                    /\n/g
+                ), "\n    ") + "\n */"
+            )
+                .replace((
+                /\n/g
+            ), "\n                "))
+        );
+        that.ajax.toString = function () {
+            return that._ajaxToString;
         };
-        // remove underscored keys from self
-        tmp = local.jsonCopy(self);
+        // remove underscored keys from that
+        tmp = local.jsonCopy(that);
         Object.keys(tmp).forEach(function (key) {
             if (key[0] === "_") {
                 tmp[key] = undefined;
@@ -2230,7 +2341,11 @@ local.apiUpdate = function (swaggerJson) {
         });
         // update paths
         local.objectSetOverride(swaggerJson, local.objectLiteralize({
-            paths: {"$[]": [self._path, {"$[]": [self._method.toLowerCase(), tmp]}]}
+            paths: {
+                "$[]": [that._path, {
+                    "$[]": [that._method.toLowerCase(), tmp]
+                }]
+            }
         }), 3);
     });
     // normalize swaggerJson
@@ -2240,8 +2355,10 @@ local.apiUpdate = function (swaggerJson) {
         local.swaggerValidate(local.swaggerJson);
     }, local.onErrorDefault);
     // init corsForwardProxyHost
-    local.corsForwardProxyHost = local.corsForwardProxyHost ||
-            local.swaggerJson["x-swgg-corsForwardProxyHost"];
+    local.corsForwardProxyHost = (
+        local.corsForwardProxyHost
+        || local.swaggerJson["x-swgg-corsForwardProxyHost"]
+    );
     // init assets.swgg.swagger.server.json
     local.assetsDict["/assets.swgg.swagger.server.json"] = JSON.stringify(
         local.swaggerJson
@@ -2258,9 +2375,11 @@ local.dbFieldRandomCreate = function (options) {
     var min;
     var schemaP;
     var value;
-    depth = Number.isFinite(options.depth)
-    ? options.depth
-    : 3;
+    depth = (
+        Number.isFinite(options.depth)
+        ? options.depth
+        : 3
+    );
     schemaP = options.schemaP;
     schemaP = schemaP.schema || schemaP;
     if (schemaP.readOnly) {
@@ -2272,20 +2391,26 @@ local.dbFieldRandomCreate = function (options) {
     }
     // init enum-value
     if (schemaP.enum) {
-        value = options.modeNotRandom
-        ? schemaP.enum[0]
-        : local.listGetElementRandom(schemaP.enum);
-        return local.schemaPType(schemaP) === "array"
-        ? [value]
-        : value;
+        value = (
+            options.modeNotRandom
+            ? schemaP.enum[0]
+            : local.listGetElementRandom(schemaP.enum)
+        );
+        return (
+            local.schemaPType(schemaP) === "array"
+            ? [value]
+            : value
+        );
     }
     // init default-value
     value = null;
     switch (local.schemaPType(schemaP)) {
     case "boolean":
-        value = options.modeNotRandom
-        ? false
-        : Boolean(Math.random() > 0.5);
+        value = (
+            options.modeNotRandom
+            ? false
+            : Boolean(Math.random() > 0.5)
+        );
         break;
     // 5.1. Validation keywords for numeric instances (number and integer)
     case "integer":
@@ -2293,9 +2418,11 @@ local.dbFieldRandomCreate = function (options) {
         max = schemaP.maximum;
         min = schemaP.minimum;
         if (options.modeNotRandom) {
-            value = !(0 < min || max < 0)
-            ? 0
-            : min || max;
+            value = (
+                !(0 < min || max < 0)
+                ? 0
+                : min || max
+            );
         } else {
             if (!(Number.isFinite(max) && Number.isFinite(min))) {
                 if (!Number.isFinite(max) && !Number.isFinite(min)) {
@@ -2333,9 +2460,11 @@ local.dbFieldRandomCreate = function (options) {
         break;
     // 5.2. Validation keywords for strings
     case "string":
-        value = options.modeNotRandom
-        ? "abcd1234"
-        : ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1);
+        value = (
+            options.modeNotRandom
+            ? "abcd1234"
+            : ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1)
+        );
         switch (schemaP.format) {
         case "byte":
             value = local.base64FromBuffer(value);
@@ -2348,15 +2477,19 @@ local.dbFieldRandomCreate = function (options) {
             value = value + "@example.com";
             break;
         case "json":
-            value = JSON.stringify({foo: value});
+            value = JSON.stringify({
+                foo: value
+            });
             break;
         case "phone":
-            value = options.modeNotRandom
-            ? "+123 (1234) 1234-1234"
-            : "+" + Math.random().toString().slice(-3) +
-                    " (" + Math.random().toString().slice(-4) + ") " +
-                    Math.random().toString().slice(-4) + "-" +
-                    Math.random().toString().slice(-4);
+            value = (
+                options.modeNotRandom
+                ? "+123 (1234) 1234-1234"
+                : "+" + Math.random().toString().slice(-3)
+                + " (" + Math.random().toString().slice(-4) + ") "
+                + Math.random().toString().slice(-4) + "-"
+                + Math.random().toString().slice(-4)
+            );
             break;
         }
         while (value.length < schemaP.minLength) {
@@ -2423,11 +2556,14 @@ local.dbRowRandomCreate = function (options) {
 /*
  * this function will create a random dbRow from options.properties
  */
-    var ii;
     var dbRow;
+    var ii;
     var properties;
     dbRow = {};
-    options = local.objectSetDefault(options, {override: local.nop, prefix: ["dbRow"]});
+    options = local.objectSetDefault(options, {
+        override: local.nop,
+        prefix: ["dbRow"]
+    });
     properties = local.swaggerValidateDataSchema({
         // dereference property
         modeDereference: true,
@@ -2438,7 +2574,9 @@ local.dbRowRandomCreate = function (options) {
     properties = local.jsonCopy((properties && properties.properties) || {});
     ii = Object.keys(properties).length;
     while (ii < (options.schema && options.schema.minProperties)) {
-        properties["property" + ii] = {type: "string"};
+        properties["property" + ii] = {
+            type: "string"
+        };
         ii += 1;
     }
     Object.keys(properties).forEach(function (key) {
@@ -2475,7 +2613,9 @@ local.idDomElementCreate = function (seed) {
     local.idDomElementDict[seed] = (local.idDomElementDict[seed] || 0) + 1;
     return encodeURIComponent(
         seed + "_" + local.idDomElementDict[seed]
-    ).replace((/\W/g), "_");
+    ).replace((
+        /\W/g
+    ), "_");
 };
 
 local.idNameInit = function (options) {
@@ -2509,7 +2649,7 @@ local.middlewareBodyParse = function (request, response, nextMiddleware) {
     var boundary;
     var crlf;
     var data;
-    var header;
+    var headerParse;
     var ii;
     var jj;
     var name;
@@ -2518,6 +2658,23 @@ local.middlewareBodyParse = function (request, response, nextMiddleware) {
         nextMiddleware();
         return;
     }
+    headerParse = function () {
+        local.bufferToString(request.bodyRaw.slice(ii, ii + 1024)).replace((
+            /^content-disposition:\u0020?form-data;(.+?)\r\n(?:content-type:\u0020?(.*?)$)?/im
+        ), function (ignore, match1, match2) {
+            data = {
+                contentType: match2,
+                name: ""
+            };
+            match1.replace((
+                /(\w+)="([^"]+)/g
+            ), function (ignore, match1, match2) {
+                data[match1.toLowerCase()] = match2;
+            });
+            name = data.name;
+            request.swgg.bodyMeta[name] = data;
+        });
+    };
     switch (request.swgg.operation._consumes0) {
     // parse application/x-www-form-urlencoded, e.g.
     // aa=hello%20world&bb=bye%20world
@@ -2527,18 +2684,17 @@ local.middlewareBodyParse = function (request, response, nextMiddleware) {
         break;
     case "application/xml":
         request.swgg.bodyParsed = {};
-        local.bufferToString(request.bodyRaw).replace(
-            (/<(.+?)><!\[CDATA\[([\S\s]+?)\]\]>/g),
-            function (name, match1, value) {
-                name = match1;
-                name = decodeURIComponent(name);
-                request.swgg.bodyParsed[name] = local.schemaPType(
-                    request.swgg.operation._schemaPDict[name]
-                ) === "string"
+        local.bufferToString(request.bodyRaw).replace((
+            /<(.+?)><!\[CDATA\[([\S\s]+?)\]\]>/g
+        ), function (name, match1, value) {
+            name = match1;
+            name = decodeURIComponent(name);
+            request.swgg.bodyParsed[name] = (
+                local.schemaPType(request.swgg.operation._schemaPDict[name]) === "string"
                 ? value
-                : JSON.parse(value);
-            }
-        );
+                : JSON.parse(value)
+            );
+        });
         break;
     /*
      * parse multipart/form-data, e.g.
@@ -2580,17 +2736,7 @@ local.middlewareBodyParse = function (request, response, nextMiddleware) {
             if (jj < 0) {
                 break;
             }
-            header = local.bufferToString(request.bodyRaw.slice(ii, ii + 1024))
-            .split("\r\n").slice(0, 2).join("\r\n");
-            name = (/^content-disposition:.*?\bname="([^"]+)/im).exec(header);
-            name = name && name[1];
-            request.swgg.bodyMeta[name] = {
-                contentType: ((/^content-type:(.*)/im)
-                .exec(header) || {"1": ""})[1].trim() || null,
-                filename: ((/^content-disposition:.*?\bfilename="([^"]+)/im)
-                .exec(header) || {"1": ""})[1].trim() || null,
-                name: name
-            };
+            headerParse();
             ii = local.bufferIndexOfSubBuffer(
                 request.bodyRaw,
                 [0x0d, 0x0a, 0x0d, 0x0a],
@@ -2701,11 +2847,15 @@ local.middlewareCrudBuiltin = function (request, response, nextMiddleware) {
                 crud.dbTable.crudRemoveOneById(crud.queryById, options.onNext);
                 break;
             case "fileGetOneById":
-                local.dbTableFile = local.db.dbTableCreateOne({name: "File"});
+                local.dbTableFile = local.db.dbTableCreateOne({
+                    name: "File"
+                });
                 crud.dbTable.crudGetOneById(crud.queryById, options.onNext);
                 break;
             case "fileUploadManyByForm":
-                local.dbTableFile = local.db.dbTableCreateOne({name: "File"});
+                local.dbTableFile = local.db.dbTableCreateOne({
+                    name: "File"
+                });
                 request.swgg.paramDict = {};
                 Object.keys(request.swgg.bodyMeta).forEach(function (key) {
                     if (typeof request.swgg.bodyMeta[key].filename !== "string") {
@@ -2721,16 +2871,18 @@ local.middlewareCrudBuiltin = function (request, response, nextMiddleware) {
                 .map(function (key) {
                     tmp = local.jsonCopy(request.swgg.paramDict);
                     tmp.id = tmp.id || ((1 + Math.random()) * 0x10000000000000)
-                            .toString(36).slice(1);
+                    .toString(36).slice(1);
                     local.objectSetOverride(tmp, {
                         fileBlob: local.base64FromBuffer(request.swgg.bodyParsed[key]),
                         fileContentType: request.swgg.bodyMeta[key].contentType,
                         fileFilename: request.swgg.bodyMeta[key].filename,
                         fileInputName: request.swgg.bodyMeta[key].name,
                         fileSize: request.swgg.bodyParsed[key].length,
-                        fileUrl: local.swaggerJsonBasePath +
-                                "/" + request.swgg.operation.tags[0] +
-                                "/fileGetOneById/" + tmp.id
+                        fileUrl: (
+                            local.swaggerJsonBasePath
+                            + "/" + request.swgg.operation.tags[0]
+                            + "/fileGetOneById/" + tmp.id
+                        )
                     });
                     return tmp;
                 });
@@ -2771,7 +2923,9 @@ local.middlewareCrudBuiltin = function (request, response, nextMiddleware) {
                 }));
                 break;
             case "userLoginByPassword":
-                options.onNext(null, {jwtEncrypted: user.jwtEncrypted});
+                options.onNext(null, {
+                    jwtEncrypted: user.jwtEncrypted
+                });
                 break;
             case "userLogout":
                 crud.dbTable.crudUpdateOneById({
@@ -2832,7 +2986,14 @@ local.middlewareRouter = function (request, response, nextMiddleware) {
  */
     var tmp;
     // init swgg object
-    local.objectSetDefault(request, {swgg: {crud: {crudType: []}, user: {}}}, 3);
+    local.objectSetDefault(request, {
+        swgg: {
+            crud: {
+                crudType: []
+            },
+            user: {}
+        }
+    }, 3);
     // if request.url is not prefixed with swaggerJsonBasePath,
     // then default to nextMiddleware
     if (request.urlParsed.pathname.indexOf(local.swaggerJsonBasePath) !== 0) {
@@ -2840,15 +3001,19 @@ local.middlewareRouter = function (request, response, nextMiddleware) {
         return;
     }
     // init methodPath
-    request.swgg.methodPath = request.method + " " +
-            request.urlParsed.pathname.replace(local.swaggerJsonBasePath, "");
+    request.swgg.methodPath = (
+        request.method + " "
+        + request.urlParsed.pathname.replace(local.swaggerJsonBasePath, "")
+    );
     // init operation
     while (request.swgg.methodPath !== tmp) {
-        request.swgg.operation = local.apiDict[request.swgg.methodPath] ||
-                // handle /foo/{id}/bar case
-                local.apiDict[
-            request.swgg.methodPath.replace((/\/[^\/]+\/([^\/]*?)$/), "/{}/$1")
-        ];
+        request.swgg.operation = (
+            local.apiDict[request.swgg.methodPath]
+            // handle /foo/{id}/bar case
+            || local.apiDict[request.swgg.methodPath.replace((
+                /\/[^\/]+\/([^\/]*?)$/
+            ), "/{}/$1")]
+        );
         // if operation exists, then break
         if (request.swgg.operation) {
             request.swgg.operation = local.jsonCopy(request.swgg.operation);
@@ -2858,10 +3023,9 @@ local.middlewareRouter = function (request, response, nextMiddleware) {
         }
         tmp = request.swgg.methodPath;
         // handle /foo/{id} case
-        request.swgg.methodPath = request.swgg.methodPath.replace(
-            (/\/[^\/]+?(\/*?)$/),
-            "/$1{}"
-        );
+        request.swgg.methodPath = request.swgg.methodPath.replace((
+            /\/[^\/]+?(\/*?)$/
+        ), "/$1{}");
     }
     nextMiddleware(null, request, response);
 };
@@ -2877,12 +3041,16 @@ local.middlewareUserLogin = function (request, response, nextMiddleware) {
     local.onNext(options, function (error, data) {
         switch (options.modeNext) {
         case 1:
-            local.dbTableUser = local.db.dbTableCreateOne({name: "User"});
+            local.dbTableUser = local.db.dbTableCreateOne({
+                name: "User"
+            });
             crud = request.swgg.crud;
             user = {};
             request.swgg.user = user;
-            user.jwtEncrypted = request.headers.authorization &&
-                    request.headers.authorization.replace("Bearer ", "");
+            user.jwtEncrypted = (
+                request.headers.authorization
+                && request.headers.authorization.replace("Bearer ", "")
+            );
             user.jwtDecrypted = local.jwtAes256GcmDecrypt(user.jwtEncrypted);
             switch (crud.crudType[0]) {
             // coverage-hack - test error handling-behavior
@@ -2990,7 +3158,9 @@ local.middlewareValidate = function (request, response, nextMiddleware) {
             .replace(local.swaggerJsonBasePath, "")
             .split("/");
             request.swgg.operation._path.split("/").forEach(function (key, ii) {
-                if ((/^\{\S*?\}$/).test(key)) {
+                if ((
+                    /^\{\S*?\}$/
+                ).test(key)) {
                     request.swgg.paramDict[key.slice(1, -1)] = decodeURIComponent(tmp[ii]);
                 }
             });
@@ -2998,36 +3168,41 @@ local.middlewareValidate = function (request, response, nextMiddleware) {
                 switch (schemaP.in) {
                 // parse body param
                 case "body":
-                    request.swgg.paramDict[schemaP.name] = request.swgg.bodyParsed ||
-                            undefined;
+                    request.swgg.paramDict[schemaP.name] = (
+                        request.swgg.bodyParsed
+                        || undefined
+                    );
                     break;
                 // parse formData param
                 case "formData":
                     switch (request.swgg.operation._consumes0) {
                     case "application/x-www-form-urlencoded":
                     case "application/xml":
-                        request.swgg.paramDict[schemaP.name] =
-                                request.swgg.bodyParsed[schemaP.name];
+                        request.swgg.paramDict[schemaP.name] = (
+                            request.swgg.bodyParsed[schemaP.name]
+                        );
                         break;
                     }
                     break;
                 // parse header param
                 case "header":
-                    request.swgg.paramDict[schemaP.name] =
-                            request.headers[schemaP.name.toLowerCase()];
+                    request.swgg.paramDict[schemaP.name] = (
+                        request.headers[schemaP.name.toLowerCase()]
+                    );
                     break;
                 // parse query param
                 case "query":
-                    request.swgg.paramDict[schemaP.name] =
-                            request.urlParsed.query[schemaP.name];
+                    request.swgg.paramDict[schemaP.name] = (
+                        request.urlParsed.query[schemaP.name]
+                    );
                     break;
                 }
                 // parse array-multi
                 tmp = request.swgg.paramDict[schemaP.name];
                 if (
-                    tmp &&
-                    local.schemaPType(schemaP) === "array" &&
-                    schemaP.collectionFormat === "multi"
+                    tmp
+                    && local.schemaPType(schemaP) === "array"
+                    && schemaP.collectionFormat === "multi"
                 ) {
                     request.swgg.paramDict[schemaP.name] = (
                         encodeURIComponent(schemaP.name)
@@ -3040,8 +3215,8 @@ local.middlewareValidate = function (request, response, nextMiddleware) {
                 }
                 // init default param
                 if (
-                    local.isNullOrUndefined(request.swgg.paramDict[schemaP.name]) &&
-                    schemaP.default !== undefined
+                    local.isNullOrUndefined(request.swgg.paramDict[schemaP.name])
+                    && schemaP.default !== undefined
                 ) {
                     request.swgg.paramDict[schemaP.name] = local.jsonCopy(
                         schemaP.default
@@ -3063,9 +3238,13 @@ local.middlewareValidate = function (request, response, nextMiddleware) {
             // init crud
             crud = request.swgg.crud;
             // init crud.dbTable
-            crud.dbTable = request.swgg.operation &&
-                    request.swgg.operation._schemaName &&
-                    local.db.dbTableCreateOne({name: request.swgg.operation._schemaName});
+            crud.dbTable = (
+                request.swgg.operation
+                && request.swgg.operation._schemaName
+                && local.db.dbTableCreateOne({
+                    name: request.swgg.operation._schemaName
+                })
+            );
             if (!crud.dbTable) {
                 nextMiddleware();
                 return;
@@ -3079,9 +3258,9 @@ local.middlewareValidate = function (request, response, nextMiddleware) {
             request.swgg.operation.parameters.forEach(function (schemaP) {
                 // JSON.parse json-string
                 if (
-                    schemaP.format === "json" &&
-                    local.schemaPType(schemaP) === "string" &&
-                    crud.data[schemaP.name]
+                    schemaP.format === "json"
+                    && local.schemaPType(schemaP) === "string"
+                    && crud.data[schemaP.name]
                 ) {
                     crud.data[schemaP.name] = JSON.parse(crud.data[schemaP.name]);
                 }
@@ -3112,7 +3291,9 @@ local.middlewareValidate = function (request, response, nextMiddleware) {
                     local.templateRender(
                         request.swgg.operation["_" + element.key] || "null",
                         request.swgg.paramDict,
-                        {notHtmlSafe: true}
+                        {
+                            notHtmlSafe: true
+                        }
                     )
                 ) || element.value;
             });
@@ -3151,19 +3332,24 @@ local.normalizeSwaggerJson = function (swaggerJson, options) {
     options = local.objectSetDefault(options, {
         objectSetDescription: function (dict) {
             if (
-                dict &&
-                dict.description &&
-                Array.isArray(dict["x-swgg-descriptionLineList"])
+                dict
+                && dict.description
+                && Array.isArray(dict["x-swgg-descriptionLineList"])
             ) {
                 delete dict.description;
             }
         }
     });
-    local.objectSetDefault(swaggerJson, {paths: {}, tags: []});
+    local.objectSetDefault(swaggerJson, {
+        paths: {},
+        tags: []
+    });
     // fix error - semanticPaths2
     pathDict = {};
     Object.keys(swaggerJson.paths).forEach(function (path) {
-        tmp = path.replace((/\{.*?\}/g), "{}");
+        tmp = path.replace((
+            /\{.*?\}/g
+        ), "{}");
         pathDict[tmp] = pathDict[tmp] || {};
         pathDict[tmp][path] = true;
     });
@@ -3181,11 +3367,14 @@ local.normalizeSwaggerJson = function (swaggerJson, options) {
             tmp = swaggerJson.paths[path][method];
             // auto-create operationId from path
             if (
-                swaggerJson["x-swgg-operationIdFromPath"] ||
-                tmp["x-swgg-operationIdFromPath"] ||
-                !tmp.operationId
+                swaggerJson["x-swgg-operationIdFromPath"]
+                || tmp["x-swgg-operationIdFromPath"]
+                || !tmp.operationId
             ) {
-                tmp.operationId = local.operationIdFromAjax({method: method, url: path});
+                tmp.operationId = local.operationIdFromAjax({
+                    method: method,
+                    url: path
+                });
             }
             // normalize parameter.required
             (tmp.parameters || []).forEach(function (schemaP) {
@@ -3239,16 +3428,19 @@ local.normalizeSwaggerJson = function (swaggerJson, options) {
         });
     });
     if (
-        !local.env.npm_package_swggTags0 ||
-        (/-all$/).test(local.env.npm_package_swggTags0)
+        !local.env.npm_package_swggTags0 || (
+            /-all$/
+        ).test(local.env.npm_package_swggTags0)
     ) {
         return swaggerJson;
     }
     // override swaggerJson with x-swgg-tags0-override
     local.objectSetOverride(
         swaggerJson,
-        swaggerJson["x-swgg-tags0-override"] &&
-                swaggerJson["x-swgg-tags0-override"][local.env.npm_package_swggTags0],
+        (
+            swaggerJson["x-swgg-tags0-override"]
+            && swaggerJson["x-swgg-tags0-override"][local.env.npm_package_swggTags0]
+        ),
         10
     );
     // filter $npm_package_swggTags0 - definitions and parameters
@@ -3276,9 +3468,11 @@ local.normalizeSwaggerJson = function (swaggerJson, options) {
     });
     // filter $npm_package_swggTags0 - tags
     swaggerJson.tags = swaggerJson.tags.filter(function (tag) {
-        return !tag["x-swgg-tags0"] ||
-                tmp["x-swgg-tags0"] === "all" ||
-                tag["x-swgg-tags0"] === local.env.npm_package_swggTags0;
+        return (
+            !tag["x-swgg-tags0"]
+            || tmp["x-swgg-tags0"] === "all"
+            || tag["x-swgg-tags0"] === local.env.npm_package_swggTags0
+        );
     });
     return swaggerJson;
 };
@@ -3292,9 +3486,9 @@ local.normalizeSwaggerParamDict = function (options) {
         tmp = options.paramDict[schemaP.name];
         // init default value
         if (
-            !options.modeNoDefault &&
-            (options.modeDefault || schemaP.required) &&
-            local.isNullOrUndefined(tmp)
+            !options.modeNoDefault
+            && (options.modeDefault || schemaP.required)
+            && local.isNullOrUndefined(tmp)
         ) {
             tmp = local.jsonCopy(schemaP.default);
         }
@@ -3344,9 +3538,12 @@ local.normalizeSwaggerParamDict = function (options) {
             }
         // JSON.parse paramDict
         } else if (
-            local.schemaPType(schemaP) !== "file" &&
-            local.schemaPType(schemaP) !== "string" &&
-            (typeof tmp === "string" || tmp instanceof Uint8Array)
+            local.schemaPType(schemaP) !== "file"
+            && local.schemaPType(schemaP) !== "string"
+            && (
+                typeof tmp === "string"
+                || Object.prototype.toString.call(tmp) === "[object Uint8Array]"
+            )
         ) {
             // try to JSON.parse the string
             local.tryCatchOnError(function () {
@@ -3369,9 +3566,9 @@ local.onErrorJsonapi = function (onError) {
         data = [error, data].map(function (data, ii) {
             // if no error occurred, then return
             if (
-                (ii === 0 && !data) ||
+                (ii === 0 && !data)
                 // if data is already normalized, then return it
-                (data && data.meta && data.meta.isJsonapiResponse)
+                || (data && data.meta && data.meta.isJsonapiResponse)
             ) {
                 return data;
             }
@@ -3388,7 +3585,9 @@ local.onErrorJsonapi = function (onError) {
                 }
                 data = data.map(function (element) {
                     if (!(typeof element === "object" && element)) {
-                        element = {message: String(element)};
+                        element = {
+                            message: String(element)
+                        };
                     }
                     // normalize error-object to plain json-object
                     return {
@@ -3402,7 +3601,9 @@ local.onErrorJsonapi = function (onError) {
                 error.errors = data;
                 return error;
             }
-            return {data: data};
+            return {
+                data: data
+            };
         });
         // init data.meta
         data.forEach(function (data, ii) {
@@ -3416,9 +3617,11 @@ local.onErrorJsonapi = function (onError) {
             } else {
                 data.meta.errorsLength = data.errors.length;
             }
-            data.meta.statusCode = Number(data.meta.statusCode) ||
-                    Number(data.statusCode) ||
-                    0;
+            data.meta.statusCode = (
+                Number(data.meta.statusCode)
+                || Number(data.statusCode)
+                || 0
+            );
         });
         onError(data[0], data[1]);
     };
@@ -3433,7 +3636,9 @@ local.operationIdFromAjax = function (options) {
     urlParsed = local.urlParseWithBraket(options.url);
     return encodeURIComponent(
         urlParsed.pathname + urlParsed.hash + " " + options.method.toUpperCase()
-    ).replace((/[^\w\-.]/g), "_");
+    ).replace((
+        /[^\w\-.]/g
+    ), "_");
 };
 
 local.schemaPItems = function (schemaP) {
@@ -3471,8 +3676,7 @@ local.serverRespondJsonapi = function (request, response, error, data, meta) {
             // debug statusCode / method / url
             local.errorMessagePrepend(
                 error,
-                response.statusCode + " " + request.method +
-                        " " + request.url + "\n"
+                response.statusCode + " " + request.method + " " + request.url + "\n"
             );
             // print error.stack to stderr
             local.onErrorDefault(error);
@@ -3513,31 +3717,45 @@ local.swaggerJsonFromAjax = function (swaggerJson, options) {
     swaggerJson = local.objectSetDefault(swaggerJson, {
         basePath: "/",
         definitions: {},
-        info: {title: "", version: ""},
+        info: {
+            title: "",
+            version: ""
+        },
         paths: {},
         swagger: "2.0"
     });
     // init options
-    options = local.objectSetDefault(options, {headers: {}, method: "GET"});
+    options = local.objectSetDefault(options, {
+        headers: {},
+        method: "GET"
+    });
     // init urlParsed
     urlParsed = local.urlParseWithBraket(options.url);
     // init operation
     operation = {
         operationId: options.operationId || local.operationIdFromAjax(options),
         parameters: [],
-        responses: {default: {description: "default response"}},
+        responses: {
+            default: {
+                description: "default response"
+            }
+        },
         tags: options.tags || ["undefined"],
         "x-swgg-tags0": options["x-swgg-tags0"]
     };
-    if ((/^(?:http|https):\/\//).test(options.url)) {
+    if ((
+        /^(?:http|https):\/\//
+    ).test(options.url)) {
         operation["x-swgg-host"] = urlParsed.host;
         operation["x-swgg-schemes"] = [urlParsed.protocol.slice(0, -1)];
     }
-    local.objectSetDefault(swaggerJson, local.objectLiteralize({paths: {
-        "$[]": [urlParsed.pathname + urlParsed.hash, {
-            "$[]": [options.method.toLowerCase(), operation]
-        }]
-    }}), 4);
+    local.objectSetDefault(swaggerJson, local.objectLiteralize({
+        paths: {
+            "$[]": [urlParsed.pathname + urlParsed.hash, {
+                "$[]": [options.method.toLowerCase(), operation]
+            }]
+        }
+    }), 4);
     // init param in header
     Object.keys(options.headers).forEach(function (key) {
         upsertSchemaP({
@@ -3548,7 +3766,9 @@ local.swaggerJsonFromAjax = function (swaggerJson, options) {
         });
     });
     // init param in path
-    urlParsed.pathname.replace((/\{[^}]+?\}/g), function (match0) {
+    urlParsed.pathname.replace((
+        /\{[^}]+?\}/g
+    ), function (match0) {
         match0 = match0.slice(1, -1);
         upsertSchemaP({
             default: match0,
@@ -3575,7 +3795,9 @@ local.swaggerJsonFromAjax = function (swaggerJson, options) {
     upsertSchemaP({
         in: "body",
         name: "body",
-        schema: {type: "string"}
+        schema: {
+            type: "string"
+        }
     });
     local.tryCatchOnError(function () {
         data = JSON.parse(data);
@@ -3598,7 +3820,10 @@ local.swaggerJsonFromAjax = function (swaggerJson, options) {
         in: "body",
         name: "body",
         schema: isArray
-        ? {items: type, type: "array"}
+        ? {
+            items: type,
+            type: "array"
+        }
         : type
     });
     return swaggerJson;
@@ -3612,19 +3837,27 @@ local.swaggerJsonFromCurl = function (swaggerJson, text) {
     var arg;
     var argList;
     var doubleBackslash;
-    var quote;
     var options;
+    var quote;
     arg = "";
     argList = [];
     doubleBackslash = local.stringUniqueKey(text);
     // parse doubleBackslash
-    text = text.replace((/\\\\/g), doubleBackslash);
+    text = text.replace((
+        /\\\\/g
+    ), doubleBackslash);
     // parse line-continuation
-    text = text.replace((/\\\n/g), "");
+    text = text.replace((
+        /\\\n/g
+    ), "");
     // parse quotes
-    text.replace((/(\s*?)(\S+)/g), function (match0, line, word) {
+    text.replace((
+        /(\s*?)(\S+)/g
+    ), function (match0, line, word) {
         line = match0;
-        word.replace((/^(["']?).*?(?:\\")?(["']?)$/), function (quote1, match1, quote2) {
+        word.replace((
+            /^(["']?).*?(?:\\")?(["']?)$/
+        ), function (quote1, match1, quote2) {
             quote1 = match1;
             if (quote) {
                 arg += line;
@@ -3637,12 +3870,16 @@ local.swaggerJsonFromCurl = function (swaggerJson, text) {
                 // parse escapes in double-quotes
                 // https://www.gnu.org/software/bash/manual/html_node/Double-Quotes.html
                 case "\"":
-                    arg = arg.replace((/\\([$`"\n])/g), "$1");
+                    arg = arg.replace((
+                        /\\([$`"\n])/g
+                    ), "$1");
                     arg = arg.slice(1, -1);
                     break;
                 // parse escapes in single-quotes
                 case "'":
-                    arg = arg.replace((/'"'"'/g), "'");
+                    arg = arg.replace((
+                        /'"'"'/g
+                    ), "'");
                     arg = arg.slice(1, -1);
                     break;
                 }
@@ -3682,9 +3919,14 @@ local.swaggerJsonFromCurl = function (swaggerJson, text) {
                 options.url = options.url || argList[ii - 1];
                 swaggerJson = local.swaggerJsonFromAjax(swaggerJson, options);
             }
-            options = {headers: {}, method: "GET"};
+            options = {
+                headers: {},
+                method: "GET"
+            };
         }
-        if ((/^(?:http|https):\/\//).test(arg)) {
+        if ((
+            /^(?:http|https):\/\//
+        ).test(arg)) {
             options.url = arg;
         }
     });
@@ -3714,12 +3956,25 @@ local.swaggerJsonFromPostBody = function (swaggerJson, options) {
         if (isArray) {
             value = value[0];
         }
-        type = local.isNullOrUndefined(value)
-        ? "string"
-        : typeof value;
-        schemaP = isArray
-        ? {default: options.data[key], items: {type: type}, type: "array"}
-        : {default: value, type: type};
+        type = (
+            local.isNullOrUndefined(value)
+            ? "string"
+            : typeof value
+        );
+        schemaP = (
+            isArray
+            ? {
+                default: options.data[key],
+                items: {
+                    type: type
+                },
+                type: "array"
+            }
+            : {
+                default: value,
+                type: type
+            }
+        );
         definition.properties[key] = schemaP;
         if (!(type === "object" && options.depth > 1)) {
             return;
@@ -3738,7 +3993,9 @@ local.swaggerJsonFromPostBody = function (swaggerJson, options) {
             definition.properties[key] = type;
         }
     });
-    return {$ref: "#/definitions/" + prefix};
+    return {
+        $ref: "#/definitions/" + prefix
+    };
 };
 
 local.swaggerValidate = function (swaggerJson) {
@@ -3769,7 +4026,9 @@ local.swaggerValidate = function (swaggerJson) {
             errorType: "semanticPaths1",
             prefix: prefix
         });
-        tmp = path.replace((/\{.*?\}/g), "{}");
+        tmp = path.replace((
+            /\{.*?\}/g
+        ), "{}");
         // validate semanticPaths2
         test = !pathDict[tmp];
         local.throwSwaggerError(!test && {
@@ -3780,7 +4039,9 @@ local.swaggerValidate = function (swaggerJson) {
         pathDict[tmp] = path;
         // validate semanticPaths3
         tmp = {};
-        path.replace((/\{.*?\}/g), function (match0) {
+        path.replace((
+            /\{.*?\}/g
+        ), function (match0) {
             test = !tmp[match0];
             local.throwSwaggerError(!test && {
                 errorType: "semanticPaths3",
@@ -3842,8 +4103,15 @@ local.swaggerValidate = function (swaggerJson) {
                 prefix: prefix.concat(["operationId"])
             });
             operationIdDict[operation.operationId] = true;
-            tmp = {in: {}, name: {}, path: {}, type: {}};
-            path.replace((/\{.*?\}/g), function (match0) {
+            tmp = {
+                in: {},
+                name: {},
+                path: {},
+                type: {}
+            };
+            path.replace((
+                /\{.*?\}/g
+            ), function (match0) {
                 match0 = match0.slice(1, -1);
                 tmp.path[match0] = tmp.path[match0] || [];
                 tmp.path[match0][0] = true;
@@ -3868,9 +4136,11 @@ local.swaggerValidate = function (swaggerJson) {
                     schema: operation
                 });
                 // validate semanticOperations3
-                test = schemaP.name === undefined ||
-                        schemaP.in === undefined ||
-                        !tmp.name[schemaP.name + " " + schemaP.in];
+                test = (
+                    schemaP.name === undefined
+                    || schemaP.in === undefined
+                    || !tmp.name[schemaP.name + " " + schemaP.in]
+                );
                 local.throwSwaggerError(!test && {
                     data: operation.parameters,
                     errorType: "semanticOperations3",
@@ -3915,19 +4185,23 @@ local.swaggerValidate = function (swaggerJson) {
                 });
             });
             // validate semanticFormData4
-            test = !tmp.type.file ||
-                    (operation.consumes || []).indexOf("multipart/form-data") >= 0;
+            test = (
+                !tmp.type.file
+                || (operation.consumes || []).indexOf("multipart/form-data") >= 0
+            );
             local.throwSwaggerError(!test && {
                 data: operation,
                 errorType: "semanticFormData4",
                 prefix: prefix
             });
             // validate semanticFormData5
-            test = !tmp.in.formData ||
-                    (operation.consumes || []).indexOf(
-                "application/x-www-form-urlencoded"
-            ) >= 0 ||
-                    (operation.consumes || []).indexOf("multipart/form-data") >= 0;
+            test = (
+                !tmp.in.formData
+                || (operation.consumes || []).indexOf(
+                    "application/x-www-form-urlencoded"
+                ) >= 0
+                || (operation.consumes || []).indexOf("multipart/form-data") >= 0
+            );
             local.throwSwaggerError(!test && {
                 data: operation,
                 errorType: "semanticFormData5",
@@ -3952,7 +4226,7 @@ local.swaggerValidateDataParameters = function (options) {
                 dataReadonlyRemove: [
                     options.dataReadonlyRemove || {},
                     schemaP.name,
-                    (options.dataReadonlyRemove || {})[schemaP.name]
+                    options.dataReadonlyRemove && options.dataReadonlyRemove[schemaP.name]
                 ],
                 prefix: options.prefix.concat([schemaP.name]),
                 schema: schemaP,
@@ -4037,8 +4311,10 @@ local.swaggerValidateDataSchema = function (options) {
         });
         circularList.push($ref);
         // validate semanticWalker6
-        test = $ref.indexOf("#/") === 0 ||
-                $ref.indexOf("http://json-schema.org/draft-04/schema#/") === 0;
+        test = (
+            $ref.indexOf("#/") === 0
+            || $ref.indexOf("http://json-schema.org/draft-04/schema#/") === 0
+        );
         local.throwSwaggerError(!test && {
             data: $ref,
             errorType: "semanticWalker6",
@@ -4075,9 +4351,9 @@ local.swaggerValidateDataSchema = function (options) {
                 tmp = list[ii];
                 // validate semanticSchema1
                 test = !(
-                    data.properties &&
-                    data.properties[tmp] &&
-                    data.properties[tmp].readOnly
+                    data.properties
+                    && data.properties[tmp]
+                    && data.properties[tmp].readOnly
                 );
                 local.throwSwaggerError(!test && {
                     data: data.properties[tmp],
@@ -4118,9 +4394,11 @@ local.swaggerValidateDataSchema = function (options) {
             break;
         }
         tmp = $ref.split("/").slice(-2);
-        schema = $ref.indexOf("http://json-schema.org/draft-04/schema#/") === 0
-        ? local.swaggerSchemaJson[tmp[0]]
-        : options.swaggerJson[tmp[0]];
+        schema = (
+            $ref.indexOf("http://json-schema.org/draft-04/schema#/") === 0
+            ? local.swaggerSchemaJson[tmp[0]]
+            : options.swaggerJson[tmp[0]]
+        );
         schema = schema && schema[tmp[1]];
         test = schema;
         local.throwSwaggerError(!test && {
@@ -4151,10 +4429,12 @@ local.swaggerValidateDataSchema = function (options) {
         data = schema.default;
     }
     // validate schema.required
-    test = options.modeDefault ||
-            !local.isNullOrUndefined(data) ||
-            schema.required !== true ||
-            schema["x-swgg-notRequired"];
+    test = (
+        options.modeDefault
+        || !local.isNullOrUndefined(data)
+        || schema.required !== true
+        || schema["x-swgg-notRequired"]
+    );
     local.throwSwaggerError(!test && {
         data: data,
         errorType: "objectRequired",
@@ -4165,8 +4445,10 @@ local.swaggerValidateDataSchema = function (options) {
         return;
     }
     // validate semanticItemsRequiredForArrayObjects1
-    test = !options.modeSchema || local.schemaPType(data) !== "array" ||
-            (typeof local.schemaPItems(data) === "object" && local.schemaPItems(data));
+    test = (
+        !options.modeSchema || local.schemaPType(data) !== "array"
+        || (typeof local.schemaPItems(data) === "object" && local.schemaPItems(data))
+    );
     local.throwSwaggerError(!test && {
         errorType: "semanticItemsRequiredForArrayObjects1",
         prefix: options.prefix,
@@ -4209,13 +4491,17 @@ local.swaggerValidateDataSchema = function (options) {
         }
         break;
     case "string":
-        test = typeof data === "string" ||
-                (!options.modeSchema && schema.format === "binary");
+        test = (
+            typeof data === "string"
+            || (!options.modeSchema && schema.format === "binary")
+        );
         switch (test && !options.modeSchema && schema.format) {
         // Clarify 'byte' format #50
         // https://github.com/swagger-api/swagger-spec/issues/50
         case "byte":
-            test = !(/[^\n\r+\/0-9=A-Za-z]/).test(data);
+            test = !(
+                /[^\n\r+\/0-9=A-Za-z]/
+            ).test(data);
             break;
         case "date":
         case "date-time":
@@ -4363,8 +4649,10 @@ local.swaggerValidateDataSchema = function (options) {
     // 5.4. Validation keywords for objects
     case "object":
         // 5.4.1. maxProperties
-        test = typeof schema.maxProperties !== "number" ||
-                Object.keys(data).length <= schema.maxProperties;
+        test = (
+            typeof schema.maxProperties !== "number"
+            || Object.keys(data).length <= schema.maxProperties
+        );
         local.throwSwaggerError(!test && {
             data: data,
             errorType: "objectMaxProperties",
@@ -4372,8 +4660,10 @@ local.swaggerValidateDataSchema = function (options) {
             schema: schema
         });
         // 5.4.2. minProperties
-        test = typeof schema.minProperties !== "number" ||
-                Object.keys(data).length >= schema.minProperties;
+        test = (
+            typeof schema.minProperties !== "number"
+            || Object.keys(data).length >= schema.minProperties
+        );
         local.throwSwaggerError(!test && {
             data: data,
             errorType: "objectMinProperties",
@@ -4547,9 +4837,11 @@ local.swaggerValidateDataSchema = function (options) {
         tmp: tmp
     });
     // 5.5.5. oneOf
-    tmp = !schema.oneOf
-    ? 1
-    : 0;
+    tmp = (
+        !schema.oneOf
+        ? 1
+        : 0
+    );
     (schema.oneOf || []).some(function (element) {
         local.tryCatchOnError(function () {
             // recurse - schema.oneOf
@@ -4617,8 +4909,12 @@ local.swaggerValidateFile = function (options, onError) {
                 return;
             }
             // fetch url
-            if ((/^(?:http|https):\/\//).test(options.file)) {
-                local.ajax({url: options.file}, function (error, xhr) {
+            if ((
+                /^(?:http|https):\/\//
+            ).test(options.file)) {
+                local.ajax({
+                    url: options.file
+                }, function (error, xhr) {
                     options.onNext(error, xhr && xhr.responseText);
                 });
                 return;
@@ -4629,9 +4925,11 @@ local.swaggerValidateFile = function (options, onError) {
         case 2:
             // jslint
             local.jslint.jslintAndPrint(data, options.file);
-            local.assert(
-                !local.jslint.result.errorText,
-                local.jslint.result.errorText.replace((/\u001b\[\d*m/g), "")
+            local.assertThrow(
+                !local.jslint.jslintResult.errorText,
+                local.jslint.jslintResult.errorText.replace((
+                    /\u001b\[\d*m/g
+                ), "")
             );
             // validate
             local.swgg.swaggerValidate(JSON.parse(data));
@@ -4640,8 +4938,8 @@ local.swaggerValidateFile = function (options, onError) {
         default:
             console.error(
                 error
-                ? "\u001b[31mswagger-validate - failed - " + options.file + "\n" +
-                error.message + "\u001b[39m"
+                ? "\u001b[31mswagger-validate - failed - " + options.file + "\n"
+                + error.message + "\u001b[39m"
                 : "swagger-validate - passed - " + options.file
             );
             onError(error);
@@ -4681,12 +4979,16 @@ local.throwSwaggerError = function (options) {
     error = new Error("error." + options.errorType + " - " + local.templateRender(
         local.swaggerErrorTypeDict[options.errorType],
         options,
-        {notHtmlSafe: true}
+        {
+            notHtmlSafe: true
+        }
     ));
     error.messageShort = local.templateRender(
         local.swaggerErrorTypeDict[options.errorType].replace("{{prefix0}}", "{{prefix2}}"),
         options,
-        {notHtmlSafe: true}
+        {
+            notHtmlSafe: true
+        }
     );
     error.options = options;
     error.statusCode = 400;
@@ -4694,38 +4996,44 @@ local.throwSwaggerError = function (options) {
 };
 
 local.uiEventDelegate = function (event) {
-    event.targetOnEvent = event.target.closest(".onEvent");
     // filter non-input keyup-event
-    if (
-        !event.targetOnEvent ||
-        (
-            event.type === "keyup" &&
-            !event.target.closest("input, option, select, textarea")
-        )
-    ) {
+    event.targetOnEvent = event.target.closest("[data-event]");
+    if (!event.targetOnEvent) {
         return;
     }
-    Object.keys(local.uiEventListenerDict).sort().some(function (key) {
-        if (!event.targetOnEvent.matches(key)) {
+    // rate-limit keyup
+    if (event.type === "keyup") {
+        local.uiEventDelegateKeyupEvent = event;
+        if (local.uiEventDelegateKeyupTimerTimeout !== 2) {
+            local.uiEventDelegateKeyupTimerTimeout = (
+                local.uiEventDelegateKeyupTimerTimeout
+                || setTimeout(function () {
+                    local.uiEventDelegateKeyupTimerTimeout = 2;
+                    local.uiEventDelegate(local.uiEventDelegateKeyupEvent);
+                }, 100)
+            );
             return;
         }
-        switch (event.targetOnEvent.tagName) {
-        case "BUTTON":
-        case "FORM":
-            event.preventDefault();
-            break;
+        local.uiEventDelegateKeyupTimerTimeout = null;
+        if (!event.target.closest("input, option, select, textarea")) {
+            return;
         }
-        event.stopPropagation();
-        local.uiEventListenerDict[key](event);
-        return true;
-    });
+    }
+    switch (event.targetOnEvent.tagName) {
+    case "BUTTON":
+    case "FORM":
+        event.preventDefault();
+        break;
+    }
+    event.stopPropagation();
+    local.uiEventListenerDict[event.targetOnEvent.dataset.event](event);
 };
 
 local.uiEventListenerDict = {};
 
-local.uiEventListenerDict[".onEventDomDb"] = local.db.onEventDomDb;
+local.uiEventListenerDict.onEventDomDb = local.db.onEventDomDb;
 
-local.uiEventListenerDict[".onEventInputTextareaChange"] = function (event) {
+local.uiEventListenerDict.onEventInputTextareaChange = function (event) {
 /*
  * this function will show/hide the textarea's multiline placeholder
  */
@@ -4739,12 +5047,12 @@ local.uiEventListenerDict[".onEventInputTextareaChange"] = function (event) {
     if (!value && !isTransparent) {
         event.targetOnEvent.style.background = "transparent";
     }
-    local.uiEventListenerDict[".onEventInputValidateAndAjax"]({
+    local.uiEventListenerDict.onEventInputValidateAndAjax({
         targetOnEvent: event.targetOnEvent
     });
 };
 
-local.uiEventListenerDict[".onEventInputValidateAndAjax"] = function (options, onError) {
+local.uiEventListenerDict.onEventInputValidateAndAjax = function (options, onError) {
 /*
  * this function will validate the input parameters
  * against the schemas in options.parameters
@@ -4816,9 +5124,9 @@ local.uiEventListenerDict[".onEventInputValidateAndAjax"] = function (options, o
                 break;
             }
             if (
-                schemaP.schema &&
-                local.schemaPType(schemaP.schema) === "string" &&
-                typeof tmp === "string"
+                schemaP.schema
+                && local.schemaPType(schemaP.schema) === "string"
+                && typeof tmp === "string"
             ) {
                 break;
             }
@@ -4829,9 +5137,11 @@ local.uiEventListenerDict[".onEventInputValidateAndAjax"] = function (options, o
             }
             // parse array
             tmp = tmp.split("\n").map(function (element) {
-                return local.schemaPItemsType(schemaP) === "string"
-                ? element
-                : jsonParse(element);
+                return (
+                    local.schemaPItemsType(schemaP) === "string"
+                    ? element
+                    : jsonParse(element)
+                );
             });
             break;
         }
@@ -4849,9 +5159,11 @@ local.uiEventListenerDict[".onEventInputValidateAndAjax"] = function (options, o
     )).forEach(function (element) {
         tmp = errorDict[element.dataset.name];
         local.uiAnimateShakeIfError(tmp, element.querySelector(".input"));
-        element.querySelector(".colorError").textContent = tmp
-        ? tmp.messageShort
-        : "";
+        element.querySelector(".colorError").textContent = (
+            tmp
+            ? tmp.messageShort
+            : ""
+        );
     });
     // shake submit-button on error
     local.uiAnimateShakeIfError(
@@ -4863,38 +5175,51 @@ local.uiEventListenerDict[".onEventInputValidateAndAjax"] = function (options, o
     local.tryCatchOnError(function () {
         tmp = JSON.stringify(JSON.parse(options.data), null, 4);
     }, local.nop);
-    tmp = "curl \\\n" + "--request " + options.api._method + " \\\n" +
-            Object.keys(options.headers).map(function (key) {
-        return "--header '" + key + ": " + options.headers[key] + "' \\\n";
-    }).join("") + "--data-binary " + (
-        typeof tmp === "string"
-        ? "'" + tmp.replace(/'/g, "'\"'\"'") + "'"
-        : "<blob>"
-    ) + " \\\n\"" + options.url.replace((/&/g), "&\\\n") + "\"";
+    tmp = (
+        "curl \\\n" + "--request " + options.api._method + " \\\n"
+        + Object.keys(options.headers).map(function (key) {
+            return "--header '" + key + ": " + options.headers[key] + "' \\\n";
+        }).join("") + "--data-binary " + (
+            typeof tmp === "string"
+            ? "'" + tmp.replace((
+                /'/g
+            ), "'\"'\"'") + "'"
+            : "<blob>"
+        ) + " \\\n\"" + options.url.replace((
+            /&/g
+        ), "&\\\n") + "\""
+    );
     options.targetOnEvent.querySelector(".requestCurl").textContent = tmp;
     // init requestJavascript
-    options.targetOnEvent.querySelector(".requestJavascript").textContent =
-            local.templateRender(local.templateUiRequestJavascript, {
-        options: options,
-        optionsJson: JSON.stringify({
-            paramDict: options.paramDict
-        }, null, 4)
-    }, {notHtmlSafe: true});
+    options.targetOnEvent.querySelector(".requestJavascript").textContent = local.templateRender(
+        local.templateUiRequestJavascript,
+        {
+            options: options,
+            optionsJson: JSON.stringify({
+                paramDict: options.paramDict
+            }, null, 4)
+        },
+        {
+            notHtmlSafe: true
+        }
+    );
 };
 
-local.uiEventListenerDict[".onEventOperationAjax"] = function (options) {
+local.uiEventListenerDict.onEventOperationAjax = function (options) {
 /*
  * this function will submit the operation to the backend
  */
     // ensure options is stateless
-    options = {targetOnEvent: options.targetOnEvent.closest(".operation")};
+    options = {
+        targetOnEvent: options.targetOnEvent.closest(".operation")
+    };
     local.onNext(options, function (error, data) {
         switch (options.modeNext) {
         case 1:
             // force ajax
             options.modeAjax = "ajax";
             // validate input
-            local.uiEventListenerDict[".onEventInputValidateAndAjax"](
+            local.uiEventListenerDict.onEventInputValidateAndAjax(
                 options,
                 options.onNext
             );
@@ -4916,11 +5241,13 @@ local.uiEventListenerDict[".onEventOperationAjax"] = function (options) {
                 statusCode: "undefined"
             });
             // init responseStatusCode
-            options.targetOnEvent.querySelector(".responseStatusCode").textContent =
-                    data.statusCode;
+            options.targetOnEvent.querySelector(".responseStatusCode").textContent = (
+                data.statusCode
+            );
             // init responseHeaders
-            options.targetOnEvent.querySelector(".responseHeaders").textContent =
-                    Object.keys(data.responseHeaders).map(function (key) {
+            options.targetOnEvent.querySelector(".responseHeaders").textContent = Object.keys(
+                data.responseHeaders
+            ).map(function (key) {
                 return key + ": " + data.responseHeaders[key] + "\r\n";
             }).join("");
             // init responseBody
@@ -4934,21 +5261,24 @@ local.uiEventListenerDict[".onEventOperationAjax"] = function (options) {
             case "audio":
             case "img":
             case "video":
-                options.targetOnEvent.querySelector(".responseBody").textContent =
-                        data.contentType;
-                options.targetOnEvent.querySelector(".responseMedia").innerHTML =
-                        "<" + data.mediaType +
-                        " class=\"domOnEventMediaHotkeysInit\" controls src=\"data:" +
-                        data.contentType +
-                        ";base64," + local.base64FromBuffer(data.responseBuffer) + "\"></" +
-                        data.mediaType + ">";
-                local.global.domOnEventMediaHotkeys("init");
+                options.targetOnEvent.querySelector(".responseBody").textContent = (
+                    data.contentType
+                );
+                options.targetOnEvent.querySelector(".responseMedia").innerHTML = (
+                    "<" + data.mediaType
+                    + " class=\"domOnEventMediaHotkeysInit\" controls src=\"data:"
+                    + data.contentType
+                    + ";base64," + local.base64FromBuffer(data.responseBuffer) + "\"></"
+                    + data.mediaType + ">"
+                );
+                globalThis.domOnEventMediaHotkeys("init");
                 break;
             default:
-                options.targetOnEvent.querySelector(".responseBody").textContent =
-                        data.responseJson
-                ? JSON.stringify(data.responseJson, null, 4)
-                : data.response;
+                options.targetOnEvent.querySelector(".responseBody").textContent = (
+                    data.responseJson
+                    ? JSON.stringify(data.responseJson, null, 4)
+                    : data.response
+                );
             }
             // shake response on error
             Array.from(options.targetOnEvent.querySelectorAll(
@@ -4962,7 +5292,7 @@ local.uiEventListenerDict[".onEventOperationAjax"] = function (options) {
     options.onNext();
 };
 
-local.uiEventListenerDict[".onEventOperationDisplayShow"] = function (event, onError) {
+local.uiEventListenerDict.onEventOperationDisplayShow = function (event, onError) {
 /*
  * this function will toggle the display of the operation
  */
@@ -4982,7 +5312,7 @@ local.uiEventListenerDict[".onEventOperationDisplayShow"] = function (event, onE
             element.querySelector("[tabIndex]").blur();
             element.querySelector("[tabIndex]").focus();
             // validate input
-            local.uiEventListenerDict[".onEventInputValidateAndAjax"]({
+            local.uiEventListenerDict.onEventInputValidateAndAjax({
                 targetOnEvent: element
             });
             local.setTimeoutOnError(onError, 0, null, element);
@@ -4990,7 +5320,7 @@ local.uiEventListenerDict[".onEventOperationDisplayShow"] = function (event, onE
     );
 };
 
-local.uiEventListenerDict[".onEventResourceDisplayAction"] = function (event) {
+local.uiEventListenerDict.onEventResourceDisplayAction = function (event) {
 /*
  * this function will toggle the display of the resource
  */
@@ -5004,7 +5334,7 @@ local.uiEventListenerDict[".onEventResourceDisplayAction"] = function (event) {
                 Array.from(document.querySelectorAll(".swggUiContainer .operationList"))
             );
             // show at least one operation in the resource
-            local.uiEventListenerDict[".onEventOperationDisplayShow"]({
+            local.uiEventListenerDict.onEventOperationDisplayShow({
                 targetOnEvent: event.currentTarget.querySelector(
                     ".operation .uiAnimateSlide[style*=\"max-height: 100%\"]"
                 ) || event.currentTarget.querySelector(".operation")
@@ -5032,7 +5362,7 @@ local.uiEventListenerDict[".onEventResourceDisplayAction"] = function (event) {
                 )).forEach(function (element) {
                     local.uiAnimateSlideDown(element);
                     // validate input
-                    local.uiEventListenerDict[".onEventInputValidateAndAjax"]({
+                    local.uiEventListenerDict.onEventInputValidateAndAjax({
                         targetOnEvent: element
                     });
                 });
@@ -5042,7 +5372,7 @@ local.uiEventListenerDict[".onEventResourceDisplayAction"] = function (event) {
     });
 };
 
-local.uiEventListenerDict[".onEventUiReload"] = function (options, onError) {
+local.uiEventListenerDict.onEventUiReload = function (options, onError) {
 /*
  * this function will reload the ui
  */
@@ -5056,8 +5386,8 @@ local.uiEventListenerDict[".onEventUiReload"] = function (options, onError) {
             options.inputUrl = document.querySelector(".swggUiContainer > .thead > .td2");
             // clear all apiKeyValue's from localStorage
             if (
-                options.targetOnEvent &&
-                options.targetOnEvent.id === "swggApiKeyClearButton1"
+                options.targetOnEvent
+                && options.targetOnEvent.id === "swggApiKeyClearButton1"
             ) {
                 local.apiKeyValue = "";
                 Object.keys(localStorage).forEach(function (key) {
@@ -5068,7 +5398,9 @@ local.uiEventListenerDict[".onEventUiReload"] = function (options, onError) {
             // restore apiKeyValue
             } else if (options.swggInit) {
                 local.apiKeyKey = "utility2_swgg_apiKeyKey_" + encodeURIComponent(
-                    local.urlParse(options.inputUrl.value.replace((/^\//), "")).href
+                    local.urlParse(options.inputUrl.value.replace((
+                        /^\//
+                    ), "")).href
                 );
                 local.apiKeyValue = localStorage.getItem(local.apiKeyKey) || "";
             // save apiKeyValue
@@ -5078,9 +5410,9 @@ local.uiEventListenerDict[".onEventUiReload"] = function (options, onError) {
             }
             // if keyup-event is not return-key, then return
             if (
-                (options.type === "keyup" && options.code !== "Enter") ||
+                (options.type === "keyup" && options.code !== "Enter")
                 // do not reload ui during test
-                local.global.utility2_modeTest >= 4
+                || globalThis.utility2_modeTest >= 4
             ) {
                 options.modeNext = Infinity;
                 options.onNext();
@@ -5095,15 +5427,20 @@ local.uiEventListenerDict[".onEventUiReload"] = function (options, onError) {
             });
             // normalize swaggerJsonUrl
             options.inputUrl.value = local.urlParse(
-                options.inputUrl.value.replace((/^\//), "")
+                options.inputUrl.value.replace((
+                    /^\//
+                ), "")
             ).href;
-            document.querySelector("#swggAjaxProgressDiv1 span").innerHTML =
-                    "loading swagger.json";
+            document.querySelector("#swggAjaxProgressDiv1 span").innerHTML = (
+                "loading swagger.json"
+            );
             options.onNext();
             break;
         case 2:
             // fetch swagger.json file
-            local.ajax({url: options.inputUrl.value}, options.onNext);
+            local.ajax({
+                url: options.inputUrl.value
+            }, options.onNext);
             break;
         case 3:
             // JSON.parse swagger.json string
@@ -5137,15 +5474,18 @@ local.uiEventListenerDict[".onEventUiReload"] = function (options, onError) {
             );
             setTimeout(function () {
                 // recurse - render .resourceList
-                local.uiEventListenerDict[".onEventUiReload"](swaggerJson, options.onNext);
+                local.uiEventListenerDict.onEventUiReload(swaggerJson, options.onNext);
             }, 100);
             break;
         default:
             local.onErrorDefault(error);
             // debug error
             local._debugOnEventUiReload = error || local._debugOnEventUiReload;
-            document.querySelector("#swggUiReloadErrorDiv1").textContent =
-                    (error || {message: ""}).message;
+            document.querySelector("#swggUiReloadErrorDiv1").textContent = (
+                (error || {
+                    message: ""
+                }).message
+            );
             local.setTimeoutOnError(onError, 0, error);
         }
     });
@@ -5184,7 +5524,9 @@ local.uiEventListenerDict[".onEventUiReload"] = function (options, onError) {
             resource = swaggerJson.resourceDict[tag];
             resource.id = resource.id || local.idDomElementCreate("swgg_id_" + tag);
             resource.summary = resource.summary || String(resource.description)
-            .replace((/\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/g), "");
+            .replace((
+                /\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/g
+            ), "");
         });
     });
     // init uiFragment
@@ -5201,9 +5543,11 @@ local.uiEventListenerDict[".onEventUiReload"] = function (options, onError) {
         aa = aa["x-swgg-sortValue"] || (aa._path + " " + aa._method);
         bb = swaggerJson.operationDict[bb];
         bb = bb["x-swgg-sortValue"] || (bb._path + " " + bb._method);
-        return aa < bb
-        ? -1
-        : 1;
+        return (
+            aa < bb
+            ? -1
+            : 1
+        );
     }).forEach(function (operation) {
         operation = swaggerJson.operationDict[operation];
         operation.id = local.idDomElementCreate("swgg_id_" + operation.operationId);
@@ -5221,7 +5565,9 @@ local.uiEventListenerDict[".onEventUiReload"] = function (options, onError) {
                 })
             });
             operation.summary = operation.summary || operation.description
-            .replace((/\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/g), "");
+            .replace((
+                /\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/g
+            ), "");
             operation.parameters.forEach(local.uiRenderSchemaP);
             // templateRender operation
             swaggerJson.uiFragment.querySelector("#" + resource.id + " .operationList")
@@ -5251,7 +5597,7 @@ local.uiEventListenerDict[".onEventUiReload"] = function (options, onError) {
         delete element.dataset.valueText;
         // init textarea's multiline placeholder
         if (element.tagName === "TEXTAREA") {
-            local.uiEventListenerDict[".onEventInputTextareaChange"]({
+            local.uiEventListenerDict.onEventInputTextareaChange({
                 targetOnEvent: element
             });
         }
@@ -5259,16 +5605,17 @@ local.uiEventListenerDict[".onEventUiReload"] = function (options, onError) {
     // init event-handling
     ["Change", "Click", "Keyup", "Submit"].forEach(function (eventType) {
         Array.from(document.querySelectorAll(
-            ".swggUiContainer .eventDelegate" + eventType
+            ".eventDelegate" + eventType
         )).forEach(function (element) {
             element.addEventListener(eventType.toLowerCase(), local.uiEventDelegate);
         });
     });
     // scrollTo location.hash
-    local.uiEventListenerDict[".onEventOperationDisplayShow"]({
-        targetOnEvent:
-                document.querySelector("#" + (location.hash.slice(2) || "undefined")) ||
-                document.querySelector(".swggUiContainer .operation")
+    local.uiEventListenerDict.onEventOperationDisplayShow({
+        targetOnEvent: (
+            document.querySelector("#" + (location.hash.slice(2) || "undefined"))
+            || document.querySelector(".swggUiContainer .operation")
+        )
     });
     local.setTimeoutOnError(onError);
 };
@@ -5280,9 +5627,11 @@ local.uiRenderSchemaP = function (schemaP) {
     // init schemaP.id
     schemaP.id = local.idDomElementCreate("swgg_id_" + schemaP.name);
     // init enum
-    schemaP.enum2 = schemaP.enum ||
-            (local.schemaPItems(schemaP) || {}).enum ||
-            (local.schemaPType(schemaP) === "boolean" && [false, true]);
+    schemaP.enum2 = (
+        schemaP.enum
+        || (local.schemaPItems(schemaP) || {}).enum
+        || (local.schemaPType(schemaP) === "boolean" && [false, true])
+    );
     // init input - file
     if (local.schemaPType(schemaP) === "file") {
         schemaP.isFile = true;
@@ -5294,15 +5643,19 @@ local.uiRenderSchemaP = function (schemaP) {
         // init enumDefault
         schemaP.enumDefault = [];
         if (schemaP.required && schemaP.default !== undefined) {
-            schemaP.enumDefault = local.schemaPType(schemaP) === "array"
-            ? schemaP.default
-            : [schemaP.default];
+            schemaP.enumDefault = (
+                local.schemaPType(schemaP) === "array"
+                ? schemaP.default
+                : [schemaP.default]
+            );
         }
         schemaP.isSelectMultiple = local.schemaPType(schemaP) === "array";
         schemaP.selectOptionList = schemaP.enum2.map(function (element) {
             // init hasDefault
-            schemaP.hasDefault = schemaP.hasDefault ||
-                    schemaP.enumDefault.indexOf(element) >= 0;
+            schemaP.hasDefault = (
+                schemaP.hasDefault
+                || schemaP.enumDefault.indexOf(element) >= 0
+            );
             return {
                 id: local.idDomElementCreate("swgg_id_" + schemaP.name),
                 selected: schemaP.enumDefault.indexOf(element) >= 0
@@ -5337,8 +5690,8 @@ local.uiRenderSchemaP = function (schemaP) {
         });
     // init input - textarea
     } else if (local.schemaPType(schemaP) === "array" || (
-        schemaP.format === "json" &&
-        local.schemaPType(schemaP) === "string"
+        schemaP.format === "json"
+        && local.schemaPType(schemaP) === "string"
     )) {
         schemaP.isTextarea = true;
     // init input - text
@@ -5346,7 +5699,7 @@ local.uiRenderSchemaP = function (schemaP) {
         schemaP.isInputText = true;
     }
     // init format2 / type2
-    [schemaP, schemaP.schema || {}].some(function (element) {
+    ([schemaP, schemaP.schema || {}]).some(function (element) {
         local.objectSetDefault(schemaP, {
             format2: local.schemaPItemsType(element) || element.format,
             type2: local.schemaPType(element)
@@ -5355,12 +5708,12 @@ local.uiRenderSchemaP = function (schemaP) {
     });
     schemaP.type2 = schemaP.type2 || "object";
     // init schema2
-    [
+    ([
         schemaP,
         local.schemaPItems(schemaP),
         schemaP.schema,
         schemaP.schema && local.schemaPItems(schemaP.schema)
-    ].some(function (element) {
+    ]).some(function (element) {
         schemaP.schema2 = (local.swaggerValidateDataSchema({
             // dereference schemaP
             modeDereference: true,
@@ -5381,20 +5734,24 @@ local.uiRenderSchemaP = function (schemaP) {
         );
     }
     // init placeholder
-    schemaP.placeholder = !local.isNullOrUndefined(schemaP.default)
-    ? schemaP.default
-    : local.dbFieldRandomCreate({
-        modeNotRandom: true,
-        schemaP: schemaP
-    });
+    schemaP.placeholder = (
+        !local.isNullOrUndefined(schemaP.default)
+        ? schemaP.default
+        : local.dbFieldRandomCreate({
+            modeNotRandom: true,
+            schemaP: schemaP
+        })
+    );
     if (typeof schemaP.placeholder !== "string") {
         if (schemaP.in === "body") {
             schemaP.placeholder = JSON.stringify(schemaP.placeholder, null, 4);
         } else if (Array.isArray(schemaP.placeholder)) {
             schemaP.placeholder = schemaP.placeholder.map(function (element) {
-                return typeof element === "string"
-                ? element
-                : JSON.stringify(element);
+                return (
+                    typeof element === "string"
+                    ? element
+                    : JSON.stringify(element)
+                );
             }).join("\n");
         } else {
             schemaP.placeholder = JSON.stringify(schemaP.placeholder);
@@ -5403,13 +5760,15 @@ local.uiRenderSchemaP = function (schemaP) {
         schemaP.placeholder = JSON.stringify(JSON.parse(schemaP.placeholder), null, 4);
     }
     // init valueText
-    schemaP.valueText = schemaP["x-swgg-apiKey"]
-    ? local.apiKeyValue
-    : schemaP.default === null
-    ? ""
-    : (schemaP.required || schemaP.isTextarea)
-    ? schemaP.placeholder
-    : "";
+    schemaP.valueText = (
+        schemaP["x-swgg-apiKey"]
+        ? local.apiKeyValue
+        : schemaP.default === null
+        ? ""
+        : (schemaP.required || schemaP.isTextarea)
+        ? schemaP.placeholder
+        : ""
+    );
     // templateRender schemaP
     schemaP.innerHTML = local.templateRender(local.templateUiParameter, schemaP);
 };
@@ -5421,7 +5780,11 @@ local.urlParseWithBraket = function (url) {
     var tmp;
     tmp = local.stringUniqueKey(url);
     return JSON.parse(JSON.stringify(
-        local.urlParse(url.replace((/\{/g), tmp + 1).replace((/\}/g), tmp + 2))
+        local.urlParse(url.replace((
+            /\{/g
+        ), tmp + 1).replace((
+            /\}/g
+        ), tmp + 2))
     ).replace(new RegExp(tmp + 1, "g"), "{").replace(new RegExp(tmp + 2, "g"), "}"));
 };
 
@@ -5430,7 +5793,10 @@ local.userLoginByPassword = function (options, onError) {
  * this function will send a login-by-password request
  */
     local.apiDict["GET /user/userLoginByPassword"].ajax({
-        paramDict: {password: options.password, username: options.username}
+        paramDict: {
+            password: options.password,
+            username: options.username
+        }
     }, onError);
 };
 
@@ -5447,9 +5813,6 @@ local.userLogout = function (options, onError) {
 // run node js-env code - init-after
 /* istanbul ignore next */
 (function () {
-
-
-
 if (local.isBrowser) {
     return;
 }
@@ -5465,4 +5828,7 @@ local.swgg.apiUpdate(
     local.fsReadFileOrEmptyStringSync(local.__dirname + "/assets.swgg.swagger.json", "json")
 );
 }());
+
+
+
 }());

@@ -9,65 +9,122 @@
 
 
 /* istanbul instrument in package github_crud */
+/* istanbul ignore next */
 /* jslint utility2:true */
-(function () {
+(function (globalThis) {
+    "use strict";
+    var consoleError;
+    var local;
+    // init globalThis
+    (function () {
+        try {
+            globalThis = Function("return this")(); // jslint ignore:line
+        } catch (ignore) {}
+    }());
+    globalThis.globalThis = globalThis;
+    // init local
+    local = {};
+    // init isBrowser
+    local.isBrowser = (
+        typeof window === "object"
+        && window === globalThis
+        && typeof window.XMLHttpRequest === "function"
+        && window.document
+        && typeof window.document.querySelectorAll === "function"
+    );
+    globalThis.globalLocal = local;
+    // init function
+    local.assertThrow = function (passed, message) {
+    /*
+     * this function will throw the error <message> if <passed> is falsy
+     */
+        var error;
+        if (passed) {
+            return;
+        }
+        error = (
+            // ternary-operator
+            (
+                message
+                && typeof message.message === "string"
+                && typeof message.stack === "string"
+            )
+            // if message is an error-object, then leave it as is
+            ? message
+            : new Error(
+                typeof message === "string"
+                // if message is a string, then leave it as is
+                ? message
+                // else JSON.stringify message
+                : JSON.stringify(message, null, 4)
+            )
+        );
+        throw error;
+    };
+    local.functionOrNop = function (fnc) {
+    /*
+     * this function will if <fnc> exists,
+     * them return <fnc>,
+     * else return <nop>
+     */
+        return fnc || local.nop;
+    };
+    local.identity = function (value) {
+    /*
+     * this function will return <value>
+     */
+        return value;
+    };
+    local.nop = function () {
+    /*
+     * this function will do nothing
+     */
+        return;
+    };
+    // init debug_inline
+    if (!globalThis["debug\u0049nline"]) {
+        consoleError = console.error;
+        globalThis["debug\u0049nline"] = function () {
+        /*
+         * this function will both print <arguments> to stderr
+         * and return <arguments>[0]
+         */
+            var argList;
+            argList = Array.from(arguments); // jslint ignore:line
+            // debug arguments
+            globalThis["debug\u0049nlineArguments"] = argList;
+            consoleError("\n\ndebug\u0049nline");
+            consoleError.apply(console, argList);
+            consoleError("\n");
+            // return arg0 for inspection
+            return argList[0];
+        };
+    }
+}(this));
+
+
+
+(function (local) {
 "use strict";
-var local;
 
 
 
 /* istanbul ignore next */
 // run shared js-env code - init-before
 (function () {
-
-
-
-// init debug_inline
-(function () {
-    var consoleError;
-    var context;
-    consoleError = console.error;
-    context = (typeof window === "object" && window) || global;
-    context["debug\u0049nline"] = context["debug\u0049nline"] || function () {
-    /*
-     * this function will both print arg0 to stderr and return it
-     */
-        var argList;
-        argList = arguments; // jslint ignore:line
-        // debug arguments
-        context["debug\u0049nlineArguments"] = argList;
-        consoleError("\n\ndebug\u0049nline");
-        consoleError.apply(console, argList);
-        consoleError("\n");
-        // return arg0 for inspection
-        return argList[0];
-    };
-}());
 // init local
-local = {};
-// init isBrowser
-local.isBrowser = (
-    typeof window === "object"
-    && typeof window.XMLHttpRequest === "function"
-    && window.document
-    && typeof window.document.querySelectorAll === "function"
-);
-// init global
-local.global = local.isBrowser
-? window
-: global;
-// re-init local
 local = (
-    local.global.utility2_rollup
-    // || local.global.utility2_rollup_old || require("./assets.utility2.rollup.js")
-    || local
+    globalThis.utility2_rollup
+    // || globalThis.utility2_rollup_old
+    // || require("./assets.utility2.rollup.js")
+    || globalThis.globalLocal
 );
 // init exports
 if (local.isBrowser) {
-    local.global.utility2_github_crud = local;
+    globalThis.utility2_github_crud = local;
 } else {
     // require builtins
-    // local.assert = require("assert");
+    local.assert = require("assert");
     local.buffer = require("buffer");
     local.child_process = require("child_process");
     local.cluster = require("cluster");
@@ -121,31 +178,24 @@ local.ajax = function (options, onError) {
  */
     var ajaxProgressUpdate;
     var bufferValidateAndCoerce;
-    var isBrowser;
     var isDone;
-    var onEvent;
-    var nop;
     var local2;
+    var onEvent;
     var streamCleanup;
+    var tmp;
     var xhr;
     var xhrInit;
     // init local2
     local2 = local.utility2 || {};
     // init function
-    nop = function () {
-    /*
-     * this function will do nothing
-     */
-        return;
-    };
-    ajaxProgressUpdate = local2.ajaxProgressUpdate || nop;
+    ajaxProgressUpdate = local2.ajaxProgressUpdate || local.nop;
     bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (bff, mode) {
     /*
      * this function will validate and coerce/convert
      * ArrayBuffer, String, or Uint8Array -> Buffer or String
      */
         // coerce ArrayBuffer -> Buffer
-        if (bff instanceof ArrayBuffer) {
+        if (Object.prototype.toString.call(bff) === "[object ArrayBuffer]") {
             bff = new Uint8Array(bff);
         }
         // convert Buffer -> String
@@ -158,9 +208,11 @@ local.ajax = function (options, onError) {
     /*
      * this function will handle events
      */
-        if (event instanceof Error) {
+        if (Object.prototype.toString.call(event) === "[object Error]") {
             xhr.error = xhr.error || event;
-            xhr.onEvent({type: "error"});
+            xhr.onEvent({
+                type: "error"
+            });
             return;
         }
         // init statusCode
@@ -191,15 +243,18 @@ local.ajax = function (options, onError) {
             // debug statusCode / method / url
             if (xhr.error) {
                 xhr.error.statusCode = xhr.statusCode;
-                (local2.errorMessagePrepend || nop)(
-                    xhr.error,
+                tmp = (
+                    // ternary-operator
                     (
-                        isBrowser
+                        local.isBrowser
                         ? "browser"
                         : "node"
-                    ) + " - "
-                            + xhr.statusCode + " " + xhr.method + " " + xhr.url + "\n"
+                    )
+                    + " - " + xhr.statusCode + " " + xhr.method + " " + xhr.url
+                    + "\n"
                 );
+                xhr.error.message = tmp + xhr.error.message;
+                xhr.error.stack = tmp + xhr.error.stack;
             }
             // update responseHeaders
             // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders
@@ -211,8 +266,9 @@ local.ajax = function (options, onError) {
                 });
             }
             // debug ajaxResponse
-            xhr.responseContentLength =
-                    (xhr.response && (xhr.response.byteLength || xhr.response.length)) | 0;
+            xhr.responseContentLength = (
+                (xhr.response && (xhr.response.byteLength || xhr.response.length)) | 0
+            );
             xhr.timeElapsed = Date.now() - xhr.timeStart;
             if (xhr.modeDebug) {
                 console.error("serverLog - " + JSON.stringify({
@@ -266,8 +322,7 @@ local.ajax = function (options, onError) {
         if (error) {
             try {
                 stream.destroy();
-            } catch (ignore) {
-            }
+            } catch (ignore) {}
         }
     };
     xhrInit = function () {
@@ -283,7 +338,7 @@ local.ajax = function (options, onError) {
         Object.assign(xhr, {
             corsForwardProxyHost: xhr.corsForwardProxyHost || local2.corsForwardProxyHost,
             headers: xhr.headers || {},
-            location: xhr.location || (isBrowser && location) || {},
+            location: xhr.location || (local.isBrowser && location) || {},
             method: xhr.method || "GET",
             responseType: xhr.responseType || "",
             timeout: xhr.timeout || local2.timeoutDefault || 30000
@@ -297,31 +352,26 @@ local.ajax = function (options, onError) {
         xhr.responseHeaders = {};
         xhr.timeStart = xhr.timeStart || Date.now();
     };
-    // init isBrowser
-    isBrowser = (
-        typeof window === "object"
-        && typeof window.XMLHttpRequest === "function"
-        && window.document
-        && typeof window.document.querySelectorAll === "function"
-    );
     // init onError
     if (local2.onErrorWithStack) {
         onError = local2.onErrorWithStack(onError);
     }
     // init xhr - XMLHttpRequest
-    xhr = isBrowser
-            && !options.httpRequest
-            && !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(options.url))
-            && new XMLHttpRequest();
+    xhr = (
+        local.isBrowser
+        && !options.httpRequest
+        && !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(options.url))
+        && new XMLHttpRequest()
+    );
     // init xhr - http.request
     if (!xhr) {
-        xhr = (local2.urlParse || require("url").parse)(options.url);
+        xhr = local.functionOrNop(local2.urlParse || require("url").parse)(options.url);
         // init xhr
         xhrInit();
         // init xhr - http.request
-        xhr = (
+        xhr = local.functionOrNop(
             options.httpRequest
-            || (isBrowser && local2.http.request)
+            || (local.isBrowser && local2.http.request)
             || require(xhr.protocol.slice(0, -1)).request
         )(xhr, function (responseStream) {
         /*
@@ -337,11 +387,15 @@ local.ajax = function (options, onError) {
                 chunkList.push(chunk);
             });
             responseStream.on("end", function () {
-                xhr.response = isBrowser
-                ? chunkList[0]
-                : Buffer.concat(chunkList);
+                xhr.response = (
+                    local.isBrowser
+                    ? chunkList[0]
+                    : Buffer.concat(chunkList)
+                );
                 responseStream.dataLength = xhr.response.byteLength || xhr.response.length;
-                xhr.onEvent({type: "load"});
+                xhr.onEvent({
+                    type: "load"
+                });
             });
             responseStream.on("error", xhr.onEvent);
         });
@@ -350,13 +404,15 @@ local.ajax = function (options, onError) {
          * this function will abort the xhr-request
          * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/abort
          */
-            xhr.onEvent({type: "abort"});
+            xhr.onEvent({
+                type: "abort"
+            });
         };
-        xhr.addEventListener = nop;
-        xhr.open = nop;
+        xhr.addEventListener = local.nop;
+        xhr.open = local.nop;
         xhr.requestStream = xhr;
         xhr.send = xhr.end;
-        xhr.setRequestHeader = nop;
+        xhr.setRequestHeader = local.nop;
         xhr.on("error", onEvent);
     }
     // init xhr
@@ -400,7 +456,7 @@ local.ajax = function (options, onError) {
     });
     // send data - FormData
     // https://developer.mozilla.org/en-US/docs/Web/API/FormData
-    if (local2.FormData && xhr.data instanceof local2.FormData) {
+    if (local2.FormData && (xhr.data && xhr.data.constructor === local2.FormData)) {
         // handle formData
         xhr.data.read(function (error, data) {
             if (error) {
@@ -427,7 +483,7 @@ local.cliRun = function (options) {
      * <code>
      * will eval <code>
      */
-        global.local = local;
+        globalThis.local = local;
         local.vm.runInThisContext(process.argv[3]);
     };
     local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
@@ -451,17 +507,14 @@ local.cliRun = function (options) {
             description: "example:",
             command: ["--eval"]
         }];
-        file = __filename.replace((/.*\//), "");
+        file = __filename.replace((
+            /.*\//
+        ), "");
         options = Object.assign({}, options);
         packageJson = require("./package.json");
         // validate comment
-        options.rgxComment = options.rgxComment || new RegExp(
-            "\\) \\{\\n"
-            + "(?:| {4})\\/\\*\\n"
-            + "(?: | {5})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n"
-            + "(?: | {5})\\* (will .*?\\S)\\n"
-            + "(?: | {5})\\*\\/\\n"
-            + "(?: {4}| {8})\\S"
+        options.rgxComment = options.rgxComment || (
+            /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         textDict = {};
         Object.keys(local.cliDict).sort().forEach(function (key, ii) {
@@ -486,14 +539,20 @@ local.cliRun = function (options) {
                     description: commandList[ii][2]
                 };
             } catch (ignore) {
-                throw new Error(
+                local.assertThrow(null, new Error(
                     "cliRun - cannot parse comment in COMMAND "
                     + key + ":\nnew RegExp(" + JSON.stringify(options.rgxComment.source)
                     + ").exec(" + JSON.stringify(text)
-                    .replace((/\\\\/g), "\u0000")
-                    .replace((/\\n/g), "\\n\\\n")
-                    .replace((/\u0000/g), "\\\\") + ");"
-                );
+                    .replace((
+                        /\\\\/g
+                    ), "\u0000")
+                    .replace((
+                        /\\n/g
+                    ), "\\n\\\n")
+                    .replace((
+                        /\u0000/g
+                    ), "\\\\") + ");"
+                ));
             }
         });
         console.log(packageJson.name + " (" + packageJson.version + ")\n\n" + commandList
@@ -511,14 +570,20 @@ local.cliRun = function (options) {
                 break;
             default:
                 element.argList = element.argList.split(" ");
-                element.description = "# COMMAND "
-                        + (element.command[0] || "<none>") + "\n# "
-                        + element.description;
+                element.description = (
+                    "# COMMAND "
+                    + (element.command[0] || "<none>") + "\n# "
+                    + element.description
+                );
             }
-            return element.description + "\n  " + file
-                    + ("  " + element.command.sort().join("|") + "  ")
-                    .replace((/^\u0020{4}$/), "  ")
-                    + element.argList.join("  ");
+            return (
+                element.description + "\n  " + file
+                + ("  " + element.command.sort().join("|") + "  ")
+                    .replace((
+                    /^\u0020{4}$/
+                ), "  ")
+                + element.argList.join("  ")
+            );
         })
         .join("\n\n"));
     };
@@ -531,11 +596,15 @@ local.cliRun = function (options) {
      *
      * will start interactive-mode
      */
-        global.local = local;
-        (local.replStart || require("repl").start)({useGlobal: true});
+        globalThis.local = local;
+        local.functionOrNop(local.replStart || require("repl").start)({
+            useGlobal: true
+        });
     };
-    local.cliDict["--interactive"] = local.cliDict["--interactive"]
-            || local.cliDict._interactive;
+    local.cliDict["--interactive"] = (
+        local.cliDict["--interactive"]
+        || local.cliDict._interactive
+    );
     local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
     local.cliDict._version = local.cliDict._version || function () {
     /*
@@ -558,20 +627,6 @@ local.cliRun = function (options) {
     local.cliDict._default();
 };
 
-local.echo = function (arg) {
-/*
- * this function will return <arg>
- */
-    return arg;
-};
-
-local.nop = function () {
-/*
- * this function will do nothing
- */
-    return;
-};
-
 local.onErrorDefault = function (error) {
 /*
  * this function will if <error> exists, then print it to stderr
@@ -589,7 +644,9 @@ local.onErrorWithStack = function (onError) {
  */
     var onError2;
     var stack;
-    stack = new Error().stack.replace((/(.*?)\n.*?$/m), "$1");
+    stack = new Error().stack.replace((
+        /(.*?)\n.*?$/m
+    ), "$1");
     onError2 = function (error, data, meta) {
         if (
             error
@@ -616,9 +673,11 @@ local.onNext = function (options, onError) {
  */
     options.onNext = local.onErrorWithStack(function (error, data, meta) {
         try {
-            options.modeNext += (error && !options.modeErrorIgnore)
-            ? 1000
-            : 1;
+            options.modeNext += (
+                (error && !options.modeErrorIgnore)
+                ? 1000
+                : 1
+            );
             if (options.modeDebug) {
                 console.error("onNext - " + JSON.stringify({
                     modeNext: options.modeNext,
@@ -632,7 +691,7 @@ local.onNext = function (options, onError) {
         } catch (errorCaught) {
             // throw errorCaught to break infinite recursion-loop
             if (options.errorCaught) {
-                throw options.errorCaught;
+                local.assertThrow(null, options.errorCaught);
             }
             options.errorCaught = errorCaught;
             options.onNext(errorCaught, data, meta);
@@ -742,9 +801,6 @@ local.onParallelList = function (options, onEach, onError) {
 
 // run shared js-env code - function
 (function () {
-
-
-
 local.githubCrudAjax = function (options, onError) {
 /*
  * this function will make a low-level content-request to github
@@ -755,8 +811,9 @@ local.githubCrudAjax = function (options, onError) {
         content: options.content,
         headers: Object.assign({
             // github oauth authentication
-            Authorization: "token " +
-                    (typeof process === "object" && process && process.env.GITHUB_TOKEN),
+            Authorization: "token " + (
+                typeof process === "object" && process && process.env.GITHUB_TOKEN
+            ),
             // bug-workaround - https://developer.github.com/v3/#user-agent-required
             "User-Agent": "undefined"
         }, options.headers),
@@ -795,23 +852,33 @@ local.githubCrudAjax = function (options, onError) {
     'https://github.com/$1'
 )
 /* jslint ignore:end */
-    .replace((/\?branch=(.*)/), function (match0, match1) {
+    .replace((
+        /\?branch=(.*)/
+    ), function (match0, match1) {
         options.branch = match1;
         if (options.method === "GET") {
             match0 = match0.replace("branch", "ref");
         }
         return match0;
     });
-    if ((/^https:\/\/github\.com\/[^\/]+?\/[^\/]+?$/).test(options.url)) {
-        options.data = JSON.stringify({name: options.url.split("/")[4]});
+    if ((
+        /^https:\/\/github\.com\/[^\/]+?\/[^\/]+?$/
+    ).test(options.url)) {
+        options.data = JSON.stringify({
+            name: options.url.split("/")[4]
+        });
         switch (options.method) {
         case "DELETE":
-            options.url = "https://api.github.com/repos/" +
-                    options.url.split("/").slice(3).join("/");
+            options.url = (
+                "https://api.github.com/repos/"
+                + options.url.split("/").slice(3).join("/")
+            );
             break;
         case "POST_ORG":
-            options.url = "https://api.github.com/orgs/" +
-                    options.url.split("/")[3] + "/repos";
+            options.url = (
+                "https://api.github.com/orgs/"
+                + options.url.split("/")[3] + "/repos"
+            );
             break;
         case "POST_USER":
             options.url = "https://api.github.com/user/repos";
@@ -825,9 +892,13 @@ local.githubCrudAjax = function (options, onError) {
             return;
         }
         if (options.method !== "GET") {
-            options.message = options.message ||
-                    "[ci skip] " + options.method + " file " +
-                    options.url.replace((/\?.*/), "");
+            options.message = (
+                options.message
+                || "[ci skip] " + options.method + " file "
+                + options.url.replace((
+                    /\?.*/
+                ), "")
+            );
             options.url += "&message=" + encodeURIComponent(options.message);
             if (options.sha) {
                 options.url += "&sha=" + options.sha;
@@ -850,15 +921,14 @@ local.githubCrudAjax = function (options, onError) {
             timeElapsed: xhr.timeElapsed
         }));
         local.onErrorDefault(
-            error &&
-            error.statusCode !== 404 &&
-            xhr &&
-            ("githubCrud - " + xhr.responseText)
+            error
+            && error.statusCode !== 404
+            && xhr
+            && ("githubCrud - " + xhr.responseText)
         );
         try {
             options.responseJson = JSON.parse(xhr.responseText);
-        } catch (ignore) {
-        }
+        } catch (ignore) {}
         onError(
             !(options.method === "DELETE" && xhr.statusCode === 404) && error,
             options.responseJson
@@ -898,7 +968,9 @@ local.githubCrudContentDelete = function (options, onError) {
                 return;
             }
             // delete tree
-            local.onParallelList({list: data}, function (options2, onParallel) {
+            local.onParallelList({
+                list: data
+            }, function (options2, onParallel) {
                 onParallel.counter += 1;
                 // recurse
                 local.githubCrudContentDelete({
@@ -921,7 +993,10 @@ local.githubCrudContentGet = function (options, onError) {
  * this function will get the github-file options.url
  * https://developer.github.com/v3/repos/contents/#get-contents
  */
-    options = {httpRequest: options.httpRequest, url: options.url};
+    options = {
+        httpRequest: options.httpRequest,
+        url: options.url
+    };
     local.onNext(options, function (error, data) {
         switch (options.modeNext) {
         case 1:
@@ -997,7 +1072,9 @@ local.githubCrudContentPutFile = function (options, onError) {
         switch (options.modeNext) {
         case 1:
             // get file from url
-            if ((/^(?:http|https):\/\//).test(options.file)) {
+            if ((
+                /^(?:http|https):\/\//
+            ).test(options.file)) {
                 local.ajax({
                     httpRequest: options.httpRequest,
                     url: options.file
@@ -1015,7 +1092,9 @@ local.githubCrudContentPutFile = function (options, onError) {
                 httpRequest: options.httpRequest,
                 message: options.message,
                 // resolve file in url
-                url: (/\/$/).test(options.url)
+                url: (
+                    /\/$/
+                ).test(options.url)
                 ? options.url + local.path.basename(options.file)
                 : options.url
             }, options.onNext);
@@ -1072,7 +1151,9 @@ local.githubCrudContentTouchList = function (options, onError) {
  * this function will touch the github-files options.urlList in parallel
  * https://developer.github.com/v3/repos/contents/#update-a-file
  */
-    local.onParallelList({list: options.urlList}, function (options2, onParallel) {
+    local.onParallelList({
+        list: options.urlList
+    }, function (options2, onParallel) {
         onParallel.counter += 1;
         local.githubCrudContentTouch({
             httpRequest: options.httpRequest,
@@ -1109,7 +1190,9 @@ local.githubCrudRepoCreateList = function (options, onError) {
  * this function will create the github-repos options.urlList in parallel
  * https://developer.github.com/v3/repos/#create
  */
-    local.onParallelList({list: options.urlList}, function (options2, onParallel) {
+    local.onParallelList({
+        list: options.urlList
+    }, function (options2, onParallel) {
         onParallel.counter += 1;
         local.githubCrudRepoCreate({
             httpRequest: options.httpRequest,
@@ -1135,7 +1218,9 @@ local.githubCrudRepoDeleteList = function (options, onError) {
  * this function will delete the github-repos options.urlList in parallel
  * https://developer.github.com/v3/repos/#delete-a-repository
  */
-    local.onParallelList({list: options.urlList}, function (options2, onParallel) {
+    local.onParallelList({
+        list: options.urlList
+    }, function (options2, onParallel) {
         onParallel.counter += 1;
         local.githubCrudRepoDelete({
             httpRequest: options.httpRequest,
@@ -1156,10 +1241,6 @@ if (local.isBrowser) {
 
 
 
-// init cli
-if (module !== require.main || local.global.utility2_rollup) {
-    return;
-}
 local.cliDict = {};
 local.cliDict.delete = function () {
 /*
@@ -1184,8 +1265,7 @@ local.cliDict.get = function () {
     }, function (error, data) {
         try {
             process.stdout.write(data);
-        } catch (ignore) {
-        }
+        } catch (ignore) {}
         process.exit(Boolean(error));
     });
 };
@@ -1210,7 +1290,9 @@ local.cliDict.repo_create = function () {
  * will create on github in parallel, comma-separated <repoList>
  */
     local.github_crud.githubCrudRepoCreateList({
-        urlList: process.argv[3].split(/[,\s]/g).filter(local.echo)
+        urlList: process.argv[3].split(
+            /[,\s]/g
+        ).filter(local.identity)
     }, function (error) {
         process.exit(Boolean(error));
     });
@@ -1222,7 +1304,9 @@ local.cliDict.repo_delete = function () {
  * will delete from github in parallel, comma-separated <repoList>
  */
     local.github_crud.githubCrudRepoDeleteList({
-        urlList: process.argv[3].split(/[,\s]/g).filter(local.echo)
+        urlList: process.argv[3].split(
+            /[,\s]/g
+        ).filter(local.identity)
     }, function (error) {
         process.exit(Boolean(error));
     });
@@ -1235,12 +1319,20 @@ local.cliDict.touch = function () {
  */
     local.github_crud.githubCrudContentTouchList({
         message: process.argv[4],
-        urlList: process.argv[3].split(/[,\s]/g).filter(local.echo)
+        urlList: process.argv[3].split(
+            /[,\s]/g
+        ).filter(local.identity)
     }, function (error) {
         process.exit(Boolean(error));
     });
 };
 
-local.cliRun();
+// run cli
+if (module === require.main && !globalThis.utility2_rollup) {
+    local.cliRun();
+}
 }());
+
+
+
 }());

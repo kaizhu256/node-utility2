@@ -9,65 +9,122 @@
 
 
 /* istanbul instrument in package istanbul */
+/* istanbul ignore next */
 /* jslint utility2:true */
-(function () {
+(function (globalThis) {
+    "use strict";
+    var consoleError;
+    var local;
+    // init globalThis
+    (function () {
+        try {
+            globalThis = Function("return this")(); // jslint ignore:line
+        } catch (ignore) {}
+    }());
+    globalThis.globalThis = globalThis;
+    // init local
+    local = {};
+    // init isBrowser
+    local.isBrowser = (
+        typeof window === "object"
+        && window === globalThis
+        && typeof window.XMLHttpRequest === "function"
+        && window.document
+        && typeof window.document.querySelectorAll === "function"
+    );
+    globalThis.globalLocal = local;
+    // init function
+    local.assertThrow = function (passed, message) {
+    /*
+     * this function will throw the error <message> if <passed> is falsy
+     */
+        var error;
+        if (passed) {
+            return;
+        }
+        error = (
+            // ternary-operator
+            (
+                message
+                && typeof message.message === "string"
+                && typeof message.stack === "string"
+            )
+            // if message is an error-object, then leave it as is
+            ? message
+            : new Error(
+                typeof message === "string"
+                // if message is a string, then leave it as is
+                ? message
+                // else JSON.stringify message
+                : JSON.stringify(message, null, 4)
+            )
+        );
+        throw error;
+    };
+    local.functionOrNop = function (fnc) {
+    /*
+     * this function will if <fnc> exists,
+     * them return <fnc>,
+     * else return <nop>
+     */
+        return fnc || local.nop;
+    };
+    local.identity = function (value) {
+    /*
+     * this function will return <value>
+     */
+        return value;
+    };
+    local.nop = function () {
+    /*
+     * this function will do nothing
+     */
+        return;
+    };
+    // init debug_inline
+    if (!globalThis["debug\u0049nline"]) {
+        consoleError = console.error;
+        globalThis["debug\u0049nline"] = function () {
+        /*
+         * this function will both print <arguments> to stderr
+         * and return <arguments>[0]
+         */
+            var argList;
+            argList = Array.from(arguments); // jslint ignore:line
+            // debug arguments
+            globalThis["debug\u0049nlineArguments"] = argList;
+            consoleError("\n\ndebug\u0049nline");
+            consoleError.apply(console, argList);
+            consoleError("\n");
+            // return arg0 for inspection
+            return argList[0];
+        };
+    }
+}(this));
+
+
+
+(function (local) {
 "use strict";
-var local;
 
 
 
 /* istanbul ignore next */
 // run shared js-env code - init-before
 (function () {
-
-
-
-// init debug_inline
-(function () {
-    var consoleError;
-    var context;
-    consoleError = console.error;
-    context = (typeof window === "object" && window) || global;
-    context["debug\u0049nline"] = context["debug\u0049nline"] || function () {
-    /*
-     * this function will both print arg0 to stderr and return it
-     */
-        var argList;
-        argList = arguments; // jslint ignore:line
-        // debug arguments
-        context["debug\u0049nlineArguments"] = argList;
-        consoleError("\n\ndebug\u0049nline");
-        consoleError.apply(console, argList);
-        consoleError("\n");
-        // return arg0 for inspection
-        return argList[0];
-    };
-}());
 // init local
-local = {};
-// init isBrowser
-local.isBrowser = (
-    typeof window === "object"
-    && typeof window.XMLHttpRequest === "function"
-    && window.document
-    && typeof window.document.querySelectorAll === "function"
-);
-// init global
-local.global = local.isBrowser
-? window
-: global;
-// re-init local
 local = (
-    local.global.utility2_rollup
-    // || local.global.utility2_rollup_old || require("./assets.utility2.rollup.js")
-    || local
+    globalThis.utility2_rollup
+    // || globalThis.utility2_rollup_old
+    // || require("./assets.utility2.rollup.js")
+    || globalThis.globalLocal
 );
 // init exports
 if (local.isBrowser) {
-    local.global.utility2_istanbul = local;
+    globalThis.utility2_istanbul = local;
 } else {
     // require builtins
-    // local.assert = require("assert");
+    local.assert = require("assert");
     local.buffer = require("buffer");
     local.child_process = require("child_process");
     local.cluster = require("cluster");
@@ -120,7 +177,7 @@ local.cliRun = function (options) {
      * <code>
      * will eval <code>
      */
-        global.local = local;
+        globalThis.local = local;
         local.vm.runInThisContext(process.argv[3]);
     };
     local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
@@ -144,17 +201,14 @@ local.cliRun = function (options) {
             description: "example:",
             command: ["--eval"]
         }];
-        file = __filename.replace((/.*\//), "");
+        file = __filename.replace((
+            /.*\//
+        ), "");
         options = Object.assign({}, options);
         packageJson = require("./package.json");
         // validate comment
-        options.rgxComment = options.rgxComment || new RegExp(
-            "\\) \\{\\n"
-            + "(?:| {4})\\/\\*\\n"
-            + "(?: | {5})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n"
-            + "(?: | {5})\\* (will .*?\\S)\\n"
-            + "(?: | {5})\\*\\/\\n"
-            + "(?: {4}| {8})\\S"
+        options.rgxComment = options.rgxComment || (
+            /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         textDict = {};
         Object.keys(local.cliDict).sort().forEach(function (key, ii) {
@@ -179,14 +233,20 @@ local.cliRun = function (options) {
                     description: commandList[ii][2]
                 };
             } catch (ignore) {
-                throw new Error(
+                local.assertThrow(null, new Error(
                     "cliRun - cannot parse comment in COMMAND "
                     + key + ":\nnew RegExp(" + JSON.stringify(options.rgxComment.source)
                     + ").exec(" + JSON.stringify(text)
-                    .replace((/\\\\/g), "\u0000")
-                    .replace((/\\n/g), "\\n\\\n")
-                    .replace((/\u0000/g), "\\\\") + ");"
-                );
+                    .replace((
+                        /\\\\/g
+                    ), "\u0000")
+                    .replace((
+                        /\\n/g
+                    ), "\\n\\\n")
+                    .replace((
+                        /\u0000/g
+                    ), "\\\\") + ");"
+                ));
             }
         });
         console.log(packageJson.name + " (" + packageJson.version + ")\n\n" + commandList
@@ -204,14 +264,20 @@ local.cliRun = function (options) {
                 break;
             default:
                 element.argList = element.argList.split(" ");
-                element.description = "# COMMAND "
-                        + (element.command[0] || "<none>") + "\n# "
-                        + element.description;
+                element.description = (
+                    "# COMMAND "
+                    + (element.command[0] || "<none>") + "\n# "
+                    + element.description
+                );
             }
-            return element.description + "\n  " + file
-                    + ("  " + element.command.sort().join("|") + "  ")
-                    .replace((/^\u0020{4}$/), "  ")
-                    + element.argList.join("  ");
+            return (
+                element.description + "\n  " + file
+                + ("  " + element.command.sort().join("|") + "  ")
+                    .replace((
+                    /^\u0020{4}$/
+                ), "  ")
+                + element.argList.join("  ")
+            );
         })
         .join("\n\n"));
     };
@@ -224,11 +290,15 @@ local.cliRun = function (options) {
      *
      * will start interactive-mode
      */
-        global.local = local;
-        (local.replStart || require("repl").start)({useGlobal: true});
+        globalThis.local = local;
+        local.functionOrNop(local.replStart || require("repl").start)({
+            useGlobal: true
+        });
     };
-    local.cliDict["--interactive"] = local.cliDict["--interactive"]
-            || local.cliDict._interactive;
+    local.cliDict["--interactive"] = (
+        local.cliDict["--interactive"]
+        || local.cliDict._interactive
+    );
     local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
     local.cliDict._version = local.cliDict._version || function () {
     /*
@@ -266,18 +336,13 @@ local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
         require("child_process").spawnSync(
             "mkdir",
             ["-p", require("path").dirname(file)],
-            {stdio: ["ignore", 1, 2]}
+            {
+                stdio: ["ignore", 1, 2]
+            }
         );
         // re-write to file
         require("fs").writeFileSync(file, data);
     }
-};
-
-local.nop = function () {
-/*
- * this function will do nothing
- */
-    return;
 };
 }());
 
@@ -285,16 +350,13 @@ local.nop = function () {
 
 // run shared js-env code - function
 (function () {
-
-
-
 var __dirname;
 var process;
 var require;
 // jslint-hack
 local.nop(__dirname, require);
 /* istanbul ignore next */
-local.global.__coverageCodeDict__ = local.global.__coverageCodeDict__ || {};
+globalThis.__coverageCodeDict__ = globalThis.__coverageCodeDict__ || {};
 // mock builtins
 __dirname = "";
 process = local.process || {
@@ -307,8 +369,7 @@ process = local.process || {
 require = function (key) {
     try {
         return local["_istanbul_" + key] || local[key] || local.require(key);
-    } catch (ignore) {
-    }
+    } catch (ignore) {}
 };
 local["./package.json"] = {};
 // mock module fs
@@ -319,7 +380,9 @@ local._istanbul_fs.readFileSync = function (file) {
     if (local.isBrowser) {
         file = file
         .replace("<!doctype html>\n", "")
-        .replace((/(<\/?)(?:body|html)/g), "$1div");
+        .replace((
+            /(<\/?)(?:body|html)/g
+        ), "$1div");
     }
     if (!local.isBrowser && process.env.npm_package_homepage) {
         file = file
@@ -327,7 +390,9 @@ local._istanbul_fs.readFileSync = function (file) {
         .replace("{{env.npm_package_name}}", process.env.npm_package_name)
         .replace("{{env.npm_package_version}}", process.env.npm_package_version);
     } else {
-        file = file.replace((/<h1\u0020[\S\s]*<\/h1>/), "");
+        file = file.replace((
+            /<h1\u0020[\S\s]*<\/h1>/
+        ), "");
     }
     return file;
 };
@@ -339,7 +404,9 @@ local._istanbul_fs.readdirSync = function () {
 // mock module path
 local._istanbul_path = local.path || {
     dirname: function (file) {
-        return file.replace((/\/[\w\-.]+?$/), "");
+        return file.replace((
+            /\/[\w\-.]+?$/
+        ), "");
     },
     resolve: function (aa, bb, cc, dd) {
         return dd || cc || bb || aa;
@@ -398,7 +465,7 @@ local.coverageReportCreate = function () {
  */
     var options;
     /* istanbul ignore next */
-    if (!local.global.__coverage__) {
+    if (!globalThis.__coverage__) {
         return "";
     }
     options = {};
@@ -407,30 +474,31 @@ local.coverageReportCreate = function () {
     if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
         console.log("merging file " + options.dir + "/coverage.json to coverage");
         try {
-            local.coverageMerge(local.global.__coverage__, JSON.parse(
+            local.coverageMerge(globalThis.__coverage__, JSON.parse(
                 local.fs.readFileSync(options.dir + "/coverage.json", "utf8")
             ));
-        } catch (ignore) {
-        }
+        } catch (ignore) {}
         try {
             options.coverageCodeDict = JSON.parse(local.fs.readFileSync(
                 options.dir + "/coverage.code-dict.json",
                 "utf8"
             ));
             Object.keys(options.coverageCodeDict).forEach(function (key) {
-                local.global.__coverageCodeDict__[key] =
-                        local.global.__coverageCodeDict__[key] ||
-                        options.coverageCodeDict[key];
+                globalThis.__coverageCodeDict__[key] = (
+                    globalThis.__coverageCodeDict__[key]
+                    || options.coverageCodeDict[key]
+                );
             });
-        } catch (ignore) {
-        }
+        } catch (ignore) {}
     }
     // init writer
     local.coverageReportHtml = "";
-    local.coverageReportHtml += "<div class=\"coverageReportDiv\">\n" +
-            "<h1>coverage-report</h1>\n" +
-            "<div style=\"background: #fff; border: 1px solid #000; margin 0; padding: 0;" +
-            "\">\n";
+    local.coverageReportHtml += (
+        "<div class=\"coverageReportDiv\">\n"
+        + "<h1>coverage-report</h1>\n"
+        + "<div style=\"background: #fff; border: 1px solid #000; margin 0; padding: 0;"
+        + "\">\n"
+    );
     local.writerData = "";
     options.sourceStore = {};
     options.writer = local.writer;
@@ -443,12 +511,12 @@ local.coverageReportCreate = function () {
         // write coverage.json
         local.fsWriteFileWithMkdirpSync(
             options.dir + "/coverage.json",
-            JSON.stringify(local.global.__coverage__)
+            JSON.stringify(globalThis.__coverage__)
         );
         // write coverage.code-dict.json
         local.fsWriteFileWithMkdirpSync(
             options.dir + "/coverage.code-dict.json",
-            JSON.stringify(local.global.__coverageCodeDict__)
+            JSON.stringify(globalThis.__coverageCodeDict__)
         );
         // write coverage.badge.svg
         options.pct = local.coverageReportSummary.root.metrics.lines.pct;
@@ -456,14 +524,16 @@ local.coverageReportCreate = function () {
             local._istanbul_path.dirname(options.dir) + "/coverage.badge.svg",
             local.templateCoverageBadgeSvg
             // edit coverage badge percent
-            .replace((/100.0/g), options.pct)
+            .replace((
+                /100.0/g
+            ), options.pct)
             // edit coverage badge color
-            .replace(
-                (/0d0/g),
-                ("0" + Math.round((100 - options.pct) * 2.21).toString(16)).slice(-2) +
-                        ("0" + Math.round(options.pct * 2.21).toString(16)).slice(-2) +
-                        "00"
-            )
+            .replace((
+                /0d0/g
+            ), (
+                ("0" + Math.round((100 - options.pct) * 2.21).toString(16)).slice(-2)
+                + ("0" + Math.round(options.pct * 2.21).toString(16)).slice(-2) + "00"
+            ))
         );
     }
     console.log("created coverage file " + options.dir + "/index.html");
@@ -487,16 +557,16 @@ local.instrumentInPackage = function (code, file) {
  * exists in the code
  */
     return (
-        process.env.npm_config_mode_coverage &&
-        code.indexOf("/* istanbul ignore all */\n") < 0 && (
-            process.env.npm_config_mode_coverage === "all" ||
-            code.indexOf(
-                "/* istanbul instrument in package " +
-                process.env.npm_package_nameLib + " */\n"
-            ) >= 0 ||
-            code.indexOf(
-                "/* istanbul instrument in package " +
-                process.env.npm_config_mode_coverage + " */\n"
+        process.env.npm_config_mode_coverage
+        && code.indexOf("/* istanbul ignore all */\n") < 0 && (
+            process.env.npm_config_mode_coverage === "all"
+            || code.indexOf(
+                "/* istanbul instrument in package "
+                + process.env.npm_package_nameLib + " */\n"
+            ) >= 0
+            || code.indexOf(
+                "/* istanbul instrument in package "
+                + process.env.npm_config_mode_coverage + " */\n"
             ) >= 0
         )
     )
@@ -514,7 +584,7 @@ local.instrumentSync = function (code, file) {
     // 1. normalize the file
     file = local._istanbul_path.resolve("/", file);
     // 2. save code to __coverageCodeDict__[file] for future html-report
-    local.global.__coverageCodeDict__[file] = code;
+    globalThis.__coverageCodeDict__[file] = code;
     // 3. return instrumented code
     return new local.Instrumenter({
         embedSource: true,
@@ -523,7 +593,9 @@ local.instrumentSync = function (code, file) {
     }).instrumentSync(code, file).trimLeft();
 };
 
-local.util = {inherits: local.nop};
+local.util = {
+inherits: local.nop
+};
 
 
 
@@ -1812,16 +1884,17 @@ local.handlebars.compile = function (template) {
         var result;
         result = template;
         // render triple-curly-brace
-        result = result.replace((/\{\{\{/g), "{{").replace((/\}\}\}/g), "}}");
+        result = result.replace((
+            /\{\{\{/g
+        ), "{{").replace((
+            /\}\}\}/g
+        ), "}}");
         // render with-statement
-        result = result.replace(
-            (/\{\{#with\u0020(.+?)\}\}([\S\s]+?)\{\{\/with\}\}/g),
-            function (match0, match1, match2) {
-                // jslint-hack
-                local.nop(match0);
-                return local.handlebars.replace(match2, dict, match1 + ".");
-            }
-        );
+        result = result.replace((
+            /\{\{#with\u0020(.+?)\}\}([\S\s]+?)\{\{\/with\}\}/g
+        ), function (ignore, match1, match2) {
+            return local.handlebars.replace(match2, dict, match1 + ".");
+        });
         // render helper
         result = result.replace(
             "{{#show_ignores metrics}}{{/show_ignores}}",
@@ -1829,32 +1902,37 @@ local.handlebars.compile = function (template) {
                 return local.handlebars.show_ignores(dict.metrics);
             }
         );
-        result = result.replace(
-            "{{#show_line_execution_counts fileCoverage}}" +
-                    "{{maxLines}}{{/show_line_execution_counts}}",
-            function () {
-                return local.handlebars.show_line_execution_counts(
-                    dict.fileCoverage,
-                    {fn: function () {
+        result = result.replace((
+            "{{#show_line_execution_counts fileCoverage}}"
+            + "{{maxLines}}{{/show_line_execution_counts}}"
+        ), function () {
+            return local.handlebars.show_line_execution_counts(
+                dict.fileCoverage,
+                {
+                    fn: function () {
                         return dict.maxLines;
-                    }}
-                );
-            }
-        );
+                    }
+                }
+            );
+        });
         result = result.replace(
             "{{#show_lines}}{{maxLines}}{{/show_lines}}",
             function () {
-                return local.handlebars.show_lines({fn: function () {
-                    return dict.maxLines;
-                }});
+                return local.handlebars.show_lines({
+                    fn: function () {
+                        return dict.maxLines;
+                    }
+                });
             }
         );
         result = result.replace(
             "{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}",
             function () {
-                return local.handlebars.show_picture({fn: function () {
-                    return dict.metrics.statements.pct;
-                }});
+                return local.handlebars.show_picture({
+                    fn: function () {
+                        return dict.metrics.statements.pct;
+                    }
+                });
             }
         );
         result = local.handlebars.replace(result, dict, "");
@@ -1876,8 +1954,7 @@ local.handlebars.registerHelper = function (key, helper) {
     local.handlebars[key] = function (aa, bb) {
         try {
             return helper(aa, bb);
-        } catch (ignore) {
-        }
+        } catch (ignore) {}
     };
 };
 
@@ -1887,15 +1964,19 @@ local.handlebars.replace = function (template, dict, withPrefix) {
  */
     var value;
     // search for keys in the template
-    return template.replace((/\{\{.+?\}\}/g), function (match0) {
+    return template.replace((
+        /\{\{.+?\}\}/g
+    ), function (match0) {
         value = dict;
         // iteratively lookup nested values in the dict
         (withPrefix + match0.slice(2, -2)).split(".").forEach(function (key) {
             value = value && value[key];
         });
-        return value === undefined
-        ? match0
-        : String(value);
+        return (
+            value === undefined
+            ? match0
+            : String(value)
+        );
     });
 };
 
@@ -1908,16 +1989,16 @@ curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/collector
 /* validateLineSortedReset */
 local.collector = {
     fileCoverageFor: function (file) {
-        return local.global.__coverage__[file];
+        return globalThis.__coverage__[file];
     },
     files: function () {
-        return Object.keys(local.global.__coverage__).filter(function (key) {
+        return Object.keys(globalThis.__coverage__).filter(function (key) {
             if (
-                local.global.__coverage__[key] &&
-                local.global.__coverageCodeDict__[key]
+                globalThis.__coverage__[key]
+                && globalThis.__coverageCodeDict__[key]
             ) {
                 // reset derived info
-                local.global.__coverage__[key].l = null;
+                globalThis.__coverage__[key].l = null;
                 return true;
             }
         });
@@ -1951,7 +2032,7 @@ len;if(i.pos>=e)break}return i&&i.pos===e?i.len+=t:r.splice(o,0,{pos:e,len:t}),s
 },wrap:function(e,t,n,r,i){return this.insertAt(e,t,!0,i),this.insertAt(n,r,!1,i
 ),this},wrapLine:function(e,t){this.wrap(0,e,this.originalLength(),t)},toString:
 function(){return this.text}},module.exports=InsertionText
-local['../util/insertion-text'] = module.exports; }());
+local["../util/insertion-text"] = module.exports; }());
 
 
 
@@ -2065,7 +2146,9 @@ Error("Code must be string");e.charAt(0)==="#"&&(e="//"+e),this.opts.noAutoWrap|
 ;n+=1)r=e[n],r&&r.value&&r.range&&h(r.range)&&(i=String(r.value).match(a),i&&t.push
 ({type:i[1],start:r.range[0],end:r.range[1]}));return t},extractCurrentHint:function(
 e){if(!e.range)return;var t=this.currentState.lastHintPosition+1,n=this.currentState
-.hints,r=e.range[0],i;this.currentState.currentHint=null;while(t<n.length){i=n[t
+.hints,r=e.range[0],i;this.currentState.currentHint=null;
+if(e.type==="Program"){return;}
+while(t<n.length){i=n[t
 ];if(!(i.end<r))break;this.currentState.currentHint=i,this.currentState.lastHintPosition=
 t,t+=1}},instrumentASTSync:function(e,t,n){var r=!1,s,o,u,a,f;t=t||String((new Date
 ).getTime())+".js",this.sourceMap=null,this.coverState={path:t,s:{},b:{},f:{},fnMap
@@ -2217,7 +2300,7 @@ n){e[n].total+=t[n].total,e[n].covered+=t[n].covered,e[n].skipped+=t[n].skipped}
 :a,summarizeCoverage:c,mergeFileCoverage:f,mergeSummaryObjects:l,toYUICoverage:h
 };e?module.exports=p:window.coverageUtils=p})(typeof module!="undefined"&&typeof
 module.exports!="undefined"&&typeof exports!="undefined")
-local['../object-utils'] = window.coverageUtils; }());
+local["../object-utils"] = window.coverageUtils; }());
 
 
 
@@ -2234,7 +2317,7 @@ module.exports={watermarks:function(){return{statements:[50,80],lines:[50,80],fu
 r[1]?"high":i>=r[0]?"medium":"low"},colorize:function(e,t){if(process.stdout.isTTY
 )switch(t){case"low":e="\u001b[91m"+e+"\u001b[0m";break;case"medium":e="\u001b[93m"+
 e+"\u001b[0m";break;case"high":e="\u001b[92m"+e+"\u001b[0m"}return e}}
-local['./common/defaults'] = module.exports; }());
+local["./common/defaults"] = module.exports; }());
 /* jslint ignore:end */
 
 
@@ -2261,7 +2344,7 @@ https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/foot.tx
 curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/templates/foot.txt > /tmp/aa.js
 */
 /* jslint ignore:start */
-local['foot.txt'] = '\
+local["foot.txt"] = '\
 </div>\n\
 <div class="footer">\n\
     <div class="meta">Generated by <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a> at {{datetime}}</div>\n\
@@ -2278,7 +2361,7 @@ file istanbul/lib/report/templates/head.txt
 https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
 curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/templates/head.txt > /tmp/aa.js
 */
-local['head.txt'] = '\
+local["head.txt"] = '\
 <!doctype html>\n\
 <html lang="en" class="x-istanbul">\n\
 <head>\n\
@@ -2846,10 +2929,6 @@ if (local.isBrowser) {
 
 
 
-// init cli
-if (module !== local.require.main || local.global.utility2_rollup) {
-    return;
-}
 local.cliDict = {};
 local.cliDict.cover = function () {
 /*
@@ -2859,22 +2938,26 @@ local.cliDict.cover = function () {
     var tmp;
     try {
         tmp = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
-        process.env.npm_package_nameLib = process.env.npm_package_nameLib ||
-                tmp.nameLib ||
-                tmp.name.replace((/-/g), "_");
-    } catch (ignore) {
-    }
-    process.env.npm_config_mode_coverage = process.env.npm_config_mode_coverage ||
-            process.env.npm_package_nameLib ||
-            "all";
+        process.env.npm_package_nameLib = (
+            process.env.npm_package_nameLib
+            || tmp.nameLib
+            || tmp.name.replace((
+                /-/g
+            ), "_")
+        );
+    } catch (ignore) {}
+    process.env.npm_config_mode_coverage = (
+        process.env.npm_config_mode_coverage
+        || process.env.npm_package_nameLib
+        || "all"
+    );
     // add coverage hook to require
     local._istanbul_moduleExtensionsJs = local._istanbul_module._extensions[".js"];
     local._istanbul_module._extensions[".js"] = function (module, file) {
         if (typeof file === "string" && (
-            file.indexOf(process.env.npm_config_mode_coverage_dir) === 0 ||
-            (
-                file.indexOf(process.cwd()) === 0 &&
-                file.indexOf(process.cwd() + "/node_modules/") !== 0
+            file.indexOf(process.env.npm_config_mode_coverage_dir) === 0 || (
+                file.indexOf(process.cwd()) === 0
+                && file.indexOf(process.cwd() + "/node_modules/") !== 0
             )
         )) {
             module._compile(local.instrumentInPackage(
@@ -2891,7 +2974,9 @@ local.cliDict.cover = function () {
     console.log("\ncovering $ " + process.argv.join(" "));
     // create coverage on exit
     process.on("exit", function () {
-        local.coverageReportCreate({coverage: local.global.__coverage__});
+        local.coverageReportCreate({
+            coverage: globalThis.__coverage__
+        });
     });
     // re-init cli
     local._istanbul_module.runMain();
@@ -2928,6 +3013,12 @@ local.cliDict.test = function () {
     local._istanbul_module.runMain();
 };
 
-local.cliRun();
+// run cli
+if (module === require.main && !globalThis.utility2_rollup) {
+    local.cliRun();
+}
 }());
+
+
+
 }());

@@ -9,65 +9,122 @@
 
 
 /* istanbul instrument in package uglifyjs */
+/* istanbul ignore next */
 /* jslint utility2:true */
-(function () {
+(function (globalThis) {
+    "use strict";
+    var consoleError;
+    var local;
+    // init globalThis
+    (function () {
+        try {
+            globalThis = Function("return this")(); // jslint ignore:line
+        } catch (ignore) {}
+    }());
+    globalThis.globalThis = globalThis;
+    // init local
+    local = {};
+    // init isBrowser
+    local.isBrowser = (
+        typeof window === "object"
+        && window === globalThis
+        && typeof window.XMLHttpRequest === "function"
+        && window.document
+        && typeof window.document.querySelectorAll === "function"
+    );
+    globalThis.globalLocal = local;
+    // init function
+    local.assertThrow = function (passed, message) {
+    /*
+     * this function will throw the error <message> if <passed> is falsy
+     */
+        var error;
+        if (passed) {
+            return;
+        }
+        error = (
+            // ternary-operator
+            (
+                message
+                && typeof message.message === "string"
+                && typeof message.stack === "string"
+            )
+            // if message is an error-object, then leave it as is
+            ? message
+            : new Error(
+                typeof message === "string"
+                // if message is a string, then leave it as is
+                ? message
+                // else JSON.stringify message
+                : JSON.stringify(message, null, 4)
+            )
+        );
+        throw error;
+    };
+    local.functionOrNop = function (fnc) {
+    /*
+     * this function will if <fnc> exists,
+     * them return <fnc>,
+     * else return <nop>
+     */
+        return fnc || local.nop;
+    };
+    local.identity = function (value) {
+    /*
+     * this function will return <value>
+     */
+        return value;
+    };
+    local.nop = function () {
+    /*
+     * this function will do nothing
+     */
+        return;
+    };
+    // init debug_inline
+    if (!globalThis["debug\u0049nline"]) {
+        consoleError = console.error;
+        globalThis["debug\u0049nline"] = function () {
+        /*
+         * this function will both print <arguments> to stderr
+         * and return <arguments>[0]
+         */
+            var argList;
+            argList = Array.from(arguments); // jslint ignore:line
+            // debug arguments
+            globalThis["debug\u0049nlineArguments"] = argList;
+            consoleError("\n\ndebug\u0049nline");
+            consoleError.apply(console, argList);
+            consoleError("\n");
+            // return arg0 for inspection
+            return argList[0];
+        };
+    }
+}(this));
+
+
+
+(function (local) {
 "use strict";
-var local;
 
 
 
 /* istanbul ignore next */
 // run shared js-env code - init-before
 (function () {
-
-
-
-// init debug_inline
-(function () {
-    var consoleError;
-    var context;
-    consoleError = console.error;
-    context = (typeof window === "object" && window) || global;
-    context["debug\u0049nline"] = context["debug\u0049nline"] || function () {
-    /*
-     * this function will both print arg0 to stderr and return it
-     */
-        var argList;
-        argList = arguments; // jslint ignore:line
-        // debug arguments
-        context["debug\u0049nlineArguments"] = argList;
-        consoleError("\n\ndebug\u0049nline");
-        consoleError.apply(console, argList);
-        consoleError("\n");
-        // return arg0 for inspection
-        return argList[0];
-    };
-}());
 // init local
-local = {};
-// init isBrowser
-local.isBrowser = (
-    typeof window === "object"
-    && typeof window.XMLHttpRequest === "function"
-    && window.document
-    && typeof window.document.querySelectorAll === "function"
-);
-// init global
-local.global = local.isBrowser
-? window
-: global;
-// re-init local
 local = (
-    local.global.utility2_rollup
-    // || local.global.utility2_rollup_old || require("./assets.utility2.rollup.js")
-    || local
+    globalThis.utility2_rollup
+    // || globalThis.utility2_rollup_old
+    // || require("./assets.utility2.rollup.js")
+    || globalThis.globalLocal
 );
 // init exports
 if (local.isBrowser) {
-    local.global.utility2_uglifyjs = local;
+    globalThis.utility2_uglifyjs = local;
 } else {
     // require builtins
-    // local.assert = require("assert");
+    local.assert = require("assert");
     local.buffer = require("buffer");
     local.child_process = require("child_process");
     local.cluster = require("cluster");
@@ -113,7 +170,7 @@ local.cliRun = function (options) {
      * <code>
      * will eval <code>
      */
-        global.local = local;
+        globalThis.local = local;
         local.vm.runInThisContext(process.argv[3]);
     };
     local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
@@ -137,17 +194,14 @@ local.cliRun = function (options) {
             description: "example:",
             command: ["--eval"]
         }];
-        file = __filename.replace((/.*\//), "");
+        file = __filename.replace((
+            /.*\//
+        ), "");
         options = Object.assign({}, options);
         packageJson = require("./package.json");
         // validate comment
-        options.rgxComment = options.rgxComment || new RegExp(
-            "\\) \\{\\n"
-            + "(?:| {4})\\/\\*\\n"
-            + "(?: | {5})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n"
-            + "(?: | {5})\\* (will .*?\\S)\\n"
-            + "(?: | {5})\\*\\/\\n"
-            + "(?: {4}| {8})\\S"
+        options.rgxComment = options.rgxComment || (
+            /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         textDict = {};
         Object.keys(local.cliDict).sort().forEach(function (key, ii) {
@@ -172,14 +226,20 @@ local.cliRun = function (options) {
                     description: commandList[ii][2]
                 };
             } catch (ignore) {
-                throw new Error(
+                local.assertThrow(null, new Error(
                     "cliRun - cannot parse comment in COMMAND "
                     + key + ":\nnew RegExp(" + JSON.stringify(options.rgxComment.source)
                     + ").exec(" + JSON.stringify(text)
-                    .replace((/\\\\/g), "\u0000")
-                    .replace((/\\n/g), "\\n\\\n")
-                    .replace((/\u0000/g), "\\\\") + ");"
-                );
+                    .replace((
+                        /\\\\/g
+                    ), "\u0000")
+                    .replace((
+                        /\\n/g
+                    ), "\\n\\\n")
+                    .replace((
+                        /\u0000/g
+                    ), "\\\\") + ");"
+                ));
             }
         });
         console.log(packageJson.name + " (" + packageJson.version + ")\n\n" + commandList
@@ -197,14 +257,20 @@ local.cliRun = function (options) {
                 break;
             default:
                 element.argList = element.argList.split(" ");
-                element.description = "# COMMAND "
-                        + (element.command[0] || "<none>") + "\n# "
-                        + element.description;
+                element.description = (
+                    "# COMMAND "
+                    + (element.command[0] || "<none>") + "\n# "
+                    + element.description
+                );
             }
-            return element.description + "\n  " + file
-                    + ("  " + element.command.sort().join("|") + "  ")
-                    .replace((/^\u0020{4}$/), "  ")
-                    + element.argList.join("  ");
+            return (
+                element.description + "\n  " + file
+                + ("  " + element.command.sort().join("|") + "  ")
+                    .replace((
+                    /^\u0020{4}$/
+                ), "  ")
+                + element.argList.join("  ")
+            );
         })
         .join("\n\n"));
     };
@@ -217,11 +283,15 @@ local.cliRun = function (options) {
      *
      * will start interactive-mode
      */
-        global.local = local;
-        (local.replStart || require("repl").start)({useGlobal: true});
+        globalThis.local = local;
+        local.functionOrNop(local.replStart || require("repl").start)({
+            useGlobal: true
+        });
     };
-    local.cliDict["--interactive"] = local.cliDict["--interactive"]
-            || local.cliDict._interactive;
+    local.cliDict["--interactive"] = (
+        local.cliDict["--interactive"]
+        || local.cliDict._interactive
+    );
     local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
     local.cliDict._version = local.cliDict._version || function () {
     /*
@@ -250,9 +320,6 @@ local.cliRun = function (options) {
 /* istanbul ignore next */
 // run shared js-env code - function
 (function () {
-
-
-
 var exports;
 var require;
 // init exports
@@ -829,34 +896,60 @@ local.uglify = function (code, file) {
  * this function will uglify the js-code
  */
     var tmp;
-    switch ((/\.\w+?$|$/m).exec(file)[0]) {
+    switch ((
+        /\.\w+?$|$/m
+    ).exec(file)[0]) {
     case ".css":
         return code
         // remove comment /**/
-        .replace((/\/\*[\S\s]*?\*\//g), "")
+        .replace((
+            /\/\*[\S\s]*?\*\//g
+        ), "")
         // remove comment //
-        .replace((/\/\/.*?$/gm), "")
+        .replace((
+            /\/\/.*?$/gm
+        ), "")
         // remove whitespace
-        .replace((/\t/g), " ")
-        .replace((/\u0020{2,}/g), " ")
-        .replace((/\u0020*?([\n,:;{}])\u0020*/g), "$1")
-        .replace((/\n\n+/g), "\n")
+        .replace((
+            /\t/g
+        ), " ")
+        .replace((
+            /\u0020{2,}/g
+        ), " ")
+        .replace((
+            /\u0020*?([\n,:;{}])\u0020*/g
+        ), "$1")
+        .replace((
+            /\n\n+/g
+        ), "\n")
         .trim();
     case ".htm":
     case ".html":
         return code
         // remove comment /**/
-        .replace((/\/\*[\S\s]*?\*\//g), "")
+        .replace((
+            /\/\*[\S\s]*?\*\//g
+        ), "")
         // remove comment //
-        .replace((/\/\/.*?$/gm), "")
+        .replace((
+            /\/\/.*?$/gm
+        ), "")
         // save whitespace in <pre></pre>
-        .replace((/<pre>[\S\s]*?<\/pre>/g), function (match0) {
-            return match0.replace((/\n/g), "\u0000");
+        .replace((
+            /<pre>[\S\s]*?<\/pre>/g
+        ), function (match0) {
+            return match0.replace((
+                /\n/g
+            ), "\u0000");
         })
         // remove whitespace
-        .replace((/\s*?\n\s*/g), " ")
+        .replace((
+            /\s*?\n\s*/g
+        ), " ")
         // restore whitespace in <pre></pre>
-        .replace((/\u0000/g), "\n")
+        .replace((
+            /\u0000/g
+        ), "\n")
         .trim();
     case ".json":
         return JSON.stringify(JSON.parse(code));
@@ -865,15 +958,23 @@ local.uglify = function (code, file) {
     tmp = local.parse(code
     .trim()
     // comment shebang
-    .replace((/^#!\//), "// "));
+    .replace((
+        /^#!\//
+    ), "// "));
     // get a new AST with mangled names
     tmp = local.ast_mangle(tmp);
     // get an AST with compression optimizations
     tmp = local.ast_squeeze(tmp);
     // compressed code here
-    tmp = local.split_lines(local.gen_code(tmp, {ascii_only: true}), 79);
+    tmp = local.split_lines(local.gen_code(tmp, {
+        ascii_only: true
+    }), 79);
     // escape \r and \t
-    tmp = tmp.replace((/\r/g), "\\r").replace((/\t/g), "\\t");
+    tmp = tmp.replace((
+        /\r/g
+    ), "\\r").replace((
+        /\t/g
+    ), "\\t");
     return tmp;
 };
 }());
@@ -889,17 +990,15 @@ if (local.isBrowser) {
 
 
 
-// init cli
-if (module !== require.main || local.global.utility2_rollup) {
-    return;
-}
 local.cliDict = {};
 local.cliDict._default = function () {
 /*
  * <file>
  * will uglify <file> and print result to stdout
  */
-    if ((/^(?:http|https):\/\//).test(process.argv[2])) {
+    if ((
+        /^(?:http|https):\/\//
+    ).test(process.argv[2])) {
         // uglify url
         (
             process.argv[2].indexOf("https") === 0
@@ -932,6 +1031,12 @@ local.cliDict._default = function () {
     }
 };
 
-local.cliRun();
+// run cli
+if (module === require.main && !globalThis.utility2_rollup) {
+    local.cliRun();
+}
 }());
+
+
+
 }());

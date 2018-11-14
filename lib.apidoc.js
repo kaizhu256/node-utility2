@@ -9,65 +9,122 @@
 
 
 /* istanbul instrument in package apidoc */
+/* istanbul ignore next */
 /* jslint utility2:true */
-(function () {
+(function (globalThis) {
+    "use strict";
+    var consoleError;
+    var local;
+    // init globalThis
+    (function () {
+        try {
+            globalThis = Function("return this")(); // jslint ignore:line
+        } catch (ignore) {}
+    }());
+    globalThis.globalThis = globalThis;
+    // init local
+    local = {};
+    // init isBrowser
+    local.isBrowser = (
+        typeof window === "object"
+        && window === globalThis
+        && typeof window.XMLHttpRequest === "function"
+        && window.document
+        && typeof window.document.querySelectorAll === "function"
+    );
+    globalThis.globalLocal = local;
+    // init function
+    local.assertThrow = function (passed, message) {
+    /*
+     * this function will throw the error <message> if <passed> is falsy
+     */
+        var error;
+        if (passed) {
+            return;
+        }
+        error = (
+            // ternary-operator
+            (
+                message
+                && typeof message.message === "string"
+                && typeof message.stack === "string"
+            )
+            // if message is an error-object, then leave it as is
+            ? message
+            : new Error(
+                typeof message === "string"
+                // if message is a string, then leave it as is
+                ? message
+                // else JSON.stringify message
+                : JSON.stringify(message, null, 4)
+            )
+        );
+        throw error;
+    };
+    local.functionOrNop = function (fnc) {
+    /*
+     * this function will if <fnc> exists,
+     * them return <fnc>,
+     * else return <nop>
+     */
+        return fnc || local.nop;
+    };
+    local.identity = function (value) {
+    /*
+     * this function will return <value>
+     */
+        return value;
+    };
+    local.nop = function () {
+    /*
+     * this function will do nothing
+     */
+        return;
+    };
+    // init debug_inline
+    if (!globalThis["debug\u0049nline"]) {
+        consoleError = console.error;
+        globalThis["debug\u0049nline"] = function () {
+        /*
+         * this function will both print <arguments> to stderr
+         * and return <arguments>[0]
+         */
+            var argList;
+            argList = Array.from(arguments); // jslint ignore:line
+            // debug arguments
+            globalThis["debug\u0049nlineArguments"] = argList;
+            consoleError("\n\ndebug\u0049nline");
+            consoleError.apply(console, argList);
+            consoleError("\n");
+            // return arg0 for inspection
+            return argList[0];
+        };
+    }
+}(this));
+
+
+
+(function (local) {
 "use strict";
-var local;
 
 
 
 /* istanbul ignore next */
 // run shared js-env code - init-before
 (function () {
-
-
-
-// init debug_inline
-(function () {
-    var consoleError;
-    var context;
-    consoleError = console.error;
-    context = (typeof window === "object" && window) || global;
-    context["debug\u0049nline"] = context["debug\u0049nline"] || function () {
-    /*
-     * this function will both print arg0 to stderr and return it
-     */
-        var argList;
-        argList = arguments; // jslint ignore:line
-        // debug arguments
-        context["debug\u0049nlineArguments"] = argList;
-        consoleError("\n\ndebug\u0049nline");
-        consoleError.apply(console, argList);
-        consoleError("\n");
-        // return arg0 for inspection
-        return argList[0];
-    };
-}());
 // init local
-local = {};
-// init isBrowser
-local.isBrowser = (
-    typeof window === "object"
-    && typeof window.XMLHttpRequest === "function"
-    && window.document
-    && typeof window.document.querySelectorAll === "function"
-);
-// init global
-local.global = local.isBrowser
-? window
-: global;
-// re-init local
 local = (
-    local.global.utility2_rollup
-    // || local.global.utility2_rollup_old || require("./assets.utility2.rollup.js")
-    || local
+    globalThis.utility2_rollup
+    // || globalThis.utility2_rollup_old
+    // || require("./assets.utility2.rollup.js")
+    || globalThis.globalLocal
 );
 // init exports
 if (local.isBrowser) {
-    local.global.utility2_apidoc = local;
+    globalThis.utility2_apidoc = local;
 } else {
     // require builtins
-    // local.assert = require("assert");
+    local.assert = require("assert");
     local.buffer = require("buffer");
     local.child_process = require("child_process");
     local.cluster = require("cluster");
@@ -104,30 +161,6 @@ local.apidoc = local;
 
 
 /* validateLineSortedReset */
-local.assert = function (passed, message, onError) {
-/*
- * this function will throw the error <message> if <passed> is falsy
- */
-    var error;
-    if (passed) {
-        return;
-    }
-    error = (message && message.stack)
-    // if message is an error-object, then leave it as is
-    ? message
-    : new Error(
-        typeof message === "string"
-        // if message is a string, then leave it as is
-        ? message
-        // else JSON.stringify message
-        : JSON.stringify(message, null, 4)
-    );
-    onError = onError || function (error) {
-        throw error;
-    };
-    onError(error);
-};
-
 local.cliRun = function (options) {
 /*
  * this function will run the cli
@@ -137,7 +170,7 @@ local.cliRun = function (options) {
      * <code>
      * will eval <code>
      */
-        global.local = local;
+        globalThis.local = local;
         local.vm.runInThisContext(process.argv[3]);
     };
     local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
@@ -161,17 +194,14 @@ local.cliRun = function (options) {
             description: "example:",
             command: ["--eval"]
         }];
-        file = __filename.replace((/.*\//), "");
+        file = __filename.replace((
+            /.*\//
+        ), "");
         options = Object.assign({}, options);
         packageJson = require("./package.json");
         // validate comment
-        options.rgxComment = options.rgxComment || new RegExp(
-            "\\) \\{\\n"
-            + "(?:| {4})\\/\\*\\n"
-            + "(?: | {5})\\*((?: <[^>]*?>| \\.\\.\\.)*?)\\n"
-            + "(?: | {5})\\* (will .*?\\S)\\n"
-            + "(?: | {5})\\*\\/\\n"
-            + "(?: {4}| {8})\\S"
+        options.rgxComment = options.rgxComment || (
+            /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         textDict = {};
         Object.keys(local.cliDict).sort().forEach(function (key, ii) {
@@ -196,14 +226,20 @@ local.cliRun = function (options) {
                     description: commandList[ii][2]
                 };
             } catch (ignore) {
-                throw new Error(
+                local.assertThrow(null, new Error(
                     "cliRun - cannot parse comment in COMMAND "
                     + key + ":\nnew RegExp(" + JSON.stringify(options.rgxComment.source)
                     + ").exec(" + JSON.stringify(text)
-                    .replace((/\\\\/g), "\u0000")
-                    .replace((/\\n/g), "\\n\\\n")
-                    .replace((/\u0000/g), "\\\\") + ");"
-                );
+                    .replace((
+                        /\\\\/g
+                    ), "\u0000")
+                    .replace((
+                        /\\n/g
+                    ), "\\n\\\n")
+                    .replace((
+                        /\u0000/g
+                    ), "\\\\") + ");"
+                ));
             }
         });
         console.log(packageJson.name + " (" + packageJson.version + ")\n\n" + commandList
@@ -221,14 +257,20 @@ local.cliRun = function (options) {
                 break;
             default:
                 element.argList = element.argList.split(" ");
-                element.description = "# COMMAND "
-                        + (element.command[0] || "<none>") + "\n# "
-                        + element.description;
+                element.description = (
+                    "# COMMAND "
+                    + (element.command[0] || "<none>") + "\n# "
+                    + element.description
+                );
             }
-            return element.description + "\n  " + file
-                    + ("  " + element.command.sort().join("|") + "  ")
-                    .replace((/^\u0020{4}$/), "  ")
-                    + element.argList.join("  ");
+            return (
+                element.description + "\n  " + file
+                + ("  " + element.command.sort().join("|") + "  ")
+                    .replace((
+                    /^\u0020{4}$/
+                ), "  ")
+                + element.argList.join("  ")
+            );
         })
         .join("\n\n"));
     };
@@ -241,11 +283,15 @@ local.cliRun = function (options) {
      *
      * will start interactive-mode
      */
-        global.local = local;
-        (local.replStart || require("repl").start)({useGlobal: true});
+        globalThis.local = local;
+        local.functionOrNop(local.replStart || require("repl").start)({
+            useGlobal: true
+        });
     };
-    local.cliDict["--interactive"] = local.cliDict["--interactive"]
-            || local.cliDict._interactive;
+    local.cliDict["--interactive"] = (
+        local.cliDict["--interactive"]
+        || local.cliDict._interactive
+    );
     local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
     local.cliDict._version = local.cliDict._version || function () {
     /*
@@ -295,13 +341,6 @@ local.moduleDirname = function (module, modulePathList) {
     return result || "";
 };
 
-local.nop = function () {
-/*
- * this function will do nothing
- */
-    return;
-};
-
 local.objectSetDefault = function (dict, defaults, depth) {
 /*
  * this function will recursively set defaults for undefined-items in dict
@@ -309,14 +348,13 @@ local.objectSetDefault = function (dict, defaults, depth) {
     dict = dict || {};
     defaults = defaults || {};
     Object.keys(defaults).forEach(function (key) {
-        var dict2;
         var defaults2;
+        var dict2;
         dict2 = dict[key];
         // handle misbehaving getter
         try {
             defaults2 = defaults[key];
-        } catch (ignore) {
-        }
+        } catch (ignore) {}
         if (defaults2 === undefined) {
             return;
         }
@@ -350,12 +388,24 @@ local.stringHtmlSafe = function (text) {
  * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
  */
     return text
-    .replace((/&/g), "&amp;")
-    .replace((/"/g), "&quot;")
-    .replace((/'/g), "&apos;")
-    .replace((/</g), "&lt;")
-    .replace((/>/g), "&gt;")
-    .replace((/&amp;(amp;|apos;|gt;|lt;|quot;)/ig), "&$1");
+    .replace((
+        /&/g
+    ), "&amp;")
+    .replace((
+        /"/g
+    ), "&quot;")
+    .replace((
+        /'/g
+    ), "&apos;")
+    .replace((
+        /</g
+    ), "&lt;")
+    .replace((
+        />/g
+    ), "&gt;")
+    .replace((
+        /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
+    ), "&$1");
 };
 
 local.templateRender = function (template, dict, options) {
@@ -367,7 +417,6 @@ local.templateRender = function (template, dict, options) {
     var match;
     var renderPartial;
     var rgx;
-    var tryCatch;
     var skip;
     var value;
     dict = dict || {};
@@ -389,48 +438,47 @@ local.templateRender = function (template, dict, options) {
         case "each":
         case "eachTrimRightComma":
             value = getValue(key);
-            value = Array.isArray(value)
-            ? value.map(function (dict) {
-                // recurse with partial
-                return local.templateRender(partial, dict, options);
-            }).join("")
-            : "";
+            value = (
+                Array.isArray(value)
+                ? value.map(function (dict) {
+                    // recurse with partial
+                    return local.templateRender(partial, dict, options);
+                }).join("")
+                : ""
+            );
             // remove trailing-comma from last element
             if (helper === "eachTrimRightComma") {
-                value = value.trimRight().replace((/,$/), "");
+                value = value.trimRight().replace((
+                    /,$/
+                ), "");
             }
             return value;
         case "if":
             partial = partial.split("{{#unless " + key + "}}");
-            partial = getValue(key)
-            ? partial[0]
-            // handle 'unless' case
-            : partial.slice(1).join("{{#unless " + key + "}}");
+            partial = (
+                getValue(key)
+                ? partial[0]
+                // handle 'unless' case
+                : partial.slice(1).join("{{#unless " + key + "}}")
+            );
             // recurse with partial
             return local.templateRender(partial, dict, options);
         case "unless":
-            return getValue(key)
-            ? ""
-            // recurse with partial
-            : local.templateRender(partial, dict, options);
+            return (
+                getValue(key)
+                ? ""
+                // recurse with partial
+                : local.templateRender(partial, dict, options)
+            );
         default:
             // recurse with partial
             return match0[0] + local.templateRender(match0.slice(1), dict, options);
         }
     };
-    tryCatch = function (fnc, message) {
-    /*
-     * this function will prepend the message to errorCaught
-     */
-        try {
-            return fnc();
-        } catch (errorCaught) {
-            errorCaught.message = message + errorCaught.message;
-            throw errorCaught;
-        }
-    };
     // render partials
-    rgx = (/\{\{#(\w+)\u0020([^}]+?)\}\}/g);
+    rgx = (
+        /\{\{#(\w+)\u0020([^}]+?)\}\}/g
+    );
     template = template || "";
     match = rgx.exec(template);
     while (match) {
@@ -446,11 +494,13 @@ local.templateRender = function (template, dict, options) {
         match = rgx.exec(template);
     }
     // search for keys in the template
-    return template.replace((/\{\{[^}]+?\}\}/g), function (match0) {
+    return template.replace((
+        /\{\{[^}]+?\}\}/g
+    ), function (match0) {
         var markdownToHtml;
         var notHtmlSafe;
         notHtmlSafe = options.notHtmlSafe;
-        return tryCatch(function () {
+        try {
             getValue(match0.slice(2, -2));
             if (value === undefined) {
                 return match0;
@@ -458,7 +508,9 @@ local.templateRender = function (template, dict, options) {
             argList.slice(1).forEach(function (arg0, ii, list) {
                 switch (arg0) {
                 case "alphanumeric":
-                    value = value.replace((/\W/g), "_");
+                    value = value.replace((
+                        /\W/g
+                    ), "_");
                     break;
                 case "decodeURIComponent":
                     value = decodeURIComponent(value);
@@ -473,7 +525,9 @@ local.templateRender = function (template, dict, options) {
                     value = JSON.stringify(value, null, 4);
                     break;
                 case "markdownSafe":
-                    value = value.replace((/`/g), "'");
+                    value = value.replace((
+                        /`/g
+                    ), "'");
                     break;
                 case "markdownToHtml":
                     markdownToHtml = true;
@@ -499,21 +553,43 @@ local.templateRender = function (template, dict, options) {
             // default to htmlSafe
             if (!notHtmlSafe) {
                 value = value
-                .replace((/&/g), "&amp;")
-                .replace((/"/g), "&quot;")
-                .replace((/'/g), "&apos;")
-                .replace((/</g), "&lt;")
-                .replace((/>/g), "&gt;")
-                .replace((/&amp;(amp;|apos;|gt;|lt;|quot;)/ig), "&$1");
+                .replace((
+                    /&/g
+                ), "&amp;")
+                .replace((
+                    /"/g
+                ), "&quot;")
+                .replace((
+                    /'/g
+                ), "&apos;")
+                .replace((
+                    /</g
+                ), "&lt;")
+                .replace((
+                    />/g
+                ), "&gt;")
+                .replace((
+                    /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
+                ), "&$1");
             }
-            markdownToHtml = markdownToHtml
-                    && (typeof local.marked === "function" && local.marked);
+            markdownToHtml = (
+                markdownToHtml
+                && (typeof local.marked === "function" && local.marked)
+            );
             if (markdownToHtml) {
                 value = markdownToHtml(value)
-                .replace((/&amp;(amp;|apos;|gt;|lt;|quot;)/ig), "&$1");
+                .replace((
+                    /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
+                ), "&$1");
             }
             return value;
-        }, "templateRender could not render expression " + JSON.stringify(match0) + "\n");
+        } catch (errorCaught) {
+            errorCaught.message = (
+                "templateRender could not render expression "
+                + JSON.stringify(match0) + "\n"
+            ) + errorCaught.message;
+            local.assertThrow(null, errorCaught);
+        }
     });
 };
 
@@ -524,7 +600,7 @@ local.tryCatchOnError = function (fnc, onError) {
  */
     var result;
     // validate onError
-    local.assert(typeof onError === "function", typeof onError);
+    local.assertThrow(typeof onError === "function", typeof onError);
     try {
         // reset errorCaught
         local._debugTryCatchError = null;
@@ -654,9 +730,6 @@ local.templateApidocHtml = '\
 
 // run shared js-env code - function
 (function () {
-
-
-
 local.apidocCreate = function (options) {
 /*
  * this function will create the apidoc from options.dir
@@ -696,26 +769,33 @@ local.apidocCreate = function (options) {
         }
         // init source
         element.source = local.stringHtmlSafe(trimLeft(toString(module[key])) || "n/a")
-        .replace((/\([\S\s]*?\)/), function (match0) {
+        .replace((
+            /\([\S\s]*?\)/
+        ), function (match0) {
             // init signature
             element.signature = match0
-            .replace((/\u0020*?\/\*[\S\s]*?\*\/\u0020*/g), "")
-            .replace((/,/g), ", ")
-            .replace((/\s+/g), " ");
+            .replace((
+                /\u0020*?\/\*[\S\s]*?\*\/\u0020*/g
+            ), "")
+            .replace((
+                /,/g
+            ), ", ")
+            .replace((
+                /\s+/g
+            ), " ");
             return element.signature;
         })
-        .replace(
-            (/(\u0020*?\/\*[\S\s]*?\*\/\n)/),
-            "<span class=\"apidocCodeCommentSpan\">$1</span>"
-        )
-        .replace((/^function\u0020\(/), key + " = function (");
+        .replace((
+            /(\u0020*?\/\*[\S\s]*?\*\/\n)/
+        ), "<span class=\"apidocCodeCommentSpan\">$1</span>")
+        .replace((
+            /^function\u0020\(/
+        ), key + " = function (");
         // init example
         options.exampleList.some(function (example) {
             example.replace(
                 new RegExp("((?:\n.*?){8}\\.)(" + key + ")(\\((?:.*?\n){8})"),
-                function (match0, match1, match2, match3) {
-                    // jslint-hack
-                    local.nop(match0);
+                function (ignore, match1, match2, match3) {
                     element.example = "..." + trimLeft(
                         local.stringHtmlSafe(match1)
                         + "<span class=\"apidocCodeKeywordSpan\">"
@@ -744,7 +824,9 @@ local.apidocCreate = function (options) {
                 // bug-workaround - truncate example to manageable size
                 + local.fs.readFileSync(file, "utf8").slice(0, 262144)
                 + "\n\n\n\n\n\n\n\n"
-            ).replace((/\r\n*/g), "\n");
+            ).replace((
+                /\r\n*/g
+            ), "\n");
         }, console.error);
         return result;
     };
@@ -765,15 +847,21 @@ local.apidocCreate = function (options) {
      */
         var whitespace;
         whitespace = "";
-        text.trim().replace((/^\u0020*/gm), function (match0) {
+        text.trim().replace((
+            /^\u0020*/gm
+        ), function (match0) {
             if (!whitespace || match0.length < whitespace.length) {
                 whitespace = match0;
             }
         });
         text = text.replace(new RegExp("^" + whitespace, "gm"), "");
         // enforce 128 character column limit
-        text = text.replace((/^.{128}[^\\\n]+/gm), function (match0) {
-            return match0.replace((/(.{128}(?:\b|\w+))/g), "$1\n").trimRight();
+        text = text.replace((
+            /^.{128}[^\\\n]+/gm
+        ), function (match0) {
+            return match0.replace((
+                /(.{128}(?:\b|\w+))/g
+            ), "$1\n").trimRight();
         });
         return text;
     };
@@ -783,7 +871,9 @@ local.apidocCreate = function (options) {
         options.modulePathList || require("module").paths
     );
     local.objectSetDefault(options, {
-        env: {npm_package_description: ""},
+        env: {
+            npm_package_description: ""
+        },
         packageJson: JSON.parse(readExample("package.json")),
         require: function (file) {
             return local.tryCatchOnError(function () {
@@ -814,15 +904,19 @@ local.apidocCreate = function (options) {
         }
     });
     local.objectSetDefault(options, {
-        blacklistDict: {global: global},
-        circularList: [global],
+        blacklistDict: {
+            globalThis: globalThis
+        },
+        circularList: [globalThis],
         exampleDict: {},
         exampleList: [],
         html: "",
         libFileList: [],
         moduleDict: {},
         moduleExtraDict: {},
-        packageJson: {bin: {}},
+        packageJson: {
+            bin: {}
+        },
         template: local.templateApidocHtml,
         whitelistDict: {}
     }, 2);
@@ -864,12 +958,14 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
     local.tryCatchOnError(function () {
         console.error("apidocCreate - requiring " + options.dir + " ...");
         moduleMain = {};
-        moduleMain = options.moduleDict[options.env.npm_package_name]
-                || options.require(options.dir)
-                || options.require(
-            options.dir + "/"
-            + (options.packageJson.bin)[Object.keys(options.packageJson.bin)[0]]
-        ) || {};
+        moduleMain = (
+            options.moduleDict[options.env.npm_package_name]
+            || options.require(options.dir)
+            || options.require(
+                options.dir + "/"
+                + (options.packageJson.bin)[Object.keys(options.packageJson.bin)[0]]
+            ) || {}
+        );
         options.circularList.push(moduleMain);
         console.error("apidocCreate - ... required " + options.dir);
     }, console.error);
@@ -884,18 +980,50 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             };
             // coverage-hack
             tmp();
-            Object.defineProperties(tmp, {toString: {get: function () {
-                return function () {
-                    return text;
-                };
-            }}});
+            Object.defineProperties(tmp, {
+                toString: {
+                    get: function () {
+                        return function () {
+                            return text;
+                        };
+                    }
+                }
+            });
         }());
     }
     // normalize moduleMain
     moduleMain = local.objectSetDefault(tmp, moduleMain);
     options.moduleDict[options.env.npm_package_name] = moduleMain;
-    // init circularList - builtin
-    Object.keys(process.binding("natives")).forEach(function (key) {
+    // init circularList - builtins
+    [
+        "assert",
+        "buffer",
+        "child_process",
+        "cluster",
+        "crypto",
+        "dgram",
+        "dns",
+        "domain",
+        "events",
+        "fs",
+        "http",
+        "https",
+        "net",
+        "os",
+        "path",
+        "querystring",
+        "readline",
+        "repl",
+        "stream",
+        "string_decoder",
+        "timers",
+        "tls",
+        "tty",
+        "url",
+        "util",
+        "vm",
+        "zlib"
+    ].forEach(function (key) {
         local.tryCatchOnError(function () {
             options.circularList.push(require(key));
         }, local.nop);
@@ -928,12 +1056,15 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
         tmp = "swgg.apiDict";
         options.moduleDict[tmp] = options.moduleDict[tmp] || {};
         tmp = options.moduleDict[tmp];
-        tmp[key + ".ajax"] = moduleMain.swgg.apiDict[key]
-                && moduleMain.swgg.apiDict[key].ajax;
+        tmp[key + ".ajax"] = (
+            moduleMain.swgg.apiDict[key]
+            && moduleMain.swgg.apiDict[key].ajax
+        );
     });
     // init moduleExtraDict
-    options.moduleExtraDict[options.env.npm_package_name] =
-            options.moduleExtraDict[options.env.npm_package_name] || {};
+    options.moduleExtraDict[options.env.npm_package_name] = (
+        options.moduleExtraDict[options.env.npm_package_name] || {}
+    );
     module = options.moduleExtraDict[options.env.npm_package_name];
     [1, 2, 3, 4].forEach(function (depth) {
         options.libFileList = options.libFileList.concat(
@@ -974,17 +1105,20 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             tmp = {};
             tmp.name = local.path.basename(file)
             .replace("lib.", "")
-            .replace((/\.[^.]*?$/), "")
-            .replace((/\W/g), "_");
-            [
+            .replace((
+                /\.[^.]*?$/
+            ), "")
+            .replace((
+                /\W/g
+            ), "_");
+            ([
                 tmp.name,
                 tmp.name.slice(0, 1).toUpperCase() + tmp.name.slice(1)
-            ].some(function (name) {
+            ]).some(function (name) {
                 tmp.isFiltered = name && (
                     !options.packageJson.main
                     || ("./" + file).indexOf(options.packageJson.main) < 0
-                )
-                        && !module[name];
+                ) && !module[name];
                 return !tmp.isFiltered;
             });
             if (!tmp.isFiltered) {
@@ -1017,20 +1151,25 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
         // handle case where module is a function
         if (typeof module === "function") {
             local.tryCatchOnError(function () {
-                module[prefix.split(".").slice(-1)[0]] =
-                        module[prefix.split(".").slice(-1)[0]] || module;
+                module[prefix.split(".").slice(-1)[0]] = (
+                    module[prefix.split(".").slice(-1)[0]] || module
+                );
             }, console.error);
         }
         return {
             elementList: Object.keys(module)
             .filter(function (key) {
                 return local.tryCatchOnError(function () {
-                    return key
-                            && (/^\w[\w\-.]*?$/).test(key)
-                            && key.indexOf("testCase_") !== 0
-                            && (
-                        module[key] !== options.blacklistDict[key]
-                        || options.whitelistDict[key]
+                    return (
+                        key
+                        && (
+                            /^\w[\w\-.]*?$/
+                        ).test(key)
+                        && key.indexOf("testCase_") !== 0
+                        && (
+                            module[key] !== options.blacklistDict[key]
+                            || options.whitelistDict[key]
+                        )
                     );
                 }, console.error);
             })
@@ -1038,18 +1177,24 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 return elementCreate(module, prefix, key);
             })
             .sort(function (aa, bb) {
-                return aa.name > bb.name
-                ? 1
-                : -1;
+                return (
+                    aa.name > bb.name
+                    ? 1
+                    : -1
+                );
             }),
             id: encodeURIComponent("apidoc.module." + prefix),
             name: prefix
         };
     });
     // render apidoc
-    options.result = local.templateRender(options.template, options, {notHtmlSafe: true})
+    options.result = local.templateRender(options.template, options, {
+        notHtmlSafe: true
+    })
     .trim()
-    .replace((/\u0020+$/gm), "") + "\n";
+    .replace((
+        /\u0020+$/gm
+    ), "") + "\n";
     return options.result;
 };
 
@@ -1072,22 +1217,28 @@ local.apidocModuleDictAdd = function (options, moduleDict) {
     };
     ["child", "prototype", "grandchild", "prototype"].forEach(function (element) {
         objectKeys(moduleDict).forEach(function (prefix) {
-            if (!(/^\w[\w\-.]*?$/).test(prefix)) {
+            if (!(
+                /^\w[\w\-.]*?$/
+            ).test(prefix)) {
                 return;
             }
             objectKeys(moduleDict[prefix]).forEach(function (key) {
-                if (!(/^\w[\w\-.]*?$/).test(key) || !moduleDict[prefix][key]) {
+                if (!(
+                    /^\w[\w\-.]*?$/
+                ).test(key) || !moduleDict[prefix][key]) {
                     return;
                 }
-                tmp = element === "prototype"
-                ? {
-                    module: moduleDict[prefix][key].prototype,
-                    name: prefix + "." + key + ".prototype"
-                }
-                : {
-                    module: moduleDict[prefix][key],
-                    name: prefix + "." + key
-                };
+                tmp = (
+                    element === "prototype"
+                    ? {
+                        module: moduleDict[prefix][key].prototype,
+                        name: prefix + "." + key + ".prototype"
+                    }
+                    : {
+                        module: moduleDict[prefix][key],
+                        name: prefix + "." + key
+                    }
+                );
                 if (
                     !tmp.module
                     || !(
@@ -1100,10 +1251,10 @@ local.apidocModuleDictAdd = function (options, moduleDict) {
                 ) {
                     return;
                 }
-                isModule = [
+                isModule = ([
                     tmp.module,
                     tmp.module.prototype
-                ].some(function (dict) {
+                ]).some(function (dict) {
                     return objectKeys(dict || {}).some(function (key) {
                         return typeof dict[key] === "function";
                     });
@@ -1130,11 +1281,8 @@ if (local.isBrowser) {
 
 
 
-// init cli
-if (module !== require.main || local.global.utility2_rollup) {
-    return;
-}
 local.cliDict = {};
+
 local.cliDict._default = function () {
 /*
  * <moduleDirectory>
@@ -1147,6 +1295,12 @@ local.cliDict._default = function () {
     }));
 };
 
-local.cliRun();
+// run cli
+if (module === require.main && !globalThis.utility2_rollup) {
+    local.cliRun();
+}
 }());
+
+
+
 }());
