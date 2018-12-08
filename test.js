@@ -12,8 +12,29 @@
         } catch (ignore) {}
     }());
     globalThis.globalThis = globalThis;
+    // init debug_inline
+    if (!globalThis["debug\u0049nline"]) {
+        consoleError = console.error;
+        globalThis["debug\u0049nline"] = function () {
+        /*
+         * this function will both print <arguments> to stderr
+         * and return <arguments>[0]
+         */
+            var argList;
+            argList = Array.from(arguments); // jslint ignore:line
+            // debug arguments
+            globalThis["debug\u0049nlineArguments"] = argList;
+            consoleError("\n\ndebug\u0049nline");
+            consoleError.apply(console, argList);
+            consoleError("\n");
+            // return arg0 for inspection
+            return argList[0];
+        };
+    }
     // init local
     local = {};
+    local.local = local;
+    globalThis.globalLocal = local;
     // init isBrowser
     local.isBrowser = (
         typeof window === "object"
@@ -22,7 +43,6 @@
         && window.document
         && typeof window.document.querySelectorAll === "function"
     );
-    globalThis.globalLocal = local;
     // init function
     local.assertThrow = function (passed, message) {
     /*
@@ -33,7 +53,7 @@
             return;
         }
         error = (
-            // ternary-operator
+            // ternary-condition
             (
                 message
                 && typeof message.message === "string"
@@ -71,24 +91,35 @@
      */
         return;
     };
-    // init debug_inline
-    if (!globalThis["debug\u0049nline"]) {
-        consoleError = console.error;
-        globalThis["debug\u0049nline"] = function () {
-        /*
-         * this function will both print <arguments> to stderr
-         * and return <arguments>[0]
-         */
-            var argList;
-            argList = Array.from(arguments); // jslint ignore:line
-            // debug arguments
-            globalThis["debug\u0049nlineArguments"] = argList;
-            consoleError("\n\ndebug\u0049nline");
-            consoleError.apply(console, argList);
-            consoleError("\n");
-            // return arg0 for inspection
-            return argList[0];
-        };
+    // require builtin
+    if (!local.isBrowser) {
+        local.assert = require("assert");
+        local.buffer = require("buffer");
+        local.child_process = require("child_process");
+        local.cluster = require("cluster");
+        local.crypto = require("crypto");
+        local.dgram = require("dgram");
+        local.dns = require("dns");
+        local.domain = require("domain");
+        local.events = require("events");
+        local.fs = require("fs");
+        local.http = require("http");
+        local.https = require("https");
+        local.net = require("net");
+        local.os = require("os");
+        local.path = require("path");
+        local.querystring = require("querystring");
+        local.readline = require("readline");
+        local.repl = require("repl");
+        local.stream = require("stream");
+        local.string_decoder = require("string_decoder");
+        local.timers = require("timers");
+        local.tls = require("tls");
+        local.tty = require("tty");
+        local.url = require("url");
+        local.util = require("util");
+        local.vm = require("vm");
+        local.zlib = require("zlib");
     }
 }(this));
 
@@ -415,11 +446,14 @@ local.testCase_ajax_post = function (options, onError) {
         responseType = responseType.element;
         onParallel.counter += 1;
         local.ajax({
-            data: responseType === "arraybuffer"
-            // test POST buffer-data handling-behavior
-            ? local.bufferCreate("aa")
-            // test POST string-data handling-behavior
-            : "aa",
+            data: (
+                // ternary-condition
+                responseType === "arraybuffer"
+                // test POST buffer-data handling-behavior
+                ? local.bufferCreate("aa")
+                // test POST string-data handling-behavior
+                : "aa"
+            ),
             method: "POST",
             // test nodejs response handling-behavior
             responseType: responseType,
@@ -501,9 +535,12 @@ local.testCase_ajax_standalone = function (options, onError) {
             onParallel.counter += 1;
             local.ajax({
                 responseType: responseType,
-                url: local.isBrowser
-                ? location.href
-                : local.serverLocalHost
+                url: (
+                    // ternary-condition
+                    local.isBrowser
+                    ? location.href
+                    : local.serverLocalHost
+                )
             }, function (error, xhr) {
                 // validate statusCode
                 local.assertJsonEqual(xhr.statusCode, 200);
@@ -942,14 +979,6 @@ local.testCase_buildApidoc_default = function (options, onError) {
     ], function (onError) {
         local.buildApidoc(null, onError);
     }, local.onErrorThrow);
-    // test $npm_package_buildCustomOrg handling-behavior
-    local.testMock([
-        [local.env, {
-            npm_package_buildCustomOrg: "electron-lite"
-        }]
-    ], function (onError) {
-        local.buildApidoc({}, onError);
-    }, local.onErrorThrow);
     local.buildApidoc({
         blacklistDict: {}
     }, onError);
@@ -996,48 +1025,6 @@ local.testCase_buildApp_default = function (options, onError) {
             url: "/assets.utility2.rollup.js"
         }]
     }, onError);
-};
-
-local.testCase_buildCustomOrg_default = function (options, onError) {
-/*
- * this function will test buildCustomOrg's default handling-behavior
- */
-    if (local.isBrowser) {
-        onError(null, options);
-        return;
-    }
-    local.testMock([
-        [local.env, {
-            GITHUB_ORG: "",
-            npm_package_buildCustomOrg: "electron-lite"
-        }],
-        [local.fs, {
-            writeFileSync: local.nop
-        }],
-        [globalThis, {
-            setTimeout: function (onError) {
-                onError(null, options);
-            }
-        }],
-        [process, {
-            on: function (options, onError) {
-                // test error handling-behavior
-                onError(local.errorDefault, options);
-            }
-        }]
-    ], function (onError) {
-        // test npmdoc handling-behavior
-        local.env.GITHUB_ORG = "npmdoc";
-        local.buildCustomOrg({}, local.onErrorThrow);
-        // test npmtest handling-behavior
-        local.env.GITHUB_ORG = "npmtest";
-        local.buildCustomOrg({}, local.onErrorThrow);
-        // test scrapeitall handling-behavior
-        local.env.GITHUB_ORG = "scrapeitall";
-        local.buildCustomOrg({}, local.onErrorThrow);
-        onError(null, options);
-    }, local.onErrorThrow);
-    local.buildCustomOrg({}, onError);
 };
 
 local.testCase_buildLib_default = function (options, onError) {
@@ -1093,42 +1080,9 @@ local.testCase_buildReadme_default = function (options, onError) {
         return;
     }
     options = {};
-    options.customize = function () {
-        options.dataFrom = options.dataFrom
-        // test shDeployCustom handling-behavior
-        .replace("# shDeployCustom", "  shDeployCustom")
-        // test no-assets.index.template.html handling-behavior
-        .replace("assets.utility2.template.html", "");
-        local.env.npm_package_private = "";
-    };
     // test shNpmTestPublished handling-behavior
     options.dataFrom = local.fs.readFileSync("README.md", "utf8")
     .replace("#\u0021! shNpmTestPublished", "shNpmTestPublished");
-    local.testMock([
-        [local, {
-            fsWriteFileWithMkdirpSync: local.nop
-        }],
-        [local.env, {
-            npm_package_buildCustomOrg: "",
-            npm_package_private: "1",
-            npm_package_name: "undefined"
-        }],
-        [local.assetsDict, {
-            // test no-assets.utility2.template.html handling-behavior
-            "/assets.index.template.html": "",
-            // test customize example.js handling-behavior
-            "/index.html": ""
-        }]
-    ], function (onError) {
-        local.buildReadme(options, onError);
-        // test $npm_package_buildCustomOrg handling-behavior
-        local.env.npm_package_buildCustomOrg = "aa";
-        options.dataFrom = options.dataFrom
-        // test no-shNpmTestPublished handling-behavior
-        .replace("  shNpmTestPublished", "# shNpmTestPublished");
-        local.buildReadme(options, onError);
-        onError(null, options);
-    }, local.onErrorThrow);
     options = {};
     options.customize = function () {
         // search-and-replace - customize dataTo
@@ -1167,19 +1121,16 @@ local.testCase_buildXxx_default = function (options, onError) {
             },
             browserTest: local.nop,
             buildApidoc: local.nop,
-            buildCustomOrg: local.nop,
             buildLib: local.nop,
             buildReadme: local.nop,
             buildTest: local.nop,
             testCase_buildReadme_default: local.nop,
             testCase_buildLib_default: local.nop,
-            testCase_buildTest_default: local.nop,
-            testCase_buildCustomOrg_default: local.nop
+            testCase_buildTest_default: local.nop
         }]
     ], function (onError) {
         local._testCase_buildApidoc_default(null, local.nop);
         local._testCase_buildApp_default(null, local.nop);
-        local._testCase_buildCustomOrg_default(null, local.nop);
         local._testCase_buildLib_default(null, local.nop);
         local._testCase_buildReadme_default(null, local.nop);
         local._testCase_buildTest_default(null, local.nop);
@@ -1423,18 +1374,6 @@ local.testCase_domElementRender_default = function (options, onError) {
     local.assertJsonEqual(local.domElementRender("<div>{{value}}</div>", {
         value: "aa"
     }).children[0].outerHTML, "<div>aa</div>");
-    onError(null, options);
-};
-
-local.testCase_domQuerySelectorAllTagNameAndPrint_default = function (options, onError) {
-/*
- * this function will test domQuerySelectorAllTagNameAndPrint's default handling-behavior
- */
-    if (!local.isBrowser) {
-        onError(null, options);
-        return;
-    }
-    local.domQuerySelectorAllTagNameAndPrint("body");
     onError(null, options);
 };
 

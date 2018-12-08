@@ -22,8 +22,29 @@
         } catch (ignore) {}
     }());
     globalThis.globalThis = globalThis;
+    // init debug_inline
+    if (!globalThis["debug\u0049nline"]) {
+        consoleError = console.error;
+        globalThis["debug\u0049nline"] = function () {
+        /*
+         * this function will both print <arguments> to stderr
+         * and return <arguments>[0]
+         */
+            var argList;
+            argList = Array.from(arguments); // jslint ignore:line
+            // debug arguments
+            globalThis["debug\u0049nlineArguments"] = argList;
+            consoleError("\n\ndebug\u0049nline");
+            consoleError.apply(console, argList);
+            consoleError("\n");
+            // return arg0 for inspection
+            return argList[0];
+        };
+    }
     // init local
     local = {};
+    local.local = local;
+    globalThis.globalLocal = local;
     // init isBrowser
     local.isBrowser = (
         typeof window === "object"
@@ -32,7 +53,6 @@
         && window.document
         && typeof window.document.querySelectorAll === "function"
     );
-    globalThis.globalLocal = local;
     // init function
     local.assertThrow = function (passed, message) {
     /*
@@ -43,7 +63,7 @@
             return;
         }
         error = (
-            // ternary-operator
+            // ternary-condition
             (
                 message
                 && typeof message.message === "string"
@@ -81,24 +101,35 @@
      */
         return;
     };
-    // init debug_inline
-    if (!globalThis["debug\u0049nline"]) {
-        consoleError = console.error;
-        globalThis["debug\u0049nline"] = function () {
-        /*
-         * this function will both print <arguments> to stderr
-         * and return <arguments>[0]
-         */
-            var argList;
-            argList = Array.from(arguments); // jslint ignore:line
-            // debug arguments
-            globalThis["debug\u0049nlineArguments"] = argList;
-            consoleError("\n\ndebug\u0049nline");
-            consoleError.apply(console, argList);
-            consoleError("\n");
-            // return arg0 for inspection
-            return argList[0];
-        };
+    // require builtin
+    if (!local.isBrowser) {
+        local.assert = require("assert");
+        local.buffer = require("buffer");
+        local.child_process = require("child_process");
+        local.cluster = require("cluster");
+        local.crypto = require("crypto");
+        local.dgram = require("dgram");
+        local.dns = require("dns");
+        local.domain = require("domain");
+        local.events = require("events");
+        local.fs = require("fs");
+        local.http = require("http");
+        local.https = require("https");
+        local.net = require("net");
+        local.os = require("os");
+        local.path = require("path");
+        local.querystring = require("querystring");
+        local.readline = require("readline");
+        local.repl = require("repl");
+        local.stream = require("stream");
+        local.string_decoder = require("string_decoder");
+        local.timers = require("timers");
+        local.tls = require("tls");
+        local.tty = require("tty");
+        local.url = require("url");
+        local.util = require("util");
+        local.vm = require("vm");
+        local.zlib = require("zlib");
     }
 }(this));
 
@@ -123,39 +154,10 @@ local = (
 if (local.isBrowser) {
     globalThis.utility2_istanbul = local;
 } else {
-    // require builtins
-    local.assert = require("assert");
-    local.buffer = require("buffer");
-    local.child_process = require("child_process");
-    local.cluster = require("cluster");
-    local.crypto = require("crypto");
-    local.dgram = require("dgram");
-    local.dns = require("dns");
-    local.domain = require("domain");
-    local.events = require("events");
-    local.fs = require("fs");
-    local.http = require("http");
-    local.https = require("https");
-    local.net = require("net");
-    local.os = require("os");
-    local.path = require("path");
-    local.querystring = require("querystring");
-    local.readline = require("readline");
-    local.repl = require("repl");
-    local.stream = require("stream");
-    local.string_decoder = require("string_decoder");
-    local.timers = require("timers");
-    local.tls = require("tls");
-    local.tty = require("tty");
-    local.url = require("url");
-    local.util = require("util");
-    local.vm = require("vm");
-    local.zlib = require("zlib");
     module.exports = local;
     module.exports.__dirname = __dirname;
 }
 // init lib main
-local.local = local;
 local.istanbul = local;
 
 
@@ -557,21 +559,24 @@ local.instrumentInPackage = function (code, file) {
  * exists in the code
  */
     return (
-        process.env.npm_config_mode_coverage
-        && code.indexOf("/* istanbul ignore all */\n") < 0 && (
-            process.env.npm_config_mode_coverage === "all"
-            || code.indexOf(
-                "/* istanbul instrument in package "
-                + process.env.npm_package_nameLib + " */\n"
-            ) >= 0
-            || code.indexOf(
-                "/* istanbul instrument in package "
-                + process.env.npm_config_mode_coverage + " */\n"
-            ) >= 0
+        // ternary-condition
+        (
+            process.env.npm_config_mode_coverage
+            && code.indexOf("/* istanbul ignore all */\n") < 0 && (
+                process.env.npm_config_mode_coverage === "all"
+                || code.indexOf(
+                    "/* istanbul instrument in package "
+                    + process.env.npm_package_nameLib + " */\n"
+                ) >= 0
+                || code.indexOf(
+                    "/* istanbul instrument in package "
+                    + process.env.npm_config_mode_coverage + " */\n"
+                ) >= 0
+            )
         )
-    )
-    ? local.instrumentSync(code, file)
-    : code;
+        ? local.instrumentSync(code, file)
+        : code
+    );
 };
 
 local.instrumentSync = function (code, file) {

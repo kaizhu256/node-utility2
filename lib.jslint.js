@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.jslint.js (2018.11.14)
+ * lib.jslint.js (2018.12.8)
  * https://github.com/kaizhu256/node-jslint-lite
  * this zero-dependency package will provide browser-compatible versions of jslint (v2018.10.26) and csslint (v1.0.5), with a working web-demo
  *
@@ -22,8 +22,29 @@
         } catch (ignore) {}
     }());
     globalThis.globalThis = globalThis;
+    // init debug_inline
+    if (!globalThis["debug\u0049nline"]) {
+        consoleError = console.error;
+        globalThis["debug\u0049nline"] = function () {
+        /*
+         * this function will both print <arguments> to stderr
+         * and return <arguments>[0]
+         */
+            var argList;
+            argList = Array.from(arguments); // jslint ignore:line
+            // debug arguments
+            globalThis["debug\u0049nlineArguments"] = argList;
+            consoleError("\n\ndebug\u0049nline");
+            consoleError.apply(console, argList);
+            consoleError("\n");
+            // return arg0 for inspection
+            return argList[0];
+        };
+    }
     // init local
     local = {};
+    local.local = local;
+    globalThis.globalLocal = local;
     // init isBrowser
     local.isBrowser = (
         typeof window === "object"
@@ -32,7 +53,6 @@
         && window.document
         && typeof window.document.querySelectorAll === "function"
     );
-    globalThis.globalLocal = local;
     // init function
     local.assertThrow = function (passed, message) {
     /*
@@ -43,7 +63,7 @@
             return;
         }
         error = (
-            // ternary-operator
+            // ternary-condition
             (
                 message
                 && typeof message.message === "string"
@@ -81,24 +101,35 @@
      */
         return;
     };
-    // init debug_inline
-    if (!globalThis["debug\u0049nline"]) {
-        consoleError = console.error;
-        globalThis["debug\u0049nline"] = function () {
-        /*
-         * this function will both print <arguments> to stderr
-         * and return <arguments>[0]
-         */
-            var argList;
-            argList = Array.from(arguments); // jslint ignore:line
-            // debug arguments
-            globalThis["debug\u0049nlineArguments"] = argList;
-            consoleError("\n\ndebug\u0049nline");
-            consoleError.apply(console, argList);
-            consoleError("\n");
-            // return arg0 for inspection
-            return argList[0];
-        };
+    // require builtin
+    if (!local.isBrowser) {
+        local.assert = require("assert");
+        local.buffer = require("buffer");
+        local.child_process = require("child_process");
+        local.cluster = require("cluster");
+        local.crypto = require("crypto");
+        local.dgram = require("dgram");
+        local.dns = require("dns");
+        local.domain = require("domain");
+        local.events = require("events");
+        local.fs = require("fs");
+        local.http = require("http");
+        local.https = require("https");
+        local.net = require("net");
+        local.os = require("os");
+        local.path = require("path");
+        local.querystring = require("querystring");
+        local.readline = require("readline");
+        local.repl = require("repl");
+        local.stream = require("stream");
+        local.string_decoder = require("string_decoder");
+        local.timers = require("timers");
+        local.tls = require("tls");
+        local.tty = require("tty");
+        local.url = require("url");
+        local.util = require("util");
+        local.vm = require("vm");
+        local.zlib = require("zlib");
     }
 }(this));
 
@@ -123,39 +154,10 @@ local = (
 if (local.isBrowser) {
     globalThis.utility2_jslint = local;
 } else {
-    // require builtins
-    local.assert = require("assert");
-    local.buffer = require("buffer");
-    local.child_process = require("child_process");
-    local.cluster = require("cluster");
-    local.crypto = require("crypto");
-    local.dgram = require("dgram");
-    local.dns = require("dns");
-    local.domain = require("domain");
-    local.events = require("events");
-    local.fs = require("fs");
-    local.http = require("http");
-    local.https = require("https");
-    local.net = require("net");
-    local.os = require("os");
-    local.path = require("path");
-    local.querystring = require("querystring");
-    local.readline = require("readline");
-    local.repl = require("repl");
-    local.stream = require("stream");
-    local.string_decoder = require("string_decoder");
-    local.timers = require("timers");
-    local.tls = require("tls");
-    local.tty = require("tty");
-    local.url = require("url");
-    local.util = require("util");
-    local.vm = require("vm");
-    local.zlib = require("zlib");
     module.exports = local;
     module.exports.__dirname = __dirname;
 }
 // init lib main
-local.local = local;
 local.jslint = local;
 
 
@@ -374,14 +376,13 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
         return tmp;
     };
     circularSet = new Set();
-    return JSON.stringify(
+    return JSON.stringify((
+        // ternary-condition
         (typeof obj === "object" && obj)
         // recurse
         ? JSON.parse(stringify(obj))
-        : obj,
-        replacer,
-        space
-    );
+        : obj
+    ), replacer, space);
 };
 }());
 
@@ -1815,14 +1816,14 @@ local.CSSLint = CSSLint;
 
 
 // jslint-hack - var
-var jslint;
+var jslint_extra;
 var jslint_result;
 var line_ignore;
 var lines_extra;
 /*
 file JSLint/jslint.js - es6
-2018-10-26T15:59:47Z - shGithubDateCommitted https://github.com/douglascrockford/JSLint/commits/813d1fb157076ef9df1d773a084c971705e57a84
-https://github.com/douglascrockford/JSLint/blob/813d1fb157076ef9df1d773a084c971705e57a84/jslint.js
+2018-11-14T03:04:33Z - shGithubDateCommitted https://github.com/douglascrockford/JSLint/commits/de413767154641f490d6e96185e525255cca5f7e
+https://github.com/douglascrockford/JSLint/blob/de413767154641f490d6e96185e525255cca5f7e/jslint.js
 node -e '
 "use strict";
 process.argv[1].replace((
@@ -1911,28 +1912,26 @@ console.log(process.argv[2]);
 +        // jslint-hack - unexpected_a
 +        warn("unexpected_a", right, null, null, left, right);
 
--                const mislaid = (
--                    stack.length > 0
--                    ? stack[stack.length - 1].right
--                    : undefined
+-                warn(
+-                    (
+-                        (
+-                            thing.id === "(string)"
+-                            && thing.value === "use strict"
+-                        )
+-                        ? "unexpected_a"
+-                        : "unexpected_expression_a"
+-                    ),
+-                    thing
 -                );
--                if (!open && mislaid !== undefined) {
--                    warn(
--                        "expected_a_next_at_b",
--                        mislaid,
--                        artifact(mislaid.id),
--                        margin + 4 + fudge
--                    );
--                } else if (right.from !== margin + 8) {
--                    expected_at(margin + 8);
--                }
-+                // jslint-hack - expected_space_a_b
-+                warn(
-+                    "expected_space_a_b",
-+                    right,
-+                    artifact(left),
-+                    artifact(right)
-+                );
++                warn((
++                    // jslint-hack - ternary-condition
++                    (
++                        thing.id === "(string)"
++                        && thing.value === "use strict"
++                    )
++                    ? "unexpected_a"
++                    : "unexpected_expression_a"
++                ), thing);
 
 -                        margin += 4;
 +                        // jslint-hack - conditional-margin
@@ -1968,13 +1967,13 @@ console.log(process.argv[2]);
 +        e.early_stop = true;
 
 ' \
-"$(curl https://raw.githubusercontent.com/douglascrockford/JSLint/813d1fb157076ef9df1d773a084c971705e57a84/jslint.js)" > /tmp/aa.js; utility2-jslint autofix /tmp/aa.js
+"$(curl https://raw.githubusercontent.com/douglascrockford/JSLint/de413767154641f490d6e96185e525255cca5f7e/jslint.js)" > /tmp/aa.js; utility2-jslint autofix /tmp/aa.js
 */
 /* jslint utility2:true */
 var next_line_extra = null;
 var warn_at_extra = null;
 // jslint.js
-// 2018-10-26
+// 2018-11-13
 // Copyright (c) 2015 Douglas Crockford  (www.JSLint.com)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -2081,21 +2080,21 @@ var warn_at_extra = null;
     missing_m, module, multivar, naked_block, name, names, nested_comment, new,
     node, not_label_a, nr, nud, number_isNaN, ok, open, opening, option,
     out_of_scope_a, parameters, parent, pop, property, push, quote,
-    redefinition_a_b, replace, required_a_optional_b, reserved_a, right, role,
-    search, shebang, signature, single, slice, some, sort, split, startsWith,
-    statement, stop, strict, subscript_a, switch, test, this, thru, toString,
-    todo_comment, tokens, too_long, too_many_digits, tree, try, type, u,
-    unclosed_comment, unclosed_mega, unclosed_string, undeclared_a,
-    unexpected_a, unexpected_a_after_b, unexpected_a_before_b,
-    unexpected_at_top_level_a, unexpected_char_a, unexpected_comment,
-    unexpected_directive_a, unexpected_expression_a, unexpected_label_a,
-    unexpected_parens, unexpected_space_a_b, unexpected_statement_a,
-    unexpected_trailing_space, unexpected_typeof_a, uninitialized_a,
-    unreachable_a, unregistered_property_a, unsafe, unused_a, use_double,
-    use_open, use_spaces, use_strict, used, value, var_loop, var_switch,
-    variable, warning, warnings, weird_condition_a, weird_expression_a,
-    weird_loop, weird_relation_a, white, wrap_condition, wrap_immediate,
-    wrap_parameter, wrap_regexp, wrap_unary, wrapped, writable, y
+    redefinition_a_b, replace, required_a_optional_b, reserved_a, role, search,
+    shebang, signature, single, slice, some, sort, split, startsWith, statement,
+    stop, strict, subscript_a, switch, test, this, thru, toString, todo_comment,
+    tokens, too_long, too_many_digits, tree, try, type, u, unclosed_comment,
+    unclosed_mega, unclosed_string, undeclared_a, unexpected_a,
+    unexpected_a_after_b, unexpected_a_before_b, unexpected_at_top_level_a,
+    unexpected_char_a, unexpected_comment, unexpected_directive_a,
+    unexpected_expression_a, unexpected_label_a, unexpected_parens,
+    unexpected_space_a_b, unexpected_statement_a, unexpected_trailing_space,
+    unexpected_typeof_a, uninitialized_a, unreachable_a,
+    unregistered_property_a, unsafe, unused_a, use_double, use_open, use_spaces,
+    use_strict, used, value, var_loop, var_switch, variable, warning, warnings,
+    weird_condition_a, weird_expression_a, weird_loop, weird_relation_a, white,
+    wrap_condition, wrap_immediate, wrap_parameter, wrap_regexp, wrap_unary,
+    wrapped, writable, y
 */
 
 function empty() {
@@ -4355,6 +4354,9 @@ function ternary(id1, id2) {
         token.arity = "ternary";
         the_token.arity = "ternary";
         the_token.expression = [left, second, expression(10)];
+        if (next_token.id !== ")") {
+            warn("use_open", the_token);
+        }
         return the_token;
     };
     return the_symbol;
@@ -5811,12 +5813,15 @@ function walk_statement(thing) {
                 thing.arity !== "statement"
                 && thing.arity !== "assignment"
             ) {
-                warn(
-                    (thing.id === "(string)" && thing.value === "use strict")
+                warn((
+                    // jslint-hack - ternary-condition
+                    (
+                        thing.id === "(string)"
+                        && thing.value === "use strict"
+                    )
                     ? "unexpected_a"
-                    : "unexpected_expression_a",
-                    thing
-                );
+                    : "unexpected_expression_a"
+                ), thing);
             }
             walk_statement(thing.block);
             walk_statement(thing.else);
@@ -6609,7 +6614,7 @@ function whitage() {
     }
 
     function one_space() {
-        if (left.line === right.line) {
+        if (left.line === right.line || !open) {
             if (left.thru + 1 !== right.from && nr_comments_skipped === 0) {
                 warn(
                     "expected_space_a_b",
@@ -6619,19 +6624,9 @@ function whitage() {
                 );
             }
         } else {
-            if (free) {
-                // jslint-hack - expected_at
-                if (right.from !== margin) {
-                    expected_at(margin);
-                }
-            } else {
-                // jslint-hack - expected_space_a_b
-                warn(
-                    "expected_space_a_b",
-                    right,
-                    artifact(left),
-                    artifact(right)
-                );
+            // jslint-hack - expected_at
+            if (right.from !== margin) {
+                expected_at(margin);
             }
         }
     }
@@ -6979,7 +6974,7 @@ var jslint0 = Object.freeze(function (
     }
     return {
         directives,
-        edition: "2018-10-26",
+        edition: "2018-11-13",
         exports,
         froms,
         functions,
@@ -7008,68 +7003,48 @@ var jslint0 = Object.freeze(function (
 file none
 */
 // jslint-hack - extra
-jslint = function (source, option, global_array) {
+jslint_extra = function (source, option, global_array) {
 /*
  * this function will run with extra-features inside jslint-function jslint()
  */
-    var ii;
-    var jj;
-    var source0;
-    option = option || {};
-    // autofix
-    if (option.autofix && !option.autofix_subroutine) {
-        option.autofix_subroutine = true;
-        return jslint(source, option, global_array);
-    }
     // init
-    ii = 0;
-    source = source || "";
-    while (true) {
-        ii += 1;
-        line_ignore = null;
-        lines = (
-            Array.isArray(source)
-            ? source
-            : source.split(rx_crlf)
-        );
-        jj = 0;
-        lines_extra = [];
-        while (jj < lines.length) {
-            lines_extra.push({});
-            jj += 1;
-        }
-        jslint_result = jslint0(source, option, global_array);
-        source0 = source;
-        source = "";
-        jj = 0;
-        while (jj < lines.length) {
-            source += (lines_extra[jj].source_autofix || lines[jj]) + "\n";
-            jj += 1;
-        }
-        source = source.slice(0, -1)
-        // expected_space_a_b: "Expected one space between '{a}' and '{b}'.",
-        // unexpected_space_a_b: "Unexpected space between '{a}' and '{b}'.",
-        .replace((
-            /\s+?\u0000/g
-        ), "\u0000")
-        .replace((
-            /(\n\u0020+)(.*?)\n\u0020*?(\/\/.*?)\u0000/g
-        ), "$1$3$1$2\u0000")
-        .replace((
-            /\u0000expected_space_a_b\u0000/g
-        ), " ")
-        .replace((
-            /\u0000unexpected_space_a_b\u0000/g
-        ), "");
-        if (ii >= 10 || jslint_result.stop || source === source0) {
-            break;
-        }
-    }
+    line_ignore = null;
+    lines = (
+        // ternary-condition
+        Array.isArray(source)
+        ? source
+        : source.split(rx_crlf)
+    );
+    lines_extra = lines.map(function () {
+        return {};
+    });
+    // jslint
+    jslint_result = jslint0(lines, option, global_array);
+    // autofix
+    source = lines_extra
+    .map(function (element, ii) {
+        return element.source_autofix || lines[ii];
+    })
+    .join("\n")
+    // expected_space_a_b: "Expected one space between '{a}' and '{b}'.",
+    // unexpected_space_a_b: "Unexpected space between '{a}' and '{b}'.",
+    .replace((
+        /\s+?\u0000/g
+    ), "\u0000")
+    .replace((
+        /(\n\u0020+)(.*?)\n\u0020*?(\/\/.*?)\u0000/g
+    ), "$1$3$1$2\u0000")
+    .replace((
+        /\u0000expected_space_a_b\u0000/g
+    ), " ")
+    .replace((
+        /\u0000unexpected_space_a_b\u0000/g
+    ), "");
     jslint_result.lines_extra = lines_extra;
     jslint_result.source_autofix = source;
     return jslint_result;
 };
-local.jslintEs6 = jslint;
+local.jslint_extra = jslint_extra;
 next_line_extra = function (source_line, line) {
 /*
  * this function will run with extra-features inside jslint-function next_line()
@@ -7260,11 +7235,6 @@ warn_at_extra = function (warning, warnings) {
 
 // run shared js-env code - function
 (function () {
-var jslint;
-jslint = local.jslintEs6;
-
-
-
 local.csslintUtility2 = function (code) {
 /*
  * this function will csslint <code> with utility2-specific rules
@@ -7398,6 +7368,7 @@ local.jslintAndPrint = function (code, file, options) {
 /*
  * this function will jslint / csslint <code> and print any errors to stderr
  */
+    var code0;
     var code2;
     var dataList;
     var ii;
@@ -7681,11 +7652,13 @@ local.jslintAndPrint = function (code, file, options) {
         .replace((
             /\/_\/[\w\s]*(\S)/g
         ), function (match0, match1) {
-            return match1 === ")"
-            ? match0
-            : match0.replace((
-                /\/_\/\w*/
-            ), "($&)");
+            return (
+                match1 === ")"
+                ? match0
+                : match0.replace((
+                    /\/_\/\w*/
+                ), "($&)")
+            );
         })
         .replace((
             /\((\/_\/\w*)\)/g
@@ -7839,7 +7812,16 @@ local.jslintAndPrint = function (code, file, options) {
             return dataList.shift().data;
         });
         // autofix - jslint
-        Object.assign(options, jslint(code2, options));
+        ii = 0;
+        while (true) {
+            ii += 1;
+            code0 = code2;
+            Object.assign(options, local.jslint_extra(code2, options));
+            code2 = options.source_autofix;
+            if (ii >= 10 || options.stop || code0 === code2) {
+                break;
+            }
+        }
         // mux - code2, dataList.</_/> -> code2
         code2 = code2
         .replace((
@@ -7848,9 +7830,6 @@ local.jslintAndPrint = function (code, file, options) {
             return dataList.shift().data;
         });
         code = code2;
-        if (!options.utility2) {
-            break;
-        }
         // autofix - sort const, let, var
         code = code.replace((
             /(?:^\u0020*?(?:const|let|var)\u0020[\w$]*?;.*?\n)+/gm
@@ -7937,12 +7916,12 @@ local.jslintAndPrint = function (code, file, options) {
             break;
         default:
             // jslint
-            Object.assign(options, jslint(
-                code,
+            Object.assign(options, local.jslint_extra(code, (
+                // ternary-condition
                 options.fileType === ".json"
                 ? {}
                 : options
-            ));
+            )));
             options.fileType = (
                 options.json
                 ? ".json"

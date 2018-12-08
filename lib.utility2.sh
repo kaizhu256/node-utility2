@@ -584,48 +584,13 @@ shBuildCiInternal () {(set -e
     shEnvSanitize
     export MODE_BUILD=npmTest
     shBuildPrint "$(du -ms node_modules | awk '{print "npm install - " $1 " megabytes"}')"
-    if [ "$npm_package_buildCustomOrg" ]
-    then
-        export npm_config_timeout_default=120000
-        rm -fr "node_modules/$npm_package_buildCustomOrg/.git"
-        case "$GITHUB_ORG" in
-        scrapeitall)
-            ;;
-        *)
-            (shNpmInstallWithPeerDependencies "$npm_package_buildCustomOrg" --prefix .) || true
-            if [ ! -d "$(shModuleDirname $npm_package_buildCustomOrg)" ]
-            then
-                shBuildPrint "fallback to $npm_package_buildCustomOrg tarball"
-                shNpmInstallTarball "$npm_package_buildCustomOrg"
-            fi
-            ;;
-        esac
-        rm -f test.js
-        shBuildApp
-        case "$GITHUB_ORG" in
-        npmdoc)
-            npm test
-            ;;
-        npmtest)
-            npm test --mode-coverage=all \
-                --mode-coverage-dir="$(shModuleDirname $npm_package_buildCustomOrg)"
-            ;;
-        esac
-    else
-        npm test --mode-coverage
-    fi
+    npm test --mode-coverage
     )
     # create apidoc
     shBuildApidoc
     # create npmPackageListing
-    if [ "$npm_package_buildCustomOrg" ]
-    then
-        shNpmPackageListingCreate "node_modules/$npm_package_buildCustomOrg"
-        shNpmPackageDependencyTreeCreate "$npm_package_buildCustomOrg"
-    else
-        shNpmPackageListingCreate
-        shNpmPackageDependencyTreeCreate "$npm_package_name" "$GITHUB_REPO#alpha"
-    fi
+    shNpmPackageListingCreate
+    shNpmPackageDependencyTreeCreate "$npm_package_name" "$GITHUB_REPO#alpha"
     # create npmPackageCliHelp
     shNpmPackageCliHelpCreate
     # create recent changelog of last 50 commits
@@ -634,17 +599,11 @@ shBuildCiInternal () {(set -e
 
 
     # screenshot coverage
-    for FILE in "$npm_config_dir_build/coverage.html\
-/node-$GITHUB_ORG-$npm_package_buildCustomOrg/node_modules/$npm_package_buildCustomOrg" \
-        "$npm_config_dir_build/coverage.html"
-    do
-        FILE="$(find "$FILE" -name *.js.html 2>/dev/null | tail -n 1)"
-        if [ -f "$FILE" ]
-        then
-            cp "$FILE" "$npm_config_dir_build/coverage.lib.html"
-            break
-        fi
-    done
+    FILE="$(find "$npm_config_dir_build" -name *.js.html 2>/dev/null | tail -n 1)"
+    if [ -f "$FILE" ]
+    then
+        cp "$FILE" "$npm_config_dir_build/coverage.lib.html"
+    fi
     # bug-workaround - travis-ci cannot run node in certain subprocesses
     LIST=""
     for FILE in apidoc.html coverage.lib.html test-report.html
@@ -655,15 +614,6 @@ shBuildCiInternal () {(set -e
         fi
     done
     MODE_BUILD=buildCi shBrowserTest "$LIST" screenshot
-    if [ "$npm_package_buildCustomOrg" ]
-    then
-        case "$GITHUB_ORG" in
-        npmtest)
-            shBuildApp
-            ;;
-        esac
-        rm -fr "$npm_package_buildCustomOrg"
-    fi
 
 
 
@@ -824,18 +774,6 @@ if ((
             + ";"
         );
     }
-    if (
-        !process.env.npm_package_buildCustomOrg
-        && value.join("/").indexOf(value[0] + "/node-" + value[0] + "-") === 0
-    ) {
-        process.env.npm_package_buildCustomOrg = value
-        .join("/")
-        .replace(value[0] + "/node-" + value[0] + "-", "");
-        process.stdout.write(
-            "export npm_package_buildCustomOrg="
-            + JSON.stringify(process.env.npm_package_buildCustomOrg) + ";"
-        );
-    }
 }
 }());
 ')" || return $?
@@ -853,7 +791,7 @@ if ((
     mkdir -p "$npm_config_dir_tmp" || return $?
     export npm_config_file_tmp="${npm_config_file_tmp:-$PWD/tmp/tmpfile}" || return $?
     # extract and save the scripts embedded in README.md to tmp/
-    if [ -f README.md ] && [ ! "$npm_package_buildCustomOrg" ]
+    if [ -f README.md ]
     then
         node -e '
 /* jslint utility2:true */
@@ -944,9 +882,12 @@ process.stdin.on("data", function (chunk) {
 });
 process.stdin.on("end", function () {
     local.cryptoAesXxxCbcRawDecrypt({
-        data: process.argv[2] === "base64"
-        ? Buffer.concat(chunkList).toString()
-        : Buffer.concat(chunkList),
+        data: (
+            // ternary-condition
+            process.argv[2] === "base64"
+            ? Buffer.concat(chunkList).toString()
+            : Buffer.concat(chunkList)
+        ),
         key: process.argv[1],
         mode: process.argv[2]
     }, function (error, data) {
@@ -1519,13 +1460,19 @@ shEnvSanitize () {
 (function () {
 "use strict";
 console.log(Object.keys(process.env).sort().map(function (key) {
-    return ((
-        /(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/i
-    ).test(key) || (
-        /Crypt|Decrypt|Key|Pass|Private|Secret|Token/
-    ).test(key))
-    ? "unset " + key + "; "
-    : "";
+    return (
+        // ternary-condition
+        ((
+            /(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/i
+        ).test(key) || (
+            // ternary-condition
+            (
+                /Crypt|Decrypt|Key|Pass|Private|Secret|Token/
+            ).test(key)
+        ))
+        ? "unset " + key + "; "
+        : ""
+    );
 }).join("").trim());
 }());
 ')"
@@ -1909,7 +1856,7 @@ shGithubRepoTouch () {(set -e
     do
         LIST2="$LIST2,https://github.com/$GITHUB_REPO/blob/$BRANCH/package.json"
     done
-    utility2-github-crud touchList "$LIST2" "$CI_COMMIT_MESSAGE"
+    utility2-github-crud touch "$LIST2" "$CI_COMMIT_MESSAGE"
 )}
 
 shGrep () {(set -e
@@ -2169,8 +2116,29 @@ shMain () {
         } catch (ignore) {}
     }());
     globalThis.globalThis = globalThis;
+    // init debug_inline
+    if (!globalThis["debug\u0049nline"]) {
+        consoleError = console.error;
+        globalThis["debug\u0049nline"] = function () {
+        /*
+         * this function will both print <arguments> to stderr
+         * and return <arguments>[0]
+         */
+            var argList;
+            argList = Array.from(arguments); // jslint ignore:line
+            // debug arguments
+            globalThis["debug\u0049nlineArguments"] = argList;
+            consoleError("\n\ndebug\u0049nline");
+            consoleError.apply(console, argList);
+            consoleError("\n");
+            // return arg0 for inspection
+            return argList[0];
+        };
+    }
     // init local
     local = {};
+    local.local = local;
+    globalThis.globalLocal = local;
     // init isBrowser
     local.isBrowser = (
         typeof window === "object"
@@ -2179,7 +2147,6 @@ shMain () {
         && window.document
         && typeof window.document.querySelectorAll === "function"
     );
-    globalThis.globalLocal = local;
     // init function
     local.assertThrow = function (passed, message) {
     /*
@@ -2190,7 +2157,7 @@ shMain () {
             return;
         }
         error = (
-            // ternary-operator
+            // ternary-condition
             (
                 message
                 && typeof message.message === "string"
@@ -2228,24 +2195,35 @@ shMain () {
      */
         return;
     };
-    // init debug_inline
-    if (!globalThis["debug\u0049nline"]) {
-        consoleError = console.error;
-        globalThis["debug\u0049nline"] = function () {
-        /*
-         * this function will both print <arguments> to stderr
-         * and return <arguments>[0]
-         */
-            var argList;
-            argList = Array.from(arguments); // jslint ignore:line
-            // debug arguments
-            globalThis["debug\u0049nlineArguments"] = argList;
-            consoleError("\n\ndebug\u0049nline");
-            consoleError.apply(console, argList);
-            consoleError("\n");
-            // return arg0 for inspection
-            return argList[0];
-        };
+    // require builtin
+    if (!local.isBrowser) {
+        local.assert = require("assert");
+        local.buffer = require("buffer");
+        local.child_process = require("child_process");
+        local.cluster = require("cluster");
+        local.crypto = require("crypto");
+        local.dgram = require("dgram");
+        local.dns = require("dns");
+        local.domain = require("domain");
+        local.events = require("events");
+        local.fs = require("fs");
+        local.http = require("http");
+        local.https = require("https");
+        local.net = require("net");
+        local.os = require("os");
+        local.path = require("path");
+        local.querystring = require("querystring");
+        local.readline = require("readline");
+        local.repl = require("repl");
+        local.stream = require("stream");
+        local.string_decoder = require("string_decoder");
+        local.timers = require("timers");
+        local.tls = require("tls");
+        local.tty = require("tty");
+        local.url = require("url");
+        local.util = require("util");
+        local.vm = require("vm");
+        local.zlib = require("zlib");
     }
 }(this));
 
@@ -2270,39 +2248,10 @@ local = (
 if (local.isBrowser) {
     globalThis.utility2_utility2 = local;
 } else {
-    // require builtins
-    local.assert = require("assert");
-    local.buffer = require("buffer");
-    local.child_process = require("child_process");
-    local.cluster = require("cluster");
-    local.crypto = require("crypto");
-    local.dgram = require("dgram");
-    local.dns = require("dns");
-    local.domain = require("domain");
-    local.events = require("events");
-    local.fs = require("fs");
-    local.http = require("http");
-    local.https = require("https");
-    local.net = require("net");
-    local.os = require("os");
-    local.path = require("path");
-    local.querystring = require("querystring");
-    local.readline = require("readline");
-    local.repl = require("repl");
-    local.stream = require("stream");
-    local.string_decoder = require("string_decoder");
-    local.timers = require("timers");
-    local.tls = require("tls");
-    local.tty = require("tty");
-    local.url = require("url");
-    local.util = require("util");
-    local.vm = require("vm");
-    local.zlib = require("zlib");
     module.exports = local;
     module.exports.__dirname = __dirname;
 }
 // init lib main
-local.local = local;
 local.utility2 = local;
 
 
@@ -2395,7 +2344,7 @@ local.ajax = function (options, onError) {
             if (xhr.error) {
                 xhr.error.statusCode = xhr.statusCode;
                 tmp = (
-                    // ternary-operator
+                    // ternary-condition
                     (
                         local.isBrowser
                         ? "browser"
@@ -3081,14 +3030,13 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
         return tmp;
     };
     circularSet = new Set();
-    return JSON.stringify(
+    return JSON.stringify((
+        // ternary-condition
         (typeof obj === "object" && obj)
         // recurse
         ? JSON.parse(stringify(obj))
-        : obj,
-        replacer,
-        space
-    );
+        : obj
+    ), replacer, space);
 };
 
 local.moduleDirname = function (module, modulePathList) {
@@ -3987,11 +3935,6 @@ shReadmeTest () {(set -e
         return;
         ;;
     esac
-    if [ "$npm_package_buildCustomOrg" ]
-    then
-        shBuildCi
-        return
-    fi
     FILE="$1"
     if [ ! -f "tmp/README.$FILE" ]
     then

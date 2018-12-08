@@ -22,8 +22,29 @@
         } catch (ignore) {}
     }());
     globalThis.globalThis = globalThis;
+    // init debug_inline
+    if (!globalThis["debug\u0049nline"]) {
+        consoleError = console.error;
+        globalThis["debug\u0049nline"] = function () {
+        /*
+         * this function will both print <arguments> to stderr
+         * and return <arguments>[0]
+         */
+            var argList;
+            argList = Array.from(arguments); // jslint ignore:line
+            // debug arguments
+            globalThis["debug\u0049nlineArguments"] = argList;
+            consoleError("\n\ndebug\u0049nline");
+            consoleError.apply(console, argList);
+            consoleError("\n");
+            // return arg0 for inspection
+            return argList[0];
+        };
+    }
     // init local
     local = {};
+    local.local = local;
+    globalThis.globalLocal = local;
     // init isBrowser
     local.isBrowser = (
         typeof window === "object"
@@ -32,7 +53,6 @@
         && window.document
         && typeof window.document.querySelectorAll === "function"
     );
-    globalThis.globalLocal = local;
     // init function
     local.assertThrow = function (passed, message) {
     /*
@@ -43,7 +63,7 @@
             return;
         }
         error = (
-            // ternary-operator
+            // ternary-condition
             (
                 message
                 && typeof message.message === "string"
@@ -81,24 +101,35 @@
      */
         return;
     };
-    // init debug_inline
-    if (!globalThis["debug\u0049nline"]) {
-        consoleError = console.error;
-        globalThis["debug\u0049nline"] = function () {
-        /*
-         * this function will both print <arguments> to stderr
-         * and return <arguments>[0]
-         */
-            var argList;
-            argList = Array.from(arguments); // jslint ignore:line
-            // debug arguments
-            globalThis["debug\u0049nlineArguments"] = argList;
-            consoleError("\n\ndebug\u0049nline");
-            consoleError.apply(console, argList);
-            consoleError("\n");
-            // return arg0 for inspection
-            return argList[0];
-        };
+    // require builtin
+    if (!local.isBrowser) {
+        local.assert = require("assert");
+        local.buffer = require("buffer");
+        local.child_process = require("child_process");
+        local.cluster = require("cluster");
+        local.crypto = require("crypto");
+        local.dgram = require("dgram");
+        local.dns = require("dns");
+        local.domain = require("domain");
+        local.events = require("events");
+        local.fs = require("fs");
+        local.http = require("http");
+        local.https = require("https");
+        local.net = require("net");
+        local.os = require("os");
+        local.path = require("path");
+        local.querystring = require("querystring");
+        local.readline = require("readline");
+        local.repl = require("repl");
+        local.stream = require("stream");
+        local.string_decoder = require("string_decoder");
+        local.timers = require("timers");
+        local.tls = require("tls");
+        local.tty = require("tty");
+        local.url = require("url");
+        local.util = require("util");
+        local.vm = require("vm");
+        local.zlib = require("zlib");
     }
 }(this));
 
@@ -123,39 +154,10 @@ local = (
 if (local.isBrowser) {
     globalThis.utility2_swgg = local;
 } else {
-    // require builtins
-    local.assert = require("assert");
-    local.buffer = require("buffer");
-    local.child_process = require("child_process");
-    local.cluster = require("cluster");
-    local.crypto = require("crypto");
-    local.dgram = require("dgram");
-    local.dns = require("dns");
-    local.domain = require("domain");
-    local.events = require("events");
-    local.fs = require("fs");
-    local.http = require("http");
-    local.https = require("https");
-    local.net = require("net");
-    local.os = require("os");
-    local.path = require("path");
-    local.querystring = require("querystring");
-    local.readline = require("readline");
-    local.repl = require("repl");
-    local.stream = require("stream");
-    local.string_decoder = require("string_decoder");
-    local.timers = require("timers");
-    local.tls = require("tls");
-    local.tty = require("tty");
-    local.url = require("url");
-    local.util = require("util");
-    local.vm = require("vm");
-    local.zlib = require("zlib");
     module.exports = local;
     module.exports.__dirname = __dirname;
 }
 // init lib main
-local.local = local;
 local.swgg = local;
 
 
@@ -1831,9 +1833,12 @@ local.apiAjax = function (that, options, onError) {
     })[0];
     // init options-defaults
     local.objectSetDefault(options, {
-        inForm: that._consumes0 === "multipart/form-data"
-        ? new local.FormData()
-        : "",
+        inForm: (
+            // ternary-condition
+            that._consumes0 === "multipart/form-data"
+            ? new local.FormData()
+            : ""
+        ),
         inHeader: {},
         inPath: that._path.replace((
             /#.*?$/
@@ -1841,9 +1846,12 @@ local.apiAjax = function (that, options, onError) {
         inQuery: "",
         headers: {},
         method: that._method,
-        responseType: that._consumes0.indexOf("application/octet-stream") === 0
-        ? "arraybuffer"
-        : ""
+        responseType: (
+            // ternary-condition
+            that._consumes0.indexOf("application/octet-stream") === 0
+            ? "arraybuffer"
+            : ""
+        )
     });
     // init paramDict
     that.parameters.forEach(function (schemaP) {
@@ -1859,14 +1867,18 @@ local.apiAjax = function (that, options, onError) {
                 break;
             case "multi":
                 tmp.forEach(function (value) {
-                    options[
+                    options[(
+                        // ternary-condition
                         schemaP.in === "formData"
                         ? "inForm"
                         : "inQuery"
-                    ] += "&" + encodeURIComponent(schemaP.name) + "=" + encodeURIComponent(
-                        local.schemaPItemsType(schemaP) === "string"
-                        ? value
-                        : JSON.stringify(value)
+                    )] += (
+                        "&" + encodeURIComponent(schemaP.name) + "="
+                        + encodeURIComponent(
+                            local.schemaPItemsType(schemaP) === "string"
+                            ? value
+                            : JSON.stringify(value)
+                        )
                     );
                 });
                 return;
@@ -3808,9 +3820,12 @@ local.swaggerJsonFromAjax = function (swaggerJson, options) {
     // init param in body - json-data
     isArray = Array.isArray(data);
     type = local.swaggerJsonFromPostBody(swaggerJson, {
-        data: isArray
-        ? data[0]
-        : data,
+        data: (
+            // ternary-condition
+            isArray
+            ? data[0]
+            : data
+        ),
         depth: 2,
         key: "body",
         prefix: operation.operationId,
@@ -3819,12 +3834,15 @@ local.swaggerJsonFromAjax = function (swaggerJson, options) {
     upsertSchemaP({
         in: "body",
         name: "body",
-        schema: isArray
-        ? {
-            items: type,
-            type: "array"
-        }
-        : type
+        schema: (
+            // ternary-condition
+            isArray
+            ? {
+                items: type,
+                type: "array"
+            }
+            : type
+        )
     });
     return swaggerJson;
 };
@@ -4554,9 +4572,12 @@ local.swaggerValidateDataSchema = function (options) {
         );
         local.throwSwaggerError(!test && {
             data: data,
-            errorType: schema.exclusiveMaximum
-            ? "numberExclusiveMaximum"
-            : "numberMaximum",
+            errorType: (
+                // ternary-condition
+                schema.exclusiveMaximum
+                ? "numberExclusiveMaximum"
+                : "numberMaximum"
+            ),
             prefix: options.prefix,
             schema: schema
         });
@@ -4568,9 +4589,12 @@ local.swaggerValidateDataSchema = function (options) {
         );
         local.throwSwaggerError(!test && {
             data: data,
-            errorType: schema.exclusiveMinimum
-            ? "numberExclusiveMinimum"
-            : "numberMinimum",
+            errorType: (
+                // ternary-condition
+                schema.exclusiveMinimum
+                ? "numberExclusiveMinimum"
+                : "numberMinimum"
+            ),
             prefix: options.prefix,
             schema: schema
         });
@@ -5658,13 +5682,22 @@ local.uiRenderSchemaP = function (schemaP) {
             );
             return {
                 id: local.idDomElementCreate("swgg_id_" + schemaP.name),
-                selected: schemaP.enumDefault.indexOf(element) >= 0
-                ? "selected"
-                : "",
-                type: local.schemaPItemsType(schemaP) || local.schemaPType(schemaP),
-                placeholder: typeof element === "string"
-                ? element
-                : JSON.stringify(element),
+                selected: (
+                    // ternary-condition
+                    schemaP.enumDefault.indexOf(element) >= 0
+                    ? "selected"
+                    : ""
+                ),
+                type: (
+                    local.schemaPItemsType(schemaP)
+                    || local.schemaPType(schemaP)
+                ),
+                placeholder: (
+                    // ternary-condition
+                    typeof element === "string"
+                    ? element
+                    : JSON.stringify(element)
+                ),
                 valueSelectOption: element
             };
         });
@@ -5725,13 +5758,12 @@ local.uiRenderSchemaP = function (schemaP) {
         return schemaP.schema2.properties;
     });
     if (schemaP.schema2.properties) {
-        schemaP.schemaText = JSON.stringify(
+        schemaP.schemaText = JSON.stringify((
+            // ternary-condition
             schemaP.type2 === "array"
             ? [schemaP.schema2.properties]
-            : schemaP.schema2.properties,
-            null,
-            4
-        );
+            : schemaP.schema2.properties
+        ), null, 4);
     }
     // init placeholder
     schemaP.placeholder = (

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2018.11.14)
+ * lib.utility2.js (2018.12.8)
  * https://github.com/kaizhu256/node-utility2
  * the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps
  *
@@ -22,8 +22,29 @@
         } catch (ignore) {}
     }());
     globalThis.globalThis = globalThis;
+    // init debug_inline
+    if (!globalThis["debug\u0049nline"]) {
+        consoleError = console.error;
+        globalThis["debug\u0049nline"] = function () {
+        /*
+         * this function will both print <arguments> to stderr
+         * and return <arguments>[0]
+         */
+            var argList;
+            argList = Array.from(arguments); // jslint ignore:line
+            // debug arguments
+            globalThis["debug\u0049nlineArguments"] = argList;
+            consoleError("\n\ndebug\u0049nline");
+            consoleError.apply(console, argList);
+            consoleError("\n");
+            // return arg0 for inspection
+            return argList[0];
+        };
+    }
     // init local
     local = {};
+    local.local = local;
+    globalThis.globalLocal = local;
     // init isBrowser
     local.isBrowser = (
         typeof window === "object"
@@ -32,7 +53,6 @@
         && window.document
         && typeof window.document.querySelectorAll === "function"
     );
-    globalThis.globalLocal = local;
     // init function
     local.assertThrow = function (passed, message) {
     /*
@@ -43,7 +63,7 @@
             return;
         }
         error = (
-            // ternary-operator
+            // ternary-condition
             (
                 message
                 && typeof message.message === "string"
@@ -81,24 +101,35 @@
      */
         return;
     };
-    // init debug_inline
-    if (!globalThis["debug\u0049nline"]) {
-        consoleError = console.error;
-        globalThis["debug\u0049nline"] = function () {
-        /*
-         * this function will both print <arguments> to stderr
-         * and return <arguments>[0]
-         */
-            var argList;
-            argList = Array.from(arguments); // jslint ignore:line
-            // debug arguments
-            globalThis["debug\u0049nlineArguments"] = argList;
-            consoleError("\n\ndebug\u0049nline");
-            consoleError.apply(console, argList);
-            consoleError("\n");
-            // return arg0 for inspection
-            return argList[0];
-        };
+    // require builtin
+    if (!local.isBrowser) {
+        local.assert = require("assert");
+        local.buffer = require("buffer");
+        local.child_process = require("child_process");
+        local.cluster = require("cluster");
+        local.crypto = require("crypto");
+        local.dgram = require("dgram");
+        local.dns = require("dns");
+        local.domain = require("domain");
+        local.events = require("events");
+        local.fs = require("fs");
+        local.http = require("http");
+        local.https = require("https");
+        local.net = require("net");
+        local.os = require("os");
+        local.path = require("path");
+        local.querystring = require("querystring");
+        local.readline = require("readline");
+        local.repl = require("repl");
+        local.stream = require("stream");
+        local.string_decoder = require("string_decoder");
+        local.timers = require("timers");
+        local.tls = require("tls");
+        local.tty = require("tty");
+        local.url = require("url");
+        local.util = require("util");
+        local.vm = require("vm");
+        local.zlib = require("zlib");
     }
 }(this));
 
@@ -123,39 +154,10 @@ local = (
 if (local.isBrowser) {
     globalThis.utility2_utility2 = local;
 } else {
-    // require builtins
-    local.assert = require("assert");
-    local.buffer = require("buffer");
-    local.child_process = require("child_process");
-    local.cluster = require("cluster");
-    local.crypto = require("crypto");
-    local.dgram = require("dgram");
-    local.dns = require("dns");
-    local.domain = require("domain");
-    local.events = require("events");
-    local.fs = require("fs");
-    local.http = require("http");
-    local.https = require("https");
-    local.net = require("net");
-    local.os = require("os");
-    local.path = require("path");
-    local.querystring = require("querystring");
-    local.readline = require("readline");
-    local.repl = require("repl");
-    local.stream = require("stream");
-    local.string_decoder = require("string_decoder");
-    local.timers = require("timers");
-    local.tls = require("tls");
-    local.tty = require("tty");
-    local.url = require("url");
-    local.util = require("util");
-    local.vm = require("vm");
-    local.zlib = require("zlib");
     module.exports = local;
     module.exports.__dirname = __dirname;
 }
 // init lib main
-local.local = local;
 local.utility2 = local;
 
 
@@ -180,7 +182,12 @@ globalThis.utility2 = local;
             ? globalThis["utility2_" + key]
             : require("./lib." + key + ".js")
         );
-    } catch (ignore) {}
+    } catch (errorCaught) {
+        local.assertThrow(
+            errorCaught.code === "MODULE_NOT_FOUND",
+            errorCaught
+        );
+    }
     local[key] = local[key] || {};
 });
 // init assets and templates
@@ -507,8 +514,29 @@ local.assetsDict["/assets.example.begin.js"] = '\
         } catch (ignore) {}\n\
     }());\n\
     globalThis.globalThis = globalThis;\n\
+    // init debug_inline\n\
+    if (!globalThis["debug\\u0049nline"]) {\n\
+        consoleError = console.error;\n\
+        globalThis["debug\\u0049nline"] = function () {\n\
+        /*\n\
+         * this function will both print <arguments> to stderr\n\
+         * and return <arguments>[0]\n\
+         */\n\
+            var argList;\n\
+            argList = Array.from(arguments); // jslint ignore:line\n\
+            // debug arguments\n\
+            globalThis["debug\\u0049nlineArguments"] = argList;\n\
+            consoleError("\\n\\ndebug\\u0049nline");\n\
+            consoleError.apply(console, argList);\n\
+            consoleError("\\n");\n\
+            // return arg0 for inspection\n\
+            return argList[0];\n\
+        };\n\
+    }\n\
     // init local\n\
     local = {};\n\
+    local.local = local;\n\
+    globalThis.globalLocal = local;\n\
     // init isBrowser\n\
     local.isBrowser = (\n\
         typeof window === "object"\n\
@@ -517,7 +545,6 @@ local.assetsDict["/assets.example.begin.js"] = '\
         && window.document\n\
         && typeof window.document.querySelectorAll === "function"\n\
     );\n\
-    globalThis.globalLocal = local;\n\
     // init function\n\
     local.assertThrow = function (passed, message) {\n\
     /*\n\
@@ -528,7 +555,7 @@ local.assetsDict["/assets.example.begin.js"] = '\
             return;\n\
         }\n\
         error = (\n\
-            // ternary-operator\n\
+            // ternary-condition\n\
             (\n\
                 message\n\
                 && typeof message.message === "string"\n\
@@ -566,24 +593,35 @@ local.assetsDict["/assets.example.begin.js"] = '\
      */\n\
         return;\n\
     };\n\
-    // init debug_inline\n\
-    if (!globalThis["debug\\u0049nline"]) {\n\
-        consoleError = console.error;\n\
-        globalThis["debug\\u0049nline"] = function () {\n\
-        /*\n\
-         * this function will both print <arguments> to stderr\n\
-         * and return <arguments>[0]\n\
-         */\n\
-            var argList;\n\
-            argList = Array.from(arguments); // jslint ignore:line\n\
-            // debug arguments\n\
-            globalThis["debug\\u0049nlineArguments"] = argList;\n\
-            consoleError("\\n\\ndebug\\u0049nline");\n\
-            consoleError.apply(console, argList);\n\
-            consoleError("\\n");\n\
-            // return arg0 for inspection\n\
-            return argList[0];\n\
-        };\n\
+    // require builtin\n\
+    if (!local.isBrowser) {\n\
+        local.assert = require("assert");\n\
+        local.buffer = require("buffer");\n\
+        local.child_process = require("child_process");\n\
+        local.cluster = require("cluster");\n\
+        local.crypto = require("crypto");\n\
+        local.dgram = require("dgram");\n\
+        local.dns = require("dns");\n\
+        local.domain = require("domain");\n\
+        local.events = require("events");\n\
+        local.fs = require("fs");\n\
+        local.http = require("http");\n\
+        local.https = require("https");\n\
+        local.net = require("net");\n\
+        local.os = require("os");\n\
+        local.path = require("path");\n\
+        local.querystring = require("querystring");\n\
+        local.readline = require("readline");\n\
+        local.repl = require("repl");\n\
+        local.stream = require("stream");\n\
+        local.string_decoder = require("string_decoder");\n\
+        local.timers = require("timers");\n\
+        local.tls = require("tls");\n\
+        local.tty = require("tty");\n\
+        local.url = require("url");\n\
+        local.util = require("util");\n\
+        local.vm = require("vm");\n\
+        local.zlib = require("zlib");\n\
     }\n\
 }(this));\n\
 '
@@ -780,34 +818,6 @@ if (local.isBrowser) {\n\
 }\n\
 // init exports\n\
 module.exports = local;\n\
-// require builtins\n\
-local.assert = require("assert");\n\
-local.buffer = require("buffer");\n\
-local.child_process = require("child_process");\n\
-local.cluster = require("cluster");\n\
-local.crypto = require("crypto");\n\
-local.dgram = require("dgram");\n\
-local.dns = require("dns");\n\
-local.domain = require("domain");\n\
-local.events = require("events");\n\
-local.fs = require("fs");\n\
-local.http = require("http");\n\
-local.https = require("https");\n\
-local.net = require("net");\n\
-local.os = require("os");\n\
-local.path = require("path");\n\
-local.querystring = require("querystring");\n\
-local.readline = require("readline");\n\
-local.repl = require("repl");\n\
-local.stream = require("stream");\n\
-local.string_decoder = require("string_decoder");\n\
-local.timers = require("timers");\n\
-local.tls = require("tls");\n\
-local.tty = require("tty");\n\
-local.url = require("url");\n\
-local.util = require("util");\n\
-local.vm = require("vm");\n\
-local.zlib = require("zlib");\n\
 /* validateLineSortedReset */\n\
 // init assets\n\
 local.assetsDict = local.assetsDict || {};\n\
@@ -932,39 +942,10 @@ local = (\n\
 if (local.isBrowser) {\n\
     globalThis.utility2_my_app = local;\n\
 } else {\n\
-    // require builtins\n\
-    local.assert = require(\"assert\");\n\
-    local.buffer = require("buffer");\n\
-    local.child_process = require("child_process");\n\
-    local.cluster = require("cluster");\n\
-    local.crypto = require("crypto");\n\
-    local.dgram = require("dgram");\n\
-    local.dns = require("dns");\n\
-    local.domain = require("domain");\n\
-    local.events = require("events");\n\
-    local.fs = require("fs");\n\
-    local.http = require("http");\n\
-    local.https = require("https");\n\
-    local.net = require("net");\n\
-    local.os = require("os");\n\
-    local.path = require("path");\n\
-    local.querystring = require("querystring");\n\
-    local.readline = require("readline");\n\
-    local.repl = require("repl");\n\
-    local.stream = require("stream");\n\
-    local.string_decoder = require("string_decoder");\n\
-    local.timers = require("timers");\n\
-    local.tls = require("tls");\n\
-    local.tty = require("tty");\n\
-    local.url = require("url");\n\
-    local.util = require("util");\n\
-    local.vm = require("vm");\n\
-    local.zlib = require("zlib");\n\
     module.exports = local;\n\
     module.exports.__dirname = __dirname;\n\
 }\n\
 // init lib main\n\
-local.local = local;\n\
 local.my_app = local;\n\
 \n\
 \n\
@@ -1200,100 +1181,6 @@ shBuildCi\n\
 \n\
 # misc\n\
 - this package was created with [utility2](https://github.com/kaizhu256/node-utility2)\n\
-';
-
-
-
-local.assetsDict["/assets.readmeCustomOrg.npmdoc.template.md"] = '\
-# npmdoc-{{env.npm_package_name}}\n\
-\n\
-#### basic api documentation for \
-{{#if env.npm_package_homepage}} \
-[{{env.npm_package_name}} ({{env.npm_package_version}})]({{env.npm_package_homepage}}) \
-{{#unless env.npm_package_homepage}} \
-{{env.npm_package_name}} ({{env.npm_package_version}}) \
-{{/if env.npm_package_homepage}} \
-[![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}}.svg)](https://travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}})\n\
-\n\
-#### {{env.npm_package_description}}\n\
-\n\
-[![NPM](https://nodei.co/npm/{{env.npm_package_name}}.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/{{env.npm_package_name}})\n\
-\n\
-- [https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html)\n\
-\n\
-[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html)\n\
-\n\
-![npmPackageListing](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenshot.npmPackageListing.svg)\n\
-\n\
-![npmPackageDependencyTree](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenshot.npmPackageDependencyTree.svg)\n\
-\n\
-\n\
-\n\
-# package.json\n\
-\n\
-```json\n\
-\n\
-{{packageJson jsonStringify4 markdownSafe}}\n\
-```\n\
-\n\
-\n\
-\n\
-# misc\n\
-- this document was created with [utility2](https://github.com/kaizhu256/node-utility2)\n\
-';
-
-
-
-local.assetsDict["/assets.readmeCustomOrg.npmtest.template.md"] = '\
-# npmtest-{{env.npm_package_name}}\n\
-\n\
-#### basic test coverage for \
-{{#if env.npm_package_homepage}} \
-[{{env.npm_package_name}} ({{env.npm_package_version}})]({{env.npm_package_homepage}}) \
-{{#unless env.npm_package_homepage}} \
-{{env.npm_package_name}} ({{env.npm_package_version}}) \
-{{/if env.npm_package_homepage}} \
-[![travis-ci.org build-status](https://api.travis-ci.org/npmtest/node-npmtest-{{env.npm_package_name}}.svg)](https://travis-ci.org/npmtest/node-npmtest-{{env.npm_package_name}})\n\
-\n\
-#### {{env.npm_package_description}}\n\
-\n\
-[![NPM](https://nodei.co/npm/{{env.npm_package_name}}.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/{{env.npm_package_name}})\n\
-\n\
-| git-branch : | [alpha](https://github.com/npmtest/node-npmtest-{{env.npm_package_name}}/tree/alpha)|\n\
-|--:|:--|\n\
-| coverage : | [![coverage](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.badge.svg)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html)|\n\
-| test-report : | [![test-report](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.badge.svg)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html)|\n\
-| test-server-github : | [![github.com test-server](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/GitHub-Mark-32px.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/app) || build-artifacts : | [![build-artifacts](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/glyphicons_144_folder_open.png)](https://github.com/npmtest/node-npmtest-{{env.npm_package_name}}/tree/gh-pages/build)|\n\
-\n\
-- [https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html)\n\
-\n\
-[![coverage](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html)\n\
-\n\
-- [https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html)\n\
-\n\
-[![test-report](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html)\n\
-\n\
-- [https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html)\n\
-\n\
-[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html)\n\
-\n\
-![npmPackageListing](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenshot.npmPackageListing.svg)\n\
-\n\
-![npmPackageDependencyTree](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenshot.npmPackageDependencyTree.svg)\n\
-\n\
-\n\
-\n\
-# package.json\n\
-\n\
-```json\n\
-\n\
-{{packageJson jsonStringify4 markdownSafe}}\n\
-```\n\
-\n\
-\n\
-\n\
-# misc\n\
-- this document was created with [utility2](https://github.com/kaizhu256/node-utility2)\n\
 ';
 
 
@@ -1890,9 +1777,13 @@ local.cliDict["utility2.testReportCreate"] = function () {
  *
  * will create test-report
  */
-    local.exit(local.testReportCreate(local.tryCatchOnError(function () {
-        return require(local.env.npm_config_dir_build + "/test-report.json");
-    }, local.onErrorDefault)).testsFailed);
+    local.exit(
+        local.testReportCreate(
+            JSON.parse(local.fs.readFileSync(
+                local.env.npm_config_dir_build + "/test-report.json"
+            ))
+        ).testsFailed
+    );
 };
 }());
 
@@ -1911,7 +1802,7 @@ local.Blob = (
          */
         this.bff = local.bufferConcat(array.map(function (element) {
             return (
-                // ternary-operator
+                // ternary-condition
                 (
                     typeof element === "string"
                     || Object.prototype.toString.call(element) === "[object Uint8Array]"
@@ -2324,19 +2215,7 @@ local._testCase_buildApp_default = function (options, onError) {
     globalThis.local.testCase_buildReadme_default(options, local.onErrorThrow);
     globalThis.local.testCase_buildLib_default(options, local.onErrorThrow);
     globalThis.local.testCase_buildTest_default(options, local.onErrorThrow);
-    globalThis.local.testCase_buildCustomOrg_default(options, local.onErrorThrow);
     local.buildApp(options, onError);
-};
-
-local._testCase_buildCustomOrg_default = function (options, onError) {
-/*
- * this function will test buildCustomOrg's default handling-behavior
- */
-    if (local.isBrowser) {
-        onError(null, options);
-        return;
-    }
-    return local.buildCustomOrg({}, onError);
 };
 
 local._testCase_buildLib_default = function (options, onError) {
@@ -2482,7 +2361,7 @@ local.ajax = function (options, onError) {
             if (xhr.error) {
                 xhr.error.statusCode = xhr.statusCode;
                 tmp = (
-                    // ternary-operator
+                    // ternary-condition
                     (
                         local.isBrowser
                         ? "browser"
@@ -2774,7 +2653,7 @@ local.ajaxCrawl = function (options, onError) {
             ), "/")
             .replace("/", "//");
             options.file = (options.url + (
-                // ternary-operator
+                // ternary-condition
                 (
                     /\.(?:html?|txt|xml)$/
                 ).test(options.url)
@@ -3310,9 +3189,12 @@ local.browserTest = function (options, onError) {
                 "--enable-logging"
             ], {
                 env: data,
-                stdio: (!options.modeDebug && options.modeSilent)
-                ? "ignore"
-                : ["ignore", 1, 2],
+                stdio: (
+                    // ternary-condition
+                    (!options.modeDebug && options.modeSilent)
+                    ? "ignore"
+                    : ["ignore", 1, 2]
+                ),
                 timeout: options.timeoutDefault
             }).once("error", options.onNext).once("exit", options.onNext);
             return;
@@ -3635,7 +3517,7 @@ local.bufferRandomBytes = function (length) {
  * filled with cryptographically-strong random-values
  */
     return (
-        // ternary-operator
+        // ternary-condition
         (
             typeof window === "object"
             && window.crypto
@@ -3714,10 +3596,6 @@ local.buildApidoc = function (options, onError) {
         blacklistDict: local,
         require: local.requireInSandbox
     });
-    if (local.env.npm_package_buildCustomOrg && !options.modeForce) {
-        onError();
-        return;
-    }
     // save apidoc.html
     result = (
         local.fsReadFileOrEmptyStringSync("apidoc.html", "utf8")
@@ -3835,91 +3713,13 @@ local.buildApp = function (options, onError) {
             },
             stdio: ["ignore", 1, 2]
         })
-        .once("error", onError)
-        .once("exit", function (exitCode) {
+        .on("error", onError)
+        .on("exit", function (exitCode) {
             // validate exitCode
             local.assertThrow(!exitCode, exitCode);
             onError();
         });
     });
-};
-
-local.buildCustomOrg = function (options, onError) {
-/*
- * this function will build the customOrg
- */
-    var isDone;
-    var onError2;
-    var onParallel;
-    if (!local.env.npm_package_buildCustomOrg && !options.modeForce) {
-        onError();
-        return;
-    }
-    onError2 = function (error) {
-        local.onErrorDefault(error);
-        if (isDone) {
-            return;
-        }
-        isDone = true;
-        // try to recover from error
-        setTimeout(onError, error && local.timeoutDefault);
-    };
-    // try to recover from uncaughtException
-    process.on("uncaughtException", onError2);
-    onParallel = local.onParallel(onError2);
-    onParallel.counter += 1;
-    // build package.json
-    options.packageJson = local.fsReadFileOrEmptyStringSync("package.json", "json");
-    onParallel.counter += 1;
-    local.buildReadme({
-        dataFrom: "\n# package.json\n```json\n" + JSON.stringify(options.packageJson) + "\n```\n",
-        modeForce: true
-    }, onParallel);
-    options.packageJson = local.fsReadFileOrEmptyStringSync("package.json", "json");
-    switch (local.env.GITHUB_ORG) {
-    case "npmdoc":
-        local.objectSetOverride(options, {
-            packageJson: {
-                keywords: ["documentation", local.env.npm_package_buildCustomOrg]
-            }
-        }, 2);
-        // build apidoc.html
-        onParallel.counter += 1;
-        local.buildApidoc({
-            dir: local.env.npm_package_buildCustomOrg,
-            modeForce: true,
-            modulePathList: options.modulePathList
-        }, onParallel);
-        break;
-    case "npmtest":
-        local.objectSetOverride(options, {
-            packageJson: {
-                keywords: ["coverage", "test", local.env.npm_package_buildCustomOrg]
-            }
-        }, 2);
-        break;
-    case "scrapeitall":
-        break;
-    }
-    // build README.md
-    options.readme = local.apidocCreate({
-        dir: local.env.npm_package_buildCustomOrg,
-        modeNoApidoc: true,
-        modulePathList: options.modulePathList,
-        require: local.requireInSandbox,
-        template: local.assetsDict[
-            "/assets.readmeCustomOrg." + local.env.GITHUB_ORG + ".template.md"
-        ]
-    });
-    local.fs.writeFileSync("README.md", options.readme);
-    console.error("created customOrg file " + process.cwd() + "/README.md\n");
-    // re-build package.json
-    options.packageJson.description = options.readme.split("\n")[2].trim();
-    local.fs.writeFileSync(
-        "package.json",
-        local.jsonStringifyOrdered(options.packageJson, null, 4) + "\n"
-    );
-    onParallel();
 };
 
 local.buildLib = function (options, onError) {
@@ -3983,10 +3783,6 @@ local.buildReadme = function (options, onError) {
  * this function will build the readme in my-app-lite style
  */
     var result;
-    if (local.env.npm_package_buildCustomOrg && !options.modeForce) {
-        onError();
-        return;
-    }
     local.objectSetDefault(options, {
         customize: local.nop,
         // reset toc
@@ -4723,18 +4519,6 @@ local.domElementRender = function (template, dict) {
     return tmp.content;
 };
 
-local.domQuerySelectorAllTagNameAndPrint = function (selector) {
-/*
- * this function will print all tagName's that match the selector
- */
-    var dict;
-    dict = {};
-    Array.from(document.querySelectorAll(selector)).forEach(function (element) {
-        dict[element.tagName.toLowerCase()] = true;
-    });
-    console.log(Object.keys(dict).sort().join("\n"));
-};
-
 local.domStyleValidate = function () {
 /*
  * this function will validate the document's style
@@ -4746,7 +4530,7 @@ local.domStyleValidate = function () {
     );
     tmp = [];
     Array.from(
-        // ternary-operator
+        // ternary-condition
         (
             typeof document === "object"
             && document
@@ -5091,14 +4875,13 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
         return tmp;
     };
     circularSet = new Set();
-    return JSON.stringify(
+    return JSON.stringify((
+        // ternary-condition
         (typeof obj === "object" && obj)
         // recurse
         ? JSON.parse(stringify(obj))
-        : obj,
-        replacer,
-        space
-    );
+        : obj
+    ), replacer, space);
 };
 
 local.jwtAes256GcmDecrypt = function (token, key) {
@@ -5379,14 +5162,12 @@ local.middlewareError = function (error, request, response) {
         local.swgg.serverRespondJsonapi(request, response, error);
     }
     // statusCode [400, 600)
-    local.serverRespondDefault(
-        request,
-        response,
+    local.serverRespondDefault(request, response, (
+        // ternary-condition
         (error.statusCode >= 400 && error.statusCode < 600)
         ? error.statusCode
-        : 500,
-        error
-    );
+        : 500
+    ), error);
 };
 
 local.middlewareFileServer = function (request, response, nextMiddleware) {
@@ -6404,12 +6185,9 @@ local.requireReadme = function () {
     code = local.templateRenderMyApp(local.assetsDict["/assets.example.template.js"], {});
     local.tryCatchOnError(function () {
         tmp = (
-            !local.env.npm_package_buildCustomOrg
-            && (
-                /```\w*?(\n[\W\s]*?example\.js[\n"][\S\s]*?)\n```/
-            ).exec(
-                local.fs.readFileSync("README.md", "utf8")
-            )
+            /```\w*?(\n[\W\s]*?example\.js[\n"][\S\s]*?)\n```/
+        ).exec(
+            local.fs.readFileSync("README.md", "utf8")
         );
         code = tmp.input.slice(0, tmp.index).replace((
             /.+/g
@@ -7020,17 +6798,16 @@ local.taskCreate = function (options, onTask, onError) {
         // cleanup task
         delete local.taskOnTaskDict[options.key];
         // preserve error.message and error.stack
-        task.result = JSON.stringify([
+        task.result = JSON.stringify([(
+            // ternary-condition
             (error && error.stack)
             ? Object.assign(local.jsonCopy(error), {
                 message: error.message,
                 name: error.name,
                 stack: error.stack
             })
-            : error,
-            data,
-            meta
-        ]);
+            : error
+        ), data, meta]);
         // pass result to callbacks in onErrorList
         task.onErrorList.forEach(function (onError) {
             onError.apply(null, JSON.parse(task.result));
@@ -7365,13 +7142,16 @@ local.testMock = function (mockList, onTestCase, onError) {
         // backup mock[0] into mock[2]
         Object.keys(mock[1]).forEach(function (key) {
             mock[2][key] = (
-                typeof process === "object"
-                && process.env === mock[0]
-                && mock[0][key] === undefined
-            )
-            // handle process.env
-            ? ""
-            : mock[0][key];
+                // ternary-condition
+                (
+                    typeof process === "object"
+                    && process.env === mock[0]
+                    && mock[0][key] === undefined
+                )
+                // handle process.env
+                ? ""
+                : mock[0][key]
+            );
         });
         // override mock[0] with mock[1]
         Object.keys(mock[1]).forEach(function (key) {
@@ -7662,15 +7442,21 @@ local.testReportMerge = function (testReport1, testReport2) {
                             )
                         }, 8);
                     }),
-                    preClass: errorStackList.length
-                    ? ""
-                    : "displayNone",
+                    preClass: (
+                        // ternary-condition
+                        errorStackList.length
+                        ? ""
+                        : "displayNone"
+                    ),
                     testPlatformNumber: ii + 1
                 });
             }, 8),
-            testStatusClass: testReport.testsFailed
-            ? "testFailed"
-            : "testPassed"
+            testStatusClass: (
+                // ternary-condition
+                testReport.testsFailed
+                ? "testFailed"
+                : "testPassed"
+            )
         }, 8)
     );
 };

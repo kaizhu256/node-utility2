@@ -1507,28 +1507,26 @@ console.log(process.argv[2]);
 +        // jslint-hack - unexpected_a
 +        warn("unexpected_a", right, null, null, left, right);
 
--                const mislaid = (
--                    stack.length > 0
--                    ? stack[stack.length - 1].right
--                    : undefined
+-                warn(
+-                    (
+-                        (
+-                            thing.id === "(string)"
+-                            && thing.value === "use strict"
+-                        )
+-                        ? "unexpected_a"
+-                        : "unexpected_expression_a"
+-                    ),
+-                    thing
 -                );
--                if (!open && mislaid !== undefined) {
--                    warn(
--                        "expected_a_next_at_b",
--                        mislaid,
--                        artifact(mislaid.id),
--                        margin + 4 + fudge
--                    );
--                } else if (right.from !== margin + 8) {
--                    expected_at(margin + 8);
--                }
-+                // jslint-hack - expected_space_a_b
-+                warn(
-+                    "expected_space_a_b",
-+                    right,
-+                    artifact(left),
-+                    artifact(right)
-+                );
++                warn((
++                    // jslint-hack - ternary-condition
++                    (
++                        thing.id === "(string)"
++                        && thing.value === "use strict"
++                    )
++                    ? "unexpected_a"
++                    : "unexpected_expression_a"
++                ), thing);
 
 -                        margin += 4;
 +                        // jslint-hack - conditional-margin
@@ -1564,13 +1562,13 @@ console.log(process.argv[2]);
 +        e.early_stop = true;
 
 ' \
-"$(curl https://raw.githubusercontent.com/douglascrockford/JSLint/813d1fb157076ef9df1d773a084c971705e57a84/jslint.js)" > /tmp/aa.js; utility2-jslint autofix /tmp/aa.js
+"$(curl https://raw.githubusercontent.com/douglascrockford/JSLint/de413767154641f490d6e96185e525255cca5f7e/jslint.js)" > /tmp/aa.js; utility2-jslint autofix /tmp/aa.js
 */
 /* jslint utility2:true */
 var next_line_extra = null;
 var warn_at_extra = null;
 // jslint.js
-// 2018-10-26
+// 2018-11-13
 // Copyright (c) 2015 Douglas Crockford  (www.JSLint.com)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -1677,21 +1675,21 @@ var warn_at_extra = null;
     missing_m, module, multivar, naked_block, name, names, nested_comment, new,
     node, not_label_a, nr, nud, number_isNaN, ok, open, opening, option,
     out_of_scope_a, parameters, parent, pop, property, push, quote,
-    redefinition_a_b, replace, required_a_optional_b, reserved_a, right, role,
-    search, shebang, signature, single, slice, some, sort, split, startsWith,
-    statement, stop, strict, subscript_a, switch, test, this, thru, toString,
-    todo_comment, tokens, too_long, too_many_digits, tree, try, type, u,
-    unclosed_comment, unclosed_mega, unclosed_string, undeclared_a,
-    unexpected_a, unexpected_a_after_b, unexpected_a_before_b,
-    unexpected_at_top_level_a, unexpected_char_a, unexpected_comment,
-    unexpected_directive_a, unexpected_expression_a, unexpected_label_a,
-    unexpected_parens, unexpected_space_a_b, unexpected_statement_a,
-    unexpected_trailing_space, unexpected_typeof_a, uninitialized_a,
-    unreachable_a, unregistered_property_a, unsafe, unused_a, use_double,
-    use_open, use_spaces, use_strict, used, value, var_loop, var_switch,
-    variable, warning, warnings, weird_condition_a, weird_expression_a,
-    weird_loop, weird_relation_a, white, wrap_condition, wrap_immediate,
-    wrap_parameter, wrap_regexp, wrap_unary, wrapped, writable, y
+    redefinition_a_b, replace, required_a_optional_b, reserved_a, role, search,
+    shebang, signature, single, slice, some, sort, split, startsWith, statement,
+    stop, strict, subscript_a, switch, test, this, thru, toString, todo_comment,
+    tokens, too_long, too_many_digits, tree, try, type, u, unclosed_comment,
+    unclosed_mega, unclosed_string, undeclared_a, unexpected_a,
+    unexpected_a_after_b, unexpected_a_before_b, unexpected_at_top_level_a,
+    unexpected_char_a, unexpected_comment, unexpected_directive_a,
+    unexpected_expression_a, unexpected_label_a, unexpected_parens,
+    unexpected_space_a_b, unexpected_statement_a, unexpected_trailing_space,
+    unexpected_typeof_a, uninitialized_a, unreachable_a,
+    unregistered_property_a, unsafe, unused_a, use_double, use_open, use_spaces,
+    use_strict, used, value, var_loop, var_switch, variable, warning, warnings,
+    weird_condition_a, weird_expression_a, weird_loop, weird_relation_a, white,
+    wrap_condition, wrap_immediate, wrap_parameter, wrap_regexp, wrap_unary,
+    wrapped, writable, y
 */
 
 function empty() {
@@ -3945,6 +3943,9 @@ function ternary(id1, id2) {
         token.arity = "ternary";
         the_token.arity = "ternary";
         the_token.expression = [left, second, expression(10)];
+        if (next_token.id !== ")") {
+            warn("use_open", the_token);
+        }
         return the_token;
     };
     return the_symbol;
@@ -5401,12 +5402,15 @@ function walk_statement(thing) {
                 thing.arity !== "statement"
                 && thing.arity !== "assignment"
             ) {
-                warn(
-                    (thing.id === "(string)" && thing.value === "use strict")
+                warn((
+                    // jslint-hack - ternary-condition
+                    (
+                        thing.id === "(string)"
+                        && thing.value === "use strict"
+                    )
                     ? "unexpected_a"
-                    : "unexpected_expression_a",
-                    thing
-                );
+                    : "unexpected_expression_a"
+                ), thing);
             }
             walk_statement(thing.block);
             walk_statement(thing.else);
@@ -6199,7 +6203,7 @@ function whitage() {
     }
 
     function one_space() {
-        if (left.line === right.line) {
+        if (left.line === right.line || !open) {
             if (left.thru + 1 !== right.from && nr_comments_skipped === 0) {
                 warn(
                     "expected_space_a_b",
@@ -6209,19 +6213,9 @@ function whitage() {
                 );
             }
         } else {
-            if (free) {
-                // jslint-hack - expected_at
-                if (right.from !== margin) {
-                    expected_at(margin);
-                }
-            } else {
-                // jslint-hack - expected_space_a_b
-                warn(
-                    "expected_space_a_b",
-                    right,
-                    artifact(left),
-                    artifact(right)
-                );
+            // jslint-hack - expected_at
+            if (right.from !== margin) {
+                expected_at(margin);
             }
         }
     }
@@ -6568,7 +6562,7 @@ export default Object.freeze(function jslint(
     }
     return {
         directives,
-        edition: "2018-10-26",
+        edition: "2018-11-13",
         exports,
         froms,
         functions,
