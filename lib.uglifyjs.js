@@ -51,7 +51,7 @@
         && window === globalThis
         && typeof window.XMLHttpRequest === "function"
         && window.document
-        && typeof window.document.querySelectorAll === "function"
+        && typeof window.document.querySelector === "function"
     );
     // init function
     local.assertThrow = function (passed, message) {
@@ -100,6 +100,22 @@
      * this function will do nothing
      */
         return;
+    };
+    local.objectAssignDefault = function (target, source) {
+    /*
+     * this function will if items from <target> are
+     * null, undefined, or empty-string,
+     * then overwrite them with items from <source>
+     */
+        Object.keys(source).forEach(function (key) {
+            if (
+                target[key] === null
+                || target[key] === undefined
+                || target[key] === ""
+            ) {
+                target[key] = target[key] || source[key];
+            }
+        });
     };
     // require builtin
     if (!local.isBrowser) {
@@ -163,7 +179,7 @@ local.uglifyjs = local;
 
 
 /* validateLineSortedReset */
-local.cliRun = function (options) {
+local.cliRun = function (option) {
 /*
  * this function will run the cli
  */
@@ -199,10 +215,10 @@ local.cliRun = function (options) {
         file = __filename.replace((
             /.*\//
         ), "");
-        options = Object.assign({}, options);
+        option = Object.assign({}, option);
         packageJson = require("./package.json");
         // validate comment
-        options.rgxComment = options.rgxComment || (
+        option.rgxComment = option.rgxComment || (
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         textDict = {};
@@ -221,7 +237,7 @@ local.cliRun = function (options) {
                 return;
             }
             try {
-                commandList[ii] = options.rgxComment.exec(text);
+                commandList[ii] = option.rgxComment.exec(text);
                 commandList[ii] = {
                     argList: (commandList[ii][1] || "").trim(),
                     command: [key],
@@ -230,7 +246,8 @@ local.cliRun = function (options) {
             } catch (ignore) {
                 local.assertThrow(null, new Error(
                     "cliRun - cannot parse comment in COMMAND "
-                    + key + ":\nnew RegExp(" + JSON.stringify(options.rgxComment.source)
+                    + key + ":\nnew RegExp("
+                    + JSON.stringify(option.rgxComment.source)
                     + ").exec(" + JSON.stringify(text)
                     .replace((
                         /\\\\/g
@@ -244,7 +261,9 @@ local.cliRun = function (options) {
                 ));
             }
         });
-        console.log(packageJson.name + " (" + packageJson.version + ")\n\n" + commandList
+        text = "";
+        text += packageJson.name + " (" + packageJson.version + ")\n\n";
+        text += commandList
         .filter(function (element) {
             return element;
         })
@@ -274,7 +293,8 @@ local.cliRun = function (options) {
                 + element.argList.join("  ")
             );
         })
-        .join("\n\n"));
+        .join("\n\n");
+        console.log(text);
     };
     local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
     local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
@@ -286,7 +306,7 @@ local.cliRun = function (options) {
      * will start interactive-mode
      */
         globalThis.local = local;
-        local.functionOrNop(local.replStart || require("repl").start)({
+        local.identity(local.replStart || require("repl").start)({
             useGlobal: true
         });
     };
@@ -302,7 +322,10 @@ local.cliRun = function (options) {
      */
         console.log(require(__dirname + "/package.json").version);
     };
-    local.cliDict["--version"] = local.cliDict["--version"] || local.cliDict._version;
+    local.cliDict["--version"] = (
+        local.cliDict["--version"]
+        || local.cliDict._version
+    );
     local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
     // default to --help command if no arguments are given
     if (process.argv.length <= 2) {

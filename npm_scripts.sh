@@ -18,6 +18,10 @@ shMain () {(set -e
         fi
         utility2 shReadmeTest build_ci.sh
         ;;
+    eval)
+        shift
+        "$@"
+        ;;
     heroku-postbuild)
         if [ "$npm_package_nameLib" = utility2 ]
         then
@@ -26,10 +30,6 @@ shMain () {(set -e
         fi
         npm install kaizhu256/node-utility2#alpha --prefix .
         utility2 shDeployHeroku
-        ;;
-    eval)
-        shift
-        "$@"
         ;;
     start)
         export PORT=${PORT:-8080}

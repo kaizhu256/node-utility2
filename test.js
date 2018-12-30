@@ -41,7 +41,7 @@
         && window === globalThis
         && typeof window.XMLHttpRequest === "function"
         && window.document
-        && typeof window.document.querySelectorAll === "function"
+        && typeof window.document.querySelector === "function"
     );
     // init function
     local.assertThrow = function (passed, message) {
@@ -90,6 +90,22 @@
      * this function will do nothing
      */
         return;
+    };
+    local.objectAssignDefault = function (target, source) {
+    /*
+     * this function will if items from <target> are
+     * null, undefined, or empty-string,
+     * then overwrite them with items from <source>
+     */
+        Object.keys(source).forEach(function (key) {
+            if (
+                target[key] === null
+                || target[key] === undefined
+                || target[key] === ""
+            ) {
+                target[key] = target[key] || source[key];
+            }
+        });
     };
     // require builtin
     if (!local.isBrowser) {
@@ -143,14 +159,14 @@ local.testRunDefault(local);
 
 // run shared js-env code - function
 (function () {
-local._testCase_testRunDefault_failure = function (options, onError) {
+local._testCase_testRunDefault_failure = function (option, onError) {
 /*
  * this function will test testRunDefault's failure handling-behavior
  */
     // test failure from callback handling-behavior
     onError(local.errorDefault);
     // test failure from multiple-callback handling-behavior
-    onError(null, options);
+    onError(null, option);
     // test failure from ajax handling-behavior
     local.ajax({
         url: "/undefined"
@@ -164,30 +180,30 @@ local._testCase_testRunDefault_failure = function (options, onError) {
         }]
     ], function (onError) {
         console.error();
-        onError(null, options);
+        onError(null, option);
     }, local.onErrorThrow);
     // test failure from thrown error handling-behavior
     throw local.errorDefault;
 };
 
-local.testCase_FormData_default = function (options, onError) {
+local.testCase_FormData_default = function (option, onError) {
 /*
  * this function will test FormData's default handling-behavior
  */
-    options = {};
-    options.blob1 = new local.Blob(["aa", "bb", local.stringHelloEmoji, 0]);
-    options.blob2 = new local.Blob(["aa", "bb", local.stringHelloEmoji, 0], {
+    option = {};
+    option.blob1 = new local.Blob(["aa", "bb", local.stringHelloEmoji, 0]);
+    option.blob2 = new local.Blob(["aa", "bb", local.stringHelloEmoji, 0], {
         type: "text/plain; charset=utf-8"
     });
-    options.data = new local.FormData();
-    options.data.append("text1", "aabb" + local.stringHelloEmoji + "0");
+    option.data = new local.FormData();
+    option.data.append("text1", "aabb" + local.stringHelloEmoji + "0");
     // test file-upload handling-behavior
-    options.data.append("file1", options.blob1);
+    option.data.append("file1", option.blob1);
     // test file-upload and filename handling-behavior
-    options.data.append("file2", options.blob2, "filename2.txt");
-    options.method = "POST";
-    options.url = "/test.echo";
-    local.ajax(options, function (error, xhr) {
+    option.data.append("file2", option.blob2, "filename2.txt");
+    option.method = "POST";
+    option.url = "/test.echo";
+    local.ajax(option, function (error, xhr) {
         // validate no error occurred
         local.assertThrow(!error, error);
         // validate responseText
@@ -204,11 +220,11 @@ local.testCase_FormData_default = function (options, onError) {
             + "filename=\"filename2.txt\"\r\nContent-Type: text/plain; "
             + "charset=utf-8\r\n\r\naabbhello \ud83d\ude01\n0\r\n"
         ) >= 0, xhr.responseText);
-        onError(null, options);
+        onError(null, option);
     });
 };
 
-local.testCase_FormData_error = function (options, onError) {
+local.testCase_FormData_error = function (option, onError) {
 /*
  * this function will test FormData's error handling-behavior
  */
@@ -226,12 +242,12 @@ local.testCase_FormData_error = function (options, onError) {
         }, function (error) {
             // validate error occurred
             local.assertThrow(error, error);
-            onError(null, options);
+            onError(null, option);
         });
     }, onError);
 };
 
-local.testCase_FormData_nullCase = function (options, onError) {
+local.testCase_FormData_nullCase = function (option, onError) {
 /*
  * this function will test FormData's null-case handling-behavior
  */
@@ -246,15 +262,15 @@ local.testCase_FormData_nullCase = function (options, onError) {
         local.assertThrow((
             /\r\n\r\n$/
         ).test(xhr.responseText), xhr.responseText);
-        onError(null, options);
+        onError(null, option);
     });
 };
 
-local.testCase_ajaxProgressUpdate_default = function (options, onError) {
+local.testCase_ajaxProgressUpdate_default = function (option, onError) {
 /*
  * this function will test ajaxProgressUpdate's default handling-behavior
  */
-    options = 0;
+    option = 0;
     local.testMock([
         [local, {
             ajaxProgressCounter: 0,
@@ -262,8 +278,8 @@ local.testCase_ajaxProgressUpdate_default = function (options, onError) {
         }],
         [globalThis, {
             setTimeout: function (fnc) {
-                options += 1;
-                local.ajaxProgressState = options % 3;
+                option += 1;
+                local.ajaxProgressState = option % 3;
                 fnc();
             }
         }]
@@ -283,45 +299,26 @@ local.testCase_ajaxProgressUpdate_default = function (options, onError) {
         // validate data
         local.assertJsonEqual(local.ajaxProgressCounter, 0);
         local.assertJsonEqual(local.ajaxProgressState, 0);
-        onError(null, options);
+        onError(null, option);
     }, onError);
 };
 
-local.testCase_ajax_abort = function (options, onError) {
-/*
- * this function will test ajax's abort handling-behavior
- */
-    options = local.ajax({
-        url: "/test.timeout"
-    }, function (error) {
-        // validate error occurred
-        local.assertThrow(error, error);
-        onError(null, options);
-    });
-    // test multiple-callback handling-behavior
-    options.onEvent({
-        type: "abort"
-    });
-    options.abort();
-    options.abort();
-};
-
-local.testCase_ajax_cache = function (options, onError) {
+local.testCase_ajax_cache = function (option, onError) {
 /*
  * this function will test ajax's cache handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
-    options = {};
-    local.onNext(options, function (error, data) {
-        switch (options.modeNext) {
+    option = {};
+    local.onNext(option, function (error, data) {
+        switch (option.modeNext) {
         case 1:
             // test http GET handling-behavior
             local.ajax({
                 url: "assets.hello.txt"
-            }, options.onNext);
+            }, option.onNext);
             break;
         case 2:
             // validate responseText
@@ -332,27 +329,115 @@ local.testCase_ajax_cache = function (options, onError) {
                     "If-Modified-Since": new Date(Date.now() + 0xffff).toUTCString()
                 },
                 url: "assets.hello.txt"
-            }, options.onNext);
+            }, option.onNext);
             break;
         case 3:
             // validate statusCode
             local.assertJsonEqual(data.statusCode, 304);
-            options.onNext();
+            option.onNext();
             break;
         default:
-            onError(error, options);
+            onError(error, option);
         }
     });
-    options.modeNext = 0;
-    options.onNext();
+    option.modeNext = 0;
+    option.onNext();
 };
 
-local.testCase_ajax_echo = function (options, onError) {
-    // test /test.echo handling-behavior
+local.testCase_ajax_default = function (option, onError) {
+/*
+ * this function will test ajax's default handling-behavior
+ */
+    var onParallel;
+    onParallel = local.onParallel(onError);
+    onParallel.counter += 1;
+
+    // test ajax's abort handling-behavior
+    onParallel.counter += 1;
+    local.onParallelList({
+        list: [
+            "",
+            "arraybuffer",
+            "blob",
+            "text"
+        ]
+    }, function (responseType, onParallel) {
+        responseType = responseType.element;
+        onParallel.counter += 1;
+        local.ajax({
+            data: (
+                responseType === "arraybuffer"
+                // test POST buffer-data handling-behavior
+                ? new TextEncoder().encode(local.stringHelloEmoji)
+                : responseType === "blob"
+                // test POST blob-data handling-behavior
+                ? new local.Blob([
+                    "",
+                    new Uint8Array(0),
+                    local.stringHelloEmoji
+                ])
+                // test POST string-data handling-behavior
+                : local.stringHelloEmoji
+            ),
+            method: "POST",
+            // test nodejs response handling-behavior
+            responseType: responseType.replace("blob", "arraybuffer"),
+            url: "/test.body"
+        }, function (error, xhr) {
+            // validate no error occurred
+            local.assertThrow(!error, error);
+            // validate statusCode
+            local.assertJsonEqual(xhr.statusCode, 200);
+            // validate responseText
+            switch (responseType) {
+            case "arraybuffer":
+            case "blob":
+                local.assertJsonEqual(xhr.responseBuffer.byteLength, 11);
+                local.assertJsonEqual(Array.from(xhr.responseBuffer), [
+                    0x68,
+                    0x65,
+                    0x6c,
+                    0x6c,
+                    0x6f,
+                    0x20,
+                    0xf0,
+                    0x9f,
+                    0x98,
+                    0x81,
+                    0x0a
+                ]);
+                break;
+            default:
+                local.assertJsonEqual(xhr.responseText, local.stringHelloEmoji);
+            }
+            onParallel(null, option);
+        });
+    }, onParallel);
+
+    // test ajax's data handling-behavior
+    onParallel.counter += 1;
+    option = local.ajax({
+        url: "/test.timeout"
+    }, function (error, xhr) {
+        // validate error occurred
+        local.assertThrow(error, error);
+        // validate statusCode
+        local.assertJsonEqual(xhr.statusCode, 500);
+        onParallel(null, option);
+    });
+    // test multiple-callback handling-behavior
+    option.onEvent({
+        type: "abort"
+    });
+    option.abort();
+    option.abort();
+
+    // test ajax's echo handling-behavior
+    onParallel.counter += 1;
     local.ajax({
         _aa: "aa",
         aa: "aa",
-        data: "aa",
+        data: local.stringHelloEmoji,
         // test request-header handling-behavior
         headers: {
             "X-Request-Header-Test": "aa"
@@ -366,26 +451,26 @@ local.testCase_ajax_echo = function (options, onError) {
         local.assertThrow(!error, error);
         // validate statusCode
         local.assertJsonEqual(xhr.statusCode, 200);
-        // validate response
+        // validate responseHeaders
+        local.assertJsonEqual(
+            xhr.responseHeaders["x-response-header-test"],
+            "bb"
+        );
+        // validate responseText
         local.assertThrow((
-            /\r\naa$/
+            /\r\nhello\u0020\ud83d\ude01\n$/
         ).test(xhr.responseText), xhr.responseText);
         local.assertThrow((
             /\r\nx-request-header-test:\u0020aa\r\n/
         ).test(xhr.responseText), xhr.responseText);
-        // validate responseHeaders
-        local.assertJsonEqual(xhr.responseHeaders["x-response-header-test"], "bb");
         // validate properties
         local.assertJsonEqual(xhr._aa, undefined);
         local.assertJsonEqual(xhr.aa, "aa");
-        onError(null, options);
+        onParallel(null, option);
     });
-};
 
-local.testCase_ajax_error = function (options, onError) {
-/*
- * this function will test ajax's error handling-behavior
- */
+    // test ajax's error handling-behavior
+    onParallel.counter += 1;
     local.onParallelList({
         list: [{
             // test 404-not-found-error handling-behavior
@@ -406,20 +491,17 @@ local.testCase_ajax_error = function (options, onError) {
             // test undefined-https-url handling-behavior
             url: "https://undefined:0"
         }]
-    }, function (options2, onParallel) {
+    }, function (option2, onParallel) {
         onParallel.counter += 1;
-        local.ajax(options2.element, function (error) {
+        local.ajax(option2.element, function (error) {
             // validate error occurred
             local.assertThrow(error, error);
-            onParallel(null, options);
+            onParallel(null, option);
         });
-    }, onError);
-};
+    }, onParallel);
 
-local.testCase_ajax_file = function (options, onError) {
-/*
- * this function will test ajax's file handling-behavior
- */
+    // test ajax's file handling-behavior
+    onParallel.counter += 1;
     local.ajax({
         url: "LICENSE"
     }, function (error, xhr) {
@@ -427,103 +509,14 @@ local.testCase_ajax_file = function (options, onError) {
         local.assertThrow(!error, error);
         // validate statusCode
         local.assertJsonEqual(xhr.statusCode, 200);
-        onError(null, options);
+        // validate responseText
+        local.assertThrow(xhr.responseText.indexOf(
+            "MIT License (https://opensource.org/licenses/MIT)\n\n"
+        ) === 0, xhr.data);
+        onParallel(null, option);
     });
-};
 
-local.testCase_ajax_post = function (options, onError) {
-/*
- * this function will test ajax's POST handling-behavior
- */
-    // test /test.body handling-behavior
-    local.onParallelList({
-        list: [
-            "",
-            "arraybuffer",
-            "text"
-        ]
-    }, function (responseType, onParallel) {
-        responseType = responseType.element;
-        onParallel.counter += 1;
-        local.ajax({
-            data: (
-                // ternary-condition
-                responseType === "arraybuffer"
-                // test POST buffer-data handling-behavior
-                ? local.bufferCreate("aa")
-                // test POST string-data handling-behavior
-                : "aa"
-            ),
-            method: "POST",
-            // test nodejs response handling-behavior
-            responseType: responseType,
-            url: "/test.body"
-        }, function (error, xhr) {
-            // validate no error occurred
-            local.assertThrow(!error, error);
-            // validate statusCode
-            local.assertJsonEqual(xhr.statusCode, 200);
-            // validate responseText
-            switch (responseType) {
-            case "arraybuffer":
-                local.assertJsonEqual(xhr.responseBuffer.byteLength, 2);
-                local.assertJsonEqual(xhr.responseBuffer[0], 97);
-                local.assertJsonEqual(xhr.responseBuffer[1], 97);
-                break;
-            default:
-                local.assertJsonEqual(xhr.responseText, "aa");
-            }
-            onParallel(null, options);
-        });
-    }, onError);
-};
-
-local.testCase_ajax_responseType = function (options, onError) {
-/*
- * this function will test ajax's responseType handling-behavior
- */
-    // test /test.body handling-behavior
-    local.onParallelList({
-        list: [
-            "",
-            "arraybuffer",
-            "text"
-        ]
-    }, function (responseType, onParallel) {
-        responseType = responseType.element;
-        onParallel.counter += 1;
-        local.ajax({
-            // test nodejs response handling-behavior
-            responseType: responseType,
-            url: "assets.hello.txt"
-        }, function (error, xhr) {
-            // validate no error occurred
-            local.assertThrow(!error, error);
-            // validate statusCode
-            local.assertJsonEqual(xhr.statusCode, 200);
-            // validate responseText
-            switch (responseType) {
-            case "arraybuffer":
-                local.assertJsonEqual(xhr.responseBuffer.byteLength, 11);
-                local.assertJsonEqual(
-                    Array.from(xhr.responseBuffer),
-                    [0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0xf0, 0x9f, 0x98, 0x81, 0x0a]
-                );
-                break;
-            default:
-                local.assertJsonEqual(xhr.responseText, local.stringHelloEmoji);
-            }
-            onParallel(null, options);
-        });
-    }, onError);
-};
-
-local.testCase_ajax_standalone = function (options, onError) {
-/*
- * this function will test ajax's standalone handling-behavior
- */
-    var onParallel;
-    onParallel = local.onParallel(onError);
+    // test ajax's standalone handling-behavior
     onParallel.counter += 1;
     local.testMock([
         [local, {
@@ -536,16 +529,15 @@ local.testCase_ajax_standalone = function (options, onError) {
             local.ajax({
                 responseType: responseType,
                 url: (
-                    // ternary-condition
                     local.isBrowser
                     ? location.href
                     : local.serverLocalHost
                 )
             }, function (error, xhr) {
-                // validate statusCode
-                local.assertJsonEqual(xhr.statusCode, 200);
                 // validate no error occurred
                 local.assertThrow(!error, error);
+                // validate statusCode
+                local.assertJsonEqual(xhr.statusCode, 200);
                 onParallel();
             });
             // test error handling-behavior
@@ -561,34 +553,34 @@ local.testCase_ajax_standalone = function (options, onError) {
                     : local.serverLocalHost
                 ) + "/undefined"
             }, function (error, xhr) {
-                // validate statusCode
-                local.assertJsonEqual(xhr.statusCode, 404);
                 // validate error occurred
                 local.assertThrow(error, error);
+                // validate statusCode
+                local.assertJsonEqual(xhr.statusCode, 404);
                 onParallel();
             });
         });
-        onError(null, options);
+        onError(null, option);
     }, onParallel);
-};
+    onParallel();
 
-local.testCase_ajax_timeout = function (options, onError) {
-/*
- * this function will test ajax's timeout handling-behavior
- */
+    // test ajax's timeout handling-behavior
+    onParallel.counter += 1;
     setTimeout(function () {
         local.ajax({
             timeout: 1,
             url: "/test.timeout"
-        }, function (error) {
+        }, function (error, xhr) {
             // validate error occurred
             local.assertThrow(error, error);
-            onError(null, options);
+            // validate statusCode
+            local.assertJsonEqual(xhr.statusCode, 500);
+            onParallel(null, option);
         });
     }, 1000);
 };
 
-local.testCase_assertXxx_default = function (options, onError) {
+local.testCase_assertXxx_default = function (option, onError) {
 /*
  * this function will test assertXxx's default handling-behavior
  */
@@ -641,92 +633,66 @@ local.testCase_assertXxx_default = function (options, onError) {
             }
         });
     });
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_base64Xxx_default = function (options, onError) {
+local.testCase_base64Xxx_default = function (option, onError) {
 /*
  * this function will test base64Xxx's default handling-behavior
  */
-    options = {};
-    options.base64 = local.base64FromBuffer(
+    option = {};
+    option.base64 = local.base64FromBuffer(
         local.stringCharsetAscii + local.stringHelloEmoji
     );
     // test null-case handling-behavior
     local.assertJsonEqual(local.base64FromBuffer(), "");
-    local.assertJsonEqual(local.bufferToString(local.base64ToBuffer()), "");
-    local.assertJsonEqual(local.base64ToString(), "");
+    local.assertJsonEqual(local.bufferToUtf8(local.base64ToBuffer()), "");
+    local.assertJsonEqual(local.base64ToUtf8(), "");
     local.assertJsonEqual(local.base64FromBuffer(local.base64ToBuffer()), "");
-    local.assertJsonEqual(local.base64FromBuffer(local.base64ToString()), "");
+    local.assertJsonEqual(local.base64FromBuffer(local.base64ToUtf8()), "");
     // test identity handling-behavior
     local.assertJsonEqual(
-        local.base64FromBuffer(local.base64ToBuffer(options.base64)),
-        options.base64
+        local.base64FromBuffer(local.base64ToBuffer(option.base64)),
+        option.base64
     );
     local.assertJsonEqual(
-        local.base64FromBuffer(local.base64ToString(options.base64)),
-        options.base64
+        local.base64FromBuffer(local.base64ToUtf8(option.base64)),
+        option.base64
     );
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_blobRead_default = function (options, onError) {
+local.testCase_blobRead_default = function (option, onError) {
 /*
  * this function will test blobRead's default handling-behavior
  */
-    local.onParallelList({
-        list: [
-            new local.Blob(["aa", "bb", local.stringHelloEmoji, 0]),
-            new local.Blob(["aa", "bb", local.stringHelloEmoji, 0], {
-                type: "text/plain; charset=utf-8"
-            })
-        ]
-    }, function (options2, onParallel) {
-        onParallel.counter += 1;
-        [null, "dataURL", "text"].forEach(function (encoding) {
-            onParallel.counter += 1;
-            local.blobRead(options2.element, encoding, function (error, data) {
-                // validate no error occurred
-                local.assertThrow(!error, error);
-                // validate data
-                switch (encoding) {
-                case "dataURL":
-                    if (options2.ii === 0) {
-                        local.assertThrow(
-                            data.indexOf(";base64,YWFiYmhlbGxvIPCfmIEKMA==") >= 0,
-                            data
-                        );
-                        break;
-                    }
-                    local.assertJsonEqual(
-                        data,
-                        "data:text/plain; charset=utf-8;base64,YWFiYmhlbGxvIPCfmIEKMA=="
-                    );
-                    break;
-                case "text":
-                    local.assertJsonEqual(data, "aabbhello \ud83d\ude01\n0");
-                    break;
-                default:
-                    local.assertJsonEqual(
-                        local.bufferToString(data),
-                        "aabbhello \ud83d\ude01\n0"
-                    );
-                }
-                onParallel(null, options);
-            });
-        });
-        onParallel(null, options);
-    }, onError);
-};
-
-local.testCase_blobRead_error = function (options, onError) {
-/*
- * this function will test blobRead's error handling-behavior
- */
+    var onParallel;
+    onParallel = local.onParallel(onError);
+    onParallel.counter += 1;
+    // test data handling-behavior
+    onParallel.counter += 1;
+    local.blobRead(new local.Blob([
+        "",
+        "aa",
+        "bb",
+        new Uint8Array(0),
+        local.stringHelloEmoji
+    ]), function (error, data) {
+        // validate no error occurred
+        local.assertThrow(!error, error);
+        // validate data
+        local.assertJsonEqual(
+            local.bufferToUtf8(data),
+            "aabbhello \ud83d\ude01\n"
+        );
+        onParallel(null, option);
+    });
     if (!local.isBrowser) {
-        onError(null, options);
+        onParallel(null, option);
         return;
     }
+    // test error handling-behavior
+    onParallel.counter += 1;
     local.testMock([
         [FileReader.prototype, {
             readAsArrayBuffer: function () {
@@ -739,27 +705,28 @@ local.testCase_blobRead_error = function (options, onError) {
             }
         }]
     ], function (onError) {
-        local.blobRead(null, null, function (error) {
+        local.blobRead(null, function (error) {
             // validate error occurred
             local.assertThrow(error, error);
         });
-        onError(null, options);
-    }, onError);
+        onError(null, option);
+    }, onParallel);
+    onParallel();
 };
 
-local.testCase_browserTest_electron = function (options, onError) {
+local.testCase_browserTest_electron = function (option, onError) {
 /*
  * this function will test browserTest's electron handling-behavior
  */
-    options = function (aa, bb, cc) {
+    option = function (aa, bb, cc) {
         [aa, bb, cc].forEach(function (fnc, ii) {
             if (typeof fnc === "function") {
-                fnc(ii && options);
-                options.onNext(null, options);
-                options.utility2_testReportSave();
+                fnc(ii && option);
+                option.onNext(null, option);
+                option.utility2_testReportSave();
             }
         });
-        return options;
+        return option;
     };
     [
         "BrowserWindow",
@@ -789,13 +756,13 @@ local.testCase_browserTest_electron = function (options, onError) {
         "window",
         "writeFile"
     ].forEach(function (key) {
-        options[key] = (
+        option[key] = (
             key.indexOf("file") === 0
             ? "undefined"
-            : options
+            : option
         );
     });
-    options.ipcMain = {
+    option.ipcMain = {
         on: function (_, fnc) {
             ["html", "testReport", "undefined"].forEach(function (type) {
                 [
@@ -808,54 +775,54 @@ local.testCase_browserTest_electron = function (options, onError) {
                         testPlatformList: [{}]
                     }
                 ].forEach(function (data) {
-                    options.isDoneTestReport = null;
+                    option.isDoneTestReport = null;
                     fnc(_, type, data);
                 });
             });
         }
     };
-    options.utility2_testReportSave = local.nop;
+    option.utility2_testReportSave = local.nop;
     local.testMock([
         [globalThis, {
-            setTimeout: options,
+            setTimeout: option,
             utility2_testReport: null
         }],
         [local, {
-            fs: options,
+            fs: option,
             fsReadFileOrEmptyStringSync: function () {
                 return "";
             },
-            fsWriteFileWithMkdirpSync: options,
-            onParallel: options
+            fsWriteFileWithMkdirpSync: option,
+            onParallel: option
         }]
     ], function (onError) {
         ["test", "undefined"].forEach(function (modeBrowserTest) {
             [1, 10, 11, 20, 100].forEach(function (modeNext) {
-                options.modeBrowserTest = modeBrowserTest;
-                options.modeNext = modeNext;
+                option.modeBrowserTest = modeBrowserTest;
+                option.modeNext = modeNext;
                 switch (modeNext) {
                 case 100:
                     local.tryCatchOnError(function () {
                         local.browserTest({
                             modeNext: modeNext
-                        }, options);
+                        }, option);
                     }, local.nop);
                     break;
                 default:
-                    local.browserTest(options, options);
+                    local.browserTest(option, option);
                 }
             });
         });
-        onError(null, options);
+        onError(null, option);
     }, onError);
 };
 
-local.testCase_browserTest_screenshot = function (options, onError) {
+local.testCase_browserTest_screenshot = function (option, onError) {
 /*
  * this function will test browserTest's screenshot handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     local.browserTest({
@@ -865,30 +832,7 @@ local.testCase_browserTest_screenshot = function (options, onError) {
     }, onError);
 };
 
-local.testCase_bufferCreate_default = function (options, onError) {
-/*
- * this function will test bufferCreate's default handling-behavior
- */
-    options = {};
-    options.text1 = "";
-    options.ii = 0;
-    while (options.ii < 0x10000) {
-        options.text1 += String.fromCodePoint(options.ii);
-        options.ii += 1;
-    }
-    options.ii = 0x100000;
-    while (options.ii < 0x110000) {
-        options.text1 += String.fromCodePoint(options.ii);
-        options.ii += 0x100;
-    }
-    // test utf8 handling-behavior
-    options.bff1 = local.bufferCreate(options.text1);
-    options.text2 = local.bufferToString(options.bff1);
-    local.assertJsonEqual(options.text2, local.bufferToString(options.text2));
-    onError(null, options);
-};
-
-local.testCase_bufferIndexOfSubBuffer_default = function (options, onError) {
+local.testCase_bufferIndexOfSubBuffer_default = function (option, onError) {
 /*
  * this function will test bufferIndexOfSubBuffer's default handling-behavior
  */
@@ -936,39 +880,39 @@ local.testCase_bufferIndexOfSubBuffer_default = function (options, onError) {
         buffer: "aabbaa",
         subBuffer: "ba",
         validate: 3
-    }].forEach(function (options) {
+    }].forEach(function (option) {
         local.assertJsonEqual(local.bufferIndexOfSubBuffer(
-            local.bufferCreate(options.buffer),
-            local.bufferCreate(options.subBuffer),
-            options.fromIndex
-        ), options.validate);
+            new TextEncoder().encode(option.buffer),
+            new TextEncoder().encode(option.subBuffer),
+            option.fromIndex
+        ), option.validate);
     });
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_bufferValidateAndCoerce_error = function (options, onError) {
+local.testCase_bufferValidateAndCoerce_error = function (option, onError) {
 /*
  * this function will test bufferValidateAndCoerce's error handling-behavior
  */
-    local.tryCatchOnError(function () {
-        local.bufferValidateAndCoerce(0);
-    }, local.nop);
-    // validate error occurred
-    local.assertThrow(local._debugTryCatchError, local._debugTryCatchError);
-    local.tryCatchOnError(function () {
-        local.bufferValidateAndCoerce({});
-    }, local.nop);
-    // validate error occurred
-    local.assertThrow(local._debugTryCatchError, local._debugTryCatchError);
-    onError(null, options);
+    [[], 0, {}].forEach(function (element) {
+        option = null;
+        try {
+            local.bufferValidateAndCoerce(element);
+        } catch (errorCaught) {
+            option = errorCaught;
+        }
+        // validate error occurred
+        local.assertThrow(option, element);
+    });
+    onError(null, option);
 };
 
-local.testCase_buildApidoc_default = function (options, onError) {
+local.testCase_buildApidoc_default = function (option, onError) {
 /*
  * this function will test buildApidoc's default handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     // test $npm_config_mode_coverage=all handling-behavior
@@ -984,17 +928,17 @@ local.testCase_buildApidoc_default = function (options, onError) {
     }, onError);
 };
 
-local.testCase_buildApp_default = function (options, onError) {
+local.testCase_buildApp_default = function (option, onError) {
 /*
  * this function will test buildApp's default handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
-    local.testCase_buildReadme_default(options, local.onErrorThrow);
-    local.testCase_buildLib_default(options, local.onErrorThrow);
-    local.testCase_buildTest_default(options, local.onErrorThrow);
+    local.testCase_buildReadme_default(option, local.onErrorThrow);
+    local.testCase_buildLib_default(option, local.onErrorThrow);
+    local.testCase_buildTest_default(option, local.onErrorThrow);
     local.buildApp({
         assetsList: [{
             file: "/assets.hello.txt",
@@ -1027,12 +971,12 @@ local.testCase_buildApp_default = function (options, onError) {
     }, onError);
 };
 
-local.testCase_buildLib_default = function (options, onError) {
+local.testCase_buildLib_default = function (option, onError) {
 /*
  * this function will test buildLib's default handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     local.testMock([
@@ -1071,20 +1015,20 @@ local.testCase_buildLib_default = function (options, onError) {
     local.buildLib({}, onError);
 };
 
-local.testCase_buildReadme_default = function (options, onError) {
+local.testCase_buildReadme_default = function (option, onError) {
 /*
  * this function will test buildReadme's default handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
-    options = {};
+    option = {};
     // test shNpmTestPublished handling-behavior
-    options.dataFrom = local.fs.readFileSync("README.md", "utf8")
+    option.dataFrom = local.fs.readFileSync("README.md", "utf8")
     .replace("#\u0021! shNpmTestPublished", "shNpmTestPublished");
-    options = {};
-    options.customize = function () {
+    option = {};
+    option.customize = function () {
         // search-and-replace - customize dataTo
         [
             // customize quickstart example.js
@@ -1102,15 +1046,15 @@ local.testCase_buildReadme_default = function (options, onError) {
                 /#\u0020run\u0020shBuildCi[^`]*?```/
             )
         ].forEach(function (rgx) {
-            options.dataFrom.replace(rgx, function (match0) {
-                options.dataTo = options.dataTo.replace(rgx, match0);
+            option.dataFrom.replace(rgx, function (match0) {
+                option.dataTo = option.dataTo.replace(rgx, match0);
             });
         });
     };
-    local.buildReadme(options, onError);
+    local.buildReadme(option, onError);
 };
 
-local.testCase_buildXxx_default = function (options, onError) {
+local.testCase_buildXxx_default = function (option, onError) {
 /*
  * this function will test buildXxx's default handling-behavior
  */
@@ -1137,20 +1081,20 @@ local.testCase_buildXxx_default = function (options, onError) {
         local._testCase_webpage_default(null, local.nop);
         local.assetsDict["/"] = "<script src=\"assets.test.js\"></script>";
         local._testCase_webpage_default(null, local.nop);
-        onError(null, options);
+        onError(null, option);
     }, onError);
 };
 
-local.testCase_childProcessSpawnWithTimeout_default = function (options, onError) {
+local.testCase_childProcessSpawnWithTimeout_default = function (option, onError) {
 /*
  * this function will test childProcessSpawnWithTimeout's default handling-behavior
  */
     var onParallel;
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
-    options = {};
+    option = {};
     onParallel = local.onParallel(onError);
     onParallel.counter += 1;
     // test default handling-behavior
@@ -1162,7 +1106,7 @@ local.testCase_childProcessSpawnWithTimeout_default = function (options, onError
         local.assertJsonEqual(exitCode, 0);
         // validate signal
         local.assertJsonEqual(signal, null);
-        onParallel(null, options);
+        onParallel(null, option);
     });
     // test timeout handling-behavior
     onParallel.counter += 1;
@@ -1171,27 +1115,27 @@ local.testCase_childProcessSpawnWithTimeout_default = function (options, onError
             timeoutDefault: 1000
         }]
     ], function (onError) {
-        options.childProcess = local.childProcessSpawnWithTimeout("sleep", [5000]);
-        onError(null, options);
+        option.childProcess = local.childProcessSpawnWithTimeout("sleep", [5000]);
+        onError(null, option);
     }, local.onErrorThrow);
-    options.childProcess
+    option.childProcess
     .on("error", onParallel)
     .on("exit", function (exitCode, signal) {
         // validate exitCode
         local.assertJsonEqual(exitCode, null);
         // validate signal
         local.assertJsonEqual(signal, "SIGKILL");
-        onParallel(null, options);
+        onParallel(null, option);
     });
-    onParallel(null, options);
+    onParallel(null, option);
 };
 
-local.testCase_childProcessSpawnWithUtility2_error = function (options, onError) {
+local.testCase_childProcessSpawnWithUtility2_error = function (option, onError) {
 /*
  * this function will test childProcessSpawnWithTimeout's error handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     local.testMock([
@@ -1204,16 +1148,16 @@ local.testCase_childProcessSpawnWithUtility2_error = function (options, onError)
             // validate error occurred
             local.assertThrow(error, error);
         });
-        onError(null, options);
+        onError(null, option);
     }, onError);
 };
 
-local.testCase_cliRun_default = function (options, onError) {
+local.testCase_cliRun_default = function (option, onError) {
 /*
  * this function will test cliRun's default handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     local.testMock([
@@ -1255,11 +1199,11 @@ local.testCase_cliRun_default = function (options, onError) {
         local.cliDict._default = null;
         local.cliDict._help = null;
         local.tryCatchOnError(local.cliRun, local.nop);
-        onError(null, options);
+        onError(null, option);
     }, onError);
 };
 
-local.testCase_corsBackendHostInject_default = function (options, onError) {
+local.testCase_corsBackendHostInject_default = function (option, onError) {
 /*
  * this function will corsBackendHostInject's default handling-behavior
  */
@@ -1287,15 +1231,15 @@ local.testCase_corsBackendHostInject_default = function (options, onError) {
             pathname: "/build..beta..travis-ci.org/"
         }
     ), "aa-beta.bb.com/cc/dd");
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_corsForwardProxyHostIfNeeded_default = function (options, onError) {
+local.testCase_corsForwardProxyHostIfNeeded_default = function (option, onError) {
 /*
  * this function will corsForwardProxyHostIfNeeded's default handling-behavior
  */
     if (!local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     local.assertThrow(local.corsForwardProxyHostIfNeeded({
@@ -1304,93 +1248,93 @@ local.testCase_corsForwardProxyHostIfNeeded_default = function (options, onError
         },
         url: "https://example.com"
     }).indexOf(".herokuapp.com") >= 0);
-    onError(null, options);
+    onError(null, option);
 };
 
 /* istanbul ignore next */
-local.testCase_cryptoAesXxxCbcRawXxx_default = function (options, onError) {
+local.testCase_cryptoAesXxxCbcRawXxx_default = function (option, onError) {
 /*
  * this function will cryptoAesXxxCbcRawXxx's default handling-behavior
  */
     if (!local.nop()) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
-    options = {};
-    local.onNext(options, function (error, data) {
-        switch (options.modeNext) {
+    option = {};
+    local.onNext(option, function (error, data) {
+        switch (option.modeNext) {
         case 1:
             // encrypt data
-            options.data = local.bufferCreate("aa");
-            options.key = "0123456789abcdef0123456789abcdef";
-            options.mode = null;
-            local.cryptoAesXxxCbcRawEncrypt(options, options.onNext);
+            option.data = new TextEncoder().encode("aa");
+            option.key = "0123456789abcdef0123456789abcdef";
+            option.mode = null;
+            local.cryptoAesXxxCbcRawEncrypt(option, option.onNext);
             break;
         case 2:
             // decrypt data
-            options.data = data.buffer;
-            local.cryptoAesXxxCbcRawDecrypt(options, options.onNext);
+            option.data = data.buffer;
+            local.cryptoAesXxxCbcRawDecrypt(option, option.onNext);
             break;
         case 3:
             // validate data
-            local.assertJsonEqual(local.bufferToString(data), "aa");
-            options.onNext();
+            local.assertJsonEqual(local.bufferToUtf8(data), "aa");
+            option.onNext();
             break;
         case 4:
             // encrypt data - base64
-            options.data = local.bufferCreate("aa");
-            options.key = (
+            option.data = new TextEncoder().encode("aa");
+            option.key = (
                 "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
             );
-            options.mode = "base64";
-            local.cryptoAesXxxCbcRawEncrypt(options, options.onNext);
+            option.mode = "base64";
+            local.cryptoAesXxxCbcRawEncrypt(option, option.onNext);
             break;
         case 5:
             // decrypt data - base64
-            options.data = data;
-            local.cryptoAesXxxCbcRawDecrypt(options, options.onNext);
+            option.data = data;
+            local.cryptoAesXxxCbcRawDecrypt(option, option.onNext);
             break;
         case 6:
             // validate data
-            local.assertJsonEqual(local.bufferToString(data), "aa");
-            options.onNext();
+            local.assertJsonEqual(local.bufferToUtf8(data), "aa");
+            option.onNext();
             break;
         default:
-            onError(error, options);
+            onError(error, option);
         }
     });
-    options.modeNext = 0;
-    options.onNext();
+    option.modeNext = 0;
+    option.onNext();
 };
 
-local.testCase_domElementRender_default = function (options, onError) {
+local.testCase_domElementRender_default = function (option, onError) {
 /*
  * this function will test domElementRender's default handling-behavior
  */
     if (!local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     local.assertJsonEqual(local.domElementRender("<div>{{value}}</div>", {
         value: "aa"
     }).children[0].outerHTML, "<div>aa</div>");
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_exit_error = function (options, onError) {
+local.testCase_exit_error = function (option, onError) {
 /*
  * this function will exit's error handling-behavior
  */
     local.exit("invalid-exitCode");
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_fsWriteFileWithMkdirpSync_default = function (options, onError) {
+local.testCase_fsWriteFileWithMkdirpSync_default = function (option, onError) {
 /*
  * this function will test fsWriteFileWithMkdirpSync's default handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     local.fsRmrSync("tmp/build/testCase_fsWriteFileWithMkdirpSync_default");
@@ -1408,10 +1352,10 @@ local.testCase_fsWriteFileWithMkdirpSync_default = function (options, onError) {
         "tmp/build/testCase_fsWriteFileWithMkdirpSync_default/aa.txt",
         "utf8"
     ), "aa");
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_isNullOrUndefined_default = function (options, onError) {
+local.testCase_isNullOrUndefined_default = function (option, onError) {
 /*
  * this function will test isNullOrUndefined's default handling-behavior
  */
@@ -1421,10 +1365,10 @@ local.testCase_isNullOrUndefined_default = function (options, onError) {
     local.assertJsonEqual(local.isNullOrUndefined(undefined), true);
     // validate data
     local.assertJsonEqual(local.isNullOrUndefined(false), false);
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_jsonCopy_default = function (options, onError) {
+local.testCase_jsonCopy_default = function (option, onError) {
 /*
  * this function will test jsonCopy's default handling-behavior
  */
@@ -1432,10 +1376,10 @@ local.testCase_jsonCopy_default = function (options, onError) {
     [undefined, null, false, true, 0, 1, 1.5, "a"].forEach(function (element) {
         local.assertJsonEqual(local.jsonCopy(element), element);
     });
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_jsonStringifyOrdered_default = function (options, onError) {
+local.testCase_jsonStringifyOrdered_default = function (option, onError) {
 /*
  * this function will test jsonStringifyOrdered's default handling-behavior
  */
@@ -1444,7 +1388,7 @@ local.testCase_jsonStringifyOrdered_default = function (options, onError) {
         local.assertJsonEqual(local.jsonStringifyOrdered(data), JSON.stringify(data));
     });
     // test data-ordering handling-behavior
-    options = {
+    option = {
         // test nested dict handling-behavior
         ff: {
             hh: 2,
@@ -1458,9 +1402,9 @@ local.testCase_jsonStringifyOrdered_default = function (options, onError) {
         aa: 1
     };
     // test circular-reference handling-behavior
-    options.zz = options;
+    option.zz = option;
     local.assertJsonEqual(
-        options,
+        option,
         {
             aa: 1,
             bb: null,
@@ -1471,49 +1415,49 @@ local.testCase_jsonStringifyOrdered_default = function (options, onError) {
             }
         }
     );
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_jwtAes256GcmXxx_default = function (options, onError) {
+local.testCase_jwtAes256GcmXxx_default = function (option, onError) {
 /*
  * this function will test jwtAes256GcmXxx's default handling-behavior
  */
-    options = {};
-    options.key = local.jwtAes256KeyCreate();
+    option = {};
+    option.key = local.jwtAes256KeyCreate();
     // use canonical example at https://jwt.io/
-    options.data = JSON.parse(local.jsonStringifyOrdered(local.normalizeJwt({
+    option.data = JSON.parse(local.jsonStringifyOrdered(local.normalizeJwt({
         sub: "1234567890",
         name: "John Doe",
         admin: true
     })));
     // encrypt token
-    options.token = local.jwtAes256GcmEncrypt(options.data, options.key);
+    option.token = local.jwtAes256GcmEncrypt(option.data, option.key);
     // validate encrypted-token
     local.assertJsonEqual(
-        local.jwtAes256GcmDecrypt(options.token, options.key),
-        options.data
+        local.jwtAes256GcmDecrypt(option.token, option.key),
+        option.data
     );
     // test decryption-failed handling-behavior
-    local.assertJsonEqual(local.jwtAes256GcmDecrypt(options.token, null), {});
-    onError(null, options);
+    local.assertJsonEqual(local.jwtAes256GcmDecrypt(option.token, null), {});
+    onError(null, option);
 };
 
-local.testCase_jwtHs256Xxx_default = function (options, onError) {
+local.testCase_jwtHs256Xxx_default = function (option, onError) {
 /*
  * this function will test jwtHs256Xxx's default handling-behavior
  */
-    options = {};
-    options.key = local.normalizeJwtBase64Url(local.base64FromBuffer("secret"));
+    option = {};
+    option.key = local.normalizeJwtBase64Url(local.base64FromBuffer("secret"));
     // use canonical example at https://jwt.io/
-    options.data = {
+    option.data = {
         sub: "1234567890",
         name: "John Doe",
         admin: true
     };
-    options.token = local.jwtHs256Encode(options.data, options.key);
+    option.token = local.jwtHs256Encode(option.data, option.key);
     // validate encoded-token
     local.assertJsonEqual(
-        options.token,
+        option.token,
         (
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
             + ".eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9"
@@ -1522,7 +1466,7 @@ local.testCase_jwtHs256Xxx_default = function (options, onError) {
     );
     // validate decoded-data
     local.assertJsonEqual(
-        local.jwtHs256Decode(options.token, options.key),
+        local.jwtHs256Decode(option.token, option.key),
         {
             admin: true,
             name: "John Doe",
@@ -1530,16 +1474,16 @@ local.testCase_jwtHs256Xxx_default = function (options, onError) {
         }
     );
     // test decoding-failed handling-behavior
-    local.assertJsonEqual(local.jwtHs256Decode(options.token, "undefined"), {});
-    onError(null, options);
+    local.assertJsonEqual(local.jwtHs256Decode(option.token, "undefined"), {});
+    onError(null, option);
 };
 
-local.testCase_libUtility2Js_standalone = function (options, onError) {
+local.testCase_libUtility2Js_standalone = function (option, onError) {
 /*
  * this function will test lib.utility2.js's standalone handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     local.fs.writeFileSync("tmp/lib.utility2.js", local.fs.readFileSync(
@@ -1547,58 +1491,58 @@ local.testCase_libUtility2Js_standalone = function (options, onError) {
         "utf8"
     ).replace("/* istanbul instrument in package utility2 */", ""));
     require("./tmp/lib.utility2.js");
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_listGetElementRandom_default = function (options, onError) {
+local.testCase_listGetElementRandom_default = function (option, onError) {
 /*
  * this function will test listGetRandom's default handling-behavior
  */
-    options = {};
+    option = {};
     // init list
-    options.list = ["aa", "bb", "cc", "dd"];
-    options.elementDict = {};
+    option.list = ["aa", "bb", "cc", "dd"];
+    option.elementDict = {};
     // get 1000 random elements from list
-    options.ii = 0;
-    while (options.ii < 1000) {
-        options.elementDict[local.listGetElementRandom(options.list)] = true;
-        options.ii += 1;
+    option.ii = 0;
+    while (option.ii < 1000) {
+        option.elementDict[local.listGetElementRandom(option.list)] = true;
+        option.ii += 1;
     }
     // validate all elements were retrieved from list
     local.assertJsonEqual(
-        Object.keys(options.elementDict).sort(),
+        Object.keys(option.elementDict).sort(),
         ["aa", "bb", "cc", "dd"]
     );
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_listShuffle_default = function (options, onError) {
+local.testCase_listShuffle_default = function (option, onError) {
 /*
  * this function will test listShuffle's default handling-behavior
  */
-    options = {};
+    option = {};
     // init list
-    options.list = "[0,1]";
+    option.list = "[0,1]";
     // shuffle list 100 times
-    options.ii = 0;
-    while (options.ii < 100) {
-        options.listShuffled = JSON.stringify(local.listShuffle(JSON.parse(options.list)));
+    option.ii = 0;
+    while (option.ii < 100) {
+        option.listShuffled = JSON.stringify(local.listShuffle(JSON.parse(option.list)));
         // validate shuffled list
-        local.assertJsonEqual(options.listShuffled.length, options.list.length);
-        options.changed = options.changed || options.listShuffled !== options.list;
-        options.ii += 1;
+        local.assertJsonEqual(option.listShuffled.length, option.list.length);
+        option.changed = option.changed || option.listShuffled !== option.list;
+        option.ii += 1;
     }
     // validate list changed at least once during the shuffle
-    local.assertThrow(options.changed, options);
-    onError(null, options);
+    local.assertThrow(option.changed, option);
+    onError(null, option);
 };
 
-local.testCase_localStorageSetItemOrClear_default = function (options, onError) {
+local.testCase_localStorageSetItemOrClear_default = function (option, onError) {
 /*
  * this function will localStorageSetItemOrClear's default handling-behavior
  */
     if (!local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     local.localStorageSetItemOrClear(
@@ -1625,13 +1569,13 @@ local.testCase_localStorageSetItemOrClear_default = function (options, onError) 
     }, onError);
 };
 
-local.testCase_middlewareForwardProxy_default = function (options, onError) {
+local.testCase_middlewareForwardProxy_default = function (option, onError) {
 /*
  * this function will test middlewareForwardProxy's default handling-behavior
  */
     var onParallel;
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     onParallel = local.onParallel(onError);
@@ -1657,7 +1601,7 @@ local.testCase_middlewareForwardProxy_default = function (options, onError) {
         local.assertThrow(!error, error);
         // validate responseText
         local.assertJsonEqual(xhr.responseText, local.stringHelloEmoji);
-        onParallel(null, options, xhr);
+        onParallel(null, option, xhr);
     });
     // test error handling-behavior
     onParallel.counter += 1;
@@ -1669,12 +1613,12 @@ local.testCase_middlewareForwardProxy_default = function (options, onError) {
     }, function (error) {
         // validate error occurred
         local.assertThrow(error, error);
-        onParallel(null, options);
+        onParallel(null, option);
     });
-    onParallel(null, options);
+    onParallel(null, option);
 };
 
-local.testCase_middlewareJsonpStateInit_assetsList = function (options, onError) {
+local.testCase_middlewareJsonpStateInit_assetsList = function (option, onError) {
 /*
  * this function will middlewareJsonpStateInit's assetsList handling-behavior
  */
@@ -1691,16 +1635,16 @@ local.testCase_middlewareJsonpStateInit_assetsList = function (options, onError)
         });
         // validate data
         local.assertJsonEqual(local.assetsDict["/undefined"], "");
-        onError(null, options);
+        onError(null, option);
     }, onError);
 };
 
-local.testCase_moduleDirname_default = function (options, onError) {
+local.testCase_moduleDirname_default = function (option, onError) {
 /*
  * this function will test moduleDirname's default handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     // test null-case handling-behavior
@@ -1709,35 +1653,35 @@ local.testCase_moduleDirname_default = function (options, onError) {
     local.assertJsonEqual(local.moduleDirname(".", module.paths), process.cwd());
     local.assertJsonEqual(local.moduleDirname("./", module.paths), process.cwd());
     // test module-exists handling-behavior
-    options = local.moduleDirname("electron-lite", module.paths);
+    option = local.moduleDirname("electron-lite", module.paths);
     local.assertThrow((
         /\/electron-lite$/
-    ).test(options), options);
+    ).test(option), option);
     // test module-does-not-exist handling-behavior
     local.assertJsonEqual(local.moduleDirname("syntax error", module.paths), "");
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_numberToRomanNumerals_default = function (options, onError) {
+local.testCase_numberToRomanNumerals_default = function (option, onError) {
 /*
  * this function will test numberToRomanNumerals's default handling-behavior
  */
-    options = {};
-    options.list = [
+    option = {};
+    option.list = [
 "","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC","XCI","XCII","XCIII","XCIV","XCV","XCVI","XCVII","XCVIII","XCIX","C" // jslint ignore:line
     ];
-    options.ii = 0;
-    while (options.ii < 10) {
+    option.ii = 0;
+    while (option.ii < 10) {
         local.assertJsonEqual(
-            local.numberToRomanNumerals(options.ii),
-            options.list[options.ii]
+            local.numberToRomanNumerals(option.ii),
+            option.list[option.ii]
         );
-        options.ii += 1;
+        option.ii += 1;
     }
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_objectLiteralize_default = function (options, onError) {
+local.testCase_objectLiteralize_default = function (option, onError) {
 /*
  * this function will test objectLiteralize's default handling-behavior
  */
@@ -1752,10 +1696,10 @@ local.testCase_objectLiteralize_default = function (options, onError) {
         },
         "": "$[]"
     });
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_objectSetDefault_default = function (options, onError) {
+local.testCase_objectSetDefault_default = function (option, onError) {
 /*
  * this function will test objectSetDefault's default handling-behavior
  */
@@ -1852,10 +1796,10 @@ local.testCase_objectSetDefault_default = function (options, onError) {
         dd: [1, 1],
         ee: [1, 1]
     });
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_objectSetOverride_default = function (options, onError) {
+local.testCase_objectSetOverride_default = function (option, onError) {
 /*
  * this function will test objectSetOverride's default handling-behavior
  */
@@ -1963,14 +1907,14 @@ local.testCase_objectSetOverride_default = function (options, onError) {
         null,
         local.env
     ).emptyString, "");
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_objectTraverse_default = function (options, onError) {
+local.testCase_objectTraverse_default = function (option, onError) {
 /*
  * this function will test objectTraverse's default handling-behavior
  */
-    options = {
+    option = {
         aa: null,
         bb: 2,
         cc: {
@@ -1979,15 +1923,15 @@ local.testCase_objectTraverse_default = function (options, onError) {
         }
     };
     // test circular-reference handling-behavior
-    options.data = options;
-    local.objectTraverse(options, function (element) {
+    option.data = option;
+    local.objectTraverse(option, function (element) {
         if (typeof element === "object" && element && !Array.isArray(element)) {
             element.zz = true;
         }
     });
-    // validate options
+    // validate option
     local.assertJsonEqual(
-        options,
+        option,
         {
             aa: null,
             bb: 2,
@@ -1999,17 +1943,17 @@ local.testCase_objectTraverse_default = function (options, onError) {
             zz: true
         }
     );
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_onErrorDefault_default = function (options, onError) {
+local.testCase_onErrorDefault_default = function (option, onError) {
 /*
  * this function will test onErrorDefault's default handling-behavior
  */
     local.testMock([
         [console, {
             error: function (arg) {
-                options = arg;
+                option = arg;
             }
         }],
         [globalThis, {
@@ -2018,17 +1962,17 @@ local.testCase_onErrorDefault_default = function (options, onError) {
     ], function (onError) {
         // test no error handling-behavior
         local.onErrorDefault();
-        // validate options
-        local.assertThrow(!options, options);
+        // validate option
+        local.assertThrow(!option, option);
         // test error handling-behavior
         local.onErrorDefault(local.errorDefault);
-        // validate options
-        local.assertThrow(options, options);
-        onError(null, options);
+        // validate option
+        local.assertThrow(option, option);
+        onError(null, option);
     }, onError);
 };
 
-local.testCase_onErrorThrow_error = function (options, onError) {
+local.testCase_onErrorThrow_error = function (option, onError) {
 /*
  * this function will test onErrorThrow's error handling-behavior
  */
@@ -2037,25 +1981,25 @@ local.testCase_onErrorThrow_error = function (options, onError) {
     }, function (error) {
         // validate error occurred
         local.assertThrow(error, error);
-        onError(null, options);
+        onError(null, option);
     });
 };
 
-local.testCase_onErrorWithStack_toString = function (options, onError) {
+local.testCase_onErrorWithStack_toString = function (option, onError) {
 /*
  * this function will test onErrorWithStack's toString handling-behavior
  */
     local.assertJsonEqual(String(local.onErrorWithStack(local.nop)), String(local.nop));
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_onFileModifiedRestart_watchFile = function (options, onError) {
+local.testCase_onFileModifiedRestart_watchFile = function (option, onError) {
 /*
  * this function will test onFileModifiedRestart's watchFile handling-behavior
  */
     var onParallel;
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     onParallel = local.onParallel(onError);
@@ -2069,116 +2013,116 @@ local.testCase_onFileModifiedRestart_watchFile = function (options, onError) {
         setTimeout(function () {
             local.fs.utimes(__filename, stat.atime, stat.mtime, onParallel);
         }, 1000);
-        onParallel(error, options);
+        onParallel(error, option);
     });
 };
 
-local.testCase_onNext_error = function (options, onError) {
+local.testCase_onNext_error = function (option, onError) {
 /*
  * this function will test onNext's error handling-behavior
  */
 
-    options = {};
-    options.modeDebug = true;
-    local.onNext(options, function () {
+    option = {};
+    option.modeDebug = true;
+    local.onNext(option, function () {
         throw local.errorDefault;
     });
-    options.modeNext = 0;
+    option.modeNext = 0;
     local.tryCatchOnError(function () {
-        options.onNext();
+        option.onNext();
     }, function (error) {
         // validate error occurred
         local.assertThrow(error, error);
-        onError(null, options);
+        onError(null, option);
     });
 };
 
-local.testCase_onParallelList_default = function (options, onError) {
+local.testCase_onParallelList_default = function (option, onError) {
 /*
  * this function will test onParallelList's default handling-behavior
  */
-    options = {};
-    local.onNext(options, function (error) {
-        switch (options.modeNext) {
+    option = {};
+    local.onNext(option, function (error) {
+        switch (option.modeNext) {
         case 1:
             // test null-case handling-behavior
-            local.onParallelList({}, local.onErrorThrow, options.onNext);
+            local.onParallelList({}, local.onErrorThrow, option.onNext);
             break;
         case 2:
-            options.list = [null];
+            option.list = [null];
             // test retryLimit handling-behavior
-            options.retryLimit = 1;
-            local.onParallelList(options, function (options2, onParallel) {
+            option.retryLimit = 1;
+            local.onParallelList(option, function (option2, onParallel) {
                 onParallel.counter += 1;
                 // test error handling-behavior
-                onParallel(local.errorDefault, options2);
+                onParallel(local.errorDefault, option2);
                 // test multiple-callback handling-behavior
                 setTimeout(onParallel, 5000);
             }, function (error) {
                 // validate error occurred
                 local.assertThrow(error, error);
-                options.onNext();
+                option.onNext();
             });
             break;
         case 3:
-            options.data = [];
+            option.data = [];
             // test rateLimit handling-behavior
-            options.rateLimit = 3;
-            options.rateMax = 0;
+            option.rateLimit = 3;
+            option.rateMax = 0;
             // test retryLimit handling-behavior
-            options.retryLimit = 1;
+            option.retryLimit = 1;
             local.onParallelList({
                 list: [1, 2, 3, 4],
-                rateLimit: options.rateLimit
-            }, function (options2, onParallel) {
+                rateLimit: option.rateLimit
+            }, function (option2, onParallel) {
                 onParallel.counter += 1;
-                options.rateMax = Math.max(onParallel.counter - 1, options.rateMax);
+                option.rateMax = Math.max(onParallel.counter - 1, option.rateMax);
                 // test async handling-behavior
                 setTimeout(function () {
                     // test list-growth handling-behavior
-                    if (options2.ii === 3) {
-                        options2.list.push(5);
+                    if (option2.ii === 3) {
+                        option2.list.push(5);
                     }
-                    options.data[options2.ii] = options2.element;
+                    option.data[option2.ii] = option2.element;
                     // test retry handling-behavior
-                    local.assertThrow(options2.retry < 1);
-                    onParallel(null, options2);
+                    local.assertThrow(option2.retry < 1);
+                    onParallel(null, option2);
                 });
-            }, options.onNext, options.rateLimit);
+            }, option.onNext, option.rateLimit);
             break;
         case 4:
             // validate data
-            local.assertJsonEqual(options.data, [1, 2, 3, 4, 5]);
-            local.assertJsonEqual(options.rateMax, 3);
-            options.data = [];
-            options.rateLimit = "syntax error";
-            options.rateMax = 0;
+            local.assertJsonEqual(option.data, [1, 2, 3, 4, 5]);
+            local.assertJsonEqual(option.rateMax, 3);
+            option.data = [];
+            option.rateLimit = "syntax error";
+            option.rateMax = 0;
             local.onParallelList({
                 list: [1, 2, 3, 4, 5],
-                rateLimit: options.rateLimit
-            }, function (options2, onParallel) {
+                rateLimit: option.rateLimit
+            }, function (option2, onParallel) {
                 // test sync handling-behavior
                 onParallel.counter += 1;
-                options.rateMax = Math.max(onParallel.counter, options.rateMax);
-                options.data[options2.ii] = options2.element;
-                onParallel(null, options);
-            }, options.onNext);
+                option.rateMax = Math.max(onParallel.counter, option.rateMax);
+                option.data[option2.ii] = option2.element;
+                onParallel(null, option);
+            }, option.onNext);
             break;
         case 5:
             // validate data
-            local.assertJsonEqual(options.data, [1, 2, 3, 4, 5]);
-            local.assertJsonEqual(options.rateMax, 2);
-            options.onNext();
+            local.assertJsonEqual(option.data, [1, 2, 3, 4, 5]);
+            local.assertJsonEqual(option.rateMax, 2);
+            option.onNext();
             break;
         default:
-            onError(error, options);
+            onError(error, option);
         }
     });
-    options.modeNext = 0;
-    options.onNext();
+    option.modeNext = 0;
+    option.onNext();
 };
 
-local.testCase_onParallel_default = function (options, onError) {
+local.testCase_onParallel_default = function (option, onError) {
 /*
  * this function will test onParallel's default handling-behavior
  */
@@ -2208,14 +2152,14 @@ local.testCase_onParallel_default = function (options, onError) {
         onParallelError();
     });
     // test default handling-behavior
-    onParallel(null, options);
+    onParallel(null, option);
 };
 
-local.testCase_onTimeout_timeout = function (options, onError) {
+local.testCase_onTimeout_timeout = function (option, onError) {
 /*
  * this function will test onTimeout's timeout handling-behavior
  */
-    options = local.timeElapsedStart();
+    option = local.timeElapsedStart();
     local.onTimeout(function (error) {
         // validate error occurred
         local.assertThrow(error, error);
@@ -2225,26 +2169,26 @@ local.testCase_onTimeout_timeout = function (options, onError) {
             error
         );
         // poll timeElapsed
-        local.timeElapsedPoll(options);
+        local.timeElapsedPoll(option);
         // validate timeElapsed passed is greater than timeout
-        local.assertThrow(options.timeElapsed >= 1000, options);
-        onError(null, options);
+        local.assertThrow(option.timeElapsed >= 1000, option);
+        onError(null, option);
     }, 1000, "testCase_onTimeout_timeout");
 };
 
-local.testCase_profileXxx_default = function (options, onError) {
+local.testCase_profileXxx_default = function (option, onError) {
 /*
  * this function will test profileXxx's default handling-behavior
  */
-    options = {};
+    option = {};
     // test profileSync's handling-behavior
-    options.timeElapsed = local.profileSync(function () {
+    option.timeElapsed = local.profileSync(function () {
         return;
     });
     // validate timeElapsed
     local.assertThrow(
-        0 <= options.timeElapsed && options.timeElapsed < 1000,
-        options.timeElapsed
+        0 <= option.timeElapsed && option.timeElapsed < 1000,
+        option.timeElapsed
     );
     // test profile's async handling-behavior
     local.profile(function (onError) {
@@ -2252,22 +2196,22 @@ local.testCase_profileXxx_default = function (options, onError) {
     }, function (error, timeElapsed) {
         // validate no error occurred
         local.assertThrow(!error, error);
-        options.timeElapsed = timeElapsed;
+        option.timeElapsed = timeElapsed;
         // validate timeElapsed
         local.assertThrow((
-            0 <= options.timeElapsed
-            && options.timeElapsed < local.timeoutDefault
-        ), options.timeElapsed);
-        onError(null, options);
+            0 <= option.timeElapsed
+            && option.timeElapsed < local.timeoutDefault
+        ), option.timeElapsed);
+        onError(null, option);
     });
 };
 
-local.testCase_replStart_default = function (options, onError) {
+local.testCase_replStart_default = function (option, onError) {
 /*
  * this function will test replStart's default handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     local.replStart();
@@ -2314,48 +2258,48 @@ local.testCase_replStart_default = function (options, onError) {
         });
         // test error handling-behavior
         globalThis.utility2_serverRepl1.onError(local.errorDefault);
-        onError(null, options);
+        onError(null, option);
     }, onError);
 };
 
-local.testCase_replStart_tcp = function (options, onError) {
+local.testCase_replStart_tcp = function (option, onError) {
 /*
  * this function will test replStart's tcp handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
-    options = {};
-    options.data = "";
-    options.input = Math.random();
-    options.socket = local.net.createConnection(local.env.PORT_REPL);
-    options.socket.on("data", function (data) {
+    option = {};
+    option.data = "";
+    option.input = Math.random();
+    option.socket = local.net.createConnection(local.env.PORT_REPL);
+    option.socket.on("data", function (data) {
     /*
-     * this function will concat data to options.data
+     * this function will concat data to option.data
      */
-        options.data += data;
+        option.data += data;
     });
-    options.socket.setEncoding("utf8");
-    options.socket.on("end", function () {
+    option.socket.setEncoding("utf8");
+    option.socket.on("end", function () {
         // validate data
         local.assertThrow(
-            options.data.indexOf(options.input) >= 0,
-            JSON.stringify([options.data, options.input])
+            option.data.indexOf(option.input) >= 0,
+            JSON.stringify([option.data, option.input])
         );
-        onError(null, options);
+        onError(null, option);
     });
-    options.socket.write(options.input + "\n");
+    option.socket.write(option.input + "\n");
     // test error handling-behavior
-    options.socket.end("undefined()\n");
+    option.socket.end("undefined()\n");
 };
 
-local.testCase_requireReadme_start = function (options, onError) {
+local.testCase_requireReadme_start = function (option, onError) {
 /*
  * this function will test requireReadme's start handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     local.testMock([
@@ -2368,8 +2312,8 @@ local.testCase_requireReadme_start = function (options, onError) {
             npm_package_nameLib: "_testCase_requireReadme_start"
         }],
         [local.fs, {
-            readFile: function (file, options, onError) {
-                onError(null, "{}", file, options);
+            readFile: function (file, option, onError) {
+                onError(null, "{}", file, option);
             },
             readdirSync: function () {
                 // test jslintAndPrint.conditional handling-behavior
@@ -2387,23 +2331,23 @@ local.testCase_requireReadme_start = function (options, onError) {
         // validate data
         local.requireReadme();
         local.assertThrow(local._testCase_requireReadme_start === local);
-        onError(null, options);
+        onError(null, option);
     }, onError);
 };
 
-local.testCase_semverCompare_default = function (options, onError) {
+local.testCase_semverCompare_default = function (option, onError) {
 /*
  * this function will test semverCompare's default handling-behavior
  */
     var aa;
     // test aa = bb
-    options = [
+    option = [
         "1.2.3",
         "1.2.3-",
         "1.2.3-alpha.beta",
         "1.2.3-alpha.beta"
     ];
-    options.forEach(function (bb, ii) {
+    option.forEach(function (bb, ii) {
         if (Boolean(ii & 1)) {
             local.assertThrow(
                 local.semverCompare(aa, bb) === 0,
@@ -2412,7 +2356,7 @@ local.testCase_semverCompare_default = function (options, onError) {
         }
         aa = bb;
     });
-    options = [
+    option = [
         "1.2.3-a",
         "1.2.3-a.2",
         "1.2.3-a.10",
@@ -2421,7 +2365,7 @@ local.testCase_semverCompare_default = function (options, onError) {
         "1.2.10"
     ];
     // test aa < bb
-    options.reduce(function (aa, bb) {
+    option.reduce(function (aa, bb) {
         local.assertThrow(
             local.semverCompare(aa, bb) === -1,
             [local.semverCompare(aa, bb), aa, bb]
@@ -2429,21 +2373,21 @@ local.testCase_semverCompare_default = function (options, onError) {
         return bb;
     });
     // test aa > bb
-    options.reverse().reduce(function (aa, bb) {
+    option.reverse().reduce(function (aa, bb) {
         local.assertThrow(
             local.semverCompare(aa, bb) === 1,
             [local.semverCompare(aa, bb), aa, bb]
         );
         return bb;
     });
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_serverRespondTimeoutDefault_timeout = function (options, onError) {
+local.testCase_serverRespondTimeoutDefault_timeout = function (option, onError) {
 /*
  * this function will test serverRespondTimeoutDefault's timeout handling-behavior
  */
-    options = function (fnc1, fnc2) {
+    option = function (fnc1, fnc2) {
         [fnc1, fnc2].forEach(function (fnc) {
             if (typeof fnc === "function") {
                 fnc();
@@ -2452,31 +2396,31 @@ local.testCase_serverRespondTimeoutDefault_timeout = function (options, onError)
     };
     local.testMock([
         [local, {
-            onTimeout: options,
+            onTimeout: option,
             serverRespondDefault: local.nop,
-            setTimeout: options
+            setTimeout: option
         }]
     ], function (onError) {
         local.serverRespondTimeoutDefault({
             headers: {}
         }, {
-            on: options
+            on: option
         });
-        onError(null, options);
+        onError(null, option);
     }, onError);
 };
 
-local.testCase_setTimeoutOnError_default = function (options, onError) {
+local.testCase_setTimeoutOnError_default = function (option, onError) {
 /*
  * this function will test setTimeoutOnError's default handling-behavior
  */
     // test null-case handling-behavior
     local.assertJsonEqual(local.setTimeoutOnError(), undefined);
     // test onError handling-behavior
-    local.assertJsonEqual(local.setTimeoutOnError(onError, 0, null, {}, options), {});
+    local.assertJsonEqual(local.setTimeoutOnError(onError, 0, null, {}, option), {});
 };
 
-local.testCase_sjclHashScryptXxx_default = function (options, onError) {
+local.testCase_sjclHashScryptXxx_default = function (option, onError) {
 /*
  * this function will test sjclHashScryptXxx's default handling-behavior
  */
@@ -2497,10 +2441,10 @@ local.testCase_sjclHashScryptXxx_default = function (options, onError) {
         "$s0$80801$epIxT/h6HbbwHaehFnh/bw=="
         + "$l/guDhz2Q0v/D93gq0K0qtSX6FWP8pH5maAJkbIcRaE="
     )), true);
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_sjclHashShaXxxCreate_default = function (options, onError) {
+local.testCase_sjclHashShaXxxCreate_default = function (option, onError) {
 /*
  * this function will test sjclHashShaXxxCreate's default handling-behavior
  */
@@ -2512,10 +2456,10 @@ local.testCase_sjclHashShaXxxCreate_default = function (options, onError) {
         local.sjclHashSha256Create("aa"),
         "lhtt0+3jy47LqsvWjeBAzXjrLtWIkTDM60xJJo6k1QY="
     );
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_sjclHmacShaXxx_default = function (options, onError) {
+local.testCase_sjclHmacShaXxx_default = function (option, onError) {
 /*
  * this function will test sjclHmacShaXxx's default handling-behavior
  */
@@ -2527,10 +2471,10 @@ local.testCase_sjclHmacShaXxx_default = function (options, onError) {
         local.sjclHmacSha256Create("aa", "bb"),
         "94Xv3VdPHA+ohKyjkM1pb0W5ZVAuMVcmIAAI2AqNRCQ="
     );
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_stringHtmlSafe_default = function (options, onError) {
+local.testCase_stringHtmlSafe_default = function (option, onError) {
 /*
  * this function will test stringHtmlSafe's default handling-behavior
  */
@@ -2541,10 +2485,10 @@ local.testCase_stringHtmlSafe_default = function (options, onError) {
             + "ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
         )
     );
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_stringQuotedToAscii_default = function (options, onError) {
+local.testCase_stringQuotedToAscii_default = function (option, onError) {
 /*
  * this function will test stringQuotedToAscii's default handling-behavior
  */
@@ -2552,10 +2496,10 @@ local.testCase_stringQuotedToAscii_default = function (options, onError) {
         local.stringQuotedToAscii(local.stringHelloEmoji),
         "hello \\ud83d\\ude01\n"
     );
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_stringRegexpEscape_default = function (options, onError) {
+local.testCase_stringRegexpEscape_default = function (option, onError) {
 /*
  * this function will test stringRegexpEscape's default handling-behavior
  */
@@ -2572,146 +2516,146 @@ local.testCase_stringRegexpEscape_default = function (options, onError) {
             + "\u007f"
         )
     );
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_stringTruncate_default = function (options, onError) {
+local.testCase_stringTruncate_default = function (option, onError) {
 /*
  * this function will test stringTruncate's default handling-behavior
  */
     local.assertJsonEqual(local.stringTruncate("aa"), "aa");
     local.assertJsonEqual(local.stringTruncate("aa", 1), "...");
     local.assertJsonEqual(local.stringTruncate("aa", 2), "aa");
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_stringUniqueKey_default = function (options, onError) {
+local.testCase_stringUniqueKey_default = function (option, onError) {
 /*
  * this function will test stringUniqueKey's default handling-behavior
  */
     local.assertThrow(("zqxj").indexOf(local.stringUniqueKey("zqxj") < 0));
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_taskCreateCached_default = function (options, onError) {
+local.testCase_taskCreateCached_default = function (option, onError) {
 /*
  * this function will test taskCreateCached's default handling-behavior
  */
     var cacheValue;
     var onTask;
-    var options2;
-    options = {};
-    local.onNext(options, function (error, data) {
-        switch (options.modeNext) {
+    var option2;
+    option = {};
+    local.onNext(option, function (error, data) {
+        switch (option.modeNext) {
         // test no cache handling-behavior
         case 1:
             onTask = function (onError) {
                 onError(null, cacheValue);
             };
-            options.cacheDict = "testCase_taskCreateCached_default";
-            options.key = "memory";
+            option.cacheDict = "testCase_taskCreateCached_default";
+            option.key = "memory";
             // cleanup memory-cache
-            local.cacheDict[options.cacheDict] = null;
+            local.cacheDict[option.cacheDict] = null;
             cacheValue = "aa";
-            options2 = {
-                cacheDict: options.cacheDict,
-                key: options.key,
+            option2 = {
+                cacheDict: option.cacheDict,
+                key: option.key,
                 // test onCacheWrite handling-behavior
-                onCacheWrite: options.onNext
+                onCacheWrite: option.onNext
             };
-            local.taskCreateCached(options2, onTask, options.onNext);
+            local.taskCreateCached(option2, onTask, option.onNext);
             break;
         case 2:
             // validate data
             local.assertJsonEqual(data, "aa");
             // validate no cache-hit
-            local.assertThrow(!options2.modeCacheHit, options2.modeCacheHit);
+            local.assertThrow(!option2.modeCacheHit, option2.modeCacheHit);
             break;
         // test cache with update handling-behavior
         case 3:
             cacheValue = "bb";
-            options2 = {
-                cacheDict: options.cacheDict,
-                key: options.key,
+            option2 = {
+                cacheDict: option.cacheDict,
+                key: option.key,
                 // test modeCacheUpdate handling-behavior
                 modeCacheUpdate: true,
                 // test onCacheWrite handling-behavior
-                onCacheWrite: options.onNext
+                onCacheWrite: option.onNext
             };
-            local.taskCreateCached(options2, onTask, options.onNext);
+            local.taskCreateCached(option2, onTask, option.onNext);
             break;
         case 4:
             // validate data
             local.assertJsonEqual(data, "aa");
             // validate modeCacheHit
-            local.assertJsonEqual(options2.modeCacheHit, true);
+            local.assertJsonEqual(option2.modeCacheHit, true);
             break;
         // test cache handling-behavior
         case 5:
-            options2 = {
-                cacheDict: options.cacheDict,
-                key: options.key
+            option2 = {
+                cacheDict: option.cacheDict,
+                key: option.key
             };
-            local.taskCreateCached(options2, onTask, options.onNext);
+            local.taskCreateCached(option2, onTask, option.onNext);
             break;
         case 6:
             // validate data
             local.assertJsonEqual(data, "bb");
             // validate modeCacheHit
-            local.assertJsonEqual(options2.modeCacheHit, true);
-            options.onNext();
+            local.assertJsonEqual(option2.modeCacheHit, true);
+            option.onNext();
             break;
         default:
-            onError(error, options);
+            onError(error, option);
         }
     });
-    options.modeNext = 0;
-    options.onNext();
+    option.modeNext = 0;
+    option.onNext();
 };
 
-local.testCase_taskCreate_multipleCallback = function (options, onError) {
+local.testCase_taskCreate_multipleCallback = function (option, onError) {
 /*
  * this function will test taskCreate's multiple-callback handling-behavior
  */
-    options = {
+    option = {
         counter: 0,
         key: "testCase_taskCreate_multiCallback"
     };
-    local.taskCreate(options, function (onError) {
-        onError(null, options);
+    local.taskCreate(option, function (onError) {
+        onError(null, option);
         // test multiple-callback handling-behavior
-        onError(null, options);
+        onError(null, option);
     }, function () {
-        options.counter += 1;
+        option.counter += 1;
     });
     // validate counter incremented once
-    local.assertJsonEqual(options.counter, 1);
-    onError(null, options);
+    local.assertJsonEqual(option.counter, 1);
+    onError(null, option);
 };
 
-local.testCase_taskCreate_upsert = function (options, onError) {
+local.testCase_taskCreate_upsert = function (option, onError) {
 /*
  * this function will test taskCreate's upsert handling-behavior
  */
-    options = {
+    option = {
         counter: 0,
         key: "testCase_taskCreate_upsert"
     };
     // test upsert handling-behavior
     [null, null].forEach(function () {
-        local.taskCreate(options, function (onError) {
-            options.counter += 1;
+        local.taskCreate(option, function (onError) {
+            option.counter += 1;
             setTimeout(onError);
         });
     });
     // validate counter incremented once
     setTimeout(function () {
-        local.assertJsonEqual(options.counter, 1);
-        onError(null, options);
+        local.assertJsonEqual(option.counter, 1);
+        onError(null, option);
     });
 };
 
-local.testCase_templateRender_default = function (options, onError) {
+local.testCase_templateRender_default = function (option, onError) {
 /*
  * this function will test templateRender's default handling-behavior
  */
@@ -2839,15 +2783,15 @@ local.testCase_templateRender_default = function (options, onError) {
     }, local.nop);
     // validate error occurred
     local.assertThrow(local._debugTryCatchError, local._debugTryCatchError);
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_testReportCreate_default = function (options, onError) {
+local.testCase_testReportCreate_default = function (option, onError) {
 /*
  * this function will test testReport's default handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     local.testMock([], function (onError) {
@@ -2863,11 +2807,11 @@ local.testCase_testReportCreate_default = function (options, onError) {
                 }]
             }]
         });
-        onError(null, options);
+        onError(null, option);
     }, onError);
 };
 
-local.testCase_throwError_default = function (options, onError) {
+local.testCase_throwError_default = function (option, onError) {
 /*
  * this function will test throwError's default handling-behavior
  */
@@ -2876,11 +2820,11 @@ local.testCase_throwError_default = function (options, onError) {
     }, function (error) {
         // validate error occurred
         local.assertThrow(error, error);
-        onError(null, options);
+        onError(null, option);
     });
 };
 
-local.testCase_uglify_default = function (options, onError) {
+local.testCase_uglify_default = function (option, onError) {
 /*
  * this function will test uglify's default handling-behavior
  */
@@ -2891,46 +2835,46 @@ local.testCase_uglify_default = function (options, onError) {
         local.uglify("aa = 'hello \ud83d\ude01\\n'", "aa.js"),
         "aa=\"hello \\ud83d\\ude01\\n\""
     );
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_uiAnimateXxx_default = function (options, onError) {
+local.testCase_uiAnimateXxx_default = function (option, onError) {
 /*
  * this function will test uiAnimateXxx's default handling-behavior
  */
     if (!local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
-    options = document.createElement("div");
+    option = document.createElement("div");
     // test uiAnimateShake handling-behavior
     local.uiAnimateShake();
-    local.uiAnimateShake(options);
-    local.assertThrow(options.classList.contains("uiAnimateShake"), options.classList);
-    local.uiAnimateShake(options);
-    local.assertThrow(options.classList.contains("uiAnimateShake"), options.classList);
+    local.uiAnimateShake(option);
+    local.assertThrow(option.classList.contains("uiAnimateShake"), option.classList);
+    local.uiAnimateShake(option);
+    local.assertThrow(option.classList.contains("uiAnimateShake"), option.classList);
     // test uiAnimateShakeIfError handling-behavior
     local.uiAnimateShakeIfError();
-    local.uiAnimateShakeIfError(null, options);
-    local.assertThrow(!options.classList.contains("hasError"), options.classList);
-    local.uiAnimateShakeIfError(true, options);
-    local.assertThrow(options.classList.contains("hasError"), options.classList);
-    local.uiAnimateShakeIfError(null, options);
-    local.assertThrow(!options.classList.contains("hasError"), options.classList);
+    local.uiAnimateShakeIfError(null, option);
+    local.assertThrow(!option.classList.contains("hasError"), option.classList);
+    local.uiAnimateShakeIfError(true, option);
+    local.assertThrow(option.classList.contains("hasError"), option.classList);
+    local.uiAnimateShakeIfError(null, option);
+    local.assertThrow(!option.classList.contains("hasError"), option.classList);
     // test uiAnimateSlideXxx handling-behavior
     local.uiAnimateSlideDown();
     local.uiAnimateSlideUp();
-    options.classList.add("uiAnimateSlide");
-    local.uiAnimateSlideDown(options);
-    local.assertThrow(options.style.maxHeight.indexOf("px") >= 0, options.style.maxHeight);
-    local.uiAnimateSlideUp(options);
-    local.assertJsonEqual(options.style.maxHeight, "0px");
+    option.classList.add("uiAnimateSlide");
+    local.uiAnimateSlideDown(option);
+    local.assertThrow(option.style.maxHeight.indexOf("px") >= 0, option.style.maxHeight);
+    local.uiAnimateSlideUp(option);
+    local.assertJsonEqual(option.style.maxHeight, "0px");
     // test uiAnimateSlideAccordian handling-behavior
-    local.uiAnimateSlideAccordian(options, [options, document.createElement("div")]);
-    onError(null, options);
+    local.uiAnimateSlideAccordian(option, [option, document.createElement("div")]);
+    onError(null, option);
 };
 
-local.testCase_urlJoin_default = function (options, onError) {
+local.testCase_urlJoin_default = function (option, onError) {
 /*
  * this function will test urlJoin's default handling-behavior
  */
@@ -2940,10 +2884,10 @@ local.testCase_urlJoin_default = function (options, onError) {
     local.assertJsonEqual(local.urlJoin("http://aa/bb/", "/zz"), "http://aa/zz");
     local.assertJsonEqual(local.urlJoin("http://aa/bb/", "//zz"), "http://zz");
     local.assertJsonEqual(local.urlJoin("http://aa/bb/", "http://zz"), "http://zz");
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_urlParse_default = function (options, onError) {
+local.testCase_urlParse_default = function (option, onError) {
 /*
  * this function will test urlParse's default handling-behavior
  */
@@ -2988,31 +2932,31 @@ local.testCase_urlParse_default = function (options, onError) {
             query: {},
             search: ""
         });
-        onError(null, options);
+        onError(null, option);
     }, onError);
 };
 
-local.testCase_uuid4Create_default = function (options, onError) {
+local.testCase_uuid4Create_default = function (option, onError) {
 /*
  * this function will test uuid4Create's default handling-behavior
  */
     local.assertThrow((local.regexpValidateUuid).test(local.uuid4Create()), local.uuid4Create());
-    onError(null, options);
+    onError(null, option);
 };
 
-local.testCase_webpage_error = function (options, onError) {
+local.testCase_webpage_error = function (option, onError) {
 /*
  * this function will test webpage's error handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
     local.browserTest({
         modeCoverageMerge: true,
         modeSilent: true,
         timeoutDefault: local.timeoutDefault - 5000,
-        // /assets.script_only.html?modeTest=1&modeTestCase=_testCase_testRunDefault_failure&timeExit=
+        // https://localhost:8080/assets.script_only.html?modeTest=1&modeTestCase=_testCase_testRunDefault_failure&timeExit=
         url: (
             local.serverLocalHost
             // test script_only handling-behavior
@@ -3028,7 +2972,7 @@ local.testCase_webpage_error = function (options, onError) {
     }, function (error) {
         // validate error occurred
         local.assertThrow(error, error);
-        onError(null, options);
+        onError(null, option);
     });
 };
 
@@ -3064,14 +3008,6 @@ local.middlewareList.push(function (request, response, nextMiddleware) {
  */
     switch (request.urlParsed.pathname) {
     // test http POST handling-behavior
-    case "/test.echo":
-        // test response header handling-behavior
-        local.serverRespondHeadSet(request, response, null, {
-            "X-Response-Header-Test": "bb"
-        });
-        local.serverRespondEcho(request, response);
-        break;
-    // test http POST handling-behavior
     case "/test.body":
         // test request-body-read handling-behavior
         local.middlewareBodyRead(request, response, function () {
@@ -3081,6 +3017,14 @@ local.middlewareList.push(function (request, response, nextMiddleware) {
                 response.end();
             });
         });
+        break;
+    // test http POST handling-behavior
+    case "/test.echo":
+        // test response header handling-behavior
+        local.serverRespondHeadSet(request, response, null, {
+            "X-Response-Header-Test": "bb"
+        });
+        local.serverRespondEcho(request, response);
         break;
     // test 500-internal-server-error handling-behavior
     case "/test.error-500":

@@ -51,7 +51,7 @@
         && window === globalThis
         && typeof window.XMLHttpRequest === "function"
         && window.document
-        && typeof window.document.querySelectorAll === "function"
+        && typeof window.document.querySelector === "function"
     );
     // init function
     local.assertThrow = function (passed, message) {
@@ -100,6 +100,22 @@
      * this function will do nothing
      */
         return;
+    };
+    local.objectAssignDefault = function (target, source) {
+    /*
+     * this function will if items from <target> are
+     * null, undefined, or empty-string,
+     * then overwrite them with items from <source>
+     */
+        Object.keys(source).forEach(function (key) {
+            if (
+                target[key] === null
+                || target[key] === undefined
+                || target[key] === ""
+            ) {
+                target[key] = target[key] || source[key];
+            }
+        });
     };
     // require builtin
     if (!local.isBrowser) {
@@ -170,7 +186,7 @@ if (!local.isBrowser) {
     local.require = require;
 }
 
-local.cliRun = function (options) {
+local.cliRun = function (option) {
 /*
  * this function will run the cli
  */
@@ -206,10 +222,10 @@ local.cliRun = function (options) {
         file = __filename.replace((
             /.*\//
         ), "");
-        options = Object.assign({}, options);
+        option = Object.assign({}, option);
         packageJson = require("./package.json");
         // validate comment
-        options.rgxComment = options.rgxComment || (
+        option.rgxComment = option.rgxComment || (
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         textDict = {};
@@ -228,7 +244,7 @@ local.cliRun = function (options) {
                 return;
             }
             try {
-                commandList[ii] = options.rgxComment.exec(text);
+                commandList[ii] = option.rgxComment.exec(text);
                 commandList[ii] = {
                     argList: (commandList[ii][1] || "").trim(),
                     command: [key],
@@ -237,7 +253,8 @@ local.cliRun = function (options) {
             } catch (ignore) {
                 local.assertThrow(null, new Error(
                     "cliRun - cannot parse comment in COMMAND "
-                    + key + ":\nnew RegExp(" + JSON.stringify(options.rgxComment.source)
+                    + key + ":\nnew RegExp("
+                    + JSON.stringify(option.rgxComment.source)
                     + ").exec(" + JSON.stringify(text)
                     .replace((
                         /\\\\/g
@@ -251,7 +268,9 @@ local.cliRun = function (options) {
                 ));
             }
         });
-        console.log(packageJson.name + " (" + packageJson.version + ")\n\n" + commandList
+        text = "";
+        text += packageJson.name + " (" + packageJson.version + ")\n\n";
+        text += commandList
         .filter(function (element) {
             return element;
         })
@@ -281,7 +300,8 @@ local.cliRun = function (options) {
                 + element.argList.join("  ")
             );
         })
-        .join("\n\n"));
+        .join("\n\n");
+        console.log(text);
     };
     local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
     local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
@@ -293,7 +313,7 @@ local.cliRun = function (options) {
      * will start interactive-mode
      */
         globalThis.local = local;
-        local.functionOrNop(local.replStart || require("repl").start)({
+        local.identity(local.replStart || require("repl").start)({
             useGlobal: true
         });
     };
@@ -309,7 +329,10 @@ local.cliRun = function (options) {
      */
         console.log(require(__dirname + "/package.json").version);
     };
-    local.cliDict["--version"] = local.cliDict["--version"] || local.cliDict._version;
+    local.cliDict["--version"] = (
+        local.cliDict["--version"]
+        || local.cliDict._version
+    );
     local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
     // default to --help command if no arguments are given
     if (process.argv.length <= 2) {
@@ -325,9 +348,16 @@ local.cliRun = function (options) {
 
 local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
 /*
- * this function will synchronously 'mkdir -p' and write the data to file
+ * this function will synchronously 'mkdir -p' and write the <data> to <file>
  */
-    if (mode === "noWrite") {
+    try {
+        if (
+            mode === "noWrite"
+            || typeof require("fs").writeFileSync !== "function"
+        ) {
+            return;
+        }
+    } catch (ignore) {
         return;
     }
     // try to write to file
@@ -465,30 +495,30 @@ local.coverageReportCreate = function () {
  * 2. write coverage in html-format to filesystem
  * 3. return coverage in html-format as single document
  */
-    var options;
+    var option;
     /* istanbul ignore next */
     if (!globalThis.__coverage__) {
         return "";
     }
-    options = {};
-    options.dir = process.cwd() + "/tmp/build/coverage.html";
+    option = {};
+    option.dir = process.cwd() + "/tmp/build/coverage.html";
     // merge previous coverage
     if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
-        console.log("merging file " + options.dir + "/coverage.json to coverage");
+        console.log("merging file " + option.dir + "/coverage.json to coverage");
         try {
             local.coverageMerge(globalThis.__coverage__, JSON.parse(
-                local.fs.readFileSync(options.dir + "/coverage.json", "utf8")
+                local.fs.readFileSync(option.dir + "/coverage.json", "utf8")
             ));
         } catch (ignore) {}
         try {
-            options.coverageCodeDict = JSON.parse(local.fs.readFileSync(
-                options.dir + "/coverage.code-dict.json",
+            option.coverageCodeDict = JSON.parse(local.fs.readFileSync(
+                option.dir + "/coverage.code-dict.json",
                 "utf8"
             ));
-            Object.keys(options.coverageCodeDict).forEach(function (key) {
+            Object.keys(option.coverageCodeDict).forEach(function (key) {
                 globalThis.__coverageCodeDict__[key] = (
                     globalThis.__coverageCodeDict__[key]
-                    || options.coverageCodeDict[key]
+                    || option.coverageCodeDict[key]
                 );
             });
         } catch (ignore) {}
@@ -502,49 +532,49 @@ local.coverageReportCreate = function () {
         + "\">\n"
     );
     local.writerData = "";
-    options.sourceStore = {};
-    options.writer = local.writer;
+    option.sourceStore = {};
+    option.writer = local.writer;
     // 1. print coverage in text-format to stdout
-    new local.TextReport(options).writeReport(local.collector);
+    new local.TextReport(option).writeReport(local.collector);
     // 2. write coverage in html-format to filesystem
-    new local.HtmlReport(options).writeReport(local.collector);
+    new local.HtmlReport(option).writeReport(local.collector);
     local.writer.writeFile("", local.nop);
     if (!local.isBrowser) {
         // write coverage.json
         local.fsWriteFileWithMkdirpSync(
-            options.dir + "/coverage.json",
+            option.dir + "/coverage.json",
             JSON.stringify(globalThis.__coverage__)
         );
         // write coverage.code-dict.json
         local.fsWriteFileWithMkdirpSync(
-            options.dir + "/coverage.code-dict.json",
+            option.dir + "/coverage.code-dict.json",
             JSON.stringify(globalThis.__coverageCodeDict__)
         );
         // write coverage.badge.svg
-        options.pct = local.coverageReportSummary.root.metrics.lines.pct;
+        option.pct = local.coverageReportSummary.root.metrics.lines.pct;
         local.fsWriteFileWithMkdirpSync(
-            local._istanbul_path.dirname(options.dir) + "/coverage.badge.svg",
+            local._istanbul_path.dirname(option.dir) + "/coverage.badge.svg",
             local.templateCoverageBadgeSvg
             // edit coverage badge percent
             .replace((
                 /100.0/g
-            ), options.pct)
+            ), option.pct)
             // edit coverage badge color
             .replace((
                 /0d0/g
             ), (
-                ("0" + Math.round((100 - options.pct) * 2.21).toString(16)).slice(-2)
-                + ("0" + Math.round(options.pct * 2.21).toString(16)).slice(-2) + "00"
+                ("0" + Math.round((100 - option.pct) * 2.21).toString(16)).slice(-2)
+                + ("0" + Math.round(option.pct * 2.21).toString(16)).slice(-2) + "00"
             ))
         );
     }
-    console.log("created coverage file " + options.dir + "/index.html");
+    console.log("created coverage file " + option.dir + "/index.html");
     // 3. return coverage in html-format as a single document
     local.coverageReportHtml += "</div>\n</div>\n";
     // write coverage.rollup.html
     if (!local.isBrowser) {
         local.fsWriteFileWithMkdirpSync(
-            options.dir + "/coverage.rollup.html",
+            option.dir + "/coverage.rollup.html",
             local.coverageReportHtml
         );
     }
@@ -1883,7 +1913,8 @@ curl https://raw.githubusercontent.com/components/handlebars.js/v1.2.1/handlebar
 local.handlebars = {};
 local.handlebars.compile = function (template) {
 /*
- * this function will return a function that will render the template with a given dict
+ * this function will return a function
+ * that will render <template> with given <dict>
  */
     return function (dict) {
         var result;
@@ -1965,7 +1996,7 @@ local.handlebars.registerHelper = function (key, helper) {
 
 local.handlebars.replace = function (template, dict, withPrefix) {
 /*
- * this function will replace the keys in the template with the dict's key / value
+ * this function will render <template> with given <dict>
  */
     var value;
     // search for keys in the template
@@ -2462,6 +2493,9 @@ local["head.txt"] = '\
     text-align: right;\n\
     width: 50px;\n\
 }\n\
+.x-istanbul .coverage .line-count a {\n\
+    text-decoration: none;\n\
+}\n\
 .x-istanbul .coverage .line-coverage {\n\
     border-left: 1px solid #666;\n\
     border-right: 1px solid #666;\n\
@@ -2736,7 +2770,9 @@ prototype={addFileCoverageSummary:function(e,t){this.summaryMap[e]=t},getTreeSum
 TreeSummary(this.summaryMap,e)}},module.exports=TreeSummarizer
 /* jslint ignore:end */
     local["../util/tree-summarizer"] = module.exports;
-    module.exports.prototype._getTreeSummary = module.exports.prototype.getTreeSummary;
+    module.exports.prototype._getTreeSummary = (
+        module.exports.prototype.getTreeSummary
+    );
     module.exports.prototype.getTreeSummary = function () {
         local.coverageReportSummary = this._getTreeSummary();
         return local.coverageReportSummary;
@@ -2815,7 +2851,7 @@ n+'px;"></span>'):""}),handlebars.registerHelper("show_ignores",function(e){var 
 e.statements.skipped,n=e.functions.skipped,r=e.branches.skipped,i;return t===0&&
 n===0&&r===0?'<span class="ignore-none">none</span>':(i=[],r>0&&i.push("branches: "+r),t>0&&i.push(
 "statements: "+t),n>0&&i.push("functions: "+n),i.join("<br>"))}),handlebars.registerHelper("show_lines",function(
-e){var t=Number(e.fn(this)),n,r=[];for(n=0;n<t;n+=1)r[n]=n+1;return r.join("\n")
+e){var t=Number(e.fn(this)),n,r="";for(n=1;n<=t;n+=1){r+='<a href="#L'+n+'" id="L'+n+'">'+n+'</a>\n';}return r
 }),handlebars.registerHelper("show_line_execution_counts",function(e,t){var n=e.
 l,r=Number(t.fn(this)),i,s,o=[],u,a="";for(i=0;i<r;i+=1)s=i+1,a="&nbsp;",u="neutral"
 ,n.hasOwnProperty(s)&&(n[s]>0?(u="yes",a=n[s]):u="no"),o.push('<span class="cline-any cline-'+
@@ -2957,7 +2993,9 @@ local.cliDict.cover = function () {
         || "all"
     );
     // add coverage hook to require
-    local._istanbul_moduleExtensionsJs = local._istanbul_module._extensions[".js"];
+    local._istanbul_moduleExtensionsJs = (
+        local._istanbul_module._extensions[".js"]
+    );
     local._istanbul_module._extensions[".js"] = function (module, file) {
         if (typeof file === "string" && (
             file.indexOf(process.env.npm_config_mode_coverage_dir) === 0 || (

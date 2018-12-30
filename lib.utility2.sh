@@ -24,7 +24,7 @@ shBaseInit () {
     # init $PATH_BIN
     if [ ! "$PATH_BIN" ]
     then
-        export PATH_BIN="$HOME/bin:$HOME/node_modules/.bin:/usr/local/bin:/usr/local/sbin" ||
+        export PATH_BIN="$HOME/bin:$HOME/node_modules/.bin:/usr/local/n/bin:/usr/local/bin:/usr/local/sbin" ||
             return $?
         export PATH="$PATH_BIN:$PATH" || return $?
     fi
@@ -170,7 +170,7 @@ shBaseInstallLinode () {(set -e
 )}
 
 shBrowserTest () {(set -e
-# this function will spawn an electron process to test the given url $LIST,
+# this function will spawn an electron process to test given url $LIST,
 # and merge the test-report into the existing test-report
     LIST="$1"
     export modeBrowserTest="$2"
@@ -512,8 +512,9 @@ shBuildCi () {(set -e
         ;;
     master)
         git tag "$npm_package_version" || true
-        shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" "$npm_package_version" \
-            || true
+        shGitCommandWithGithubToken push \
+            "https://github.com/$GITHUB_REPO" \
+            "$npm_package_version" || true
         ;;
     publish)
         if (grep -q -E '    shNpmTestPublished' README.md)
@@ -713,6 +714,8 @@ $HOME/node_modules/electron-lite}" || return $?
     if [ ! "$npm_config_dir_utility2" ]
     then
         [ ! -f lib.utility2.js ] || export npm_config_dir_utility2="$PWD"
+        [ ! -f "$HOME/src/utility2/lib.utility2.js" ] ||
+            export npm_config_dir_utility2="$HOME/src/utility2"
         export npm_config_dir_utility2="${npm_config_dir_utility2:-\
 $(shModuleDirname utility2)}" || return $?
         export npm_config_dir_utility2="${npm_config_dir_utility2:-\
@@ -868,7 +871,7 @@ shChromeSocks5 () {(set -e
 )}
 
 shCryptoAesXxxCbcRawDecrypt () {(set -e
-# this function will inplace aes-xxx-cbc decrypt stdin with the given hex-key $1
+# this function will inplace aes-xxx-cbc decrypt stdin with given hex-key $1
 # example usage:
 # printf 'hello world\n' | shCryptoAesXxxCbcRawEncrypt 0123456789abcdef0123456789abcdef | shCryptoAesXxxCbcRawDecrypt 0123456789abcdef0123456789abcdef
     node -e "$UTILITY2_MACRO_JS"'
@@ -901,7 +904,7 @@ process.stdin.on("end", function () {
 )}
 
 shCryptoAesXxxCbcRawEncrypt () {(set -e
-# this function will inplace aes-xxx-cbc encrypt stdin with the given hex-key $1
+# this function will inplace aes-xxx-cbc encrypt stdin with given hex-key $1
 # example usage:
 # printf 'hello world\n' | shCryptoAesXxxCbcRawEncrypt 0123456789abcdef0123456789abcdef | shCryptoAesXxxCbcRawDecrypt 0123456789abcdef0123456789abcdef
     node -e "$UTILITY2_MACRO_JS"'
@@ -1060,7 +1063,7 @@ shCustomOrgRepoCreateSyncCreateNpmdoc () {(set -e
 )}
 
 shDateIso () {(set -e
-# this function will print the current date in ISO format with the given offset $1 in ms
+# this function will print the current date in ISO format with given offset $1 in ms
     node -e 'console.log(new Date(Date.now() + Number(process.argv[1])).toISOString())' "$1"
 )}
 
@@ -1187,12 +1190,30 @@ shDockerCopyFromImage () {(set -e
 )}
 
 shDockerLogs () {(set -e
-# this function log the docker container $1
+# this function log the  $1
     docker logs --tail=256 -f "$1"
 )}
 
+shDockerMssqlcommand () {(set -e
+# this function will restart the docker-container mssql
+# http://transmission:transmission@127.0.0.1:9091
+    case "$(uname)" in
+    Linux)
+        LOCALHOST="${LOCALHOST:-127.0.0.1}"
+        ;;
+    *)
+        LOCALHOST="${LOCALHOST:-192.168.99.100}"
+        ;;
+    esac
+    sqlcmd \
+        -S "$LOCALHOST,1433" \
+        -P "${SA_PASSWORD:-yourStrong(\!)Passw0rd}" \
+        -U SA
+)}
+
 shDockerNpmRestart () {(set -e
-# this function will npm-restart the app inside the docker-container $IMAGE:$NAME
+# this function will npm-restart the app
+# inside the docker-container $IMAGE:$NAME
     NAME="$1"
     IMAGE="$2"
     DIR="$3"
@@ -1214,7 +1235,7 @@ shDockerRestart () {(set -e
 )}
 
 shDockerRestartElasticsearch () {(set -e
-# this function will restart the elasticsearch docker-container
+# this function will restart the docker-container elasticsearch
 # https://hub.docker.com/_/elasticsearch/
     case "$(uname)" in
     Linux)
@@ -1263,8 +1284,29 @@ server {
 "
 )}
 
+shDockerRestartMssql () {(set -e
+# this function will restart the docker-container mssql
+# http://transmission:transmission@127.0.0.1:9091
+    case "$(uname)" in
+    Linux)
+        LOCALHOST="${LOCALHOST:-127.0.0.1}"
+        ;;
+    *)
+        LOCALHOST="${LOCALHOST:-192.168.99.100}"
+        ;;
+    esac
+    docker rm -fv mssql || true
+    mkdir -p "$HOME/docker/mssql.data"
+    docker run --name mssql -d \
+        -e "ACCEPT_EULA=Y" \
+        -e "SA_PASSWORD=${SA_PASSWORD:-yourStrong(\!)Passw0rd}" \
+        -p "$LOCALHOST:1433:1433" \
+        -v "$HOME/docker/mssql.data:/var/opt/mssql" \
+        mcr.microsoft.com/mssql/server:2017-latest
+)}
+
 shDockerRestartNginx () {(set -e
-# this function will restart the nginx docker-container
+# this function will restart the docker-container nginx
     # init htpasswd
     # printf "aa:$(openssl passwd -crypt bb)\n" > "$HOME/docker/etc.nginx.htpasswd.private"
     # printf "aa:$(openssl passwd -crypt bb)\n" > "$HOME/docker/etc.nginx.htpasswd.share"
@@ -1360,7 +1402,7 @@ server {
 )}
 
 shDockerRestartTransmission () {(set -e
-# this function will restart the transmission docker-container
+# this function will restart the docker-container transmission
 # http://transmission:transmission@127.0.0.1:9091
     case "$(uname)" in
     Linux)
@@ -1479,7 +1521,7 @@ console.log(Object.keys(process.env).sort().map(function (key) {
 }
 
 shFileCustomizeFromToRgx () {(set -e
-# this function will customize a segment of file $2 with a segment of file $1, with the given rgx
+# this function will customize a segment of file $2 with a segment of file $1, with given rgx
     node -e "$UTILITY2_MACRO_JS"'
 /* jslint utility2:true */
 (function (local) {
@@ -1505,15 +1547,19 @@ shFileJsonNormalize () {(set -e
 /* jslint utility2:true */
 (function (local) {
 "use strict";
+console.error("shFileJsonNormalize " + process.argv[1]);
 var tmp;
-tmp = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+tmp = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8").trim());
 if (process.argv[2]) {
     local.objectSetDefault(tmp, JSON.parse(process.argv[2]), Infinity);
 }
 if (process.argv[3]) {
     local.objectSetOverride(tmp, JSON.parse(process.argv[3]), Infinity);
 }
-require("fs").writeFileSync(process.argv[1], local.jsonStringifyOrdered(tmp, null, 4) + "\n");
+require("fs").writeFileSync(
+    process.argv[1],
+    local.jsonStringifyOrdered(tmp, null, 4) + "\n"
+);
 }(globalThis.globalLocal));
 ' "$@"
 )}
@@ -1712,7 +1758,7 @@ shGitLsTree () {(set -e
 )}
 
 shGitSquashPop () {(set -e
-# this function will squash HEAD to the given $COMMIT
+# this function will squash HEAD to given $COMMIT
 # http://stackoverflow.com/questions/5189560
 # /how-can-i-squash-my-last-x-commits-together-using-git
     COMMIT="$1"
@@ -1936,7 +1982,10 @@ shHttpFileServer () {(set -e
 require("http").createServer(function (request, response) {
     require("fs").readFile(
         // security - disable parent directory lookup
-        require("path").resolve("/", require("url").parse(request.url).pathname).slice(1),
+        require("path").resolve(
+            "/",
+            require("url").parse(request.url).pathname
+        ).slice(1),
         function (error, data) {
             response.end(
                 error
@@ -2071,7 +2120,7 @@ shKillallElectron () {(set -e
 )}
 
 shListUnflattenAndApply () {(set -e
-# this function will unflatten $LIST into $SUB_LIST with the given $LENGTH,
+# this function will unflatten $LIST into $SUB_LIST with given $LENGTH,
 # and apply shListUnflattenAndApplyFunction to $SUB_LIST
     LIST="$1"
     LENGTH="${2:-6}"
@@ -2145,7 +2194,7 @@ shMain () {
         && window === globalThis
         && typeof window.XMLHttpRequest === "function"
         && window.document
-        && typeof window.document.querySelectorAll === "function"
+        && typeof window.document.querySelector === "function"
     );
     // init function
     local.assertThrow = function (passed, message) {
@@ -2194,6 +2243,22 @@ shMain () {
      * this function will do nothing
      */
         return;
+    };
+    local.objectAssignDefault = function (target, source) {
+    /*
+     * this function will if items from <target> are
+     * null, undefined, or empty-string,
+     * then overwrite them with items from <source>
+     */
+        Object.keys(source).forEach(function (key) {
+            if (
+                target[key] === null
+                || target[key] === undefined
+                || target[key] === ""
+            ) {
+                target[key] = target[key] || source[key];
+            }
+        });
     };
     // require builtin
     if (!local.isBrowser) {
@@ -2261,9 +2326,9 @@ globalThis.local = local;
 
 
 
-local.ajax = function (options, onError) {
+local.ajax = function (option, onError) {
 /*
- * this function will send an ajax-request with the given options.url,
+ * this function will send an ajax-request with given <option>.url,
  * with error-handling and timeout
  * example usage:
     local.ajax({
@@ -2282,6 +2347,7 @@ local.ajax = function (options, onError) {
     var local2;
     var onEvent;
     var streamCleanup;
+    var timeout;
     var tmp;
     var xhr;
     var xhrInit;
@@ -2289,16 +2355,19 @@ local.ajax = function (options, onError) {
     local2 = local.utility2 || {};
     // init function
     ajaxProgressUpdate = local2.ajaxProgressUpdate || local.nop;
-    bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (bff, mode) {
+    bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (
+        bff,
+        mode
+    ) {
     /*
-     * this function will validate and coerce/convert
-     * ArrayBuffer, String, or Uint8Array -> Buffer or String
+     * this function will validate and coerce/convert <bff> -> Buffer
+     * (or String if <mode> = "string")
      */
         // coerce ArrayBuffer -> Buffer
         if (Object.prototype.toString.call(bff) === "[object ArrayBuffer]") {
             bff = new Uint8Array(bff);
         }
-        // convert Buffer -> String
+        // convert Buffer -> utf8
         if (mode === "string" && typeof bff !== "string") {
             bff = String(bff);
         }
@@ -2326,7 +2395,10 @@ local.ajax = function (options, onError) {
             }
             isDone = true;
             // decrement ajaxProgressCounter
-            local2.ajaxProgressCounter = Math.max(local2.ajaxProgressCounter - 1, 0);
+            local2.ajaxProgressCounter = Math.max(
+                local2.ajaxProgressCounter - 1,
+                0
+            );
             ajaxProgressUpdate();
             // handle abort or error event
             switch (!xhr.error && event.type) {
@@ -2336,12 +2408,15 @@ local.ajax = function (options, onError) {
                 break;
             case "load":
                 if (xhr.statusCode >= 400) {
-                    xhr.error = new Error("ajax - statusCode " + xhr.statusCode);
+                    xhr.error = new Error(
+                        "ajax - statusCode " + xhr.statusCode
+                    );
                 }
                 break;
             }
             // debug statusCode / method / url
             if (xhr.error) {
+                xhr.statusCode = xhr.statusCode || 500;
                 xhr.error.statusCode = xhr.statusCode;
                 tmp = (
                     // ternary-condition
@@ -2367,8 +2442,9 @@ local.ajax = function (options, onError) {
             }
             // debug ajaxResponse
             xhr.responseContentLength = (
-                (xhr.response && (xhr.response.byteLength || xhr.response.length)) | 0
-            );
+                xhr.response
+                && (xhr.response.byteLength || xhr.response.length)
+            ) | 0;
             xhr.timeElapsed = Date.now() - xhr.timeStart;
             if (xhr.modeDebug) {
                 console.error("serverLog - " + JSON.stringify({
@@ -2392,7 +2468,10 @@ local.ajax = function (options, onError) {
                 if (typeof xhr.responseText === "string") {
                     break;
                 }
-                xhr.responseText = bufferValidateAndCoerce(xhr.response, "string");
+                xhr.responseText = bufferValidateAndCoerce(
+                    xhr.response,
+                    "string"
+                );
                 break;
             case "arraybuffer":
                 xhr.responseBuffer = bufferValidateAndCoerce(xhr.response);
@@ -2429,23 +2508,35 @@ local.ajax = function (options, onError) {
     /*
      * this function will init xhr
      */
-        // init options
-        Object.keys(options).forEach(function (key) {
+        // init option
+        Object.keys(option).forEach(function (key) {
             if (key[0] !== "_") {
-                xhr[key] = options[key];
+                xhr[key] = option[key];
             }
         });
-        Object.assign(xhr, {
-            corsForwardProxyHost: xhr.corsForwardProxyHost || local2.corsForwardProxyHost,
-            headers: xhr.headers || {},
-            location: xhr.location || (local.isBrowser && location) || {},
-            method: xhr.method || "GET",
-            responseType: xhr.responseType || "",
-            timeout: xhr.timeout || local2.timeoutDefault || 30000
+        // init timeout
+        timeout = xhr.timeout || local2.timeoutDefault || 30000;
+        // init defaults
+        local.objectAssignDefault(xhr, {
+            corsForwardProxyHost: local2.corsForwardProxyHost,
+            headers: {},
+            location: (local.isBrowser && location) || {},
+            method: "GET",
+            responseType: ""
         });
+        // init headers
         Object.keys(xhr.headers).forEach(function (key) {
             xhr.headers[key.toLowerCase()] = xhr.headers[key];
         });
+        // coerce Uint8Array -> Buffer
+        if (
+            !local.isBrowser
+            && !Buffer.isBuffer(xhr.data)
+            && Object.prototype.toString.call(xhr.data)
+            === "[object Uint8Array]"
+        ) {
+            Object.setPrototypeOf(xhr.data, Buffer.prototype);
+        }
         // init misc
         local2._debugXhr = xhr;
         xhr.onEvent = onEvent;
@@ -2459,18 +2550,20 @@ local.ajax = function (options, onError) {
     // init xhr - XMLHttpRequest
     xhr = (
         local.isBrowser
-        && !options.httpRequest
-        && !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(options.url))
+        && !option.httpRequest
+        && !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(option.url))
         && new XMLHttpRequest()
     );
     // init xhr - http.request
     if (!xhr) {
-        xhr = local.functionOrNop(local2.urlParse || require("url").parse)(options.url);
+        xhr = local.identity(local2.urlParse || require("url").parse)(
+            option.url
+        );
         // init xhr
         xhrInit();
         // init xhr - http.request
-        xhr = local.functionOrNop(
-            options.httpRequest
+        xhr = local.identity(
+            option.httpRequest
             || (local.isBrowser && local2.http.request)
             || require(xhr.protocol.slice(0, -1)).request
         )(xhr, function (responseStream) {
@@ -2479,7 +2572,10 @@ local.ajax = function (options, onError) {
          */
             var chunkList;
             chunkList = [];
-            xhr.responseHeaders = responseStream.responseHeaders || responseStream.headers;
+            xhr.responseHeaders = (
+                responseStream.responseHeaders
+                || responseStream.headers
+            );
             xhr.responseStream = responseStream;
             xhr.statusCode = responseStream.statusCode;
             responseStream.dataLength = 0;
@@ -2492,7 +2588,10 @@ local.ajax = function (options, onError) {
                     ? chunkList[0]
                     : Buffer.concat(chunkList)
                 );
-                responseStream.dataLength = xhr.response.byteLength || xhr.response.length;
+                responseStream.dataLength = (
+                    xhr.response.byteLength
+                    || xhr.response.length
+                );
                 xhr.onEvent({
                     type: "load"
                 });
@@ -2521,13 +2620,13 @@ local.ajax = function (options, onError) {
     xhr.timerTimeout = setTimeout(function () {
         xhr.error = xhr.error || new Error(
             "onTimeout - timeout-error - "
-            + xhr.timeout + " ms - " + "ajax " + xhr.method + " " + xhr.url
+            + timeout + " ms - " + "ajax " + xhr.method + " " + xhr.url
         );
         xhr.abort();
         // cleanup requestStream and responseStream
         streamCleanup(xhr.requestStream);
         streamCleanup(xhr.responseStream);
-    }, xhr.timeout);
+    }, timeout);
     // increment ajaxProgressCounter
     local2.ajaxProgressCounter = local2.ajaxProgressCounter || 0;
     local2.ajaxProgressCounter += 1;
@@ -2542,9 +2641,12 @@ local.ajax = function (options, onError) {
         xhr.upload.addEventListener("progress", ajaxProgressUpdate);
     }
     // open url - corsForwardProxyHost
-    if (local2.corsForwardProxyHostIfNeeded && local2.corsForwardProxyHostIfNeeded(xhr)) {
+    if (local.functionOrNop(local2.corsForwardProxyHostIfNeeded)(xhr)) {
         xhr.open(xhr.method, local2.corsForwardProxyHostIfNeeded(xhr));
-        xhr.setRequestHeader("forward-proxy-headers", JSON.stringify(xhr.headers));
+        xhr.setRequestHeader(
+            "forward-proxy-headers",
+            JSON.stringify(xhr.headers)
+        );
         xhr.setRequestHeader("forward-proxy-url", xhr.url);
     // open url - default
     } else {
@@ -2554,11 +2656,15 @@ local.ajax = function (options, onError) {
     Object.keys(xhr.headers).forEach(function (key) {
         xhr.setRequestHeader(key, xhr.headers[key]);
     });
-    // send data - FormData
+    // send data
+    switch ((xhr.data && xhr.data.constructor) || true) {
+    // Blob
+    // https://developer.mozilla.org/en-US/docs/Web/API/Blob
+    case local2.Blob:
+    // FormData
     // https://developer.mozilla.org/en-US/docs/Web/API/FormData
-    if (local2.FormData && (xhr.data && xhr.data.constructor === local2.FormData)) {
-        // handle formData
-        xhr.data.read(function (error, data) {
+    case local2.FormData:
+        local2.blobRead(xhr.data, function (error, data) {
             if (error) {
                 xhr.onEvent(error);
                 return;
@@ -2566,9 +2672,8 @@ local.ajax = function (options, onError) {
             // send data
             xhr.send(data);
         });
-    // send data - default
-    } else {
-        // send data
+        break;
+    default:
         xhr.send(xhr.data);
     }
     return xhr;
@@ -2576,7 +2681,7 @@ local.ajax = function (options, onError) {
 
 local.assertJsonEqual = function (aa, bb, message) {
 /*
- * this function will assert jsonStringifyOrdered(aa) === JSON.stringify(bb)
+ * this function will assert jsonStringifyOrdered(<aa>) === JSON.stringify(<bb>)
  */
     aa = local.jsonStringifyOrdered(aa);
     bb = JSON.stringify(bb);
@@ -2585,7 +2690,7 @@ local.assertJsonEqual = function (aa, bb, message) {
 
 local.assertJsonNotEqual = function (aa, bb, message) {
 /*
- * this function will assert jsonStringifyOrdered(aa) !== JSON.stringify(bb)
+ * this function will assert jsonStringifyOrdered(<aa>) !== JSON.stringify(<bb>)
  */
     aa = local.jsonStringifyOrdered(aa);
     bb = JSON.stringify(bb);
@@ -2594,7 +2699,7 @@ local.assertJsonNotEqual = function (aa, bb, message) {
 
 local.base64FromBuffer = function (bff) {
 /*
- * this function will convert Uint8Array bff to base64
+ * this function will convert Uint8Array <bff> to base64
  * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
  */
     var ii;
@@ -2602,13 +2707,9 @@ local.base64FromBuffer = function (bff) {
     var text;
     var uint24;
     var uint6ToB64;
-    // convert utf8-string bff to Uint8Array
+    // convert utf8 -> Uint8Array
     if (typeof bff === "string") {
-        bff = (
-            (typeof Buffer === "function" && typeof Buffer.isBuffer === "function")
-            ? Buffer.from(bff)
-            : new window.TextEncoder().encode(bff)
-        );
+        bff = new TextEncoder().encode(bff);
     }
     bff = bff || [];
     text = "";
@@ -2648,7 +2749,7 @@ local.base64FromBuffer = function (bff) {
 
 local.base64ToBuffer = function (b64, mode) {
 /*
- * this function will convert b64 to Uint8Array
+ * this function will convert <b64> to Uint8Array
  * https://gist.github.com/wang-bin/7332335
  */
     var bff;
@@ -2685,58 +2786,48 @@ local.base64ToBuffer = function (b64, mode) {
     return local.bufferValidateAndCoerce(bff, mode);
 };
 
-local.base64ToString = function (b64) {
+local.base64ToUtf8 = function (b64) {
 /*
- * this function will convert b64 to utf8-string
+ * this function will convert <b64> -> utf8
  */
     return local.base64ToBuffer(b64, "string");
 };
 
 local.bufferValidateAndCoerce = function (bff, mode) {
 /*
- * this function will validate and coerce/convert
- * ArrayBuffer, String, or Uint8Array -> Buffer or String
+ * this function will validate and coerce/convert <bff> -> Buffer
+ * (or String if <mode> = "string")
  */
-    var isBuffer;
-    // validate not typeof number
-    if (typeof bff === "number") {
-        throw new Error("bufferValidateAndCoerce - value cannot be typeof number");
+    // validate not 0
+    if (bff !== 0) {
+        bff = bff || "";
     }
-    bff = bff || "";
-    isBuffer = typeof Buffer === "function" && typeof Buffer.isBuffer === "function";
-    // convert String -> Buffer
+    if (typeof bff === "string" && mode === "string") {
+        return bff;
+    }
+    // convert utf8 -> Uint8Array
     if (typeof bff === "string") {
-        return (
-            mode === "string"
-            ? bff
-            : isBuffer
-            ? Buffer.from(bff)
-            : new window.TextEncoder().encode(bff)
+        bff = (
+            local.isBrowser
+            ? new TextEncoder().encode(bff)
+            : Buffer.from(bff)
         );
-    }
-    if (Object.prototype.toString.call(bff) === "[object ArrayBuffer]") {
-        bff = new Uint8Array(bff);
-    }
     // validate instanceof Uint8Array
-    if (Object.prototype.toString.call(bff) !== "[object Uint8Array]") {
+    } else if (Object.prototype.toString.call(bff) !== "[object Uint8Array]") {
         throw new Error(
             "bufferValidateAndCoerce - value is not instanceof "
             + "ArrayBuffer, String, or Uint8Array"
         );
     }
+    // convert Uint8Array -> utf8
+    if (mode === "string") {
+        return new TextDecoder().decode(bff);
+    }
     // coerce Uint8Array -> Buffer
-    if (isBuffer) {
+    if (!local.isBrowser && !Buffer.isBuffer(bff)) {
         Object.setPrototypeOf(bff, Buffer.prototype);
     }
-    if (mode !== "string") {
-        return bff;
-    }
-    // convert Buffer -> String
-    return (
-        isBuffer
-        ? String(bff)
-        : new window.TextDecoder().decode(bff)
-    );
+    return bff;
 };
 
 local.childProcessSpawnWithUtility2 = function (script, onError) {
@@ -2744,7 +2835,8 @@ local.childProcessSpawnWithUtility2 = function (script, onError) {
  * this function will run child_process.spawn, with lib.utility2.sh sourced
  */
     require("child_process").spawn(
-        ". " + (process.env.npm_config_dir_utility2 || __dirname) + "/lib.utility2.sh; " + script,
+        ". " + (process.env.npm_config_dir_utility2 || __dirname)
+        + "/lib.utility2.sh; " + script,
         {
             shell: true,
             stdio: ["ignore", 1, 2]
@@ -2756,9 +2848,9 @@ local.childProcessSpawnWithUtility2 = function (script, onError) {
     });
 };
 
-local.cryptoAesXxxCbcRawDecrypt = function (options, onError) {
+local.cryptoAesXxxCbcRawDecrypt = function (option, onError) {
 /*
- * this function will aes-xxx-cbc decrypt with the given options
+ * this function will aes-xxx-cbc decrypt with given option
  * example usage:
     data = new Uint8Array([1,2,3]);
     key = '"'"'0123456789abcdef0123456789abcdef'"'"';
@@ -2778,15 +2870,15 @@ local.cryptoAesXxxCbcRawDecrypt = function (options, onError) {
     var iv;
     var key;
     // init key
-    key = new Uint8Array(0.5 * options.key.length);
+    key = new Uint8Array(0.5 * option.key.length);
     ii = 0;
     while (ii < key.byteLength) {
-        key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
+        key[ii] = parseInt(option.key.slice(2 * ii, 2 * ii + 2), 16);
         ii += 2;
     }
-    data = options.data;
+    data = option.data;
     // base64
-    if (options.mode === "base64") {
+    if (option.mode === "base64") {
         data = local.base64ToBuffer(data);
     }
     // normalize data
@@ -2797,8 +2889,8 @@ local.cryptoAesXxxCbcRawDecrypt = function (options, onError) {
     iv = data.subarray(0, 16);
     // optimization - create resized-view of data
     data = data.subarray(16);
-    crypto = typeof window === "object" && window.crypto;
-    if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === "function")) {
+    crypto = globalThis.crypto;
+    if (!local.isBrowser) {
         setTimeout(function () {
             crypto = require("crypto");
             cipher = crypto.createDecipheriv(
@@ -2822,9 +2914,9 @@ local.cryptoAesXxxCbcRawDecrypt = function (options, onError) {
     }).catch(onError);
 };
 
-local.cryptoAesXxxCbcRawEncrypt = function (options, onError) {
+local.cryptoAesXxxCbcRawEncrypt = function (option, onError) {
 /*
- * this function will aes-xxx-cbc encrypt with the given options
+ * this function will aes-xxx-cbc encrypt with given option
  * example usage:
     data = new Uint8Array([1,2,3]);
     key = '"'"'0123456789abcdef0123456789abcdef'"'"';
@@ -2844,17 +2936,17 @@ local.cryptoAesXxxCbcRawEncrypt = function (options, onError) {
     var iv;
     var key;
     // init key
-    key = new Uint8Array(0.5 * options.key.length);
+    key = new Uint8Array(0.5 * option.key.length);
     ii = 0;
     while (ii < key.byteLength) {
-        key[ii] = parseInt(options.key.slice(2 * ii, 2 * ii + 2), 16);
+        key[ii] = parseInt(option.key.slice(2 * ii, 2 * ii + 2), 16);
         ii += 2;
     }
-    data = options.data;
+    data = option.data;
     // init iv
     iv = new Uint8Array((((data.byteLength) >> 4) << 4) + 32);
-    crypto = typeof window === "object" && window.crypto;
-    if (!(crypto && crypto.subtle && typeof crypto.subtle.importKey === "function")) {
+    crypto = globalThis.crypto;
+    if (!local.isBrowser) {
         setTimeout(function () {
             crypto = require("crypto");
             // init iv
@@ -2867,7 +2959,7 @@ local.cryptoAesXxxCbcRawEncrypt = function (options, onError) {
             data = cipher.update(data);
             iv.set(data, 16);
             iv.set(cipher.final(), 16 + data.byteLength);
-            if (options.mode === "base64") {
+            if (option.mode === "base64") {
                 iv = local.base64FromBuffer(iv);
                 iv += "\n";
             }
@@ -2886,7 +2978,7 @@ local.cryptoAesXxxCbcRawEncrypt = function (options, onError) {
         }, key, data).then(function (data) {
             iv.set(new Uint8Array(data), 16);
             // base64
-            if (options.mode === "base64") {
+            if (option.mode === "base64") {
                 iv = local.base64FromBuffer(iv);
                 iv += "\n";
             }
@@ -2895,20 +2987,20 @@ local.cryptoAesXxxCbcRawEncrypt = function (options, onError) {
     }).catch(onError);
 };
 
-local.fsReadFileOrEmptyStringSync = function (file, options) {
+local.fsReadFileOrEmptyStringSync = function (file, option) {
 /*
  * this function will try to read the file or return empty-string
- * if options === '"'"'json'"'"', then try to JSON.parse the file or return null
+ * if option === '"'"'json'"'"', then try to JSON.parse the file or return null
  */
     try {
         return (
-            options === "json"
+            option === "json"
             ? JSON.parse(local.fs.readFileSync(file, "utf8"))
-            : local.fs.readFileSync(file, options)
+            : local.fs.readFileSync(file, option)
         );
     } catch (ignore) {
         return (
-            options === "json"
+            option === "json"
             ? {}
             : ""
         );
@@ -2930,9 +3022,16 @@ local.fsRmrSync = function (dir) {
 
 local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
 /*
- * this function will synchronously '"'"'mkdir -p'"'"' and write the data to file
+ * this function will synchronously '"'"'mkdir -p'"'"' and write the <data> to <file>
  */
-    if (mode === "noWrite") {
+    try {
+        if (
+            mode === "noWrite"
+            || typeof require("fs").writeFileSync !== "function"
+        ) {
+            return;
+        }
+    } catch (ignore) {
         return;
     }
     // try to write to file
@@ -3011,7 +3110,8 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
             circularSet.delete(obj);
             return tmp;
         }
-        // if obj is not an array, then recurse its items with object-keys sorted
+        // if obj is not an array,
+        // then recurse its items with object-keys sorted
         tmp = "{" + Object.keys(obj)
         // sort object-keys
         .sort()
@@ -3031,7 +3131,6 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
     };
     circularSet = new Set();
     return JSON.stringify((
-        // ternary-condition
         (typeof obj === "object" && obj)
         // recurse
         ? JSON.parse(stringify(obj))
@@ -3055,7 +3154,10 @@ local.moduleDirname = function (module, modulePathList) {
     .concat([process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"])
     .some(function (modulePath) {
         try {
-            result = require("path").resolve(process.cwd(), modulePath + "/" + module);
+            result = require("path").resolve(
+                process.cwd(),
+                modulePath + "/" + module
+            );
             result = require("fs").statSync(result).isDirectory() && result;
             return result;
         } catch (ignore) {
@@ -3098,7 +3200,8 @@ local.objectSetDefault = function (dict, defaults, depth) {
             // dict2 is a non-null and non-array object
             && typeof dict2 === "object" && dict2 && !Array.isArray(dict2)
             // defaults2 is a non-null and non-array object
-            && typeof defaults2 === "object" && defaults2 && !Array.isArray(defaults2)
+            && typeof defaults2 === "object" && defaults2
+            && !Array.isArray(defaults2)
         ) {
             // recurse
             local.objectSetDefault(dict2, defaults2, depth - 1);
@@ -3195,21 +3298,21 @@ local.onErrorWithStack = function (onError) {
     return onError2;
 };
 
-local.onNext = function (options, onError) {
+local.onNext = function (option, onError) {
 /*
- * this function will wrap onError inside the recursive function options.onNext,
+ * this function will wrap onError inside the recursive function option.onNext,
  * and append the current stack to any error
  */
-    options.onNext = local.onErrorWithStack(function (error, data, meta) {
+    option.onNext = local.onErrorWithStack(function (error, data, meta) {
         try {
-            options.modeNext += (
-                (error && !options.modeErrorIgnore)
+            option.modeNext += (
+                (error && !option.modeErrorIgnore)
                 ? 1000
                 : 1
             );
-            if (options.modeDebug) {
+            if (option.modeDebug) {
                 console.error("onNext - " + JSON.stringify({
-                    modeNext: options.modeNext,
+                    modeNext: option.modeNext,
                     errorMessage: error && error.message
                 }));
                 if (error && error.stack) {
@@ -3219,14 +3322,14 @@ local.onNext = function (options, onError) {
             onError(error, data, meta);
         } catch (errorCaught) {
             // throw errorCaught to break infinite recursion-loop
-            if (options.errorCaught) {
-                local.assertThrow(null, options.errorCaught);
+            if (option.errorCaught) {
+                local.assertThrow(null, option.errorCaught);
             }
-            options.errorCaught = errorCaught;
-            options.onNext(errorCaught, data, meta);
+            option.errorCaught = errorCaught;
+            option.onNext(errorCaught, data, meta);
         }
     });
-    return options;
+    return option;
 };
 
 local.onParallel = function (onError, onEach, onRetry) {
@@ -3247,7 +3350,9 @@ local.onParallel = function (onError, onEach, onRetry) {
         onParallel.counter -= 1;
         // validate counter
         if (!(onParallel.counter >= 0 || error || onParallel.error)) {
-            error = new Error("invalid onParallel.counter = " + onParallel.counter);
+            error = new Error(
+                "invalid onParallel.counter = " + onParallel.counter
+            );
         // ensure onError is run only once
         } else if (onParallel.counter < 0) {
             return;
@@ -3271,37 +3376,37 @@ local.onParallel = function (onError, onEach, onRetry) {
     return onParallel;
 };
 
-local.onParallelList = function (options, onEach, onError) {
+local.onParallelList = function (option, onEach, onError) {
 /*
  * this function will
  * 1. async-run onEach in parallel,
- *    with the given options.rateLimit and options.retryLimit
- * 2. call onError when onParallel.ii + 1 === options.list.length
+ *    with given option.rateLimit and option.retryLimit
+ * 2. call onError when onParallel.ii + 1 === option.list.length
  */
     var isListEnd;
     var onEach2;
     var onParallel;
-    options.list = options.list || [];
+    option.list = option.list || [];
     onEach2 = function () {
         while (true) {
-            if (!(onParallel.ii + 1 < options.list.length)) {
+            if (!(onParallel.ii + 1 < option.list.length)) {
                 isListEnd = true;
                 return;
             }
-            if (!(onParallel.counter < options.rateLimit + 1)) {
+            if (!(onParallel.counter < option.rateLimit + 1)) {
                 return;
             }
             onParallel.ii += 1;
             onEach({
-                element: options.list[onParallel.ii],
+                element: option.list[onParallel.ii],
                 ii: onParallel.ii,
-                list: options.list,
+                list: option.list,
                 retry: 0
             }, onParallel);
         }
     };
     onParallel = local.onParallel(onError, onEach2, function (error, data) {
-        if (error && data && data.retry < options.retryLimit) {
+        if (error && data && data.retry < option.retryLimit) {
             local.onErrorDefault(error);
             data.retry += 1;
             setTimeout(function () {
@@ -3310,16 +3415,16 @@ local.onParallelList = function (options, onEach, onError) {
             }, 1000);
             return true;
         }
-        // restart if options.list has grown
-        if (isListEnd && (onParallel.ii + 1 < options.list.length)) {
+        // restart if option.list has grown
+        if (isListEnd && (onParallel.ii + 1 < option.list.length)) {
             isListEnd = null;
             onEach2();
         }
     });
     onParallel.ii = -1;
-    options.rateLimit = Number(options.rateLimit) || 6;
-    options.rateLimit = Math.max(options.rateLimit, 1);
-    options.retryLimit = Number(options.retryLimit) || 2;
+    option.rateLimit = Number(option.rateLimit) || 6;
+    option.rateLimit = Math.max(option.rateLimit, 1);
+    option.retryLimit = Number(option.retryLimit) || 2;
     onParallel.counter += 1;
     onEach2();
     onParallel();
@@ -3391,47 +3496,47 @@ local.stringMerge = function (str1, str2, rgx) {
     return str1;
 };
 
-local.templateRenderMyApp = function (template, options) {
+local.templateRenderMyApp = function (template, option) {
 /*
- * this function will render the my-app-lite template with the given options.packageJson
+ * this function will render the my-app-lite template with given option.packageJson
  */
-    options.packageJson = local.fsReadFileOrEmptyStringSync("package.json", "json");
-    local.objectSetDefault(options.packageJson, {
-        nameLib: options.packageJson.name.replace((
+    option.packageJson = local.fsReadFileOrEmptyStringSync("package.json", "json");
+    local.objectSetDefault(option.packageJson, {
+        nameLib: option.packageJson.name.replace((
             /\W/g
         ), "_"),
         repository: {
-            url: "https://github.com/kaizhu256/node-" + options.packageJson.name + ".git"
+            url: "https://github.com/kaizhu256/node-" + option.packageJson.name + ".git"
         }
     }, 2);
-    options.githubRepo = options.packageJson.repository.url
+    option.githubRepo = option.packageJson.repository.url
     .replace((
         /\.git$/
     ), "").split("/").slice(-2);
     template = template.replace((
         /kaizhu256(\.github\.io\/|%252F|\/)/g
-    ), options.githubRepo[0] + ("$1"));
+    ), option.githubRepo[0] + ("$1"));
     template = template.replace((
         /node-my-app-lite/g
-    ), options.githubRepo[1]);
+    ), option.githubRepo[1]);
     template = template.replace((
         /\bh1-my-app\b/g
     ), (
-        options.packageJson.nameHeroku
-        || ("h1-" + options.packageJson.nameLib.replace((
+        option.packageJson.nameHeroku
+        || ("h1-" + option.packageJson.nameLib.replace((
             /_/g
         ), "-"))
     ));
     template = template.replace((
         /my-app-lite/g
-    ), options.packageJson.name);
+    ), option.packageJson.name);
     template = template.replace((
         /my_app/g
-    ), options.packageJson.nameLib);
+    ), option.packageJson.nameLib);
     template = template.replace((
         /\{\{packageJson\.(\S+)\}\}/g
     ), function (ignore, match1) {
-        return options.packageJson[match1];
+        return option.packageJson[match1];
     });
     return template;
 };
@@ -3457,10 +3562,6 @@ local.throwError = function () {
     shift
     case "$COMMAND" in
     -*)
-        shBuildInit
-        lib.utility2.js "$COMMAND" "$@"
-        ;;
-    utility2.*)
         shBuildInit
         lib.utility2.js "$COMMAND" "$@"
         ;;
@@ -3490,6 +3591,10 @@ local.throwError = function () {
         shBuildInit
         shRunWithScreenshotTxt shNpmTest "$@"
         ;;
+    utility2.*)
+        shBuildInit
+        lib.utility2.js "$COMMAND" "$@"
+        ;;
     utility2Dirname)
         shBuildInit
         printf "$npm_config_dir_utility2\n"
@@ -3502,7 +3607,7 @@ local.throwError = function () {
 )}
 
 shMediaHlsEncrypt () {(set -e
-# this function encrypt the hls-media with the given hls.m3u8 file
+# this function encrypt the hls-media with given hls.m3u8 file
 # example usage:
 # CRYPTO_AES_KEY_MEDIA=0123456789abcdef0123456789abcdef shMediaHlsEncrypt
     node -e "$UTILITY2_MACRO_JS"'
@@ -3579,7 +3684,7 @@ console.log(local.moduleDirname(process.argv[1], module.paths));
 )}
 
 shNpmDeprecateAlias () {(set -e
-# this function will deprecate the npm-package $NAME with the given $MESSAGE
+# this function will deprecate the npm-package $NAME with given $MESSAGE
 # example usage:
 # shNpmDeprecateAlias deprecated-package
     shEnvSanitize
@@ -3626,36 +3731,6 @@ shNpmInstallTarball () {(set -e
     mkdir -p "node_modules/$NAME"
     curl -Lfs "$(npm view "$NAME" dist.tarball)" | \
         tar --strip-components 1 -C "node_modules/$NAME" -xzf -
-)}
-
-shNpmInstallWithPeerDependencies () {(set -e
-# this function will npm-install "$@" with peer-dependencies auto-installed
-    shEnvSanitize
-    export MODE_BUILD=shNpmInstallWithPeerDependencies
-    shBuildPrint "npm-installing with peer-dependencies ..."
-    FILE="$npm_config_dir_tmp/npmInstallWithPeerDependencies"
-    npm install "$@" | tee "$FILE"
-    eval "$(node -e '
-/* jslint utility2:true */
-(function () {
-"use strict";
-var dict;
-dict = {};
-require("fs").readFileSync(process.argv[1], "utf8").replace((
-    /\u0020UNMET\u0020PEER\u0020DEPENDENCY\u0020(\S+)/g
-), function (ignore, match1) {
-    match1 = match1.split("@");
-    dict[match1[0]] = dict[match1[0]] || (match1[1] || "").trim();
-});
-Object.keys(dict).forEach(function (key) {
-    console.error("npm install " + key + "@" + dict[key]);
-    console.log("npm install " + key + "@" + dict[key]);
-});
-console.log("true");
-}());
-' "$FILE")"
-    npm install "$@"
-    shBuildPrint "... npm-installed with peer-dependencies"
 )}
 
 shNpmPackageCliHelpCreate () {(set -e
@@ -3857,7 +3932,7 @@ shPasswordRandom () {(set -e
 )}
 
 shPidByPort () {(set -e
-# this function will print the process pid for the given port $1
+# this function will print the process pid for given port $1
 # https://stackoverflow.com/questions/4421633/who-is-listening-on-a-given-tcp-port-on-mac-os-x
 # https://unix.stackexchange.com/questions/106561/finding-the-pid-of-the-process-using-a-specific-port
     case "$(uname)" in
@@ -4258,7 +4333,7 @@ shTravisRepoBuildRestart () {(set -e
 )}
 
 shTravisSync () {(set -e
-# this function will sync travis-ci with the given $TRAVIS_ACCESS_TOKEN
+# this function will sync travis-ci with given $TRAVIS_ACCESS_TOKEN
 # this is an expensive operation that will use up your github rate-limit quota
     curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
         "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/users/sync"
@@ -4466,7 +4541,7 @@ shUtility2DependentsSync () {(set -e
 )}
 
 shUtility2GitCommit () {(set -e
-# this function will git-commit $UTILITY2_DEPENDENTS with the given $MESSAGE
+# this function will git-commit $UTILITY2_DEPENDENTS with given $MESSAGE
     # init $MESSAGE
     MESSAGE="$1"
     for DIR in $UTILITY2_DEPENDENTS
@@ -4478,7 +4553,7 @@ shUtility2GitCommit () {(set -e
 )}
 
 shUtility2GitCommitAndPush () {(set -e
-# this function will git-commit and git-push $UTILITY2_DEPENDENTS with the given $MESSAGE
+# this function will git-commit and git-push $UTILITY2_DEPENDENTS with given $MESSAGE
     # init $MESSAGE
     MESSAGE="$1"
     for DIR in $UTILITY2_DEPENDENTS

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.db.js (2018.9.1)
+ * lib.db.js (2018.12.30)
  * https://github.com/kaizhu256/node-db-lite
  * this zero-dependency package will provide a persistent, in-browser database, with a working web-demo
  *
@@ -78,7 +78,7 @@
         && window === globalThis
         && typeof window.XMLHttpRequest === "function"
         && window.document
-        && typeof window.document.querySelectorAll === "function"
+        && typeof window.document.querySelector === "function"
     );
     // init function
     local.assertThrow = function (passed, message) {
@@ -127,6 +127,22 @@
      * this function will do nothing
      */
         return;
+    };
+    local.objectAssignDefault = function (target, source) {
+    /*
+     * this function will if items from <target> are
+     * null, undefined, or empty-string,
+     * then overwrite them with items from <source>
+     */
+        Object.keys(source).forEach(function (key) {
+            if (
+                target[key] === null
+                || target[key] === undefined
+                || target[key] === ""
+            ) {
+                target[key] = target[key] || source[key];
+            }
+        });
     };
     // require builtin
     if (!local.isBrowser) {
@@ -190,7 +206,7 @@ local.db = local;
 
 
 /* validateLineSortedReset */
-local.cliRun = function (options) {
+local.cliRun = function (option) {
 /*
  * this function will run the cli
  */
@@ -226,10 +242,10 @@ local.cliRun = function (options) {
         file = __filename.replace((
             /.*\//
         ), "");
-        options = Object.assign({}, options);
+        option = Object.assign({}, option);
         packageJson = require("./package.json");
         // validate comment
-        options.rgxComment = options.rgxComment || (
+        option.rgxComment = option.rgxComment || (
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         textDict = {};
@@ -248,7 +264,7 @@ local.cliRun = function (options) {
                 return;
             }
             try {
-                commandList[ii] = options.rgxComment.exec(text);
+                commandList[ii] = option.rgxComment.exec(text);
                 commandList[ii] = {
                     argList: (commandList[ii][1] || "").trim(),
                     command: [key],
@@ -257,7 +273,8 @@ local.cliRun = function (options) {
             } catch (ignore) {
                 local.assertThrow(null, new Error(
                     "cliRun - cannot parse comment in COMMAND "
-                    + key + ":\nnew RegExp(" + JSON.stringify(options.rgxComment.source)
+                    + key + ":\nnew RegExp("
+                    + JSON.stringify(option.rgxComment.source)
                     + ").exec(" + JSON.stringify(text)
                     .replace((
                         /\\\\/g
@@ -271,7 +288,9 @@ local.cliRun = function (options) {
                 ));
             }
         });
-        console.log(packageJson.name + " (" + packageJson.version + ")\n\n" + commandList
+        text = "";
+        text += packageJson.name + " (" + packageJson.version + ")\n\n";
+        text += commandList
         .filter(function (element) {
             return element;
         })
@@ -301,7 +320,8 @@ local.cliRun = function (options) {
                 + element.argList.join("  ")
             );
         })
-        .join("\n\n"));
+        .join("\n\n");
+        console.log(text);
     };
     local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
     local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
@@ -313,7 +333,7 @@ local.cliRun = function (options) {
      * will start interactive-mode
      */
         globalThis.local = local;
-        local.functionOrNop(local.replStart || require("repl").start)({
+        local.identity(local.replStart || require("repl").start)({
             useGlobal: true
         });
     };
@@ -329,7 +349,10 @@ local.cliRun = function (options) {
      */
         console.log(require(__dirname + "/package.json").version);
     };
-    local.cliDict["--version"] = local.cliDict["--version"] || local.cliDict._version;
+    local.cliDict["--version"] = (
+        local.cliDict["--version"]
+        || local.cliDict._version
+    );
     local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
     // default to --help command if no arguments are given
     if (process.argv.length <= 2) {
@@ -395,7 +418,8 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
             circularSet.delete(obj);
             return tmp;
         }
-        // if obj is not an array, then recurse its items with object-keys sorted
+        // if obj is not an array,
+        // then recurse its items with object-keys sorted
         tmp = "{" + Object.keys(obj)
         // sort object-keys
         .sort()
@@ -415,7 +439,6 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
     };
     circularSet = new Set();
     return JSON.stringify((
-        // ternary-condition
         (typeof obj === "object" && obj)
         // recurse
         ? JSON.parse(stringify(obj))
@@ -538,7 +561,9 @@ local.onParallel = function (onError, onEach, onRetry) {
         onParallel.counter -= 1;
         // validate counter
         if (!(onParallel.counter >= 0 || error || onParallel.error)) {
-            error = new Error("invalid onParallel.counter = " + onParallel.counter);
+            error = new Error(
+                "invalid onParallel.counter = " + onParallel.counter
+            );
         // ensure onError is run only once
         } else if (onParallel.counter < 0) {
             return;
@@ -590,7 +615,10 @@ local.replStart = function () {
         var onError2;
         onError2 = function (error, data) {
             // debug error
-            globalThis.utility2_debugReplError = error || globalThis.utility2_debugReplError;
+            globalThis.utility2_debugReplError = (
+                error
+                || globalThis.utility2_debugReplError
+            );
             onError(error, data);
         };
         script.replace((
@@ -635,17 +663,20 @@ local.replStart = function () {
                 break;
             // syntax-sugar to map text with charCodeAt
             case "charCode":
-                script = "console.error(" + JSON.stringify(
+                console.error(
                     match2.split("").map(function (chr) {
-                        return "\\u" + chr.charCodeAt(0).toString(16).padStart(4, 0);
+                        return (
+                            "\\u"
+                            + chr.charCodeAt(0).toString(16).padStart(4, 0)
+                        );
                     }).join("")
-                ) + ")\n";
+                );
+                script = "\n";
                 break;
             // syntax-sugar to sort chr
             case "charSort":
-                script = "console.error(" + JSON.stringify(
-                    match2.split("").sort().join("")
-                ) + ")\n";
+                console.error(JSON.stringify(match2.split("").sort().join("")));
+                script = "\n";
                 break;
             // syntax-sugar to grep current dir
             case "grep":
@@ -691,14 +722,15 @@ vendor)s{0,1}(\\b|_)\
                 script = "\n";
                 break;
             // syntax-sugar to list object's keys, sorted by item-type
-            // console.log(Object.keys(globalThis).map(function(key){return(typeof window[key]==='object'&&window[key]&&window[key]===globalThis[key]?'globalThis':typeof window[key])+' '+key;}).sort().join('\n'))
+            // console.error(Object.keys(global).map(function(key){return(typeof global[key]==='object'&&global[key]&&global[key]===global[key]?'global':typeof global[key])+' '+key;}).sort().join('\n')) // jslint ignore:line
             case "keys":
                 script = (
-                    "console.log(Object.keys(" + match2 + ").map(function(key){return("
+                    "console.error(Object.keys(" + match2
+                    + ").map(function(key){return("
                     + "typeof " + match2 + "[key]==='object'&&"
                     + match2 + "[key]&&"
-                    + match2 + "[key]===globalThis[key]"
-                    + "?'globalThis'"
+                    + match2 + "[key]===global[key]"
+                    + "?'global'"
                     + ":typeof " + match2 + "[key]"
                     + ")+' '+key;"
                     + "}).sort().join('\\n'))\n"
@@ -711,7 +743,9 @@ vendor)s{0,1}(\\b|_)\
             // syntax-sugar to read file
             case "readFile":
                 try {
-                    globalThis.readFileData = require("fs").readFileSync(match2, "utf8");
+                    console.error(JSON.stringify(
+                        require("fs").readFileSync(match2, "utf8")
+                    ));
                 } catch (errorCaught) {
                     console.error(errorCaught);
                 }
@@ -740,7 +774,9 @@ vendor)s{0,1}(\\b|_)\
         }()));
     };
     // start tcp-server
-    globalThis.utility2_serverReplTcp1 = require("net").createServer(function (socket) {
+    globalThis.utility2_serverReplTcp1 = require("net").createServer(function (
+        socket
+    ) {
         // init socket
         that.socket = socket;
         that.socket.on("data", that.write.bind(that));
@@ -749,7 +785,9 @@ vendor)s{0,1}(\\b|_)\
     });
     // coverage-hack - ignore else-statement
     local.nop(process.env.PORT_REPL && (function () {
-        console.error("repl-server listening on tcp-port " + process.env.PORT_REPL);
+        console.error(
+            "repl-server listening on tcp-port " + process.env.PORT_REPL
+        );
         globalThis.utility2_serverReplTcp1.listen(process.env.PORT_REPL);
     }()));
 };
@@ -807,9 +845,9 @@ clear = function (onError) {
     }, onError);
 };
 
-defer = function (options, onError) {
+defer = function (option, onError) {
 /*
- * this function will defer options.action until storage is ready
+ * this function will defer option.action until storage is ready
  */
     var data;
     var isDone;
@@ -823,7 +861,7 @@ defer = function (options, onError) {
     };
     if (!storage) {
         deferList.push(function () {
-            defer(options, onError);
+            defer(option, onError);
         });
         init();
         return;
@@ -840,7 +878,7 @@ defer = function (options, onError) {
                 data || request.result || ""
             );
         };
-        switch (options.action) {
+        switch (option.action) {
         case "clear":
         case "removeItem":
         case "setItem":
@@ -853,18 +891,19 @@ defer = function (options, onError) {
             .transaction(storageDir, "readonly")
             .objectStore(storageDir);
         }
-        switch (options.action) {
+        switch (option.action) {
         case "clear":
             request = objectStore.clear();
             break;
         case "getItem":
-            request = objectStore.get(String(options.key));
+            request = objectStore.get(String(option.key));
             break;
         case "keys":
             data = [];
             request = objectStore.openCursor();
             request.onsuccess = function () {
                 if (!request.result) {
+                    onError2();
                     return;
                 }
                 data.push(request.result.key);
@@ -875,10 +914,10 @@ defer = function (options, onError) {
             request = objectStore.count();
             break;
         case "removeItem":
-            request = objectStore.delete(String(options.key));
+            request = objectStore.delete(String(option.key));
             break;
         case "setItem":
-            request = objectStore.put(options.value, String(options.key));
+            request = objectStore.put(option.value, String(option.key));
             break;
         }
         ["onabort", "onerror", "onsuccess"].forEach(function (handler) {
@@ -887,7 +926,7 @@ defer = function (options, onError) {
         // debug request
         local._debugStorageRequest = request;
     } else {
-        switch (options.action) {
+        switch (option.action) {
         case "clear":
             child_process.spawnSync("rm -f " + storage + "/*", {
                 shell: true,
@@ -897,7 +936,7 @@ defer = function (options, onError) {
             break;
         case "getItem":
             fs.readFile(
-                storage + "/" + encodeURIComponent(String(options.key)),
+                storage + "/" + encodeURIComponent(String(option.key)),
                 "utf8",
                 function (ignore, data) {
                     onError(null, data || "");
@@ -916,7 +955,7 @@ defer = function (options, onError) {
             break;
         case "removeItem":
             fs.unlink(
-                storage + "/" + encodeURIComponent(String(options.key)),
+                storage + "/" + encodeURIComponent(String(option.key)),
                 // ignore error
                 function () {
                     onError();
@@ -926,13 +965,13 @@ defer = function (options, onError) {
         case "setItem":
             tmp = os.tmpdir() + "/" + Date.now() + Math.random();
             // save to tmp
-            fs.writeFile(tmp, options.value, function (error) {
+            fs.writeFile(tmp, option.value, function (error) {
                 // validate no error occurred
                 local.assertThrow(!error, error);
                 // rename tmp to key
                 fs.rename(
                     tmp,
-                    storage + "/" + encodeURIComponent(String(options.key)),
+                    storage + "/" + encodeURIComponent(String(option.key)),
                     onError
                 );
             });
@@ -945,7 +984,7 @@ deferList = [];
 
 getItem = function (key, onError) {
 /*
- * this function will get the item with the given key from storage
+ * this function will get the item with given key from storage
  */
     defer({
         action: "getItem",
@@ -1023,7 +1062,7 @@ length = function (onError) {
 
 removeItem = function (key, onError) {
 /*
- * this function will remove the item with the given key from storage
+ * this function will remove the item with given key from storage
  */
     defer({
         action: "removeItem",
@@ -1033,7 +1072,7 @@ removeItem = function (key, onError) {
 
 setItem = function (key, value, onError) {
 /*
- * this function will set the item with the given key and value to storage
+ * this function will set the item with given key and value to storage
  */
     defer({
         action: "setItem",
@@ -1060,11 +1099,11 @@ local.storageSetItem = setItem;
 
 // run shared js-env code - lib.dbTable.js
 (function () {
-local._DbTable = function (options) {
+local._DbTable = function (option) {
 /*
  * this function will create a dbTable
  */
-    this.name = String(options.name);
+    this.name = String(option.name);
     // register dbTable in dbTableDict
     local.dbTableDict[this.name] = this;
     this.dbRowList = [];
@@ -1075,7 +1114,7 @@ local._DbTable = function (options) {
         dict: {}
     }];
     this.onSaveList = [];
-    this.sizeLimit = options.sizeLimit || 0;
+    this.sizeLimit = option.sizeLimit || 0;
 };
 
 local._DbTable.prototype._cleanup = function () {
@@ -1116,7 +1155,7 @@ local._DbTable.prototype._crudGetManyByQuery = function (
 ) {
 /*
  * this function will get the dbRow's in the dbTable,
- * with the given query, sort, skip, and limit
+ * with given query, sort, skip, and limit
  */
     var ii;
     var result;
@@ -1157,7 +1196,7 @@ local._DbTable.prototype._crudGetManyByQuery = function (
 
 local._DbTable.prototype._crudGetOneById = function (idDict) {
 /*
- * this function will get the dbRow in the dbTable with the given idDict
+ * this function will get the dbRow in the dbTable with given idDict
  */
     var id;
     var result;
@@ -1176,7 +1215,7 @@ local._DbTable.prototype._crudGetOneById = function (idDict) {
 
 local._DbTable.prototype._crudRemoveOneById = function (idDict, circularList) {
 /*
- * this function will remove the dbRow from the dbTable with the given idDict
+ * this function will remove the dbRow from the dbTable with given idDict
  */
     var id;
     var result;
@@ -1211,7 +1250,7 @@ local._DbTable.prototype._crudRemoveOneById = function (idDict, circularList) {
 
 local._DbTable.prototype._crudSetOneById = function (dbRow) {
 /*
- * this function will set the dbRow into the dbTable with the given dbRow._id
+ * this function will set the dbRow into the dbTable with given dbRow._id
  * WARNING - existing dbRow with conflicting dbRow._id will be removed
  */
     var existing;
@@ -1280,7 +1319,7 @@ local._DbTable.prototype._crudSetOneById = function (dbRow) {
 local._DbTable.prototype._crudUpdateOneById = function (dbRow) {
 /*
  * this function will update the dbRow in the dbTable,
- * if it exists with the given dbRow._id
+ * if it exists with given dbRow._id
  * WARNING
  * existing dbRow's with conflicting unique-keys (besides the one being updated)
  * will be removed
@@ -1317,7 +1356,7 @@ local._DbTable.prototype.crudCountAll = function (onError) {
 
 local._DbTable.prototype.crudCountManyByQuery = function (query, onError) {
 /*
- * this function will count the number of dbRow's in the dbTable with the given query
+ * this function will count the number of dbRow's in the dbTable with given query
  */
     this._cleanup();
     return local.setTimeoutOnError(
@@ -1330,7 +1369,7 @@ local._DbTable.prototype.crudCountManyByQuery = function (query, onError) {
 
 local._DbTable.prototype.crudGetManyById = function (idDictList, onError) {
 /*
- * this function will get the dbRow's in the dbTable with the given idDictList
+ * this function will get the dbRow's in the dbTable with given idDictList
  */
     var that;
     this._cleanup();
@@ -1342,27 +1381,27 @@ local._DbTable.prototype.crudGetManyById = function (idDictList, onError) {
     ));
 };
 
-local._DbTable.prototype.crudGetManyByQuery = function (options, onError) {
+local._DbTable.prototype.crudGetManyByQuery = function (option, onError) {
 /*
- * this function will get the dbRow's in the dbTable with the given options.query
+ * this function will get the dbRow's in the dbTable with given option.query
  */
     this._cleanup();
-    options = local.objectSetOverride(options);
+    option = local.objectSetOverride(option);
     return local.setTimeoutOnError(onError, 0, null, local.dbRowProject(
         this._crudGetManyByQuery(
-            options.query,
-            options.sort || this.sortDefault,
-            options.skip,
-            options.limit,
-            options.shuffle
+            option.query,
+            option.sort || this.sortDefault,
+            option.skip,
+            option.limit,
+            option.shuffle
         ),
-        options.fieldList
+        option.fieldList
     ));
 };
 
 local._DbTable.prototype.crudGetOneById = function (idDict, onError) {
 /*
- * this function will get the dbRow in the dbTable with the given idDict
+ * this function will get the dbRow in the dbTable with given idDict
  */
     this._cleanup();
     return local.setTimeoutOnError(onError, 0, null, local.dbRowProject(
@@ -1372,7 +1411,7 @@ local._DbTable.prototype.crudGetOneById = function (idDict, onError) {
 
 local._DbTable.prototype.crudGetOneByQuery = function (query, onError) {
 /*
- * this function will get the dbRow in the dbTable with the given query
+ * this function will get the dbRow in the dbTable with given query
  */
     var ii;
     var result;
@@ -1417,7 +1456,7 @@ local._DbTable.prototype.crudRemoveAll = function (onError) {
 
 local._DbTable.prototype.crudRemoveManyById = function (idDictList, onError) {
 /*
- * this function will remove the dbRow's from the dbTable with the given idDictList
+ * this function will remove the dbRow's from the dbTable with given idDictList
  */
     var that;
     that = this;
@@ -1430,7 +1469,7 @@ local._DbTable.prototype.crudRemoveManyById = function (idDictList, onError) {
 
 local._DbTable.prototype.crudRemoveManyByQuery = function (query, onError) {
 /*
- * this function will remove the dbRow's from the dbTable with the given query
+ * this function will remove the dbRow's from the dbTable with given query
  */
     var that;
     that = this;
@@ -1443,7 +1482,7 @@ local._DbTable.prototype.crudRemoveManyByQuery = function (query, onError) {
 
 local._DbTable.prototype.crudRemoveOneById = function (idDict, onError) {
 /*
- * this function will remove the dbRow from the dbTable with the given idDict
+ * this function will remove the dbRow from the dbTable with given idDict
  */
     return local.setTimeoutOnError(onError, 0, null, local.dbRowProject(
         this._crudRemoveOneById(idDict)
@@ -1465,7 +1504,7 @@ local._DbTable.prototype.crudSetManyById = function (dbRowList, onError) {
 
 local._DbTable.prototype.crudSetOneById = function (dbRow, onError) {
 /*
- * this function will set the dbRow into the dbTable with the given dbRow._id
+ * this function will set the dbRow into the dbTable with given dbRow._id
  */
     return local.setTimeoutOnError(onError, 0, null, local.dbRowProject(
         this._crudSetOneById(dbRow)
@@ -1475,7 +1514,7 @@ local._DbTable.prototype.crudSetOneById = function (dbRow, onError) {
 local._DbTable.prototype.crudUpdateManyById = function (dbRowList, onError) {
 /*
  * this function will update the dbRowList in the dbTable,
- * if they exist with the given dbRow._id's
+ * if they exist with given dbRow._id's
  */
     var that;
     that = this;
@@ -1488,7 +1527,7 @@ local._DbTable.prototype.crudUpdateManyById = function (dbRowList, onError) {
 
 local._DbTable.prototype.crudUpdateManyByQuery = function (query, dbRow, onError) {
 /*
- * this function will update the dbRow's in the dbTable with the given query
+ * this function will update the dbRow's in the dbTable with given query
  */
     var result;
     var that;
@@ -1505,7 +1544,7 @@ local._DbTable.prototype.crudUpdateManyByQuery = function (query, dbRow, onError
 local._DbTable.prototype.crudUpdateOneById = function (dbRow, onError) {
 /*
  * this function will update the dbRow in the dbTable,
- * if it exists with the given dbRow._id
+ * if it exists with given dbRow._id
  */
     return local.setTimeoutOnError(onError, 0, null, local.dbRowProject(
         this._crudUpdateOneById(dbRow)
@@ -1551,26 +1590,26 @@ local._DbTable.prototype.export = function (onError) {
     return local.setTimeoutOnError(onError, 0, null, result.trim());
 };
 
-local._DbTable.prototype.idIndexCreate = function (options, onError) {
+local._DbTable.prototype.idIndexCreate = function (option, onError) {
 /*
- * this function will create an idIndex with the given options.name
+ * this function will create an idIndex with given option.name
  */
     var dbRow;
     var idIndex;
     var ii;
     var name;
-    options = local.objectSetOverride(options);
-    name = String(options.name);
+    option = local.objectSetOverride(option);
+    name = String(option.name);
     // disallow idIndex with dot-name
     if (name.indexOf(".") >= 0 || name === "_id") {
         return local.setTimeoutOnError(onError);
     }
     // remove existing idIndex
-    this.idIndexRemove(options);
+    this.idIndexRemove(option);
     // init idIndex
     idIndex = {
         dict: {},
-        isInteger: Boolean(options.isInteger),
+        isInteger: Boolean(option.isInteger),
         name: name
     };
     this.idIndexList.push(idIndex);
@@ -1589,13 +1628,13 @@ local._DbTable.prototype.idIndexCreate = function (options, onError) {
     return local.setTimeoutOnError(onError);
 };
 
-local._DbTable.prototype.idIndexRemove = function (options, onError) {
+local._DbTable.prototype.idIndexRemove = function (option, onError) {
 /*
- * this function will remove the idIndex with the given options.name
+ * this function will remove the idIndex with given option.name
  */
     var name;
-    options = local.objectSetOverride(options);
-    name = String(options.name);
+    option = local.objectSetOverride(option);
+    name = String(option.name);
     this.idIndexList = this.idIndexList.filter(function (idIndex) {
         return idIndex.name !== name || idIndex.name === "_id";
     });
@@ -1747,6 +1786,7 @@ local.dbLoad = function (onError) {
     });
     local.storageKeys(function (error, data) {
         onParallel.counter += 1;
+        // validate no error occurred
         onParallel.counter += 1;
         onParallel(error);
         (data || []).forEach(function (key) {
@@ -1766,7 +1806,7 @@ local.dbLoad = function (onError) {
 
 local.dbReset = function (dbSeedList, onError) {
 /*
- * this function will drop and seed the db with the given dbSeedList
+ * this function will drop and seed the db with given dbSeedList
  */
     var onParallel;
     onParallel = globalThis.utility2_onReadyBefore || local.onParallel(onError);
@@ -1785,7 +1825,7 @@ local.dbReset = function (dbSeedList, onError) {
 
 local.dbRowGetItem = function (dbRow, key) {
 /*
- * this function will get the item with the given key from dbRow
+ * this function will get the item with given key from dbRow
  */
     var ii;
     var value;
@@ -1806,7 +1846,7 @@ local.dbRowGetItem = function (dbRow, key) {
 
 local.dbRowListGetManyByOperator = function (dbRowList, fieldName, operator, bb, not) {
 /*
- * this function will get the dbRow's in dbRowList with the given operator
+ * this function will get the dbRow's in dbRowList with given operator
  */
     var fieldValue;
     var ii;
@@ -1929,7 +1969,7 @@ local.dbRowListGetManyByOperator = function (dbRowList, fieldName, operator, bb,
 
 local.dbRowListGetManyByQuery = function (dbRowList, query, fieldName, not) {
 /*
- * this function will get the dbRow's in dbRowList with the given query
+ * this function will get the dbRow's in dbRowList with given query
  */
     var bb;
     var dbRowDict;
@@ -1977,7 +2017,7 @@ local.dbRowListGetManyByQuery = function (dbRowList, query, fieldName, not) {
 
 local.dbRowProject = function (dbRow, fieldList) {
 /*
- * this function will deepcopy and project the dbRow with the given fieldList
+ * this function will deepcopy and project the dbRow with given fieldList
  */
     var result;
     if (!dbRow) {
@@ -2006,7 +2046,7 @@ local.dbRowProject = function (dbRow, fieldList) {
 local.dbRowSetId = function (dbRow, idIndex) {
 /*
  * this function will if does not exist,
- * then set a random and unique id into dbRow for the given idIndex,
+ * then set a random and unique id into dbRow for given idIndex,
  */
     var id;
     id = dbRow[idIndex.name];
@@ -2042,7 +2082,7 @@ local.dbSave = function (onError) {
 
 local.dbSeed = function (dbSeedList, onError) {
 /*
- * this function will seed the db with the given dbSeedList
+ * this function will seed the db with given dbSeedList
  */
     var dbTableDict;
     var onParallel;
@@ -2052,8 +2092,8 @@ local.dbSeed = function (dbSeedList, onError) {
     // seed db
     onParallel.counter += 1;
     local.dbTableCreateMany(dbSeedList, onParallel);
-    (dbSeedList || []).forEach(function (options) {
-        dbTableDict[options.name] = true;
+    (dbSeedList || []).forEach(function (option) {
+        dbTableDict[option.name] = true;
     });
     Object.keys(dbTableDict).forEach(function (name) {
         console.error("db - seeding dbTable " + name + " ...");
@@ -2062,9 +2102,9 @@ local.dbSeed = function (dbSeedList, onError) {
     onParallel();
 };
 
-local.dbTableCreateMany = function (optionsList, onError) {
+local.dbTableCreateMany = function (optionList, onError) {
 /*
- * this function will create many dbTables with the given optionsList
+ * this function will create many dbTables with given optionList
  */
     var onParallel;
     var result;
@@ -2072,26 +2112,26 @@ local.dbTableCreateMany = function (optionsList, onError) {
         local.setTimeoutOnError(onError, 0, error, result);
     });
     onParallel.counter += 1;
-    result = (optionsList || []).map(function (options) {
+    result = (optionList || []).map(function (option) {
         onParallel.counter += 1;
-        return local.dbTableCreateOne(options, onParallel);
+        return local.dbTableCreateOne(option, onParallel);
     });
     return local.setTimeoutOnError(onParallel, 0, null, result);
 };
 
-local.dbTableCreateOne = function (options, onError) {
+local.dbTableCreateOne = function (option, onError) {
 /*
- * this function will create a dbTable with the given options
+ * this function will create a dbTable with given option
  */
     var DbTable;
     var that;
-    options = local.objectSetOverride(options);
+    option = local.objectSetOverride(option);
     // register dbTable
     DbTable = local._DbTable;
-    local.dbTableDict[options.name] = local.dbTableDict[options.name] || new DbTable(options);
-    that = local.dbTableDict[options.name];
+    local.dbTableDict[option.name] = local.dbTableDict[option.name] || new DbTable(option);
+    that = local.dbTableDict[option.name];
     that.sortDefault = (
-        options.sortDefault
+        option.sortDefault
         || that.sortDefault
         || [{
             fieldName: "_timeUpdated",
@@ -2099,17 +2139,17 @@ local.dbTableCreateOne = function (options, onError) {
         }]
     );
     // remove idIndex
-    (options.idIndexRemoveList || []).forEach(function (idIndex) {
+    (option.idIndexRemoveList || []).forEach(function (idIndex) {
         that.idIndexRemove(idIndex);
     });
     // create idIndex
-    (options.idIndexCreateList || []).forEach(function (idIndex) {
+    (option.idIndexCreateList || []).forEach(function (idIndex) {
         that.idIndexCreate(idIndex);
     });
     // upsert dbRow
-    that.crudSetManyById(options.dbRowList);
+    that.crudSetManyById(option.dbRowList);
     // restore dbTable from persistent-storage
-    that.isLoaded = that.isLoaded || options.isLoaded;
+    that.isLoaded = that.isLoaded || option.isLoaded;
     if (!that.isLoaded) {
         local.storageGetItem("dbTable." + that.name + ".json", function (error, data) {
             // validate no error occurred
@@ -2140,14 +2180,20 @@ local.onEventDomDb = function (event) {
     switch (event.target.dataset.onEventDomDb || event.target.id) {
     case "dbExportButton1":
         tmp = globalThis.URL.createObjectURL(new globalThis.Blob([local.dbExport()]));
-        document.querySelector("#dbExportA1").href = tmp;
-        document.querySelector("#dbExportA1").click();
+        document.querySelector(
+            "#dbExportA1"
+        ).href = tmp;
+        document.querySelector(
+            "#dbExportA1"
+        ).click();
         setTimeout(function () {
             globalThis.URL.revokeObjectURL(tmp);
         }, 30000);
         break;
     case "dbImportButton1":
-        tmp = document.querySelector("#dbImportInput1");
+        tmp = document.querySelector(
+            "#dbImportInput1"
+        );
         if (!tmp.onEventDomDb) {
             tmp.onEventDomDb = local.onEventDomDb;
             tmp.addEventListener("change", local.onEventDomDb);
@@ -2159,8 +2205,10 @@ local.onEventDomDb = function (event) {
             return;
         }
         ajaxProgressUpdate();
-        reader = new globalThis.FileReader();
-        tmp = document.querySelector("#dbImportInput1").files[0];
+        reader = new FileReader();
+        tmp = document.querySelector(
+            "#dbImportInput1"
+        ).files[0];
         if (!tmp) {
             return;
         }

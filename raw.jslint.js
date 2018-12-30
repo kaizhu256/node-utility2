@@ -1418,7 +1418,7 @@ t+1)+": "+e.type+" at line "+e.line+", col "+e.col,s+="\n"+e.message,s+="\n"+e.e
 
 
 /*
-file JSLint/jslint.js - es6
+file JSLint/jslint.js
 node -e '
 "use strict";
 process.argv[1].replace((
@@ -1496,12 +1496,20 @@ console.log(process.argv[2]);
 -        if (snippet === "//") {
 +        if (snippet === "//") {
 +            // jslint-hack - too_long
-+            regexp_seen = true;
++            if (option.utility2 && (
++                /^!!|^\u0020https:\/\//m
++            ).test(source_line)) {
++                regexp_seen = true;
++            }
 
 -                array.push(source_line);
 +                array.push(source_line);
 +                // jslint-hack - too_long
-+                regexp_seen = true;
++                if (option.utility2 && (
++                    /^\S|^\u0020{2}|\u0020https:\/\/|\u0020this\u0020.*?\u0020package\u0020will\u0020/m
++                ).test(source_line)) {
++                    regexp_seen = true;
++                }
 
 -        warn("unexpected_a", right);
 +        // jslint-hack - unexpected_a
@@ -3006,7 +3014,11 @@ function tokenize(source) {
 
         if (snippet === "//") {
             // jslint-hack - too_long
-            regexp_seen = true;
+            if (option.utility2 && (
+                /^!!|^\u0020https:\/\//m
+            ).test(source_line)) {
+                regexp_seen = true;
+            }
             snippet = source_line;
             source_line = "";
             the_token = comment(snippet);
@@ -3036,7 +3048,11 @@ function tokenize(source) {
                 }
                 array.push(source_line);
                 // jslint-hack - too_long
-                regexp_seen = true;
+                if (option.utility2 && (
+                    /^\S|^\u0020{2}|\u0020https:\/\/|\u0020this\u0020.*?\u0020package\u0020will\u0020/m
+                ).test(source_line)) {
+                    regexp_seen = true;
+                }
                 source_line = next_line();
                 if (source_line === undefined) {
                     return stop_at("unclosed_comment", line, column);

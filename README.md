@@ -56,22 +56,30 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- fix function buildReadme's custom-case
 - jslint-autofix - move inner-loop to outer
 - left-align .<xxx>
 - replace circurlarList -> circularSet
 - jslint - refactor files to 80 chr column-limit
 - add default testCase _testCase_cliRun_help
 - merge class _http.IncomingMessage -> _http.ServerResponse
-- add test-coverage for function ajaxCrawl
 - integrate db-lite and github-crud into a cloud-based db on github
 - add server stress-test using electron
 - none
 
-#### changelog 2018.12.8
-- npm publish 2018.12.8
-- upgrade to jslint commit-de413767154641f490d6e96185e525255cca5f7e (v2018.11.14)
-- remove customOrg code
-- remove assetsDict["/assets.readmeCustomOrg.npmdoc.template.md"], local.assetsDict["/assets.readmeCustomOrg.npmtest.template.md"]
+#### changelog 2018.12.30
+- npm publish 2018.12.30
+- jslint - open-form - document.querySelector(
+- jslint - validateLineSorted - switch-statement
+- split function jslintAndPrint -> jslintAndPrint, jslintAutofix, jslintUtility2
+- rename function base64ToString -> base64ToUtf8
+- rename function bufferToString -> bufferToUtf8
+- replace function local.bufferCreate -> new TextEncoder().encode
+- remove unused function local.ajaxCrawl
+- add function local.objectAssignDefault
+- rename var options -> option
+- istanbul - add clickable id-fragment to lines in html-coverage
+- .vimrc - add functions MyStringifyRegion, MyRename
 - none
 
 #### this package requires
@@ -104,7 +112,7 @@ PORT=8081 node ./assets.app.js
 
 
 # quickstart example.js
-![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)
+![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252Ftmp%252Fapp%252Ftmp%252Fbuild%252Ftest-report.html.png)
 
 #### to run this example, follow the instruction in the script below
 - [example.js](https://kaizhu256.github.io/node-utility2/build/example.js)
@@ -171,7 +179,7 @@ instruction
         && window === globalThis
         && typeof window.XMLHttpRequest === "function"
         && window.document
-        && typeof window.document.querySelectorAll === "function"
+        && typeof window.document.querySelector === "function"
     );
     // init function
     local.assertThrow = function (passed, message) {
@@ -220,6 +228,22 @@ instruction
      * this function will do nothing
      */
         return;
+    };
+    local.objectAssignDefault = function (target, source) {
+    /*
+     * this function will if items from <target> are
+     * null, undefined, or empty-string,
+     * then overwrite them with items from <source>
+     */
+        Object.keys(source).forEach(function (key) {
+            if (
+                target[key] === null
+                || target[key] === undefined
+                || target[key] === ""
+            ) {
+                target[key] = target[key] || source[key];
+            }
+        });
     };
     // require builtin
     if (!local.isBrowser) {
@@ -281,15 +305,15 @@ local.assetsDict["/assets.index.template.html"] = "";
 
 // run shared js-env code - function
 (function () {
-local.testCase_ajax_200 = function (options, onError) {
+local.testCase_ajax_200 = function (option, onError) {
 /*
  * this function will test ajax's "200 ok" handling-behavior
  */
     if (!local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
-    options = {};
+    option = {};
     // test ajax-path "assets.hello.txt"
     local.ajax({
         url: "assets.hello.txt"
@@ -298,22 +322,22 @@ local.testCase_ajax_200 = function (options, onError) {
             // validate no error occurred
             local.assertThrow(!error, error);
             // validate data
-            options.data = xhr.responseText;
-            local.assertThrow(options.data === "hello \ud83d\ude01\n", options.data);
+            option.data = xhr.responseText;
+            local.assertThrow(option.data === "hello \ud83d\ude01\n", option.data);
             onError();
         }, onError);
     });
 };
 
-local.testCase_ajax_404 = function (options, onError) {
+local.testCase_ajax_404 = function (option, onError) {
 /*
  * this function will test ajax's "404 not found" handling-behavior
  */
     if (!local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
-    options = {};
+    option = {};
     // test ajax-path "/undefined"
     local.ajax({
         url: "/undefined"
@@ -321,27 +345,27 @@ local.testCase_ajax_404 = function (options, onError) {
         local.tryCatchOnError(function () {
             // validate error occurred
             local.assertThrow(error, error);
-            options.statusCode = error.statusCode;
+            option.statusCode = error.statusCode;
             // validate 404 http statusCode
-            local.assertThrow(options.statusCode === 404, options.statusCode);
+            local.assertThrow(option.statusCode === 404, option.statusCode);
             onError();
         }, onError);
     });
 };
 
-local.testCase_webpage_default = function (options, onError) {
+local.testCase_webpage_default = function (option, onError) {
 /*
  * this function will test webpage's default handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, options);
+        onError(null, option);
         return;
     }
-    options = {
+    option = {
         modeCoverageMerge: true,
         url: local.serverLocalHost + "?modeTest=1"
     };
-    local.browserTest(options, onError);
+    local.browserTest(option, onError);
 };
 }());
 
@@ -378,17 +402,28 @@ local.testRunBrowser = function (event) {
     switch (event && event.currentTarget && event.currentTarget.id) {
     case "testRunButton1":
         // show tests
-        if (document.querySelector("#testReportDiv1").style.maxHeight === "0px") {
-            local.uiAnimateSlideDown(document.querySelector("#testReportDiv1"));
-            document.querySelector("#testRunButton1").textContent = "hide internal test";
+        if (document.querySelector(
+            "#testReportDiv1"
+        ).style.maxHeight === "0px") {
+            local.uiAnimateSlideDown(document.querySelector(
+                "#testReportDiv1"
+            ));
+            document.querySelector(
+                "#testRunButton1"
+            ).textContent = "hide internal test";
             local.modeTest = 1;
             local.testRunDefault(local);
         // hide tests
         } else {
-            local.uiAnimateSlideUp(document.querySelector("#testReportDiv1"));
-            document.querySelector("#testRunButton1").textContent = "run internal test";
+            local.uiAnimateSlideUp(document.querySelector(
+                "#testReportDiv1"
+            ));
+            document.querySelector(
+                "#testRunButton1"
+            ).textContent = "run internal test";
         }
         break;
+    /* validateLineSortedReset */
     // custom-case
     case "testRunButton2":
         // run tests
@@ -401,7 +436,9 @@ local.testRunBrowser = function (event) {
         }
         // jslint #inputTextareaEval1
         local.jslint.jslintAndPrint(
-            document.querySelector("#inputTextareaEval1").value,
+            document.querySelector(
+                "#inputTextareaEval1"
+            ).value,
             "inputTextareaEval1.js",
             {
                 autofix: (
@@ -413,11 +450,15 @@ local.testRunBrowser = function (event) {
             }
         );
         if (local.jslint.jslintResult.autofix) {
-            document.querySelector("#inputTextareaEval1").value = (
+            document.querySelector(
+                "#inputTextareaEval1"
+            ).value = (
                 local.jslint.jslintResult.code
             );
         }
-        document.querySelector("#outputJslintPre1").textContent = (
+        document.querySelector(
+            "#outputJslintPre1"
+        ).textContent = (
             local.jslint.jslintResult.errorText
         ).replace((
             /\u001b\[\d*m/g
@@ -428,18 +469,26 @@ local.testRunBrowser = function (event) {
         } catch (ignore) {}
         // try to cover and eval input-code
         try {
-            document.querySelector("#outputTextarea1").value = (
+            document.querySelector(
+                "#outputTextarea1"
+            ).value = (
                 local.istanbul.instrumentSync(
-                    document.querySelector("#inputTextareaEval1").value,
+                    document.querySelector(
+                        "#inputTextareaEval1"
+                    ).value,
                     "/inputTextareaEval1.js"
                 )
             );
             eval( // jslint ignore:line
-                document.querySelector("#outputTextarea1").value.replace((
+                document.querySelector(
+                    "#outputTextarea1"
+                ).value.replace((
                     /^#!\//
                 ), "// ")
             );
-            document.querySelector("#coverageReportDiv1").innerHTML = (
+            document.querySelector(
+                "#coverageReportDiv1"
+            ).innerHTML = (
                 local.istanbul.coverageReportCreate({
                     coverage: window.__coverage__
                 })
@@ -452,7 +501,7 @@ local.testRunBrowser = function (event) {
 
 local.uiEventDelegate = local.uiEventDelegate || function (event) {
     // filter non-input keyup-event
-    event.targetOnEvent = event.target.closest("[data-event]");
+    event.targetOnEvent = event.target.closest("[data-onevent]");
     if (!event.targetOnEvent) {
         return;
     }
@@ -481,7 +530,7 @@ local.uiEventDelegate = local.uiEventDelegate || function (event) {
         break;
     }
     event.stopPropagation();
-    local.uiEventListenerDict[event.targetOnEvent.dataset.event](event);
+    local.uiEventListenerDict[event.targetOnEvent.dataset.onevent](event);
 };
 
 local.uiEventListenerDict = local.uiEventListenerDict || {};
@@ -496,7 +545,9 @@ local.uiEventListenerDict.testRunBrowser = local.testRunBrowser;
         var element;
         argList = Array.from(arguments); // jslint ignore:line
         console[key + "_original"].apply(console, argList);
-        element = document.querySelector("#outputStdoutTextarea1");
+        element = document.querySelector(
+            "#outputStdoutTextarea1"
+        );
         if (!element) {
             return;
         }
@@ -728,11 +779,15 @@ textarea {\n\
     var ajaxProgressUpdate;\n\
     if (\n\
         window.timerIntervalAjaxProgressUpdate\n\
-        || !document.querySelector("#ajaxProgressDiv1")\n\
+        || !document.querySelector(\n\
+            "#ajaxProgressDiv1"\n\
+        )\n\
     ) {\n\
         return;\n\
     }\n\
-    ajaxProgressDiv1 = document.querySelector("#ajaxProgressDiv1");\n\
+    ajaxProgressDiv1 = document.querySelector(\n\
+        "#ajaxProgressDiv1"\n\
+    );\n\
     setTimeout(function () {\n\
         ajaxProgressDiv1.style.width = "25%";\n\
     });\n\
@@ -791,6 +846,7 @@ textarea {\n\
             event.preventDefault();\n\
         }\n\
     };\n\
+    // init event-handling\n\
     document.addEventListener(\n\
         "keydown",\n\
         window.domOnEventSelectAllWithinPre\n\
@@ -815,13 +871,13 @@ utility2-comment -->\n\
 <!-- utility2-comment\n\
 <a class="button" download href="assets.app.js">download standalone app</a><br>\n\
 <button id="testRunButton1" style="display: none;"></button>\n\
-<button class="button eventDelegateClick onreset" data-event="testRunBrowser" id="testRunButton2">run internal test</button><br>\n\
+<button class="button eventDelegateClick onreset" data-onevent="testRunBrowser" id="testRunButton2">run internal test</button><br>\n\
 utility2-comment -->\n\
 \n\
 \n\
 \n\
 <label>edit or paste script below to cover and test</label>\n\
-<textarea class="eventDelegateKeyup onreset" data-event="testRunBrowser" id="inputTextareaEval1">\n\
+<textarea class="eventDelegateKeyup onreset" data-onevent="testRunBrowser" id="inputTextareaEval1">\n\
 // remove comment below to disable jslint\n\
 /*jslint browser, devel*/\n\
 /*global window*/\n\
@@ -832,23 +888,23 @@ utility2-comment -->\n\
     testCaseDict.modeTest = 1;\n\
 \n\
     // comment this testCase to disable the failed error demo\n\
-    testCaseDict.testCase_failed_error_demo = function (options, onError) {\n\
+    testCaseDict.testCase_failed_error_demo = function (option, onError) {\n\
     /*\n\
      * this function will demo a failed error test\n\
      */\n\
         // jslint-hack\n\
-        window.utility2.nop(options);\n\
+        window.utility2.nop(option);\n\
         onError(new Error("this is a failed error demo"));\n\
     };\n\
 \n\
-    testCaseDict.testCase_passed_ajax_demo = function (options, onError) {\n\
+    testCaseDict.testCase_passed_ajax_demo = function (option, onError) {\n\
     /*\n\
      * this function will demo a passed ajax test\n\
      */\n\
         var data;\n\
-        options = {url: "/"};\n\
+        option = {url: "/"};\n\
         // test ajax request for main-page "/"\n\
-        window.utility2.ajax(options, function (error, xhr) {\n\
+        window.utility2.ajax(option, function (error, xhr) {\n\
             try {\n\
                 // validate no error occurred\n\
                 console.assert(!error, error);\n\
@@ -867,7 +923,7 @@ utility2-comment -->\n\
     window.utility2.testRunDefault(testCaseDict);\n\
 }());\n\
 </textarea>\n\
-<button class="button eventDelegateClick onreset" data-event="testRunBrowser" id="jslintAutofixButton1">jslint autofix</button><br>\n\
+<button class="button eventDelegateClick onreset" data-onevent="testRunBrowser" id="jslintAutofixButton1">jslint autofix</button><br>\n\
 <pre class= "colorError" id="outputJslintPre1" tabindex="0"></pre>\n\
 <label>instrumented-code</label>\n\
 <textarea class="resettable" id="outputTextarea1" readonly></textarea>\n\
@@ -970,7 +1026,7 @@ local.http.createServer(function (request, response) {
 ```
 
 #### output from browser
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/app/assets.example.html)
+[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252Ftmp%252Fapp%252Ftmp%252Fbuild%252Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252Ftmp%252Fapp%252Ftmp%252Fbuild%252Ftest-report.html.html)
 
 #### output from shell
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.svg)
@@ -1068,7 +1124,7 @@ local.http.createServer(function (request, response) {
         "test": "./npm_scripts.sh",
         "utility2": "./npm_scripts.sh"
     },
-    "version": "2018.12.8"
+    "version": "2018.12.30"
 }
 ```
 
@@ -1274,7 +1330,8 @@ shBuildCiBefore () {(set -e
     shReadmeTest example.js
     # screenshot
     MODE_BUILD=testExampleJs shBrowserTest \
-        /tmp/app/tmp/build/coverage.html/app/example.js.html,tmp/build/test-report.html \
+/tmp/app/tmp/build/coverage.html/app/example.js.html,\
+/tmp/app/tmp/build/test-report.html \
         screenshot
 )}
 
