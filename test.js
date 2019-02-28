@@ -46,7 +46,7 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw the error <message> if <passed> is falsy
+     * this function will throw error <message> if <passed> is falsy
      */
         var error;
         if (passed) {
@@ -97,7 +97,8 @@
      * null, undefined, or empty-string,
      * then overwrite them with items from <source>
      */
-        Object.keys(source).forEach(function (key) {
+        target = target || {};
+        Object.keys(source || {}).forEach(function (key) {
             if (
                 target[key] === null
                 || target[key] === undefined
@@ -106,6 +107,7 @@
                 target[key] = target[key] || source[key];
             }
         });
+        return target;
     };
     // require builtin
     if (!local.isBrowser) {
@@ -149,7 +151,9 @@
 // run shared js-env code - init-before
 (function () {
 // init local
-local = (globalThis.utility2 || require("./lib.utility2.js")).requireReadme();
+local = (
+    globalThis.utility2 || require("./lib.utility2.js")
+).requireReadme();
 globalThis.local = local;
 // init test
 local.testRunDefault(local);
@@ -1031,7 +1035,7 @@ local.testCase_buildReadme_default = function (option, onError) {
     option.customize = function () {
         // search-and-replace - customize dataTo
         [
-            // customize quickstart example.js
+            // customize quickstart-example-js
             (
                 /#\u0020quickstart\u0020example.js[\S\s]*?istanbul\u0020instrument\u0020in\u0020package/
             ),
@@ -1043,7 +1047,7 @@ local.testCase_buildReadme_default = function (option, onError) {
             ),
             // customize build-script
             (
-                /#\u0020run\u0020shBuildCi[^`]*?```/
+                /\n#\u0020internal\u0020build\u0020script\n[\S\s]*?\nshBuildCi\n/
             )
         ].forEach(function (rgx) {
             option.dataFrom.replace(rgx, function (match0) {
@@ -1681,24 +1685,6 @@ local.testCase_numberToRomanNumerals_default = function (option, onError) {
     onError(null, option);
 };
 
-local.testCase_objectLiteralize_default = function (option, onError) {
-/*
- * this function will test objectLiteralize's default handling-behavior
- */
-    local.assertJsonEqual(local.objectLiteralize({
-        "": "$[]",
-        "$[]1": [1, {
-            "$[]2": [2, 3]
-        }]
-    }), {
-        "1": {
-            "2": 3
-        },
-        "": "$[]"
-    });
-    onError(null, option);
-};
-
 local.testCase_objectSetDefault_default = function (option, onError) {
 /*
  * this function will test objectSetDefault's default handling-behavior
@@ -1907,42 +1893,6 @@ local.testCase_objectSetOverride_default = function (option, onError) {
         null,
         local.env
     ).emptyString, "");
-    onError(null, option);
-};
-
-local.testCase_objectTraverse_default = function (option, onError) {
-/*
- * this function will test objectTraverse's default handling-behavior
- */
-    option = {
-        aa: null,
-        bb: 2,
-        cc: {
-            dd: 4,
-            ee: [5, 6, 7]
-        }
-    };
-    // test circular-reference handling-behavior
-    option.data = option;
-    local.objectTraverse(option, function (element) {
-        if (typeof element === "object" && element && !Array.isArray(element)) {
-            element.zz = true;
-        }
-    });
-    // validate option
-    local.assertJsonEqual(
-        option,
-        {
-            aa: null,
-            bb: 2,
-            cc: {
-                dd: 4,
-                ee: [5, 6, 7],
-                zz: true
-            },
-            zz: true
-        }
-    );
     onError(null, option);
 };
 
@@ -2254,10 +2204,10 @@ local.testCase_replStart_default = function (option, onError) {
             // test error handling-behavior
             "undefined()\n"
         ].forEach(function (script) {
-            globalThis.utility2_serverRepl1.eval(script, null, "repl", local.nop);
+            globalThis.utility2_repl1.eval(script, null, "repl", local.nop);
         });
         // test error handling-behavior
-        globalThis.utility2_serverRepl1.onError(local.errorDefault);
+        globalThis.utility2_repl1.onError(local.errorDefault);
         onError(null, option);
     }, onError);
 };

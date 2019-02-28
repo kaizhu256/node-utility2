@@ -14,7 +14,7 @@ set nocompatible
 set noerrorbells
 set noswapfile
 set pastetoggle=<f2>
-set scrolloff=4
+set scrolloff=2
 set shiftwidth=2
 set showmatch
 set smartcase
@@ -23,6 +23,9 @@ set statusline=%l\ %c\ %F%m%r%h%w\ %y\ %p%%
 set tabstop=4
 
 autocmd!
+" syntax highlighting
+" autocmd BufEnter * :syntax sync fromstart
+autocmd BufEnter * :syntax sync minlines=200
 " autochdir
 autocmd BufEnter * silent! lcd %:p:h
 " auto remove trailing whitespace
@@ -42,8 +45,9 @@ function! MyCommentRegion(...)
 " this function will comment selected-region
     " un-comment
     if a:1 == 'u'
-        '<,'>s/^\(\s*\)\(""\|#\|%%\|\/\/\)!! /\1/e
-        '<,'>s/^\(\s*\)<\!--!! \(.*\) -->/\1\2/e
+        '<,'>s/^\(\s*\)\(""\|#\|%%\|--\|\/\/\)!! /\1/e
+        '<,'>s/^\(\s*\)<!--!! \(.*\) -->/\1\2/e
+        '<,'>s/^\(\s*\)\/\*!! \(.*\) \*\//\1\2/e
     " comment \"\"
     elseif a:1 == '"'
         '<,'>s/^\(\s*\)\(\S\)/\1""!! \2/e
@@ -53,10 +57,16 @@ function! MyCommentRegion(...)
     " comment %%
     elseif a:1 == '%'
         '<,'>s/^\(\s*\)\(\S\)/\1%%!! \2/e
+    " comment --
+    elseif a:1 == '-'
+        '<,'>s/^\(\s*\)\(\S\)/\1--!! \2/e
+    " comment /*...*/
+    elseif a:1 == '*'
+        '<,'>s/^\(\s*\)\(\S.*\)/\1\/*!! \2 *\//e
     " comment //
     elseif a:1 == '/'
         '<,'>s/^\(\s*\)\(\S\)/\1\/\/!! \2/e
-    " comment <!-- ... -->
+    " comment <!--...-->
     elseif a:1 == '<'
         '<,'>s/^\(\s*\)\(\S.*\)/\1<!--!! \2 -->/e
     endif
@@ -70,14 +80,14 @@ function! MyStringifyRegion(...)
     if a:1 == 'u'
         '<,'>s/^\(\s*\)\(+ "\|"\)\(.*\)"$/\1\3/e
         '<,'>s/\\n\\$//e
-        '<,'>s/\\\("\|'\)/\1/e
+        '<,'>s/\\\(["'\\]\)/\1/eg
     " stringify + "..."
     elseif a:1 == '+'
-        '<,'>s/"/\\"/e
+        '<,'>s/["\\]/\\&/eg
         '<,'>s/\S.*/+ "&"/e
     " stringify ...\n\
     elseif a:1 == '\'
-        '<,'>s/'/\\'/e
+        '<,'>s/['\\]/\\&/eg
         '<,'>s/$/\\n\\/e
     endif
     " restore position
@@ -131,7 +141,7 @@ function! MyRename(name, bang)
 	endif
 	return l:status
 endfunction
-command! -nargs=* -complete=file -bang Rename call Rename(<q-args>, '<bang>')
+command! -nargs=* -complete=file -bang MyRename call MyRename(<q-args>, '<bang>')
 
 " insert-mode remap
 inoremap <c-a> <c-o>^
@@ -139,22 +149,27 @@ inoremap <c-d> <c-o>x
 inoremap <c-e> <c-o>$
 inoremap <c-k> <c-o>D
 " non-recursive remap
-nnoremap <silent> !bc :bp<bar>sp<bar>bn<bar>bd!<CR>
-nnoremap <silent> "+ :call MyStringifyRegion('+')<cr><cr>
-nnoremap <silent> "\ :call MyStringifyRegion('\')<cr><cr>
-nnoremap <silent> "u :call MyStringifyRegion('u')<cr><cr>
-nnoremap <silent> #" :call MyCommentRegion('"')<cr><cr>
-nnoremap <silent> #% :call MyCommentRegion('%')<cr><cr>
-nnoremap <silent> #/ :call MyCommentRegion('/')<cr><cr>
-nnoremap <silent> #<char-0x23> :call MyCommentRegion('#')<cr><cr>
-nnoremap <silent> #u :call MyCommentRegion('u')<cr><cr>
+nnoremap <f12> <esc>:syntax sync fromstart<cr>
+nnoremap <silent> !bc :bprevious<bar>split<bar>bnext<bar>bwipeout!<cr>
+nnoremap <silent> "+ :call MyStringifyRegion('+')<cr>
+nnoremap <silent> "\ :call MyStringifyRegion('\')<cr>
+nnoremap <silent> "u :call MyStringifyRegion('u')<cr>
+nnoremap <silent> #" :call MyCommentRegion('"')<cr>
+nnoremap <silent> #% :call MyCommentRegion('%')<cr>
+nnoremap <silent> #- :call MyCommentRegion('-')<cr>
+nnoremap <silent> #* :call MyCommentRegion('*')<cr>
+nnoremap <silent> #/ :call MyCommentRegion('/')<cr>
+nnoremap <silent> #<char-0x23> :call MyCommentRegion('#')<cr>
+nnoremap <silent> #u :call MyCommentRegion('u')<cr>
 " visual-mode remap
-vnoremap <silent> "+ <esc>:call MyStringifyRegion('+')<cr><cr>
-vnoremap <silent> "\ <esc>:call MyStringifyRegion('\')<cr><cr>
-vnoremap <silent> "u <esc>:call MyStringifyRegion('u')<cr><cr>
-vnoremap <silent> #" <esc>:call MyCommentRegion('"')<cr><cr>
-vnoremap <silent> #% <esc>:call MyCommentRegion('%')<cr><cr>
-vnoremap <silent> #/ <esc>:call MyCommentRegion('/')<cr><cr>
-vnoremap <silent> #< <esc>:call MyCommentRegion('<')<cr><cr>
-vnoremap <silent> #<char-0x23> <esc>:call MyCommentRegion('#')<cr><cr>
-vnoremap <silent> #u <esc>:call MyCommentRegion('u')<cr><cr>
+vnoremap <silent> "+ <esc>:call MyStringifyRegion('+')<cr>
+vnoremap <silent> "\ <esc>:call MyStringifyRegion('\')<cr>
+vnoremap <silent> "u <esc>:call MyStringifyRegion('u')<cr>
+vnoremap <silent> #" <esc>:call MyCommentRegion('"')<cr>
+vnoremap <silent> #% <esc>:call MyCommentRegion('%')<cr>
+vnoremap <silent> #- <esc>:call MyCommentRegion('-')<cr>
+vnoremap <silent> #* <esc>:call MyCommentRegion('*')<cr>
+vnoremap <silent> #/ <esc>:call MyCommentRegion('/')<cr>
+vnoremap <silent> #< <esc>:call MyCommentRegion('<')<cr>
+vnoremap <silent> #<char-0x23> <esc>:call MyCommentRegion('#')<cr>
+vnoremap <silent> #u <esc>:call MyCommentRegion('u')<cr>

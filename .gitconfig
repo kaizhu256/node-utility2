@@ -1,11 +1,13 @@
 [branch "alpha"]
-    remote = origin
     merge = refs/heads/alpha
+    remote = origin
 [core]
     bare = false
     filemode = true
     logallrefupdates = true
     repositoryformatversion = 0
+[diff]
+    algorithm = histogram
 [receive]
     denyCurrentBranch = warn
 [remote "heroku"]
@@ -16,4 +18,7 @@
     url = https://github.com/kaizhu256/node-utility2
 [remote "upstream"]
     fetch = +refs/heads/*:refs/remotes/upstream/*
+    url = https://github.com/kaizhu256/node-utility2
+[remote "utility2"]
+    fetch = +refs/heads/*:refs/remotes/utility2/*
     url = https://github.com/kaizhu256/node-utility2

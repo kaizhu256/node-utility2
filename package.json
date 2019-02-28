@@ -14,7 +14,7 @@
         "electron-lite": "kaizhu256/node-electron-lite#alpha"
     },
     "engines": {
-        "node": ">=8.0"
+        "node": ">=10.0"
     },
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
@@ -48,5 +48,5 @@
         "test": "./npm_scripts.sh",
         "utility2": "./npm_scripts.sh"
     },
-    "version": "2018.12.30"
+    "version": "2019.2.28"
 }

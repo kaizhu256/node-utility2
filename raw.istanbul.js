@@ -1,6 +1,5 @@
 /*
 file esprima/esprima.js
-utility2-uglifyjs https://raw.githubusercontent.com/jquery/esprima/2.7.3/esprima.js > /tmp/aa.js
 */
 (function(e,t){"use strict";typeof define=="function"&&define.amd?define(["exports"
 ],t):typeof exports!="undefined"?t(exports):t(e.esprima={})})(this,function(e){"use strict"
@@ -705,7 +704,6 @@ Object.freeze=="function"&&Object.freeze(t),t}()})
 
 /*
 file estraverse/estraverse.js
-utility2-uglifyjs https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > /tmp/aa.js
 */
 (function(e,t){"use strict";typeof define=="function"&&define.amd?define(["exports"
 ],t):typeof exports!="undefined"?t(exports):t(e.estraverse={})})(this,function e
@@ -840,7 +838,6 @@ i,t.Controller=b,t.cloneEnvironment=function(){return e({})},t})
 
 /*
 file esutils/lib/code.js
-utility2-uglifyjs https://raw.githubusercontent.com/estools/esutils/2.0.2/lib/code.js > /tmp/aa.js
 */
 (function(){"use strict";function o(e){return 48<=e&&e<=57}function u(e){return 48<=
 e&&e<=57||97<=e&&e<=102||65<=e&&e<=70}function a(e){return e>=48&&e<=55}function f
@@ -866,7 +863,6 @@ p,isIdentifierStartES6:d,isIdentifierPartES6:v}})()
 
 /*
 file escodegen/escodegen.js
-utility2-uglifyjs https://raw.githubusercontent.com/estools/escodegen/1.8.1/escodegen.js > /tmp/aa.js
 */
 (function(){"use strict";function k(e){return bt.Expression.hasOwnProperty(e.type
 )}function L(e){return bt.Statement.hasOwnProperty(e.type)}function V(){return{indent
@@ -1239,14 +1235,12 @@ G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
 
 /*
 file handlebars.js/handlebars.js
-curl https://raw.githubusercontent.com/components/handlebars.js/v1.2.1/handlebars.js > /tmp/aa.js
 */
 
 
 
 /*
 file istanbul/lib/collector.js
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/collector.js > /tmp/aa.js
 */
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
@@ -1374,7 +1368,6 @@ module.exports = Collector;
 
 /*
 file istanbul/lib/util/insertion-text.js
-utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/insertion-text.js > /tmp/aa.js
 */
 function InsertionText(e,t){this.text=e,this.origLength=e.length,this.offsets=[]
 ,this.consumeBlanks=t,this.startPos=this.findFirstNonBlank(),this.endPos=this.findLastNonBlank
@@ -1397,7 +1390,6 @@ function(){return this.text}},module.exports=InsertionText
 
 /*
 file istanbul/lib/instrumenter.js
-utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.4.5/lib/instrumenter.js > /tmp/aa.js
 */
 (function(e){"use strict";function p(e,t){var n,r;return s!==null?(n=s.createHash
 ("md5"),n.update(e),r=n.digest("base64"),r=r.replace(new RegExp("=","g"),"").replace
@@ -1612,7 +1604,6 @@ module.exports!="undefined"&&typeof exports!="undefined")
 
 /*
 file istanbul/lib/object-utils.js
-utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/object-utils.js > /tmp/aa.js
 */
 (function(e){function t(e){var t=e.statementMap,n=e.s,r;e.l||(e.l=r={},Object.keys
 (n).forEach(function(e){var i=t[e].start.line,s=n[e],o=r[i];s===0&&t[e].skip&&(s=1
@@ -1653,7 +1644,6 @@ module.exports!="undefined"&&typeof exports!="undefined")
 
 /*
 file istanbul/lib/report/common/defaults.js
-utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/common/defaults.js > /tmp/aa.js
 */
 module.exports={watermarks:function(){return{statements:[50,80],lines:[50,80],functions
 :[50,80],branches:[50,80]}},classFor:function(e,t,n){var r=n[e],i=t[e].pct;return i>=
@@ -1665,7 +1655,6 @@ e+"\u001b[0m";break;case"high":e="\u001b[92m"+e+"\u001b[0m"}return e}}
 
 /*
 file istanbul/lib/report/index.js
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/index.js > /tmp/aa.js
 */
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
@@ -1730,7 +1719,6 @@ module.exports = Report;
 
 /*
 file istanbul/lib/report/templates/foot.txt
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/templates/foot.txt > /tmp/aa.js
 */
 /*
 </div>
@@ -1840,7 +1828,6 @@ curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/te
 
 /*
 file istanbul/lib/report/templates/head.txt
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/templates/head.txt > /tmp/aa.js
 */
 /*
 <!doctype html>
@@ -2066,7 +2053,6 @@ curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/te
 
 /*
 file istanbul/lib/util/file-writer.js
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/file-writer.js > /tmp/aa.js
 */
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
@@ -2204,7 +2190,6 @@ module.exports = FileWriter;
 
 /*
 file istanbul/lib/util/tree-summarizer.js
-utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/tree-summarizer.js > /tmp/aa.js
 */
 function commonArrayPrefix(e,t){var n=e.length<t.length?e.length:t.length,r,i=[]
 ;for(r=0;r<n;r+=1){if(e[r]!==t[r])break;i.push(e[r])}return i}function findCommonArrayPrefix
@@ -2247,7 +2232,6 @@ TreeSummary(this.summaryMap,e)}},module.exports=TreeSummarizer
 
 /*
 file istanbul/lib/report/html.js
-utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/html.js > /tmp/aa.js
 */
 function customEscape(e){return e=e.toString(),e.replace(RE_AMP,"&amp;").replace
 (RE_LT,"&lt;").replace(RE_GT,"&gt;").replace(RE_lt,"<").replace(RE_gt,">")}function title
@@ -2374,7 +2358,6 @@ i),s.copyFile(t,i))}),this.writeFiles(s,o.root,r,e)}}),module.exports=HtmlReport
 
 /*
 file istanbul/lib/report/text.js
-utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/text.js > /tmp/aa.js
 */
 function TextReport(e){Report.call(this),e=e||{},this.dir=e.dir||process.cwd(),this
 .file=e.file,this.summary=e.summary,this.maxCols=e.maxCols||0,this.watermarks=e.
@@ -2414,7 +2397,6 @@ maxCols>0&&(o=this.maxCols-s-2,i>o&&(i=o)),walk(r,i,u,0,this.watermarks),a=u.joi
 
 /*
 file badge.svg - coverage
-https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
 */
 '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
 /*

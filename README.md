@@ -56,10 +56,11 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- fix function buildReadme's custom-case
+- jslint - fix lineOffset issue
+- jslint - jlintUtility2 with ignore-region blank
+- jslint - sort nested switch-statements
 - jslint-autofix - move inner-loop to outer
 - left-align .<xxx>
-- replace circurlarList -> circularSet
 - jslint - refactor files to 80 chr column-limit
 - add default testCase _testCase_cliRun_help
 - merge class _http.IncomingMessage -> _http.ServerResponse
@@ -67,19 +68,27 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - add server stress-test using electron
 - none
 
-#### changelog 2018.12.30
-- npm publish 2018.12.30
-- jslint - open-form - document.querySelector(
-- jslint - validateLineSorted - switch-statement
-- split function jslintAndPrint -> jslintAndPrint, jslintAutofix, jslintUtility2
-- rename function base64ToString -> base64ToUtf8
-- rename function bufferToString -> bufferToUtf8
-- replace function local.bufferCreate -> new TextEncoder().encode
-- remove unused function local.ajaxCrawl
-- add function local.objectAssignDefault
-- rename var options -> option
-- istanbul - add clickable id-fragment to lines in html-coverage
-- .vimrc - add functions MyStringifyRegion, MyRename
+#### changelog 2019.2.28
+- npm publish 2019.2.28
+- split function domOnEventDelegate into domOnEventDelegate, domOnEventResetOutput
+- add function local.dateGetWeek
+- merge shell-functions utility2.customOrgRepoCreate, shCustomOrgRepoCreate into shTravisRepoCreate
+- replace circurlarList with circularSet
+- jslint - merge function local.jslintUtility20 into local.jslintAndPrint
+- update shell-function shHttpFileServer to be windows-compatible
+- jslint - simplify lint and autofix for json
+- bug - fix unintended indent-autofix for jslint-ignore in demux and mux
+- jslint-autofix in separate process
+- add functions local.dateUtcFromLocal, local.dateUtcToLocal, local.domDatasetDecode, local.domDatasetEncode
+- update function templateRender with functions padEnd and padStart
+- add repl-command \$ ll
+- auto-git-diff when npm_config_mode_restart=1
+- jslint - add function jslintAndPrintDir
+- swgg - add input-type=number
+- jslint - lint json with JSON.parse instead of jslint
+- revamp ui event-handling with window.domOnEventDelegateDict
+- fix function buildReadme's custom-case
+- remove unused-functions objectLiteralize and objectTraverse
 - none
 
 #### this package requires
@@ -88,7 +97,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 
 
 # quickstart standalone app
-#### to run this example, follow the instruction in the script below
+#### to run this example, follow instruction in script below
 - [assets.app.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.app.js)
 ```shell
 # example.sh
@@ -99,7 +108,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 curl -O https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.app.js
 # 2. run standalone app
 PORT=8081 node ./assets.app.js
-# 3. open a browser to http://127.0.0.1:8081 and play with the web-demo
+# 3. open a browser to http://127.0.0.1:8081 and play with web-demo
 # 4. edit file assets.app.js to suit your needs
 ```
 
@@ -184,7 +193,7 @@ instruction
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw the error <message> if <passed> is falsy
+     * this function will throw error <message> if <passed> is falsy
      */
         var error;
         if (passed) {
@@ -235,7 +244,8 @@ instruction
      * null, undefined, or empty-string,
      * then overwrite them with items from <source>
      */
-        Object.keys(source).forEach(function (key) {
+        target = target || {};
+        Object.keys(source || {}).forEach(function (key) {
             if (
                 target[key] === null
                 || target[key] === undefined
@@ -244,6 +254,7 @@ instruction
                 target[key] = target[key] || source[key];
             }
         });
+        return target;
     };
     // require builtin
     if (!local.isBrowser) {
@@ -377,69 +388,63 @@ local.testCase_webpage_default = function (option, onError) {
 if (!local.isBrowser) {
     return;
 }
-local.testRunBrowser = function (event) {
-    if (!event || (
-        event
-        && event.currentTarget
-        && event.currentTarget.className
-        && event.currentTarget.className.includes
-        && event.currentTarget.className.includes("onreset")
-    )) {
-        // reset output
-        Array.from(document.querySelectorAll(
-            "body > .resettable"
-        )).forEach(function (element) {
-            switch (element.tagName) {
-            case "INPUT":
-            case "TEXTAREA":
-                element.value = "";
-                break;
-            default:
-                element.textContent = "";
-            }
-        });
+// log stderr and stdout to #outputStdout1
+["error", "log"].forEach(function (key) {
+    var argList;
+    var element;
+    var fnc;
+    element = document.querySelector(
+        "#outputStdout1"
+    );
+    if (!element) {
+        return;
     }
-    switch (event && event.currentTarget && event.currentTarget.id) {
-    case "testRunButton1":
-        // show tests
-        if (document.querySelector(
-            "#testReportDiv1"
-        ).style.maxHeight === "0px") {
-            local.uiAnimateSlideDown(document.querySelector(
-                "#testReportDiv1"
-            ));
-            document.querySelector(
-                "#testRunButton1"
-            ).textContent = "hide internal test";
-            local.modeTest = 1;
-            local.testRunDefault(local);
-        // hide tests
-        } else {
-            local.uiAnimateSlideUp(document.querySelector(
-                "#testReportDiv1"
-            ));
-            document.querySelector(
-                "#testRunButton1"
-            ).textContent = "run internal test";
-        }
-        break;
-    /* validateLineSortedReset */
+    fnc = console[key];
+    console[key] = function () {
+        argList = Array.from(arguments); // jslint ignore:line
+        fnc.apply(console, argList);
+        // append text to #outputStdout1
+        element.textContent += argList.map(function (arg) {
+            return (
+                typeof arg === "string"
+                ? arg
+                : JSON.stringify(arg, null, 4)
+            );
+        }).join(" ").replace((
+            /\u001b\[\d*m/g
+        ), "") + "\n";
+        // scroll textarea to bottom
+        element.scrollTop = element.scrollHeight;
+    };
+});
+Object.assign(local, globalThis.domOnEventDelegateDict);
+globalThis.domOnEventDelegateDict = local;
+local.onEventDomDb = (
+    local.db && local.db.onEventDomDb
+);
+local.testRunBrowser = function (event) {
+/*
+ * this function will run browser-tests
+ */
+    switch (
+        !event.ctrlKey
+        && !event.metaKey
+        && (
+            event.modeInit
+            || (event.type + "." + (event.target && event.target.id))
+        )
+    ) {
     // custom-case
-    case "testRunButton2":
-        // run tests
-        local.modeTest = 1;
-        local.testRunDefault(local);
-        break;
-    default:
-        if (location.href.indexOf("modeTest=") >= 0) {
-            return;
-        }
-        // jslint #inputTextareaEval1
+    case "click.jslintAutofixButton1":
+    case "keydown.inputEval1":
+    case true:
+        globalThis.domOnEventDelegateDict.domOnEventResetOutput();
+        // jslint #inputEval1
         local.jslint.jslintAndPrint(
             document.querySelector(
-                "#inputTextareaEval1"
+                "#inputEval1"
             ).value,
-            "inputTextareaEval1.js",
+            "inputEval1.js",
             {
                 autofix: (
                     event
@@ -451,7 +456,7 @@ local.testRunBrowser = function (event) {
         );
         if (local.jslint.jslintResult.autofix) {
             document.querySelector(
-                "#inputTextareaEval1"
+                "#inputEval1"
             ).value = (
                 local.jslint.jslintResult.code
             );
@@ -465,24 +470,24 @@ local.testRunBrowser = function (event) {
         ), "").trim();
         // try to cleanup __coverage__
         try {
-            delete globalThis.__coverage__["/inputTextareaEval1.js"];
+            delete globalThis.__coverage__["/inputEval1.js"];
         } catch (ignore) {}
         // try to cover and eval input-code
         try {
             document.querySelector(
-                "#outputTextarea1"
-            ).value = (
+                "#outputCode1"
+            ).textContent = (
                 local.istanbul.instrumentSync(
                     document.querySelector(
-                        "#inputTextareaEval1"
+                        "#inputEval1"
                     ).value,
-                    "/inputTextareaEval1.js"
+                    "/inputEval1.js"
                 )
             );
             eval( // jslint ignore:line
                 document.querySelector(
-                    "#outputTextarea1"
-                ).value.replace((
+                    "#outputCode1"
+                ).textContent.replace((
                     /^#!\//
                 ), "// ")
             );
@@ -496,85 +501,49 @@ local.testRunBrowser = function (event) {
         } catch (errorCaught2) {
             console.error(errorCaught2);
         }
-    }
-};
-
-local.uiEventDelegate = local.uiEventDelegate || function (event) {
-    // filter non-input keyup-event
-    event.targetOnEvent = event.target.closest("[data-onevent]");
-    if (!event.targetOnEvent) {
         return;
-    }
-    // rate-limit keyup
-    if (event.type === "keyup") {
-        local.uiEventDelegateKeyupEvent = event;
-        if (local.uiEventDelegateKeyupTimerTimeout !== 2) {
-            local.uiEventDelegateKeyupTimerTimeout = (
-                local.uiEventDelegateKeyupTimerTimeout
-                || setTimeout(function () {
-                    local.uiEventDelegateKeyupTimerTimeout = 2;
-                    local.uiEventDelegate(local.uiEventDelegateKeyupEvent);
-                }, 100)
-            );
+    case "click.testRunButton1":
+        local.modeTest = 1;
+        local.testRunDefault(local);
+        return;
+    // run browser-tests
+    default:
+        if (
+            (event.target && event.target.id) !== "testRunButton1"
+            && !(event.modeInit && (
+                /\bmodeTest=1\b/
+            ).test(location.search))
+        ) {
             return;
         }
-        local.uiEventDelegateKeyupTimerTimeout = null;
-        if (!event.target.closest("input, option, select, textarea")) {
+        // show browser-tests
+        if (document.querySelector(
+            "#testReportDiv1"
+        ).style.maxHeight === "0px") {
+            globalThis.domOnEventDelegateDict.domOnEventResetOutput();
+            local.uiAnimateSlideDown(document.querySelector(
+                "#testReportDiv1"
+            ));
+            document.querySelector(
+                "#testRunButton1"
+            ).textContent = "hide internal test";
+            local.modeTest = 1;
+            local.testRunDefault(local);
             return;
         }
+        // hide browser-tests
+        local.uiAnimateSlideUp(document.querySelector(
+            "#testReportDiv1"
+        ));
+        document.querySelector(
+            "#testRunButton1"
+        ).textContent = "run internal test";
     }
-    switch (event.targetOnEvent.tagName) {
-    case "BUTTON":
-    case "FORM":
-        event.preventDefault();
-        break;
-    }
-    event.stopPropagation();
-    local.uiEventListenerDict[event.targetOnEvent.dataset.onevent](event);
 };
 
-local.uiEventListenerDict = local.uiEventListenerDict || {};
-
-local.uiEventListenerDict.testRunBrowser = local.testRunBrowser;
-
-// log stderr and stdout to #outputStdoutTextarea1
-["error", "log"].forEach(function (key) {
-    console[key + "_original"] = console[key + "_original"] || console[key];
-    console[key] = function () {
-        var argList;
-        var element;
-        argList = Array.from(arguments); // jslint ignore:line
-        console[key + "_original"].apply(console, argList);
-        element = document.querySelector(
-            "#outputStdoutTextarea1"
-        );
-        if (!element) {
-            return;
-        }
-        // append text to #outputStdoutTextarea1
-        element.value += argList.map(function (arg) {
-            return (
-                typeof arg === "string"
-                ? arg
-                : JSON.stringify(arg, null, 4)
-            );
-        }).join(" ").replace((
-            /\u001b\[\d*m/g
-        ), "") + "\n";
-        // scroll textarea to bottom
-        element.scrollTop = element.scrollHeight;
-    };
+local.testRunBrowser({
+    modeInit: true
 });
-// init event-handling
-["Change", "Click", "Keyup", "Submit"].forEach(function (eventType) {
-    Array.from(document.querySelectorAll(
-        ".eventDelegate" + eventType
-    )).forEach(function (element) {
-        element.addEventListener(eventType.toLowerCase(), local.uiEventDelegate);
-    });
-});
-// run tests
-local.testRunBrowser();
 }());
 
 
@@ -649,19 +618,21 @@ a {\n\
 body {\n\
     background: #eef;\n\
     font-family: Arial, Helvetica, sans-serif;\n\
+    font-size: small;\n\
     margin: 0 40px;\n\
 }\n\
 body > div,\n\
 body > form > div,\n\
 body > form > input,\n\
 body > form > pre,\n\
-body > form > textarea,\n\
 body > form > .button,\n\
+body > form > .textarea,\n\
 body > input,\n\
 body > pre,\n\
-body > textarea,\n\
-body > .button {\n\
+body > .button,\n\
+body > .textarea {\n\
     margin-bottom: 20px;\n\
+    margin-top: 0;\n\
 }\n\
 body > form > input,\n\
 body > form > .button,\n\
@@ -669,27 +640,23 @@ body > input,\n\
 body > .button {\n\
     width: 20rem;\n\
 }\n\
-body > form > textarea,\n\
-body > textarea {\n\
+body > form > .textarea,\n\
+body > .textarea {\n\
     height: 10rem;\n\
     width: 100%;\n\
 }\n\
-body > textarea[readonly] {\n\
+body > .readonly {\n\
     background: #ddd;\n\
 }\n\
 code,\n\
 pre,\n\
-textarea {\n\
+.textarea {\n\
     font-family: Consolas, Menlo, monospace;\n\
-    font-size: small;\n\
+    font-size: smaller;\n\
 }\n\
 pre {\n\
     overflow-wrap: break-word;\n\
     white-space: pre-wrap;\n\
-}\n\
-textarea {\n\
-    overflow: auto;\n\
-    white-space: pre;\n\
 }\n\
 .button {\n\
     background-color: #fff;\n\
@@ -713,6 +680,14 @@ textarea {\n\
 }\n\
 .colorError {\n\
     color: #d00;\n\
+}\n\
+.textarea {\n\
+    background: #fff;\n\
+    border: 1px solid #999;\n\
+    border-radius: 0;\n\
+    cursor: auto;\n\
+    overflow: auto;\n\
+    padding: 2px;\n\
 }\n\
 .uiAnimateShake {\n\
     animation-duration: 500ms;\n\
@@ -738,13 +713,13 @@ textarea {\n\
 <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
 <a class="zeroPixel" download="db.persistence.json" href="" id="dbExportA1"></a>\n\
-<input class="zeroPixel" id="dbImportInput1" type="file">\n\
+<input class="zeroPixel" data-onevent="onEventDomDb" data-onevent-db="dbImportInput" type="file">\n\
 <script>\n\
 /* jslint utility2:true */\n\
 // init domOnEventWindowOnloadTimeElapsed\n\
 (function () {\n\
 /*\n\
- * this function will measure and print the time-elapsed for window.onload\n\
+ * this function will measure and print time-elapsed for window.onload\n\
  */\n\
     "use strict";\n\
     if (window.domOnEventWindowOnloadTimeElapsed) {\n\
@@ -767,11 +742,104 @@ textarea {\n\
 \n\
 \n\
 \n\
+// init domOnEventDelegateDict\n\
+(function () {\n\
+/*\n\
+ * this function will handle delegated dom-event\n\
+ */\n\
+    "use strict";\n\
+    var timerTimeoutDict;\n\
+    if (window.domOnEventDelegateDict) {\n\
+        return;\n\
+    }\n\
+    window.domOnEventDelegateDict = {};\n\
+    timerTimeoutDict = {};\n\
+    window.domOnEventDelegateDict.domOnEventDelegate = function (event) {\n\
+        event.targetOnEvent = event.target.closest(\n\
+            "[data-onevent]"\n\
+        );\n\
+        if (\n\
+            !event.targetOnEvent\n\
+            || event.targetOnEvent.dataset.onevent === "domOnEventNop"\n\
+            || event.target.closest(\n\
+                ".disabled, .readonly"\n\
+            )\n\
+        ) {\n\
+            return;\n\
+        }\n\
+        // rate-limit high-frequency-event\n\
+        switch (event.type) {\n\
+        case "keydown":\n\
+        case "keyup":\n\
+            // filter non-input keyboard-event\n\
+            if (!event.target.closest(\n\
+                "input, option, select, textarea"\n\
+            )) {\n\
+                return;\n\
+            }\n\
+            if (timerTimeoutDict[event.type] !== true) {\n\
+                timerTimeoutDict[event.type] = timerTimeoutDict[\n\
+                    event.type\n\
+                ] || setTimeout(function () {\n\
+                    timerTimeoutDict[event.type] = true;\n\
+                    window.domOnEventDelegateDict.domOnEventDelegate(\n\
+                        event\n\
+                    );\n\
+                }, 50);\n\
+                return;\n\
+            }\n\
+            timerTimeoutDict[event.type] = null;\n\
+            break;\n\
+        }\n\
+        switch (event.targetOnEvent.tagName) {\n\
+        case "BUTTON":\n\
+        case "FORM":\n\
+            event.preventDefault();\n\
+            break;\n\
+        }\n\
+        event.stopPropagation();\n\
+        window.domOnEventDelegateDict[event.targetOnEvent.dataset.onevent](\n\
+            event\n\
+        );\n\
+    };\n\
+    window.domOnEventDelegateDict.domOnEventResetOutput = function () {\n\
+        Array.from(document.querySelectorAll(\n\
+            ".onevent-reset-output"\n\
+        )).forEach(function (element) {\n\
+            switch (element.tagName) {\n\
+            case "INPUT":\n\
+            case "TEXTAREA":\n\
+                element.value = "";\n\
+                break;\n\
+            case "PRE":\n\
+                element.textContent = "";\n\
+                break;\n\
+            default:\n\
+                element.innerHTML = "";\n\
+            }\n\
+        });\n\
+    };\n\
+    // init event-handling\n\
+    [\n\
+        "change",\n\
+        "click",\n\
+        "keydown",\n\
+        "submit"\n\
+    ].forEach(function (eventType) {\n\
+        document.addEventListener(\n\
+            eventType,\n\
+            window.domOnEventDelegateDict.domOnEventDelegate\n\
+        );\n\
+    });\n\
+}());\n\
+\n\
+\n\
+\n\
 // init timerIntervalAjaxProgressUpdate\n\
 (function () {\n\
 /*\n\
- * this function will increment the ajax-progress-bar\n\
- * until the webpage has loaded\n\
+ * this function will increment ajax-progress-bar\n\
+ * until webpage has loaded\n\
  */\n\
     "use strict";\n\
     var ajaxProgressDiv1;\n\
@@ -836,10 +904,14 @@ textarea {\n\
             event\n\
             && event.key === "a"\n\
             && (event.ctrlKey || event.metaKey)\n\
-            && event.target.closest("pre")\n\
+            && event.target.closest(\n\
+                "pre"\n\
+            )\n\
         ) {\n\
             range = document.createRange();\n\
-            range.selectNodeContents(event.target.closest("pre"));\n\
+            range.selectNodeContents(event.target.closest(\n\
+                "pre"\n\
+            ));\n\
             selection = window.getSelection();\n\
             selection.removeAllRanges();\n\
             selection.addRange(range);\n\
@@ -870,14 +942,13 @@ utility2-comment -->\n\
 <h3>{{env.npm_package_description}}</h3>\n\
 <!-- utility2-comment\n\
 <a class="button" download href="assets.app.js">download standalone app</a><br>\n\
-<button id="testRunButton1" style="display: none;"></button>\n\
-<button class="button eventDelegateClick onreset" data-onevent="testRunBrowser" id="testRunButton2">run internal test</button><br>\n\
+<button class="button" data-onevent="testRunBrowser" id="testRunButton1">run internal test</button><br>\n\
 utility2-comment -->\n\
 \n\
 \n\
 \n\
 <label>edit or paste script below to cover and test</label>\n\
-<textarea class="eventDelegateKeyup onreset" data-onevent="testRunBrowser" id="inputTextareaEval1">\n\
+<textarea class="textarea" data-onevent="testRunBrowser" id="inputEval1">\n\
 // remove comment below to disable jslint\n\
 /*jslint browser, devel*/\n\
 /*global window*/\n\
@@ -923,14 +994,14 @@ utility2-comment -->\n\
     window.utility2.testRunDefault(testCaseDict);\n\
 }());\n\
 </textarea>\n\
-<button class="button eventDelegateClick onreset" data-onevent="testRunBrowser" id="jslintAutofixButton1">jslint autofix</button><br>\n\
+<button class="button" data-onevent="testRunBrowser" id="jslintAutofixButton1">jslint autofix</button><br>\n\
 <pre class= "colorError" id="outputJslintPre1" tabindex="0"></pre>\n\
 <label>instrumented-code</label>\n\
-<textarea class="resettable" id="outputTextarea1" readonly></textarea>\n\
+<pre class="readonly textarea" id="outputCode1" tabindex="0"></pre>\n\
 <label>stderr and stdout</label>\n\
-<textarea class="resettable" id="outputStdoutTextarea1" readonly></textarea>\n\
-<div class="resettable" id="testReportDiv1"></div>\n\
-<div class="resettable" id="coverageReportDiv1"></div>\n\
+<pre class="onevent-reset-output readonly textarea" id="outputStdout1" tabindex="0"></pre>\n\
+<div id="testReportDiv1"></div>\n\
+<div id="coverageReportDiv1"></div>\n\
 <!-- utility2-comment\n\
 {{#if isRollup}}\n\
 <script src="assets.app.js"></script>\n\
@@ -938,7 +1009,6 @@ utility2-comment -->\n\
 utility2-comment -->\n\
 <script src="assets.utility2.lib.istanbul.js"></script>\n\
 <script src="assets.utility2.lib.jslint.js"></script>\n\
-<script src="assets.utility2.lib.jslint2.js"></script>\n\
 <script src="assets.utility2.lib.db.js"></script>\n\
 <script src="assets.utility2.lib.marked.js"></script>\n\
 <script src="assets.utility2.lib.sjcl.js"></script>\n\
@@ -1008,7 +1078,7 @@ if (globalThis.utility2_serverHttp1) {
     return;
 }
 process.env.PORT = process.env.PORT || "8081";
-console.error("server starting on port " + process.env.PORT);
+console.error("http-server listening on port " + process.env.PORT);
 local.http.createServer(function (request, response) {
     request.urlParsed = local.url.parse(request.url);
     if (local.assetsDict[request.urlParsed.pathname] !== undefined) {
@@ -1090,7 +1160,7 @@ local.http.createServer(function (request, response) {
         "electron-lite": "kaizhu256/node-electron-lite#alpha"
     },
     "engines": {
-        "node": ">=8.0"
+        "node": ">=10.0"
     },
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
@@ -1124,7 +1194,7 @@ local.http.createServer(function (request, response) {
         "test": "./npm_scripts.sh",
         "utility2": "./npm_scripts.sh"
     },
-    "version": "2018.12.30"
+    "version": "2019.2.28"
 }
 ```
 

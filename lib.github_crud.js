@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.github_crud.js (2018.8.8)
+ * lib.github_crud.js (2019.1.21)
  * https://github.com/kaizhu256/node-github-crud
  * this zero-dependency package will provide a simple cli-tool to PUT / GET / DELETE github files
  *
@@ -56,7 +56,7 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw the error <message> if <passed> is falsy
+     * this function will throw error <message> if <passed> is falsy
      */
         var error;
         if (passed) {
@@ -107,7 +107,8 @@
      * null, undefined, or empty-string,
      * then overwrite them with items from <source>
      */
-        Object.keys(source).forEach(function (key) {
+        target = target || {};
+        Object.keys(source || {}).forEach(function (key) {
             if (
                 target[key] === null
                 || target[key] === undefined
@@ -116,6 +117,7 @@
                 target[key] = target[key] || source[key];
             }
         });
+        return target;
     };
     // require builtin
     if (!local.isBrowser) {
@@ -205,7 +207,7 @@ local.ajax = function (option, onError) {
     var xhr;
     var xhrInit;
     // init local2
-    local2 = local.utility2 || {};
+    local2 = option.local2 || local.utility2 || {};
     // init function
     ajaxProgressUpdate = local2.ajaxProgressUpdate || local.nop;
     bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (
@@ -341,16 +343,16 @@ local.ajax = function (option, onError) {
     };
     streamCleanup = function (stream) {
     /*
-     * this function will try to end or destroy the stream
+     * this function will try to end or destroy <stream>
      */
         var error;
-        // try to end the stream
+        // try to end stream
         try {
             stream.end();
         } catch (errorCaught) {
             error = errorCaught;
         }
-        // if error, then try to destroy the stream
+        // if error, then try to destroy stream
         if (error) {
             try {
                 stream.destroy();
@@ -421,7 +423,7 @@ local.ajax = function (option, onError) {
             || require(xhr.protocol.slice(0, -1)).request
         )(xhr, function (responseStream) {
         /*
-         * this function will read the responseStream
+         * this function will read <responseStream>
          */
             var chunkList;
             chunkList = [];
@@ -453,7 +455,7 @@ local.ajax = function (option, onError) {
         });
         xhr.abort = function () {
         /*
-         * this function will abort the xhr-request
+         * this function will abort xhr-request
          * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/abort
          */
             xhr.onEvent({
@@ -601,14 +603,11 @@ local.cliRun = function (option) {
                     "cliRun - cannot parse comment in COMMAND "
                     + key + ":\nnew RegExp("
                     + JSON.stringify(option.rgxComment.source)
-                    + ").exec(" + JSON.stringify(text)
-                    .replace((
+                    + ").exec(" + JSON.stringify(text).replace((
                         /\\\\/g
-                    ), "\u0000")
-                    .replace((
+                    ), "\u0000").replace((
                         /\\n/g
-                    ), "\\n\\\n")
-                    .replace((
+                    ), "\\n\\\n").replace((
                         /\u0000/g
                     ), "\\\\") + ");"
                 ));
@@ -733,7 +732,7 @@ local.onErrorWithStack = function (onError) {
 
 local.onNext = function (option, onError) {
 /*
- * this function will wrap onError inside the recursive function option.onNext,
+ * this function will wrap onError inside recursive-function <option>.onNext,
  * and append the current stack to any error
  */
     option.onNext = local.onErrorWithStack(function (error, data, meta) {
@@ -1005,7 +1004,7 @@ local.githubCrudAjax = function (option, onError) {
 
 local.githubCrudContentDelete = function (option, onError) {
 /*
- * this function will delete the github-file option.url
+ * this function will delete github-file <option>.url
  * https://developer.github.com/v3/repos/contents/#delete-a-file
  */
     option = {
@@ -1057,7 +1056,7 @@ local.githubCrudContentDelete = function (option, onError) {
 
 local.githubCrudContentGet = function (option, onError) {
 /*
- * this function will get the github-file option.url
+ * this function will get github-file <option>.url
  * https://developer.github.com/v3/repos/contents/#get-contents
  */
     option = {
@@ -1085,7 +1084,7 @@ local.githubCrudContentGet = function (option, onError) {
 
 local.githubCrudContentPut = function (option, onError) {
 /*
- * this function will put option.content to the github-file option.url
+ * this function will put <option>.content to github-file <option>.url
  * https://developer.github.com/v3/repos/contents/#create-a-file
  * https://developer.github.com/v3/repos/contents/#update-a-file
  */
@@ -1126,7 +1125,7 @@ local.githubCrudContentPut = function (option, onError) {
 
 local.githubCrudContentPutFile = function (option, onError) {
 /*
- * this function will put option.file to the github-file option.url
+ * this function will put option.file to github-file <option>.url
  * https://developer.github.com/v3/repos/contents/#update-a-file
  */
     option = {
@@ -1179,7 +1178,7 @@ local.githubCrudContentPutFile = function (option, onError) {
 
 local.githubCrudContentTouch = function (option, onError) {
 /*
- * this function will touch the github-file option.url
+ * this function will touch github-file <option>.url
  * https://developer.github.com/v3/repos/contents/#update-a-file
  */
     option = {
@@ -1218,7 +1217,7 @@ local.githubCrudContentTouch = function (option, onError) {
 
 local.githubCrudContentTouchList = function (option, onError) {
 /*
- * this function will touch the github-files option.urlList in parallel
+ * this function will touch github-files <option>.urlList in parallel
  * https://developer.github.com/v3/repos/contents/#update-a-file
  */
     local.onParallelList({
@@ -1235,7 +1234,7 @@ local.githubCrudContentTouchList = function (option, onError) {
 
 local.githubCrudRepoCreate = function (option, onError) {
 /*
- * this function will create the github-repo option.url
+ * this function will create github-repo <option>.url
  * https://developer.github.com/v3/repos/#create
  */
     local.githubCrudAjax({
@@ -1257,7 +1256,7 @@ local.githubCrudRepoCreate = function (option, onError) {
 
 local.githubCrudRepoCreateList = function (option, onError) {
 /*
- * this function will create the github-repos option.urlList in parallel
+ * this function will create github-repos <option>.urlList in parallel
  * https://developer.github.com/v3/repos/#create
  */
     local.onParallelList({
@@ -1273,7 +1272,7 @@ local.githubCrudRepoCreateList = function (option, onError) {
 
 local.githubCrudRepoDelete = function (option, onError) {
 /*
- * this function will delete the github-repo option.url
+ * this function will delete github-repo <option>.url
  * https://developer.github.com/v3/repos/#delete-a-repository
  */
     local.githubCrudAjax({
@@ -1285,7 +1284,7 @@ local.githubCrudRepoDelete = function (option, onError) {
 
 local.githubCrudRepoDeleteList = function (option, onError) {
 /*
- * this function will delete the github-repos option.urlList in parallel
+ * this function will delete github-repos <option>.urlList in parallel
  * https://developer.github.com/v3/repos/#delete-a-repository
  */
     local.onParallelList({
@@ -1343,7 +1342,7 @@ local.cliDict.get = function () {
 local.cliDict.put = function () {
 /*
  * <fileRemote> <fileLocal> <commitMessage>
- * will put on github <fileRemote>, <fileLocal>
+ * will put on github <fileRemote> to <fileLocal>
  */
     local.github_crud.githubCrudContentPutFile({
         message: process.argv[5],
@@ -1397,7 +1396,7 @@ local.cliDict.touch = function () {
     });
 };
 
-// run cli
+// run the cli
 if (module === require.main && !globalThis.utility2_rollup) {
     local.cliRun();
 }

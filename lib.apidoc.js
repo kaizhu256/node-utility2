@@ -56,7 +56,7 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw the error <message> if <passed> is falsy
+     * this function will throw error <message> if <passed> is falsy
      */
         var error;
         if (passed) {
@@ -107,7 +107,8 @@
      * null, undefined, or empty-string,
      * then overwrite them with items from <source>
      */
-        Object.keys(source).forEach(function (key) {
+        target = target || {};
+        Object.keys(source || {}).forEach(function (key) {
             if (
                 target[key] === null
                 || target[key] === undefined
@@ -116,6 +117,7 @@
                 target[key] = target[key] || source[key];
             }
         });
+        return target;
     };
     // require builtin
     if (!local.isBrowser) {
@@ -248,14 +250,11 @@ local.cliRun = function (option) {
                     "cliRun - cannot parse comment in COMMAND "
                     + key + ":\nnew RegExp("
                     + JSON.stringify(option.rgxComment.source)
-                    + ").exec(" + JSON.stringify(text)
-                    .replace((
+                    + ").exec(" + JSON.stringify(text).replace((
                         /\\\\/g
-                    ), "\u0000")
-                    .replace((
+                    ), "\u0000").replace((
                         /\\n/g
-                    ), "\\n\\\n")
-                    .replace((
+                    ), "\\n\\\n").replace((
                         /\u0000/g
                     ), "\\\\") + ");"
                 ));
@@ -437,216 +436,6 @@ local.stringHtmlSafe = function (text) {
     ), "&$1");
 };
 
-local.templateRender = function (template, dict, option) {
-/*
- * this function will render the template with given dict
- */
-    var argList;
-    var getValue;
-    var match;
-    var renderPartial;
-    var rgx;
-    var skip;
-    var value;
-    dict = dict || {};
-    option = option || {};
-    getValue = function (key) {
-        argList = key.split(" ");
-        value = dict;
-        if (argList[0] === "#this/") {
-            return;
-        }
-        // iteratively lookup nested values in the dict
-        argList[0].split(".").forEach(function (key) {
-            value = value && value[key];
-        });
-        return value;
-    };
-    renderPartial = function (match0, helper, key, partial) {
-        switch (helper) {
-        case "each":
-        case "eachTrimRightComma":
-            value = getValue(key);
-            value = (
-                Array.isArray(value)
-                ? value.map(function (dict) {
-                    // recurse with partial
-                    return local.templateRender(partial, dict, option);
-                }).join("")
-                : ""
-            );
-            // remove trailing-comma from last element
-            if (helper === "eachTrimRightComma") {
-                value = value.trimRight().replace((
-                    /,$/
-                ), "");
-            }
-            return value;
-        case "if":
-            partial = partial.split("{{#unless " + key + "}}");
-            partial = (
-                getValue(key)
-                ? partial[0]
-                // handle 'unless' case
-                : partial.slice(1).join("{{#unless " + key + "}}")
-            );
-            // recurse with partial
-            return local.templateRender(partial, dict, option);
-        case "unless":
-            return (
-                getValue(key)
-                ? ""
-                // recurse with partial
-                : local.templateRender(partial, dict, option)
-            );
-        default:
-            // recurse with partial
-            return match0[0] + local.templateRender(match0.slice(1), dict, option);
-        }
-    };
-    // render partials
-    rgx = (
-        /\{\{#(\w+)\u0020([^}]+?)\}\}/g
-    );
-    template = template || "";
-    match = rgx.exec(template);
-    while (match) {
-        rgx.lastIndex += 1 - match[0].length;
-        template = template.replace(
-            new RegExp(
-                "\\{\\{#(" + match[1] + ") (" + match[2]
-                + ")\\}\\}([\\S\\s]*?)\\{\\{/" + match[1] + " " + match[2]
-                + "\\}\\}"
-            ),
-            renderPartial
-        );
-        match = rgx.exec(template);
-    }
-    // search for keys in the template
-    return template.replace((
-        /\{\{[^}]+?\}\}/g
-    ), function (match0) {
-        var markdownToHtml;
-        var notHtmlSafe;
-        notHtmlSafe = option.notHtmlSafe;
-        try {
-            getValue(match0.slice(2, -2));
-            if (value === undefined) {
-                return match0;
-            }
-            argList.slice(1).forEach(function (arg0, ii, list) {
-                switch (arg0) {
-                case "alphanumeric":
-                    value = value.replace((
-                        /\W/g
-                    ), "_");
-                    break;
-                case "decodeURIComponent":
-                    value = decodeURIComponent(value);
-                    break;
-                case "encodeURIComponent":
-                    value = encodeURIComponent(value);
-                    break;
-                case "jsonStringify":
-                    value = JSON.stringify(value);
-                    break;
-                case "jsonStringify4":
-                    value = JSON.stringify(value, null, 4);
-                    break;
-                case "markdownSafe":
-                    value = value.replace((
-                        /`/g
-                    ), "'");
-                    break;
-                case "markdownToHtml":
-                    markdownToHtml = true;
-                    break;
-                case "notHtmlSafe":
-                    notHtmlSafe = true;
-                    break;
-                case "truncate":
-                    skip = ii + 1;
-                    if (value.length > list[skip]) {
-                        value = value.slice(0, list[skip] - 3).trimRight() + "...";
-                    }
-                    break;
-                // default to String.prototype[arg0]()
-                default:
-                    if (ii === skip) {
-                        break;
-                    }
-                    value = value[arg0]();
-                }
-            });
-            value = String(value);
-            // default to htmlSafe
-            if (!notHtmlSafe) {
-                value = value
-                .replace((
-                    /&/g
-                ), "&amp;")
-                .replace((
-                    /"/g
-                ), "&quot;")
-                .replace((
-                    /'/g
-                ), "&apos;")
-                .replace((
-                    /</g
-                ), "&lt;")
-                .replace((
-                    />/g
-                ), "&gt;")
-                .replace((
-                    /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
-                ), "&$1");
-            }
-            markdownToHtml = (
-                markdownToHtml
-                && (typeof local.marked === "function" && local.marked)
-            );
-            if (markdownToHtml) {
-                value = markdownToHtml(value)
-                .replace((
-                    /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
-                ), "&$1");
-            }
-            return value;
-        } catch (errorCaught) {
-            errorCaught.message = (
-                "templateRender could not render expression "
-                + JSON.stringify(match0) + "\n"
-            ) + errorCaught.message;
-            local.assertThrow(null, errorCaught);
-        }
-    });
-};
-
-local.tryCatchOnError = function (fnc, onError) {
-/*
- * this function will run the fnc in a tryCatch block,
- * else call onError with the errorCaught
- */
-    var result;
-    // validate onError
-    local.assertThrow(typeof onError === "function", typeof onError);
-    try {
-        // reset errorCaught
-        local._debugTryCatchError = null;
-        result = fnc();
-        local._debugTryCatchError = null;
-        return result;
-    } catch (errorCaught) {
-        // debug errorCaught
-        local._debugTryCatchError = errorCaught;
-        return onError(errorCaught);
-    }
-};
-}());
-
-
-
-// run shared js-env code - init-before
 /* jslint ignore:start */
 local.templateApidocHtml = '\
 <div class="apidocDiv">\n\
@@ -754,6 +543,234 @@ local.templateApidocHtml = '\
 </div>\n\
 ';
 /* jslint ignore:end */
+
+local.templateRender = function (template, dict, option) {
+/*
+ * this function will render the template with given dict
+ */
+    var argList;
+    var getValue;
+    var match;
+    var renderPartial;
+    var rgx;
+    var skip;
+    var value;
+    dict = dict || {};
+    option = option || {};
+    getValue = function (key) {
+        argList = key.split(" ");
+        value = dict;
+        if (argList[0] === "#this/") {
+            return;
+        }
+        // iteratively lookup nested values in the dict
+        argList[0].split(".").forEach(function (key) {
+            value = value && value[key];
+        });
+        return value;
+    };
+    renderPartial = function (match0, helper, key, partial) {
+        switch (helper) {
+        case "each":
+        case "eachTrimRightComma":
+            value = getValue(key);
+            value = (
+                Array.isArray(value)
+                ? value.map(function (dict) {
+                    // recurse with partial
+                    return local.templateRender(partial, dict, option);
+                }).join("")
+                : ""
+            );
+            // remove trailing-comma from last element
+            if (helper === "eachTrimRightComma") {
+                value = value.trimRight().replace((
+                    /,$/
+                ), "");
+            }
+            return value;
+        case "if":
+            partial = partial.split("{{#unless " + key + "}}");
+            partial = (
+                getValue(key)
+                ? partial[0]
+                // handle 'unless' case
+                : partial.slice(1).join("{{#unless " + key + "}}")
+            );
+            // recurse with partial
+            return local.templateRender(partial, dict, option);
+        case "unless":
+            return (
+                getValue(key)
+                ? ""
+                // recurse with partial
+                : local.templateRender(partial, dict, option)
+            );
+        default:
+            // recurse with partial
+            return match0[0] + local.templateRender(
+                match0.slice(1),
+                dict,
+                option
+            );
+        }
+    };
+    // render partials
+    rgx = (
+        /\{\{#(\w+)\u0020([^}]+?)\}\}/g
+    );
+    template = template || "";
+    match = rgx.exec(template);
+    while (match) {
+        rgx.lastIndex += 1 - match[0].length;
+        template = template.replace(
+            new RegExp(
+                "\\{\\{#(" + match[1] + ") (" + match[2]
+                + ")\\}\\}([\\S\\s]*?)\\{\\{/" + match[1] + " " + match[2]
+                + "\\}\\}"
+            ),
+            renderPartial
+        );
+        match = rgx.exec(template);
+    }
+    // search for keys in the template
+    return template.replace((
+        /\{\{[^}]+?\}\}/g
+    ), function (match0) {
+        var markdownToHtml;
+        var notHtmlSafe;
+        notHtmlSafe = option.notHtmlSafe;
+        try {
+            getValue(match0.slice(2, -2));
+            if (value === undefined) {
+                return match0;
+            }
+            argList.slice(1).forEach(function (arg0, ii, list) {
+                switch (arg0) {
+                case "alphanumeric":
+                    value = value.replace((
+                        /\W/g
+                    ), "_");
+                    break;
+                case "decodeURIComponent":
+                    value = decodeURIComponent(value);
+                    break;
+                case "encodeURIComponent":
+                    value = encodeURIComponent(value);
+                    break;
+                case "jsonStringify":
+                    value = JSON.stringify(value);
+                    break;
+                case "jsonStringify4":
+                    value = JSON.stringify(value, null, 4);
+                    break;
+                case "markdownSafe":
+                    value = value.replace((
+                        /`/g
+                    ), "'");
+                    break;
+                case "markdownToHtml":
+                    markdownToHtml = true;
+                    break;
+                case "notHtmlSafe":
+                    notHtmlSafe = true;
+                    break;
+                case "padEnd":
+                    skip = ii + 2;
+                    value = String(value).padEnd(
+                        list[skip - 1],
+                        list[skip]
+                    );
+                    break;
+                case "padStart":
+                    skip = ii + 2;
+                    value = String(value).padStart(
+                        list[skip - 1],
+                        list[skip]
+                    );
+                    break;
+                case "truncate":
+                    skip = ii + 1;
+                    if (value.length > list[skip]) {
+                        value = value.slice(
+                            0,
+                            Math.max(list[skip] - 3, 0)
+                        ).trimRight() + "...";
+                    }
+                    break;
+                // default to String.prototype[arg0]()
+                default:
+                    if (ii <= skip) {
+                        break;
+                    }
+                    value = value[arg0]();
+                }
+            });
+            value = String(value);
+            // default to htmlSafe
+            if (!notHtmlSafe) {
+                value = value
+                .replace((
+                    /&/g
+                ), "&amp;")
+                .replace((
+                    /"/g
+                ), "&quot;")
+                .replace((
+                    /'/g
+                ), "&apos;")
+                .replace((
+                    /</g
+                ), "&lt;")
+                .replace((
+                    />/g
+                ), "&gt;")
+                .replace((
+                    /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
+                ), "&$1");
+            }
+            markdownToHtml = (
+                markdownToHtml
+                && (typeof local.marked === "function" && local.marked)
+            );
+            if (markdownToHtml) {
+                value = markdownToHtml(value)
+                .replace((
+                    /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
+                ), "&$1");
+            }
+            return value;
+        } catch (errorCaught) {
+            errorCaught.message = (
+                "templateRender could not render expression "
+                + JSON.stringify(match0) + "\n"
+            ) + errorCaught.message;
+            local.assertThrow(null, errorCaught);
+        }
+    });
+};
+
+local.tryCatchOnError = function (fnc, onError) {
+/*
+ * this function will run the fnc in a tryCatch block,
+ * else call onError with the errorCaught
+ */
+    var result;
+    // validate onError
+    local.assertThrow(typeof onError === "function", typeof onError);
+    try {
+        // reset errorCaught
+        local._debugTryCatchError = null;
+        result = fnc();
+        local._debugTryCatchError = null;
+        return result;
+    } catch (errorCaught) {
+        // debug errorCaught
+        local._debugTryCatchError = errorCaught;
+        return onError(errorCaught);
+    }
+};
+}());
 
 
 
@@ -936,7 +953,7 @@ local.apidocCreate = function (option) {
         blacklistDict: {
             globalThis: globalThis
         },
-        circularList: [globalThis],
+        circularSet: new Set([globalThis]),
         exampleDict: {},
         exampleList: [],
         html: "",
@@ -995,7 +1012,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 + (option.packageJson.bin)[Object.keys(option.packageJson.bin)[0]]
             ) || {}
         );
-        option.circularList.push(moduleMain);
+        option.circularSet.add(moduleMain);
         console.error("apidocCreate - ... required " + option.dir);
     }, console.error);
     tmp = {};
@@ -1023,7 +1040,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
     // normalize moduleMain
     moduleMain = local.objectSetDefault(tmp, moduleMain);
     option.moduleDict[option.env.npm_package_name] = moduleMain;
-    // init circularList - builtins
+    // init circularSet - builtins
     [
         "assert",
         "buffer",
@@ -1054,29 +1071,20 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
         "zlib"
     ].forEach(function (key) {
         local.tryCatchOnError(function () {
-            option.circularList.push(require(key));
+            option.circularSet.add(require(key));
         }, local.nop);
     });
-    // init circularList - blacklistDict
+    // init circularSet - blacklistDict
     Object.keys(option.blacklistDict).forEach(function (key) {
-        option.circularList.push(option.blacklistDict[key]);
+        option.circularSet.add(option.blacklistDict[key]);
     });
-    // init circularList - moduleDict
+    // init circularSet - moduleDict
     Object.keys(option.moduleDict).forEach(function (key) {
-        option.circularList.push(option.moduleDict[key]);
+        option.circularSet.add(option.moduleDict[key]);
     });
-    // init circularList - prototype
-    Object.keys(option.circularList).forEach(function (key) {
-        tmp = option.circularList[key];
-        option.circularList.push(tmp && tmp.prototype);
-    });
-    // deduplicate circularList
-    tmp = option.circularList;
-    option.circularList = [];
-    tmp.forEach(function (element) {
-        if (option.circularList.indexOf(element) < 0) {
-            option.circularList.push(element);
-        }
+    // init circularSet - prototype
+    option.circularSet.forEach(function (element) {
+        option.circularSet.add(element && element.prototype);
     });
     // init moduleDict child
     local.apidocModuleDictAdd(option, option.moduleDict);
@@ -1156,7 +1164,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             console.error("apidocCreate - libFile " + file);
             tmp.module = option.require(option.dir + "/" + file);
             // filter circular-reference
-            if (!(tmp.module && option.circularList.indexOf(tmp.module) < 0)) {
+            if (!(tmp.module && option.circularSet.has(tmp.module))) {
                 return;
             }
             option.ii -= 1;
@@ -1276,7 +1284,7 @@ local.apidocModuleDictAdd = function (option, moduleDict) {
                     )
                     || Array.isArray(tmp.module)
                     || option.moduleDict[tmp.name]
-                    || option.circularList.indexOf(tmp.module) >= 0
+                    || option.circularSet.has(tmp.module)
                 ) {
                     return;
                 }
@@ -1291,7 +1299,7 @@ local.apidocModuleDictAdd = function (option, moduleDict) {
                 if (!isModule) {
                     return;
                 }
-                option.circularList.push(tmp.module);
+                option.circularSet.add(tmp.module);
                 option.moduleDict[tmp.name] = tmp.module;
             });
         });
@@ -1324,7 +1332,7 @@ local.cliDict._default = function () {
     }));
 };
 
-// run cli
+// run the cli
 if (module === require.main && !globalThis.utility2_rollup) {
     local.cliRun();
 }

@@ -9,12 +9,11 @@
 # git config --global diff.algorithm histogram
 # git fetch origin alpha beta master --tags
 # git ls-remote --heads origin
+# shCryptoWithGithubOrg aa shTravisRepoCreate aa/node-aa-bb
+# shCryptoWithGithubOrg aa shGithubApiRateLimitGet
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/bb "touch" alpha
-# shCryptoWithGithubOrg npmdoc shCustomOrgRepoCreateSyncCreate npmdoc/node-npmdoc-mysql
-# shCryptoWithGithubOrg npmdoc shGithubRepoTouch npmdoc/node-npmdoc-mysql "[npm publishAfterCommitAfterBuild]"
 # shGitAddTee npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
 # shGitAddTee shUtility2DependentsSync
-# utility2 electron test.js --enable-logging
 # utility2 shReadmeTest example.js
 
 shBaseInit () {
@@ -316,9 +315,8 @@ shBuildCi () {(set -e
     # init $CI_COMMIT_*
     export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE"
     export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)"
-    export CI_COMMIT_MESSAGE_META="$(git log -1 --pretty=%s | \
-        grep  -E "\[.*\]" | \
-        sed -e "s/\].*//" -e "s/\[//")"
+    export CI_COMMIT_MESSAGE_META=\
+"$(git log -1 --pretty=%s | grep  -E "\[.*\]" | sed -e "s/\].*//" -e "s/\[//")"
     # decrypt and exec encrypted data
     if [ "$CRYPTO_AES_KEY" ]
     then
@@ -330,7 +328,8 @@ shBuildCi () {(set -e
         git config --global user.email nobody
         git config --global user.name nobody
     fi
-    shBuildPrint "shBuildCi CI_BRANCH=$CI_BRANCH CI_COMMIT_MESSAGE_META=\"$CI_COMMIT_MESSAGE\""
+    shBuildPrint \
+"shBuildCi CI_BRANCH=$CI_BRANCH CI_COMMIT_MESSAGE_META=\"$CI_COMMIT_MESSAGE\""
     case "$CI_BRANCH" in
     alpha)
         case "$CI_COMMIT_MESSAGE" in
@@ -501,7 +500,8 @@ shBuildCi () {(set -e
             git add .
             git rm --cached -f .travis.yml
             git commit -am "[npm publishAfterCommit]"
-            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f HEAD:alpha
+            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" \
+                -f HEAD:alpha
             export CI_COMMIT_ID="$(git rev-parse --verify HEAD)"
             find node_modules -name .git -print0 | xargs -0 rm -fr
             npm run build-ci
@@ -541,28 +541,33 @@ shBuildCi () {(set -e
         "[npm publishAfterCommit]"*)
             shGitSquashPop HEAD~1 "[ci skip] [npm published \
 $(node -e 'process.stdout.write(require("./package.json").version)')]"
-            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f HEAD:alpha
+            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" \
+                -f HEAD:alpha
             shSleep 5
-            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f HEAD:beta
+            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" \
+                -f HEAD:alpha
             ;;
         *)
-            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" HEAD:beta
+            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" \
+                HEAD:beta
             ;;
         esac
         ;;
     esac
     # sync with $npm_package_githubRepoAlias
-    if [ "$CI_BRANCH" = alpha ] || [ "$CI_BRANCH" = beta ] || [ "$CI_BRANCH" = master ]
+    if [ "$CI_BRANCH" = alpha ] \
+        || [ "$CI_BRANCH" = beta ] \
+        || [ "$CI_BRANCH" = master ]
     then
         for GITHUB_REPO_ALIAS in $npm_package_githubRepoAlias
         do
-            shGithubRepoBaseCreate "$GITHUB_REPO_ALIAS"
-            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO_ALIAS" --tags -f \
-                "$CI_BRANCH"
+            shGithubRepoCreate "$GITHUB_REPO_ALIAS"
+            shGitCommandWithGithubToken push \
+                "https://github.com/$GITHUB_REPO_ALIAS" --tags -f "$CI_BRANCH"
             if [ "$CI_BRANCH" = alpha ] && [ "$npm_package_description" ]
             then
-                shGithubRepoDescriptionUpdate "$GITHUB_REPO_ALIAS" "$npm_package_description" || \
-                    true
+                shGithubRepoDescriptionUpdate "$GITHUB_REPO_ALIAS" \
+                "$npm_package_description" || true
             fi
         done
     fi
@@ -703,7 +708,13 @@ shBuildInit () {
     # init $npm_config_dir_electron
     if [ ! "$npm_config_dir_electron" ]
     then
-        [ ! -f lib.electron.js ] || export npm_config_dir_electron="$PWD"
+        if [ -f lib.electron.js ]
+        then
+            export npm_config_dir_electron="$PWD"
+        elif [ -f "$HOME/src/electron-lite/lib.electron.js" ]
+        then
+            export npm_config_dir_electron="$HOME/src/electron-lite"
+        fi
         export npm_config_dir_electron="${npm_config_dir_electron:-\
 $(shModuleDirname electron-lite)}" || return $?
         export npm_config_dir_electron="${npm_config_dir_electron:-\
@@ -713,9 +724,13 @@ $HOME/node_modules/electron-lite}" || return $?
     # init $npm_config_dir_utility2
     if [ ! "$npm_config_dir_utility2" ]
     then
-        [ ! -f lib.utility2.js ] || export npm_config_dir_utility2="$PWD"
-        [ ! -f "$HOME/src/utility2/lib.utility2.js" ] ||
+        if [ -f lib.utility2.js ]
+        then
+            export npm_config_dir_utility2="$PWD"
+        elif [ -f "$HOME/src/utility2/lib.utility2.js" ]
+        then
             export npm_config_dir_utility2="$HOME/src/utility2"
+        fi
         export npm_config_dir_utility2="${npm_config_dir_utility2:-\
 $(shModuleDirname utility2)}" || return $?
         export npm_config_dir_utility2="${npm_config_dir_utility2:-\
@@ -954,8 +969,8 @@ shCryptoTravisDecrypt () {(set -e
     URL="https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG"
     shBuildPrint "decrypting $URL ..."
-    printf "${1:-"$(curl -#Lf "$URL")"}" | \
-        shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
+    printf "${1:-"$(curl -#Lf "$URL")"}" \
+        | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
 )}
 
 shCryptoTravisEncrypt () {(set -e
@@ -979,16 +994,16 @@ shCryptoTravisEncrypt () {(set -e
         TMPFILE="$(mktemp)"
         URL="https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/key"
         shBuildPrint "fetch $URL"
-        curl -#Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" | \
-            sed -n \
-                -e "s/.*-----BEGIN [RSA ]*PUBLIC KEY-----\(.*\)-----END [RSA ]*PUBLIC KEY-----.*/\
+        curl -#Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" \
+            | sed -n -e \
+"s/.*-----BEGIN [RSA ]*PUBLIC KEY-----\(.*\)-----END [RSA ]*PUBLIC KEY-----.*/\
 -----BEGIN PUBLIC KEY-----\\1-----END PUBLIC KEY-----/" \
-                -e "s/\\\\n/%/gp" | \
-            tr "%" "\n" > "$TMPFILE"
-        CRYPTO_AES_KEY_ENCRYPTED="$(printf "CRYPTO_AES_KEY=$CRYPTO_AES_KEY" | \
-            openssl rsautl -encrypt -pubin -inkey "$TMPFILE" | \
-            base64 | \
-            tr -d "\n")"
+            -e "s/\\\\n/%/gp" \
+            | tr "%" "\n" > "$TMPFILE"
+        CRYPTO_AES_KEY_ENCRYPTED="$(printf "CRYPTO_AES_KEY=$CRYPTO_AES_KEY" \
+            | openssl rsautl -encrypt -pubin -inkey "$TMPFILE" \
+            | base64 \
+            | tr -d "\n")"
         rm "$TMPFILE"
         if [ ! "$CRYPTO_AES_KEY_ENCRYPTED" ]
         then
@@ -1016,50 +1031,6 @@ shCryptoWithGithubOrg () {(set -e
     shift
     . "$HOME/.ssh/CRYPTO_AES_SH_DECRYPTED_$GITHUB_ORG"
     "$@"
-)}
-
-shCustomOrgRepoCreate () {(set -e
-# this function will create and push the customOrgRepo $LIST[ii]
-# https://docs.travis-ci.com/api
-# example usage:
-# shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoCreate "kaizhu256/node-sandbox2 kaizhu256/node-sandbox3"
-# sleep 5
-# shCryptoWithGithubOrg kaizhu256 shTravisSync
-# sleep 5
-# shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoCreate "kaizhu256/node-sandbox2 kaizhu256/node-sandbox3"
-    LIST="$1"
-    shBuildInit
-    lib.utility2.js utility2.customOrgRepoCreate "$LIST"
-)}
-
-shCustomOrgRepoCreateSyncCreate () {(set -e
-# this function will create, sync, create the customOrgRepo $LIST[ii]
-# example usage:
-# shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoCreateSyncCreate kaizhu256/node-sandbox2
-    LIST="$1"
-    shCustomOrgRepoCreate "$LIST"
-    shSleep 5
-    shTravisSync
-    shSleep 5
-    shCustomOrgRepoCreate "$LIST"
-)}
-
-shCustomOrgRepoCreateSyncCreateNpmdoc () {(set -e
-# this function will create and push the customOrgRepo $LIST[ii]
-# example usage:
-# shCustomOrgRepoCreateSyncCreateNpmdoc npmdoc/node-npmdoc-mysql
-    LIST="$1"
-    for CUSTOM_ORG in npmdoc npmtest
-    do
-        # shCryptoWithGithubOrg npmdoc shCustomOrgRepoCreateSyncCreate npmdoc/node-npmdoc-mysql
-        # shCryptoWithGithubOrg npmdoc shGithubRepoTouch npmdoc/node-npmdoc-mysql "[npm publishAfterCommitAfterBuild]"
-        # shCryptoWithGithubOrg npmtest shCustomOrgRepoCreateSyncCreate npmtest/node-npmtest-mysql
-        # shCryptoWithGithubOrg npmtest shGithubRepoTouch npmtest/node-npmtest-mysql "[npm publishAfterCommitAfterBuild]"
-        LIST="$(printf "$LIST" | sed -e "s/npmdoc/$CUSTOM_ORG/g")"
-        shCryptoWithGithubOrg "$CUSTOM_ORG" shCustomOrgRepoCreateSyncCreate "$LIST"
-        shCryptoWithGithubOrg "$CUSTOM_ORG" shGithubRepoTouch "$LIST" \
-            "[npm publishAfterCommitAfterBuild]"
-    done
 )}
 
 shDateIso () {(set -e
@@ -1100,8 +1071,8 @@ shDeployGithub () {(set -e
 # and run a simple curl check for $TEST_URL
 # and test $TEST_URL
     export MODE_BUILD=deployGithub
-    export TEST_URL="https://$(printf "$GITHUB_REPO" | \
-        sed -e "s/\//.github.io\//")/build..$CI_BRANCH..travis-ci.org/app"
+    export TEST_URL="https://$(printf "$GITHUB_REPO" \
+        | sed -e "s/\//.github.io\//")/build..$CI_BRANCH..travis-ci.org/app"
     shBuildPrint "deployed to $TEST_URL"
     # verify deployed app's main-page returns status-code < 400
     shSleep 15
@@ -1726,7 +1697,7 @@ shGitInfo () {(set -e
     printf "\n"
     shGitLsTree
     printf "\n"
-    git grep -E '!\! ' || true
+    git grep -E '[^!]!\! ' || true
     printf "\n"
     git grep -E '\becho\b' *.sh || true
     printf "\n"
@@ -1795,17 +1766,25 @@ shGithubDateCommitted () {(set -e
     curl -Lfs "$1" | grep -m 1 -o -E "\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ"
 )}
 
-shGithubRepoBaseCreate () {(set -e
+shGithubRepoBranchId () {(set -e
+# this function will print the $COMMIT_ID for $GITHUB_REPO:#$BRANCH
+    BRANCH="$1"
+    curl -H "user-agent: undefined" -Lfs \
+"https://api.github.com/repos\
+/$GITHUB_REPO/commits?access_token=$GITHUB_TOKEN&sha=$BRANCH" \
+        | sed -e 's/^\[{"sha":"//' -e 's/".*//'
+)}
+
+shGithubRepoCreate () {(set -e
 # this function will create the base github-repo https://github.com/$GITHUB_REPO
-# example usage:
-# shCryptoWithGithubOrg kaizhu256 shGithubRepoBaseCreate kaizhu256/node-sandbox2
     GITHUB_REPO="$1"
-    export MODE_BUILD="${MODE_BUILD:-shGithubRepoBaseCreate}"
+    export MODE_BUILD="${MODE_BUILD:-shGithubRepoCreate}"
     # init /tmp/githubRepo/kaizhu256/base
     if [ ! -d /tmp/githubRepo/kaizhu256/base ]
     then
     (
-        git clone https://github.com/kaizhu256/base /tmp/githubRepo/kaizhu256/base
+        git clone https://github.com/kaizhu256/base \
+            /tmp/githubRepo/kaizhu256/base
         cd /tmp/githubRepo/kaizhu256/base
         git checkout -b alpha origin/alpha || true
         git checkout -b beta origin/beta || true
@@ -1819,8 +1798,9 @@ shGithubRepoBaseCreate () {(set -e
     mkdir -p "/tmp/githubRepo/$(printf "$GITHUB_REPO" | sed -e "s/\/.*//")"
     cp -a /tmp/githubRepo/kaizhu256/base "/tmp/githubRepo/$GITHUB_REPO"
     cd "/tmp/githubRepo/$GITHUB_REPO"
-    curl -Lfs https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig | \
-        sed -e "s|kaizhu256/node-utility2|$GITHUB_REPO|" > .git/config
+    curl -Lfs \
+https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig \
+        | sed -e "s|kaizhu256/node-utility2|$GITHUB_REPO|" > .git/config
     # create github-repo
     node -e "$UTILITY2_MACRO_JS"'
 /* jslint utility2:true */
@@ -1833,10 +1813,14 @@ local.ajax({
         "User-Agent": "undefined"
     },
     method: "POST",
-    url: "https://api.github.com/orgs/" + process.argv[1].split("/")[0] + "/repos"
-}, function (error, xhr) {
+    url: (
+        "https://api.github.com/orgs/"
+        + process.argv[1].split("/")[0]
+        + "/repos"
+    )
+}, function (err, xhr) {
     if (xhr.statusCode !== 404) {
-        local.onErrorDefault(error && xhr && (
+        local.onErrorDefault(err && xhr && (
             "https://github.com/" + process.argv[1] + " - " + xhr.responseText
         ));
         return;
@@ -1849,8 +1833,8 @@ local.ajax({
         },
         method: "POST",
         url: "https://api.github.com/user/repos"
-    }, function (error, xhr) {
-        local.onErrorDefault(error && xhr && (
+    }, function (err, xhr) {
+        local.onErrorDefault(err && xhr && (
             "https://github.com/" + process.argv[1] + " - " + xhr.responseText
         ));
         return;
@@ -1859,17 +1843,11 @@ local.ajax({
 }(globalThis.globalLocal));
 ' "$GITHUB_REPO"
     # set default-branch to beta
-    shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" beta || true
+    shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" beta \
+        || true
     # push all branches
-    shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" --all || true
-)}
-
-shGithubRepoBranchId () {(set -e
-# this function will print the $COMMIT_ID for $GITHUB_REPO:#$BRANCH
-    BRANCH="$1"
-    curl -H "user-agent: undefined" -Lfs \
-"https://api.github.com/repos/$GITHUB_REPO/commits?access_token=$GITHUB_TOKEN&sha=$BRANCH" | \
-        sed -e 's/^\[{"sha":"//' -e 's/".*//'
+    shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" --all \
+        || true
 )}
 
 shGithubRepoDescriptionUpdate () {(set -e
@@ -1929,13 +1907,13 @@ swp|\
 tmp|\
 vendor)s{0,1}(\\b|_)\
 "
-    find "$DIR" -type f | \
-        grep -v -E "$FILE_FILTER" | \
-        tr "\n" "\000" | \
-        xargs -0 grep -HIn -E "$REGEXP" "$@" || true
-    find "$DIR" -name .travis.yml | \
-        tr "\n" "\000" | \
-        xargs -0 grep -HIn -E "$REGEXP" "$@" || true
+    find "$DIR" -type f \
+        | grep -v -E "$FILE_FILTER" \
+        | tr "\n" "\000" \
+        | xargs -0 grep -HIn -E "$REGEXP" "$@" || true
+    find "$DIR" -name .travis.yml \
+        | tr "\n" "\000" \
+        | xargs -0 grep -HIn -E "$REGEXP" "$@" || true
 )}
 
 shGrepReplace () {(set -e
@@ -1946,7 +1924,10 @@ shGrepReplace () {(set -e
 "use strict";
 var dict;
 dict = {};
-require("fs").readFileSync(process.argv[1], "utf8").split("\n").forEach(function (element) {
+require("fs").readFileSync(
+    process.argv[1],
+    "utf8"
+).split("\n").forEach(function (element) {
     element = (
         /^(.+?):(\d+?):(.+?)$/
     ).exec(element);
@@ -1974,26 +1955,39 @@ shHtpasswdCreate () {(set -e
 )}
 
 shHttpFileServer () {(set -e
-# this function will run a simple node http-file-server on http-port $PORT
+# this function will run a simple node http-file-server on port $PORT
     node -e '
 /* jslint utility2:true */
 (function () {
 "use strict";
+var processCwd;
+processCwd = process.cwd() + (
+    process.platform === "win32"
+    ? "\\"
+    : "/"
+);
+process.env.PORT = process.env.PORT || "8080";
+console.error("http-file-server listening on port " + process.env.PORT);
 require("http").createServer(function (request, response) {
-    require("fs").readFile(
-        // security - disable parent directory lookup
-        require("path").resolve(
-            "/",
-            require("url").parse(request.url).pathname
-        ).slice(1),
-        function (error, data) {
-            response.end(
-                error
-                ? error.stack
-                : data
-            );
-        }
+    var file;
+    file = require("path").resolve(
+        processCwd,
+        require("url").parse(request.url).pathname.slice(1)
     );
+    // security - disable parent-directory lookup
+    if (file.indexOf(processCwd) !== 0) {
+        response.statusCode = 404;
+        response.end();
+        return;
+    }
+    require("fs").readFile(file, function (error, data) {
+        if (error) {
+            response.statusCode = 404;
+            response.end();
+            return;
+        }
+        response.end(data);
+    });
 }).listen(process.env.PORT);
 }());
 '
@@ -2199,7 +2193,7 @@ shMain () {
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw the error <message> if <passed> is falsy
+     * this function will throw error <message> if <passed> is falsy
      */
         var error;
         if (passed) {
@@ -2250,7 +2244,8 @@ shMain () {
      * null, undefined, or empty-string,
      * then overwrite them with items from <source>
      */
-        Object.keys(source).forEach(function (key) {
+        target = target || {};
+        Object.keys(source || {}).forEach(function (key) {
             if (
                 target[key] === null
                 || target[key] === undefined
@@ -2259,6 +2254,7 @@ shMain () {
                 target[key] = target[key] || source[key];
             }
         });
+        return target;
     };
     // require builtin
     if (!local.isBrowser) {
@@ -2352,7 +2348,7 @@ local.ajax = function (option, onError) {
     var xhr;
     var xhrInit;
     // init local2
-    local2 = local.utility2 || {};
+    local2 = option.local2 || local.utility2 || {};
     // init function
     ajaxProgressUpdate = local2.ajaxProgressUpdate || local.nop;
     bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (
@@ -2488,16 +2484,16 @@ local.ajax = function (option, onError) {
     };
     streamCleanup = function (stream) {
     /*
-     * this function will try to end or destroy the stream
+     * this function will try to end or destroy <stream>
      */
         var error;
-        // try to end the stream
+        // try to end stream
         try {
             stream.end();
         } catch (errorCaught) {
             error = errorCaught;
         }
-        // if error, then try to destroy the stream
+        // if error, then try to destroy stream
         if (error) {
             try {
                 stream.destroy();
@@ -2568,7 +2564,7 @@ local.ajax = function (option, onError) {
             || require(xhr.protocol.slice(0, -1)).request
         )(xhr, function (responseStream) {
         /*
-         * this function will read the responseStream
+         * this function will read <responseStream>
          */
             var chunkList;
             chunkList = [];
@@ -2600,7 +2596,7 @@ local.ajax = function (option, onError) {
         });
         xhr.abort = function () {
         /*
-         * this function will abort the xhr-request
+         * this function will abort xhr-request
          * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/abort
          */
             xhr.onEvent({
@@ -2850,7 +2846,7 @@ local.childProcessSpawnWithUtility2 = function (script, onError) {
 
 local.cryptoAesXxxCbcRawDecrypt = function (option, onError) {
 /*
- * this function will aes-xxx-cbc decrypt with given option
+ * this function will aes-xxx-cbc decrypt with given <option>
  * example usage:
     data = new Uint8Array([1,2,3]);
     key = '"'"'0123456789abcdef0123456789abcdef'"'"';
@@ -2916,7 +2912,7 @@ local.cryptoAesXxxCbcRawDecrypt = function (option, onError) {
 
 local.cryptoAesXxxCbcRawEncrypt = function (option, onError) {
 /*
- * this function will aes-xxx-cbc encrypt with given option
+ * this function will aes-xxx-cbc encrypt with given <option>
  * example usage:
     data = new Uint8Array([1,2,3]);
     key = '"'"'0123456789abcdef0123456789abcdef'"'"';
@@ -2989,8 +2985,8 @@ local.cryptoAesXxxCbcRawEncrypt = function (option, onError) {
 
 local.fsReadFileOrEmptyStringSync = function (file, option) {
 /*
- * this function will try to read the file or return empty-string
- * if option === '"'"'json'"'"', then try to JSON.parse the file or return null
+ * this function will try to read file or return empty-string, or
+ * if option === "json", then try to JSON.parse file or return null
  */
     try {
         return (
@@ -3009,7 +3005,7 @@ local.fsReadFileOrEmptyStringSync = function (file, option) {
 
 local.fsRmrSync = function (dir) {
 /*
- * this function will synchronously '"'"'rm -fr'"'"' the dir
+ * this function will synchronously "rm -fr" dir
  */
     local.child_process.execFileSync(
         "rm",
@@ -3022,7 +3018,7 @@ local.fsRmrSync = function (dir) {
 
 local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
 /*
- * this function will synchronously '"'"'mkdir -p'"'"' and write the <data> to <file>
+ * this function will synchronously "mkdir -p" and write the <data> to <file>
  */
     try {
         if (
@@ -3112,20 +3108,15 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
         }
         // if obj is not an array,
         // then recurse its items with object-keys sorted
-        tmp = "{" + Object.keys(obj)
-        // sort object-keys
-        .sort()
-        .map(function (key) {
+        tmp = "{" + Object.keys(obj).sort().map(function (key) {
             // recurse
             tmp = stringify(obj[key]);
             if (typeof tmp === "string") {
                 return JSON.stringify(key) + ":" + tmp;
             }
-        })
-        .filter(function (obj) {
+        }).filter(function (obj) {
             return typeof obj === "string";
-        })
-        .join(",") + "}";
+        }).join(",") + "}";
         circularSet.delete(obj);
         return tmp;
     };
@@ -3300,7 +3291,7 @@ local.onErrorWithStack = function (onError) {
 
 local.onNext = function (option, onError) {
 /*
- * this function will wrap onError inside the recursive function option.onNext,
+ * this function will wrap onError inside recursive-function <option>.onNext,
  * and append the current stack to any error
  */
     option.onNext = local.onErrorWithStack(function (error, data, meta) {
@@ -3498,7 +3489,7 @@ local.stringMerge = function (str1, str2, rgx) {
 
 local.templateRenderMyApp = function (template, option) {
 /*
- * this function will render the my-app-lite template with given option.packageJson
+ * this function will render the my-app-lite template with given <option>.packageJson
  */
     option.packageJson = local.fsReadFileOrEmptyStringSync("package.json", "json");
     local.objectSetDefault(option.packageJson, {
@@ -3729,8 +3720,8 @@ shNpmInstallTarball () {(set -e
 # this function will npm-install the tarball instead of the full module
     NAME="$1"
     mkdir -p "node_modules/$NAME"
-    curl -Lfs "$(npm view "$NAME" dist.tarball)" | \
-        tar --strip-components 1 -C "node_modules/$NAME" -xzf -
+    curl -Lfs "$(npm view "$NAME" dist.tarball)" \
+        | tar --strip-components 1 -C "node_modules/$NAME" -xzf -
 )}
 
 shNpmPackageCliHelpCreate () {(set -e
@@ -3947,9 +3938,9 @@ shPidByPort () {(set -e
 
 shRandomIntegerInRange () {(set -e
 # this function will print a random number in the interval [$1..$2)
-    LC_CTYPE=C tr -cd 0-9 </dev/urandom | \
-        head -c 9 | \
-        awk "{ printf(\"%s\n\", $1 + (\$0 % ($2 - $1))); }"
+    LC_CTYPE=C tr -cd 0-9 </dev/urandom \
+        | head -c 9 \
+        | awk "{ printf(\"%s\n\", $1 + (\$0 % ($2 - $1))); }"
 )}
 
 shReadmeLinkValidate () {(set -e
@@ -4128,6 +4119,9 @@ shRun () {(set -e
         export npm_config_mode_auto_restart_child=1
         while true
         do
+            printf "\n"
+            git diff --color 2>/dev/null | cat || true
+            printf "\n"
             printf "(re)starting $*\n"
             ("$@") || EXIT_CODE=$?
             printf "process exited with code $EXIT_CODE\n"
@@ -4317,8 +4311,7 @@ shTravisRepoBuildCancel () {(set -e
     GITHUB_REPO="$1"
     BUILD_ID="$(curl -#Lf "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/builds" \
         | grep -o -E "\d\d*" | head -n 1)"
-    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf \
-        -X POST \
+    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
         "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/builds/$BUILD_ID/cancel"
 )}
 
@@ -4329,7 +4322,192 @@ shTravisRepoBuildRestart () {(set -e
     BUILD_ID="$(curl -#Lf "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/builds" \
         | grep -o -E "\d\d*" | head -n 1)"
     curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
-        "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/builds/$BUILD_ID/cancel"
+        "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/builds/$BUILD_ID/restart"
+)}
+
+shTravisRepoCreate () {(set -e
+# this function will create the travis-repo https://github.com/$GITHUB_REPO
+    export GITHUB_REPO="$1"
+    export MODE_BUILD="${MODE_BUILD:-shGithubRepoCiCreate}"
+    export TRAVIS_DOMAIN=${TRAVIS_DOMAIN:-travis-ci.org}
+    shBuildPrint "$GITHUB_REPO - creating ..."
+    shGithubRepoCreate "$GITHUB_REPO"
+    shSleep 5
+    shTravisSync
+    while true
+    do
+        shSleep 2
+        if (curl "https://api.$TRAVIS_DOMAIN/repos/$GITHUB_REPO" \
+            -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -fs 2>&1 > /dev/null)
+        then
+            break
+        fi
+    done
+    node -e "$UTILITY2_MACRO_JS"'
+/* jslint utility2:true */
+(function (local) {
+"use strict";
+var onParallel;
+var option;
+option = {};
+local.onNext(option, function (err, data) {
+    switch (option.modeNext) {
+    case 1:
+        option.shBuildPrintPrefix = (
+            "\n\u001b[35m[MODE_BUILD=shCustomOrgRepoCreate]\u001b[0m - "
+        );
+        local.ajax({
+            headers: {
+                Authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN
+            },
+            url: (
+                "https://api."
+                + process.env.TRAVIS_DOMAIN + "/repos/"
+                + process.env.GITHUB_REPO
+            )
+        }, option.onNext);
+        break;
+    case 2:
+        option.id = JSON.parse(data.responseText).id;
+        setTimeout(option.onNext, 5000);
+        break;
+    case 3:
+        local.ajax({
+            data: "{\"hook\":{\"active\":true}}",
+            headers: {
+                Authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
+                "Content-Type": "application/json; charset=utf-8"
+            },
+            method: "PUT",
+            url: (
+                "https://api."
+                + process.env.TRAVIS_DOMAIN
+                + "/hooks/" + option.id
+            )
+        }, option.onNext);
+        break;
+    case 4:
+        setTimeout(option.onNext, 5000);
+        break;
+    case 5:
+        onParallel = local.onParallel(option.onNext);
+        onParallel.counter += 1;
+        onParallel.counter += 1;
+        local.ajax({
+            data: "{\"setting.value\":true}",
+            headers: {
+                Authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
+                "Content-Type": "application/json; charset=utf-8",
+                "Travis-API-Version": 3
+            },
+            method: "PATCH",
+            url: (
+                "https://api." + process.env.TRAVIS_DOMAIN + "/repo/"
+                + option.id + "/setting/builds_only_with_travis_yml"
+            )
+        }, onParallel);
+        onParallel.counter += 1;
+        local.ajax({
+            data: "{\"setting.value\":true}",
+            headers: {
+                Authorization: "token "
+                + process.env.TRAVIS_ACCESS_TOKEN,
+                "Content-Type": "application/json; charset=utf-8",
+                "Travis-API-Version": 3
+            },
+            method: "PATCH",
+            url: (
+                "https://api." + process.env.TRAVIS_DOMAIN + "/repo/"
+                + option.id + "/setting/auto_cancel_pushes"
+            )
+        }, onParallel);
+        onParallel();
+        break;
+    case 6:
+        onParallel.counter += 1;
+        onParallel.counter += 1;
+        local.ajax({
+            url: (
+                "https://raw.githubusercontent.com"
+                + "/kaizhu256/node-utility2/alpha/.gitignore"
+            )
+        }, function (err, xhr) {
+            local.assertThrow(!err, err);
+            local.fs.writeFile(
+                "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.gitignore",
+                xhr.responseText,
+                onParallel
+            );
+        });
+        onParallel.counter += 1;
+        local.ajax({
+            url: (
+                "https://raw.githubusercontent.com"
+                + "/kaizhu256/node-utility2/alpha/.travis.yml"
+            )
+        }, function (err, xhr) {
+            local.assertThrow(!err, err);
+            local.fs.writeFile(
+                "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.travis.yml",
+                xhr.responseText,
+                onParallel
+            );
+        });
+        onParallel.counter += 1;
+        local.fs.open("README.md", "w", function (err, fd) {
+            local.assertThrow(!err, err);
+            local.fs.close(fd, onParallel);
+        });
+        onParallel.counter += 1;
+        local.fs.writeFile(
+            "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/package.json",
+            JSON.stringify({
+                devDependencies: {
+                    "electron-lite":
+                    "kaizhu256/node-electron-lite#alpha",
+                    utility2: "kaizhu256/node-utility2#alpha"
+                },
+                name: process.env.GITHUB_REPO.replace((
+                    /.+?\/node-|.+?\//
+                ), ""),
+                homepage: "https://github.com/" + process.env.GITHUB_REPO,
+                repository: {
+                    type: "git",
+                    url: "https://github.com/" + process.env.GITHUB_REPO
+                    + ".git"
+                },
+                scripts: {
+                    "build-ci": "utility2 shBuildCi"
+                },
+                version: "0.0.1"
+            }, null, 4),
+            onParallel
+        );
+        onParallel();
+        break;
+    default:
+        console.error(
+            option.shBuildPrintPrefix + new Date().toISOString()
+            + process.env.GITHUB_REPO + (
+                err
+                ? " - ... failed to create - modeNext = " + option.modeNext
+                : " - ... created"
+            )
+        );
+    }
+});
+option.modeNext = 0;
+option.onNext();
+}(globalThis.globalLocal));
+'
+    cd "/tmp/githubRepo/$GITHUB_REPO"
+    unset GITHUB_ORG
+    unset GITHUB_REPO
+    shBuildInit
+    shCryptoTravisEncrypt > /dev/null
+    git add -f . .gitignore .travis.yml
+    git commit -am "[npm publishAfterCommitAfterBuild]"
+    shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f alpha
 )}
 
 shTravisSync () {(set -e

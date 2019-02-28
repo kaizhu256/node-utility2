@@ -56,7 +56,7 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw the error <message> if <passed> is falsy
+     * this function will throw error <message> if <passed> is falsy
      */
         var error;
         if (passed) {
@@ -107,7 +107,8 @@
      * null, undefined, or empty-string,
      * then overwrite them with items from <source>
      */
-        Object.keys(source).forEach(function (key) {
+        target = target || {};
+        Object.keys(source || {}).forEach(function (key) {
             if (
                 target[key] === null
                 || target[key] === undefined
@@ -116,6 +117,7 @@
                 target[key] = target[key] || source[key];
             }
         });
+        return target;
     };
     // require builtin
     if (!local.isBrowser) {
@@ -255,14 +257,11 @@ local.cliRun = function (option) {
                     "cliRun - cannot parse comment in COMMAND "
                     + key + ":\nnew RegExp("
                     + JSON.stringify(option.rgxComment.source)
-                    + ").exec(" + JSON.stringify(text)
-                    .replace((
+                    + ").exec(" + JSON.stringify(text).replace((
                         /\\\\/g
-                    ), "\u0000")
-                    .replace((
+                    ), "\u0000").replace((
                         /\\n/g
-                    ), "\\n\\\n")
-                    .replace((
+                    ), "\\n\\\n").replace((
                         /\u0000/g
                     ), "\\\\") + ");"
                 ));
@@ -348,7 +347,7 @@ local.cliRun = function (option) {
 
 local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
 /*
- * this function will synchronously 'mkdir -p' and write the <data> to <file>
+ * this function will synchronously "mkdir -p" and write the <data> to <file>
  */
     try {
         if (
@@ -2949,6 +2948,7 @@ local.TextReport = module.exports; }());
 
 
 /*
+file badge.svg - coverage
 https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
 */
 local.templateCoverageBadgeSvg =
@@ -3056,7 +3056,7 @@ local.cliDict.test = function () {
     local._istanbul_module.runMain();
 };
 
-// run cli
+// run the cli
 if (module === require.main && !globalThis.utility2_rollup) {
     local.cliRun();
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.db.js (2018.12.30)
+ * lib.db.js (2018.12.31)
  * https://github.com/kaizhu256/node-db-lite
  * this zero-dependency package will provide a persistent, in-browser database, with a working web-demo
  *
@@ -83,7 +83,7 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw the error <message> if <passed> is falsy
+     * this function will throw error <message> if <passed> is falsy
      */
         var error;
         if (passed) {
@@ -134,7 +134,8 @@
      * null, undefined, or empty-string,
      * then overwrite them with items from <source>
      */
-        Object.keys(source).forEach(function (key) {
+        target = target || {};
+        Object.keys(source || {}).forEach(function (key) {
             if (
                 target[key] === null
                 || target[key] === undefined
@@ -143,6 +144,7 @@
                 target[key] = target[key] || source[key];
             }
         });
+        return target;
     };
     // require builtin
     if (!local.isBrowser) {
@@ -275,14 +277,11 @@ local.cliRun = function (option) {
                     "cliRun - cannot parse comment in COMMAND "
                     + key + ":\nnew RegExp("
                     + JSON.stringify(option.rgxComment.source)
-                    + ").exec(" + JSON.stringify(text)
-                    .replace((
+                    + ").exec(" + JSON.stringify(text).replace((
                         /\\\\/g
-                    ), "\u0000")
-                    .replace((
+                    ), "\u0000").replace((
                         /\\n/g
-                    ), "\\n\\\n")
-                    .replace((
+                    ), "\\n\\\n").replace((
                         /\u0000/g
                     ), "\\\\") + ");"
                 ));
@@ -420,20 +419,15 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
         }
         // if obj is not an array,
         // then recurse its items with object-keys sorted
-        tmp = "{" + Object.keys(obj)
-        // sort object-keys
-        .sort()
-        .map(function (key) {
+        tmp = "{" + Object.keys(obj).sort().map(function (key) {
             // recurse
             tmp = stringify(obj[key]);
             if (typeof tmp === "string") {
                 return JSON.stringify(key) + ":" + tmp;
             }
-        })
-        .filter(function (obj) {
+        }).filter(function (obj) {
             return typeof obj === "string";
-        })
-        .join(",") + "}";
+        }).join(",") + "}";
         circularSet.delete(obj);
         return tmp;
     };
@@ -592,25 +586,24 @@ local.replStart = function () {
  * this function will start the repl-debugger
  */
     var that;
-    if (globalThis.utility2_serverRepl1) {
+    if (globalThis.utility2_repl1) {
         return;
     }
-    // start replServer
+    // start repl
     that = require("repl").start({
         useGlobal: true
     });
-    globalThis.utility2_serverRepl1 = that;
+    globalThis.utility2_repl1 = that;
     that.onError = function (error) {
     /*
-     * this function will debug any repl-error
+     * this function will debug repl-error
      */
-        // debug error
         globalThis.utility2_debugReplError = error;
         console.error(error);
     };
-    // save repl eval function
+    // save eval-function
     that.evalDefault = that.eval;
-    // hook custom repl eval function
+    // hook custom-eval-function
     that.eval = function (script, context, file, onError) {
         var onError2;
         onError2 = function (error, data) {
@@ -625,16 +618,20 @@ local.replStart = function () {
             /^(\S+)\u0020(.*?)\n/
         ), function (ignore, match1, match2) {
             switch (match1) {
-            // syntax-sugar to run async shell-command
+            // syntax-sugar - run async shell-command
             case "$":
                 switch (match2) {
-                // syntax-sugar to run git diff
+                // syntax-sugar - run git diff
                 case "git diff":
                     match2 = "git diff --color | cat";
                     break;
-                // syntax-sugar to run git log
+                // syntax-sugar - run git log
                 case "git log":
                     match2 = "git log -n 4 | cat";
+                    break;
+                // syntax-sugar - run git log
+                case "ll":
+                    match2 = "ls -Fal";
                     break;
                 }
                 // source lib.utility2.sh
@@ -648,9 +645,8 @@ local.replStart = function () {
                 require("child_process").spawn(match2, {
                     shell: true,
                     stdio: ["ignore", 1, 2]
-                })
                 // on shell exit, print return prompt
-                .on("exit", function (exitCode) {
+                }).on("exit", function (exitCode) {
                     console.error("exit-code " + exitCode);
                     that.evalDefault(
                         "\n",
@@ -661,7 +657,7 @@ local.replStart = function () {
                 });
                 script = "\n";
                 break;
-            // syntax-sugar to map text with charCodeAt
+            // syntax-sugar - map text with charCodeAt
             case "charCode":
                 console.error(
                     match2.split("").map(function (chr) {
@@ -673,12 +669,12 @@ local.replStart = function () {
                 );
                 script = "\n";
                 break;
-            // syntax-sugar to sort chr
+            // syntax-sugar - sort chr
             case "charSort":
                 console.error(JSON.stringify(match2.split("").sort().join("")));
                 script = "\n";
                 break;
-            // syntax-sugar to grep current dir
+            // syntax-sugar - grep current dir
             case "grep":
                 // run async shell-command
                 require("child_process").spawn((
@@ -721,7 +717,7 @@ vendor)s{0,1}(\\b|_)\
                 });
                 script = "\n";
                 break;
-            // syntax-sugar to list object's keys, sorted by item-type
+            // syntax-sugar - list object's keys, sorted by item-type
             // console.error(Object.keys(global).map(function(key){return(typeof global[key]==='object'&&global[key]&&global[key]===global[key]?'global':typeof global[key])+' '+key;}).sort().join('\n')) // jslint ignore:line
             case "keys":
                 script = (
@@ -736,11 +732,11 @@ vendor)s{0,1}(\\b|_)\
                     + "}).sort().join('\\n'))\n"
                 );
                 break;
-            // syntax-sugar to print stringified arg
+            // syntax-sugar - print stringified arg
             case "print":
                 script = "console.error(String(" + match2 + "))\n";
                 break;
-            // syntax-sugar to read file
+            // syntax-sugar - read file
             case "readFile":
                 try {
                     console.error(JSON.stringify(
@@ -773,8 +769,8 @@ vendor)s{0,1}(\\b|_)\
             that.socket.write(chunk, encoding);
         }()));
     };
-    // start tcp-server
-    globalThis.utility2_serverReplTcp1 = require("net").createServer(function (
+    // start serverRepl1
+    globalThis.utility2_serverRepl1 = require("net").createServer(function (
         socket
     ) {
         // init socket
@@ -786,9 +782,9 @@ vendor)s{0,1}(\\b|_)\
     // coverage-hack - ignore else-statement
     local.nop(process.env.PORT_REPL && (function () {
         console.error(
-            "repl-server listening on tcp-port " + process.env.PORT_REPL
+            "repl-server listening on port " + process.env.PORT_REPL
         );
-        globalThis.utility2_serverReplTcp1.listen(process.env.PORT_REPL);
+        globalThis.utility2_serverRepl1.listen(process.env.PORT_REPL);
     }()));
 };
 
@@ -1213,7 +1209,7 @@ local._DbTable.prototype._crudGetOneById = function (idDict) {
     return result;
 };
 
-local._DbTable.prototype._crudRemoveOneById = function (idDict, circularList) {
+local._DbTable.prototype._crudRemoveOneById = function (idDict, circularSet) {
 /*
  * this function will remove the dbRow from the dbTable with given idDict
  */
@@ -1224,7 +1220,7 @@ local._DbTable.prototype._crudRemoveOneById = function (idDict, circularList) {
         return null;
     }
     that = this;
-    circularList = circularList || [idDict];
+    circularSet = circularSet || new Set([idDict]);
     result = null;
     that.idIndexList.forEach(function (idIndex) {
         id = idDict[idIndex.name];
@@ -1237,12 +1233,12 @@ local._DbTable.prototype._crudRemoveOneById = function (idDict, circularList) {
         // optimization - soft-delete
         result.$isRemoved = true;
         that.isDirty = true;
-        if (circularList.indexOf(result) >= 0) {
+        if (circularSet.has(result)) {
             return;
         }
-        circularList.push(result);
+        circularSet.add(result);
         // recurse
-        that._crudRemoveOneById(result, circularList);
+        that._crudRemoveOneById(result, circularSet);
     });
     that.save();
     return result;
@@ -2177,9 +2173,9 @@ local.onEventDomDb = function (event) {
     var utility2;
     utility2 = globalThis.utility2 || {};
     ajaxProgressUpdate = utility2.ajaxProgressUpdate || local.nop;
-    switch (event.target.dataset.onEventDomDb || event.target.id) {
-    case "dbExportButton1":
-        tmp = globalThis.URL.createObjectURL(new globalThis.Blob([local.dbExport()]));
+    switch (event.target.dataset.oneventDb) {
+    case "dbExport":
+        tmp = URL.createObjectURL(new globalThis.Blob([local.dbExport()]));
         document.querySelector(
             "#dbExportA1"
         ).href = tmp;
@@ -2187,38 +2183,27 @@ local.onEventDomDb = function (event) {
             "#dbExportA1"
         ).click();
         setTimeout(function () {
-            globalThis.URL.revokeObjectURL(tmp);
+            URL.revokeObjectURL(tmp);
         }, 30000);
         break;
-    case "dbImportButton1":
-        tmp = document.querySelector(
-            "#dbImportInput1"
-        );
-        if (!tmp.onEventDomDb) {
-            tmp.onEventDomDb = local.onEventDomDb;
-            tmp.addEventListener("change", local.onEventDomDb);
-        }
-        tmp.click();
+    case "dbImport":
+        document.querySelector(
+            "[data-onevent-db='dbImportInput']"
+        ).click();
         break;
-    case "dbImportInput1":
+    case "dbImportInput":
         if (event.type !== "change") {
             return;
         }
         ajaxProgressUpdate();
         reader = new FileReader();
-        tmp = document.querySelector(
-            "#dbImportInput1"
-        ).files[0];
-        if (!tmp) {
-            return;
-        }
         reader.addEventListener("load", function () {
             local.dbImport(reader.result);
             ajaxProgressUpdate();
         });
-        reader.readAsText(tmp);
+        reader.readAsText(event.target.files[0]);
         break;
-    case "dbResetButton1":
+    case "dbReset":
         ajaxProgressUpdate();
         local.dbReset(globalThis.utility2_dbSeedList, function (error) {
             local.onErrorDefault(error);
@@ -2465,7 +2450,7 @@ local.cliDict.dbTableRemove = function () {
     });
 };
 
-// run cli
+// run the cli
 if (module === require.main && !globalThis.utility2_rollup) {
     local.cliRun();
 }

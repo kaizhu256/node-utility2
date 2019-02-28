@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.swgg.js (2018.12.11)
+ * lib.swgg.js (2019.2.20)
  * https://github.com/kaizhu256/node-swgg
  * this zero-dependency package will run a virtual swagger-ui server with persistent-storage in the browser, that your webapp can use (in-place of a real backend), with a working web-demo
  *
@@ -56,7 +56,7 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw the error <message> if <passed> is falsy
+     * this function will throw error <message> if <passed> is falsy
      */
         var error;
         if (passed) {
@@ -107,7 +107,8 @@
      * null, undefined, or empty-string,
      * then overwrite them with items from <source>
      */
-        Object.keys(source).forEach(function (key) {
+        target = target || {};
+        Object.keys(source || {}).forEach(function (key) {
             if (
                 target[key] === null
                 || target[key] === undefined
@@ -116,6 +117,7 @@
                 target[key] = target[key] || source[key];
             }
         });
+        return target;
     };
     // require builtin
     if (!local.isBrowser) {
@@ -1047,15 +1049,9 @@ local.templateUiMain = '\
     </a><br>\n\
     {{/if x-swgg-downloadStandaloneApp}}\n\
     {{#if x-swgg-onEventDomDb}}\n\
-    <button class="button" data-onevent="onEventDomDb" data-on-event-dom-db="dbResetButton1">\n\
-        reset database\n\
-    </button><br>\n\
-    <button class="button" data-onevent="onEventDomDb" data-on-event-dom-db="dbExportButton1">\n\
-        export database -&gt; file\n\
-    </button><br>\n\
-    <button class="button" data-onevent="onEventDomDb" data-on-event-dom-db="dbImportButton1">\n\
-        import database &lt;- file\n\
-    </button><br>\n\
+    <button class="button" data-onevent="onEventDomDb" data-onevent-db="dbReset">reset database</button><br>\n\
+    <button class="button" data-onevent="onEventDomDb" data-onevent-db="dbExport">export database -&gt; file</button><br>\n\
+    <button class="button" data-onevent="onEventDomDb" data-onevent-db="dbImport">import database &lt;- file</button><br>\n\
     {{/if x-swgg-onEventDomDb}}\n\
     <ul>\n\
         {{#if externalDocs.url}}\n\
@@ -1215,7 +1211,7 @@ local.templateUiParameter = '\
     <div class="multilinePlaceholderContainer">\n\
         <pre class="multilinePlaceholderPre">{{placeholder}}</pre>\n\
         <textarea\n\
-            class="input multilinePlaceholderTextarea" data-onevent="onEventInputTextareaChange"\n\
+            class="input multilinePlaceholderTextarea textarea" data-onevent="onEventInputTextareaChange"\n\
             data-value-text="{{valueText encodeURIComponent notHtmlSafe}}"\n\
         ></textarea>\n\
     </div>\n\
@@ -1233,6 +1229,14 @@ local.templateUiParameter = '\
         {{/each selectOptionList}}\n\
     </select>\n\
     {{/if enum2}}\n\
+    {{#if isInputNumber}}\n\
+    <input\n\
+        class="input"\n\
+        data-value-text="{{valueText encodeURIComponent notHtmlSafe}}"\n\
+        placeholder="{{placeholder}}"\n\
+        type="number"\n\
+    >\n\
+    {{/if isInputNumber}}\n\
     {{#if isInputText}}\n\
     <input\n\
         class="input"\n\
@@ -2027,6 +2031,7 @@ local.apiUpdate = function (swaggerJson) {
 /*
  * this function will update the swagger-api dict of api-calls
  */
+    var pathDict;
     var tmp;
     swaggerJson = swaggerJson || {};
     // normalize swaggerJson
@@ -2384,13 +2389,12 @@ local.apiUpdate = function (swaggerJson) {
             }
         });
         // update paths
-        local.objectSetOverride(swaggerJson, local.objectLiteralize({
-            paths: {
-                "$[]": [that._path, {
-                    "$[]": [that._method.toLowerCase(), tmp]
-                }]
-            }
-        }), 3);
+        pathDict = {};
+        pathDict[that._path] = {};
+        pathDict[that._path][that._method.toLowerCase()] = tmp;
+        local.objectSetOverride(swaggerJson, {
+            paths: pathDict
+        }, 3);
     });
     // normalize swaggerJson
     local.swaggerJson = JSON.parse(local.jsonStringifyOrdered(swaggerJson));
@@ -3740,6 +3744,7 @@ local.swaggerJsonFromAjax = function (swaggerJson, option) {
     var data;
     var isArray;
     var operation;
+    var pathDict;
     var type;
     var upsertSchemaP;
     var urlParsed;
@@ -3793,13 +3798,14 @@ local.swaggerJsonFromAjax = function (swaggerJson, option) {
         operation["x-swgg-host"] = urlParsed.host;
         operation["x-swgg-schemes"] = [urlParsed.protocol.slice(0, -1)];
     }
-    local.objectSetDefault(swaggerJson, local.objectLiteralize({
-        paths: {
-            "$[]": [urlParsed.pathname + urlParsed.hash, {
-                "$[]": [option.method.toLowerCase(), operation]
-            }]
-        }
-    }), 4);
+    pathDict = {};
+    pathDict[urlParsed.pathname + urlParsed.hash] = {};
+    pathDict[urlParsed.pathname + urlParsed.hash][
+        option.method.toLowerCase()
+    ] = operation;
+    local.objectSetDefault(swaggerJson, {
+        paths: pathDict
+    }, 3);
     // init param in header
     Object.keys(option.headers).forEach(function (key) {
         upsertSchemaP({
@@ -4297,7 +4303,7 @@ local.swaggerValidateDataSchema = function (option) {
  * http://json-schema.org/draft-04/json-schema-validation.html#rfc.section.5
  */
     var $ref;
-    var circularList;
+    var circularSet;
     var data;
     var dataReadonlyRemove2;
     var ii;
@@ -4313,7 +4319,7 @@ local.swaggerValidateDataSchema = function (option) {
     option.dataReadonlyRemove = option.dataReadonlyRemove || [{}, "", null];
     dataReadonlyRemove2 = option.dataReadonlyRemove[2] || {};
     schema = option.schema;
-    circularList = [];
+    circularSet = new Set();
     while (true) {
         // dereference schema.schema
         while (schema.schema) {
@@ -4352,14 +4358,14 @@ local.swaggerValidateDataSchema = function (option) {
         if (!$ref) {
             break;
         }
-        test = circularList.indexOf($ref) < 0;
+        test = !circularSet.has($ref);
         local.throwSwaggerError(!test && {
             data: data,
             errorType: "schemaDereferenceCircular",
             prefix: option.prefix,
             schema: schema
         });
-        circularList.push($ref);
+        circularSet.add($ref);
         // validate semanticWalker6
         test = (
             $ref.indexOf("#/") === 0
@@ -5053,7 +5059,9 @@ local.throwSwaggerError = function (option) {
 
 local.uiEventDelegate = function (event) {
     // filter non-input keyup-event
-    event.targetOnEvent = event.target.closest("[data-onevent]");
+    event.targetOnEvent = event.target.closest(
+        "[data-onevent]"
+    );
     if (!event.targetOnEvent) {
         return;
     }
@@ -5071,7 +5079,9 @@ local.uiEventDelegate = function (event) {
             return;
         }
         local.uiEventDelegateKeyupTimerTimeout = null;
-        if (!event.target.closest("input, option, select, textarea")) {
+        if (!event.target.closest(
+            "input, option, select, textarea"
+        )) {
             return;
         }
     }
@@ -5085,7 +5095,9 @@ local.uiEventDelegate = function (event) {
     local.uiEventListenerDict[event.targetOnEvent.dataset.onevent](event);
 };
 
-local.uiEventListenerDict = {};
+local.uiEventListenerDict = local.objectAssignDefault(
+    globalThis.domOnEventDelegateDict
+);
 
 local.uiEventListenerDict.onEventDomDb = local.db.onEventDomDb;
 
@@ -5127,7 +5139,9 @@ local.uiEventListenerDict.onEventInputValidateAndAjax = function (option, onErro
         });
     };
     // jslint-hack
-    option.targetOnEvent = option.targetOnEvent.closest(".operation");
+    option.targetOnEvent = option.targetOnEvent.closest(
+        ".operation"
+    );
     option.api = local.apiDict[option.targetOnEvent.dataset._methodPath];
     option.headers = {};
     option.modeAjax = option.modeAjax || "validate";
@@ -5278,7 +5292,9 @@ local.uiEventListenerDict.onEventOperationAjax = function (option) {
  */
     // ensure option is stateless
     option = {
-        targetOnEvent: option.targetOnEvent.closest(".operation")
+        targetOnEvent: option.targetOnEvent.closest(
+            ".operation"
+        )
     };
     local.onNext(option, function (error, data) {
         switch (option.modeNext) {
@@ -5383,11 +5399,17 @@ local.uiEventListenerDict.onEventOperationDisplayShow = function (event, onError
     element = event.targetOnEvent;
     element = element.querySelector(
         ".operation"
-    ) || element.closest(".operation");
+    ) || element.closest(
+        ".operation"
+    );
     location.hash = "!" + element.id;
-    element.closest(".resource").classList.remove("expanded");
+    element.closest(
+        ".resource"
+    ).classList.remove("expanded");
     // show parent resource
-    local.uiAnimateSlideDown(element.closest(".resource").querySelector(
+    local.uiAnimateSlideDown(element.closest(
+        ".resource"
+    ).querySelector(
         ".operationList"
     ));
     // show the operation, but hide all other operations
@@ -5395,7 +5417,9 @@ local.uiEventListenerDict.onEventOperationDisplayShow = function (event, onError
         element.querySelector(
             ".operation > form"
         ),
-        Array.from(element.closest(".operationList").querySelectorAll(
+        Array.from(element.closest(
+            ".operationList"
+        ).querySelectorAll(
             ".operation > form"
         )),
         function () {
@@ -5488,6 +5512,17 @@ local.uiEventListenerDict.onEventUiReload = function (option, onError) {
     local.onNext(option, function (error, data) {
         switch (option.modeNext) {
         case 1:
+            if (
+                event
+                && event.targetOnEvent
+                && !event.targetOnEvent.classList.contains(
+                    "eventDelegate"
+                    + event.type[0].toUpperCase()
+                    + event.type.slice(1)
+                )
+            ) {
+                return;
+            }
             option.inputUrl = document.querySelector(
                 ".swggUiContainer > .thead > .td2"
             );
@@ -5591,7 +5626,10 @@ local.uiEventListenerDict.onEventUiReload = function (option, onError) {
             );
             setTimeout(function () {
                 // recurse - render .resourceList
-                local.uiEventListenerDict.onEventUiReload(swaggerJson, option.onNext);
+                local.uiEventListenerDict.onEventUiReload(
+                    swaggerJson,
+                    option.onNext
+                );
             }, 100);
             break;
         default:
@@ -5732,7 +5770,10 @@ local.uiEventListenerDict.onEventUiReload = function (option, onError) {
         Array.from(document.querySelectorAll(
             ".eventDelegate" + eventType
         )).forEach(function (element) {
-            element.addEventListener(eventType.toLowerCase(), local.uiEventDelegate);
+            element.addEventListener(
+                eventType.toLowerCase(),
+                local.uiEventDelegate
+            );
         });
     });
     // scrollTo location.hash
@@ -5832,6 +5873,9 @@ local.uiRenderSchemaP = function (schemaP) {
         && local.schemaPType(schemaP) === "string"
     )) {
         schemaP.isTextarea = true;
+    // init input - number
+    } else if (schemaP.type === "integer" || schemaP.type === "number") {
+        schemaP.isInputNumber = true;
     // init input - text
     } else {
         schemaP.isInputText = true;
