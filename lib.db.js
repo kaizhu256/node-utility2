@@ -83,30 +83,30 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw error <message> if <passed> is falsy
+     * this function will throw error-<message> if <passed> is falsy
      */
-        var error;
+        var err;
         if (passed) {
             return;
         }
-        error = (
+        err = (
             // ternary-condition
             (
                 message
                 && typeof message.message === "string"
                 && typeof message.stack === "string"
             )
-            // if message is an error-object, then leave it as is
+            // if message is error-object, then leave as is
             ? message
             : new Error(
                 typeof message === "string"
-                // if message is a string, then leave it as is
+                // if message is a string, then leave as is
                 ? message
                 // else JSON.stringify message
                 : JSON.stringify(message, null, 4)
             )
         );
-        throw error;
+        throw err;
     };
     local.functionOrNop = function (fnc) {
     /*
@@ -208,9 +208,9 @@ local.db = local;
 
 
 /* validateLineSortedReset */
-local.cliRun = function (option) {
+local.cliRun = function (opt) {
 /*
- * this function will run the cli
+ * this function will run the cli with given <opt>
  */
     local.cliDict._eval = local.cliDict._eval || function () {
     /*
@@ -244,10 +244,10 @@ local.cliRun = function (option) {
         file = __filename.replace((
             /.*\//
         ), "");
-        option = Object.assign({}, option);
+        opt = Object.assign({}, opt);
         packageJson = require("./package.json");
         // validate comment
-        option.rgxComment = option.rgxComment || (
+        opt.rgxComment = opt.rgxComment || (
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         textDict = {};
@@ -266,7 +266,7 @@ local.cliRun = function (option) {
                 return;
             }
             try {
-                commandList[ii] = option.rgxComment.exec(text);
+                commandList[ii] = opt.rgxComment.exec(text);
                 commandList[ii] = {
                     argList: (commandList[ii][1] || "").trim(),
                     command: [key],
@@ -275,8 +275,9 @@ local.cliRun = function (option) {
             } catch (ignore) {
                 local.assertThrow(null, new Error(
                     "cliRun - cannot parse comment in COMMAND "
-                    + key + ":\nnew RegExp("
-                    + JSON.stringify(option.rgxComment.source)
+                    + key
+                    + ":\nnew RegExp("
+                    + JSON.stringify(opt.rgxComment.source)
                     + ").exec(" + JSON.stringify(text).replace((
                         /\\\\/g
                     ), "\u0000").replace((
@@ -289,34 +290,32 @@ local.cliRun = function (option) {
         });
         text = "";
         text += packageJson.name + " (" + packageJson.version + ")\n\n";
-        text += commandList
-        .filter(function (element) {
-            return element;
-        })
-        .map(function (element, ii) {
-            element.command = element.command.filter(function (element) {
-                return element;
+        text += commandList.filter(function (elem) {
+            return elem;
+        }).map(function (elem, ii) {
+            elem.command = elem.command.filter(function (elem) {
+                return elem;
             });
             switch (ii) {
             case 0:
             case 1:
-                element.argList = [element.argList];
+                elem.argList = [elem.argList];
                 break;
             default:
-                element.argList = element.argList.split(" ");
-                element.description = (
+                elem.argList = elem.argList.split(" ");
+                elem.description = (
                     "# COMMAND "
-                    + (element.command[0] || "<none>") + "\n# "
-                    + element.description
+                    + (elem.command[0] || "<none>") + "\n# "
+                    + elem.description
                 );
             }
             return (
-                element.description + "\n  " + file
-                + ("  " + element.command.sort().join("|") + "  ")
+                elem.description + "\n  " + file
+                + ("  " + elem.command.sort().join("|") + "  ")
                     .replace((
                     /^\u0020{4}$/
                 ), "  ")
-                + element.argList.join("  ")
+                + elem.argList.join("  ")
             );
         })
         .join("\n\n");
@@ -498,37 +497,37 @@ local.objectSetOverride = function (dict, overrides, depth, env) {
     return dict;
 };
 
-local.onErrorDefault = function (error) {
+local.onErrorDefault = function (err) {
 /*
- * this function will if <error> exists, then print it to stderr
+ * this function will if <err> exists, then print it to stderr
  */
-    if (error) {
-        console.error(error);
+    if (err) {
+        console.error(err);
     }
-    return error;
+    return err;
 };
 
 local.onErrorWithStack = function (onError) {
 /*
- * this function will create a new callback that will call onError,
- * and append the current stack to any error
+ * this function will create wrapper around <onError>
+ * that will append current-stack to err.stack
  */
     var onError2;
     var stack;
     stack = new Error().stack.replace((
         /(.*?)\n.*?$/m
     ), "$1");
-    onError2 = function (error, data, meta) {
+    onError2 = function (err, data, meta) {
         if (
-            error
-            && typeof error.stack === "string"
-            && error !== local.errorDefault
-            && String(error.stack).indexOf(stack.split("\n")[2]) < 0
+            err
+            && typeof err.stack === "string"
+            && err !== local.errorDefault
+            && String(err.stack).indexOf(stack.split("\n")[2]) < 0
         ) {
-            // append the current stack to error.stack
-            error.stack += "\n" + stack;
+            // append current-stack to err.stack
+            err.stack += "\n" + stack;
         }
-        onError(error, data, meta);
+        onError(err, data, meta);
     };
     // debug onError
     onError2.toString = function () {
@@ -594,25 +593,24 @@ local.replStart = function () {
         useGlobal: true
     });
     globalThis.utility2_repl1 = that;
-    that.onError = function (error) {
+    that.onError = function (err) {
     /*
      * this function will debug repl-error
      */
-        globalThis.utility2_debugReplError = error;
-        console.error(error);
+        globalThis.utility2_debugReplError = err;
+        console.error(err);
     };
     // save eval-function
     that.evalDefault = that.eval;
     // hook custom-eval-function
     that.eval = function (script, context, file, onError) {
         var onError2;
-        onError2 = function (error, data) {
-            // debug error
+        onError2 = function (err, data) {
+            // debug err
             globalThis.utility2_debugReplError = (
-                error
-                || globalThis.utility2_debugReplError
+                err || globalThis.utility2_debugReplError
             );
-            onError(error, data);
+            onError(err, data);
         };
         script.replace((
             /^(\S+)\u0020(.*?)\n/
@@ -742,8 +740,8 @@ vendor)s{0,1}(\\b|_)\
                     console.error(JSON.stringify(
                         require("fs").readFileSync(match2, "utf8")
                     ));
-                } catch (errorCaught) {
-                    console.error(errorCaught);
+                } catch (errCaught) {
+                    console.error(errCaught);
                 }
                 script = "\n";
                 break;
@@ -788,13 +786,14 @@ vendor)s{0,1}(\\b|_)\
     }()));
 };
 
-local.setTimeoutOnError = function (onError, timeout, error, data) {
+local.setTimeoutOnError = function (onError, timeout, err, data) {
 /*
- * this function will after timeout has passed, then call onError(error, data)
+ * this function will after timeout has passed,
+ * then call <onError>(<err>, <data>)
  */
     if (typeof onError === "function") {
         setTimeout(function () {
-            onError(error, data);
+            onError(err, data);
         }, timeout);
     }
     return data;
@@ -852,7 +851,7 @@ defer = function (option, onError) {
     var request;
     var tmp;
     onError = onError || function (error) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
     };
     if (!storage) {
@@ -962,7 +961,7 @@ defer = function (option, onError) {
             tmp = os.tmpdir() + "/" + Date.now() + Math.random();
             // save to tmp
             fs.writeFile(tmp, option.value, function (error) {
-                // validate no error occurred
+                // validate no err occurred
                 local.assertThrow(!error, error);
                 // rename tmp to key
                 fs.rename(
@@ -995,7 +994,7 @@ init = function () {
     var onError;
     var request;
     onError = function (error) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         if (local.isBrowser) {
             storage = globalThis[storageDir];
@@ -1782,7 +1781,7 @@ local.dbLoad = function (onError) {
     });
     local.storageKeys(function (error, data) {
         onParallel.counter += 1;
-        // validate no error occurred
+        // validate no err occurred
         onParallel.counter += 1;
         onParallel(error);
         (data || []).forEach(function (key) {
@@ -2148,7 +2147,7 @@ local.dbTableCreateOne = function (option, onError) {
     that.isLoaded = that.isLoaded || option.isLoaded;
     if (!that.isLoaded) {
         local.storageGetItem("dbTable." + that.name + ".json", function (error, data) {
-            // validate no error occurred
+            // validate no err occurred
             local.assertThrow(!error, error);
             if (!that.isLoaded) {
                 local.dbImport(data);
@@ -2296,7 +2295,7 @@ local.cliDict.dbTableCrudGetManyByQuery = function () {
     local.dbTableCreateOne({
         name: process.argv[3]
     }, function (error, that) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         console.log(JSON.stringify(that.crudGetManyByQuery(
             JSON.parse(process.argv[4] || "{}")
@@ -2312,7 +2311,7 @@ local.cliDict.dbTableCrudRemoveManyByQuery = function () {
     local.dbTableCreateOne({
         name: process.argv[3]
     }, function (error, that) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         console.log(JSON.stringify(that.crudRemoveManyByQuery(
             JSON.parse(process.argv[4])
@@ -2328,7 +2327,7 @@ local.cliDict.dbTableCrudSetManyById = function () {
     local.dbTableCreateOne({
         name: process.argv[3]
     }, function (error, that) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         that.crudSetManyById(JSON.parse(process.argv[4]));
     });
@@ -2342,7 +2341,7 @@ local.cliDict.dbTableHeaderDictGet = function () {
     local.dbTableCreateOne({
         name: process.argv[3]
     }, function (error, that) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         var tmp;
         tmp = [];
@@ -2368,7 +2367,7 @@ local.cliDict.dbTableHeaderDictSet = function () {
     local.dbTableCreateOne({
         name: process.argv[3]
     }, function (error, that) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         local.tmp = JSON.parse(process.argv[4]);
         that.sizeLimit = local.tmp.sizeLimit || that.sizeLimit;
@@ -2393,7 +2392,7 @@ local.cliDict.dbTableIdIndexCreate = function () {
     local.dbTableCreateOne({
         name: process.argv[3]
     }, function (error, that) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         that.idIndexCreate(JSON.parse(process.argv[4]));
         that.save();
@@ -2416,7 +2415,7 @@ local.cliDict.dbTableIdIndexRemove = function () {
     local.dbTableCreateOne({
         name: process.argv[3]
     }, function (error, that) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         that.idIndexRemove(JSON.parse(process.argv[4]));
         that.save();
@@ -2430,7 +2429,7 @@ local.cliDict.dbTableList = function () {
  * will get from db, <dbTableList>
  */
     local.storageKeys(function (error, data) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         console.log(JSON.stringify(data.map(function (element) {
             return element.split(".").slice(1, -1).join(".");
@@ -2444,7 +2443,7 @@ local.cliDict.dbTableRemove = function () {
  * will remove from db, <dbTable>
  */
     local.storageRemoveItem("dbTable." + process.argv[3] + ".json", function (error) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         local.cliDict.dbTableList();
     });

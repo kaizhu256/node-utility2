@@ -56,30 +56,30 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw error <message> if <passed> is falsy
+     * this function will throw error-<message> if <passed> is falsy
      */
-        var error;
+        var err;
         if (passed) {
             return;
         }
-        error = (
+        err = (
             // ternary-condition
             (
                 message
                 && typeof message.message === "string"
                 && typeof message.stack === "string"
             )
-            // if message is an error-object, then leave it as is
+            // if message is error-object, then leave as is
             ? message
             : new Error(
                 typeof message === "string"
-                // if message is a string, then leave it as is
+                // if message is a string, then leave as is
                 ? message
                 // else JSON.stringify message
                 : JSON.stringify(message, null, 4)
             )
         );
-        throw error;
+        throw err;
     };
     local.functionOrNop = function (fnc) {
     /*
@@ -1184,7 +1184,7 @@ local.templateUiOperation = '\
     <h4 class="label">response status code</h4>\n\
     <pre class="responseStatusCode" tabindex="0"></pre>\n\
     <h4 class="label">response headers</h4>\n\
-    <pre class="responseHeaders" tabIndex="0"></pre>\n\
+    <pre class="resHeaders" tabIndex="0"></pre>\n\
     <h4 class="label">response body</h4>\n\
     <pre class="responseBody" tabIndex="0"></pre>\n\
     <div class="responseMedia"></div>\n\
@@ -1397,9 +1397,9 @@ local.assetsDict["/assets.swgg.html"] = local.assetsDict["/assets.utility2.templ
     text-align: center;\n\
     width: 5rem;\n\
 }\n\
-.swggUiContainer .responseBody,\n\
-.swggUiContainer .responseHeaders,\n\
-.swggUiContainer .responseStatusCode {\n\
+.swggUiContainer .resBody,\n\
+.swggUiContainer .resHeaders,\n\
+.swggUiContainer .resStatusCode {\n\
     font-weight: bold;\n\
 }\n\
 .swggUiContainer .schemaP pre,\n\
@@ -2020,7 +2020,7 @@ local.apiAjax = function (that, option, onError) {
         }, local.nop);
         // init userJwtEncrypted
         local.userJwtEncrypted = (
-            xhr.responseHeaders["swgg-jwt-encrypted"]
+            xhr.resHeaders["swgg-jwt-encrypted"]
             || local.userJwtEncrypted
         );
         onError(error, xhr);
@@ -4288,10 +4288,10 @@ local.swaggerValidateDataParameters = function (option) {
                 schema: schemaP,
                 swaggerJson: local.swaggerJson
             });
-        }, function (errorCaught) {
-            console.error(errorCaught.message);
-            errorList.push(errorCaught);
-            errorCaught.errorList = errorList;
+        }, function (errCaught) {
+            console.error(errCaught.message);
+            errorList.push(errCaught);
+            errCaught.errorList = errorList;
         });
     });
     return errorList;
@@ -5308,17 +5308,17 @@ local.uiEventListenerDict.onEventOperationAjax = function (option) {
             );
             // reset response output
             Array.from(option.targetOnEvent.querySelectorAll(
-                ".responseBody, .responseHeaders, .responseStatusCode"
+                ".resBody, .resHeaders, .resStatusCode"
             )).forEach(function (element) {
                 element.classList.remove("hasError");
                 element.textContent = "loading ...";
             });
             option.targetOnEvent.querySelector(
-                ".responseMedia"
+                ".resMedia"
             ).innerHTML = "";
             // scrollTo response
             option.targetOnEvent.querySelector(
-                ".responseStatusCode"
+                ".resStatusCode"
             ).focus();
             break;
         default:
@@ -5329,21 +5329,19 @@ local.uiEventListenerDict.onEventOperationAjax = function (option) {
             });
             // init responseStatusCode
             option.targetOnEvent.querySelector(
-                ".responseStatusCode"
+                ".resStatusCode"
             ).textContent = (
                 data.statusCode
             );
-            // init responseHeaders
+            // init resHeaders
             option.targetOnEvent.querySelector(
-                ".responseHeaders"
-            ).textContent = Object.keys(
-                data.responseHeaders
-            ).map(function (key) {
-                return key + ": " + data.responseHeaders[key] + "\r\n";
+                ".resHeaders"
+            ).textContent = Object.keys(data.resHeaders).map(function (key) {
+                return key + ": " + data.resHeaders[key] + "\r\n";
             }).join("");
             // init responseBody
             option.targetOnEvent.querySelector(
-                ".responseHeaders"
+                ".resHeaders"
             ).textContent.replace((
                 /^content-type:(.*?)$/im
             ), function (ignore, match1) {
@@ -5355,24 +5353,24 @@ local.uiEventListenerDict.onEventOperationAjax = function (option) {
             case "img":
             case "video":
                 option.targetOnEvent.querySelector(
-                    ".responseBody"
+                    ".resBody"
                 ).textContent = (
                     data.contentType
                 );
                 option.targetOnEvent.querySelector(
-                    ".responseMedia"
+                    ".resMedia"
                 ).innerHTML = (
                     "<" + data.mediaType
                     + " class=\"domOnEventMediaHotkeysInit\" controls src=\"data:"
                     + data.contentType
-                    + ";base64," + local.base64FromBuffer(data.responseBuffer) + "\"></"
+                    + ";base64," + local.base64FromBuffer(data.resBuffer) + "\"></"
                     + data.mediaType + ">"
                 );
                 globalThis.domOnEventMediaHotkeys("init");
                 break;
             default:
                 option.targetOnEvent.querySelector(
-                    ".responseBody"
+                    ".resBody"
                 ).textContent = (
                     data.responseJson
                     ? JSON.stringify(data.responseJson, null, 4)
@@ -5381,7 +5379,7 @@ local.uiEventListenerDict.onEventOperationAjax = function (option) {
             }
             // shake response on error
             Array.from(option.targetOnEvent.querySelectorAll(
-                ".responseBody, .responseHeaders, .responseStatusCode"
+                ".resBody, .resHeaders, .resStatusCode"
             )).forEach(function (element) {
                 local.uiAnimateShakeIfError(data.statusCode >= 400, element);
             });

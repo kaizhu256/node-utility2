@@ -6,8 +6,7 @@
         "utility2-db": "lib.db.js",
         "utility2-github-crud": "lib.github_crud.js",
         "utility2-istanbul": "lib.istanbul.js",
-        "utility2-jslint": "lib.jslint.js",
-        "utility2-uglifyjs": "lib.uglifyjs.js"
+        "utility2-jslint": "lib.jslint.js"
     },
     "description": "the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps",
     "devDependencies": {
@@ -48,5 +47,5 @@
         "test": "./npm_scripts.sh",
         "utility2": "./npm_scripts.sh"
     },
-    "version": "2019.2.28"
+    "version": "2019.4.9"
 }

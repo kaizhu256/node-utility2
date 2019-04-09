@@ -56,30 +56,30 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw error <message> if <passed> is falsy
+     * this function will throw error-<message> if <passed> is falsy
      */
-        var error;
+        var err;
         if (passed) {
             return;
         }
-        error = (
+        err = (
             // ternary-condition
             (
                 message
                 && typeof message.message === "string"
                 && typeof message.stack === "string"
             )
-            // if message is an error-object, then leave it as is
+            // if message is error-object, then leave as is
             ? message
             : new Error(
                 typeof message === "string"
-                // if message is a string, then leave it as is
+                // if message is a string, then leave as is
                 ? message
                 // else JSON.stringify message
                 : JSON.stringify(message, null, 4)
             )
         );
-        throw error;
+        throw err;
     };
     local.functionOrNop = function (fnc) {
     /*
@@ -181,9 +181,9 @@ local.apidoc = local;
 
 
 /* validateLineSortedReset */
-local.cliRun = function (option) {
+local.cliRun = function (opt) {
 /*
- * this function will run the cli
+ * this function will run the cli with given <opt>
  */
     local.cliDict._eval = local.cliDict._eval || function () {
     /*
@@ -217,10 +217,10 @@ local.cliRun = function (option) {
         file = __filename.replace((
             /.*\//
         ), "");
-        option = Object.assign({}, option);
+        opt = Object.assign({}, opt);
         packageJson = require("./package.json");
         // validate comment
-        option.rgxComment = option.rgxComment || (
+        opt.rgxComment = opt.rgxComment || (
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         textDict = {};
@@ -239,7 +239,7 @@ local.cliRun = function (option) {
                 return;
             }
             try {
-                commandList[ii] = option.rgxComment.exec(text);
+                commandList[ii] = opt.rgxComment.exec(text);
                 commandList[ii] = {
                     argList: (commandList[ii][1] || "").trim(),
                     command: [key],
@@ -248,8 +248,9 @@ local.cliRun = function (option) {
             } catch (ignore) {
                 local.assertThrow(null, new Error(
                     "cliRun - cannot parse comment in COMMAND "
-                    + key + ":\nnew RegExp("
-                    + JSON.stringify(option.rgxComment.source)
+                    + key
+                    + ":\nnew RegExp("
+                    + JSON.stringify(opt.rgxComment.source)
                     + ").exec(" + JSON.stringify(text).replace((
                         /\\\\/g
                     ), "\u0000").replace((
@@ -262,34 +263,32 @@ local.cliRun = function (option) {
         });
         text = "";
         text += packageJson.name + " (" + packageJson.version + ")\n\n";
-        text += commandList
-        .filter(function (element) {
-            return element;
-        })
-        .map(function (element, ii) {
-            element.command = element.command.filter(function (element) {
-                return element;
+        text += commandList.filter(function (elem) {
+            return elem;
+        }).map(function (elem, ii) {
+            elem.command = elem.command.filter(function (elem) {
+                return elem;
             });
             switch (ii) {
             case 0:
             case 1:
-                element.argList = [element.argList];
+                elem.argList = [elem.argList];
                 break;
             default:
-                element.argList = element.argList.split(" ");
-                element.description = (
+                elem.argList = elem.argList.split(" ");
+                elem.description = (
                     "# COMMAND "
-                    + (element.command[0] || "<none>") + "\n# "
-                    + element.description
+                    + (elem.command[0] || "<none>") + "\n# "
+                    + elem.description
                 );
             }
             return (
-                element.description + "\n  " + file
-                + ("  " + element.command.sort().join("|") + "  ")
+                elem.description + "\n  " + file
+                + ("  " + elem.command.sort().join("|") + "  ")
                     .replace((
                     /^\u0020{4}$/
                 ), "  ")
-                + element.argList.join("  ")
+                + elem.argList.join("  ")
             );
         })
         .join("\n\n");
@@ -501,7 +500,7 @@ local.templateApidocHtml = '\
 ><h1>table of contents</h1></a><ol>\n\
     {{#each moduleList}}\n\
     <li class="apidocModuleLi"><a href="#{{id}}">module {{name}}</a><ol>\n\
-        {{#each elementList}}\n\
+        {{#each elemList}}\n\
         <li>\n\
             {{#if source}}\n\
             <a class="apidocElementLiA" href="#{{id}}">\n\
@@ -512,14 +511,14 @@ local.templateApidocHtml = '\
             <span class="apidocSignatureSpan">{{name}}</span>\n\
             {{/if source}}\n\
         </li>\n\
-        {{/each elementList}}\n\
+        {{/each elemList}}\n\
     </ol></li>\n\
     {{/each moduleList}}\n\
 </ol></div>\n\
 {{#each moduleList}}\n\
 <div class="apidocSectionDiv">\n\
 <h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n\
-    {{#each elementList}}\n\
+    {{#each elemList}}\n\
     {{#if source}}\n\
     <h2>\n\
         <a href="#{{id}}" id="{{id}}">\n\
@@ -532,7 +531,7 @@ local.templateApidocHtml = '\
     <li>example usage<pre class="apidocCodePre">{{example}}</pre></li>\n\
     </ul>\n\
     {{/if source}}\n\
-    {{/each elementList}}\n\
+    {{/each elemList}}\n\
 </div>\n\
 {{/each moduleList}}\n\
 <div class="apidocFooterDiv">\n\
@@ -544,7 +543,7 @@ local.templateApidocHtml = '\
 ';
 /* jslint ignore:end */
 
-local.templateRender = function (template, dict, option) {
+local.templateRender = function (template, dict, opt) {
 /*
  * this function will render the template with given dict
  */
@@ -556,7 +555,7 @@ local.templateRender = function (template, dict, option) {
     var skip;
     var value;
     dict = dict || {};
-    option = option || {};
+    opt = opt || {};
     getValue = function (key) {
         argList = key.split(" ");
         value = dict;
@@ -578,11 +577,11 @@ local.templateRender = function (template, dict, option) {
                 Array.isArray(value)
                 ? value.map(function (dict) {
                     // recurse with partial
-                    return local.templateRender(partial, dict, option);
+                    return local.templateRender(partial, dict, opt);
                 }).join("")
                 : ""
             );
-            // remove trailing-comma from last element
+            // remove trailing-comma from last elem
             if (helper === "eachTrimRightComma") {
                 value = value.trimRight().replace((
                     /,$/
@@ -598,21 +597,17 @@ local.templateRender = function (template, dict, option) {
                 : partial.slice(1).join("{{#unless " + key + "}}")
             );
             // recurse with partial
-            return local.templateRender(partial, dict, option);
+            return local.templateRender(partial, dict, opt);
         case "unless":
             return (
                 getValue(key)
                 ? ""
                 // recurse with partial
-                : local.templateRender(partial, dict, option)
+                : local.templateRender(partial, dict, opt)
             );
         default:
             // recurse with partial
-            return match0[0] + local.templateRender(
-                match0.slice(1),
-                dict,
-                option
-            );
+            return match0[0] + local.templateRender(match0.slice(1), dict, opt);
         }
     };
     // render partials
@@ -639,7 +634,7 @@ local.templateRender = function (template, dict, option) {
     ), function (match0) {
         var markdownToHtml;
         var notHtmlSafe;
-        notHtmlSafe = option.notHtmlSafe;
+        notHtmlSafe = opt.notHtmlSafe;
         try {
             getValue(match0.slice(2, -2));
             if (value === undefined) {
@@ -740,12 +735,13 @@ local.templateRender = function (template, dict, option) {
                 ), "&$1");
             }
             return value;
-        } catch (errorCaught) {
-            errorCaught.message = (
+        } catch (errCaught) {
+            errCaught.message = (
                 "templateRender could not render expression "
-                + JSON.stringify(match0) + "\n"
-            ) + errorCaught.message;
-            local.assertThrow(null, errorCaught);
+                + JSON.stringify(match0)
+                + "\n"
+            ) + errCaught.message;
+            local.assertThrow(null, errCaught);
         }
     });
 };
@@ -753,21 +749,21 @@ local.templateRender = function (template, dict, option) {
 local.tryCatchOnError = function (fnc, onError) {
 /*
  * this function will run the fnc in a tryCatch block,
- * else call onError with the errorCaught
+ * else call onError with errCaught
  */
     var result;
     // validate onError
     local.assertThrow(typeof onError === "function", typeof onError);
     try {
-        // reset errorCaught
+        // reset errCaught
         local._debugTryCatchError = null;
         result = fnc();
         local._debugTryCatchError = null;
         return result;
-    } catch (errorCaught) {
-        // debug errorCaught
-        local._debugTryCatchError = errorCaught;
-        return onError(errorCaught);
+    } catch (errCaught) {
+        // debug errCaught
+        local._debugTryCatchError = errCaught;
+        return onError(errCaught);
     }
 };
 }());
@@ -780,47 +776,45 @@ local.apidocCreate = function (option) {
 /*
  * this function will create the apidoc from option.dir
  */
-    var elementCreate;
+    var elemCreate;
     var module;
     var moduleMain;
     var readExample;
     var tmp;
     var toString;
     var trimLeft;
-    elementCreate = function (module, prefix, key) {
+    elemCreate = function (module, prefix, key) {
     /*
-     * this function will create the apidoc-element in given module
+     * this function will create the apidoc-elem in given <module>
      */
-        var element;
+        var elem;
         if (option.modeNoApidoc) {
-            return element;
+            return elem;
         }
-        element = {};
-        element.moduleName = prefix.split(".");
+        elem = {};
+        elem.moduleName = prefix.split(".");
         // handle case where module is a function
-        if (element.moduleName.slice(-1)[0] === key) {
-            element.moduleName.pop();
+        if (elem.moduleName.slice(-1)[0] === key) {
+            elem.moduleName.pop();
         }
-        element.moduleName = element.moduleName.join(".");
-        element.id = encodeURIComponent("apidoc.element." + prefix + "." + key);
-        element.typeof = typeof module[key];
-        element.name = (
-            element.typeof + " <span class=\"apidocSignatureSpan\">"
-            + element.moduleName + ".</span>" + key
+        elem.moduleName = elem.moduleName.join(".");
+        elem.id = encodeURIComponent("apidoc.elem." + prefix + "." + key);
+        elem.typeof = typeof module[key];
+        elem.name = (
+            elem.typeof + " <span class=\"apidocSignatureSpan\">"
+            + elem.moduleName + ".</span>" + key
         )
             // handle case where module is a function
             .replace(">.<", "><");
-        if (element.typeof !== "function") {
-            return element;
+        if (elem.typeof !== "function") {
+            return elem;
         }
         // init source
-        element.source = local.stringHtmlSafe(trimLeft(toString(module[key])) || "n/a")
-        .replace((
+        elem.source = local.stringHtmlSafe(trimLeft(toString(module[key])) || "n/a").replace((
             /\([\S\s]*?\)/
         ), function (match0) {
             // init signature
-            element.signature = match0
-            .replace((
+            elem.signature = match0.replace((
                 /\u0020*?\/\*[\S\s]*?\*\/\u0020*/g
             ), "")
             .replace((
@@ -829,7 +823,7 @@ local.apidocCreate = function (option) {
             .replace((
                 /\s+/g
             ), " ");
-            return element.signature;
+            return elem.signature;
         })
         .replace((
             /(\u0020*?\/\*[\S\s]*?\*\/\n)/
@@ -842,7 +836,7 @@ local.apidocCreate = function (option) {
             example.replace(
                 new RegExp("((?:\n.*?){8}\\.)(" + key + ")(\\((?:.*?\n){8})"),
                 function (ignore, match1, match2, match3) {
-                    element.example = "..." + trimLeft(
+                    elem.example = "..." + trimLeft(
                         local.stringHtmlSafe(match1)
                         + "<span class=\"apidocCodeKeywordSpan\">"
                         + local.stringHtmlSafe(match2)
@@ -851,10 +845,10 @@ local.apidocCreate = function (option) {
                     ).trimRight() + "\n...";
                 }
             );
-            return element.example;
+            return elem.example;
         });
-        element.example = element.example || "n/a";
-        return element;
+        elem.example = elem.example || "n/a";
+        return elem;
     };
     readExample = function (file) {
     /*
@@ -936,9 +930,9 @@ local.apidocCreate = function (option) {
                 delete tmp.email;
             }
             if (Array.isArray(tmp)) {
-                tmp.forEach(function (element) {
-                    if (element && element.email) {
-                        delete element.email;
+                tmp.forEach(function (elem) {
+                    if (elem && elem.email) {
+                        delete elem.email;
                     }
                 });
             }
@@ -1083,8 +1077,8 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
         option.circularSet.add(option.moduleDict[key]);
     });
     // init circularSet - prototype
-    option.circularSet.forEach(function (element) {
-        option.circularSet.add(element && element.prototype);
+    option.circularSet.forEach(function (elem) {
+        option.circularSet.add(elem && elem.prototype);
     });
     // init moduleDict child
     local.apidocModuleDictAdd(option, option.moduleDict);
@@ -1194,8 +1188,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             }, console.error);
         }
         return {
-            elementList: Object.keys(module)
-            .filter(function (key) {
+            elemList: Object.keys(module).filter(function (key) {
                 return local.tryCatchOnError(function () {
                     return (
                         key
@@ -1209,11 +1202,9 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                         )
                     );
                 }, console.error);
-            })
-            .map(function (key) {
-                return elementCreate(module, prefix, key);
-            })
-            .sort(function (aa, bb) {
+            }).map(function (key) {
+                return elemCreate(module, prefix, key);
+            }).sort(function (aa, bb) {
                 return (
                     aa.name > bb.name
                     ? 1
@@ -1252,7 +1243,7 @@ local.apidocModuleDictAdd = function (option, moduleDict) {
             }, local.nop);
         });
     };
-    ["child", "prototype", "grandchild", "prototype"].forEach(function (element) {
+    ["child", "prototype", "grandchild", "prototype"].forEach(function (elem) {
         objectKeys(moduleDict).forEach(function (prefix) {
             if (!(
                 /^\w[\w\-.]*?$/
@@ -1266,7 +1257,7 @@ local.apidocModuleDictAdd = function (option, moduleDict) {
                     return;
                 }
                 tmp = (
-                    element === "prototype"
+                    elem === "prototype"
                     ? {
                         module: moduleDict[prefix][key].prototype,
                         name: prefix + "." + key + ".prototype"

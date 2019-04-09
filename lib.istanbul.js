@@ -56,30 +56,30 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw error <message> if <passed> is falsy
+     * this function will throw error-<message> if <passed> is falsy
      */
-        var error;
+        var err;
         if (passed) {
             return;
         }
-        error = (
+        err = (
             // ternary-condition
             (
                 message
                 && typeof message.message === "string"
                 && typeof message.stack === "string"
             )
-            // if message is an error-object, then leave it as is
+            // if message is error-object, then leave as is
             ? message
             : new Error(
                 typeof message === "string"
-                // if message is a string, then leave it as is
+                // if message is a string, then leave as is
                 ? message
                 // else JSON.stringify message
                 : JSON.stringify(message, null, 4)
             )
         );
-        throw error;
+        throw err;
     };
     local.functionOrNop = function (fnc) {
     /*
@@ -188,9 +188,9 @@ if (!local.isBrowser) {
     local.require = require;
 }
 
-local.cliRun = function (option) {
+local.cliRun = function (opt) {
 /*
- * this function will run the cli
+ * this function will run the cli with given <opt>
  */
     local.cliDict._eval = local.cliDict._eval || function () {
     /*
@@ -224,10 +224,10 @@ local.cliRun = function (option) {
         file = __filename.replace((
             /.*\//
         ), "");
-        option = Object.assign({}, option);
+        opt = Object.assign({}, opt);
         packageJson = require("./package.json");
         // validate comment
-        option.rgxComment = option.rgxComment || (
+        opt.rgxComment = opt.rgxComment || (
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         textDict = {};
@@ -246,7 +246,7 @@ local.cliRun = function (option) {
                 return;
             }
             try {
-                commandList[ii] = option.rgxComment.exec(text);
+                commandList[ii] = opt.rgxComment.exec(text);
                 commandList[ii] = {
                     argList: (commandList[ii][1] || "").trim(),
                     command: [key],
@@ -255,8 +255,9 @@ local.cliRun = function (option) {
             } catch (ignore) {
                 local.assertThrow(null, new Error(
                     "cliRun - cannot parse comment in COMMAND "
-                    + key + ":\nnew RegExp("
-                    + JSON.stringify(option.rgxComment.source)
+                    + key
+                    + ":\nnew RegExp("
+                    + JSON.stringify(opt.rgxComment.source)
                     + ").exec(" + JSON.stringify(text).replace((
                         /\\\\/g
                     ), "\u0000").replace((
@@ -269,34 +270,32 @@ local.cliRun = function (option) {
         });
         text = "";
         text += packageJson.name + " (" + packageJson.version + ")\n\n";
-        text += commandList
-        .filter(function (element) {
-            return element;
-        })
-        .map(function (element, ii) {
-            element.command = element.command.filter(function (element) {
-                return element;
+        text += commandList.filter(function (elem) {
+            return elem;
+        }).map(function (elem, ii) {
+            elem.command = elem.command.filter(function (elem) {
+                return elem;
             });
             switch (ii) {
             case 0:
             case 1:
-                element.argList = [element.argList];
+                elem.argList = [elem.argList];
                 break;
             default:
-                element.argList = element.argList.split(" ");
-                element.description = (
+                elem.argList = elem.argList.split(" ");
+                elem.description = (
                     "# COMMAND "
-                    + (element.command[0] || "<none>") + "\n# "
-                    + element.description
+                    + (elem.command[0] || "<none>") + "\n# "
+                    + elem.description
                 );
             }
             return (
-                element.description + "\n  " + file
-                + ("  " + element.command.sort().join("|") + "  ")
+                elem.description + "\n  " + file
+                + ("  " + elem.command.sort().join("|") + "  ")
                     .replace((
                     /^\u0020{4}$/
                 ), "  ")
-                + element.argList.join("  ")
+                + elem.argList.join("  ")
             );
         })
         .join("\n\n");

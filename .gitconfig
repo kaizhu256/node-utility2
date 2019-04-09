@@ -1,6 +1,9 @@
 [branch "alpha"]
     merge = refs/heads/alpha
     remote = origin
+[branch "base"]
+    merge = refs/heads/base
+    remote = origin
 [core]
     bare = false
     filemode = true
@@ -10,6 +13,9 @@
     algorithm = histogram
 [receive]
     denyCurrentBranch = warn
+[remote "aa-bb"]
+    fetch = +refs/heads/*:refs/remotes/aa-bb/*
+    url = https://github.com/kaizhu256/node-aa-bb
 [remote "heroku"]
     fetch = +refs/heads/*:refs/remotes/heroku/*
     url = git@heroku.com:h1-utility2-alpha.git

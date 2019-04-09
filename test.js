@@ -46,30 +46,30 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw error <message> if <passed> is falsy
+     * this function will throw error-<message> if <passed> is falsy
      */
-        var error;
+        var err;
         if (passed) {
             return;
         }
-        error = (
+        err = (
             // ternary-condition
             (
                 message
                 && typeof message.message === "string"
                 && typeof message.stack === "string"
             )
-            // if message is an error-object, then leave it as is
+            // if message is error-object, then leave as is
             ? message
             : new Error(
                 typeof message === "string"
-                // if message is a string, then leave it as is
+                // if message is a string, then leave as is
                 ? message
                 // else JSON.stringify message
                 : JSON.stringify(message, null, 4)
             )
         );
-        throw error;
+        throw err;
     };
     local.functionOrNop = function (fnc) {
     /*
@@ -208,7 +208,7 @@ local.testCase_FormData_default = function (option, onError) {
     option.method = "POST";
     option.url = "/test.echo";
     local.ajax(option, function (error, xhr) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         // validate responseText
         local.assertThrow(xhr.responseText.indexOf(
@@ -244,7 +244,7 @@ local.testCase_FormData_error = function (option, onError) {
             method: "POST",
             url: "/test.echo"
         }, function (error) {
-            // validate error occurred
+            // validate err occurred
             local.assertThrow(error, error);
             onError(null, option);
         });
@@ -260,7 +260,7 @@ local.testCase_FormData_nullCase = function (option, onError) {
         method: "POST",
         url: "/test.echo"
     }, function (error, xhr) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         // validate responseText
         local.assertThrow((
@@ -366,7 +366,7 @@ local.testCase_ajax_default = function (option, onError) {
             "text"
         ]
     }, function (responseType, onParallel) {
-        responseType = responseType.element;
+        responseType = responseType.elem;
         onParallel.counter += 1;
         local.ajax({
             data: (
@@ -388,7 +388,7 @@ local.testCase_ajax_default = function (option, onError) {
             responseType: responseType.replace("blob", "arraybuffer"),
             url: "/test.body"
         }, function (error, xhr) {
-            // validate no error occurred
+            // validate no err occurred
             local.assertThrow(!error, error);
             // validate statusCode
             local.assertJsonEqual(xhr.statusCode, 200);
@@ -423,7 +423,7 @@ local.testCase_ajax_default = function (option, onError) {
     option = local.ajax({
         url: "/test.timeout"
     }, function (error, xhr) {
-        // validate error occurred
+        // validate err occurred
         local.assertThrow(error, error);
         // validate statusCode
         local.assertJsonEqual(xhr.statusCode, 500);
@@ -451,15 +451,12 @@ local.testCase_ajax_default = function (option, onError) {
         modeDebug: true,
         url: "/test.echo"
     }, function (error, xhr) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         // validate statusCode
         local.assertJsonEqual(xhr.statusCode, 200);
-        // validate responseHeaders
-        local.assertJsonEqual(
-            xhr.responseHeaders["x-response-header-test"],
-            "bb"
-        );
+        // validate resHeaders
+        local.assertJsonEqual(xhr.resHeaders["x-response-header-test"], "bb");
         // validate responseText
         local.assertThrow((
             /\r\nhello\u0020\ud83d\ude01\n$/
@@ -497,8 +494,8 @@ local.testCase_ajax_default = function (option, onError) {
         }]
     }, function (option2, onParallel) {
         onParallel.counter += 1;
-        local.ajax(option2.element, function (error) {
-            // validate error occurred
+        local.ajax(option2.elem, function (error) {
+            // validate err occurred
             local.assertThrow(error, error);
             onParallel(null, option);
         });
@@ -509,7 +506,7 @@ local.testCase_ajax_default = function (option, onError) {
     local.ajax({
         url: "LICENSE"
     }, function (error, xhr) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         // validate statusCode
         local.assertJsonEqual(xhr.statusCode, 200);
@@ -538,7 +535,7 @@ local.testCase_ajax_default = function (option, onError) {
                     : local.serverLocalHost
                 )
             }, function (error, xhr) {
-                // validate no error occurred
+                // validate no err occurred
                 local.assertThrow(!error, error);
                 // validate statusCode
                 local.assertJsonEqual(xhr.statusCode, 200);
@@ -557,7 +554,7 @@ local.testCase_ajax_default = function (option, onError) {
                     : local.serverLocalHost
                 ) + "/undefined"
             }, function (error, xhr) {
-                // validate error occurred
+                // validate err occurred
                 local.assertThrow(error, error);
                 // validate statusCode
                 local.assertJsonEqual(xhr.statusCode, 404);
@@ -575,7 +572,7 @@ local.testCase_ajax_default = function (option, onError) {
             timeout: 1,
             url: "/test.timeout"
         }, function (error, xhr) {
-            // validate error occurred
+            // validate err occurred
             local.assertThrow(error, error);
             // validate statusCode
             local.assertJsonEqual(xhr.statusCode, 500);
@@ -594,7 +591,7 @@ local.testCase_assertXxx_default = function (option, onError) {
     local.tryCatchOnError(function () {
         local.assertThrow(null);
     }, function (error) {
-        // validate error occurred
+        // validate err occurred
         local.assertThrow(error, error);
         // validate error-message
         local.assertJsonEqual(error.message, "");
@@ -603,7 +600,7 @@ local.testCase_assertXxx_default = function (option, onError) {
     local.tryCatchOnError(function () {
         local.assertThrow(null, "aa");
     }, function (error) {
-        // validate error occurred
+        // validate err occurred
         local.assertThrow(error, error);
         // validate error-message
         local.assertJsonEqual(error.message, "aa");
@@ -612,7 +609,7 @@ local.testCase_assertXxx_default = function (option, onError) {
     local.tryCatchOnError(function () {
         local.assertThrow(null, local.errorDefault);
     }, function (error) {
-        // validate error occurred
+        // validate err occurred
         local.assertThrow(error, error);
     });
     // test assertion failed with json object
@@ -621,7 +618,7 @@ local.testCase_assertXxx_default = function (option, onError) {
             aa: 1
         });
     }, function (error) {
-        // validate error occurred
+        // validate err occurred
         local.assertThrow(error, error);
         // validate error-message
         local.assertJsonEqual(error.message, "{\n    \"aa\": 1\n}");
@@ -682,7 +679,7 @@ local.testCase_blobRead_default = function (option, onError) {
         new Uint8Array(0),
         local.stringHelloEmoji
     ]), function (error, data) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         // validate data
         local.assertJsonEqual(
@@ -710,7 +707,7 @@ local.testCase_blobRead_default = function (option, onError) {
         }]
     ], function (onError) {
         local.blobRead(null, function (error) {
-            // validate error occurred
+            // validate err occurred
             local.assertThrow(error, error);
         });
         onError(null, option);
@@ -831,7 +828,7 @@ local.testCase_browserTest_screenshot = function (option, onError) {
     }
     local.browserTest({
         modeBrowserTest: "screenshot",
-        timeoutDefault: 10000,
+        timeoutDefault: 20000,
         url: "tmp/build/test-report.html"
     }, onError);
 };
@@ -898,15 +895,15 @@ local.testCase_bufferValidateAndCoerce_error = function (option, onError) {
 /*
  * this function will test bufferValidateAndCoerce's error handling-behavior
  */
-    [[], 0, {}].forEach(function (element) {
+    [[], 0, {}].forEach(function (elem) {
         option = null;
         try {
-            local.bufferValidateAndCoerce(element);
-        } catch (errorCaught) {
-            option = errorCaught;
+            local.bufferValidateAndCoerce(elem);
+        } catch (errCaught) {
+            option = errCaught;
         }
-        // validate error occurred
-        local.assertThrow(option, element);
+        // validate err occurred
+        local.assertThrow(option, elem);
     });
     onError(null, option);
 };
@@ -965,9 +962,6 @@ local.testCase_buildApp_default = function (option, onError) {
         }, {
             file: "/assets.utility2.lib.sjcl.js",
             url: "/assets.utility2.lib.sjcl.js"
-        }, {
-            file: "/assets.utility2.lib.uglifyjs.js",
-            url: "/assets.utility2.lib.uglifyjs.js"
         }, {
             file: "/assets.utility2.rollup.js",
             url: "/assets.utility2.rollup.js"
@@ -1149,7 +1143,7 @@ local.testCase_childProcessSpawnWithUtility2_error = function (option, onError) 
         }]
     ], function (onError) {
         local.local.childProcessSpawnWithUtility2("undefined", function (error) {
-            // validate error occurred
+            // validate err occurred
             local.assertThrow(error, error);
         });
         onError(null, option);
@@ -1377,8 +1371,8 @@ local.testCase_jsonCopy_default = function (option, onError) {
  * this function will test jsonCopy's default handling-behavior
  */
     // test various data-type handling-behavior
-    [undefined, null, false, true, 0, 1, 1.5, "a"].forEach(function (element) {
-        local.assertJsonEqual(local.jsonCopy(element), element);
+    [undefined, null, false, true, 0, 1, 1.5, "a"].forEach(function (elem) {
+        local.assertJsonEqual(local.jsonCopy(elem), elem);
     });
     onError(null, option);
 };
@@ -1505,16 +1499,16 @@ local.testCase_listGetElementRandom_default = function (option, onError) {
     option = {};
     // init list
     option.list = ["aa", "bb", "cc", "dd"];
-    option.elementDict = {};
-    // get 1000 random elements from list
+    option.elemDict = {};
+    // get 1000 random elem from list
     option.ii = 0;
     while (option.ii < 1000) {
-        option.elementDict[local.listGetElementRandom(option.list)] = true;
+        option.elemDict[local.listGetElementRandom(option.list)] = true;
         option.ii += 1;
     }
-    // validate all elements were retrieved from list
+    // validate all elem were retrieved from list
     local.assertJsonEqual(
-        Object.keys(option.elementDict).sort(),
+        Object.keys(option.elemDict).sort(),
         ["aa", "bb", "cc", "dd"]
     );
     onError(null, option);
@@ -1601,7 +1595,7 @@ local.testCase_middlewareForwardProxy_default = function (option, onError) {
         },
         url: ""
     }, function (error, xhr) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         // validate responseText
         local.assertJsonEqual(xhr.responseText, local.stringHelloEmoji);
@@ -1615,7 +1609,7 @@ local.testCase_middlewareForwardProxy_default = function (option, onError) {
         },
         url: ""
     }, function (error) {
-        // validate error occurred
+        // validate err occurred
         local.assertThrow(error, error);
         onParallel(null, option);
     });
@@ -1929,7 +1923,7 @@ local.testCase_onErrorThrow_error = function (option, onError) {
     local.tryCatchOnError(function () {
         local.onErrorThrow(local.errorDefault);
     }, function (error) {
-        // validate error occurred
+        // validate err occurred
         local.assertThrow(error, error);
         onError(null, option);
     });
@@ -1981,7 +1975,7 @@ local.testCase_onNext_error = function (option, onError) {
     local.tryCatchOnError(function () {
         option.onNext();
     }, function (error) {
-        // validate error occurred
+        // validate err occurred
         local.assertThrow(error, error);
         onError(null, option);
     });
@@ -2009,7 +2003,7 @@ local.testCase_onParallelList_default = function (option, onError) {
                 // test multiple-callback handling-behavior
                 setTimeout(onParallel, 5000);
             }, function (error) {
-                // validate error occurred
+                // validate err occurred
                 local.assertThrow(error, error);
                 option.onNext();
             });
@@ -2033,7 +2027,7 @@ local.testCase_onParallelList_default = function (option, onError) {
                     if (option2.ii === 3) {
                         option2.list.push(5);
                     }
-                    option.data[option2.ii] = option2.element;
+                    option.data[option2.ii] = option2.elem;
                     // test retry handling-behavior
                     local.assertThrow(option2.retry < 1);
                     onParallel(null, option2);
@@ -2054,7 +2048,7 @@ local.testCase_onParallelList_default = function (option, onError) {
                 // test sync handling-behavior
                 onParallel.counter += 1;
                 option.rateMax = Math.max(onParallel.counter, option.rateMax);
-                option.data[option2.ii] = option2.element;
+                option.data[option2.ii] = option2.elem;
                 onParallel(null, option);
             }, option.onNext);
             break;
@@ -2092,11 +2086,11 @@ local.testCase_onParallel_default = function (option, onError) {
         onParallelError();
         // test multiple-callback-error handling-behavior
         onParallelError();
-        // validate error occurred
+        // validate err occurred
         local.assertThrow(onParallelError.error, onParallelError.error);
         // test error handling-behavior
         onParallelError(local.errorDefault);
-        // validate error occurred
+        // validate err occurred
         local.assertThrow(onParallelError.error, onParallelError.error);
         // test ignore-after-error handling-behavior
         onParallelError();
@@ -2111,7 +2105,7 @@ local.testCase_onTimeout_timeout = function (option, onError) {
  */
     option = local.timeElapsedStart();
     local.onTimeout(function (error) {
-        // validate error occurred
+        // validate err occurred
         local.assertThrow(error, error);
         // validate error message
         local.assertThrow(
@@ -2144,7 +2138,7 @@ local.testCase_profileXxx_default = function (option, onError) {
     local.profile(function (onError) {
         setTimeout(onError);
     }, function (error, timeElapsed) {
-        // validate no error occurred
+        // validate no err occurred
         local.assertThrow(!error, error);
         option.timeElapsed = timeElapsed;
         // validate timeElapsed
@@ -2731,7 +2725,7 @@ local.testCase_templateRender_default = function (option, onError) {
             aa: 1
         });
     }, local.nop);
-    // validate error occurred
+    // validate err occurred
     local.assertThrow(local._debugTryCatchError, local._debugTryCatchError);
     onError(null, option);
 };
@@ -2768,24 +2762,10 @@ local.testCase_throwError_default = function (option, onError) {
     local.tryCatchOnError(function () {
         local.throwError();
     }, function (error) {
-        // validate error occurred
+        // validate err occurred
         local.assertThrow(error, error);
         onError(null, option);
     });
-};
-
-local.testCase_uglify_default = function (option, onError) {
-/*
- * this function will test uglify's default handling-behavior
- */
-    // test css handling-behavior
-    local.assertJsonEqual(local.uglify("body { margin: 0; }", "aa.css"), "body{margin:0;}");
-    // test js handling-behavior
-    local.assertJsonEqual(
-        local.uglify("aa = 'hello \ud83d\ude01\\n'", "aa.js"),
-        "aa=\"hello \\ud83d\\ude01\\n\""
-    );
-    onError(null, option);
 };
 
 local.testCase_uiAnimateXxx_default = function (option, onError) {
@@ -2920,7 +2900,7 @@ local.testCase_webpage_error = function (option, onError) {
             + "timeExit={{timeExit}}"
         )
     }, function (error) {
-        // validate error occurred
+        // validate err occurred
         local.assertThrow(error, error);
         onError(null, option);
     });

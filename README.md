@@ -56,6 +56,9 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- jslint - auto-newline function-calls with names longer than 20 char
+- replace uglifyjs-lite with terser-lite (v2.8.29)
+- jslint - allow space after semi-colon in jslint-macro
 - jslint - fix lineOffset issue
 - jslint - jlintUtility2 with ignore-region blank
 - jslint - sort nested switch-statements
@@ -68,27 +71,12 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - add server stress-test using electron
 - none
 
-#### changelog 2019.2.28
-- npm publish 2019.2.28
-- split function domOnEventDelegate into domOnEventDelegate, domOnEventResetOutput
-- add function local.dateGetWeek
-- merge shell-functions utility2.customOrgRepoCreate, shCustomOrgRepoCreate into shTravisRepoCreate
-- replace circurlarList with circularSet
-- jslint - merge function local.jslintUtility20 into local.jslintAndPrint
-- update shell-function shHttpFileServer to be windows-compatible
-- jslint - simplify lint and autofix for json
-- bug - fix unintended indent-autofix for jslint-ignore in demux and mux
-- jslint-autofix in separate process
-- add functions local.dateUtcFromLocal, local.dateUtcToLocal, local.domDatasetDecode, local.domDatasetEncode
-- update function templateRender with functions padEnd and padStart
-- add repl-command \$ ll
-- auto-git-diff when npm_config_mode_restart=1
-- jslint - add function jslintAndPrintDir
-- swgg - add input-type=number
-- jslint - lint json with JSON.parse instead of jslint
-- revamp ui event-handling with window.domOnEventDelegateDict
-- fix function buildReadme's custom-case
-- remove unused-functions objectLiteralize and objectTraverse
+#### changelog 2019.4.9
+- npm publish 2019.4.9
+- add shims for TextDecoder, TextEncoder
+- shorten name element to elem, option to opt, error to err, request to req, response to res
+- add file lib.terser.js
+- delist uglifyjs-lite from shUtility2Dependents
 - none
 
 #### this package requires
@@ -193,30 +181,30 @@ instruction
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw error <message> if <passed> is falsy
+     * this function will throw error-<message> if <passed> is falsy
      */
-        var error;
+        var err;
         if (passed) {
             return;
         }
-        error = (
+        err = (
             // ternary-condition
             (
                 message
                 && typeof message.message === "string"
                 && typeof message.stack === "string"
             )
-            // if message is an error-object, then leave it as is
+            // if message is error-object, then leave as is
             ? message
             : new Error(
                 typeof message === "string"
-                // if message is a string, then leave it as is
+                // if message is a string, then leave as is
                 ? message
                 // else JSON.stringify message
                 : JSON.stringify(message, null, 4)
             )
         );
-        throw error;
+        throw err;
     };
     local.functionOrNop = function (fnc) {
     /*
@@ -330,7 +318,7 @@ local.testCase_ajax_200 = function (option, onError) {
         url: "assets.hello.txt"
     }, function (error, xhr) {
         local.tryCatchOnError(function () {
-            // validate no error occurred
+            // validate no err occurred
             local.assertThrow(!error, error);
             // validate data
             option.data = xhr.responseText;
@@ -354,7 +342,7 @@ local.testCase_ajax_404 = function (option, onError) {
         url: "/undefined"
     }, function (error) {
         local.tryCatchOnError(function () {
-            // validate error occurred
+            // validate err occurred
             local.assertThrow(error, error);
             option.statusCode = error.statusCode;
             // validate 404 http statusCode
@@ -391,12 +379,12 @@ if (!local.isBrowser) {
 // log stderr and stdout to #outputStdout1
 ["error", "log"].forEach(function (key) {
     var argList;
-    var element;
+    var elem;
     var fnc;
-    element = document.querySelector(
+    elem = document.querySelector(
         "#outputStdout1"
     );
-    if (!element) {
+    if (!elem) {
         return;
     }
     fnc = console[key];
@@ -404,7 +392,7 @@ if (!local.isBrowser) {
         argList = Array.from(arguments); // jslint ignore:line
         fnc.apply(console, argList);
         // append text to #outputStdout1
-        element.textContent += argList.map(function (arg) {
+        elem.textContent += argList.map(function (arg) {
             return (
                 typeof arg === "string"
                 ? arg
@@ -414,7 +402,7 @@ if (!local.isBrowser) {
             /\u001b\[\d*m/g
         ), "") + "\n";
         // scroll textarea to bottom
-        element.scrollTop = element.scrollHeight;
+        elem.scrollTop = elem.scrollHeight;
     };
 });
 Object.assign(local, globalThis.domOnEventDelegateDict);
@@ -805,17 +793,17 @@ pre {\n\
     window.domOnEventDelegateDict.domOnEventResetOutput = function () {\n\
         Array.from(document.querySelectorAll(\n\
             ".onevent-reset-output"\n\
-        )).forEach(function (element) {\n\
-            switch (element.tagName) {\n\
+        )).forEach(function (elem) {\n\
+            switch (elem.tagName) {\n\
             case "INPUT":\n\
             case "TEXTAREA":\n\
-                element.value = "";\n\
+                elem.value = "";\n\
                 break;\n\
             case "PRE":\n\
-                element.textContent = "";\n\
+                elem.textContent = "";\n\
                 break;\n\
             default:\n\
-                element.innerHTML = "";\n\
+                elem.innerHTML = "";\n\
             }\n\
         });\n\
     };\n\
@@ -977,7 +965,7 @@ utility2-comment -->\n\
         // test ajax request for main-page "/"\n\
         window.utility2.ajax(option, function (error, xhr) {\n\
             try {\n\
-                // validate no error occurred\n\
+                // validate no err occurred\n\
                 console.assert(!error, error);\n\
                 // validate "200 ok" status\n\
                 console.assert(xhr.statusCode === 200, xhr.statusCode);\n\
@@ -1012,7 +1000,6 @@ utility2-comment -->\n\
 <script src="assets.utility2.lib.db.js"></script>\n\
 <script src="assets.utility2.lib.marked.js"></script>\n\
 <script src="assets.utility2.lib.sjcl.js"></script>\n\
-<script src="assets.utility2.lib.uglifyjs.js"></script>\n\
 <script src="assets.utility2.js"></script>\n\
 <script>window.utility2_onReadyBefore.counter += 1;</script>\n\
 <script src="jsonp.utility2.stateInit?callback=window.utility2.stateInit"></script>\n\
@@ -1079,14 +1066,14 @@ if (globalThis.utility2_serverHttp1) {
 }
 process.env.PORT = process.env.PORT || "8081";
 console.error("http-server listening on port " + process.env.PORT);
-local.http.createServer(function (request, response) {
-    request.urlParsed = local.url.parse(request.url);
-    if (local.assetsDict[request.urlParsed.pathname] !== undefined) {
-        response.end(local.assetsDict[request.urlParsed.pathname]);
+local.http.createServer(function (req, res) {
+    req.urlParsed = local.url.parse(req.url);
+    if (local.assetsDict[req.urlParsed.pathname] !== undefined) {
+        res.end(local.assetsDict[req.urlParsed.pathname]);
         return;
     }
-    response.statusCode = 404;
-    response.end();
+    res.statusCode = 404;
+    res.end();
 }).listen(process.env.PORT);
 }());
 
@@ -1152,8 +1139,7 @@ local.http.createServer(function (request, response) {
         "utility2-db": "lib.db.js",
         "utility2-github-crud": "lib.github_crud.js",
         "utility2-istanbul": "lib.istanbul.js",
-        "utility2-jslint": "lib.jslint.js",
-        "utility2-uglifyjs": "lib.uglifyjs.js"
+        "utility2-jslint": "lib.jslint.js"
     },
     "description": "the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps",
     "devDependencies": {
@@ -1194,7 +1180,7 @@ local.http.createServer(function (request, response) {
         "test": "./npm_scripts.sh",
         "utility2": "./npm_scripts.sh"
     },
-    "version": "2019.2.28"
+    "version": "2019.4.9"
 }
 ```
 
