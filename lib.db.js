@@ -633,7 +633,10 @@ local.replStart = function () {
                     break;
                 }
                 // source lib.utility2.sh
-                if (process.env.npm_config_dir_utility2 && (match2 !== ":")) {
+                if (
+                    process.platform !== "win32"
+                    && process.env.npm_config_dir_utility2 && (match2 !== ":")
+                ) {
                     match2 = (
                         ". " + process.env.npm_config_dir_utility2
                         + "/lib.utility2.sh;" + match2
@@ -689,7 +692,7 @@ fixture|\
 git_module|\
 jquery|\
 log|\
-min|mock|\
+min|misc|mock|\
 node_module|\
 rollup|\
 swp|\

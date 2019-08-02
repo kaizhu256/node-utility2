@@ -5,6 +5,7 @@ set backspace=2
 " https://stackoverflow.com/questions/1636297/how-to-change-the-folder-path-for-swp-files-in-vim
 set directory=$HOME/.vim/swapfiles//
 set expandtab
+set ffs=unix,dos
 set hidden
 set hlsearch
 set ignorecase
@@ -19,7 +20,8 @@ set shiftwidth=2
 set showmatch
 set smartcase
 set softtabstop=2
-set statusline=%l\ %c\ %F%m%r%h%w\ %y\ %p%%
+" https://vimhelp.org/options.txt.html#%27statusline%27
+set statusline=%F%m%r%h%w\ %y\ %L\ %l:%c\ 0x%B
 set tabstop=4
 
 autocmd!
@@ -173,3 +175,38 @@ vnoremap <silent> #/ <esc>:call MyCommentRegion('/')<cr>
 vnoremap <silent> #< <esc>:call MyCommentRegion('<')<cr>
 vnoremap <silent> #<char-0x23> <esc>:call MyCommentRegion('#')<cr>
 vnoremap <silent> #u <esc>:call MyCommentRegion('u')<cr>
+
+if exists("+columns")
+    set columns=161
+endif
+" if exists("+lines")
+    " set lines=999
+" endif
+if has("gui_running")
+    " https://www.bulafish.com/centos/2018/05/05/change-vim-color-scheme/
+    " colorscheme blue
+    " colorscheme darkblue
+    " colorscheme default
+    " colorscheme delek
+    " colorscheme desert
+    " colorscheme elflord
+    " colorscheme evening
+    " colorscheme koehler
+    " colorscheme morning
+    " colorscheme murphy
+    " colorscheme pablo
+    " colorscheme peachpuff
+    " colorscheme ron
+    " colorscheme shine
+    " colorscheme slate
+    colorscheme torte
+    " colorscheme zellner
+endif
+if has("gui_gtk2")
+    set guifont=Monospace:h8
+elseif has("gui_macvim")
+    set guifont=Menlo:h8
+    set transparency=10
+elseif has("gui_win32")
+    set guifont=Consolas:h8
+endif

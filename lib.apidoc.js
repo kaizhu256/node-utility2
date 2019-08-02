@@ -671,15 +671,10 @@ local.templateRender = function (template, dict, opt) {
                     notHtmlSafe = true;
                     break;
                 case "padEnd":
-                    skip = ii + 2;
-                    value = String(value).padEnd(
-                        list[skip - 1],
-                        list[skip]
-                    );
-                    break;
                 case "padStart":
+                case "slice":
                     skip = ii + 2;
-                    value = String(value).padStart(
+                    value = String(value)[arg0](
                         list[skip - 1],
                         list[skip]
                     );

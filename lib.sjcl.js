@@ -175,425 +175,604 @@ local.sjcl = local;
 
 
 /* validateLineSortedReset */
-// rollup-file sjcl.js
-// 2016-09-10T10:34:50Z
-// https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/sjcl.js
-// utility2-uglifyjs https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/sjcl.js
+/*
+file https://github.com/bitwiseshiftleft/sjcl/blob/1.0.8/sjcl.js
+shGithubDateCommitted https://github.com/bitwiseshiftleft/sjcl/blob/1.0.8/sjcl.js # 2017-07-04T08:55:03Z
+curl https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.8/sjcl.js > /tmp/aa.js
+*/
 /* jslint ignore:start */
 (function () { var module;
-"use strict";function t(e,t,n){if(4!==t.length)throw new sjcl.exception.invalid("invalid aes block size"
-);var r=e.b[n],i=t[0]^r[0],s=t[n?3:1]^r[1],o=t[2]^r[2];t=t[n?1:3]^r[3];var u,a,f
-,l=r.length/4-2,c,h=4,p=[0,0,0,0];u=e.s[n],e=u[0];var d=u[1],v=u[2],m=u[3],g=u[4
-];for(c=0;c<l;c++)u=e[i>>>24]^d[s>>16&255]^v[o>>8&255]^m[t&255]^r[h],a=e[s>>>24]^
-d[o>>16&255]^v[t>>8&255]^m[i&255]^r[h+1],f=e[o>>>24]^d[t>>16&255]^v[i>>8&255]^m[
-s&255]^r[h+2],t=e[t>>>24]^d[i>>16&255]^v[s>>8&255]^m[o&255]^r[h+3],h+=4,i=u,s=a,
-o=f;for(c=0;4>c;c++)p[n?3&-c:c]=g[i>>>24]<<24^g[s>>16&255]<<16^g[o>>8&255]<<8^g[
-t&255]^r[h++],u=i,i=s,s=o,o=t,t=u;return p}function u(e,t){var n,r,i,s=e.F,o=e.b
-,u=s[0],a=s[1],f=s[2],l=s[3],c=s[4],h=s[5],p=s[6],d=s[7];for(n=0;64>n;n++)16>n?r=
-t[n]:(r=t[n+1&15],i=t[n+14&15],r=t[n&15]=(r>>>7^r>>>18^r>>>3^r<<25^r<<14)+(i>>>17^
-i>>>19^i>>>10^i<<15^i<<13)+t[n&15]+t[n+9&15]|0),r=r+d+(c>>>6^c>>>11^c>>>25^c<<26^
-c<<21^c<<7)+(p^c&(h^p))+o[n],d=p,p=h,h=c,c=l+r|0,l=f,f=a,a=u,u=r+(a&f^l&(a^f))+(
-a>>>2^a>>>13^a>>>22^a<<30^a<<19^a<<10)|0;s[0]=s[0]+u|0,s[1]=s[1]+a|0,s[2]=s[2]+f|0
-,s[3]=s[3]+l|0,s[4]=s[4]+c|0,s[5]=s[5]+h|0,s[6]=s[6]+p|0,s[7]=s[7]+d|0}function A
-(e,t){var n,r=sjcl.random.K[e],i=[];for(n in r)r.hasOwnProperty(n)&&i.push(r[n])
-;for(n=0;n<i.length;n++)i[n](t)}function C(e,t){"undefined"!=typeof window&&window
-.performance&&"function"==typeof window.performance.now?e.addEntropy(window.performance
-.now(),t,"loadtime"):e.addEntropy((new Date).valueOf(),t,"loadtime")}function y(
-e){e.b=z(e).concat(z(e)),e.L=new sjcl.cipher.aes(e.b)}function z(e){for(var t=0;4>
-t&&(e.h[t]=e.h[t]+1|0,!e.h[t]);t++);return e.L.encrypt(e.h)}function B(e,t){return function(
-){t.apply(e,arguments)}}var sjcl={cipher:{},hash:{},keyexchange:{},mode:{},misc:
-{},codec:{},exception:{corrupt:function(e){this.toString=function(){return"CORRUPT: "+
-this.message},this.message=e},invalid:function(e){this.toString=function(){return"INVALID: "+
-this.message},this.message=e},bug:function(e){this.toString=function(){return"BUG: "+
-this.message},this.message=e},notReady:function(e){this.toString=function(){return"NOT READY: "+
-this.message},this.message=e}}};sjcl.cipher.aes=function(e){this.s[0][0][0]||this
-.O();var t,n,r,i,s=this.s[0][4],o=this.s[1];t=e.length;var u=1;if(4!==t&&6!==t&&8!==
-t)throw new sjcl.exception.invalid("invalid aes key size");this.b=[r=e.slice(0),
-i=[]];for(e=t;e<4*t+28;e++){n=r[e-1];if(0===e%t||8===t&&4===e%t)n=s[n>>>24]<<24^
-s[n>>16&255]<<16^s[n>>8&255]<<8^s[n&255],0===e%t&&(n=n<<8^n>>>24^u<<24,u=u<<1^283*
-(u>>7));r[e]=r[e-t]^n}for(t=0;e;t++,e--)n=r[t&3?e:e-4],i[t]=4>=e||4>t?n:o[0][s[n>>>24
-]]^o[1][s[n>>16&255]]^o[2][s[n>>8&255]]^o[3][s[n&255]]},sjcl.cipher.aes.prototype=
-{encrypt:function(e){return t(this,e,0)},decrypt:function(e){return t(this,e,1)}
-,s:[[[],[],[],[],[]],[[],[],[],[],[]]],O:function(){var e=this.s[0],t=this.s[1],
-n=e[4],r=t[4],i,s,o,u=[],a=[],f,l,c,h;for(i=0;256>i;i++)a[(u[i]=i<<1^283*(i>>7))^
-i]=i;for(s=o=0;!n[s];s^=f||1,o=a[o]||1)for(c=o^o<<1^o<<2^o<<3^o<<4,c=c>>8^c&255^99
-,n[s]=c,r[c]=s,l=u[i=u[f=u[s]]],h=16843009*l^65537*i^257*f^16843008*s,l=257*u[c]^16843008*
-c,i=0;4>i;i++)e[i][s]=l=l<<24^l>>>8,t[i][c]=h=h<<24^h>>>8;for(i=0;5>i;i++)e[i]=e
-[i].slice(0),t[i]=t[i].slice(0)}},sjcl.bitArray={bitSlice:function(e,t,n){return e=
-sjcl.bitArray.$(e.slice(t/32),32-(t&31)).slice(1),void 0===n?e:sjcl.bitArray.clamp
-(e,n-t)},extract:function(e,t,n){var r=Math.floor(-t-n&31);return((t+n-1^t)&-32?
-e[t/32|0]<<32-r^e[t/32+1|0]>>>r:e[t/32|0]>>>r)&(1<<n)-1},concat:function(e,t){if(0===
-e.length||0===t.length)return e.concat(t);var n=e[e.length-1],r=sjcl.bitArray.getPartial
-(n);return 32===r?e.concat(t):sjcl.bitArray.$(t,r,n|0,e.slice(0,e.length-1))},bitLength
-:function(e){var t=e.length;return 0===t?0:32*(t-1)+sjcl.bitArray.getPartial(e[t-1
-])},clamp:function(e,t){if(32*e.length<t)return e;e=e.slice(0,Math.ceil(t/32));var n=
-e.length;return t&=31,0<n&&t&&(e[n-1]=sjcl.bitArray.partial(t,e[n-1]&2147483648>>
-t-1,1)),e},partial:function(e,t,n){return 32===e?t:(n?t|0:t<<32-e)+1099511627776*
-e},getPartial:function(e){return Math.round(e/1099511627776)||32},equal:function(
-e,t){if(sjcl.bitArray.bitLength(e)!==sjcl.bitArray.bitLength(t))return!1;var n=0
-,r;for(r=0;r<e.length;r++)n|=e[r]^t[r];return 0===n},$:function(e,t,n,r){var i;i=0
-;for(void 0===r&&(r=[]);32<=t;t-=32)r.push(n),n=0;if(0===t)return r.concat(e);for(
-i=0;i<e.length;i++)r.push(n|e[i]>>>t),n=e[i]<<32-t;return i=e.length?e[e.length-1
-]:0,e=sjcl.bitArray.getPartial(i),r.push(sjcl.bitArray.partial(t+e&31,32<t+e?n:r
-.pop(),1)),r},i:function(e,t){return[e[0]^t[0],e[1]^t[1],e[2]^t[2],e[3]^t[3]]},byteswapM
-:function(e){var t,n;for(t=0;t<e.length;++t)n=e[t],e[t]=n>>>24|n>>>8&65280|(n&65280
-)<<8|n<<24;return e}},sjcl.codec.utf8String={fromBits:function(e){var t="",n=sjcl
-.bitArray.bitLength(e),r,i;for(r=0;r<n/8;r++)0===(r&3)&&(i=e[r/4]),t+=String.fromCharCode
-(i>>>24),i<<=8;return decodeURIComponent(escape(t))},toBits:function(e){e=unescape
-(encodeURIComponent(e));var t=[],n,r=0;for(n=0;n<e.length;n++)r=r<<8|e.charCodeAt
-(n),3===(n&3)&&(t.push(r),r=0);return n&3&&t.push(sjcl.bitArray.partial(8*(n&3),
-r)),t}},sjcl.codec.hex={fromBits:function(e){var t="",n;for(n=0;n<e.length;n++)t+=
-((e[n]|0)+0xf00000000000).toString(16).substr(4);return t.substr(0,sjcl.bitArray
-.bitLength(e)/4)},toBits:function(e){var t,n=[],r;e=e.replace(/\s|0x/g,""),r=e.length
-,e+="00000000";for(t=0;t<e.length;t+=8)n.push(parseInt(e.substr(t,8),16)^0);return sjcl
-.bitArray.clamp(n,4*r)}},sjcl.codec.base32={B:"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
-,X:"0123456789ABCDEFGHIJKLMNOPQRSTUV",BITS:32,BASE:5,REMAINING:27,fromBits:function(
-e,t,n){var r=sjcl.codec.base32.BASE,i=sjcl.codec.base32.REMAINING,s="",o=0,u=sjcl
-.codec.base32.B,a=0,f=sjcl.bitArray.bitLength(e);n&&(u=sjcl.codec.base32.X);for(
-n=0;s.length*r<f;)s+=u.charAt((a^e[n]>>>o)>>>i),o<r?(a=e[n]<<r-o,o+=i,n++):(a<<=
-r,o-=r);for(;s.length&7&&!t;)s+="=";return s},toBits:function(e,t){e=e.replace(/\s|=/g
-,"").toUpperCase();var n=sjcl.codec.base32.BITS,r=sjcl.codec.base32.BASE,i=sjcl.
-codec.base32.REMAINING,s=[],o,u=0,a=sjcl.codec.base32.B,f=0,l,c="base32";t&&(a=sjcl
-.codec.base32.X,c="base32hex");for(o=0;o<e.length;o++){l=a.indexOf(e.charAt(o));
-if(0>l){if(!t)try{return sjcl.codec.base32hex.toBits(e)}catch(h){}throw new sjcl
-.exception.invalid("this isn't "+c+"!")}u>i?(u-=i,s.push(f^l>>>u),f=l<<n-u):(u+=
-r,f^=l<<n-u)}return u&56&&s.push(sjcl.bitArray.partial(u&56,f,1)),s}},sjcl.codec
-.base32hex={fromBits:function(e,t){return sjcl.codec.base32.fromBits(e,t,1)},toBits
-:function(e){return sjcl.codec.base32.toBits(e,1)}},sjcl.codec.base64={B:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-,fromBits:function(e,t,n){var r="",i=0,s=sjcl.codec.base64.B,o=0,u=sjcl.bitArray
-.bitLength(e);n&&(s=s.substr(0,62)+"-_");for(n=0;6*r.length<u;)r+=s.charAt((o^e[
-n]>>>i)>>>26),6>i?(o=e[n]<<6-i,i+=26,n++):(o<<=6,i-=6);for(;r.length&3&&!t;)r+="="
-;return r},toBits:function(e,t){e=e.replace(/\s|=/g,"");var n=[],r,i=0,s=sjcl.codec
-.base64.B,o=0,u;t&&(s=s.substr(0,62)+"-_");for(r=0;r<e.length;r++){u=s.indexOf(e
-.charAt(r));if(0>u)throw new sjcl.exception.invalid("this isn't base64!");26<i?(
-i-=26,n.push(o^u>>>i),o=u<<32-i):(i+=6,o^=u<<32-i)}return i&56&&n.push(sjcl.bitArray
-.partial(i&56,o,1)),n}},sjcl.codec.base64url={fromBits:function(e){return sjcl.codec
-.base64.fromBits(e,1,1)},toBits:function(e){return sjcl.codec.base64.toBits(e,1)
-}},sjcl.hash.sha256=function(e){this.b[0]||this.O(),e?(this.F=e.F.slice(0),this.
-A=e.A.slice(0),this.l=e.l):this.reset()},sjcl.hash.sha256.hash=function(e){return(new
-sjcl.hash.sha256).update(e).finalize()},sjcl.hash.sha256.prototype={blockSize:512
-,reset:function(){return this.F=this.Y.slice(0),this.A=[],this.l=0,this},update:
-function(e){"string"==typeof e&&(e=sjcl.codec.utf8String.toBits(e));var t,n=this
-.A=sjcl.bitArray.concat(this.A,e);t=this.l,e=this.l=t+sjcl.bitArray.bitLength(e)
-;if(9007199254740991<e)throw new sjcl.exception.invalid("Cannot hash more than 2^53 - 1 bits"
-);if("undefined"!=typeof Uint32Array){var r=new Uint32Array(n),i=0;for(t=512+t-(512+
-t&511);t<=e;t+=512)u(this,r.subarray(16*i,16*(i+1))),i+=1;n.splice(0,16*i)}else for(
-t=512+t-(512+t&511);t<=e;t+=512)u(this,n.splice(0,16));return this},finalize:function(
-){var e,t=this.A,n=this.F,t=sjcl.bitArray.concat(t,[sjcl.bitArray.partial(1,1)])
-;for(e=t.length+2;e&15;e++)t.push(0);t.push(Math.floor(this.l/4294967296));for(t
-.push(this.l|0);t.length;)u(this,t.splice(0,16));return this.reset(),n},Y:[],b:[
-],O:function(){function e(e){return 4294967296*(e-Math.floor(e))|0}for(var t=0,n=2
-,r,i;64>t;n++){i=!0;for(r=2;r*r<=n;r++)if(0===n%r){i=!1;break}i&&(8>t&&(this.Y[t
-]=e(Math.pow(n,.5))),this.b[t]=e(Math.pow(n,1/3)),t++)}}},sjcl.mode.ccm={name:"ccm"
-,G:[],listenProgress:function(e){sjcl.mode.ccm.G.push(e)},unListenProgress:function(
-e){e=sjcl.mode.ccm.G.indexOf(e),-1<e&&sjcl.mode.ccm.G.splice(e,1)},fa:function(e
-){var t=sjcl.mode.ccm.G.slice(),n;for(n=0;n<t.length;n+=1)t[n](e)},encrypt:function(
-e,t,n,r,i){var s,o=t.slice(0),u=sjcl.bitArray,a=u.bitLength(n)/8,f=u.bitLength(o
-)/8;i=i||64,r=r||[];if(7>a)throw new sjcl.exception.invalid("ccm: iv must be at least 7 bytes"
-);for(s=2;4>s&&f>>>8*s;s++);return s<15-a&&(s=15-a),n=u.clamp(n,8*(15-s)),t=sjcl
-.mode.ccm.V(e,t,n,r,i,s),o=sjcl.mode.ccm.C(e,o,n,t,i,s),u.concat(o.data,o.tag)},
-decrypt:function(e,t,n,r,i){i=i||64,r=r||[];var s=sjcl.bitArray,o=s.bitLength(n)/8
-,u=s.bitLength(t),a=s.clamp(t,u-i),f=s.bitSlice(t,u-i),u=(u-i)/8;if(7>o)throw new
-sjcl.exception.invalid("ccm: iv must be at least 7 bytes");for(t=2;4>t&&u>>>8*t;
-t++);t<15-o&&(t=15-o),n=s.clamp(n,8*(15-t)),a=sjcl.mode.ccm.C(e,a,n,f,i,t),e=sjcl
-.mode.ccm.V(e,a.data,n,r,i,t);if(!s.equal(a.tag,e))throw new sjcl.exception.corrupt
-("ccm: tag doesn't match");return a.data},na:function(e,t,n,r,i,s){var o=[],u=sjcl
-.bitArray,a=u.i;r=[u.partial(8,(t.length?64:0)|r-2<<2|s-1)],r=u.concat(r,n),r[3]|=
-i,r=e.encrypt(r);if(t.length)for(n=u.bitLength(t)/8,65279>=n?o=[u.partial(16,n)]
-:4294967295>=n&&(o=u.concat([u.partial(16,65534)],[n])),o=u.concat(o,t),t=0;t<o.
-length;t+=4)r=e.encrypt(a(r,o.slice(t,t+4).concat([0,0,0])));return r},V:function(
-e,t,n,r,i,s){var o=sjcl.bitArray,u=o.i;i/=8;if(i%2||4>i||16<i)throw new sjcl.exception
-.invalid("ccm: invalid tag length");if(4294967295<r.length||4294967295<t.length)
-throw new sjcl.exception.bug("ccm: can't deal with 4GiB or more data");n=sjcl.mode
-.ccm.na(e,r,n,i,o.bitLength(t)/8,s);for(r=0;r<t.length;r+=4)n=e.encrypt(u(n,t.slice
-(r,r+4).concat([0,0,0])));return o.clamp(n,8*i)},C:function(e,t,n,r,i,s){var o,u=
-sjcl.bitArray;o=u.i;var a=t.length,f=u.bitLength(t),l=a/50,c=l;n=u.concat([u.partial
-(8,s-1)],n).concat([0,0,0]).slice(0,4),r=u.bitSlice(o(r,e.encrypt(n)),0,i);if(!a
-)return{tag:r,data:[]};for(o=0;o<a;o+=4)o>l&&(sjcl.mode.ccm.fa(o/a),l+=c),n[3]++
-,i=e.encrypt(n),t[o]^=i[0],t[o+1]^=i[1],t[o+2]^=i[2],t[o+3]^=i[3];return{tag:r,data
-:u.clamp(t,f)}}},sjcl.mode.ocb2={name:"ocb2",encrypt:function(e,t,n,r,i,s){if(128!==
-sjcl.bitArray.bitLength(n))throw new sjcl.exception.invalid("ocb iv must be 128 bits"
-);var o,u=sjcl.mode.ocb2.S,a=sjcl.bitArray,f=a.i,l=[0,0,0,0];n=u(e.encrypt(n));var c
-,h=[];r=r||[],i=i||64;for(o=0;o+4<t.length;o+=4)c=t.slice(o,o+4),l=f(l,c),h=h.concat
-(f(n,e.encrypt(f(n,c)))),n=u(n);return c=t.slice(o),t=a.bitLength(c),o=e.encrypt
-(f(n,[0,0,0,t])),c=a.clamp(f(c.concat([0,0,0]),o),t),l=f(l,f(c.concat([0,0,0]),o
-)),l=e.encrypt(f(l,f(n,u(n)))),r.length&&(l=f(l,s?r:sjcl.mode.ocb2.pmac(e,r))),h
-.concat(a.concat(c,a.clamp(l,i)))},decrypt:function(e,t,n,r,i,s){if(128!==sjcl.bitArray
-.bitLength(n))throw new sjcl.exception.invalid("ocb iv must be 128 bits");i=i||64
-;var o=sjcl.mode.ocb2.S,u=sjcl.bitArray,a=u.i,f=[0,0,0,0],l=o(e.encrypt(n)),c,h,
-p=sjcl.bitArray.bitLength(t)-i,d=[];r=r||[];for(n=0;n+4<p/32;n+=4)c=a(l,e.decrypt
-(a(l,t.slice(n,n+4)))),f=a(f,c),d=d.concat(c),l=o(l);h=p-32*n,c=e.encrypt(a(l,[0
-,0,0,h])),c=a(c,u.clamp(t.slice(n),h).concat([0,0,0])),f=a(f,c),f=e.encrypt(a(f,
-a(l,o(l)))),r.length&&(f=a(f,s?r:sjcl.mode.ocb2.pmac(e,r)));if(!u.equal(u.clamp(
-f,i),u.bitSlice(t,p)))throw new sjcl.exception.corrupt("ocb: tag doesn't match")
-;return d.concat(u.clamp(c,h))},pmac:function(e,t){var n,r=sjcl.mode.ocb2.S,i=sjcl
-.bitArray,s=i.i,o=[0,0,0,0],u=e.encrypt([0,0,0,0]),u=s(u,r(r(u)));for(n=0;n+4<t.
-length;n+=4)u=r(u),o=s(o,e.encrypt(s(u,t.slice(n,n+4))));return n=t.slice(n),128>
-i.bitLength(n)&&(u=s(u,r(u)),n=i.concat(n,[-2147483648,0,0,0])),o=s(o,n),e.encrypt
-(s(r(s(u,r(u))),o))},S:function(e){return[e[0]<<1^e[1]>>>31,e[1]<<1^e[2]>>>31,e[2
-]<<1^e[3]>>>31,e[3]<<1^135*(e[0]>>>31)]}},sjcl.mode.gcm={name:"gcm",encrypt:function(
-e,t,n,r,i){var s=t.slice(0);return t=sjcl.bitArray,r=r||[],e=sjcl.mode.gcm.C(!0,
-e,s,r,n,i||128),t.concat(e.data,e.tag)},decrypt:function(e,t,n,r,i){var s=t.slice
-(0),o=sjcl.bitArray,u=o.bitLength(s);i=i||128,r=r||[],i<=u?(t=o.bitSlice(s,u-i),
-s=o.bitSlice(s,0,u-i)):(t=s,s=[]),e=sjcl.mode.gcm.C(!1,e,s,r,n,i);if(!o.equal(e.
-tag,t))throw new sjcl.exception.corrupt("gcm: tag doesn't match");return e.data}
-,ka:function(e,t){var n,r,i,s,o,u=sjcl.bitArray.i;i=[0,0,0,0],s=t.slice(0);for(n=0
-;128>n;n++){(r=0!==(e[Math.floor(n/32)]&1<<31-n%32))&&(i=u(i,s)),o=0!==(s[3]&1);
-for(r=3;0<r;r--)s[r]=s[r]>>>1|(s[r-1]&1)<<31;s[0]>>>=1,o&&(s[0]^=-520093696)}return i
-},j:function(e,t,n){var r,i=n.length;t=t.slice(0);for(r=0;r<i;r+=4)t[0]^=4294967295&
-n[r],t[1]^=4294967295&n[r+1],t[2]^=4294967295&n[r+2],t[3]^=4294967295&n[r+3],t=sjcl
-.mode.gcm.ka(t,e);return t},C:function(e,t,n,r,i,s){var o,u,a,f,l,c,h,p,d=sjcl.bitArray
-;c=n.length,h=d.bitLength(n),p=d.bitLength(r),u=d.bitLength(i),o=t.encrypt([0,0,0
-,0]),96===u?(i=i.slice(0),i=d.concat(i,[1])):(i=sjcl.mode.gcm.j(o,[0,0,0,0],i),i=
-sjcl.mode.gcm.j(o,i,[0,0,Math.floor(u/4294967296),u&4294967295])),u=sjcl.mode.gcm
-.j(o,[0,0,0,0],r),l=i.slice(0),r=u.slice(0),e||(r=sjcl.mode.gcm.j(o,u,n));for(f=0
-;f<c;f+=4)l[3]++,a=t.encrypt(l),n[f]^=a[0],n[f+1]^=a[1],n[f+2]^=a[2],n[f+3]^=a[3
-];return n=d.clamp(n,h),e&&(r=sjcl.mode.gcm.j(o,u,n)),e=[Math.floor(p/4294967296
-),p&4294967295,Math.floor(h/4294967296),h&4294967295],r=sjcl.mode.gcm.j(o,r,e),a=
-t.encrypt(i),r[0]^=a[0],r[1]^=a[1],r[2]^=a[2],r[3]^=a[3],{tag:d.bitSlice(r,0,s),
-data:n}}},sjcl.misc.hmac=function(e,t){this.W=t=t||sjcl.hash.sha256;var n=[[],[]
-],r,i=t.prototype.blockSize/32;this.w=[new t,new t],e.length>i&&(e=t.hash(e));for(
-r=0;r<i;r++)n[0][r]=e[r]^909522486,n[1][r]=e[r]^1549556828;this.w[0].update(n[0]
-),this.w[1].update(n[1]),this.R=new t(this.w[0])},sjcl.misc.hmac.prototype.encrypt=
-sjcl.misc.hmac.prototype.mac=function(e){if(this.aa)throw new sjcl.exception.invalid
-("encrypt on already updated hmac called!");return this.update(e),this.digest(e)
-},sjcl.misc.hmac.prototype.reset=function(){this.R=new this.W(this.w[0]),this.aa=!1
-},sjcl.misc.hmac.prototype.update=function(e){this.aa=!0,this.R.update(e)},sjcl.
-misc.hmac.prototype.digest=function(){var e=this.R.finalize(),e=(new this.W(this
-.w[1])).update(e).finalize();return this.reset(),e},sjcl.misc.pbkdf2=function(e,
-t,n,r,i){n=n||1e4;if(0>r||0>n)throw new sjcl.exception.invalid("invalid params to pbkdf2"
-);"string"==typeof e&&(e=sjcl.codec.utf8String.toBits(e)),"string"==typeof t&&(t=
-sjcl.codec.utf8String.toBits(t)),i=i||sjcl.misc.hmac,e=new i(e);var s,o,u,a,f=[]
-,l=sjcl.bitArray;for(a=1;32*f.length<(r||1);a++){i=s=e.encrypt(l.concat(t,[a]));
-for(o=1;o<n;o++)for(s=e.encrypt(s),u=0;u<s.length;u++)i[u]^=s[u];f=f.concat(i)}return r&&
-(f=l.clamp(f,r)),f},sjcl.prng=function(e){this.c=[new sjcl.hash.sha256],this.m=[0
-],this.P=0,this.H={},this.N=0,this.U={},this.Z=this.f=this.o=this.ha=0,this.b=[0
-,0,0,0,0,0,0,0],this.h=[0,0,0,0],this.L=void 0,this.M=e,this.D=!1,this.K={progress
-:{},seeded:{}},this.u=this.ga=0,this.I=1,this.J=2,this.ca=65536,this.T=[0,48,64,96
-,128,192,256,384,512,768,1024],this.da=3e4,this.ba=80},sjcl.prng.prototype={randomWords
-:function(e,t){var n=[],r;r=this.isReady(t);var i;if(r===this.u)throw new sjcl.exception
-.notReady("generator isn't seeded");if(r&this.J){r=!(r&this.I),i=[];var s=0,o;this
-.Z=i[0]=(new Date).valueOf()+this.da;for(o=0;16>o;o++)i.push(4294967296*Math.random
-()|0);for(o=0;o<this.c.length&&(i=i.concat(this.c[o].finalize()),s+=this.m[o],this
-.m[o]=0,r||!(this.P&1<<o));o++);this.P>=1<<this.c.length&&(this.c.push(new sjcl.
-hash.sha256),this.m.push(0)),this.f-=s,s>this.o&&(this.o=s),this.P++,this.b=sjcl
-.hash.sha256.hash(this.b.concat(i)),this.L=new sjcl.cipher.aes(this.b);for(r=0;4>
-r&&(this.h[r]=this.h[r]+1|0,!this.h[r]);r++);}for(r=0;r<e;r+=4)0===(r+1)%this.ca&&
-y(this),i=z(this),n.push(i[0],i[1],i[2],i[3]);return y(this),n.slice(0,e)},setDefaultParanoia
-:function(e,t){if(0===e&&"Setting paranoia=0 will ruin your security; use it only for testing"!==
-t)throw new sjcl.exception.invalid("Setting paranoia=0 will ruin your security; use it only for testing"
-);this.M=e},addEntropy:function(e,t,n){n=n||"user";var r,i,s=(new Date).valueOf(
-),o=this.H[n],u=this.isReady(),a=0;r=this.U[n],void 0===r&&(r=this.U[n]=this.ha++
-),void 0===o&&(o=this.H[n]=0),this.H[n]=(this.H[n]+1)%this.c.length;switch(typeof
-e){case"number":void 0===t&&(t=1),this.c[o].update([r,this.N++,1,t,s,1,e|0]);break;
-case"object":n=Object.prototype.toString.call(e);if("[object Uint32Array]"===n){
-i=[];for(n=0;n<e.length;n++)i.push(e[n]);e=i}else for("[object Array]"!==n&&(a=1
-),n=0;n<e.length&&!a;n++)"number"!=typeof e[n]&&(a=1);if(!a){if(void 0===t)for(n=
-t=0;n<e.length;n++)for(i=e[n];0<i;)t++,i>>>=1;this.c[o].update([r,this.N++,2,t,s
-,e.length].concat(e))}break;case"string":void 0===t&&(t=e.length),this.c[o].update
-([r,this.N++,3,t,s,e.length]),this.c[o].update(e);break;default:a=1}if(a)throw new
-sjcl.exception.bug("random: addEntropy only supports number, array of numbers or string"
-);this.m[o]+=t,this.f+=t,u===this.u&&(this.isReady()!==this.u&&A("seeded",Math.max
-(this.o,this.f)),A("progress",this.getProgress()))},isReady:function(e){return e=
-this.T[void 0!==e?e:this.M],this.o&&this.o>=e?this.m[0]>this.ba&&(new Date).valueOf
-()>this.Z?this.J|this.I:this.I:this.f>=e?this.J|this.u:this.u},getProgress:function(
-e){return e=this.T[e?e:this.M],this.o>=e?1:this.f>e?1:this.f/e},startCollectors:
-function(){if(!this.D){this.a={loadTimeCollector:B(this,this.ma),mouseCollector:
-B(this,this.oa),keyboardCollector:B(this,this.la),accelerometerCollector:B(this,
-this.ea),touchCollector:B(this,this.qa)};if(window.addEventListener)window.addEventListener
-("load",this.a.loadTimeCollector,!1),window.addEventListener("mousemove",this.a.
-mouseCollector,!1),window.addEventListener("keypress",this.a.keyboardCollector,!1
-),window.addEventListener("devicemotion",this.a.accelerometerCollector,!1),window
-.addEventListener("touchmove",this.a.touchCollector,!1);else{if(!document.attachEvent
-)throw new sjcl.exception.bug("can't attach event");document.attachEvent("onload"
-,this.a.loadTimeCollector),document.attachEvent("onmousemove",this.a.mouseCollector
-),document.attachEvent("keypress",this.a.keyboardCollector)}this.D=!0}},stopCollectors
-:function(){this.D&&(window.removeEventListener?(window.removeEventListener("load"
-,this.a.loadTimeCollector,!1),window.removeEventListener("mousemove",this.a.mouseCollector
-,!1),window.removeEventListener("keypress",this.a.keyboardCollector,!1),window.removeEventListener
-("devicemotion",this.a.accelerometerCollector,!1),window.removeEventListener("touchmove"
-,this.a.touchCollector,!1)):document.detachEvent&&(document.detachEvent("onload"
-,this.a.loadTimeCollector),document.detachEvent("onmousemove",this.a.mouseCollector
-),document.detachEvent("keypress",this.a.keyboardCollector)),this.D=!1)},addEventListener
-:function(e,t){this.K[e][this.ga++]=t},removeEventListener:function(e,t){var n,r
-,i=this.K[e],s=[];for(r in i)i.hasOwnProperty(r)&&i[r]===t&&s.push(r);for(n=0;n<
-s.length;n++)r=s[n],delete i[r]},la:function(){C(this,1)},oa:function(e){var t,n
-;try{t=e.x||e.clientX||e.offsetX||0,n=e.y||e.clientY||e.offsetY||0}catch(r){n=t=0
-}0!=t&&0!=n&&this.addEntropy([t,n],2,"mouse"),C(this,0)},qa:function(e){e=e.touches
-[0]||e.changedTouches[0],this.addEntropy([e.pageX||e.clientX,e.pageY||e.clientY]
-,1,"touch"),C(this,0)},ma:function(){C(this,2)},ea:function(e){e=e.accelerationIncludingGravity
-.x||e.accelerationIncludingGravity.y||e.accelerationIncludingGravity.z;if(window
-.orientation){var t=window.orientation;"number"==typeof t&&this.addEntropy(t,1,"accelerometer"
-)}e&&this.addEntropy(e,2,"accelerometer"),C(this,0)}},sjcl.random=new sjcl.prng(6
-);e:try{var D,E,F,G;if(G="undefined"!=typeof module&&module.exports){var H;try{H=
-require("crypto")}catch(a){H=null}G=E=H}if(G&&E.randomBytes)D=E.randomBytes(128)
-,D=new Uint32Array((new Uint8Array(D)).buffer),sjcl.random.addEntropy(D,1024,"crypto['randomBytes']"
-);else if("undefined"!=typeof window&&"undefined"!=typeof Uint32Array){F=new Uint32Array
-(32);if(window.crypto&&window.crypto.getRandomValues)window.crypto.getRandomValues
-(F);else{if(!window.msCrypto||!window.msCrypto.getRandomValues)break e;window.msCrypto
-.getRandomValues(F)}sjcl.random.addEntropy(F,1024,"crypto['getRandomValues']")}}
-catch(a){"undefined"!=typeof window&&window.console&&(console.log("There was an error collecting entropy from the browser:"
-),console.log(a))}sjcl.json={defaults:{v:1,iter:1e4,ks:128,ts:64,mode:"ccm",adata
-:"",cipher:"aes"},ja:function(e,t,n,r){n=n||{},r=r||{};var i=sjcl.json,s=i.g({iv
-:sjcl.random.randomWords(4,0)},i.defaults),o;i.g(s,n),n=s.adata,"string"==typeof
-s.salt&&(s.salt=sjcl.codec.base64.toBits(s.salt)),"string"==typeof s.iv&&(s.iv=sjcl
-.codec.base64.toBits(s.iv));if(!sjcl.mode[s.mode]||!sjcl.cipher[s.cipher]||"string"==typeof
-e&&100>=s.iter||64!==s.ts&&96!==s.ts&&128!==s.ts||128!==s.ks&&192!==s.ks&&256!==
-s.ks||2>s.iv.length||4<s.iv.length)throw new sjcl.exception.invalid("json encrypt: invalid parameters"
-);return"string"==typeof e?(o=sjcl.misc.cachedPbkdf2(e,s),e=o.key.slice(0,s.ks/32
-),s.salt=o.salt):sjcl.ecc&&e instanceof sjcl.ecc.elGamal.publicKey&&(o=e.kem(),s
-.kemtag=o.tag,e=o.key.slice(0,s.ks/32)),"string"==typeof t&&(t=sjcl.codec.utf8String
-.toBits(t)),"string"==typeof n&&(s.adata=n=sjcl.codec.utf8String.toBits(n)),o=new
-sjcl.cipher[s.cipher](e),i.g(r,s),r.key=e,s.ct="ccm"===s.mode&&sjcl.arrayBuffer&&
-sjcl.arrayBuffer.ccm&&t instanceof ArrayBuffer?sjcl.arrayBuffer.ccm.encrypt(o,t,
-s.iv,n,s.ts):sjcl.mode[s.mode].encrypt(o,t,s.iv,n,s.ts),s},encrypt:function(e,t,
-n,r){var i=sjcl.json,s=i.ja.apply(i,arguments);return i.encode(s)},ia:function(e
-,t,n,r){n=n||{},r=r||{};var i=sjcl.json;t=i.g(i.g(i.g({},i.defaults),t),n,!0);var s
-,o;s=t.adata,"string"==typeof t.salt&&(t.salt=sjcl.codec.base64.toBits(t.salt)),"string"==typeof
-t.iv&&(t.iv=sjcl.codec.base64.toBits(t.iv));if(!sjcl.mode[t.mode]||!sjcl.cipher[
-t.cipher]||"string"==typeof e&&100>=t.iter||64!==t.ts&&96!==t.ts&&128!==t.ts||128!==
-t.ks&&192!==t.ks&&256!==t.ks||!t.iv||2>t.iv.length||4<t.iv.length)throw new sjcl
-.exception.invalid("json decrypt: invalid parameters");return"string"==typeof e?
-(o=sjcl.misc.cachedPbkdf2(e,t),e=o.key.slice(0,t.ks/32),t.salt=o.salt):sjcl.ecc&&
-e instanceof sjcl.ecc.elGamal.secretKey&&(e=e.unkem(sjcl.codec.base64.toBits(t.kemtag
-)).slice(0,t.ks/32)),"string"==typeof s&&(s=sjcl.codec.utf8String.toBits(s)),o=new
-sjcl.cipher[t.cipher](e),s="ccm"===t.mode&&sjcl.arrayBuffer&&sjcl.arrayBuffer.ccm&&
-t.ct instanceof ArrayBuffer?sjcl.arrayBuffer.ccm.decrypt(o,t.ct,t.iv,t.tag,s,t.ts
-):sjcl.mode[t.mode].decrypt(o,t.ct,t.iv,s,t.ts),i.g(r,t),r.key=e,1===n.raw?s:sjcl
-.codec.utf8String.fromBits(s)},decrypt:function(e,t,n,r){var i=sjcl.json;return i
-.ia(e,i.decode(t),n,r)},encode:function(e){var t,n="{",r="";for(t in e)if(e.hasOwnProperty
-(t)){if(!t.match(/^[a-z0-9]+$/i))throw new sjcl.exception.invalid("json encode: invalid property name"
-);n+=r+'"'+t+'":',r=",";switch(typeof e[t]){case"number":case"boolean":n+=e[t];break;
-case"string":n+='"'+escape(e[t])+'"';break;case"object":n+='"'+sjcl.codec.base64
-.fromBits(e[t],0)+'"';break;default:throw new sjcl.exception.bug("json encode: unsupported type"
-)}}return n+"}"},decode:function(e){e=e.replace(/\s/g,"");if(!e.match(/^\{.*\}$/
-))throw new sjcl.exception.invalid("json decode: this isn't json!");e=e.replace(/^\{|\}$/g
-,"").split(/,/);var t={},n,r;for(n=0;n<e.length;n++){if(!(r=e[n].match(/^\s*(?:(["']?)([a-z][a-z0-9]*)\1)\s*:\s*(?:(-?\d+)|"([a-z0-9+\/%*_.@=\-]*)"|(true|false))$/i
-)))throw new sjcl.exception.invalid("json decode: this isn't json!");null!=r[3]?
-t[r[2]]=parseInt(r[3],10):null!=r[4]?t[r[2]]=r[2].match(/^(ct|adata|salt|iv)$/)?
-sjcl.codec.base64.toBits(r[4]):unescape(r[4]):null!=r[5]&&(t[r[2]]="true"===r[5]
-)}return t},g:function(e,t,n){void 0===e&&(e={});if(void 0===t)return e;for(var r in
-t)if(t.hasOwnProperty(r)){if(n&&void 0!==e[r]&&e[r]!==t[r])throw new sjcl.exception
-.invalid("required parameter overridden");e[r]=t[r]}return e},sa:function(e,t){var n=
-{},r;for(r in e)e.hasOwnProperty(r)&&e[r]!==t[r]&&(n[r]=e[r]);return n},ra:function(
-e,t){var n={},r;for(r=0;r<t.length;r++)void 0!==e[t[r]]&&(n[t[r]]=e[t[r]]);return n
-}},sjcl.encrypt=sjcl.json.encrypt,sjcl.decrypt=sjcl.json.decrypt,sjcl.misc.pa={}
-,sjcl.misc.cachedPbkdf2=function(e,t){var n=sjcl.misc.pa,r;return t=t||{},r=t.iter||1e3
-,n=n[e]=n[e]||{},r=n[r]=n[r]||{firstSalt:t.salt&&t.salt.length?t.salt.slice(0):sjcl
-.random.randomWords(2,0)},n=void 0===t.salt?r.firstSalt:t.salt,r[n]=r[n]||sjcl.misc
-.pbkdf2(e,n,t.iter),{key:r[n].slice(0),salt:n.slice(0)}},"undefined"!=typeof module&&
-module.exports&&(module.exports=sjcl),"function"==typeof define&&define([],function(
-){return sjcl})
-local.sjcl = sjcl; }());
+"use strict";var sjcl={cipher:{},hash:{},keyexchange:{},mode:{},misc:{},codec:{},exception:{corrupt:function(a){this.toString=function(){return"CORRUPT: "+this.message};this.message=a},invalid:function(a){this.toString=function(){return"INVALID: "+this.message};this.message=a},bug:function(a){this.toString=function(){return"BUG: "+this.message};this.message=a},notReady:function(a){this.toString=function(){return"NOT READY: "+this.message};this.message=a}}};
+sjcl.cipher.aes=function(a){this.s[0][0][0]||this.O();var b,c,d,e,f=this.s[0][4],g=this.s[1];b=a.length;var h=1;if(4!==b&&6!==b&&8!==b)throw new sjcl.exception.invalid("invalid aes key size");this.b=[d=a.slice(0),e=[]];for(a=b;a<4*b+28;a++){c=d[a-1];if(0===a%b||8===b&&4===a%b)c=f[c>>>24]<<24^f[c>>16&255]<<16^f[c>>8&255]<<8^f[c&255],0===a%b&&(c=c<<8^c>>>24^h<<24,h=h<<1^283*(h>>7));d[a]=d[a-b]^c}for(b=0;a;b++,a--)c=d[b&3?a:a-4],e[b]=4>=a||4>b?c:g[0][f[c>>>24]]^g[1][f[c>>16&255]]^g[2][f[c>>8&255]]^g[3][f[c&
+255]]};
+sjcl.cipher.aes.prototype={encrypt:function(a){return t(this,a,0)},decrypt:function(a){return t(this,a,1)},s:[[[],[],[],[],[]],[[],[],[],[],[]]],O:function(){var a=this.s[0],b=this.s[1],c=a[4],d=b[4],e,f,g,h=[],k=[],l,n,m,p;for(e=0;0x100>e;e++)k[(h[e]=e<<1^283*(e>>7))^e]=e;for(f=g=0;!c[f];f^=l||1,g=k[g]||1)for(m=g^g<<1^g<<2^g<<3^g<<4,m=m>>8^m&255^99,c[f]=m,d[m]=f,n=h[e=h[l=h[f]]],p=0x1010101*n^0x10001*e^0x101*l^0x1010100*f,n=0x101*h[m]^0x1010100*m,e=0;4>e;e++)a[e][f]=n=n<<24^n>>>8,b[e][m]=p=p<<24^p>>>8;for(e=
+0;5>e;e++)a[e]=a[e].slice(0),b[e]=b[e].slice(0)}};
+function t(a,b,c){if(4!==b.length)throw new sjcl.exception.invalid("invalid aes block size");var d=a.b[c],e=b[0]^d[0],f=b[c?3:1]^d[1],g=b[2]^d[2];b=b[c?1:3]^d[3];var h,k,l,n=d.length/4-2,m,p=4,r=[0,0,0,0];h=a.s[c];a=h[0];var q=h[1],v=h[2],w=h[3],x=h[4];for(m=0;m<n;m++)h=a[e>>>24]^q[f>>16&255]^v[g>>8&255]^w[b&255]^d[p],k=a[f>>>24]^q[g>>16&255]^v[b>>8&255]^w[e&255]^d[p+1],l=a[g>>>24]^q[b>>16&255]^v[e>>8&255]^w[f&255]^d[p+2],b=a[b>>>24]^q[e>>16&255]^v[f>>8&255]^w[g&255]^d[p+3],p+=4,e=h,f=k,g=l;for(m=
+0;4>m;m++)r[c?3&-m:m]=x[e>>>24]<<24^x[f>>16&255]<<16^x[g>>8&255]<<8^x[b&255]^d[p++],h=e,e=f,f=g,g=b,b=h;return r}
+sjcl.bitArray={bitSlice:function(a,b,c){a=sjcl.bitArray.$(a.slice(b/32),32-(b&31)).slice(1);return void 0===c?a:sjcl.bitArray.clamp(a,c-b)},extract:function(a,b,c){var d=Math.floor(-b-c&31);return((b+c-1^b)&-32?a[b/32|0]<<32-d^a[b/32+1|0]>>>d:a[b/32|0]>>>d)&(1<<c)-1},concat:function(a,b){if(0===a.length||0===b.length)return a.concat(b);var c=a[a.length-1],d=sjcl.bitArray.getPartial(c);return 32===d?a.concat(b):sjcl.bitArray.$(b,d,c|0,a.slice(0,a.length-1))},bitLength:function(a){var b=a.length;return 0===
+b?0:32*(b-1)+sjcl.bitArray.getPartial(a[b-1])},clamp:function(a,b){if(32*a.length<b)return a;a=a.slice(0,Math.ceil(b/32));var c=a.length;b=b&31;0<c&&b&&(a[c-1]=sjcl.bitArray.partial(b,a[c-1]&2147483648>>b-1,1));return a},partial:function(a,b,c){return 32===a?b:(c?b|0:b<<32-a)+0x10000000000*a},getPartial:function(a){return Math.round(a/0x10000000000)||32},equal:function(a,b){if(sjcl.bitArray.bitLength(a)!==sjcl.bitArray.bitLength(b))return!1;var c=0,d;for(d=0;d<a.length;d++)c|=a[d]^b[d];return 0===
+c},$:function(a,b,c,d){var e;e=0;for(void 0===d&&(d=[]);32<=b;b-=32)d.push(c),c=0;if(0===b)return d.concat(a);for(e=0;e<a.length;e++)d.push(c|a[e]>>>b),c=a[e]<<32-b;e=a.length?a[a.length-1]:0;a=sjcl.bitArray.getPartial(e);d.push(sjcl.bitArray.partial(b+a&31,32<b+a?c:d.pop(),1));return d},i:function(a,b){return[a[0]^b[0],a[1]^b[1],a[2]^b[2],a[3]^b[3]]},byteswapM:function(a){var b,c;for(b=0;b<a.length;++b)c=a[b],a[b]=c>>>24|c>>>8&0xff00|(c&0xff00)<<8|c<<24;return a}};
+sjcl.codec.utf8String={fromBits:function(a){var b="",c=sjcl.bitArray.bitLength(a),d,e;for(d=0;d<c/8;d++)0===(d&3)&&(e=a[d/4]),b+=String.fromCharCode(e>>>8>>>8>>>8),e<<=8;return decodeURIComponent(escape(b))},toBits:function(a){a=unescape(encodeURIComponent(a));var b=[],c,d=0;for(c=0;c<a.length;c++)d=d<<8|a.charCodeAt(c),3===(c&3)&&(b.push(d),d=0);c&3&&b.push(sjcl.bitArray.partial(8*(c&3),d));return b}};
+sjcl.codec.hex={fromBits:function(a){var b="",c;for(c=0;c<a.length;c++)b+=((a[c]|0)+0xf00000000000).toString(16).substr(4);return b.substr(0,sjcl.bitArray.bitLength(a)/4)},toBits:function(a){var b,c=[],d;a=a.replace(/\s|0x/g,"");d=a.length;a=a+"00000000";for(b=0;b<a.length;b+=8)c.push(parseInt(a.substr(b,8),16)^0);return sjcl.bitArray.clamp(c,4*d)}};
+sjcl.codec.base32={B:"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567",X:"0123456789ABCDEFGHIJKLMNOPQRSTUV",BITS:32,BASE:5,REMAINING:27,fromBits:function(a,b,c){var d=sjcl.codec.base32.BASE,e=sjcl.codec.base32.REMAINING,f="",g=0,h=sjcl.codec.base32.B,k=0,l=sjcl.bitArray.bitLength(a);c&&(h=sjcl.codec.base32.X);for(c=0;f.length*d<l;)f+=h.charAt((k^a[c]>>>g)>>>e),g<d?(k=a[c]<<d-g,g+=e,c++):(k<<=d,g-=d);for(;f.length&7&&!b;)f+="=";return f},toBits:function(a,b){a=a.replace(/\s|=/g,"").toUpperCase();var c=sjcl.codec.base32.BITS,
+d=sjcl.codec.base32.BASE,e=sjcl.codec.base32.REMAINING,f=[],g,h=0,k=sjcl.codec.base32.B,l=0,n,m="base32";b&&(k=sjcl.codec.base32.X,m="base32hex");for(g=0;g<a.length;g++){n=k.indexOf(a.charAt(g));if(0>n){if(!b)try{return sjcl.codec.base32hex.toBits(a)}catch(p){}throw new sjcl.exception.invalid("this isn't "+m+"!");}h>e?(h-=e,f.push(l^n>>>h),l=n<<c-h):(h+=d,l^=n<<c-h)}h&56&&f.push(sjcl.bitArray.partial(h&56,l,1));return f}};
+sjcl.codec.base32hex={fromBits:function(a,b){return sjcl.codec.base32.fromBits(a,b,1)},toBits:function(a){return sjcl.codec.base32.toBits(a,1)}};
+sjcl.codec.base64={B:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",fromBits:function(a,b,c){var d="",e=0,f=sjcl.codec.base64.B,g=0,h=sjcl.bitArray.bitLength(a);c&&(f=f.substr(0,62)+"-_");for(c=0;6*d.length<h;)d+=f.charAt((g^a[c]>>>e)>>>26),6>e?(g=a[c]<<6-e,e+=26,c++):(g<<=6,e-=6);for(;d.length&3&&!b;)d+="=";return d},toBits:function(a,b){a=a.replace(/\s|=/g,"");var c=[],d,e=0,f=sjcl.codec.base64.B,g=0,h;b&&(f=f.substr(0,62)+"-_");for(d=0;d<a.length;d++){h=f.indexOf(a.charAt(d));
+if(0>h)throw new sjcl.exception.invalid("this isn't base64!");26<e?(e-=26,c.push(g^h>>>e),g=h<<32-e):(e+=6,g^=h<<32-e)}e&56&&c.push(sjcl.bitArray.partial(e&56,g,1));return c}};sjcl.codec.base64url={fromBits:function(a){return sjcl.codec.base64.fromBits(a,1,1)},toBits:function(a){return sjcl.codec.base64.toBits(a,1)}};sjcl.hash.sha256=function(a){this.b[0]||this.O();a?(this.F=a.F.slice(0),this.A=a.A.slice(0),this.l=a.l):this.reset()};sjcl.hash.sha256.hash=function(a){return(new sjcl.hash.sha256).update(a).finalize()};
+sjcl.hash.sha256.prototype={blockSize:512,reset:function(){this.F=this.Y.slice(0);this.A=[];this.l=0;return this},update:function(a){"string"===typeof a&&(a=sjcl.codec.utf8String.toBits(a));var b,c=this.A=sjcl.bitArray.concat(this.A,a);b=this.l;a=this.l=b+sjcl.bitArray.bitLength(a);if(0x1fffffffffffff<a)throw new sjcl.exception.invalid("Cannot hash more than 2^53 - 1 bits");if("undefined"!==typeof Uint32Array){var d=new Uint32Array(c),e=0;for(b=512+b-(512+b&0x1ff);b<=a;b+=512)u(this,d.subarray(16*e,
+16*(e+1))),e+=1;c.splice(0,16*e)}else for(b=512+b-(512+b&0x1ff);b<=a;b+=512)u(this,c.splice(0,16));return this},finalize:function(){var a,b=this.A,c=this.F,b=sjcl.bitArray.concat(b,[sjcl.bitArray.partial(1,1)]);for(a=b.length+2;a&15;a++)b.push(0);b.push(Math.floor(this.l/0x100000000));for(b.push(this.l|0);b.length;)u(this,b.splice(0,16));this.reset();return c},Y:[],b:[],O:function(){function a(a){return 0x100000000*(a-Math.floor(a))|0}for(var b=0,c=2,d,e;64>b;c++){e=!0;for(d=2;d*d<=c;d++)if(0===c%d){e=
+!1;break}e&&(8>b&&(this.Y[b]=a(Math.pow(c,.5))),this.b[b]=a(Math.pow(c,1/3)),b++)}}};
+function u(a,b){var c,d,e,f=a.F,g=a.b,h=f[0],k=f[1],l=f[2],n=f[3],m=f[4],p=f[5],r=f[6],q=f[7];for(c=0;64>c;c++)16>c?d=b[c]:(d=b[c+1&15],e=b[c+14&15],d=b[c&15]=(d>>>7^d>>>18^d>>>3^d<<25^d<<14)+(e>>>17^e>>>19^e>>>10^e<<15^e<<13)+b[c&15]+b[c+9&15]|0),d=d+q+(m>>>6^m>>>11^m>>>25^m<<26^m<<21^m<<7)+(r^m&(p^r))+g[c],q=r,r=p,p=m,m=n+d|0,n=l,l=k,k=h,h=d+(k&l^n&(k^l))+(k>>>2^k>>>13^k>>>22^k<<30^k<<19^k<<10)|0;f[0]=f[0]+h|0;f[1]=f[1]+k|0;f[2]=f[2]+l|0;f[3]=f[3]+n|0;f[4]=f[4]+m|0;f[5]=f[5]+p|0;f[6]=f[6]+r|0;f[7]=
+f[7]+q|0}
+sjcl.mode.ccm={name:"ccm",G:[],listenProgress:function(a){sjcl.mode.ccm.G.push(a)},unListenProgress:function(a){a=sjcl.mode.ccm.G.indexOf(a);-1<a&&sjcl.mode.ccm.G.splice(a,1)},fa:function(a){var b=sjcl.mode.ccm.G.slice(),c;for(c=0;c<b.length;c+=1)b[c](a)},encrypt:function(a,b,c,d,e){var f,g=b.slice(0),h=sjcl.bitArray,k=h.bitLength(c)/8,l=h.bitLength(g)/8;e=e||64;d=d||[];if(7>k)throw new sjcl.exception.invalid("ccm: iv must be at least 7 bytes");for(f=2;4>f&&l>>>8*f;f++);f<15-k&&(f=15-k);c=h.clamp(c,
+8*(15-f));b=sjcl.mode.ccm.V(a,b,c,d,e,f);g=sjcl.mode.ccm.C(a,g,c,b,e,f);return h.concat(g.data,g.tag)},decrypt:function(a,b,c,d,e){e=e||64;d=d||[];var f=sjcl.bitArray,g=f.bitLength(c)/8,h=f.bitLength(b),k=f.clamp(b,h-e),l=f.bitSlice(b,h-e),h=(h-e)/8;if(7>g)throw new sjcl.exception.invalid("ccm: iv must be at least 7 bytes");for(b=2;4>b&&h>>>8*b;b++);b<15-g&&(b=15-g);c=f.clamp(c,8*(15-b));k=sjcl.mode.ccm.C(a,k,c,l,e,b);a=sjcl.mode.ccm.V(a,k.data,c,d,e,b);if(!f.equal(k.tag,a))throw new sjcl.exception.corrupt("ccm: tag doesn't match");
+return k.data},na:function(a,b,c,d,e,f){var g=[],h=sjcl.bitArray,k=h.i;d=[h.partial(8,(b.length?64:0)|d-2<<2|f-1)];d=h.concat(d,c);d[3]|=e;d=a.encrypt(d);if(b.length)for(c=h.bitLength(b)/8,65279>=c?g=[h.partial(16,c)]:0xffffffff>=c&&(g=h.concat([h.partial(16,65534)],[c])),g=h.concat(g,b),b=0;b<g.length;b+=4)d=a.encrypt(k(d,g.slice(b,b+4).concat([0,0,0])));return d},V:function(a,b,c,d,e,f){var g=sjcl.bitArray,h=g.i;e/=8;if(e%2||4>e||16<e)throw new sjcl.exception.invalid("ccm: invalid tag length");
+if(0xffffffff<d.length||0xffffffff<b.length)throw new sjcl.exception.bug("ccm: can't deal with 4GiB or more data");c=sjcl.mode.ccm.na(a,d,c,e,g.bitLength(b)/8,f);for(d=0;d<b.length;d+=4)c=a.encrypt(h(c,b.slice(d,d+4).concat([0,0,0])));return g.clamp(c,8*e)},C:function(a,b,c,d,e,f){var g,h=sjcl.bitArray;g=h.i;var k=b.length,l=h.bitLength(b),n=k/50,m=n;c=h.concat([h.partial(8,f-1)],c).concat([0,0,0]).slice(0,4);d=h.bitSlice(g(d,a.encrypt(c)),0,e);if(!k)return{tag:d,data:[]};for(g=0;g<k;g+=4)g>n&&(sjcl.mode.ccm.fa(g/
+k),n+=m),c[3]++,e=a.encrypt(c),b[g]^=e[0],b[g+1]^=e[1],b[g+2]^=e[2],b[g+3]^=e[3];return{tag:d,data:h.clamp(b,l)}}};
+sjcl.mode.ocb2={name:"ocb2",encrypt:function(a,b,c,d,e,f){if(128!==sjcl.bitArray.bitLength(c))throw new sjcl.exception.invalid("ocb iv must be 128 bits");var g,h=sjcl.mode.ocb2.S,k=sjcl.bitArray,l=k.i,n=[0,0,0,0];c=h(a.encrypt(c));var m,p=[];d=d||[];e=e||64;for(g=0;g+4<b.length;g+=4)m=b.slice(g,g+4),n=l(n,m),p=p.concat(l(c,a.encrypt(l(c,m)))),c=h(c);m=b.slice(g);b=k.bitLength(m);g=a.encrypt(l(c,[0,0,0,b]));m=k.clamp(l(m.concat([0,0,0]),g),b);n=l(n,l(m.concat([0,0,0]),g));n=a.encrypt(l(n,l(c,h(c))));
+d.length&&(n=l(n,f?d:sjcl.mode.ocb2.pmac(a,d)));return p.concat(k.concat(m,k.clamp(n,e)))},decrypt:function(a,b,c,d,e,f){if(128!==sjcl.bitArray.bitLength(c))throw new sjcl.exception.invalid("ocb iv must be 128 bits");e=e||64;var g=sjcl.mode.ocb2.S,h=sjcl.bitArray,k=h.i,l=[0,0,0,0],n=g(a.encrypt(c)),m,p,r=sjcl.bitArray.bitLength(b)-e,q=[];d=d||[];for(c=0;c+4<r/32;c+=4)m=k(n,a.decrypt(k(n,b.slice(c,c+4)))),l=k(l,m),q=q.concat(m),n=g(n);p=r-32*c;m=a.encrypt(k(n,[0,0,0,p]));m=k(m,h.clamp(b.slice(c),p).concat([0,
+0,0]));l=k(l,m);l=a.encrypt(k(l,k(n,g(n))));d.length&&(l=k(l,f?d:sjcl.mode.ocb2.pmac(a,d)));if(!h.equal(h.clamp(l,e),h.bitSlice(b,r)))throw new sjcl.exception.corrupt("ocb: tag doesn't match");return q.concat(h.clamp(m,p))},pmac:function(a,b){var c,d=sjcl.mode.ocb2.S,e=sjcl.bitArray,f=e.i,g=[0,0,0,0],h=a.encrypt([0,0,0,0]),h=f(h,d(d(h)));for(c=0;c+4<b.length;c+=4)h=d(h),g=f(g,a.encrypt(f(h,b.slice(c,c+4))));c=b.slice(c);128>e.bitLength(c)&&(h=f(h,d(h)),c=e.concat(c,[-2147483648,0,0,0]));g=f(g,c);
+return a.encrypt(f(d(f(h,d(h))),g))},S:function(a){return[a[0]<<1^a[1]>>>31,a[1]<<1^a[2]>>>31,a[2]<<1^a[3]>>>31,a[3]<<1^135*(a[0]>>>31)]}};
+sjcl.mode.gcm={name:"gcm",encrypt:function(a,b,c,d,e){var f=b.slice(0);b=sjcl.bitArray;d=d||[];a=sjcl.mode.gcm.C(!0,a,f,d,c,e||128);return b.concat(a.data,a.tag)},decrypt:function(a,b,c,d,e){var f=b.slice(0),g=sjcl.bitArray,h=g.bitLength(f);e=e||128;d=d||[];e<=h?(b=g.bitSlice(f,h-e),f=g.bitSlice(f,0,h-e)):(b=f,f=[]);a=sjcl.mode.gcm.C(!1,a,f,d,c,e);if(!g.equal(a.tag,b))throw new sjcl.exception.corrupt("gcm: tag doesn't match");return a.data},ka:function(a,b){var c,d,e,f,g,h=sjcl.bitArray.i;e=[0,0,
+0,0];f=b.slice(0);for(c=0;128>c;c++){(d=0!==(a[Math.floor(c/32)]&1<<31-c%32))&&(e=h(e,f));g=0!==(f[3]&1);for(d=3;0<d;d--)f[d]=f[d]>>>1|(f[d-1]&1)<<31;f[0]>>>=1;g&&(f[0]^=-0x1f000000)}return e},j:function(a,b,c){var d,e=c.length;b=b.slice(0);for(d=0;d<e;d+=4)b[0]^=0xffffffff&c[d],b[1]^=0xffffffff&c[d+1],b[2]^=0xffffffff&c[d+2],b[3]^=0xffffffff&c[d+3],b=sjcl.mode.gcm.ka(b,a);return b},C:function(a,b,c,d,e,f){var g,h,k,l,n,m,p,r,q=sjcl.bitArray;m=c.length;p=q.bitLength(c);r=q.bitLength(d);h=q.bitLength(e);
+g=b.encrypt([0,0,0,0]);96===h?(e=e.slice(0),e=q.concat(e,[1])):(e=sjcl.mode.gcm.j(g,[0,0,0,0],e),e=sjcl.mode.gcm.j(g,e,[0,0,Math.floor(h/0x100000000),h&0xffffffff]));h=sjcl.mode.gcm.j(g,[0,0,0,0],d);n=e.slice(0);d=h.slice(0);a||(d=sjcl.mode.gcm.j(g,h,c));for(l=0;l<m;l+=4)n[3]++,k=b.encrypt(n),c[l]^=k[0],c[l+1]^=k[1],c[l+2]^=k[2],c[l+3]^=k[3];c=q.clamp(c,p);a&&(d=sjcl.mode.gcm.j(g,h,c));a=[Math.floor(r/0x100000000),r&0xffffffff,Math.floor(p/0x100000000),p&0xffffffff];d=sjcl.mode.gcm.j(g,d,a);k=b.encrypt(e);
+d[0]^=k[0];d[1]^=k[1];d[2]^=k[2];d[3]^=k[3];return{tag:q.bitSlice(d,0,f),data:c}}};sjcl.misc.hmac=function(a,b){this.W=b=b||sjcl.hash.sha256;var c=[[],[]],d,e=b.prototype.blockSize/32;this.w=[new b,new b];a.length>e&&(a=b.hash(a));for(d=0;d<e;d++)c[0][d]=a[d]^909522486,c[1][d]=a[d]^1549556828;this.w[0].update(c[0]);this.w[1].update(c[1]);this.R=new b(this.w[0])};
+sjcl.misc.hmac.prototype.encrypt=sjcl.misc.hmac.prototype.mac=function(a){if(this.aa)throw new sjcl.exception.invalid("encrypt on already updated hmac called!");this.update(a);return this.digest(a)};sjcl.misc.hmac.prototype.reset=function(){this.R=new this.W(this.w[0]);this.aa=!1};sjcl.misc.hmac.prototype.update=function(a){this.aa=!0;this.R.update(a)};sjcl.misc.hmac.prototype.digest=function(){var a=this.R.finalize(),a=(new this.W(this.w[1])).update(a).finalize();this.reset();return a};
+sjcl.misc.pbkdf2=function(a,b,c,d,e){c=c||1E4;if(0>d||0>c)throw new sjcl.exception.invalid("invalid params to pbkdf2");"string"===typeof a&&(a=sjcl.codec.utf8String.toBits(a));"string"===typeof b&&(b=sjcl.codec.utf8String.toBits(b));e=e||sjcl.misc.hmac;a=new e(a);var f,g,h,k,l=[],n=sjcl.bitArray;for(k=1;32*l.length<(d||1);k++){e=f=a.encrypt(n.concat(b,[k]));for(g=1;g<c;g++)for(f=a.encrypt(f),h=0;h<f.length;h++)e[h]^=f[h];l=l.concat(e)}d&&(l=n.clamp(l,d));return l};
+sjcl.prng=function(a){this.c=[new sjcl.hash.sha256];this.m=[0];this.P=0;this.H={};this.N=0;this.U={};this.Z=this.f=this.o=this.ha=0;this.b=[0,0,0,0,0,0,0,0];this.h=[0,0,0,0];this.L=void 0;this.M=a;this.D=!1;this.K={progress:{},seeded:{}};this.u=this.ga=0;this.I=1;this.J=2;this.ca=0x10000;this.T=[0,48,64,96,128,192,0x100,384,512,768,1024];this.da=3E4;this.ba=80};
+sjcl.prng.prototype={randomWords:function(a,b){var c=[],d;d=this.isReady(b);var e;if(d===this.u)throw new sjcl.exception.notReady("generator isn't seeded");if(d&this.J){d=!(d&this.I);e=[];var f=0,g;this.Z=e[0]=(new Date).valueOf()+this.da;for(g=0;16>g;g++)e.push(0x100000000*Math.random()|0);for(g=0;g<this.c.length&&(e=e.concat(this.c[g].finalize()),f+=this.m[g],this.m[g]=0,d||!(this.P&1<<g));g++);this.P>=1<<this.c.length&&(this.c.push(new sjcl.hash.sha256),this.m.push(0));this.f-=f;f>this.o&&(this.o=
+f);this.P++;this.b=sjcl.hash.sha256.hash(this.b.concat(e));this.L=new sjcl.cipher.aes(this.b);for(d=0;4>d&&(this.h[d]=this.h[d]+1|0,!this.h[d]);d++);}for(d=0;d<a;d+=4)0===(d+1)%this.ca&&y(this),e=z(this),c.push(e[0],e[1],e[2],e[3]);y(this);return c.slice(0,a)},setDefaultParanoia:function(a,b){if(0===a&&"Setting paranoia=0 will ruin your security; use it only for testing"!==b)throw new sjcl.exception.invalid("Setting paranoia=0 will ruin your security; use it only for testing");this.M=a},addEntropy:function(a,
+b,c){c=c||"user";var d,e,f=(new Date).valueOf(),g=this.H[c],h=this.isReady(),k=0;d=this.U[c];void 0===d&&(d=this.U[c]=this.ha++);void 0===g&&(g=this.H[c]=0);this.H[c]=(this.H[c]+1)%this.c.length;switch(typeof a){case "number":void 0===b&&(b=1);this.c[g].update([d,this.N++,1,b,f,1,a|0]);break;case "object":c=Object.prototype.toString.call(a);if("[object Uint32Array]"===c){e=[];for(c=0;c<a.length;c++)e.push(a[c]);a=e}else for("[object Array]"!==c&&(k=1),c=0;c<a.length&&!k;c++)"number"!==typeof a[c]&&
+(k=1);if(!k){if(void 0===b)for(c=b=0;c<a.length;c++)for(e=a[c];0<e;)b++,e=e>>>1;this.c[g].update([d,this.N++,2,b,f,a.length].concat(a))}break;case "string":void 0===b&&(b=a.length);this.c[g].update([d,this.N++,3,b,f,a.length]);this.c[g].update(a);break;default:k=1}if(k)throw new sjcl.exception.bug("random: addEntropy only supports number, array of numbers or string");this.m[g]+=b;this.f+=b;h===this.u&&(this.isReady()!==this.u&&A("seeded",Math.max(this.o,this.f)),A("progress",this.getProgress()))},
+isReady:function(a){a=this.T[void 0!==a?a:this.M];return this.o&&this.o>=a?this.m[0]>this.ba&&(new Date).valueOf()>this.Z?this.J|this.I:this.I:this.f>=a?this.J|this.u:this.u},getProgress:function(a){a=this.T[a?a:this.M];return this.o>=a?1:this.f>a?1:this.f/a},startCollectors:function(){if(!this.D){this.a={loadTimeCollector:B(this,this.ma),mouseCollector:B(this,this.oa),keyboardCollector:B(this,this.la),accelerometerCollector:B(this,this.ea),touchCollector:B(this,this.qa)};if(window.addEventListener)window.addEventListener("load",
+this.a.loadTimeCollector,!1),window.addEventListener("mousemove",this.a.mouseCollector,!1),window.addEventListener("keypress",this.a.keyboardCollector,!1),window.addEventListener("devicemotion",this.a.accelerometerCollector,!1),window.addEventListener("touchmove",this.a.touchCollector,!1);else if(document.attachEvent)document.attachEvent("onload",this.a.loadTimeCollector),document.attachEvent("onmousemove",this.a.mouseCollector),document.attachEvent("keypress",this.a.keyboardCollector);else throw new sjcl.exception.bug("can't attach event");
+this.D=!0}},stopCollectors:function(){this.D&&(window.removeEventListener?(window.removeEventListener("load",this.a.loadTimeCollector,!1),window.removeEventListener("mousemove",this.a.mouseCollector,!1),window.removeEventListener("keypress",this.a.keyboardCollector,!1),window.removeEventListener("devicemotion",this.a.accelerometerCollector,!1),window.removeEventListener("touchmove",this.a.touchCollector,!1)):document.detachEvent&&(document.detachEvent("onload",this.a.loadTimeCollector),document.detachEvent("onmousemove",
+this.a.mouseCollector),document.detachEvent("keypress",this.a.keyboardCollector)),this.D=!1)},addEventListener:function(a,b){this.K[a][this.ga++]=b},removeEventListener:function(a,b){var c,d,e=this.K[a],f=[];for(d in e)e.hasOwnProperty(d)&&e[d]===b&&f.push(d);for(c=0;c<f.length;c++)d=f[c],delete e[d]},la:function(){C(this,1)},oa:function(a){var b,c;try{b=a.x||a.clientX||a.offsetX||0,c=a.y||a.clientY||a.offsetY||0}catch(d){c=b=0}0!=b&&0!=c&&this.addEntropy([b,c],2,"mouse");C(this,0)},qa:function(a){a=
+a.touches[0]||a.changedTouches[0];this.addEntropy([a.pageX||a.clientX,a.pageY||a.clientY],1,"touch");C(this,0)},ma:function(){C(this,2)},ea:function(a){a=a.accelerationIncludingGravity.x||a.accelerationIncludingGravity.y||a.accelerationIncludingGravity.z;if(window.orientation){var b=window.orientation;"number"===typeof b&&this.addEntropy(b,1,"accelerometer")}a&&this.addEntropy(a,2,"accelerometer");C(this,0)}};
+function A(a,b){var c,d=sjcl.random.K[a],e=[];for(c in d)d.hasOwnProperty(c)&&e.push(d[c]);for(c=0;c<e.length;c++)e[c](b)}function C(a,b){"undefined"!==typeof window&&window.performance&&"function"===typeof window.performance.now?a.addEntropy(window.performance.now(),b,"loadtime"):a.addEntropy((new Date).valueOf(),b,"loadtime")}function y(a){a.b=z(a).concat(z(a));a.L=new sjcl.cipher.aes(a.b)}function z(a){for(var b=0;4>b&&(a.h[b]=a.h[b]+1|0,!a.h[b]);b++);return a.L.encrypt(a.h)}
+function B(a,b){return function(){b.apply(a,arguments)}}sjcl.random=new sjcl.prng(6);
+a:try{var D,E,F,G;if(G="undefined"!==typeof module&&module.exports){var H;try{H=require("crypto")}catch(a){H=null}G=E=H}if(G&&E.randomBytes)D=E.randomBytes(128),D=new Uint32Array((new Uint8Array(D)).buffer),sjcl.random.addEntropy(D,1024,"crypto['randomBytes']");else if("undefined"!==typeof window&&"undefined"!==typeof Uint32Array){F=new Uint32Array(32);if(window.crypto&&window.crypto.getRandomValues)window.crypto.getRandomValues(F);else if(window.msCrypto&&window.msCrypto.getRandomValues)window.msCrypto.getRandomValues(F);
+else break a;sjcl.random.addEntropy(F,1024,"crypto['getRandomValues']")}}catch(a){"undefined"!==typeof window&&window.console&&(console.log("There was an error collecting entropy from the browser:"),console.log(a))}
+sjcl.json={defaults:{v:1,iter:1E4,ks:128,ts:64,mode:"ccm",adata:"",cipher:"aes"},ja:function(a,b,c,d){c=c||{};d=d||{};var e=sjcl.json,f=e.g({iv:sjcl.random.randomWords(4,0)},e.defaults),g;e.g(f,c);c=f.adata;"string"===typeof f.salt&&(f.salt=sjcl.codec.base64.toBits(f.salt));"string"===typeof f.iv&&(f.iv=sjcl.codec.base64.toBits(f.iv));if(!sjcl.mode[f.mode]||!sjcl.cipher[f.cipher]||"string"===typeof a&&100>=f.iter||64!==f.ts&&96!==f.ts&&128!==f.ts||128!==f.ks&&192!==f.ks&&0x100!==f.ks||2>f.iv.length||
+4<f.iv.length)throw new sjcl.exception.invalid("json encrypt: invalid parameters");"string"===typeof a?(g=sjcl.misc.cachedPbkdf2(a,f),a=g.key.slice(0,f.ks/32),f.salt=g.salt):sjcl.ecc&&a instanceof sjcl.ecc.elGamal.publicKey&&(g=a.kem(),f.kemtag=g.tag,a=g.key.slice(0,f.ks/32));"string"===typeof b&&(b=sjcl.codec.utf8String.toBits(b));"string"===typeof c&&(f.adata=c=sjcl.codec.utf8String.toBits(c));g=new sjcl.cipher[f.cipher](a);e.g(d,f);d.key=a;f.ct="ccm"===f.mode&&sjcl.arrayBuffer&&sjcl.arrayBuffer.ccm&&
+b instanceof ArrayBuffer?sjcl.arrayBuffer.ccm.encrypt(g,b,f.iv,c,f.ts):sjcl.mode[f.mode].encrypt(g,b,f.iv,c,f.ts);return f},encrypt:function(a,b,c,d){var e=sjcl.json,f=e.ja.apply(e,arguments);return e.encode(f)},ia:function(a,b,c,d){c=c||{};d=d||{};var e=sjcl.json;b=e.g(e.g(e.g({},e.defaults),b),c,!0);var f,g;f=b.adata;"string"===typeof b.salt&&(b.salt=sjcl.codec.base64.toBits(b.salt));"string"===typeof b.iv&&(b.iv=sjcl.codec.base64.toBits(b.iv));if(!sjcl.mode[b.mode]||!sjcl.cipher[b.cipher]||"string"===
+typeof a&&100>=b.iter||64!==b.ts&&96!==b.ts&&128!==b.ts||128!==b.ks&&192!==b.ks&&0x100!==b.ks||!b.iv||2>b.iv.length||4<b.iv.length)throw new sjcl.exception.invalid("json decrypt: invalid parameters");"string"===typeof a?(g=sjcl.misc.cachedPbkdf2(a,b),a=g.key.slice(0,b.ks/32),b.salt=g.salt):sjcl.ecc&&a instanceof sjcl.ecc.elGamal.secretKey&&(a=a.unkem(sjcl.codec.base64.toBits(b.kemtag)).slice(0,b.ks/32));"string"===typeof f&&(f=sjcl.codec.utf8String.toBits(f));g=new sjcl.cipher[b.cipher](a);f="ccm"===
+b.mode&&sjcl.arrayBuffer&&sjcl.arrayBuffer.ccm&&b.ct instanceof ArrayBuffer?sjcl.arrayBuffer.ccm.decrypt(g,b.ct,b.iv,b.tag,f,b.ts):sjcl.mode[b.mode].decrypt(g,b.ct,b.iv,f,b.ts);e.g(d,b);d.key=a;return 1===c.raw?f:sjcl.codec.utf8String.fromBits(f)},decrypt:function(a,b,c,d){var e=sjcl.json;return e.ia(a,e.decode(b),c,d)},encode:function(a){var b,c="{",d="";for(b in a)if(a.hasOwnProperty(b)){if(!b.match(/^[a-z0-9]+$/i))throw new sjcl.exception.invalid("json encode: invalid property name");c+=d+'"'+
+b+'":';d=",";switch(typeof a[b]){case "number":case "boolean":c+=a[b];break;case "string":c+='"'+escape(a[b])+'"';break;case "object":c+='"'+sjcl.codec.base64.fromBits(a[b],0)+'"';break;default:throw new sjcl.exception.bug("json encode: unsupported type");}}return c+"}"},decode:function(a){a=a.replace(/\s/g,"");if(!a.match(/^\{.*\}$/))throw new sjcl.exception.invalid("json decode: this isn't json!");a=a.replace(/^\{|\}$/g,"").split(/,/);var b={},c,d;for(c=0;c<a.length;c++){if(!(d=a[c].match(/^\s*(?:(["']?)([a-z][a-z0-9]*)\1)\s*:\s*(?:(-?\d+)|"([a-z0-9+\/%*_.@=\-]*)"|(true|false))$/i)))throw new sjcl.exception.invalid("json decode: this isn't json!");
+null!=d[3]?b[d[2]]=parseInt(d[3],10):null!=d[4]?b[d[2]]=d[2].match(/^(ct|adata|salt|iv)$/)?sjcl.codec.base64.toBits(d[4]):unescape(d[4]):null!=d[5]&&(b[d[2]]="true"===d[5])}return b},g:function(a,b,c){void 0===a&&(a={});if(void 0===b)return a;for(var d in b)if(b.hasOwnProperty(d)){if(c&&void 0!==a[d]&&a[d]!==b[d])throw new sjcl.exception.invalid("required parameter overridden");a[d]=b[d]}return a},sa:function(a,b){var c={},d;for(d in a)a.hasOwnProperty(d)&&a[d]!==b[d]&&(c[d]=a[d]);return c},ra:function(a,
+b){var c={},d;for(d=0;d<b.length;d++)void 0!==a[b[d]]&&(c[b[d]]=a[b[d]]);return c}};sjcl.encrypt=sjcl.json.encrypt;sjcl.decrypt=sjcl.json.decrypt;sjcl.misc.pa={};sjcl.misc.cachedPbkdf2=function(a,b){var c=sjcl.misc.pa,d;b=b||{};d=b.iter||1E3;c=c[a]=c[a]||{};d=c[d]=c[d]||{firstSalt:b.salt&&b.salt.length?b.salt.slice(0):sjcl.random.randomWords(2,0)};c=void 0===b.salt?d.firstSalt:b.salt;d[c]=d[c]||sjcl.misc.pbkdf2(a,c,b.iter);return{key:d[c].slice(0),salt:c.slice(0)}};
+"undefined"!==typeof module&&module.exports&&(module.exports=sjcl);"function"===typeof define&&define([],function(){return sjcl});
+local.sjcl = sjcl;
 
 
 
-// rollup-file core/sha1.js
-// 2016-06-09T23:25:22Z
-// https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/core/sha1.js
-// utility2-uglifyjs https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/core/sha1.js
-(function () { var sjcl; sjcl = local.sjcl;
-sjcl.hash.sha1=function(e){e?(this._h=e._h.slice(0),this._buffer=e._buffer.slice
-(0),this._length=e._length):this.reset()},sjcl.hash.sha1.hash=function(e){return(new
-sjcl.hash.sha1).update(e).finalize()},sjcl.hash.sha1.prototype={blockSize:512,reset
-:function(){return this._h=this._init.slice(0),this._buffer=[],this._length=0,this
-},update:function(e){typeof e=="string"&&(e=sjcl.codec.utf8String.toBits(e));var t
-,n=this._buffer=sjcl.bitArray.concat(this._buffer,e),r=this._length,i=this._length=
-r+sjcl.bitArray.bitLength(e);if(i>9007199254740991)throw new sjcl.exception.invalid
-("Cannot hash more than 2^53 - 1 bits");if(typeof Uint32Array!="undefined"){var s=new
-Uint32Array(n),o=0;for(t=this.blockSize+r-(this.blockSize+r&this.blockSize-1);t<=
-i;t+=this.blockSize)this._block(s.subarray(16*o,16*(o+1))),o+=1;n.splice(0,16*o)
-}else for(t=this.blockSize+r-(this.blockSize+r&this.blockSize-1);t<=i;t+=this.blockSize
-)this._block(n.splice(0,16));return this},finalize:function(){var e,t=this._buffer
-,n=this._h;t=sjcl.bitArray.concat(t,[sjcl.bitArray.partial(1,1)]);for(e=t.length+2
-;e&15;e++)t.push(0);t.push(Math.floor(this._length/4294967296)),t.push(this._length|0
-);while(t.length)this._block(t.splice(0,16));return this.reset(),n},_init:[1732584193
-,4023233417,2562383102,271733878,3285377520],_key:[1518500249,1859775393,2400959708
-,3395469782],_f:function(e,t,n,r){if(e<=19)return t&n|~t&r;if(e<=39)return t^n^r
-;if(e<=59)return t&n|t&r|n&r;if(e<=79)return t^n^r},_S:function(e,t){return t<<e|
-t>>>32-e},_block:function(e){var t,n,r,i,s,o,u,a=this._h,f;if(typeof Uint32Array!="undefined"
-){f=Array(80);for(var l=0;l<16;l++)f[l]=e[l]}else f=e;r=a[0],i=a[1],s=a[2],o=a[3
-],u=a[4];for(t=0;t<=79;t++)t>=16&&(f[t]=this._S(1,f[t-3]^f[t-8]^f[t-14]^f[t-16])
-),n=this._S(5,r)+this._f(t,i,s,o)+u+f[t]+this._key[Math.floor(t/20)]|0,u=o,o=s,s=
-this._S(30,i),i=r,r=n;a[0]=a[0]+r|0,a[1]=a[1]+i|0,a[2]=a[2]+s|0,a[3]=a[3]+o|0,a[4
-]=a[4]+u|0}}
-}());
+/*
+file https://github.com/bitwiseshiftleft/sjcl/blob/1.0.8/core/sha1.js
+shGithubDateCommitted https://github.com/bitwiseshiftleft/sjcl/blob/1.0.8/core/sha1.js # 2016-06-09T23:25:22Z
+curl https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.8/core/sha1.js > /tmp/aa.js
+*/
+/** @fileOverview Javascript SHA-1 implementation.
+ *
+ * Based on the implementation in RFC 3174, method 1, and on the SJCL
+ * SHA-256 implementation.
+ *
+ * @author Quinn Slack
+ */
+
+/**
+ * Context for a SHA-1 operation in progress.
+ * @constructor
+ */
+sjcl.hash.sha1 = function (hash) {
+  if (hash) {
+    this._h = hash._h.slice(0);
+    this._buffer = hash._buffer.slice(0);
+    this._length = hash._length;
+  } else {
+    this.reset();
+  }
+};
+
+/**
+ * Hash a string or an array of words.
+ * @static
+ * @param {bitArray|String} data the data to hash.
+ * @return {bitArray} The hash value, an array of 5 big-endian words.
+ */
+sjcl.hash.sha1.hash = function (data) {
+  return (new sjcl.hash.sha1()).update(data).finalize();
+};
+
+sjcl.hash.sha1.prototype = {
+  /**
+   * The hash's block size, in bits.
+   * @constant
+   */
+  blockSize: 512,
+
+  /**
+   * Reset the hash state.
+   * @return this
+   */
+  reset:function () {
+    this._h = this._init.slice(0);
+    this._buffer = [];
+    this._length = 0;
+    return this;
+  },
+
+  /**
+   * Input several words to the hash.
+   * @param {bitArray|String} data the data to hash.
+   * @return this
+   */
+  update: function (data) {
+    if (typeof data === "string") {
+      data = sjcl.codec.utf8String.toBits(data);
+    }
+    var i, b = this._buffer = sjcl.bitArray.concat(this._buffer, data),
+        ol = this._length,
+        nl = this._length = ol + sjcl.bitArray.bitLength(data);
+    if (nl > 9007199254740991){
+      throw new sjcl.exception.invalid("Cannot hash more than 2^53 - 1 bits");
+    }
+
+    if (typeof Uint32Array !== 'undefined') {
+	var c = new Uint32Array(b);
+    	var j = 0;
+    	for (i = this.blockSize+ol - ((this.blockSize+ol) & (this.blockSize-1)); i <= nl;
+		i+= this.blockSize) {
+      	    this._block(c.subarray(16 * j, 16 * (j+1)));
+      	    j += 1;
+    	}
+    	b.splice(0, 16 * j);
+    } else {
+    	for (i = this.blockSize+ol - ((this.blockSize+ol) & (this.blockSize-1)); i <= nl;
+             i+= this.blockSize) {
+      	     this._block(b.splice(0,16));
+      	}
+    }
+    return this;
+  },
+
+  /**
+   * Complete hashing and output the hash value.
+   * @return {bitArray} The hash value, an array of 5 big-endian words. TODO
+   */
+  finalize:function () {
+    var i, b = this._buffer, h = this._h;
+
+    // Round out and push the buffer
+    b = sjcl.bitArray.concat(b, [sjcl.bitArray.partial(1,1)]);
+    // Round out the buffer to a multiple of 16 words, less the 2 length words.
+    for (i = b.length + 2; i & 15; i++) {
+      b.push(0);
+    }
+
+    // append the length
+    b.push(Math.floor(this._length / 0x100000000));
+    b.push(this._length | 0);
+
+    while (b.length) {
+      this._block(b.splice(0,16));
+    }
+
+    this.reset();
+    return h;
+  },
+
+  /**
+   * The SHA-1 initialization vector.
+   * @private
+   */
+  _init:[0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0],
+
+  /**
+   * The SHA-1 hash key.
+   * @private
+   */
+  _key:[0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6],
+
+  /**
+   * The SHA-1 logical functions f(0), f(1), ..., f(79).
+   * @private
+   */
+  _f:function(t, b, c, d) {
+    if (t <= 19) {
+      return (b & c) | (~b & d);
+    } else if (t <= 39) {
+      return b ^ c ^ d;
+    } else if (t <= 59) {
+      return (b & c) | (b & d) | (c & d);
+    } else if (t <= 79) {
+      return b ^ c ^ d;
+    }
+  },
+
+  /**
+   * Circular left-shift operator.
+   * @private
+   */
+  _S:function(n, x) {
+    return (x << n) | (x >>> 32-n);
+  },
+
+  /**
+   * Perform one cycle of SHA-1.
+   * @param {Uint32Array|bitArray} words one block of words.
+   * @private
+   */
+  _block:function (words) {
+    var t, tmp, a, b, c, d, e,
+    h = this._h;
+    var w;
+    if (typeof Uint32Array !== 'undefined') {
+        // When words is passed to _block, it has 16 elements. SHA1 _block
+        // function extends words with new elements (at the end there are 80 elements).
+        // The problem is that if we use Uint32Array instead of Array,
+        // the length of Uint32Array cannot be changed. Thus, we replace words with a
+        // normal Array here.
+        w = Array(80); // do not use Uint32Array here as the instantiation is slower
+        for (var j=0; j<16; j++){
+            w[j] = words[j];
+        }
+    } else {
+        w = words;
+    }
+
+    a = h[0]; b = h[1]; c = h[2]; d = h[3]; e = h[4];
+
+    for (t=0; t<=79; t++) {
+      if (t >= 16) {
+        w[t] = this._S(1, w[t-3] ^ w[t-8] ^ w[t-14] ^ w[t-16]);
+      }
+      tmp = (this._S(5, a) + this._f(t, b, c, d) + e + w[t] +
+             this._key[Math.floor(t/20)]) | 0;
+      e = d;
+      d = c;
+      c = this._S(30, b);
+      b = a;
+      a = tmp;
+   }
+
+   h[0] = (h[0]+a) |0;
+   h[1] = (h[1]+b) |0;
+   h[2] = (h[2]+c) |0;
+   h[3] = (h[3]+d) |0;
+   h[4] = (h[4]+e) |0;
+  }
+};
 
 
 
-// rollup-file core/codecBytes.js
-// 2016-05-31T18:26:45Z
-// https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/core/codecBytes.js
-// utility2-uglifyjs https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/core/codecBytes.js
-(function () { var sjcl; sjcl = local.sjcl;
-sjcl.codec.bytes={fromBits:function(e){var t=[],n=sjcl.bitArray.bitLength(e),r,i
-;for(r=0;r<n/8;r++)(r&3)===0&&(i=e[r/4]),t.push(i>>>24),i<<=8;return t},toBits:function(
-e){var t=[],n,r=0;for(n=0;n<e.length;n++)r=r<<8|e[n],(n&3)===3&&(t.push(r),r=0);
-return n&3&&t.push(sjcl.bitArray.partial(8*(n&3),r)),t}}
-}());
+/*
+file https://github.com/bitwiseshiftleft/sjcl/blob/1.0.8/core/codecBytes.js
+shGithubDateCommitted https://github.com/bitwiseshiftleft/sjcl/blob/1.0.8/core/codecBytes.js # 2016-05-31T18:26:45Z
+curl https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.8/core/codecBytes.js > /tmp/aa.js
+*/
+/** @fileOverview Bit array codec implementations.
+ *
+ * @author Emily Stark
+ * @author Mike Hamburg
+ * @author Dan Boneh
+ */
+
+/**
+ * Arrays of bytes
+ * @namespace
+ */
+sjcl.codec.bytes = {
+  /** Convert from a bitArray to an array of bytes. */
+  fromBits: function (arr) {
+    var out = [], bl = sjcl.bitArray.bitLength(arr), i, tmp;
+    for (i=0; i<bl/8; i++) {
+      if ((i&3) === 0) {
+        tmp = arr[i/4];
+      }
+      out.push(tmp >>> 24);
+      tmp <<= 8;
+    }
+    return out;
+  },
+  /** Convert from an array of bytes to a bitArray. */
+  toBits: function (bytes) {
+    var out = [], i, tmp=0;
+    for (i=0; i<bytes.length; i++) {
+      tmp = tmp << 8 | bytes[i];
+      if ((i&3) === 3) {
+        out.push(tmp);
+        tmp = 0;
+      }
+    }
+    if (i&3) {
+      out.push(sjcl.bitArray.partial(8*(i&3), tmp));
+    }
+    return out;
+  }
+};
 
 
 
-// rollup-file core/scrypt.js
-// 2016-05-31T18:10:00Z
-// https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/core/scrypt.js
-// utility2-uglifyjs https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/core/scrypt.js
-(function () { var sjcl; sjcl = local.sjcl;
-sjcl.misc.scrypt=function(e,t,n,r,i,s,o){var u=Math.pow(2,32)-1,a=sjcl.misc.scrypt
-;n=n||16384,r=r||8,i=i||1;if(r*i>=Math.pow(2,30))throw sjcl.exception.invalid("The parameters r, p must satisfy r * p < 2^30"
-);if(n<2||n&n-1!=0)throw sjcl.exception.invalid("The parameter N must be a power of 2."
-);if(n>u/128/r)throw sjcl.exception.invalid("N too big.");if(r>u/128/i)throw sjcl
-.exception.invalid("r too big.");var f=sjcl.misc.pbkdf2(e,t,1,i*128*r*8,o),l=f.length/
-i;a.reverse(f);for(var c=0;c<i;c++){var h=f.slice(c*l,(c+1)*l);a.blockcopy(a.ROMix
-(h,n),0,f,c*l)}return a.reverse(f),sjcl.misc.pbkdf2(e,f,1,s,o)},sjcl.misc.scrypt
-.salsa20Core=function(e,t){var n=function(e,t){return e<<t|e>>>32-t},r=e.slice(0
-);for(var i=t;i>0;i-=2)r[4]^=n(r[0]+r[12],7),r[8]^=n(r[4]+r[0],9),r[12]^=n(r[8]+
-r[4],13),r[0]^=n(r[12]+r[8],18),r[9]^=n(r[5]+r[1],7),r[13]^=n(r[9]+r[5],9),r[1]^=
-n(r[13]+r[9],13),r[5]^=n(r[1]+r[13],18),r[14]^=n(r[10]+r[6],7),r[2]^=n(r[14]+r[10
-],9),r[6]^=n(r[2]+r[14],13),r[10]^=n(r[6]+r[2],18),r[3]^=n(r[15]+r[11],7),r[7]^=
-n(r[3]+r[15],9),r[11]^=n(r[7]+r[3],13),r[15]^=n(r[11]+r[7],18),r[1]^=n(r[0]+r[3]
-,7),r[2]^=n(r[1]+r[0],9),r[3]^=n(r[2]+r[1],13),r[0]^=n(r[3]+r[2],18),r[6]^=n(r[5
-]+r[4],7),r[7]^=n(r[6]+r[5],9),r[4]^=n(r[7]+r[6],13),r[5]^=n(r[4]+r[7],18),r[11]^=
-n(r[10]+r[9],7),r[8]^=n(r[11]+r[10],9),r[9]^=n(r[8]+r[11],13),r[10]^=n(r[9]+r[8]
-,18),r[12]^=n(r[15]+r[14],7),r[13]^=n(r[12]+r[15],9),r[14]^=n(r[13]+r[12],13),r[15
-]^=n(r[14]+r[13],18);for(i=0;i<16;i++)e[i]=r[i]+e[i]},sjcl.misc.scrypt.blockMix=
-function(e){var t=e.slice(-16),n=[],r=e.length/16,i=sjcl.misc.scrypt;for(var s=0
-;s<r;s++)i.blockxor(e,16*s,t,0,16),i.salsa20Core(t,8),(s&1)==0?i.blockcopy(t,0,n
-,8*s):i.blockcopy(t,0,n,8*(s^1+r));return n},sjcl.misc.scrypt.ROMix=function(e,t
-){var n=e.slice(0),r=[],i=sjcl.misc.scrypt;for(var s=0;s<t;s++)r.push(n.slice(0)
-),n=i.blockMix(n);for(s=0;s<t;s++){var o=n[n.length-16]&t-1;i.blockxor(r[o],0,n,0
-),n=i.blockMix(n)}return n},sjcl.misc.scrypt.reverse=function(e){for(var t in e)
-{var n=e[t]&255;n=n<<8|e[t]>>>8&255,n=n<<8|e[t]>>>16&255,n=n<<8|e[t]>>>24&255,e[
-t]=n}},sjcl.misc.scrypt.blockcopy=function(e,t,n,r,i){var s;i=i||e.length-t;for(
-s=0;s<i;s++)n[r+s]=e[t+s]|0},sjcl.misc.scrypt.blockxor=function(e,t,n,r,i){var s
-;i=i||e.length-t;for(s=0;s<i;s++)n[r+s]=n[r+s]^e[t+s]|0}
-}());
+/*
+file https://github.com/bitwiseshiftleft/sjcl/blob/1.0.8/core/scrypt.js
+shGithubDateCommitted https://github.com/bitwiseshiftleft/sjcl/blob/1.0.8/core/scrypt.js # 2016-05-31T18:10:00Z
+curl https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.8/core/scrypt.js > /tmp/aa.js
+*/
+/** scrypt Password-Based Key-Derivation Function.
+ *
+ * @param {bitArray|String} password  The password.
+ * @param {bitArray|String} salt      The salt.  Should have lots of entropy.
+ *
+ * @param {Number} [N=16384] CPU/Memory cost parameter.
+ * @param {Number} [r=8]     Block size parameter.
+ * @param {Number} [p=1]     Parallelization parameter.
+ *
+ * @param {Number} [length] The length of the derived key.  Defaults to the
+ *                          output size of the hash function.
+ * @param {Object} [Prff=sjcl.misc.hmac] The pseudorandom function family.
+ *
+ * @return {bitArray} The derived key.
+ */
+sjcl.misc.scrypt = function (password, salt, N, r, p, length, Prff) {
+  var SIZE_MAX = Math.pow(2, 32) - 1,
+      self = sjcl.misc.scrypt;
+
+  N = N || 16384;
+  r = r || 8;
+  p = p || 1;
+
+  if (r * p >= Math.pow(2, 30)) {
+    throw sjcl.exception.invalid("The parameters r, p must satisfy r * p < 2^30");
+  }
+
+  if ((N < 2) || (N & (N - 1) != 0)) {
+    throw sjcl.exception.invalid("The parameter N must be a power of 2.");
+  }
+
+  if (N > SIZE_MAX / 128 / r) {
+    throw sjcl.exception.invalid("N too big.");
+  }
+
+  if (r > SIZE_MAX / 128 / p) {
+    throw sjcl.exception.invalid("r too big.");
+  }
+
+  var blocks = sjcl.misc.pbkdf2(password, salt, 1, p * 128 * r * 8, Prff),
+      len = blocks.length / p;
+
+  self.reverse(blocks);
+
+  for (var i = 0; i < p; i++) {
+    var block = blocks.slice(i * len, (i + 1) * len);
+    self.blockcopy(self.ROMix(block, N), 0, blocks, i * len);
+  }
+
+  self.reverse(blocks);
+
+  return sjcl.misc.pbkdf2(password, blocks, 1, length, Prff);
+};
+
+sjcl.misc.scrypt.salsa20Core = function (word, rounds) {
+  var R = function(a, b) { return (a << b) | (a >>> (32 - b)); };
+  var x = word.slice(0);
+
+  for (var i = rounds; i > 0; i -= 2) {
+    x[ 4] ^= R(x[ 0]+x[12], 7);  x[ 8] ^= R(x[ 4]+x[ 0], 9);
+    x[12] ^= R(x[ 8]+x[ 4],13);  x[ 0] ^= R(x[12]+x[ 8],18);
+    x[ 9] ^= R(x[ 5]+x[ 1], 7);  x[13] ^= R(x[ 9]+x[ 5], 9);
+    x[ 1] ^= R(x[13]+x[ 9],13);  x[ 5] ^= R(x[ 1]+x[13],18);
+    x[14] ^= R(x[10]+x[ 6], 7);  x[ 2] ^= R(x[14]+x[10], 9);
+    x[ 6] ^= R(x[ 2]+x[14],13);  x[10] ^= R(x[ 6]+x[ 2],18);
+    x[ 3] ^= R(x[15]+x[11], 7);  x[ 7] ^= R(x[ 3]+x[15], 9);
+    x[11] ^= R(x[ 7]+x[ 3],13);  x[15] ^= R(x[11]+x[ 7],18);
+    x[ 1] ^= R(x[ 0]+x[ 3], 7);  x[ 2] ^= R(x[ 1]+x[ 0], 9);
+    x[ 3] ^= R(x[ 2]+x[ 1],13);  x[ 0] ^= R(x[ 3]+x[ 2],18);
+    x[ 6] ^= R(x[ 5]+x[ 4], 7);  x[ 7] ^= R(x[ 6]+x[ 5], 9);
+    x[ 4] ^= R(x[ 7]+x[ 6],13);  x[ 5] ^= R(x[ 4]+x[ 7],18);
+    x[11] ^= R(x[10]+x[ 9], 7);  x[ 8] ^= R(x[11]+x[10], 9);
+    x[ 9] ^= R(x[ 8]+x[11],13);  x[10] ^= R(x[ 9]+x[ 8],18);
+    x[12] ^= R(x[15]+x[14], 7);  x[13] ^= R(x[12]+x[15], 9);
+    x[14] ^= R(x[13]+x[12],13);  x[15] ^= R(x[14]+x[13],18);
+  }
+
+  for (i = 0; i < 16; i++) word[i] = x[i]+word[i];
+};
+
+sjcl.misc.scrypt.blockMix = function(blocks) {
+  var X = blocks.slice(-16),
+      out = [],
+      len = blocks.length / 16,
+      self = sjcl.misc.scrypt;
+
+  for (var i = 0; i < len; i++) {
+    self.blockxor(blocks, 16 * i, X, 0, 16);
+    self.salsa20Core(X, 8);
+
+    if ((i & 1) == 0) {
+      self.blockcopy(X, 0, out, 8 * i);
+    } else {
+      self.blockcopy(X, 0, out, 8 * (i^1 + len));
+    }
+  }
+
+  return out;
+};
+
+sjcl.misc.scrypt.ROMix = function(block, N) {
+  var X = block.slice(0),
+      V = [],
+      self = sjcl.misc.scrypt;
+
+  for (var i = 0; i < N; i++) {
+    V.push(X.slice(0));
+    X = self.blockMix(X);
+  }
+
+  for (i = 0; i < N; i++) {
+    var j = X[X.length - 16] & (N - 1);
+
+    self.blockxor(V[j], 0, X, 0);
+    X = self.blockMix(X);
+  }
+
+  return X;
+};
+
+sjcl.misc.scrypt.reverse = function (words) { // Converts Big <-> Little Endian words
+  for (var i in words) {
+    var out = words[i] &  0xFF;
+    out = (out << 8) | (words[i] >>>  8) & 0xFF;
+    out = (out << 8) | (words[i] >>> 16) & 0xFF;
+    out = (out << 8) | (words[i] >>> 24) & 0xFF;
+
+    words[i] = out;
+  }
+};
+
+sjcl.misc.scrypt.blockcopy = function (S, Si, D, Di, len) {
+  var i;
+
+  len = len || (S.length - Si);
+
+  for (i = 0; i < len; i++) D[Di + i] = S[Si + i] | 0;
+};
+
+sjcl.misc.scrypt.blockxor = function(S, Si, D, Di, len) {
+  var i;
+
+  len = len || (S.length - Si);
+
+  for (i = 0; i < len; i++) D[Di + i] = (D[Di + i] ^ S[Si + i]) | 0;
+};
 
 
 
-// rollup-file core/cbc.js
-// 2016-05-31T18:26:45Z
-// https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/core/cbc.js
-// utility2-uglifyjs https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/core/cbc.js
-(function () { var sjcl; sjcl = local.sjcl;
-sjcl.beware===undefined&&(sjcl.beware={}),sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."
-]=function(){sjcl.mode.cbc={name:"cbc",encrypt:function(e,t,n,r){if(r&&r.length)
-throw new sjcl.exception.invalid("cbc can't authenticate data");if(sjcl.bitArray
-.bitLength(n)!==128)throw new sjcl.exception.invalid("cbc iv must be 128 bits");
-var i,s=sjcl.bitArray,o=s._xor4,u=s.bitLength(t),a=0,f=[];if(u&7)throw new sjcl.
-exception.invalid("pkcs#5 padding only works for multiples of a byte");for(i=0;a+128<=
-u;i+=4,a+=128)n=e.encrypt(o(n,t.slice(i,i+4))),f.splice(i,0,n[0],n[1],n[2],n[3])
-;return u=(16-(u>>3&15))*16843009,n=e.encrypt(o(n,s.concat(t,[u,u,u,u]).slice(i,
-i+4))),f.splice(i,0,n[0],n[1],n[2],n[3]),f},decrypt:function(e,t,n,r){if(r&&r.length
-)throw new sjcl.exception.invalid("cbc can't authenticate data");if(sjcl.bitArray
-.bitLength(n)!==128)throw new sjcl.exception.invalid("cbc iv must be 128 bits");
-if(sjcl.bitArray.bitLength(t)&127||!t.length)throw new sjcl.exception.corrupt("cbc ciphertext must be a positive multiple of the block size"
-);var i,s=sjcl.bitArray,o=s._xor4,u,a,f=[];r=r||[];for(i=0;i<t.length;i+=4)u=t.slice
-(i,i+4),a=o(n,e.decrypt(u)),f.splice(i,0,a[0],a[1],a[2],a[3]),n=u;u=f[i-1]&255;if(
-u===0||u>16)throw new sjcl.exception.corrupt("pkcs#5 padding corrupt");a=u*16843009
-;if(!s.equal(s.bitSlice([a,a,a,a],0,u*8),s.bitSlice(f,f.length*32-u*8,f.length*32
-)))throw new sjcl.exception.corrupt("pkcs#5 padding corrupt");return s.bitSlice(
-f,0,f.length*32-u*8)}}}
+/*
+file https://github.com/bitwiseshiftleft/sjcl/blob/1.0.8/core/cbc.js
+shGithubDateCommitted https://github.com/bitwiseshiftleft/sjcl/blob/1.0.8/core/cbc.js # 2016-05-31T18:26:45Z
+curl https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.8/core/cbc.js > /tmp/aa.js
+*/
+/** @fileOverview CBC mode implementation
+ *
+ * @author Emily Stark
+ * @author Mike Hamburg
+ * @author Dan Boneh
+ */
+
+if (sjcl.beware === undefined) {
+  sjcl.beware = {};
+}
+sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."
+] = function() {
+  /**
+   * Dangerous: CBC mode with PKCS#5 padding.
+   * @namespace
+   * @author Emily Stark
+   * @author Mike Hamburg
+   * @author Dan Boneh
+   */
+  sjcl.mode.cbc = {
+    /** The name of the mode.
+     * @constant
+     */
+    name: "cbc",
+
+    /** Encrypt in CBC mode with PKCS#5 padding.
+     * @param {Object} prp The block cipher.  It must have a block size of 16 bytes.
+     * @param {bitArray} plaintext The plaintext data.
+     * @param {bitArray} iv The initialization value.
+     * @param {bitArray} [adata=[]] The authenticated data.  Must be empty.
+     * @return The encrypted data, an array of bytes.
+     * @throws {sjcl.exception.invalid} if the IV isn't exactly 128 bits, or if any adata is specified.
+     */
+    encrypt: function(prp, plaintext, iv, adata) {
+      if (adata && adata.length) {
+        throw new sjcl.exception.invalid("cbc can't authenticate data");
+      }
+      if (sjcl.bitArray.bitLength(iv) !== 128) {
+        throw new sjcl.exception.invalid("cbc iv must be 128 bits");
+      }
+      var i,
+          w = sjcl.bitArray,
+          xor = w._xor4,
+          bl = w.bitLength(plaintext),
+          bp = 0,
+          output = [];
+
+      if (bl&7) {
+        throw new sjcl.exception.invalid("pkcs#5 padding only works for multiples of a byte");
+      }
+
+      for (i=0; bp+128 <= bl; i+=4, bp+=128) {
+        /* Encrypt a non-final block */
+        iv = prp.encrypt(xor(iv, plaintext.slice(i,i+4)));
+        output.splice(i,0,iv[0],iv[1],iv[2],iv[3]);
+      }
+
+      /* Construct the pad. */
+      bl = (16 - ((bl >> 3) & 15)) * 0x1010101;
+
+      /* Pad and encrypt. */
+      iv = prp.encrypt(xor(iv,w.concat(plaintext,[bl,bl,bl,bl]).slice(i,i+4)));
+      output.splice(i,0,iv[0],iv[1],iv[2],iv[3]);
+      return output;
+    },
+
+    /** Decrypt in CBC mode.
+     * @param {Object} prp The block cipher.  It must have a block size of 16 bytes.
+     * @param {bitArray} ciphertext The ciphertext data.
+     * @param {bitArray} iv The initialization value.
+     * @param {bitArray} [adata=[]] The authenticated data.  It must be empty.
+     * @return The decrypted data, an array of bytes.
+     * @throws {sjcl.exception.invalid} if the IV isn't exactly 128 bits, or if any adata is specified.
+     * @throws {sjcl.exception.corrupt} if if the message is corrupt.
+     */
+    decrypt: function(prp, ciphertext, iv, adata) {
+      if (adata && adata.length) {
+        throw new sjcl.exception.invalid("cbc can't authenticate data");
+      }
+      if (sjcl.bitArray.bitLength(iv) !== 128) {
+        throw new sjcl.exception.invalid("cbc iv must be 128 bits");
+      }
+      if ((sjcl.bitArray.bitLength(ciphertext) & 127) || !ciphertext.length) {
+        throw new sjcl.exception.corrupt("cbc ciphertext must be a positive multiple of the block size");
+      }
+      var i,
+          w = sjcl.bitArray,
+          xor = w._xor4,
+          bi, bo,
+          output = [];
+
+      adata = adata || [];
+
+      for (i=0; i<ciphertext.length; i+=4) {
+        bi = ciphertext.slice(i,i+4);
+        bo = xor(iv,prp.decrypt(bi));
+        output.splice(i,0,bo[0],bo[1],bo[2],bo[3]);
+        iv = bi;
+      }
+
+      /* check and remove the pad */
+      bi = output[i-1] & 255;
+      if (bi === 0 || bi > 16) {
+        throw new sjcl.exception.corrupt("pkcs#5 padding corrupt");
+      }
+      bo = bi * 0x1010101;
+      if (!w.equal(w.bitSlice([bo,bo,bo,bo], 0, bi*8),
+                   w.bitSlice(output, output.length*32 - bi*8, output.length*32))) {
+        throw new sjcl.exception.corrupt("pkcs#5 padding corrupt");
+      }
+
+      return w.bitSlice(output, 0, output.length*32 - bi*8);
+    }
+  };
+};
+
+
+
+/*
+file none
+*/
 }());
 /* jslint ignore:end */
 // init exports

@@ -1,1246 +1,9374 @@
 /*
-file esprima/esprima.js
+file https://github.com/jquery/esprima/blob/2.7.3/esprima.js
+shGithubDateCommitted https://github.com/jquery/esprima/commits/2.7.3 # 2016-08-22T15:14:14Z
+curl https://raw.githubusercontent.com/jquery/esprima/2.7.3/esprima.js > /tmp/aa.js
 */
-(function(e,t){"use strict";typeof define=="function"&&define.amd?define(["exports"
-],t):typeof exports!="undefined"?t(exports):t(e.esprima={})})(this,function(e){"use strict"
-;function L(e,t){if(!e)throw new Error("ASSERT: "+t)}function A(e){return e>=48&&
-e<=57}function O(e){return"0123456789abcdefABCDEF".indexOf(e)>=0}function M(e){return"01234567"
-.indexOf(e)>=0}function _(e){var t=e!=="0",n="01234567".indexOf(e);return l<E&&M
-(a[l])&&(t=!0,n=n*8+"01234567".indexOf(a[l++]),"0123".indexOf(e)>=0&&l<E&&M(a[l]
-)&&(n=n*8+"01234567".indexOf(a[l++]))),{code:n,octal:t}}function D(e){return e===32||
-e===9||e===11||e===12||e===160||e>=5760&&[5760,6158,8192,8193,8194,8195,8196,8197
-,8198,8199,8200,8201,8202,8239,8287,12288,65279].indexOf(e)>=0}function P(e){return e===10||
-e===13||e===8232||e===8233}function H(e){return e<65536?String.fromCharCode(e):String
-.fromCharCode(55296+(e-65536>>10))+String.fromCharCode(56320+(e-65536&1023))}function B
-(e){return e===36||e===95||e>=65&&e<=90||e>=97&&e<=122||e===92||e>=128&&u.NonAsciiIdentifierStart
-.test(H(e))}function j(e){return e===36||e===95||e>=65&&e<=90||e>=97&&e<=122||e>=48&&
-e<=57||e===92||e>=128&&u.NonAsciiIdentifierPart.test(H(e))}function F(e){switch(
-e){case"enum":case"export":case"import":case"super":return!0;default:return!1}}function I
-(e){switch(e){case"implements":case"interface":case"package":case"private":case"protected"
-:case"public":case"static":case"yield":case"let":return!0;default:return!1}}function q
-(e){return e==="eval"||e==="arguments"}function R(e){switch(e.length){case 2:return e==="if"||
-e==="in"||e==="do";case 3:return e==="var"||e==="for"||e==="new"||e==="try"||e==="let"
-;case 4:return e==="this"||e==="else"||e==="case"||e==="void"||e==="with"||e==="enum"
-;case 5:return e==="while"||e==="break"||e==="catch"||e==="throw"||e==="const"||
-e==="yield"||e==="class"||e==="super";case 6:return e==="return"||e==="typeof"||
-e==="delete"||e==="switch"||e==="export"||e==="import";case 7:return e==="default"||
-e==="finally"||e==="extends";case 8:return e==="function"||e==="continue"||e==="debugger"
-;case 10:return e==="instanceof";default:return!1}}function U(e,t,n,r,i){var s;L
-(typeof n=="number","Comment must have valid position"),x.lastCommentStart=n,s={
-type:e,value:t},T.range&&(s.range=[n,r]),T.loc&&(s.loc=i),T.comments.push(s),T.attachComment&&
-(T.leadingComments.push(s),T.trailingComments.push(s)),T.tokenize&&(s.type=s.type+"Comment"
-,T.delegate&&(s=T.delegate(s)),T.tokens.push(s))}function z(e){var t,n,r,i;t=l-e
-,n={start:{line:c,column:l-h-e}};while(l<E){r=a.charCodeAt(l),++l;if(P(r)){p=!0,
-T.comments&&(i=a.slice(t+e,l-1),n.end={line:c,column:l-h-1},U("Line",i,t,l-1,n))
-,r===13&&a.charCodeAt(l)===10&&++l,++c,h=l;return}}T.comments&&(i=a.slice(t+e,l)
-,n.end={line:c,column:l-h},U("Line",i,t,l,n))}function W(){var e,t,n,r;T.comments&&
-(e=l-2,t={start:{line:c,column:l-h-2}});while(l<E){n=a.charCodeAt(l);if(P(n))n===13&&
-a.charCodeAt(l+1)===10&&++l,p=!0,++c,++l,h=l;else if(n===42){if(a.charCodeAt(l+1
-)===47){++l,++l,T.comments&&(r=a.slice(e+2,l-2),t.end={line:c,column:l-h},U("Block"
-,r,e,l,t));return}++l}else++l}T.comments&&(t.end={line:c,column:l-h},r=a.slice(e+2
-,l),U("Block",r,e,l,t)),At()}function X(){var e,t;p=!1,t=l===0;while(l<E){e=a.charCodeAt
-(l);if(D(e))++l;else if(P(e))p=!0,++l,e===13&&a.charCodeAt(l)===10&&++l,++c,h=l,
-t=!0;else if(e===47){e=a.charCodeAt(l+1);if(e===47)++l,++l,z(2),t=!0;else{if(e!==42
-)break;++l,++l,W()}}else if(t&&e===45){if(a.charCodeAt(l+1)!==45||a.charCodeAt(l+2
-)!==62)break;l+=3,z(3)}else{if(e!==60)break;if(a.slice(l+1,l+4)!=="!--")break;++
-l,++l,++l,++l,z(4)}}}function V(e){var t,n,r,i=0;n=e==="u"?4:2;for(t=0;t<n;++t){
-if(!(l<E&&O(a[l])))return"";r=a[l++],i=i*16+"0123456789abcdef".indexOf(r.toLowerCase
-())}return String.fromCharCode(i)}function $(){var e,t;e=a[l],t=0,e==="}"&&Lt();
-while(l<E){e=a[l++];if(!O(e))break;t=t*16+"0123456789abcdef".indexOf(e.toLowerCase
-())}return(t>1114111||e!=="}")&&Lt(),H(t)}function J(e){var t,n,r;return t=a.charCodeAt
-(e),t>=55296&&t<=56319&&(r=a.charCodeAt(e+1),r>=56320&&r<=57343&&(n=t,t=(n-55296
-)*1024+r-56320+65536)),t}function K(){var e,t,n;e=J(l),n=H(e),l+=n.length,e===92&&
-(a.charCodeAt(l)!==117&&Lt(),++l,a[l]==="{"?(++l,t=$()):(t=V("u"),e=t.charCodeAt
-(0),(!t||t==="\\"||!B(e))&&Lt()),n=t);while(l<E){e=J(l);if(!j(e))break;t=H(e),n+=
-t,l+=t.length,e===92&&(n=n.substr(0,n.length-1),a.charCodeAt(l)!==117&&Lt(),++l,
-a[l]==="{"?(++l,t=$()):(t=V("u"),e=t.charCodeAt(0),(!t||t==="\\"||!j(e))&&Lt()),
-n+=t)}return n}function Q(){var e,t;e=l++;while(l<E){t=a.charCodeAt(l);if(t===92
-)return l=e,K();if(t>=55296&&t<57343)return l=e,K();if(!j(t))break;++l}return a.
-slice(e,l)}function G(){var e,n,r;return e=l,n=a.charCodeAt(l)===92?K():Q(),n.length===1?
-r=t.Identifier:R(n)?r=t.Keyword:n==="null"?r=t.NullLiteral:n==="true"||n==="false"?
-r=t.BooleanLiteral:r=t.Identifier,{type:r,value:n,lineNumber:c,lineStart:h,start
-:e,end:l}}function Y(){var e,n;e={type:t.Punctuator,value:"",lineNumber:c,lineStart
-:h,start:l,end:l},n=a[l];switch(n){case"(":T.tokenize&&(T.openParenToken=T.tokenValues
-.length),++l;break;case"{":T.tokenize&&(T.openCurlyToken=T.tokenValues.length),x
-.curlyStack.push("{"),++l;break;case".":++l,a[l]==="."&&a[l+1]==="."&&(l+=2,n="..."
-);break;case"}":++l,x.curlyStack.pop();break;case")":case";":case",":case"[":case"]"
-:case":":case"?":case"~":++l;break;default:n=a.substr(l,4),n===">>>="?l+=4:(n=n.
-substr(0,3),n==="==="||n==="!=="||n===">>>"||n==="<<="||n===">>="?l+=3:(n=n.substr
-(0,2),n==="&&"||n==="||"||n==="=="||n==="!="||n==="+="||n==="-="||n==="*="||n==="/="||
-n==="++"||n==="--"||n==="<<"||n===">>"||n==="&="||n==="|="||n==="^="||n==="%="||
-n==="<="||n===">="||n==="=>"?l+=2:(n=a[l],"<>=!+-*%&|^/".indexOf(n)>=0&&++l)))}return l===
-e.start&&Lt(),e.end=l,e.value=n,e}function Z(e){var n="";while(l<E){if(!O(a[l]))
-break;n+=a[l++]}return n.length===0&&Lt(),B(a.charCodeAt(l))&&Lt(),{type:t.NumericLiteral
-,value:parseInt("0x"+n,16),lineNumber:c,lineStart:h,start:e,end:l}}function et(e
-){var n,r;r="";while(l<E){n=a[l];if(n!=="0"&&n!=="1")break;r+=a[l++]}return r.length===0&&
-Lt(),l<E&&(n=a.charCodeAt(l),(B(n)||A(n))&&Lt()),{type:t.NumericLiteral,value:parseInt
-(r,2),lineNumber:c,lineStart:h,start:e,end:l}}function tt(e,n){var r,i;M(e)?(i=!0
-,r="0"+a[l++]):(i=!1,++l,r="");while(l<E){if(!M(a[l]))break;r+=a[l++]}return!i&&
-r.length===0&&Lt(),(B(a.charCodeAt(l))||A(a.charCodeAt(l)))&&Lt(),{type:t.NumericLiteral
-,value:parseInt(r,8),octal:i,lineNumber:c,lineStart:h,start:n,end:l}}function nt
-(){var e,t;for(e=l+1;e<E;++e){t=a[e];if(t==="8"||t==="9")return!1;if(!M(t))return!0
-}return!0}function rt(){var e,n,r;r=a[l],L(A(r.charCodeAt(0))||r===".","Numeric literal must start with a decimal digit or a decimal point"
-),n=l,e="";if(r!=="."){e=a[l++],r=a[l];if(e==="0"){if(r==="x"||r==="X")return++l
-,Z(n);if(r==="b"||r==="B")return++l,et(n);if(r==="o"||r==="O")return tt(r,n);if(
-M(r)&&nt())return tt(r,n)}while(A(a.charCodeAt(l)))e+=a[l++];r=a[l]}if(r==="."){
-e+=a[l++];while(A(a.charCodeAt(l)))e+=a[l++];r=a[l]}if(r==="e"||r==="E"){e+=a[l++
-],r=a[l];if(r==="+"||r==="-")e+=a[l++];if(A(a.charCodeAt(l)))while(A(a.charCodeAt
-(l)))e+=a[l++];else Lt()}return B(a.charCodeAt(l))&&Lt(),{type:t.NumericLiteral,
-value:parseFloat(e),lineNumber:c,lineStart:h,start:n,end:l}}function it(){var e=""
-,n,r,i,s,o,u=!1;n=a[l],L(n==="'"||n==='"',"String literal must starts with a quote"
-),r=l,++l;while(l<E){i=a[l++];if(i===n){n="";break}if(i==="\\"){i=a[l++];if(!i||!
-P(i.charCodeAt(0)))switch(i){case"u":case"x":if(a[l]==="{")++l,e+=$();else{s=V(i
-);if(!s)throw Lt();e+=s}break;case"n":e+="\n";break;case"r":e+="\r";break;case"t"
-:e+="\t";break;case"b":e+="\b";break;case"f":e+="\f";break;case"v":e+="\u000b";break;
-case"8":case"9":e+=i,At();break;default:M(i)?(o=_(i),u=o.octal||u,e+=String.fromCharCode
-(o.code)):e+=i}else++c,i==="\r"&&a[l]==="\n"&&++l,h=l}else{if(P(i.charCodeAt(0))
-)break;e+=i}}return n!==""&&(l=r,Lt()),{type:t.StringLiteral,value:e,octal:u,lineNumber
-:y,lineStart:b,start:r,end:l}}function st(){var e="",n,r,i,s,u,f,p,d;s=!1,f=!1,r=
-l,u=a[l]==="`",i=2,++l;while(l<E){n=a[l++];if(n==="`"){i=1,f=!0,s=!0;break}if(n==="$"
-){if(a[l]==="{"){x.curlyStack.push("${"),++l,s=!0;break}e+=n}else if(n==="\\"){n=
-a[l++];if(!P(n.charCodeAt(0)))switch(n){case"n":e+="\n";break;case"r":e+="\r";break;
-case"t":e+="\t";break;case"u":case"x":a[l]==="{"?(++l,e+=$()):(p=l,d=V(n),d?e+=d
-:(l=p,e+=n));break;case"b":e+="\b";break;case"f":e+="\f";break;case"v":e+="\u000b"
-;break;default:n==="0"?(A(a.charCodeAt(l))&&Nt(o.TemplateOctalLiteral),e+="\0"):
-M(n)?Nt(o.TemplateOctalLiteral):e+=n}else++c,n==="\r"&&a[l]==="\n"&&++l,h=l}else P
-(n.charCodeAt(0))?(++c,n==="\r"&&a[l]==="\n"&&++l,h=l,e+="\n"):e+=n}return s||Lt
-(),u||x.curlyStack.pop(),{type:t.Template,value:{cooked:e,raw:a.slice(r+1,l-i)},
-head:u,tail:f,lineNumber:c,lineStart:h,start:r,end:l}}function ot(e,t){var n="\uffff"
-,r=e;t.indexOf("u")>=0&&(r=r.replace(/\\u\{([0-9a-fA-F]+)\}|\\u([a-fA-F0-9]{4})/g
-,function(e,t,r){var i=parseInt(t||r,16);return i>1114111&&Lt(null,o.InvalidRegExp
-),i<=65535?String.fromCharCode(i):n}).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g,
-n));try{RegExp(r)}catch(i){Lt(null,o.InvalidRegExp)}try{return new RegExp(e,t)}catch(
-s){return null}}function ut(){var e,t,n,r,i;e=a[l],L(e==="/","Regular expression literal must start with a slash"
-),t=a[l++],n=!1,r=!1;while(l<E){e=a[l++],t+=e;if(e==="\\")e=a[l++],P(e.charCodeAt
-(0))&&Lt(null,o.UnterminatedRegExp),t+=e;else if(P(e.charCodeAt(0)))Lt(null,o.UnterminatedRegExp
-);else if(n)e==="]"&&(n=!1);else{if(e==="/"){r=!0;break}e==="["&&(n=!0)}}return r||
-Lt(null,o.UnterminatedRegExp),i=t.substr(1,t.length-2),{value:i,literal:t}}function at
-(){var e,t,n,r;t="",n="";while(l<E){e=a[l];if(!j(e.charCodeAt(0)))break;++l;if(e==="\\"&&
-l<E){e=a[l];if(e==="u"){++l,r=l,e=V("u");if(e){n+=e;for(t+="\\u";r<l;++r)t+=a[r]
-}else l=r,n+="u",t+="\\u";At()}else t+="\\",At()}else n+=e,t+=e}return{value:n,literal
-:t}}function ft(){var e,n,r,i;return w=!0,S=null,X(),e=l,n=ut(),r=at(),i=ot(n.value
-,r.value),w=!1,T.tokenize?{type:t.RegularExpression,value:i,regex:{pattern:n.value
-,flags:r.value},lineNumber:c,lineStart:h,start:e,end:l}:{literal:n.literal+r.literal
-,value:i,regex:{pattern:n.value,flags:r.value},start:e,end:l}}function lt(){var e
-,t,n,r;return X(),e=l,t={start:{line:c,column:l-h}},n=ft(),t.end={line:c,column:
-l-h},T.tokenize||(T.tokens.length>0&&(r=T.tokens[T.tokens.length-1],r.range[0]===
-e&&r.type==="Punctuator"&&(r.value==="/"||r.value==="/=")&&T.tokens.pop()),T.tokens
-.push({type:"RegularExpression",value:n.literal,regex:n.regex,range:[e,l],loc:t}
-)),n}function ct(e){return e.type===t.Identifier||e.type===t.Keyword||e.type===t
-.BooleanLiteral||e.type===t.NullLiteral}function ht(){function i(e){return e&&e.
-length>1&&e[0]>="a"&&e[0]<="z"}var e,t,n;t=T.tokenValues[T.tokenValues.length-1]
-,e=t!==null;switch(t){case"this":case"]":e=!1;break;case")":n=T.tokenValues[T.openParenToken-1
-],e=n==="if"||n==="while"||n==="for"||n==="with";break;case"}":e=!1,i(T.tokenValues
-[T.openCurlyToken-3])?(n=T.tokenValues[T.openCurlyToken-4],e=n?r.indexOf(n)<0:!1
-):i(T.tokenValues[T.openCurlyToken-4])&&(n=T.tokenValues[T.openCurlyToken-5],e=n?
-r.indexOf(n)<0:!0)}return e?lt():Y()}function pt(){var e,n;if(l>=E)return{type:t
-.EOF,lineNumber:c,lineStart:h,start:l,end:l};e=a.charCodeAt(l);if(B(e))return n=
-G(),f&&I(n.value)&&(n.type=t.Keyword),n;if(e===40||e===41||e===59)return Y();if(
-e===39||e===34)return it();if(e===46)return A(a.charCodeAt(l+1))?rt():Y();if(A(e
-))return rt();if(T.tokenize&&e===47)return ht();if(e===96||e===125&&x.curlyStack
-[x.curlyStack.length-1]==="${")return st();if(e>=55296&&e<57343){e=J(l);if(B(e))
-return G()}return Y()}function dt(){var e,r,i,s;return e={start:{line:c,column:l-
-h}},r=pt(),e.end={line:c,column:l-h},r.type!==t.EOF&&(i=a.slice(r.start,r.end),s=
-{type:n[r.type],value:i,range:[r.start,r.end],loc:e},r.regex&&(s.regex={pattern:
-r.regex.pattern,flags:r.regex.flags}),T.tokenValues&&T.tokenValues.push(s.type==="Punctuator"||
-s.type==="Keyword"?s.value:null),T.tokenize&&(T.range||delete s.range,T.loc||delete
-s.loc,T.delegate&&(s=T.delegate(s))),T.tokens.push(s)),r}function vt(){var e;return w=!0
-,d=l,v=c,m=h,X(),e=S,g=l,y=c,b=h,S=typeof T.tokens!="undefined"?dt():pt(),w=!1,e
-}function mt(){w=!0,X(),d=l,v=c,m=h,g=l,y=c,b=h,S=typeof T.tokens!="undefined"?dt
-():pt(),w=!1}function gt(){this.line=y,this.column=g-b}function yt(){this.start=new
-gt,this.end=null}function bt(e){this.start={line:e.lineNumber,column:e.start-e.lineStart
-},this.end=null}function wt(){T.range&&(this.range=[g,0]),T.loc&&(this.loc=new yt
-)}function Et(e){T.range&&(this.range=[e.start,0]),T.loc&&(this.loc=new bt(e))}function St
-(e){var t,n;for(t=0;t<T.errors.length;t++){n=T.errors[t];if(n.index===e.index&&n
-.message===e.message)return}T.errors.push(e)}function xt(e,t){var n=new Error(e)
-;try{throw n}catch(r){Object.create&&Object.defineProperty&&(n=Object.create(r),
-Object.defineProperty(n,"column",{value:t}))}finally{return n}}function Tt(e,t,n
-){var r,i,s;return r="Line "+e+": "+n,i=t-(w?h:m)+1,s=xt(r,i),s.lineNumber=e,s.description=
-n,s.index=t,s}function Nt(e){var t,n;throw t=Array.prototype.slice.call(arguments
-,1),n=e.replace(/%(\d)/g,function(e,n){return L(n<t.length,"Message reference must be in range"
-),t[n]}),Tt(v,d,n)}function Ct(e){var t,n,r;t=Array.prototype.slice.call(arguments
-,1),n=e.replace(/%(\d)/g,function(e,n){return L(n<t.length,"Message reference must be in range"
-),t[n]}),r=Tt(c,d,n);if(!T.errors)throw r;St(r)}function kt(e,n){var r,i=n||o.UnexpectedToken
-;return e?(n||(i=e.type===t.EOF?o.UnexpectedEOS:e.type===t.Identifier?o.UnexpectedIdentifier
-:e.type===t.NumericLiteral?o.UnexpectedNumber:e.type===t.StringLiteral?o.UnexpectedString
-:e.type===t.Template?o.UnexpectedTemplate:o.UnexpectedToken,e.type===t.Keyword&&
-(F(e.value)?i=o.UnexpectedReserved:f&&I(e.value)&&(i=o.StrictReservedWord))),r=e
-.type===t.Template?e.value.raw:e.value):r="ILLEGAL",i=i.replace("%0",r),e&&typeof
-e.lineNumber=="number"?Tt(e.lineNumber,e.start,i):Tt(w?c:v,w?l:d,i)}function Lt(
-e,t){throw kt(e,t)}function At(e,t){var n=kt(e,t);if(!T.errors)throw n;St(n)}function Ot
-(e){var n=vt();(n.type!==t.Punctuator||n.value!==e)&&Lt(n)}function Mt(){var e;T
-.errors?(e=S,e.type===t.Punctuator&&e.value===","?vt():e.type===t.Punctuator&&e.
-value===";"?(vt(),At(e)):At(e,o.UnexpectedToken)):Ot(",")}function _t(e){var n=vt
-();(n.type!==t.Keyword||n.value!==e)&&Lt(n)}function Dt(e){return S.type===t.Punctuator&&
-S.value===e}function Pt(e){return S.type===t.Keyword&&S.value===e}function Ht(e)
-{return S.type===t.Identifier&&S.value===e}function Bt(){var e;return S.type!==t
-.Punctuator?!1:(e=S.value,e==="="||e==="*="||e==="/="||e==="%="||e==="+="||e==="-="||
-e==="<<="||e===">>="||e===">>>="||e==="&="||e==="^="||e==="|=")}function jt(){if(
-a.charCodeAt(g)===59||Dt(";")){vt();return}if(p)return;d=g,v=y,m=b,S.type!==t.EOF&&!
-Dt("}")&&Lt(S)}function Ft(e){var t=N,n=C,r=k,i;return N=!0,C=!0,k=null,i=e(),k!==
-null&&Lt(k),N=t,C=n,k=r,i}function It(e){var t=N,n=C,r=k,i;return N=!0,C=!0,k=null
-,i=e(),N=N&&t,C=C&&n,k=r||k,i}function qt(e,t){var n=new wt,r=[],i,s;Ot("[");while(!
-Dt("]"))if(Dt(","))vt(),r.push(null);else{if(Dt("...")){s=new wt,vt(),e.push(S),
-i=kn(t),r.push(s.finishRestElement(i));break}r.push(Wt(e,t)),Dt("]")||Ot(",")}return Ot
-("]"),n.finishArrayPattern(r)}function Rt(e,n){var r=new wt,i,s,o=Dt("["),u;if(S
-.type===t.Identifier){s=S,i=kn();if(Dt("="))return e.push(s),vt(),u=Sn(),r.finishProperty
-("init",i,!1,(new Et(s)).finishAssignmentPattern(i,u),!1,!0);if(!Dt(":"))return e
-.push(s),r.finishProperty("init",i,!1,i,!1,!0)}else i=Jt();return Ot(":"),u=Wt(e
-,n),r.finishProperty("init",i,o,u,!1,!1)}function Ut(e,t){var n=new wt,r=[];Ot("{"
-);while(!Dt("}"))r.push(Rt(e,t)),Dt("}")||Ot(",");return vt(),n.finishObjectPattern
-(r)}function zt(e,t){return Dt("[")?qt(e,t):Dt("{")?Ut(e,t):(Pt("let")&&(t==="const"||
-t==="let")&&At(S,o.UnexpectedToken),e.push(S),kn(t))}function Wt(e,t){var n=S,r,
-i,s;return r=zt(e,t),Dt("=")&&(vt(),i=x.allowYield,x.allowYield=!0,s=Ft(Sn),x.allowYield=
-i,r=(new Et(n)).finishAssignmentPattern(r,s)),r}function Xt(){var e=[],t=new wt,
-n;Ot("[");while(!Dt("]"))Dt(",")?(vt(),e.push(null)):Dt("...")?(n=new wt,vt(),n.
-finishSpreadElement(It(Sn)),Dt("]")||(C=N=!1,Ot(",")),e.push(n)):(e.push(It(Sn))
-,Dt("]")||Ot(","));return vt(),t.finishArrayExpression(e)}function Vt(e,t,n){var r
-,i;return C=N=!1,r=f,i=Ft(tr),f&&t.firstRestricted&&At(t.firstRestricted,t.message
-),f&&t.stricted&&At(t.stricted,t.message),f=r,e.finishFunctionExpression(null,t.
-params,t.defaults,i,n)}function $t(){var e,t,n=new wt,r=x.allowYield;return x.allowYield=!1
-,e=ir(),x.allowYield=r,x.allowYield=!1,t=Vt(n,e,!1),x.allowYield=r,t}function Jt
-(){var e,n=new wt,r;e=vt();switch(e.type){case t.StringLiteral:case t.NumericLiteral
-:return f&&e.octal&&At(e,o.StrictOctalLiteral),n.finishLiteral(e);case t.Identifier
-:case t.BooleanLiteral:case t.NullLiteral:case t.Keyword:return n.finishIdentifier
-(e.value);case t.Punctuator:if(e.value==="[")return r=Ft(Sn),Ot("]"),r}Lt(e)}function Kt
-(){switch(S.type){case t.Identifier:case t.StringLiteral:case t.BooleanLiteral:case t
-.NullLiteral:case t.NumericLiteral:case t.Keyword:return!0;case t.Punctuator:return S
-.value==="["}return!1}function Qt(e,n,r,i){var s,o,u,a,f=x.allowYield;if(e.type===
-t.Identifier){if(e.value==="get"&&Kt())return r=Dt("["),n=Jt(),u=new wt,Ot("("),
-Ot(")"),x.allowYield=!1,s=Vt(u,{params:[],defaults:[],stricted:null,firstRestricted
-:null,message:null},!1),x.allowYield=f,i.finishProperty("get",n,r,s,!1,!1);if(e.
-value==="set"&&Kt())return r=Dt("["),n=Jt(),u=new wt,Ot("("),o={params:[],defaultCount
-:0,defaults:[],firstRestricted:null,paramSet:{}},Dt(")")?At(S):(x.allowYield=!1,
-rr(o),x.allowYield=f,o.defaultCount===0&&(o.defaults=[])),Ot(")"),x.allowYield=!1
-,s=Vt(u,o,!1),x.allowYield=f,i.finishProperty("set",n,r,s,!1,!1)}else if(e.type===
-t.Punctuator&&e.value==="*"&&Kt())return r=Dt("["),n=Jt(),u=new wt,x.allowYield=!0
-,a=ir(),x.allowYield=f,x.allowYield=!1,s=Vt(u,a,!0),x.allowYield=f,i.finishProperty
-("init",n,r,s,!0,!1);return n&&Dt("(")?(s=$t(),i.finishProperty("init",n,r,s,!0,!1
-)):null}function Gt(e){var n=S,r=new wt,s,u,a,f,l;s=Dt("["),Dt("*")?vt():u=Jt(),
-a=Qt(n,u,s,r);if(a)return a;u||Lt(S),s||(f=u.type===i.Identifier&&u.name==="__proto__"||
-u.type===i.Literal&&u.value==="__proto__",e.value&&f&&Ct(o.DuplicateProtoProperty
-),e.value|=f);if(Dt(":"))return vt(),l=It(Sn),r.finishProperty("init",u,s,l,!1,!1
-);if(n.type===t.Identifier)return Dt("=")?(k=S,vt(),l=Ft(Sn),r.finishProperty("init"
-,u,s,(new Et(n)).finishAssignmentPattern(u,l),!1,!0)):r.finishProperty("init",u,
-s,u,!1,!0);Lt(S)}function Yt(){var e=[],t={value:!1},n=new wt;Ot("{");while(!Dt("}"
-))e.push(Gt(t)),Dt("}")||Mt();return Ot("}"),n.finishObjectExpression(e)}function Zt
-(e){var t;switch(e.type){case i.Identifier:case i.MemberExpression:case i.RestElement
-:case i.AssignmentPattern:break;case i.SpreadElement:e.type=i.RestElement,Zt(e.argument
-);break;case i.ArrayExpression:e.type=i.ArrayPattern;for(t=0;t<e.elements.length
-;t++)e.elements[t]!==null&&Zt(e.elements[t]);break;case i.ObjectExpression:e.type=
-i.ObjectPattern;for(t=0;t<e.properties.length;t++)Zt(e.properties[t].value);break;
-case i.AssignmentExpression:e.type=i.AssignmentPattern,Zt(e.left);break;default:
-}}function en(e){var n,r;return(S.type!==t.Template||e.head&&!S.head)&&Lt(),n=new
-wt,r=vt(),n.finishTemplateElement({raw:r.value.raw,cooked:r.value.cooked},r.tail
-)}function tn(){var e,t,n,r=new wt;e=en({head:!0}),t=[e],n=[];while(!e.tail)n.push
-(xn()),e=en({head:!1}),t.push(e);return r.finishTemplateLiteral(t,n)}function nn
-(){var e,t,n,r,o=[];Ot("(");if(Dt(")"))return vt(),Dt("=>")||Ot("=>"),{type:s.ArrowParameterPlaceHolder
-,params:[],rawParams:[]};n=S;if(Dt("..."))return e=jn(o),Ot(")"),Dt("=>")||Ot("=>"
-),{type:s.ArrowParameterPlaceHolder,params:[e]};N=!0,e=It(Sn);if(Dt(",")){C=!1,t=
-[e];while(g<E){if(!Dt(","))break;vt();if(Dt("...")){N||Lt(S),t.push(jn(o)),Ot(")"
-),Dt("=>")||Ot("=>"),N=!1;for(r=0;r<t.length;r++)Zt(t[r]);return{type:s.ArrowParameterPlaceHolder
-,params:t}}t.push(It(Sn))}e=(new Et(n)).finishSequenceExpression(t)}Ot(")");if(Dt
-("=>")){if(e.type===i.Identifier&&e.name==="yield")return{type:s.ArrowParameterPlaceHolder
-,params:[e]};N||Lt(S);if(e.type===i.SequenceExpression)for(r=0;r<e.expressions.length
-;r++)Zt(e.expressions[r]);else Zt(e);e={type:s.ArrowParameterPlaceHolder,params:
-e.type===i.SequenceExpression?e.expressions:[e]}}return N=!1,e}function rn(){var e
-,n,r,i;if(Dt("("))return N=!1,It(nn);if(Dt("["))return It(Xt);if(Dt("{"))return It
-(Yt);e=S.type,i=new wt;if(e===t.Identifier)x.sourceType==="module"&&S.value==="await"&&
-At(S),r=i.finishIdentifier(vt().value);else if(e===t.StringLiteral||e===t.NumericLiteral
-)C=N=!1,f&&S.octal&&At(S,o.StrictOctalLiteral),r=i.finishLiteral(vt());else if(e===
-t.Keyword){if(!f&&x.allowYield&&Pt("yield"))return on();if(!f&&Pt("let"))return i
-.finishIdentifier(vt().value);C=N=!1;if(Pt("function"))return or();if(Pt("this")
-)return vt(),i.finishThisExpression();if(Pt("class"))return fr();Lt(vt())}else e===
-t.BooleanLiteral?(C=N=!1,n=vt(),n.value=n.value==="true",r=i.finishLiteral(n)):e===
-t.NullLiteral?(C=N=!1,n=vt(),n.value=null,r=i.finishLiteral(n)):Dt("/")||Dt("/="
-)?(C=N=!1,l=g,typeof T.tokens!="undefined"?n=lt():n=ft(),vt(),r=i.finishLiteral(
-n)):e===t.Template?r=tn():Lt(vt());return r}function sn(){var e=[],t;Ot("(");if(!
-Dt(")"))while(g<E){Dt("...")?(t=new wt,vt(),t.finishSpreadElement(Ft(Sn))):t=Ft(
-Sn),e.push(t);if(Dt(")"))break;Mt()}return Ot(")"),e}function on(){var e,t=new wt
-;return e=vt(),ct(e)||Lt(e),t.finishIdentifier(e.value)}function un(){return Ot("."
-),on()}function an(){var e;return Ot("["),e=Ft(xn),Ot("]"),e}function fn(){var e
-,n,r=new wt;_t("new");if(Dt(".")){vt();if(S.type===t.Identifier&&S.value==="target"&&
-x.inFunctionBody)return vt(),r.finishMetaProperty("new","target");Lt(S)}return e=
-Ft(cn),n=Dt("(")?sn():[],C=N=!1,r.finishNewExpression(e,n)}function ln(){var e,n
-,r,i,s,o=x.allowIn;s=S,x.allowIn=!0,Pt("super")&&x.inFunctionBody?(n=new wt,vt()
-,n=n.finishSuper(),!Dt("(")&&!Dt(".")&&!Dt("[")&&Lt(S)):n=It(Pt("new")?fn:rn);for(
-;;)if(Dt("."))N=!1,C=!0,i=un(),n=(new Et(s)).finishMemberExpression(".",n,i);else if(
-Dt("("))N=!1,C=!1,r=sn(),n=(new Et(s)).finishCallExpression(n,r);else if(Dt("[")
-)N=!1,C=!0,i=an(),n=(new Et(s)).finishMemberExpression("[",n,i);else{if(S.type!==
-t.Template||!S.head)break;e=tn(),n=(new Et(s)).finishTaggedTemplateExpression(n,
-e)}return x.allowIn=o,n}function cn(){var e,n,r,i;L(x.allowIn,"callee of new expression always allow in keyword."
-),i=S,Pt("super")&&x.inFunctionBody?(n=new wt,vt(),n=n.finishSuper(),!Dt("[")&&!
-Dt(".")&&Lt(S)):n=It(Pt("new")?fn:rn);for(;;)if(Dt("["))N=!1,C=!0,r=an(),n=(new
-Et(i)).finishMemberExpression("[",n,r);else if(Dt("."))N=!1,C=!0,r=un(),n=(new Et
-(i)).finishMemberExpression(".",n,r);else{if(S.type!==t.Template||!S.head)break;
-e=tn(),n=(new Et(i)).finishTaggedTemplateExpression(n,e)}return n}function hn(){
-var e,n,r=S;return e=It(ln),!p&&S.type===t.Punctuator&&(Dt("++")||Dt("--"))&&(f&&
-e.type===i.Identifier&&q(e.name)&&Ct(o.StrictLHSPostfix),C||Ct(o.InvalidLHSInAssignment
-),C=N=!1,n=vt(),e=(new Et(r)).finishPostfixExpression(n.value,e)),e}function pn(
-){var e,n,r;return S.type!==t.Punctuator&&S.type!==t.Keyword?n=hn():Dt("++")||Dt
-("--")?(r=S,e=vt(),n=It(pn),f&&n.type===i.Identifier&&q(n.name)&&Ct(o.StrictLHSPrefix
-),C||Ct(o.InvalidLHSInAssignment),n=(new Et(r)).finishUnaryExpression(e.value,n)
-,C=N=!1):Dt("+")||Dt("-")||Dt("~")||Dt("!")?(r=S,e=vt(),n=It(pn),n=(new Et(r)).finishUnaryExpression
-(e.value,n),C=N=!1):Pt("delete")||Pt("void")||Pt("typeof")?(r=S,e=vt(),n=It(pn),
-n=(new Et(r)).finishUnaryExpression(e.value,n),f&&n.operator==="delete"&&n.argument
-.type===i.Identifier&&Ct(o.StrictDelete),C=N=!1):n=hn(),n}function dn(e,n){var r=0
-;if(e.type!==t.Punctuator&&e.type!==t.Keyword)return 0;switch(e.value){case"||":
-r=1;break;case"&&":r=2;break;case"|":r=3;break;case"^":r=4;break;case"&":r=5;break;
-case"==":case"!=":case"===":case"!==":r=6;break;case"<":case">":case"<=":case">="
-:case"instanceof":r=7;break;case"in":r=n?7:0;break;case"<<":case">>":case">>>":r=8
-;break;case"+":case"-":r=9;break;case"*":case"/":case"%":r=11;break;default:}return r
-}function vn(){var e,t,n,r,i,s,o,u,a,f;e=S,a=It(pn),r=S,i=dn(r,x.allowIn);if(i===0
-)return a;C=N=!1,r.prec=i,vt(),t=[e,S],o=Ft(pn),s=[a,r,o];while((i=dn(S,x.allowIn
-))>0){while(s.length>2&&i<=s[s.length-2].prec)o=s.pop(),u=s.pop().value,a=s.pop(
-),t.pop(),n=(new Et(t[t.length-1])).finishBinaryExpression(u,a,o),s.push(n);r=vt
-(),r.prec=i,s.push(r),t.push(S),n=Ft(pn),s.push(n)}f=s.length-1,n=s[f],t.pop();while(
-f>1)n=(new Et(t.pop())).finishBinaryExpression(s[f-1].value,s[f-2],n),f-=2;return n
-}function mn(){var e,t,n,r,i;return i=S,e=It(vn),Dt("?")&&(vt(),t=x.allowIn,x.allowIn=!0
-,n=Ft(Sn),x.allowIn=t,Ot(":"),r=Ft(Sn),e=(new Et(i)).finishConditionalExpression
-(e,n,r),C=N=!1),e}function gn(){return Dt("{")?tr():Ft(Sn)}function yn(e,t){var n
-;switch(t.type){case i.Identifier:nr(e,t,t.name);break;case i.RestElement:yn(e,t
-.argument);break;case i.AssignmentPattern:yn(e,t.left);break;case i.ArrayPattern
-:for(n=0;n<t.elements.length;n++)t.elements[n]!==null&&yn(e,t.elements[n]);break;
-case i.YieldExpression:break;default:L(t.type===i.ObjectPattern,"Invalid type");
-for(n=0;n<t.properties.length;n++)yn(e,t.properties[n].value)}}function bn(e){var t
-,n,r,u,a,l,c,h;a=[],l=0,u=[e];switch(e.type){case i.Identifier:break;case s.ArrowParameterPlaceHolder
-:u=e.params;break;default:return null}c={paramSet:{}};for(t=0,n=u.length;t<n;t+=1
-){r=u[t];switch(r.type){case i.AssignmentPattern:u[t]=r.left,r.right.type===i.YieldExpression&&
-(r.right.argument&&Lt(S),r.right.type=i.Identifier,r.right.name="yield",delete r
-.right.argument,delete r.right.delegate),a.push(r.right),++l,yn(c,r.left);break;
-default:yn(c,r),u[t]=r,a.push(null)}}if(f||!x.allowYield)for(t=0,n=u.length;t<n;
-t+=1)r=u[t],r.type===i.YieldExpression&&Lt(S);return c.message===o.StrictParamDupe&&
-(h=f?c.stricted:c.firstRestricted,Lt(h,c.message)),l===0&&(a=[]),{params:u,defaults
-:a,stricted:c.stricted,firstRestricted:c.firstRestricted,message:c.message}}function wn
-(e,t){var n,r,s;return p&&At(S),Ot("=>"),n=f,r=x.allowYield,x.allowYield=!0,s=gn
-(),f&&e.firstRestricted&&Lt(e.firstRestricted,e.message),f&&e.stricted&&At(e.stricted
-,e.message),f=n,x.allowYield=r,t.finishArrowFunctionExpression(e.params,e.defaults
-,s,s.type!==i.BlockStatement)}function En(){var e,n,r,i;return e=null,n=new wt,r=!1
-,_t("yield"),p||(i=x.allowYield,x.allowYield=!1,r=Dt("*"),r?(vt(),e=Sn()):!Dt(";"
-)&&!Dt("}")&&!Dt(")")&&S.type!==t.EOF&&(e=Sn()),x.allowYield=i),n.finishYieldExpression
-(e,r)}function Sn(){var e,t,n,r,u;return u=S,e=S,!x.allowYield&&Pt("yield")?En()
-:(t=mn(),t.type===s.ArrowParameterPlaceHolder||Dt("=>")?(C=N=!1,r=bn(t),r?(k=null
-,wn(r,new Et(u))):t):(Bt()&&(C||Ct(o.InvalidLHSInAssignment),f&&t.type===i.Identifier&&
-(q(t.name)&&At(e,o.StrictLHSAssignment),I(t.name)&&At(e,o.StrictReservedWord)),Dt
-("=")?Zt(t):C=N=!1,e=vt(),n=Ft(Sn),t=(new Et(u)).finishAssignmentExpression(e.value
-,t,n),k=null),t))}function xn(){var e,t=S,n;e=Ft(Sn);if(Dt(",")){n=[e];while(g<E
-){if(!Dt(","))break;vt(),n.push(Ft(Sn))}e=(new Et(t)).finishSequenceExpression(n
-)}return e}function Tn(){if(S.type===t.Keyword)switch(S.value){case"export":return x
-.sourceType!=="module"&&At(S,o.IllegalExportDeclaration),vr();case"import":return x
-.sourceType!=="module"&&At(S,o.IllegalImportDeclaration),wr();case"const":return Bn
-({inFor:!1});case"function":return sr(new wt);case"class":return ar()}return Pt("let"
-)&&Hn()?Bn({inFor:!1}):er()}function Nn(){var e=[];while(g<E){if(Dt("}"))break;e
-.push(Tn())}return e}function Cn(){var e,t=new wt;return Ot("{"),e=Nn(),Ot("}"),
-t.finishBlockStatement(e)}function kn(e){var n,r=new wt;return n=vt(),n.type===t
-.Keyword&&n.value==="yield"?(f&&At(n,o.StrictReservedWord),x.allowYield||Lt(n)):
-n.type!==t.Identifier?f&&n.type===t.Keyword&&I(n.value)?At(n,o.StrictReservedWord
-):(f||n.value!=="let"||e!=="var")&&Lt(n):x.sourceType==="module"&&n.type===t.Identifier&&
-n.value==="await"&&At(n),r.finishIdentifier(n.value)}function Ln(e){var t=null,n
-,r=new wt,s=[];return n=zt(s,"var"),f&&q(n.name)&&Ct(o.StrictVarName),Dt("=")?(vt
-(),t=Ft(Sn)):n.type!==i.Identifier&&!e.inFor&&Ot("="),r.finishVariableDeclarator
-(n,t)}function An(e){var t,n;t={inFor:e.inFor},n=[Ln(t)];while(Dt(","))vt(),n.push
-(Ln(t));return n}function On(e){var t;return _t("var"),t=An({inFor:!1}),jt(),e.finishVariableDeclaration
-(t)}function Mn(e,t){var n=null,r,s=new wt,u=[];r=zt(u,e),f&&r.type===i.Identifier&&
-q(r.name)&&Ct(o.StrictVarName);if(e==="const")!Pt("in")&&!Ht("of")&&(Ot("="),n=Ft
-(Sn));else if(!t.inFor&&r.type!==i.Identifier||Dt("="))Ot("="),n=Ft(Sn);return s
-.finishVariableDeclarator(r,n)}function _n(e,t){var n=[Mn(e,t)];while(Dt(","))vt
-(),n.push(Mn(e,t));return n}function Dn(){return{index:l,lineNumber:c,lineStart:
-h,hasLineTerminator:p,lastIndex:d,lastLineNumber:v,lastLineStart:m,startIndex:g,
-startLineNumber:y,startLineStart:b,lookahead:S,tokenCount:T.tokens?T.tokens.length
-:0}}function Pn(e){l=e.index,c=e.lineNumber,h=e.lineStart,p=e.hasLineTerminator,
-d=e.lastIndex,v=e.lastLineNumber,m=e.lastLineStart,g=e.startIndex,y=e.startLineNumber
-,b=e.startLineStart,S=e.lookahead,T.tokens&&T.tokens.splice(e.tokenCount,T.tokens
-.length)}function Hn(){var e,n;return n=Dn(),vt(),e=S.type===t.Identifier||Dt("["
-)||Dt("{")||Pt("let")||Pt("yield"),Pn(n),e}function Bn(e){var t,n,r=new wt;return t=
-vt().value,L(t==="let"||t==="const","Lexical declaration must be either let or const"
-),n=_n(t,e),jt(),r.finishLexicalDeclaration(n,t)}function jn(e){var t,n=new wt;return vt
-(),Dt("{")&&Nt(o.ObjectPatternAsRestParameter),e.push(S),t=kn(),Dt("=")&&Nt(o.DefaultRestParameter
-),Dt(")")||Nt(o.ParameterAfterRestParameter),n.finishRestElement(t)}function Fn(
-e){return Ot(";"),e.finishEmptyStatement()}function In(e){var t=xn();return jt()
-,e.finishExpressionStatement(t)}function qn(e){var t,n,r;return _t("if"),Ot("(")
-,t=xn(),Ot(")"),n=er(),Pt("else")?(vt(),r=er()):r=null,e.finishIfStatement(t,n,r
-)}function Rn(e){var t,n,r;return _t("do"),r=x.inIteration,x.inIteration=!0,t=er
-(),x.inIteration=r,_t("while"),Ot("("),n=xn(),Ot(")"),Dt(";")&&vt(),e.finishDoWhileStatement
-(t,n)}function Un(e){var t,n,r;return _t("while"),Ot("("),t=xn(),Ot(")"),r=x.inIteration
-,x.inIteration=!0,n=er(),x.inIteration=r,e.finishWhileStatement(t,n)}function zn
-(e){var t,n,r,i,s,u,a,l,c,h,p,d,v=x.allowIn;t=s=u=null,n=!0,_t("for"),Ot("(");if(
-Dt(";"))vt();else if(Pt("var"))t=new wt,vt(),x.allowIn=!1,h=An({inFor:!0}),x.allowIn=
-v,h.length===1&&Pt("in")?(t=t.finishVariableDeclaration(h),vt(),a=t,l=xn(),t=null
-):h.length===1&&h[0].init===null&&Ht("of")?(t=t.finishVariableDeclaration(h),vt(
-),a=t,l=Sn(),t=null,n=!1):(t=t.finishVariableDeclaration(h),Ot(";"));else if(Pt("const"
-)||Pt("let"))t=new wt,c=vt().value,!f&&S.value==="in"?(t=t.finishIdentifier(c),vt
-(),a=t,l=xn(),t=null):(x.allowIn=!1,h=_n(c,{inFor:!0}),x.allowIn=v,h.length===1&&
-h[0].init===null&&Pt("in")?(t=t.finishLexicalDeclaration(h,c),vt(),a=t,l=xn(),t=
-null):h.length===1&&h[0].init===null&&Ht("of")?(t=t.finishLexicalDeclaration(h,c
-),vt(),a=t,l=Sn(),t=null,n=!1):(jt(),t=t.finishLexicalDeclaration(h,c)));else{i=
-S,x.allowIn=!1,t=It(Sn),x.allowIn=v;if(Pt("in"))C||Ct(o.InvalidLHSInForIn),vt(),
-Zt(t),a=t,l=xn(),t=null;else if(Ht("of"))C||Ct(o.InvalidLHSInForLoop),vt(),Zt(t)
-,a=t,l=Sn(),t=null,n=!1;else{if(Dt(",")){r=[t];while(Dt(","))vt(),r.push(Ft(Sn))
-;t=(new Et(i)).finishSequenceExpression(r)}Ot(";")}}return typeof a=="undefined"&&
-(Dt(";")||(s=xn()),Ot(";"),Dt(")")||(u=xn())),Ot(")"),d=x.inIteration,x.inIteration=!0
-,p=Ft(er),x.inIteration=d,typeof a=="undefined"?e.finishForStatement(t,s,u,p):n?
-e.finishForInStatement(a,l,p):e.finishForOfStatement(a,l,p)}function Wn(e){var n=
-null,r;return _t("continue"),a.charCodeAt(g)===59?(vt(),x.inIteration||Nt(o.IllegalContinue
-),e.finishContinueStatement(null)):p?(x.inIteration||Nt(o.IllegalContinue),e.finishContinueStatement
-(null)):(S.type===t.Identifier&&(n=kn(),r="$"+n.name,Object.prototype.hasOwnProperty
-.call(x.labelSet,r)||Nt(o.UnknownLabel,n.name)),jt(),n===null&&!x.inIteration&&Nt
-(o.IllegalContinue),e.finishContinueStatement(n))}function Xn(e){var n=null,r;return _t
-("break"),a.charCodeAt(d)===59?(vt(),!x.inIteration&&!x.inSwitch&&Nt(o.IllegalBreak
-),e.finishBreakStatement(null)):(p?!x.inIteration&&!x.inSwitch&&Nt(o.IllegalBreak
-):S.type===t.Identifier&&(n=kn(),r="$"+n.name,Object.prototype.hasOwnProperty.call
-(x.labelSet,r)||Nt(o.UnknownLabel,n.name)),jt(),n===null&&!x.inIteration&&!x.inSwitch&&
-Nt(o.IllegalBreak),e.finishBreakStatement(n))}function Vn(e){var n=null;return _t
-("return"),x.inFunctionBody||Ct(o.IllegalReturn),a.charCodeAt(d)===32&&B(a.charCodeAt
-(d+1))?(n=xn(),jt(),e.finishReturnStatement(n)):p?e.finishReturnStatement(null):
-(Dt(";")||!Dt("}")&&S.type!==t.EOF&&(n=xn()),jt(),e.finishReturnStatement(n))}function $n
-(e){var t,n;return f&&Ct(o.StrictModeWith),_t("with"),Ot("("),t=xn(),Ot(")"),n=er
-(),e.finishWithStatement(t,n)}function Jn(){var e,t=[],n,r=new wt;Pt("default")?
-(vt(),e=null):(_t("case"),e=xn()),Ot(":");while(g<E){if(Dt("}")||Pt("default")||
-Pt("case"))break;n=Tn(),t.push(n)}return r.finishSwitchCase(e,t)}function Kn(e){
-var t,n,r,i,s;_t("switch"),Ot("("),t=xn(),Ot(")"),Ot("{"),n=[];if(Dt("}"))return vt
-(),e.finishSwitchStatement(t,n);i=x.inSwitch,x.inSwitch=!0,s=!1;while(g<E){if(Dt
-("}"))break;r=Jn(),r.test===null&&(s&&Nt(o.MultipleDefaultsInSwitch),s=!0),n.push
-(r)}return x.inSwitch=i,Ot("}"),e.finishSwitchStatement(t,n)}function Qn(e){var t
-;return _t("throw"),p&&Nt(o.NewlineAfterThrow),t=xn(),jt(),e.finishThrowStatement
-(t)}function Gn(){var e,t=[],n={},r,i,s,u=new wt;_t("catch"),Ot("("),Dt(")")&&Lt
-(S),e=zt(t);for(i=0;i<t.length;i++)r="$"+t[i].value,Object.prototype.hasOwnProperty
-.call(n,r)&&Ct(o.DuplicateBinding,t[i].value),n[r]=!0;return f&&q(e.name)&&Ct(o.
-StrictCatchVariable),Ot(")"),s=Cn(),u.finishCatchClause(e,s)}function Yn(e){var t
-,n=null,r=null;return _t("try"),t=Cn(),Pt("catch")&&(n=Gn()),Pt("finally")&&(vt(
-),r=Cn()),!n&&!r&&Nt(o.NoCatchOrFinally),e.finishTryStatement(t,n,r)}function Zn
-(e){return _t("debugger"),jt(),e.finishDebuggerStatement()}function er(){var e=S
-.type,n,r,s,u;e===t.EOF&&Lt(S);if(e===t.Punctuator&&S.value==="{")return Cn();C=
-N=!0,u=new wt;if(e===t.Punctuator)switch(S.value){case";":return Fn(u);case"(":return In
-(u);default:}else if(e===t.Keyword)switch(S.value){case"break":return Xn(u);case"continue"
-:return Wn(u);case"debugger":return Zn(u);case"do":return Rn(u);case"for":return zn
-(u);case"function":return sr(u);case"if":return qn(u);case"return":return Vn(u);
-case"switch":return Kn(u);case"throw":return Qn(u);case"try":return Yn(u);case"var"
-:return On(u);case"while":return Un(u);case"with":return $n(u);default:}return n=
-xn(),n.type===i.Identifier&&Dt(":")?(vt(),s="$"+n.name,Object.prototype.hasOwnProperty
-.call(x.labelSet,s)&&Nt(o.Redeclaration,"Label",n.name),x.labelSet[s]=!0,r=er(),delete
-x.labelSet[s],u.finishLabeledStatement(n,r)):(jt(),u.finishExpressionStatement(n
-))}function tr(){var e,n=[],r,s,u,l,c,h,p,d=new wt;Ot("{");while(g<E){if(S.type!==
-t.StringLiteral)break;r=S,e=Tn(),n.push(e);if(e.expression.type!==i.Literal)break;
-s=a.slice(r.start+1,r.end-1),s==="use strict"?(f=!0,u&&At(u,o.StrictOctalLiteral
-)):!u&&r.octal&&(u=r)}l=x.labelSet,c=x.inIteration,h=x.inSwitch,p=x.inFunctionBody
-,x.labelSet={},x.inIteration=!1,x.inSwitch=!1,x.inFunctionBody=!0;while(g<E){if(
-Dt("}"))break;n.push(Tn())}return Ot("}"),x.labelSet=l,x.inIteration=c,x.inSwitch=
-h,x.inFunctionBody=p,d.finishBlockStatement(n)}function nr(e,t,n){var r="$"+n;f?
-(q(n)&&(e.stricted=t,e.message=o.StrictParamName),Object.prototype.hasOwnProperty
-.call(e.paramSet,r)&&(e.stricted=t,e.message=o.StrictParamDupe)):e.firstRestricted||
-(q(n)?(e.firstRestricted=t,e.message=o.StrictParamName):I(n)?(e.firstRestricted=
-t,e.message=o.StrictReservedWord):Object.prototype.hasOwnProperty.call(e.paramSet
-,r)&&(e.stricted=t,e.message=o.StrictParamDupe)),e.paramSet[r]=!0}function rr(e)
-{var t,n,r=[],s,o;t=S;if(t.value==="...")return n=jn(r),nr(e,n.argument,n.argument
-.name),e.params.push(n),e.defaults.push(null),!1;n=Wt(r);for(s=0;s<r.length;s++)
-nr(e,r[s],r[s].value);return n.type===i.AssignmentPattern&&(o=n.right,n=n.left,++
-e.defaultCount),e.params.push(n),e.defaults.push(o),!Dt(")")}function ir(e){var t
-;t={params:[],defaultCount:0,defaults:[],firstRestricted:e},Ot("(");if(!Dt(")"))
-{t.paramSet={};while(g<E){if(!rr(t))break;Ot(",")}}return Ot(")"),t.defaultCount===0&&
-(t.defaults=[]),{params:t.params,defaults:t.defaults,stricted:t.stricted,firstRestricted
-:t.firstRestricted,message:t.message}}function sr(e,t){var n=null,r=[],i=[],s,u,
-a,l,c,h,p,d,v;v=x.allowYield,_t("function"),d=Dt("*"),d&&vt();if(!t||!Dt("("))u=
-S,n=kn(),f?q(u.value)&&At(u,o.StrictFunctionName):q(u.value)?(c=u,h=o.StrictFunctionName
-):I(u.value)&&(c=u,h=o.StrictReservedWord);return x.allowYield=!d,l=ir(c),r=l.params
-,i=l.defaults,a=l.stricted,c=l.firstRestricted,l.message&&(h=l.message),p=f,s=tr
-(),f&&c&&Lt(c,h),f&&a&&At(a,h),f=p,x.allowYield=v,e.finishFunctionDeclaration(n,
-r,i,s,d)}function or(){var e,t=null,n,r,i,s,u=[],a=[],l,c,h=new wt,p,d;return d=
-x.allowYield,_t("function"),p=Dt("*"),p&&vt(),x.allowYield=!p,Dt("(")||(e=S,t=!f&&!
-p&&Pt("yield")?on():kn(),f?q(e.value)&&At(e,o.StrictFunctionName):q(e.value)?(r=
-e,i=o.StrictFunctionName):I(e.value)&&(r=e,i=o.StrictReservedWord)),s=ir(r),u=s.
-params,a=s.defaults,n=s.stricted,r=s.firstRestricted,s.message&&(i=s.message),c=
-f,l=tr(),f&&r&&Lt(r,i),f&&n&&At(n,i),f=c,x.allowYield=d,h.finishFunctionExpression
-(t,u,a,l,p)}function ur(){var e,t,n,r=!1,s,u,a,f;e=new wt,Ot("{"),s=[];while(!Dt
-("}"))Dt(";")?vt():(u=new wt,t=S,n=!1,a=Dt("["),Dt("*")?vt():(f=Jt(),f.name==="static"&&
-(Kt()||Dt("*"))&&(t=S,n=!0,a=Dt("["),Dt("*")?vt():f=Jt())),u=Qt(t,f,a,u),u?(u["static"
-]=n,u.kind==="init"&&(u.kind="method"),n?!u.computed&&(u.key.name||u.key.value.toString
-())==="prototype"&&Lt(t,o.StaticPrototype):!u.computed&&(u.key.name||u.key.value
-.toString())==="constructor"&&((u.kind!=="method"||!u.method||u.value.generator)&&
-Lt(t,o.ConstructorSpecialMethod),r?Lt(t,o.DuplicateConstructor):r=!0,u.kind="constructor"
-),u.type=i.MethodDefinition,delete u.method,delete u.shorthand,s.push(u)):Lt(S))
-;return vt(),e.finishClassBody(s)}function ar(e){var n=null,r=null,i=new wt,s,o=
-f;f=!0,_t("class");if(!e||S.type===t.Identifier)n=kn();return Pt("extends")&&(vt
-(),r=Ft(ln)),s=ur(),f=o,i.finishClassDeclaration(n,r,s)}function fr(){var e=null
-,n=null,r=new wt,i,s=f;return f=!0,_t("class"),S.type===t.Identifier&&(e=kn()),Pt
-("extends")&&(vt(),n=Ft(ln)),i=ur(),f=s,r.finishClassExpression(e,n,i)}function lr
-(){var e=new wt;return S.type!==t.StringLiteral&&Nt(o.InvalidModuleSpecifier),e.
-finishLiteral(vt())}function cr(){var e,t,n=new wt,r;return Pt("default")?(r=new
-wt,vt(),t=r.finishIdentifier("default")):t=kn(),Ht("as")&&(vt(),e=on()),n.finishExportSpecifier
-(t,e)}function hr(e){var n=null,r,i=null,s=[];if(S.type===t.Keyword)switch(S.value
-){case"let":case"const":return n=Bn({inFor:!1}),e.finishExportNamedDeclaration(n
-,s,null);case"var":case"class":case"function":return n=Tn(),e.finishExportNamedDeclaration
-(n,s,null)}Ot("{");while(!Dt("}")){r=r||Pt("default"),s.push(cr());if(!Dt("}")){
-Ot(",");if(Dt("}"))break}}return Ot("}"),Ht("from")?(vt(),i=lr(),jt()):r?Nt(S.value?
-o.UnexpectedToken:o.MissingFromClause,S.value):jt(),e.finishExportNamedDeclaration
-(n,s,i)}function pr(e){var t=null,n=null;return _t("default"),Pt("function")?(t=
-sr(new wt,!0),e.finishExportDefaultDeclaration(t)):Pt("class")?(t=ar(!0),e.finishExportDefaultDeclaration
-(t)):(Ht("from")&&Nt(o.UnexpectedToken,S.value),Dt("{")?n=Yt():Dt("[")?n=Xt():n=
-Sn(),jt(),e.finishExportDefaultDeclaration(n))}function dr(e){var t;return Ot("*"
-),Ht("from")||Nt(S.value?o.UnexpectedToken:o.MissingFromClause,S.value),vt(),t=lr
-(),jt(),e.finishExportAllDeclaration(t)}function vr(){var e=new wt;return x.inFunctionBody&&
-Nt(o.IllegalExportDeclaration),_t("export"),Pt("default")?pr(e):Dt("*")?dr(e):hr
-(e)}function mr(){var e,t,n=new wt;return t=on(),Ht("as")&&(vt(),e=kn()),n.finishImportSpecifier
-(e,t)}function gr(){var e=[];Ot("{");while(!Dt("}")){e.push(mr());if(!Dt("}")){Ot
-(",");if(Dt("}"))break}}return Ot("}"),e}function yr(){var e,t=new wt;return e=on
-(),t.finishImportDefaultSpecifier(e)}function br(){var e,t=new wt;return Ot("*")
-,Ht("as")||Nt(o.NoAsAfterImportNamespace),vt(),e=on(),t.finishImportNamespaceSpecifier
-(e)}function wr(){var e=[],n,r=new wt;return x.inFunctionBody&&Nt(o.IllegalImportDeclaration
-),_t("import"),S.type===t.StringLiteral?n=lr():(Dt("{")?e=e.concat(gr()):Dt("*")?
-e.push(br()):ct(S)&&!Pt("default")?(e.push(yr()),Dt(",")&&(vt(),Dt("*")?e.push(br
-()):Dt("{")?e=e.concat(gr()):Lt(S))):Lt(vt()),Ht("from")||Nt(S.value?o.UnexpectedToken
-:o.MissingFromClause,S.value),vt(),n=lr()),jt(),r.finishImportDeclaration(e,n)}function Er
-(){var e,n=[],r,s,u;while(g<E){r=S;if(r.type!==t.StringLiteral)break;e=Tn(),n.push
-(e);if(e.expression.type!==i.Literal)break;s=a.slice(r.start+1,r.end-1),s==="use strict"?
-(f=!0,u&&At(u,o.StrictOctalLiteral)):!u&&r.octal&&(u=r)}while(g<E){e=Tn();if(typeof
-e=="undefined")break;n.push(e)}return n}function Sr(){var e,t;return mt(),t=new
-wt,e=Er(),t.finishProgram(e,x.sourceType)}function xr(){var e,t,n,r=[];for(e=0;e<
-T.tokens.length;++e)t=T.tokens[e],n={type:t.type,value:t.value},t.regex&&(n.regex=
-{pattern:t.regex.pattern,flags:t.regex.flags}),T.range&&(n.range=t.range),T.loc&&
-(n.loc=t.loc),r.push(n);T.tokens=r}function Tr(e,n,r){var i,s;i=String,typeof e!="string"&&!
-(e instanceof String)&&(e=i(e)),a=e,l=0,c=a.length>0?1:0,h=0,g=l,y=c,b=h,E=a.length
-,S=null,x={allowIn:!0,allowYield:!0,labelSet:{},inFunctionBody:!1,inIteration:!1
-,inSwitch:!1,lastCommentStart:-1,curlyStack:[]},T={},n=n||{},n.tokens=!0,T.tokens=
-[],T.tokenValues=[],T.tokenize=!0,T.delegate=r,T.openParenToken=-1,T.openCurlyToken=-1
-,T.range=typeof n.range=="boolean"&&n.range,T.loc=typeof n.loc=="boolean"&&n.loc
-,typeof n.comment=="boolean"&&n.comment&&(T.comments=[]),typeof n.tolerant=="boolean"&&
-n.tolerant&&(T.errors=[]);try{mt();if(S.type===t.EOF)return T.tokens;vt();while(
-S.type!==t.EOF)try{vt()}catch(o){if(T.errors){St(o);break}throw o}s=T.tokens,typeof
-T.errors!="undefined"&&(s.errors=T.errors)}catch(u){throw u}finally{T={}}return s
-}function Nr(e,t){var n,r;r=String,typeof e!="string"&&!(e instanceof String)&&(
-e=r(e)),a=e,l=0,c=a.length>0?1:0,h=0,g=l,y=c,b=h,E=a.length,S=null,x={allowIn:!0
-,allowYield:!0,labelSet:{},inFunctionBody:!1,inIteration:!1,inSwitch:!1,lastCommentStart
-:-1,curlyStack:[],sourceType:"script"},f=!1,T={},typeof t!="undefined"&&(T.range=typeof
-t.range=="boolean"&&t.range,T.loc=typeof t.loc=="boolean"&&t.loc,T.attachComment=typeof
-t.attachComment=="boolean"&&t.attachComment,T.loc&&t.source!==null&&t.source!==undefined&&
-(T.source=r(t.source)),typeof t.tokens=="boolean"&&t.tokens&&(T.tokens=[]),typeof
-t.comment=="boolean"&&t.comment&&(T.comments=[]),typeof t.tolerant=="boolean"&&t
-.tolerant&&(T.errors=[]),T.attachComment&&(T.range=!0,T.comments=[],T.bottomRightStack=
-[],T.trailingComments=[],T.leadingComments=[]),t.sourceType==="module"&&(x.sourceType=
-t.sourceType,f=!0));try{n=Sr(),typeof T.comments!="undefined"&&(n.comments=T.comments
-),typeof T.tokens!="undefined"&&(xr(),n.tokens=T.tokens),typeof T.errors!="undefined"&&
-(n.errors=T.errors)}catch(i){throw i}finally{T={}}return n}var t,n,r,i,s,o,u,a,f
-,l,c,h,p,d,v,m,g,y,b,w,E,S,x,T,N,C,k;t={BooleanLiteral:1,EOF:2,Identifier:3,Keyword
-:4,NullLiteral:5,NumericLiteral:6,Punctuator:7,StringLiteral:8,RegularExpression
-:9,Template:10},n={},n[t.BooleanLiteral]="Boolean",n[t.EOF]="<end>",n[t.Identifier
-]="Identifier",n[t.Keyword]="Keyword",n[t.NullLiteral]="Null",n[t.NumericLiteral
-]="Numeric",n[t.Punctuator]="Punctuator",n[t.StringLiteral]="String",n[t.RegularExpression
-]="RegularExpression",n[t.Template]="Template",r=["(","{","[","in","typeof","instanceof"
-,"new","return","case","delete","throw","void","=","+=","-=","*=","/=","%=","<<="
-,">>=",">>>=","&=","|=","^=",",","+","-","*","/","%","++","--","<<",">>",">>>","&"
-,"|","^","!","~","&&","||","?",":","===","==",">=","<=","<",">","!=","!=="],i={AssignmentExpression
-:"AssignmentExpression",AssignmentPattern:"AssignmentPattern",ArrayExpression:"ArrayExpression"
-,ArrayPattern:"ArrayPattern",ArrowFunctionExpression:"ArrowFunctionExpression",BlockStatement
-:"BlockStatement",BinaryExpression:"BinaryExpression",BreakStatement:"BreakStatement"
-,CallExpression:"CallExpression",CatchClause:"CatchClause",ClassBody:"ClassBody"
-,ClassDeclaration:"ClassDeclaration",ClassExpression:"ClassExpression",ConditionalExpression
-:"ConditionalExpression",ContinueStatement:"ContinueStatement",DoWhileStatement:"DoWhileStatement"
-,DebuggerStatement:"DebuggerStatement",EmptyStatement:"EmptyStatement",ExportAllDeclaration
-:"ExportAllDeclaration",ExportDefaultDeclaration:"ExportDefaultDeclaration",ExportNamedDeclaration
-:"ExportNamedDeclaration",ExportSpecifier:"ExportSpecifier",ExpressionStatement:"ExpressionStatement"
-,ForStatement:"ForStatement",ForOfStatement:"ForOfStatement",ForInStatement:"ForInStatement"
-,FunctionDeclaration:"FunctionDeclaration",FunctionExpression:"FunctionExpression"
-,Identifier:"Identifier",IfStatement:"IfStatement",ImportDeclaration:"ImportDeclaration"
-,ImportDefaultSpecifier:"ImportDefaultSpecifier",ImportNamespaceSpecifier:"ImportNamespaceSpecifier"
-,ImportSpecifier:"ImportSpecifier",Literal:"Literal",LabeledStatement:"LabeledStatement"
-,LogicalExpression:"LogicalExpression",MemberExpression:"MemberExpression",MetaProperty
-:"MetaProperty",MethodDefinition:"MethodDefinition",NewExpression:"NewExpression"
-,ObjectExpression:"ObjectExpression",ObjectPattern:"ObjectPattern",Program:"Program"
-,Property:"Property",RestElement:"RestElement",ReturnStatement:"ReturnStatement"
-,SequenceExpression:"SequenceExpression",SpreadElement:"SpreadElement",Super:"Super"
-,SwitchCase:"SwitchCase",SwitchStatement:"SwitchStatement",TaggedTemplateExpression
-:"TaggedTemplateExpression",TemplateElement:"TemplateElement",TemplateLiteral:"TemplateLiteral"
-,ThisExpression:"ThisExpression",ThrowStatement:"ThrowStatement",TryStatement:"TryStatement"
-,UnaryExpression:"UnaryExpression",UpdateExpression:"UpdateExpression",VariableDeclaration
-:"VariableDeclaration",VariableDeclarator:"VariableDeclarator",WhileStatement:"WhileStatement"
-,WithStatement:"WithStatement",YieldExpression:"YieldExpression"},s={ArrowParameterPlaceHolder
-:"ArrowParameterPlaceHolder"},o={UnexpectedToken:"Unexpected token %0",UnexpectedNumber
-:"Unexpected number",UnexpectedString:"Unexpected string",UnexpectedIdentifier:"Unexpected identifier"
-,UnexpectedReserved:"Unexpected reserved word",UnexpectedTemplate:"Unexpected quasi %0"
-,UnexpectedEOS:"Unexpected end of input",NewlineAfterThrow:"Illegal newline after throw"
-,InvalidRegExp:"Invalid regular expression",UnterminatedRegExp:"Invalid regular expression: missing /"
-,InvalidLHSInAssignment:"Invalid left-hand side in assignment",InvalidLHSInForIn
-:"Invalid left-hand side in for-in",InvalidLHSInForLoop:"Invalid left-hand side in for-loop"
-,MultipleDefaultsInSwitch:"More than one default clause in switch statement",NoCatchOrFinally
-:"Missing catch or finally after try",UnknownLabel:"Undefined label '%0'",Redeclaration
-:"%0 '%1' has already been declared",IllegalContinue:"Illegal continue statement"
-,IllegalBreak:"Illegal break statement",IllegalReturn:"Illegal return statement"
-,StrictModeWith:"Strict mode code may not include a with statement",StrictCatchVariable
-:"Catch variable may not be eval or arguments in strict mode",StrictVarName:"Variable name may not be eval or arguments in strict mode"
-,StrictParamName:"Parameter name eval or arguments is not allowed in strict mode"
-,StrictParamDupe:"Strict mode function may not have duplicate parameter names",StrictFunctionName
-:"Function name may not be eval or arguments in strict mode",StrictOctalLiteral:"Octal literals are not allowed in strict mode."
-,StrictDelete:"Delete of an unqualified identifier in strict mode.",StrictLHSAssignment
-:"Assignment to eval or arguments is not allowed in strict mode",StrictLHSPostfix
-:"Postfix increment/decrement may not have eval or arguments operand in strict mode"
-,StrictLHSPrefix:"Prefix increment/decrement may not have eval or arguments operand in strict mode"
-,StrictReservedWord:"Use of future reserved word in strict mode",TemplateOctalLiteral
-:"Octal literals are not allowed in template strings.",ParameterAfterRestParameter
-:"Rest parameter must be last formal parameter",DefaultRestParameter:"Unexpected token ="
-,ObjectPatternAsRestParameter:"Unexpected token {",DuplicateProtoProperty:"Duplicate __proto__ fields are not allowed in object literals"
-,ConstructorSpecialMethod:"Class constructor may not be an accessor",DuplicateConstructor
-:"A class may only have one constructor",StaticPrototype:"Classes may not have static property named prototype"
-,MissingFromClause:"Unexpected token",NoAsAfterImportNamespace:"Unexpected token"
-,InvalidModuleSpecifier:"Unexpected token",IllegalImportDeclaration:"Unexpected token"
-,IllegalExportDeclaration:"Unexpected token",DuplicateBinding:"Duplicate binding %0"
-},u={NonAsciiIdentifierStart:/[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u08A0-\u08B2\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58\u0C59\u0C60\u0C61\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D60\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1877\u1880-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19C1-\u19C7\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4B\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1CE9-\u1CEC\u1CEE-\u1CF1\u1CF5\u1CF6\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303C\u3041-\u3096\u309B-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6EF\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA7AD\uA7B0\uA7B1\uA7F7-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB5F\uAB64\uAB65\uABC0-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDE80-\uDE9C\uDEA0-\uDED0\uDF00-\uDF1F\uDF30-\uDF4A\uDF50-\uDF75\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00\uDE10-\uDE13\uDE15-\uDE17\uDE19-\uDE33\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE4\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48]|\uD804[\uDC03-\uDC37\uDC83-\uDCAF\uDCD0-\uDCE8\uDD03-\uDD26\uDD50-\uDD72\uDD76\uDD83-\uDDB2\uDDC1-\uDDC4\uDDDA\uDE00-\uDE11\uDE13-\uDE2B\uDEB0-\uDEDE\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3D\uDF5D-\uDF61]|\uD805[\uDC80-\uDCAF\uDCC4\uDCC5\uDCC7\uDD80-\uDDAE\uDE00-\uDE2F\uDE44\uDE80-\uDEAA]|\uD806[\uDCA0-\uDCDF\uDCFF\uDEC0-\uDEF8]|\uD808[\uDC00-\uDF98]|\uD809[\uDC00-\uDC6E]|[\uD80C\uD840-\uD868\uD86A-\uD86C][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDED0-\uDEED\uDF00-\uDF2F\uDF40-\uDF43\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDF00-\uDF44\uDF50\uDF93-\uDF9F]|\uD82C[\uDC00\uDC01]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB]|\uD83A[\uDC00-\uDCC4]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDED6\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D]|\uD87E[\uDC00-\uDE1D]/
-,NonAsciiIdentifierPart:/[\xAA\xB5\xB7\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0-\u08B2\u08E4-\u0963\u0966-\u096F\u0971-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BEF\u0C00-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58\u0C59\u0C60-\u0C63\u0C66-\u0C6F\u0C81-\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D01-\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D57\u0D60-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DE6-\u0DEF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1369-\u1371\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191E\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19DA\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1AB0-\u1ABD\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1CD0-\u1CD2\u1CD4-\u1CF6\u1CF8\u1CF9\u1D00-\u1DF5\u1DFC-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u200C\u200D\u203F\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA69D\uA69F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA7AD\uA7B0\uA7B1\uA7F7-\uA827\uA840-\uA873\uA880-\uA8C4\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uA9E0-\uA9FE\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB5F\uAB64\uAB65\uABC0-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE2D\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDDFD\uDE80-\uDE9C\uDEA0-\uDED0\uDEE0\uDF00-\uDF1F\uDF30-\uDF4A\uDF50-\uDF7A\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCA0-\uDCA9\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00-\uDE03\uDE05\uDE06\uDE0C-\uDE13\uDE15-\uDE17\uDE19-\uDE33\uDE38-\uDE3A\uDE3F\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE6\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48]|\uD804[\uDC00-\uDC46\uDC66-\uDC6F\uDC7F-\uDCBA\uDCD0-\uDCE8\uDCF0-\uDCF9\uDD00-\uDD34\uDD36-\uDD3F\uDD50-\uDD73\uDD76\uDD80-\uDDC4\uDDD0-\uDDDA\uDE00-\uDE11\uDE13-\uDE37\uDEB0-\uDEEA\uDEF0-\uDEF9\uDF01-\uDF03\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3C-\uDF44\uDF47\uDF48\uDF4B-\uDF4D\uDF57\uDF5D-\uDF63\uDF66-\uDF6C\uDF70-\uDF74]|\uD805[\uDC80-\uDCC5\uDCC7\uDCD0-\uDCD9\uDD80-\uDDB5\uDDB8-\uDDC0\uDE00-\uDE40\uDE44\uDE50-\uDE59\uDE80-\uDEB7\uDEC0-\uDEC9]|\uD806[\uDCA0-\uDCE9\uDCFF\uDEC0-\uDEF8]|\uD808[\uDC00-\uDF98]|\uD809[\uDC00-\uDC6E]|[\uD80C\uD840-\uD868\uD86A-\uD86C][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDE60-\uDE69\uDED0-\uDEED\uDEF0-\uDEF4\uDF00-\uDF36\uDF40-\uDF43\uDF50-\uDF59\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDF00-\uDF44\uDF50-\uDF7E\uDF8F-\uDF9F]|\uD82C[\uDC00\uDC01]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99\uDC9D\uDC9E]|\uD834[\uDD65-\uDD69\uDD6D-\uDD72\uDD7B-\uDD82\uDD85-\uDD8B\uDDAA-\uDDAD\uDE42-\uDE44]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB\uDFCE-\uDFFF]|\uD83A[\uDC00-\uDCC4\uDCD0-\uDCD6]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDED6\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D]|\uD87E[\uDC00-\uDE1D]|\uDB40[\uDD00-\uDDEF]/
-},Et.prototype=wt.prototype={processComment:function(){var e,t,n,r,s=T.bottomRightStack
-,o,u,a=s[s.length-1];if(this.type===i.Program&&this.body.length>0)return;if(this
-.type===i.BlockStatement&&this.body.length===0){t=[];for(o=T.leadingComments.length-1
-;o>=0;--o)u=T.leadingComments[o],this.range[1]>=u.range[1]&&(t.unshift(u),T.leadingComments
-.splice(o,1),T.trailingComments.splice(o,1));if(t.length){this.innerComments=t;return}
-}if(T.trailingComments.length>0){r=[];for(o=T.trailingComments.length-1;o>=0;--o
-)u=T.trailingComments[o],u.range[0]>=this.range[1]&&(r.unshift(u),T.trailingComments
-.splice(o,1));T.trailingComments=[]}else a&&a.trailingComments&&a.trailingComments
-[0].range[0]>=this.range[1]&&(r=a.trailingComments,delete a.trailingComments);while(
-a&&a.range[0]>=this.range[0])e=s.pop(),a=s[s.length-1];if(e){if(e.leadingComments
-){n=[];for(o=e.leadingComments.length-1;o>=0;--o)u=e.leadingComments[o],u.range[1
-]<=this.range[0]&&(n.unshift(u),e.leadingComments.splice(o,1));e.leadingComments
-.length||(e.leadingComments=undefined)}}else if(T.leadingComments.length>0){n=[]
-;for(o=T.leadingComments.length-1;o>=0;--o)u=T.leadingComments[o],u.range[1]<=this
-.range[0]&&(n.unshift(u),T.leadingComments.splice(o,1))}n&&n.length>0&&(this.leadingComments=
-n),r&&r.length>0&&(this.trailingComments=r),s.push(this)},finish:function(){T.range&&
-(this.range[1]=d),T.loc&&(this.loc.end={line:v,column:d-m},T.source&&(this.loc.source=
-T.source)),T.attachComment&&this.processComment()},finishArrayExpression:function(
-e){return this.type=i.ArrayExpression,this.elements=e,this.finish(),this},finishArrayPattern
-:function(e){return this.type=i.ArrayPattern,this.elements=e,this.finish(),this}
-,finishArrowFunctionExpression:function(e,t,n,r){return this.type=i.ArrowFunctionExpression
-,this.id=null,this.params=e,this.defaults=t,this.body=n,this.generator=!1,this.expression=
-r,this.finish(),this},finishAssignmentExpression:function(e,t,n){return this.type=
-i.AssignmentExpression,this.operator=e,this.left=t,this.right=n,this.finish(),this
-},finishAssignmentPattern:function(e,t){return this.type=i.AssignmentPattern,this
-.left=e,this.right=t,this.finish(),this},finishBinaryExpression:function(e,t,n){
-return this.type=e==="||"||e==="&&"?i.LogicalExpression:i.BinaryExpression,this.
-operator=e,this.left=t,this.right=n,this.finish(),this},finishBlockStatement:function(
-e){return this.type=i.BlockStatement,this.body=e,this.finish(),this},finishBreakStatement
-:function(e){return this.type=i.BreakStatement,this.label=e,this.finish(),this},
-finishCallExpression:function(e,t){return this.type=i.CallExpression,this.callee=
-e,this.arguments=t,this.finish(),this},finishCatchClause:function(e,t){return this
-.type=i.CatchClause,this.param=e,this.body=t,this.finish(),this},finishClassBody
-:function(e){return this.type=i.ClassBody,this.body=e,this.finish(),this},finishClassDeclaration
-:function(e,t,n){return this.type=i.ClassDeclaration,this.id=e,this.superClass=t
-,this.body=n,this.finish(),this},finishClassExpression:function(e,t,n){return this
-.type=i.ClassExpression,this.id=e,this.superClass=t,this.body=n,this.finish(),this
-},finishConditionalExpression:function(e,t,n){return this.type=i.ConditionalExpression
-,this.test=e,this.consequent=t,this.alternate=n,this.finish(),this},finishContinueStatement
-:function(e){return this.type=i.ContinueStatement,this.label=e,this.finish(),this
-},finishDebuggerStatement:function(){return this.type=i.DebuggerStatement,this.finish
-(),this},finishDoWhileStatement:function(e,t){return this.type=i.DoWhileStatement
-,this.body=e,this.test=t,this.finish(),this},finishEmptyStatement:function(){return this
-.type=i.EmptyStatement,this.finish(),this},finishExpressionStatement:function(e)
-{return this.type=i.ExpressionStatement,this.expression=e,this.finish(),this},finishForStatement
-:function(e,t,n,r){return this.type=i.ForStatement,this.init=e,this.test=t,this.
-update=n,this.body=r,this.finish(),this},finishForOfStatement:function(e,t,n){return this
-.type=i.ForOfStatement,this.left=e,this.right=t,this.body=n,this.finish(),this},
-finishForInStatement:function(e,t,n){return this.type=i.ForInStatement,this.left=
-e,this.right=t,this.body=n,this.each=!1,this.finish(),this},finishFunctionDeclaration
-:function(e,t,n,r,s){return this.type=i.FunctionDeclaration,this.id=e,this.params=
-t,this.defaults=n,this.body=r,this.generator=s,this.expression=!1,this.finish(),
-this},finishFunctionExpression:function(e,t,n,r,s){return this.type=i.FunctionExpression
-,this.id=e,this.params=t,this.defaults=n,this.body=r,this.generator=s,this.expression=!1
-,this.finish(),this},finishIdentifier:function(e){return this.type=i.Identifier,
-this.name=e,this.finish(),this},finishIfStatement:function(e,t,n){return this.type=
-i.IfStatement,this.test=e,this.consequent=t,this.alternate=n,this.finish(),this}
-,finishLabeledStatement:function(e,t){return this.type=i.LabeledStatement,this.label=
-e,this.body=t,this.finish(),this},finishLiteral:function(e){return this.type=i.Literal
-,this.value=e.value,this.raw=a.slice(e.start,e.end),e.regex&&(this.regex=e.regex
-),this.finish(),this},finishMemberExpression:function(e,t,n){return this.type=i.
-MemberExpression,this.computed=e==="[",this.object=t,this.property=n,this.finish
-(),this},finishMetaProperty:function(e,t){return this.type=i.MetaProperty,this.meta=
-e,this.property=t,this.finish(),this},finishNewExpression:function(e,t){return this
-.type=i.NewExpression,this.callee=e,this.arguments=t,this.finish(),this},finishObjectExpression
-:function(e){return this.type=i.ObjectExpression,this.properties=e,this.finish()
-,this},finishObjectPattern:function(e){return this.type=i.ObjectPattern,this.properties=
-e,this.finish(),this},finishPostfixExpression:function(e,t){return this.type=i.UpdateExpression
-,this.operator=e,this.argument=t,this.prefix=!1,this.finish(),this},finishProgram
-:function(e,t){return this.type=i.Program,this.body=e,this.sourceType=t,this.finish
-(),this},finishProperty:function(e,t,n,r,s,o){return this.type=i.Property,this.key=
-t,this.computed=n,this.value=r,this.kind=e,this.method=s,this.shorthand=o,this.finish
-(),this},finishRestElement:function(e){return this.type=i.RestElement,this.argument=
-e,this.finish(),this},finishReturnStatement:function(e){return this.type=i.ReturnStatement
-,this.argument=e,this.finish(),this},finishSequenceExpression:function(e){return this
-.type=i.SequenceExpression,this.expressions=e,this.finish(),this},finishSpreadElement
-:function(e){return this.type=i.SpreadElement,this.argument=e,this.finish(),this
-},finishSwitchCase:function(e,t){return this.type=i.SwitchCase,this.test=e,this.
-consequent=t,this.finish(),this},finishSuper:function(){return this.type=i.Super
-,this.finish(),this},finishSwitchStatement:function(e,t){return this.type=i.SwitchStatement
-,this.discriminant=e,this.cases=t,this.finish(),this},finishTaggedTemplateExpression
-:function(e,t){return this.type=i.TaggedTemplateExpression,this.tag=e,this.quasi=
-t,this.finish(),this},finishTemplateElement:function(e,t){return this.type=i.TemplateElement
-,this.value=e,this.tail=t,this.finish(),this},finishTemplateLiteral:function(e,t
-){return this.type=i.TemplateLiteral,this.quasis=e,this.expressions=t,this.finish
-(),this},finishThisExpression:function(){return this.type=i.ThisExpression,this.
-finish(),this},finishThrowStatement:function(e){return this.type=i.ThrowStatement
-,this.argument=e,this.finish(),this},finishTryStatement:function(e,t,n){return this
-.type=i.TryStatement,this.block=e,this.guardedHandlers=[],this.handlers=t?[t]:[]
-,this.handler=t,this.finalizer=n,this.finish(),this},finishUnaryExpression:function(
-e,t){return this.type=e==="++"||e==="--"?i.UpdateExpression:i.UnaryExpression,this
-.operator=e,this.argument=t,this.prefix=!0,this.finish(),this},finishVariableDeclaration
-:function(e){return this.type=i.VariableDeclaration,this.declarations=e,this.kind="var"
-,this.finish(),this},finishLexicalDeclaration:function(e,t){return this.type=i.VariableDeclaration
-,this.declarations=e,this.kind=t,this.finish(),this},finishVariableDeclarator:function(
-e,t){return this.type=i.VariableDeclarator,this.id=e,this.init=t,this.finish(),this
-},finishWhileStatement:function(e,t){return this.type=i.WhileStatement,this.test=
-e,this.body=t,this.finish(),this},finishWithStatement:function(e,t){return this.
-type=i.WithStatement,this.object=e,this.body=t,this.finish(),this},finishExportSpecifier
-:function(e,t){return this.type=i.ExportSpecifier,this.exported=t||e,this.local=
-e,this.finish(),this},finishImportDefaultSpecifier:function(e){return this.type=
-i.ImportDefaultSpecifier,this.local=e,this.finish(),this},finishImportNamespaceSpecifier
-:function(e){return this.type=i.ImportNamespaceSpecifier,this.local=e,this.finish
-(),this},finishExportNamedDeclaration:function(e,t,n){return this.type=i.ExportNamedDeclaration
-,this.declaration=e,this.specifiers=t,this.source=n,this.finish(),this},finishExportDefaultDeclaration
-:function(e){return this.type=i.ExportDefaultDeclaration,this.declaration=e,this
-.finish(),this},finishExportAllDeclaration:function(e){return this.type=i.ExportAllDeclaration
-,this.source=e,this.finish(),this},finishImportSpecifier:function(e,t){return this
-.type=i.ImportSpecifier,this.local=e||t,this.imported=t,this.finish(),this},finishImportDeclaration
-:function(e,t){return this.type=i.ImportDeclaration,this.specifiers=e,this.source=
-t,this.finish(),this},finishYieldExpression:function(e,t){return this.type=i.YieldExpression
-,this.argument=e,this.delegate=t,this.finish(),this}},e.version="2.7.3",e.tokenize=
-Tr,e.parse=Nr,e.Syntax=function(){var e,t={};typeof Object.create=="function"&&(
-t=Object.create(null));for(e in i)i.hasOwnProperty(e)&&(t[e]=i[e]);return typeof
-Object.freeze=="function"&&Object.freeze(t),t}()})
+/*
+  Copyright (c) jQuery Foundation, Inc. and Contributors, All Rights Reserved.
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+(function (root, factory) {
+    'use strict';
+
+    // Universal Module Definition (UMD) to support AMD, CommonJS/Node.js,
+    // Rhino, and plain browser loading.
+
+    /* istanbul ignore next */
+    if (typeof define === 'function' && define.amd) {
+        define(['exports'], factory);
+    } else if (typeof exports !== 'undefined') {
+        factory(exports);
+    } else {
+        factory((root.esprima = {}));
+    }
+}(this, function (exports) {
+    'use strict';
+
+    var Token,
+        TokenName,
+        FnExprTokens,
+        Syntax,
+        PlaceHolders,
+        Messages,
+        Regex,
+        source,
+        strict,
+        index,
+        lineNumber,
+        lineStart,
+        hasLineTerminator,
+        lastIndex,
+        lastLineNumber,
+        lastLineStart,
+        startIndex,
+        startLineNumber,
+        startLineStart,
+        scanning,
+        length,
+        lookahead,
+        state,
+        extra,
+        isBindingElement,
+        isAssignmentTarget,
+        firstCoverInitializedNameError;
+
+    Token = {
+        BooleanLiteral: 1,
+        EOF: 2,
+        Identifier: 3,
+        Keyword: 4,
+        NullLiteral: 5,
+        NumericLiteral: 6,
+        Punctuator: 7,
+        StringLiteral: 8,
+        RegularExpression: 9,
+        Template: 10
+    };
+
+    TokenName = {};
+    TokenName[Token.BooleanLiteral] = 'Boolean';
+    TokenName[Token.EOF] = '<end>';
+    TokenName[Token.Identifier] = 'Identifier';
+    TokenName[Token.Keyword] = 'Keyword';
+    TokenName[Token.NullLiteral] = 'Null';
+    TokenName[Token.NumericLiteral] = 'Numeric';
+    TokenName[Token.Punctuator] = 'Punctuator';
+    TokenName[Token.StringLiteral] = 'String';
+    TokenName[Token.RegularExpression] = 'RegularExpression';
+    TokenName[Token.Template] = 'Template';
+
+    // A function following one of those tokens is an expression.
+    FnExprTokens = ['(', '{', '[', 'in', 'typeof', 'instanceof', 'new',
+                    'return', 'case', 'delete', 'throw', 'void',
+                    // assignment operators
+                    '=', '+=', '-=', '*=', '/=', '%=', '<<=', '>>=', '>>>=',
+                    '&=', '|=', '^=', ',',
+                    // binary/unary operators
+                    '+', '-', '*', '/', '%', '++', '--', '<<', '>>', '>>>', '&',
+                    '|', '^', '!', '~', '&&', '||', '?', ':', '===', '==', '>=',
+                    '<=', '<', '>', '!=', '!=='];
+
+    Syntax = {
+        AssignmentExpression: 'AssignmentExpression',
+        AssignmentPattern: 'AssignmentPattern',
+        ArrayExpression: 'ArrayExpression',
+        ArrayPattern: 'ArrayPattern',
+        ArrowFunctionExpression: 'ArrowFunctionExpression',
+        BlockStatement: 'BlockStatement',
+        BinaryExpression: 'BinaryExpression',
+        BreakStatement: 'BreakStatement',
+        CallExpression: 'CallExpression',
+        CatchClause: 'CatchClause',
+        ClassBody: 'ClassBody',
+        ClassDeclaration: 'ClassDeclaration',
+        ClassExpression: 'ClassExpression',
+        ConditionalExpression: 'ConditionalExpression',
+        ContinueStatement: 'ContinueStatement',
+        DoWhileStatement: 'DoWhileStatement',
+        DebuggerStatement: 'DebuggerStatement',
+        EmptyStatement: 'EmptyStatement',
+        ExportAllDeclaration: 'ExportAllDeclaration',
+        ExportDefaultDeclaration: 'ExportDefaultDeclaration',
+        ExportNamedDeclaration: 'ExportNamedDeclaration',
+        ExportSpecifier: 'ExportSpecifier',
+        ExpressionStatement: 'ExpressionStatement',
+        ForStatement: 'ForStatement',
+        ForOfStatement: 'ForOfStatement',
+        ForInStatement: 'ForInStatement',
+        FunctionDeclaration: 'FunctionDeclaration',
+        FunctionExpression: 'FunctionExpression',
+        Identifier: 'Identifier',
+        IfStatement: 'IfStatement',
+        ImportDeclaration: 'ImportDeclaration',
+        ImportDefaultSpecifier: 'ImportDefaultSpecifier',
+        ImportNamespaceSpecifier: 'ImportNamespaceSpecifier',
+        ImportSpecifier: 'ImportSpecifier',
+        Literal: 'Literal',
+        LabeledStatement: 'LabeledStatement',
+        LogicalExpression: 'LogicalExpression',
+        MemberExpression: 'MemberExpression',
+        MetaProperty: 'MetaProperty',
+        MethodDefinition: 'MethodDefinition',
+        NewExpression: 'NewExpression',
+        ObjectExpression: 'ObjectExpression',
+        ObjectPattern: 'ObjectPattern',
+        Program: 'Program',
+        Property: 'Property',
+        RestElement: 'RestElement',
+        ReturnStatement: 'ReturnStatement',
+        SequenceExpression: 'SequenceExpression',
+        SpreadElement: 'SpreadElement',
+        Super: 'Super',
+        SwitchCase: 'SwitchCase',
+        SwitchStatement: 'SwitchStatement',
+        TaggedTemplateExpression: 'TaggedTemplateExpression',
+        TemplateElement: 'TemplateElement',
+        TemplateLiteral: 'TemplateLiteral',
+        ThisExpression: 'ThisExpression',
+        ThrowStatement: 'ThrowStatement',
+        TryStatement: 'TryStatement',
+        UnaryExpression: 'UnaryExpression',
+        UpdateExpression: 'UpdateExpression',
+        VariableDeclaration: 'VariableDeclaration',
+        VariableDeclarator: 'VariableDeclarator',
+        WhileStatement: 'WhileStatement',
+        WithStatement: 'WithStatement',
+        YieldExpression: 'YieldExpression'
+    };
+
+    PlaceHolders = {
+        ArrowParameterPlaceHolder: 'ArrowParameterPlaceHolder'
+    };
+
+    // Error messages should be identical to V8.
+    Messages = {
+        UnexpectedToken: 'Unexpected token %0',
+        UnexpectedNumber: 'Unexpected number',
+        UnexpectedString: 'Unexpected string',
+        UnexpectedIdentifier: 'Unexpected identifier',
+        UnexpectedReserved: 'Unexpected reserved word',
+        UnexpectedTemplate: 'Unexpected quasi %0',
+        UnexpectedEOS: 'Unexpected end of input',
+        NewlineAfterThrow: 'Illegal newline after throw',
+        InvalidRegExp: 'Invalid regular expression',
+        UnterminatedRegExp: 'Invalid regular expression: missing /',
+        InvalidLHSInAssignment: 'Invalid left-hand side in assignment',
+        InvalidLHSInForIn: 'Invalid left-hand side in for-in',
+        InvalidLHSInForLoop: 'Invalid left-hand side in for-loop',
+        MultipleDefaultsInSwitch: 'More than one default clause in switch statement',
+        NoCatchOrFinally: 'Missing catch or finally after try',
+        UnknownLabel: 'Undefined label \'%0\'',
+        Redeclaration: '%0 \'%1\' has already been declared',
+        IllegalContinue: 'Illegal continue statement',
+        IllegalBreak: 'Illegal break statement',
+        IllegalReturn: 'Illegal return statement',
+        StrictModeWith: 'Strict mode code may not include a with statement',
+        StrictCatchVariable: 'Catch variable may not be eval or arguments in strict mode',
+        StrictVarName: 'Variable name may not be eval or arguments in strict mode',
+        StrictParamName: 'Parameter name eval or arguments is not allowed in strict mode',
+        StrictParamDupe: 'Strict mode function may not have duplicate parameter names',
+        StrictFunctionName: 'Function name may not be eval or arguments in strict mode',
+        StrictOctalLiteral: 'Octal literals are not allowed in strict mode.',
+        StrictDelete: 'Delete of an unqualified identifier in strict mode.',
+        StrictLHSAssignment: 'Assignment to eval or arguments is not allowed in strict mode',
+        StrictLHSPostfix: 'Postfix increment/decrement may not have eval or arguments operand in strict mode',
+        StrictLHSPrefix: 'Prefix increment/decrement may not have eval or arguments operand in strict mode',
+        StrictReservedWord: 'Use of future reserved word in strict mode',
+        TemplateOctalLiteral: 'Octal literals are not allowed in template strings.',
+        ParameterAfterRestParameter: 'Rest parameter must be last formal parameter',
+        DefaultRestParameter: 'Unexpected token =',
+        ObjectPatternAsRestParameter: 'Unexpected token {',
+        DuplicateProtoProperty: 'Duplicate __proto__ fields are not allowed in object literals',
+        ConstructorSpecialMethod: 'Class constructor may not be an accessor',
+        DuplicateConstructor: 'A class may only have one constructor',
+        StaticPrototype: 'Classes may not have static property named prototype',
+        MissingFromClause: 'Unexpected token',
+        NoAsAfterImportNamespace: 'Unexpected token',
+        InvalidModuleSpecifier: 'Unexpected token',
+        IllegalImportDeclaration: 'Unexpected token',
+        IllegalExportDeclaration: 'Unexpected token',
+        DuplicateBinding: 'Duplicate binding %0'
+    };
+
+    // See also tools/generate-unicode-regex.js.
+    Regex = {
+        // ECMAScript 6/Unicode v7.0.0 NonAsciiIdentifierStart:
+        NonAsciiIdentifierStart: /[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u08A0-\u08B2\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58\u0C59\u0C60\u0C61\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D60\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1877\u1880-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19C1-\u19C7\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4B\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1CE9-\u1CEC\u1CEE-\u1CF1\u1CF5\u1CF6\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303C\u3041-\u3096\u309B-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6EF\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA7AD\uA7B0\uA7B1\uA7F7-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB5F\uAB64\uAB65\uABC0-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDE80-\uDE9C\uDEA0-\uDED0\uDF00-\uDF1F\uDF30-\uDF4A\uDF50-\uDF75\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00\uDE10-\uDE13\uDE15-\uDE17\uDE19-\uDE33\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE4\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48]|\uD804[\uDC03-\uDC37\uDC83-\uDCAF\uDCD0-\uDCE8\uDD03-\uDD26\uDD50-\uDD72\uDD76\uDD83-\uDDB2\uDDC1-\uDDC4\uDDDA\uDE00-\uDE11\uDE13-\uDE2B\uDEB0-\uDEDE\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3D\uDF5D-\uDF61]|\uD805[\uDC80-\uDCAF\uDCC4\uDCC5\uDCC7\uDD80-\uDDAE\uDE00-\uDE2F\uDE44\uDE80-\uDEAA]|\uD806[\uDCA0-\uDCDF\uDCFF\uDEC0-\uDEF8]|\uD808[\uDC00-\uDF98]|\uD809[\uDC00-\uDC6E]|[\uD80C\uD840-\uD868\uD86A-\uD86C][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDED0-\uDEED\uDF00-\uDF2F\uDF40-\uDF43\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDF00-\uDF44\uDF50\uDF93-\uDF9F]|\uD82C[\uDC00\uDC01]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB]|\uD83A[\uDC00-\uDCC4]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDED6\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D]|\uD87E[\uDC00-\uDE1D]/,
+
+        // ECMAScript 6/Unicode v7.0.0 NonAsciiIdentifierPart:
+        NonAsciiIdentifierPart: /[\xAA\xB5\xB7\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0-\u08B2\u08E4-\u0963\u0966-\u096F\u0971-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BEF\u0C00-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58\u0C59\u0C60-\u0C63\u0C66-\u0C6F\u0C81-\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D01-\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D57\u0D60-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DE6-\u0DEF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1369-\u1371\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191E\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19DA\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1AB0-\u1ABD\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1CD0-\u1CD2\u1CD4-\u1CF6\u1CF8\u1CF9\u1D00-\u1DF5\u1DFC-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u200C\u200D\u203F\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA69D\uA69F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA7AD\uA7B0\uA7B1\uA7F7-\uA827\uA840-\uA873\uA880-\uA8C4\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uA9E0-\uA9FE\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB5F\uAB64\uAB65\uABC0-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE2D\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDDFD\uDE80-\uDE9C\uDEA0-\uDED0\uDEE0\uDF00-\uDF1F\uDF30-\uDF4A\uDF50-\uDF7A\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCA0-\uDCA9\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00-\uDE03\uDE05\uDE06\uDE0C-\uDE13\uDE15-\uDE17\uDE19-\uDE33\uDE38-\uDE3A\uDE3F\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE6\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48]|\uD804[\uDC00-\uDC46\uDC66-\uDC6F\uDC7F-\uDCBA\uDCD0-\uDCE8\uDCF0-\uDCF9\uDD00-\uDD34\uDD36-\uDD3F\uDD50-\uDD73\uDD76\uDD80-\uDDC4\uDDD0-\uDDDA\uDE00-\uDE11\uDE13-\uDE37\uDEB0-\uDEEA\uDEF0-\uDEF9\uDF01-\uDF03\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3C-\uDF44\uDF47\uDF48\uDF4B-\uDF4D\uDF57\uDF5D-\uDF63\uDF66-\uDF6C\uDF70-\uDF74]|\uD805[\uDC80-\uDCC5\uDCC7\uDCD0-\uDCD9\uDD80-\uDDB5\uDDB8-\uDDC0\uDE00-\uDE40\uDE44\uDE50-\uDE59\uDE80-\uDEB7\uDEC0-\uDEC9]|\uD806[\uDCA0-\uDCE9\uDCFF\uDEC0-\uDEF8]|\uD808[\uDC00-\uDF98]|\uD809[\uDC00-\uDC6E]|[\uD80C\uD840-\uD868\uD86A-\uD86C][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDE60-\uDE69\uDED0-\uDEED\uDEF0-\uDEF4\uDF00-\uDF36\uDF40-\uDF43\uDF50-\uDF59\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDF00-\uDF44\uDF50-\uDF7E\uDF8F-\uDF9F]|\uD82C[\uDC00\uDC01]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99\uDC9D\uDC9E]|\uD834[\uDD65-\uDD69\uDD6D-\uDD72\uDD7B-\uDD82\uDD85-\uDD8B\uDDAA-\uDDAD\uDE42-\uDE44]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB\uDFCE-\uDFFF]|\uD83A[\uDC00-\uDCC4\uDCD0-\uDCD6]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDED6\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D]|\uD87E[\uDC00-\uDE1D]|\uDB40[\uDD00-\uDDEF]/
+    };
+
+    // Ensure the condition is true, otherwise throw an error.
+    // This is only to have a better contract semantic, i.e. another safety net
+    // to catch a logic error. The condition shall be fulfilled in normal case.
+    // Do NOT use this to enforce a certain condition on any user input.
+
+    function assert(condition, message) {
+        /* istanbul ignore if */
+        if (!condition) {
+            throw new Error('ASSERT: ' + message);
+        }
+    }
+
+    function isDecimalDigit(ch) {
+        return (ch >= 0x30 && ch <= 0x39);   // 0..9
+    }
+
+    function isHexDigit(ch) {
+        return '0123456789abcdefABCDEF'.indexOf(ch) >= 0;
+    }
+
+    function isOctalDigit(ch) {
+        return '01234567'.indexOf(ch) >= 0;
+    }
+
+    function octalToDecimal(ch) {
+        // \0 is not octal escape sequence
+        var octal = (ch !== '0'), code = '01234567'.indexOf(ch);
+
+        if (index < length && isOctalDigit(source[index])) {
+            octal = true;
+            code = code * 8 + '01234567'.indexOf(source[index++]);
+
+            // 3 digits are only allowed when string starts
+            // with 0, 1, 2, 3
+            if ('0123'.indexOf(ch) >= 0 &&
+                    index < length &&
+                    isOctalDigit(source[index])) {
+                code = code * 8 + '01234567'.indexOf(source[index++]);
+            }
+        }
+
+        return {
+            code: code,
+            octal: octal
+        };
+    }
+
+    // ECMA-262 11.2 White Space
+
+    function isWhiteSpace(ch) {
+        return (ch === 0x20) || (ch === 0x09) || (ch === 0x0B) || (ch === 0x0C) || (ch === 0xA0) ||
+            (ch >= 0x1680 && [0x1680, 0x180E, 0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x2008, 0x2009, 0x200A, 0x202F, 0x205F, 0x3000, 0xFEFF].indexOf(ch) >= 0);
+    }
+
+    // ECMA-262 11.3 Line Terminators
+
+    function isLineTerminator(ch) {
+        return (ch === 0x0A) || (ch === 0x0D) || (ch === 0x2028) || (ch === 0x2029);
+    }
+
+    // ECMA-262 11.6 Identifier Names and Identifiers
+
+    function fromCodePoint(cp) {
+        return (cp < 0x10000) ? String.fromCharCode(cp) :
+            String.fromCharCode(0xD800 + ((cp - 0x10000) >> 10)) +
+            String.fromCharCode(0xDC00 + ((cp - 0x10000) & 1023));
+    }
+
+    function isIdentifierStart(ch) {
+        return (ch === 0x24) || (ch === 0x5F) ||  // $ (dollar) and _ (underscore)
+            (ch >= 0x41 && ch <= 0x5A) ||         // A..Z
+            (ch >= 0x61 && ch <= 0x7A) ||         // a..z
+            (ch === 0x5C) ||                      // \ (backslash)
+            ((ch >= 0x80) && Regex.NonAsciiIdentifierStart.test(fromCodePoint(ch)));
+    }
+
+    function isIdentifierPart(ch) {
+        return (ch === 0x24) || (ch === 0x5F) ||  // $ (dollar) and _ (underscore)
+            (ch >= 0x41 && ch <= 0x5A) ||         // A..Z
+            (ch >= 0x61 && ch <= 0x7A) ||         // a..z
+            (ch >= 0x30 && ch <= 0x39) ||         // 0..9
+            (ch === 0x5C) ||                      // \ (backslash)
+            ((ch >= 0x80) && Regex.NonAsciiIdentifierPart.test(fromCodePoint(ch)));
+    }
+
+    // ECMA-262 11.6.2.2 Future Reserved Words
+
+    function isFutureReservedWord(id) {
+        switch (id) {
+        case 'enum':
+        case 'export':
+        case 'import':
+        case 'super':
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    function isStrictModeReservedWord(id) {
+        switch (id) {
+        case 'implements':
+        case 'interface':
+        case 'package':
+        case 'private':
+        case 'protected':
+        case 'public':
+        case 'static':
+        case 'yield':
+        case 'let':
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    function isRestrictedWord(id) {
+        return id === 'eval' || id === 'arguments';
+    }
+
+    // ECMA-262 11.6.2.1 Keywords
+
+    function isKeyword(id) {
+        switch (id.length) {
+        case 2:
+            return (id === 'if') || (id === 'in') || (id === 'do');
+        case 3:
+            return (id === 'var') || (id === 'for') || (id === 'new') ||
+                (id === 'try') || (id === 'let');
+        case 4:
+            return (id === 'this') || (id === 'else') || (id === 'case') ||
+                (id === 'void') || (id === 'with') || (id === 'enum');
+        case 5:
+            return (id === 'while') || (id === 'break') || (id === 'catch') ||
+                (id === 'throw') || (id === 'const') || (id === 'yield') ||
+                (id === 'class') || (id === 'super');
+        case 6:
+            return (id === 'return') || (id === 'typeof') || (id === 'delete') ||
+                (id === 'switch') || (id === 'export') || (id === 'import');
+        case 7:
+            return (id === 'default') || (id === 'finally') || (id === 'extends');
+        case 8:
+            return (id === 'function') || (id === 'continue') || (id === 'debugger');
+        case 10:
+            return (id === 'instanceof');
+        default:
+            return false;
+        }
+    }
+
+    // ECMA-262 11.4 Comments
+
+    function addComment(type, value, start, end, loc) {
+        var comment;
+
+        assert(typeof start === 'number', 'Comment must have valid position');
+
+        state.lastCommentStart = start;
+
+        comment = {
+            type: type,
+            value: value
+        };
+        if (extra.range) {
+            comment.range = [start, end];
+        }
+        if (extra.loc) {
+            comment.loc = loc;
+        }
+        extra.comments.push(comment);
+        if (extra.attachComment) {
+            extra.leadingComments.push(comment);
+            extra.trailingComments.push(comment);
+        }
+        if (extra.tokenize) {
+            comment.type = comment.type + 'Comment';
+            if (extra.delegate) {
+                comment = extra.delegate(comment);
+            }
+            extra.tokens.push(comment);
+        }
+    }
+
+    function skipSingleLineComment(offset) {
+        var start, loc, ch, comment;
+
+        start = index - offset;
+        loc = {
+            start: {
+                line: lineNumber,
+                column: index - lineStart - offset
+            }
+        };
+
+        while (index < length) {
+            ch = source.charCodeAt(index);
+            ++index;
+            if (isLineTerminator(ch)) {
+                hasLineTerminator = true;
+                if (extra.comments) {
+                    comment = source.slice(start + offset, index - 1);
+                    loc.end = {
+                        line: lineNumber,
+                        column: index - lineStart - 1
+                    };
+                    addComment('Line', comment, start, index - 1, loc);
+                }
+                if (ch === 13 && source.charCodeAt(index) === 10) {
+                    ++index;
+                }
+                ++lineNumber;
+                lineStart = index;
+                return;
+            }
+        }
+
+        if (extra.comments) {
+            comment = source.slice(start + offset, index);
+            loc.end = {
+                line: lineNumber,
+                column: index - lineStart
+            };
+            addComment('Line', comment, start, index, loc);
+        }
+    }
+
+    function skipMultiLineComment() {
+        var start, loc, ch, comment;
+
+        if (extra.comments) {
+            start = index - 2;
+            loc = {
+                start: {
+                    line: lineNumber,
+                    column: index - lineStart - 2
+                }
+            };
+        }
+
+        while (index < length) {
+            ch = source.charCodeAt(index);
+            if (isLineTerminator(ch)) {
+                if (ch === 0x0D && source.charCodeAt(index + 1) === 0x0A) {
+                    ++index;
+                }
+                hasLineTerminator = true;
+                ++lineNumber;
+                ++index;
+                lineStart = index;
+            } else if (ch === 0x2A) {
+                // Block comment ends with '*/'.
+                if (source.charCodeAt(index + 1) === 0x2F) {
+                    ++index;
+                    ++index;
+                    if (extra.comments) {
+                        comment = source.slice(start + 2, index - 2);
+                        loc.end = {
+                            line: lineNumber,
+                            column: index - lineStart
+                        };
+                        addComment('Block', comment, start, index, loc);
+                    }
+                    return;
+                }
+                ++index;
+            } else {
+                ++index;
+            }
+        }
+
+        // Ran off the end of the file - the whole thing is a comment
+        if (extra.comments) {
+            loc.end = {
+                line: lineNumber,
+                column: index - lineStart
+            };
+            comment = source.slice(start + 2, index);
+            addComment('Block', comment, start, index, loc);
+        }
+        tolerateUnexpectedToken();
+    }
+
+    function skipComment() {
+        var ch, start;
+        hasLineTerminator = false;
+
+        start = (index === 0);
+        while (index < length) {
+            ch = source.charCodeAt(index);
+
+            if (isWhiteSpace(ch)) {
+                ++index;
+            } else if (isLineTerminator(ch)) {
+                hasLineTerminator = true;
+                ++index;
+                if (ch === 0x0D && source.charCodeAt(index) === 0x0A) {
+                    ++index;
+                }
+                ++lineNumber;
+                lineStart = index;
+                start = true;
+            } else if (ch === 0x2F) { // U+002F is '/'
+                ch = source.charCodeAt(index + 1);
+                if (ch === 0x2F) {
+                    ++index;
+                    ++index;
+                    skipSingleLineComment(2);
+                    start = true;
+                } else if (ch === 0x2A) {  // U+002A is '*'
+                    ++index;
+                    ++index;
+                    skipMultiLineComment();
+                } else {
+                    break;
+                }
+            } else if (start && ch === 0x2D) { // U+002D is '-'
+                // U+003E is '>'
+                if ((source.charCodeAt(index + 1) === 0x2D) && (source.charCodeAt(index + 2) === 0x3E)) {
+                    // '-->' is a single-line comment
+                    index += 3;
+                    skipSingleLineComment(3);
+                } else {
+                    break;
+                }
+            } else if (ch === 0x3C) { // U+003C is '<'
+                if (source.slice(index + 1, index + 4) === '!--') {
+                    ++index; // `<`
+                    ++index; // `!`
+                    ++index; // `-`
+                    ++index; // `-`
+                    skipSingleLineComment(4);
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+    }
+
+    function scanHexEscape(prefix) {
+        var i, len, ch, code = 0;
+
+        len = (prefix === 'u') ? 4 : 2;
+        for (i = 0; i < len; ++i) {
+            if (index < length && isHexDigit(source[index])) {
+                ch = source[index++];
+                code = code * 16 + '0123456789abcdef'.indexOf(ch.toLowerCase());
+            } else {
+                return '';
+            }
+        }
+        return String.fromCharCode(code);
+    }
+
+    function scanUnicodeCodePointEscape() {
+        var ch, code;
+
+        ch = source[index];
+        code = 0;
+
+        // At least, one hex digit is required.
+        if (ch === '}') {
+            throwUnexpectedToken();
+        }
+
+        while (index < length) {
+            ch = source[index++];
+            if (!isHexDigit(ch)) {
+                break;
+            }
+            code = code * 16 + '0123456789abcdef'.indexOf(ch.toLowerCase());
+        }
+
+        if (code > 0x10FFFF || ch !== '}') {
+            throwUnexpectedToken();
+        }
+
+        return fromCodePoint(code);
+    }
+
+    function codePointAt(i) {
+        var cp, first, second;
+
+        cp = source.charCodeAt(i);
+        if (cp >= 0xD800 && cp <= 0xDBFF) {
+            second = source.charCodeAt(i + 1);
+            if (second >= 0xDC00 && second <= 0xDFFF) {
+                first = cp;
+                cp = (first - 0xD800) * 0x400 + second - 0xDC00 + 0x10000;
+            }
+        }
+
+        return cp;
+    }
+
+    function getComplexIdentifier() {
+        var cp, ch, id;
+
+        cp = codePointAt(index);
+        id = fromCodePoint(cp);
+        index += id.length;
+
+        // '\u' (U+005C, U+0075) denotes an escaped character.
+        if (cp === 0x5C) {
+            if (source.charCodeAt(index) !== 0x75) {
+                throwUnexpectedToken();
+            }
+            ++index;
+            if (source[index] === '{') {
+                ++index;
+                ch = scanUnicodeCodePointEscape();
+            } else {
+                ch = scanHexEscape('u');
+                cp = ch.charCodeAt(0);
+                if (!ch || ch === '\\' || !isIdentifierStart(cp)) {
+                    throwUnexpectedToken();
+                }
+            }
+            id = ch;
+        }
+
+        while (index < length) {
+            cp = codePointAt(index);
+            if (!isIdentifierPart(cp)) {
+                break;
+            }
+            ch = fromCodePoint(cp);
+            id += ch;
+            index += ch.length;
+
+            // '\u' (U+005C, U+0075) denotes an escaped character.
+            if (cp === 0x5C) {
+                id = id.substr(0, id.length - 1);
+                if (source.charCodeAt(index) !== 0x75) {
+                    throwUnexpectedToken();
+                }
+                ++index;
+                if (source[index] === '{') {
+                    ++index;
+                    ch = scanUnicodeCodePointEscape();
+                } else {
+                    ch = scanHexEscape('u');
+                    cp = ch.charCodeAt(0);
+                    if (!ch || ch === '\\' || !isIdentifierPart(cp)) {
+                        throwUnexpectedToken();
+                    }
+                }
+                id += ch;
+            }
+        }
+
+        return id;
+    }
+
+    function getIdentifier() {
+        var start, ch;
+
+        start = index++;
+        while (index < length) {
+            ch = source.charCodeAt(index);
+            if (ch === 0x5C) {
+                // Blackslash (U+005C) marks Unicode escape sequence.
+                index = start;
+                return getComplexIdentifier();
+            } else if (ch >= 0xD800 && ch < 0xDFFF) {
+                // Need to handle surrogate pairs.
+                index = start;
+                return getComplexIdentifier();
+            }
+            if (isIdentifierPart(ch)) {
+                ++index;
+            } else {
+                break;
+            }
+        }
+
+        return source.slice(start, index);
+    }
+
+    function scanIdentifier() {
+        var start, id, type;
+
+        start = index;
+
+        // Backslash (U+005C) starts an escaped character.
+        id = (source.charCodeAt(index) === 0x5C) ? getComplexIdentifier() : getIdentifier();
+
+        // There is no keyword or literal with only one character.
+        // Thus, it must be an identifier.
+        if (id.length === 1) {
+            type = Token.Identifier;
+        } else if (isKeyword(id)) {
+            type = Token.Keyword;
+        } else if (id === 'null') {
+            type = Token.NullLiteral;
+        } else if (id === 'true' || id === 'false') {
+            type = Token.BooleanLiteral;
+        } else {
+            type = Token.Identifier;
+        }
+
+        return {
+            type: type,
+            value: id,
+            lineNumber: lineNumber,
+            lineStart: lineStart,
+            start: start,
+            end: index
+        };
+    }
+
+
+    // ECMA-262 11.7 Punctuators
+
+    function scanPunctuator() {
+        var token, str;
+
+        token = {
+            type: Token.Punctuator,
+            value: '',
+            lineNumber: lineNumber,
+            lineStart: lineStart,
+            start: index,
+            end: index
+        };
+
+        // Check for most common single-character punctuators.
+        str = source[index];
+        switch (str) {
+
+        case '(':
+            if (extra.tokenize) {
+                extra.openParenToken = extra.tokenValues.length;
+            }
+            ++index;
+            break;
+
+        case '{':
+            if (extra.tokenize) {
+                extra.openCurlyToken = extra.tokenValues.length;
+            }
+            state.curlyStack.push('{');
+            ++index;
+            break;
+
+        case '.':
+            ++index;
+            if (source[index] === '.' && source[index + 1] === '.') {
+                // Spread operator: ...
+                index += 2;
+                str = '...';
+            }
+            break;
+
+        case '}':
+            ++index;
+            state.curlyStack.pop();
+            break;
+        case ')':
+        case ';':
+        case ',':
+        case '[':
+        case ']':
+        case ':':
+        case '?':
+        case '~':
+            ++index;
+            break;
+
+        default:
+            // 4-character punctuator.
+            str = source.substr(index, 4);
+            if (str === '>>>=') {
+                index += 4;
+            } else {
+
+                // 3-character punctuators.
+                str = str.substr(0, 3);
+                if (str === '===' || str === '!==' || str === '>>>' ||
+                    str === '<<=' || str === '>>=') {
+                    index += 3;
+                } else {
+
+                    // 2-character punctuators.
+                    str = str.substr(0, 2);
+                    if (str === '&&' || str === '||' || str === '==' || str === '!=' ||
+                        str === '+=' || str === '-=' || str === '*=' || str === '/=' ||
+                        str === '++' || str === '--' || str === '<<' || str === '>>' ||
+                        str === '&=' || str === '|=' || str === '^=' || str === '%=' ||
+                        str === '<=' || str === '>=' || str === '=>') {
+                        index += 2;
+                    } else {
+
+                        // 1-character punctuators.
+                        str = source[index];
+                        if ('<>=!+-*%&|^/'.indexOf(str) >= 0) {
+                            ++index;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (index === token.start) {
+            throwUnexpectedToken();
+        }
+
+        token.end = index;
+        token.value = str;
+        return token;
+    }
+
+    // ECMA-262 11.8.3 Numeric Literals
+
+    function scanHexLiteral(start) {
+        var number = '';
+
+        while (index < length) {
+            if (!isHexDigit(source[index])) {
+                break;
+            }
+            number += source[index++];
+        }
+
+        if (number.length === 0) {
+            throwUnexpectedToken();
+        }
+
+        if (isIdentifierStart(source.charCodeAt(index))) {
+            throwUnexpectedToken();
+        }
+
+        return {
+            type: Token.NumericLiteral,
+            value: parseInt('0x' + number, 16),
+            lineNumber: lineNumber,
+            lineStart: lineStart,
+            start: start,
+            end: index
+        };
+    }
+
+    function scanBinaryLiteral(start) {
+        var ch, number;
+
+        number = '';
+
+        while (index < length) {
+            ch = source[index];
+            if (ch !== '0' && ch !== '1') {
+                break;
+            }
+            number += source[index++];
+        }
+
+        if (number.length === 0) {
+            // only 0b or 0B
+            throwUnexpectedToken();
+        }
+
+        if (index < length) {
+            ch = source.charCodeAt(index);
+            /* istanbul ignore else */
+            if (isIdentifierStart(ch) || isDecimalDigit(ch)) {
+                throwUnexpectedToken();
+            }
+        }
+
+        return {
+            type: Token.NumericLiteral,
+            value: parseInt(number, 2),
+            lineNumber: lineNumber,
+            lineStart: lineStart,
+            start: start,
+            end: index
+        };
+    }
+
+    function scanOctalLiteral(prefix, start) {
+        var number, octal;
+
+        if (isOctalDigit(prefix)) {
+            octal = true;
+            number = '0' + source[index++];
+        } else {
+            octal = false;
+            ++index;
+            number = '';
+        }
+
+        while (index < length) {
+            if (!isOctalDigit(source[index])) {
+                break;
+            }
+            number += source[index++];
+        }
+
+        if (!octal && number.length === 0) {
+            // only 0o or 0O
+            throwUnexpectedToken();
+        }
+
+        if (isIdentifierStart(source.charCodeAt(index)) || isDecimalDigit(source.charCodeAt(index))) {
+            throwUnexpectedToken();
+        }
+
+        return {
+            type: Token.NumericLiteral,
+            value: parseInt(number, 8),
+            octal: octal,
+            lineNumber: lineNumber,
+            lineStart: lineStart,
+            start: start,
+            end: index
+        };
+    }
+
+    function isImplicitOctalLiteral() {
+        var i, ch;
+
+        // Implicit octal, unless there is a non-octal digit.
+        // (Annex B.1.1 on Numeric Literals)
+        for (i = index + 1; i < length; ++i) {
+            ch = source[i];
+            if (ch === '8' || ch === '9') {
+                return false;
+            }
+            if (!isOctalDigit(ch)) {
+                return true;
+            }
+        }
+
+        return true;
+    }
+
+    function scanNumericLiteral() {
+        var number, start, ch;
+
+        ch = source[index];
+        assert(isDecimalDigit(ch.charCodeAt(0)) || (ch === '.'),
+            'Numeric literal must start with a decimal digit or a decimal point');
+
+        start = index;
+        number = '';
+        if (ch !== '.') {
+            number = source[index++];
+            ch = source[index];
+
+            // Hex number starts with '0x'.
+            // Octal number starts with '0'.
+            // Octal number in ES6 starts with '0o'.
+            // Binary number in ES6 starts with '0b'.
+            if (number === '0') {
+                if (ch === 'x' || ch === 'X') {
+                    ++index;
+                    return scanHexLiteral(start);
+                }
+                if (ch === 'b' || ch === 'B') {
+                    ++index;
+                    return scanBinaryLiteral(start);
+                }
+                if (ch === 'o' || ch === 'O') {
+                    return scanOctalLiteral(ch, start);
+                }
+
+                if (isOctalDigit(ch)) {
+                    if (isImplicitOctalLiteral()) {
+                        return scanOctalLiteral(ch, start);
+                    }
+                }
+            }
+
+            while (isDecimalDigit(source.charCodeAt(index))) {
+                number += source[index++];
+            }
+            ch = source[index];
+        }
+
+        if (ch === '.') {
+            number += source[index++];
+            while (isDecimalDigit(source.charCodeAt(index))) {
+                number += source[index++];
+            }
+            ch = source[index];
+        }
+
+        if (ch === 'e' || ch === 'E') {
+            number += source[index++];
+
+            ch = source[index];
+            if (ch === '+' || ch === '-') {
+                number += source[index++];
+            }
+            if (isDecimalDigit(source.charCodeAt(index))) {
+                while (isDecimalDigit(source.charCodeAt(index))) {
+                    number += source[index++];
+                }
+            } else {
+                throwUnexpectedToken();
+            }
+        }
+
+        if (isIdentifierStart(source.charCodeAt(index))) {
+            throwUnexpectedToken();
+        }
+
+        return {
+            type: Token.NumericLiteral,
+            value: parseFloat(number),
+            lineNumber: lineNumber,
+            lineStart: lineStart,
+            start: start,
+            end: index
+        };
+    }
+
+    // ECMA-262 11.8.4 String Literals
+
+    function scanStringLiteral() {
+        var str = '', quote, start, ch, unescaped, octToDec, octal = false;
+
+        quote = source[index];
+        assert((quote === '\'' || quote === '"'),
+            'String literal must starts with a quote');
+
+        start = index;
+        ++index;
+
+        while (index < length) {
+            ch = source[index++];
+
+            if (ch === quote) {
+                quote = '';
+                break;
+            } else if (ch === '\\') {
+                ch = source[index++];
+                if (!ch || !isLineTerminator(ch.charCodeAt(0))) {
+                    switch (ch) {
+                    case 'u':
+                    case 'x':
+                        if (source[index] === '{') {
+                            ++index;
+                            str += scanUnicodeCodePointEscape();
+                        } else {
+                            unescaped = scanHexEscape(ch);
+                            if (!unescaped) {
+                                throw throwUnexpectedToken();
+                            }
+                            str += unescaped;
+                        }
+                        break;
+                    case 'n':
+                        str += '\n';
+                        break;
+                    case 'r':
+                        str += '\r';
+                        break;
+                    case 't':
+                        str += '\t';
+                        break;
+                    case 'b':
+                        str += '\b';
+                        break;
+                    case 'f':
+                        str += '\f';
+                        break;
+                    case 'v':
+                        str += '\x0B';
+                        break;
+                    case '8':
+                    case '9':
+                        str += ch;
+                        tolerateUnexpectedToken();
+                        break;
+
+                    default:
+                        if (isOctalDigit(ch)) {
+                            octToDec = octalToDecimal(ch);
+
+                            octal = octToDec.octal || octal;
+                            str += String.fromCharCode(octToDec.code);
+                        } else {
+                            str += ch;
+                        }
+                        break;
+                    }
+                } else {
+                    ++lineNumber;
+                    if (ch === '\r' && source[index] === '\n') {
+                        ++index;
+                    }
+                    lineStart = index;
+                }
+            } else if (isLineTerminator(ch.charCodeAt(0))) {
+                break;
+            } else {
+                str += ch;
+            }
+        }
+
+        if (quote !== '') {
+            index = start;
+            throwUnexpectedToken();
+        }
+
+        return {
+            type: Token.StringLiteral,
+            value: str,
+            octal: octal,
+            lineNumber: startLineNumber,
+            lineStart: startLineStart,
+            start: start,
+            end: index
+        };
+    }
+
+    // ECMA-262 11.8.6 Template Literal Lexical Components
+
+    function scanTemplate() {
+        var cooked = '', ch, start, rawOffset, terminated, head, tail, restore, unescaped;
+
+        terminated = false;
+        tail = false;
+        start = index;
+        head = (source[index] === '`');
+        rawOffset = 2;
+
+        ++index;
+
+        while (index < length) {
+            ch = source[index++];
+            if (ch === '`') {
+                rawOffset = 1;
+                tail = true;
+                terminated = true;
+                break;
+            } else if (ch === '$') {
+                if (source[index] === '{') {
+                    state.curlyStack.push('${');
+                    ++index;
+                    terminated = true;
+                    break;
+                }
+                cooked += ch;
+            } else if (ch === '\\') {
+                ch = source[index++];
+                if (!isLineTerminator(ch.charCodeAt(0))) {
+                    switch (ch) {
+                    case 'n':
+                        cooked += '\n';
+                        break;
+                    case 'r':
+                        cooked += '\r';
+                        break;
+                    case 't':
+                        cooked += '\t';
+                        break;
+                    case 'u':
+                    case 'x':
+                        if (source[index] === '{') {
+                            ++index;
+                            cooked += scanUnicodeCodePointEscape();
+                        } else {
+                            restore = index;
+                            unescaped = scanHexEscape(ch);
+                            if (unescaped) {
+                                cooked += unescaped;
+                            } else {
+                                index = restore;
+                                cooked += ch;
+                            }
+                        }
+                        break;
+                    case 'b':
+                        cooked += '\b';
+                        break;
+                    case 'f':
+                        cooked += '\f';
+                        break;
+                    case 'v':
+                        cooked += '\v';
+                        break;
+
+                    default:
+                        if (ch === '0') {
+                            if (isDecimalDigit(source.charCodeAt(index))) {
+                                // Illegal: \01 \02 and so on
+                                throwError(Messages.TemplateOctalLiteral);
+                            }
+                            cooked += '\0';
+                        } else if (isOctalDigit(ch)) {
+                            // Illegal: \1 \2
+                            throwError(Messages.TemplateOctalLiteral);
+                        } else {
+                            cooked += ch;
+                        }
+                        break;
+                    }
+                } else {
+                    ++lineNumber;
+                    if (ch === '\r' && source[index] === '\n') {
+                        ++index;
+                    }
+                    lineStart = index;
+                }
+            } else if (isLineTerminator(ch.charCodeAt(0))) {
+                ++lineNumber;
+                if (ch === '\r' && source[index] === '\n') {
+                    ++index;
+                }
+                lineStart = index;
+                cooked += '\n';
+            } else {
+                cooked += ch;
+            }
+        }
+
+        if (!terminated) {
+            throwUnexpectedToken();
+        }
+
+        if (!head) {
+            state.curlyStack.pop();
+        }
+
+        return {
+            type: Token.Template,
+            value: {
+                cooked: cooked,
+                raw: source.slice(start + 1, index - rawOffset)
+            },
+            head: head,
+            tail: tail,
+            lineNumber: lineNumber,
+            lineStart: lineStart,
+            start: start,
+            end: index
+        };
+    }
+
+    // ECMA-262 11.8.5 Regular Expression Literals
+
+    function testRegExp(pattern, flags) {
+        // The BMP character to use as a replacement for astral symbols when
+        // translating an ES6 "u"-flagged pattern to an ES5-compatible
+        // approximation.
+        // Note: replacing with '\uFFFF' enables false positives in unlikely
+        // scenarios. For example, `[\u{1044f}-\u{10440}]` is an invalid
+        // pattern that would not be detected by this substitution.
+        var astralSubstitute = '\uFFFF',
+            tmp = pattern;
+
+        if (flags.indexOf('u') >= 0) {
+            tmp = tmp
+                // Replace every Unicode escape sequence with the equivalent
+                // BMP character or a constant ASCII code point in the case of
+                // astral symbols. (See the above note on `astralSubstitute`
+                // for more information.)
+                .replace(/\\u\{([0-9a-fA-F]+)\}|\\u([a-fA-F0-9]{4})/g, function ($0, $1, $2) {
+                    var codePoint = parseInt($1 || $2, 16);
+                    if (codePoint > 0x10FFFF) {
+                        throwUnexpectedToken(null, Messages.InvalidRegExp);
+                    }
+                    if (codePoint <= 0xFFFF) {
+                        return String.fromCharCode(codePoint);
+                    }
+                    return astralSubstitute;
+                })
+                // Replace each paired surrogate with a single ASCII symbol to
+                // avoid throwing on regular expressions that are only valid in
+                // combination with the "u" flag.
+                .replace(
+                    /[\uD800-\uDBFF][\uDC00-\uDFFF]/g,
+                    astralSubstitute
+                );
+        }
+
+        // First, detect invalid regular expressions.
+        try {
+            RegExp(tmp);
+        } catch (e) {
+            throwUnexpectedToken(null, Messages.InvalidRegExp);
+        }
+
+        // Return a regular expression object for this pattern-flag pair, or
+        // `null` in case the current environment doesn't support the flags it
+        // uses.
+        try {
+            return new RegExp(pattern, flags);
+        } catch (exception) {
+            /* istanbul ignore next */
+            return null;
+        }
+    }
+
+    function scanRegExpBody() {
+        var ch, str, classMarker, terminated, body;
+
+        ch = source[index];
+        assert(ch === '/', 'Regular expression literal must start with a slash');
+        str = source[index++];
+
+        classMarker = false;
+        terminated = false;
+        while (index < length) {
+            ch = source[index++];
+            str += ch;
+            if (ch === '\\') {
+                ch = source[index++];
+                // ECMA-262 7.8.5
+                if (isLineTerminator(ch.charCodeAt(0))) {
+                    throwUnexpectedToken(null, Messages.UnterminatedRegExp);
+                }
+                str += ch;
+            } else if (isLineTerminator(ch.charCodeAt(0))) {
+                throwUnexpectedToken(null, Messages.UnterminatedRegExp);
+            } else if (classMarker) {
+                if (ch === ']') {
+                    classMarker = false;
+                }
+            } else {
+                if (ch === '/') {
+                    terminated = true;
+                    break;
+                } else if (ch === '[') {
+                    classMarker = true;
+                }
+            }
+        }
+
+        if (!terminated) {
+            throwUnexpectedToken(null, Messages.UnterminatedRegExp);
+        }
+
+        // Exclude leading and trailing slash.
+        body = str.substr(1, str.length - 2);
+        return {
+            value: body,
+            literal: str
+        };
+    }
+
+    function scanRegExpFlags() {
+        var ch, str, flags, restore;
+
+        str = '';
+        flags = '';
+        while (index < length) {
+            ch = source[index];
+            if (!isIdentifierPart(ch.charCodeAt(0))) {
+                break;
+            }
+
+            ++index;
+            if (ch === '\\' && index < length) {
+                ch = source[index];
+                if (ch === 'u') {
+                    ++index;
+                    restore = index;
+                    ch = scanHexEscape('u');
+                    if (ch) {
+                        flags += ch;
+                        for (str += '\\u'; restore < index; ++restore) {
+                            str += source[restore];
+                        }
+                    } else {
+                        index = restore;
+                        flags += 'u';
+                        str += '\\u';
+                    }
+                    tolerateUnexpectedToken();
+                } else {
+                    str += '\\';
+                    tolerateUnexpectedToken();
+                }
+            } else {
+                flags += ch;
+                str += ch;
+            }
+        }
+
+        return {
+            value: flags,
+            literal: str
+        };
+    }
+
+    function scanRegExp() {
+        var start, body, flags, value;
+        scanning = true;
+
+        lookahead = null;
+        skipComment();
+        start = index;
+
+        body = scanRegExpBody();
+        flags = scanRegExpFlags();
+        value = testRegExp(body.value, flags.value);
+        scanning = false;
+        if (extra.tokenize) {
+            return {
+                type: Token.RegularExpression,
+                value: value,
+                regex: {
+                    pattern: body.value,
+                    flags: flags.value
+                },
+                lineNumber: lineNumber,
+                lineStart: lineStart,
+                start: start,
+                end: index
+            };
+        }
+
+        return {
+            literal: body.literal + flags.literal,
+            value: value,
+            regex: {
+                pattern: body.value,
+                flags: flags.value
+            },
+            start: start,
+            end: index
+        };
+    }
+
+    function collectRegex() {
+        var pos, loc, regex, token;
+
+        skipComment();
+
+        pos = index;
+        loc = {
+            start: {
+                line: lineNumber,
+                column: index - lineStart
+            }
+        };
+
+        regex = scanRegExp();
+
+        loc.end = {
+            line: lineNumber,
+            column: index - lineStart
+        };
+
+        /* istanbul ignore next */
+        if (!extra.tokenize) {
+            // Pop the previous token, which is likely '/' or '/='
+            if (extra.tokens.length > 0) {
+                token = extra.tokens[extra.tokens.length - 1];
+                if (token.range[0] === pos && token.type === 'Punctuator') {
+                    if (token.value === '/' || token.value === '/=') {
+                        extra.tokens.pop();
+                    }
+                }
+            }
+
+            extra.tokens.push({
+                type: 'RegularExpression',
+                value: regex.literal,
+                regex: regex.regex,
+                range: [pos, index],
+                loc: loc
+            });
+        }
+
+        return regex;
+    }
+
+    function isIdentifierName(token) {
+        return token.type === Token.Identifier ||
+            token.type === Token.Keyword ||
+            token.type === Token.BooleanLiteral ||
+            token.type === Token.NullLiteral;
+    }
+
+    // Using the following algorithm:
+    // https://github.com/mozilla/sweet.js/wiki/design
+
+    function advanceSlash() {
+        var regex, previous, check;
+
+        function testKeyword(value) {
+            return value && (value.length > 1) && (value[0] >= 'a') && (value[0] <= 'z');
+        }
+
+        previous = extra.tokenValues[extra.tokenValues.length - 1];
+        regex = (previous !== null);
+
+        switch (previous) {
+        case 'this':
+        case ']':
+            regex = false;
+            break;
+
+        case ')':
+            check = extra.tokenValues[extra.openParenToken - 1];
+            regex = (check === 'if' || check === 'while' || check === 'for' || check === 'with');
+            break;
+
+        case '}':
+            // Dividing a function by anything makes little sense,
+            // but we have to check for that.
+            regex = false;
+            if (testKeyword(extra.tokenValues[extra.openCurlyToken - 3])) {
+                // Anonymous function, e.g. function(){} /42
+                check = extra.tokenValues[extra.openCurlyToken - 4];
+                regex = check ? (FnExprTokens.indexOf(check) < 0) : false;
+            } else if (testKeyword(extra.tokenValues[extra.openCurlyToken - 4])) {
+                // Named function, e.g. function f(){} /42/
+                check = extra.tokenValues[extra.openCurlyToken - 5];
+                regex = check ? (FnExprTokens.indexOf(check) < 0) : true;
+            }
+        }
+
+        return regex ? collectRegex() : scanPunctuator();
+    }
+
+    function advance() {
+        var cp, token;
+
+        if (index >= length) {
+            return {
+                type: Token.EOF,
+                lineNumber: lineNumber,
+                lineStart: lineStart,
+                start: index,
+                end: index
+            };
+        }
+
+        cp = source.charCodeAt(index);
+
+        if (isIdentifierStart(cp)) {
+            token = scanIdentifier();
+            if (strict && isStrictModeReservedWord(token.value)) {
+                token.type = Token.Keyword;
+            }
+            return token;
+        }
+
+        // Very common: ( and ) and ;
+        if (cp === 0x28 || cp === 0x29 || cp === 0x3B) {
+            return scanPunctuator();
+        }
+
+        // String literal starts with single quote (U+0027) or double quote (U+0022).
+        if (cp === 0x27 || cp === 0x22) {
+            return scanStringLiteral();
+        }
+
+        // Dot (.) U+002E can also start a floating-point number, hence the need
+        // to check the next character.
+        if (cp === 0x2E) {
+            if (isDecimalDigit(source.charCodeAt(index + 1))) {
+                return scanNumericLiteral();
+            }
+            return scanPunctuator();
+        }
+
+        if (isDecimalDigit(cp)) {
+            return scanNumericLiteral();
+        }
+
+        // Slash (/) U+002F can also start a regex.
+        if (extra.tokenize && cp === 0x2F) {
+            return advanceSlash();
+        }
+
+        // Template literals start with ` (U+0060) for template head
+        // or } (U+007D) for template middle or template tail.
+        if (cp === 0x60 || (cp === 0x7D && state.curlyStack[state.curlyStack.length - 1] === '${')) {
+            return scanTemplate();
+        }
+
+        // Possible identifier start in a surrogate pair.
+        if (cp >= 0xD800 && cp < 0xDFFF) {
+            cp = codePointAt(index);
+            if (isIdentifierStart(cp)) {
+                return scanIdentifier();
+            }
+        }
+
+        return scanPunctuator();
+    }
+
+    function collectToken() {
+        var loc, token, value, entry;
+
+        loc = {
+            start: {
+                line: lineNumber,
+                column: index - lineStart
+            }
+        };
+
+        token = advance();
+        loc.end = {
+            line: lineNumber,
+            column: index - lineStart
+        };
+
+        if (token.type !== Token.EOF) {
+            value = source.slice(token.start, token.end);
+            entry = {
+                type: TokenName[token.type],
+                value: value,
+                range: [token.start, token.end],
+                loc: loc
+            };
+            if (token.regex) {
+                entry.regex = {
+                    pattern: token.regex.pattern,
+                    flags: token.regex.flags
+                };
+            }
+            if (extra.tokenValues) {
+                extra.tokenValues.push((entry.type === 'Punctuator' || entry.type === 'Keyword') ? entry.value : null);
+            }
+            if (extra.tokenize) {
+                if (!extra.range) {
+                    delete entry.range;
+                }
+                if (!extra.loc) {
+                    delete entry.loc;
+                }
+                if (extra.delegate) {
+                    entry = extra.delegate(entry);
+                }
+            }
+            extra.tokens.push(entry);
+        }
+
+        return token;
+    }
+
+    function lex() {
+        var token;
+        scanning = true;
+
+        lastIndex = index;
+        lastLineNumber = lineNumber;
+        lastLineStart = lineStart;
+
+        skipComment();
+
+        token = lookahead;
+
+        startIndex = index;
+        startLineNumber = lineNumber;
+        startLineStart = lineStart;
+
+        lookahead = (typeof extra.tokens !== 'undefined') ? collectToken() : advance();
+        scanning = false;
+        return token;
+    }
+
+    function peek() {
+        scanning = true;
+
+        skipComment();
+
+        lastIndex = index;
+        lastLineNumber = lineNumber;
+        lastLineStart = lineStart;
+
+        startIndex = index;
+        startLineNumber = lineNumber;
+        startLineStart = lineStart;
+
+        lookahead = (typeof extra.tokens !== 'undefined') ? collectToken() : advance();
+        scanning = false;
+    }
+
+    function Position() {
+        this.line = startLineNumber;
+        this.column = startIndex - startLineStart;
+    }
+
+    function SourceLocation() {
+        this.start = new Position();
+        this.end = null;
+    }
+
+    function WrappingSourceLocation(startToken) {
+        this.start = {
+            line: startToken.lineNumber,
+            column: startToken.start - startToken.lineStart
+        };
+        this.end = null;
+    }
+
+    function Node() {
+        if (extra.range) {
+            this.range = [startIndex, 0];
+        }
+        if (extra.loc) {
+            this.loc = new SourceLocation();
+        }
+    }
+
+    function WrappingNode(startToken) {
+        if (extra.range) {
+            this.range = [startToken.start, 0];
+        }
+        if (extra.loc) {
+            this.loc = new WrappingSourceLocation(startToken);
+        }
+    }
+
+    WrappingNode.prototype = Node.prototype = {
+
+        processComment: function () {
+            var lastChild,
+                innerComments,
+                leadingComments,
+                trailingComments,
+                bottomRight = extra.bottomRightStack,
+                i,
+                comment,
+                last = bottomRight[bottomRight.length - 1];
+
+            if (this.type === Syntax.Program) {
+                if (this.body.length > 0) {
+                    return;
+                }
+            }
+            /**
+             * patch innnerComments for properties empty block
+             * `function a() {/** comments **\/}`
+             */
+
+            if (this.type === Syntax.BlockStatement && this.body.length === 0) {
+                innerComments = [];
+                for (i = extra.leadingComments.length - 1; i >= 0; --i) {
+                    comment = extra.leadingComments[i];
+                    if (this.range[1] >= comment.range[1]) {
+                        innerComments.unshift(comment);
+                        extra.leadingComments.splice(i, 1);
+                        extra.trailingComments.splice(i, 1);
+                    }
+                }
+                if (innerComments.length) {
+                    this.innerComments = innerComments;
+                    //bottomRight.push(this);
+                    return;
+                }
+            }
+
+            if (extra.trailingComments.length > 0) {
+                trailingComments = [];
+                for (i = extra.trailingComments.length - 1; i >= 0; --i) {
+                    comment = extra.trailingComments[i];
+                    if (comment.range[0] >= this.range[1]) {
+                        trailingComments.unshift(comment);
+                        extra.trailingComments.splice(i, 1);
+                    }
+                }
+                extra.trailingComments = [];
+            } else {
+                if (last && last.trailingComments && last.trailingComments[0].range[0] >= this.range[1]) {
+                    trailingComments = last.trailingComments;
+                    delete last.trailingComments;
+                }
+            }
+
+            // Eating the stack.
+            while (last && last.range[0] >= this.range[0]) {
+                lastChild = bottomRight.pop();
+                last = bottomRight[bottomRight.length - 1];
+            }
+
+            if (lastChild) {
+                if (lastChild.leadingComments) {
+                    leadingComments = [];
+                    for (i = lastChild.leadingComments.length - 1; i >= 0; --i) {
+                        comment = lastChild.leadingComments[i];
+                        if (comment.range[1] <= this.range[0]) {
+                            leadingComments.unshift(comment);
+                            lastChild.leadingComments.splice(i, 1);
+                        }
+                    }
+
+                    if (!lastChild.leadingComments.length) {
+                        lastChild.leadingComments = undefined;
+                    }
+                }
+            } else if (extra.leadingComments.length > 0) {
+                leadingComments = [];
+                for (i = extra.leadingComments.length - 1; i >= 0; --i) {
+                    comment = extra.leadingComments[i];
+                    if (comment.range[1] <= this.range[0]) {
+                        leadingComments.unshift(comment);
+                        extra.leadingComments.splice(i, 1);
+                    }
+                }
+            }
+
+
+            if (leadingComments && leadingComments.length > 0) {
+                this.leadingComments = leadingComments;
+            }
+            if (trailingComments && trailingComments.length > 0) {
+                this.trailingComments = trailingComments;
+            }
+
+            bottomRight.push(this);
+        },
+
+        finish: function () {
+            if (extra.range) {
+                this.range[1] = lastIndex;
+            }
+            if (extra.loc) {
+                this.loc.end = {
+                    line: lastLineNumber,
+                    column: lastIndex - lastLineStart
+                };
+                if (extra.source) {
+                    this.loc.source = extra.source;
+                }
+            }
+
+            if (extra.attachComment) {
+                this.processComment();
+            }
+        },
+
+        finishArrayExpression: function (elements) {
+            this.type = Syntax.ArrayExpression;
+            this.elements = elements;
+            this.finish();
+            return this;
+        },
+
+        finishArrayPattern: function (elements) {
+            this.type = Syntax.ArrayPattern;
+            this.elements = elements;
+            this.finish();
+            return this;
+        },
+
+        finishArrowFunctionExpression: function (params, defaults, body, expression) {
+            this.type = Syntax.ArrowFunctionExpression;
+            this.id = null;
+            this.params = params;
+            this.defaults = defaults;
+            this.body = body;
+            this.generator = false;
+            this.expression = expression;
+            this.finish();
+            return this;
+        },
+
+        finishAssignmentExpression: function (operator, left, right) {
+            this.type = Syntax.AssignmentExpression;
+            this.operator = operator;
+            this.left = left;
+            this.right = right;
+            this.finish();
+            return this;
+        },
+
+        finishAssignmentPattern: function (left, right) {
+            this.type = Syntax.AssignmentPattern;
+            this.left = left;
+            this.right = right;
+            this.finish();
+            return this;
+        },
+
+        finishBinaryExpression: function (operator, left, right) {
+            this.type = (operator === '||' || operator === '&&') ? Syntax.LogicalExpression : Syntax.BinaryExpression;
+            this.operator = operator;
+            this.left = left;
+            this.right = right;
+            this.finish();
+            return this;
+        },
+
+        finishBlockStatement: function (body) {
+            this.type = Syntax.BlockStatement;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishBreakStatement: function (label) {
+            this.type = Syntax.BreakStatement;
+            this.label = label;
+            this.finish();
+            return this;
+        },
+
+        finishCallExpression: function (callee, args) {
+            this.type = Syntax.CallExpression;
+            this.callee = callee;
+            this.arguments = args;
+            this.finish();
+            return this;
+        },
+
+        finishCatchClause: function (param, body) {
+            this.type = Syntax.CatchClause;
+            this.param = param;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishClassBody: function (body) {
+            this.type = Syntax.ClassBody;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishClassDeclaration: function (id, superClass, body) {
+            this.type = Syntax.ClassDeclaration;
+            this.id = id;
+            this.superClass = superClass;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishClassExpression: function (id, superClass, body) {
+            this.type = Syntax.ClassExpression;
+            this.id = id;
+            this.superClass = superClass;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishConditionalExpression: function (test, consequent, alternate) {
+            this.type = Syntax.ConditionalExpression;
+            this.test = test;
+            this.consequent = consequent;
+            this.alternate = alternate;
+            this.finish();
+            return this;
+        },
+
+        finishContinueStatement: function (label) {
+            this.type = Syntax.ContinueStatement;
+            this.label = label;
+            this.finish();
+            return this;
+        },
+
+        finishDebuggerStatement: function () {
+            this.type = Syntax.DebuggerStatement;
+            this.finish();
+            return this;
+        },
+
+        finishDoWhileStatement: function (body, test) {
+            this.type = Syntax.DoWhileStatement;
+            this.body = body;
+            this.test = test;
+            this.finish();
+            return this;
+        },
+
+        finishEmptyStatement: function () {
+            this.type = Syntax.EmptyStatement;
+            this.finish();
+            return this;
+        },
+
+        finishExpressionStatement: function (expression) {
+            this.type = Syntax.ExpressionStatement;
+            this.expression = expression;
+            this.finish();
+            return this;
+        },
+
+        finishForStatement: function (init, test, update, body) {
+            this.type = Syntax.ForStatement;
+            this.init = init;
+            this.test = test;
+            this.update = update;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishForOfStatement: function (left, right, body) {
+            this.type = Syntax.ForOfStatement;
+            this.left = left;
+            this.right = right;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishForInStatement: function (left, right, body) {
+            this.type = Syntax.ForInStatement;
+            this.left = left;
+            this.right = right;
+            this.body = body;
+            this.each = false;
+            this.finish();
+            return this;
+        },
+
+        finishFunctionDeclaration: function (id, params, defaults, body, generator) {
+            this.type = Syntax.FunctionDeclaration;
+            this.id = id;
+            this.params = params;
+            this.defaults = defaults;
+            this.body = body;
+            this.generator = generator;
+            this.expression = false;
+            this.finish();
+            return this;
+        },
+
+        finishFunctionExpression: function (id, params, defaults, body, generator) {
+            this.type = Syntax.FunctionExpression;
+            this.id = id;
+            this.params = params;
+            this.defaults = defaults;
+            this.body = body;
+            this.generator = generator;
+            this.expression = false;
+            this.finish();
+            return this;
+        },
+
+        finishIdentifier: function (name) {
+            this.type = Syntax.Identifier;
+            this.name = name;
+            this.finish();
+            return this;
+        },
+
+        finishIfStatement: function (test, consequent, alternate) {
+            this.type = Syntax.IfStatement;
+            this.test = test;
+            this.consequent = consequent;
+            this.alternate = alternate;
+            this.finish();
+            return this;
+        },
+
+        finishLabeledStatement: function (label, body) {
+            this.type = Syntax.LabeledStatement;
+            this.label = label;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishLiteral: function (token) {
+            this.type = Syntax.Literal;
+            this.value = token.value;
+            this.raw = source.slice(token.start, token.end);
+            if (token.regex) {
+                this.regex = token.regex;
+            }
+            this.finish();
+            return this;
+        },
+
+        finishMemberExpression: function (accessor, object, property) {
+            this.type = Syntax.MemberExpression;
+            this.computed = accessor === '[';
+            this.object = object;
+            this.property = property;
+            this.finish();
+            return this;
+        },
+
+        finishMetaProperty: function (meta, property) {
+            this.type = Syntax.MetaProperty;
+            this.meta = meta;
+            this.property = property;
+            this.finish();
+            return this;
+        },
+
+        finishNewExpression: function (callee, args) {
+            this.type = Syntax.NewExpression;
+            this.callee = callee;
+            this.arguments = args;
+            this.finish();
+            return this;
+        },
+
+        finishObjectExpression: function (properties) {
+            this.type = Syntax.ObjectExpression;
+            this.properties = properties;
+            this.finish();
+            return this;
+        },
+
+        finishObjectPattern: function (properties) {
+            this.type = Syntax.ObjectPattern;
+            this.properties = properties;
+            this.finish();
+            return this;
+        },
+
+        finishPostfixExpression: function (operator, argument) {
+            this.type = Syntax.UpdateExpression;
+            this.operator = operator;
+            this.argument = argument;
+            this.prefix = false;
+            this.finish();
+            return this;
+        },
+
+        finishProgram: function (body, sourceType) {
+            this.type = Syntax.Program;
+            this.body = body;
+            this.sourceType = sourceType;
+            this.finish();
+            return this;
+        },
+
+        finishProperty: function (kind, key, computed, value, method, shorthand) {
+            this.type = Syntax.Property;
+            this.key = key;
+            this.computed = computed;
+            this.value = value;
+            this.kind = kind;
+            this.method = method;
+            this.shorthand = shorthand;
+            this.finish();
+            return this;
+        },
+
+        finishRestElement: function (argument) {
+            this.type = Syntax.RestElement;
+            this.argument = argument;
+            this.finish();
+            return this;
+        },
+
+        finishReturnStatement: function (argument) {
+            this.type = Syntax.ReturnStatement;
+            this.argument = argument;
+            this.finish();
+            return this;
+        },
+
+        finishSequenceExpression: function (expressions) {
+            this.type = Syntax.SequenceExpression;
+            this.expressions = expressions;
+            this.finish();
+            return this;
+        },
+
+        finishSpreadElement: function (argument) {
+            this.type = Syntax.SpreadElement;
+            this.argument = argument;
+            this.finish();
+            return this;
+        },
+
+        finishSwitchCase: function (test, consequent) {
+            this.type = Syntax.SwitchCase;
+            this.test = test;
+            this.consequent = consequent;
+            this.finish();
+            return this;
+        },
+
+        finishSuper: function () {
+            this.type = Syntax.Super;
+            this.finish();
+            return this;
+        },
+
+        finishSwitchStatement: function (discriminant, cases) {
+            this.type = Syntax.SwitchStatement;
+            this.discriminant = discriminant;
+            this.cases = cases;
+            this.finish();
+            return this;
+        },
+
+        finishTaggedTemplateExpression: function (tag, quasi) {
+            this.type = Syntax.TaggedTemplateExpression;
+            this.tag = tag;
+            this.quasi = quasi;
+            this.finish();
+            return this;
+        },
+
+        finishTemplateElement: function (value, tail) {
+            this.type = Syntax.TemplateElement;
+            this.value = value;
+            this.tail = tail;
+            this.finish();
+            return this;
+        },
+
+        finishTemplateLiteral: function (quasis, expressions) {
+            this.type = Syntax.TemplateLiteral;
+            this.quasis = quasis;
+            this.expressions = expressions;
+            this.finish();
+            return this;
+        },
+
+        finishThisExpression: function () {
+            this.type = Syntax.ThisExpression;
+            this.finish();
+            return this;
+        },
+
+        finishThrowStatement: function (argument) {
+            this.type = Syntax.ThrowStatement;
+            this.argument = argument;
+            this.finish();
+            return this;
+        },
+
+        finishTryStatement: function (block, handler, finalizer) {
+            this.type = Syntax.TryStatement;
+            this.block = block;
+            this.guardedHandlers = [];
+            this.handlers = handler ? [handler] : [];
+            this.handler = handler;
+            this.finalizer = finalizer;
+            this.finish();
+            return this;
+        },
+
+        finishUnaryExpression: function (operator, argument) {
+            this.type = (operator === '++' || operator === '--') ? Syntax.UpdateExpression : Syntax.UnaryExpression;
+            this.operator = operator;
+            this.argument = argument;
+            this.prefix = true;
+            this.finish();
+            return this;
+        },
+
+        finishVariableDeclaration: function (declarations) {
+            this.type = Syntax.VariableDeclaration;
+            this.declarations = declarations;
+            this.kind = 'var';
+            this.finish();
+            return this;
+        },
+
+        finishLexicalDeclaration: function (declarations, kind) {
+            this.type = Syntax.VariableDeclaration;
+            this.declarations = declarations;
+            this.kind = kind;
+            this.finish();
+            return this;
+        },
+
+        finishVariableDeclarator: function (id, init) {
+            this.type = Syntax.VariableDeclarator;
+            this.id = id;
+            this.init = init;
+            this.finish();
+            return this;
+        },
+
+        finishWhileStatement: function (test, body) {
+            this.type = Syntax.WhileStatement;
+            this.test = test;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishWithStatement: function (object, body) {
+            this.type = Syntax.WithStatement;
+            this.object = object;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishExportSpecifier: function (local, exported) {
+            this.type = Syntax.ExportSpecifier;
+            this.exported = exported || local;
+            this.local = local;
+            this.finish();
+            return this;
+        },
+
+        finishImportDefaultSpecifier: function (local) {
+            this.type = Syntax.ImportDefaultSpecifier;
+            this.local = local;
+            this.finish();
+            return this;
+        },
+
+        finishImportNamespaceSpecifier: function (local) {
+            this.type = Syntax.ImportNamespaceSpecifier;
+            this.local = local;
+            this.finish();
+            return this;
+        },
+
+        finishExportNamedDeclaration: function (declaration, specifiers, src) {
+            this.type = Syntax.ExportNamedDeclaration;
+            this.declaration = declaration;
+            this.specifiers = specifiers;
+            this.source = src;
+            this.finish();
+            return this;
+        },
+
+        finishExportDefaultDeclaration: function (declaration) {
+            this.type = Syntax.ExportDefaultDeclaration;
+            this.declaration = declaration;
+            this.finish();
+            return this;
+        },
+
+        finishExportAllDeclaration: function (src) {
+            this.type = Syntax.ExportAllDeclaration;
+            this.source = src;
+            this.finish();
+            return this;
+        },
+
+        finishImportSpecifier: function (local, imported) {
+            this.type = Syntax.ImportSpecifier;
+            this.local = local || imported;
+            this.imported = imported;
+            this.finish();
+            return this;
+        },
+
+        finishImportDeclaration: function (specifiers, src) {
+            this.type = Syntax.ImportDeclaration;
+            this.specifiers = specifiers;
+            this.source = src;
+            this.finish();
+            return this;
+        },
+
+        finishYieldExpression: function (argument, delegate) {
+            this.type = Syntax.YieldExpression;
+            this.argument = argument;
+            this.delegate = delegate;
+            this.finish();
+            return this;
+        }
+    };
+
+
+    function recordError(error) {
+        var e, existing;
+
+        for (e = 0; e < extra.errors.length; e++) {
+            existing = extra.errors[e];
+            // Prevent duplicated error.
+            /* istanbul ignore next */
+            if (existing.index === error.index && existing.message === error.message) {
+                return;
+            }
+        }
+
+        extra.errors.push(error);
+    }
+
+    function constructError(msg, column) {
+        var error = new Error(msg);
+        try {
+            throw error;
+        } catch (base) {
+            /* istanbul ignore else */
+            if (Object.create && Object.defineProperty) {
+                error = Object.create(base);
+                Object.defineProperty(error, 'column', { value: column });
+            }
+        } finally {
+            return error;
+        }
+    }
+
+    function createError(line, pos, description) {
+        var msg, column, error;
+
+        msg = 'Line ' + line + ': ' + description;
+        column = pos - (scanning ? lineStart : lastLineStart) + 1;
+        error = constructError(msg, column);
+        error.lineNumber = line;
+        error.description = description;
+        error.index = pos;
+        return error;
+    }
+
+    // Throw an exception
+
+    function throwError(messageFormat) {
+        var args, msg;
+
+        args = Array.prototype.slice.call(arguments, 1);
+        msg = messageFormat.replace(/%(\d)/g,
+            function (whole, idx) {
+                assert(idx < args.length, 'Message reference must be in range');
+                return args[idx];
+            }
+        );
+
+        throw createError(lastLineNumber, lastIndex, msg);
+    }
+
+    function tolerateError(messageFormat) {
+        var args, msg, error;
+
+        args = Array.prototype.slice.call(arguments, 1);
+        /* istanbul ignore next */
+        msg = messageFormat.replace(/%(\d)/g,
+            function (whole, idx) {
+                assert(idx < args.length, 'Message reference must be in range');
+                return args[idx];
+            }
+        );
+
+        error = createError(lineNumber, lastIndex, msg);
+        if (extra.errors) {
+            recordError(error);
+        } else {
+            throw error;
+        }
+    }
+
+    // Throw an exception because of the token.
+
+    function unexpectedTokenError(token, message) {
+        var value, msg = message || Messages.UnexpectedToken;
+
+        if (token) {
+            if (!message) {
+                msg = (token.type === Token.EOF) ? Messages.UnexpectedEOS :
+                    (token.type === Token.Identifier) ? Messages.UnexpectedIdentifier :
+                    (token.type === Token.NumericLiteral) ? Messages.UnexpectedNumber :
+                    (token.type === Token.StringLiteral) ? Messages.UnexpectedString :
+                    (token.type === Token.Template) ? Messages.UnexpectedTemplate :
+                    Messages.UnexpectedToken;
+
+                if (token.type === Token.Keyword) {
+                    if (isFutureReservedWord(token.value)) {
+                        msg = Messages.UnexpectedReserved;
+                    } else if (strict && isStrictModeReservedWord(token.value)) {
+                        msg = Messages.StrictReservedWord;
+                    }
+                }
+            }
+
+            value = (token.type === Token.Template) ? token.value.raw : token.value;
+        } else {
+            value = 'ILLEGAL';
+        }
+
+        msg = msg.replace('%0', value);
+
+        return (token && typeof token.lineNumber === 'number') ?
+            createError(token.lineNumber, token.start, msg) :
+            createError(scanning ? lineNumber : lastLineNumber, scanning ? index : lastIndex, msg);
+    }
+
+    function throwUnexpectedToken(token, message) {
+        throw unexpectedTokenError(token, message);
+    }
+
+    function tolerateUnexpectedToken(token, message) {
+        var error = unexpectedTokenError(token, message);
+        if (extra.errors) {
+            recordError(error);
+        } else {
+            throw error;
+        }
+    }
+
+    // Expect the next token to match the specified punctuator.
+    // If not, an exception will be thrown.
+
+    function expect(value) {
+        var token = lex();
+        if (token.type !== Token.Punctuator || token.value !== value) {
+            throwUnexpectedToken(token);
+        }
+    }
+
+    /**
+     * @name expectCommaSeparator
+     * @description Quietly expect a comma when in tolerant mode, otherwise delegates
+     * to <code>expect(value)</code>
+     * @since 2.0
+     */
+    function expectCommaSeparator() {
+        var token;
+
+        if (extra.errors) {
+            token = lookahead;
+            if (token.type === Token.Punctuator && token.value === ',') {
+                lex();
+            } else if (token.type === Token.Punctuator && token.value === ';') {
+                lex();
+                tolerateUnexpectedToken(token);
+            } else {
+                tolerateUnexpectedToken(token, Messages.UnexpectedToken);
+            }
+        } else {
+            expect(',');
+        }
+    }
+
+    // Expect the next token to match the specified keyword.
+    // If not, an exception will be thrown.
+
+    function expectKeyword(keyword) {
+        var token = lex();
+        if (token.type !== Token.Keyword || token.value !== keyword) {
+            throwUnexpectedToken(token);
+        }
+    }
+
+    // Return true if the next token matches the specified punctuator.
+
+    function match(value) {
+        return lookahead.type === Token.Punctuator && lookahead.value === value;
+    }
+
+    // Return true if the next token matches the specified keyword
+
+    function matchKeyword(keyword) {
+        return lookahead.type === Token.Keyword && lookahead.value === keyword;
+    }
+
+    // Return true if the next token matches the specified contextual keyword
+    // (where an identifier is sometimes a keyword depending on the context)
+
+    function matchContextualKeyword(keyword) {
+        return lookahead.type === Token.Identifier && lookahead.value === keyword;
+    }
+
+    // Return true if the next token is an assignment operator
+
+    function matchAssign() {
+        var op;
+
+        if (lookahead.type !== Token.Punctuator) {
+            return false;
+        }
+        op = lookahead.value;
+        return op === '=' ||
+            op === '*=' ||
+            op === '/=' ||
+            op === '%=' ||
+            op === '+=' ||
+            op === '-=' ||
+            op === '<<=' ||
+            op === '>>=' ||
+            op === '>>>=' ||
+            op === '&=' ||
+            op === '^=' ||
+            op === '|=';
+    }
+
+    function consumeSemicolon() {
+        // Catch the very common case first: immediately a semicolon (U+003B).
+        if (source.charCodeAt(startIndex) === 0x3B || match(';')) {
+            lex();
+            return;
+        }
+
+        if (hasLineTerminator) {
+            return;
+        }
+
+        // FIXME(ikarienator): this is seemingly an issue in the previous location info convention.
+        lastIndex = startIndex;
+        lastLineNumber = startLineNumber;
+        lastLineStart = startLineStart;
+
+        if (lookahead.type !== Token.EOF && !match('}')) {
+            throwUnexpectedToken(lookahead);
+        }
+    }
+
+    // Cover grammar support.
+    //
+    // When an assignment expression position starts with an left parenthesis, the determination of the type
+    // of the syntax is to be deferred arbitrarily long until the end of the parentheses pair (plus a lookahead)
+    // or the first comma. This situation also defers the determination of all the expressions nested in the pair.
+    //
+    // There are three productions that can be parsed in a parentheses pair that needs to be determined
+    // after the outermost pair is closed. They are:
+    //
+    //   1. AssignmentExpression
+    //   2. BindingElements
+    //   3. AssignmentTargets
+    //
+    // In order to avoid exponential backtracking, we use two flags to denote if the production can be
+    // binding element or assignment target.
+    //
+    // The three productions have the relationship:
+    //
+    //   BindingElements ⊆ AssignmentTargets ⊆ AssignmentExpression
+    //
+    // with a single exception that CoverInitializedName when used directly in an Expression, generates
+    // an early error. Therefore, we need the third state, firstCoverInitializedNameError, to track the
+    // first usage of CoverInitializedName and report it when we reached the end of the parentheses pair.
+    //
+    // isolateCoverGrammar function runs the given parser function with a new cover grammar context, and it does not
+    // effect the current flags. This means the production the parser parses is only used as an expression. Therefore
+    // the CoverInitializedName check is conducted.
+    //
+    // inheritCoverGrammar function runs the given parse function with a new cover grammar context, and it propagates
+    // the flags outside of the parser. This means the production the parser parses is used as a part of a potential
+    // pattern. The CoverInitializedName check is deferred.
+    function isolateCoverGrammar(parser) {
+        var oldIsBindingElement = isBindingElement,
+            oldIsAssignmentTarget = isAssignmentTarget,
+            oldFirstCoverInitializedNameError = firstCoverInitializedNameError,
+            result;
+        isBindingElement = true;
+        isAssignmentTarget = true;
+        firstCoverInitializedNameError = null;
+        result = parser();
+        if (firstCoverInitializedNameError !== null) {
+            throwUnexpectedToken(firstCoverInitializedNameError);
+        }
+        isBindingElement = oldIsBindingElement;
+        isAssignmentTarget = oldIsAssignmentTarget;
+        firstCoverInitializedNameError = oldFirstCoverInitializedNameError;
+        return result;
+    }
+
+    function inheritCoverGrammar(parser) {
+        var oldIsBindingElement = isBindingElement,
+            oldIsAssignmentTarget = isAssignmentTarget,
+            oldFirstCoverInitializedNameError = firstCoverInitializedNameError,
+            result;
+        isBindingElement = true;
+        isAssignmentTarget = true;
+        firstCoverInitializedNameError = null;
+        result = parser();
+        isBindingElement = isBindingElement && oldIsBindingElement;
+        isAssignmentTarget = isAssignmentTarget && oldIsAssignmentTarget;
+        firstCoverInitializedNameError = oldFirstCoverInitializedNameError || firstCoverInitializedNameError;
+        return result;
+    }
+
+    // ECMA-262 13.3.3 Destructuring Binding Patterns
+
+    function parseArrayPattern(params, kind) {
+        var node = new Node(), elements = [], rest, restNode;
+        expect('[');
+
+        while (!match(']')) {
+            if (match(',')) {
+                lex();
+                elements.push(null);
+            } else {
+                if (match('...')) {
+                    restNode = new Node();
+                    lex();
+                    params.push(lookahead);
+                    rest = parseVariableIdentifier(kind);
+                    elements.push(restNode.finishRestElement(rest));
+                    break;
+                } else {
+                    elements.push(parsePatternWithDefault(params, kind));
+                }
+                if (!match(']')) {
+                    expect(',');
+                }
+            }
+
+        }
+
+        expect(']');
+
+        return node.finishArrayPattern(elements);
+    }
+
+    function parsePropertyPattern(params, kind) {
+        var node = new Node(), key, keyToken, computed = match('['), init;
+        if (lookahead.type === Token.Identifier) {
+            keyToken = lookahead;
+            key = parseVariableIdentifier();
+            if (match('=')) {
+                params.push(keyToken);
+                lex();
+                init = parseAssignmentExpression();
+
+                return node.finishProperty(
+                    'init', key, false,
+                    new WrappingNode(keyToken).finishAssignmentPattern(key, init), false, true);
+            } else if (!match(':')) {
+                params.push(keyToken);
+                return node.finishProperty('init', key, false, key, false, true);
+            }
+        } else {
+            key = parseObjectPropertyKey();
+        }
+        expect(':');
+        init = parsePatternWithDefault(params, kind);
+        return node.finishProperty('init', key, computed, init, false, false);
+    }
+
+    function parseObjectPattern(params, kind) {
+        var node = new Node(), properties = [];
+
+        expect('{');
+
+        while (!match('}')) {
+            properties.push(parsePropertyPattern(params, kind));
+            if (!match('}')) {
+                expect(',');
+            }
+        }
+
+        lex();
+
+        return node.finishObjectPattern(properties);
+    }
+
+    function parsePattern(params, kind) {
+        if (match('[')) {
+            return parseArrayPattern(params, kind);
+        } else if (match('{')) {
+            return parseObjectPattern(params, kind);
+        } else if (matchKeyword('let')) {
+            if (kind === 'const' || kind === 'let') {
+                tolerateUnexpectedToken(lookahead, Messages.UnexpectedToken);
+            }
+        }
+
+        params.push(lookahead);
+        return parseVariableIdentifier(kind);
+    }
+
+    function parsePatternWithDefault(params, kind) {
+        var startToken = lookahead, pattern, previousAllowYield, right;
+        pattern = parsePattern(params, kind);
+        if (match('=')) {
+            lex();
+            previousAllowYield = state.allowYield;
+            state.allowYield = true;
+            right = isolateCoverGrammar(parseAssignmentExpression);
+            state.allowYield = previousAllowYield;
+            pattern = new WrappingNode(startToken).finishAssignmentPattern(pattern, right);
+        }
+        return pattern;
+    }
+
+    // ECMA-262 12.2.5 Array Initializer
+
+    function parseArrayInitializer() {
+        var elements = [], node = new Node(), restSpread;
+
+        expect('[');
+
+        while (!match(']')) {
+            if (match(',')) {
+                lex();
+                elements.push(null);
+            } else if (match('...')) {
+                restSpread = new Node();
+                lex();
+                restSpread.finishSpreadElement(inheritCoverGrammar(parseAssignmentExpression));
+
+                if (!match(']')) {
+                    isAssignmentTarget = isBindingElement = false;
+                    expect(',');
+                }
+                elements.push(restSpread);
+            } else {
+                elements.push(inheritCoverGrammar(parseAssignmentExpression));
+
+                if (!match(']')) {
+                    expect(',');
+                }
+            }
+        }
+
+        lex();
+
+        return node.finishArrayExpression(elements);
+    }
+
+    // ECMA-262 12.2.6 Object Initializer
+
+    function parsePropertyFunction(node, paramInfo, isGenerator) {
+        var previousStrict, body;
+
+        isAssignmentTarget = isBindingElement = false;
+
+        previousStrict = strict;
+        body = isolateCoverGrammar(parseFunctionSourceElements);
+
+        if (strict && paramInfo.firstRestricted) {
+            tolerateUnexpectedToken(paramInfo.firstRestricted, paramInfo.message);
+        }
+        if (strict && paramInfo.stricted) {
+            tolerateUnexpectedToken(paramInfo.stricted, paramInfo.message);
+        }
+
+        strict = previousStrict;
+        return node.finishFunctionExpression(null, paramInfo.params, paramInfo.defaults, body, isGenerator);
+    }
+
+    function parsePropertyMethodFunction() {
+        var params, method, node = new Node(),
+            previousAllowYield = state.allowYield;
+
+        state.allowYield = false;
+        params = parseParams();
+        state.allowYield = previousAllowYield;
+
+        state.allowYield = false;
+        method = parsePropertyFunction(node, params, false);
+        state.allowYield = previousAllowYield;
+
+        return method;
+    }
+
+    function parseObjectPropertyKey() {
+        var token, node = new Node(), expr;
+
+        token = lex();
+
+        // Note: This function is called only from parseObjectProperty(), where
+        // EOF and Punctuator tokens are already filtered out.
+
+        switch (token.type) {
+        case Token.StringLiteral:
+        case Token.NumericLiteral:
+            if (strict && token.octal) {
+                tolerateUnexpectedToken(token, Messages.StrictOctalLiteral);
+            }
+            return node.finishLiteral(token);
+        case Token.Identifier:
+        case Token.BooleanLiteral:
+        case Token.NullLiteral:
+        case Token.Keyword:
+            return node.finishIdentifier(token.value);
+        case Token.Punctuator:
+            if (token.value === '[') {
+                expr = isolateCoverGrammar(parseAssignmentExpression);
+                expect(']');
+                return expr;
+            }
+            break;
+        }
+        throwUnexpectedToken(token);
+    }
+
+    function lookaheadPropertyName() {
+        switch (lookahead.type) {
+        case Token.Identifier:
+        case Token.StringLiteral:
+        case Token.BooleanLiteral:
+        case Token.NullLiteral:
+        case Token.NumericLiteral:
+        case Token.Keyword:
+            return true;
+        case Token.Punctuator:
+            return lookahead.value === '[';
+        }
+        return false;
+    }
+
+    // This function is to try to parse a MethodDefinition as defined in 14.3. But in the case of object literals,
+    // it might be called at a position where there is in fact a short hand identifier pattern or a data property.
+    // This can only be determined after we consumed up to the left parentheses.
+    //
+    // In order to avoid back tracking, it returns `null` if the position is not a MethodDefinition and the caller
+    // is responsible to visit other options.
+    function tryParseMethodDefinition(token, key, computed, node) {
+        var value, options, methodNode, params,
+            previousAllowYield = state.allowYield;
+
+        if (token.type === Token.Identifier) {
+            // check for `get` and `set`;
+
+            if (token.value === 'get' && lookaheadPropertyName()) {
+                computed = match('[');
+                key = parseObjectPropertyKey();
+                methodNode = new Node();
+                expect('(');
+                expect(')');
+
+                state.allowYield = false;
+                value = parsePropertyFunction(methodNode, {
+                    params: [],
+                    defaults: [],
+                    stricted: null,
+                    firstRestricted: null,
+                    message: null
+                }, false);
+                state.allowYield = previousAllowYield;
+
+                return node.finishProperty('get', key, computed, value, false, false);
+            } else if (token.value === 'set' && lookaheadPropertyName()) {
+                computed = match('[');
+                key = parseObjectPropertyKey();
+                methodNode = new Node();
+                expect('(');
+
+                options = {
+                    params: [],
+                    defaultCount: 0,
+                    defaults: [],
+                    firstRestricted: null,
+                    paramSet: {}
+                };
+                if (match(')')) {
+                    tolerateUnexpectedToken(lookahead);
+                } else {
+                    state.allowYield = false;
+                    parseParam(options);
+                    state.allowYield = previousAllowYield;
+                    if (options.defaultCount === 0) {
+                        options.defaults = [];
+                    }
+                }
+                expect(')');
+
+                state.allowYield = false;
+                value = parsePropertyFunction(methodNode, options, false);
+                state.allowYield = previousAllowYield;
+
+                return node.finishProperty('set', key, computed, value, false, false);
+            }
+        } else if (token.type === Token.Punctuator && token.value === '*' && lookaheadPropertyName()) {
+            computed = match('[');
+            key = parseObjectPropertyKey();
+            methodNode = new Node();
+
+            state.allowYield = true;
+            params = parseParams();
+            state.allowYield = previousAllowYield;
+
+            state.allowYield = false;
+            value = parsePropertyFunction(methodNode, params, true);
+            state.allowYield = previousAllowYield;
+
+            return node.finishProperty('init', key, computed, value, true, false);
+        }
+
+        if (key && match('(')) {
+            value = parsePropertyMethodFunction();
+            return node.finishProperty('init', key, computed, value, true, false);
+        }
+
+        // Not a MethodDefinition.
+        return null;
+    }
+
+    function parseObjectProperty(hasProto) {
+        var token = lookahead, node = new Node(), computed, key, maybeMethod, proto, value;
+
+        computed = match('[');
+        if (match('*')) {
+            lex();
+        } else {
+            key = parseObjectPropertyKey();
+        }
+        maybeMethod = tryParseMethodDefinition(token, key, computed, node);
+        if (maybeMethod) {
+            return maybeMethod;
+        }
+
+        if (!key) {
+            throwUnexpectedToken(lookahead);
+        }
+
+        // Check for duplicated __proto__
+        if (!computed) {
+            proto = (key.type === Syntax.Identifier && key.name === '__proto__') ||
+                (key.type === Syntax.Literal && key.value === '__proto__');
+            if (hasProto.value && proto) {
+                tolerateError(Messages.DuplicateProtoProperty);
+            }
+            hasProto.value |= proto;
+        }
+
+        if (match(':')) {
+            lex();
+            value = inheritCoverGrammar(parseAssignmentExpression);
+            return node.finishProperty('init', key, computed, value, false, false);
+        }
+
+        if (token.type === Token.Identifier) {
+            if (match('=')) {
+                firstCoverInitializedNameError = lookahead;
+                lex();
+                value = isolateCoverGrammar(parseAssignmentExpression);
+                return node.finishProperty('init', key, computed,
+                    new WrappingNode(token).finishAssignmentPattern(key, value), false, true);
+            }
+            return node.finishProperty('init', key, computed, key, false, true);
+        }
+
+        throwUnexpectedToken(lookahead);
+    }
+
+    function parseObjectInitializer() {
+        var properties = [], hasProto = {value: false}, node = new Node();
+
+        expect('{');
+
+        while (!match('}')) {
+            properties.push(parseObjectProperty(hasProto));
+
+            if (!match('}')) {
+                expectCommaSeparator();
+            }
+        }
+
+        expect('}');
+
+        return node.finishObjectExpression(properties);
+    }
+
+    function reinterpretExpressionAsPattern(expr) {
+        var i;
+        switch (expr.type) {
+        case Syntax.Identifier:
+        case Syntax.MemberExpression:
+        case Syntax.RestElement:
+        case Syntax.AssignmentPattern:
+            break;
+        case Syntax.SpreadElement:
+            expr.type = Syntax.RestElement;
+            reinterpretExpressionAsPattern(expr.argument);
+            break;
+        case Syntax.ArrayExpression:
+            expr.type = Syntax.ArrayPattern;
+            for (i = 0; i < expr.elements.length; i++) {
+                if (expr.elements[i] !== null) {
+                    reinterpretExpressionAsPattern(expr.elements[i]);
+                }
+            }
+            break;
+        case Syntax.ObjectExpression:
+            expr.type = Syntax.ObjectPattern;
+            for (i = 0; i < expr.properties.length; i++) {
+                reinterpretExpressionAsPattern(expr.properties[i].value);
+            }
+            break;
+        case Syntax.AssignmentExpression:
+            expr.type = Syntax.AssignmentPattern;
+            reinterpretExpressionAsPattern(expr.left);
+            break;
+        default:
+            // Allow other node type for tolerant parsing.
+            break;
+        }
+    }
+
+    // ECMA-262 12.2.9 Template Literals
+
+    function parseTemplateElement(option) {
+        var node, token;
+
+        if (lookahead.type !== Token.Template || (option.head && !lookahead.head)) {
+            throwUnexpectedToken();
+        }
+
+        node = new Node();
+        token = lex();
+
+        return node.finishTemplateElement({ raw: token.value.raw, cooked: token.value.cooked }, token.tail);
+    }
+
+    function parseTemplateLiteral() {
+        var quasi, quasis, expressions, node = new Node();
+
+        quasi = parseTemplateElement({ head: true });
+        quasis = [quasi];
+        expressions = [];
+
+        while (!quasi.tail) {
+            expressions.push(parseExpression());
+            quasi = parseTemplateElement({ head: false });
+            quasis.push(quasi);
+        }
+
+        return node.finishTemplateLiteral(quasis, expressions);
+    }
+
+    // ECMA-262 12.2.10 The Grouping Operator
+
+    function parseGroupExpression() {
+        var expr, expressions, startToken, i, params = [];
+
+        expect('(');
+
+        if (match(')')) {
+            lex();
+            if (!match('=>')) {
+                expect('=>');
+            }
+            return {
+                type: PlaceHolders.ArrowParameterPlaceHolder,
+                params: [],
+                rawParams: []
+            };
+        }
+
+        startToken = lookahead;
+        if (match('...')) {
+            expr = parseRestElement(params);
+            expect(')');
+            if (!match('=>')) {
+                expect('=>');
+            }
+            return {
+                type: PlaceHolders.ArrowParameterPlaceHolder,
+                params: [expr]
+            };
+        }
+
+        isBindingElement = true;
+        expr = inheritCoverGrammar(parseAssignmentExpression);
+
+        if (match(',')) {
+            isAssignmentTarget = false;
+            expressions = [expr];
+
+            while (startIndex < length) {
+                if (!match(',')) {
+                    break;
+                }
+                lex();
+
+                if (match('...')) {
+                    if (!isBindingElement) {
+                        throwUnexpectedToken(lookahead);
+                    }
+                    expressions.push(parseRestElement(params));
+                    expect(')');
+                    if (!match('=>')) {
+                        expect('=>');
+                    }
+                    isBindingElement = false;
+                    for (i = 0; i < expressions.length; i++) {
+                        reinterpretExpressionAsPattern(expressions[i]);
+                    }
+                    return {
+                        type: PlaceHolders.ArrowParameterPlaceHolder,
+                        params: expressions
+                    };
+                }
+
+                expressions.push(inheritCoverGrammar(parseAssignmentExpression));
+            }
+
+            expr = new WrappingNode(startToken).finishSequenceExpression(expressions);
+        }
+
+
+        expect(')');
+
+        if (match('=>')) {
+            if (expr.type === Syntax.Identifier && expr.name === 'yield') {
+                return {
+                    type: PlaceHolders.ArrowParameterPlaceHolder,
+                    params: [expr]
+                };
+            }
+
+            if (!isBindingElement) {
+                throwUnexpectedToken(lookahead);
+            }
+
+            if (expr.type === Syntax.SequenceExpression) {
+                for (i = 0; i < expr.expressions.length; i++) {
+                    reinterpretExpressionAsPattern(expr.expressions[i]);
+                }
+            } else {
+                reinterpretExpressionAsPattern(expr);
+            }
+
+            expr = {
+                type: PlaceHolders.ArrowParameterPlaceHolder,
+                params: expr.type === Syntax.SequenceExpression ? expr.expressions : [expr]
+            };
+        }
+        isBindingElement = false;
+        return expr;
+    }
+
+
+    // ECMA-262 12.2 Primary Expressions
+
+    function parsePrimaryExpression() {
+        var type, token, expr, node;
+
+        if (match('(')) {
+            isBindingElement = false;
+            return inheritCoverGrammar(parseGroupExpression);
+        }
+
+        if (match('[')) {
+            return inheritCoverGrammar(parseArrayInitializer);
+        }
+
+        if (match('{')) {
+            return inheritCoverGrammar(parseObjectInitializer);
+        }
+
+        type = lookahead.type;
+        node = new Node();
+
+        if (type === Token.Identifier) {
+            if (state.sourceType === 'module' && lookahead.value === 'await') {
+                tolerateUnexpectedToken(lookahead);
+            }
+            expr = node.finishIdentifier(lex().value);
+        } else if (type === Token.StringLiteral || type === Token.NumericLiteral) {
+            isAssignmentTarget = isBindingElement = false;
+            if (strict && lookahead.octal) {
+                tolerateUnexpectedToken(lookahead, Messages.StrictOctalLiteral);
+            }
+            expr = node.finishLiteral(lex());
+        } else if (type === Token.Keyword) {
+            if (!strict && state.allowYield && matchKeyword('yield')) {
+                return parseNonComputedProperty();
+            }
+            if (!strict && matchKeyword('let')) {
+                return node.finishIdentifier(lex().value);
+            }
+            isAssignmentTarget = isBindingElement = false;
+            if (matchKeyword('function')) {
+                return parseFunctionExpression();
+            }
+            if (matchKeyword('this')) {
+                lex();
+                return node.finishThisExpression();
+            }
+            if (matchKeyword('class')) {
+                return parseClassExpression();
+            }
+            throwUnexpectedToken(lex());
+        } else if (type === Token.BooleanLiteral) {
+            isAssignmentTarget = isBindingElement = false;
+            token = lex();
+            token.value = (token.value === 'true');
+            expr = node.finishLiteral(token);
+        } else if (type === Token.NullLiteral) {
+            isAssignmentTarget = isBindingElement = false;
+            token = lex();
+            token.value = null;
+            expr = node.finishLiteral(token);
+        } else if (match('/') || match('/=')) {
+            isAssignmentTarget = isBindingElement = false;
+            index = startIndex;
+
+            if (typeof extra.tokens !== 'undefined') {
+                token = collectRegex();
+            } else {
+                token = scanRegExp();
+            }
+            lex();
+            expr = node.finishLiteral(token);
+        } else if (type === Token.Template) {
+            expr = parseTemplateLiteral();
+        } else {
+            throwUnexpectedToken(lex());
+        }
+
+        return expr;
+    }
+
+    // ECMA-262 12.3 Left-Hand-Side Expressions
+
+    function parseArguments() {
+        var args = [], expr;
+
+        expect('(');
+
+        if (!match(')')) {
+            while (startIndex < length) {
+                if (match('...')) {
+                    expr = new Node();
+                    lex();
+                    expr.finishSpreadElement(isolateCoverGrammar(parseAssignmentExpression));
+                } else {
+                    expr = isolateCoverGrammar(parseAssignmentExpression);
+                }
+                args.push(expr);
+                if (match(')')) {
+                    break;
+                }
+                expectCommaSeparator();
+            }
+        }
+
+        expect(')');
+
+        return args;
+    }
+
+    function parseNonComputedProperty() {
+        var token, node = new Node();
+
+        token = lex();
+
+        if (!isIdentifierName(token)) {
+            throwUnexpectedToken(token);
+        }
+
+        return node.finishIdentifier(token.value);
+    }
+
+    function parseNonComputedMember() {
+        expect('.');
+
+        return parseNonComputedProperty();
+    }
+
+    function parseComputedMember() {
+        var expr;
+
+        expect('[');
+
+        expr = isolateCoverGrammar(parseExpression);
+
+        expect(']');
+
+        return expr;
+    }
+
+    // ECMA-262 12.3.3 The new Operator
+
+    function parseNewExpression() {
+        var callee, args, node = new Node();
+
+        expectKeyword('new');
+
+        if (match('.')) {
+            lex();
+            if (lookahead.type === Token.Identifier && lookahead.value === 'target') {
+                if (state.inFunctionBody) {
+                    lex();
+                    return node.finishMetaProperty('new', 'target');
+                }
+            }
+            throwUnexpectedToken(lookahead);
+        }
+
+        callee = isolateCoverGrammar(parseLeftHandSideExpression);
+        args = match('(') ? parseArguments() : [];
+
+        isAssignmentTarget = isBindingElement = false;
+
+        return node.finishNewExpression(callee, args);
+    }
+
+    // ECMA-262 12.3.4 Function Calls
+
+    function parseLeftHandSideExpressionAllowCall() {
+        var quasi, expr, args, property, startToken, previousAllowIn = state.allowIn;
+
+        startToken = lookahead;
+        state.allowIn = true;
+
+        if (matchKeyword('super') && state.inFunctionBody) {
+            expr = new Node();
+            lex();
+            expr = expr.finishSuper();
+            if (!match('(') && !match('.') && !match('[')) {
+                throwUnexpectedToken(lookahead);
+            }
+        } else {
+            expr = inheritCoverGrammar(matchKeyword('new') ? parseNewExpression : parsePrimaryExpression);
+        }
+
+        for (;;) {
+            if (match('.')) {
+                isBindingElement = false;
+                isAssignmentTarget = true;
+                property = parseNonComputedMember();
+                expr = new WrappingNode(startToken).finishMemberExpression('.', expr, property);
+            } else if (match('(')) {
+                isBindingElement = false;
+                isAssignmentTarget = false;
+                args = parseArguments();
+                expr = new WrappingNode(startToken).finishCallExpression(expr, args);
+            } else if (match('[')) {
+                isBindingElement = false;
+                isAssignmentTarget = true;
+                property = parseComputedMember();
+                expr = new WrappingNode(startToken).finishMemberExpression('[', expr, property);
+            } else if (lookahead.type === Token.Template && lookahead.head) {
+                quasi = parseTemplateLiteral();
+                expr = new WrappingNode(startToken).finishTaggedTemplateExpression(expr, quasi);
+            } else {
+                break;
+            }
+        }
+        state.allowIn = previousAllowIn;
+
+        return expr;
+    }
+
+    // ECMA-262 12.3 Left-Hand-Side Expressions
+
+    function parseLeftHandSideExpression() {
+        var quasi, expr, property, startToken;
+        assert(state.allowIn, 'callee of new expression always allow in keyword.');
+
+        startToken = lookahead;
+
+        if (matchKeyword('super') && state.inFunctionBody) {
+            expr = new Node();
+            lex();
+            expr = expr.finishSuper();
+            if (!match('[') && !match('.')) {
+                throwUnexpectedToken(lookahead);
+            }
+        } else {
+            expr = inheritCoverGrammar(matchKeyword('new') ? parseNewExpression : parsePrimaryExpression);
+        }
+
+        for (;;) {
+            if (match('[')) {
+                isBindingElement = false;
+                isAssignmentTarget = true;
+                property = parseComputedMember();
+                expr = new WrappingNode(startToken).finishMemberExpression('[', expr, property);
+            } else if (match('.')) {
+                isBindingElement = false;
+                isAssignmentTarget = true;
+                property = parseNonComputedMember();
+                expr = new WrappingNode(startToken).finishMemberExpression('.', expr, property);
+            } else if (lookahead.type === Token.Template && lookahead.head) {
+                quasi = parseTemplateLiteral();
+                expr = new WrappingNode(startToken).finishTaggedTemplateExpression(expr, quasi);
+            } else {
+                break;
+            }
+        }
+        return expr;
+    }
+
+    // ECMA-262 12.4 Postfix Expressions
+
+    function parsePostfixExpression() {
+        var expr, token, startToken = lookahead;
+
+        expr = inheritCoverGrammar(parseLeftHandSideExpressionAllowCall);
+
+        if (!hasLineTerminator && lookahead.type === Token.Punctuator) {
+            if (match('++') || match('--')) {
+                // ECMA-262 11.3.1, 11.3.2
+                if (strict && expr.type === Syntax.Identifier && isRestrictedWord(expr.name)) {
+                    tolerateError(Messages.StrictLHSPostfix);
+                }
+
+                if (!isAssignmentTarget) {
+                    tolerateError(Messages.InvalidLHSInAssignment);
+                }
+
+                isAssignmentTarget = isBindingElement = false;
+
+                token = lex();
+                expr = new WrappingNode(startToken).finishPostfixExpression(token.value, expr);
+            }
+        }
+
+        return expr;
+    }
+
+    // ECMA-262 12.5 Unary Operators
+
+    function parseUnaryExpression() {
+        var token, expr, startToken;
+
+        if (lookahead.type !== Token.Punctuator && lookahead.type !== Token.Keyword) {
+            expr = parsePostfixExpression();
+        } else if (match('++') || match('--')) {
+            startToken = lookahead;
+            token = lex();
+            expr = inheritCoverGrammar(parseUnaryExpression);
+            // ECMA-262 11.4.4, 11.4.5
+            if (strict && expr.type === Syntax.Identifier && isRestrictedWord(expr.name)) {
+                tolerateError(Messages.StrictLHSPrefix);
+            }
+
+            if (!isAssignmentTarget) {
+                tolerateError(Messages.InvalidLHSInAssignment);
+            }
+            expr = new WrappingNode(startToken).finishUnaryExpression(token.value, expr);
+            isAssignmentTarget = isBindingElement = false;
+        } else if (match('+') || match('-') || match('~') || match('!')) {
+            startToken = lookahead;
+            token = lex();
+            expr = inheritCoverGrammar(parseUnaryExpression);
+            expr = new WrappingNode(startToken).finishUnaryExpression(token.value, expr);
+            isAssignmentTarget = isBindingElement = false;
+        } else if (matchKeyword('delete') || matchKeyword('void') || matchKeyword('typeof')) {
+            startToken = lookahead;
+            token = lex();
+            expr = inheritCoverGrammar(parseUnaryExpression);
+            expr = new WrappingNode(startToken).finishUnaryExpression(token.value, expr);
+            if (strict && expr.operator === 'delete' && expr.argument.type === Syntax.Identifier) {
+                tolerateError(Messages.StrictDelete);
+            }
+            isAssignmentTarget = isBindingElement = false;
+        } else {
+            expr = parsePostfixExpression();
+        }
+
+        return expr;
+    }
+
+    function binaryPrecedence(token, allowIn) {
+        var prec = 0;
+
+        if (token.type !== Token.Punctuator && token.type !== Token.Keyword) {
+            return 0;
+        }
+
+        switch (token.value) {
+        case '||':
+            prec = 1;
+            break;
+
+        case '&&':
+            prec = 2;
+            break;
+
+        case '|':
+            prec = 3;
+            break;
+
+        case '^':
+            prec = 4;
+            break;
+
+        case '&':
+            prec = 5;
+            break;
+
+        case '==':
+        case '!=':
+        case '===':
+        case '!==':
+            prec = 6;
+            break;
+
+        case '<':
+        case '>':
+        case '<=':
+        case '>=':
+        case 'instanceof':
+            prec = 7;
+            break;
+
+        case 'in':
+            prec = allowIn ? 7 : 0;
+            break;
+
+        case '<<':
+        case '>>':
+        case '>>>':
+            prec = 8;
+            break;
+
+        case '+':
+        case '-':
+            prec = 9;
+            break;
+
+        case '*':
+        case '/':
+        case '%':
+            prec = 11;
+            break;
+
+        default:
+            break;
+        }
+
+        return prec;
+    }
+
+    // ECMA-262 12.6 Multiplicative Operators
+    // ECMA-262 12.7 Additive Operators
+    // ECMA-262 12.8 Bitwise Shift Operators
+    // ECMA-262 12.9 Relational Operators
+    // ECMA-262 12.10 Equality Operators
+    // ECMA-262 12.11 Binary Bitwise Operators
+    // ECMA-262 12.12 Binary Logical Operators
+
+    function parseBinaryExpression() {
+        var marker, markers, expr, token, prec, stack, right, operator, left, i;
+
+        marker = lookahead;
+        left = inheritCoverGrammar(parseUnaryExpression);
+
+        token = lookahead;
+        prec = binaryPrecedence(token, state.allowIn);
+        if (prec === 0) {
+            return left;
+        }
+        isAssignmentTarget = isBindingElement = false;
+        token.prec = prec;
+        lex();
+
+        markers = [marker, lookahead];
+        right = isolateCoverGrammar(parseUnaryExpression);
+
+        stack = [left, token, right];
+
+        while ((prec = binaryPrecedence(lookahead, state.allowIn)) > 0) {
+
+            // Reduce: make a binary expression from the three topmost entries.
+            while ((stack.length > 2) && (prec <= stack[stack.length - 2].prec)) {
+                right = stack.pop();
+                operator = stack.pop().value;
+                left = stack.pop();
+                markers.pop();
+                expr = new WrappingNode(markers[markers.length - 1]).finishBinaryExpression(operator, left, right);
+                stack.push(expr);
+            }
+
+            // Shift.
+            token = lex();
+            token.prec = prec;
+            stack.push(token);
+            markers.push(lookahead);
+            expr = isolateCoverGrammar(parseUnaryExpression);
+            stack.push(expr);
+        }
+
+        // Final reduce to clean-up the stack.
+        i = stack.length - 1;
+        expr = stack[i];
+        markers.pop();
+        while (i > 1) {
+            expr = new WrappingNode(markers.pop()).finishBinaryExpression(stack[i - 1].value, stack[i - 2], expr);
+            i -= 2;
+        }
+
+        return expr;
+    }
+
+
+    // ECMA-262 12.13 Conditional Operator
+
+    function parseConditionalExpression() {
+        var expr, previousAllowIn, consequent, alternate, startToken;
+
+        startToken = lookahead;
+
+        expr = inheritCoverGrammar(parseBinaryExpression);
+        if (match('?')) {
+            lex();
+            previousAllowIn = state.allowIn;
+            state.allowIn = true;
+            consequent = isolateCoverGrammar(parseAssignmentExpression);
+            state.allowIn = previousAllowIn;
+            expect(':');
+            alternate = isolateCoverGrammar(parseAssignmentExpression);
+
+            expr = new WrappingNode(startToken).finishConditionalExpression(expr, consequent, alternate);
+            isAssignmentTarget = isBindingElement = false;
+        }
+
+        return expr;
+    }
+
+    // ECMA-262 14.2 Arrow Function Definitions
+
+    function parseConciseBody() {
+        if (match('{')) {
+            return parseFunctionSourceElements();
+        }
+        return isolateCoverGrammar(parseAssignmentExpression);
+    }
+
+    function checkPatternParam(options, param) {
+        var i;
+        switch (param.type) {
+        case Syntax.Identifier:
+            validateParam(options, param, param.name);
+            break;
+        case Syntax.RestElement:
+            checkPatternParam(options, param.argument);
+            break;
+        case Syntax.AssignmentPattern:
+            checkPatternParam(options, param.left);
+            break;
+        case Syntax.ArrayPattern:
+            for (i = 0; i < param.elements.length; i++) {
+                if (param.elements[i] !== null) {
+                    checkPatternParam(options, param.elements[i]);
+                }
+            }
+            break;
+        case Syntax.YieldExpression:
+            break;
+        default:
+            assert(param.type === Syntax.ObjectPattern, 'Invalid type');
+            for (i = 0; i < param.properties.length; i++) {
+                checkPatternParam(options, param.properties[i].value);
+            }
+            break;
+        }
+    }
+    function reinterpretAsCoverFormalsList(expr) {
+        var i, len, param, params, defaults, defaultCount, options, token;
+
+        defaults = [];
+        defaultCount = 0;
+        params = [expr];
+
+        switch (expr.type) {
+        case Syntax.Identifier:
+            break;
+        case PlaceHolders.ArrowParameterPlaceHolder:
+            params = expr.params;
+            break;
+        default:
+            return null;
+        }
+
+        options = {
+            paramSet: {}
+        };
+
+        for (i = 0, len = params.length; i < len; i += 1) {
+            param = params[i];
+            switch (param.type) {
+            case Syntax.AssignmentPattern:
+                params[i] = param.left;
+                if (param.right.type === Syntax.YieldExpression) {
+                    if (param.right.argument) {
+                        throwUnexpectedToken(lookahead);
+                    }
+                    param.right.type = Syntax.Identifier;
+                    param.right.name = 'yield';
+                    delete param.right.argument;
+                    delete param.right.delegate;
+                }
+                defaults.push(param.right);
+                ++defaultCount;
+                checkPatternParam(options, param.left);
+                break;
+            default:
+                checkPatternParam(options, param);
+                params[i] = param;
+                defaults.push(null);
+                break;
+            }
+        }
+
+        if (strict || !state.allowYield) {
+            for (i = 0, len = params.length; i < len; i += 1) {
+                param = params[i];
+                if (param.type === Syntax.YieldExpression) {
+                    throwUnexpectedToken(lookahead);
+                }
+            }
+        }
+
+        if (options.message === Messages.StrictParamDupe) {
+            token = strict ? options.stricted : options.firstRestricted;
+            throwUnexpectedToken(token, options.message);
+        }
+
+        if (defaultCount === 0) {
+            defaults = [];
+        }
+
+        return {
+            params: params,
+            defaults: defaults,
+            stricted: options.stricted,
+            firstRestricted: options.firstRestricted,
+            message: options.message
+        };
+    }
+
+    function parseArrowFunctionExpression(options, node) {
+        var previousStrict, previousAllowYield, body;
+
+        if (hasLineTerminator) {
+            tolerateUnexpectedToken(lookahead);
+        }
+        expect('=>');
+
+        previousStrict = strict;
+        previousAllowYield = state.allowYield;
+        state.allowYield = true;
+
+        body = parseConciseBody();
+
+        if (strict && options.firstRestricted) {
+            throwUnexpectedToken(options.firstRestricted, options.message);
+        }
+        if (strict && options.stricted) {
+            tolerateUnexpectedToken(options.stricted, options.message);
+        }
+
+        strict = previousStrict;
+        state.allowYield = previousAllowYield;
+
+        return node.finishArrowFunctionExpression(options.params, options.defaults, body, body.type !== Syntax.BlockStatement);
+    }
+
+    // ECMA-262 14.4 Yield expression
+
+    function parseYieldExpression() {
+        var argument, expr, delegate, previousAllowYield;
+
+        argument = null;
+        expr = new Node();
+        delegate = false;
+
+        expectKeyword('yield');
+
+        if (!hasLineTerminator) {
+            previousAllowYield = state.allowYield;
+            state.allowYield = false;
+            delegate = match('*');
+            if (delegate) {
+                lex();
+                argument = parseAssignmentExpression();
+            } else {
+                if (!match(';') && !match('}') && !match(')') && lookahead.type !== Token.EOF) {
+                    argument = parseAssignmentExpression();
+                }
+            }
+            state.allowYield = previousAllowYield;
+        }
+
+        return expr.finishYieldExpression(argument, delegate);
+    }
+
+    // ECMA-262 12.14 Assignment Operators
+
+    function parseAssignmentExpression() {
+        var token, expr, right, list, startToken;
+
+        startToken = lookahead;
+        token = lookahead;
+
+        if (!state.allowYield && matchKeyword('yield')) {
+            return parseYieldExpression();
+        }
+
+        expr = parseConditionalExpression();
+
+        if (expr.type === PlaceHolders.ArrowParameterPlaceHolder || match('=>')) {
+            isAssignmentTarget = isBindingElement = false;
+            list = reinterpretAsCoverFormalsList(expr);
+
+            if (list) {
+                firstCoverInitializedNameError = null;
+                return parseArrowFunctionExpression(list, new WrappingNode(startToken));
+            }
+
+            return expr;
+        }
+
+        if (matchAssign()) {
+            if (!isAssignmentTarget) {
+                tolerateError(Messages.InvalidLHSInAssignment);
+            }
+
+            // ECMA-262 12.1.1
+            if (strict && expr.type === Syntax.Identifier) {
+                if (isRestrictedWord(expr.name)) {
+                    tolerateUnexpectedToken(token, Messages.StrictLHSAssignment);
+                }
+                if (isStrictModeReservedWord(expr.name)) {
+                    tolerateUnexpectedToken(token, Messages.StrictReservedWord);
+                }
+            }
+
+            if (!match('=')) {
+                isAssignmentTarget = isBindingElement = false;
+            } else {
+                reinterpretExpressionAsPattern(expr);
+            }
+
+            token = lex();
+            right = isolateCoverGrammar(parseAssignmentExpression);
+            expr = new WrappingNode(startToken).finishAssignmentExpression(token.value, expr, right);
+            firstCoverInitializedNameError = null;
+        }
+
+        return expr;
+    }
+
+    // ECMA-262 12.15 Comma Operator
+
+    function parseExpression() {
+        var expr, startToken = lookahead, expressions;
+
+        expr = isolateCoverGrammar(parseAssignmentExpression);
+
+        if (match(',')) {
+            expressions = [expr];
+
+            while (startIndex < length) {
+                if (!match(',')) {
+                    break;
+                }
+                lex();
+                expressions.push(isolateCoverGrammar(parseAssignmentExpression));
+            }
+
+            expr = new WrappingNode(startToken).finishSequenceExpression(expressions);
+        }
+
+        return expr;
+    }
+
+    // ECMA-262 13.2 Block
+
+    function parseStatementListItem() {
+        if (lookahead.type === Token.Keyword) {
+            switch (lookahead.value) {
+            case 'export':
+                if (state.sourceType !== 'module') {
+                    tolerateUnexpectedToken(lookahead, Messages.IllegalExportDeclaration);
+                }
+                return parseExportDeclaration();
+            case 'import':
+                if (state.sourceType !== 'module') {
+                    tolerateUnexpectedToken(lookahead, Messages.IllegalImportDeclaration);
+                }
+                return parseImportDeclaration();
+            case 'const':
+                return parseLexicalDeclaration({inFor: false});
+            case 'function':
+                return parseFunctionDeclaration(new Node());
+            case 'class':
+                return parseClassDeclaration();
+            }
+        }
+
+        if (matchKeyword('let') && isLexicalDeclaration()) {
+            return parseLexicalDeclaration({inFor: false});
+        }
+
+        return parseStatement();
+    }
+
+    function parseStatementList() {
+        var list = [];
+        while (startIndex < length) {
+            if (match('}')) {
+                break;
+            }
+            list.push(parseStatementListItem());
+        }
+
+        return list;
+    }
+
+    function parseBlock() {
+        var block, node = new Node();
+
+        expect('{');
+
+        block = parseStatementList();
+
+        expect('}');
+
+        return node.finishBlockStatement(block);
+    }
+
+    // ECMA-262 13.3.2 Variable Statement
+
+    function parseVariableIdentifier(kind) {
+        var token, node = new Node();
+
+        token = lex();
+
+        if (token.type === Token.Keyword && token.value === 'yield') {
+            if (strict) {
+                tolerateUnexpectedToken(token, Messages.StrictReservedWord);
+            } if (!state.allowYield) {
+                throwUnexpectedToken(token);
+            }
+        } else if (token.type !== Token.Identifier) {
+            if (strict && token.type === Token.Keyword && isStrictModeReservedWord(token.value)) {
+                tolerateUnexpectedToken(token, Messages.StrictReservedWord);
+            } else {
+                if (strict || token.value !== 'let' || kind !== 'var') {
+                    throwUnexpectedToken(token);
+                }
+            }
+        } else if (state.sourceType === 'module' && token.type === Token.Identifier && token.value === 'await') {
+            tolerateUnexpectedToken(token);
+        }
+
+        return node.finishIdentifier(token.value);
+    }
+
+    function parseVariableDeclaration(options) {
+        var init = null, id, node = new Node(), params = [];
+
+        id = parsePattern(params, 'var');
+
+        // ECMA-262 12.2.1
+        if (strict && isRestrictedWord(id.name)) {
+            tolerateError(Messages.StrictVarName);
+        }
+
+        if (match('=')) {
+            lex();
+            init = isolateCoverGrammar(parseAssignmentExpression);
+        } else if (id.type !== Syntax.Identifier && !options.inFor) {
+            expect('=');
+        }
+
+        return node.finishVariableDeclarator(id, init);
+    }
+
+    function parseVariableDeclarationList(options) {
+        var opt, list;
+
+        opt = { inFor: options.inFor };
+        list = [parseVariableDeclaration(opt)];
+
+        while (match(',')) {
+            lex();
+            list.push(parseVariableDeclaration(opt));
+        }
+
+        return list;
+    }
+
+    function parseVariableStatement(node) {
+        var declarations;
+
+        expectKeyword('var');
+
+        declarations = parseVariableDeclarationList({ inFor: false });
+
+        consumeSemicolon();
+
+        return node.finishVariableDeclaration(declarations);
+    }
+
+    // ECMA-262 13.3.1 Let and Const Declarations
+
+    function parseLexicalBinding(kind, options) {
+        var init = null, id, node = new Node(), params = [];
+
+        id = parsePattern(params, kind);
+
+        // ECMA-262 12.2.1
+        if (strict && id.type === Syntax.Identifier && isRestrictedWord(id.name)) {
+            tolerateError(Messages.StrictVarName);
+        }
+
+        if (kind === 'const') {
+            if (!matchKeyword('in') && !matchContextualKeyword('of')) {
+                expect('=');
+                init = isolateCoverGrammar(parseAssignmentExpression);
+            }
+        } else if ((!options.inFor && id.type !== Syntax.Identifier) || match('=')) {
+            expect('=');
+            init = isolateCoverGrammar(parseAssignmentExpression);
+        }
+
+        return node.finishVariableDeclarator(id, init);
+    }
+
+    function parseBindingList(kind, options) {
+        var list = [parseLexicalBinding(kind, options)];
+
+        while (match(',')) {
+            lex();
+            list.push(parseLexicalBinding(kind, options));
+        }
+
+        return list;
+    }
+
+
+    function tokenizerState() {
+        return {
+            index: index,
+            lineNumber: lineNumber,
+            lineStart: lineStart,
+            hasLineTerminator: hasLineTerminator,
+            lastIndex: lastIndex,
+            lastLineNumber: lastLineNumber,
+            lastLineStart: lastLineStart,
+            startIndex: startIndex,
+            startLineNumber: startLineNumber,
+            startLineStart: startLineStart,
+            lookahead: lookahead,
+            tokenCount: extra.tokens ? extra.tokens.length : 0
+        };
+    }
+
+    function resetTokenizerState(ts) {
+        index = ts.index;
+        lineNumber = ts.lineNumber;
+        lineStart = ts.lineStart;
+        hasLineTerminator = ts.hasLineTerminator;
+        lastIndex = ts.lastIndex;
+        lastLineNumber = ts.lastLineNumber;
+        lastLineStart = ts.lastLineStart;
+        startIndex = ts.startIndex;
+        startLineNumber = ts.startLineNumber;
+        startLineStart = ts.startLineStart;
+        lookahead = ts.lookahead;
+        if (extra.tokens) {
+            extra.tokens.splice(ts.tokenCount, extra.tokens.length);
+        }
+    }
+
+    function isLexicalDeclaration() {
+        var lexical, ts;
+
+        ts = tokenizerState();
+
+        lex();
+        lexical = (lookahead.type === Token.Identifier) || match('[') || match('{') ||
+            matchKeyword('let') || matchKeyword('yield');
+
+        resetTokenizerState(ts);
+
+        return lexical;
+    }
+
+    function parseLexicalDeclaration(options) {
+        var kind, declarations, node = new Node();
+
+        kind = lex().value;
+        assert(kind === 'let' || kind === 'const', 'Lexical declaration must be either let or const');
+
+        declarations = parseBindingList(kind, options);
+
+        consumeSemicolon();
+
+        return node.finishLexicalDeclaration(declarations, kind);
+    }
+
+    function parseRestElement(params) {
+        var param, node = new Node();
+
+        lex();
+
+        if (match('{')) {
+            throwError(Messages.ObjectPatternAsRestParameter);
+        }
+
+        params.push(lookahead);
+
+        param = parseVariableIdentifier();
+
+        if (match('=')) {
+            throwError(Messages.DefaultRestParameter);
+        }
+
+        if (!match(')')) {
+            throwError(Messages.ParameterAfterRestParameter);
+        }
+
+        return node.finishRestElement(param);
+    }
+
+    // ECMA-262 13.4 Empty Statement
+
+    function parseEmptyStatement(node) {
+        expect(';');
+        return node.finishEmptyStatement();
+    }
+
+    // ECMA-262 12.4 Expression Statement
+
+    function parseExpressionStatement(node) {
+        var expr = parseExpression();
+        consumeSemicolon();
+        return node.finishExpressionStatement(expr);
+    }
+
+    // ECMA-262 13.6 If statement
+
+    function parseIfStatement(node) {
+        var test, consequent, alternate;
+
+        expectKeyword('if');
+
+        expect('(');
+
+        test = parseExpression();
+
+        expect(')');
+
+        consequent = parseStatement();
+
+        if (matchKeyword('else')) {
+            lex();
+            alternate = parseStatement();
+        } else {
+            alternate = null;
+        }
+
+        return node.finishIfStatement(test, consequent, alternate);
+    }
+
+    // ECMA-262 13.7 Iteration Statements
+
+    function parseDoWhileStatement(node) {
+        var body, test, oldInIteration;
+
+        expectKeyword('do');
+
+        oldInIteration = state.inIteration;
+        state.inIteration = true;
+
+        body = parseStatement();
+
+        state.inIteration = oldInIteration;
+
+        expectKeyword('while');
+
+        expect('(');
+
+        test = parseExpression();
+
+        expect(')');
+
+        if (match(';')) {
+            lex();
+        }
+
+        return node.finishDoWhileStatement(body, test);
+    }
+
+    function parseWhileStatement(node) {
+        var test, body, oldInIteration;
+
+        expectKeyword('while');
+
+        expect('(');
+
+        test = parseExpression();
+
+        expect(')');
+
+        oldInIteration = state.inIteration;
+        state.inIteration = true;
+
+        body = parseStatement();
+
+        state.inIteration = oldInIteration;
+
+        return node.finishWhileStatement(test, body);
+    }
+
+    function parseForStatement(node) {
+        var init, forIn, initSeq, initStartToken, test, update, left, right, kind, declarations,
+            body, oldInIteration, previousAllowIn = state.allowIn;
+
+        init = test = update = null;
+        forIn = true;
+
+        expectKeyword('for');
+
+        expect('(');
+
+        if (match(';')) {
+            lex();
+        } else {
+            if (matchKeyword('var')) {
+                init = new Node();
+                lex();
+
+                state.allowIn = false;
+                declarations = parseVariableDeclarationList({ inFor: true });
+                state.allowIn = previousAllowIn;
+
+                if (declarations.length === 1 && matchKeyword('in')) {
+                    init = init.finishVariableDeclaration(declarations);
+                    lex();
+                    left = init;
+                    right = parseExpression();
+                    init = null;
+                } else if (declarations.length === 1 && declarations[0].init === null && matchContextualKeyword('of')) {
+                    init = init.finishVariableDeclaration(declarations);
+                    lex();
+                    left = init;
+                    right = parseAssignmentExpression();
+                    init = null;
+                    forIn = false;
+                } else {
+                    init = init.finishVariableDeclaration(declarations);
+                    expect(';');
+                }
+            } else if (matchKeyword('const') || matchKeyword('let')) {
+                init = new Node();
+                kind = lex().value;
+
+                if (!strict && lookahead.value === 'in') {
+                    init = init.finishIdentifier(kind);
+                    lex();
+                    left = init;
+                    right = parseExpression();
+                    init = null;
+                } else {
+                    state.allowIn = false;
+                    declarations = parseBindingList(kind, {inFor: true});
+                    state.allowIn = previousAllowIn;
+
+                    if (declarations.length === 1 && declarations[0].init === null && matchKeyword('in')) {
+                        init = init.finishLexicalDeclaration(declarations, kind);
+                        lex();
+                        left = init;
+                        right = parseExpression();
+                        init = null;
+                    } else if (declarations.length === 1 && declarations[0].init === null && matchContextualKeyword('of')) {
+                        init = init.finishLexicalDeclaration(declarations, kind);
+                        lex();
+                        left = init;
+                        right = parseAssignmentExpression();
+                        init = null;
+                        forIn = false;
+                    } else {
+                        consumeSemicolon();
+                        init = init.finishLexicalDeclaration(declarations, kind);
+                    }
+                }
+            } else {
+                initStartToken = lookahead;
+                state.allowIn = false;
+                init = inheritCoverGrammar(parseAssignmentExpression);
+                state.allowIn = previousAllowIn;
+
+                if (matchKeyword('in')) {
+                    if (!isAssignmentTarget) {
+                        tolerateError(Messages.InvalidLHSInForIn);
+                    }
+
+                    lex();
+                    reinterpretExpressionAsPattern(init);
+                    left = init;
+                    right = parseExpression();
+                    init = null;
+                } else if (matchContextualKeyword('of')) {
+                    if (!isAssignmentTarget) {
+                        tolerateError(Messages.InvalidLHSInForLoop);
+                    }
+
+                    lex();
+                    reinterpretExpressionAsPattern(init);
+                    left = init;
+                    right = parseAssignmentExpression();
+                    init = null;
+                    forIn = false;
+                } else {
+                    if (match(',')) {
+                        initSeq = [init];
+                        while (match(',')) {
+                            lex();
+                            initSeq.push(isolateCoverGrammar(parseAssignmentExpression));
+                        }
+                        init = new WrappingNode(initStartToken).finishSequenceExpression(initSeq);
+                    }
+                    expect(';');
+                }
+            }
+        }
+
+        if (typeof left === 'undefined') {
+
+            if (!match(';')) {
+                test = parseExpression();
+            }
+            expect(';');
+
+            if (!match(')')) {
+                update = parseExpression();
+            }
+        }
+
+        expect(')');
+
+        oldInIteration = state.inIteration;
+        state.inIteration = true;
+
+        body = isolateCoverGrammar(parseStatement);
+
+        state.inIteration = oldInIteration;
+
+        return (typeof left === 'undefined') ?
+                node.finishForStatement(init, test, update, body) :
+                forIn ? node.finishForInStatement(left, right, body) :
+                    node.finishForOfStatement(left, right, body);
+    }
+
+    // ECMA-262 13.8 The continue statement
+
+    function parseContinueStatement(node) {
+        var label = null, key;
+
+        expectKeyword('continue');
+
+        // Optimize the most common form: 'continue;'.
+        if (source.charCodeAt(startIndex) === 0x3B) {
+            lex();
+
+            if (!state.inIteration) {
+                throwError(Messages.IllegalContinue);
+            }
+
+            return node.finishContinueStatement(null);
+        }
+
+        if (hasLineTerminator) {
+            if (!state.inIteration) {
+                throwError(Messages.IllegalContinue);
+            }
+
+            return node.finishContinueStatement(null);
+        }
+
+        if (lookahead.type === Token.Identifier) {
+            label = parseVariableIdentifier();
+
+            key = '$' + label.name;
+            if (!Object.prototype.hasOwnProperty.call(state.labelSet, key)) {
+                throwError(Messages.UnknownLabel, label.name);
+            }
+        }
+
+        consumeSemicolon();
+
+        if (label === null && !state.inIteration) {
+            throwError(Messages.IllegalContinue);
+        }
+
+        return node.finishContinueStatement(label);
+    }
+
+    // ECMA-262 13.9 The break statement
+
+    function parseBreakStatement(node) {
+        var label = null, key;
+
+        expectKeyword('break');
+
+        // Catch the very common case first: immediately a semicolon (U+003B).
+        if (source.charCodeAt(lastIndex) === 0x3B) {
+            lex();
+
+            if (!(state.inIteration || state.inSwitch)) {
+                throwError(Messages.IllegalBreak);
+            }
+
+            return node.finishBreakStatement(null);
+        }
+
+        if (hasLineTerminator) {
+            if (!(state.inIteration || state.inSwitch)) {
+                throwError(Messages.IllegalBreak);
+            }
+        } else if (lookahead.type === Token.Identifier) {
+            label = parseVariableIdentifier();
+
+            key = '$' + label.name;
+            if (!Object.prototype.hasOwnProperty.call(state.labelSet, key)) {
+                throwError(Messages.UnknownLabel, label.name);
+            }
+        }
+
+        consumeSemicolon();
+
+        if (label === null && !(state.inIteration || state.inSwitch)) {
+            throwError(Messages.IllegalBreak);
+        }
+
+        return node.finishBreakStatement(label);
+    }
+
+    // ECMA-262 13.10 The return statement
+
+    function parseReturnStatement(node) {
+        var argument = null;
+
+        expectKeyword('return');
+
+        if (!state.inFunctionBody) {
+            tolerateError(Messages.IllegalReturn);
+        }
+
+        // 'return' followed by a space and an identifier is very common.
+        if (source.charCodeAt(lastIndex) === 0x20) {
+            if (isIdentifierStart(source.charCodeAt(lastIndex + 1))) {
+                argument = parseExpression();
+                consumeSemicolon();
+                return node.finishReturnStatement(argument);
+            }
+        }
+
+        if (hasLineTerminator) {
+            // HACK
+            return node.finishReturnStatement(null);
+        }
+
+        if (!match(';')) {
+            if (!match('}') && lookahead.type !== Token.EOF) {
+                argument = parseExpression();
+            }
+        }
+
+        consumeSemicolon();
+
+        return node.finishReturnStatement(argument);
+    }
+
+    // ECMA-262 13.11 The with statement
+
+    function parseWithStatement(node) {
+        var object, body;
+
+        if (strict) {
+            tolerateError(Messages.StrictModeWith);
+        }
+
+        expectKeyword('with');
+
+        expect('(');
+
+        object = parseExpression();
+
+        expect(')');
+
+        body = parseStatement();
+
+        return node.finishWithStatement(object, body);
+    }
+
+    // ECMA-262 13.12 The switch statement
+
+    function parseSwitchCase() {
+        var test, consequent = [], statement, node = new Node();
+
+        if (matchKeyword('default')) {
+            lex();
+            test = null;
+        } else {
+            expectKeyword('case');
+            test = parseExpression();
+        }
+        expect(':');
+
+        while (startIndex < length) {
+            if (match('}') || matchKeyword('default') || matchKeyword('case')) {
+                break;
+            }
+            statement = parseStatementListItem();
+            consequent.push(statement);
+        }
+
+        return node.finishSwitchCase(test, consequent);
+    }
+
+    function parseSwitchStatement(node) {
+        var discriminant, cases, clause, oldInSwitch, defaultFound;
+
+        expectKeyword('switch');
+
+        expect('(');
+
+        discriminant = parseExpression();
+
+        expect(')');
+
+        expect('{');
+
+        cases = [];
+
+        if (match('}')) {
+            lex();
+            return node.finishSwitchStatement(discriminant, cases);
+        }
+
+        oldInSwitch = state.inSwitch;
+        state.inSwitch = true;
+        defaultFound = false;
+
+        while (startIndex < length) {
+            if (match('}')) {
+                break;
+            }
+            clause = parseSwitchCase();
+            if (clause.test === null) {
+                if (defaultFound) {
+                    throwError(Messages.MultipleDefaultsInSwitch);
+                }
+                defaultFound = true;
+            }
+            cases.push(clause);
+        }
+
+        state.inSwitch = oldInSwitch;
+
+        expect('}');
+
+        return node.finishSwitchStatement(discriminant, cases);
+    }
+
+    // ECMA-262 13.14 The throw statement
+
+    function parseThrowStatement(node) {
+        var argument;
+
+        expectKeyword('throw');
+
+        if (hasLineTerminator) {
+            throwError(Messages.NewlineAfterThrow);
+        }
+
+        argument = parseExpression();
+
+        consumeSemicolon();
+
+        return node.finishThrowStatement(argument);
+    }
+
+    // ECMA-262 13.15 The try statement
+
+    function parseCatchClause() {
+        var param, params = [], paramMap = {}, key, i, body, node = new Node();
+
+        expectKeyword('catch');
+
+        expect('(');
+        if (match(')')) {
+            throwUnexpectedToken(lookahead);
+        }
+
+        param = parsePattern(params);
+        for (i = 0; i < params.length; i++) {
+            key = '$' + params[i].value;
+            if (Object.prototype.hasOwnProperty.call(paramMap, key)) {
+                tolerateError(Messages.DuplicateBinding, params[i].value);
+            }
+            paramMap[key] = true;
+        }
+
+        // ECMA-262 12.14.1
+        if (strict && isRestrictedWord(param.name)) {
+            tolerateError(Messages.StrictCatchVariable);
+        }
+
+        expect(')');
+        body = parseBlock();
+        return node.finishCatchClause(param, body);
+    }
+
+    function parseTryStatement(node) {
+        var block, handler = null, finalizer = null;
+
+        expectKeyword('try');
+
+        block = parseBlock();
+
+        if (matchKeyword('catch')) {
+            handler = parseCatchClause();
+        }
+
+        if (matchKeyword('finally')) {
+            lex();
+            finalizer = parseBlock();
+        }
+
+        if (!handler && !finalizer) {
+            throwError(Messages.NoCatchOrFinally);
+        }
+
+        return node.finishTryStatement(block, handler, finalizer);
+    }
+
+    // ECMA-262 13.16 The debugger statement
+
+    function parseDebuggerStatement(node) {
+        expectKeyword('debugger');
+
+        consumeSemicolon();
+
+        return node.finishDebuggerStatement();
+    }
+
+    // 13 Statements
+
+    function parseStatement() {
+        var type = lookahead.type,
+            expr,
+            labeledBody,
+            key,
+            node;
+
+        if (type === Token.EOF) {
+            throwUnexpectedToken(lookahead);
+        }
+
+        if (type === Token.Punctuator && lookahead.value === '{') {
+            return parseBlock();
+        }
+        isAssignmentTarget = isBindingElement = true;
+        node = new Node();
+
+        if (type === Token.Punctuator) {
+            switch (lookahead.value) {
+            case ';':
+                return parseEmptyStatement(node);
+            case '(':
+                return parseExpressionStatement(node);
+            default:
+                break;
+            }
+        } else if (type === Token.Keyword) {
+            switch (lookahead.value) {
+            case 'break':
+                return parseBreakStatement(node);
+            case 'continue':
+                return parseContinueStatement(node);
+            case 'debugger':
+                return parseDebuggerStatement(node);
+            case 'do':
+                return parseDoWhileStatement(node);
+            case 'for':
+                return parseForStatement(node);
+            case 'function':
+                return parseFunctionDeclaration(node);
+            case 'if':
+                return parseIfStatement(node);
+            case 'return':
+                return parseReturnStatement(node);
+            case 'switch':
+                return parseSwitchStatement(node);
+            case 'throw':
+                return parseThrowStatement(node);
+            case 'try':
+                return parseTryStatement(node);
+            case 'var':
+                return parseVariableStatement(node);
+            case 'while':
+                return parseWhileStatement(node);
+            case 'with':
+                return parseWithStatement(node);
+            default:
+                break;
+            }
+        }
+
+        expr = parseExpression();
+
+        // ECMA-262 12.12 Labelled Statements
+        if ((expr.type === Syntax.Identifier) && match(':')) {
+            lex();
+
+            key = '$' + expr.name;
+            if (Object.prototype.hasOwnProperty.call(state.labelSet, key)) {
+                throwError(Messages.Redeclaration, 'Label', expr.name);
+            }
+
+            state.labelSet[key] = true;
+            labeledBody = parseStatement();
+            delete state.labelSet[key];
+            return node.finishLabeledStatement(expr, labeledBody);
+        }
+
+        consumeSemicolon();
+
+        return node.finishExpressionStatement(expr);
+    }
+
+    // ECMA-262 14.1 Function Definition
+
+    function parseFunctionSourceElements() {
+        var statement, body = [], token, directive, firstRestricted,
+            oldLabelSet, oldInIteration, oldInSwitch, oldInFunctionBody,
+            node = new Node();
+
+        expect('{');
+
+        while (startIndex < length) {
+            if (lookahead.type !== Token.StringLiteral) {
+                break;
+            }
+            token = lookahead;
+
+            statement = parseStatementListItem();
+            body.push(statement);
+            if (statement.expression.type !== Syntax.Literal) {
+                // this is not directive
+                break;
+            }
+            directive = source.slice(token.start + 1, token.end - 1);
+            if (directive === 'use strict') {
+                strict = true;
+                if (firstRestricted) {
+                    tolerateUnexpectedToken(firstRestricted, Messages.StrictOctalLiteral);
+                }
+            } else {
+                if (!firstRestricted && token.octal) {
+                    firstRestricted = token;
+                }
+            }
+        }
+
+        oldLabelSet = state.labelSet;
+        oldInIteration = state.inIteration;
+        oldInSwitch = state.inSwitch;
+        oldInFunctionBody = state.inFunctionBody;
+
+        state.labelSet = {};
+        state.inIteration = false;
+        state.inSwitch = false;
+        state.inFunctionBody = true;
+
+        while (startIndex < length) {
+            if (match('}')) {
+                break;
+            }
+            body.push(parseStatementListItem());
+        }
+
+        expect('}');
+
+        state.labelSet = oldLabelSet;
+        state.inIteration = oldInIteration;
+        state.inSwitch = oldInSwitch;
+        state.inFunctionBody = oldInFunctionBody;
+
+        return node.finishBlockStatement(body);
+    }
+
+    function validateParam(options, param, name) {
+        var key = '$' + name;
+        if (strict) {
+            if (isRestrictedWord(name)) {
+                options.stricted = param;
+                options.message = Messages.StrictParamName;
+            }
+            if (Object.prototype.hasOwnProperty.call(options.paramSet, key)) {
+                options.stricted = param;
+                options.message = Messages.StrictParamDupe;
+            }
+        } else if (!options.firstRestricted) {
+            if (isRestrictedWord(name)) {
+                options.firstRestricted = param;
+                options.message = Messages.StrictParamName;
+            } else if (isStrictModeReservedWord(name)) {
+                options.firstRestricted = param;
+                options.message = Messages.StrictReservedWord;
+            } else if (Object.prototype.hasOwnProperty.call(options.paramSet, key)) {
+                options.stricted = param;
+                options.message = Messages.StrictParamDupe;
+            }
+        }
+        options.paramSet[key] = true;
+    }
+
+    function parseParam(options) {
+        var token, param, params = [], i, def;
+
+        token = lookahead;
+        if (token.value === '...') {
+            param = parseRestElement(params);
+            validateParam(options, param.argument, param.argument.name);
+            options.params.push(param);
+            options.defaults.push(null);
+            return false;
+        }
+
+        param = parsePatternWithDefault(params);
+        for (i = 0; i < params.length; i++) {
+            validateParam(options, params[i], params[i].value);
+        }
+
+        if (param.type === Syntax.AssignmentPattern) {
+            def = param.right;
+            param = param.left;
+            ++options.defaultCount;
+        }
+
+        options.params.push(param);
+        options.defaults.push(def);
+
+        return !match(')');
+    }
+
+    function parseParams(firstRestricted) {
+        var options;
+
+        options = {
+            params: [],
+            defaultCount: 0,
+            defaults: [],
+            firstRestricted: firstRestricted
+        };
+
+        expect('(');
+
+        if (!match(')')) {
+            options.paramSet = {};
+            while (startIndex < length) {
+                if (!parseParam(options)) {
+                    break;
+                }
+                expect(',');
+            }
+        }
+
+        expect(')');
+
+        if (options.defaultCount === 0) {
+            options.defaults = [];
+        }
+
+        return {
+            params: options.params,
+            defaults: options.defaults,
+            stricted: options.stricted,
+            firstRestricted: options.firstRestricted,
+            message: options.message
+        };
+    }
+
+    function parseFunctionDeclaration(node, identifierIsOptional) {
+        var id = null, params = [], defaults = [], body, token, stricted, tmp, firstRestricted, message, previousStrict,
+            isGenerator, previousAllowYield;
+
+        previousAllowYield = state.allowYield;
+
+        expectKeyword('function');
+
+        isGenerator = match('*');
+        if (isGenerator) {
+            lex();
+        }
+
+        if (!identifierIsOptional || !match('(')) {
+            token = lookahead;
+            id = parseVariableIdentifier();
+            if (strict) {
+                if (isRestrictedWord(token.value)) {
+                    tolerateUnexpectedToken(token, Messages.StrictFunctionName);
+                }
+            } else {
+                if (isRestrictedWord(token.value)) {
+                    firstRestricted = token;
+                    message = Messages.StrictFunctionName;
+                } else if (isStrictModeReservedWord(token.value)) {
+                    firstRestricted = token;
+                    message = Messages.StrictReservedWord;
+                }
+            }
+        }
+
+        state.allowYield = !isGenerator;
+        tmp = parseParams(firstRestricted);
+        params = tmp.params;
+        defaults = tmp.defaults;
+        stricted = tmp.stricted;
+        firstRestricted = tmp.firstRestricted;
+        if (tmp.message) {
+            message = tmp.message;
+        }
+
+
+        previousStrict = strict;
+        body = parseFunctionSourceElements();
+        if (strict && firstRestricted) {
+            throwUnexpectedToken(firstRestricted, message);
+        }
+        if (strict && stricted) {
+            tolerateUnexpectedToken(stricted, message);
+        }
+
+        strict = previousStrict;
+        state.allowYield = previousAllowYield;
+
+        return node.finishFunctionDeclaration(id, params, defaults, body, isGenerator);
+    }
+
+    function parseFunctionExpression() {
+        var token, id = null, stricted, firstRestricted, message, tmp,
+            params = [], defaults = [], body, previousStrict, node = new Node(),
+            isGenerator, previousAllowYield;
+
+        previousAllowYield = state.allowYield;
+
+        expectKeyword('function');
+
+        isGenerator = match('*');
+        if (isGenerator) {
+            lex();
+        }
+
+        state.allowYield = !isGenerator;
+        if (!match('(')) {
+            token = lookahead;
+            id = (!strict && !isGenerator && matchKeyword('yield')) ? parseNonComputedProperty() : parseVariableIdentifier();
+            if (strict) {
+                if (isRestrictedWord(token.value)) {
+                    tolerateUnexpectedToken(token, Messages.StrictFunctionName);
+                }
+            } else {
+                if (isRestrictedWord(token.value)) {
+                    firstRestricted = token;
+                    message = Messages.StrictFunctionName;
+                } else if (isStrictModeReservedWord(token.value)) {
+                    firstRestricted = token;
+                    message = Messages.StrictReservedWord;
+                }
+            }
+        }
+
+        tmp = parseParams(firstRestricted);
+        params = tmp.params;
+        defaults = tmp.defaults;
+        stricted = tmp.stricted;
+        firstRestricted = tmp.firstRestricted;
+        if (tmp.message) {
+            message = tmp.message;
+        }
+
+        previousStrict = strict;
+        body = parseFunctionSourceElements();
+        if (strict && firstRestricted) {
+            throwUnexpectedToken(firstRestricted, message);
+        }
+        if (strict && stricted) {
+            tolerateUnexpectedToken(stricted, message);
+        }
+        strict = previousStrict;
+        state.allowYield = previousAllowYield;
+
+        return node.finishFunctionExpression(id, params, defaults, body, isGenerator);
+    }
+
+    // ECMA-262 14.5 Class Definitions
+
+    function parseClassBody() {
+        var classBody, token, isStatic, hasConstructor = false, body, method, computed, key;
+
+        classBody = new Node();
+
+        expect('{');
+        body = [];
+        while (!match('}')) {
+            if (match(';')) {
+                lex();
+            } else {
+                method = new Node();
+                token = lookahead;
+                isStatic = false;
+                computed = match('[');
+                if (match('*')) {
+                    lex();
+                } else {
+                    key = parseObjectPropertyKey();
+                    if (key.name === 'static' && (lookaheadPropertyName() || match('*'))) {
+                        token = lookahead;
+                        isStatic = true;
+                        computed = match('[');
+                        if (match('*')) {
+                            lex();
+                        } else {
+                            key = parseObjectPropertyKey();
+                        }
+                    }
+                }
+                method = tryParseMethodDefinition(token, key, computed, method);
+                if (method) {
+                    method['static'] = isStatic; // jscs:ignore requireDotNotation
+                    if (method.kind === 'init') {
+                        method.kind = 'method';
+                    }
+                    if (!isStatic) {
+                        if (!method.computed && (method.key.name || method.key.value.toString()) === 'constructor') {
+                            if (method.kind !== 'method' || !method.method || method.value.generator) {
+                                throwUnexpectedToken(token, Messages.ConstructorSpecialMethod);
+                            }
+                            if (hasConstructor) {
+                                throwUnexpectedToken(token, Messages.DuplicateConstructor);
+                            } else {
+                                hasConstructor = true;
+                            }
+                            method.kind = 'constructor';
+                        }
+                    } else {
+                        if (!method.computed && (method.key.name || method.key.value.toString()) === 'prototype') {
+                            throwUnexpectedToken(token, Messages.StaticPrototype);
+                        }
+                    }
+                    method.type = Syntax.MethodDefinition;
+                    delete method.method;
+                    delete method.shorthand;
+                    body.push(method);
+                } else {
+                    throwUnexpectedToken(lookahead);
+                }
+            }
+        }
+        lex();
+        return classBody.finishClassBody(body);
+    }
+
+    function parseClassDeclaration(identifierIsOptional) {
+        var id = null, superClass = null, classNode = new Node(), classBody, previousStrict = strict;
+        strict = true;
+
+        expectKeyword('class');
+
+        if (!identifierIsOptional || lookahead.type === Token.Identifier) {
+            id = parseVariableIdentifier();
+        }
+
+        if (matchKeyword('extends')) {
+            lex();
+            superClass = isolateCoverGrammar(parseLeftHandSideExpressionAllowCall);
+        }
+        classBody = parseClassBody();
+        strict = previousStrict;
+
+        return classNode.finishClassDeclaration(id, superClass, classBody);
+    }
+
+    function parseClassExpression() {
+        var id = null, superClass = null, classNode = new Node(), classBody, previousStrict = strict;
+        strict = true;
+
+        expectKeyword('class');
+
+        if (lookahead.type === Token.Identifier) {
+            id = parseVariableIdentifier();
+        }
+
+        if (matchKeyword('extends')) {
+            lex();
+            superClass = isolateCoverGrammar(parseLeftHandSideExpressionAllowCall);
+        }
+        classBody = parseClassBody();
+        strict = previousStrict;
+
+        return classNode.finishClassExpression(id, superClass, classBody);
+    }
+
+    // ECMA-262 15.2 Modules
+
+    function parseModuleSpecifier() {
+        var node = new Node();
+
+        if (lookahead.type !== Token.StringLiteral) {
+            throwError(Messages.InvalidModuleSpecifier);
+        }
+        return node.finishLiteral(lex());
+    }
+
+    // ECMA-262 15.2.3 Exports
+
+    function parseExportSpecifier() {
+        var exported, local, node = new Node(), def;
+        if (matchKeyword('default')) {
+            // export {default} from 'something';
+            def = new Node();
+            lex();
+            local = def.finishIdentifier('default');
+        } else {
+            local = parseVariableIdentifier();
+        }
+        if (matchContextualKeyword('as')) {
+            lex();
+            exported = parseNonComputedProperty();
+        }
+        return node.finishExportSpecifier(local, exported);
+    }
+
+    function parseExportNamedDeclaration(node) {
+        var declaration = null,
+            isExportFromIdentifier,
+            src = null, specifiers = [];
+
+        // non-default export
+        if (lookahead.type === Token.Keyword) {
+            // covers:
+            // export var f = 1;
+            switch (lookahead.value) {
+                case 'let':
+                case 'const':
+                    declaration = parseLexicalDeclaration({inFor: false});
+                    return node.finishExportNamedDeclaration(declaration, specifiers, null);
+                case 'var':
+                case 'class':
+                case 'function':
+                    declaration = parseStatementListItem();
+                    return node.finishExportNamedDeclaration(declaration, specifiers, null);
+            }
+        }
+
+        expect('{');
+        while (!match('}')) {
+            isExportFromIdentifier = isExportFromIdentifier || matchKeyword('default');
+            specifiers.push(parseExportSpecifier());
+            if (!match('}')) {
+                expect(',');
+                if (match('}')) {
+                    break;
+                }
+            }
+        }
+        expect('}');
+
+        if (matchContextualKeyword('from')) {
+            // covering:
+            // export {default} from 'foo';
+            // export {foo} from 'foo';
+            lex();
+            src = parseModuleSpecifier();
+            consumeSemicolon();
+        } else if (isExportFromIdentifier) {
+            // covering:
+            // export {default}; // missing fromClause
+            throwError(lookahead.value ?
+                    Messages.UnexpectedToken : Messages.MissingFromClause, lookahead.value);
+        } else {
+            // cover
+            // export {foo};
+            consumeSemicolon();
+        }
+        return node.finishExportNamedDeclaration(declaration, specifiers, src);
+    }
+
+    function parseExportDefaultDeclaration(node) {
+        var declaration = null,
+            expression = null;
+
+        // covers:
+        // export default ...
+        expectKeyword('default');
+
+        if (matchKeyword('function')) {
+            // covers:
+            // export default function foo () {}
+            // export default function () {}
+            declaration = parseFunctionDeclaration(new Node(), true);
+            return node.finishExportDefaultDeclaration(declaration);
+        }
+        if (matchKeyword('class')) {
+            declaration = parseClassDeclaration(true);
+            return node.finishExportDefaultDeclaration(declaration);
+        }
+
+        if (matchContextualKeyword('from')) {
+            throwError(Messages.UnexpectedToken, lookahead.value);
+        }
+
+        // covers:
+        // export default {};
+        // export default [];
+        // export default (1 + 2);
+        if (match('{')) {
+            expression = parseObjectInitializer();
+        } else if (match('[')) {
+            expression = parseArrayInitializer();
+        } else {
+            expression = parseAssignmentExpression();
+        }
+        consumeSemicolon();
+        return node.finishExportDefaultDeclaration(expression);
+    }
+
+    function parseExportAllDeclaration(node) {
+        var src;
+
+        // covers:
+        // export * from 'foo';
+        expect('*');
+        if (!matchContextualKeyword('from')) {
+            throwError(lookahead.value ?
+                    Messages.UnexpectedToken : Messages.MissingFromClause, lookahead.value);
+        }
+        lex();
+        src = parseModuleSpecifier();
+        consumeSemicolon();
+
+        return node.finishExportAllDeclaration(src);
+    }
+
+    function parseExportDeclaration() {
+        var node = new Node();
+        if (state.inFunctionBody) {
+            throwError(Messages.IllegalExportDeclaration);
+        }
+
+        expectKeyword('export');
+
+        if (matchKeyword('default')) {
+            return parseExportDefaultDeclaration(node);
+        }
+        if (match('*')) {
+            return parseExportAllDeclaration(node);
+        }
+        return parseExportNamedDeclaration(node);
+    }
+
+    // ECMA-262 15.2.2 Imports
+
+    function parseImportSpecifier() {
+        // import {<foo as bar>} ...;
+        var local, imported, node = new Node();
+
+        imported = parseNonComputedProperty();
+        if (matchContextualKeyword('as')) {
+            lex();
+            local = parseVariableIdentifier();
+        }
+
+        return node.finishImportSpecifier(local, imported);
+    }
+
+    function parseNamedImports() {
+        var specifiers = [];
+        // {foo, bar as bas}
+        expect('{');
+        while (!match('}')) {
+            specifiers.push(parseImportSpecifier());
+            if (!match('}')) {
+                expect(',');
+                if (match('}')) {
+                    break;
+                }
+            }
+        }
+        expect('}');
+        return specifiers;
+    }
+
+    function parseImportDefaultSpecifier() {
+        // import <foo> ...;
+        var local, node = new Node();
+
+        local = parseNonComputedProperty();
+
+        return node.finishImportDefaultSpecifier(local);
+    }
+
+    function parseImportNamespaceSpecifier() {
+        // import <* as foo> ...;
+        var local, node = new Node();
+
+        expect('*');
+        if (!matchContextualKeyword('as')) {
+            throwError(Messages.NoAsAfterImportNamespace);
+        }
+        lex();
+        local = parseNonComputedProperty();
+
+        return node.finishImportNamespaceSpecifier(local);
+    }
+
+    function parseImportDeclaration() {
+        var specifiers = [], src, node = new Node();
+
+        if (state.inFunctionBody) {
+            throwError(Messages.IllegalImportDeclaration);
+        }
+
+        expectKeyword('import');
+
+        if (lookahead.type === Token.StringLiteral) {
+            // import 'foo';
+            src = parseModuleSpecifier();
+        } else {
+
+            if (match('{')) {
+                // import {bar}
+                specifiers = specifiers.concat(parseNamedImports());
+            } else if (match('*')) {
+                // import * as foo
+                specifiers.push(parseImportNamespaceSpecifier());
+            } else if (isIdentifierName(lookahead) && !matchKeyword('default')) {
+                // import foo
+                specifiers.push(parseImportDefaultSpecifier());
+                if (match(',')) {
+                    lex();
+                    if (match('*')) {
+                        // import foo, * as foo
+                        specifiers.push(parseImportNamespaceSpecifier());
+                    } else if (match('{')) {
+                        // import foo, {bar}
+                        specifiers = specifiers.concat(parseNamedImports());
+                    } else {
+                        throwUnexpectedToken(lookahead);
+                    }
+                }
+            } else {
+                throwUnexpectedToken(lex());
+            }
+
+            if (!matchContextualKeyword('from')) {
+                throwError(lookahead.value ?
+                        Messages.UnexpectedToken : Messages.MissingFromClause, lookahead.value);
+            }
+            lex();
+            src = parseModuleSpecifier();
+        }
+
+        consumeSemicolon();
+        return node.finishImportDeclaration(specifiers, src);
+    }
+
+    // ECMA-262 15.1 Scripts
+
+    function parseScriptBody() {
+        var statement, body = [], token, directive, firstRestricted;
+
+        while (startIndex < length) {
+            token = lookahead;
+            if (token.type !== Token.StringLiteral) {
+                break;
+            }
+
+            statement = parseStatementListItem();
+            body.push(statement);
+            if (statement.expression.type !== Syntax.Literal) {
+                // this is not directive
+                break;
+            }
+            directive = source.slice(token.start + 1, token.end - 1);
+            if (directive === 'use strict') {
+                strict = true;
+                if (firstRestricted) {
+                    tolerateUnexpectedToken(firstRestricted, Messages.StrictOctalLiteral);
+                }
+            } else {
+                if (!firstRestricted && token.octal) {
+                    firstRestricted = token;
+                }
+            }
+        }
+
+        while (startIndex < length) {
+            statement = parseStatementListItem();
+            /* istanbul ignore if */
+            if (typeof statement === 'undefined') {
+                break;
+            }
+            body.push(statement);
+        }
+        return body;
+    }
+
+    function parseProgram() {
+        var body, node;
+
+        peek();
+        node = new Node();
+
+        body = parseScriptBody();
+        return node.finishProgram(body, state.sourceType);
+    }
+
+    function filterTokenLocation() {
+        var i, entry, token, tokens = [];
+
+        for (i = 0; i < extra.tokens.length; ++i) {
+            entry = extra.tokens[i];
+            token = {
+                type: entry.type,
+                value: entry.value
+            };
+            if (entry.regex) {
+                token.regex = {
+                    pattern: entry.regex.pattern,
+                    flags: entry.regex.flags
+                };
+            }
+            if (extra.range) {
+                token.range = entry.range;
+            }
+            if (extra.loc) {
+                token.loc = entry.loc;
+            }
+            tokens.push(token);
+        }
+
+        extra.tokens = tokens;
+    }
+
+    function tokenize(code, options, delegate) {
+        var toString,
+            tokens;
+
+        toString = String;
+        if (typeof code !== 'string' && !(code instanceof String)) {
+            code = toString(code);
+        }
+
+        source = code;
+        index = 0;
+        lineNumber = (source.length > 0) ? 1 : 0;
+        lineStart = 0;
+        startIndex = index;
+        startLineNumber = lineNumber;
+        startLineStart = lineStart;
+        length = source.length;
+        lookahead = null;
+        state = {
+            allowIn: true,
+            allowYield: true,
+            labelSet: {},
+            inFunctionBody: false,
+            inIteration: false,
+            inSwitch: false,
+            lastCommentStart: -1,
+            curlyStack: []
+        };
+
+        extra = {};
+
+        // Options matching.
+        options = options || {};
+
+        // Of course we collect tokens here.
+        options.tokens = true;
+        extra.tokens = [];
+        extra.tokenValues = [];
+        extra.tokenize = true;
+        extra.delegate = delegate;
+
+        // The following two fields are necessary to compute the Regex tokens.
+        extra.openParenToken = -1;
+        extra.openCurlyToken = -1;
+
+        extra.range = (typeof options.range === 'boolean') && options.range;
+        extra.loc = (typeof options.loc === 'boolean') && options.loc;
+
+        if (typeof options.comment === 'boolean' && options.comment) {
+            extra.comments = [];
+        }
+        if (typeof options.tolerant === 'boolean' && options.tolerant) {
+            extra.errors = [];
+        }
+
+        try {
+            peek();
+            if (lookahead.type === Token.EOF) {
+                return extra.tokens;
+            }
+
+            lex();
+            while (lookahead.type !== Token.EOF) {
+                try {
+                    lex();
+                } catch (lexError) {
+                    if (extra.errors) {
+                        recordError(lexError);
+                        // We have to break on the first error
+                        // to avoid infinite loops.
+                        break;
+                    } else {
+                        throw lexError;
+                    }
+                }
+            }
+
+            tokens = extra.tokens;
+            if (typeof extra.errors !== 'undefined') {
+                tokens.errors = extra.errors;
+            }
+        } catch (e) {
+            throw e;
+        } finally {
+            extra = {};
+        }
+        return tokens;
+    }
+
+    function parse(code, options) {
+        var program, toString;
+
+        toString = String;
+        if (typeof code !== 'string' && !(code instanceof String)) {
+            code = toString(code);
+        }
+
+        source = code;
+        index = 0;
+        lineNumber = (source.length > 0) ? 1 : 0;
+        lineStart = 0;
+        startIndex = index;
+        startLineNumber = lineNumber;
+        startLineStart = lineStart;
+        length = source.length;
+        lookahead = null;
+        state = {
+            allowIn: true,
+            allowYield: true,
+            labelSet: {},
+            inFunctionBody: false,
+            inIteration: false,
+            inSwitch: false,
+            lastCommentStart: -1,
+            curlyStack: [],
+            sourceType: 'script'
+        };
+        strict = false;
+
+        extra = {};
+        if (typeof options !== 'undefined') {
+            extra.range = (typeof options.range === 'boolean') && options.range;
+            extra.loc = (typeof options.loc === 'boolean') && options.loc;
+            extra.attachComment = (typeof options.attachComment === 'boolean') && options.attachComment;
+
+            if (extra.loc && options.source !== null && options.source !== undefined) {
+                extra.source = toString(options.source);
+            }
+
+            if (typeof options.tokens === 'boolean' && options.tokens) {
+                extra.tokens = [];
+            }
+            if (typeof options.comment === 'boolean' && options.comment) {
+                extra.comments = [];
+            }
+            if (typeof options.tolerant === 'boolean' && options.tolerant) {
+                extra.errors = [];
+            }
+            if (extra.attachComment) {
+                extra.range = true;
+                extra.comments = [];
+                extra.bottomRightStack = [];
+                extra.trailingComments = [];
+                extra.leadingComments = [];
+            }
+            if (options.sourceType === 'module') {
+                // very restrictive condition for now
+                state.sourceType = options.sourceType;
+                strict = true;
+            }
+        }
+
+        try {
+            program = parseProgram();
+            if (typeof extra.comments !== 'undefined') {
+                program.comments = extra.comments;
+            }
+            if (typeof extra.tokens !== 'undefined') {
+                filterTokenLocation();
+                program.tokens = extra.tokens;
+            }
+            if (typeof extra.errors !== 'undefined') {
+                program.errors = extra.errors;
+            }
+        } catch (e) {
+            throw e;
+        } finally {
+            extra = {};
+        }
+
+        return program;
+    }
+
+    // Sync with *.json manifests.
+    exports.version = '2.7.3';
+
+    exports.tokenize = tokenize;
+
+    exports.parse = parse;
+
+    // Deep copy.
+    /* istanbul ignore next */
+    exports.Syntax = (function () {
+        var name, types = {};
+
+        if (typeof Object.create === 'function') {
+            types = Object.create(null);
+        }
+
+        for (name in Syntax) {
+            if (Syntax.hasOwnProperty(name)) {
+                types[name] = Syntax[name];
+            }
+        }
+
+        if (typeof Object.freeze === 'function') {
+            Object.freeze(types);
+        }
+
+        return types;
+    }());
+
+}));
+/* vim: set sw=4 ts=4 et tw=80 : */
 
 
 
 /*
-file estraverse/estraverse.js
+file https://github.com/estools/estraverse/blob/1.9.3/estraverse.js
+shGithubDateCommitted https://github.com/estools/estraverse/commits/1.9.3 # 2015-03-05T15:53:45Z
+curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > /tmp/aa.js
 */
-(function(e,t){"use strict";typeof define=="function"&&define.amd?define(["exports"
-],t):typeof exports!="undefined"?t(exports):t(e.estraverse={})})(this,function e
-(t){"use strict";function c(){}function h(e){var t={},n,r;for(n in e)e.hasOwnProperty
-(n)&&(r=e[n],typeof r=="object"&&r!==null?t[n]=h(r):t[n]=r);return t}function p(
-e){var t={},n;for(n in e)e.hasOwnProperty(n)&&(t[n]=e[n]);return t}function d(e,
-t){var n,r,i,s;r=e.length,i=0;while(r)n=r>>>1,s=i+n,t(e[s])?r=n:(i=s+1,r-=n+1);return i
-}function v(e,t){var n,r,i,s;r=e.length,i=0;while(r)n=r>>>1,s=i+n,t(e[s])?(i=s+1
-,r-=n+1):r=n;return i}function m(e,t){var n=u(t),r,i,s;for(i=0,s=n.length;i<s;i+=1
-)r=n[i],e[r]=t[r];return e}function g(e,t){this.parent=e,this.key=t}function y(e
-,t,n,r){this.node=e,this.path=t,this.wrap=n,this.ref=r}function b(){}function w(
-e){return e==null?!1:typeof e=="object"&&typeof e.type=="string"}function E(e,t)
-{return(e===n.ObjectExpression||e===n.ObjectPattern)&&"properties"===t}function S
-(e,t){var n=new b;return n.traverse(e,t)}function x(e,t){var n=new b;return n.replace
-(e,t)}function T(e,t){var n;return n=d(t,function(n){return n.range[0]>e.range[0
-]}),e.extendedRange=[e.range[0],e.range[1]],n!==t.length&&(e.extendedRange[1]=t[
-n].range[0]),n-=1,n>=0&&(e.extendedRange[0]=t[n].range[1]),e}function N(e,t,n){var r=
-[],s,o,u,a;if(!e.range)throw new Error("attachComments needs range information")
-;if(!n.length){if(t.length){for(u=0,o=t.length;u<o;u+=1)s=h(t[u]),s.extendedRange=
-[0,e.range[0]],r.push(s);e.leadingComments=r}return e}for(u=0,o=t.length;u<o;u+=1
-)r.push(T(h(t[u]),n));return a=0,S(e,{enter:function(e){var t;while(a<r.length){
-t=r[a];if(t.extendedRange[1]>e.range[0])break;t.extendedRange[1]===e.range[0]?(e
-.leadingComments||(e.leadingComments=[]),e.leadingComments.push(t),r.splice(a,1)
-):a+=1}if(a===r.length)return i.Break;if(r[a].extendedRange[0]>e.range[1])return i
-.Skip}}),a=0,S(e,{leave:function(e){var t;while(a<r.length){t=r[a];if(e.range[1]<
-t.extendedRange[0])break;e.range[1]===t.extendedRange[0]?(e.trailingComments||(e
-.trailingComments=[]),e.trailingComments.push(t),r.splice(a,1)):a+=1}if(a===r.length
-)return i.Break;if(r[a].extendedRange[0]>e.range[1])return i.Skip}}),e}var n,r,i
-,s,o,u,a,f,l;return r=Array.isArray,r||(r=function(t){return Object.prototype.toString
-.call(t)==="[object Array]"}),c(p),c(v),o=Object.create||function(){function e()
-{}return function(t){return e.prototype=t,new e}}(),u=Object.keys||function(e){var t=
-[],n;for(n in e)t.push(n);return t},n={AssignmentExpression:"AssignmentExpression"
-,ArrayExpression:"ArrayExpression",ArrayPattern:"ArrayPattern",ArrowFunctionExpression
-:"ArrowFunctionExpression",AwaitExpression:"AwaitExpression",BlockStatement:"BlockStatement"
-,BinaryExpression:"BinaryExpression",BreakStatement:"BreakStatement",CallExpression
-:"CallExpression",CatchClause:"CatchClause",ClassBody:"ClassBody",ClassDeclaration
-:"ClassDeclaration",ClassExpression:"ClassExpression",ComprehensionBlock:"ComprehensionBlock"
-,ComprehensionExpression:"ComprehensionExpression",ConditionalExpression:"ConditionalExpression"
-,ContinueStatement:"ContinueStatement",DebuggerStatement:"DebuggerStatement",DirectiveStatement
-:"DirectiveStatement",DoWhileStatement:"DoWhileStatement",EmptyStatement:"EmptyStatement"
-,ExportBatchSpecifier:"ExportBatchSpecifier",ExportDeclaration:"ExportDeclaration"
-,ExportSpecifier:"ExportSpecifier",ExpressionStatement:"ExpressionStatement",ForStatement
-:"ForStatement",ForInStatement:"ForInStatement",ForOfStatement:"ForOfStatement",
-FunctionDeclaration:"FunctionDeclaration",FunctionExpression:"FunctionExpression"
-,GeneratorExpression:"GeneratorExpression",Identifier:"Identifier",IfStatement:"IfStatement"
-,ImportDeclaration:"ImportDeclaration",ImportDefaultSpecifier:"ImportDefaultSpecifier"
-,ImportNamespaceSpecifier:"ImportNamespaceSpecifier",ImportSpecifier:"ImportSpecifier"
-,Literal:"Literal",LabeledStatement:"LabeledStatement",LogicalExpression:"LogicalExpression"
-,MemberExpression:"MemberExpression",MethodDefinition:"MethodDefinition",ModuleSpecifier
-:"ModuleSpecifier",NewExpression:"NewExpression",ObjectExpression:"ObjectExpression"
-,ObjectPattern:"ObjectPattern",Program:"Program",Property:"Property",ReturnStatement
-:"ReturnStatement",SequenceExpression:"SequenceExpression",SpreadElement:"SpreadElement"
-,SwitchStatement:"SwitchStatement",SwitchCase:"SwitchCase",TaggedTemplateExpression
-:"TaggedTemplateExpression",TemplateElement:"TemplateElement",TemplateLiteral:"TemplateLiteral"
-,ThisExpression:"ThisExpression",ThrowStatement:"ThrowStatement",TryStatement:"TryStatement"
-,UnaryExpression:"UnaryExpression",UpdateExpression:"UpdateExpression",VariableDeclaration
-:"VariableDeclaration",VariableDeclarator:"VariableDeclarator",WhileStatement:"WhileStatement"
-,WithStatement:"WithStatement",YieldExpression:"YieldExpression"},s={AssignmentExpression
-:["left","right"],ArrayExpression:["elements"],ArrayPattern:["elements"],ArrowFunctionExpression
-:["params","defaults","rest","body"],AwaitExpression:["argument"],BlockStatement
-:["body"],BinaryExpression:["left","right"],BreakStatement:["label"],CallExpression
-:["callee","arguments"],CatchClause:["param","body"],ClassBody:["body"],ClassDeclaration
-:["id","body","superClass"],ClassExpression:["id","body","superClass"],ComprehensionBlock
-:["left","right"],ComprehensionExpression:["blocks","filter","body"],ConditionalExpression
-:["test","consequent","alternate"],ContinueStatement:["label"],DebuggerStatement
-:[],DirectiveStatement:[],DoWhileStatement:["body","test"],EmptyStatement:[],ExportBatchSpecifier
-:[],ExportDeclaration:["declaration","specifiers","source"],ExportSpecifier:["id"
-,"name"],ExpressionStatement:["expression"],ForStatement:["init","test","update"
-,"body"],ForInStatement:["left","right","body"],ForOfStatement:["left","right","body"
-],FunctionDeclaration:["id","params","defaults","rest","body"],FunctionExpression
-:["id","params","defaults","rest","body"],GeneratorExpression:["blocks","filter"
-,"body"],Identifier:[],IfStatement:["test","consequent","alternate"],ImportDeclaration
-:["specifiers","source"],ImportDefaultSpecifier:["id"],ImportNamespaceSpecifier:
-["id"],ImportSpecifier:["id","name"],Literal:[],LabeledStatement:["label","body"
-],LogicalExpression:["left","right"],MemberExpression:["object","property"],MethodDefinition
-:["key","value"],ModuleSpecifier:[],NewExpression:["callee","arguments"],ObjectExpression
-:["properties"],ObjectPattern:["properties"],Program:["body"],Property:["key","value"
-],ReturnStatement:["argument"],SequenceExpression:["expressions"],SpreadElement:
-["argument"],SwitchStatement:["discriminant","cases"],SwitchCase:["test","consequent"
-],TaggedTemplateExpression:["tag","quasi"],TemplateElement:[],TemplateLiteral:["quasis"
-,"expressions"],ThisExpression:[],ThrowStatement:["argument"],TryStatement:["block"
-,"handlers","handler","guardedHandlers","finalizer"],UnaryExpression:["argument"
-],UpdateExpression:["argument"],VariableDeclaration:["declarations"],VariableDeclarator
-:["id","init"],WhileStatement:["test","body"],WithStatement:["object","body"],YieldExpression
-:["argument"]},a={},f={},l={},i={Break:a,Skip:f,Remove:l},g.prototype.replace=function(
-t){this.parent[this.key]=t},g.prototype.remove=function(){return r(this.parent)?
-(this.parent.splice(this.key,1),!0):(this.replace(null),!1)},b.prototype.path=function(
-){function a(e,t){if(r(t))for(i=0,s=t.length;i<s;++i)e.push(t[i]);else e.push(t)
-}var t,n,i,s,o,u;if(!this.__current.path)return null;o=[];for(t=2,n=this.__leavelist
-.length;t<n;++t)u=this.__leavelist[t],a(o,u.path);return a(o,this.__current.path
-),o},b.prototype.type=function(){var e=this.current();return e.type||this.__current
-.wrap},b.prototype.parents=function(){var t,n,r;r=[];for(t=1,n=this.__leavelist.
-length;t<n;++t)r.push(this.__leavelist[t].node);return r},b.prototype.current=function(
-){return this.__current.node},b.prototype.__execute=function(t,n){var r,i;return i=
-undefined,r=this.__current,this.__current=n,this.__state=null,t&&(i=t.call(this,
-n.node,this.__leavelist[this.__leavelist.length-1].node)),this.__current=r,i},b.
-prototype.notify=function(t){this.__state=t},b.prototype.skip=function(){this.notify
-(f)},b.prototype["break"]=function(){this.notify(a)},b.prototype.remove=function(
-){this.notify(l)},b.prototype.__initialize=function(e,t){this.visitor=t,this.root=
-e,this.__worklist=[],this.__leavelist=[],this.__current=null,this.__state=null,this
-.__fallback=t.fallback==="iteration",this.__keys=s,t.keys&&(this.__keys=m(o(this
-.__keys),t.keys))},b.prototype.traverse=function(t,n){var i,s,o,l,c,h,p,d,v,m,g,
-b;this.__initialize(t,n),b={},i=this.__worklist,s=this.__leavelist,i.push(new y(
-t,null,null,null)),s.push(new y(null,null,null,null));while(i.length){o=i.pop();
-if(o===b){o=s.pop(),h=this.__execute(n.leave,o);if(this.__state===a||h===a)return;
-continue}if(o.node){h=this.__execute(n.enter,o);if(this.__state===a||h===a)return;
-i.push(b),s.push(o);if(this.__state===f||h===f)continue;l=o.node,c=o.wrap||l.type
-,m=this.__keys[c];if(!m){if(!this.__fallback)throw new Error("Unknown node type "+
-c+".");m=u(l)}d=m.length;while((d-=1)>=0){p=m[d],g=l[p];if(!g)continue;if(r(g)){
-v=g.length;while((v-=1)>=0){if(!g[v])continue;if(E(c,m[d]))o=new y(g[v],[p,v],"Property"
-,null);else{if(!w(g[v]))continue;o=new y(g[v],[p,v],null,null)}i.push(o)}}else w
-(g)&&i.push(new y(g,p,null,null))}}}},b.prototype.replace=function(t,n){function i
-(e){var t,n,r,i;if(e.ref.remove()){n=e.ref.key,i=e.ref.parent,t=s.length;while(t--
-){r=s[t];if(r.ref&&r.ref.parent===i){if(r.ref.key<n)break;--r.ref.key}}}}var s,o
-,c,h,p,d,v,m,b,S,x,T,N;this.__initialize(t,n),x={},s=this.__worklist,o=this.__leavelist
-,T={root:t},d=new y(t,null,null,new g(T,"root")),s.push(d),o.push(d);while(s.length
-){d=s.pop();if(d===x){d=o.pop(),p=this.__execute(n.leave,d),p!==undefined&&p!==a&&
-p!==f&&p!==l&&d.ref.replace(p),(this.__state===l||p===l)&&i(d);if(this.__state===
-a||p===a)return T.root;continue}p=this.__execute(n.enter,d),p!==undefined&&p!==a&&
-p!==f&&p!==l&&(d.ref.replace(p),d.node=p);if(this.__state===l||p===l)i(d),d.node=
-null;if(this.__state===a||p===a)return T.root;c=d.node;if(!c)continue;s.push(x),
-o.push(d);if(this.__state===f||p===f)continue;h=d.wrap||c.type,b=this.__keys[h];
-if(!b){if(!this.__fallback)throw new Error("Unknown node type "+h+".");b=u(c)}v=
-b.length;while((v-=1)>=0){N=b[v],S=c[N];if(!S)continue;if(r(S)){m=S.length;while(
-(m-=1)>=0){if(!S[m])continue;if(E(h,b[v]))d=new y(S[m],[N,m],"Property",new g(S,
-m));else{if(!w(S[m]))continue;d=new y(S[m],[N,m],null,new g(S,m))}s.push(d)}}else w
-(S)&&s.push(new y(S,N,null,new g(c,N)))}}return T.root},t.version="1.8.1-dev",t.
-Syntax=n,t.traverse=S,t.replace=x,t.attachComments=N,t.VisitorKeys=s,t.VisitorOption=
-i,t.Controller=b,t.cloneEnvironment=function(){return e({})},t})
+/*
+  Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
+  Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+/*jslint vars:false, bitwise:true*/
+/*jshint indent:4*/
+/*global exports:true, define:true*/
+(function (root, factory) {
+    'use strict';
+
+    // Universal Module Definition (UMD) to support AMD, CommonJS/Node.js,
+    // and plain browser loading,
+    if (typeof define === 'function' && define.amd) {
+        define(['exports'], factory);
+    } else if (typeof exports !== 'undefined') {
+        factory(exports);
+    } else {
+        factory((root.estraverse = {}));
+    }
+}(this, function clone(exports) {
+    'use strict';
+
+    var Syntax,
+        isArray,
+        VisitorOption,
+        VisitorKeys,
+        objectCreate,
+        objectKeys,
+        BREAK,
+        SKIP,
+        REMOVE;
+
+    function ignoreJSHintError() { }
+
+    isArray = Array.isArray;
+    if (!isArray) {
+        isArray = function isArray(array) {
+            return Object.prototype.toString.call(array) === '[object Array]';
+        };
+    }
+
+    function deepCopy(obj) {
+        var ret = {}, key, val;
+        for (key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                val = obj[key];
+                if (typeof val === 'object' && val !== null) {
+                    ret[key] = deepCopy(val);
+                } else {
+                    ret[key] = val;
+                }
+            }
+        }
+        return ret;
+    }
+
+    function shallowCopy(obj) {
+        var ret = {}, key;
+        for (key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                ret[key] = obj[key];
+            }
+        }
+        return ret;
+    }
+    ignoreJSHintError(shallowCopy);
+
+    // based on LLVM libc++ upper_bound / lower_bound
+    // MIT License
+
+    function upperBound(array, func) {
+        var diff, len, i, current;
+
+        len = array.length;
+        i = 0;
+
+        while (len) {
+            diff = len >>> 1;
+            current = i + diff;
+            if (func(array[current])) {
+                len = diff;
+            } else {
+                i = current + 1;
+                len -= diff + 1;
+            }
+        }
+        return i;
+    }
+
+    function lowerBound(array, func) {
+        var diff, len, i, current;
+
+        len = array.length;
+        i = 0;
+
+        while (len) {
+            diff = len >>> 1;
+            current = i + diff;
+            if (func(array[current])) {
+                i = current + 1;
+                len -= diff + 1;
+            } else {
+                len = diff;
+            }
+        }
+        return i;
+    }
+    ignoreJSHintError(lowerBound);
+
+    objectCreate = Object.create || (function () {
+        function F() { }
+
+        return function (o) {
+            F.prototype = o;
+            return new F();
+        };
+    })();
+
+    objectKeys = Object.keys || function (o) {
+        var keys = [], key;
+        for (key in o) {
+            keys.push(key);
+        }
+        return keys;
+    };
+
+    function extend(to, from) {
+        var keys = objectKeys(from), key, i, len;
+        for (i = 0, len = keys.length; i < len; i += 1) {
+            key = keys[i];
+            to[key] = from[key];
+        }
+        return to;
+    }
+
+    Syntax = {
+        AssignmentExpression: 'AssignmentExpression',
+        ArrayExpression: 'ArrayExpression',
+        ArrayPattern: 'ArrayPattern',
+        ArrowFunctionExpression: 'ArrowFunctionExpression',
+        AwaitExpression: 'AwaitExpression', // CAUTION: It's deferred to ES7.
+        BlockStatement: 'BlockStatement',
+        BinaryExpression: 'BinaryExpression',
+        BreakStatement: 'BreakStatement',
+        CallExpression: 'CallExpression',
+        CatchClause: 'CatchClause',
+        ClassBody: 'ClassBody',
+        ClassDeclaration: 'ClassDeclaration',
+        ClassExpression: 'ClassExpression',
+        ComprehensionBlock: 'ComprehensionBlock',  // CAUTION: It's deferred to ES7.
+        ComprehensionExpression: 'ComprehensionExpression',  // CAUTION: It's deferred to ES7.
+        ConditionalExpression: 'ConditionalExpression',
+        ContinueStatement: 'ContinueStatement',
+        DebuggerStatement: 'DebuggerStatement',
+        DirectiveStatement: 'DirectiveStatement',
+        DoWhileStatement: 'DoWhileStatement',
+        EmptyStatement: 'EmptyStatement',
+        ExportBatchSpecifier: 'ExportBatchSpecifier',
+        ExportDeclaration: 'ExportDeclaration',
+        ExportSpecifier: 'ExportSpecifier',
+        ExpressionStatement: 'ExpressionStatement',
+        ForStatement: 'ForStatement',
+        ForInStatement: 'ForInStatement',
+        ForOfStatement: 'ForOfStatement',
+        FunctionDeclaration: 'FunctionDeclaration',
+        FunctionExpression: 'FunctionExpression',
+        GeneratorExpression: 'GeneratorExpression',  // CAUTION: It's deferred to ES7.
+        Identifier: 'Identifier',
+        IfStatement: 'IfStatement',
+        ImportDeclaration: 'ImportDeclaration',
+        ImportDefaultSpecifier: 'ImportDefaultSpecifier',
+        ImportNamespaceSpecifier: 'ImportNamespaceSpecifier',
+        ImportSpecifier: 'ImportSpecifier',
+        Literal: 'Literal',
+        LabeledStatement: 'LabeledStatement',
+        LogicalExpression: 'LogicalExpression',
+        MemberExpression: 'MemberExpression',
+        MethodDefinition: 'MethodDefinition',
+        ModuleSpecifier: 'ModuleSpecifier',
+        NewExpression: 'NewExpression',
+        ObjectExpression: 'ObjectExpression',
+        ObjectPattern: 'ObjectPattern',
+        Program: 'Program',
+        Property: 'Property',
+        ReturnStatement: 'ReturnStatement',
+        SequenceExpression: 'SequenceExpression',
+        SpreadElement: 'SpreadElement',
+        SwitchStatement: 'SwitchStatement',
+        SwitchCase: 'SwitchCase',
+        TaggedTemplateExpression: 'TaggedTemplateExpression',
+        TemplateElement: 'TemplateElement',
+        TemplateLiteral: 'TemplateLiteral',
+        ThisExpression: 'ThisExpression',
+        ThrowStatement: 'ThrowStatement',
+        TryStatement: 'TryStatement',
+        UnaryExpression: 'UnaryExpression',
+        UpdateExpression: 'UpdateExpression',
+        VariableDeclaration: 'VariableDeclaration',
+        VariableDeclarator: 'VariableDeclarator',
+        WhileStatement: 'WhileStatement',
+        WithStatement: 'WithStatement',
+        YieldExpression: 'YieldExpression'
+    };
+
+    VisitorKeys = {
+        AssignmentExpression: ['left', 'right'],
+        ArrayExpression: ['elements'],
+        ArrayPattern: ['elements'],
+        ArrowFunctionExpression: ['params', 'defaults', 'rest', 'body'],
+        AwaitExpression: ['argument'], // CAUTION: It's deferred to ES7.
+        BlockStatement: ['body'],
+        BinaryExpression: ['left', 'right'],
+        BreakStatement: ['label'],
+        CallExpression: ['callee', 'arguments'],
+        CatchClause: ['param', 'body'],
+        ClassBody: ['body'],
+        ClassDeclaration: ['id', 'body', 'superClass'],
+        ClassExpression: ['id', 'body', 'superClass'],
+        ComprehensionBlock: ['left', 'right'],  // CAUTION: It's deferred to ES7.
+        ComprehensionExpression: ['blocks', 'filter', 'body'],  // CAUTION: It's deferred to ES7.
+        ConditionalExpression: ['test', 'consequent', 'alternate'],
+        ContinueStatement: ['label'],
+        DebuggerStatement: [],
+        DirectiveStatement: [],
+        DoWhileStatement: ['body', 'test'],
+        EmptyStatement: [],
+        ExportBatchSpecifier: [],
+        ExportDeclaration: ['declaration', 'specifiers', 'source'],
+        ExportSpecifier: ['id', 'name'],
+        ExpressionStatement: ['expression'],
+        ForStatement: ['init', 'test', 'update', 'body'],
+        ForInStatement: ['left', 'right', 'body'],
+        ForOfStatement: ['left', 'right', 'body'],
+        FunctionDeclaration: ['id', 'params', 'defaults', 'rest', 'body'],
+        FunctionExpression: ['id', 'params', 'defaults', 'rest', 'body'],
+        GeneratorExpression: ['blocks', 'filter', 'body'],  // CAUTION: It's deferred to ES7.
+        Identifier: [],
+        IfStatement: ['test', 'consequent', 'alternate'],
+        ImportDeclaration: ['specifiers', 'source'],
+        ImportDefaultSpecifier: ['id'],
+        ImportNamespaceSpecifier: ['id'],
+        ImportSpecifier: ['id', 'name'],
+        Literal: [],
+        LabeledStatement: ['label', 'body'],
+        LogicalExpression: ['left', 'right'],
+        MemberExpression: ['object', 'property'],
+        MethodDefinition: ['key', 'value'],
+        ModuleSpecifier: [],
+        NewExpression: ['callee', 'arguments'],
+        ObjectExpression: ['properties'],
+        ObjectPattern: ['properties'],
+        Program: ['body'],
+        Property: ['key', 'value'],
+        ReturnStatement: ['argument'],
+        SequenceExpression: ['expressions'],
+        SpreadElement: ['argument'],
+        SwitchStatement: ['discriminant', 'cases'],
+        SwitchCase: ['test', 'consequent'],
+        TaggedTemplateExpression: ['tag', 'quasi'],
+        TemplateElement: [],
+        TemplateLiteral: ['quasis', 'expressions'],
+        ThisExpression: [],
+        ThrowStatement: ['argument'],
+        TryStatement: ['block', 'handlers', 'handler', 'guardedHandlers', 'finalizer'],
+        UnaryExpression: ['argument'],
+        UpdateExpression: ['argument'],
+        VariableDeclaration: ['declarations'],
+        VariableDeclarator: ['id', 'init'],
+        WhileStatement: ['test', 'body'],
+        WithStatement: ['object', 'body'],
+        YieldExpression: ['argument']
+    };
+
+    // unique id
+    BREAK = {};
+    SKIP = {};
+    REMOVE = {};
+
+    VisitorOption = {
+        Break: BREAK,
+        Skip: SKIP,
+        Remove: REMOVE
+    };
+
+    function Reference(parent, key) {
+        this.parent = parent;
+        this.key = key;
+    }
+
+    Reference.prototype.replace = function replace(node) {
+        this.parent[this.key] = node;
+    };
+
+    Reference.prototype.remove = function remove() {
+        if (isArray(this.parent)) {
+            this.parent.splice(this.key, 1);
+            return true;
+        } else {
+            this.replace(null);
+            return false;
+        }
+    };
+
+    function Element(node, path, wrap, ref) {
+        this.node = node;
+        this.path = path;
+        this.wrap = wrap;
+        this.ref = ref;
+    }
+
+    function Controller() { }
+
+    // API:
+    // return property path array from root to current node
+    Controller.prototype.path = function path() {
+        var i, iz, j, jz, result, element;
+
+        function addToPath(result, path) {
+            if (isArray(path)) {
+                for (j = 0, jz = path.length; j < jz; ++j) {
+                    result.push(path[j]);
+                }
+            } else {
+                result.push(path);
+            }
+        }
+
+        // root node
+        if (!this.__current.path) {
+            return null;
+        }
+
+        // first node is sentinel, second node is root element
+        result = [];
+        for (i = 2, iz = this.__leavelist.length; i < iz; ++i) {
+            element = this.__leavelist[i];
+            addToPath(result, element.path);
+        }
+        addToPath(result, this.__current.path);
+        return result;
+    };
+
+    // API:
+    // return type of current node
+    Controller.prototype.type = function () {
+        var node = this.current();
+        return node.type || this.__current.wrap;
+    };
+
+    // API:
+    // return array of parent elements
+    Controller.prototype.parents = function parents() {
+        var i, iz, result;
+
+        // first node is sentinel
+        result = [];
+        for (i = 1, iz = this.__leavelist.length; i < iz; ++i) {
+            result.push(this.__leavelist[i].node);
+        }
+
+        return result;
+    };
+
+    // API:
+    // return current node
+    Controller.prototype.current = function current() {
+        return this.__current.node;
+    };
+
+    Controller.prototype.__execute = function __execute(callback, element) {
+        var previous, result;
+
+        result = undefined;
+
+        previous  = this.__current;
+        this.__current = element;
+        this.__state = null;
+        if (callback) {
+            result = callback.call(this, element.node, this.__leavelist[this.__leavelist.length - 1].node);
+        }
+        this.__current = previous;
+
+        return result;
+    };
+
+    // API:
+    // notify control skip / break
+    Controller.prototype.notify = function notify(flag) {
+        this.__state = flag;
+    };
+
+    // API:
+    // skip child nodes of current node
+    Controller.prototype.skip = function () {
+        this.notify(SKIP);
+    };
+
+    // API:
+    // break traversals
+    Controller.prototype['break'] = function () {
+        this.notify(BREAK);
+    };
+
+    // API:
+    // remove node
+    Controller.prototype.remove = function () {
+        this.notify(REMOVE);
+    };
+
+    Controller.prototype.__initialize = function(root, visitor) {
+        this.visitor = visitor;
+        this.root = root;
+        this.__worklist = [];
+        this.__leavelist = [];
+        this.__current = null;
+        this.__state = null;
+        this.__fallback = visitor.fallback === 'iteration';
+        this.__keys = VisitorKeys;
+        if (visitor.keys) {
+            this.__keys = extend(objectCreate(this.__keys), visitor.keys);
+        }
+    };
+
+    function isNode(node) {
+        if (node == null) {
+            return false;
+        }
+        return typeof node === 'object' && typeof node.type === 'string';
+    }
+
+    function isProperty(nodeType, key) {
+        return (nodeType === Syntax.ObjectExpression || nodeType === Syntax.ObjectPattern) && 'properties' === key;
+    }
+
+    Controller.prototype.traverse = function traverse(root, visitor) {
+        var worklist,
+            leavelist,
+            element,
+            node,
+            nodeType,
+            ret,
+            key,
+            current,
+            current2,
+            candidates,
+            candidate,
+            sentinel;
+
+        this.__initialize(root, visitor);
+
+        sentinel = {};
+
+        // reference
+        worklist = this.__worklist;
+        leavelist = this.__leavelist;
+
+        // initialize
+        worklist.push(new Element(root, null, null, null));
+        leavelist.push(new Element(null, null, null, null));
+
+        while (worklist.length) {
+            element = worklist.pop();
+
+            if (element === sentinel) {
+                element = leavelist.pop();
+
+                ret = this.__execute(visitor.leave, element);
+
+                if (this.__state === BREAK || ret === BREAK) {
+                    return;
+                }
+                continue;
+            }
+
+            if (element.node) {
+
+                ret = this.__execute(visitor.enter, element);
+
+                if (this.__state === BREAK || ret === BREAK) {
+                    return;
+                }
+
+                worklist.push(sentinel);
+                leavelist.push(element);
+
+                if (this.__state === SKIP || ret === SKIP) {
+                    continue;
+                }
+
+                node = element.node;
+                nodeType = element.wrap || node.type;
+                candidates = this.__keys[nodeType];
+                if (!candidates) {
+                    if (this.__fallback) {
+                        candidates = objectKeys(node);
+                    } else {
+                        throw new Error('Unknown node type ' + nodeType + '.');
+                    }
+                }
+
+                current = candidates.length;
+                while ((current -= 1) >= 0) {
+                    key = candidates[current];
+                    candidate = node[key];
+                    if (!candidate) {
+                        continue;
+                    }
+
+                    if (isArray(candidate)) {
+                        current2 = candidate.length;
+                        while ((current2 -= 1) >= 0) {
+                            if (!candidate[current2]) {
+                                continue;
+                            }
+                            if (isProperty(nodeType, candidates[current])) {
+                                element = new Element(candidate[current2], [key, current2], 'Property', null);
+                            } else if (isNode(candidate[current2])) {
+                                element = new Element(candidate[current2], [key, current2], null, null);
+                            } else {
+                                continue;
+                            }
+                            worklist.push(element);
+                        }
+                    } else if (isNode(candidate)) {
+                        worklist.push(new Element(candidate, key, null, null));
+                    }
+                }
+            }
+        }
+    };
+
+    Controller.prototype.replace = function replace(root, visitor) {
+        function removeElem(element) {
+            var i,
+                key,
+                nextElem,
+                parent;
+
+            if (element.ref.remove()) {
+                // When the reference is an element of an array.
+                key = element.ref.key;
+                parent = element.ref.parent;
+
+                // If removed from array, then decrease following items' keys.
+                i = worklist.length;
+                while (i--) {
+                    nextElem = worklist[i];
+                    if (nextElem.ref && nextElem.ref.parent === parent) {
+                        if  (nextElem.ref.key < key) {
+                            break;
+                        }
+                        --nextElem.ref.key;
+                    }
+                }
+            }
+        }
+
+        var worklist,
+            leavelist,
+            node,
+            nodeType,
+            target,
+            element,
+            current,
+            current2,
+            candidates,
+            candidate,
+            sentinel,
+            outer,
+            key;
+
+        this.__initialize(root, visitor);
+
+        sentinel = {};
+
+        // reference
+        worklist = this.__worklist;
+        leavelist = this.__leavelist;
+
+        // initialize
+        outer = {
+            root: root
+        };
+        element = new Element(root, null, null, new Reference(outer, 'root'));
+        worklist.push(element);
+        leavelist.push(element);
+
+        while (worklist.length) {
+            element = worklist.pop();
+
+            if (element === sentinel) {
+                element = leavelist.pop();
+
+                target = this.__execute(visitor.leave, element);
+
+                // node may be replaced with null,
+                // so distinguish between undefined and null in this place
+                if (target !== undefined && target !== BREAK && target !== SKIP && target !== REMOVE) {
+                    // replace
+                    element.ref.replace(target);
+                }
+
+                if (this.__state === REMOVE || target === REMOVE) {
+                    removeElem(element);
+                }
+
+                if (this.__state === BREAK || target === BREAK) {
+                    return outer.root;
+                }
+                continue;
+            }
+
+            target = this.__execute(visitor.enter, element);
+
+            // node may be replaced with null,
+            // so distinguish between undefined and null in this place
+            if (target !== undefined && target !== BREAK && target !== SKIP && target !== REMOVE) {
+                // replace
+                element.ref.replace(target);
+                element.node = target;
+            }
+
+            if (this.__state === REMOVE || target === REMOVE) {
+                removeElem(element);
+                element.node = null;
+            }
+
+            if (this.__state === BREAK || target === BREAK) {
+                return outer.root;
+            }
+
+            // node may be null
+            node = element.node;
+            if (!node) {
+                continue;
+            }
+
+            worklist.push(sentinel);
+            leavelist.push(element);
+
+            if (this.__state === SKIP || target === SKIP) {
+                continue;
+            }
+
+            nodeType = element.wrap || node.type;
+            candidates = this.__keys[nodeType];
+            if (!candidates) {
+                if (this.__fallback) {
+                    candidates = objectKeys(node);
+                } else {
+                    throw new Error('Unknown node type ' + nodeType + '.');
+                }
+            }
+
+            current = candidates.length;
+            while ((current -= 1) >= 0) {
+                key = candidates[current];
+                candidate = node[key];
+                if (!candidate) {
+                    continue;
+                }
+
+                if (isArray(candidate)) {
+                    current2 = candidate.length;
+                    while ((current2 -= 1) >= 0) {
+                        if (!candidate[current2]) {
+                            continue;
+                        }
+                        if (isProperty(nodeType, candidates[current])) {
+                            element = new Element(candidate[current2], [key, current2], 'Property', new Reference(candidate, current2));
+                        } else if (isNode(candidate[current2])) {
+                            element = new Element(candidate[current2], [key, current2], null, new Reference(candidate, current2));
+                        } else {
+                            continue;
+                        }
+                        worklist.push(element);
+                    }
+                } else if (isNode(candidate)) {
+                    worklist.push(new Element(candidate, key, null, new Reference(node, key)));
+                }
+            }
+        }
+
+        return outer.root;
+    };
+
+    function traverse(root, visitor) {
+        var controller = new Controller();
+        return controller.traverse(root, visitor);
+    }
+
+    function replace(root, visitor) {
+        var controller = new Controller();
+        return controller.replace(root, visitor);
+    }
+
+    function extendCommentRange(comment, tokens) {
+        var target;
+
+        target = upperBound(tokens, function search(token) {
+            return token.range[0] > comment.range[0];
+        });
+
+        comment.extendedRange = [comment.range[0], comment.range[1]];
+
+        if (target !== tokens.length) {
+            comment.extendedRange[1] = tokens[target].range[0];
+        }
+
+        target -= 1;
+        if (target >= 0) {
+            comment.extendedRange[0] = tokens[target].range[1];
+        }
+
+        return comment;
+    }
+
+    function attachComments(tree, providedComments, tokens) {
+        // At first, we should calculate extended comment ranges.
+        var comments = [], comment, len, i, cursor;
+
+        if (!tree.range) {
+            throw new Error('attachComments needs range information');
+        }
+
+        // tokens array is empty, we attach comments to tree as 'leadingComments'
+        if (!tokens.length) {
+            if (providedComments.length) {
+                for (i = 0, len = providedComments.length; i < len; i += 1) {
+                    comment = deepCopy(providedComments[i]);
+                    comment.extendedRange = [0, tree.range[0]];
+                    comments.push(comment);
+                }
+                tree.leadingComments = comments;
+            }
+            return tree;
+        }
+
+        for (i = 0, len = providedComments.length; i < len; i += 1) {
+            comments.push(extendCommentRange(deepCopy(providedComments[i]), tokens));
+        }
+
+        // This is based on John Freeman's implementation.
+        cursor = 0;
+        traverse(tree, {
+            enter: function (node) {
+                var comment;
+
+                while (cursor < comments.length) {
+                    comment = comments[cursor];
+                    if (comment.extendedRange[1] > node.range[0]) {
+                        break;
+                    }
+
+                    if (comment.extendedRange[1] === node.range[0]) {
+                        if (!node.leadingComments) {
+                            node.leadingComments = [];
+                        }
+                        node.leadingComments.push(comment);
+                        comments.splice(cursor, 1);
+                    } else {
+                        cursor += 1;
+                    }
+                }
+
+                // already out of owned node
+                if (cursor === comments.length) {
+                    return VisitorOption.Break;
+                }
+
+                if (comments[cursor].extendedRange[0] > node.range[1]) {
+                    return VisitorOption.Skip;
+                }
+            }
+        });
+
+        cursor = 0;
+        traverse(tree, {
+            leave: function (node) {
+                var comment;
+
+                while (cursor < comments.length) {
+                    comment = comments[cursor];
+                    if (node.range[1] < comment.extendedRange[0]) {
+                        break;
+                    }
+
+                    if (node.range[1] === comment.extendedRange[0]) {
+                        if (!node.trailingComments) {
+                            node.trailingComments = [];
+                        }
+                        node.trailingComments.push(comment);
+                        comments.splice(cursor, 1);
+                    } else {
+                        cursor += 1;
+                    }
+                }
+
+                // already out of owned node
+                if (cursor === comments.length) {
+                    return VisitorOption.Break;
+                }
+
+                if (comments[cursor].extendedRange[0] > node.range[1]) {
+                    return VisitorOption.Skip;
+                }
+            }
+        });
+
+        return tree;
+    }
+
+    exports.version = '1.8.1-dev';
+    exports.Syntax = Syntax;
+    exports.traverse = traverse;
+    exports.replace = replace;
+    exports.attachComments = attachComments;
+    exports.VisitorKeys = VisitorKeys;
+    exports.VisitorOption = VisitorOption;
+    exports.Controller = Controller;
+    exports.cloneEnvironment = function () { return clone({}); };
+
+    return exports;
+}));
+/* vim: set sw=4 ts=4 et tw=80 : */
 
 
 
 /*
-file esutils/lib/code.js
+file https://github.com/estools/esutils/blob/2.0.2/lib/code.js
+shGithubDateCommitted https://github.com/estools/esutils/commits/2.0.2 # 2015-03-14T17:10:47Z
+curl https://raw.githubusercontent.com/estools/esutils/2.0.2/lib/code.js > /tmp/aa.js
 */
-(function(){"use strict";function o(e){return 48<=e&&e<=57}function u(e){return 48<=
-e&&e<=57||97<=e&&e<=102||65<=e&&e<=70}function a(e){return e>=48&&e<=55}function f
-(e){return e===32||e===9||e===11||e===12||e===160||e>=5760&&n.indexOf(e)>=0}function l
-(e){return e===10||e===13||e===8232||e===8233}function c(e){if(e<=65535)return String
-.fromCharCode(e);var t=String.fromCharCode(Math.floor((e-65536)/1024)+55296),n=String
-.fromCharCode((e-65536)%1024+56320);return t+n}function h(e){return e<128?r[e]:t
-.NonAsciiIdentifierStart.test(c(e))}function p(e){return e<128?i[e]:t.NonAsciiIdentifierPart
-.test(c(e))}function d(t){return t<128?r[t]:e.NonAsciiIdentifierStart.test(c(t))
-}function v(t){return t<128?i[t]:e.NonAsciiIdentifierPart.test(c(t))}var e,t,n,r
-,i,s;t={NonAsciiIdentifierStart:/[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u08A0-\u08B2\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58\u0C59\u0C60\u0C61\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D60\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1877\u1880-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19C1-\u19C7\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4B\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1CE9-\u1CEC\u1CEE-\u1CF1\u1CF5\u1CF6\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2E2F\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303C\u3041-\u3096\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6EF\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA7AD\uA7B0\uA7B1\uA7F7-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB5F\uAB64\uAB65\uABC0-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]/
-,NonAsciiIdentifierPart:/[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0-\u08B2\u08E4-\u0963\u0966-\u096F\u0971-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BEF\u0C00-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58\u0C59\u0C60-\u0C63\u0C66-\u0C6F\u0C81-\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D01-\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D57\u0D60-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DE6-\u0DEF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191E\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19D9\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1AB0-\u1ABD\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1CD0-\u1CD2\u1CD4-\u1CF6\u1CF8\u1CF9\u1D00-\u1DF5\u1DFC-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u200C\u200D\u203F\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u2E2F\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099\u309A\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA69D\uA69F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA7AD\uA7B0\uA7B1\uA7F7-\uA827\uA840-\uA873\uA880-\uA8C4\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uA9E0-\uA9FE\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB5F\uAB64\uAB65\uABC0-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE2D\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]/
-},e={NonAsciiIdentifierStart:/[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u08A0-\u08B2\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58\u0C59\u0C60\u0C61\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D60\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1877\u1880-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19C1-\u19C7\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4B\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1CE9-\u1CEC\u1CEE-\u1CF1\u1CF5\u1CF6\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303C\u3041-\u3096\u309B-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6EF\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA7AD\uA7B0\uA7B1\uA7F7-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB5F\uAB64\uAB65\uABC0-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDE80-\uDE9C\uDEA0-\uDED0\uDF00-\uDF1F\uDF30-\uDF4A\uDF50-\uDF75\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00\uDE10-\uDE13\uDE15-\uDE17\uDE19-\uDE33\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE4\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48]|\uD804[\uDC03-\uDC37\uDC83-\uDCAF\uDCD0-\uDCE8\uDD03-\uDD26\uDD50-\uDD72\uDD76\uDD83-\uDDB2\uDDC1-\uDDC4\uDDDA\uDE00-\uDE11\uDE13-\uDE2B\uDEB0-\uDEDE\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3D\uDF5D-\uDF61]|\uD805[\uDC80-\uDCAF\uDCC4\uDCC5\uDCC7\uDD80-\uDDAE\uDE00-\uDE2F\uDE44\uDE80-\uDEAA]|\uD806[\uDCA0-\uDCDF\uDCFF\uDEC0-\uDEF8]|\uD808[\uDC00-\uDF98]|\uD809[\uDC00-\uDC6E]|[\uD80C\uD840-\uD868\uD86A-\uD86C][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDED0-\uDEED\uDF00-\uDF2F\uDF40-\uDF43\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDF00-\uDF44\uDF50\uDF93-\uDF9F]|\uD82C[\uDC00\uDC01]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB]|\uD83A[\uDC00-\uDCC4]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDED6\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D]|\uD87E[\uDC00-\uDE1D]/
-,NonAsciiIdentifierPart:/[\xAA\xB5\xB7\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0-\u08B2\u08E4-\u0963\u0966-\u096F\u0971-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BEF\u0C00-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58\u0C59\u0C60-\u0C63\u0C66-\u0C6F\u0C81-\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D01-\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D57\u0D60-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DE6-\u0DEF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1369-\u1371\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191E\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19DA\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1AB0-\u1ABD\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1CD0-\u1CD2\u1CD4-\u1CF6\u1CF8\u1CF9\u1D00-\u1DF5\u1DFC-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u200C\u200D\u203F\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA69D\uA69F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA7AD\uA7B0\uA7B1\uA7F7-\uA827\uA840-\uA873\uA880-\uA8C4\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uA9E0-\uA9FE\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB5F\uAB64\uAB65\uABC0-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE2D\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDDFD\uDE80-\uDE9C\uDEA0-\uDED0\uDEE0\uDF00-\uDF1F\uDF30-\uDF4A\uDF50-\uDF7A\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCA0-\uDCA9\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00-\uDE03\uDE05\uDE06\uDE0C-\uDE13\uDE15-\uDE17\uDE19-\uDE33\uDE38-\uDE3A\uDE3F\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE6\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48]|\uD804[\uDC00-\uDC46\uDC66-\uDC6F\uDC7F-\uDCBA\uDCD0-\uDCE8\uDCF0-\uDCF9\uDD00-\uDD34\uDD36-\uDD3F\uDD50-\uDD73\uDD76\uDD80-\uDDC4\uDDD0-\uDDDA\uDE00-\uDE11\uDE13-\uDE37\uDEB0-\uDEEA\uDEF0-\uDEF9\uDF01-\uDF03\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3C-\uDF44\uDF47\uDF48\uDF4B-\uDF4D\uDF57\uDF5D-\uDF63\uDF66-\uDF6C\uDF70-\uDF74]|\uD805[\uDC80-\uDCC5\uDCC7\uDCD0-\uDCD9\uDD80-\uDDB5\uDDB8-\uDDC0\uDE00-\uDE40\uDE44\uDE50-\uDE59\uDE80-\uDEB7\uDEC0-\uDEC9]|\uD806[\uDCA0-\uDCE9\uDCFF\uDEC0-\uDEF8]|\uD808[\uDC00-\uDF98]|\uD809[\uDC00-\uDC6E]|[\uD80C\uD840-\uD868\uD86A-\uD86C][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDE60-\uDE69\uDED0-\uDEED\uDEF0-\uDEF4\uDF00-\uDF36\uDF40-\uDF43\uDF50-\uDF59\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDF00-\uDF44\uDF50-\uDF7E\uDF8F-\uDF9F]|\uD82C[\uDC00\uDC01]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99\uDC9D\uDC9E]|\uD834[\uDD65-\uDD69\uDD6D-\uDD72\uDD7B-\uDD82\uDD85-\uDD8B\uDDAA-\uDDAD\uDE42-\uDE44]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB\uDFCE-\uDFFF]|\uD83A[\uDC00-\uDCC4\uDCD0-\uDCD6]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDED6\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D]|\uD87E[\uDC00-\uDE1D]|\uDB40[\uDD00-\uDDEF]/
-},n=[5760,6158,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8239,8287,12288
-,65279],r=new Array(128);for(s=0;s<128;++s)r[s]=s>=97&&s<=122||s>=65&&s<=90||s===36||
-s===95;i=new Array(128);for(s=0;s<128;++s)i[s]=s>=97&&s<=122||s>=65&&s<=90||s>=48&&
-s<=57||s===36||s===95;module.exports={isDecimalDigit:o,isHexDigit:u,isOctalDigit
-:a,isWhiteSpace:f,isLineTerminator:l,isIdentifierStartES5:h,isIdentifierPartES5:
-p,isIdentifierStartES6:d,isIdentifierPartES6:v}})()
+/*
+  Copyright (C) 2013-2014 Yusuke Suzuki <utatane.tea@gmail.com>
+  Copyright (C) 2014 Ivan Nikulin <ifaaan@gmail.com>
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+(function () {
+    'use strict';
+
+    var ES6Regex, ES5Regex, NON_ASCII_WHITESPACES, IDENTIFIER_START, IDENTIFIER_PART, ch;
+
+    // See `tools/generate-identifier-regex.js`.
+    ES5Regex = {
+        // ECMAScript 5.1/Unicode v7.0.0 NonAsciiIdentifierStart:
+        NonAsciiIdentifierStart: /[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u08A0-\u08B2\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58\u0C59\u0C60\u0C61\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D60\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1877\u1880-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19C1-\u19C7\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4B\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1CE9-\u1CEC\u1CEE-\u1CF1\u1CF5\u1CF6\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2E2F\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303C\u3041-\u3096\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6EF\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA7AD\uA7B0\uA7B1\uA7F7-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB5F\uAB64\uAB65\uABC0-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]/,
+        // ECMAScript 5.1/Unicode v7.0.0 NonAsciiIdentifierPart:
+        NonAsciiIdentifierPart: /[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0-\u08B2\u08E4-\u0963\u0966-\u096F\u0971-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BEF\u0C00-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58\u0C59\u0C60-\u0C63\u0C66-\u0C6F\u0C81-\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D01-\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D57\u0D60-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DE6-\u0DEF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191E\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19D9\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1AB0-\u1ABD\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1CD0-\u1CD2\u1CD4-\u1CF6\u1CF8\u1CF9\u1D00-\u1DF5\u1DFC-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u200C\u200D\u203F\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u2E2F\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099\u309A\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA69D\uA69F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA7AD\uA7B0\uA7B1\uA7F7-\uA827\uA840-\uA873\uA880-\uA8C4\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uA9E0-\uA9FE\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB5F\uAB64\uAB65\uABC0-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE2D\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]/
+    };
+
+    ES6Regex = {
+        // ECMAScript 6/Unicode v7.0.0 NonAsciiIdentifierStart:
+        NonAsciiIdentifierStart: /[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u08A0-\u08B2\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58\u0C59\u0C60\u0C61\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D60\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1877\u1880-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19C1-\u19C7\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4B\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1CE9-\u1CEC\u1CEE-\u1CF1\u1CF5\u1CF6\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303C\u3041-\u3096\u309B-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6EF\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA7AD\uA7B0\uA7B1\uA7F7-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB5F\uAB64\uAB65\uABC0-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDE80-\uDE9C\uDEA0-\uDED0\uDF00-\uDF1F\uDF30-\uDF4A\uDF50-\uDF75\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00\uDE10-\uDE13\uDE15-\uDE17\uDE19-\uDE33\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE4\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48]|\uD804[\uDC03-\uDC37\uDC83-\uDCAF\uDCD0-\uDCE8\uDD03-\uDD26\uDD50-\uDD72\uDD76\uDD83-\uDDB2\uDDC1-\uDDC4\uDDDA\uDE00-\uDE11\uDE13-\uDE2B\uDEB0-\uDEDE\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3D\uDF5D-\uDF61]|\uD805[\uDC80-\uDCAF\uDCC4\uDCC5\uDCC7\uDD80-\uDDAE\uDE00-\uDE2F\uDE44\uDE80-\uDEAA]|\uD806[\uDCA0-\uDCDF\uDCFF\uDEC0-\uDEF8]|\uD808[\uDC00-\uDF98]|\uD809[\uDC00-\uDC6E]|[\uD80C\uD840-\uD868\uD86A-\uD86C][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDED0-\uDEED\uDF00-\uDF2F\uDF40-\uDF43\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDF00-\uDF44\uDF50\uDF93-\uDF9F]|\uD82C[\uDC00\uDC01]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB]|\uD83A[\uDC00-\uDCC4]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDED6\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D]|\uD87E[\uDC00-\uDE1D]/,
+        // ECMAScript 6/Unicode v7.0.0 NonAsciiIdentifierPart:
+        NonAsciiIdentifierPart: /[\xAA\xB5\xB7\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0-\u08B2\u08E4-\u0963\u0966-\u096F\u0971-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BEF\u0C00-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58\u0C59\u0C60-\u0C63\u0C66-\u0C6F\u0C81-\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D01-\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D57\u0D60-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DE6-\u0DEF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1369-\u1371\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191E\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19DA\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1AB0-\u1ABD\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1CD0-\u1CD2\u1CD4-\u1CF6\u1CF8\u1CF9\u1D00-\u1DF5\u1DFC-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u200C\u200D\u203F\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA69D\uA69F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA7AD\uA7B0\uA7B1\uA7F7-\uA827\uA840-\uA873\uA880-\uA8C4\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uA9E0-\uA9FE\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB5F\uAB64\uAB65\uABC0-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE2D\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDDFD\uDE80-\uDE9C\uDEA0-\uDED0\uDEE0\uDF00-\uDF1F\uDF30-\uDF4A\uDF50-\uDF7A\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCA0-\uDCA9\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00-\uDE03\uDE05\uDE06\uDE0C-\uDE13\uDE15-\uDE17\uDE19-\uDE33\uDE38-\uDE3A\uDE3F\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE6\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48]|\uD804[\uDC00-\uDC46\uDC66-\uDC6F\uDC7F-\uDCBA\uDCD0-\uDCE8\uDCF0-\uDCF9\uDD00-\uDD34\uDD36-\uDD3F\uDD50-\uDD73\uDD76\uDD80-\uDDC4\uDDD0-\uDDDA\uDE00-\uDE11\uDE13-\uDE37\uDEB0-\uDEEA\uDEF0-\uDEF9\uDF01-\uDF03\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3C-\uDF44\uDF47\uDF48\uDF4B-\uDF4D\uDF57\uDF5D-\uDF63\uDF66-\uDF6C\uDF70-\uDF74]|\uD805[\uDC80-\uDCC5\uDCC7\uDCD0-\uDCD9\uDD80-\uDDB5\uDDB8-\uDDC0\uDE00-\uDE40\uDE44\uDE50-\uDE59\uDE80-\uDEB7\uDEC0-\uDEC9]|\uD806[\uDCA0-\uDCE9\uDCFF\uDEC0-\uDEF8]|\uD808[\uDC00-\uDF98]|\uD809[\uDC00-\uDC6E]|[\uD80C\uD840-\uD868\uD86A-\uD86C][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDE60-\uDE69\uDED0-\uDEED\uDEF0-\uDEF4\uDF00-\uDF36\uDF40-\uDF43\uDF50-\uDF59\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDF00-\uDF44\uDF50-\uDF7E\uDF8F-\uDF9F]|\uD82C[\uDC00\uDC01]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99\uDC9D\uDC9E]|\uD834[\uDD65-\uDD69\uDD6D-\uDD72\uDD7B-\uDD82\uDD85-\uDD8B\uDDAA-\uDDAD\uDE42-\uDE44]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB\uDFCE-\uDFFF]|\uD83A[\uDC00-\uDCC4\uDCD0-\uDCD6]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDED6\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D]|\uD87E[\uDC00-\uDE1D]|\uDB40[\uDD00-\uDDEF]/
+    };
+
+    function isDecimalDigit(ch) {
+        return 0x30 <= ch && ch <= 0x39;  // 0..9
+    }
+
+    function isHexDigit(ch) {
+        return 0x30 <= ch && ch <= 0x39 ||  // 0..9
+            0x61 <= ch && ch <= 0x66 ||     // a..f
+            0x41 <= ch && ch <= 0x46;       // A..F
+    }
+
+    function isOctalDigit(ch) {
+        return ch >= 0x30 && ch <= 0x37;  // 0..7
+    }
+
+    // 7.2 White Space
+
+    NON_ASCII_WHITESPACES = [
+        0x1680, 0x180E,
+        0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x2008, 0x2009, 0x200A,
+        0x202F, 0x205F,
+        0x3000,
+        0xFEFF
+    ];
+
+    function isWhiteSpace(ch) {
+        return ch === 0x20 || ch === 0x09 || ch === 0x0B || ch === 0x0C || ch === 0xA0 ||
+            ch >= 0x1680 && NON_ASCII_WHITESPACES.indexOf(ch) >= 0;
+    }
+
+    // 7.3 Line Terminators
+
+    function isLineTerminator(ch) {
+        return ch === 0x0A || ch === 0x0D || ch === 0x2028 || ch === 0x2029;
+    }
+
+    // 7.6 Identifier Names and Identifiers
+
+    function fromCodePoint(cp) {
+        if (cp <= 0xFFFF) { return String.fromCharCode(cp); }
+        var cu1 = String.fromCharCode(Math.floor((cp - 0x10000) / 0x400) + 0xD800);
+        var cu2 = String.fromCharCode(((cp - 0x10000) % 0x400) + 0xDC00);
+        return cu1 + cu2;
+    }
+
+    IDENTIFIER_START = new Array(0x80);
+    for(ch = 0; ch < 0x80; ++ch) {
+        IDENTIFIER_START[ch] =
+            ch >= 0x61 && ch <= 0x7A ||  // a..z
+            ch >= 0x41 && ch <= 0x5A ||  // A..Z
+            ch === 0x24 || ch === 0x5F;  // $ (dollar) and _ (underscore)
+    }
+
+    IDENTIFIER_PART = new Array(0x80);
+    for(ch = 0; ch < 0x80; ++ch) {
+        IDENTIFIER_PART[ch] =
+            ch >= 0x61 && ch <= 0x7A ||  // a..z
+            ch >= 0x41 && ch <= 0x5A ||  // A..Z
+            ch >= 0x30 && ch <= 0x39 ||  // 0..9
+            ch === 0x24 || ch === 0x5F;  // $ (dollar) and _ (underscore)
+    }
+
+    function isIdentifierStartES5(ch) {
+        return ch < 0x80 ? IDENTIFIER_START[ch] : ES5Regex.NonAsciiIdentifierStart.test(fromCodePoint(ch));
+    }
+
+    function isIdentifierPartES5(ch) {
+        return ch < 0x80 ? IDENTIFIER_PART[ch] : ES5Regex.NonAsciiIdentifierPart.test(fromCodePoint(ch));
+    }
+
+    function isIdentifierStartES6(ch) {
+        return ch < 0x80 ? IDENTIFIER_START[ch] : ES6Regex.NonAsciiIdentifierStart.test(fromCodePoint(ch));
+    }
+
+    function isIdentifierPartES6(ch) {
+        return ch < 0x80 ? IDENTIFIER_PART[ch] : ES6Regex.NonAsciiIdentifierPart.test(fromCodePoint(ch));
+    }
+
+    module.exports = {
+        isDecimalDigit: isDecimalDigit,
+        isHexDigit: isHexDigit,
+        isOctalDigit: isOctalDigit,
+        isWhiteSpace: isWhiteSpace,
+        isLineTerminator: isLineTerminator,
+        isIdentifierStartES5: isIdentifierStartES5,
+        isIdentifierPartES5: isIdentifierPartES5,
+        isIdentifierStartES6: isIdentifierStartES6,
+        isIdentifierPartES6: isIdentifierPartES6
+    };
+}());
+/* vim: set sw=4 ts=4 et tw=80 : */
 
 
 
 /*
-file escodegen/escodegen.js
+file https://github.com/estools/escodegen/blob/1.8.1/escodegen.js
+shGithubDateCommitted https://github.com/estools/escodegen/commits/1.8.1 # 2016-08-06T18:04:07Z
+curl https://raw.githubusercontent.com/estools/escodegen/1.8.1/escodegen.js > /tmp/aa.js
 */
-(function(){"use strict";function k(e){return bt.Expression.hasOwnProperty(e.type
-)}function L(e){return bt.Statement.hasOwnProperty(e.type)}function V(){return{indent
-:null,base:null,parse:null,comment:!1,format:{indent:{style:"    ",base:0,adjustMultilineComment
-:!1},newline:"\n",space:" ",json:!1,renumber:!1,hexadecimal:!1,quotes:"single",escapeless
-:!1,compact:!1,parentheses:!0,semicolons:!0,safeConcatenation:!1,preserveBlankLines
-:!1},moz:{comprehensionExpressionStartsWithAssignment:!1,starlessGenerator:!1},sourceMap
-:null,sourceMapRoot:null,sourceMapWithCode:!1,directive:!1,raw:!0,verbatim:null,
-sourceCode:null}}function $(e,t){var n="";for(t|=0;t>0;t>>>=1,e+=e)t&1&&(n+=e);return n
-}function J(e){return/[\r\n]/g.test(e)}function K(e){var t=e.length;return t&&s.
-code.isLineTerminator(e.charCodeAt(t-1))}function Q(e,t){var n;for(n in t)t.hasOwnProperty
-(n)&&(e[n]=t[n]);return e}function G(e,t){function i(e){return typeof e=="object"&&
-e instanceof Object&&!(e instanceof RegExp)}var n,r;for(n in t)t.hasOwnProperty(
-n)&&(r=t[n],i(r)?i(e[n])?G(e[n],r):e[n]=G({},r):e[n]=r);return e}function Y(e){var t
-,n,r,i,s;if(e!==e)throw new Error("Numeric literal whose value is NaN");if(e<0||
-e===0&&1/e<0)throw new Error("Numeric literal whose value is negative");if(e===1/0
-)return f?"null":l?"1e400":"1e+400";t=""+e;if(!l||t.length<3)return t;n=t.indexOf
-("."),!f&&t.charCodeAt(0)===48&&n===1&&(n=0,t=t.slice(1)),r=t,t=t.replace("e+","e"
-),i=0,(s=r.indexOf("e"))>0&&(i=+r.slice(s+1),r=r.slice(0,s)),n>=0&&(i-=r.length-
-n-1,r=+(r.slice(0,n)+r.slice(n+1))+""),s=0;while(r.charCodeAt(r.length+s-1)===48
-)--s;return s!==0&&(i-=s,r=r.slice(0,s)),i!==0&&(r+="e"+i),(r.length<t.length||c&&
-e>1e12&&Math.floor(e)===e&&(r="0x"+e.toString(16)).length<t.length)&&+r===e&&(t=
-r),t}function Z(e,t){return(e&-2)===8232?(t?"u":"\\u")+(e===8232?"2028":"2029"):
-e===10||e===13?(t?"":"\\")+(e===10?"n":"r"):String.fromCharCode(e)}function et(e
-){var t,n,r,i,s,o,u,a;n=e.toString();if(e.source){t=n.match(/\/([^/]*)$/);if(!t)
-return n;r=t[1],n="",u=!1,a=!1;for(i=0,s=e.source.length;i<s;++i)o=e.source.charCodeAt
-(i),a?(n+=Z(o,a),a=!1):(u?o===93&&(u=!1):o===47?n+="\\":o===91&&(u=!0),n+=Z(o,a)
-,a=o===92);return"/"+n+"/"+r}return n}function tt(e,t){var n;return e===8?"\\b":
-e===12?"\\f":e===9?"\\t":(n=e.toString(16).toUpperCase(),f||e>255?"\\u"+"0000".slice
-(n.length)+n:e===0&&!s.code.isDecimalDigit(t)?"\\0":e===11?"\\x0B":"\\x"+"00".slice
-(n.length)+n)}function nt(e){if(e===92)return"\\\\";if(e===10)return"\\n";if(e===13
-)return"\\r";if(e===8232)return"\\u2028";if(e===8233)return"\\u2029";throw new Error
-("Incorrectly classified character")}function rt(e){var t,n,r,i;i=h==="double"?'"'
-:"'";for(t=0,n=e.length;t<n;++t){r=e.charCodeAt(t);if(r===39){i='"';break}if(r===34
-){i="'";break}r===92&&++t}return i+e+i}function it(e){var t="",n,r,i,o=0,u=0,a,l
-;for(n=0,r=e.length;n<r;++n){i=e.charCodeAt(n);if(i===39)++o;else if(i===34)++u;
-else if(i===47&&f)t+="\\";else{if(s.code.isLineTerminator(i)||i===92){t+=nt(i);continue}
-if(!s.code.isIdentifierPartES5(i)&&(f&&i<32||!f&&!p&&(i<32||i>126))){t+=tt(i,e.charCodeAt
-(n+1));continue}}t+=String.fromCharCode(i)}a=!(h==="double"||h==="auto"&&u<o),l=
-a?"'":'"';if(a?!o:!u)return l+t+l;e=t,t=l;for(n=0,r=e.length;n<r;++n){i=e.charCodeAt
-(n);if(i===39&&a||i===34&&!a)t+="\\";t+=String.fromCharCode(i)}return t+l}function st
-(e){var t,n,r,i="";for(t=0,n=e.length;t<n;++t)r=e[t],i+=o(r)?st(r):r;return i}function ot
-(e,t){if(!S)return o(e)?st(e):e;if(t==null){if(e instanceof r)return e;t={}}return t
-.loc==null?new r(null,null,S,e,t.name||null):new r(t.loc.start.line,t.loc.start.
-column,S===!0?t.loc.source||null:S,e,t.name||null)}function ut(){return v?v:" "}
-function at(e,t){var n,r,i,o;return n=ot(e).toString(),n.length===0?[t]:(r=ot(t)
-.toString(),r.length===0?[e]:(i=n.charCodeAt(n.length-1),o=r.charCodeAt(0),(i===43||
-i===45)&&i===o||s.code.isIdentifierPartES5(i)&&s.code.isIdentifierPartES5(o)||i===47&&
-o===105?[e,ut(),t]:s.code.isWhiteSpace(i)||s.code.isLineTerminator(i)||s.code.isWhiteSpace
-(o)||s.code.isLineTerminator(o)?[e,t]:[e,v,t]))}function ft(e){return[u,e]}function lt
-(e){var t;t=u,u+=a,e(u),u=t}function ct(e){var t;for(t=e.length-1;t>=0;--t)if(s.
-code.isLineTerminator(e.charCodeAt(t)))break;return e.length-1-t}function ht(e,t
-){var n,r,i,o,a,f,l,c;n=e.split(/\r\n|[\r\n]/),f=Number.MAX_VALUE;for(r=1,i=n.length
-;r<i;++r){o=n[r],a=0;while(a<o.length&&s.code.isWhiteSpace(o.charCodeAt(a)))++a;
-f>a&&(f=a)}typeof t!="undefined"?(l=u,n[1][f]==="*"&&(t+=" "),u=t):(f&1&&--f,l=u
-);for(r=1,i=n.length;r<i;++r)c=ot(ft(n[r].slice(f))),n[r]=S?c.join(""):c;return u=
-l,n.join("\n")}function pt(e,t){if(e.type==="Line"){if(K(e.value))return"//"+e.value
-;var n="//"+e.value;return T||(n+="\n"),n}return w.format.indent.adjustMultilineComment&&/[\n\r]/
-.test(e.value)?ht("/*"+e.value+"*/",t):"/*"+e.value+"*/"}function dt(t,n){var r,
-i,s,o,f,l,c,h,p,d,v,m,g,b;if(t.leadingComments&&t.leadingComments.length>0){o=n;
-if(T){s=t.leadingComments[0],n=[],h=s.extendedRange,p=s.range,v=x.substring(h[0]
-,p[0]),b=(v.match(/\n/g)||[]).length,b>0?(n.push($("\n",b)),n.push(ft(pt(s)))):(
-n.push(v),n.push(pt(s))),d=p;for(r=1,i=t.leadingComments.length;r<i;r++)s=t.leadingComments
-[r],p=s.range,m=x.substring(d[1],p[0]),b=(m.match(/\n/g)||[]).length,n.push($("\n"
-,b)),n.push(ft(pt(s))),d=p;g=x.substring(p[1],h[1]),b=(g.match(/\n/g)||[]).length
-,n.push($("\n",b))}else{s=t.leadingComments[0],n=[],y&&t.type===e.Program&&t.body
-.length===0&&n.push("\n"),n.push(pt(s)),K(ot(n).toString())||n.push("\n");for(r=1
-,i=t.leadingComments.length;r<i;++r)s=t.leadingComments[r],c=[pt(s)],K(ot(c).toString
-())||c.push("\n"),n.push(ft(c))}n.push(ft(o))}if(t.trailingComments)if(T)s=t.trailingComments
-[0],h=s.extendedRange,p=s.range,v=x.substring(h[0],p[0]),b=(v.match(/\n/g)||[]).
-length,b>0?(n.push($("\n",b)),n.push(ft(pt(s)))):(n.push(v),n.push(pt(s)));else{
-f=!K(ot(n).toString()),l=$(" ",ct(ot([u,n,a]).toString()));for(r=0,i=t.trailingComments
-.length;r<i;++r)s=t.trailingComments[r],f?(r===0?n=[n,a]:n=[n,l],n.push(pt(s,l))
-):n=[n,ft(pt(s))],r!==i-1&&!K(ot(n).toString())&&(n=[n,"\n"])}return n}function vt
-(e,t,n){var r,i=0;for(r=e;r<t;r++)x[r]==="\n"&&i++;for(r=1;r<i;r++)n.push(d)}function mt
-(e,t,n){return t<n?["(",e,")"]:e}function gt(e){var t,n,r;r=e.split(/\r\n|\n/);for(
-t=1,n=r.length;t<n;t++)r[t]=d+u+r[t];return r}function yt(e,n){var r,i,s;return r=
-e[w.verbatim],typeof r=="string"?i=mt(gt(r),t.Sequence,n):(i=gt(r.content),s=r.precedence!=
-null?r.precedence:t.Sequence,i=mt(i,s,n)),ot(i,e)}function bt(){}function wt(e){
-return ot(e.name,e)}function Et(e,t){return e.async?"async"+(t?ut():v):""}function St
-(e){var t=e.generator&&!w.moz.starlessGenerator;return t?"*"+v:""}function xt(e)
-{var t=e.value;return t.async?Et(t,!e.computed):St(t)?"*":""}function Tt(e){var n
-;n=new bt;if(L(e))return n.generateStatement(e,R);if(k(e))return n.generateExpression
-(e,t.Sequence,j);throw new Error("Unknown node type: "+e.type)}function Nt(e,t){
-var n=V(),i,s;return t!=null?(typeof t.indent=="string"&&(n.format.indent.style=
-t.indent),typeof t.base=="number"&&(n.format.indent.base=t.base),t=G(n,t),a=t.format
-.indent.style,typeof t.base=="string"?u=t.base:u=$(a,t.format.indent.base)):(t=n
-,a=t.format.indent.style,u=$(a,t.format.indent.base)),f=t.format.json,l=t.format
-.renumber,c=f?!1:t.format.hexadecimal,h=f?"double":t.format.quotes,p=t.format.escapeless
-,d=t.format.newline,v=t.format.space,t.format.compact&&(d=v=a=u=""),m=t.format.parentheses
-,g=t.format.semicolons,y=t.format.safeConcatenation,b=t.directive,E=f?null:t.parse
-,S=t.sourceMap,x=t.sourceCode,T=t.format.preserveBlankLines&&x!==null,w=t,S&&(exports
-.browser?r=global.sourceMap.SourceNode:r=require("source-map").SourceNode),i=Tt(
-e),S?(s=i.toStringWithSourceMap({file:t.file,sourceRoot:t.sourceMapRoot}),t.sourceContent&&
-s.map.setSourceContent(t.sourceMap,t.sourceContent),t.sourceMapWithCode?s:s.map.
-toString()):(s={code:i.toString(),map:null},t.sourceMapWithCode?s:s.code)}var e,
-t,n,r,i,s,o,u,a,f,l,c,h,p,d,v,m,g,y,b,w,E,S,x,T,N,C;i=require("estraverse"),s=require
-("esutils"),e=i.Syntax,t={Sequence:0,Yield:1,Await:1,Assignment:1,Conditional:2,
-ArrowFunction:2,LogicalOR:3,LogicalAND:4,BitwiseOR:5,BitwiseXOR:6,BitwiseAND:7,Equality
-:8,Relational:9,BitwiseSHIFT:10,Additive:11,Multiplicative:12,Unary:13,Postfix:14
-,Call:15,New:16,TaggedTemplate:17,Member:18,Primary:19},n={"||":t.LogicalOR,"&&"
-:t.LogicalAND,"|":t.BitwiseOR,"^":t.BitwiseXOR,"&":t.BitwiseAND,"==":t.Equality,"!="
-:t.Equality,"===":t.Equality,"!==":t.Equality,is:t.Equality,isnt:t.Equality,"<":
-t.Relational,">":t.Relational,"<=":t.Relational,">=":t.Relational,"in":t.Relational
-,"instanceof":t.Relational,"<<":t.BitwiseSHIFT,">>":t.BitwiseSHIFT,">>>":t.BitwiseSHIFT
-,"+":t.Additive,"-":t.Additive,"*":t.Multiplicative,"%":t.Multiplicative,"/":t.Multiplicative
-};var A=1,O=2,M=4,_=8,D=16,P=32,H=O|M,B=A|O,j=A|O|M,F=A,I=M,q=A|M,R=A,U=A|P,z=0,
-W=A|D,X=A|_;o=Array.isArray,o||(o=function(t){return Object.prototype.toString.call
-(t)==="[object Array]"}),bt.prototype.maybeBlock=function(t,n){var r,i,s=this;return i=!
-w.comment||!t.leadingComments,t.type===e.BlockStatement&&i?[v,this.generateStatement
-(t,n)]:t.type===e.EmptyStatement&&i?";":(lt(function(){r=[d,ft(s.generateStatement
-(t,n))]}),r)},bt.prototype.maybeBlockSuffix=function(t,n){var r=K(ot(n).toString
-());return t.type===e.BlockStatement&&(!w.comment||!t.leadingComments)&&!r?[n,v]
-:r?[n,u]:[n,d,u]},bt.prototype.generatePattern=function(t,n,r){return t.type===e
-.Identifier?wt(t):this.generateExpression(t,n,r)},bt.prototype.generateFunctionParams=
-function(n){var r,i,s,o;o=!1;if(n.type===e.ArrowFunctionExpression&&!n.rest&&(!n
-.defaults||n.defaults.length===0)&&n.params.length===1&&n.params[0].type===e.Identifier
-)s=[Et(n,!0),wt(n.params[0])];else{s=n.type===e.ArrowFunctionExpression?[Et(n,!1
-)]:[],s.push("("),n.defaults&&(o=!0);for(r=0,i=n.params.length;r<i;++r)o&&n.defaults
-[r]?s.push(this.generateAssignment(n.params[r],n.defaults[r],"=",t.Assignment,j)
-):s.push(this.generatePattern(n.params[r],t.Assignment,j)),r+1<i&&s.push(","+v);
-n.rest&&(n.params.length&&s.push(","+v),s.push("..."),s.push(wt(n.rest))),s.push
-(")")}return s},bt.prototype.generateFunctionBody=function(n){var r,i;return r=this
-.generateFunctionParams(n),n.type===e.ArrowFunctionExpression&&(r.push(v),r.push
-("=>")),n.expression?(r.push(v),i=this.generateExpression(n.body,t.Assignment,j)
-,i.toString().charAt(0)==="{"&&(i=["(",i,")"]),r.push(i)):r.push(this.maybeBlock
-(n.body,X)),r},bt.prototype.generateIterationForStatement=function(n,r,i){var s=
-["for"+v+"("],o=this;return lt(function(){r.left.type===e.VariableDeclaration?lt
-(function(){s.push(r.left.kind+ut()),s.push(o.generateStatement(r.left.declarations
-[0],z))}):s.push(o.generateExpression(r.left,t.Call,j)),s=at(s,n),s=[at(s,o.generateExpression
-(r.right,t.Sequence,j)),")"]}),s.push(this.maybeBlock(r.body,i)),s},bt.prototype
-.generatePropertyKey=function(e,n,r){var i=[];return n&&i.push("["),r.type==="AssignmentPattern"?
-i.push(this.AssignmentPattern(r,t.Sequence,j)):i.push(this.generateExpression(e,
-t.Sequence,j)),n&&i.push("]"),i},bt.prototype.generateAssignment=function(e,n,r,
-i,s){return t.Assignment<i&&(s|=A),mt([this.generateExpression(e,t.Call,s),v+r+v
-,this.generateExpression(n,t.Assignment,s)],t.Assignment,i)},bt.prototype.semicolon=
-function(e){return!g&&e&P?"":";"},bt.Statement={BlockStatement:function(e,t){var n
-,r,i=["{",d],s=this;return lt(function(){e.body.length===0&&T&&(n=e.range,n[1]-n
-[0]>2&&(r=x.substring(n[0]+1,n[1]-1),r[0]==="\n"&&(i=["{"]),i.push(r)));var o,u,
-a,f;f=R,t&_&&(f|=D);for(o=0,u=e.body.length;o<u;++o)T&&(o===0&&(e.body[0].leadingComments&&
-(n=e.body[0].leadingComments[0].extendedRange,r=x.substring(n[0],n[1]),r[0]==="\n"&&
-(i=["{"])),e.body[0].leadingComments||vt(e.range[0],e.body[0].range[0],i)),o>0&&!
-e.body[o-1].trailingComments&&!e.body[o].leadingComments&&vt(e.body[o-1].range[1
-],e.body[o].range[0],i)),o===u-1&&(f|=P),e.body[o].leadingComments&&T?a=s.generateStatement
-(e.body[o],f):a=ft(s.generateStatement(e.body[o],f)),i.push(a),K(ot(a).toString(
-))||(T&&o<u-1?e.body[o+1].leadingComments||i.push(d):i.push(d)),T&&o===u-1&&(e.body
-[o].trailingComments||vt(e.body[o].range[1],e.range[1],i))}),i.push(ft("}")),i},
-BreakStatement:function(e,t){return e.label?"break "+e.label.name+this.semicolon
-(t):"break"+this.semicolon(t)},ContinueStatement:function(e,t){return e.label?"continue "+
-e.label.name+this.semicolon(t):"continue"+this.semicolon(t)},ClassBody:function(
-e,n){var r=["{",d],i=this;return lt(function(n){var s,o;for(s=0,o=e.body.length;
-s<o;++s)r.push(n),r.push(i.generateExpression(e.body[s],t.Sequence,j)),s+1<o&&r.
-push(d)}),K(ot(r).toString())||r.push(d),r.push(u),r.push("}"),r},ClassDeclaration
-:function(e,n){var r,i;return r=["class"],e.id&&(r=at(r,this.generateExpression(
-e.id,t.Sequence,j))),e.superClass&&(i=at("extends",this.generateExpression(e.superClass
-,t.Assignment,j)),r=at(r,i)),r.push(v),r.push(this.generateStatement(e.body,U)),
-r},DirectiveStatement:function(e,t){return w.raw&&e.raw?e.raw+this.semicolon(t):
-rt(e.directive)+this.semicolon(t)},DoWhileStatement:function(e,n){var r=at("do",
-this.maybeBlock(e.body,R));return r=this.maybeBlockSuffix(e.body,r),at(r,["while"+
-v+"(",this.generateExpression(e.test,t.Sequence,j),")"+this.semicolon(n)])},CatchClause
-:function(e,n){var r,i=this;return lt(function(){var n;r=["catch"+v+"(",i.generateExpression
-(e.param,t.Sequence,j),")"],e.guard&&(n=i.generateExpression(e.guard,t.Sequence,
-j),r.splice(2,0," if ",n))}),r.push(this.maybeBlock(e.body,R)),r},DebuggerStatement
-:function(e,t){return"debugger"+this.semicolon(t)},EmptyStatement:function(e,t){
-return";"},ExportDefaultDeclaration:function(e,n){var r=["export"],i;return i=n&
-P?U:R,r=at(r,"default"),L(e.declaration)?r=at(r,this.generateStatement(e.declaration
-,i)):r=at(r,this.generateExpression(e.declaration,t.Assignment,j)+this.semicolon
-(n)),r},ExportNamedDeclaration:function(n,r){var i=["export"],s,o=this;return s=
-r&P?U:R,n.declaration?at(i,this.generateStatement(n.declaration,s)):(n.specifiers&&
-(n.specifiers.length===0?i=at(i,"{"+v+"}"):n.specifiers[0].type===e.ExportBatchSpecifier?
-i=at(i,this.generateExpression(n.specifiers[0],t.Sequence,j)):(i=at(i,"{"),lt(function(
-e){var r,s;i.push(d);for(r=0,s=n.specifiers.length;r<s;++r)i.push(e),i.push(o.generateExpression
-(n.specifiers[r],t.Sequence,j)),r+1<s&&i.push(","+d)}),K(ot(i).toString())||i.push
-(d),i.push(u+"}")),n.source?i=at(i,["from"+v,this.generateExpression(n.source,t.
-Sequence,j),this.semicolon(r)]):i.push(this.semicolon(r))),i)},ExportAllDeclaration
-:function(e,n){return["export"+v,"*"+v,"from"+v,this.generateExpression(e.source
-,t.Sequence,j),this.semicolon(n)]},ExpressionStatement:function(n,r){function u(
-e){var t;return e.slice(0,5)!=="class"?!1:(t=e.charCodeAt(5),t===123||s.code.isWhiteSpace
-(t)||s.code.isLineTerminator(t))}function a(e){var t;return e.slice(0,8)!=="function"?!1
-:(t=e.charCodeAt(8),t===40||s.code.isWhiteSpace(t)||t===42||s.code.isLineTerminator
-(t))}function f(e){var t,n,r;if(e.slice(0,5)!=="async")return!1;if(!s.code.isWhiteSpace
-(e.charCodeAt(5)))return!1;for(n=6,r=e.length;n<r;++n)if(!s.code.isWhiteSpace(e.
-charCodeAt(n)))break;return n===r?!1:e.slice(n,n+8)!=="function"?!1:(t=e.charCodeAt
-(n+8),t===40||s.code.isWhiteSpace(t)||t===42||s.code.isLineTerminator(t))}var i,
-o;return i=[this.generateExpression(n.expression,t.Sequence,j)],o=ot(i).toString
-(),o.charCodeAt(0)===123||u(o)||a(o)||f(o)||b&&r&D&&n.expression.type===e.Literal&&typeof
-n.expression.value=="string"?i=["(",i,")"+this.semicolon(r)]:i.push(this.semicolon
-(r)),i},ImportDeclaration:function(n,r){var i,s,o=this;return n.specifiers.length===0?
-["import",v,this.generateExpression(n.source,t.Sequence,j),this.semicolon(r)]:(i=
-["import"],s=0,n.specifiers[s].type===e.ImportDefaultSpecifier&&(i=at(i,[this.generateExpression
-(n.specifiers[s],t.Sequence,j)]),++s),n.specifiers[s]&&(s!==0&&i.push(","),n.specifiers
-[s].type===e.ImportNamespaceSpecifier?i=at(i,[v,this.generateExpression(n.specifiers
-[s],t.Sequence,j)]):(i.push(v+"{"),n.specifiers.length-s===1?(i.push(v),i.push(this
-.generateExpression(n.specifiers[s],t.Sequence,j)),i.push(v+"}"+v)):(lt(function(
-e){var r,u;i.push(d);for(r=s,u=n.specifiers.length;r<u;++r)i.push(e),i.push(o.generateExpression
-(n.specifiers[r],t.Sequence,j)),r+1<u&&i.push(","+d)}),K(ot(i).toString())||i.push
-(d),i.push(u+"}"+v)))),i=at(i,["from"+v,this.generateExpression(n.source,t.Sequence
-,j),this.semicolon(r)]),i)},VariableDeclarator:function(e,n){var r=n&A?j:H;return e
-.init?[this.generateExpression(e.id,t.Assignment,r),v,"=",v,this.generateExpression
-(e.init,t.Assignment,r)]:this.generatePattern(e.id,t.Assignment,r)},VariableDeclaration
-:function(e,t){function a(){s=e.declarations[0],w.comment&&s.leadingComments?(n.
-push("\n"),n.push(ft(u.generateStatement(s,o)))):(n.push(ut()),n.push(u.generateStatement
-(s,o)));for(r=1,i=e.declarations.length;r<i;++r)s=e.declarations[r],w.comment&&s
-.leadingComments?(n.push(","+d),n.push(ft(u.generateStatement(s,o)))):(n.push(","+
-v),n.push(u.generateStatement(s,o)))}var n,r,i,s,o,u=this;return n=[e.kind],o=t&
-A?R:z,e.declarations.length>1?lt(a):a(),n.push(this.semicolon(t)),n},ThrowStatement
-:function(e,n){return[at("throw",this.generateExpression(e.argument,t.Sequence,j
-)),this.semicolon(n)]},TryStatement:function(e,t){var n,r,i,s;n=["try",this.maybeBlock
-(e.block,R)],n=this.maybeBlockSuffix(e.block,n);if(e.handlers)for(r=0,i=e.handlers
-.length;r<i;++r){n=at(n,this.generateStatement(e.handlers[r],R));if(e.finalizer||
-r+1!==i)n=this.maybeBlockSuffix(e.handlers[r].body,n)}else{s=e.guardedHandlers||
-[];for(r=0,i=s.length;r<i;++r){n=at(n,this.generateStatement(s[r],R));if(e.finalizer||
-r+1!==i)n=this.maybeBlockSuffix(s[r].body,n)}if(e.handler)if(o(e.handler))for(r=0
-,i=e.handler.length;r<i;++r){n=at(n,this.generateStatement(e.handler[r],R));if(e
-.finalizer||r+1!==i)n=this.maybeBlockSuffix(e.handler[r].body,n)}else n=at(n,this
-.generateStatement(e.handler,R)),e.finalizer&&(n=this.maybeBlockSuffix(e.handler
-.body,n))}return e.finalizer&&(n=at(n,["finally",this.maybeBlock(e.finalizer,R)]
-)),n},SwitchStatement:function(e,n){var r,i,s,o,u,a=this;lt(function(){r=["switch"+
-v+"(",a.generateExpression(e.discriminant,t.Sequence,j),")"+v+"{"+d]});if(e.cases
-){u=R;for(s=0,o=e.cases.length;s<o;++s)s===o-1&&(u|=P),i=ft(this.generateStatement
-(e.cases[s],u)),r.push(i),K(ot(i).toString())||r.push(d)}return r.push(ft("}")),
-r},SwitchCase:function(n,r){var i,s,o,u,a,f=this;return lt(function(){n.test?i=[
-at("case",f.generateExpression(n.test,t.Sequence,j)),":"]:i=["default:"],o=0,u=n
-.consequent.length,u&&n.consequent[0].type===e.BlockStatement&&(s=f.maybeBlock(n
-.consequent[0],R),i.push(s),o=1),o!==u&&!K(ot(i).toString())&&i.push(d),a=R;for(
-;o<u;++o)o===u-1&&r&P&&(a|=P),s=ft(f.generateStatement(n.consequent[o],a)),i.push
-(s),o+1!==u&&!K(ot(s).toString())&&i.push(d)}),i},IfStatement:function(n,r){var i
-,s,o,u=this;return lt(function(){i=["if"+v+"(",u.generateExpression(n.test,t.Sequence
-,j),")"]}),o=r&P,s=R,o&&(s|=P),n.alternate?(i.push(this.maybeBlock(n.consequent,
-R)),i=this.maybeBlockSuffix(n.consequent,i),n.alternate.type===e.IfStatement?i=at
-(i,["else ",this.generateStatement(n.alternate,s)]):i=at(i,at("else",this.maybeBlock
-(n.alternate,s)))):i.push(this.maybeBlock(n.consequent,s)),i},ForStatement:function(
-n,r){var i,s=this;return lt(function(){i=["for"+v+"("],n.init?n.init.type===e.VariableDeclaration?
-i.push(s.generateStatement(n.init,z)):(i.push(s.generateExpression(n.init,t.Sequence
-,H)),i.push(";")):i.push(";"),n.test?(i.push(v),i.push(s.generateExpression(n.test
-,t.Sequence,j)),i.push(";")):i.push(";"),n.update?(i.push(v),i.push(s.generateExpression
-(n.update,t.Sequence,j)),i.push(")")):i.push(")")}),i.push(this.maybeBlock(n.body
-,r&P?U:R)),i},ForInStatement:function(e,t){return this.generateIterationForStatement
-("in",e,t&P?U:R)},ForOfStatement:function(e,t){return this.generateIterationForStatement
-("of",e,t&P?U:R)},LabeledStatement:function(e,t){return[e.label.name+":",this.maybeBlock
-(e.body,t&P?U:R)]},Program:function(e,t){var n,r,i,s,o;s=e.body.length,n=[y&&s>0?"\n"
-:""],o=W;for(i=0;i<s;++i)!y&&i===s-1&&(o|=P),T&&(i===0&&(e.body[0].leadingComments||
-vt(e.range[0],e.body[i].range[0],n)),i>0&&!e.body[i-1].trailingComments&&!e.body
-[i].leadingComments&&vt(e.body[i-1].range[1],e.body[i].range[0],n)),r=ft(this.generateStatement
-(e.body[i],o)),n.push(r),i+1<s&&!K(ot(r).toString())&&(T?e.body[i+1].leadingComments||
-n.push(d):n.push(d)),T&&i===s-1&&(e.body[i].trailingComments||vt(e.body[i].range
-[1],e.range[1],n));return n},FunctionDeclaration:function(e,t){return[Et(e,!0),"function"
-,St(e)||ut(),e.id?wt(e.id):"",this.generateFunctionBody(e)]},ReturnStatement:function(
-e,n){return e.argument?[at("return",this.generateExpression(e.argument,t.Sequence
-,j)),this.semicolon(n)]:["return"+this.semicolon(n)]},WhileStatement:function(e,
-n){var r,i=this;return lt(function(){r=["while"+v+"(",i.generateExpression(e.test
-,t.Sequence,j),")"]}),r.push(this.maybeBlock(e.body,n&P?U:R)),r},WithStatement:function(
-e,n){var r,i=this;return lt(function(){r=["with"+v+"(",i.generateExpression(e.object
-,t.Sequence,j),")"]}),r.push(this.maybeBlock(e.body,n&P?U:R)),r}},Q(bt.prototype
-,bt.Statement),bt.Expression={SequenceExpression:function(e,n,r){var i,s,o;t.Sequence<
-n&&(r|=A),i=[];for(s=0,o=e.expressions.length;s<o;++s)i.push(this.generateExpression
-(e.expressions[s],t.Assignment,r)),s+1<o&&i.push(","+v);return mt(i,t.Sequence,n
-)},AssignmentExpression:function(e,t,n){return this.generateAssignment(e.left,e.
-right,e.operator,t,n)},ArrowFunctionExpression:function(e,n,r){return mt(this.generateFunctionBody
-(e),t.ArrowFunction,n)},ConditionalExpression:function(e,n,r){return t.Conditional<
-n&&(r|=A),mt([this.generateExpression(e.test,t.LogicalOR,r),v+"?"+v,this.generateExpression
-(e.consequent,t.Assignment,r),v+":"+v,this.generateExpression(e.alternate,t.Assignment
-,r)],t.Conditional,n)},LogicalExpression:function(e,t,n){return this.BinaryExpression
-(e,t,n)},BinaryExpression:function(e,t,r){var i,o,u,a;return o=n[e.operator],o<t&&
-(r|=A),u=this.generateExpression(e.left,o,r),a=u.toString(),a.charCodeAt(a.length-1
-)===47&&s.code.isIdentifierPartES5(e.operator.charCodeAt(0))?i=[u,ut(),e.operator
-]:i=at(u,e.operator),u=this.generateExpression(e.right,o+1,r),e.operator==="/"&&
-u.toString().charAt(0)==="/"||e.operator.slice(-1)==="<"&&u.toString().slice(0,3
-)==="!--"?(i.push(ut()),i.push(u)):i=at(i,u),e.operator==="in"&&!(r&A)?["(",i,")"
-]:mt(i,o,t)},CallExpression:function(e,n,r){var i,s,o;i=[this.generateExpression
-(e.callee,t.Call,B)],i.push("(");for(s=0,o=e.arguments.length;s<o;++s)i.push(this
-.generateExpression(e.arguments[s],t.Assignment,j)),s+1<o&&i.push(","+v);return i
-.push(")"),r&O?mt(i,t.Call,n):["(",i,")"]},NewExpression:function(e,n,r){var i,s
-,o,u,a;s=e.arguments.length,a=r&M&&!m&&s===0?q:F,i=at("new",this.generateExpression
-(e.callee,t.New,a));if(!(r&M)||m||s>0){i.push("(");for(o=0,u=s;o<u;++o)i.push(this
-.generateExpression(e.arguments[o],t.Assignment,j)),o+1<u&&i.push(","+v);i.push(")"
-)}return mt(i,t.New,n)},MemberExpression:function(n,r,i){var o,u;return o=[this.
-generateExpression(n.object,t.Call,i&O?B:F)],n.computed?(o.push("["),o.push(this
-.generateExpression(n.property,t.Sequence,i&O?j:q)),o.push("]")):(n.object.type===
-e.Literal&&typeof n.object.value=="number"&&(u=ot(o).toString(),u.indexOf(".")<0&&!/[eExX]/
-.test(u)&&s.code.isDecimalDigit(u.charCodeAt(u.length-1))&&!(u.length>=2&&u.charCodeAt
-(0)===48)&&o.push(".")),o.push("."),o.push(wt(n.property))),mt(o,t.Member,r)},MetaProperty
-:function(e,n,r){var i;return i=[],i.push(e.meta),i.push("."),i.push(e.property)
-,mt(i,t.Member,n)},UnaryExpression:function(e,n,r){var i,o,u,a,f;return o=this.generateExpression
-(e.argument,t.Unary,j),v===""?i=at(e.operator,o):(i=[e.operator],e.operator.length>2?
-i=at(i,o):(a=ot(i).toString(),f=a.charCodeAt(a.length-1),u=o.toString().charCodeAt
-(0),(f===43||f===45)&&f===u||s.code.isIdentifierPartES5(f)&&s.code.isIdentifierPartES5
-(u)?(i.push(ut()),i.push(o)):i.push(o))),mt(i,t.Unary,n)},YieldExpression:function(
-e,n,r){var i;return e.delegate?i="yield*":i="yield",e.argument&&(i=at(i,this.generateExpression
-(e.argument,t.Yield,j))),mt(i,t.Yield,n)},AwaitExpression:function(e,n,r){var i=
-at(e.all?"await*":"await",this.generateExpression(e.argument,t.Await,j));return mt
-(i,t.Await,n)},UpdateExpression:function(e,n,r){return e.prefix?mt([e.operator,this
-.generateExpression(e.argument,t.Unary,j)],t.Unary,n):mt([this.generateExpression
-(e.argument,t.Postfix,j),e.operator],t.Postfix,n)},FunctionExpression:function(e
-,t,n){var r=[Et(e,!0),"function"];return e.id?(r.push(St(e)||ut()),r.push(wt(e.id
-))):r.push(St(e)||v),r.push(this.generateFunctionBody(e)),r},ArrayPattern:function(
-e,t,n){return this.ArrayExpression(e,t,n,!0)},ArrayExpression:function(e,n,r,i){
-var s,o,a=this;return e.elements.length?(o=i?!1:e.elements.length>1,s=["[",o?d:""
-],lt(function(n){var r,i;for(r=0,i=e.elements.length;r<i;++r)e.elements[r]?(s.push
-(o?n:""),s.push(a.generateExpression(e.elements[r],t.Assignment,j))):(o&&s.push(
-n),r+1===i&&s.push(",")),r+1<i&&s.push(","+(o?d:v))}),o&&!K(ot(s).toString())&&s
-.push(d),s.push(o?u:""),s.push("]"),s):"[]"},RestElement:function(e,t,n){return"..."+
-this.generatePattern(e.argument)},ClassExpression:function(e,n,r){var i,s;return i=
-["class"],e.id&&(i=at(i,this.generateExpression(e.id,t.Sequence,j))),e.superClass&&
-(s=at("extends",this.generateExpression(e.superClass,t.Assignment,j)),i=at(i,s))
-,i.push(v),i.push(this.generateStatement(e.body,U)),i},MethodDefinition:function(
-e,t,n){var r,i;return e["static"]?r=["static"+v]:r=[],e.kind==="get"||e.kind==="set"?
-i=[at(e.kind,this.generatePropertyKey(e.key,e.computed,e.value)),this.generateFunctionBody
-(e.value)]:i=[xt(e),this.generatePropertyKey(e.key,e.computed,e.value),this.generateFunctionBody
-(e.value)],at(r,i)},Property:function(e,n,r){return e.kind==="get"||e.kind==="set"?
-[e.kind,ut(),this.generatePropertyKey(e.key,e.computed,e.value),this.generateFunctionBody
-(e.value)]:e.shorthand?this.generatePropertyKey(e.key,e.computed,e.value):e.method?
-[xt(e),this.generatePropertyKey(e.key,e.computed,e.value),this.generateFunctionBody
-(e.value)]:[this.generatePropertyKey(e.key,e.computed,e.value),":"+v,this.generateExpression
-(e.value,t.Assignment,j)]},ObjectExpression:function(e,n,r){var i,s,o,a=this;return e
-.properties.length?(i=e.properties.length>1,lt(function(){o=a.generateExpression
-(e.properties[0],t.Sequence,j)}),!i&&!J(ot(o).toString())?["{",v,o,v,"}"]:(lt(function(
-n){var r,u;s=["{",d,n,o];if(i){s.push(","+d);for(r=1,u=e.properties.length;r<u;++
-r)s.push(n),s.push(a.generateExpression(e.properties[r],t.Sequence,j)),r+1<u&&s.
-push(","+d)}}),K(ot(s).toString())||s.push(d),s.push(u),s.push("}"),s)):"{}"},AssignmentPattern
-:function(e,t,n){return this.generateAssignment(e.left,e.right,"=",t,n)},ObjectPattern
-:function(n,r,i){var s,o,a,f,l,c=this;if(!n.properties.length)return"{}";f=!1;if(
-n.properties.length===1)l=n.properties[0],l.value.type!==e.Identifier&&(f=!0);else for(
-o=0,a=n.properties.length;o<a;++o){l=n.properties[o];if(!l.shorthand){f=!0;break}
-}return s=["{",f?d:""],lt(function(e){var r,i;for(r=0,i=n.properties.length;r<i;++
-r)s.push(f?e:""),s.push(c.generateExpression(n.properties[r],t.Sequence,j)),r+1<
-i&&s.push(","+(f?d:v))}),f&&!K(ot(s).toString())&&s.push(d),s.push(f?u:""),s.push
-("}"),s},ThisExpression:function(e,t,n){return"this"},Super:function(e,t,n){return"super"
-},Identifier:function(e,t,n){return wt(e)},ImportDefaultSpecifier:function(e,t,n
-){return wt(e.id||e.local)},ImportNamespaceSpecifier:function(e,t,n){var r=["*"]
-,i=e.id||e.local;return i&&r.push(v+"as"+ut()+wt(i)),r},ImportSpecifier:function(
-e,t,n){var r=e.imported,i=[r.name],s=e.local;return s&&s.name!==r.name&&i.push(ut
-()+"as"+ut()+wt(s)),i},ExportSpecifier:function(e,t,n){var r=e.local,i=[r.name],
-s=e.exported;return s&&s.name!==r.name&&i.push(ut()+"as"+ut()+wt(s)),i},Literal:
-function(t,n,r){var i;if(t.hasOwnProperty("raw")&&E&&w.raw)try{i=E(t.raw).body[0
-].expression;if(i.type===e.Literal&&i.value===t.value)return t.raw}catch(s){}return t
-.value===null?"null":typeof t.value=="string"?it(t.value):typeof t.value=="number"?
-Y(t.value):typeof t.value=="boolean"?t.value?"true":"false":et(t.value)},GeneratorExpression
-:function(e,t,n){return this.ComprehensionExpression(e,t,n)},ComprehensionExpression
-:function(n,r,i){var s,o,u,a,f=this;return s=n.type===e.GeneratorExpression?["("
-]:["["],w.moz.comprehensionExpressionStartsWithAssignment&&(a=this.generateExpression
-(n.body,t.Assignment,j),s.push(a)),n.blocks&&lt(function(){for(o=0,u=n.blocks.length
-;o<u;++o)a=f.generateExpression(n.blocks[o],t.Sequence,j),o>0||w.moz.comprehensionExpressionStartsWithAssignment?
-s=at(s,a):s.push(a)}),n.filter&&(s=at(s,"if"+v),a=this.generateExpression(n.filter
-,t.Sequence,j),s=at(s,["(",a,")"])),w.moz.comprehensionExpressionStartsWithAssignment||
-(a=this.generateExpression(n.body,t.Assignment,j),s=at(s,a)),s.push(n.type===e.GeneratorExpression?")"
-:"]"),s},ComprehensionBlock:function(n,r,i){var s;return n.left.type===e.VariableDeclaration?
-s=[n.left.kind,ut(),this.generateStatement(n.left.declarations[0],z)]:s=this.generateExpression
-(n.left,t.Call,j),s=at(s,n.of?"of":"in"),s=at(s,this.generateExpression(n.right,
-t.Sequence,j)),["for"+v+"(",s,")"]},SpreadElement:function(e,n,r){return["...",this
-.generateExpression(e.argument,t.Assignment,j)]},TaggedTemplateExpression:function(
-e,n,r){var i=B;r&O||(i=F);var s=[this.generateExpression(e.tag,t.Call,i),this.generateExpression
-(e.quasi,t.Primary,I)];return mt(s,t.TaggedTemplate,n)},TemplateElement:function(
-e,t,n){return e.value.raw},TemplateLiteral:function(e,n,r){var i,s,o;i=["`"];for(
-s=0,o=e.quasis.length;s<o;++s)i.push(this.generateExpression(e.quasis[s],t.Primary
-,j)),s+1<o&&(i.push("${"+v),i.push(this.generateExpression(e.expressions[s],t.Sequence
-,j)),i.push(v+"}"));return i.push("`"),i},ModuleSpecifier:function(e,t,n){return this
-.Literal(e,t,n)}},Q(bt.prototype,bt.Expression),bt.prototype.generateExpression=
-function(t,n,r){var i,s;return s=t.type||e.Property,w.verbatim&&t.hasOwnProperty
-(w.verbatim)?yt(t,n):(i=this[s](t,n,r),w.comment&&(i=dt(t,i)),ot(i,t))},bt.prototype
-.generateStatement=function(t,n){var r,i;return r=this[t.type](t,n),w.comment&&(
-r=dt(t,r)),i=ot(r).toString(),t.type===e.Program&&!y&&d===""&&i.charAt(i.length-1
-)==="\n"&&(r=S?ot(r).replaceRight(/\s+$/,""):i.replace(/\s+$/,"")),ot(r,t)},N={indent
-:{style:"",base:0},renumber:!0,hexadecimal:!0,quotes:"auto",escapeless:!0,compact
-:!0,parentheses:!1,semicolons:!1},C=V().format,exports.version=require("./package.json"
-).version,exports.generate=Nt,exports.attachComments=i.attachComments,exports.Precedence=
-G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
+/*
+  Copyright (C) 2012-2014 Yusuke Suzuki <utatane.tea@gmail.com>
+  Copyright (C) 2015 Ingvar Stepanyan <me@rreverser.com>
+  Copyright (C) 2014 Ivan Nikulin <ifaaan@gmail.com>
+  Copyright (C) 2012-2013 Michael Ficarra <escodegen.copyright@michael.ficarra.me>
+  Copyright (C) 2012-2013 Mathias Bynens <mathias@qiwi.be>
+  Copyright (C) 2013 Irakli Gozalishvili <rfobic@gmail.com>
+  Copyright (C) 2012 Robert Gust-Bardon <donate@robert.gust-bardon.org>
+  Copyright (C) 2012 John Freeman <jfreeman08@gmail.com>
+  Copyright (C) 2011-2012 Ariya Hidayat <ariya.hidayat@gmail.com>
+  Copyright (C) 2012 Joost-Wim Boekesteijn <joost-wim@boekesteijn.nl>
+  Copyright (C) 2012 Kris Kowal <kris.kowal@cixar.com>
+  Copyright (C) 2012 Arpad Borsos <arpad.borsos@googlemail.com>
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+/*global exports:true, require:true, global:true*/
+(function () {
+    'use strict';
+
+    var Syntax,
+        Precedence,
+        BinaryPrecedence,
+        SourceNode,
+        estraverse,
+        esutils,
+        isArray,
+        base,
+        indent,
+        json,
+        renumber,
+        hexadecimal,
+        quotes,
+        escapeless,
+        newline,
+        space,
+        parentheses,
+        semicolons,
+        safeConcatenation,
+        directive,
+        extra,
+        parse,
+        sourceMap,
+        sourceCode,
+        preserveBlankLines,
+        FORMAT_MINIFY,
+        FORMAT_DEFAULTS;
+
+    estraverse = require('estraverse');
+    esutils = require('esutils');
+
+    Syntax = estraverse.Syntax;
+
+    // Generation is done by generateExpression.
+    function isExpression(node) {
+        return CodeGenerator.Expression.hasOwnProperty(node.type);
+    }
+
+    // Generation is done by generateStatement.
+    function isStatement(node) {
+        return CodeGenerator.Statement.hasOwnProperty(node.type);
+    }
+
+    Precedence = {
+        Sequence: 0,
+        Yield: 1,
+        Await: 1,
+        Assignment: 1,
+        Conditional: 2,
+        ArrowFunction: 2,
+        LogicalOR: 3,
+        LogicalAND: 4,
+        BitwiseOR: 5,
+        BitwiseXOR: 6,
+        BitwiseAND: 7,
+        Equality: 8,
+        Relational: 9,
+        BitwiseSHIFT: 10,
+        Additive: 11,
+        Multiplicative: 12,
+        Unary: 13,
+        Postfix: 14,
+        Call: 15,
+        New: 16,
+        TaggedTemplate: 17,
+        Member: 18,
+        Primary: 19
+    };
+
+    BinaryPrecedence = {
+        '||': Precedence.LogicalOR,
+        '&&': Precedence.LogicalAND,
+        '|': Precedence.BitwiseOR,
+        '^': Precedence.BitwiseXOR,
+        '&': Precedence.BitwiseAND,
+        '==': Precedence.Equality,
+        '!=': Precedence.Equality,
+        '===': Precedence.Equality,
+        '!==': Precedence.Equality,
+        'is': Precedence.Equality,
+        'isnt': Precedence.Equality,
+        '<': Precedence.Relational,
+        '>': Precedence.Relational,
+        '<=': Precedence.Relational,
+        '>=': Precedence.Relational,
+        'in': Precedence.Relational,
+        'instanceof': Precedence.Relational,
+        '<<': Precedence.BitwiseSHIFT,
+        '>>': Precedence.BitwiseSHIFT,
+        '>>>': Precedence.BitwiseSHIFT,
+        '+': Precedence.Additive,
+        '-': Precedence.Additive,
+        '*': Precedence.Multiplicative,
+        '%': Precedence.Multiplicative,
+        '/': Precedence.Multiplicative
+    };
+
+    //Flags
+    var F_ALLOW_IN = 1,
+        F_ALLOW_CALL = 1 << 1,
+        F_ALLOW_UNPARATH_NEW = 1 << 2,
+        F_FUNC_BODY = 1 << 3,
+        F_DIRECTIVE_CTX = 1 << 4,
+        F_SEMICOLON_OPT = 1 << 5;
+
+    //Expression flag sets
+    //NOTE: Flag order:
+    // F_ALLOW_IN
+    // F_ALLOW_CALL
+    // F_ALLOW_UNPARATH_NEW
+    var E_FTT = F_ALLOW_CALL | F_ALLOW_UNPARATH_NEW,
+        E_TTF = F_ALLOW_IN | F_ALLOW_CALL,
+        E_TTT = F_ALLOW_IN | F_ALLOW_CALL | F_ALLOW_UNPARATH_NEW,
+        E_TFF = F_ALLOW_IN,
+        E_FFT = F_ALLOW_UNPARATH_NEW,
+        E_TFT = F_ALLOW_IN | F_ALLOW_UNPARATH_NEW;
+
+    //Statement flag sets
+    //NOTE: Flag order:
+    // F_ALLOW_IN
+    // F_FUNC_BODY
+    // F_DIRECTIVE_CTX
+    // F_SEMICOLON_OPT
+    var S_TFFF = F_ALLOW_IN,
+        S_TFFT = F_ALLOW_IN | F_SEMICOLON_OPT,
+        S_FFFF = 0x00,
+        S_TFTF = F_ALLOW_IN | F_DIRECTIVE_CTX,
+        S_TTFF = F_ALLOW_IN | F_FUNC_BODY;
+
+    function getDefaultOptions() {
+        // default options
+        return {
+            indent: null,
+            base: null,
+            parse: null,
+            comment: false,
+            format: {
+                indent: {
+                    style: '    ',
+                    base: 0,
+                    adjustMultilineComment: false
+                },
+                newline: '\n',
+                space: ' ',
+                json: false,
+                renumber: false,
+                hexadecimal: false,
+                quotes: 'single',
+                escapeless: false,
+                compact: false,
+                parentheses: true,
+                semicolons: true,
+                safeConcatenation: false,
+                preserveBlankLines: false
+            },
+            moz: {
+                comprehensionExpressionStartsWithAssignment: false,
+                starlessGenerator: false
+            },
+            sourceMap: null,
+            sourceMapRoot: null,
+            sourceMapWithCode: false,
+            directive: false,
+            raw: true,
+            verbatim: null,
+            sourceCode: null
+        };
+    }
+
+    function stringRepeat(str, num) {
+        var result = '';
+
+        for (num |= 0; num > 0; num >>>= 1, str += str) {
+            if (num & 1) {
+                result += str;
+            }
+        }
+
+        return result;
+    }
+
+    isArray = Array.isArray;
+    if (!isArray) {
+        isArray = function isArray(array) {
+            return Object.prototype.toString.call(array) === '[object Array]';
+        };
+    }
+
+    function hasLineTerminator(str) {
+        return (/[\r\n]/g).test(str);
+    }
+
+    function endsWithLineTerminator(str) {
+        var len = str.length;
+        return len && esutils.code.isLineTerminator(str.charCodeAt(len - 1));
+    }
+
+    function merge(target, override) {
+        var key;
+        for (key in override) {
+            if (override.hasOwnProperty(key)) {
+                target[key] = override[key];
+            }
+        }
+        return target;
+    }
+
+    function updateDeeply(target, override) {
+        var key, val;
+
+        function isHashObject(target) {
+            return typeof target === 'object' && target instanceof Object && !(target instanceof RegExp);
+        }
+
+        for (key in override) {
+            if (override.hasOwnProperty(key)) {
+                val = override[key];
+                if (isHashObject(val)) {
+                    if (isHashObject(target[key])) {
+                        updateDeeply(target[key], val);
+                    } else {
+                        target[key] = updateDeeply({}, val);
+                    }
+                } else {
+                    target[key] = val;
+                }
+            }
+        }
+        return target;
+    }
+
+    function generateNumber(value) {
+        var result, point, temp, exponent, pos;
+
+        if (value !== value) {
+            throw new Error('Numeric literal whose value is NaN');
+        }
+        if (value < 0 || (value === 0 && 1 / value < 0)) {
+            throw new Error('Numeric literal whose value is negative');
+        }
+
+        if (value === 1 / 0) {
+            return json ? 'null' : renumber ? '1e400' : '1e+400';
+        }
+
+        result = '' + value;
+        if (!renumber || result.length < 3) {
+            return result;
+        }
+
+        point = result.indexOf('.');
+        if (!json && result.charCodeAt(0) === 0x30  /* 0 */ && point === 1) {
+            point = 0;
+            result = result.slice(1);
+        }
+        temp = result;
+        result = result.replace('e+', 'e');
+        exponent = 0;
+        if ((pos = temp.indexOf('e')) > 0) {
+            exponent = +temp.slice(pos + 1);
+            temp = temp.slice(0, pos);
+        }
+        if (point >= 0) {
+            exponent -= temp.length - point - 1;
+            temp = +(temp.slice(0, point) + temp.slice(point + 1)) + '';
+        }
+        pos = 0;
+        while (temp.charCodeAt(temp.length + pos - 1) === 0x30  /* 0 */) {
+            --pos;
+        }
+        if (pos !== 0) {
+            exponent -= pos;
+            temp = temp.slice(0, pos);
+        }
+        if (exponent !== 0) {
+            temp += 'e' + exponent;
+        }
+        if ((temp.length < result.length ||
+                    (hexadecimal && value > 1e12 && Math.floor(value) === value && (temp = '0x' + value.toString(16)).length < result.length)) &&
+                +temp === value) {
+            result = temp;
+        }
+
+        return result;
+    }
+
+    // Generate valid RegExp expression.
+    // This function is based on https://github.com/Constellation/iv Engine
+
+    function escapeRegExpCharacter(ch, previousIsBackslash) {
+        // not handling '\' and handling \u2028 or \u2029 to unicode escape sequence
+        if ((ch & ~1) === 0x2028) {
+            return (previousIsBackslash ? 'u' : '\\u') + ((ch === 0x2028) ? '2028' : '2029');
+        } else if (ch === 10 || ch === 13) {  // \n, \r
+            return (previousIsBackslash ? '' : '\\') + ((ch === 10) ? 'n' : 'r');
+        }
+        return String.fromCharCode(ch);
+    }
+
+    function generateRegExp(reg) {
+        var match, result, flags, i, iz, ch, characterInBrack, previousIsBackslash;
+
+        result = reg.toString();
+
+        if (reg.source) {
+            // extract flag from toString result
+            match = result.match(/\/([^/]*)$/);
+            if (!match) {
+                return result;
+            }
+
+            flags = match[1];
+            result = '';
+
+            characterInBrack = false;
+            previousIsBackslash = false;
+            for (i = 0, iz = reg.source.length; i < iz; ++i) {
+                ch = reg.source.charCodeAt(i);
+
+                if (!previousIsBackslash) {
+                    if (characterInBrack) {
+                        if (ch === 93) {  // ]
+                            characterInBrack = false;
+                        }
+                    } else {
+                        if (ch === 47) {  // /
+                            result += '\\';
+                        } else if (ch === 91) {  // [
+                            characterInBrack = true;
+                        }
+                    }
+                    result += escapeRegExpCharacter(ch, previousIsBackslash);
+                    previousIsBackslash = ch === 92;  // \
+                } else {
+                    // if new RegExp("\\\n') is provided, create /\n/
+                    result += escapeRegExpCharacter(ch, previousIsBackslash);
+                    // prevent like /\\[/]/
+                    previousIsBackslash = false;
+                }
+            }
+
+            return '/' + result + '/' + flags;
+        }
+
+        return result;
+    }
+
+    function escapeAllowedCharacter(code, next) {
+        var hex;
+
+        if (code === 0x08  /* \b */) {
+            return '\\b';
+        }
+
+        if (code === 0x0C  /* \f */) {
+            return '\\f';
+        }
+
+        if (code === 0x09  /* \t */) {
+            return '\\t';
+        }
+
+        hex = code.toString(16).toUpperCase();
+        if (json || code > 0xFF) {
+            return '\\u' + '0000'.slice(hex.length) + hex;
+        } else if (code === 0x0000 && !esutils.code.isDecimalDigit(next)) {
+            return '\\0';
+        } else if (code === 0x000B  /* \v */) { // '\v'
+            return '\\x0B';
+        } else {
+            return '\\x' + '00'.slice(hex.length) + hex;
+        }
+    }
+
+    function escapeDisallowedCharacter(code) {
+        if (code === 0x5C  /* \ */) {
+            return '\\\\';
+        }
+
+        if (code === 0x0A  /* \n */) {
+            return '\\n';
+        }
+
+        if (code === 0x0D  /* \r */) {
+            return '\\r';
+        }
+
+        if (code === 0x2028) {
+            return '\\u2028';
+        }
+
+        if (code === 0x2029) {
+            return '\\u2029';
+        }
+
+        throw new Error('Incorrectly classified character');
+    }
+
+    function escapeDirective(str) {
+        var i, iz, code, quote;
+
+        quote = quotes === 'double' ? '"' : '\'';
+        for (i = 0, iz = str.length; i < iz; ++i) {
+            code = str.charCodeAt(i);
+            if (code === 0x27  /* ' */) {
+                quote = '"';
+                break;
+            } else if (code === 0x22  /* " */) {
+                quote = '\'';
+                break;
+            } else if (code === 0x5C  /* \ */) {
+                ++i;
+            }
+        }
+
+        return quote + str + quote;
+    }
+
+    function escapeString(str) {
+        var result = '', i, len, code, singleQuotes = 0, doubleQuotes = 0, single, quote;
+
+        for (i = 0, len = str.length; i < len; ++i) {
+            code = str.charCodeAt(i);
+            if (code === 0x27  /* ' */) {
+                ++singleQuotes;
+            } else if (code === 0x22  /* " */) {
+                ++doubleQuotes;
+            } else if (code === 0x2F  /* / */ && json) {
+                result += '\\';
+            } else if (esutils.code.isLineTerminator(code) || code === 0x5C  /* \ */) {
+                result += escapeDisallowedCharacter(code);
+                continue;
+            } else if (!esutils.code.isIdentifierPartES5(code) && (json && code < 0x20  /* SP */ || !json && !escapeless && (code < 0x20  /* SP */ || code > 0x7E  /* ~ */))) {
+                result += escapeAllowedCharacter(code, str.charCodeAt(i + 1));
+                continue;
+            }
+            result += String.fromCharCode(code);
+        }
+
+        single = !(quotes === 'double' || (quotes === 'auto' && doubleQuotes < singleQuotes));
+        quote = single ? '\'' : '"';
+
+        if (!(single ? singleQuotes : doubleQuotes)) {
+            return quote + result + quote;
+        }
+
+        str = result;
+        result = quote;
+
+        for (i = 0, len = str.length; i < len; ++i) {
+            code = str.charCodeAt(i);
+            if ((code === 0x27  /* ' */ && single) || (code === 0x22  /* " */ && !single)) {
+                result += '\\';
+            }
+            result += String.fromCharCode(code);
+        }
+
+        return result + quote;
+    }
+
+    /**
+     * flatten an array to a string, where the array can contain
+     * either strings or nested arrays
+     */
+    function flattenToString(arr) {
+        var i, iz, elem, result = '';
+        for (i = 0, iz = arr.length; i < iz; ++i) {
+            elem = arr[i];
+            result += isArray(elem) ? flattenToString(elem) : elem;
+        }
+        return result;
+    }
+
+    /**
+     * convert generated to a SourceNode when source maps are enabled.
+     */
+    function toSourceNodeWhenNeeded(generated, node) {
+        if (!sourceMap) {
+            // with no source maps, generated is either an
+            // array or a string.  if an array, flatten it.
+            // if a string, just return it
+            if (isArray(generated)) {
+                return flattenToString(generated);
+            } else {
+                return generated;
+            }
+        }
+        if (node == null) {
+            if (generated instanceof SourceNode) {
+                return generated;
+            } else {
+                node = {};
+            }
+        }
+        if (node.loc == null) {
+            return new SourceNode(null, null, sourceMap, generated, node.name || null);
+        }
+        return new SourceNode(node.loc.start.line, node.loc.start.column, (sourceMap === true ? node.loc.source || null : sourceMap), generated, node.name || null);
+    }
+
+    function noEmptySpace() {
+        return (space) ? space : ' ';
+    }
+
+    function join(left, right) {
+        var leftSource,
+            rightSource,
+            leftCharCode,
+            rightCharCode;
+
+        leftSource = toSourceNodeWhenNeeded(left).toString();
+        if (leftSource.length === 0) {
+            return [right];
+        }
+
+        rightSource = toSourceNodeWhenNeeded(right).toString();
+        if (rightSource.length === 0) {
+            return [left];
+        }
+
+        leftCharCode = leftSource.charCodeAt(leftSource.length - 1);
+        rightCharCode = rightSource.charCodeAt(0);
+
+        if ((leftCharCode === 0x2B  /* + */ || leftCharCode === 0x2D  /* - */) && leftCharCode === rightCharCode ||
+            esutils.code.isIdentifierPartES5(leftCharCode) && esutils.code.isIdentifierPartES5(rightCharCode) ||
+            leftCharCode === 0x2F  /* / */ && rightCharCode === 0x69  /* i */) { // infix word operators all start with `i`
+            return [left, noEmptySpace(), right];
+        } else if (esutils.code.isWhiteSpace(leftCharCode) || esutils.code.isLineTerminator(leftCharCode) ||
+                esutils.code.isWhiteSpace(rightCharCode) || esutils.code.isLineTerminator(rightCharCode)) {
+            return [left, right];
+        }
+        return [left, space, right];
+    }
+
+    function addIndent(stmt) {
+        return [base, stmt];
+    }
+
+    function withIndent(fn) {
+        var previousBase;
+        previousBase = base;
+        base += indent;
+        fn(base);
+        base = previousBase;
+    }
+
+    function calculateSpaces(str) {
+        var i;
+        for (i = str.length - 1; i >= 0; --i) {
+            if (esutils.code.isLineTerminator(str.charCodeAt(i))) {
+                break;
+            }
+        }
+        return (str.length - 1) - i;
+    }
+
+    function adjustMultilineComment(value, specialBase) {
+        var array, i, len, line, j, spaces, previousBase, sn;
+
+        array = value.split(/\r\n|[\r\n]/);
+        spaces = Number.MAX_VALUE;
+
+        // first line doesn't have indentation
+        for (i = 1, len = array.length; i < len; ++i) {
+            line = array[i];
+            j = 0;
+            while (j < line.length && esutils.code.isWhiteSpace(line.charCodeAt(j))) {
+                ++j;
+            }
+            if (spaces > j) {
+                spaces = j;
+            }
+        }
+
+        if (typeof specialBase !== 'undefined') {
+            // pattern like
+            // {
+            //   var t = 20;  /*
+            //                 * this is comment
+            //                 */
+            // }
+            previousBase = base;
+            if (array[1][spaces] === '*') {
+                specialBase += ' ';
+            }
+            base = specialBase;
+        } else {
+            if (spaces & 1) {
+                // /*
+                //  *
+                //  */
+                // If spaces are odd number, above pattern is considered.
+                // We waste 1 space.
+                --spaces;
+            }
+            previousBase = base;
+        }
+
+        for (i = 1, len = array.length; i < len; ++i) {
+            sn = toSourceNodeWhenNeeded(addIndent(array[i].slice(spaces)));
+            array[i] = sourceMap ? sn.join('') : sn;
+        }
+
+        base = previousBase;
+
+        return array.join('\n');
+    }
+
+    function generateComment(comment, specialBase) {
+        if (comment.type === 'Line') {
+            if (endsWithLineTerminator(comment.value)) {
+                return '//' + comment.value;
+            } else {
+                // Always use LineTerminator
+                var result = '//' + comment.value;
+                if (!preserveBlankLines) {
+                    result += '\n';
+                }
+                return result;
+            }
+        }
+        if (extra.format.indent.adjustMultilineComment && /[\n\r]/.test(comment.value)) {
+            return adjustMultilineComment('/*' + comment.value + '*/', specialBase);
+        }
+        return '/*' + comment.value + '*/';
+    }
+
+    function addComments(stmt, result) {
+        var i, len, comment, save, tailingToStatement, specialBase, fragment,
+            extRange, range, prevRange, prefix, infix, suffix, count;
+
+        if (stmt.leadingComments && stmt.leadingComments.length > 0) {
+            save = result;
+
+            if (preserveBlankLines) {
+                comment = stmt.leadingComments[0];
+                result = [];
+
+                extRange = comment.extendedRange;
+                range = comment.range;
+
+                prefix = sourceCode.substring(extRange[0], range[0]);
+                count = (prefix.match(/\n/g) || []).length;
+                if (count > 0) {
+                    result.push(stringRepeat('\n', count));
+                    result.push(addIndent(generateComment(comment)));
+                } else {
+                    result.push(prefix);
+                    result.push(generateComment(comment));
+                }
+
+                prevRange = range;
+
+                for (i = 1, len = stmt.leadingComments.length; i < len; i++) {
+                    comment = stmt.leadingComments[i];
+                    range = comment.range;
+
+                    infix = sourceCode.substring(prevRange[1], range[0]);
+                    count = (infix.match(/\n/g) || []).length;
+                    result.push(stringRepeat('\n', count));
+                    result.push(addIndent(generateComment(comment)));
+
+                    prevRange = range;
+                }
+
+                suffix = sourceCode.substring(range[1], extRange[1]);
+                count = (suffix.match(/\n/g) || []).length;
+                result.push(stringRepeat('\n', count));
+            } else {
+                comment = stmt.leadingComments[0];
+                result = [];
+                if (safeConcatenation && stmt.type === Syntax.Program && stmt.body.length === 0) {
+                    result.push('\n');
+                }
+                result.push(generateComment(comment));
+                if (!endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
+                    result.push('\n');
+                }
+
+                for (i = 1, len = stmt.leadingComments.length; i < len; ++i) {
+                    comment = stmt.leadingComments[i];
+                    fragment = [generateComment(comment)];
+                    if (!endsWithLineTerminator(toSourceNodeWhenNeeded(fragment).toString())) {
+                        fragment.push('\n');
+                    }
+                    result.push(addIndent(fragment));
+                }
+            }
+
+            result.push(addIndent(save));
+        }
+
+        if (stmt.trailingComments) {
+
+            if (preserveBlankLines) {
+                comment = stmt.trailingComments[0];
+                extRange = comment.extendedRange;
+                range = comment.range;
+
+                prefix = sourceCode.substring(extRange[0], range[0]);
+                count = (prefix.match(/\n/g) || []).length;
+
+                if (count > 0) {
+                    result.push(stringRepeat('\n', count));
+                    result.push(addIndent(generateComment(comment)));
+                } else {
+                    result.push(prefix);
+                    result.push(generateComment(comment));
+                }
+            } else {
+                tailingToStatement = !endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString());
+                specialBase = stringRepeat(' ', calculateSpaces(toSourceNodeWhenNeeded([base, result, indent]).toString()));
+                for (i = 0, len = stmt.trailingComments.length; i < len; ++i) {
+                    comment = stmt.trailingComments[i];
+                    if (tailingToStatement) {
+                        // We assume target like following script
+                        //
+                        // var t = 20;  /**
+                        //               * This is comment of t
+                        //               */
+                        if (i === 0) {
+                            // first case
+                            result = [result, indent];
+                        } else {
+                            result = [result, specialBase];
+                        }
+                        result.push(generateComment(comment, specialBase));
+                    } else {
+                        result = [result, addIndent(generateComment(comment))];
+                    }
+                    if (i !== len - 1 && !endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
+                        result = [result, '\n'];
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    function generateBlankLines(start, end, result) {
+        var j, newlineCount = 0;
+
+        for (j = start; j < end; j++) {
+            if (sourceCode[j] === '\n') {
+                newlineCount++;
+            }
+        }
+
+        for (j = 1; j < newlineCount; j++) {
+            result.push(newline);
+        }
+    }
+
+    function parenthesize(text, current, should) {
+        if (current < should) {
+            return ['(', text, ')'];
+        }
+        return text;
+    }
+
+    function generateVerbatimString(string) {
+        var i, iz, result;
+        result = string.split(/\r\n|\n/);
+        for (i = 1, iz = result.length; i < iz; i++) {
+            result[i] = newline + base + result[i];
+        }
+        return result;
+    }
+
+    function generateVerbatim(expr, precedence) {
+        var verbatim, result, prec;
+        verbatim = expr[extra.verbatim];
+
+        if (typeof verbatim === 'string') {
+            result = parenthesize(generateVerbatimString(verbatim), Precedence.Sequence, precedence);
+        } else {
+            // verbatim is object
+            result = generateVerbatimString(verbatim.content);
+            prec = (verbatim.precedence != null) ? verbatim.precedence : Precedence.Sequence;
+            result = parenthesize(result, prec, precedence);
+        }
+
+        return toSourceNodeWhenNeeded(result, expr);
+    }
+
+    function CodeGenerator() {
+    }
+
+    // Helpers.
+
+    CodeGenerator.prototype.maybeBlock = function(stmt, flags) {
+        var result, noLeadingComment, that = this;
+
+        noLeadingComment = !extra.comment || !stmt.leadingComments;
+
+        if (stmt.type === Syntax.BlockStatement && noLeadingComment) {
+            return [space, this.generateStatement(stmt, flags)];
+        }
+
+        if (stmt.type === Syntax.EmptyStatement && noLeadingComment) {
+            return ';';
+        }
+
+        withIndent(function () {
+            result = [
+                newline,
+                addIndent(that.generateStatement(stmt, flags))
+            ];
+        });
+
+        return result;
+    };
+
+    CodeGenerator.prototype.maybeBlockSuffix = function (stmt, result) {
+        var ends = endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString());
+        if (stmt.type === Syntax.BlockStatement && (!extra.comment || !stmt.leadingComments) && !ends) {
+            return [result, space];
+        }
+        if (ends) {
+            return [result, base];
+        }
+        return [result, newline, base];
+    };
+
+    function generateIdentifier(node) {
+        return toSourceNodeWhenNeeded(node.name, node);
+    }
+
+    function generateAsyncPrefix(node, spaceRequired) {
+        return node.async ? 'async' + (spaceRequired ? noEmptySpace() : space) : '';
+    }
+
+    function generateStarSuffix(node) {
+        var isGenerator = node.generator && !extra.moz.starlessGenerator;
+        return isGenerator ? '*' + space : '';
+    }
+
+    function generateMethodPrefix(prop) {
+        var func = prop.value;
+        if (func.async) {
+            return generateAsyncPrefix(func, !prop.computed);
+        } else {
+            // avoid space before method name
+            return generateStarSuffix(func) ? '*' : '';
+        }
+    }
+
+    CodeGenerator.prototype.generatePattern = function (node, precedence, flags) {
+        if (node.type === Syntax.Identifier) {
+            return generateIdentifier(node);
+        }
+        return this.generateExpression(node, precedence, flags);
+    };
+
+    CodeGenerator.prototype.generateFunctionParams = function (node) {
+        var i, iz, result, hasDefault;
+
+        hasDefault = false;
+
+        if (node.type === Syntax.ArrowFunctionExpression &&
+                !node.rest && (!node.defaults || node.defaults.length === 0) &&
+                node.params.length === 1 && node.params[0].type === Syntax.Identifier) {
+            // arg => { } case
+            result = [generateAsyncPrefix(node, true), generateIdentifier(node.params[0])];
+        } else {
+            result = node.type === Syntax.ArrowFunctionExpression ? [generateAsyncPrefix(node, false)] : [];
+            result.push('(');
+            if (node.defaults) {
+                hasDefault = true;
+            }
+            for (i = 0, iz = node.params.length; i < iz; ++i) {
+                if (hasDefault && node.defaults[i]) {
+                    // Handle default values.
+                    result.push(this.generateAssignment(node.params[i], node.defaults[i], '=', Precedence.Assignment, E_TTT));
+                } else {
+                    result.push(this.generatePattern(node.params[i], Precedence.Assignment, E_TTT));
+                }
+                if (i + 1 < iz) {
+                    result.push(',' + space);
+                }
+            }
+
+            if (node.rest) {
+                if (node.params.length) {
+                    result.push(',' + space);
+                }
+                result.push('...');
+                result.push(generateIdentifier(node.rest));
+            }
+
+            result.push(')');
+        }
+
+        return result;
+    };
+
+    CodeGenerator.prototype.generateFunctionBody = function (node) {
+        var result, expr;
+
+        result = this.generateFunctionParams(node);
+
+        if (node.type === Syntax.ArrowFunctionExpression) {
+            result.push(space);
+            result.push('=>');
+        }
+
+        if (node.expression) {
+            result.push(space);
+            expr = this.generateExpression(node.body, Precedence.Assignment, E_TTT);
+            if (expr.toString().charAt(0) === '{') {
+                expr = ['(', expr, ')'];
+            }
+            result.push(expr);
+        } else {
+            result.push(this.maybeBlock(node.body, S_TTFF));
+        }
+
+        return result;
+    };
+
+    CodeGenerator.prototype.generateIterationForStatement = function (operator, stmt, flags) {
+        var result = ['for' + space + '('], that = this;
+        withIndent(function () {
+            if (stmt.left.type === Syntax.VariableDeclaration) {
+                withIndent(function () {
+                    result.push(stmt.left.kind + noEmptySpace());
+                    result.push(that.generateStatement(stmt.left.declarations[0], S_FFFF));
+                });
+            } else {
+                result.push(that.generateExpression(stmt.left, Precedence.Call, E_TTT));
+            }
+
+            result = join(result, operator);
+            result = [join(
+                result,
+                that.generateExpression(stmt.right, Precedence.Sequence, E_TTT)
+            ), ')'];
+        });
+        result.push(this.maybeBlock(stmt.body, flags));
+        return result;
+    };
+
+    CodeGenerator.prototype.generatePropertyKey = function (expr, computed, value) {
+        var result = [];
+
+        if (computed) {
+            result.push('[');
+        }
+
+        if (value.type === 'AssignmentPattern') {
+            result.push(this.AssignmentPattern(value, Precedence.Sequence, E_TTT));
+        } else {
+            result.push(this.generateExpression(expr, Precedence.Sequence, E_TTT));
+        }
+
+        if (computed) {
+            result.push(']');
+        }
+
+        return result;
+    };
+
+    CodeGenerator.prototype.generateAssignment = function (left, right, operator, precedence, flags) {
+        if (Precedence.Assignment < precedence) {
+            flags |= F_ALLOW_IN;
+        }
+
+        return parenthesize(
+            [
+                this.generateExpression(left, Precedence.Call, flags),
+                space + operator + space,
+                this.generateExpression(right, Precedence.Assignment, flags)
+            ],
+            Precedence.Assignment,
+            precedence
+        );
+    };
+
+    CodeGenerator.prototype.semicolon = function (flags) {
+        if (!semicolons && flags & F_SEMICOLON_OPT) {
+            return '';
+        }
+        return ';';
+    };
+
+    // Statements.
+
+    CodeGenerator.Statement = {
+
+        BlockStatement: function (stmt, flags) {
+            var range, content, result = ['{', newline], that = this;
+
+            withIndent(function () {
+                // handle functions without any code
+                if (stmt.body.length === 0 && preserveBlankLines) {
+                    range = stmt.range;
+                    if (range[1] - range[0] > 2) {
+                        content = sourceCode.substring(range[0] + 1, range[1] - 1);
+                        if (content[0] === '\n') {
+                            result = ['{'];
+                        }
+                        result.push(content);
+                    }
+                }
+
+                var i, iz, fragment, bodyFlags;
+                bodyFlags = S_TFFF;
+                if (flags & F_FUNC_BODY) {
+                    bodyFlags |= F_DIRECTIVE_CTX;
+                }
+
+                for (i = 0, iz = stmt.body.length; i < iz; ++i) {
+                    if (preserveBlankLines) {
+                        // handle spaces before the first line
+                        if (i === 0) {
+                            if (stmt.body[0].leadingComments) {
+                                range = stmt.body[0].leadingComments[0].extendedRange;
+                                content = sourceCode.substring(range[0], range[1]);
+                                if (content[0] === '\n') {
+                                    result = ['{'];
+                                }
+                            }
+                            if (!stmt.body[0].leadingComments) {
+                                generateBlankLines(stmt.range[0], stmt.body[0].range[0], result);
+                            }
+                        }
+
+                        // handle spaces between lines
+                        if (i > 0) {
+                            if (!stmt.body[i - 1].trailingComments  && !stmt.body[i].leadingComments) {
+                                generateBlankLines(stmt.body[i - 1].range[1], stmt.body[i].range[0], result);
+                            }
+                        }
+                    }
+
+                    if (i === iz - 1) {
+                        bodyFlags |= F_SEMICOLON_OPT;
+                    }
+
+                    if (stmt.body[i].leadingComments && preserveBlankLines) {
+                        fragment = that.generateStatement(stmt.body[i], bodyFlags);
+                    } else {
+                        fragment = addIndent(that.generateStatement(stmt.body[i], bodyFlags));
+                    }
+
+                    result.push(fragment);
+                    if (!endsWithLineTerminator(toSourceNodeWhenNeeded(fragment).toString())) {
+                        if (preserveBlankLines && i < iz - 1) {
+                            // don't add a new line if there are leading coments
+                            // in the next statement
+                            if (!stmt.body[i + 1].leadingComments) {
+                                result.push(newline);
+                            }
+                        } else {
+                            result.push(newline);
+                        }
+                    }
+
+                    if (preserveBlankLines) {
+                        // handle spaces after the last line
+                        if (i === iz - 1) {
+                            if (!stmt.body[i].trailingComments) {
+                                generateBlankLines(stmt.body[i].range[1], stmt.range[1], result);
+                            }
+                        }
+                    }
+                }
+            });
+
+            result.push(addIndent('}'));
+            return result;
+        },
+
+        BreakStatement: function (stmt, flags) {
+            if (stmt.label) {
+                return 'break ' + stmt.label.name + this.semicolon(flags);
+            }
+            return 'break' + this.semicolon(flags);
+        },
+
+        ContinueStatement: function (stmt, flags) {
+            if (stmt.label) {
+                return 'continue ' + stmt.label.name + this.semicolon(flags);
+            }
+            return 'continue' + this.semicolon(flags);
+        },
+
+        ClassBody: function (stmt, flags) {
+            var result = [ '{', newline], that = this;
+
+            withIndent(function (indent) {
+                var i, iz;
+
+                for (i = 0, iz = stmt.body.length; i < iz; ++i) {
+                    result.push(indent);
+                    result.push(that.generateExpression(stmt.body[i], Precedence.Sequence, E_TTT));
+                    if (i + 1 < iz) {
+                        result.push(newline);
+                    }
+                }
+            });
+
+            if (!endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
+                result.push(newline);
+            }
+            result.push(base);
+            result.push('}');
+            return result;
+        },
+
+        ClassDeclaration: function (stmt, flags) {
+            var result, fragment;
+            result  = ['class'];
+            if (stmt.id) {
+                result = join(result, this.generateExpression(stmt.id, Precedence.Sequence, E_TTT));
+            }
+            if (stmt.superClass) {
+                fragment = join('extends', this.generateExpression(stmt.superClass, Precedence.Assignment, E_TTT));
+                result = join(result, fragment);
+            }
+            result.push(space);
+            result.push(this.generateStatement(stmt.body, S_TFFT));
+            return result;
+        },
+
+        DirectiveStatement: function (stmt, flags) {
+            if (extra.raw && stmt.raw) {
+                return stmt.raw + this.semicolon(flags);
+            }
+            return escapeDirective(stmt.directive) + this.semicolon(flags);
+        },
+
+        DoWhileStatement: function (stmt, flags) {
+            // Because `do 42 while (cond)` is Syntax Error. We need semicolon.
+            var result = join('do', this.maybeBlock(stmt.body, S_TFFF));
+            result = this.maybeBlockSuffix(stmt.body, result);
+            return join(result, [
+                'while' + space + '(',
+                this.generateExpression(stmt.test, Precedence.Sequence, E_TTT),
+                ')' + this.semicolon(flags)
+            ]);
+        },
+
+        CatchClause: function (stmt, flags) {
+            var result, that = this;
+            withIndent(function () {
+                var guard;
+
+                result = [
+                    'catch' + space + '(',
+                    that.generateExpression(stmt.param, Precedence.Sequence, E_TTT),
+                    ')'
+                ];
+
+                if (stmt.guard) {
+                    guard = that.generateExpression(stmt.guard, Precedence.Sequence, E_TTT);
+                    result.splice(2, 0, ' if ', guard);
+                }
+            });
+            result.push(this.maybeBlock(stmt.body, S_TFFF));
+            return result;
+        },
+
+        DebuggerStatement: function (stmt, flags) {
+            return 'debugger' + this.semicolon(flags);
+        },
+
+        EmptyStatement: function (stmt, flags) {
+            return ';';
+        },
+
+        ExportDefaultDeclaration: function (stmt, flags) {
+            var result = [ 'export' ], bodyFlags;
+
+            bodyFlags = (flags & F_SEMICOLON_OPT) ? S_TFFT : S_TFFF;
+
+            // export default HoistableDeclaration[Default]
+            // export default AssignmentExpression[In] ;
+            result = join(result, 'default');
+            if (isStatement(stmt.declaration)) {
+                result = join(result, this.generateStatement(stmt.declaration, bodyFlags));
+            } else {
+                result = join(result, this.generateExpression(stmt.declaration, Precedence.Assignment, E_TTT) + this.semicolon(flags));
+            }
+            return result;
+        },
+
+        ExportNamedDeclaration: function (stmt, flags) {
+            var result = [ 'export' ], bodyFlags, that = this;
+
+            bodyFlags = (flags & F_SEMICOLON_OPT) ? S_TFFT : S_TFFF;
+
+            // export VariableStatement
+            // export Declaration[Default]
+            if (stmt.declaration) {
+                return join(result, this.generateStatement(stmt.declaration, bodyFlags));
+            }
+
+            // export ExportClause[NoReference] FromClause ;
+            // export ExportClause ;
+            if (stmt.specifiers) {
+                if (stmt.specifiers.length === 0) {
+                    result = join(result, '{' + space + '}');
+                } else if (stmt.specifiers[0].type === Syntax.ExportBatchSpecifier) {
+                    result = join(result, this.generateExpression(stmt.specifiers[0], Precedence.Sequence, E_TTT));
+                } else {
+                    result = join(result, '{');
+                    withIndent(function (indent) {
+                        var i, iz;
+                        result.push(newline);
+                        for (i = 0, iz = stmt.specifiers.length; i < iz; ++i) {
+                            result.push(indent);
+                            result.push(that.generateExpression(stmt.specifiers[i], Precedence.Sequence, E_TTT));
+                            if (i + 1 < iz) {
+                                result.push(',' + newline);
+                            }
+                        }
+                    });
+                    if (!endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
+                        result.push(newline);
+                    }
+                    result.push(base + '}');
+                }
+
+                if (stmt.source) {
+                    result = join(result, [
+                        'from' + space,
+                        // ModuleSpecifier
+                        this.generateExpression(stmt.source, Precedence.Sequence, E_TTT),
+                        this.semicolon(flags)
+                    ]);
+                } else {
+                    result.push(this.semicolon(flags));
+                }
+            }
+            return result;
+        },
+
+        ExportAllDeclaration: function (stmt, flags) {
+            // export * FromClause ;
+            return [
+                'export' + space,
+                '*' + space,
+                'from' + space,
+                // ModuleSpecifier
+                this.generateExpression(stmt.source, Precedence.Sequence, E_TTT),
+                this.semicolon(flags)
+            ];
+        },
+
+        ExpressionStatement: function (stmt, flags) {
+            var result, fragment;
+
+            function isClassPrefixed(fragment) {
+                var code;
+                if (fragment.slice(0, 5) !== 'class') {
+                    return false;
+                }
+                code = fragment.charCodeAt(5);
+                return code === 0x7B  /* '{' */ || esutils.code.isWhiteSpace(code) || esutils.code.isLineTerminator(code);
+            }
+
+            function isFunctionPrefixed(fragment) {
+                var code;
+                if (fragment.slice(0, 8) !== 'function') {
+                    return false;
+                }
+                code = fragment.charCodeAt(8);
+                return code === 0x28 /* '(' */ || esutils.code.isWhiteSpace(code) || code === 0x2A  /* '*' */ || esutils.code.isLineTerminator(code);
+            }
+
+            function isAsyncPrefixed(fragment) {
+                var code, i, iz;
+                if (fragment.slice(0, 5) !== 'async') {
+                    return false;
+                }
+                if (!esutils.code.isWhiteSpace(fragment.charCodeAt(5))) {
+                    return false;
+                }
+                for (i = 6, iz = fragment.length; i < iz; ++i) {
+                    if (!esutils.code.isWhiteSpace(fragment.charCodeAt(i))) {
+                        break;
+                    }
+                }
+                if (i === iz) {
+                    return false;
+                }
+                if (fragment.slice(i, i + 8) !== 'function') {
+                    return false;
+                }
+                code = fragment.charCodeAt(i + 8);
+                return code === 0x28 /* '(' */ || esutils.code.isWhiteSpace(code) || code === 0x2A  /* '*' */ || esutils.code.isLineTerminator(code);
+            }
+
+            result = [this.generateExpression(stmt.expression, Precedence.Sequence, E_TTT)];
+            // 12.4 '{', 'function', 'class' is not allowed in this position.
+            // wrap expression with parentheses
+            fragment = toSourceNodeWhenNeeded(result).toString();
+            if (fragment.charCodeAt(0) === 0x7B  /* '{' */ ||  // ObjectExpression
+                    isClassPrefixed(fragment) ||
+                    isFunctionPrefixed(fragment) ||
+                    isAsyncPrefixed(fragment) ||
+                    (directive && (flags & F_DIRECTIVE_CTX) && stmt.expression.type === Syntax.Literal && typeof stmt.expression.value === 'string')) {
+                result = ['(', result, ')' + this.semicolon(flags)];
+            } else {
+                result.push(this.semicolon(flags));
+            }
+            return result;
+        },
+
+        ImportDeclaration: function (stmt, flags) {
+            // ES6: 15.2.1 valid import declarations:
+            //     - import ImportClause FromClause ;
+            //     - import ModuleSpecifier ;
+            var result, cursor, that = this;
+
+            // If no ImportClause is present,
+            // this should be `import ModuleSpecifier` so skip `from`
+            // ModuleSpecifier is StringLiteral.
+            if (stmt.specifiers.length === 0) {
+                // import ModuleSpecifier ;
+                return [
+                    'import',
+                    space,
+                    // ModuleSpecifier
+                    this.generateExpression(stmt.source, Precedence.Sequence, E_TTT),
+                    this.semicolon(flags)
+                ];
+            }
+
+            // import ImportClause FromClause ;
+            result = [
+                'import'
+            ];
+            cursor = 0;
+
+            // ImportedBinding
+            if (stmt.specifiers[cursor].type === Syntax.ImportDefaultSpecifier) {
+                result = join(result, [
+                        this.generateExpression(stmt.specifiers[cursor], Precedence.Sequence, E_TTT)
+                ]);
+                ++cursor;
+            }
+
+            if (stmt.specifiers[cursor]) {
+                if (cursor !== 0) {
+                    result.push(',');
+                }
+
+                if (stmt.specifiers[cursor].type === Syntax.ImportNamespaceSpecifier) {
+                    // NameSpaceImport
+                    result = join(result, [
+                            space,
+                            this.generateExpression(stmt.specifiers[cursor], Precedence.Sequence, E_TTT)
+                    ]);
+                } else {
+                    // NamedImports
+                    result.push(space + '{');
+
+                    if ((stmt.specifiers.length - cursor) === 1) {
+                        // import { ... } from "...";
+                        result.push(space);
+                        result.push(this.generateExpression(stmt.specifiers[cursor], Precedence.Sequence, E_TTT));
+                        result.push(space + '}' + space);
+                    } else {
+                        // import {
+                        //    ...,
+                        //    ...,
+                        // } from "...";
+                        withIndent(function (indent) {
+                            var i, iz;
+                            result.push(newline);
+                            for (i = cursor, iz = stmt.specifiers.length; i < iz; ++i) {
+                                result.push(indent);
+                                result.push(that.generateExpression(stmt.specifiers[i], Precedence.Sequence, E_TTT));
+                                if (i + 1 < iz) {
+                                    result.push(',' + newline);
+                                }
+                            }
+                        });
+                        if (!endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
+                            result.push(newline);
+                        }
+                        result.push(base + '}' + space);
+                    }
+                }
+            }
+
+            result = join(result, [
+                'from' + space,
+                // ModuleSpecifier
+                this.generateExpression(stmt.source, Precedence.Sequence, E_TTT),
+                this.semicolon(flags)
+            ]);
+            return result;
+        },
+
+        VariableDeclarator: function (stmt, flags) {
+            var itemFlags = (flags & F_ALLOW_IN) ? E_TTT : E_FTT;
+            if (stmt.init) {
+                return [
+                    this.generateExpression(stmt.id, Precedence.Assignment, itemFlags),
+                    space,
+                    '=',
+                    space,
+                    this.generateExpression(stmt.init, Precedence.Assignment, itemFlags)
+                ];
+            }
+            return this.generatePattern(stmt.id, Precedence.Assignment, itemFlags);
+        },
+
+        VariableDeclaration: function (stmt, flags) {
+            // VariableDeclarator is typed as Statement,
+            // but joined with comma (not LineTerminator).
+            // So if comment is attached to target node, we should specialize.
+            var result, i, iz, node, bodyFlags, that = this;
+
+            result = [ stmt.kind ];
+
+            bodyFlags = (flags & F_ALLOW_IN) ? S_TFFF : S_FFFF;
+
+            function block() {
+                node = stmt.declarations[0];
+                if (extra.comment && node.leadingComments) {
+                    result.push('\n');
+                    result.push(addIndent(that.generateStatement(node, bodyFlags)));
+                } else {
+                    result.push(noEmptySpace());
+                    result.push(that.generateStatement(node, bodyFlags));
+                }
+
+                for (i = 1, iz = stmt.declarations.length; i < iz; ++i) {
+                    node = stmt.declarations[i];
+                    if (extra.comment && node.leadingComments) {
+                        result.push(',' + newline);
+                        result.push(addIndent(that.generateStatement(node, bodyFlags)));
+                    } else {
+                        result.push(',' + space);
+                        result.push(that.generateStatement(node, bodyFlags));
+                    }
+                }
+            }
+
+            if (stmt.declarations.length > 1) {
+                withIndent(block);
+            } else {
+                block();
+            }
+
+            result.push(this.semicolon(flags));
+
+            return result;
+        },
+
+        ThrowStatement: function (stmt, flags) {
+            return [join(
+                'throw',
+                this.generateExpression(stmt.argument, Precedence.Sequence, E_TTT)
+            ), this.semicolon(flags)];
+        },
+
+        TryStatement: function (stmt, flags) {
+            var result, i, iz, guardedHandlers;
+
+            result = ['try', this.maybeBlock(stmt.block, S_TFFF)];
+            result = this.maybeBlockSuffix(stmt.block, result);
+
+            if (stmt.handlers) {
+                // old interface
+                for (i = 0, iz = stmt.handlers.length; i < iz; ++i) {
+                    result = join(result, this.generateStatement(stmt.handlers[i], S_TFFF));
+                    if (stmt.finalizer || i + 1 !== iz) {
+                        result = this.maybeBlockSuffix(stmt.handlers[i].body, result);
+                    }
+                }
+            } else {
+                guardedHandlers = stmt.guardedHandlers || [];
+
+                for (i = 0, iz = guardedHandlers.length; i < iz; ++i) {
+                    result = join(result, this.generateStatement(guardedHandlers[i], S_TFFF));
+                    if (stmt.finalizer || i + 1 !== iz) {
+                        result = this.maybeBlockSuffix(guardedHandlers[i].body, result);
+                    }
+                }
+
+                // new interface
+                if (stmt.handler) {
+                    if (isArray(stmt.handler)) {
+                        for (i = 0, iz = stmt.handler.length; i < iz; ++i) {
+                            result = join(result, this.generateStatement(stmt.handler[i], S_TFFF));
+                            if (stmt.finalizer || i + 1 !== iz) {
+                                result = this.maybeBlockSuffix(stmt.handler[i].body, result);
+                            }
+                        }
+                    } else {
+                        result = join(result, this.generateStatement(stmt.handler, S_TFFF));
+                        if (stmt.finalizer) {
+                            result = this.maybeBlockSuffix(stmt.handler.body, result);
+                        }
+                    }
+                }
+            }
+            if (stmt.finalizer) {
+                result = join(result, ['finally', this.maybeBlock(stmt.finalizer, S_TFFF)]);
+            }
+            return result;
+        },
+
+        SwitchStatement: function (stmt, flags) {
+            var result, fragment, i, iz, bodyFlags, that = this;
+            withIndent(function () {
+                result = [
+                    'switch' + space + '(',
+                    that.generateExpression(stmt.discriminant, Precedence.Sequence, E_TTT),
+                    ')' + space + '{' + newline
+                ];
+            });
+            if (stmt.cases) {
+                bodyFlags = S_TFFF;
+                for (i = 0, iz = stmt.cases.length; i < iz; ++i) {
+                    if (i === iz - 1) {
+                        bodyFlags |= F_SEMICOLON_OPT;
+                    }
+                    fragment = addIndent(this.generateStatement(stmt.cases[i], bodyFlags));
+                    result.push(fragment);
+                    if (!endsWithLineTerminator(toSourceNodeWhenNeeded(fragment).toString())) {
+                        result.push(newline);
+                    }
+                }
+            }
+            result.push(addIndent('}'));
+            return result;
+        },
+
+        SwitchCase: function (stmt, flags) {
+            var result, fragment, i, iz, bodyFlags, that = this;
+            withIndent(function () {
+                if (stmt.test) {
+                    result = [
+                        join('case', that.generateExpression(stmt.test, Precedence.Sequence, E_TTT)),
+                        ':'
+                    ];
+                } else {
+                    result = ['default:'];
+                }
+
+                i = 0;
+                iz = stmt.consequent.length;
+                if (iz && stmt.consequent[0].type === Syntax.BlockStatement) {
+                    fragment = that.maybeBlock(stmt.consequent[0], S_TFFF);
+                    result.push(fragment);
+                    i = 1;
+                }
+
+                if (i !== iz && !endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
+                    result.push(newline);
+                }
+
+                bodyFlags = S_TFFF;
+                for (; i < iz; ++i) {
+                    if (i === iz - 1 && flags & F_SEMICOLON_OPT) {
+                        bodyFlags |= F_SEMICOLON_OPT;
+                    }
+                    fragment = addIndent(that.generateStatement(stmt.consequent[i], bodyFlags));
+                    result.push(fragment);
+                    if (i + 1 !== iz && !endsWithLineTerminator(toSourceNodeWhenNeeded(fragment).toString())) {
+                        result.push(newline);
+                    }
+                }
+            });
+            return result;
+        },
+
+        IfStatement: function (stmt, flags) {
+            var result, bodyFlags, semicolonOptional, that = this;
+            withIndent(function () {
+                result = [
+                    'if' + space + '(',
+                    that.generateExpression(stmt.test, Precedence.Sequence, E_TTT),
+                    ')'
+                ];
+            });
+            semicolonOptional = flags & F_SEMICOLON_OPT;
+            bodyFlags = S_TFFF;
+            if (semicolonOptional) {
+                bodyFlags |= F_SEMICOLON_OPT;
+            }
+            if (stmt.alternate) {
+                result.push(this.maybeBlock(stmt.consequent, S_TFFF));
+                result = this.maybeBlockSuffix(stmt.consequent, result);
+                if (stmt.alternate.type === Syntax.IfStatement) {
+                    result = join(result, ['else ', this.generateStatement(stmt.alternate, bodyFlags)]);
+                } else {
+                    result = join(result, join('else', this.maybeBlock(stmt.alternate, bodyFlags)));
+                }
+            } else {
+                result.push(this.maybeBlock(stmt.consequent, bodyFlags));
+            }
+            return result;
+        },
+
+        ForStatement: function (stmt, flags) {
+            var result, that = this;
+            withIndent(function () {
+                result = ['for' + space + '('];
+                if (stmt.init) {
+                    if (stmt.init.type === Syntax.VariableDeclaration) {
+                        result.push(that.generateStatement(stmt.init, S_FFFF));
+                    } else {
+                        // F_ALLOW_IN becomes false.
+                        result.push(that.generateExpression(stmt.init, Precedence.Sequence, E_FTT));
+                        result.push(';');
+                    }
+                } else {
+                    result.push(';');
+                }
+
+                if (stmt.test) {
+                    result.push(space);
+                    result.push(that.generateExpression(stmt.test, Precedence.Sequence, E_TTT));
+                    result.push(';');
+                } else {
+                    result.push(';');
+                }
+
+                if (stmt.update) {
+                    result.push(space);
+                    result.push(that.generateExpression(stmt.update, Precedence.Sequence, E_TTT));
+                    result.push(')');
+                } else {
+                    result.push(')');
+                }
+            });
+
+            result.push(this.maybeBlock(stmt.body, flags & F_SEMICOLON_OPT ? S_TFFT : S_TFFF));
+            return result;
+        },
+
+        ForInStatement: function (stmt, flags) {
+            return this.generateIterationForStatement('in', stmt, flags & F_SEMICOLON_OPT ? S_TFFT : S_TFFF);
+        },
+
+        ForOfStatement: function (stmt, flags) {
+            return this.generateIterationForStatement('of', stmt, flags & F_SEMICOLON_OPT ? S_TFFT : S_TFFF);
+        },
+
+        LabeledStatement: function (stmt, flags) {
+            return [stmt.label.name + ':', this.maybeBlock(stmt.body, flags & F_SEMICOLON_OPT ? S_TFFT : S_TFFF)];
+        },
+
+        Program: function (stmt, flags) {
+            var result, fragment, i, iz, bodyFlags;
+            iz = stmt.body.length;
+            result = [safeConcatenation && iz > 0 ? '\n' : ''];
+            bodyFlags = S_TFTF;
+            for (i = 0; i < iz; ++i) {
+                if (!safeConcatenation && i === iz - 1) {
+                    bodyFlags |= F_SEMICOLON_OPT;
+                }
+
+                if (preserveBlankLines) {
+                    // handle spaces before the first line
+                    if (i === 0) {
+                        if (!stmt.body[0].leadingComments) {
+                            generateBlankLines(stmt.range[0], stmt.body[i].range[0], result);
+                        }
+                    }
+
+                    // handle spaces between lines
+                    if (i > 0) {
+                        if (!stmt.body[i - 1].trailingComments && !stmt.body[i].leadingComments) {
+                            generateBlankLines(stmt.body[i - 1].range[1], stmt.body[i].range[0], result);
+                        }
+                    }
+                }
+
+                fragment = addIndent(this.generateStatement(stmt.body[i], bodyFlags));
+                result.push(fragment);
+                if (i + 1 < iz && !endsWithLineTerminator(toSourceNodeWhenNeeded(fragment).toString())) {
+                    if (preserveBlankLines) {
+                        if (!stmt.body[i + 1].leadingComments) {
+                            result.push(newline);
+                        }
+                    } else {
+                        result.push(newline);
+                    }
+                }
+
+                if (preserveBlankLines) {
+                    // handle spaces after the last line
+                    if (i === iz - 1) {
+                        if (!stmt.body[i].trailingComments) {
+                            generateBlankLines(stmt.body[i].range[1], stmt.range[1], result);
+                        }
+                    }
+                }
+            }
+            return result;
+        },
+
+        FunctionDeclaration: function (stmt, flags) {
+            return [
+                generateAsyncPrefix(stmt, true),
+                'function',
+                generateStarSuffix(stmt) || noEmptySpace(),
+                stmt.id ? generateIdentifier(stmt.id) : '',
+                this.generateFunctionBody(stmt)
+            ];
+        },
+
+        ReturnStatement: function (stmt, flags) {
+            if (stmt.argument) {
+                return [join(
+                    'return',
+                    this.generateExpression(stmt.argument, Precedence.Sequence, E_TTT)
+                ), this.semicolon(flags)];
+            }
+            return ['return' + this.semicolon(flags)];
+        },
+
+        WhileStatement: function (stmt, flags) {
+            var result, that = this;
+            withIndent(function () {
+                result = [
+                    'while' + space + '(',
+                    that.generateExpression(stmt.test, Precedence.Sequence, E_TTT),
+                    ')'
+                ];
+            });
+            result.push(this.maybeBlock(stmt.body, flags & F_SEMICOLON_OPT ? S_TFFT : S_TFFF));
+            return result;
+        },
+
+        WithStatement: function (stmt, flags) {
+            var result, that = this;
+            withIndent(function () {
+                result = [
+                    'with' + space + '(',
+                    that.generateExpression(stmt.object, Precedence.Sequence, E_TTT),
+                    ')'
+                ];
+            });
+            result.push(this.maybeBlock(stmt.body, flags & F_SEMICOLON_OPT ? S_TFFT : S_TFFF));
+            return result;
+        }
+
+    };
+
+    merge(CodeGenerator.prototype, CodeGenerator.Statement);
+
+    // Expressions.
+
+    CodeGenerator.Expression = {
+
+        SequenceExpression: function (expr, precedence, flags) {
+            var result, i, iz;
+            if (Precedence.Sequence < precedence) {
+                flags |= F_ALLOW_IN;
+            }
+            result = [];
+            for (i = 0, iz = expr.expressions.length; i < iz; ++i) {
+                result.push(this.generateExpression(expr.expressions[i], Precedence.Assignment, flags));
+                if (i + 1 < iz) {
+                    result.push(',' + space);
+                }
+            }
+            return parenthesize(result, Precedence.Sequence, precedence);
+        },
+
+        AssignmentExpression: function (expr, precedence, flags) {
+            return this.generateAssignment(expr.left, expr.right, expr.operator, precedence, flags);
+        },
+
+        ArrowFunctionExpression: function (expr, precedence, flags) {
+            return parenthesize(this.generateFunctionBody(expr), Precedence.ArrowFunction, precedence);
+        },
+
+        ConditionalExpression: function (expr, precedence, flags) {
+            if (Precedence.Conditional < precedence) {
+                flags |= F_ALLOW_IN;
+            }
+            return parenthesize(
+                [
+                    this.generateExpression(expr.test, Precedence.LogicalOR, flags),
+                    space + '?' + space,
+                    this.generateExpression(expr.consequent, Precedence.Assignment, flags),
+                    space + ':' + space,
+                    this.generateExpression(expr.alternate, Precedence.Assignment, flags)
+                ],
+                Precedence.Conditional,
+                precedence
+            );
+        },
+
+        LogicalExpression: function (expr, precedence, flags) {
+            return this.BinaryExpression(expr, precedence, flags);
+        },
+
+        BinaryExpression: function (expr, precedence, flags) {
+            var result, currentPrecedence, fragment, leftSource;
+            currentPrecedence = BinaryPrecedence[expr.operator];
+
+            if (currentPrecedence < precedence) {
+                flags |= F_ALLOW_IN;
+            }
+
+            fragment = this.generateExpression(expr.left, currentPrecedence, flags);
+
+            leftSource = fragment.toString();
+
+            if (leftSource.charCodeAt(leftSource.length - 1) === 0x2F /* / */ && esutils.code.isIdentifierPartES5(expr.operator.charCodeAt(0))) {
+                result = [fragment, noEmptySpace(), expr.operator];
+            } else {
+                result = join(fragment, expr.operator);
+            }
+
+            fragment = this.generateExpression(expr.right, currentPrecedence + 1, flags);
+
+            if (expr.operator === '/' && fragment.toString().charAt(0) === '/' ||
+            expr.operator.slice(-1) === '<' && fragment.toString().slice(0, 3) === '!--') {
+                // If '/' concats with '/' or `<` concats with `!--`, it is interpreted as comment start
+                result.push(noEmptySpace());
+                result.push(fragment);
+            } else {
+                result = join(result, fragment);
+            }
+
+            if (expr.operator === 'in' && !(flags & F_ALLOW_IN)) {
+                return ['(', result, ')'];
+            }
+            return parenthesize(result, currentPrecedence, precedence);
+        },
+
+        CallExpression: function (expr, precedence, flags) {
+            var result, i, iz;
+            // F_ALLOW_UNPARATH_NEW becomes false.
+            result = [this.generateExpression(expr.callee, Precedence.Call, E_TTF)];
+            result.push('(');
+            for (i = 0, iz = expr['arguments'].length; i < iz; ++i) {
+                result.push(this.generateExpression(expr['arguments'][i], Precedence.Assignment, E_TTT));
+                if (i + 1 < iz) {
+                    result.push(',' + space);
+                }
+            }
+            result.push(')');
+
+            if (!(flags & F_ALLOW_CALL)) {
+                return ['(', result, ')'];
+            }
+            return parenthesize(result, Precedence.Call, precedence);
+        },
+
+        NewExpression: function (expr, precedence, flags) {
+            var result, length, i, iz, itemFlags;
+            length = expr['arguments'].length;
+
+            // F_ALLOW_CALL becomes false.
+            // F_ALLOW_UNPARATH_NEW may become false.
+            itemFlags = (flags & F_ALLOW_UNPARATH_NEW && !parentheses && length === 0) ? E_TFT : E_TFF;
+
+            result = join(
+                'new',
+                this.generateExpression(expr.callee, Precedence.New, itemFlags)
+            );
+
+            if (!(flags & F_ALLOW_UNPARATH_NEW) || parentheses || length > 0) {
+                result.push('(');
+                for (i = 0, iz = length; i < iz; ++i) {
+                    result.push(this.generateExpression(expr['arguments'][i], Precedence.Assignment, E_TTT));
+                    if (i + 1 < iz) {
+                        result.push(',' + space);
+                    }
+                }
+                result.push(')');
+            }
+
+            return parenthesize(result, Precedence.New, precedence);
+        },
+
+        MemberExpression: function (expr, precedence, flags) {
+            var result, fragment;
+
+            // F_ALLOW_UNPARATH_NEW becomes false.
+            result = [this.generateExpression(expr.object, Precedence.Call, (flags & F_ALLOW_CALL) ? E_TTF : E_TFF)];
+
+            if (expr.computed) {
+                result.push('[');
+                result.push(this.generateExpression(expr.property, Precedence.Sequence, flags & F_ALLOW_CALL ? E_TTT : E_TFT));
+                result.push(']');
+            } else {
+                if (expr.object.type === Syntax.Literal && typeof expr.object.value === 'number') {
+                    fragment = toSourceNodeWhenNeeded(result).toString();
+                    // When the following conditions are all true,
+                    //   1. No floating point
+                    //   2. Don't have exponents
+                    //   3. The last character is a decimal digit
+                    //   4. Not hexadecimal OR octal number literal
+                    // we should add a floating point.
+                    if (
+                            fragment.indexOf('.') < 0 &&
+                            !/[eExX]/.test(fragment) &&
+                            esutils.code.isDecimalDigit(fragment.charCodeAt(fragment.length - 1)) &&
+                            !(fragment.length >= 2 && fragment.charCodeAt(0) === 48)  // '0'
+                            ) {
+                        result.push('.');
+                    }
+                }
+                result.push('.');
+                result.push(generateIdentifier(expr.property));
+            }
+
+            return parenthesize(result, Precedence.Member, precedence);
+        },
+
+        MetaProperty: function (expr, precedence, flags) {
+            var result;
+            result = [];
+            result.push(expr.meta);
+            result.push('.');
+            result.push(expr.property);
+            return parenthesize(result, Precedence.Member, precedence);
+        },
+
+        UnaryExpression: function (expr, precedence, flags) {
+            var result, fragment, rightCharCode, leftSource, leftCharCode;
+            fragment = this.generateExpression(expr.argument, Precedence.Unary, E_TTT);
+
+            if (space === '') {
+                result = join(expr.operator, fragment);
+            } else {
+                result = [expr.operator];
+                if (expr.operator.length > 2) {
+                    // delete, void, typeof
+                    // get `typeof []`, not `typeof[]`
+                    result = join(result, fragment);
+                } else {
+                    // Prevent inserting spaces between operator and argument if it is unnecessary
+                    // like, `!cond`
+                    leftSource = toSourceNodeWhenNeeded(result).toString();
+                    leftCharCode = leftSource.charCodeAt(leftSource.length - 1);
+                    rightCharCode = fragment.toString().charCodeAt(0);
+
+                    if (((leftCharCode === 0x2B  /* + */ || leftCharCode === 0x2D  /* - */) && leftCharCode === rightCharCode) ||
+                            (esutils.code.isIdentifierPartES5(leftCharCode) && esutils.code.isIdentifierPartES5(rightCharCode))) {
+                        result.push(noEmptySpace());
+                        result.push(fragment);
+                    } else {
+                        result.push(fragment);
+                    }
+                }
+            }
+            return parenthesize(result, Precedence.Unary, precedence);
+        },
+
+        YieldExpression: function (expr, precedence, flags) {
+            var result;
+            if (expr.delegate) {
+                result = 'yield*';
+            } else {
+                result = 'yield';
+            }
+            if (expr.argument) {
+                result = join(
+                    result,
+                    this.generateExpression(expr.argument, Precedence.Yield, E_TTT)
+                );
+            }
+            return parenthesize(result, Precedence.Yield, precedence);
+        },
+
+        AwaitExpression: function (expr, precedence, flags) {
+            var result = join(
+                expr.all ? 'await*' : 'await',
+                this.generateExpression(expr.argument, Precedence.Await, E_TTT)
+            );
+            return parenthesize(result, Precedence.Await, precedence);
+        },
+
+        UpdateExpression: function (expr, precedence, flags) {
+            if (expr.prefix) {
+                return parenthesize(
+                    [
+                        expr.operator,
+                        this.generateExpression(expr.argument, Precedence.Unary, E_TTT)
+                    ],
+                    Precedence.Unary,
+                    precedence
+                );
+            }
+            return parenthesize(
+                [
+                    this.generateExpression(expr.argument, Precedence.Postfix, E_TTT),
+                    expr.operator
+                ],
+                Precedence.Postfix,
+                precedence
+            );
+        },
+
+        FunctionExpression: function (expr, precedence, flags) {
+            var result = [
+                generateAsyncPrefix(expr, true),
+                'function'
+            ];
+            if (expr.id) {
+                result.push(generateStarSuffix(expr) || noEmptySpace());
+                result.push(generateIdentifier(expr.id));
+            } else {
+                result.push(generateStarSuffix(expr) || space);
+            }
+            result.push(this.generateFunctionBody(expr));
+            return result;
+        },
+
+        ArrayPattern: function (expr, precedence, flags) {
+            return this.ArrayExpression(expr, precedence, flags, true);
+        },
+
+        ArrayExpression: function (expr, precedence, flags, isPattern) {
+            var result, multiline, that = this;
+            if (!expr.elements.length) {
+                return '[]';
+            }
+            multiline = isPattern ? false : expr.elements.length > 1;
+            result = ['[', multiline ? newline : ''];
+            withIndent(function (indent) {
+                var i, iz;
+                for (i = 0, iz = expr.elements.length; i < iz; ++i) {
+                    if (!expr.elements[i]) {
+                        if (multiline) {
+                            result.push(indent);
+                        }
+                        if (i + 1 === iz) {
+                            result.push(',');
+                        }
+                    } else {
+                        result.push(multiline ? indent : '');
+                        result.push(that.generateExpression(expr.elements[i], Precedence.Assignment, E_TTT));
+                    }
+                    if (i + 1 < iz) {
+                        result.push(',' + (multiline ? newline : space));
+                    }
+                }
+            });
+            if (multiline && !endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
+                result.push(newline);
+            }
+            result.push(multiline ? base : '');
+            result.push(']');
+            return result;
+        },
+
+        RestElement: function(expr, precedence, flags) {
+            return '...' + this.generatePattern(expr.argument);
+        },
+
+        ClassExpression: function (expr, precedence, flags) {
+            var result, fragment;
+            result = ['class'];
+            if (expr.id) {
+                result = join(result, this.generateExpression(expr.id, Precedence.Sequence, E_TTT));
+            }
+            if (expr.superClass) {
+                fragment = join('extends', this.generateExpression(expr.superClass, Precedence.Assignment, E_TTT));
+                result = join(result, fragment);
+            }
+            result.push(space);
+            result.push(this.generateStatement(expr.body, S_TFFT));
+            return result;
+        },
+
+        MethodDefinition: function (expr, precedence, flags) {
+            var result, fragment;
+            if (expr['static']) {
+                result = ['static' + space];
+            } else {
+                result = [];
+            }
+            if (expr.kind === 'get' || expr.kind === 'set') {
+                fragment = [
+                    join(expr.kind, this.generatePropertyKey(expr.key, expr.computed, expr.value)),
+                    this.generateFunctionBody(expr.value)
+                ];
+            } else {
+                fragment = [
+                    generateMethodPrefix(expr),
+                    this.generatePropertyKey(expr.key, expr.computed, expr.value),
+                    this.generateFunctionBody(expr.value)
+                ];
+            }
+            return join(result, fragment);
+        },
+
+        Property: function (expr, precedence, flags) {
+            if (expr.kind === 'get' || expr.kind === 'set') {
+                return [
+                    expr.kind, noEmptySpace(),
+                    this.generatePropertyKey(expr.key, expr.computed, expr.value),
+                    this.generateFunctionBody(expr.value)
+                ];
+            }
+
+            if (expr.shorthand) {
+                return this.generatePropertyKey(expr.key, expr.computed, expr.value);
+            }
+
+            if (expr.method) {
+                return [
+                    generateMethodPrefix(expr),
+                    this.generatePropertyKey(expr.key, expr.computed, expr.value),
+                    this.generateFunctionBody(expr.value)
+                ];
+            }
+
+            return [
+                this.generatePropertyKey(expr.key, expr.computed, expr.value),
+                ':' + space,
+                this.generateExpression(expr.value, Precedence.Assignment, E_TTT)
+            ];
+        },
+
+        ObjectExpression: function (expr, precedence, flags) {
+            var multiline, result, fragment, that = this;
+
+            if (!expr.properties.length) {
+                return '{}';
+            }
+            multiline = expr.properties.length > 1;
+
+            withIndent(function () {
+                fragment = that.generateExpression(expr.properties[0], Precedence.Sequence, E_TTT);
+            });
+
+            if (!multiline) {
+                // issues 4
+                // Do not transform from
+                //   dejavu.Class.declare({
+                //       method2: function () {}
+                //   });
+                // to
+                //   dejavu.Class.declare({method2: function () {
+                //       }});
+                if (!hasLineTerminator(toSourceNodeWhenNeeded(fragment).toString())) {
+                    return [ '{', space, fragment, space, '}' ];
+                }
+            }
+
+            withIndent(function (indent) {
+                var i, iz;
+                result = [ '{', newline, indent, fragment ];
+
+                if (multiline) {
+                    result.push(',' + newline);
+                    for (i = 1, iz = expr.properties.length; i < iz; ++i) {
+                        result.push(indent);
+                        result.push(that.generateExpression(expr.properties[i], Precedence.Sequence, E_TTT));
+                        if (i + 1 < iz) {
+                            result.push(',' + newline);
+                        }
+                    }
+                }
+            });
+
+            if (!endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
+                result.push(newline);
+            }
+            result.push(base);
+            result.push('}');
+            return result;
+        },
+
+        AssignmentPattern: function(expr, precedence, flags) {
+            return this.generateAssignment(expr.left, expr.right, '=', precedence, flags);
+        },
+
+        ObjectPattern: function (expr, precedence, flags) {
+            var result, i, iz, multiline, property, that = this;
+            if (!expr.properties.length) {
+                return '{}';
+            }
+
+            multiline = false;
+            if (expr.properties.length === 1) {
+                property = expr.properties[0];
+                if (property.value.type !== Syntax.Identifier) {
+                    multiline = true;
+                }
+            } else {
+                for (i = 0, iz = expr.properties.length; i < iz; ++i) {
+                    property = expr.properties[i];
+                    if (!property.shorthand) {
+                        multiline = true;
+                        break;
+                    }
+                }
+            }
+            result = ['{', multiline ? newline : '' ];
+
+            withIndent(function (indent) {
+                var i, iz;
+                for (i = 0, iz = expr.properties.length; i < iz; ++i) {
+                    result.push(multiline ? indent : '');
+                    result.push(that.generateExpression(expr.properties[i], Precedence.Sequence, E_TTT));
+                    if (i + 1 < iz) {
+                        result.push(',' + (multiline ? newline : space));
+                    }
+                }
+            });
+
+            if (multiline && !endsWithLineTerminator(toSourceNodeWhenNeeded(result).toString())) {
+                result.push(newline);
+            }
+            result.push(multiline ? base : '');
+            result.push('}');
+            return result;
+        },
+
+        ThisExpression: function (expr, precedence, flags) {
+            return 'this';
+        },
+
+        Super: function (expr, precedence, flags) {
+            return 'super';
+        },
+
+        Identifier: function (expr, precedence, flags) {
+            return generateIdentifier(expr);
+        },
+
+        ImportDefaultSpecifier: function (expr, precedence, flags) {
+            return generateIdentifier(expr.id || expr.local);
+        },
+
+        ImportNamespaceSpecifier: function (expr, precedence, flags) {
+            var result = ['*'];
+            var id = expr.id || expr.local;
+            if (id) {
+                result.push(space + 'as' + noEmptySpace() + generateIdentifier(id));
+            }
+            return result;
+        },
+
+        ImportSpecifier: function (expr, precedence, flags) {
+            var imported = expr.imported;
+            var result = [ imported.name ];
+            var local = expr.local;
+            if (local && local.name !== imported.name) {
+                result.push(noEmptySpace() + 'as' + noEmptySpace() + generateIdentifier(local));
+            }
+            return result;
+        },
+
+        ExportSpecifier: function (expr, precedence, flags) {
+            var local = expr.local;
+            var result = [ local.name ];
+            var exported = expr.exported;
+            if (exported && exported.name !== local.name) {
+                result.push(noEmptySpace() + 'as' + noEmptySpace() + generateIdentifier(exported));
+            }
+            return result;
+        },
+
+        Literal: function (expr, precedence, flags) {
+            var raw;
+            if (expr.hasOwnProperty('raw') && parse && extra.raw) {
+                try {
+                    raw = parse(expr.raw).body[0].expression;
+                    if (raw.type === Syntax.Literal) {
+                        if (raw.value === expr.value) {
+                            return expr.raw;
+                        }
+                    }
+                } catch (e) {
+                    // not use raw property
+                }
+            }
+
+            if (expr.value === null) {
+                return 'null';
+            }
+
+            if (typeof expr.value === 'string') {
+                return escapeString(expr.value);
+            }
+
+            if (typeof expr.value === 'number') {
+                return generateNumber(expr.value);
+            }
+
+            if (typeof expr.value === 'boolean') {
+                return expr.value ? 'true' : 'false';
+            }
+
+            return generateRegExp(expr.value);
+        },
+
+        GeneratorExpression: function (expr, precedence, flags) {
+            return this.ComprehensionExpression(expr, precedence, flags);
+        },
+
+        ComprehensionExpression: function (expr, precedence, flags) {
+            // GeneratorExpression should be parenthesized with (...), ComprehensionExpression with [...]
+            // Due to https://bugzilla.mozilla.org/show_bug.cgi?id=883468 position of expr.body can differ in Spidermonkey and ES6
+
+            var result, i, iz, fragment, that = this;
+            result = (expr.type === Syntax.GeneratorExpression) ? ['('] : ['['];
+
+            if (extra.moz.comprehensionExpressionStartsWithAssignment) {
+                fragment = this.generateExpression(expr.body, Precedence.Assignment, E_TTT);
+                result.push(fragment);
+            }
+
+            if (expr.blocks) {
+                withIndent(function () {
+                    for (i = 0, iz = expr.blocks.length; i < iz; ++i) {
+                        fragment = that.generateExpression(expr.blocks[i], Precedence.Sequence, E_TTT);
+                        if (i > 0 || extra.moz.comprehensionExpressionStartsWithAssignment) {
+                            result = join(result, fragment);
+                        } else {
+                            result.push(fragment);
+                        }
+                    }
+                });
+            }
+
+            if (expr.filter) {
+                result = join(result, 'if' + space);
+                fragment = this.generateExpression(expr.filter, Precedence.Sequence, E_TTT);
+                result = join(result, [ '(', fragment, ')' ]);
+            }
+
+            if (!extra.moz.comprehensionExpressionStartsWithAssignment) {
+                fragment = this.generateExpression(expr.body, Precedence.Assignment, E_TTT);
+
+                result = join(result, fragment);
+            }
+
+            result.push((expr.type === Syntax.GeneratorExpression) ? ')' : ']');
+            return result;
+        },
+
+        ComprehensionBlock: function (expr, precedence, flags) {
+            var fragment;
+            if (expr.left.type === Syntax.VariableDeclaration) {
+                fragment = [
+                    expr.left.kind, noEmptySpace(),
+                    this.generateStatement(expr.left.declarations[0], S_FFFF)
+                ];
+            } else {
+                fragment = this.generateExpression(expr.left, Precedence.Call, E_TTT);
+            }
+
+            fragment = join(fragment, expr.of ? 'of' : 'in');
+            fragment = join(fragment, this.generateExpression(expr.right, Precedence.Sequence, E_TTT));
+
+            return [ 'for' + space + '(', fragment, ')' ];
+        },
+
+        SpreadElement: function (expr, precedence, flags) {
+            return [
+                '...',
+                this.generateExpression(expr.argument, Precedence.Assignment, E_TTT)
+            ];
+        },
+
+        TaggedTemplateExpression: function (expr, precedence, flags) {
+            var itemFlags = E_TTF;
+            if (!(flags & F_ALLOW_CALL)) {
+                itemFlags = E_TFF;
+            }
+            var result = [
+                this.generateExpression(expr.tag, Precedence.Call, itemFlags),
+                this.generateExpression(expr.quasi, Precedence.Primary, E_FFT)
+            ];
+            return parenthesize(result, Precedence.TaggedTemplate, precedence);
+        },
+
+        TemplateElement: function (expr, precedence, flags) {
+            // Don't use "cooked". Since tagged template can use raw template
+            // representation. So if we do so, it breaks the script semantics.
+            return expr.value.raw;
+        },
+
+        TemplateLiteral: function (expr, precedence, flags) {
+            var result, i, iz;
+            result = [ '`' ];
+            for (i = 0, iz = expr.quasis.length; i < iz; ++i) {
+                result.push(this.generateExpression(expr.quasis[i], Precedence.Primary, E_TTT));
+                if (i + 1 < iz) {
+                    result.push('${' + space);
+                    result.push(this.generateExpression(expr.expressions[i], Precedence.Sequence, E_TTT));
+                    result.push(space + '}');
+                }
+            }
+            result.push('`');
+            return result;
+        },
+
+        ModuleSpecifier: function (expr, precedence, flags) {
+            return this.Literal(expr, precedence, flags);
+        }
+
+    };
+
+    merge(CodeGenerator.prototype, CodeGenerator.Expression);
+
+    CodeGenerator.prototype.generateExpression = function (expr, precedence, flags) {
+        var result, type;
+
+        type = expr.type || Syntax.Property;
+
+        if (extra.verbatim && expr.hasOwnProperty(extra.verbatim)) {
+            return generateVerbatim(expr, precedence);
+        }
+
+        result = this[type](expr, precedence, flags);
+
+
+        if (extra.comment) {
+            result = addComments(expr, result);
+        }
+        return toSourceNodeWhenNeeded(result, expr);
+    };
+
+    CodeGenerator.prototype.generateStatement = function (stmt, flags) {
+        var result,
+            fragment;
+
+        result = this[stmt.type](stmt, flags);
+
+        // Attach comments
+
+        if (extra.comment) {
+            result = addComments(stmt, result);
+        }
+
+        fragment = toSourceNodeWhenNeeded(result).toString();
+        if (stmt.type === Syntax.Program && !safeConcatenation && newline === '' &&  fragment.charAt(fragment.length - 1) === '\n') {
+            result = sourceMap ? toSourceNodeWhenNeeded(result).replaceRight(/\s+$/, '') : fragment.replace(/\s+$/, '');
+        }
+
+        return toSourceNodeWhenNeeded(result, stmt);
+    };
+
+    function generateInternal(node) {
+        var codegen;
+
+        codegen = new CodeGenerator();
+        if (isStatement(node)) {
+            return codegen.generateStatement(node, S_TFFF);
+        }
+
+        if (isExpression(node)) {
+            return codegen.generateExpression(node, Precedence.Sequence, E_TTT);
+        }
+
+        throw new Error('Unknown node type: ' + node.type);
+    }
+
+    function generate(node, options) {
+        var defaultOptions = getDefaultOptions(), result, pair;
+
+        if (options != null) {
+            // Obsolete options
+            //
+            //   `options.indent`
+            //   `options.base`
+            //
+            // Instead of them, we can use `option.format.indent`.
+            if (typeof options.indent === 'string') {
+                defaultOptions.format.indent.style = options.indent;
+            }
+            if (typeof options.base === 'number') {
+                defaultOptions.format.indent.base = options.base;
+            }
+            options = updateDeeply(defaultOptions, options);
+            indent = options.format.indent.style;
+            if (typeof options.base === 'string') {
+                base = options.base;
+            } else {
+                base = stringRepeat(indent, options.format.indent.base);
+            }
+        } else {
+            options = defaultOptions;
+            indent = options.format.indent.style;
+            base = stringRepeat(indent, options.format.indent.base);
+        }
+        json = options.format.json;
+        renumber = options.format.renumber;
+        hexadecimal = json ? false : options.format.hexadecimal;
+        quotes = json ? 'double' : options.format.quotes;
+        escapeless = options.format.escapeless;
+        newline = options.format.newline;
+        space = options.format.space;
+        if (options.format.compact) {
+            newline = space = indent = base = '';
+        }
+        parentheses = options.format.parentheses;
+        semicolons = options.format.semicolons;
+        safeConcatenation = options.format.safeConcatenation;
+        directive = options.directive;
+        parse = json ? null : options.parse;
+        sourceMap = options.sourceMap;
+        sourceCode = options.sourceCode;
+        preserveBlankLines = options.format.preserveBlankLines && sourceCode !== null;
+        extra = options;
+
+        if (sourceMap) {
+            if (!exports.browser) {
+                // We assume environment is node.js
+                // And prevent from including source-map by browserify
+                SourceNode = require('source-map').SourceNode;
+            } else {
+                SourceNode = global.sourceMap.SourceNode;
+            }
+        }
+
+        result = generateInternal(node);
+
+        if (!sourceMap) {
+            pair = {code: result.toString(), map: null};
+            return options.sourceMapWithCode ? pair : pair.code;
+        }
+
+
+        pair = result.toStringWithSourceMap({
+            file: options.file,
+            sourceRoot: options.sourceMapRoot
+        });
+
+        if (options.sourceContent) {
+            pair.map.setSourceContent(options.sourceMap,
+                                      options.sourceContent);
+        }
+
+        if (options.sourceMapWithCode) {
+            return pair;
+        }
+
+        return pair.map.toString();
+    }
+
+    FORMAT_MINIFY = {
+        indent: {
+            style: '',
+            base: 0
+        },
+        renumber: true,
+        hexadecimal: true,
+        quotes: 'auto',
+        escapeless: true,
+        compact: true,
+        parentheses: false,
+        semicolons: false
+    };
+
+    FORMAT_DEFAULTS = getDefaultOptions().format;
+
+    exports.version = require('./package.json').version;
+    exports.generate = generate;
+    exports.attachComments = estraverse.attachComments;
+    exports.Precedence = updateDeeply({}, Precedence);
+    exports.browser = false;
+    exports.FORMAT_MINIFY = FORMAT_MINIFY;
+    exports.FORMAT_DEFAULTS = FORMAT_DEFAULTS;
+}());
+/* vim: set sw=4 ts=4 et tw=80 : */
 
 
 
 /*
-file handlebars.js/handlebars.js
+file https://github.com/components/handlebars.js/blob/v1.2.1/handlebars.js
+shGithubDateCommitted https://github.com/components/handlebars.js/commits/v1.2.1 # 2013-12-26T22:37:39Z
+curl https://raw.githubusercontent.com/components/handlebars.js/v1.2.1/handlebars.js > /tmp/aa.js
 */
 
 
 
 /*
-file istanbul/lib/collector.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/collector.js
+shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/collector.js > /tmp/aa.js
 */
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
@@ -1367,294 +9495,1645 @@ module.exports = Collector;
 
 
 /*
-file istanbul/lib/util/insertion-text.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
+shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/insertion-text.js > /tmp/aa.js
 */
-function InsertionText(e,t){this.text=e,this.origLength=e.length,this.offsets=[]
-,this.consumeBlanks=t,this.startPos=this.findFirstNonBlank(),this.endPos=this.findLastNonBlank
-()}var WHITE_RE=/[ \f\n\r\t\v\u00A0\u2028\u2029]/;InsertionText.prototype={findFirstNonBlank
-:function(){var e=-1,t=this.text,n=t.length,r;for(r=0;r<n;r+=1)if(!t.charAt(r).match
-(WHITE_RE)){e=r;break}return e},findLastNonBlank:function(){var e=this.text,t=e.
-length,n=e.length+1,r;for(r=t-1;r>=0;r-=1)if(!e.charAt(r).match(WHITE_RE)){n=r;break}
-return n},originalLength:function(){return this.origLength},insertAt:function(e,
-t,n,r){r=typeof r=="undefined"?this.consumeBlanks:r,e=e>this.originalLength()?this
-.originalLength():e,e=e<0?0:e,r&&(e<=this.startPos&&(e=0),e>this.endPos&&(e=this
-.origLength));var i=t.length,s=this.findOffset(e,i,n),o=e+s,u=this.text;return this
-.text=u.substring(0,o)+t+u.substring(o),this},findOffset:function(e,t,n){var r=this
-.offsets,i,s=0,o;for(o=0;o<r.length;o+=1){i=r[o];if(i.pos<e||i.pos===e&&!n)s+=i.
-len;if(i.pos>=e)break}return i&&i.pos===e?i.len+=t:r.splice(o,0,{pos:e,len:t}),s
-},wrap:function(e,t,n,r,i){return this.insertAt(e,t,!0,i),this.insertAt(n,r,!1,i
-),this},wrapLine:function(e,t){this.wrap(0,e,this.originalLength(),t)},toString:
-function(){return this.text}},module.exports=InsertionText
+/*
+ Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
+ Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
+ */
+
+function InsertionText(text, consumeBlanks) {
+    this.text = text;
+    this.origLength = text.length;
+    this.offsets = [];
+    this.consumeBlanks = consumeBlanks;
+    this.startPos = this.findFirstNonBlank();
+    this.endPos = this.findLastNonBlank();
+}
+
+var WHITE_RE = /[ \f\n\r\t\v\u00A0\u2028\u2029]/;
+
+InsertionText.prototype = {
+
+    findFirstNonBlank: function () {
+        var pos = -1,
+            text = this.text,
+            len = text.length,
+            i;
+        for (i = 0; i < len; i += 1) {
+            if (!text.charAt(i).match(WHITE_RE)) {
+                pos = i;
+                break;
+            }
+        }
+        return pos;
+    },
+    findLastNonBlank: function () {
+        var text = this.text,
+            len = text.length,
+            pos = text.length + 1,
+            i;
+        for (i = len - 1; i >= 0; i -= 1) {
+            if (!text.charAt(i).match(WHITE_RE)) {
+                pos = i;
+                break;
+            }
+        }
+        return pos;
+    },
+    originalLength: function () {
+        return this.origLength;
+    },
+
+    insertAt: function (col, str, insertBefore, consumeBlanks) {
+        consumeBlanks = typeof consumeBlanks === 'undefined' ? this.consumeBlanks : consumeBlanks;
+        col = col > this.originalLength() ? this.originalLength() : col;
+        col = col < 0 ? 0 : col;
+
+        if (consumeBlanks) {
+            if (col <= this.startPos) {
+                col = 0;
+            }
+            if (col > this.endPos) {
+                col = this.origLength;
+            }
+        }
+
+        var len = str.length,
+            offset = this.findOffset(col, len, insertBefore),
+            realPos = col + offset,
+            text = this.text;
+        this.text = text.substring(0, realPos) + str + text.substring(realPos);
+        return this;
+    },
+
+    findOffset: function (pos, len, insertBefore) {
+        var offsets = this.offsets,
+            offsetObj,
+            cumulativeOffset = 0,
+            i;
+
+        for (i = 0; i < offsets.length; i += 1) {
+            offsetObj = offsets[i];
+            if (offsetObj.pos < pos || (offsetObj.pos === pos && !insertBefore)) {
+                cumulativeOffset += offsetObj.len;
+            }
+            if (offsetObj.pos >= pos) {
+                break;
+            }
+        }
+        if (offsetObj && offsetObj.pos === pos) {
+            offsetObj.len += len;
+        } else {
+            offsets.splice(i, 0, { pos: pos, len: len });
+        }
+        return cumulativeOffset;
+    },
+
+    wrap: function (startPos, startText, endPos, endText, consumeBlanks) {
+        this.insertAt(startPos, startText, true, consumeBlanks);
+        this.insertAt(endPos, endText, false, consumeBlanks);
+        return this;
+    },
+
+    wrapLine: function (startText, endText) {
+        this.wrap(0, startText, this.originalLength(), endText);
+    },
+
+    toString: function () {
+        return this.text;
+    }
+};
+
+module.exports = InsertionText;
 
 
 
 /*
-file istanbul/lib/instrumenter.js
+file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
+shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.4.5 # 2016-08-21T19:53:22Z
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.4.5/lib/instrumenter.js > /tmp/aa.js
 */
-(function(e){"use strict";function p(e,t){var n,r;return s!==null?(n=s.createHash
-("md5"),n.update(e),r=n.digest("base64"),r=r.replace(new RegExp("=","g"),"").replace
-(new RegExp("\\+","g"),"_").replace(new RegExp("/","g"),"$")):(window.__cov_seq=
-window.__cov_seq||0,window.__cov_seq+=1,r=window.__cov_seq),"__cov_"+(t?"":r)}function d
-(e,t){h(t)||(t=[t]),Array.prototype.push.apply(e,t)}function v(e,t,n,r){this.walkMap=
-e,this.preprocessor=t,this.scope=n,this.debug=r,this.debug&&(this.level=0,this.seq=!0
-)}function m(e,n){var r=e.type,i,s,o=t[r],u=!!e.loc||e.type===t.Program.name,a=u?
-n.walkMap[r]:null,f,l,c,p,v,m,g,y,b,w,E;if(!t[r]){console.error(e),console.error
-("Unsupported node type:"+r);return}o=t[r].children;if(e.walking)throw new Error
-("Infinite regress: Custom walkers may NOT call walker.apply(node)");e.walking=!0
-,m=n.apply(e,n.preprocessor),i=m.preprocessor,i&&(delete m.preprocessor,m=n.apply
-(e,i));if(h(a))for(c=0;c<a.length;c+=1){E=c===a.length-1,m=n.apply(m,a[c]);if(m.
-type!==r&&!E)throw new Error("Only the last walker is allowed to change the node type: [type was: "+
-r+" ]")}else a&&(m=n.apply(e,a));if(e.skipSelf)return;for(f=0;f<o.length;f+=1){p=
-o[f],v=e[p];if(v&&!v.skipWalk){b={node:e,property:p};if(h(v)){g=[];for(l=0;l<v.length
-;l+=1)y=v[l],b.index=l,y?(w=n.apply(y,null,b),h(w.prepend)&&(d(g,w.prepend),delete
-w.prepend)):w=undefined,d(g,w);e[p]=g}else{w=n.apply(v,null,b);if(h(w.prepend))throw new
-Error("Internal error: attempt to prepend statements in disallowed (non-array) context"
-);e[p]=w}}}return s=m.postprocessor,s&&(delete m.postprocessor,m=n.apply(m,s)),delete
-e.walking,m}function g(e){this.opts=e||{debug:!1,walkDebug:!1,coverageVariable:"__coverage__"
-,codeGenerationOptions:undefined,noAutoWrap:!1,noCompact:!1,embedSource:!1,preserveComments
-:!1,esModules:!1},this.opts.esModules&&!this.opts.noAutoWrap&&(this.opts.noAutoWrap=!0
-,this.opts.debug&&console.log("Setting noAutoWrap to true as required by esModules"
-)),this.walker=new v({ArrowFunctionExpression:[this.arrowBlockConverter],ExpressionStatement
-:this.coverStatement,ExportNamedDeclaration:this.coverExport,BreakStatement:this
-.coverStatement,ContinueStatement:this.coverStatement,DebuggerStatement:this.coverStatement
-,ReturnStatement:this.coverStatement,ThrowStatement:this.coverStatement,TryStatement
-:[this.paranoidHandlerCheck,this.coverStatement],VariableDeclaration:this.coverStatement
-,IfStatement:[this.ifBlockConverter,this.coverStatement,this.ifBranchInjector],ForStatement
-:[this.skipInit,this.loopBlockConverter,this.coverStatement],ForInStatement:[this
-.skipLeft,this.loopBlockConverter,this.coverStatement],ForOfStatement:[this.skipLeft
-,this.loopBlockConverter,this.coverStatement],WhileStatement:[this.loopBlockConverter
-,this.coverStatement],DoWhileStatement:[this.loopBlockConverter,this.coverStatement
-],SwitchStatement:[this.coverStatement,this.switchBranchInjector],SwitchCase:[this
-.switchCaseInjector],WithStatement:[this.withBlockConverter,this.coverStatement]
-,FunctionDeclaration:[this.coverFunction,this.coverStatement],FunctionExpression
-:this.coverFunction,LabeledStatement:this.coverStatement,ConditionalExpression:this
-.conditionalBranchInjector,LogicalExpression:this.logicalExpressionBranchInjector
-,ObjectExpression:this.maybeAddType,MetaProperty:this.coverMetaProperty},this.extractCurrentHint
-,this,this.opts.walkDebug),this.opts.backdoor&&this.opts.backdoor.omitTrackerSuffix&&
-(this.omitTrackerSuffix=!0)}var t,n,r=e?require("esprima"):esprima,i=e?require("escodegen"
-):escodegen,s=e?require("crypto"):null,o="(function () { ",u="\n}());",a=/^\s*istanbul\s+ignore\s+(if|else|next)(?=\W|$)/
-,f,l,c,h=Array.isArray;h||(h=function(e){return e&&Object.prototype.toString.call
-(e)==="[object Array]"});if(!e){l={"Could not find esprima":r,"Could not find escodegen"
-:i,"JSON object not in scope":JSON,"Array does not implement push":[].push,"Array does not implement unshift"
-:[].unshift};for(c in l)if(l.hasOwnProperty(c)&&!l[c])throw new Error(c)}t={AssignmentExpression
-:["left","right"],AssignmentPattern:["left","right"],ArrayExpression:["elements"
-],ArrayPattern:["elements"],ArrowFunctionExpression:["params","body"],AwaitExpression
-:["argument"],BlockStatement:["body"],BinaryExpression:["left","right"],BreakStatement
-:["label"],CallExpression:["callee","arguments"],CatchClause:["param","body"],ClassBody
-:["body"],ClassDeclaration:["id","superClass","body"],ClassExpression:["id","superClass"
-,"body"],ComprehensionBlock:["left","right"],ComprehensionExpression:["blocks","filter"
-,"body"],ConditionalExpression:["test","consequent","alternate"],ContinueStatement
-:["label"],DebuggerStatement:[],DirectiveStatement:[],DoWhileStatement:["body","test"
-],EmptyStatement:[],ExportAllDeclaration:["source"],ExportDefaultDeclaration:["declaration"
-],ExportNamedDeclaration:["declaration","specifiers","source"],ExportSpecifier:["exported"
-,"local"],ExpressionStatement:["expression"],ForStatement:["init","test","update"
-,"body"],ForInStatement:["left","right","body"],ForOfStatement:["left","right","body"
-],FunctionDeclaration:["id","params","body"],FunctionExpression:["id","params","body"
-],GeneratorExpression:["blocks","filter","body"],Identifier:[],IfStatement:["test"
-,"consequent","alternate"],ImportDeclaration:["specifiers","source"],ImportDefaultSpecifier
-:["local"],ImportNamespaceSpecifier:["local"],ImportSpecifier:["imported","local"
-],Literal:[],LabeledStatement:["label","body"],LogicalExpression:["left","right"
-],MetaProperty:["meta","property"],MemberExpression:["object","property"],MethodDefinition
-:["key","value"],ModuleSpecifier:[],NewExpression:["callee","arguments"],ObjectExpression
-:["properties"],ObjectPattern:["properties"],Program:["body"],Property:["key","value"
-],RestElement:["argument"],ReturnStatement:["argument"],SequenceExpression:["expressions"
-],SpreadElement:["argument"],Super:[],SwitchStatement:["discriminant","cases"],SwitchCase
-:["test","consequent"],TaggedTemplateExpression:["tag","quasi"],TemplateElement:
-[],TemplateLiteral:["quasis","expressions"],ThisExpression:[],ThrowStatement:["argument"
-],TryStatement:["block","handler","finalizer"],UnaryExpression:["argument"],UpdateExpression
-:["argument"],VariableDeclaration:["declarations"],VariableDeclarator:["id","init"
-],WhileStatement:["test","body"],WithStatement:["object","body"],YieldExpression
-:["argument"]};for(n in t)t.hasOwnProperty(n)&&(t[n]={name:n,children:t[n]});f={
-variable:function(e){return{type:t.Identifier.name,name:e}},stringLiteral:function(
-e){return{type:t.Literal.name,value:String(e)}},numericLiteral:function(e){return{
-type:t.Literal.name,value:Number(e)}},statement:function(e){return{type:t.ExpressionStatement
-.name,expression:e}},dot:function(e,n){return{type:t.MemberExpression.name,computed
-:!1,object:e,property:n}},subscript:function(e,n){return{type:t.MemberExpression
-.name,computed:!0,object:e,property:n}},postIncrement:function(e){return{type:t.
-UpdateExpression.name,operator:"++",prefix:!1,argument:e}},sequence:function(e,n
-){return{type:t.SequenceExpression.name,expressions:[e,n]}},returnStatement:function(
-e){return{type:t.ReturnStatement.name,argument:e}}},v.prototype={startWalk:function(
-e){this.path=[],this.apply(e)},apply:function(e,t,n){var r,i,s,o;t=t||m;if(this.
-debug){this.seq+=1,this.level+=1,s=this.seq,o="";for(i=0;i<this.level;i+=1)o+="    "
-;console.log(o+"Enter ("+s+"):"+e.type)}return n&&this.path.push(n),r=t.call(this
-.scope,e,this),n&&this.path.pop(),this.debug&&(this.level-=1,console.log(o+"Return ("+
-s+"):"+e.type)),r||e},startLineForNode:function(e){return e&&e.loc&&e.loc.start?
-e.loc.start.line:null},ancestor:function(e){return this.path.length>e-1?this.path
-[this.path.length-e]:null},parent:function(){return this.ancestor(1)},isLabeled:
-function(){var e=this.parent();return e&&e.node.type===t.LabeledStatement.name}}
-,g.prototype={instrumentSync:function(e,n){var s;if(typeof e!="string")throw new
-Error("Code must be string");e.charAt(0)==="#"&&(e="//"+e),this.opts.noAutoWrap||
-(e=o+e+u);try{s=r.parse(e,{loc:!0,range:!0,tokens:this.opts.preserveComments,comment
-:!0,sourceType:this.opts.esModules?"module":"script"})}catch(a){throw console.log
-("Failed to parse file: "+n),a}return this.opts.preserveComments&&(s=i.attachComments
-(s,s.comments,s.tokens)),this.opts.noAutoWrap||(s={type:t.Program.name,body:s.body
-[0].expression.callee.body.body,comments:s.comments}),this.instrumentASTSync(s,n
-,e)},filterHints:function(e){var t=[],n,r,i;if(!e||!h(e))return t;for(n=0;n<e.length
-;n+=1)r=e[n],r&&r.value&&r.range&&h(r.range)&&(i=String(r.value).match(a),i&&t.push
-({type:i[1],start:r.range[0],end:r.range[1]}));return t},extractCurrentHint:function(
-e){if(!e.range)return;var t=this.currentState.lastHintPosition+1,n=this.currentState
-.hints,r=e.range[0],i;this.currentState.currentHint=null;while(t<n.length){i=n[t
-];if(!(i.end<r))break;this.currentState.currentHint=i,this.currentState.lastHintPosition=
-t,t+=1}},instrumentASTSync:function(e,t,n){var r=!1,s,o,u,a,f;t=t||String((new Date
-).getTime())+".js",this.sourceMap=null,this.coverState={path:t,s:{},b:{},f:{},fnMap
-:{},statementMap:{},branchMap:{}},this.currentState={trackerVar:p(t,this.omitTrackerSuffix
-),func:0,branch:0,variable:0,statement:0,hints:this.filterHints(e.comments),currentHint
-:null,lastHintPosition:-1,ignoring:0},e.body&&e.body.length>0&&this.isUseStrictExpression
-(e.body[0])&&(e.body.shift(),r=!0),this.walker.startWalk(e),s=this.opts.codeGenerationOptions||
-{format:{compact:!this.opts.noCompact}},s.comment=this.opts.preserveComments,o=i
-.generate(e,s),u=this.getPreamble(n||"",r);if(o.map&&o.code){a=u.split(/\r\n|\r|\n/
-).length;for(f=0;f<o.map._mappings._array.length;f+=1)o.map._mappings._array[f].
-generatedLine+=a;this.sourceMap=o.map,o=o.code}return u+"\n"+o+"\n"},instrument:
-function(e,t,n){!n&&typeof t=="function"&&(n=t,t=null);try{n(null,this.instrumentSync
-(e,t))}catch(r){n(r)}},lastFileCoverage:function(){return this.coverState},lastSourceMap
-:function(){return this.sourceMap},fixColumnPositions:function(e){var t=o.length
-,n=function(e){e.start.line===1&&(e.start.column-=t),e.end.line===1&&(e.end.column-=
-t)},r,i,s,u;i=e.statementMap;for(r in i)i.hasOwnProperty(r)&&n(i[r]);i=e.fnMap;for(
-r in i)i.hasOwnProperty(r)&&n(i[r].loc);i=e.branchMap;for(r in i)if(i.hasOwnProperty
-(r)){u=i[r].locations;for(s=0;s<u.length;s+=1)n(u[s])}},getPreamble:function(e,t
-){var n=this.opts.coverageVariable||"__coverage__",r=this.coverState.path.replace
-(/\\/g,"\\\\"),i=this.currentState.trackerVar,s,o=t?'"use strict";':"",u=function(
-e){return function(){return e}},a;return this.opts.noAutoWrap||this.fixColumnPositions
-(this.coverState),this.opts.embedSource&&(this.coverState.code=e.split(/(?:\r?\n)|\r/
-)),s=this.opts.debug?JSON.stringify(this.coverState,undefined,4):JSON.stringify(
-this.coverState),a=["%STRICT%","var %VAR% = (Function('return this'))();","if (!%VAR%.%GLOBAL%) { %VAR%.%GLOBAL% = {}; }"
-,"%VAR% = %VAR%.%GLOBAL%;","if (!(%VAR%['%FILE%'])) {","   %VAR%['%FILE%'] = %OBJECT%;"
-,"}","%VAR% = %VAR%['%FILE%'];"].join("\n").replace(/%STRICT%/g,u(o)).replace(/%VAR%/g
-,u(i)).replace(/%GLOBAL%/g,u(n)).replace(/%FILE%/g,u(r)).replace(/%OBJECT%/g,u(s
-)),a},startIgnore:function(){this.currentState.ignoring+=1},endIgnore:function()
-{this.currentState.ignoring-=1},convertToBlock:function(e){return e?e.type==="BlockStatement"?
-e:{type:"BlockStatement",body:[e]}:{type:"BlockStatement",body:[]}},arrowBlockConverter
-:function(e){var t;e.expression&&(t=f.returnStatement(e.body),t.loc=e.body.loc,e
-.body=this.convertToBlock(t),e.expression=!1)},paranoidHandlerCheck:function(e){!
-e.handler&&e.handlers&&(e.handler=e.handlers[0])},ifBlockConverter:function(e){e
-.consequent=this.convertToBlock(e.consequent),e.alternate=this.convertToBlock(e.
-alternate)},loopBlockConverter:function(e){e.body=this.convertToBlock(e.body)},withBlockConverter
-:function(e){e.body=this.convertToBlock(e.body)},statementName:function(e,t){var n
-,r=!!this.currentState.ignoring;return e.skip=r||undefined,t=t||0,this.currentState
-.statement+=1,n=this.currentState.statement,this.coverState.statementMap[n]=e,this
-.coverState.s[n]=t,n},skipInit:function(e){e.init&&(e.init.skipWalk=!0)},skipLeft
-:function(e){e.left.skipWalk=!0},isUseStrictExpression:function(e){return e&&e.type===
-t.ExpressionStatement.name&&e.expression&&e.expression.type===t.Literal.name&&e.
-expression.value==="use strict"},maybeSkipNode:function(e,t){var n=!!this.currentState
-.ignoring,r=this.currentState.currentHint,i=!n&&r&&r.type===t;return i?(this.startIgnore
-(),e.postprocessor=this.endIgnore,!0):!1},coverMetaProperty:function(e){e.skipSelf=!0
-},coverStatement:function(e,n){var r,i,s,o;this.maybeSkipNode(e,"next");if(this.
-isUseStrictExpression(e)){o=n.ancestor(2);if(o&&(o.node.type===t.FunctionExpression
-.name||o.node.type===t.FunctionDeclaration.name)&&n.parent().node.body[0]===e)return}
-if(e.type===t.FunctionDeclaration.name)this.statementName(e.loc,1);else{s=n.parent
-();if(s&&s.node.type===t.ExportNamedDeclaration.name)return;r=this.statementName
-(e.loc),i=f.statement(f.postIncrement(f.subscript(f.dot(f.variable(this.currentState
-.trackerVar),f.variable("s")),f.stringLiteral(r)))),this.splice(i,e,n)}},coverExport
-:function(e,t){var n,r;if(!e.declaration||!e.declaration.declarations)return;this
-.maybeSkipNode(e,"next"),n=this.statementName(e.declaration.loc),r=f.statement(f
-.postIncrement(f.subscript(f.dot(f.variable(this.currentState.trackerVar),f.variable
-("s")),f.stringLiteral(n)))),this.splice(r,e,t)},splice:function(e,t,n){var r=n.
-isLabeled()?n.parent().node:t;r.prepend=r.prepend||[],d(r.prepend,e)},functionName
-:function(e,t,n){this.currentState.func+=1;var r=this.currentState.func,i=!!this
-.currentState.ignoring,s=e.id?e.id.name:"(anonymous_"+r+")",o=function(e){var t=
-n[e]||{};return{line:t.line,column:t.column}};return this.coverState.fnMap[r]={name
-:s,line:t,loc:{start:o("start"),end:o("end")},skip:i||undefined},this.coverState
-.f[r]=0,r},coverFunction:function(e,t){var n,r=e.body,i=r.body,s;this.maybeSkipNode
-(e,"next"),n=this.functionName(e,t.startLineForNode(e),{start:e.loc.start,end:{line
-:e.body.loc.start.line,column:e.body.loc.start.column}}),i.length>0&&this.isUseStrictExpression
-(i[0])&&(s=i.shift()),i.unshift(f.statement(f.postIncrement(f.subscript(f.dot(f.
-variable(this.currentState.trackerVar),f.variable("f")),f.stringLiteral(n))))),s&&
-i.unshift(s)},branchName:function(e,t,n){var r,i=[],s=[],o,u=!!this.currentState
-.ignoring;this.currentState.branch+=1,r=this.currentState.branch;for(o=0;o<n.length
-;o+=1)n[o].skip=n[o].skip||u||undefined,s.push(n[o]),i.push(0);return this.coverState
-.b[r]=i,this.coverState.branchMap[r]={line:t,type:e,locations:s},r},branchIncrementExprAst
-:function(e,t,n){var r=f.postIncrement(f.subscript(f.subscript(f.dot(f.variable(
-this.currentState.trackerVar),f.variable("b")),f.stringLiteral(e)),f.numericLiteral
-(t)),n);return r},locationsForNodes:function(e){var t=[],n;for(n=0;n<e.length;n+=1
-)t.push(e[n].loc);return t},ifBranchInjector:function(e,t){var n=!!this.currentState
-.ignoring,r=this.currentState.currentHint,i=!n&&r&&r.type==="if",s=!n&&r&&r.type==="else"
-,o=e.loc.start.line,u=e.loc.start.column,a=function(){return{line:o,column:u}},l=
-this.branchName("if",t.startLineForNode(e),[{start:a(),end:a(),skip:i||undefined
-},{start:a(),end:a(),skip:s||undefined}]),c=e.consequent.body,h=e.alternate.body
-,p;c.unshift(f.statement(this.branchIncrementExprAst(l,0))),h.unshift(f.statement
-(this.branchIncrementExprAst(l,1))),i&&(p=e.consequent,p.preprocessor=this.startIgnore
-,p.postprocessor=this.endIgnore),s&&(p=e.alternate,p.preprocessor=this.startIgnore
-,p.postprocessor=this.endIgnore)},branchLocationFor:function(e,t){return this.coverState
-.branchMap[e].locations[t]},switchBranchInjector:function(e,t){var n=e.cases,r,i
-;if(!(n&&n.length>0))return;r=this.branchName("switch",t.startLineForNode(e),this
-.locationsForNodes(n));for(i=0;i<n.length;i+=1)n[i].branchLocation=this.branchLocationFor
-(r,i),n[i].consequent.unshift(f.statement(this.branchIncrementExprAst(r,i)))},switchCaseInjector
-:function(e){var t=e.branchLocation;delete e.branchLocation,this.maybeSkipNode(e
-,"next")&&(t.skip=!0)},conditionalBranchInjector:function(e,t){var n=this.branchName
-("cond-expr",t.startLineForNode(e),this.locationsForNodes([e.consequent,e.alternate
-])),r=this.branchIncrementExprAst(n,0),i=this.branchIncrementExprAst(n,1);e.consequent
-.preprocessor=this.maybeAddSkip(this.branchLocationFor(n,0)),e.alternate.preprocessor=
-this.maybeAddSkip(this.branchLocationFor(n,1)),e.consequent=f.sequence(r,e.consequent
-),e.alternate=f.sequence(i,e.alternate)},maybeAddSkip:function(e){return function(
-t){var n=!!this.currentState.ignoring,r=this.currentState.currentHint,i=!n&&r&&r
-.type==="next";i&&(this.startIgnore(),t.postprocessor=this.endIgnore);if(i||n)e.
-skip=!0}},logicalExpressionBranchInjector:function(e,n){var r=n.parent(),i=[],s,
-o,u;this.maybeSkipNode(e,"next");if(r&&r.node.type===t.LogicalExpression.name)return;
-this.findLeaves(e,i),s=this.branchName("binary-expr",n.startLineForNode(e),this.
-locationsForNodes(i.map(function(e){return e.node})));for(u=0;u<i.length;u+=1)o=
-i[u],o.parent[o.property]=f.sequence(this.branchIncrementExprAst(s,u),o.node),o.
-node.preprocessor=this.maybeAddSkip(this.branchLocationFor(s,u))},findLeaves:function(
-e,n,r,i){e.type===t.LogicalExpression.name?(this.findLeaves(e.left,n,e,"left"),this
-.findLeaves(e.right,n,e,"right")):n.push({node:e,parent:r,property:i})},maybeAddType
-:function(e){var n=e.properties,r,i;for(r=0;r<n.length;r+=1)i=n[r],i.type||(i.type=
-t.Property.name)}},e?module.exports=g:window.Instrumenter=g})(typeof module!="undefined"&&typeof
-module.exports!="undefined"&&typeof exports!="undefined")
+/*
+ Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
+ Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
+ */
+
+/*global esprima, escodegen, window */
+(function (isNode) {
+    "use strict";
+    var SYNTAX,
+        nodeType,
+        ESP = isNode ? require('esprima') : esprima,
+        ESPGEN = isNode ? require('escodegen') : escodegen,  //TODO - package as dependency
+        crypto = isNode ? require('crypto') : null,
+        LEADER_WRAP = '(function () { ',
+        TRAILER_WRAP = '\n}());',
+        COMMENT_RE = /^\s*istanbul\s+ignore\s+(if|else|next)(?=\W|$)/,
+        astgen,
+        preconditions,
+        cond,
+        isArray = Array.isArray;
+
+    /* istanbul ignore if: untestable */
+    if (!isArray) {
+        isArray = function (thing) { return thing &&  Object.prototype.toString.call(thing) === '[object Array]'; };
+    }
+
+    if (!isNode) {
+        preconditions = {
+            'Could not find esprima': ESP,
+            'Could not find escodegen': ESPGEN,
+            'JSON object not in scope': JSON,
+            'Array does not implement push': [].push,
+            'Array does not implement unshift': [].unshift
+        };
+        /* istanbul ignore next: untestable */
+        for (cond in preconditions) {
+            if (preconditions.hasOwnProperty(cond)) {
+                if (!preconditions[cond]) { throw new Error(cond); }
+            }
+        }
+    }
+
+    function generateTrackerVar(filename, omitSuffix) {
+        var hash, suffix;
+        if (crypto !== null) {
+            hash = crypto.createHash('md5');
+            hash.update(filename);
+            suffix = hash.digest('base64');
+            //trim trailing equal signs, turn identifier unsafe chars to safe ones + => _ and / => $
+            suffix = suffix.replace(new RegExp('=', 'g'), '')
+                .replace(new RegExp('\\+', 'g'), '_')
+                .replace(new RegExp('/', 'g'), '$');
+        } else {
+            window.__cov_seq = window.__cov_seq || 0;
+            window.__cov_seq += 1;
+            suffix = window.__cov_seq;
+        }
+        return '__cov_' + (omitSuffix ? '' : suffix);
+    }
+
+    function pushAll(ary, thing) {
+        if (!isArray(thing)) {
+            thing = [ thing ];
+        }
+        Array.prototype.push.apply(ary, thing);
+    }
+
+    SYNTAX = {
+        // keep in sync with estraverse's VisitorKeys
+        AssignmentExpression: ['left', 'right'],
+        AssignmentPattern: ['left', 'right'],
+        ArrayExpression: ['elements'],
+        ArrayPattern: ['elements'],
+        ArrowFunctionExpression: ['params', 'body'],
+        AwaitExpression: ['argument'], // CAUTION: It's deferred to ES7.
+        BlockStatement: ['body'],
+        BinaryExpression: ['left', 'right'],
+        BreakStatement: ['label'],
+        CallExpression: ['callee', 'arguments'],
+        CatchClause: ['param', 'body'],
+        ClassBody: ['body'],
+        ClassDeclaration: ['id', 'superClass', 'body'],
+        ClassExpression: ['id', 'superClass', 'body'],
+        ComprehensionBlock: ['left', 'right'],  // CAUTION: It's deferred to ES7.
+        ComprehensionExpression: ['blocks', 'filter', 'body'],  // CAUTION: It's deferred to ES7.
+        ConditionalExpression: ['test', 'consequent', 'alternate'],
+        ContinueStatement: ['label'],
+        DebuggerStatement: [],
+        DirectiveStatement: [],
+        DoWhileStatement: ['body', 'test'],
+        EmptyStatement: [],
+        ExportAllDeclaration: ['source'],
+        ExportDefaultDeclaration: ['declaration'],
+        ExportNamedDeclaration: ['declaration', 'specifiers', 'source'],
+        ExportSpecifier: ['exported', 'local'],
+        ExpressionStatement: ['expression'],
+        ForStatement: ['init', 'test', 'update', 'body'],
+        ForInStatement: ['left', 'right', 'body'],
+        ForOfStatement: ['left', 'right', 'body'],
+        FunctionDeclaration: ['id', 'params', 'body'],
+        FunctionExpression: ['id', 'params', 'body'],
+        GeneratorExpression: ['blocks', 'filter', 'body'],  // CAUTION: It's deferred to ES7.
+        Identifier: [],
+        IfStatement: ['test', 'consequent', 'alternate'],
+        ImportDeclaration: ['specifiers', 'source'],
+        ImportDefaultSpecifier: ['local'],
+        ImportNamespaceSpecifier: ['local'],
+        ImportSpecifier: ['imported', 'local'],
+        Literal: [],
+        LabeledStatement: ['label', 'body'],
+        LogicalExpression: ['left', 'right'],
+        MetaProperty: ['meta', 'property'],
+        MemberExpression: ['object', 'property'],
+        MethodDefinition: ['key', 'value'],
+        ModuleSpecifier: [],
+        NewExpression: ['callee', 'arguments'],
+        ObjectExpression: ['properties'],
+        ObjectPattern: ['properties'],
+        Program: ['body'],
+        Property: ['key', 'value'],
+        RestElement: [ 'argument' ],
+        ReturnStatement: ['argument'],
+        SequenceExpression: ['expressions'],
+        SpreadElement: ['argument'],
+        Super: [],
+        SwitchStatement: ['discriminant', 'cases'],
+        SwitchCase: ['test', 'consequent'],
+        TaggedTemplateExpression: ['tag', 'quasi'],
+        TemplateElement: [],
+        TemplateLiteral: ['quasis', 'expressions'],
+        ThisExpression: [],
+        ThrowStatement: ['argument'],
+        TryStatement: ['block', 'handler', 'finalizer'],
+        UnaryExpression: ['argument'],
+        UpdateExpression: ['argument'],
+        VariableDeclaration: ['declarations'],
+        VariableDeclarator: ['id', 'init'],
+        WhileStatement: ['test', 'body'],
+        WithStatement: ['object', 'body'],
+        YieldExpression: ['argument']
+    };
+
+    for (nodeType in SYNTAX) {
+        /* istanbul ignore else: has own property */
+        if (SYNTAX.hasOwnProperty(nodeType)) {
+            SYNTAX[nodeType] = { name: nodeType, children: SYNTAX[nodeType] };
+        }
+    }
+
+    astgen = {
+        variable: function (name) { return { type: SYNTAX.Identifier.name, name: name }; },
+        stringLiteral: function (str) { return { type: SYNTAX.Literal.name, value: String(str) }; },
+        numericLiteral: function (num) { return { type: SYNTAX.Literal.name, value: Number(num) }; },
+        statement: function (contents) { return { type: SYNTAX.ExpressionStatement.name, expression: contents }; },
+        dot: function (obj, field) { return { type: SYNTAX.MemberExpression.name, computed: false, object: obj, property: field }; },
+        subscript: function (obj, sub) { return { type: SYNTAX.MemberExpression.name, computed: true, object: obj, property: sub }; },
+        postIncrement: function (obj) { return { type: SYNTAX.UpdateExpression.name, operator: '++', prefix: false, argument: obj }; },
+        sequence: function (one, two) { return { type: SYNTAX.SequenceExpression.name, expressions: [one, two] }; },
+        returnStatement: function (expr) { return { type: SYNTAX.ReturnStatement.name, argument: expr }; }
+    };
+
+    function Walker(walkMap, preprocessor, scope, debug) {
+        this.walkMap = walkMap;
+        this.preprocessor = preprocessor;
+        this.scope = scope;
+        this.debug = debug;
+        if (this.debug) {
+            this.level = 0;
+            this.seq = true;
+        }
+    }
+
+    function defaultWalker(node, walker) {
+
+        var type = node.type,
+            preprocessor,
+            postprocessor,
+            children = SYNTAX[type],
+            // don't run generated nodes thru custom walks otherwise we will attempt to instrument the instrumentation code :)
+            applyCustomWalker = !!node.loc || node.type === SYNTAX.Program.name,
+            walkerFn = applyCustomWalker ? walker.walkMap[type] : null,
+            i,
+            j,
+            walkFnIndex,
+            childType,
+            childNode,
+            ret,
+            childArray,
+            childElement,
+            pathElement,
+            assignNode,
+            isLast;
+
+        if (!SYNTAX[type]) {
+            console.error(node);
+            console.error('Unsupported node type:' + type);
+            return;
+        }
+        children = SYNTAX[type].children;
+        /* istanbul ignore if: guard */
+        if (node.walking) { throw new Error('Infinite regress: Custom walkers may NOT call walker.apply(node)'); }
+        node.walking = true;
+
+        ret = walker.apply(node, walker.preprocessor);
+
+        preprocessor = ret.preprocessor;
+        if (preprocessor) {
+            delete ret.preprocessor;
+            ret = walker.apply(node, preprocessor);
+        }
+
+        if (isArray(walkerFn)) {
+            for (walkFnIndex = 0; walkFnIndex < walkerFn.length; walkFnIndex += 1) {
+                isLast = walkFnIndex === walkerFn.length - 1;
+                ret = walker.apply(ret, walkerFn[walkFnIndex]);
+                /*istanbul ignore next: paranoid check */
+                if (ret.type !== type && !isLast) {
+                    throw new Error('Only the last walker is allowed to change the node type: [type was: ' + type + ' ]');
+                }
+            }
+        } else {
+            if (walkerFn) {
+                ret = walker.apply(node, walkerFn);
+            }
+        }
+
+        if (node.skipSelf) {
+            return;
+        }
+
+        for (i = 0; i < children.length; i += 1) {
+            childType = children[i];
+            childNode = node[childType];
+            if (childNode && !childNode.skipWalk) {
+                pathElement = { node: node, property: childType };
+                if (isArray(childNode)) {
+                    childArray = [];
+                    for (j = 0; j < childNode.length; j += 1) {
+                        childElement = childNode[j];
+                        pathElement.index = j;
+                        if (childElement) {
+                          assignNode = walker.apply(childElement, null, pathElement);
+                          if (isArray(assignNode.prepend)) {
+                              pushAll(childArray, assignNode.prepend);
+                              delete assignNode.prepend;
+                          }
+                        } else {
+                            assignNode = undefined;
+                        }
+                        pushAll(childArray, assignNode);
+                    }
+                    node[childType] = childArray;
+                } else {
+                    assignNode = walker.apply(childNode, null, pathElement);
+                    /*istanbul ignore if: paranoid check */
+                    if (isArray(assignNode.prepend)) {
+                        throw new Error('Internal error: attempt to prepend statements in disallowed (non-array) context');
+                        /* if this should be allowed, this is how to solve it
+                        tmpNode = { type: 'BlockStatement', body: [] };
+                        pushAll(tmpNode.body, assignNode.prepend);
+                        pushAll(tmpNode.body, assignNode);
+                        node[childType] = tmpNode;
+                        delete assignNode.prepend;
+                        */
+                    } else {
+                        node[childType] = assignNode;
+                    }
+                }
+            }
+        }
+
+        postprocessor = ret.postprocessor;
+        if (postprocessor) {
+            delete ret.postprocessor;
+            ret = walker.apply(ret, postprocessor);
+        }
+
+        delete node.walking;
+
+        return ret;
+    }
+
+    Walker.prototype = {
+        startWalk: function (node) {
+            this.path = [];
+            this.apply(node);
+        },
+
+        apply: function (node, walkFn, pathElement) {
+            var ret, i, seq, prefix;
+
+            walkFn = walkFn || defaultWalker;
+            if (this.debug) {
+                this.seq += 1;
+                this.level += 1;
+                seq = this.seq;
+                prefix = '';
+                for (i = 0; i < this.level; i += 1) { prefix += '    '; }
+                console.log(prefix + 'Enter (' + seq + '):' + node.type);
+            }
+            if (pathElement) { this.path.push(pathElement); }
+            ret = walkFn.call(this.scope, node, this);
+            if (pathElement) { this.path.pop(); }
+            if (this.debug) {
+                this.level -= 1;
+                console.log(prefix + 'Return (' + seq + '):' + node.type);
+            }
+            return ret || node;
+        },
+
+        startLineForNode: function (node) {
+            return node && node.loc && node.loc.start ? node.loc.start.line : /* istanbul ignore next: guard */ null;
+        },
+
+        ancestor: function (n) {
+            return this.path.length > n - 1 ? this.path[this.path.length - n] : /* istanbul ignore next: guard */ null;
+        },
+
+        parent: function () {
+            return this.ancestor(1);
+        },
+
+        isLabeled: function () {
+            var el = this.parent();
+            return el && el.node.type === SYNTAX.LabeledStatement.name;
+        }
+    };
+
+    /**
+     * mechanism to instrument code for coverage. It uses the `esprima` and
+     * `escodegen` libraries for JS parsing and code generation respectively.
+     *
+     * Works on `node` as well as the browser.
+     *
+     * Usage on nodejs
+     * ---------------
+     *
+     *      var instrumenter = new require('istanbul').Instrumenter(),
+     *          changed = instrumenter.instrumentSync('function meaningOfLife() { return 42; }', 'filename.js');
+     *
+     * Usage in a browser
+     * ------------------
+     *
+     * Load `esprima.js`, `escodegen.js` and `instrumenter.js` (this file) using `script` tags or other means.
+     *
+     * Create an instrumenter object as:
+     *
+     *      var instrumenter = new Instrumenter(),
+     *          changed = instrumenter.instrumentSync('function meaningOfLife() { return 42; }', 'filename.js');
+     *
+     * Aside from demonstration purposes, it is unclear why you would want to instrument code in a browser.
+     *
+     * @class Instrumenter
+     * @constructor
+     * @param {Object} options Optional. Configuration options.
+     * @param {String} [options.coverageVariable] the global variable name to use for
+     *      tracking coverage. Defaults to `__coverage__`
+     * @param {Boolean} [options.embedSource] whether to embed the source code of every
+     *      file as an array in the file coverage object for that file. Defaults to `false`
+     * @param {Boolean} [options.preserveComments] whether comments should be preserved in the output. Defaults to `false`
+     * @param {Boolean} [options.noCompact] emit readable code when set. Defaults to `false`
+     * @param {Boolean} [options.esModules] whether the code to instrument contains uses es
+     *      imports or exports.
+     * @param {Boolean} [options.noAutoWrap] do not automatically wrap the source in
+     *      an anonymous function before covering it. By default, code is wrapped in
+     *      an anonymous function before it is parsed. This is done because
+     *      some nodejs libraries have `return` statements outside of
+     *      a function which is technically invalid Javascript and causes the parser to fail.
+     *      This construct, however, works correctly in node since module loading
+     *      is done in the context of an anonymous function.
+     *
+     * Note that the semantics of the code *returned* by the instrumenter does not change in any way.
+     * The function wrapper is "unwrapped" before the instrumented code is generated.
+     * @param {Object} [options.codeGenerationOptions] an object that is directly passed to the `escodegen`
+     *      library as configuration for code generation. The `noCompact` setting is not honored when this
+     *      option is specified
+     * @param {Boolean} [options.debug] assist in debugging. Currently, the only effect of
+     *      setting this option is a pretty-print of the coverage variable. Defaults to `false`
+     * @param {Boolean} [options.walkDebug] assist in debugging of the AST walker used by this class.
+     *
+     */
+    function Instrumenter(options) {
+        this.opts = options || {
+            debug: false,
+            walkDebug: false,
+            coverageVariable: '__coverage__',
+            codeGenerationOptions: undefined,
+            noAutoWrap: false,
+            noCompact: false,
+            embedSource: false,
+            preserveComments: false,
+            esModules: false
+        };
+
+        if (this.opts.esModules && !this.opts.noAutoWrap) {
+            this.opts.noAutoWrap = true;
+            if (this.opts.debug) {
+                console.log('Setting noAutoWrap to true as required by esModules');
+            }
+        }
+
+        this.walker = new Walker({
+            ArrowFunctionExpression: [ this.arrowBlockConverter ],
+            ExpressionStatement: this.coverStatement,
+            ExportNamedDeclaration: this.coverExport,
+            BreakStatement: this.coverStatement,
+            ContinueStatement: this.coverStatement,
+            DebuggerStatement: this.coverStatement,
+            ReturnStatement: this.coverStatement,
+            ThrowStatement: this.coverStatement,
+            TryStatement: [ this.paranoidHandlerCheck, this.coverStatement],
+            VariableDeclaration: this.coverStatement,
+            IfStatement: [ this.ifBlockConverter, this.coverStatement, this.ifBranchInjector ],
+            ForStatement: [ this.skipInit, this.loopBlockConverter, this.coverStatement ],
+            ForInStatement: [ this.skipLeft, this.loopBlockConverter, this.coverStatement ],
+            ForOfStatement: [ this.skipLeft, this.loopBlockConverter, this.coverStatement ],
+            WhileStatement: [ this.loopBlockConverter, this.coverStatement ],
+            DoWhileStatement: [ this.loopBlockConverter, this.coverStatement ],
+            SwitchStatement: [ this.coverStatement, this.switchBranchInjector ],
+            SwitchCase: [ this.switchCaseInjector ],
+            WithStatement: [ this.withBlockConverter, this.coverStatement ],
+            FunctionDeclaration: [ this.coverFunction, this.coverStatement ],
+            FunctionExpression: this.coverFunction,
+            LabeledStatement: this.coverStatement,
+            ConditionalExpression: this.conditionalBranchInjector,
+            LogicalExpression: this.logicalExpressionBranchInjector,
+            ObjectExpression: this.maybeAddType,
+            MetaProperty: this.coverMetaProperty,
+        }, this.extractCurrentHint, this, this.opts.walkDebug);
+
+        //unit testing purposes only
+        if (this.opts.backdoor && this.opts.backdoor.omitTrackerSuffix) {
+            this.omitTrackerSuffix = true;
+        }
+    }
+
+    Instrumenter.prototype = {
+        /**
+         * synchronous instrumentation method. Throws when illegal code is passed to it
+         * @method instrumentSync
+         * @param {String} code the code to be instrumented as a String
+         * @param {String} filename Optional. The name of the file from which
+         *  the code was read. A temporary filename is generated when not specified.
+         *  Not specifying a filename is only useful for unit tests and demonstrations
+         *  of this library.
+         */
+        instrumentSync: function (code, filename) {
+            var program;
+
+            //protect from users accidentally passing in a Buffer object instead
+            if (typeof code !== 'string') { throw new Error('Code must be string'); }
+            if (code.charAt(0) === '#') { //shebang, 'comment' it out, won't affect syntax tree locations for things we care about
+                code = '//' + code;
+            }
+            if (!this.opts.noAutoWrap) {
+                code = LEADER_WRAP + code + TRAILER_WRAP;
+            }
+            try {
+                program = ESP.parse(code, {
+                    loc: true,
+                    range: true,
+                    tokens: this.opts.preserveComments,
+                    comment: true,
+                    sourceType: this.opts.esModules ? 'module' : 'script'
+                });
+            } catch (e) {
+                console.log('Failed to parse file: ' + filename);
+                throw e;
+            }
+            if (this.opts.preserveComments) {
+                program = ESPGEN.attachComments(program, program.comments, program.tokens);
+            }
+            if (!this.opts.noAutoWrap) {
+                program = {
+                    type: SYNTAX.Program.name,
+                    body: program.body[0].expression.callee.body.body,
+                    comments: program.comments
+                };
+            }
+            return this.instrumentASTSync(program, filename, code);
+        },
+        filterHints: function (comments) {
+            var ret = [],
+                i,
+                comment,
+                groups;
+            if (!(comments && isArray(comments))) {
+                return ret;
+            }
+            for (i = 0; i < comments.length; i += 1) {
+                comment = comments[i];
+                /* istanbul ignore else: paranoid check */
+                if (comment && comment.value && comment.range && isArray(comment.range)) {
+                    groups = String(comment.value).match(COMMENT_RE);
+                    if (groups) {
+                        ret.push({ type: groups[1], start: comment.range[0], end: comment.range[1] });
+                    }
+                }
+            }
+            return ret;
+        },
+        extractCurrentHint: function (node) {
+            if (!node.range) { return; }
+            var i = this.currentState.lastHintPosition + 1,
+                hints = this.currentState.hints,
+                nodeStart = node.range[0],
+                hint;
+            this.currentState.currentHint = null;
+            while (i < hints.length) {
+                hint = hints[i];
+                if (hint.end < nodeStart) {
+                    this.currentState.currentHint = hint;
+                    this.currentState.lastHintPosition = i;
+                    i += 1;
+                } else {
+                    break;
+                }
+            }
+        },
+        /**
+         * synchronous instrumentation method that instruments an AST instead.
+         * @method instrumentASTSync
+         * @param {String} program the AST to be instrumented
+         * @param {String} filename Optional. The name of the file from which
+         *  the code was read. A temporary filename is generated when not specified.
+         *  Not specifying a filename is only useful for unit tests and demonstrations
+         *  of this library.
+         *  @param {String} originalCode the original code corresponding to the AST,
+         *  used for embedding the source into the coverage object
+         */
+        instrumentASTSync: function (program, filename, originalCode) {
+            var usingStrict = false,
+                codegenOptions,
+                generated,
+                preamble,
+                lineCount,
+                i;
+            filename = filename || String(new Date().getTime()) + '.js';
+            this.sourceMap = null;
+            this.coverState = {
+                path: filename,
+                s: {},
+                b: {},
+                f: {},
+                fnMap: {},
+                statementMap: {},
+                branchMap: {}
+            };
+            this.currentState = {
+                trackerVar: generateTrackerVar(filename, this.omitTrackerSuffix),
+                func: 0,
+                branch: 0,
+                variable: 0,
+                statement: 0,
+                hints: this.filterHints(program.comments),
+                currentHint: null,
+                lastHintPosition: -1,
+                ignoring: 0
+            };
+            if (program.body && program.body.length > 0 && this.isUseStrictExpression(program.body[0])) {
+                //nuke it
+                program.body.shift();
+                //and add it back at code generation time
+                usingStrict = true;
+            }
+            this.walker.startWalk(program);
+            codegenOptions = this.opts.codeGenerationOptions || { format: { compact: !this.opts.noCompact }};
+            codegenOptions.comment = this.opts.preserveComments;
+            //console.log(JSON.stringify(program, undefined, 2));
+
+            generated = ESPGEN.generate(program, codegenOptions);
+            preamble = this.getPreamble(originalCode || '', usingStrict);
+
+            if (generated.map && generated.code) {
+                lineCount = preamble.split(/\r\n|\r|\n/).length;
+                // offset all the generated line numbers by the number of lines in the preamble
+                for (i = 0; i < generated.map._mappings._array.length; i += 1) {
+                    generated.map._mappings._array[i].generatedLine += lineCount;
+                }
+                this.sourceMap = generated.map;
+                generated = generated.code;
+            }
+
+            return preamble + '\n' + generated + '\n';
+        },
+        /**
+         * Callback based instrumentation. Note that this still executes synchronously in the same process tick
+         * and calls back immediately. It only provides the options for callback style error handling as
+         * opposed to a `try-catch` style and nothing more. Implemented as a wrapper over `instrumentSync`
+         *
+         * @method instrument
+         * @param {String} code the code to be instrumented as a String
+         * @param {String} filename Optional. The name of the file from which
+         *  the code was read. A temporary filename is generated when not specified.
+         *  Not specifying a filename is only useful for unit tests and demonstrations
+         *  of this library.
+         * @param {Function(err, instrumentedCode)} callback - the callback function
+         */
+        instrument: function (code, filename, callback) {
+
+            if (!callback && typeof filename === 'function') {
+                callback = filename;
+                filename = null;
+            }
+            try {
+                callback(null, this.instrumentSync(code, filename));
+            } catch (ex) {
+                callback(ex);
+            }
+        },
+        /**
+         * returns the file coverage object for the code that was instrumented
+         * just before calling this method. Note that this represents a
+         * "zero-coverage" object which is not even representative of the code
+         * being loaded in node or a browser (which would increase the statement
+         * counts for mainline code).
+         * @method lastFileCoverage
+         * @return {Object} a "zero-coverage" file coverage object for the code last instrumented
+         * by this instrumenter
+         */
+        lastFileCoverage: function () {
+            return this.coverState;
+        },
+        /**
+         * returns the source map object for the code that was instrumented
+         * just before calling this method.
+         * @method lastSourceMap
+         * @return {Object} a source map object for the code last instrumented
+         * by this instrumenter
+         */
+        lastSourceMap: function () {
+            return this.sourceMap;
+        },
+        fixColumnPositions: function (coverState) {
+            var offset = LEADER_WRAP.length,
+                fixer = function (loc) {
+                    if (loc.start.line === 1) {
+                        loc.start.column -= offset;
+                    }
+                    if (loc.end.line === 1) {
+                        loc.end.column -= offset;
+                    }
+                },
+                k,
+                obj,
+                i,
+                locations;
+
+            obj = coverState.statementMap;
+            for (k in obj) {
+                /* istanbul ignore else: has own property */
+                if (obj.hasOwnProperty(k)) { fixer(obj[k]); }
+            }
+            obj = coverState.fnMap;
+            for (k in obj) {
+                /* istanbul ignore else: has own property */
+                if (obj.hasOwnProperty(k)) { fixer(obj[k].loc); }
+            }
+            obj = coverState.branchMap;
+            for (k in obj) {
+                /* istanbul ignore else: has own property */
+                if (obj.hasOwnProperty(k)) {
+                    locations = obj[k].locations;
+                    for (i = 0; i < locations.length; i += 1) {
+                        fixer(locations[i]);
+                    }
+                }
+            }
+        },
+
+        getPreamble: function (sourceCode, emitUseStrict) {
+            var varName = this.opts.coverageVariable || '__coverage__',
+                file = this.coverState.path.replace(/\\/g, '\\\\'),
+                tracker = this.currentState.trackerVar,
+                coverState,
+                strictLine = emitUseStrict ? '"use strict";' : '',
+                // return replacements using the function to ensure that the replacement is
+                // treated like a dumb string and not as a string with RE replacement patterns
+                replacer = function (s) {
+                    return function () { return s; };
+                },
+                code;
+            if (!this.opts.noAutoWrap) {
+                this.fixColumnPositions(this.coverState);
+            }
+            if (this.opts.embedSource) {
+                this.coverState.code = sourceCode.split(/(?:\r?\n)|\r/);
+            }
+            coverState = this.opts.debug ? JSON.stringify(this.coverState, undefined, 4) : JSON.stringify(this.coverState);
+            code = [
+                "%STRICT%",
+                "var %VAR% = (Function('return this'))();",
+                "if (!%VAR%.%GLOBAL%) { %VAR%.%GLOBAL% = {}; }",
+                "%VAR% = %VAR%.%GLOBAL%;",
+                "if (!(%VAR%['%FILE%'])) {",
+                "   %VAR%['%FILE%'] = %OBJECT%;",
+                "}",
+                "%VAR% = %VAR%['%FILE%'];"
+            ].join("\n")
+                .replace(/%STRICT%/g, replacer(strictLine))
+                .replace(/%VAR%/g, replacer(tracker))
+                .replace(/%GLOBAL%/g, replacer(varName))
+                .replace(/%FILE%/g, replacer(file))
+                .replace(/%OBJECT%/g, replacer(coverState));
+            return code;
+        },
+
+        startIgnore: function () {
+            this.currentState.ignoring += 1;
+        },
+
+        endIgnore: function () {
+            this.currentState.ignoring -= 1;
+        },
+
+        convertToBlock: function (node) {
+            if (!node) {
+                return { type: 'BlockStatement', body: [] };
+            } else if (node.type === 'BlockStatement') {
+                return node;
+            } else {
+                return { type: 'BlockStatement', body: [ node ] };
+            }
+        },
+
+        arrowBlockConverter: function (node) {
+            var retStatement;
+            if (node.expression) { // turn expression nodes into a block with a return statement
+                retStatement = astgen.returnStatement(node.body);
+                // ensure the generated return statement is covered
+                retStatement.loc = node.body.loc;
+                node.body = this.convertToBlock(retStatement);
+                node.expression = false;
+            }
+        },
+
+        paranoidHandlerCheck: function (node) {
+            // if someone is using an older esprima on the browser
+            // convert handlers array to single handler attribute
+            // containing its first element
+            /* istanbul ignore next */
+            if (!node.handler && node.handlers) {
+                node.handler = node.handlers[0];
+            }
+        },
+
+        ifBlockConverter: function (node) {
+            node.consequent = this.convertToBlock(node.consequent);
+            node.alternate = this.convertToBlock(node.alternate);
+        },
+
+        loopBlockConverter: function (node) {
+            node.body = this.convertToBlock(node.body);
+        },
+
+        withBlockConverter: function (node) {
+            node.body = this.convertToBlock(node.body);
+        },
+
+        statementName: function (location, initValue) {
+            var sName,
+                ignoring = !!this.currentState.ignoring;
+
+            location.skip = ignoring || undefined;
+            initValue = initValue || 0;
+            this.currentState.statement += 1;
+            sName = this.currentState.statement;
+            this.coverState.statementMap[sName] = location;
+            this.coverState.s[sName] = initValue;
+            return sName;
+        },
+
+        skipInit: function (node /*, walker */) {
+            if (node.init) {
+                node.init.skipWalk = true;
+            }
+        },
+
+        skipLeft: function (node /*, walker */) {
+            node.left.skipWalk = true;
+        },
+
+        isUseStrictExpression: function (node) {
+            return node && node.type === SYNTAX.ExpressionStatement.name &&
+                node.expression  && node.expression.type === SYNTAX.Literal.name &&
+                node.expression.value === 'use strict';
+        },
+
+        maybeSkipNode: function (node, type) {
+            var alreadyIgnoring = !!this.currentState.ignoring,
+                hint = this.currentState.currentHint,
+                ignoreThis = !alreadyIgnoring && hint && hint.type === type;
+
+            if (ignoreThis) {
+                this.startIgnore();
+                node.postprocessor = this.endIgnore;
+                return true;
+            }
+            return false;
+        },
+
+        coverMetaProperty: function(node /* , walker */) {
+           node.skipSelf = true;
+        },
+
+        coverStatement: function (node, walker) {
+            var sName,
+                incrStatementCount,
+                parent,
+                grandParent;
+
+            this.maybeSkipNode(node, 'next');
+
+            if (this.isUseStrictExpression(node)) {
+                grandParent = walker.ancestor(2);
+                /* istanbul ignore else: difficult to test */
+                if (grandParent) {
+                    if ((grandParent.node.type === SYNTAX.FunctionExpression.name ||
+                        grandParent.node.type === SYNTAX.FunctionDeclaration.name)  &&
+                        walker.parent().node.body[0] === node) {
+                        return;
+                    }
+                }
+            }
+
+            if (node.type === SYNTAX.FunctionDeclaration.name) {
+                // Called for the side-effect of setting the function's statement count to 1.
+                this.statementName(node.loc, 1);
+            } else {
+                // We let `coverExport` handle ExportNamedDeclarations.
+                parent = walker.parent();
+                if (parent && parent.node.type === SYNTAX.ExportNamedDeclaration.name) {
+                    return;
+                }
+
+                sName = this.statementName(node.loc);
+
+                incrStatementCount = astgen.statement(
+                    astgen.postIncrement(
+                        astgen.subscript(
+                            astgen.dot(astgen.variable(this.currentState.trackerVar), astgen.variable('s')),
+                            astgen.stringLiteral(sName)
+                        )
+                    )
+                );
+
+                this.splice(incrStatementCount, node, walker);
+            }
+        },
+
+        coverExport: function (node, walker) {
+            var sName, incrStatementCount;
+
+            if ( !node.declaration || !node.declaration.declarations ) { return; }
+
+            this.maybeSkipNode(node, 'next');
+
+            sName = this.statementName(node.declaration.loc);
+            incrStatementCount = astgen.statement(
+                astgen.postIncrement(
+                    astgen.subscript(
+                        astgen.dot(astgen.variable(this.currentState.trackerVar), astgen.variable('s')),
+                        astgen.stringLiteral(sName)
+                    )
+                )
+            );
+
+            this.splice(incrStatementCount, node, walker);
+        },
+
+        splice: function (statements, node, walker) {
+            var targetNode = walker.isLabeled() ? walker.parent().node : node;
+            targetNode.prepend = targetNode.prepend || [];
+            pushAll(targetNode.prepend, statements);
+        },
+
+        functionName: function (node, line, location) {
+            this.currentState.func += 1;
+            var id = this.currentState.func,
+                ignoring = !!this.currentState.ignoring,
+                name = node.id ? node.id.name : '(anonymous_' + id + ')',
+                clone = function (attr) {
+                    var obj = location[attr] || /* istanbul ignore next */ {};
+                    return { line: obj.line, column: obj.column };
+                };
+            this.coverState.fnMap[id] = {
+                name: name, line: line,
+                loc: {
+                    start: clone('start'),
+                    end: clone('end')
+                },
+                skip: ignoring || undefined
+            };
+            this.coverState.f[id] = 0;
+            return id;
+        },
+
+        coverFunction: function (node, walker) {
+            var id,
+                body = node.body,
+                blockBody = body.body,
+                popped;
+
+            this.maybeSkipNode(node, 'next');
+
+            id = this.functionName(node, walker.startLineForNode(node), {
+                start: node.loc.start,
+                end: { line: node.body.loc.start.line, column: node.body.loc.start.column }
+            });
+
+            if (blockBody.length > 0 && this.isUseStrictExpression(blockBody[0])) {
+                popped = blockBody.shift();
+            }
+            blockBody.unshift(
+                astgen.statement(
+                    astgen.postIncrement(
+                        astgen.subscript(
+                            astgen.dot(astgen.variable(this.currentState.trackerVar), astgen.variable('f')),
+                            astgen.stringLiteral(id)
+                        )
+                    )
+                )
+            );
+            if (popped) {
+                blockBody.unshift(popped);
+            }
+        },
+
+        branchName: function (type, startLine, pathLocations) {
+            var bName,
+                paths = [],
+                locations = [],
+                i,
+                ignoring = !!this.currentState.ignoring;
+            this.currentState.branch += 1;
+            bName = this.currentState.branch;
+            for (i = 0; i < pathLocations.length; i += 1) {
+                pathLocations[i].skip = pathLocations[i].skip || ignoring || undefined;
+                locations.push(pathLocations[i]);
+                paths.push(0);
+            }
+            this.coverState.b[bName] = paths;
+            this.coverState.branchMap[bName] = { line: startLine, type: type, locations: locations };
+            return bName;
+        },
+
+        branchIncrementExprAst: function (varName, branchIndex, down) {
+            var ret = astgen.postIncrement(
+                astgen.subscript(
+                    astgen.subscript(
+                        astgen.dot(astgen.variable(this.currentState.trackerVar), astgen.variable('b')),
+                        astgen.stringLiteral(varName)
+                    ),
+                    astgen.numericLiteral(branchIndex)
+                ),
+                down
+            );
+            return ret;
+        },
+
+        locationsForNodes: function (nodes) {
+            var ret = [],
+                i;
+            for (i = 0; i < nodes.length; i += 1) {
+                ret.push(nodes[i].loc);
+            }
+            return ret;
+        },
+
+        ifBranchInjector: function (node, walker) {
+            var alreadyIgnoring = !!this.currentState.ignoring,
+                hint = this.currentState.currentHint,
+                ignoreThen = !alreadyIgnoring && hint && hint.type === 'if',
+                ignoreElse = !alreadyIgnoring && hint && hint.type === 'else',
+                line = node.loc.start.line,
+                col = node.loc.start.column,
+                makeLoc = function () { return  { line: line, column: col }; },
+                bName = this.branchName('if', walker.startLineForNode(node), [
+                    { start: makeLoc(), end: makeLoc(), skip: ignoreThen || undefined },
+                    { start: makeLoc(), end: makeLoc(), skip: ignoreElse || undefined }
+                ]),
+                thenBody = node.consequent.body,
+                elseBody = node.alternate.body,
+                child;
+            thenBody.unshift(astgen.statement(this.branchIncrementExprAst(bName, 0)));
+            elseBody.unshift(astgen.statement(this.branchIncrementExprAst(bName, 1)));
+            if (ignoreThen) { child = node.consequent; child.preprocessor = this.startIgnore; child.postprocessor = this.endIgnore; }
+            if (ignoreElse) { child = node.alternate; child.preprocessor = this.startIgnore; child.postprocessor = this.endIgnore; }
+        },
+
+        branchLocationFor: function (name, index) {
+            return this.coverState.branchMap[name].locations[index];
+        },
+
+        switchBranchInjector: function (node, walker) {
+            var cases = node.cases,
+                bName,
+                i;
+
+            if (!(cases && cases.length > 0)) {
+                return;
+            }
+            bName = this.branchName('switch', walker.startLineForNode(node), this.locationsForNodes(cases));
+            for (i = 0; i < cases.length; i += 1) {
+                cases[i].branchLocation = this.branchLocationFor(bName, i);
+                cases[i].consequent.unshift(astgen.statement(this.branchIncrementExprAst(bName, i)));
+            }
+        },
+
+        switchCaseInjector: function (node) {
+            var location = node.branchLocation;
+            delete node.branchLocation;
+            if (this.maybeSkipNode(node, 'next')) {
+                location.skip = true;
+            }
+        },
+
+        conditionalBranchInjector: function (node, walker) {
+            var bName = this.branchName('cond-expr', walker.startLineForNode(node), this.locationsForNodes([ node.consequent, node.alternate ])),
+                ast1 = this.branchIncrementExprAst(bName, 0),
+                ast2 = this.branchIncrementExprAst(bName, 1);
+
+            node.consequent.preprocessor = this.maybeAddSkip(this.branchLocationFor(bName, 0));
+            node.alternate.preprocessor = this.maybeAddSkip(this.branchLocationFor(bName, 1));
+            node.consequent = astgen.sequence(ast1, node.consequent);
+            node.alternate = astgen.sequence(ast2, node.alternate);
+        },
+
+        maybeAddSkip: function (branchLocation) {
+            return function (node) {
+                var alreadyIgnoring = !!this.currentState.ignoring,
+                    hint = this.currentState.currentHint,
+                    ignoreThis = !alreadyIgnoring && hint && hint.type === 'next';
+                if (ignoreThis) {
+                    this.startIgnore();
+                    node.postprocessor = this.endIgnore;
+                }
+                if (ignoreThis || alreadyIgnoring) {
+                    branchLocation.skip = true;
+                }
+            };
+        },
+
+        logicalExpressionBranchInjector: function (node, walker) {
+            var parent = walker.parent(),
+                leaves = [],
+                bName,
+                tuple,
+                i;
+
+            this.maybeSkipNode(node, 'next');
+
+            if (parent && parent.node.type === SYNTAX.LogicalExpression.name) {
+                //already covered
+                return;
+            }
+
+            this.findLeaves(node, leaves);
+            bName = this.branchName('binary-expr',
+                walker.startLineForNode(node),
+                this.locationsForNodes(leaves.map(function (item) { return item.node; }))
+            );
+            for (i = 0; i < leaves.length; i += 1) {
+                tuple = leaves[i];
+                tuple.parent[tuple.property] = astgen.sequence(this.branchIncrementExprAst(bName, i), tuple.node);
+                tuple.node.preprocessor = this.maybeAddSkip(this.branchLocationFor(bName, i));
+            }
+        },
+
+        findLeaves: function (node, accumulator, parent, property) {
+            if (node.type === SYNTAX.LogicalExpression.name) {
+                this.findLeaves(node.left, accumulator, node, 'left');
+                this.findLeaves(node.right, accumulator, node, 'right');
+            } else {
+                accumulator.push({ node: node, parent: parent, property: property });
+            }
+        },
+        maybeAddType: function (node /*, walker */) {
+            var props = node.properties,
+                i,
+                child;
+            for (i = 0; i < props.length; i += 1) {
+                child = props[i];
+                if (!child.type) {
+                    child.type = SYNTAX.Property.name;
+                }
+            }
+        },
+    };
+
+    if (isNode) {
+        module.exports = Instrumenter;
+    } else {
+        window.Instrumenter = Instrumenter;
+    }
+
+}(typeof module !== 'undefined' && typeof module.exports !== 'undefined' && typeof exports !== 'undefined'));
 
 
 
 /*
-file istanbul/lib/object-utils.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
+shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/object-utils.js > /tmp/aa.js
 */
-(function(e){function t(e){var t=e.statementMap,n=e.s,r;e.l||(e.l=r={},Object.keys
-(n).forEach(function(e){var i=t[e].start.line,s=n[e],o=r[i];s===0&&t[e].skip&&(s=1
-);if(typeof o=="undefined"||o<s)r[i]=s}))}function n(e){Object.keys(e).forEach(function(
-n){t(e[n])})}function r(e){Object.keys(e).forEach(function(t){delete e[t].l})}function i
-(e,t){var n;return t>0?(n=1e5*e/t+5,Math.floor(n/10)/100):100}function s(e,t,n){
-var r=e[t],s=n?e[n]:null,o={total:0,covered:0,skipped:0};return Object.keys(r).forEach
-(function(e){var t=!!r[e],n=s&&s[e].skip;o.total+=1;if(t||n)o.covered+=1;!t&&n&&
-(o.skipped+=1)}),o.pct=i(o.covered,o.total),o}function o(e){var t=e.b,n=e.branchMap
-,r={total:0,covered:0,skipped:0};return Object.keys(t).forEach(function(e){var i=
-t[e],s=n[e],o,u,a;for(a=0;a<i.length;a+=1){o=i[a]>0,u=s.locations&&s.locations[a
-]&&s.locations[a].skip;if(o||u)r.covered+=1;!o&&u&&(r.skipped+=1)}r.total+=i.length
-}),r.pct=i(r.covered,r.total),r}function u(){return{lines:{total:0,covered:0,skipped
-:0,pct:"Unknown"},statements:{total:0,covered:0,skipped:0,pct:"Unknown"},functions
-:{total:0,covered:0,skipped:0,pct:"Unknown"},branches:{total:0,covered:0,skipped
-:0,pct:"Unknown"}}}function a(e){var n=u();return t(e),n.lines=s(e,"l"),n.functions=
-s(e,"f","fnMap"),n.statements=s(e,"s","statementMap"),n.branches=o(e),n}function f
-(e,t){var n=JSON.parse(JSON.stringify(e)),r;return delete n.l,Object.keys(t.s).forEach
-(function(e){n.s[e]+=t.s[e]}),Object.keys(t.f).forEach(function(e){n.f[e]+=t.f[e
-]}),Object.keys(t.b).forEach(function(e){var i=n.b[e],s=t.b[e];for(r=0;r<i.length
-;r+=1)i[r]+=s[r]}),n}function l(){var e=u(),t=Array.prototype.slice.call(arguments
-),n=["lines","statements","branches","functions"],r=function(t){t&&n.forEach(function(
-n){e[n].total+=t[n].total,e[n].covered+=t[n].covered,e[n].skipped+=t[n].skipped}
-)};return t.forEach(function(e){r(e)}),n.forEach(function(t){e[t].pct=i(e[t].covered
-,e[t].total)}),e}function c(e){var t=[];return Object.keys(e).forEach(function(n
-){t.push(a(e[n]))}),l.apply(null,t)}function h(e){var t={};return n(e),Object.keys
-(e).forEach(function(n){var r=e[n],i=r.l,s=r.f,o=r.fnMap,u;u=t[n]={lines:{},calledLines
-:0,coveredLines:0,functions:{},calledFunctions:0,coveredFunctions:0},Object.keys
-(i).forEach(function(e){u.lines[e]=i[e],u.coveredLines+=1,i[e]>0&&(u.calledLines+=1
-)}),Object.keys(s).forEach(function(e){var t=o[e].name+":"+o[e].line;u.functions
-[t]=s[e],u.coveredFunctions+=1,s[e]>0&&(u.calledFunctions+=1)})}),t}var p={addDerivedInfo
-:n,addDerivedInfoForFile:t,removeDerivedInfo:r,blankSummary:u,summarizeFileCoverage
-:a,summarizeCoverage:c,mergeFileCoverage:f,mergeSummaryObjects:l,toYUICoverage:h
-};e?module.exports=p:window.coverageUtils=p})(typeof module!="undefined"&&typeof
-module.exports!="undefined"&&typeof exports!="undefined")
+/*
+ Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
+ Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
+ */
+
+/**
+ * utility methods to process coverage objects. A coverage object has the following
+ * format.
+ *
+ *      {
+ *          "/path/to/file1.js": { file1 coverage },
+ *          "/path/to/file2.js": { file2 coverage }
+ *      }
+ *
+ *  The internals of the file coverage object are intentionally not documented since
+ *  it is not a public interface.
+ *
+ *  *Note:* When a method of this module has the word `File` in it, it will accept
+ *  one of the sub-objects of the main coverage object as an argument. Other
+ *  methods accept the higher level coverage object with multiple keys.
+ *
+ * Works on `node` as well as the browser.
+ *
+ * Usage on nodejs
+ * ---------------
+ *
+ *      var objectUtils = require('istanbul').utils;
+ *
+ * Usage in a browser
+ * ------------------
+ *
+ * Load this file using a `script` tag or other means. This will set `window.coverageUtils`
+ * to this module's exports.
+ *
+ * @class ObjectUtils
+ * @static
+ */
+(function (isNode) {
+    /**
+     * adds line coverage information to a file coverage object, reverse-engineering
+     * it from statement coverage. The object passed in is updated in place.
+     *
+     * Note that if line coverage information is already present in the object,
+     * it is not recomputed.
+     *
+     * @method addDerivedInfoForFile
+     * @static
+     * @param {Object} fileCoverage the coverage object for a single file
+     */
+    function addDerivedInfoForFile(fileCoverage) {
+        var statementMap = fileCoverage.statementMap,
+            statements = fileCoverage.s,
+            lineMap;
+
+        if (!fileCoverage.l) {
+            fileCoverage.l = lineMap = {};
+            Object.keys(statements).forEach(function (st) {
+                var line = statementMap[st].start.line,
+                    count = statements[st],
+                    prevVal = lineMap[line];
+                if (count === 0 && statementMap[st].skip) { count = 1; }
+                if (typeof prevVal === 'undefined' || prevVal < count) {
+                    lineMap[line] = count;
+                }
+            });
+        }
+    }
+    /**
+     * adds line coverage information to all file coverage objects.
+     *
+     * @method addDerivedInfo
+     * @static
+     * @param {Object} coverage the coverage object
+     */
+    function addDerivedInfo(coverage) {
+        Object.keys(coverage).forEach(function (k) {
+            addDerivedInfoForFile(coverage[k]);
+        });
+    }
+    /**
+     * removes line coverage information from all file coverage objects
+     * @method removeDerivedInfo
+     * @static
+     * @param {Object} coverage the coverage object
+     */
+    function removeDerivedInfo(coverage) {
+        Object.keys(coverage).forEach(function (k) {
+            delete coverage[k].l;
+        });
+    }
+
+    function percent(covered, total) {
+        var tmp;
+        if (total > 0) {
+            tmp = 1000 * 100 * covered / total + 5;
+            return Math.floor(tmp / 10) / 100;
+        } else {
+            return 100.00;
+        }
+    }
+
+    function computeSimpleTotals(fileCoverage, property, mapProperty) {
+        var stats = fileCoverage[property],
+            map = mapProperty ? fileCoverage[mapProperty] : null,
+            ret = { total: 0, covered: 0, skipped: 0 };
+
+        Object.keys(stats).forEach(function (key) {
+            var covered = !!stats[key],
+                skipped = map && map[key].skip;
+            ret.total += 1;
+            if (covered || skipped) {
+                ret.covered += 1;
+            }
+            if (!covered && skipped) {
+                ret.skipped += 1;
+            }
+        });
+        ret.pct = percent(ret.covered, ret.total);
+        return ret;
+    }
+
+    function computeBranchTotals(fileCoverage) {
+        var stats = fileCoverage.b,
+            branchMap = fileCoverage.branchMap,
+            ret = { total: 0, covered: 0, skipped: 0 };
+
+        Object.keys(stats).forEach(function (key) {
+            var branches = stats[key],
+                map = branchMap[key],
+                covered,
+                skipped,
+                i;
+            for (i = 0; i < branches.length; i += 1) {
+                covered = branches[i] > 0;
+                skipped = map.locations && map.locations[i] && map.locations[i].skip;
+                if (covered || skipped) {
+                    ret.covered += 1;
+                }
+                if (!covered && skipped) {
+                    ret.skipped += 1;
+                }
+            }
+            ret.total += branches.length;
+        });
+        ret.pct = percent(ret.covered, ret.total);
+        return ret;
+    }
+    /**
+     * returns a blank summary metrics object. A metrics object has the following
+     * format.
+     *
+     *      {
+     *          lines: lineMetrics,
+     *          statements: statementMetrics,
+     *          functions: functionMetrics,
+     *          branches: branchMetrics
+     *      }
+     *
+     *  Each individual metric object looks as follows:
+     *
+     *      {
+     *          total: n,
+     *          covered: m,
+     *          pct: percent
+     *      }
+     *
+     * @method blankSummary
+     * @static
+     * @return {Object} a blank metrics object
+     */
+    function blankSummary() {
+        return {
+            lines: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: 'Unknown'
+            },
+            statements: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: 'Unknown'
+            },
+            functions: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: 'Unknown'
+            },
+            branches: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: 'Unknown'
+            }
+        };
+    }
+    /**
+     * returns the summary metrics given the coverage object for a single file. See `blankSummary()`
+     * to understand the format of the returned object.
+     *
+     * @method summarizeFileCoverage
+     * @static
+     * @param {Object} fileCoverage the coverage object for a single file.
+     * @return {Object} the summary metrics for the file
+     */
+    function summarizeFileCoverage(fileCoverage) {
+        var ret = blankSummary();
+        addDerivedInfoForFile(fileCoverage);
+        ret.lines = computeSimpleTotals(fileCoverage, 'l');
+        ret.functions = computeSimpleTotals(fileCoverage, 'f', 'fnMap');
+        ret.statements = computeSimpleTotals(fileCoverage, 's', 'statementMap');
+        ret.branches = computeBranchTotals(fileCoverage);
+        return ret;
+    }
+    /**
+     * merges two instances of file coverage objects *for the same file*
+     * such that the execution counts are correct.
+     *
+     * @method mergeFileCoverage
+     * @static
+     * @param {Object} first the first file coverage object for a given file
+     * @param {Object} second the second file coverage object for the same file
+     * @return {Object} an object that is a result of merging the two. Note that
+     *      the input objects are not changed in any way.
+     */
+    function mergeFileCoverage(first, second) {
+        var ret = JSON.parse(JSON.stringify(first)),
+            i;
+
+        delete ret.l; //remove derived info
+
+        Object.keys(second.s).forEach(function (k) {
+            ret.s[k] += second.s[k];
+        });
+        Object.keys(second.f).forEach(function (k) {
+            ret.f[k] += second.f[k];
+        });
+        Object.keys(second.b).forEach(function (k) {
+            var retArray = ret.b[k],
+                secondArray = second.b[k];
+            for (i = 0; i < retArray.length; i += 1) {
+                retArray[i] += secondArray[i];
+            }
+        });
+
+        return ret;
+    }
+    /**
+     * merges multiple summary metrics objects by summing up the `totals` and
+     * `covered` fields and recomputing the percentages. This function is generic
+     * and can accept any number of arguments.
+     *
+     * @method mergeSummaryObjects
+     * @static
+     * @param {Object} summary... multiple summary metrics objects
+     * @return {Object} the merged summary metrics
+     */
+    function mergeSummaryObjects() {
+        var ret = blankSummary(),
+            args = Array.prototype.slice.call(arguments),
+            keys = ['lines', 'statements', 'branches', 'functions'],
+            increment = function (obj) {
+                if (obj) {
+                    keys.forEach(function (key) {
+                        ret[key].total += obj[key].total;
+                        ret[key].covered += obj[key].covered;
+                        ret[key].skipped += obj[key].skipped;
+                    });
+                }
+            };
+        args.forEach(function (arg) {
+            increment(arg);
+        });
+        keys.forEach(function (key) {
+            ret[key].pct = percent(ret[key].covered, ret[key].total);
+        });
+
+        return ret;
+    }
+    /**
+     * returns the coverage summary for a single coverage object. This is
+     * wrapper over `summarizeFileCoverage` and `mergeSummaryObjects` for
+     * the common case of a single coverage object
+     * @method summarizeCoverage
+     * @static
+     * @param {Object} coverage  the coverage object
+     * @return {Object} summary coverage metrics across all files in the coverage object
+     */
+    function summarizeCoverage(coverage) {
+        var fileSummary = [];
+        Object.keys(coverage).forEach(function (key) {
+            fileSummary.push(summarizeFileCoverage(coverage[key]));
+        });
+        return mergeSummaryObjects.apply(null, fileSummary);
+    }
+
+    /**
+     * makes the coverage object generated by this library yuitest_coverage compatible.
+     * Note that this transformation is lossy since the returned object will not have
+     * statement and branch coverage.
+     *
+     * @method toYUICoverage
+     * @static
+     * @param {Object} coverage The `istanbul` coverage object
+     * @return {Object} a coverage object in `yuitest_coverage` format.
+     */
+    function toYUICoverage(coverage) {
+        var ret = {};
+
+        addDerivedInfo(coverage);
+
+        Object.keys(coverage).forEach(function (k) {
+            var fileCoverage = coverage[k],
+                lines = fileCoverage.l,
+                functions = fileCoverage.f,
+                fnMap = fileCoverage.fnMap,
+                o;
+
+            o = ret[k] = {
+                lines: {},
+                calledLines: 0,
+                coveredLines: 0,
+                functions: {},
+                calledFunctions: 0,
+                coveredFunctions: 0
+            };
+            Object.keys(lines).forEach(function (k) {
+                o.lines[k] = lines[k];
+                o.coveredLines += 1;
+                if (lines[k] > 0) {
+                    o.calledLines += 1;
+                }
+            });
+            Object.keys(functions).forEach(function (k) {
+                var name = fnMap[k].name + ':' + fnMap[k].line;
+                o.functions[name] = functions[k];
+                o.coveredFunctions += 1;
+                if (functions[k] > 0) {
+                    o.calledFunctions += 1;
+                }
+            });
+        });
+        return ret;
+    }
+
+    var exportables = {
+        addDerivedInfo: addDerivedInfo,
+        addDerivedInfoForFile: addDerivedInfoForFile,
+        removeDerivedInfo: removeDerivedInfo,
+        blankSummary: blankSummary,
+        summarizeFileCoverage: summarizeFileCoverage,
+        summarizeCoverage: summarizeCoverage,
+        mergeFileCoverage: mergeFileCoverage,
+        mergeSummaryObjects: mergeSummaryObjects,
+        toYUICoverage: toYUICoverage
+    };
+
+    /* istanbul ignore else: windows */
+    if (isNode) {
+        module.exports = exportables;
+    } else {
+        window.coverageUtils = exportables;
+    }
+}(typeof module !== 'undefined' && typeof module.exports !== 'undefined' && typeof exports !== 'undefined'));
 
 
 
 /*
-file istanbul/lib/report/common/defaults.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/common/defaults.js
+shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/common/defaults.js > /tmp/aa.js
 */
-module.exports={watermarks:function(){return{statements:[50,80],lines:[50,80],functions
-:[50,80],branches:[50,80]}},classFor:function(e,t,n){var r=n[e],i=t[e].pct;return i>=
-r[1]?"high":i>=r[0]?"medium":"low"},colorize:function(e,t){if(process.stdout.isTTY
-)switch(t){case"low":e="\u001b[91m"+e+"\u001b[0m";break;case"medium":e="\u001b[93m"+
-e+"\u001b[0m";break;case"high":e="\u001b[92m"+e+"\u001b[0m"}return e}}
+/*
+ Copyright (c) 2013, Yahoo! Inc.  All rights reserved.
+ Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
+ */
+module.exports = {
+    watermarks: function () {
+        return {
+            statements: [ 50, 80 ],
+            lines: [ 50, 80 ],
+            functions: [ 50, 80],
+            branches: [ 50, 80 ]
+        };
+    },
+
+    classFor: function (type, metrics, watermarks) {
+        var mark = watermarks[type],
+            value = metrics[type].pct;
+        return value >= mark[1] ? 'high' : value >= mark[0] ? 'medium' : 'low';
+    },
+
+    colorize: function (str, clazz) {
+        /* istanbul ignore if: untestable in batch mode */
+        if (process.stdout.isTTY) {
+            switch (clazz) {
+                case 'low' : str = '\033[91m' + str + '\033[0m'; break;
+                case 'medium': str = '\033[93m' + str + '\033[0m'; break;
+                case 'high': str = '\033[92m' + str + '\033[0m'; break;
+            }
+        }
+        return str;
+    }
+};
 
 
 
 /*
-file istanbul/lib/report/index.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/index.js
+shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/index.js > /tmp/aa.js
 */
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
@@ -1718,7 +11197,9 @@ module.exports = Report;
 
 
 /*
-file istanbul/lib/report/templates/foot.txt
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/foot.txt
+shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/templates/foot.txt > /tmp/aa.js
 */
 /*
 </div>
@@ -1827,7 +11308,9 @@ file istanbul/lib/report/templates/foot.txt
 
 
 /*
-file istanbul/lib/report/templates/head.txt
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
+shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/templates/head.txt > /tmp/aa.js
 */
 /*
 <!doctype html>
@@ -2052,7 +11535,9 @@ file istanbul/lib/report/templates/head.txt
 
 
 /*
-file istanbul/lib/util/file-writer.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
+shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/file-writer.js > /tmp/aa.js
 */
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
@@ -2189,216 +11674,988 @@ module.exports = FileWriter;
 
 
 /*
-file istanbul/lib/util/tree-summarizer.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
+shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/tree-summarizer.js > /tmp/aa.js
 */
-function commonArrayPrefix(e,t){var n=e.length<t.length?e.length:t.length,r,i=[]
-;for(r=0;r<n;r+=1){if(e[r]!==t[r])break;i.push(e[r])}return i}function findCommonArrayPrefix
-(e){if(e.length===0)return[];var t=e.map(function(e){return e.split(SEP)}),n=t.pop
-();return t.length===0?n.slice(0,n.length-1):t.reduce(commonArrayPrefix,n)}function Node
-(e,t,n){this.name=e,this.fullName=e,this.kind=t,this.metrics=n||null,this.parent=
-null,this.children=[]}function TreeSummary(e,t){this.prefix=t,this.convertToTree
-(e,t)}function TreeSummarizer(){this.summaryMap={}}var path=require("path"),SEP=
-path.sep||"/",utils=require("../object-utils");Node.prototype={displayShortName:
-function(){return this.relativeName},fullPath:function(){return this.fullName},addChild
-:function(e){this.children.push(e),e.parent=this},toJSON:function(){return{name:
-this.name,relativeName:this.relativeName,fullName:this.fullName,kind:this.kind,metrics
-:this.metrics,parent:this.parent===null?null:this.parent.name,children:this.children
-.map(function(e){return e.toJSON()})}}},TreeSummary.prototype={getNode:function(
-e){return this.map[e]},convertToTree:function(e,t){var n=[],r=t.join(SEP)+SEP,i=new
-Node(r,"dir"),s,o,u={},a=!1;u[r]=i,Object.keys(e).forEach(function(t){var r=e[t]
-,s,o,f;s=new Node(t,"file",r),u[t]=s,n.push(s),o=path.dirname(t)+SEP,o===SEP+SEP&&
-(o=SEP+"__root__"+SEP),f=u[o],f||(f=new Node(o,"dir"),i.addChild(f),u[o]=f),f.addChild
-(s),f===i&&(a=!0)}),a&&t.length>0&&(t.pop(),s=i,o=s.children,s.children=[],i=new
-Node(t.join(SEP)+SEP,"dir"),i.addChild(s),o.forEach(function(e){e.kind==="dir"?i
-.addChild(e):s.addChild(e)})),this.fixupNodes(i,t.join(SEP)+SEP),this.calculateMetrics
-(i),this.root=i,this.map={},this.indexAndSortTree(i,this.map)},fixupNodes:function(
-e,t,n){var r=this;e.name.indexOf(t)===0&&(e.name=e.name.substring(t.length)),e.name
-.charAt(0)===SEP&&(e.name=e.name.substring(1)),n?n.name!=="__root__/"?e.relativeName=
-e.name.substring(n.name.length):e.relativeName=e.name:e.relativeName=e.name.substring
-(t.length),e.children.forEach(function(n){r.fixupNodes(n,t,e)})},calculateMetrics
-:function(e){var t=this,n;if(e.kind!=="dir")return;e.children.forEach(function(e
-){t.calculateMetrics(e)}),e.metrics=utils.mergeSummaryObjects.apply(null,e.children
-.map(function(e){return e.metrics})),n=e.children.filter(function(e){return e.kind!=="dir"
-}),n.length>0?e.packageMetrics=utils.mergeSummaryObjects.apply(null,n.map(function(
-e){return e.metrics})):e.packageMetrics=null},indexAndSortTree:function(e,t){var n=
-this;t[e.name]=e,e.children.sort(function(e,t){return e=e.relativeName,t=t.relativeName
-,e<t?-1:e>t?1:0}),e.children.forEach(function(e){n.indexAndSortTree(e,t)})},toJSON
-:function(){return{prefix:this.prefix,root:this.root.toJSON()}}},TreeSummarizer.
-prototype={addFileCoverageSummary:function(e,t){this.summaryMap[e]=t},getTreeSummary
-:function(){var e=findCommonArrayPrefix(Object.keys(this.summaryMap));return new
-TreeSummary(this.summaryMap,e)}},module.exports=TreeSummarizer
+/*
+ Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
+ Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
+ */
+
+var path = require('path'),
+    SEP = path.sep || '/',
+    utils = require('../object-utils');
+
+function commonArrayPrefix(first, second) {
+    var len = first.length < second.length ? first.length : second.length,
+        i,
+        ret = [];
+    for (i = 0; i < len; i += 1) {
+        if (first[i] === second[i]) {
+            ret.push(first[i]);
+        } else {
+            break;
+        }
+    }
+    return ret;
+}
+
+function findCommonArrayPrefix(args) {
+    if (args.length === 0) {
+        return [];
+    }
+
+    var separated = args.map(function (arg) { return arg.split(SEP); }),
+        ret = separated.pop();
+
+    if (separated.length === 0) {
+        return ret.slice(0, ret.length - 1);
+    } else {
+        return separated.reduce(commonArrayPrefix, ret);
+    }
+}
+
+function Node(fullName, kind, metrics) {
+    this.name = fullName;
+    this.fullName = fullName;
+    this.kind = kind;
+    this.metrics = metrics || null;
+    this.parent = null;
+    this.children = [];
+}
+
+Node.prototype = {
+    displayShortName: function () {
+        return this.relativeName;
+    },
+    fullPath: function () {
+        return this.fullName;
+    },
+    addChild: function (child) {
+        this.children.push(child);
+        child.parent = this;
+    },
+    toJSON: function () {
+        return {
+            name: this.name,
+            relativeName: this.relativeName,
+            fullName: this.fullName,
+            kind: this.kind,
+            metrics: this.metrics,
+            parent: this.parent === null ? null : this.parent.name,
+            children: this.children.map(function (node) { return node.toJSON(); })
+        };
+    }
+};
+
+function TreeSummary(summaryMap, commonPrefix) {
+    this.prefix = commonPrefix;
+    this.convertToTree(summaryMap, commonPrefix);
+}
+
+TreeSummary.prototype = {
+    getNode: function (shortName) {
+        return this.map[shortName];
+    },
+    convertToTree: function (summaryMap, arrayPrefix) {
+        var nodes = [],
+            rootPath = arrayPrefix.join(SEP) + SEP,
+            root = new Node(rootPath, 'dir'),
+            tmp,
+            tmpChildren,
+            seen = {},
+            filesUnderRoot = false;
+
+        seen[rootPath] = root;
+        Object.keys(summaryMap).forEach(function (key) {
+            var metrics = summaryMap[key],
+                node,
+                parentPath,
+                parent;
+            node = new Node(key, 'file', metrics);
+            seen[key] = node;
+            nodes.push(node);
+            parentPath = path.dirname(key) + SEP;
+            if (parentPath === SEP + SEP) {
+                parentPath = SEP + '__root__' + SEP;
+            }
+            parent = seen[parentPath];
+            if (!parent) {
+                parent = new Node(parentPath, 'dir');
+                root.addChild(parent);
+                seen[parentPath] = parent;
+            }
+            parent.addChild(node);
+            if (parent === root) { filesUnderRoot = true; }
+        });
+
+        if (filesUnderRoot && arrayPrefix.length > 0) {
+            arrayPrefix.pop(); //start at one level above
+            tmp = root;
+            tmpChildren = tmp.children;
+            tmp.children = [];
+            root = new Node(arrayPrefix.join(SEP) + SEP, 'dir');
+            root.addChild(tmp);
+            tmpChildren.forEach(function (child) {
+                if (child.kind === 'dir') {
+                    root.addChild(child);
+                } else {
+                    tmp.addChild(child);
+                }
+            });
+        }
+        this.fixupNodes(root, arrayPrefix.join(SEP) + SEP);
+        this.calculateMetrics(root);
+        this.root = root;
+        this.map = {};
+        this.indexAndSortTree(root, this.map);
+    },
+
+    fixupNodes: function (node, prefix, parent) {
+        var that = this;
+        if (node.name.indexOf(prefix) === 0) {
+            node.name = node.name.substring(prefix.length);
+        }
+        if (node.name.charAt(0) === SEP) {
+            node.name = node.name.substring(1);
+        }
+        if (parent) {
+            if (parent.name !== '__root__/') {
+                node.relativeName = node.name.substring(parent.name.length);
+            } else {
+                node.relativeName = node.name;
+            }
+        } else {
+            node.relativeName = node.name.substring(prefix.length);
+        }
+        node.children.forEach(function (child) {
+            that.fixupNodes(child, prefix, node);
+        });
+    },
+    calculateMetrics: function (entry) {
+        var that = this,
+            fileChildren;
+        if (entry.kind !== 'dir') {return; }
+        entry.children.forEach(function (child) {
+            that.calculateMetrics(child);
+        });
+        entry.metrics = utils.mergeSummaryObjects.apply(
+            null,
+            entry.children.map(function (child) { return child.metrics; })
+        );
+        // calclulate "java-style" package metrics where there is no hierarchy
+        // across packages
+        fileChildren = entry.children.filter(function (n) { return n.kind !== 'dir'; });
+        if (fileChildren.length > 0) {
+            entry.packageMetrics = utils.mergeSummaryObjects.apply(
+                null,
+                fileChildren.map(function (child) { return child.metrics; })
+            );
+        } else {
+            entry.packageMetrics = null;
+        }
+    },
+    indexAndSortTree: function (node, map) {
+        var that = this;
+        map[node.name] = node;
+        node.children.sort(function (a, b) {
+            a = a.relativeName;
+            b = b.relativeName;
+            return a < b ? -1 : a > b ? 1 : 0;
+        });
+        node.children.forEach(function (child) {
+            that.indexAndSortTree(child, map);
+        });
+    },
+    toJSON: function () {
+        return {
+            prefix: this.prefix,
+            root: this.root.toJSON()
+        };
+    }
+};
+
+function TreeSummarizer() {
+    this.summaryMap = {};
+}
+
+TreeSummarizer.prototype = {
+    addFileCoverageSummary: function (filePath, metrics) {
+        this.summaryMap[filePath] = metrics;
+    },
+    getTreeSummary: function () {
+        var commonArrayPrefix = findCommonArrayPrefix(Object.keys(this.summaryMap));
+        return new TreeSummary(this.summaryMap, commonArrayPrefix);
+    }
+};
+
+module.exports = TreeSummarizer;
 
 
 
 /*
-file istanbul/lib/report/html.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
+shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/html.js > /tmp/aa.js
 */
-function customEscape(e){return e=e.toString(),e.replace(RE_AMP,"&amp;").replace
-(RE_LT,"&lt;").replace(RE_GT,"&gt;").replace(RE_lt,"<").replace(RE_gt,">")}function title
-(e){return' title="'+e+'" '}function annotateLines(e,t){var n=e.l;if(!n)return;Object
-.keys(n).forEach(function(e){var r=n[e];t[e].covered=r>0?"yes":"no"}),t.forEach(
-function(e){e.covered===null&&(e.covered="neutral")})}function annotateStatements
-(e,t){var n=e.s,r=e.statementMap;Object.keys(n).forEach(function(e){var i=n[e],s=
-r[e],o=i>0?"yes":"no",u=s.start.column,a=s.end.column+1,f=s.start.line,l=s.end.line
-,c=lt+'span class="'+(s.skip?"cstat-skip":"cstat-no")+'"'+title("statement not covered"
-)+gt,h=lt+"/span"+gt,p;o==="no"&&(l!==f&&(l=f,a=t[f].text.originalLength()),p=t[
-f].text,p.wrap(u,c,f===l?a:p.originalLength(),h))})}function annotateFunctions(e
-,t){var n=e.f,r=e.fnMap;if(!n)return;Object.keys(n).forEach(function(e){var i=n[
-e],s=r[e],o=i>0?"yes":"no",u=s.loc.start.column,a=s.loc.end.column+1,f=s.loc.start
-.line,l=s.loc.end.line,c=lt+'span class="'+(s.skip?"fstat-skip":"fstat-no")+'"'+
-title("function not covered")+gt,h=lt+"/span"+gt,p;o==="no"&&(l!==f&&(l=f,a=t[f]
-.text.originalLength()),p=t[f].text,p.wrap(u,c,f===l?a:p.originalLength(),h))})}
-function annotateBranches(e,t){var n=e.b,r=e.branchMap;if(!n)return;Object.keys(
-n).forEach(function(e){var i=n[e],s=i.reduce(function(e,t){return e+t},0),o=r[e]
-.locations,u,a,f,l,c,h,p,d,v,m,g;if(s>0)for(u=0;u<i.length;u+=1)a=i[u],f=o[u],l=
-a>0?"yes":"no",c=f.start.column,h=f.end.column+1,p=f.start.line,d=f.end.line,v=lt+'span class="branch-'+
-u+" "+(f.skip?"cbranch-skip":"cbranch-no")+'"'+title("branch not covered")+gt,m=
-lt+"/span"+gt,a===0&&(d!==p&&(d=p,h=t[p].text.originalLength()),g=t[p].text,r[e]
-.type==="if"?g.insertAt(c,lt+'span class="'+(f.skip?"skip-if-branch":"missing-if-branch"
-)+'"'+title((u===0?"if":"else")+" path not taken")+gt+(u===0?"I":"E")+lt+"/span"+
-gt,!0,!1):g.wrap(c,v,p===d?h:g.originalLength(),m))})}function getReportClass(e,
-t){var n=e.pct,r=1;return n*r===n?n>=t[1]?"high":n>=t[0]?"medium":"low":""}function HtmlReport
-(e){Report.call(this),this.opts=e||{},this.opts.dir=this.opts.dir||path.resolve(
-process.cwd(),"html-report"),this.opts.sourceStore=this.opts.sourceStore||Store.
-create("fslookup"),this.opts.linkMapper=this.opts.linkMapper||this.standardLinkMapper
-(),this.opts.writer=this.opts.writer||null,this.opts.templateData={datetime:Date
-()},this.opts.watermarks=this.opts.watermarks||defaults.watermarks()}var handlebars=
-require("handlebars"),defaults=require("./common/defaults"),path=require("path")
-,SEP=path.sep||"/",fs=require("fs"),util=require("util"),FileWriter=require("../util/file-writer"
-),Report=require("./index"),Store=require("../store"),InsertionText=require("../util/insertion-text"
-),TreeSummarizer=require("../util/tree-summarizer"),utils=require("../object-utils"
-),templateFor=function(e){return handlebars.compile(fs.readFileSync(path.resolve
-(__dirname,"templates",e+".txt"),"utf8"))},headerTemplate=templateFor("head"),footerTemplate=
-templateFor("foot"),pathTemplate=handlebars.compile('<div class="path">{{{html}}}</div>'
-),detailTemplate=handlebars.compile(["<tr>",'<td class="line-count">{{#show_lines}}{{maxLines}}{{/show_lines}}</td>'
-,'<td class="line-coverage">{{#show_line_execution_counts fileCoverage}}{{maxLines}}{{/show_line_execution_counts}}</td>'
-,'<td class="text"><pre class="prettyprint lang-js">{{#show_code structured}}{{/show_code}}</pre></td>'
-,"</tr>\n"].join("")),summaryTableHeader=['<div class="coverage-summary">',"<table>"
-,"<thead>","<tr>",'   <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>'
-,'   <th data-col="pic" data-type="number" data-fmt="html" data-html="true" class="pic"></th>'
-,'   <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>'
-,'   <th data-col="statements_raw" data-type="number" data-fmt="html" class="abs"></th>'
-,'   <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>'
-,'   <th data-col="branches_raw" data-type="number" data-fmt="html" class="abs"></th>'
-,'   <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>'
-,'   <th data-col="functions_raw" data-type="number" data-fmt="html" class="abs"></th>'
-,'   <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>'
-,'   <th data-col="lines_raw" data-type="number" data-fmt="html" class="abs"></th>'
-,"</tr>","</thead>","<tbody>"].join("\n"),summaryLineTemplate=handlebars.compile
-(["<tr>",'<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}">{{file}}</a></td>'
-,'<td data-value="{{metrics.statements.pct}}" class="pic {{reportClasses.statements}}">{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</td>'
-,'<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%</td>'
-,'<td data-value="{{metrics.statements.total}}" class="abs {{reportClasses.statements}}">({{metrics.statements.covered}}&nbsp;/&nbsp;{{metrics.statements.total}})</td>'
-,'<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%</td>'
-,'<td data-value="{{metrics.branches.total}}" class="abs {{reportClasses.branches}}">({{metrics.branches.covered}}&nbsp;/&nbsp;{{metrics.branches.total}})</td>'
-,'<td data-value="{{metrics.functions.pct}}" class="pct {{reportClasses.functions}}">{{metrics.functions.pct}}%</td>'
-,'<td data-value="{{metrics.functions.total}}" class="abs {{reportClasses.functions}}">({{metrics.functions.covered}}&nbsp;/&nbsp;{{metrics.functions.total}})</td>'
-,'<td data-value="{{metrics.lines.pct}}" class="pct {{reportClasses.lines}}">{{metrics.lines.pct}}%</td>'
-,'<td data-value="{{metrics.lines.total}}" class="abs {{reportClasses.lines}}">({{metrics.lines.covered}}&nbsp;/&nbsp;{{metrics.lines.total}})</td>'
-,"</tr>\n"].join("\n\t")),summaryTableFooter=["</tbody>","</table>","</div>"].join
-("\n"),lt="\u0001",gt="\u0002",RE_LT=/</g,RE_GT=/>/g,RE_AMP=/&/g,RE_lt=/\u0001/g
-,RE_gt=/\u0002/g;handlebars.registerHelper("show_picture",function(e){var t=Number
-(e.fn(this)),n,r="";return isFinite(t)?(t===100&&(r=" cover-full"),t=Math.floor(
-t),n=100-t,'<span class="cover-fill'+r+'" style="width: '+t+'px;"></span>'+'<span class="cover-empty" style="width:'+
-n+'px;"></span>'):""}),handlebars.registerHelper("show_ignores",function(e){var t=
-e.statements.skipped,n=e.functions.skipped,r=e.branches.skipped,i;return t===0&&
-n===0&&r===0?'<span class="ignore-none">none</span>':(i=[],t>0&&i.push(t===1?"1 statement"
-:t+" statements"),n>0&&i.push(n===1?"1 function":n+" functions"),r>0&&i.push(r===1?"1 branch"
-:r+" branches"),i.join(", "))}),handlebars.registerHelper("show_lines",function(
-e){var t=Number(e.fn(this)),n,r=[];for(n=0;n<t;n+=1)r[n]=n+1;return r.join("\n")
-}),handlebars.registerHelper("show_line_execution_counts",function(e,t){var n=e.
-l,r=Number(t.fn(this)),i,s,o=[],u,a="";for(i=0;i<r;i+=1)s=i+1,a="&nbsp;",u="neutral"
-,n.hasOwnProperty(s)&&(n[s]>0?(u="yes",a=n[s]):u="no"),o.push('<span class="cline-any cline-'+
-u+'">'+a+"</span>");return o.join("\n")}),handlebars.registerHelper("show_code",
-function(e){var t=[];return e.forEach(function(e){t.push(customEscape(e.text)||"&nbsp;"
-)}),t.join("\n")}),HtmlReport.TYPE="html",util.inherits(HtmlReport,Report),Report
-.mix(HtmlReport,{getPathHtml:function(e,t){var n=e.parent,r=[],i=[],s;while(n)r.
-push(n),n=n.parent;for(s=0;s<r.length;s+=1)i.push('<a href="'+t.ancestor(e,s+1)+'">'+
-(r[s].relativeName||"All files")+"</a>");return i.reverse(),i.length>0?i.join(" &#187; "
-)+" &#187; "+e.displayShortName():""},fillTemplate:function(e,t){var n=this.opts
-,r=n.linkMapper;t.entity=e.name||"All files",t.metrics=e.metrics,t.reportClass=getReportClass
-(e.metrics.statements,n.watermarks.statements),t.pathHtml=pathTemplate({html:this
-.getPathHtml(e,r)}),t.prettify={js:r.asset(e,"prettify.js"),css:r.asset(e,"prettify.css"
-)}},writeDetailPage:function(e,t,n){var r=this.opts,i=r.sourceStore,s=r.templateData
-,o=n.code&&Array.isArray(n.code)?n.code.join("\n")+"\n":i.get(n.path),u=o.split(/(?:\r?\n)|\r/
-),a=0,f=u.map(function(e){return a+=1,{line:a,covered:null,text:new InsertionText
-(e,!0)}}),l;f.unshift({line:0,covered:null,text:new InsertionText("")}),this.fillTemplate
-(t,s),e.write(headerTemplate(s)),e.write('<pre><table class="coverage">\n'),annotateLines
-(n,f),annotateBranches(n,f),annotateFunctions(n,f),annotateStatements(n,f),f.shift
-(),l={structured:f,maxLines:f.length,fileCoverage:n},e.write(detailTemplate(l)),
-e.write("</table></pre>\n"),e.write(footerTemplate(s))},writeIndexPage:function(
-e,t){var n=this.opts.linkMapper,r=this.opts.templateData,i=Array.prototype.slice
-.apply(t.children),s=this.opts.watermarks;i.sort(function(e,t){return e.name<t.name?-1
-:1}),this.fillTemplate(t,r),e.write(headerTemplate(r)),e.write(summaryTableHeader
-),i.forEach(function(t){var r=t.metrics,i={statements:getReportClass(r.statements
-,s.statements),lines:getReportClass(r.lines,s.lines),functions:getReportClass(r.
-functions,s.functions),branches:getReportClass(r.branches,s.branches)},o={metrics
-:r,reportClasses:i,file:t.displayShortName(),output:n.fromParent(t)};e.write(summaryLineTemplate
-(o)+"\n")}),e.write(summaryTableFooter),e.write(footerTemplate(r))},writeFiles:function(
-e,t,n,r){var i=this,s=path.resolve(n,"index.html"),o;this.opts.verbose&&console.
-error("Writing "+s),e.writeFile(s,function(e){i.writeIndexPage(e,t)}),t.children
-.forEach(function(t){t.kind==="dir"?i.writeFiles(e,t,path.resolve(n,t.relativeName
-),r):(o=path.resolve(n,t.relativeName+".html"),i.opts.verbose&&console.error("Writing "+
-o),e.writeFile(o,function(e){i.writeDetailPage(e,t,r.fileCoverageFor(t.fullPath(
-)))}))})},standardLinkMapper:function(){return{fromParent:function(e){var t=0,n=
-e.relativeName,r;if(SEP!=="/"){n="";for(t=0;t<e.relativeName.length;t+=1)r=e.relativeName
-.charAt(t),r===SEP?n+="/":n+=r}return e.kind==="dir"?n+"index.html":n+".html"},ancestorHref
-:function(e,t){var n="",r,i,s,o;for(s=0;s<t;s+=1){r=e.relativeName.split(SEP),i=
-r.length-1;for(o=0;o<i;o+=1)n+="../";e=e.parent}return n},ancestor:function(e,t)
-{return this.ancestorHref(e,t)+"index.html"},asset:function(e,t){var n=0,r=e.parent
-;while(r)n+=1,r=r.parent;return this.ancestorHref(e,n)+t}}},writeReport:function(
-e,t){var n=this.opts,r=n.dir,i=new TreeSummarizer,s=n.writer||new FileWriter(t),
-o;e.files().forEach(function(t){i.addFileCoverageSummary(t,utils.summarizeFileCoverage
-(e.fileCoverageFor(t)))}),o=i.getTreeSummary(),fs.readdirSync(path.resolve(__dirname
-,"..","vendor")).forEach(function(e){var t=path.resolve(__dirname,"..","vendor",
-e),i=path.resolve(r,e),o=fs.statSync(t);o.isFile()&&(n.verbose&&console.log("Write asset: "+
-i),s.copyFile(t,i))}),this.writeFiles(s,o.root,r,e)}}),module.exports=HtmlReport
+/*
+ Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
+ Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
+ */
+
+/*jshint maxlen: 300 */
+var handlebars = require('handlebars'),
+    defaults = require('./common/defaults'),
+    path = require('path'),
+    SEP = path.sep || '/',
+    fs = require('fs'),
+    util = require('util'),
+    FileWriter = require('../util/file-writer'),
+    Report = require('./index'),
+    Store = require('../store'),
+    InsertionText = require('../util/insertion-text'),
+    TreeSummarizer = require('../util/tree-summarizer'),
+    utils = require('../object-utils'),
+    templateFor = function (name) { return handlebars.compile(fs.readFileSync(path.resolve(__dirname, 'templates', name + '.txt'), 'utf8')); },
+    headerTemplate = templateFor('head'),
+    footerTemplate = templateFor('foot'),
+    pathTemplate = handlebars.compile('<div class="path">{{{html}}}</div>'),
+    detailTemplate = handlebars.compile([
+        '<tr>',
+        '<td class="line-count">{{#show_lines}}{{maxLines}}{{/show_lines}}</td>',
+        '<td class="line-coverage">{{#show_line_execution_counts fileCoverage}}{{maxLines}}{{/show_line_execution_counts}}</td>',
+        '<td class="text"><pre class="prettyprint lang-js">{{#show_code structured}}{{/show_code}}</pre></td>',
+        '</tr>\n'
+    ].join('')),
+    summaryTableHeader = [
+        '<div class="coverage-summary">',
+        '<table>',
+        '<thead>',
+        '<tr>',
+        '   <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>',
+        '   <th data-col="pic" data-type="number" data-fmt="html" data-html="true" class="pic"></th>',
+        '   <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>',
+        '   <th data-col="statements_raw" data-type="number" data-fmt="html" class="abs"></th>',
+        '   <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>',
+        '   <th data-col="branches_raw" data-type="number" data-fmt="html" class="abs"></th>',
+        '   <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>',
+        '   <th data-col="functions_raw" data-type="number" data-fmt="html" class="abs"></th>',
+        '   <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>',
+        '   <th data-col="lines_raw" data-type="number" data-fmt="html" class="abs"></th>',
+        '</tr>',
+        '</thead>',
+        '<tbody>'
+    ].join('\n'),
+    summaryLineTemplate = handlebars.compile([
+        '<tr>',
+        '<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}">{{file}}</a></td>',
+        '<td data-value="{{metrics.statements.pct}}" class="pic {{reportClasses.statements}}">{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</td>',
+        '<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%</td>',
+        '<td data-value="{{metrics.statements.total}}" class="abs {{reportClasses.statements}}">({{metrics.statements.covered}}&nbsp;/&nbsp;{{metrics.statements.total}})</td>',
+        '<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%</td>',
+        '<td data-value="{{metrics.branches.total}}" class="abs {{reportClasses.branches}}">({{metrics.branches.covered}}&nbsp;/&nbsp;{{metrics.branches.total}})</td>',
+        '<td data-value="{{metrics.functions.pct}}" class="pct {{reportClasses.functions}}">{{metrics.functions.pct}}%</td>',
+        '<td data-value="{{metrics.functions.total}}" class="abs {{reportClasses.functions}}">({{metrics.functions.covered}}&nbsp;/&nbsp;{{metrics.functions.total}})</td>',
+        '<td data-value="{{metrics.lines.pct}}" class="pct {{reportClasses.lines}}">{{metrics.lines.pct}}%</td>',
+        '<td data-value="{{metrics.lines.total}}" class="abs {{reportClasses.lines}}">({{metrics.lines.covered}}&nbsp;/&nbsp;{{metrics.lines.total}})</td>',
+        '</tr>\n'
+    ].join('\n\t')),
+    summaryTableFooter = [
+        '</tbody>',
+        '</table>',
+        '</div>'
+    ].join('\n'),
+    lt = '\u0001',
+    gt = '\u0002',
+    RE_LT = /</g,
+    RE_GT = />/g,
+    RE_AMP = /&/g,
+    RE_lt = /\u0001/g,
+    RE_gt = /\u0002/g;
+
+handlebars.registerHelper('show_picture', function (opts) {
+    var num = Number(opts.fn(this)),
+        rest,
+        cls = '';
+    if (isFinite(num)) {
+        if (num === 100) {
+            cls = ' cover-full';
+        }
+        num = Math.floor(num);
+        rest = 100 - num;
+        return '<span class="cover-fill' + cls + '" style="width: ' + num + 'px;"></span>' +
+            '<span class="cover-empty" style="width:' + rest + 'px;"></span>';
+    } else {
+        return '';
+    }
+});
+
+handlebars.registerHelper('show_ignores', function (metrics) {
+    var statements = metrics.statements.skipped,
+        functions = metrics.functions.skipped,
+        branches = metrics.branches.skipped,
+        result;
+
+    if (statements === 0 && functions === 0 && branches === 0) {
+        return '<span class="ignore-none">none</span>';
+    }
+
+    result = [];
+    if (statements >0) { result.push(statements === 1 ? '1 statement': statements + ' statements'); }
+    if (functions >0) { result.push(functions === 1 ? '1 function' : functions + ' functions'); }
+    if (branches >0) { result.push(branches === 1 ? '1 branch' : branches + ' branches'); }
+
+    return result.join(', ');
+});
+
+handlebars.registerHelper('show_lines', function (opts) {
+    var maxLines = Number(opts.fn(this)),
+        i,
+        array = [];
+
+    for (i = 0; i < maxLines; i += 1) {
+        array[i] = i + 1;
+    }
+    return array.join('\n');
+});
+
+handlebars.registerHelper('show_line_execution_counts', function (context, opts) {
+    var lines = context.l,
+        maxLines = Number(opts.fn(this)),
+        i,
+        lineNumber,
+        array = [],
+        covered,
+        value = '';
+
+    for (i = 0; i < maxLines; i += 1) {
+        lineNumber = i + 1;
+        value = '&nbsp;';
+        covered = 'neutral';
+        if (lines.hasOwnProperty(lineNumber)) {
+            if (lines[lineNumber] > 0) {
+                covered = 'yes';
+                value = lines[lineNumber];
+            } else {
+                covered = 'no';
+            }
+        }
+        array.push('<span class="cline-any cline-' + covered + '">' + value + '</span>');
+    }
+    return array.join('\n');
+});
+
+function customEscape(text) {
+    text = text.toString();
+    return text.replace(RE_AMP, '&amp;')
+        .replace(RE_LT, '&lt;')
+        .replace(RE_GT, '&gt;')
+        .replace(RE_lt, '<')
+        .replace(RE_gt, '>');
+}
+
+handlebars.registerHelper('show_code', function (context /*, opts */) {
+    var array = [];
+
+    context.forEach(function (item) {
+        array.push(customEscape(item.text) || '&nbsp;');
+    });
+    return array.join('\n');
+});
+
+function title(str) {
+    return ' title="' + str + '" ';
+}
+
+function annotateLines(fileCoverage, structuredText) {
+    var lineStats = fileCoverage.l;
+    if (!lineStats) { return; }
+    Object.keys(lineStats).forEach(function (lineNumber) {
+        var count = lineStats[lineNumber];
+        structuredText[lineNumber].covered = count > 0 ? 'yes' : 'no';
+    });
+    structuredText.forEach(function (item) {
+        if (item.covered === null) {
+            item.covered = 'neutral';
+        }
+    });
+}
+
+function annotateStatements(fileCoverage, structuredText) {
+    var statementStats = fileCoverage.s,
+        statementMeta = fileCoverage.statementMap;
+    Object.keys(statementStats).forEach(function (stName) {
+        var count = statementStats[stName],
+            meta = statementMeta[stName],
+            type = count > 0 ? 'yes' : 'no',
+            startCol = meta.start.column,
+            endCol = meta.end.column + 1,
+            startLine = meta.start.line,
+            endLine = meta.end.line,
+            openSpan = lt + 'span class="' + (meta.skip ? 'cstat-skip' : 'cstat-no') + '"' + title('statement not covered') + gt,
+            closeSpan = lt + '/span' + gt,
+            text;
+
+        if (type === 'no') {
+            if (endLine !== startLine) {
+                endLine = startLine;
+                endCol = structuredText[startLine].text.originalLength();
+            }
+            text = structuredText[startLine].text;
+            text.wrap(startCol,
+                openSpan,
+                startLine === endLine ? endCol : text.originalLength(),
+                closeSpan);
+        }
+    });
+}
+
+function annotateFunctions(fileCoverage, structuredText) {
+
+    var fnStats = fileCoverage.f,
+        fnMeta = fileCoverage.fnMap;
+    if (!fnStats) { return; }
+    Object.keys(fnStats).forEach(function (fName) {
+        var count = fnStats[fName],
+            meta = fnMeta[fName],
+            type = count > 0 ? 'yes' : 'no',
+            startCol = meta.loc.start.column,
+            endCol = meta.loc.end.column + 1,
+            startLine = meta.loc.start.line,
+            endLine = meta.loc.end.line,
+            openSpan = lt + 'span class="' + (meta.skip ? 'fstat-skip' : 'fstat-no') + '"' + title('function not covered') + gt,
+            closeSpan = lt + '/span' + gt,
+            text;
+
+        if (type === 'no') {
+            if (endLine !== startLine) {
+                endLine = startLine;
+                endCol = structuredText[startLine].text.originalLength();
+            }
+            text = structuredText[startLine].text;
+            text.wrap(startCol,
+                openSpan,
+                startLine === endLine ? endCol : text.originalLength(),
+                closeSpan);
+        }
+    });
+}
+
+function annotateBranches(fileCoverage, structuredText) {
+    var branchStats = fileCoverage.b,
+        branchMeta = fileCoverage.branchMap;
+    if (!branchStats) { return; }
+
+    Object.keys(branchStats).forEach(function (branchName) {
+        var branchArray = branchStats[branchName],
+            sumCount = branchArray.reduce(function (p, n) { return p + n; }, 0),
+            metaArray = branchMeta[branchName].locations,
+            i,
+            count,
+            meta,
+            type,
+            startCol,
+            endCol,
+            startLine,
+            endLine,
+            openSpan,
+            closeSpan,
+            text;
+
+        if (sumCount > 0) { //only highlight if partial branches are missing
+            for (i = 0; i < branchArray.length; i += 1) {
+                count = branchArray[i];
+                meta = metaArray[i];
+                type = count > 0 ? 'yes' : 'no';
+                startCol = meta.start.column;
+                endCol = meta.end.column + 1;
+                startLine = meta.start.line;
+                endLine = meta.end.line;
+                openSpan = lt + 'span class="branch-' + i + ' ' + (meta.skip ? 'cbranch-skip' : 'cbranch-no') + '"' + title('branch not covered') + gt;
+                closeSpan = lt + '/span' + gt;
+
+                if (count === 0) { //skip branches taken
+                    if (endLine !== startLine) {
+                        endLine = startLine;
+                        endCol = structuredText[startLine].text.originalLength();
+                    }
+                    text = structuredText[startLine].text;
+                    if (branchMeta[branchName].type === 'if') { // and 'if' is a special case since the else branch might not be visible, being non-existent
+                        text.insertAt(startCol, lt + 'span class="' + (meta.skip ? 'skip-if-branch' : 'missing-if-branch') + '"' +
+                            title((i === 0 ? 'if' : 'else') + ' path not taken') + gt +
+                            (i === 0 ? 'I' : 'E')  + lt + '/span' + gt, true, false);
+                    } else {
+                        text.wrap(startCol,
+                            openSpan,
+                            startLine === endLine ? endCol : text.originalLength(),
+                            closeSpan);
+                    }
+                }
+            }
+        }
+    });
+}
+
+function getReportClass(stats, watermark) {
+    var coveragePct = stats.pct,
+        identity  = 1;
+    if (coveragePct * identity === coveragePct) {
+        return coveragePct >= watermark[1] ? 'high' : coveragePct >= watermark[0] ? 'medium' : 'low';
+    } else {
+        return '';
+    }
+}
+
+/**
+ * a `Report` implementation that produces HTML coverage reports.
+ *
+ * Usage
+ * -----
+ *
+ *      var report = require('istanbul').Report.create('html');
+ *
+ *
+ * @class HtmlReport
+ * @extends Report
+ * @constructor
+ * @param {Object} opts optional
+ * @param {String} [opts.dir] the directory in which to generate reports. Defaults to `./html-report`
+ */
+function HtmlReport(opts) {
+    Report.call(this);
+    this.opts = opts || {};
+    this.opts.dir = this.opts.dir || path.resolve(process.cwd(), 'html-report');
+    this.opts.sourceStore = this.opts.sourceStore || Store.create('fslookup');
+    this.opts.linkMapper = this.opts.linkMapper || this.standardLinkMapper();
+    this.opts.writer = this.opts.writer || null;
+    this.opts.templateData = { datetime: Date() };
+    this.opts.watermarks = this.opts.watermarks || defaults.watermarks();
+}
+
+HtmlReport.TYPE = 'html';
+util.inherits(HtmlReport, Report);
+
+Report.mix(HtmlReport, {
+
+    getPathHtml: function (node, linkMapper) {
+        var parent = node.parent,
+            nodePath = [],
+            linkPath = [],
+            i;
+
+        while (parent) {
+            nodePath.push(parent);
+            parent = parent.parent;
+        }
+
+        for (i = 0; i < nodePath.length; i += 1) {
+            linkPath.push('<a href="' + linkMapper.ancestor(node, i + 1) + '">' +
+                (nodePath[i].relativeName || 'All files') + '</a>');
+        }
+        linkPath.reverse();
+        return linkPath.length > 0 ? linkPath.join(' &#187; ') + ' &#187; ' +
+            node.displayShortName() : '';
+    },
+
+    fillTemplate: function (node, templateData) {
+        var opts = this.opts,
+            linkMapper = opts.linkMapper;
+
+        templateData.entity = node.name || 'All files';
+        templateData.metrics = node.metrics;
+        templateData.reportClass = getReportClass(node.metrics.statements, opts.watermarks.statements);
+        templateData.pathHtml = pathTemplate({ html: this.getPathHtml(node, linkMapper) });
+        templateData.prettify = {
+            js: linkMapper.asset(node, 'prettify.js'),
+            css: linkMapper.asset(node, 'prettify.css')
+        };
+    },
+    writeDetailPage: function (writer, node, fileCoverage) {
+        var opts = this.opts,
+            sourceStore = opts.sourceStore,
+            templateData = opts.templateData,
+            sourceText = fileCoverage.code && Array.isArray(fileCoverage.code) ?
+                fileCoverage.code.join('\n') + '\n' : sourceStore.get(fileCoverage.path),
+            code = sourceText.split(/(?:\r?\n)|\r/),
+            count = 0,
+            structured = code.map(function (str) { count += 1; return { line: count, covered: null, text: new InsertionText(str, true) }; }),
+            context;
+
+        structured.unshift({ line: 0, covered: null, text: new InsertionText("") });
+
+        this.fillTemplate(node, templateData);
+        writer.write(headerTemplate(templateData));
+        writer.write('<pre><table class="coverage">\n');
+
+        annotateLines(fileCoverage, structured);
+        //note: order is important, since statements typically result in spanning the whole line and doing branches late
+        //causes mismatched tags
+        annotateBranches(fileCoverage, structured);
+        annotateFunctions(fileCoverage, structured);
+        annotateStatements(fileCoverage, structured);
+
+        structured.shift();
+        context = {
+            structured: structured,
+            maxLines: structured.length,
+            fileCoverage: fileCoverage
+        };
+        writer.write(detailTemplate(context));
+        writer.write('</table></pre>\n');
+        writer.write(footerTemplate(templateData));
+    },
+
+    writeIndexPage: function (writer, node) {
+        var linkMapper = this.opts.linkMapper,
+            templateData = this.opts.templateData,
+            children = Array.prototype.slice.apply(node.children),
+            watermarks = this.opts.watermarks;
+
+        children.sort(function (a, b) {
+            return a.name < b.name ? -1 : 1;
+        });
+
+        this.fillTemplate(node, templateData);
+        writer.write(headerTemplate(templateData));
+        writer.write(summaryTableHeader);
+        children.forEach(function (child) {
+            var metrics = child.metrics,
+                reportClasses = {
+                    statements: getReportClass(metrics.statements, watermarks.statements),
+                    lines: getReportClass(metrics.lines, watermarks.lines),
+                    functions: getReportClass(metrics.functions, watermarks.functions),
+                    branches: getReportClass(metrics.branches, watermarks.branches)
+                },
+                data = {
+                    metrics: metrics,
+                    reportClasses: reportClasses,
+                    file: child.displayShortName(),
+                    output: linkMapper.fromParent(child)
+                };
+            writer.write(summaryLineTemplate(data) + '\n');
+        });
+        writer.write(summaryTableFooter);
+        writer.write(footerTemplate(templateData));
+    },
+
+    writeFiles: function (writer, node, dir, collector) {
+        var that = this,
+            indexFile = path.resolve(dir, 'index.html'),
+            childFile;
+        if (this.opts.verbose) { console.error('Writing ' + indexFile); }
+        writer.writeFile(indexFile, function (contentWriter) {
+            that.writeIndexPage(contentWriter, node);
+        });
+        node.children.forEach(function (child) {
+            if (child.kind === 'dir') {
+                that.writeFiles(writer, child, path.resolve(dir, child.relativeName), collector);
+            } else {
+                childFile = path.resolve(dir, child.relativeName + '.html');
+                if (that.opts.verbose) { console.error('Writing ' + childFile); }
+                writer.writeFile(childFile, function (contentWriter) {
+                    that.writeDetailPage(contentWriter, child, collector.fileCoverageFor(child.fullPath()));
+                });
+            }
+        });
+    },
+
+    standardLinkMapper: function () {
+        return {
+            fromParent: function (node) {
+                var i = 0,
+                    relativeName = node.relativeName,
+                    ch;
+                if (SEP !== '/') {
+                    relativeName = '';
+                    for (i = 0; i < node.relativeName.length; i += 1) {
+                        ch = node.relativeName.charAt(i);
+                        if (ch === SEP) {
+                            relativeName += '/';
+                        } else {
+                            relativeName += ch;
+                        }
+                    }
+                }
+                return node.kind === 'dir' ? relativeName + 'index.html' : relativeName + '.html';
+            },
+            ancestorHref: function (node, num) {
+                var href = '',
+                    separated,
+                    levels,
+                    i,
+                    j;
+                for (i = 0; i < num; i += 1) {
+                    separated = node.relativeName.split(SEP);
+                    levels = separated.length - 1;
+                    for (j = 0; j < levels; j += 1) {
+                        href += '../';
+                    }
+                    node = node.parent;
+                }
+                return href;
+            },
+            ancestor: function (node, num) {
+                return this.ancestorHref(node, num) + 'index.html';
+            },
+            asset: function (node, name) {
+                var i = 0,
+                    parent = node.parent;
+                while (parent) { i += 1; parent = parent.parent; }
+                return this.ancestorHref(node, i) + name;
+            }
+        };
+    },
+
+    writeReport: function (collector, sync) {
+        var opts = this.opts,
+            dir = opts.dir,
+            summarizer = new TreeSummarizer(),
+            writer = opts.writer || new FileWriter(sync),
+            tree;
+
+        collector.files().forEach(function (key) {
+            summarizer.addFileCoverageSummary(key, utils.summarizeFileCoverage(collector.fileCoverageFor(key)));
+        });
+        tree = summarizer.getTreeSummary();
+        fs.readdirSync(path.resolve(__dirname, '..', 'vendor')).forEach(function (f) {
+            var resolvedSource = path.resolve(__dirname, '..', 'vendor', f),
+                resolvedDestination = path.resolve(dir, f),
+                stat = fs.statSync(resolvedSource);
+
+            if (stat.isFile()) {
+                if (opts.verbose) {
+                    console.log('Write asset: ' + resolvedDestination);
+                }
+                writer.copyFile(resolvedSource, resolvedDestination);
+            }
+        });
+        //console.log(JSON.stringify(tree.root, undefined, 4));
+        this.writeFiles(writer, tree.root, dir, collector);
+    }
+});
+
+module.exports = HtmlReport;
 
 
 
 /*
-file istanbul/lib/report/text.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
+shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/text.js > /tmp/aa.js
 */
-function TextReport(e){Report.call(this),e=e||{},this.dir=e.dir||process.cwd(),this
-.file=e.file,this.summary=e.summary,this.maxCols=e.maxCols||0,this.watermarks=e.
-watermarks||defaults.watermarks()}function padding(e,t){var n="",r;t=t||" ";for(
-r=0;r<e;r+=1)n+=t;return n}function fill(e,t,n,r,i){r=r||0,e=String(e);var s=r*TAB_SIZE
-,o=t-s,u=padding(s),a="",f,l=e.length;return o>0&&(o>=l?(f=padding(o-l),a=n?f+e:
-e+f):(a=e.substring(l-o),a="... "+a.substring(4))),a=defaults.colorize(a,i),u+a}
-function formatName(e,t,n,r){return fill(e,t,!1,n,r)}function formatPct(e,t){return fill
-(e,PCT_COLS,!0,0,t)}function nodeName(e){return e.displayShortName()||"All files"
-}function tableHeader(e){var t=[];return t.push(formatName("File",e,0)),t.push(formatPct
-("% Stmts")),t.push(formatPct("% Branches")),t.push(formatPct("% Funcs")),t.push
-(formatPct("% Lines")),t.join(" |")+" |"}function tableRow(e,t,n,r){var i=nodeName
-(e),s=e.metrics.statements.pct,o=e.metrics.branches.pct,u=e.metrics.functions.pct
-,a=e.metrics.lines.pct,f=[];return f.push(formatName(i,t,n,defaults.classFor("statements"
-,e.metrics,r))),f.push(formatPct(s,defaults.classFor("statements",e.metrics,r)))
-,f.push(formatPct(o,defaults.classFor("branches",e.metrics,r))),f.push(formatPct
-(u,defaults.classFor("functions",e.metrics,r))),f.push(formatPct(a,defaults.classFor
-("lines",e.metrics,r))),f.join(DELIM)+DELIM}function findNameWidth(e,t,n){n=n||0
-,t=t||0;var r=TAB_SIZE*t+nodeName(e).length;return r>n&&(n=r),e.children.forEach
-(function(e){n=findNameWidth(e,t+1,n)}),n}function makeLine(e){var t=padding(e,"-"
-),n=padding(PCT_COLS,"-"),r=[];return r.push(t),r.push(n),r.push(n),r.push(n),r.
-push(n),r.join(COL_DELIM)+COL_DELIM}function walk(e,t,n,r,i){var s;r===0?(s=makeLine
-(t),n.push(s),n.push(tableHeader(t)),n.push(s)):n.push(tableRow(e,t,r,i)),e.children
-.forEach(function(e){walk(e,t,n,r+1,i)}),r===0&&(n.push(s),n.push(tableRow(e,t,r
-,i)),n.push(s))}var path=require("path"),mkdirp=require("mkdirp"),fs=require("fs"
-),defaults=require("./common/defaults"),Report=require("./index"),TreeSummarizer=
-require("../util/tree-summarizer"),utils=require("../object-utils"),PCT_COLS=10,
-TAB_SIZE=3,DELIM=" |",COL_DELIM="-|";TextReport.TYPE="text",Report.mix(TextReport
-,{writeReport:function(e){var t=new TreeSummarizer,n,r,i,s=4*(PCT_COLS+2),o,u=[]
-,a;e.files().forEach(function(n){t.addFileCoverageSummary(n,utils.summarizeFileCoverage
-(e.fileCoverageFor(n)))}),n=t.getTreeSummary(),r=n.root,i=findNameWidth(r),this.
-maxCols>0&&(o=this.maxCols-s-2,i>o&&(i=o)),walk(r,i,u,0,this.watermarks),a=u.join
-("\n")+"\n",this.file?(mkdirp.sync(this.dir),fs.writeFileSync(path.join(this.dir
-,this.file),a,"utf8")):console.log(a)}}),module.exports=TextReport
+/*
+ Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
+ Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
+ */
+
+var path = require('path'),
+    mkdirp = require('mkdirp'),
+    fs = require('fs'),
+    defaults = require('./common/defaults'),
+    Report = require('./index'),
+    TreeSummarizer = require('../util/tree-summarizer'),
+    utils = require('../object-utils'),
+    PCT_COLS = 10,
+    TAB_SIZE = 3,
+    DELIM = ' |',
+    COL_DELIM = '-|';
+
+/**
+ * a `Report` implementation that produces text output in a detailed table.
+ *
+ * Usage
+ * -----
+ *
+ *      var report = require('istanbul').Report.create('text');
+ *
+ * @class TextReport
+ * @extends Report
+ * @constructor
+ * @param {Object} opts optional
+ * @param {String} [opts.dir] the directory in which to the text coverage report will be written, when writing to a file
+ * @param {String} [opts.file] the filename for the report. When omitted, the report is written to console
+ * @param {Number} [opts.maxcols] the max column width of the report. By default, the width of the report is adjusted based on the length of the paths
+ *              to be reported.
+ */
+function TextReport(opts) {
+    Report.call(this);
+    opts = opts || {};
+    this.dir = opts.dir || process.cwd();
+    this.file = opts.file;
+    this.summary = opts.summary;
+    this.maxCols = opts.maxCols || 0;
+    this.watermarks = opts.watermarks || defaults.watermarks();
+}
+
+TextReport.TYPE = 'text';
+
+function padding(num, ch) {
+    var str = '',
+        i;
+    ch = ch || ' ';
+    for (i = 0; i < num; i += 1) {
+        str += ch;
+    }
+    return str;
+}
+
+function fill(str, width, right, tabs, clazz) {
+    tabs = tabs || 0;
+    str = String(str);
+
+    var leadingSpaces = tabs * TAB_SIZE,
+        remaining = width - leadingSpaces,
+        leader = padding(leadingSpaces),
+        fmtStr = '',
+        fillStr,
+        strlen = str.length;
+
+    if (remaining > 0) {
+        if (remaining >= strlen) {
+            fillStr = padding(remaining - strlen);
+            fmtStr = right ? fillStr + str : str + fillStr;
+        } else {
+            fmtStr = str.substring(strlen - remaining);
+            fmtStr = '... ' + fmtStr.substring(4);
+        }
+    }
+
+    fmtStr = defaults.colorize(fmtStr, clazz);
+    return leader + fmtStr;
+}
+
+function formatName(name, maxCols, level, clazz) {
+    return fill(name, maxCols, false, level, clazz);
+}
+
+function formatPct(pct, clazz) {
+    return fill(pct, PCT_COLS, true, 0, clazz);
+}
+
+function nodeName(node) {
+    return node.displayShortName() || 'All files';
+}
+
+
+function tableHeader(maxNameCols) {
+    var elements = [];
+    elements.push(formatName('File', maxNameCols, 0));
+    elements.push(formatPct('% Stmts'));
+    elements.push(formatPct('% Branches'));
+    elements.push(formatPct('% Funcs'));
+    elements.push(formatPct('% Lines'));
+    return elements.join(' |') + ' |';
+}
+
+function tableRow(node, maxNameCols, level, watermarks) {
+    var name = nodeName(node),
+        statements = node.metrics.statements.pct,
+        branches = node.metrics.branches.pct,
+        functions = node.metrics.functions.pct,
+        lines = node.metrics.lines.pct,
+        elements = [];
+
+    elements.push(formatName(name, maxNameCols, level, defaults.classFor('statements', node.metrics, watermarks)));
+    elements.push(formatPct(statements, defaults.classFor('statements', node.metrics, watermarks)));
+    elements.push(formatPct(branches, defaults.classFor('branches', node.metrics, watermarks)));
+    elements.push(formatPct(functions, defaults.classFor('functions', node.metrics, watermarks)));
+    elements.push(formatPct(lines, defaults.classFor('lines', node.metrics, watermarks)));
+
+    return elements.join(DELIM) + DELIM;
+}
+
+function findNameWidth(node, level, last) {
+    last = last || 0;
+    level = level || 0;
+    var idealWidth = TAB_SIZE * level + nodeName(node).length;
+    if (idealWidth > last) {
+        last = idealWidth;
+    }
+    node.children.forEach(function (child) {
+        last = findNameWidth(child, level + 1, last);
+    });
+    return last;
+}
+
+function makeLine(nameWidth) {
+    var name = padding(nameWidth, '-'),
+        pct = padding(PCT_COLS, '-'),
+        elements = [];
+
+    elements.push(name);
+    elements.push(pct);
+    elements.push(pct);
+    elements.push(pct);
+    elements.push(pct);
+    return elements.join(COL_DELIM) + COL_DELIM;
+}
+
+function walk(node, nameWidth, array, level, watermarks) {
+    var line;
+    if (level === 0) {
+        line = makeLine(nameWidth);
+        array.push(line);
+        array.push(tableHeader(nameWidth));
+        array.push(line);
+    } else {
+        array.push(tableRow(node, nameWidth, level, watermarks));
+    }
+    node.children.forEach(function (child) {
+        walk(child, nameWidth, array, level + 1, watermarks);
+    });
+    if (level === 0) {
+        array.push(line);
+        array.push(tableRow(node, nameWidth, level, watermarks));
+        array.push(line);
+    }
+}
+
+Report.mix(TextReport, {
+    writeReport: function (collector /*, sync */) {
+        var summarizer = new TreeSummarizer(),
+            tree,
+            root,
+            nameWidth,
+            statsWidth = 4 * ( PCT_COLS + 2),
+            maxRemaining,
+            strings = [],
+            text;
+
+        collector.files().forEach(function (key) {
+            summarizer.addFileCoverageSummary(key, utils.summarizeFileCoverage(collector.fileCoverageFor(key)));
+        });
+        tree = summarizer.getTreeSummary();
+        root = tree.root;
+        nameWidth = findNameWidth(root);
+        if (this.maxCols > 0) {
+            maxRemaining = this.maxCols - statsWidth - 2;
+            if (nameWidth > maxRemaining) {
+                nameWidth = maxRemaining;
+            }
+        }
+        walk(root, nameWidth, strings, 0, this.watermarks);
+        text = strings.join('\n') + '\n';
+        if (this.file) {
+            mkdirp.sync(this.dir);
+            fs.writeFileSync(path.join(this.dir, this.file), text, 'utf8');
+        } else {
+            console.log(text);
+        }
+    }
+});
+
+module.exports = TextReport;
 
 
 
 /*
-file badge.svg - coverage
+file https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
 */
 '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
+
+
+
 /*
 file none
 */

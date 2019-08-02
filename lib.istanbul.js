@@ -633,9 +633,7 @@ inherits: local.nop
 
 
 /*
-file esprima/esprima.js
-2016-08-22T15:14:14Z - shGithubDateCommitted https://github.com/jquery/esprima/commits/2.7.3
-https://github.com/jquery/esprima/blob/2.7.3/esprima.js
+file https://github.com/jquery/esprima/blob/2.7.3/esprima.js
 utility2-uglifyjs https://raw.githubusercontent.com/jquery/esprima/2.7.3/esprima.js > /tmp/aa.js
 */
 /* istanbul ignore next */
@@ -1352,9 +1350,7 @@ Object.freeze=="function"&&Object.freeze(t),t}()})
 
 
 /*
-file estraverse/estraverse.js
-2015-03-05T15:18:29Z - shGithubDateCommitted https://github.com/estools/estraverse/commits/1.9.3
-https://github.com/estools/estraverse/blob/1.9.3/estraverse.js
+file https://github.com/estools/estraverse/blob/1.9.3/estraverse.js
 utility2-uglifyjs https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > /tmp/aa.js
 */
 /* istanbul ignore next */
@@ -1492,9 +1488,7 @@ i,t.Controller=b,t.cloneEnvironment=function(){return e({})},t})
 
 
 /*
-file esutils/lib/code.js
-2015-03-14T17:10:47Z - shGithubDateCommitted https://github.com/estools/esutils/commits/2.0.2
-https://github.com/estools/esutils/blob/2.0.2/lib/code.js
+file https://github.com/estools/esutils/blob/2.0.2/lib/code.js
 utility2-uglifyjs https://raw.githubusercontent.com/estools/esutils/2.0.2/lib/code.js > /tmp/aa.js
 */
 /* istanbul ignore next */
@@ -1523,9 +1517,7 @@ local.esutils = { code: module.exports }; }());
 
 
 /*
-file escodegen/escodegen.js
-2016-08-06T18:04:07Z - shGithubDateCommitted https://github.com/estools/escodegen/commits/1.8.1
-https://github.com/estools/escodegen/blob/1.8.1/escodegen.js
+file https://github.com/estools/escodegen/blob/1.8.1/escodegen.js
 utility2-uglifyjs https://raw.githubusercontent.com/estools/escodegen/1.8.1/escodegen.js > /tmp/aa.js
 */
 /* istanbul ignore next */
@@ -1902,10 +1894,7 @@ G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
 
 
 /*
-file handlebars.js/handlebars.js
-2013-12-26T22:37:39Z - shGithubDateCommitted https://github.com/components/handlebars.js/commits/v1.2.1
-https://github.com/components/handlebars.js/blob/v1.2.1/handlebars.js
-curl https://raw.githubusercontent.com/components/handlebars.js/v1.2.1/handlebars.js > /tmp/aa.js
+file https://github.com/components/handlebars.js/blob/v1.2.1/handlebars.js
 */
 /* validateLineSortedReset */
 local.handlebars = {};
@@ -2015,10 +2004,7 @@ local.handlebars.replace = function (template, dict, withPrefix) {
 };
 
 /*
-file istanbul/lib/collector.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/collector.js
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/collector.js > /tmp/aa.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/collector.js
 */
 /* validateLineSortedReset */
 local.collector = {
@@ -2042,9 +2028,7 @@ local.collector = {
 
 
 /*
-file istanbul/lib/util/insertion-text.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/insertion-text.js > /tmp/aa.js
 */
 /* istanbul ignore next */
@@ -2071,9 +2055,7 @@ local["../util/insertion-text"] = module.exports; }());
 
 
 /*
-file istanbul/lib/instrumenter.js
-2016-08-21T19:53:22Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.4.5
-https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
+file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.4.5/lib/instrumenter.js > /tmp/aa.js
 */
 /* istanbul ignore next */
@@ -2293,9 +2275,7 @@ module.exports!="undefined"&&typeof exports!="undefined")
 
 
 /*
-file istanbul/lib/object-utils.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
 utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/object-utils.js > /tmp/aa.js
 */
 /* istanbul ignore next */
@@ -2339,9 +2319,7 @@ local["../object-utils"] = window.coverageUtils; }());
 
 
 /*
-file istanbul/lib/report/common/defaults.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/common/defaults.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/common/defaults.js
 utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/common/defaults.js > /tmp/aa.js
 */
 /* istanbul ignore next */
@@ -2357,10 +2335,7 @@ local["./common/defaults"] = module.exports; }());
 
 
 /*
-file istanbul/lib/report/index.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/index.js
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/index.js > /tmp/aa.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/index.js
 */
 local["./index"] = {
     call: local.nop,
@@ -2372,10 +2347,7 @@ local["./index"] = {
 
 
 /*
-file istanbul/lib/report/templates/foot.txt
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/foot.txt
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/templates/foot.txt > /tmp/aa.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/foot.txt
 */
 /* jslint ignore:start */
 local["foot.txt"] = '\
@@ -2390,10 +2362,7 @@ local["foot.txt"] = '\
 
 
 /*
-file istanbul/lib/report/templates/head.txt
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/templates/head.txt > /tmp/aa.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
 */
 local["head.txt"] = '\
 <!doctype html>\n\
@@ -2697,10 +2666,7 @@ local["head.txt"] = '\
 
 
 /*
-file istanbul/lib/util/file-writer.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/file-writer.js > /tmp/aa.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
 */
 local.writer = {
     write: function (data) {
@@ -2720,9 +2686,7 @@ local.writer = {
 
 
 /*
-file istanbul/lib/util/tree-summarizer.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
 utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/tree-summarizer.js > /tmp/aa.js
 */
 /* istanbul ignore next */
@@ -2780,9 +2744,7 @@ TreeSummary(this.summaryMap,e)}},module.exports=TreeSummarizer
 
 
 /*
-file istanbul/lib/report/html.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/html.js > /tmp/aa.js
 */
 /* istanbul ignore next */
@@ -2902,9 +2864,7 @@ local.HtmlReport = module.exports; }());
 
 
 /*
-file istanbul/lib/report/text.js
-2014-07-04T07:47:53Z - shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16
-https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/text.js > /tmp/aa.js
 */
 /* istanbul ignore next */
@@ -2947,11 +2907,13 @@ local.TextReport = module.exports; }());
 
 
 /*
-file badge.svg - coverage
-https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
+file https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
 */
 local.templateCoverageBadgeSvg =
 '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
+
+
+
 /*
 file none
 */

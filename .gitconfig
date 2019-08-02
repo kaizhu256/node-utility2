@@ -5,8 +5,9 @@
     merge = refs/heads/base
     remote = origin
 [core]
+    autocrlf = false
     bare = false
-    filemode = true
+    # filemode = false
     logallrefupdates = true
     repositoryformatversion = 0
 [diff]
@@ -16,6 +17,9 @@
 [remote "aa-bb"]
     fetch = +refs/heads/*:refs/remotes/aa-bb/*
     url = https://github.com/kaizhu256/node-aa-bb
+[remote "fork"]
+    fetch = +refs/heads/*:refs/remotes/fork/*
+    url = https://github.com/kaizhu256/node-utility2
 [remote "heroku"]
     fetch = +refs/heads/*:refs/remotes/heroku/*
     url = git@heroku.com:h1-utility2-alpha.git

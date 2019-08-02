@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2019.4.9)
+ * lib.utility2.js (2019.8.1)
  * https://github.com/kaizhu256/node-utility2
  * the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps
  *
@@ -1677,6 +1677,156 @@ local.cliDict["utility2.testReportCreate"] = function () {
 
 
 
+/* istanbul ignore next */
+// run shared js-env code - polyfill
+(function () {
+    var ArrayPrototypeFlat;
+    var TextXxcoder;
+    ArrayPrototypeFlat = function (depth) {
+    /*
+     * this function will polyfill Array.prototype.flat
+     * https://github.com/jonathantneal/array-flat-polyfill
+     */
+        depth = (
+            globalThis.isNaN(depth)
+            ? 1
+            : Number(depth)
+        );
+        if (!depth) {
+            return Array.prototype.slice.call(this);
+        }
+        return Array.prototype.reduce.call(this, function (acc, cur) {
+            if (Array.isArray(cur)) {
+                // recurse
+                acc.push.apply(acc, ArrayPrototypeFlat.call(cur, depth - 1));
+            } else {
+                acc.push(cur);
+            }
+            return acc;
+        }, []);
+    };
+    Array.prototype.flat = Array.prototype.flat || ArrayPrototypeFlat;
+    Array.prototype.flatMap = Array.prototype.flatMap || function flatMap(
+        ...argList
+    ) {
+    /*
+     * this function will polyfill Array.prototype.flatMap
+     * https://github.com/jonathantneal/array-flat-polyfill
+     */
+        return this.map(...argList).flat();
+    };
+    if (!local.isBrowser) {
+        globalThis.TextDecoder = (
+            globalThis.TextDecoder || local.util.TextDecoder
+        );
+        globalThis.TextEncoder = (
+            globalThis.TextEncoder || local.util.TextEncoder
+        );
+    }
+    TextXxcoder = function () {
+    /*
+     * this function will polyfill TextDecoder/TextEncoder
+     * https://gist.github.com/Yaffle/5458286
+     */
+        return;
+    };
+    TextXxcoder.prototype.decode = function (octets) {
+    /*
+     * this function will polyfill TextDecoder.prototype.decode
+     * https://gist.github.com/Yaffle/5458286
+     */
+        var bytesNeeded;
+        var codePoint;
+        var ii;
+        var kk;
+        var octet;
+        var string;
+        string = "";
+        ii = 0;
+        while (ii < octets.length) {
+            octet = octets[ii];
+            bytesNeeded = 0;
+            codePoint = 0;
+            if (octet <= 0x7F) {
+                bytesNeeded = 0;
+                codePoint = octet & 0xFF;
+            } else if (octet <= 0xDF) {
+                bytesNeeded = 1;
+                codePoint = octet & 0x1F;
+            } else if (octet <= 0xEF) {
+                bytesNeeded = 2;
+                codePoint = octet & 0x0F;
+            } else if (octet <= 0xF4) {
+                bytesNeeded = 3;
+                codePoint = octet & 0x07;
+            }
+            if (octets.length - ii - bytesNeeded > 0) {
+                kk = 0;
+                while (kk < bytesNeeded) {
+                    octet = octets[ii + kk + 1];
+                    codePoint = (codePoint << 6) | (octet & 0x3F);
+                    kk += 1;
+                }
+            } else {
+                codePoint = 0xFFFD;
+                bytesNeeded = octets.length - ii;
+            }
+            string += String.fromCodePoint(codePoint);
+            ii += bytesNeeded + 1;
+        }
+        return string;
+    };
+    TextXxcoder.prototype.encode = function (string) {
+    /*
+     * this function will polyfill TextEncoder.prototype.encode
+     * https://gist.github.com/Yaffle/5458286
+     */
+        var bits;
+        var cc;
+        var codePoint;
+        var ii;
+        var length;
+        var octets;
+        octets = [];
+        length = string.length;
+        ii = 0;
+        while (ii < length) {
+            codePoint = string.codePointAt(ii);
+            cc = 0;
+            bits = 0;
+            if (codePoint <= 0x0000007F) {
+                cc = 0;
+                bits = 0x00;
+            } else if (codePoint <= 0x000007FF) {
+                cc = 6;
+                bits = 0xC0;
+            } else if (codePoint <= 0x0000FFFF) {
+                cc = 12;
+                bits = 0xE0;
+            } else if (codePoint <= 0x001FFFFF) {
+                cc = 18;
+                bits = 0xF0;
+            }
+            octets.push(bits | (codePoint >> cc));
+            cc -= 6;
+            while (cc >= 0) {
+                octets.push(0x80 | ((codePoint >> cc) & 0x3F));
+                cc -= 6;
+            }
+            ii += (
+                codePoint >= 0x10000
+                ? 2
+                : 1
+            );
+        }
+        return octets;
+    };
+    globalThis.TextDecoder = globalThis.TextDecoder || TextXxcoder;
+    globalThis.TextEncoder = globalThis.TextEncoder || TextXxcoder;
+}());
+
+
+
 // run shared js-env code - function
 (function () {
 // init lib Blob
@@ -1815,40 +1965,6 @@ local.FormData.prototype.read = function (onError) {
         );
     });
 };
-
-local.TextDecoder = globalThis.TextDecoder || function () {
-    return;
-};
-
-local.TextDecoder.prototype.decode = (
-    local.TextDecoder.prototype.decode || function (bff) {
-        return (
-            (bff && bff.length)
-            ? String(Object.setPrototypeOf(bff, Buffer.prototype))
-            : ""
-        );
-    }
-);
-
-globalThis.TextDecoder = local.TextDecoder;
-
-local.TextEncoder = globalThis.TextEncoder || function () {
-    return;
-};
-
-local.TextEncoder.prototype.encode = (
-    local.TextEncoder.prototype.encode || function (bff) {
-        if (bff === undefined) {
-            return new Uint8Array();
-        }
-        if (typeof bff !== "string") {
-            bff = String(bff);
-        }
-        return Buffer.from(bff);
-    }
-);
-
-globalThis.TextEncoder = local.TextEncoder;
 
 // init lib _http
 local._http = {};
@@ -4314,6 +4430,38 @@ local.dateGetWeekOfMonth = function (date) {
     ).getUTCDay()) / 7) - 1;
 };
 
+local.dateGetWeekOfYear = function (date) {
+/*
+ * this function will return ISO week-of-year from <date>
+ *
+ * Based on information at:
+ *
+ *    http://www.merlyn.demon.co.uk/weekcalc.htm#WNR
+ *
+ * Algorithm is to find nearest thursday, it's year
+ * is the year of the week number. Then get weeks
+ * between that date and the first day of that year.
+ *
+ * Note that dates in one year can be weeks of previous
+ * or next year, overlap is up to 3 days.
+ *
+ * e.g. 2014/12/29 is Monday in week  1 of 2015
+ *      2012/1/1   is Sunday in week 52 of 2011
+ *
+ * https://stackoverflow.com/questions/6117814/get-week-of-year-in-javascript-like-in-php
+ */
+    date = new Date(date.slice(0, 10) + "T00:00:00Z");
+    // Set to nearest Thursday: current date + 4 - current day number
+    // Make Sunday's day number 7
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    // Calculate full weeks to nearest Thursday
+    return Math.ceil((((
+        date
+        // Get first day of year
+        - new Date(Date.UTC(date.getUTCFullYear(), 0, 1))
+    ) / 86400000) + 1) / 7);
+};
+
 local.dateUtcFromLocal = function (date, timezoneOffset) {
 /*
  * this function will convert local-<date> to utc-date
@@ -4372,6 +4520,14 @@ local.domQuerySelectorAllTagName = function (selector) {
     return Array.from(set).sort();
 };
 
+local.domSelectOptionValue = function (elem) {
+/*
+ * this function will return <elem>.options[<elem>.selectedIndex].value
+ */
+    elem = elem && elem.options[elem.selectedIndex];
+    return (elem && elem.value) || "";
+};
+
 local.domStyleValidate = function () {
 /*
  * this function will validate <style> tags
@@ -4399,9 +4555,13 @@ local.domStyleValidate = function () {
         ), "\n").replace((
             /^([^\n\u0020@].*?)[,{:].*?$/gm
         ), function (match0, match1) {
-            ii = document.querySelectorAll(
-                match1
-            ).length;
+            try {
+                ii = document.querySelectorAll(
+                    match1
+                ).length;
+            } catch (errCaught) {
+                console.error(errCaught);
+            }
             if (!(ii > 1)) {
                 tmp.push(ii + " " + match0);
             }
@@ -5778,7 +5938,10 @@ local.replStart = function () {
                     break;
                 }
                 // source lib.utility2.sh
-                if (process.env.npm_config_dir_utility2 && (match2 !== ":")) {
+                if (
+                    process.platform !== "win32"
+                    && process.env.npm_config_dir_utility2 && (match2 !== ":")
+                ) {
                     match2 = (
                         ". " + process.env.npm_config_dir_utility2
                         + "/lib.utility2.sh;" + match2
@@ -5834,7 +5997,7 @@ fixture|\
 git_module|\
 jquery|\
 log|\
-min|mock|\
+min|misc|mock|\
 node_module|\
 rollup|\
 swp|\
@@ -6904,15 +7067,10 @@ local.templateRender = function (template, dict, opt) {
                     notHtmlSafe = true;
                     break;
                 case "padEnd":
-                    skip = ii + 2;
-                    value = String(value).padEnd(
-                        list[skip - 1],
-                        list[skip]
-                    );
-                    break;
                 case "padStart":
+                case "slice":
                     skip = ii + 2;
-                    value = String(value).padStart(
+                    value = String(value)[arg0](
                         list[skip - 1],
                         list[skip]
                     );
@@ -8043,8 +8201,6 @@ globalThis.utility2_onReadyAfter = globalThis.utility2_onReadyAfter || function 
  * this function will call onError when utility2_onReadyBefore.counter === 0
  */
     globalThis.utility2_onReadyBefore.counter += 1;
-    // visual notification - utility2_onReadyAfter
-    local.ajaxProgressUpdate();
     local.taskCreate({
         key: "globalThis.utility2_onReadyAfter"
     }, null, onError);

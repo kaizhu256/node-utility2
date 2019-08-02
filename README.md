@@ -56,11 +56,13 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- rename var event to evt
+- rename var value to val
 - jslint - auto-newline function-calls with names longer than 20 char
 - replace uglifyjs-lite with terser-lite (v2.8.29)
 - jslint - allow space after semi-colon in jslint-macro
 - jslint - fix lineOffset issue
-- jslint - jlintUtility2 with ignore-region blank
+- jslint - jslintUtility2 with ignore-region blank
 - jslint - sort nested switch-statements
 - jslint-autofix - move inner-loop to outer
 - left-align .<xxx>
@@ -71,12 +73,16 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - add server stress-test using electron
 - none
 
-#### changelog 2019.4.9
-- npm publish 2019.4.9
-- add shims for TextDecoder, TextEncoder
-- shorten name element to elem, option to opt, error to err, request to req, response to res
-- add file lib.terser.js
-- delist uglifyjs-lite from shUtility2Dependents
+#### changelog 2019.8.1
+- npm publish 2019.8.1
+- unminify file raw.istanbul.js
+- update file lib.sjcl.js to v1.0.8
+- add polyfill for Array.p.flat() and Array.p.flatMap()
+- add function dateGetWeekOfYear()
+- .vimrc - set ffs=unix,dos
+- add winpty support
+- rename dir /src/ to /Documents/
+- add shell-functions shGitInitBase, shGitLsTreeSort, shMkisofs
 - none
 
 #### this package requires
@@ -1180,7 +1186,7 @@ local.http.createServer(function (req, res) {
         "test": "./npm_scripts.sh",
         "utility2": "./npm_scripts.sh"
     },
-    "version": "2019.4.9"
+    "version": "2019.8.1"
 }
 ```
 

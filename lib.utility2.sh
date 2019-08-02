@@ -711,9 +711,9 @@ shBuildInit () {
         if [ -f lib.electron.js ]
         then
             export npm_config_dir_electron="$PWD"
-        elif [ -f "$HOME/src/electron-lite/lib.electron.js" ]
+        elif [ -f "$HOME/Documents/electron-lite/lib.electron.js" ]
         then
-            export npm_config_dir_electron="$HOME/src/electron-lite"
+            export npm_config_dir_electron="$HOME/Documents/electron-lite"
         fi
         export npm_config_dir_electron="${npm_config_dir_electron:-\
 $(shModuleDirname electron-lite)}" || return $?
@@ -727,9 +727,9 @@ $HOME/node_modules/electron-lite}" || return $?
         if [ -f lib.utility2.js ]
         then
             export npm_config_dir_utility2="$PWD"
-        elif [ -f "$HOME/src/utility2/lib.utility2.js" ]
+        elif [ -f "$HOME/Documents/utility2/lib.utility2.js" ]
         then
-            export npm_config_dir_utility2="$HOME/src/utility2"
+            export npm_config_dir_utility2="$HOME/Documents/utility2"
         fi
         export npm_config_dir_utility2="${npm_config_dir_utility2:-\
 $(shModuleDirname utility2)}" || return $?
@@ -1704,6 +1704,19 @@ shGitInfo () {(set -e
     git grep -E '\bset -\w*x\b' *.sh || true
 )}
 
+shGitInitBase () {(set -e
+# this function will git init && git fetch utility2 base
+    git init
+    git remote add utility2 https://github.com/kaizhu256/node-utility2
+    git fetch utility2 base
+    git reset utility2/base
+    git checkout -b alpha
+    git add .
+    git commit -am "initial commit"
+    curl https://raw.githubusercontent.com/kaizhu256/node-utility2\
+/alpha/.gitconfig > .git/config
+)}
+
 shGitLsTree () {(set -e
 # this function will list all files committed in HEAD
 # example usage:
@@ -1719,7 +1732,7 @@ shGitLsTree () {(set -e
     (cmd | getline size)
     close(cmd)
     sizeTotal += size
-    printf("%-3s  %s %8s bytes  %s\n", ii, date, size, file)
+    printf("%-4s  %s %9s bytes %s\n", ii, date, size, file)
 } END {
     ii = 0
     file = "."
@@ -1727,8 +1740,46 @@ shGitLsTree () {(set -e
     (cmd | getline date)
     close(cmd)
     size = sizeTotal
-    printf("%-3s  %s %8s bytes  %s\n", ii, date, size, file)
+    printf("%-4s  %s %9s bytes %s\n", ii, date, size, file)
     }' | sed -e "s/ /./"
+)}
+
+shGitLsTreeSort () {(set -e
+# this function will sort git-lstree by size
+    printf "# 0\n" > .gitlstree
+    shGitLsTree | sed -e "s/^.\{31\}//" >> .gitlstree
+    node -e '
+/* jslint utility2:true */
+(function () {
+"use strict";
+var dict;
+dict = {};
+require("fs").readFileSync(".gitlstree", "utf8").replace((
+    /(.*?)\u0020bytes\u0020(.*?)$/gm
+), function (ignore, match1, match2) {
+    dict[match1] = dict[match1] || [];
+    dict[match1].push(match2);
+});
+[
+    1,
+    2
+].forEach(function (ii) {
+    console.log("# " + ii);
+    Object.keys(dict).sort().reverse().forEach(function (key) {
+        if (dict[key].length < ii) {
+            return;
+        }
+        console.log(key.replace((
+            /\u0020/g
+        ), "_"));
+        dict[key].forEach(function (elem) {
+            console.log("    " + JSON.stringify(elem));
+        });
+    });
+});
+}());
+' >> .gitlstree
+    printf "#\n" >> .gitlstree
 )}
 
 shGitSquashPop () {(set -e
@@ -1766,7 +1817,8 @@ shGithubDateCommitted () {(set -e
 # this function will fetch the commit-date for the github-commit-url $1
 # example usage:
 # shGithubDateCommitted https://github.com/kaizhu256/node-utility2/commits/master
-    curl -Lfs "$1" | grep -m 1 -o -E "\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ"
+    printf "shGithubDateCommitted $1 # "
+    curl -Lfs "$1" | grep -m 1 -o -E "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z"
 )}
 
 shGithubRepoBranchId () {(set -e
@@ -1903,7 +1955,7 @@ fixture|\
 git_module|\
 jquery|\
 log|\
-min|mock|\
+min|misc|mock|\
 node_module|\
 rollup|\
 swp|\
@@ -2105,7 +2157,12 @@ shIstanbulCover () {(set -e
     export NODE_BINARY="${NODE_BINARY:-node}"
     if [ ! "$npm_config_mode_coverage" ]
     then
-        "$NODE_BINARY" "$@"
+        if [ "$MSYSTEM" ] && (winpty --version > /dev/null 2>&1)
+        then
+            winpty "$NODE_BINARY" "$@"
+        else
+            "$NODE_BINARY" "$@"
+        fi
         return
     fi
     "$NODE_BINARY" "$npm_config_dir_utility2/lib.istanbul.js" cover "$@"
@@ -2333,6 +2390,35 @@ local.utility2 = local;
 globalThis.local = local;
 
 
+
+local.TextDecoder = globalThis.TextDecoder || function () {
+/*
+ * this function will polyfill TextDecoder
+ */
+    return;
+};
+
+local.TextDecoder.prototype.decode = (
+    local.TextDecoder.prototype.decode || function (bff) {
+        /*
+         * this function will polyfill TextDecoder.prototype.decode
+         */
+        return (
+            (bff && bff.length)
+            ? String(Object.setPrototypeOf(bff, Buffer.prototype))
+            : ""
+        );
+    }
+);
+
+globalThis.TextDecoder = local.TextDecoder;
+
+local.TextEncoder = globalThis.TextEncoder || function () {
+/*
+ * this function will polyfill TextEncoder
+ */
+    return;
+};
 
 local.ajax = function (opt, onError) {
 /*
@@ -3681,6 +3767,48 @@ shMediaHlsFromMp4 () {(set -e
         hls.m3u8
 )}
 
+shMkisofs () {(set -e
+# this function will mkisofs .
+    mkdir -p tmp
+    if [ ! -f .gitginore ]
+    then
+        touch .gitignore
+    fi
+    # mkisofs plain-cd
+    if [ ! "$2" ]
+    then
+        mkisofs \
+            -J \
+            -R \
+            -V "$1" \
+            -exclude .git \
+            -exclude tmp \
+            -exclude-list .gitignore \
+            -joliet-long \
+            -o "tmp/$1.iso" \
+            .
+        return
+    fi
+    # mkisofs boot-cd
+    cp "$2" "$2.modified"
+    mkisofs \
+        -J \
+        -R \
+        -V "$1" \
+        -exclude .git \
+        -exclude tmp \
+        -exclude-list .gitignore \
+        -exclude "$2" \
+        -joliet-long \
+        -o "tmp/$1.iso" \
+        -b "$2.modified" \
+        -boot-info-table \
+        -boot-load-size 4 \
+        -no-emul-boot \
+        .
+    rm "$2.modified"
+)}
+
 shModuleDirname () {(set -e
 # this function will print the __dirname of the module $1
     MODULE="$1"
@@ -4332,7 +4460,7 @@ shTravisRepoBuildCancel () {(set -e
 # https://docs.travis-ci.com/api#builds
     GITHUB_REPO="$1"
     BUILD_ID="$(curl -#Lf "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/builds" \
-        | grep -o -E "\d\d*" | head -n 1)"
+        | grep -o -E "[0-9]{1,}" | head -n 1)"
     curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
         "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/builds/$BUILD_ID/cancel"
 )}
@@ -4342,7 +4470,7 @@ shTravisRepoBuildRestart () {(set -e
 # https://docs.travis-ci.com/api#builds
     GITHUB_REPO="$1"
     BUILD_ID="$(curl -#Lf "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/builds" \
-        | grep -o -E "\d\d*" | head -n 1)"
+        | grep -o -E "[0-9]{1,}" | head -n 1)"
     curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
         "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/builds/$BUILD_ID/restart"
 )}
@@ -4542,7 +4670,7 @@ shTravisSync () {(set -e
 shTravisTaskPush () {(set -e
 # this function will push the shell-task-script $1 with the message $2 to travis
 # example usage:
-# shCryptoWithGithubOrg kaizhu256 shTravisTaskPush "$HOME/src/sandbox2/.task.sh"
+# shCryptoWithGithubOrg kaizhu256 shTravisTaskPush "$HOME/Documents/sandbox2/.task.sh"
     utility2-github-crud put https://github.com/kaizhu256/node-sandbox2/blob/task/.task.sh \
         "$1" "[\$ /bin/sh .task.sh] $2"
 )}
@@ -4669,7 +4797,7 @@ shUbuntuInit () {
 shUtility2BuildApp () {(set -e
 # this function will run shBuildApp in $UTILITY2_DEPENDENTS
     shUtility2DependentsSync
-    cd "$HOME/src"
+    cd "$HOME/Documents"
     # shBuildApp
     for DIR in $UTILITY2_DEPENDENTS
     do
@@ -4684,7 +4812,7 @@ shUtility2BuildApp () {(set -e
 
 shUtility2Dependents () {(set -e
 # this function will return a list of utility2 dependents
-    cd "$HOME/src" 2>/dev/null || true
+    cd "$HOME/Documents" 2>/dev/null || true
 printf "
 apidoc-lite
 bootstrap-lite
@@ -4703,8 +4831,8 @@ utility2
 shUtility2DependentsSync () {(set -e
 # this function will sync files between utility2 and its dependents
     CWD="$PWD"
-    cd "$HOME/src/utility2" && shBuildApp
-    cd "$HOME/src"
+    cd "$HOME/Documents/utility2" && shBuildApp
+    cd "$HOME/Documents"
     ln -f "utility2/lib.utility2.sh" "$HOME"
     for DIR in $UTILITY2_DEPENDENTS $(ls -d swgg-* 2>/dev/null)
     do
@@ -4713,7 +4841,7 @@ shUtility2DependentsSync () {(set -e
             continue
         fi
         cd "$DIR"
-        npm_config_dir_utility2="$HOME/src/utility2" shBuildAppSync
+        npm_config_dir_utility2="$HOME/Documents/utility2" shBuildAppSync
         cd ..
         # hardlink "lib.$LIB.js"
         LIB="$(printf "$DIR" | sed -e "s/-lite\$//" -e "s/-/_/g")"
@@ -4732,7 +4860,7 @@ shUtility2DependentsSync () {(set -e
         # hardlink assets.utility2.rollup.js
         if [ -f "assets.utility2.rollup.js" ]
         then
-            ln -f "$HOME/src/utility2/tmp/build/app/assets.utility2.rollup.js" .
+            ln -f "$HOME/Documents/utility2/tmp/build/app/assets.utility2.rollup.js" .
         fi
         cd ..
     done
@@ -4745,7 +4873,7 @@ shUtility2GitCommit () {(set -e
     MESSAGE="$1"
     for DIR in $UTILITY2_DEPENDENTS
     do
-        cd "$HOME/src/$DIR" || continue
+        cd "$HOME/Documents/$DIR" || continue
         printf "\n\n\n\n$PWD\n"
         git commit -am "'$MESSAGE'" || true
     done
@@ -4757,7 +4885,7 @@ shUtility2GitCommitAndPush () {(set -e
     MESSAGE="$1"
     for DIR in $UTILITY2_DEPENDENTS
     do
-        cd "$HOME/src/$DIR" || continue
+        cd "$HOME/Documents/$DIR" || continue
         printf "\n\n\n\n$PWD\n"
         git commit -am "'$MESSAGE'" || true
         git push || true
@@ -4769,7 +4897,7 @@ shUtility2GitDiffHead () {(set -e
     rm -f /tmp/shUtility2GitDiffHead.diff
     for DIR in $UTILITY2_DEPENDENTS
     do
-        cd "$HOME/src/$DIR" || continue
+        cd "$HOME/Documents/$DIR" || continue
         printf "\n\n\n\n$PWD\n\n\n\n" 2>&1 >> /tmp/shUtility2GitDiffHead.diff
         shGitLsTree 2>&1 >> /tmp/shUtility2GitDiffHead.diff
         git status 2>&1 >> /tmp/shUtility2GitDiffHead.diff
@@ -4780,9 +4908,9 @@ shUtility2GitDiffHead () {(set -e
 
 shUtility2Grep () {(set -e
 # this function will recursively grep $UTILITY2_DEPENDENTS for the regexp $1
-    for DIR in $UTILITY2_DEPENDENTS $(cd "$HOME/src"; ls -d swgg-* 2>/dev/null)
+    for DIR in $UTILITY2_DEPENDENTS $(cd "$HOME/Documents"; ls -d swgg-* 2>/dev/null)
     do
-        DIR="$HOME/src/$DIR"
+        DIR="$HOME/Documents/$DIR"
         if [ -d "$DIR" ]
         then
             shGrep "$DIR" "$@"
@@ -4795,7 +4923,7 @@ shUtility2GrepTravisYml () {(set -e
     REGEXP="$1"
     for DIR in $UTILITY2_DEPENDENTS
     do
-        DIR="$HOME/src/$DIR"
+        DIR="$HOME/Documents/$DIR"
         if [ -d "$DIR" ]
         then
             grep -HIin -E "$REGEXP" "$DIR/.travis.yml" || true
