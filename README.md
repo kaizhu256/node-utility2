@@ -56,16 +56,17 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- rename var event to evt
+- jslint-autofix - split ([aa, bb]) into multiple lines
+- rename var previous to prev
 - rename var value to val
 - jslint - auto-newline function-calls with names longer than 20 char
 - replace uglifyjs-lite with terser-lite (v2.8.29)
+- jslint - remove bad_property_a and unexpected_a hacks
 - jslint - allow space after semi-colon in jslint-macro
 - jslint - fix lineOffset issue
 - jslint - jslintUtility2 with ignore-region blank
 - jslint - sort nested switch-statements
 - jslint-autofix - move inner-loop to outer
-- left-align .<xxx>
 - jslint - refactor files to 80 chr column-limit
 - add default testCase _testCase_cliRun_help
 - merge class _http.IncomingMessage -> _http.ServerResponse
@@ -73,16 +74,13 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - add server stress-test using electron
 - none
 
-#### changelog 2019.8.1
-- npm publish 2019.8.1
-- unminify file raw.istanbul.js
-- update file lib.sjcl.js to v1.0.8
-- add polyfill for Array.p.flat() and Array.p.flatMap()
-- add function dateGetWeekOfYear()
-- .vimrc - set ffs=unix,dos
-- add winpty support
-- rename dir /src/ to /Documents/
-- add shell-functions shGitInitBase, shGitLsTreeSort, shMkisofs
+#### changelog 2019.8.2
+- npm publish 2019.8.2
+- add partial support for git-for-windows/MINGW env
+- update to jslint commit ea8401c6a72e21d66f49766af692b09e81d7a79f
+- csslint - validateLineSortedReset @media
+- rename var event to evt
+- rename var nextMiddleware to next
 - none
 
 #### this package requires
@@ -328,7 +326,10 @@ local.testCase_ajax_200 = function (option, onError) {
             local.assertThrow(!error, error);
             // validate data
             option.data = xhr.responseText;
-            local.assertThrow(option.data === "hello \ud83d\ude01\n", option.data);
+            local.assertThrow(
+                option.data === "hello \ud83d\ude01\n",
+                option.data
+            );
             onError();
         }, onError);
     });
@@ -416,16 +417,16 @@ globalThis.domOnEventDelegateDict = local;
 local.onEventDomDb = (
     local.db && local.db.onEventDomDb
 );
-local.testRunBrowser = function (event) {
+local.testRunBrowser = function (evt) {
 /*
  * this function will run browser-tests
  */
     switch (
-        !event.ctrlKey
-        && !event.metaKey
+        !evt.ctrlKey
+        && !evt.metaKey
         && (
-            event.modeInit
-            || (event.type + "." + (event.target && event.target.id))
+            evt.modeInit
+            || (evt.type + "." + (evt.target && evt.target.id))
         )
     ) {
     // custom-case
@@ -441,9 +442,9 @@ local.testRunBrowser = function (event) {
             "inputEval1.js",
             {
                 autofix: (
-                    event
-                    && event.currentTarget
-                    && event.currentTarget.id === "jslintAutofixButton1"
+                    evt
+                    && evt.currentTarget
+                    && evt.currentTarget.id === "jslintAutofixButton1"
                 ),
                 conditional: true
             }
@@ -503,8 +504,8 @@ local.testRunBrowser = function (event) {
     // run browser-tests
     default:
         if (
-            (event.target && event.target.id) !== "testRunButton1"
-            && !(event.modeInit && (
+            (evt.target && evt.target.id) !== "testRunButton1"
+            && !(evt.modeInit && (
                 /\bmodeTest=1\b/
             ).test(location.search))
         ) {
@@ -588,23 +589,25 @@ local.assetsDict["/assets.index.template.html"] = '\
 }\n\
 /* csslint ignore:end */\n\
 @keyframes uiAnimateShake {\n\
-    0%, 50% {\n\
-        transform: translateX(10px);\n\
-    }\n\
-    25%, 75% {\n\
-        transform: translateX(-10px);\n\
-    }\n\
-    100% {\n\
-        transform: translateX(0);\n\
-    }\n\
+0%,\n\
+50% {\n\
+    transform: translateX(10px);\n\
+}\n\
+100% {\n\
+    transform: translateX(0);\n\
+}\n\
+25%,\n\
+75% {\n\
+    transform: translateX(-10px);\n\
+}\n\
 }\n\
 @keyframes uiAnimateSpin {\n\
-    0% {\n\
-        transform: rotate(0deg);\n\
-    }\n\
-    100% {\n\
-        transform: rotate(360deg);\n\
-    }\n\
+0% {\n\
+    transform: rotate(0deg);\n\
+}\n\
+100% {\n\
+    transform: rotate(360deg);\n\
+}\n\
 }\n\
 a {\n\
     overflow-wrap: break-word;\n\
@@ -748,52 +751,50 @@ pre {\n\
     }\n\
     window.domOnEventDelegateDict = {};\n\
     timerTimeoutDict = {};\n\
-    window.domOnEventDelegateDict.domOnEventDelegate = function (event) {\n\
-        event.targetOnEvent = event.target.closest(\n\
+    window.domOnEventDelegateDict.domOnEventDelegate = function (evt) {\n\
+        evt.targetOnEvent = evt.target.closest(\n\
             "[data-onevent]"\n\
         );\n\
         if (\n\
-            !event.targetOnEvent\n\
-            || event.targetOnEvent.dataset.onevent === "domOnEventNop"\n\
-            || event.target.closest(\n\
+            !evt.targetOnEvent\n\
+            || evt.targetOnEvent.dataset.onevent === "domOnEventNop"\n\
+            || evt.target.closest(\n\
                 ".disabled, .readonly"\n\
             )\n\
         ) {\n\
             return;\n\
         }\n\
         // rate-limit high-frequency-event\n\
-        switch (event.type) {\n\
+        switch (evt.type) {\n\
         case "keydown":\n\
         case "keyup":\n\
             // filter non-input keyboard-event\n\
-            if (!event.target.closest(\n\
+            if (!evt.target.closest(\n\
                 "input, option, select, textarea"\n\
             )) {\n\
                 return;\n\
             }\n\
-            if (timerTimeoutDict[event.type] !== true) {\n\
-                timerTimeoutDict[event.type] = timerTimeoutDict[\n\
-                    event.type\n\
+            if (timerTimeoutDict[evt.type] !== true) {\n\
+                timerTimeoutDict[evt.type] = timerTimeoutDict[\n\
+                    evt.type\n\
                 ] || setTimeout(function () {\n\
-                    timerTimeoutDict[event.type] = true;\n\
-                    window.domOnEventDelegateDict.domOnEventDelegate(\n\
-                        event\n\
-                    );\n\
+                    timerTimeoutDict[evt.type] = true;\n\
+                    window.domOnEventDelegateDict.domOnEventDelegate(evt);\n\
                 }, 50);\n\
                 return;\n\
             }\n\
-            timerTimeoutDict[event.type] = null;\n\
+            timerTimeoutDict[evt.type] = null;\n\
             break;\n\
         }\n\
-        switch (event.targetOnEvent.tagName) {\n\
+        switch (evt.targetOnEvent.tagName) {\n\
         case "BUTTON":\n\
         case "FORM":\n\
-            event.preventDefault();\n\
+            evt.preventDefault();\n\
             break;\n\
         }\n\
-        event.stopPropagation();\n\
-        window.domOnEventDelegateDict[event.targetOnEvent.dataset.onevent](\n\
-            event\n\
+        evt.stopPropagation();\n\
+        window.domOnEventDelegateDict[evt.targetOnEvent.dataset.onevent](\n\
+            evt\n\
         );\n\
     };\n\
     window.domOnEventDelegateDict.domOnEventResetOutput = function () {\n\
@@ -891,25 +892,25 @@ pre {\n\
     if (window.domOnEventSelectAllWithinPre) {\n\
         return;\n\
     }\n\
-    window.domOnEventSelectAllWithinPre = function (event) {\n\
+    window.domOnEventSelectAllWithinPre = function (evt) {\n\
         var range;\n\
         var selection;\n\
         if (\n\
-            event\n\
-            && event.key === "a"\n\
-            && (event.ctrlKey || event.metaKey)\n\
-            && event.target.closest(\n\
+            evt\n\
+            && evt.key === "a"\n\
+            && (evt.ctrlKey || evt.metaKey)\n\
+            && evt.target.closest(\n\
                 "pre"\n\
             )\n\
         ) {\n\
             range = document.createRange();\n\
-            range.selectNodeContents(event.target.closest(\n\
+            range.selectNodeContents(evt.target.closest(\n\
                 "pre"\n\
             ));\n\
             selection = window.getSelection();\n\
             selection.removeAllRanges();\n\
             selection.addRange(range);\n\
-            event.preventDefault();\n\
+            evt.preventDefault();\n\
         }\n\
     };\n\
     // init event-handling\n\
@@ -1177,16 +1178,16 @@ local.http.createServer(function (req, res) {
         "url": "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
-        "build-ci": "./npm_scripts.sh",
+        "build-ci": "sh ./npm_scripts.sh",
         "env": "env",
-        "eval": "./npm_scripts.sh",
-        "heroku-postbuild": "./npm_scripts.sh",
-        "postinstall": "./npm_scripts.sh",
-        "start": "./npm_scripts.sh",
-        "test": "./npm_scripts.sh",
-        "utility2": "./npm_scripts.sh"
+        "eval": "sh ./npm_scripts.sh",
+        "heroku-postbuild": "sh ./npm_scripts.sh",
+        "postinstall": "sh ./npm_scripts.sh",
+        "start": "sh ./npm_scripts.sh",
+        "test": "sh ./npm_scripts.sh",
+        "utility2": "sh ./npm_scripts.sh"
     },
-    "version": "2019.8.1"
+    "version": "2019.8.2"
 }
 ```
 
@@ -1231,15 +1232,15 @@ RUN (set -e; \
         git \
         gnupg; \
     (busybox --list | xargs -n1 /bin/sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true); \
-    curl -#L https://deb.nodesource.com/setup_8.x | /bin/bash -; \
+    curl -#L https://deb.nodesource.com/setup_10.x | /bin/bash -; \
     apt-get install -y nodejs; \
-    (cd /usr/lib && npm install sqlite3@3); \
+    (cd /usr/lib && npm install sqlite3@4); \
 )
 # install electron-lite
 # COPY electron-*.zip /tmp
 # libasound.so.2: cannot open shared object file: No such file or directory
 # libgconf-2.so.4: cannot open shared object file: No such file or directory
-# libgtk-x11-2.0.so.0: cannot open shared object file: No such file or directory
+# libgtk-3.so.0: cannot open shared object file: No such file or directory
 # libnss3.so: cannot open shared object file: No such file or directory
 # libXss.so.1: cannot open shared object file: No such file or directory
 # libXtst.so.6: cannot open shared object file: No such file or directory
@@ -1249,7 +1250,7 @@ RUN (set -e; \
     apt-get install --no-install-recommends -y \
         libasound2 \
         libgconf-2-4 \
-        libgtk2.0-0 \
+        libgtk-3-0 \
         libnss3 \
         libxss1 \
         libxtst6 \

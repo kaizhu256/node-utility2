@@ -330,7 +330,9 @@ local.testCase_ajax_cache = function (option, onError) {
             // test http GET 304 cache handling-behavior
             local.ajax({
                 headers: {
-                    "If-Modified-Since": new Date(Date.now() + 0xffff).toUTCString()
+                    "If-Modified-Since": (
+                        new Date(Date.now() + 0xffff).toUTCString()
+                    )
                 },
                 url: "assets.hello.txt"
             }, option.onNext);
@@ -528,7 +530,7 @@ local.testCase_ajax_default = function (option, onError) {
             // test default handling-behavior
             onParallel.counter += 1;
             local.ajax({
-                responseType: responseType,
+                responseType,
                 url: (
                     local.isBrowser
                     ? location.href
@@ -544,8 +546,8 @@ local.testCase_ajax_default = function (option, onError) {
             // test error handling-behavior
             onParallel.counter += 1;
             local.ajax({
-                responseType: responseType,
-                undefined: undefined,
+                responseType,
+                undefined,
                 url: (
                     local.isBrowser
                     ? location.href.replace((
@@ -805,7 +807,7 @@ local.testCase_browserTest_electron = function (option, onError) {
                 case 100:
                     local.tryCatchOnError(function () {
                         local.browserTest({
-                            modeNext: modeNext
+                            modeNext
                         }, option);
                     }, local.nop);
                     break;
@@ -1083,9 +1085,13 @@ local.testCase_buildXxx_default = function (option, onError) {
     }, onError);
 };
 
-local.testCase_childProcessSpawnWithTimeout_default = function (option, onError) {
+local.testCase_childProcessSpawnWithTimeout_default = function (
+    option,
+    onError
+) {
 /*
- * this function will test childProcessSpawnWithTimeout's default handling-behavior
+ * this function will test
+ * childProcessSpawnWithTimeout's default handling-behavior
  */
     var onParallel;
     if (local.isBrowser) {
@@ -1113,7 +1119,9 @@ local.testCase_childProcessSpawnWithTimeout_default = function (option, onError)
             timeoutDefault: 1000
         }]
     ], function (onError) {
-        option.childProcess = local.childProcessSpawnWithTimeout("sleep", [5000]);
+        option.childProcess = (
+            local.childProcessSpawnWithTimeout("sleep", [5000])
+        );
         onError(null, option);
     }, local.onErrorThrow);
     option.childProcess
@@ -1128,9 +1136,13 @@ local.testCase_childProcessSpawnWithTimeout_default = function (option, onError)
     onParallel(null, option);
 };
 
-local.testCase_childProcessSpawnWithUtility2_error = function (option, onError) {
+local.testCase_childProcessSpawnWithUtility2_error = function (
+    option,
+    onError
+) {
 /*
- * this function will test childProcessSpawnWithTimeout's error handling-behavior
+ * this function will test
+ * childProcessSpawnWithTimeout's error handling-behavior
  */
     if (local.isBrowser) {
         onError(null, option);
@@ -1142,7 +1154,9 @@ local.testCase_childProcessSpawnWithUtility2_error = function (option, onError) 
             npm_config_dir_utility2: ""
         }]
     ], function (onError) {
-        local.local.childProcessSpawnWithUtility2("undefined", function (error) {
+        local.local.childProcessSpawnWithUtility2("undefined", function (
+            error
+        ) {
             // validate err occurred
             local.assertThrow(error, error);
         });
@@ -1232,7 +1246,10 @@ local.testCase_corsBackendHostInject_default = function (option, onError) {
     onError(null, option);
 };
 
-local.testCase_corsForwardProxyHostIfNeeded_default = function (option, onError) {
+local.testCase_corsForwardProxyHostIfNeeded_default = function (
+    option,
+    onError
+) {
 /*
  * this function will corsForwardProxyHostIfNeeded's default handling-behavior
  */
@@ -1282,7 +1299,8 @@ local.testCase_cryptoAesXxxCbcRawXxx_default = function (option, onError) {
             // encrypt data - base64
             option.data = new TextEncoder().encode("aa");
             option.key = (
-                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                "0123456789abcdef0123456789abcdef"
+                + "0123456789abcdef0123456789abcdef"
             );
             option.mode = "base64";
             local.cryptoAesXxxCbcRawEncrypt(option, option.onNext);
@@ -1329,7 +1347,8 @@ local.testCase_exit_error = function (option, onError) {
 
 local.testCase_fsWriteFileWithMkdirpSync_default = function (option, onError) {
 /*
- * this function will test fsWriteFileWithMkdirpSync's default handling-behavior
+ * this function will test
+ * fsWriteFileWithMkdirpSync's default handling-behavior
  */
     if (local.isBrowser) {
         onError(null, option);
@@ -1382,8 +1401,22 @@ local.testCase_jsonStringifyOrdered_default = function (option, onError) {
  * this function will test jsonStringifyOrdered's default handling-behavior
  */
     // test data-type handling-behavior
-    [undefined, null, false, true, 0, 1, 1.5, "a", {}, []].forEach(function (data) {
-        local.assertJsonEqual(local.jsonStringifyOrdered(data), JSON.stringify(data));
+    local.identity([
+        undefined,
+        null,
+        false,
+        true,
+        0,
+        1,
+        1.5,
+        "a",
+        {},
+        []
+    ]).forEach(function (data) {
+        local.assertJsonEqual(
+            local.jsonStringifyOrdered(data),
+            JSON.stringify(data)
+        );
     });
     // test data-ordering handling-behavior
     option = {
@@ -1458,7 +1491,8 @@ local.testCase_jwtHs256Xxx_default = function (option, onError) {
         option.token,
         (
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-            + ".eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9"
+            + ".eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZ"
+            + "SI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9"
             + ".TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
         )
     );
@@ -1524,7 +1558,9 @@ local.testCase_listShuffle_default = function (option, onError) {
     // shuffle list 100 times
     option.ii = 0;
     while (option.ii < 100) {
-        option.listShuffled = JSON.stringify(local.listShuffle(JSON.parse(option.list)));
+        option.listShuffled = JSON.stringify(
+            local.listShuffle(JSON.parse(option.list))
+        );
         // validate shuffled list
         local.assertJsonEqual(option.listShuffled.length, option.list.length);
         option.changed = option.changed || option.listShuffled !== option.list;
@@ -1535,7 +1571,10 @@ local.testCase_listShuffle_default = function (option, onError) {
     onError(null, option);
 };
 
-local.testCase_localStorageSetItemOrClear_default = function (option, onError) {
+local.testCase_localStorageSetItemOrClear_default = function (
+    option,
+    onError
+) {
 /*
  * this function will localStorageSetItemOrClear's default handling-behavior
  */
@@ -1582,7 +1621,9 @@ local.testCase_middlewareForwardProxy_default = function (option, onError) {
     onParallel.counter += 1;
     local.ajax({
         headers: {
-            "access-control-request-headers": "forward-proxy-headers,forward-proxy-url"
+            "access-control-request-headers": (
+                "forward-proxy-headers,forward-proxy-url"
+            )
         },
         method: "OPTIONS",
         url: ""
@@ -1616,7 +1657,10 @@ local.testCase_middlewareForwardProxy_default = function (option, onError) {
     onParallel(null, option);
 };
 
-local.testCase_middlewareJsonpStateInit_assetsList = function (option, onError) {
+local.testCase_middlewareJsonpStateInit_assetsList = function (
+    option,
+    onError
+) {
 /*
  * this function will middlewareJsonpStateInit's assetsList handling-behavior
  */
@@ -1646,17 +1690,29 @@ local.testCase_moduleDirname_default = function (option, onError) {
         return;
     }
     // test null-case handling-behavior
-    local.assertJsonEqual(local.moduleDirname(null, module.paths), process.cwd());
+    local.assertJsonEqual(
+        local.moduleDirname(null, module.paths),
+        process.cwd()
+    );
     // test path handling-behavior
-    local.assertJsonEqual(local.moduleDirname(".", module.paths), process.cwd());
-    local.assertJsonEqual(local.moduleDirname("./", module.paths), process.cwd());
+    local.assertJsonEqual(
+        local.moduleDirname(".", module.paths),
+        process.cwd()
+    );
+    local.assertJsonEqual(
+        local.moduleDirname("./", module.paths),
+        process.cwd()
+    );
     // test module-exists handling-behavior
     option = local.moduleDirname("electron-lite", module.paths);
     local.assertThrow((
         /\/electron-lite$/
     ).test(option), option);
     // test module-does-not-exist handling-behavior
-    local.assertJsonEqual(local.moduleDirname("syntax error", module.paths), "");
+    local.assertJsonEqual(
+        local.moduleDirname("syntax error", module.paths),
+        ""
+    );
     onError(null, option);
 };
 
@@ -1933,7 +1989,10 @@ local.testCase_onErrorWithStack_toString = function (option, onError) {
 /*
  * this function will test onErrorWithStack's toString handling-behavior
  */
-    local.assertJsonEqual(String(local.onErrorWithStack(local.nop)), String(local.nop));
+    local.assertJsonEqual(
+        String(local.onErrorWithStack(local.nop)),
+        String(local.nop)
+    );
     onError(null, option);
 };
 
@@ -2020,7 +2079,10 @@ local.testCase_onParallelList_default = function (option, onError) {
                 rateLimit: option.rateLimit
             }, function (option2, onParallel) {
                 onParallel.counter += 1;
-                option.rateMax = Math.max(onParallel.counter - 1, option.rateMax);
+                option.rateMax = Math.max(
+                    onParallel.counter - 1,
+                    option.rateMax
+                );
                 // test async handling-behavior
                 setTimeout(function () {
                     // test list-growth handling-behavior
@@ -2165,8 +2227,8 @@ local.testCase_replStart_default = function (option, onError) {
         [local.child_process, {
             spawn: function () {
                 return {
-                    on: function (event, callback) {
-                        callback(null, event);
+                    on: function (evt, callback) {
+                        callback(null, evt);
                     }
                 };
             }
@@ -2327,9 +2389,13 @@ local.testCase_semverCompare_default = function (option, onError) {
     onError(null, option);
 };
 
-local.testCase_serverRespondTimeoutDefault_timeout = function (option, onError) {
+local.testCase_serverRespondTimeoutDefault_timeout = function (
+    option,
+    onError
+) {
 /*
- * this function will test serverRespondTimeoutDefault's timeout handling-behavior
+ * this function will test
+ * serverRespondTimeoutDefault's timeout handling-behavior
  */
     option = function (fnc1, fnc2) {
         [fnc1, fnc2].forEach(function (fnc) {
@@ -2361,7 +2427,10 @@ local.testCase_setTimeoutOnError_default = function (option, onError) {
     // test null-case handling-behavior
     local.assertJsonEqual(local.setTimeoutOnError(), undefined);
     // test onError handling-behavior
-    local.assertJsonEqual(local.setTimeoutOnError(onError, 0, null, {}, option), {});
+    local.assertJsonEqual(
+        local.setTimeoutOnError(onError, 0, null, {}, option),
+        {}
+    );
 };
 
 local.testCase_sjclHashScryptXxx_default = function (option, onError) {
@@ -2369,7 +2438,10 @@ local.testCase_sjclHashScryptXxx_default = function (option, onError) {
  * this function will test sjclHashScryptXxx's default handling-behavior
  */
     // test sjclHashScryptCreate's null-case handling-behavior
-    local.assertJsonEqual(local.sjclHashScryptCreate().slice(0, 10), "$s0$10801$");
+    local.assertJsonEqual(
+        local.sjclHashScryptCreate().slice(0, 10),
+        "$s0$10801$"
+    );
     // https://github.com/wg/scrypt
     // test sjclHashScryptValidate's fail handling-behavior
     local.assertJsonEqual(local.sjclHashScryptValidate(
@@ -2423,7 +2495,9 @@ local.testCase_stringHtmlSafe_default = function (option, onError) {
  * this function will test stringHtmlSafe's default handling-behavior
  */
     local.assertJsonEqual(
-        local.stringHtmlSafe(local.stringHtmlSafe(local.stringCharsetAscii).slice(32, -1)),
+        local.stringHtmlSafe(
+            local.stringHtmlSafe(local.stringCharsetAscii).slice(32, -1)
+        ),
         (
             " !&quot;#$%&amp;&apos;()*+,-./0123456789:;&lt;=&gt;?@"
             + "ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
@@ -2618,7 +2692,8 @@ local.testCase_templateRender_default = function (option, onError) {
         }),
         (
             "<p> !&quot;#$%&amp;&apos;()*+,-./0123456789:;&lt;=&gt;?@"
-            + "ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~</p>\n"
+            + "ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+            + "</p>\n"
         )
     );
     // test markdownSafe handling-behavior
@@ -2639,7 +2714,8 @@ local.testCase_templateRender_default = function (option, onError) {
     local.assertJsonEqual(local.templateRender((
         "{{aa alphanumeric}} "
         + "{{aa truncate 4 truncate 4}} "
-        + "{{aa jsonStringify jsonStringify4 decodeURIComponent encodeURIComponent trim}} "
+        + "{{aa jsonStringify jsonStringify4 decodeURIComponent"
+        + " encodeURIComponent trim}} "
         + "{{bb}} {{cc}} {{dd}} {{ee.ff}}"
     ), {
         // test string value handling-behavior
@@ -2780,13 +2856,22 @@ local.testCase_uiAnimateXxx_default = function (option, onError) {
     // test uiAnimateShake handling-behavior
     local.uiAnimateShake();
     local.uiAnimateShake(option);
-    local.assertThrow(option.classList.contains("uiAnimateShake"), option.classList);
+    local.assertThrow(
+        option.classList.contains("uiAnimateShake"),
+        option.classList
+    );
     local.uiAnimateShake(option);
-    local.assertThrow(option.classList.contains("uiAnimateShake"), option.classList);
+    local.assertThrow(
+        option.classList.contains("uiAnimateShake"),
+        option.classList
+    );
     // test uiAnimateShakeIfError handling-behavior
     local.uiAnimateShakeIfError();
     local.uiAnimateShakeIfError(null, option);
-    local.assertThrow(!option.classList.contains("hasError"), option.classList);
+    local.assertThrow(
+        !option.classList.contains("hasError"),
+        option.classList
+    );
     local.uiAnimateShakeIfError(true, option);
     local.assertThrow(option.classList.contains("hasError"), option.classList);
     local.uiAnimateShakeIfError(null, option);
@@ -2796,11 +2881,17 @@ local.testCase_uiAnimateXxx_default = function (option, onError) {
     local.uiAnimateSlideUp();
     option.classList.add("uiAnimateSlide");
     local.uiAnimateSlideDown(option);
-    local.assertThrow(option.style.maxHeight.indexOf("px") >= 0, option.style.maxHeight);
+    local.assertThrow(
+        option.style.maxHeight.indexOf("px") >= 0,
+        option.style.maxHeight
+    );
     local.uiAnimateSlideUp(option);
     local.assertJsonEqual(option.style.maxHeight, "0px");
     // test uiAnimateSlideAccordian handling-behavior
-    local.uiAnimateSlideAccordian(option, [option, document.createElement("div")]);
+    local.uiAnimateSlideAccordian(
+        option,
+        [option, document.createElement("div")]
+    );
     onError(null, option);
 };
 
@@ -2810,10 +2901,19 @@ local.testCase_urlJoin_default = function (option, onError) {
  */
     local.assertJsonEqual(local.urlJoin("", ""), "/");
     local.assertJsonEqual(local.urlJoin("http://aa/bb", "zz"), "http://aa/zz");
-    local.assertJsonEqual(local.urlJoin("http://aa/bb/", "zz"), "http://aa/bb/zz");
-    local.assertJsonEqual(local.urlJoin("http://aa/bb/", "/zz"), "http://aa/zz");
+    local.assertJsonEqual(
+        local.urlJoin("http://aa/bb/", "zz"),
+        "http://aa/bb/zz"
+    );
+    local.assertJsonEqual(
+        local.urlJoin("http://aa/bb/", "/zz"),
+        "http://aa/zz"
+    );
     local.assertJsonEqual(local.urlJoin("http://aa/bb/", "//zz"), "http://zz");
-    local.assertJsonEqual(local.urlJoin("http://aa/bb/", "http://zz"), "http://zz");
+    local.assertJsonEqual(
+        local.urlJoin("http://aa/bb/", "http://zz"),
+        "http://zz"
+    );
     onError(null, option);
 };
 
@@ -2837,7 +2937,10 @@ local.testCase_urlParse_default = function (option, onError) {
             hash: "#zz=1",
             host: "127.0.0.1:80",
             hostname: "127.0.0.1",
-            href: "https://127.0.0.1:80/foo/bar?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1",
+            href: (
+                "https://127.0.0.1:80/foo/bar"
+                + "?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1"
+            ),
             path: "/foo/bar?aa=1&bb%20cc=dd%20=ee&aa=2&aa",
             pathname: "/foo/bar",
             port: "80",
@@ -2870,7 +2973,10 @@ local.testCase_uuid4Create_default = function (option, onError) {
 /*
  * this function will test uuid4Create's default handling-behavior
  */
-    local.assertThrow((local.regexpValidateUuid).test(local.uuid4Create()), local.uuid4Create());
+    local.assertThrow(
+        local.regexpValidateUuid.test(local.uuid4Create()),
+        local.uuid4Create()
+    );
     onError(null, option);
 };
 
@@ -2932,7 +3038,7 @@ local.testRunServer(local);
 // coverage-hack - stateInit
 local.stateInit({});
 // init test-middleware
-local.middlewareList.push(function (request, response, nextMiddleware) {
+local.middlewareList.push(function (request, response, next) {
 /*
  * this function will run the test-middleware
  */
@@ -2960,9 +3066,9 @@ local.middlewareList.push(function (request, response, nextMiddleware) {
     case "/test.error-500":
         // test multiple-callback serverRespondHeadSet handling-behavior
         local.serverRespondHeadSet(request, response, null, {});
-        nextMiddleware(local.errorDefault);
+        next(local.errorDefault);
         // test multiple-callback-error handling-behavior
-        nextMiddleware(local.errorDefault);
+        next(local.errorDefault);
         // test onErrorDefault handling-behavior
         local.testMock([
             [local, {
@@ -2988,7 +3094,7 @@ local.middlewareList.push(function (request, response, nextMiddleware) {
         break;
     // serve file
     default:
-        local.middlewareFileServer(request, response, nextMiddleware);
+        local.middlewareFileServer(request, response, next);
     }
 });
 }());

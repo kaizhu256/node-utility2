@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2019.8.1)
+ * lib.utility2.js (2019.8.2)
  * https://github.com/kaizhu256/node-utility2
  * the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps
  *
@@ -231,23 +231,25 @@ local.assetsDict["/assets.utility2.template.html"] = '\
 }\n\
 /* csslint ignore:end */\n\
 @keyframes uiAnimateShake {\n\
-    0%, 50% {\n\
-        transform: translateX(10px);\n\
-    }\n\
-    25%, 75% {\n\
-        transform: translateX(-10px);\n\
-    }\n\
-    100% {\n\
-        transform: translateX(0);\n\
-    }\n\
+0%,\n\
+50% {\n\
+    transform: translateX(10px);\n\
+}\n\
+100% {\n\
+    transform: translateX(0);\n\
+}\n\
+25%,\n\
+75% {\n\
+    transform: translateX(-10px);\n\
+}\n\
 }\n\
 @keyframes uiAnimateSpin {\n\
-    0% {\n\
-        transform: rotate(0deg);\n\
-    }\n\
-    100% {\n\
-        transform: rotate(360deg);\n\
-    }\n\
+0% {\n\
+    transform: rotate(0deg);\n\
+}\n\
+100% {\n\
+    transform: rotate(360deg);\n\
+}\n\
 }\n\
 a {\n\
     overflow-wrap: break-word;\n\
@@ -391,52 +393,50 @@ pre {\n\
     }\n\
     window.domOnEventDelegateDict = {};\n\
     timerTimeoutDict = {};\n\
-    window.domOnEventDelegateDict.domOnEventDelegate = function (event) {\n\
-        event.targetOnEvent = event.target.closest(\n\
+    window.domOnEventDelegateDict.domOnEventDelegate = function (evt) {\n\
+        evt.targetOnEvent = evt.target.closest(\n\
             "[data-onevent]"\n\
         );\n\
         if (\n\
-            !event.targetOnEvent\n\
-            || event.targetOnEvent.dataset.onevent === "domOnEventNop"\n\
-            || event.target.closest(\n\
+            !evt.targetOnEvent\n\
+            || evt.targetOnEvent.dataset.onevent === "domOnEventNop"\n\
+            || evt.target.closest(\n\
                 ".disabled, .readonly"\n\
             )\n\
         ) {\n\
             return;\n\
         }\n\
         // rate-limit high-frequency-event\n\
-        switch (event.type) {\n\
+        switch (evt.type) {\n\
         case "keydown":\n\
         case "keyup":\n\
             // filter non-input keyboard-event\n\
-            if (!event.target.closest(\n\
+            if (!evt.target.closest(\n\
                 "input, option, select, textarea"\n\
             )) {\n\
                 return;\n\
             }\n\
-            if (timerTimeoutDict[event.type] !== true) {\n\
-                timerTimeoutDict[event.type] = timerTimeoutDict[\n\
-                    event.type\n\
+            if (timerTimeoutDict[evt.type] !== true) {\n\
+                timerTimeoutDict[evt.type] = timerTimeoutDict[\n\
+                    evt.type\n\
                 ] || setTimeout(function () {\n\
-                    timerTimeoutDict[event.type] = true;\n\
-                    window.domOnEventDelegateDict.domOnEventDelegate(\n\
-                        event\n\
-                    );\n\
+                    timerTimeoutDict[evt.type] = true;\n\
+                    window.domOnEventDelegateDict.domOnEventDelegate(evt);\n\
                 }, 50);\n\
                 return;\n\
             }\n\
-            timerTimeoutDict[event.type] = null;\n\
+            timerTimeoutDict[evt.type] = null;\n\
             break;\n\
         }\n\
-        switch (event.targetOnEvent.tagName) {\n\
+        switch (evt.targetOnEvent.tagName) {\n\
         case "BUTTON":\n\
         case "FORM":\n\
-            event.preventDefault();\n\
+            evt.preventDefault();\n\
             break;\n\
         }\n\
-        event.stopPropagation();\n\
-        window.domOnEventDelegateDict[event.targetOnEvent.dataset.onevent](\n\
-            event\n\
+        evt.stopPropagation();\n\
+        window.domOnEventDelegateDict[evt.targetOnEvent.dataset.onevent](\n\
+            evt\n\
         );\n\
     };\n\
     window.domOnEventDelegateDict.domOnEventResetOutput = function () {\n\
@@ -534,25 +534,25 @@ pre {\n\
     if (window.domOnEventSelectAllWithinPre) {\n\
         return;\n\
     }\n\
-    window.domOnEventSelectAllWithinPre = function (event) {\n\
+    window.domOnEventSelectAllWithinPre = function (evt) {\n\
         var range;\n\
         var selection;\n\
         if (\n\
-            event\n\
-            && event.key === "a"\n\
-            && (event.ctrlKey || event.metaKey)\n\
-            && event.target.closest(\n\
+            evt\n\
+            && evt.key === "a"\n\
+            && (evt.ctrlKey || evt.metaKey)\n\
+            && evt.target.closest(\n\
                 "pre"\n\
             )\n\
         ) {\n\
             range = document.createRange();\n\
-            range.selectNodeContents(event.target.closest(\n\
+            range.selectNodeContents(evt.target.closest(\n\
                 "pre"\n\
             ));\n\
             selection = window.getSelection();\n\
             selection.removeAllRanges();\n\
             selection.addRange(range);\n\
-            event.preventDefault();\n\
+            evt.preventDefault();\n\
         }\n\
     };\n\
     // init event-handling\n\
@@ -850,16 +850,16 @@ globalThis.domOnEventDelegateDict = local;\n\
 local.onEventDomDb = (\n\
     local.db && local.db.onEventDomDb\n\
 );\n\
-local.testRunBrowser = function (event) {\n\
+local.testRunBrowser = function (evt) {\n\
 /*\n\
  * this function will run browser-tests\n\
  */\n\
     switch (\n\
-        !event.ctrlKey\n\
-        && !event.metaKey\n\
+        !evt.ctrlKey\n\
+        && !evt.metaKey\n\
         && (\n\
-            event.modeInit\n\
-            || (event.type + "." + (event.target && event.target.id))\n\
+            evt.modeInit\n\
+            || (evt.type + "." + (evt.target && evt.target.id))\n\
         )\n\
     ) {\n\
     // custom-case\n\
@@ -868,8 +868,8 @@ local.testRunBrowser = function (event) {\n\
     // run browser-tests\n\
     default:\n\
         if (\n\
-            (event.target && event.target.id) !== "testRunButton1"\n\
-            && !(event.modeInit && (\n\
+            (evt.target && evt.target.id) !== "testRunButton1"\n\
+            && !(evt.modeInit && (\n\
                 /\\bmodeTest=1\\b/\n\
             ).test(location.search))\n\
         ) {\n\
@@ -1230,14 +1230,14 @@ PORT=8081 node ./assets.app.js\n\
         "url": "https://github.com/kaizhu256/node-my-app-lite.git"\n\
     },\n\
     "scripts": {\n\
-        "build-ci": "./npm_scripts.sh",\n\
+        "build-ci": "sh ./npm_scripts.sh",\n\
         "env": "env",\n\
-        "eval": "./npm_scripts.sh",\n\
-        "heroku-postbuild": "./npm_scripts.sh",\n\
-        "postinstall": "./npm_scripts.sh",\n\
-        "start": "./npm_scripts.sh",\n\
-        "test": "./npm_scripts.sh",\n\
-        "utility2": "./npm_scripts.sh"\n\
+        "eval": "sh ./npm_scripts.sh",\n\
+        "heroku-postbuild": "sh ./npm_scripts.sh",\n\
+        "postinstall": "sh ./npm_scripts.sh",\n\
+        "start": "sh ./npm_scripts.sh",\n\
+        "test": "sh ./npm_scripts.sh",\n\
+        "utility2": "sh ./npm_scripts.sh"\n\
     },\n\
     "version": "0.0.1"\n\
 }\n\
@@ -1544,7 +1544,7 @@ local.cliDict["utility2.browserTest"] = function () {
         )
     ).filter(local.identity).forEach(function (url) {
         local.browserTest({
-            url: url
+            url
         }, local.onErrorDefault);
     });
 };
@@ -1884,8 +1884,8 @@ local.FormData.prototype.append = function (name, value, filename) {
         }, local.nop);
     }
     this.entryList.push({
-        name: name,
-        value: value
+        name,
+        value
     });
 };
 
@@ -1986,7 +1986,7 @@ local._http.IncomingMessage = function (xhr) {
     this.url = xhr.url;
 };
 
-local._http.IncomingMessage.prototype.addListener = function (event, onEvent) {
+local._http.IncomingMessage.prototype.addListener = function (evt, onEvent) {
 /*
  * Adds a listener to the end of the listeners array for the specified event.
  * No checks are made to see if the listener has already been added.
@@ -1994,10 +1994,10 @@ local._http.IncomingMessage.prototype.addListener = function (event, onEvent) {
  * in the listener being added multiple times.
  * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_emitter_addlistener_event_listener
  */
-    this.onEvent.addEventListener(event, function (event) {
-        onEvent(event.data);
+    this.onEvent.addEventListener(evt, function (evt) {
+        onEvent(evt.data);
     });
-    if (this.readable && event === "end") {
+    if (this.readable && evt === "end") {
         this.readable = null;
         this.emit("data", this.data);
         this.emit("end");
@@ -2005,14 +2005,14 @@ local._http.IncomingMessage.prototype.addListener = function (event, onEvent) {
     return this;
 };
 
-local._http.IncomingMessage.prototype.emit = function (event, data) {
+local._http.IncomingMessage.prototype.emit = function (evt, data) {
 /*
  * Execute each of the listeners in order with the supplied arguments.
  * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_emitter_emit_event_arg1_arg2
  */
-    event = new globalThis.Event(event);
-    event.data = data;
-    this.onEvent.dispatchEvent(event);
+    evt = new Event(evt);
+    evt.data = data;
+    this.onEvent.dispatchEvent(evt);
 };
 
 /*
@@ -2379,12 +2379,12 @@ local.ajax = function (opt, onError) {
         }
         return bff;
     };
-    onEvent = function (event) {
+    onEvent = function (evt) {
     /*
      * this function will handle events
      */
-        if (Object.prototype.toString.call(event) === "[object Error]") {
-            xhr.err = xhr.err || event;
+        if (Object.prototype.toString.call(evt) === "[object Error]") {
+            xhr.err = xhr.err || evt;
             xhr.onEvent({
                 type: "error"
             });
@@ -2392,7 +2392,7 @@ local.ajax = function (opt, onError) {
         }
         // init statusCode
         xhr.statusCode = (xhr.statusCode || xhr.status) | 0;
-        switch (event.type) {
+        switch (evt.type) {
         case "abort":
         case "error":
         case "load":
@@ -2407,10 +2407,10 @@ local.ajax = function (opt, onError) {
             );
             ajaxProgressUpdate();
             // handle abort or error event
-            switch (!xhr.err && event.type) {
+            switch (!xhr.err && evt.type) {
             case "abort":
             case "error":
-                xhr.err = new Error("ajax - event " + event.type);
+                xhr.err = new Error("ajax - event " + evt.type);
                 break;
             case "load":
                 if (xhr.statusCode >= 400) {
@@ -2873,15 +2873,15 @@ local.blobRead = function (blob, onError) {
         return;
     }
     reader = new FileReader();
-    reader.onabort = function (event) {
+    reader.onabort = function (evt) {
         if (isDone) {
             return;
         }
         isDone = true;
-        switch (event.type) {
+        switch (evt.type) {
         case "abort":
         case "error":
-            onError(new Error("blobRead - " + event.type));
+            onError(new Error("blobRead - " + evt.type));
             break;
         case "load":
             onError(
@@ -2931,8 +2931,8 @@ local.browserTest = function (opt, onError) {
     if (opt.modeTestReportCreate) {
         return;
     }
-    onMessage = function (event, type, data) {
-        switch (event && type) {
+    onMessage = function (evt, type, data) {
+        switch (evt && type) {
         case "html":
             if (isDoneHtml) {
                 return;
@@ -3178,12 +3178,12 @@ local.browserTest = function (opt, onError) {
             }
             // init event-handling - ipc
             opt.electron.ipcMain.on(opt.fileElectronHtml, function (
-                event,
+                evt,
                 type,
                 data
             ) {
                 try {
-                    onMessage(event, type, data);
+                    onMessage(evt, type, data);
                 } catch (errCaught) {
                     opt.onNext(errCaught);
                 }
@@ -3713,14 +3713,14 @@ local.buildReadme = function (opt, onError) {
         delete opt.packageJson.devDependencies[opt.packageJson.name];
         // reset scripts
         opt.packageJson.scripts = {
-            "build-ci": "./npm_scripts.sh",
+            "build-ci": "sh ./npm_scripts.sh",
             env: "env",
-            eval: "./npm_scripts.sh",
-            "heroku-postbuild": "./npm_scripts.sh",
-            postinstall: "./npm_scripts.sh",
-            start: "./npm_scripts.sh",
-            test: "./npm_scripts.sh",
-            utility2: "./npm_scripts.sh"
+            eval: "sh ./npm_scripts.sh",
+            "heroku-postbuild": "sh ./npm_scripts.sh",
+            postinstall: "sh ./npm_scripts.sh",
+            start: "sh ./npm_scripts.sh",
+            test: "sh ./npm_scripts.sh",
+            utility2: "sh ./npm_scripts.sh"
         };
         // save package.json
         local.fsWriteFileWithMkdirpSync(
@@ -4061,7 +4061,7 @@ local.childProcessSpawnWithUtility2 = function (script, onError) {
         }
     ).on("exit", function (exitCode) {
         onError(exitCode && Object.assign(new Error(), {
-            exitCode: exitCode
+            exitCode
         }));
     });
 };
@@ -4331,7 +4331,7 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
         name: "AES-CBC"
     }, false, ["decrypt"]).then(function (key) {
         crypto.subtle.decrypt({
-            iv: iv,
+            iv,
             name: "AES-CBC"
         }, key, data).then(function (data) {
             onError(null, new Uint8Array(data));
@@ -4650,7 +4650,7 @@ local.fsRmrSync = function (dir) {
 
 local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
 /*
- * this function will synchronously "mkdir -p" and write the <data> to <file>
+ * this function will synchronously "mkdir -p" and write <data> to <file>
  */
     try {
         if (
@@ -4955,7 +4955,7 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
 local.jwtAes256GcmDecrypt = function (token, key) {
 /*
  * this function will use json-web-encryption to
- * aes-256-gcm-decrypt the token with given base64url-encoded <key>
+ * aes-256-gcm-decrypt <token> with given base64url-encoded <key>
  * https://tools.ietf.org/html/rfc7516
  */
     return local.tryCatchOnError(function () {
@@ -4984,7 +4984,7 @@ local.jwtAes256GcmDecrypt = function (token, key) {
 local.jwtAes256GcmEncrypt = function (data, key) {
 /*
  * this function will use json-web-encryption to
- * aes-256-gcm-encrypt the data with given base64url-encoded <key>
+ * aes-256-gcm-encrypt <data> with given base64url-encoded <key>
  * https://tools.ietf.org/html/rfc7516
  */
     var adata;
@@ -5016,7 +5016,7 @@ local.jwtAes256KeyCreate = function () {
 
 local.jwtAes256KeyInit = function (key) {
 /*
- * this function will init the aes-256-base64url-jwt-key
+ * this function will init aes-256-base64url-jwt-<key>
  * https://jwt.io/
  */
     // init npm_config_jwtAes256Key
@@ -5029,14 +5029,14 @@ local.jwtAes256KeyInit = function (key) {
 
 local.jwtHs256Decode = function (token, key) {
 /*
- * this function will decode the json-web-token with given base64-encoded <key>
+ * this function will decode json-web-token with given base64-encoded <key>
  * https://jwt.io/
  */
     var Hmac;
     var timeNow;
     Hmac = local.sjcl.misc.hmac;
     timeNow = Date.now() / 1000;
-    // try to decode the token
+    // try to decode token
     return local.tryCatchOnError(function () {
         token = token.split(".");
         // validate header
@@ -5062,7 +5062,7 @@ local.jwtHs256Decode = function (token, key) {
 
 local.jwtHs256Encode = function (data, key) {
 /*
- * this function will encode the data into a json-web-token
+ * this function will encode <data> into a json-web-token
  * with given base64-encoded <key>
  * https://jwt.io/
  */
@@ -5090,7 +5090,7 @@ local.listGetElementRandom = function (list) {
 
 local.listShuffle = function (list) {
 /*
- * this function will inplace shuffle the list using fisher-yates algorithm
+ * this function will inplace shuffle <list> using fisher-yates algorithm
  * https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
  */
     var ii;
@@ -5109,7 +5109,7 @@ local.listShuffle = function (list) {
 
 local.localStorageSetItemOrClear = function (key, value) {
 /*
- * this function will try to set the key/value pair to localStorage,
+ * this function will try to set <key>/<value> pair to localStorage,
  * or else call localStorage.clear()
  */
     try {
@@ -5119,16 +5119,16 @@ local.localStorageSetItemOrClear = function (key, value) {
     }
 };
 
-local.middlewareAssetsCached = function (request, response, nextMiddleware) {
+local.middlewareAssetsCached = function (request, response, next) {
 /*
- * this function will run the middleware that will serve cached-assets
+ * this function will run middleware that will serve cached-assets
  */
     var opt;
     opt = {};
     local.onNext(opt, function (err, data) {
         opt.result = opt.result || local.assetsDict[request.urlParsed.pathname];
         if (opt.result === undefined) {
-            nextMiddleware(err);
+            next(err);
             return;
         }
         switch (opt.modeNext) {
@@ -5177,34 +5177,30 @@ local.middlewareAssetsCached = function (request, response, nextMiddleware) {
     opt.onNext();
 };
 
-local.middlewareBodyRead = function (request, ignore, nextMiddleware) {
+local.middlewareBodyRead = function (request, ignore, next) {
 /*
- * this function will run the middleware that will
- * read and save the request-body to request.bodyRaw
+ * this function will run middleware that will
+ * read and save the request-body to <request>.bodyRaw
  */
-    // if request is already read, then goto nextMiddleware
+    // if request is already read, then goto next
     if (!request.readable) {
-        nextMiddleware();
+        next();
         return;
     }
     local.streamReadAll(request, function (err, data) {
         request.bodyRaw = request.bodyRaw || data;
-        nextMiddleware(err);
+        next(err);
     });
 };
 
-local.middlewareCacheControlLastModified = function (
-    request,
-    response,
-    nextMiddleware
-) {
+local.middlewareCacheControlLastModified = function (request, response, next) {
 /*
- * this function will run the middleware
- * that will update the response-header Last-Modified
+ * this function will run middleware that will
+ * update the response-header Last-Modified
  */
     // do not cache if headers already sent or url has '?' search indicator
     if (response.headersSent || request.url.indexOf("?") >= 0) {
-        nextMiddleware();
+        next();
         return;
     }
     // init serverResponseHeaderLastModified
@@ -5227,12 +5223,12 @@ local.middlewareCacheControlLastModified = function (
         "Last-Modified",
         local.serverResponseHeaderLastModified.toUTCString()
     );
-    nextMiddleware();
+    next();
 };
 
 local.middlewareError = function (err, request, response) {
 /*
- * this function will run the middleware that will handle errors
+ * this function will run middleware that will handle errors
  */
     // default - 404 Not Found
     if (!err) {
@@ -5251,12 +5247,12 @@ local.middlewareError = function (err, request, response) {
     ), err);
 };
 
-local.middlewareFileServer = function (request, response, nextMiddleware) {
+local.middlewareFileServer = function (request, response, next) {
 /*
- * this function will run the middleware that will serve files
+ * this function will run middleware that will serve files
  */
     if (request.method !== "GET" || local.isBrowser) {
-        nextMiddleware();
+        next();
         return;
     }
     request.urlFile = (process.cwd() + request.urlParsed.pathname
@@ -5278,9 +5274,9 @@ local.middlewareFileServer = function (request, response, nextMiddleware) {
             onError(err, data && local.base64FromBuffer(data));
         });
     }, function (err, data) {
-        // default to nextMiddleware
+        // default to next
         if (err) {
-            nextMiddleware();
+            next();
             return;
         }
         // init response-header content-type
@@ -5294,9 +5290,9 @@ local.middlewareFileServer = function (request, response, nextMiddleware) {
     });
 };
 
-local.middlewareForwardProxy = function (request, response, nextMiddleware) {
+local.middlewareForwardProxy = function (request, response, next) {
 /*
- * this function will run the middleware that will forward-proxy the request
+ * this function will run middleware that will forward-proxy the request
  * to its destination-host
  */
     var isDone;
@@ -5313,7 +5309,7 @@ local.middlewareForwardProxy = function (request, response, nextMiddleware) {
         return;
     }
     if (!request.headers["forward-proxy-url"]) {
-        nextMiddleware();
+        next();
         return;
     }
     local.serverRespondCors(request, response);
@@ -5342,7 +5338,7 @@ local.middlewareForwardProxy = function (request, response, nextMiddleware) {
         // cleanup clientRequest and clientResponse
         local.streamCleanup(opt.clientRequest);
         local.streamCleanup(opt.clientResponse);
-        nextMiddleware(err);
+        next(err);
     };
     // init opt
     opt = local.urlParse(request.headers["forward-proxy-url"]);
@@ -5379,17 +5375,17 @@ local.middlewareForwardProxy = function (request, response, nextMiddleware) {
     request.pipe(opt.clientRequest);
 };
 
-local.middlewareInit = function (request, response, nextMiddleware) {
+local.middlewareInit = function (request, response, next) {
 /*
- * this function will run the middleware that will init the request and response
+ * this function will run middleware that will init the request and response
  */
     // debug request and response
     local._debugServerRequestResponse4 = local._debugServerRequestResponse3;
     local._debugServerRequestResponse3 = local._debugServerRequestResponse2;
     local._debugServerRequestResponse2 = local._debugServerRequestResponse1;
     local._debugServerRequestResponse1 = {
-        request: request,
-        response: response
+        request,
+        response
     };
     // init timerTimeout
     local.serverRespondTimeoutDefault(request, response, local.timeoutDefault);
@@ -5407,13 +5403,13 @@ local.middlewareInit = function (request, response, nextMiddleware) {
             "Content-Type": "text/html; charset=utf-8"
         });
     }
-    // default to nextMiddleware
-    nextMiddleware();
+    // default to next
+    next();
 };
 
-local.middlewareJsonpStateInit = function (request, response, nextMiddleware) {
+local.middlewareJsonpStateInit = function (request, response, next) {
 /*
- * this function will run the middleware that will
+ * this function will run middleware that will
  * serve the browser-state wrapped in given jsonp-callback
  */
     var state;
@@ -5421,7 +5417,7 @@ local.middlewareJsonpStateInit = function (request, response, nextMiddleware) {
         request.urlParsed
         && request.urlParsed.pathname === "/jsonp.utility2.stateInit"
     ))) {
-        nextMiddleware();
+        next();
         return;
     }
     state = {
@@ -6319,7 +6315,7 @@ local.requireReadme = function () {
                 ), "$1"),
                 {
                     env: local.env,
-                    isRollup: isRollup
+                    isRollup
                 }
             );
         });
@@ -7498,7 +7494,7 @@ local.testReportMerge = function (testReport1, testReport2) {
             .map(function (testPlatform, ii) {
                 errorStackList = [];
                 return local.objectSetOverride(testPlatform, {
-                    errorStackList: errorStackList,
+                    errorStackList,
                     name: testPlatform.name,
                     screenshot: testPlatform.screenshot,
                     // map testCaseList
@@ -7513,7 +7509,7 @@ local.testReportMerge = function (testReport1, testReport2) {
                             });
                         }
                         return local.objectSetOverride(testCase, {
-                            testCaseNumber: testCaseNumber,
+                            testCaseNumber,
                             testReportTestStatusClass: (
                                 "test"
                                 + testCase.status[0].toUpperCase()

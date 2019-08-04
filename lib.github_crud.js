@@ -228,12 +228,12 @@ local.ajax = function (opt, onError) {
         }
         return bff;
     };
-    onEvent = function (event) {
+    onEvent = function (evt) {
     /*
      * this function will handle events
      */
-        if (Object.prototype.toString.call(event) === "[object Error]") {
-            xhr.err = xhr.err || event;
+        if (Object.prototype.toString.call(evt) === "[object Error]") {
+            xhr.err = xhr.err || evt;
             xhr.onEvent({
                 type: "error"
             });
@@ -241,7 +241,7 @@ local.ajax = function (opt, onError) {
         }
         // init statusCode
         xhr.statusCode = (xhr.statusCode || xhr.status) | 0;
-        switch (event.type) {
+        switch (evt.type) {
         case "abort":
         case "error":
         case "load":
@@ -256,10 +256,10 @@ local.ajax = function (opt, onError) {
             );
             ajaxProgressUpdate();
             // handle abort or error event
-            switch (!xhr.err && event.type) {
+            switch (!xhr.err && evt.type) {
             case "abort":
             case "error":
-                xhr.err = new Error("ajax - event " + event.type);
+                xhr.err = new Error("ajax - event " + evt.type);
                 break;
             case "load":
                 if (xhr.statusCode >= 400) {
@@ -871,9 +871,11 @@ local.githubCrudAjax = function (option, onError) {
         headers: Object.assign({
             // github oauth authentication
             Authorization: "token " + (
-                typeof process === "object" && process && process.env.GITHUB_TOKEN
+                typeof process === "object"
+                && process && process.env.GITHUB_TOKEN
             ),
-            // bug-workaround - https://developer.github.com/v3/#user-agent-required
+            // bug-workaround
+            // https://developer.github.com/v3/#user-agent-required
             "User-Agent": "undefined"
         }, option.headers),
         httpRequest: option.httpRequest,

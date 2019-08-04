@@ -940,7 +940,7 @@ local.apidocCreate = function (option) {
     });
     local.objectSetDefault(option, {
         blacklistDict: {
-            globalThis: globalThis
+            globalThis
         },
         circularSet: new Set([globalThis]),
         exampleDict: {},

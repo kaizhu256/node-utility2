@@ -5,6 +5,7 @@ set backspace=2
 " https://stackoverflow.com/questions/1636297/how-to-change-the-folder-path-for-swp-files-in-vim
 set directory=$HOME/.vim/swapfiles//
 set expandtab
+" set ff=unix
 set ffs=unix,dos
 set hidden
 set hlsearch

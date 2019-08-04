@@ -346,7 +346,7 @@ local.cliRun = function (opt) {
 
 local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
 /*
- * this function will synchronously "mkdir -p" and write the <data> to <file>
+ * this function will synchronously "mkdir -p" and write <data> to <file>
  */
     try {
         if (
@@ -2616,22 +2616,32 @@ local["head.txt"] = '\
     if (window.domOnEventSelectAllWithinPre) {\n\
         return;\n\
     }\n\
-    window.domOnEventSelectAllWithinPre = function (event) {\n\
+    window.domOnEventSelectAllWithinPre = function (evt) {\n\
         var range;\n\
         var selection;\n\
-        if (event &&\n\
-                event.key === "a" &&\n\
-                (event.ctrlKey || event.metaKey) &&\n\
-                event.target.closest("pre")) {\n\
+        if (\n\
+            evt\n\
+            && evt.key === "a"\n\
+            && (evt.ctrlKey || evt.metaKey)\n\
+            && evt.target.closest(\n\
+                "pre"\n\
+            )\n\
+        ) {\n\
             range = document.createRange();\n\
-            range.selectNodeContents(event.target.closest("pre"));\n\
+            range.selectNodeContents(evt.target.closest(\n\
+                "pre"\n\
+            ));\n\
             selection = window.getSelection();\n\
             selection.removeAllRanges();\n\
             selection.addRange(range);\n\
-            event.preventDefault();\n\
+            evt.preventDefault();\n\
         }\n\
     };\n\
-    document.addEventListener("keydown", window.domOnEventSelectAllWithinPre);\n\
+    // init event-handling\n\
+    document.addEventListener(\n\
+        "keydown",\n\
+        window.domOnEventSelectAllWithinPre\n\
+    );\n\
 }());\n\
 </script>\n\
 <div class="header {{reportClass}}">\n\

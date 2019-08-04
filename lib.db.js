@@ -441,7 +441,7 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
 
 local.listShuffle = function (list) {
 /*
- * this function will inplace shuffle the list using fisher-yates algorithm
+ * this function will inplace shuffle <list> using fisher-yates algorithm
  * https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
  */
     var ii;
@@ -986,7 +986,7 @@ getItem = function (key, onError) {
  */
     defer({
         action: "getItem",
-        key: key
+        key
     }, onError);
 };
 
@@ -1064,7 +1064,7 @@ removeItem = function (key, onError) {
  */
     defer({
         action: "removeItem",
-        key: key
+        key
     }, onError);
 };
 
@@ -1074,8 +1074,8 @@ setItem = function (key, value, onError) {
  */
     defer({
         action: "setItem",
-        key: key,
-        value: value
+        key,
+        value
     }, onError);
 };
 
@@ -1608,7 +1608,7 @@ local._DbTable.prototype.idIndexCreate = function (option, onError) {
     idIndex = {
         dict: {},
         isInteger: Boolean(option.isInteger),
-        name: name
+        name
     };
     this.idIndexList.push(idIndex);
     // populate idIndex with dbRowList
@@ -2165,7 +2165,7 @@ local.dbTableCreateOne = function (option, onError) {
 
 local.dbTableDict = {};
 
-local.onEventDomDb = function (event) {
+local.onEventDomDb = function (evt) {
 /*
  * this function will handle db dom-events
  */
@@ -2175,7 +2175,7 @@ local.onEventDomDb = function (event) {
     var utility2;
     utility2 = globalThis.utility2 || {};
     ajaxProgressUpdate = utility2.ajaxProgressUpdate || local.nop;
-    switch (event.target.dataset.oneventDb) {
+    switch (evt.target.dataset.oneventDb) {
     case "dbExport":
         tmp = URL.createObjectURL(new globalThis.Blob([local.dbExport()]));
         document.querySelector(
@@ -2194,7 +2194,7 @@ local.onEventDomDb = function (event) {
         ).click();
         break;
     case "dbImportInput":
-        if (event.type !== "change") {
+        if (evt.type !== "change") {
             return;
         }
         ajaxProgressUpdate();
@@ -2203,7 +2203,7 @@ local.onEventDomDb = function (event) {
             local.dbImport(reader.result);
             ajaxProgressUpdate();
         });
-        reader.readAsText(event.target.files[0]);
+        reader.readAsText(evt.target.files[0]);
         break;
     case "dbReset":
         ajaxProgressUpdate();

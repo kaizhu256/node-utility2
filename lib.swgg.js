@@ -2690,9 +2690,9 @@ local.idNameInit = function (option) {
     return option;
 };
 
-local.middlewareBodyParse = function (request, response, nextMiddleware) {
+local.middlewareBodyParse = function (request, response, next) {
 /*
- * this function will run the middleware that will parse request.bodyRaw
+ * this function will run middleware that will parse request.bodyRaw
  */
     var boundary;
     var crlf;
@@ -2701,9 +2701,9 @@ local.middlewareBodyParse = function (request, response, nextMiddleware) {
     var ii;
     var jj;
     var name;
-    // if request is already parsed, then goto nextMiddleware
+    // if request is already parsed, then goto next
     if (!request.swgg.operation || !local.isNullOrUndefined(request.swgg.bodyParsed)) {
-        nextMiddleware();
+        next();
         return;
     }
     headerParse = function () {
@@ -2802,12 +2802,12 @@ local.middlewareBodyParse = function (request, response, nextMiddleware) {
             request.swgg.bodyParsed = JSON.parse(request.swgg.bodyParsed);
         }, local.nop);
     }
-    nextMiddleware(null, request, response);
+    next(null, request, response);
 };
 
-local.middlewareCrudBuiltin = function (request, response, nextMiddleware) {
+local.middlewareCrudBuiltin = function (request, response, next) {
 /*
- * this function will run the middleware that will
+ * this function will run middleware that will
  * run the builtin crud-operations backed by db-lite
  */
     var crud;
@@ -3009,27 +3009,27 @@ local.middlewareCrudBuiltin = function (request, response, nextMiddleware) {
             option.onNext();
             break;
         default:
-            nextMiddleware(error);
+            next(error);
         }
     });
     option.modeNext = 0;
     option.onNext();
 };
 
-local.middlewareCrudEnd = function (request, response, nextMiddleware) {
+local.middlewareCrudEnd = function (request, response, next) {
 /*
- * this function will run the middleware that will end the builtin crud-operations
+ * this function will run middleware that will end the builtin crud-operations
  */
     if (request.swgg.crud.endArgList) {
         local.serverRespondJsonapi.apply(null, request.swgg.crud.endArgList);
         return;
     }
-    nextMiddleware(null, request, response);
+    next(null, request, response);
 };
 
-local.middlewareRouter = function (request, response, nextMiddleware) {
+local.middlewareRouter = function (request, response, next) {
 /*
- * this function will run the middleware that will
+ * this function will run middleware that will
  * map the request's method-path to swagger's tags[0]-crudType
  */
     var tmp;
@@ -3043,9 +3043,9 @@ local.middlewareRouter = function (request, response, nextMiddleware) {
         }
     }, 3);
     // if request.url is not prefixed with swaggerJsonBasePath,
-    // then default to nextMiddleware
+    // then default to next
     if (request.urlParsed.pathname.indexOf(local.swaggerJsonBasePath) !== 0) {
-        nextMiddleware();
+        next();
         return;
     }
     // init methodPath
@@ -3075,12 +3075,12 @@ local.middlewareRouter = function (request, response, nextMiddleware) {
             /\/[^\/]+?(\/*?)$/
         ), "/$1{}");
     }
-    nextMiddleware(null, request, response);
+    next(null, request, response);
 };
 
-local.middlewareUserLogin = function (request, response, nextMiddleware) {
+local.middlewareUserLogin = function (request, response, next) {
 /*
- * this function will run the middleware that will handle user login
+ * this function will run middleware that will handle user login
  */
     var crud;
     var option;
@@ -3176,16 +3176,16 @@ local.middlewareUserLogin = function (request, response, nextMiddleware) {
             option.onNext();
             break;
         default:
-            nextMiddleware(error);
+            next(error);
         }
     });
     option.modeNext = 0;
     option.onNext();
 };
 
-local.middlewareValidate = function (request, response, nextMiddleware) {
+local.middlewareValidate = function (request, response, next) {
 /*
- * this function will run the middleware that will validate the swagger-request
+ * this function will run middleware that will validate the swagger-request
  */
     var crud;
     var option;
@@ -3294,7 +3294,7 @@ local.middlewareValidate = function (request, response, nextMiddleware) {
                 })
             );
             if (!crud.dbTable) {
-                nextMiddleware();
+                next();
                 return;
             }
             // init crud.body
@@ -3361,10 +3361,10 @@ local.middlewareValidate = function (request, response, nextMiddleware) {
             // init-after crud.idName
             crud.modeQueryByIdInvert = true;
             local.idNameInit(crud);
-            nextMiddleware();
+            next();
             break;
         default:
-            nextMiddleware(error, request, response);
+            next(error, request, response);
         }
     });
     option.modeNext = 0;
@@ -3420,7 +3420,7 @@ local.normalizeSwaggerJson = function (swaggerJson, option) {
                 || !tmp.operationId
             ) {
                 tmp.operationId = local.operationIdFromAjax({
-                    method: method,
+                    method,
                     url: path
                 });
             }
@@ -3543,7 +3543,7 @@ local.normalizeSwaggerParamDict = function (option) {
         if (option.modeDefault && local.isNullOrUndefined(tmp)) {
             tmp = local.dbFieldRandomCreate({
                 modeNotRandom: true,
-                schemaP: schemaP
+                schemaP
             });
         }
         // parse array
@@ -3650,7 +3650,7 @@ local.onErrorJsonapi = function (onError) {
                 return error;
             }
             return {
-                data: data
+                data
             };
         });
         // init data.meta
@@ -4022,13 +4022,13 @@ local.swaggerJsonFromPostBody = function (swaggerJson, option) {
             ? {
                 default: option.data[key],
                 items: {
-                    type: type
+                    type
                 },
                 type: "array"
             }
             : {
                 default: value,
-                type: type
+                type
             }
         );
         definition.properties[key] = schemaP;
@@ -4039,8 +4039,8 @@ local.swaggerJsonFromPostBody = function (swaggerJson, option) {
         type = local.swaggerJsonFromPostBody(swaggerJson, {
             data: value,
             depth: option.depth - 1,
-            key: key,
-            prefix: prefix,
+            key,
+            prefix,
             "x-swgg-tags0": option["x-swgg-tags0"]
         });
         if (isArray) {
@@ -4071,7 +4071,7 @@ local.swaggerValidate = function (swaggerJson) {
         modeSchema: true,
         prefix: ["swaggerJson"],
         schema: local.swaggerSchemaJson,
-        swaggerJson: swaggerJson
+        swaggerJson
     });
     pathDict = {};
     Object.keys(swaggerJson.paths).forEach(function (path) {
@@ -4080,7 +4080,7 @@ local.swaggerValidate = function (swaggerJson) {
         test = path.indexOf("?") < 0;
         local.throwSwaggerError(!test && {
             errorType: "semanticPaths1",
-            prefix: prefix
+            prefix
         });
         tmp = path.replace((
             /\{.*?\}/g
@@ -4090,7 +4090,7 @@ local.swaggerValidate = function (swaggerJson) {
         local.throwSwaggerError(!test && {
             errorType: "semanticPaths2",
             pathList: [pathDict[tmp], path],
-            prefix: prefix
+            prefix
         });
         pathDict[tmp] = path;
         // validate semanticPaths3
@@ -4102,7 +4102,7 @@ local.swaggerValidate = function (swaggerJson) {
             local.throwSwaggerError(!test && {
                 errorType: "semanticPaths3",
                 name: match0,
-                prefix: prefix
+                prefix
             });
             tmp[match0] = true;
         });
@@ -4110,7 +4110,7 @@ local.swaggerValidate = function (swaggerJson) {
         test = path.indexOf("{}") < 0;
         local.throwSwaggerError(!test && {
             errorType: "semanticPaths5",
-            prefix: prefix
+            prefix
         });
     });
     // validate swaggerJson.definitions[key].properties[ii].default
@@ -4120,14 +4120,14 @@ local.swaggerValidate = function (swaggerJson) {
             modeDereference: true,
             prefix: ["swaggerJson", "definitions", schemaName],
             schema: swaggerJson.definitions[schemaName],
-            swaggerJson: swaggerJson
+            swaggerJson
         });
         Object.keys(tmp.properties || {}).forEach(function (key) {
             local.swaggerValidateDataSchema({
                 modeDefault: true,
                 prefix: ["swaggerJson", "definitions", schemaName, "properties", key],
                 schema: tmp.properties[key],
-                swaggerJson: swaggerJson
+                swaggerJson
             });
         });
     });
@@ -4137,7 +4137,7 @@ local.swaggerValidate = function (swaggerJson) {
             modeDefault: true,
             prefix: ["swaggerJson", "parameters", key],
             schema: swaggerJson.parameters[key],
-            swaggerJson: swaggerJson
+            swaggerJson
         });
     });
     // validate swaggerJson.paths[key][key].parameters[ii].default
@@ -4147,9 +4147,9 @@ local.swaggerValidate = function (swaggerJson) {
             operation = local.swaggerValidateDataSchema({
                 // dereference operation
                 modeDereference: true,
-                prefix: prefix,
+                prefix,
                 schema: swaggerJson.paths[path][method],
-                swaggerJson: swaggerJson
+                swaggerJson
             });
             // validate semanticOperationIds1
             test = !operationIdDict[operation.operationId];
@@ -4188,7 +4188,7 @@ local.swaggerValidate = function (swaggerJson) {
                 local.throwSwaggerError(!test && {
                     data: operation,
                     errorType: "semanticOperations2",
-                    prefix: prefix,
+                    prefix,
                     schema: operation
                 });
                 // validate semanticOperations3
@@ -4210,14 +4210,14 @@ local.swaggerValidate = function (swaggerJson) {
                 local.throwSwaggerError(!test && {
                     data: operation,
                     errorType: "semanticOperations1",
-                    prefix: prefix
+                    prefix
                 });
                 // validate schemaP
                 local.swaggerValidateDataSchema({
                     modeDefault: true,
                     prefix: prefix.concat(["parameters", schemaP.name]),
                     schema: schemaP,
-                    swaggerJson: swaggerJson
+                    swaggerJson
                 });
                 if (schemaP.in === "path") {
                     tmp.path[schemaP.name] = tmp.path[schemaP.name] || [];
@@ -4236,7 +4236,7 @@ local.swaggerValidate = function (swaggerJson) {
                 test = tmp.path[name][1];
                 local.throwSwaggerError(!test && {
                     errorType: "semanticPaths6",
-                    name: name,
+                    name,
                     prefix: prefix.concat(["parameters", "ii"])
                 });
             });
@@ -4248,7 +4248,7 @@ local.swaggerValidate = function (swaggerJson) {
             local.throwSwaggerError(!test && {
                 data: operation,
                 errorType: "semanticFormData4",
-                prefix: prefix
+                prefix
             });
             // validate semanticFormData5
             test = (
@@ -4261,7 +4261,7 @@ local.swaggerValidate = function (swaggerJson) {
             local.throwSwaggerError(!test && {
                 data: operation,
                 errorType: "semanticFormData5",
-                prefix: prefix,
+                prefix,
                 schema: operation
             });
         });
@@ -4360,10 +4360,10 @@ local.swaggerValidateDataSchema = function (option) {
         }
         test = !circularSet.has($ref);
         local.throwSwaggerError(!test && {
-            data: data,
+            data,
             errorType: "schemaDereferenceCircular",
             prefix: option.prefix,
-            schema: schema
+            schema
         });
         circularSet.add($ref);
         // validate semanticWalker6
@@ -4388,14 +4388,14 @@ local.swaggerValidateDataSchema = function (option) {
             // validate semanticFormData3
             test = data.type !== "file" || data.in === "formData";
             local.throwSwaggerError(!test && {
-                data: data,
+                data,
                 errorType: "semanticFormData3",
                 prefix: option.prefix
             });
             // validate semanticParameters2
             test = data.in === "body" || !local.isNullOrUndefined(data.type);
             local.throwSwaggerError(!test && {
-                data: data,
+                data,
                 errorType: "semanticParameters2",
                 prefix: option.prefix
             });
@@ -4428,24 +4428,24 @@ local.swaggerValidateDataSchema = function (option) {
             // validate semanticWalker2
             test = !(data.maximum < data.minimum);
             local.throwSwaggerError(!test && {
-                data: data,
+                data,
                 errorType: "semanticWalker2",
                 prefix: option.prefix
             });
             // validate semanticWalker3
             test = !(data.maxProperties < data.minProperties);
             local.throwSwaggerError(!test && {
-                data: data,
+                data,
                 errorType: "semanticWalker3",
                 prefix: option.prefix
             });
             // validate semanticWalker4
             test = !(data.maxLength < data.minLength);
             local.throwSwaggerError(!test && {
-                data: data,
+                data,
                 errorType: "semanticWalker4",
                 prefix: option.prefix,
-                schema: schema
+                schema
             });
             break;
         }
@@ -4458,7 +4458,7 @@ local.swaggerValidateDataSchema = function (option) {
         schema = schema && schema[tmp[1]];
         test = schema;
         local.throwSwaggerError(!test && {
-            data: data,
+            data,
             errorType: "schemaDereference",
             prefix: option.prefix,
             schema: option.schema
@@ -4492,10 +4492,10 @@ local.swaggerValidateDataSchema = function (option) {
         || schema["x-swgg-notRequired"]
     );
     local.throwSwaggerError(!test && {
-        data: data,
+        data,
         errorType: "objectRequired",
         prefix: option.prefix,
-        schema: schema
+        schema
     });
     if (local.isNullOrUndefined(data)) {
         return;
@@ -4581,11 +4581,11 @@ local.swaggerValidateDataSchema = function (option) {
         test = option.modeSchema || typeof data === "object";
     }
     local.throwSwaggerError(!test && {
-        data: data,
+        data,
         errorType: "itemType",
         prefix: option.prefix,
-        schema: schema,
-        typeof: typeof data
+        schema,
+        typeof: local.identity(typeof data)
     });
     tmp = typeof data;
     if (tmp === "object" && Array.isArray(data)) {
@@ -4610,18 +4610,18 @@ local.swaggerValidateDataSchema = function (option) {
         // 5.3.2. maxItems
         test = typeof schema.maxItems !== "number" || data.length <= schema.maxItems;
         local.throwSwaggerError(!test && {
-            data: data,
+            data,
             errorType: "arrayMaxItems",
             prefix: option.prefix,
-            schema: schema
+            schema
         });
         // 5.3.3. minItems
         test = typeof schema.minItems !== "number" || data.length >= schema.minItems;
         local.throwSwaggerError(!test && {
-            data: data,
+            data,
             errorType: "arrayMinItems",
             prefix: option.prefix,
-            schema: schema
+            schema
         });
         // 5.3.4. uniqueItems
         test = !schema.uniqueItems || data.every(function (element) {
@@ -4629,11 +4629,11 @@ local.swaggerValidateDataSchema = function (option) {
             return data.indexOf(element) === data.lastIndexOf(element);
         });
         local.throwSwaggerError(!test && {
-            data: data,
+            data,
             errorType: "arrayUniqueItems",
             prefix: option.prefix,
-            schema: schema,
-            tmp: tmp
+            schema,
+            tmp
         });
         break;
     // 5.1. Validation keywords for numeric instances (number and integer)
@@ -4641,10 +4641,10 @@ local.swaggerValidateDataSchema = function (option) {
         // 5.1.1. multipleOf
         test = typeof schema.multipleOf !== "number" || data % schema.multipleOf === 0;
         local.throwSwaggerError(!test && {
-            data: data,
+            data,
             errorType: "numberMultipleOf",
             prefix: option.prefix,
-            schema: schema
+            schema
         });
         // 5.1.2. maximum and exclusiveMaximum
         test = typeof schema.maximum !== "number" || (
@@ -4653,7 +4653,7 @@ local.swaggerValidateDataSchema = function (option) {
             : data <= schema.maximum
         );
         local.throwSwaggerError(!test && {
-            data: data,
+            data,
             errorType: (
                 // ternary-condition
                 schema.exclusiveMaximum
@@ -4661,7 +4661,7 @@ local.swaggerValidateDataSchema = function (option) {
                 : "numberMaximum"
             ),
             prefix: option.prefix,
-            schema: schema
+            schema
         });
         // 5.1.3. minimum and exclusiveMinimum
         test = typeof schema.minimum !== "number" || (
@@ -4670,7 +4670,7 @@ local.swaggerValidateDataSchema = function (option) {
             : data >= schema.minimum
         );
         local.throwSwaggerError(!test && {
-            data: data,
+            data,
             errorType: (
                 // ternary-condition
                 schema.exclusiveMinimum
@@ -4678,7 +4678,7 @@ local.swaggerValidateDataSchema = function (option) {
                 : "numberMinimum"
             ),
             prefix: option.prefix,
-            schema: schema
+            schema
         });
         break;
     // 5.4. Validation keywords for objects
@@ -4689,10 +4689,10 @@ local.swaggerValidateDataSchema = function (option) {
             || Object.keys(data).length <= schema.maxProperties
         );
         local.throwSwaggerError(!test && {
-            data: data,
+            data,
             errorType: "objectMaxProperties",
             prefix: option.prefix,
-            schema: schema
+            schema
         });
         // 5.4.2. minProperties
         test = (
@@ -4700,21 +4700,21 @@ local.swaggerValidateDataSchema = function (option) {
             || Object.keys(data).length >= schema.minProperties
         );
         local.throwSwaggerError(!test && {
-            data: data,
+            data,
             errorType: "objectMinProperties",
             prefix: option.prefix,
-            schema: schema
+            schema
         });
         // 5.4.3. required
         (schema.required || []).forEach(function (key) {
             // validate semanticItemsRequiredForArrayObjects2
             test = !local.isNullOrUndefined(data[key]);
             local.throwSwaggerError(!test && {
-                data: data,
+                data,
                 errorType: "semanticItemsRequiredForArrayObjects2",
-                key: key,
+                key,
                 prefix: option.prefix,
-                schema: schema
+                schema
             });
         });
         // 5.4.4. additionalProperties, properties and patternProperties
@@ -4773,11 +4773,11 @@ local.swaggerValidateDataSchema = function (option) {
 */
             test = tmp || schema.additionalProperties !== false;
             local.throwSwaggerError(!test && {
-                data: data,
+                data,
                 errorType: "objectAdditionalProperties",
-                key: key,
+                key,
                 prefix: option.prefix,
-                schema: schema
+                schema
             });
             // recurse - schema.additionalProperties
             local.swaggerValidateDataSchema({
@@ -4806,12 +4806,12 @@ local.swaggerValidateDataSchema = function (option) {
             schema.dependencies[key].every(function (key2) {
                 test = !local.isNullOrUndefined(data[key2]);
                 local.throwSwaggerError(!test && {
-                    data: data,
+                    data,
                     errorType: "objectDependencies",
-                    key: key,
-                    key2: key2,
+                    key,
+                    key2,
                     prefix: option.prefix,
-                    schema: schema
+                    schema
                 });
             });
         });
@@ -4821,26 +4821,26 @@ local.swaggerValidateDataSchema = function (option) {
         // 5.2.1. maxLength
         test = typeof schema.maxLength !== "number" || data.length <= schema.maxLength;
         local.throwSwaggerError(!test && {
-            data: data,
+            data,
             errorType: "stringMaxLength",
             prefix: option.prefix,
-            schema: schema
+            schema
         });
         // 5.2.2. minLength
         test = typeof schema.minLength !== "number" || data.length >= schema.minLength;
         local.throwSwaggerError(!test && {
-            data: data,
+            data,
             errorType: "stringMinLength",
             prefix: option.prefix,
-            schema: schema
+            schema
         });
         // 5.2.3. pattern
         test = !schema.pattern || new RegExp(schema.pattern).test(data);
         local.throwSwaggerError(!test && {
-            data: data,
+            data,
             errorType: "stringPattern",
             prefix: option.prefix,
-            schema: schema
+            schema
         });
         break;
     }
@@ -4855,11 +4855,11 @@ local.swaggerValidateDataSchema = function (option) {
         return tmp.indexOf(element) >= 0;
     });
     local.throwSwaggerError(!test && {
-        data: data,
+        data,
         errorType: "itemEnum",
         prefix: option.prefix,
-        schema: schema,
-        tmp: tmp
+        schema,
+        tmp
     });
     // 5.5.2. type
     local.nop();
@@ -4867,7 +4867,7 @@ local.swaggerValidateDataSchema = function (option) {
     (schema.allOf || []).forEach(function (element) {
         // recurse - schema.allOf
         local.swaggerValidateDataSchema({
-            data: data,
+            data,
             prefix: option.prefix,
             modeSchema: option.modeSchema,
             schema: element,
@@ -4880,7 +4880,7 @@ local.swaggerValidateDataSchema = function (option) {
         local.tryCatchOnError(function () {
             // recurse - schema.anyOf
             local.swaggerValidateDataSchema({
-                data: data,
+                data,
                 modeSchema: option.modeSchema,
                 prefix: option.prefix,
                 schema: element,
@@ -4892,11 +4892,11 @@ local.swaggerValidateDataSchema = function (option) {
         return !tmp;
     });
     local.throwSwaggerError(!test && {
-        data: data,
+        data,
         errorType: "itemOneOf",
         prefix: option.prefix,
-        schema: schema,
-        tmp: tmp
+        schema,
+        tmp
     });
     // 5.5.5. oneOf
     tmp = (
@@ -4908,7 +4908,7 @@ local.swaggerValidateDataSchema = function (option) {
         local.tryCatchOnError(function () {
             // recurse - schema.oneOf
             local.swaggerValidateDataSchema({
-                data: data,
+                data,
                 modeSchema: option.modeSchema,
                 prefix: option.prefix,
                 schema: element,
@@ -4920,17 +4920,17 @@ local.swaggerValidateDataSchema = function (option) {
     });
     test = tmp === 1;
     local.throwSwaggerError(!test && {
-        data: data,
+        data,
         errorType: "itemOneOf",
         prefix: option.prefix,
-        schema: schema,
-        tmp: tmp
+        schema,
+        tmp
     });
     // 5.5.6. not
     test = !schema.not || !local.tryCatchOnError(function () {
         // recurse - schema.not
         local.swaggerValidateDataSchema({
-            data: data,
+            data,
             modeSchema: option.modeSchema,
             prefix: option.prefix,
             schema: schema.not,
@@ -4939,10 +4939,10 @@ local.swaggerValidateDataSchema = function (option) {
         return true;
     }, local.nop);
     local.throwSwaggerError(!test && {
-        data: data,
+        data,
         errorType: "itemNot",
         prefix: option.prefix,
-        schema: schema
+        schema
     });
     // 5.5.7. definitions
     local.nop();
@@ -5275,7 +5275,7 @@ local.uiEventListenerDict.onEventInputValidateAndAjax = function (option, onErro
     ).textContent = local.templateRender(
         local.templateUiRequestJavascript,
         {
-            option: option,
+            option,
             optionJson: JSON.stringify({
                 paramDict: option.paramDict
             }, null, 4)
@@ -5714,7 +5714,7 @@ local.uiEventListenerDict.onEventUiReload = function (option, onError) {
                 description: "no description",
                 responseList: Object.keys(operation.responses).sort().map(function (key) {
                     return {
-                        key: key,
+                        key,
                         value: operation.responses[key]
                     };
                 })
@@ -5918,7 +5918,7 @@ local.uiRenderSchemaP = function (schemaP) {
         ? schemaP.default
         : local.dbFieldRandomCreate({
             modeNotRandom: true,
-            schemaP: schemaP
+            schemaP
         })
     );
     if (typeof schemaP.placeholder !== "string") {

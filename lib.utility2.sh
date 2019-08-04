@@ -221,7 +221,7 @@ shBuildApp () {(set -e
     \"main\": \"lib.$npm_package_nameLib.js\",
     \"name\": \"$npm_package_name\",
     \"scripts\": {
-        \"test\": \"./npm_scripts.sh\"
+        \"test\": \"\$PWD/npm_scripts.sh\"
     },
     \"version\": \"0.0.1\"
 }"
@@ -1426,9 +1426,15 @@ shDockerSh () {(set -e
 # this function will run /bin/bash in the docker-container $NAME
 # http://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
     NAME="$1"
-    COMMAND="${2:-/bin/bash}"
     docker start "$NAME"
-    docker exec -it "$NAME" $COMMAND
+    case "$(uname)" in
+    MINGW*)
+        winpty docker exec -it "$NAME" ${2:-bash}
+        ;;
+    *)
+        docker exec -it "$NAME" ${2:-/bin/bash}
+        ;;
+    esac
 )}
 
 shDockerStart () {(set -e
@@ -1436,6 +1442,9 @@ shDockerStart () {(set -e
     case "$(uname)" in
     Linux)
         LOCALHOST="${LOCALHOST:-127.0.0.1}"
+        ;;
+    MINGW*)
+        export HOME="$USERPROFILE"
         ;;
     *)
         LOCALHOST="${LOCALHOST:-192.168.99.100}"
@@ -2467,12 +2476,12 @@ local.ajax = function (opt, onError) {
         }
         return bff;
     };
-    onEvent = function (event) {
+    onEvent = function (evt) {
     /*
      * this function will handle events
      */
-        if (Object.prototype.toString.call(event) === "[object Error]") {
-            xhr.err = xhr.err || event;
+        if (Object.prototype.toString.call(evt) === "[object Error]") {
+            xhr.err = xhr.err || evt;
             xhr.onEvent({
                 type: "error"
             });
@@ -2480,7 +2489,7 @@ local.ajax = function (opt, onError) {
         }
         // init statusCode
         xhr.statusCode = (xhr.statusCode || xhr.status) | 0;
-        switch (event.type) {
+        switch (evt.type) {
         case "abort":
         case "error":
         case "load":
@@ -2495,10 +2504,10 @@ local.ajax = function (opt, onError) {
             );
             ajaxProgressUpdate();
             // handle abort or error event
-            switch (!xhr.err && event.type) {
+            switch (!xhr.err && evt.type) {
             case "abort":
             case "error":
-                xhr.err = new Error("ajax - event " + event.type);
+                xhr.err = new Error("ajax - event " + evt.type);
                 break;
             case "load":
                 if (xhr.statusCode >= 400) {
@@ -2931,7 +2940,7 @@ local.childProcessSpawnWithUtility2 = function (script, onError) {
         }
     ).on("exit", function (exitCode) {
         onError(exitCode && Object.assign(new Error(), {
-            exitCode: exitCode
+            exitCode
         }));
     });
 };
@@ -2999,7 +3008,7 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
         name: "AES-CBC"
     }, false, ["decrypt"]).then(function (key) {
         crypto.subtle.decrypt({
-            iv: iv,
+            iv,
             name: "AES-CBC"
         }, key, data).then(function (data) {
             onError(null, new Uint8Array(data));
@@ -3120,7 +3129,7 @@ local.fsRmrSync = function (dir) {
 
 local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
 /*
- * this function will synchronously "mkdir -p" and write the <data> to <file>
+ * this function will synchronously "mkdir -p" and write <data> to <file>
  */
     try {
         if (
@@ -3671,14 +3680,14 @@ local.throwError = function () {
         ;;
     start)
         shBuildInit
-        if [ "$1" ]
+        if [ "$#" != 0 ]
         then
             FILE="$1"
+            shift
         else
             export npm_config_mode_start="1"
             FILE="$npm_config_dir_utility2/test.js"
         fi
-        shift || true
         export npm_config_mode_auto_restart=1
         shBuildInit
         shRun shIstanbulCover "$FILE"
@@ -3722,7 +3731,7 @@ data = data.replace((
     require("fs").readFile(match0, function (error, data) {
         console.assert(!error, error);
         local.cryptoAesXxxCbcRawEncrypt({
-            data: data,
+            data,
             key: process.env.CRYPTO_AES_KEY_MEDIA
         }, function (error, data) {
             console.assert(!error, error);
@@ -3988,7 +3997,10 @@ packageJson = require("./package.json");
 packageJson.nameOriginal = packageJson.name;
 packageJson.name = name || packageJson.name;
 packageJson.version = version || packageJson.version;
-require("fs").writeFileSync("package.json", JSON.stringify(packageJson, null, 4) + "\n");
+require("fs").writeFileSync(
+    "package.json",
+    JSON.stringify(packageJson, null, 4) + "\n"
+);
 }());
 ' "$NAME" "$VERSION"
     npm publish
@@ -4112,11 +4124,18 @@ require("fs").readFileSync("README.md", "utf8").replace((
     .replace((
         /\/build\//g
     ), "/build..alpha..travis-ci.org/");
-    if (process.env.npm_package_private && match0.indexOf("https://github.com/") === 0) {
+    if (
+        process.env.npm_package_private
+        && match0.indexOf("https://github.com/") === 0
+    ) {
         return;
     }
-    request = require(match1).request(require("url").parse(match0), function (response) {
-        console.log("shReadmeLinkValidate " + response.statusCode + " " + match0);
+    request = require(match1).request(require("url").parse(match0), function (
+        response
+    ) {
+        console.log(
+            "shReadmeLinkValidate " + response.statusCode + " " + match0
+        );
         response.destroy();
         if (!(response.statusCode < 400)) {
             throw new Error("shReadmeLinkValidate - invalid link " + match0);
@@ -4373,7 +4392,8 @@ result = (
     + result + "</text>\n</svg>\n"
 );
 require("fs").writeFileSync(
-    process.env.npm_config_dir_build + "/" + process.env.MODE_BUILD_SCREENSHOT_IMG,
+    process.env.npm_config_dir_build
+    + "/" + process.env.MODE_BUILD_SCREENSHOT_IMG,
     result
 );
 }());
