@@ -90,7 +90,7 @@
             return;
         }
         err = (
-            // ternary-condition
+            // ternary-operator
             (
                 message
                 && typeof message.message === "string"
@@ -1222,7 +1222,9 @@ local._DbTable.prototype._crudRemoveOneById = function (idDict, circularSet) {
         return null;
     }
     that = this;
-    circularSet = circularSet || new Set([idDict]);
+    circularSet = circularSet || new Set([
+        idDict
+    ]);
     result = null;
     that.idIndexList.forEach(function (idIndex) {
         id = idDict[idIndex.name];
@@ -1417,7 +1419,9 @@ local._DbTable.prototype.crudGetOneByQuery = function (query, onError) {
     // optimization - while-loop
     ii = 0;
     while (ii < this.dbRowList.length) {
-        result = local.dbRowListGetManyByQuery([this.dbRowList[ii]], query)[0];
+        result = local.dbRowListGetManyByQuery([
+            this.dbRowList[ii]
+        ], query)[0];
         if (result) {
             break;
         }
@@ -2177,7 +2181,9 @@ local.onEventDomDb = function (evt) {
     ajaxProgressUpdate = utility2.ajaxProgressUpdate || local.nop;
     switch (evt.target.dataset.oneventDb) {
     case "dbExport":
-        tmp = URL.createObjectURL(new globalThis.Blob([local.dbExport()]));
+        tmp = URL.createObjectURL(new globalThis.Blob([
+            local.dbExport()
+        ]));
         document.querySelector(
             "#dbExportA1"
         ).href = tmp;

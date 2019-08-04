@@ -63,7 +63,7 @@
             return;
         }
         err = (
-            // ternary-condition
+            // ternary-operator
             (
                 message
                 && typeof message.message === "string"
@@ -274,7 +274,7 @@ local.ajax = function (opt, onError) {
                 xhr.statusCode = xhr.statusCode || 500;
                 xhr.err.statusCode = xhr.statusCode;
                 tmp = (
-                    // ternary-condition
+                    // ternary-operator
                     (
                         local.isBrowser
                         ? "browser"
@@ -1154,7 +1154,7 @@ local.githubCrudContentPutFile = function (option, onError) {
                 message: option.message,
                 // resolve file in url
                 url: (
-                    // ternary-condition
+                    // ternary-operator
                     (
                         /\/$/
                     ).test(option.url)

@@ -53,7 +53,7 @@
             return;
         }
         err = (
-            // ternary-condition
+            // ternary-operator
             (
                 message
                 && typeof message.message === "string"
@@ -195,8 +195,12 @@ local.testCase_FormData_default = function (option, onError) {
  * this function will test FormData's default handling-behavior
  */
     option = {};
-    option.blob1 = new local.Blob(["aa", "bb", local.stringHelloEmoji, 0]);
-    option.blob2 = new local.Blob(["aa", "bb", local.stringHelloEmoji, 0], {
+    option.blob1 = new local.Blob([
+        "aa", "bb", local.stringHelloEmoji, 0
+    ]);
+    option.blob2 = new local.Blob([
+        "aa", "bb", local.stringHelloEmoji, 0
+    ], {
         type: "text/plain; charset=utf-8"
     });
     option.data = new local.FormData();
@@ -1722,7 +1726,107 @@ local.testCase_numberToRomanNumerals_default = function (option, onError) {
  */
     option = {};
     option.list = [
-"","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC","XCI","XCII","XCIII","XCIV","XCV","XCVI","XCVII","XCVIII","XCIX","C" // jslint ignore:line
+        "",
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "XI",
+        "XII",
+        "XIII",
+        "XIV",
+        "XV",
+        "XVI",
+        "XVII",
+        "XVIII",
+        "XIX",
+        "XX",
+        "XXI",
+        "XXII",
+        "XXIII",
+        "XXIV",
+        "XXV",
+        "XXVI",
+        "XXVII",
+        "XXVIII",
+        "XXIX",
+        "XXX",
+        "XXXI",
+        "XXXII",
+        "XXXIII",
+        "XXXIV",
+        "XXXV",
+        "XXXVI",
+        "XXXVII",
+        "XXXVIII",
+        "XXXIX",
+        "XL",
+        "XLI",
+        "XLII",
+        "XLIII",
+        "XLIV",
+        "XLV",
+        "XLVI",
+        "XLVII",
+        "XLVIII",
+        "XLIX",
+        "L",
+        "LI",
+        "LII",
+        "LIII",
+        "LIV",
+        "LV",
+        "LVI",
+        "LVII",
+        "LVIII",
+        "LIX",
+        "LX",
+        "LXI",
+        "LXII",
+        "LXIII",
+        "LXIV",
+        "LXV",
+        "LXVI",
+        "LXVII",
+        "LXVIII",
+        "LXIX",
+        "LXX",
+        "LXXI",
+        "LXXII",
+        "LXXIII",
+        "LXXIV",
+        "LXXV",
+        "LXXVI",
+        "LXXVII",
+        "LXXVIII",
+        "LXXIX",
+        "LXXX",
+        "LXXXI",
+        "LXXXII",
+        "LXXXIII",
+        "LXXXIV",
+        "LXXXV",
+        "LXXXVI",
+        "LXXXVII",
+        "LXXXVIII",
+        "LXXXIX",
+        "XC",
+        "XCI",
+        "XCII",
+        "XCIII",
+        "XCIV",
+        "XCV",
+        "XCVI",
+        "XCVII",
+        "XCVIII",
+        "XCIX",
+        "C"
     ];
     option.ii = 0;
     while (option.ii < 10) {
@@ -2291,7 +2395,9 @@ local.testCase_replStart_tcp = function (option, onError) {
         // validate data
         local.assertThrow(
             option.data.indexOf(option.input) >= 0,
-            JSON.stringify([option.data, option.input])
+            JSON.stringify([
+                option.data, option.input
+            ])
         );
         onError(null, option);
     });

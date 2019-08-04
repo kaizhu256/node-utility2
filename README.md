@@ -56,14 +56,12 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- jslint-autofix - split ([aa, bb]) into multiple lines
-- rename var previous to prev
 - rename var value to val
 - jslint - auto-newline function-calls with names longer than 20 char
 - replace uglifyjs-lite with terser-lite (v2.8.29)
 - jslint - remove bad_property_a and unexpected_a hacks
 - jslint - allow space after semi-colon in jslint-macro
-- jslint - fix lineOffset issue
+- jslint - fix lineOffset issue with ignored-lines
 - jslint - jslintUtility2 with ignore-region blank
 - jslint - sort nested switch-statements
 - jslint-autofix - move inner-loop to outer
@@ -76,6 +74,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 
 #### changelog 2019.8.2
 - npm publish 2019.8.2
+- jslint-autofix - split ([aa, bb]) into multiple-lines
 - add partial support for git-for-windows/MINGW env
 - update to jslint commit ea8401c6a72e21d66f49766af692b09e81d7a79f
 - csslint - validateLineSortedReset @media
@@ -192,7 +191,7 @@ instruction
             return;
         }
         err = (
-            // ternary-condition
+            // ternary-operator
             (
                 message
                 && typeof message.message === "string"

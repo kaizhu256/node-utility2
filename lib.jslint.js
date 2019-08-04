@@ -63,7 +63,7 @@
             return;
         }
         err = (
-            // ternary-condition
+            // ternary-operator
             (
                 message
                 && typeof message.message === "string"
@@ -2439,7 +2439,8 @@ function warn_at(code, line, column, a, b, c, d) {
 // Report an error at some line and column of the program. The warning object
 // resembles an exception.
 
-    var warning = { // ~~
+    var warning = {
+        // ~~
         name: "JSLintError",
         column,
         line,
@@ -4951,7 +4952,9 @@ prefix("(", function () {
             return stop("expected_identifier_a", the_value);
         }
         the_paren.expression = [the_value];
-        return fart([the_paren.expression, "(" + the_value.id + ")"]);
+        return fart([
+            the_paren.expression, "(" + the_value.id + ")"
+        ]);
     }
     return the_value;
 });
@@ -6937,7 +6940,7 @@ jslint_extra = function (source, option, global_array) {
     // init
     line_ignore = null;
     lines = (
-        // ternary-condition
+        // ternary-operator
         Array.isArray(source)
         ? source
         : source.split(rx_crlf)
@@ -7719,12 +7722,12 @@ local.jslintAutofix = function (code, file, option) {
         ), "");
         // autofix - braket - "{\n    ..."
         code = code.replace((
-            /^(\u0020*)(.*?(?:\{|\.(?:closest|querySelector|querySelectorAll)\())(\S)/gm
+            /^(\u0020*)(.*?(?:\(\[|\{))\u0020*?(\S)/gm
         ), "$1$2\n$1    $3");
         // autofix - braket - "{}"
         code = code.replace((
-            /[(\[{]\s+[)\]}]/g
-        ), "{}");
+            /([(\[{])\s+([)\]}])/g
+        ), "$1$2");
         // autofix - trailing-whitespace
         code = code.replace((
             /\u0020+$/gm

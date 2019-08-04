@@ -63,7 +63,7 @@
             return;
         }
         err = (
-            // ternary-condition
+            // ternary-operator
             (
                 message
                 && typeof message.message === "string"
@@ -673,7 +673,7 @@ local.assetsDict["/assets.example.begin.js"] = '\
             return;\n\
         }\n\
         err = (\n\
-            // ternary-condition\n\
+            // ternary-operator\n\
             (\n\
                 message\n\
                 && typeof message.message === "string"\n\
@@ -1840,7 +1840,7 @@ local.Blob = (
          */
         this.bff = local.bufferConcat(array.map(function (elem) {
             return (
-                // ternary-condition
+                // ternary-operator
                 (
                     typeof elem === "string"
                     || Object.prototype.toString.call(elem)
@@ -1955,7 +1955,9 @@ local.FormData.prototype.read = function (onError) {
         });
     }, function (err) {
         // add closing boundary
-        result.push([boundary + "--\r\n"]);
+        result.push([
+            boundary + "--\r\n"
+        ]);
         // concatenate result
         onError(
             err,
@@ -2425,7 +2427,7 @@ local.ajax = function (opt, onError) {
                 xhr.statusCode = xhr.statusCode || 500;
                 xhr.err.statusCode = xhr.statusCode;
                 tmp = (
-                    // ternary-condition
+                    // ternary-operator
                     (
                         local.isBrowser
                         ? "browser"
@@ -3413,7 +3415,7 @@ local.bufferRandomBytes = function (length) {
  * filled with cryptographically-strong random-values
  */
     return (
-        // ternary-condition
+        // ternary-operator
         (
             typeof window === "object"
             && window.crypto
@@ -4323,7 +4325,9 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
                 key,
                 iv
             );
-            onError(null, Buffer.concat([cipher.update(data), cipher.final()]));
+            onError(null, Buffer.concat([
+                cipher.update(data), cipher.final()
+            ]));
         });
         return;
     }
@@ -4539,7 +4543,7 @@ local.domStyleValidate = function () {
     );
     tmp = [];
     Array.from(
-        // ternary-condition
+        // ternary-operator
         (
             typeof document === "object"
             && document
@@ -5475,7 +5479,9 @@ local.moduleDirname = function (module, modulePathList) {
     ["node_modules"]
     .concat(modulePathList)
     .concat(require("module").globalPaths)
-    .concat([process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"])
+    .concat([
+        process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
+    ])
     .some(function (modulePath) {
         try {
             result = require("path").resolve(
@@ -6134,7 +6140,9 @@ local.requireInSandbox = function (file) {
                 mockDict[key]();
             }
         });
-        mockList.push([tmp, mockDict]);
+        mockList.push([
+            tmp, mockDict
+        ]);
     });
     local.testMock(mockList, function (onError) {
         local.tryCatchOnError(function () {
@@ -6858,15 +6866,17 @@ local.taskCreate = function (opt, onTask, onError) {
         // cleanup task
         delete local.taskOnTaskDict[opt.key];
         // preserve err.message and err.stack
-        task.result = JSON.stringify([(
-            (err && err.stack)
-            ? Object.assign(local.jsonCopy(err), {
-                message: err.message,
-                name: err.name,
-                stack: err.stack
-            })
-            : err
-        ), data, meta]);
+        task.result = JSON.stringify([
+            (
+                (err && err.stack)
+                ? Object.assign(local.jsonCopy(err), {
+                    message: err.message,
+                    name: err.name,
+                    stack: err.stack
+                })
+                : err
+            ), data, meta
+        ]);
         // pass result to callbacks in onErrorList
         task.onErrorList.forEach(function (onError) {
             onError.apply(null, JSON.parse(task.result));
@@ -7205,7 +7215,9 @@ local.testMock = function (mockList, onTestCase, onError) {
     };
     // suppress console.error and console.log
     if (!(mockList[0] && mockList[0][0] === console)) {
-        mockList.unshift([console, {}]);
+        mockList.unshift([
+            console, {}
+        ]);
     }
     local.objectSetDefault(mockList[0][1], {
         error: local.nop,
@@ -7217,7 +7229,7 @@ local.testMock = function (mockList, onTestCase, onError) {
         // backup mock[0] into mock[2]
         Object.keys(mock[1]).forEach(function (key) {
             mock[2][key] = (
-                // ternary-condition
+                // ternary-operator
                 (
                     typeof process === "object"
                     && process.env === mock[0]

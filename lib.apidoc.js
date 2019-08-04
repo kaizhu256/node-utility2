@@ -63,7 +63,7 @@
             return;
         }
         err = (
-            // ternary-condition
+            // ternary-operator
             (
                 message
                 && typeof message.message === "string"
@@ -350,7 +350,9 @@ local.moduleDirname = function (module, modulePathList) {
     ["node_modules"]
     .concat(modulePathList)
     .concat(require("module").globalPaths)
-    .concat([process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"])
+    .concat([
+        process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
+    ])
     .some(function (modulePath) {
         try {
             result = require("path").resolve(
@@ -942,7 +944,9 @@ local.apidocCreate = function (option) {
         blacklistDict: {
             globalThis
         },
-        circularSet: new Set([globalThis]),
+        circularSet: new Set([
+            globalThis
+        ]),
         exampleDict: {},
         exampleList: [],
         html: "",

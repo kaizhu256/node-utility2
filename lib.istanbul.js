@@ -63,7 +63,7 @@
             return;
         }
         err = (
-            // ternary-condition
+            // ternary-operator
             (
                 message
                 && typeof message.message === "string"
@@ -587,7 +587,7 @@ local.instrumentInPackage = function (code, file) {
  * exists in the code
  */
     return (
-        // ternary-condition
+        // ternary-operator
         (
             process.env.npm_config_mode_coverage
             && code.indexOf("/* istanbul ignore all */\n") < 0 && (

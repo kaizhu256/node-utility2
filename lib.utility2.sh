@@ -901,7 +901,7 @@ process.stdin.on("data", function (chunk) {
 process.stdin.on("end", function () {
     local.cryptoAesXxxCbcRawDecrypt({
         data: (
-            // ternary-condition
+            // ternary-operator
             process.argv[2] === "base64"
             ? Buffer.concat(chunkList).toString()
             : Buffer.concat(chunkList)
@@ -1483,11 +1483,11 @@ shEnvSanitize () {
 "use strict";
 console.log(Object.keys(process.env).sort().map(function (key) {
     return (
-        // ternary-condition
+        // ternary-operator
         ((
             /(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/i
         ).test(key) || (
-            // ternary-condition
+            // ternary-operator
             (
                 /Crypt|Decrypt|Key|Pass|Private|Secret|Token/
             ).test(key)
@@ -1571,7 +1571,9 @@ packageJson.version = (
     ? aa
     : bb
 );
-console.error([aa, bb, packageJson.version]);
+console.error([
+    aa, bb, packageJson.version
+]);
 // update package.json
 require("fs").writeFileSync("package.json", JSON.stringify(packageJson, null, 4) + "\n");
 // update README.md
@@ -2278,7 +2280,7 @@ shMain () {
             return;
         }
         err = (
-            // ternary-condition
+            // ternary-operator
             (
                 message
                 && typeof message.message === "string"
@@ -2522,7 +2524,7 @@ local.ajax = function (opt, onError) {
                 xhr.statusCode = xhr.statusCode || 500;
                 xhr.err.statusCode = xhr.statusCode;
                 tmp = (
-                    // ternary-condition
+                    // ternary-operator
                     (
                         local.isBrowser
                         ? "browser"
@@ -3000,7 +3002,9 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
                 key,
                 iv
             );
-            onError(null, Buffer.concat([cipher.update(data), cipher.final()]));
+            onError(null, Buffer.concat([
+                cipher.update(data), cipher.final()
+            ]));
         });
         return;
     }
@@ -3253,7 +3257,9 @@ local.moduleDirname = function (module, modulePathList) {
     ["node_modules"]
     .concat(modulePathList)
     .concat(require("module").globalPaths)
-    .concat([process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"])
+    .concat([
+        process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
+    ])
     .some(function (modulePath) {
         try {
             result = require("path").resolve(
