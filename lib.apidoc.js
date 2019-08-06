@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.apidoc.js (2018.9.29)
+ * lib.apidoc.js (2019.8.1)
  * https://github.com/kaizhu256/node-apidoc-lite
  * this zero-dependency package will auto-generate documentation for your npm-package with zero-config
  *
@@ -56,7 +56,7 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw error-<message> if <passed> is falsy
+     * this function will throw err.<message> if <passed> is falsy
      */
         var err;
         if (passed) {
@@ -69,7 +69,7 @@
                 && typeof message.message === "string"
                 && typeof message.stack === "string"
             )
-            // if message is error-object, then leave as is
+            // if message is errObj, then leave as is
             ? message
             : new Error(
                 typeof message === "string"
@@ -205,15 +205,21 @@ local.cliRun = function (opt) {
         var packageJson;
         var text;
         var textDict;
-        commandList = [{
-            argList: "<arg2>  ...",
-            description: "usage:",
-            command: ["<arg1>"]
-        }, {
-            argList: "'console.log(\"hello world\")'",
-            description: "example:",
-            command: ["--eval"]
-        }];
+        commandList = [
+            {
+                argList: "<arg2>  ...",
+                description: "usage:",
+                command: [
+                    "<arg1>"
+                ]
+            }, {
+                argList: "'console.log(\"hello world\")'",
+                description: "example:",
+                command: [
+                    "--eval"
+                ]
+            }
+        ];
         file = __filename.replace((
             /.*\//
         ), "");
@@ -242,7 +248,9 @@ local.cliRun = function (opt) {
                 commandList[ii] = opt.rgxComment.exec(text);
                 commandList[ii] = {
                     argList: (commandList[ii][1] || "").trim(),
-                    command: [key],
+                    command: [
+                        key
+                    ],
                     description: commandList[ii][2]
                 };
             } catch (ignore) {
@@ -272,7 +280,9 @@ local.cliRun = function (opt) {
             switch (ii) {
             case 0:
             case 1:
-                elem.argList = [elem.argList];
+                elem.argList = [
+                    elem.argList
+                ];
                 break;
             default:
                 elem.argList = elem.argList.split(" ");
@@ -347,7 +357,9 @@ local.moduleDirname = function (module, modulePathList) {
         return require("path").resolve(process.cwd(), module || "");
     }
     // search modulePathList
-    ["node_modules"]
+    [
+        "node_modules"
+    ]
     .concat(modulePathList)
     .concat(require("module").globalPaths)
     .concat([
@@ -769,9 +781,9 @@ local.tryCatchOnError = function (fnc, onError) {
 
 // run shared js-env code - function
 (function () {
-local.apidocCreate = function (option) {
+local.apidocCreate = function (opt) {
 /*
- * this function will create the apidoc from option.dir
+ * this function will create the apidoc from <opt>.dir
  */
     var elemCreate;
     var module;
@@ -785,7 +797,7 @@ local.apidocCreate = function (option) {
      * this function will create the apidoc-elem in given <module>
      */
         var elem;
-        if (option.modeNoApidoc) {
+        if (opt.modeNoApidoc) {
             return elem;
         }
         elem = {};
@@ -807,7 +819,9 @@ local.apidocCreate = function (option) {
             return elem;
         }
         // init source
-        elem.source = local.stringHtmlSafe(trimLeft(toString(module[key])) || "n/a").replace((
+        elem.source = local.stringHtmlSafe(
+            trimLeft(toString(module[key])) || "n/a"
+        ).replace((
             /\([\S\s]*?\)/
         ), function (match0) {
             // init signature
@@ -829,7 +843,7 @@ local.apidocCreate = function (option) {
             /^function\u0020\(/
         ), key + " = function (");
         // init example
-        option.exampleList.some(function (example) {
+        opt.exampleList.some(function (example) {
             example.replace(
                 new RegExp("((?:\n.*?){8}\\.)(" + key + ")(\\((?:.*?\n){8})"),
                 function (ignore, match1, match2, match3) {
@@ -853,7 +867,7 @@ local.apidocCreate = function (option) {
      */
         var result;
         local.tryCatchOnError(function () {
-            file = local.path.resolve(option.dir, file);
+            file = local.path.resolve(opt.dir, file);
             console.error("apidocCreate - readExample " + file);
             result = "";
             result = (
@@ -902,12 +916,12 @@ local.apidocCreate = function (option) {
         });
         return text;
     };
-    // init option
-    option.dir = local.moduleDirname(
-        option.dir,
-        option.modulePathList || require("module").paths
+    // init opt
+    opt.dir = local.moduleDirname(
+        opt.dir,
+        opt.modulePathList || require("module").paths
     );
-    local.objectSetDefault(option, {
+    local.objectSetDefault(opt, {
         env: {
             npm_package_description: ""
         },
@@ -918,8 +932,8 @@ local.apidocCreate = function (option) {
             }, console.error);
         }
     });
-    Object.keys(option.packageJson).forEach(function (key) {
-        tmp = option.packageJson[key];
+    Object.keys(opt.packageJson).forEach(function (key) {
+        tmp = opt.packageJson[key];
         // strip email from npmdoc documentation
         // https://github.com/npmdoc/node-npmdoc-hpp/issues/1
         if (tmp) {
@@ -935,12 +949,12 @@ local.apidocCreate = function (option) {
             }
         }
         if (key[0] === "_" || key === "readme") {
-            delete option.packageJson[key];
+            delete opt.packageJson[key];
         } else if (typeof tmp === "string") {
-            option.env["npm_package_" + key] = tmp;
+            opt.env["npm_package_" + key] = tmp;
         }
     });
-    local.objectSetDefault(option, {
+    local.objectSetDefault(opt, {
         blacklistDict: {
             globalThis
         },
@@ -960,14 +974,16 @@ local.apidocCreate = function (option) {
         whitelistDict: {}
     }, 2);
     // init exampleList
-    [1, 2, 3, 4].forEach(function (depth) {
-        option.exampleList = option.exampleList.concat(
+    ([
+        1, 2, 3, 4
+    ]).forEach(function (depth) {
+        opt.exampleList = opt.exampleList.concat(
             // find . -maxdepth 1 -mindepth 1 -name "*.js" -type f
-            // http://stackoverflow.com/questions/4509624/how-to-limit-depth-for-recursive-file-list
+            // https://stackoverflow.com/questions/4509624/how-to-limit-depth-for-recursive-file-list
             local.child_process.execSync(
-                "find \"" + option.dir
+                "find \"" + opt.dir
                 + "\" -maxdepth " + depth + " -mindepth " + depth
-                + " -type f | sed -e \"s|" + option.dir
+                + " -type f | sed -e \"s|" + opt.dir
                 + "/||\" | grep -iv "
 /* jslint ignore:start */
 + '"\
@@ -987,26 +1003,26 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             .split("\n")
         );
     });
-    option.exampleList = option.exampleList.filter(function (file) {
-        if (file && !option.exampleDict[file]) {
-            option.exampleDict[file] = true;
+    opt.exampleList = opt.exampleList.filter(function (file) {
+        if (file && !opt.exampleDict[file]) {
+            opt.exampleDict[file] = true;
             return true;
         }
     }).slice(0, 256).map(readExample);
     // init moduleMain
     local.tryCatchOnError(function () {
-        console.error("apidocCreate - requiring " + option.dir + " ...");
+        console.error("apidocCreate - requiring " + opt.dir + " ...");
         moduleMain = {};
         moduleMain = (
-            option.moduleDict[option.env.npm_package_name]
-            || option.require(option.dir)
-            || option.require(
-                option.dir + "/"
-                + (option.packageJson.bin)[Object.keys(option.packageJson.bin)[0]]
+            opt.moduleDict[opt.env.npm_package_name]
+            || opt.require(opt.dir)
+            || opt.require(
+                opt.dir + "/"
+                + (opt.packageJson.bin)[Object.keys(opt.packageJson.bin)[0]]
             ) || {}
         );
-        option.circularSet.add(moduleMain);
-        console.error("apidocCreate - ... required " + option.dir);
+        opt.circularSet.add(moduleMain);
+        console.error("apidocCreate - ... required " + opt.dir);
     }, console.error);
     tmp = {};
     // handle case where module is a function
@@ -1032,7 +1048,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
     }
     // normalize moduleMain
     moduleMain = local.objectSetDefault(tmp, moduleMain);
-    option.moduleDict[option.env.npm_package_name] = moduleMain;
+    opt.moduleDict[opt.env.npm_package_name] = moduleMain;
     // init circularSet - builtins
     [
         "assert",
@@ -1064,46 +1080,50 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
         "zlib"
     ].forEach(function (key) {
         local.tryCatchOnError(function () {
-            option.circularSet.add(require(key));
+            opt.circularSet.add(require(key));
         }, local.nop);
     });
     // init circularSet - blacklistDict
-    Object.keys(option.blacklistDict).forEach(function (key) {
-        option.circularSet.add(option.blacklistDict[key]);
+    Object.keys(opt.blacklistDict).forEach(function (key) {
+        opt.circularSet.add(opt.blacklistDict[key]);
     });
     // init circularSet - moduleDict
-    Object.keys(option.moduleDict).forEach(function (key) {
-        option.circularSet.add(option.moduleDict[key]);
+    Object.keys(opt.moduleDict).forEach(function (key) {
+        opt.circularSet.add(opt.moduleDict[key]);
     });
     // init circularSet - prototype
-    option.circularSet.forEach(function (elem) {
-        option.circularSet.add(elem && elem.prototype);
+    opt.circularSet.forEach(function (elem) {
+        opt.circularSet.add(elem && elem.prototype);
     });
     // init moduleDict child
-    local.apidocModuleDictAdd(option, option.moduleDict);
+    local.apidocModuleDictAdd(opt, opt.moduleDict);
     // init swgg.apiDict
-    Object.keys((moduleMain.swgg && moduleMain.swgg.apiDict) || {}).forEach(function (key) {
+    Object.keys(
+        (moduleMain.swgg && moduleMain.swgg.apiDict) || {}
+    ).forEach(function (key) {
         tmp = "swgg.apiDict";
-        option.moduleDict[tmp] = option.moduleDict[tmp] || {};
-        tmp = option.moduleDict[tmp];
+        opt.moduleDict[tmp] = opt.moduleDict[tmp] || {};
+        tmp = opt.moduleDict[tmp];
         tmp[key + ".ajax"] = (
             moduleMain.swgg.apiDict[key]
             && moduleMain.swgg.apiDict[key].ajax
         );
     });
     // init moduleExtraDict
-    option.moduleExtraDict[option.env.npm_package_name] = (
-        option.moduleExtraDict[option.env.npm_package_name] || {}
+    opt.moduleExtraDict[opt.env.npm_package_name] = (
+        opt.moduleExtraDict[opt.env.npm_package_name] || {}
     );
-    module = option.moduleExtraDict[option.env.npm_package_name];
-    [1, 2, 3, 4].forEach(function (depth) {
-        option.libFileList = option.libFileList.concat(
+    module = opt.moduleExtraDict[opt.env.npm_package_name];
+    ([
+        1, 2, 3, 4
+    ]).forEach(function (depth) {
+        opt.libFileList = opt.libFileList.concat(
             // find . -maxdepth 1 -mindepth 1 -name "*.js" -type f
-            // http://stackoverflow.com/questions/4509624/how-to-limit-depth-for-recursive-file-list
+            // https://stackoverflow.com/questions/4509624/how-to-limit-depth-for-recursive-file-list
             local.child_process.execSync(
-                "find \"" + option.dir
+                "find \"" + opt.dir
                 + "\" -maxdepth " + depth + " -mindepth " + depth
-                + " -name \"*.js\" -type f | sed -e \"s|" + option.dir
+                + " -name \"*.js\" -type f | sed -e \"s|" + opt.dir
                 + "/||\" | grep -iv "
 /* jslint ignore:start */
 + '"\
@@ -1129,8 +1149,8 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             .split("\n")
         );
     });
-    option.ii = 256;
-    option.libFileList.every(function (file) {
+    opt.ii = 256;
+    opt.libFileList.every(function (file) {
         local.tryCatchOnError(function () {
             tmp = {};
             tmp.name = local.path.basename(file)
@@ -1146,8 +1166,8 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 tmp.name.slice(0, 1).toUpperCase() + tmp.name.slice(1)
             ]).some(function (name) {
                 tmp.isFiltered = name && (
-                    !option.packageJson.main
-                    || ("./" + file).indexOf(option.packageJson.main) < 0
+                    !opt.packageJson.main
+                    || ("./" + file).indexOf(opt.packageJson.main) < 0
                 ) && !module[name];
                 return !tmp.isFiltered;
             });
@@ -1155,29 +1175,29 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 return;
             }
             console.error("apidocCreate - libFile " + file);
-            tmp.module = option.require(option.dir + "/" + file);
+            tmp.module = opt.require(opt.dir + "/" + file);
             // filter circular-reference
-            if (!(tmp.module && option.circularSet.has(tmp.module))) {
+            if (!(tmp.module && opt.circularSet.has(tmp.module))) {
                 return;
             }
-            option.ii -= 1;
+            opt.ii -= 1;
             module[tmp.name] = tmp.module;
         }, console.error);
-        return option.ii;
+        return opt.ii;
     });
-    local.apidocModuleDictAdd(option, option.moduleExtraDict);
-    Object.keys(option.moduleDict).forEach(function (key) {
-        if (key.indexOf(option.env.npm_package_name + ".") !== 0) {
+    local.apidocModuleDictAdd(opt, opt.moduleExtraDict);
+    Object.keys(opt.moduleDict).forEach(function (key) {
+        if (key.indexOf(opt.env.npm_package_name + ".") !== 0) {
             return;
         }
         tmp = key.split(".").slice(1).join(".");
-        moduleMain[tmp] = moduleMain[tmp] || option.moduleDict[key];
+        moduleMain[tmp] = moduleMain[tmp] || opt.moduleDict[key];
     });
     // init moduleList
-    option.moduleList = Object.keys(option.moduleDict)
+    opt.moduleList = Object.keys(opt.moduleDict)
     .sort()
     .map(function (prefix) {
-        module = option.moduleDict[prefix];
+        module = opt.moduleDict[prefix];
         // handle case where module is a function
         if (typeof module === "function") {
             local.tryCatchOnError(function () {
@@ -1196,8 +1216,8 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                         ).test(key)
                         && key.indexOf("testCase_") !== 0
                         && (
-                            module[key] !== option.blacklistDict[key]
-                            || option.whitelistDict[key]
+                            module[key] !== opt.blacklistDict[key]
+                            || opt.whitelistDict[key]
                         )
                     );
                 }, console.error);
@@ -1215,19 +1235,19 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
         };
     });
     // render apidoc
-    option.result = local.templateRender(option.template, option, {
+    opt.result = local.templateRender(opt.template, opt, {
         notHtmlSafe: true
     })
     .trim()
     .replace((
         /\u0020+$/gm
     ), "") + "\n";
-    return option.result;
+    return opt.result;
 };
 
-local.apidocModuleDictAdd = function (option, moduleDict) {
+local.apidocModuleDictAdd = function (opt, moduleDict) {
 /*
- * this function will add the modules in moduleDict to option.moduleDict
+ * this function will add the modules in <moduleDict> to <opt>.moduleDict
  */
     var isModule;
     var objectKeys;
@@ -1242,7 +1262,9 @@ local.apidocModuleDictAdd = function (option, moduleDict) {
             }, local.nop);
         });
     };
-    ["child", "prototype", "grandchild", "prototype"].forEach(function (elem) {
+    [
+        "child", "prototype", "grandchild", "prototype"
+    ].forEach(function (elem) {
         objectKeys(moduleDict).forEach(function (prefix) {
             if (!(
                 /^\w[\w\-.]*?$/
@@ -1273,8 +1295,8 @@ local.apidocModuleDictAdd = function (option, moduleDict) {
                         || typeof tmp.module === "object"
                     )
                     || Array.isArray(tmp.module)
-                    || option.moduleDict[tmp.name]
-                    || option.circularSet.has(tmp.module)
+                    || opt.moduleDict[tmp.name]
+                    || opt.circularSet.has(tmp.module)
                 ) {
                     return;
                 }
@@ -1289,8 +1311,8 @@ local.apidocModuleDictAdd = function (option, moduleDict) {
                 if (!isModule) {
                     return;
                 }
-                option.circularSet.add(tmp.module);
-                option.moduleDict[tmp.name] = tmp.module;
+                opt.circularSet.add(tmp.module);
+                opt.moduleDict[tmp.name] = tmp.module;
             });
         });
     });

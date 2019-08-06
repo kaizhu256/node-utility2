@@ -14,6 +14,8 @@ branches:
     - /^master$/
     - /^publish$/
     - /^task$/
+cache:
+    npm: false
 env:
     global:
     # this value is auto-created by shTravisCryptoAesEncryptYml

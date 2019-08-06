@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.swgg.js (2019.2.20)
+ * lib.swgg.js (2019.8.1)
  * https://github.com/kaizhu256/node-swgg
  * this zero-dependency package will run a virtual swagger-ui server with persistent-storage in the browser, that your webapp can use (in-place of a real backend), with a working web-demo
  *
@@ -56,7 +56,7 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw error-<message> if <passed> is falsy
+     * this function will throw err.<message> if <passed> is falsy
      */
         var err;
         if (passed) {
@@ -69,7 +69,7 @@
                 && typeof message.message === "string"
                 && typeof message.stack === "string"
             )
-            // if message is error-object, then leave as is
+            // if message is errObj, then leave as is
             ? message
             : new Error(
                 typeof message === "string"
@@ -1178,9 +1178,9 @@ local.templateUiOperation = '\
     {{/each responseList}}\n\
     <button class="button" data-onevent="onEventOperationAjax">try it out!</button>\n\
     <h4 class="label">nodejs request</h4>\n\
-    <pre class="requestJavascript" tabIndex="0"></pre>\n\
+    <pre class="reqJs" tabIndex="0"></pre>\n\
     <h4 class="label">curl request</h4>\n\
-    <pre class="requestCurl" tabIndex="0"></pre>\n\
+    <pre class="reqCurl" tabIndex="0"></pre>\n\
     <h4 class="label">response status code</h4>\n\
     <pre class="responseStatusCode" tabindex="0"></pre>\n\
     <h4 class="label">response headers</h4>\n\
@@ -1255,16 +1255,16 @@ local.templateUiParameter = '\
 
 
 
-local.templateUiRequestJavascript = '\
+local.templateUiReqJs = '\
 /*\n\
- * reproduce api-call {{option.api._methodPath jsonStringify}}\n\
+ * reproduce api-call {{opt.api._methodPath jsonStringify}}\n\
  * 1. initialize nodejs swgg-client from previous step\n\
  * 2. run code below to reproduce api-call\n\
  */\n\
-swgg.apiDict[{{option.api._methodPath jsonStringify}}].ajax({{optionJson}}, \
-function (error, data) {\n\
-    if (error) {\n\
-        console.error(error);\n\
+swgg.apiDict[{{opt.api._methodPath jsonStringify}}].ajax({{optionJson}}, \
+function (err, data) {\n\
+    if (err) {\n\
+        console.error(err);\n\
         return;\n\
     }\n\
     console.log(data.responseJson || data.responseText);\n\
@@ -1673,7 +1673,7 @@ local.assetsDict["/assets.swgg.html"] = local.assetsDict["/assets.utility2.templ
     background: #bbf;\n\
 }\n\
 /* validateLineSortedReset */\n\
-/* error */\n\
+/* err */\n\
 .swggUiContainer button.hasError,\n\
 .swggUiContainer pre.hasError,\n\
 .swggUiContainer textarea.hasError {\n\
@@ -1725,7 +1725,9 @@ local.assetsDict["/assets.swgg.html"] = local.assetsDict["/assets.utility2.templ
             )).forEach(function (media) {\n\
                 media.classList.remove("domOnEventMediaHotkeysInit");\n\
                 media.classList.add("domOnEventMediaHotkeys");\n\
-                ["play", "pause", "seeking"].forEach(function (event) {\n\
+                [\n\
+                    "play", "pause", "seeking"\n\
+                ].forEach(function (event) {\n\
                     media.addEventListener(event, onEvent);\n\
                 });\n\
             });\n\
@@ -1833,42 +1835,46 @@ local.assetsDict["/assets.swgg.swagger.schema.json"] = local.jsonStringifyOrdere
         2
     )
 );
-local.swaggerSchemaJson = JSON.parse(local.assetsDict["/assets.swgg.swagger.schema.json"]);
+local.swaggerSchemaJson = JSON.parse(
+    local.assetsDict["/assets.swgg.swagger.schema.json"]
+);
 }());
 
 
 
 // run shared js-env code - function
 (function () {
-local.apiAjax = function (that, option, onError) {
+local.apiAjax = function (that, opt, onError) {
 /*
- * this function will send a swagger-api ajax-request with the operation that
+ * this function will send a swagger-api ajax-req with the operation that
  */
     var tmp;
-    local.objectSetDefault(option, {
+    local.objectSetDefault(opt, {
         data: "",
         operation: that,
         paramDict: {},
         url: ""
     });
-    if (option.modeDefault) {
-        local.normalizeSwaggerParamDict(option);
+    if (opt.modeDefault) {
+        local.normalizeSwaggerParamDict(opt);
     }
     // try to validate paramDict
-    option.error = local.swaggerValidateDataParameters({
+    opt.err = local.swaggerValidateDataParameters({
         // normalize paramDict
         data: local.normalizeSwaggerParamDict({
-            modeNoDefault: option.modeNoDefault,
+            modeNoDefault: opt.modeNoDefault,
             operation: that,
-            paramDict: local.jsonCopy(option.paramDict)
+            paramDict: local.jsonCopy(opt.paramDict)
         }).paramDict,
-        dataReadonlyRemove: option.paramDict,
-        prefix: ["operation", that._methodPath],
+        dataReadonlyRemove: opt.paramDict,
+        prefix: [
+            "operation", that._methodPath
+        ],
         parameters: that.parameters,
         swaggerJson: local.swaggerJson
     })[0];
-    // init option-defaults
-    local.objectSetDefault(option, {
+    // init default
+    local.objectSetDefault(opt, {
         inForm: (
             // ternary-operator
             that._consumes0 === "multipart/form-data"
@@ -1891,7 +1897,7 @@ local.apiAjax = function (that, option, onError) {
     });
     // init paramDict
     that.parameters.forEach(function (schemaP) {
-        tmp = option.paramDict[schemaP.name];
+        tmp = opt.paramDict[schemaP.name];
         if (local.isNullOrUndefined(tmp)) {
             return;
         }
@@ -1903,7 +1909,7 @@ local.apiAjax = function (that, option, onError) {
                 break;
             case "multi":
                 tmp.forEach(function (value) {
-                    option[(
+                    opt[(
                         // ternary-operator
                         schemaP.in === "formData"
                         ? "inForm"
@@ -1931,21 +1937,24 @@ local.apiAjax = function (that, option, onError) {
             default:
                 tmp = tmp.join(",");
             }
-        } else if (typeof tmp !== "string" && !(tmp && tmp.constructor === local.Blob)) {
+        } else if (
+            typeof tmp !== "string"
+            && !(tmp && tmp.constructor === local.Blob)
+        ) {
             tmp = JSON.stringify(tmp);
         }
         switch (schemaP.in) {
         case "body":
-            option.inBody = tmp;
+            opt.inBody = tmp;
             break;
         case "formData":
             switch (that._consumes0) {
             case "application/xml":
                 // init xml header
-                if (!option.inForm) {
-                    option.inForm += "<?xml version=\"1.0\"?>";
+                if (!opt.inForm) {
+                    opt.inForm += "<?xml version=\"1.0\"?>";
                 }
-                option.inForm += (
+                opt.inForm += (
                     "\n<" + schemaP.name + ">" + "<![CDATA["
                     + tmp.replace((
                         /\]\]>/g
@@ -1953,27 +1962,27 @@ local.apiAjax = function (that, option, onError) {
                 );
                 break;
             case "multipart/form-data":
-                option.inForm.append(schemaP.name, tmp, tmp && tmp.name);
+                opt.inForm.append(schemaP.name, tmp, tmp && tmp.name);
                 break;
             default:
-                if (option.inForm) {
-                    option.inForm += "&";
+                if (opt.inForm) {
+                    opt.inForm += "&";
                 }
-                option.inForm += (
+                opt.inForm += (
                     encodeURIComponent(schemaP.name) + "="
                     + encodeURIComponent(tmp)
                 );
             }
             break;
         case "header":
-            option.inHeader[encodeURIComponent(schemaP.name.toLowerCase())] = tmp;
+            opt.inHeader[encodeURIComponent(schemaP.name.toLowerCase())] = tmp;
             break;
         case "path":
-            option.inPath = option.inPath
+            opt.inPath = opt.inPath
             .replace("{" + schemaP.name + "}", encodeURIComponent(tmp));
             break;
         case "query":
-            option.inQuery += (
+            opt.inQuery += (
                 "&" + encodeURIComponent(schemaP.name) + "="
                 + encodeURIComponent(tmp)
             );
@@ -1981,39 +1990,44 @@ local.apiAjax = function (that, option, onError) {
         }
     });
     // init data
-    option.data = option.inBody || option.inForm;
+    opt.data = opt.inBody || opt.inForm;
     // init headers
-    local.objectSetOverride(option.headers, option.inHeader);
+    local.objectSetOverride(opt.headers, opt.inHeader);
     // init headers - Content-Type
-    option.headers["Content-Type"] = that._consumes0;
+    opt.headers["Content-Type"] = that._consumes0;
     // init headers - Authorization
-    option.jwtEncrypted = option.jwtEncrypted || local.userJwtEncrypted;
-    if (option.jwtEncrypted) {
-        option.headers.Authorization = (
-            option.headers.Authorization
-            || "Bearer " + option.jwtEncrypted
+    opt.jwtEncrypted = opt.jwtEncrypted || local.userJwtEncrypted;
+    if (opt.jwtEncrypted) {
+        opt.headers.Authorization = (
+            opt.headers.Authorization
+            || "Bearer " + opt.jwtEncrypted
         );
     }
     // init url
-    option.url = "";
-    option.url += (
-        local.identity(that["x-swgg-schemes"] || local.swaggerJson.schemes || [])[0]
-        || local.urlParse("").protocol.slice(0, -1)
+    opt.url = "";
+    opt.url += (
+        local.identity(
+            that["x-swgg-schemes"] || local.swaggerJson.schemes || []
+        )[0] || local.urlParse("").protocol.slice(0, -1)
     );
-    option.url += "://";
-    option.url += that["x-swgg-host"] || local.swaggerJson.host || local.urlParse("").host;
-    option.url += local.swaggerJsonBasePath;
-    option.url += option.inPath + "?" + option.inQuery.slice(1);
-    option.url = option.url.replace((
+    opt.url += "://";
+    opt.url += (
+        that["x-swgg-host"]
+        || local.swaggerJson.host
+        || local.urlParse("").host
+    );
+    opt.url += local.swaggerJsonBasePath;
+    opt.url += opt.inPath + "?" + opt.inQuery.slice(1);
+    opt.url = opt.url.replace((
         /\?$/
     ), "");
-    if (option.modeAjax === "validate" || (option.error && option.modeAjax !== "ajax")) {
-        onError(option.error);
+    if (opt.modeAjax === "validate" || (opt.err && opt.modeAjax !== "ajax")) {
+        onError(opt.err);
         return;
     }
-    option.error = null;
-    // send ajax-request
-    return local.ajax(option, function (error, xhr) {
+    opt.err = null;
+    // send ajax-req
+    return local.ajax(opt, function (err, xhr) {
         // try to init responseJson
         local.tryCatchOnError(function () {
             xhr.responseJson = JSON.parse(xhr.responseText);
@@ -2023,7 +2037,7 @@ local.apiAjax = function (that, option, onError) {
             xhr.resHeaders["swgg-jwt-encrypted"]
             || local.userJwtEncrypted
         );
-        onError(error, xhr);
+        onError(err, xhr);
     });
 };
 
@@ -2039,9 +2053,14 @@ local.apiUpdate = function (swaggerJson) {
         objectSetDescription: function (dict) {
             if (typeof dict === "object" && dict && !dict.$ref) {
                 if (Array.isArray(dict["x-swgg-descriptionLineList"])) {
-                    dict.description = dict["x-swgg-descriptionLineList"].join("\n");
+                    dict.description = (
+                        dict["x-swgg-descriptionLineList"].join("\n")
+                    );
                 }
-                if (!(dict === swaggerJson.externalDocs || dict === swaggerJson.info)) {
+                if (!(
+                    dict === swaggerJson.externalDocs
+                    || dict === swaggerJson.info
+                )) {
                     dict.description = dict.description || "no description";
                 }
             }
@@ -2159,7 +2178,9 @@ local.apiUpdate = function (swaggerJson) {
     };
     // save tags
     tmp = {};
-    [local.swaggerJson.tags, swaggerJson.tags].forEach(function (tagList) {
+    [
+        local.swaggerJson.tags, swaggerJson.tags
+    ].forEach(function (tagList) {
         tagList.forEach(function (tag) {
             tmp[tag.name] = local.objectSetOverride(tmp[tag.name], tag);
         });
@@ -2183,20 +2204,28 @@ local.apiUpdate = function (swaggerJson) {
             local.swaggerValidateDataSchema({
                 // dereference definition
                 modeDereference: true,
-                prefix: ["swaggerJson", "definitions", schemaName],
+                prefix: [
+                    "swaggerJson", "definitions", schemaName
+                ],
                 schema: swaggerJson.definitions[schemaName],
                 swaggerJson: local.swaggerJson
             })
         );
         tmp = swaggerJson.definitions[schemaName];
         (tmp.allOf || []).forEach(function (element) {
-            local.objectSetDefault(tmp, local.jsonCopy(local.swaggerValidateDataSchema({
-                // dereference definition.allOf
-                modeDereference: true,
-                prefix: ["swaggerJson", "definitions", schemaName, "allOf"],
-                schema: element,
-                swaggerJson: local.swaggerJson
-            })), 2);
+            local.objectSetDefault(
+                tmp,
+                local.jsonCopy(local.swaggerValidateDataSchema({
+                    // dereference definition.allOf
+                    modeDereference: true,
+                    prefix: [
+                        "swaggerJson", "definitions", schemaName, "allOf"
+                    ],
+                    schema: element,
+                    swaggerJson: local.swaggerJson
+                })),
+                2
+            );
         });
         delete tmp.allOf;
     });
@@ -2276,7 +2305,9 @@ local.apiUpdate = function (swaggerJson) {
             parameters: [],
             responses: {
                 "200": {
-                    description: "ok - " + "http://jsonapi.org/format/#document-top-level",
+                    description: (
+                        "ok - http://jsonapi.org/format/#document-top-level"
+                    ),
                     schema: {
                         $ref: "#/definitions/BuiltinJsonapiResponse"
                     }
@@ -2312,10 +2343,14 @@ local.apiUpdate = function (swaggerJson) {
             });
             // init _idName.format and _idName.type
             if (that._schemaName && schemaP.name === that._idName) {
-                schemaP.format = swaggerJson.definitions[that._schemaName]
-                .properties[that._idBackend].format;
-                schemaP.type = local.schemaPType(swaggerJson.definitions[that._schemaName]
-                .properties[that._idBackend]);
+                schemaP.format = swaggerJson.definitions[
+                    that._schemaName
+                ].properties[that._idBackend].format;
+                schemaP.type = local.schemaPType(
+                    swaggerJson.definitions[
+                        that._schemaName
+                    ].properties[that._idBackend]
+                );
             }
             // init _schemaPDict
             that._schemaPDict[schemaP.name] = schemaP;
@@ -2363,9 +2398,9 @@ local.apiUpdate = function (swaggerJson) {
                         operation: that,
                         paramDict: {}
                     }).paramDict, null, 4)
-                    + ", function (error, data) {\n"
-                    + "    if (error) {\n"
-                    + "        console.error(error);\n"
+                    + ", function (err, data) {\n"
+                    + "    if (err) {\n"
+                    + "        console.error(err);\n"
                     + "        return;\n"
                     + "    }\n"
                     + "    console.log(data.responseJson || data.responseText);\n"
@@ -2413,9 +2448,9 @@ local.apiUpdate = function (swaggerJson) {
     );
 };
 
-local.dbFieldRandomCreate = function (option) {
+local.dbFieldRandomCreate = function (opt) {
 /*
- * this function will create a random dbField from <option>.schemaP
+ * this function will create a random dbField from <opt>.schemaP
  */
     var depth;
     var ii;
@@ -2424,33 +2459,35 @@ local.dbFieldRandomCreate = function (option) {
     var schemaP;
     var value;
     depth = (
-        Number.isFinite(option.depth)
-        ? option.depth
+        Number.isFinite(opt.depth)
+        ? opt.depth
         : 3
     );
-    schemaP = option.schemaP;
+    schemaP = opt.schemaP;
     schemaP = schemaP.schema || schemaP;
     if (schemaP.readOnly) {
         return;
     }
-    // init default-value
-    if (option.modeNotRandom && !local.isNullOrUndefined(schemaP.default)) {
+    // init default
+    if (opt.modeNotRandom && !local.isNullOrUndefined(schemaP.default)) {
         return local.jsonCopy(schemaP.default);
     }
     // init enum-value
     if (schemaP.enum) {
         value = (
-            option.modeNotRandom
+            opt.modeNotRandom
             ? schemaP.enum[0]
             : local.listGetElementRandom(schemaP.enum)
         );
         return (
             local.schemaPType(schemaP) === "array"
-            ? [value]
+            ? [
+                value
+            ]
             : value
         );
     }
-    // init default-value
+    // init default
     value = null;
     switch (local.schemaPType(schemaP)) {
     // 5.3. Validation keywords for arrays
@@ -2473,7 +2510,7 @@ local.dbFieldRandomCreate = function (option) {
             // recurse dbFieldRandomCreate
             value.push(local.dbFieldRandomCreate({
                 depth: depth - 1,
-                modeNotRandom: option.modeNotRandom,
+                modeNotRandom: opt.modeNotRandom,
                 schemaP: local.schemaPItems(schemaP)
             }));
             ii += 1;
@@ -2481,7 +2518,7 @@ local.dbFieldRandomCreate = function (option) {
         break;
     case "boolean":
         value = (
-            option.modeNotRandom
+            opt.modeNotRandom
             ? false
             : Boolean(Math.random() > 0.5)
         );
@@ -2491,7 +2528,7 @@ local.dbFieldRandomCreate = function (option) {
     case "number":
         max = schemaP.maximum;
         min = schemaP.minimum;
-        if (option.modeNotRandom) {
+        if (opt.modeNotRandom) {
             value = (
                 !(0 < min || max < 0)
                 ? 0
@@ -2509,7 +2546,10 @@ local.dbFieldRandomCreate = function (option) {
                 }
             }
             // exclusiveMaximum and exclusiveMinimum for float
-            value = min + (max - min) * Math.max(Math.random(), min * 0.000000000000001);
+            value = (
+                min
+                + (max - min) * Math.max(Math.random(), min * 0.000000000000001)
+            );
             if (local.schemaPType(schemaP) === "integer") {
                 value = Math.round(value);
             }
@@ -2535,7 +2575,7 @@ local.dbFieldRandomCreate = function (option) {
     // 5.2. Validation keywords for strings
     case "string":
         value = (
-            option.modeNotRandom
+            opt.modeNotRandom
             ? "abcd1234"
             : ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1)
         );
@@ -2557,7 +2597,7 @@ local.dbFieldRandomCreate = function (option) {
             break;
         case "phone":
             value = (
-                option.modeNotRandom
+                opt.modeNotRandom
                 ? "+123 (1234) 1234-1234"
                 : "+" + Math.random().toString().slice(-3)
                 + " (" + Math.random().toString().slice(-4) + ") "
@@ -2579,49 +2619,53 @@ local.dbFieldRandomCreate = function (option) {
         // recurse dbRowRandomCreate
         value = local.dbRowRandomCreate({
             depth: depth - 1,
-            modeNotRandom: option.modeNotRandom,
-            prefix: ["schema<" + JSON.stringify(schemaP) + ">"],
+            modeNotRandom: opt.modeNotRandom,
+            prefix: [
+                "schema<" + JSON.stringify(schemaP) + ">"
+            ],
             schema: schemaP
         });
     }
     return value;
 };
 
-local.dbRowListRandomCreate = function (option) {
+local.dbRowListRandomCreate = function (opt) {
 /*
- * this function will create a dbRowList of option.length random dbRow's
+ * this function will create a dbRowList of <opt>.length random dbRow's
  */
     var ii;
     ii = 0;
-    while (ii < option.length) {
-        option.dbRowList.push(local.dbRowRandomCreate(option));
+    while (ii < opt.length) {
+        opt.dbRowList.push(local.dbRowRandomCreate(opt));
         ii += 1;
     }
-    return option.dbRowList;
+    return opt.dbRowList;
 };
 
-local.dbRowRandomCreate = function (option) {
+local.dbRowRandomCreate = function (opt) {
 /*
- * this function will create a random dbRow from option.properties
+ * this function will create a random dbRow from opt.properties
  */
     var dbRow;
     var ii;
     var properties;
     dbRow = {};
-    option = local.objectSetDefault(option, {
+    opt = local.objectSetDefault(opt, {
         override: local.nop,
-        prefix: ["dbRow"]
+        prefix: [
+            "dbRow"
+        ]
     });
     properties = local.swaggerValidateDataSchema({
         // dereference property
         modeDereference: true,
-        prefix: option.prefix,
-        schema: option.schema,
+        prefix: opt.prefix,
+        schema: opt.schema,
         swaggerJson: local.swaggerJson
     });
     properties = local.jsonCopy((properties && properties.properties) || {});
     ii = Object.keys(properties).length;
-    while (ii < (option.schema && option.schema.minProperties)) {
+    while (ii < (opt.schema && opt.schema.minProperties)) {
         properties["property" + ii] = {
             type: "string"
         };
@@ -2629,12 +2673,12 @@ local.dbRowRandomCreate = function (option) {
     }
     Object.keys(properties).forEach(function (key) {
         dbRow[key] = local.dbFieldRandomCreate({
-            depth: option.depth,
-            modeNotRandom: option.modeNotRandom,
+            depth: opt.depth,
+            modeNotRandom: opt.modeNotRandom,
             schemaP: local.swaggerValidateDataSchema({
                 // dereference property
                 modeDereference: true,
-                prefix: option.prefix.concat([
+                prefix: opt.prefix.concat([
                     key
                 ]),
                 schema: properties[key],
@@ -2642,13 +2686,13 @@ local.dbRowRandomCreate = function (option) {
             })
         });
     });
-    dbRow = local.jsonCopy(local.objectSetOverride(dbRow, option.override(option)));
+    dbRow = local.jsonCopy(local.objectSetOverride(dbRow, opt.override(opt)));
     // try to validate data
     local.tryCatchOnError(function () {
         local.swaggerValidateDataSchema({
             data: dbRow,
-            prefix: option.prefix,
-            schema: option.schema,
+            prefix: opt.prefix,
+            schema: opt.schema,
             swaggerJson: local.swaggerJson
         });
     }, local.onErrorDefault);
@@ -2668,33 +2712,33 @@ local.idDomElementCreate = function (seed) {
     ), "_");
 };
 
-local.idNameInit = function (option) {
+local.idNameInit = function (opt) {
 /*
- * this function will init option.idBackend, option.idName, and option.queryById
+ * this function will init <opt>.idBackend, <opt>.idName, and <opt>.queryById
  */
     var idBackend;
     var idName;
     // init idName
-    idName = option.crudType[1] || "id";
-    option.idName = idName;
+    idName = opt.crudType[1] || "id";
+    opt.idName = idName;
     // init idBackend
-    idBackend = option.crudType[2] || option.idName;
-    option.idBackend = idBackend;
+    idBackend = opt.crudType[2] || opt.idName;
+    opt.idBackend = idBackend;
     // invert queryById
-    if (option.modeQueryByIdInvert) {
-        idBackend = option.idName;
-        idName = option.idBackend;
+    if (opt.modeQueryByIdInvert) {
+        idBackend = opt.idName;
+        idName = opt.idBackend;
     }
     // init queryById
-    option.idValue = (option.data && option.data[idBackend]) || option.idValue;
-    option.queryById = {};
-    option.queryById[idName] = option.idValue;
-    return option;
+    opt.idValue = (opt.data && opt.data[idBackend]) || opt.idValue;
+    opt.queryById = {};
+    opt.queryById[idName] = opt.idValue;
+    return opt;
 };
 
-local.middlewareBodyParse = function (request, response, next) {
+local.middlewareBodyParse = function (req, res, next) {
 /*
- * this function will run middleware that will parse request.bodyRaw
+ * this function will run middleware that will parse req.bodyRaw
  */
     var boundary;
     var crlf;
@@ -2703,13 +2747,13 @@ local.middlewareBodyParse = function (request, response, next) {
     var ii;
     var jj;
     var name;
-    // if request is already parsed, then goto next
-    if (!request.swgg.operation || !local.isNullOrUndefined(request.swgg.bodyParsed)) {
+    // if req is already parsed, then goto next
+    if (!req.swgg.operation || !local.isNullOrUndefined(req.swgg.bodyParsed)) {
         next();
         return;
     }
     headerParse = function () {
-        local.bufferToUtf8(request.bodyRaw.slice(ii, ii + 1024)).replace((
+        local.bufferToUtf8(req.bodyRaw.slice(ii, ii + 1024)).replace((
             /^content-disposition:\u0020?form-data;(.+?)\r\n(?:content-type:\u0020?(.*?)$)?/im
         ), function (ignore, match1, match2) {
             data = {
@@ -2722,25 +2766,28 @@ local.middlewareBodyParse = function (request, response, next) {
                 data[match1.toLowerCase()] = match2;
             });
             name = data.name;
-            request.swgg.bodyMeta[name] = data;
+            req.swgg.bodyMeta[name] = data;
         });
     };
-    switch (request.swgg.operation._consumes0) {
+    switch (req.swgg.operation._consumes0) {
     // parse application/x-www-form-urlencoded, e.g.
     // aa=hello%20world&bb=bye%20world
     case "application/x-www-form-urlencoded":
-        request.swgg.bodyParsed = local.bufferToUtf8(request.bodyRaw);
-        request.swgg.bodyParsed = local.urlParse("?" + request.swgg.bodyParsed, true).query;
+        req.swgg.bodyParsed = local.bufferToUtf8(req.bodyRaw);
+        req.swgg.bodyParsed = local.urlParse(
+            "?" + req.swgg.bodyParsed,
+            true
+        ).query;
         break;
     case "application/xml":
-        request.swgg.bodyParsed = {};
-        local.bufferToUtf8(request.bodyRaw).replace((
+        req.swgg.bodyParsed = {};
+        local.bufferToUtf8(req.bodyRaw).replace((
             /<(.+?)><!\[CDATA\[([\S\s]+?)\]\]>/g
         ), function (name, match1, value) {
             name = match1;
             name = decodeURIComponent(name);
-            request.swgg.bodyParsed[name] = (
-                local.schemaPType(request.swgg.operation._schemaPDict[name]) === "string"
+            req.swgg.bodyParsed[name] = (
+                local.schemaPType(req.swgg.operation._schemaPDict[name]) === "string"
                 ? value
                 : JSON.parse(value)
             );
@@ -2766,24 +2813,24 @@ local.middlewareBodyParse = function (request, response, next) {
      * https://tools.ietf.org/html/rfc7578
      */
     case "multipart/form-data":
-        request.swgg.bodyParsed = {};
-        request.swgg.bodyMeta = {};
+        req.swgg.bodyParsed = {};
+        req.swgg.bodyMeta = {};
         crlf = new Uint8Array([
             0x0d, 0x0a
         ]);
         // init boundary
         ii = 0;
-        jj = local.bufferIndexOfSubBuffer(request.bodyRaw, crlf, ii);
+        jj = local.bufferIndexOfSubBuffer(req.bodyRaw, crlf, ii);
         if (jj <= 0) {
             break;
         }
         boundary = local.bufferConcat([
-            crlf, request.bodyRaw.slice(ii, jj)
+            crlf, req.bodyRaw.slice(ii, jj)
         ]);
         ii = jj + 2;
         while (true) {
             jj = local.bufferIndexOfSubBuffer(
-                request.bodyRaw,
+                req.bodyRaw,
                 boundary,
                 ii
             );
@@ -2792,63 +2839,65 @@ local.middlewareBodyParse = function (request, response, next) {
             }
             headerParse();
             ii = local.bufferIndexOfSubBuffer(
-                request.bodyRaw,
-                [0x0d, 0x0a, 0x0d, 0x0a],
+                req.bodyRaw,
+                [
+                    0x0d, 0x0a, 0x0d, 0x0a
+                ],
                 ii + 2
             ) + 4;
-            data = request.bodyRaw.slice(ii, jj);
-            request.swgg.bodyParsed[name] = data;
+            data = req.bodyRaw.slice(ii, jj);
+            req.swgg.bodyParsed[name] = data;
             ii = jj + boundary.length + 2;
         }
         break;
     default:
-        request.swgg.bodyParsed = local.bufferToUtf8(request.bodyRaw);
+        req.swgg.bodyParsed = local.bufferToUtf8(req.bodyRaw);
         // try to JSON.parse the string
         local.tryCatchOnError(function () {
-            request.swgg.bodyParsed = JSON.parse(request.swgg.bodyParsed);
+            req.swgg.bodyParsed = JSON.parse(req.swgg.bodyParsed);
         }, local.nop);
     }
-    next(null, request, response);
+    next(null, req, res);
 };
 
-local.middlewareCrudBuiltin = function (request, response, next) {
+local.middlewareCrudBuiltin = function (req, res, next) {
 /*
  * this function will run middleware that will
  * run the builtin crud-operations backed by db-lite
  */
     var crud;
     var onParallel;
-    var option;
+    var opt;
     var tmp;
     var user;
-    option = {};
-    local.onNext(option, function (error, data, meta) {
-        switch (option.modeNext) {
+    opt = {};
+    local.onNext(opt, function (err, data, meta) {
+        switch (opt.modeNext) {
         case 1:
-            crud = request.swgg.crud;
-            user = request.swgg.user;
+            crud = req.swgg.crud;
+            user = req.swgg.user;
             switch (crud.crudType[0]) {
             case "crudCountManyByQuery":
-                crud.dbTable.crudCountManyByQuery(crud.queryWhere, option.onNext);
+                crud.dbTable.crudCountManyByQuery(crud.queryWhere, opt.onNext);
                 break;
             case "crudSetManyById":
-                crud.dbTable.crudSetManyById(crud.body, option.onNext);
+                crud.dbTable.crudSetManyById(crud.body, opt.onNext);
                 break;
             case "crudSetOneById":
                 // replace idName with idBackend in body
                 delete crud.body.id;
                 delete crud.body[crud.idName];
                 crud.body[crud.idBackend] = crud.data[crud.idName];
-                crud.dbTable.crudSetOneById(crud.body, option.onNext);
+                crud.dbTable.crudSetOneById(crud.body, opt.onNext);
                 break;
             case "crudUpdateOneById":
                 // replace idName with idBackend in body
                 delete crud.body.id;
                 delete crud.body[crud.idName];
                 crud.body[crud.idBackend] = crud.data[crud.idName];
-                crud.dbTable.crudUpdateOneById(crud.body, option.onNext);
+                crud.dbTable.crudUpdateOneById(crud.body, opt.onNext);
                 break;
-            // coverage-hack - test error handling-behavior
+            // coverage-hack - test err handling-behavior
             case "crudErrorDelete":
             case "crudErrorGet":
             case "crudErrorHead":
@@ -2856,10 +2905,10 @@ local.middlewareCrudBuiltin = function (request, response, next) {
             case "crudErrorPatch":
             case "crudErrorPost":
             case "crudErrorPut":
-                option.onNext(local.errorDefault);
+                opt.onNext(local.errDefault);
                 break;
             case "crudGetManyByQuery":
-                onParallel = local.onParallel(option.onNext);
+                onParallel = local.onParallel(opt.onNext);
                 onParallel.counter += 1;
                 crud.dbTable.crudGetManyByQuery({
                     fieldList: crud.queryFields,
@@ -2867,23 +2916,23 @@ local.middlewareCrudBuiltin = function (request, response, next) {
                     query: crud.queryWhere,
                     skip: crud.querySkip,
                     sort: crud.querySort
-                }, function (error, data) {
+                }, function (err, data) {
                     crud.queryData = data;
-                    onParallel(error);
+                    onParallel(err);
                 });
                 onParallel.counter += 1;
-                crud.dbTable.crudCountAll(function (error, data) {
+                crud.dbTable.crudCountAll(function (err, data) {
                     crud.paginationCountTotal = data;
-                    onParallel(error);
+                    onParallel(err);
                 });
                 break;
             case "crudGetOneById":
-                crud.dbTable.crudGetOneById(crud.queryById, option.onNext);
+                crud.dbTable.crudGetOneById(crud.queryById, opt.onNext);
                 break;
             case "crudGetOneByQuery":
                 crud.dbTable.crudGetOneByQuery({
                     query: crud.queryWhere
-                }, option.onNext);
+                }, opt.onNext);
                 break;
             case "crudNullDelete":
             case "crudNullGet":
@@ -2892,92 +2941,94 @@ local.middlewareCrudBuiltin = function (request, response, next) {
             case "crudNullPatch":
             case "crudNullPost":
             case "crudNullPut":
-                option.onNext();
+                opt.onNext();
                 break;
             case "crudRemoveManyByQuery":
-                crud.dbTable.crudRemoveManyByQuery(crud.queryWhere, option.onNext);
+                crud.dbTable.crudRemoveManyByQuery(crud.queryWhere, opt.onNext);
                 break;
             case "crudRemoveOneById":
-                crud.dbTable.crudRemoveOneById(crud.queryById, option.onNext);
+                crud.dbTable.crudRemoveOneById(crud.queryById, opt.onNext);
                 break;
             case "fileGetOneById":
                 local.dbTableFile = local.db.dbTableCreateOne({
                     name: "File"
                 });
-                crud.dbTable.crudGetOneById(crud.queryById, option.onNext);
+                crud.dbTable.crudGetOneById(crud.queryById, opt.onNext);
                 break;
             case "fileUploadManyByForm":
                 local.dbTableFile = local.db.dbTableCreateOne({
                     name: "File"
                 });
-                request.swgg.paramDict = {};
-                Object.keys(request.swgg.bodyMeta).forEach(function (key) {
-                    if (typeof request.swgg.bodyMeta[key].filename !== "string") {
-                        request.swgg.paramDict[key] = local.bufferToUtf8(
-                            request.swgg.bodyParsed[key]
+                req.swgg.paramDict = {};
+                Object.keys(req.swgg.bodyMeta).forEach(function (key) {
+                    if (typeof req.swgg.bodyMeta[key].filename !== "string") {
+                        req.swgg.paramDict[key] = local.bufferToUtf8(
+                            req.swgg.bodyParsed[key]
                         );
                     }
                 });
-                crud.body = Object.keys(request.swgg.bodyMeta)
+                crud.body = Object.keys(req.swgg.bodyMeta)
                 .filter(function (key) {
-                    return typeof request.swgg.bodyMeta[key].filename === "string";
+                    return typeof req.swgg.bodyMeta[key].filename === "string";
                 })
                 .map(function (key) {
-                    tmp = local.jsonCopy(request.swgg.paramDict);
+                    tmp = local.jsonCopy(req.swgg.paramDict);
                     tmp.id = tmp.id || ((1 + Math.random()) * 0x10000000000000)
                     .toString(36).slice(1);
                     local.objectSetOverride(tmp, {
-                        fileBlob: local.base64FromBuffer(request.swgg.bodyParsed[key]),
-                        fileContentType: request.swgg.bodyMeta[key].contentType,
-                        fileFilename: request.swgg.bodyMeta[key].filename,
-                        fileInputName: request.swgg.bodyMeta[key].name,
-                        fileSize: request.swgg.bodyParsed[key].length,
+                        fileBlob: local.base64FromBuffer(req.swgg.bodyParsed[key]),
+                        fileContentType: req.swgg.bodyMeta[key].contentType,
+                        fileFilename: req.swgg.bodyMeta[key].filename,
+                        fileInputName: req.swgg.bodyMeta[key].name,
+                        fileSize: req.swgg.bodyParsed[key].length,
                         fileUrl: (
                             local.swaggerJsonBasePath
-                            + "/" + request.swgg.operation.tags[0]
+                            + "/" + req.swgg.operation.tags[0]
                             + "/fileGetOneById/" + tmp.id
                         )
                     });
                     return tmp;
                 });
-                local.dbTableFile.crudSetManyById(crud.body, option.onNext);
+                local.dbTableFile.crudSetManyById(crud.body, opt.onNext);
                 break;
             case "userLoginByPassword":
             case "userLogout":
                 // respond with 401 Unauthorized
                 if (!user.isAuthenticated) {
-                    local.serverRespondHeadSet(request, response, 401, {});
-                    request.swgg.crud.endArgList = [request, response];
-                    option.modeNext = Infinity;
-                    option.onNext();
+                    local.serverRespondHeadSet(req, res, 401, {});
+                    req.swgg.crud.endArgList = [
+                        req, res
+                    ];
+                    opt.modeNext = Infinity;
+                    opt.onNext();
                     return;
                 }
-                option.onNext();
+                opt.onNext();
                 break;
             default:
-                option.modeNext = Infinity;
-                option.onNext();
+                opt.modeNext = Infinity;
+                opt.onNext();
             }
             break;
         case 2:
             switch (crud.crudType[0]) {
             case "crudSetOneById":
             case "crudUpdateOneById":
-                option.onNext(null, data);
+                opt.onNext(null, data);
                 break;
             case "crudGetManyByQuery":
-                option.onNext(null, crud.queryData, {
+                opt.onNext(null, crud.queryData, {
                     paginationCountTotal: crud.paginationCountTotal
                 });
                 break;
             case "fileUploadManyByForm":
-                option.onNext(null, data.map(function (element) {
+                opt.onNext(null, data.map(function (element) {
                     delete element.fileBlob;
                     return element;
                 }));
                 break;
             case "userLoginByPassword":
-                option.onNext(null, {
+                opt.onNext(null, {
                     jwtEncrypted: user.jwtEncrypted
                 });
                 break;
@@ -2985,62 +3036,64 @@ local.middlewareCrudBuiltin = function (request, response, next) {
                 crud.dbTable.crudUpdateOneById({
                     jwtEncrypted: null,
                     username: user.username
-                }, option.onNext);
+                }, opt.onNext);
                 break;
             default:
-                option.onNext(null, data, meta);
+                opt.onNext(null, data, meta);
             }
             break;
         case 3:
             switch (crud.crudType[0]) {
             case "fileGetOneById":
                 if (!data) {
-                    local.serverRespondDefault(request, response, 404);
+                    local.serverRespondDefault(req, res, 404);
                     return;
                 }
-                local.serverRespondHeadSet(request, response, null, {
+                local.serverRespondHeadSet(req, res, null, {
                     "Content-Type": data.fileContentType
                 });
-                response.end(local.base64ToBuffer(data.fileBlob));
+                res.end(local.base64ToBuffer(data.fileBlob));
                 break;
             case "userLogout":
-                option.onNext();
+                opt.onNext();
                 break;
             default:
-                option.onNext(null, data, meta);
+                opt.onNext(null, data, meta);
             }
             break;
         case 4:
-            request.swgg.crud.endArgList = [request, response, null, data, meta];
-            option.onNext();
+            req.swgg.crud.endArgList = [
+                req, res, null, data, meta
+            ];
+            opt.onNext();
             break;
         default:
-            next(error);
+            next(err);
         }
     });
-    option.modeNext = 0;
-    option.onNext();
+    opt.modeNext = 0;
+    opt.onNext();
 };
 
-local.middlewareCrudEnd = function (request, response, next) {
+local.middlewareCrudEnd = function (req, res, next) {
 /*
  * this function will run middleware that will end the builtin crud-operations
  */
-    if (request.swgg.crud.endArgList) {
-        local.serverRespondJsonapi.apply(null, request.swgg.crud.endArgList);
+    if (req.swgg.crud.endArgList) {
+        local.serverRespondJsonapi.apply(null, req.swgg.crud.endArgList);
         return;
     }
-    next(null, request, response);
+    next(null, req, res);
 };
 
-local.middlewareRouter = function (request, response, next) {
+local.middlewareRouter = function (req, res, next) {
 /*
  * this function will run middleware that will
- * map the request's method-path to swagger's tags[0]-crudType
+ * map the req's method-path to swagger's tags[0]-crudType
  */
     var tmp;
     // init swgg object
-    local.objectSetDefault(request, {
+    local.objectSetDefault(req, {
         swgg: {
             crud: {
                 crudType: []
@@ -3048,76 +3101,76 @@ local.middlewareRouter = function (request, response, next) {
             user: {}
         }
     }, 3);
-    // if request.url is not prefixed with swaggerJsonBasePath,
+    // if req.url is not prefixed with swaggerJsonBasePath,
     // then default to next
-    if (request.urlParsed.pathname.indexOf(local.swaggerJsonBasePath) !== 0) {
+    if (req.urlParsed.pathname.indexOf(local.swaggerJsonBasePath) !== 0) {
         next();
         return;
     }
     // init methodPath
-    request.swgg.methodPath = (
-        request.method + " "
-        + request.urlParsed.pathname.replace(local.swaggerJsonBasePath, "")
+    req.swgg.methodPath = (
+        req.method + " "
+        + req.urlParsed.pathname.replace(local.swaggerJsonBasePath, "")
     );
     // init operation
-    while (request.swgg.methodPath !== tmp) {
-        request.swgg.operation = (
-            local.apiDict[request.swgg.methodPath]
+    while (req.swgg.methodPath !== tmp) {
+        req.swgg.operation = (
+            local.apiDict[req.swgg.methodPath]
             // handle /foo/{id}/bar case
-            || local.apiDict[request.swgg.methodPath.replace((
+            || local.apiDict[req.swgg.methodPath.replace((
                 /\/[^\/]+\/([^\/]*?)$/
             ), "/{}/$1")]
         );
         // if operation exists, then break
-        if (request.swgg.operation) {
-            request.swgg.operation = local.jsonCopy(request.swgg.operation);
+        if (req.swgg.operation) {
+            req.swgg.operation = local.jsonCopy(req.swgg.operation);
             // init crud.crudType
-            request.swgg.crud.crudType = request.swgg.operation._crudType;
+            req.swgg.crud.crudType = req.swgg.operation._crudType;
             break;
         }
-        tmp = request.swgg.methodPath;
+        tmp = req.swgg.methodPath;
         // handle /foo/{id} case
-        request.swgg.methodPath = request.swgg.methodPath.replace((
+        req.swgg.methodPath = req.swgg.methodPath.replace((
             /\/[^\/]+?(\/*?)$/
         ), "/$1{}");
     }
-    next(null, request, response);
+    next(null, req, res);
 };
 
-local.middlewareUserLogin = function (request, response, next) {
+local.middlewareUserLogin = function (req, res, next) {
 /*
  * this function will run middleware that will handle user login
  */
     var crud;
-    var option;
+    var opt;
     var user;
-    option = {};
-    local.onNext(option, function (error, data) {
-        switch (option.modeNext) {
+    opt = {};
+    local.onNext(opt, function (err, data) {
+        switch (opt.modeNext) {
         case 1:
             local.dbTableUser = local.db.dbTableCreateOne({
                 name: "User"
             });
-            crud = request.swgg.crud;
+            crud = req.swgg.crud;
             user = {};
-            request.swgg.user = user;
+            req.swgg.user = user;
             user.jwtEncrypted = (
-                request.headers.authorization
-                && request.headers.authorization.replace("Bearer ", "")
+                req.headers.authorization
+                && req.headers.authorization.replace("Bearer ", "")
             );
             user.jwtDecrypted = local.jwtAes256GcmDecrypt(user.jwtEncrypted);
             switch (crud.crudType[0]) {
-            // coverage-hack - test error handling-behavior
+            // coverage-hack - test err handling-behavior
             case "crudErrorLogin":
-                option.onNext(local.errorDefault);
+                opt.onNext(local.errDefault);
                 return;
             case "userLoginByPassword":
-                user.password = request.urlParsed.query.password;
-                user.username = request.urlParsed.query.username;
+                user.password = req.urlParsed.query.password;
+                user.username = req.urlParsed.query.username;
                 if (user.password && user.username) {
                     local.dbTableUser.crudGetOneById({
                         username: user.username
-                    }, option.onNext);
+                    }, opt.onNext);
                     return;
                 }
                 break;
@@ -3127,12 +3180,12 @@ local.middlewareUserLogin = function (request, response, next) {
                     user.username = user.jwtDecrypted.sub;
                     local.dbTableUser.crudGetOneById({
                         username: user.username
-                    }, option.onNext);
+                    }, opt.onNext);
                     return;
                 }
             }
-            option.modeNext = Infinity;
-            option.onNext();
+            opt.modeNext = Infinity;
+            opt.onNext();
             break;
         case 2:
             switch (crud.crudType[0]) {
@@ -3142,8 +3195,8 @@ local.middlewareUserLogin = function (request, response, next) {
                     user.password,
                     user.data && user.data.password
                 )) {
-                    option.modeNext = Infinity;
-                    option.onNext();
+                    opt.modeNext = Infinity;
+                    opt.onNext();
                     return;
                 }
                 // init isAuthenticated
@@ -3154,14 +3207,14 @@ local.middlewareUserLogin = function (request, response, next) {
                 user.jwtDecrypted.sub = user.data.username;
                 // update jwtEncrypted in client
                 user.jwtEncrypted = local.jwtAes256GcmEncrypt(user.jwtDecrypted);
-                local.serverRespondHeadSet(request, response, null, {
+                local.serverRespondHeadSet(req, res, null, {
                     "swgg-jwt-encrypted": user.jwtEncrypted
                 });
                 // update jwtEncrypted in dbTableUser
                 local.dbTableUser.crudUpdateOneById({
                     jwtEncrypted: user.jwtEncrypted,
                     username: user.jwtDecrypted.sub
-                }, option.onNext);
+                }, opt.onNext);
                 return;
             default:
                 data = data || {};
@@ -3172,131 +3225,139 @@ local.middlewareUserLogin = function (request, response, next) {
                     // update jwtEncrypted in client
                     if (data.jwtEncrypted !== user.jwtEncrypted) {
                         user.jwtEncrypted = data.jwtEncrypted;
-                        user.jwtDecrypted = local.jwtAes256GcmDecrypt(user.jwtEncrypted);
-                        local.serverRespondHeadSet(request, response, null, {
+                        user.jwtDecrypted = local.jwtAes256GcmDecrypt(
+                            user.jwtEncrypted
+                        );
+                        local.serverRespondHeadSet(req, res, null, {
                             "swgg-jwt-encrypted": user.jwtEncrypted
                         });
                     }
                 }
             }
-            option.onNext();
+            opt.onNext();
             break;
         default:
-            next(error);
+            next(err);
         }
     });
-    option.modeNext = 0;
-    option.onNext();
+    opt.modeNext = 0;
+    opt.onNext();
 };
 
-local.middlewareValidate = function (request, response, next) {
+local.middlewareValidate = function (req, res, next) {
 /*
- * this function will run middleware that will validate the swagger-request
+ * this function will run middleware that will validate the swagger-<req>
  */
     var crud;
-    var option;
+    var opt;
     var tmp;
-    option = {};
-    local.onNext(option, function (error) {
-        switch (option.modeNext) {
+    opt = {};
+    local.onNext(opt, function (err) {
+        switch (opt.modeNext) {
         case 1:
-            if (!request.swgg.operation) {
-                option.modeNext = Infinity;
-                option.onNext();
+            if (!req.swgg.operation) {
+                opt.modeNext = Infinity;
+                opt.onNext();
                 return;
             }
             // init paramDict
-            request.swgg.paramDict = {};
+            req.swgg.paramDict = {};
             // parse path param
-            tmp = request.urlParsed.pathname
+            tmp = req.urlParsed.pathname
             .replace(local.swaggerJsonBasePath, "")
             .split("/");
-            request.swgg.operation._path.split("/").forEach(function (key, ii) {
+            req.swgg.operation._path.split("/").forEach(function (key, ii) {
                 if ((
                     /^\{\S*?\}$/
                 ).test(key)) {
-                    request.swgg.paramDict[key.slice(1, -1)] = decodeURIComponent(tmp[ii]);
+                    req.swgg.paramDict[key.slice(1, -1)] = (
+                        decodeURIComponent(tmp[ii])
+                    );
                 }
             });
-            request.swgg.operation.parameters.forEach(function (schemaP) {
+            req.swgg.operation.parameters.forEach(function (schemaP) {
                 switch (schemaP.in) {
                 // parse body param
                 case "body":
-                    request.swgg.paramDict[schemaP.name] = (
-                        request.swgg.bodyParsed
+                    req.swgg.paramDict[schemaP.name] = (
+                        req.swgg.bodyParsed
                         || undefined
                     );
                     break;
                 // parse formData param
                 case "formData":
-                    switch (request.swgg.operation._consumes0) {
+                    switch (req.swgg.operation._consumes0) {
                     case "application/x-www-form-urlencoded":
                     case "application/xml":
-                        request.swgg.paramDict[schemaP.name] = (
-                            request.swgg.bodyParsed[schemaP.name]
+                        req.swgg.paramDict[schemaP.name] = (
+                            req.swgg.bodyParsed[schemaP.name]
                         );
                         break;
                     }
                     break;
                 // parse header param
                 case "header":
-                    request.swgg.paramDict[schemaP.name] = (
-                        request.headers[schemaP.name.toLowerCase()]
+                    req.swgg.paramDict[schemaP.name] = (
+                        req.headers[schemaP.name.toLowerCase()]
                     );
                     break;
                 // parse query param
                 case "query":
-                    request.swgg.paramDict[schemaP.name] = (
-                        request.urlParsed.query[schemaP.name]
+                    req.swgg.paramDict[schemaP.name] = (
+                        req.urlParsed.query[schemaP.name]
                     );
                     break;
                 }
                 // parse array-multi
-                tmp = request.swgg.paramDict[schemaP.name];
+                tmp = req.swgg.paramDict[schemaP.name];
                 if (
                     tmp
                     && local.schemaPType(schemaP) === "array"
                     && schemaP.collectionFormat === "multi"
                 ) {
-                    request.swgg.paramDict[schemaP.name] = (
+                    req.swgg.paramDict[schemaP.name] = (
                         encodeURIComponent(schemaP.name)
                         + "=" + (
                             Array.isArray(tmp)
                             ? tmp
-                            : [tmp]
+                            : [
+                                tmp
+                            ]
                         ).join("&" + encodeURIComponent(schemaP.name) + "=")
                     );
                 }
-                // init default param
+                // init default
                 if (
-                    local.isNullOrUndefined(request.swgg.paramDict[schemaP.name])
+                    local.isNullOrUndefined(req.swgg.paramDict[schemaP.name])
                     && schemaP.default !== undefined
                 ) {
-                    request.swgg.paramDict[schemaP.name] = local.jsonCopy(
+                    req.swgg.paramDict[schemaP.name] = local.jsonCopy(
                         schemaP.default
                     );
                 }
             });
             // normalize paramDict
-            local.normalizeSwaggerParamDict(request.swgg);
+            local.normalizeSwaggerParamDict(req.swgg);
             // validate paramDict
-            error = local.swaggerValidateDataParameters({
-                data: request.swgg.paramDict,
-                prefix: ["operation", request.swgg.methodPath],
-                parameters: request.swgg.operation.parameters,
+            err = local.swaggerValidateDataParameters({
+                data: req.swgg.paramDict,
+                prefix: [
+                    "operation", req.swgg.methodPath
+                ],
+                parameters: req.swgg.operation.parameters,
                 swaggerJson: local.swaggerJson
             })[0];
-            option.onNext(error);
+            opt.onNext(err);
             break;
         case 2:
             // init crud
-            crud = request.swgg.crud;
+            crud = req.swgg.crud;
             // init crud.dbTable
             crud.dbTable = (
-                request.swgg.operation
-                && request.swgg.operation._schemaName
+                req.swgg.operation
+                && req.swgg.operation._schemaName
                 && local.db.dbTableCreateOne({
-                    name: request.swgg.operation._schemaName
+                    name: req.swgg.operation._schemaName
                 })
             );
             if (!crud.dbTable) {
@@ -3304,12 +3365,12 @@ local.middlewareValidate = function (request, response, next) {
                 return;
             }
             // init crud.body
-            if (request.swgg.operation._consumes0 !== "multipart/form-data") {
-                crud.body = local.jsonCopy(request.swgg.bodyParsed);
+            if (req.swgg.operation._consumes0 !== "multipart/form-data") {
+                crud.body = local.jsonCopy(req.swgg.bodyParsed);
             }
             // init crud.data
-            crud.data = local.jsonCopy(request.swgg.paramDict);
-            request.swgg.operation.parameters.forEach(function (schemaP) {
+            crud.data = local.jsonCopy(req.swgg.paramDict);
+            req.swgg.operation.parameters.forEach(function (schemaP) {
                 // JSON.parse json-string
                 if (
                     schemaP.format === "json"
@@ -3320,31 +3381,35 @@ local.middlewareValidate = function (request, response, next) {
                 }
             });
             // init crud.query*
-            [{
-                key: "queryFields",
-                value: {}
-            }, {
-                key: "queryLimit",
-                value: 100
-            }, {
-                key: "querySkip",
-                value: 0
-            }, {
-                key: "querySort",
-                value: [{
-                    fieldName: "id"
+            [
+                {
+                    key: "queryFields",
+                    value: {}
                 }, {
-                    fieldName: "_timeUpdated",
-                    isDescending: true
-                }]
-            }, {
-                key: "queryWhere",
-                value: {}
-            }].forEach(function (element) {
+                    key: "queryLimit",
+                    value: 100
+                }, {
+                    key: "querySkip",
+                    value: 0
+                }, {
+                    key: "querySort",
+                    value: [
+                        {
+                            fieldName: "id"
+                        }, {
+                            fieldName: "_timeUpdated",
+                            isDescending: true
+                        }
+                    ]
+                }, {
+                    key: "queryWhere",
+                    value: {}
+                }
+            ].forEach(function (element) {
                 crud[element.key] = crud.data["_" + element.key] || JSON.parse(
                     local.templateRender(
-                        request.swgg.operation["_" + element.key] || "null",
-                        request.swgg.paramDict,
+                        req.swgg.operation["_" + element.key] || "null",
+                        req.swgg.paramDict,
                         {
                             notHtmlSafe: true
                         }
@@ -3370,20 +3435,20 @@ local.middlewareValidate = function (request, response, next) {
             next();
             break;
         default:
-            next(error, request, response);
+            next(err, req, res);
         }
     });
-    option.modeNext = 0;
-    option.onNext();
+    opt.modeNext = 0;
+    opt.onNext();
 };
 
-local.normalizeSwaggerJson = function (swaggerJson, option) {
+local.normalizeSwaggerJson = function (swaggerJson, opt) {
 /*
  * this function will normalize swaggerJson and filter $npm_package_swggTags0
  */
     var pathDict;
     var tmp;
-    option = local.objectSetDefault(option, {
+    opt = local.objectSetDefault(opt, {
         objectSetDescription: function (dict) {
             if (
                 dict
@@ -3398,7 +3463,7 @@ local.normalizeSwaggerJson = function (swaggerJson, option) {
         paths: {},
         tags: []
     });
-    // fix error - semanticPaths2
+    // fix err - semanticPaths2
     pathDict = {};
     Object.keys(swaggerJson.paths).forEach(function (path) {
         tmp = path.replace((
@@ -3409,7 +3474,7 @@ local.normalizeSwaggerJson = function (swaggerJson, option) {
     });
     Object.keys(pathDict).forEach(function (key) {
         Object.keys(pathDict[key]).sort().forEach(function (path, ii) {
-            // fix error.semanticUniquePath
+            // fix err.semanticUniquePath
             if (ii && swaggerJson["x-swgg-fixErrorSemanticUniquePath"]) {
                 swaggerJson.paths[path + "#" + ii] = swaggerJson.paths[path];
                 delete swaggerJson.paths[path];
@@ -3441,43 +3506,46 @@ local.normalizeSwaggerJson = function (swaggerJson, option) {
     // override tag.description with x-swgg-tags0-override
     if (swaggerJson["x-swgg-tags0-override"]) {
         swaggerJson.tags.forEach(function (tag) {
-            tmp = local.objectSetDefault(swaggerJson["x-swgg-tags0-override"][tag.name], {
-                description: tag.description,
-                "x-swgg-descriptionLineList": tag["x-swgg-descriptionLineList"]
-            });
+            tmp = local.objectSetDefault(
+                swaggerJson["x-swgg-tags0-override"][tag.name],
+                {
+                    description: tag.description,
+                    "x-swgg-descriptionLineList": tag["x-swgg-descriptionLineList"]
+                }
+            );
             tag.description = tmp.description;
             tag["x-swgg-descriptionLineList"] = tmp["x-swgg-descriptionLineList"];
             // objectSetDescription
-            option.objectSetDescription(tmp);
-            option.objectSetDescription(tag);
+            opt.objectSetDescription(tmp);
+            opt.objectSetDescription(tag);
         });
     }
-    // apply option.objectSetDescription
-    [swaggerJson.externalDocs, swaggerJson.info].forEach(option.objectSetDescription);
-    [
-        swaggerJson.definitions,
-        swaggerJson.parameters,
-        swaggerJson.responses
-    ].forEach(function (dict) {
+    // apply opt.objectSetDescription
+    ([
+        swaggerJson.externalDocs, swaggerJson.info
+    ]).forEach(opt.objectSetDescription);
+    ([
+        swaggerJson.definitions, swaggerJson.parameters, swaggerJson.responses
+    ]).forEach(function (dict) {
         Object.keys(dict || {}).forEach(function (key) {
             tmp = dict[key];
             if (dict === swaggerJson.definitions) {
                 tmp = tmp.properties || {};
                 Object.keys(tmp).forEach(function (key) {
-                    option.objectSetDescription(tmp[key]);
+                    opt.objectSetDescription(tmp[key]);
                 });
                 return;
             }
-            option.objectSetDescription(tmp);
+            opt.objectSetDescription(tmp);
         });
     });
     Object.keys(swaggerJson.paths).forEach(function (path) {
         Object.keys(swaggerJson.paths[path]).forEach(function (method) {
             tmp = swaggerJson.paths[path][method];
-            option.objectSetDescription(tmp);
-            (tmp.parameters || []).forEach(option.objectSetDescription);
+            opt.objectSetDescription(tmp);
+            (tmp.parameters || []).forEach(opt.objectSetDescription);
             Object.keys(tmp.responses || {}).forEach(function (key) {
-                option.objectSetDescription(tmp.responses[key]);
+                opt.objectSetDescription(tmp.responses[key]);
             });
         });
     });
@@ -3498,7 +3566,9 @@ local.normalizeSwaggerJson = function (swaggerJson, option) {
         10
     );
     // filter $npm_package_swggTags0 - definitions and parameters
-    ["definitions", "parameters", "responses"].forEach(function (schema) {
+    [
+        "definitions", "parameters", "responses"
+    ].forEach(function (schema) {
         schema = swaggerJson[schema] || {};
         Object.keys(schema).forEach(function (key) {
             tmp = schema[key]["x-swgg-tags0"];
@@ -3531,22 +3601,22 @@ local.normalizeSwaggerJson = function (swaggerJson, option) {
     return swaggerJson;
 };
 
-local.normalizeSwaggerParamDict = function (option) {
+local.normalizeSwaggerParamDict = function (opt) {
 /*
- * this function will parse the option according to option.operation.parameters
+ * this function will parse the <opt> according to <opt>.operation.parameters
  */
     var tmp;
-    option.operation.parameters.forEach(function (schemaP) {
-        tmp = option.paramDict[schemaP.name];
-        // init default value
+    opt.operation.parameters.forEach(function (schemaP) {
+        tmp = opt.paramDict[schemaP.name];
+        // init default
         if (
-            !option.modeNoDefault
-            && (option.modeDefault || schemaP.required)
+            !opt.modeNoDefault
+            && (opt.modeDefault || schemaP.required)
             && local.isNullOrUndefined(tmp)
         ) {
             tmp = local.jsonCopy(schemaP.default);
         }
-        if (option.modeDefault && local.isNullOrUndefined(tmp)) {
+        if (opt.modeDefault && local.isNullOrUndefined(tmp)) {
             tmp = local.dbFieldRandomCreate({
                 modeNotRandom: true,
                 schemaP
@@ -3555,17 +3625,22 @@ local.normalizeSwaggerParamDict = function (option) {
         // parse array
         if (local.schemaPType(schemaP) === "array" && schemaP.in !== "body") {
             if (typeof tmp === "string") {
-                switch (schemaP.collectionFormat || schemaP["x-swgg-collectionFormat"]) {
+                switch (
+                    schemaP.collectionFormat
+                    || schemaP["x-swgg-collectionFormat"]
+                ) {
                 case "json":
                     local.tryCatchOnError(function () {
                         tmp = JSON.parse(tmp);
                     }, local.nop);
-                    option.paramDict[schemaP.name] = tmp;
+                    opt.paramDict[schemaP.name] = tmp;
                     return;
                 case "multi":
                     tmp = local.urlParse("?" + tmp, true).query[schemaP.name];
                     if (!Array.isArray(tmp)) {
-                        tmp = [tmp];
+                        tmp = [
+                            tmp
+                        ];
                     }
                     break;
                 case "pipes":
@@ -3604,21 +3679,23 @@ local.normalizeSwaggerParamDict = function (option) {
                 tmp = JSON.parse(local.bufferToUtf8(tmp));
             }, local.nop);
         }
-        option.paramDict[schemaP.name] = tmp;
+        opt.paramDict[schemaP.name] = tmp;
     });
-    return option;
+    return opt;
 };
 
 local.onErrorJsonapi = function (onError) {
 /*
- * this function will normalize the error and data to jsonapi format,
+ * this function will normalize err and data to jsonapi format,
  * and pass them to onError
  * http://jsonapi.org/format/#errors
  * http://jsonapi.org/format/#document-structure-resource-objects
  */
-    return function (error, data, meta) {
-        data = [error, data].map(function (data, ii) {
-            // if no error occurred, then return
+    return function (err, data, meta) {
+        data = [
+            err, data
+        ].map(function (data, ii) {
+            // if no err occurred, then return
             if (
                 (ii === 0 && !data)
                 // if data is already normalized, then return it
@@ -3628,12 +3705,14 @@ local.onErrorJsonapi = function (onError) {
             }
             // normalize data-list
             if (!Array.isArray(data)) {
-                data = [data];
+                data = [
+                    data
+                ];
             }
-            // normalize error-list to contain non-null objects
+            // normalize errList to contain non-null objects
             if (!ii) {
-                data = data.errorList || data;
-                // normalize error-list to be non-empty
+                data = data.errList || data;
+                // normalize errList to be non-empty
                 if (!data.length) {
                     data.push(null);
                 }
@@ -3643,7 +3722,7 @@ local.onErrorJsonapi = function (onError) {
                             message: String(element)
                         };
                     }
-                    // normalize error-object to plain json-object
+                    // normalize errObj to plain json-object
                     return {
                         message: element.message,
                         name: element.name,
@@ -3651,9 +3730,9 @@ local.onErrorJsonapi = function (onError) {
                         statusCode: Number(element.statusCode) || 500
                     };
                 });
-                error = local.jsonCopy(data[0]);
-                error.errors = data;
-                return error;
+                err = local.jsonCopy(data[0]);
+                err.errors = data;
+                return err;
             }
             return {
                 data
@@ -3681,15 +3760,15 @@ local.onErrorJsonapi = function (onError) {
     };
 };
 
-local.operationIdFromAjax = function (option) {
+local.operationIdFromAjax = function (opt) {
 /*
  * this function will create a sortable operationId
- * from given ajax-option
+ * from given ajax-<opt>
  */
     var urlParsed;
-    urlParsed = local.urlParseWithBraket(option.url);
+    urlParsed = local.urlParseWithBraket(opt.url);
     return encodeURIComponent(
-        urlParsed.pathname + urlParsed.hash + " " + option.method.toUpperCase()
+        urlParsed.pathname + urlParsed.hash + " " + opt.method.toUpperCase()
     ).replace((
         /[^\w\-.]/g
     ), "_");
@@ -3716,36 +3795,36 @@ local.schemaPType = function (schemaP) {
     return schemaP && (schemaP["x-swgg-type"] || schemaP.type);
 };
 
-local.serverRespondJsonapi = function (request, response, error, data, meta) {
+local.serverRespondJsonapi = function (req, res, err, data, meta) {
 /*
  * this function will respond in jsonapi format
  * http://jsonapi.org/format/#errors
  * http://jsonapi.org/format/#document-structure-resource-objects
  */
-    local.onErrorJsonapi(function (error, data) {
-        local.serverRespondHeadSet(request, response, error && error.statusCode, {
+    local.onErrorJsonapi(function (err, data) {
+        local.serverRespondHeadSet(req, res, err && err.statusCode, {
             "Content-Type": "application/json"
         });
-        if (error) {
+        if (err) {
             // debug statusCode / method / url
             local.errorMessagePrepend(
-                error,
-                response.statusCode + " " + request.method + " " + request.url + "\n"
+                err,
+                res.statusCode + " " + req.method + " " + req.url + "\n"
             );
-            // print error.stack to stderr
-            local.onErrorDefault(error);
+            // print err.stack to stderr
+            local.onErrorDefault(err);
         }
-        data = error || data;
-        response.statusCode = data.meta.statusCode || response.statusCode;
-        data.meta.statusCode = response.statusCode;
-        response.end(JSON.stringify(data));
-    })(error, data, meta);
+        data = err || data;
+        res.statusCode = data.meta.statusCode || res.statusCode;
+        data.meta.statusCode = res.statusCode;
+        res.end(JSON.stringify(data));
+    })(err, data, meta);
 };
 
-local.swaggerJsonFromAjax = function (swaggerJson, option) {
+local.swaggerJsonFromAjax = function (swaggerJson, opt) {
 /*
  * this function will update swaggerJson
- * with definitions and paths created from given ajax-option
+ * with definitions and paths created from given ajax-<opt>
  */
     var data;
     var isArray;
@@ -3757,7 +3836,9 @@ local.swaggerJsonFromAjax = function (swaggerJson, option) {
     upsertSchemaP = function (schemaP) {
         if (!operation.parameters.some(function (element) {
             if (element.in === schemaP.in && element.name === schemaP.name) {
-                ["default", "items", "schema"].forEach(function (key) {
+                [
+                    "default", "items", "schema"
+                ].forEach(function (key) {
                     if (!local.isNullOrUndefined(schemaP[key])) {
                         element[key] = schemaP[key];
                     }
@@ -3779,43 +3860,47 @@ local.swaggerJsonFromAjax = function (swaggerJson, option) {
         paths: {},
         swagger: "2.0"
     });
-    // init option
-    option = local.objectSetDefault(option, {
+    // init opt
+    opt = local.objectSetDefault(opt, {
         headers: {},
         method: "GET"
     });
     // init urlParsed
-    urlParsed = local.urlParseWithBraket(option.url);
+    urlParsed = local.urlParseWithBraket(opt.url);
     // init operation
     operation = {
-        operationId: option.operationId || local.operationIdFromAjax(option),
+        operationId: opt.operationId || local.operationIdFromAjax(opt),
         parameters: [],
         responses: {
             default: {
                 description: "default response"
             }
         },
-        tags: option.tags || ["undefined"],
-        "x-swgg-tags0": option["x-swgg-tags0"]
+        tags: opt.tags || [
+            "undefined"
+        ],
+        "x-swgg-tags0": opt["x-swgg-tags0"]
     };
     if ((
         /^(?:http|https):\/\//
-    ).test(option.url)) {
+    ).test(opt.url)) {
         operation["x-swgg-host"] = urlParsed.host;
-        operation["x-swgg-schemes"] = [urlParsed.protocol.slice(0, -1)];
+        operation["x-swgg-schemes"] = [
+            urlParsed.protocol.slice(0, -1)
+        ];
     }
     pathDict = {};
     pathDict[urlParsed.pathname + urlParsed.hash] = {};
     pathDict[urlParsed.pathname + urlParsed.hash][
-        option.method.toLowerCase()
+        opt.method.toLowerCase()
     ] = operation;
     local.objectSetDefault(swaggerJson, {
         paths: pathDict
     }, 3);
     // init param in header
-    Object.keys(option.headers).forEach(function (key) {
+    Object.keys(opt.headers).forEach(function (key) {
         upsertSchemaP({
-            default: option.headers[key],
+            default: opt.headers[key],
             in: "header",
             name: key,
             type: "string"
@@ -3843,7 +3928,7 @@ local.swaggerJsonFromAjax = function (swaggerJson, option) {
             type: "string"
         });
     });
-    data = option.data;
+    data = opt.data;
     if (!data) {
         return swaggerJson;
     }
@@ -3873,7 +3958,7 @@ local.swaggerJsonFromAjax = function (swaggerJson, option) {
         depth: 2,
         key: "body",
         prefix: operation.operationId,
-        "x-swgg-tags0": option["x-swgg-tags0"]
+        "x-swgg-tags0": opt["x-swgg-tags0"]
     });
     upsertSchemaP({
         in: "body",
@@ -3899,7 +3984,7 @@ local.swaggerJsonFromCurl = function (swaggerJson, text) {
     var arg;
     var argList;
     var doubleBackslash;
-    var option;
+    var opt;
     var quote;
     arg = "";
     argList = [];
@@ -3963,25 +4048,25 @@ local.swaggerJsonFromCurl = function (swaggerJson, text) {
         case "--data-binary":
         case "--data-raw":
         case "-d":
-            option.data = arg;
+            opt.data = arg;
             return;
         case "--header":
         case "-H":
             arg = arg.split(":");
             arg[1] = arg.slice(1).join(":").trim();
-            option.headers[arg[0].toLowerCase()] = arg[1];
+            opt.headers[arg[0].toLowerCase()] = arg[1];
             return;
         case "--request":
         case "-X":
-            option.method = arg;
+            opt.method = arg;
             return;
         }
         if (arg === "curl") {
-            if (option) {
-                option.url = option.url || argList[ii - 1];
-                swaggerJson = local.swaggerJsonFromAjax(swaggerJson, option);
+            if (opt) {
+                opt.url = opt.url || argList[ii - 1];
+                swaggerJson = local.swaggerJsonFromAjax(swaggerJson, opt);
             }
-            option = {
+            opt = {
                 headers: {},
                 method: "GET"
             };
@@ -3989,13 +4074,13 @@ local.swaggerJsonFromCurl = function (swaggerJson, text) {
         if ((
             /^(?:http|https):\/\//
         ).test(arg)) {
-            option.url = arg;
+            opt.url = arg;
         }
     });
     return swaggerJson;
 };
 
-local.swaggerJsonFromPostBody = function (swaggerJson, option) {
+local.swaggerJsonFromPostBody = function (swaggerJson, opt) {
 /*
  * this function will update swaggerJson
  * with definitions created from the post-body-data
@@ -4006,14 +4091,14 @@ local.swaggerJsonFromPostBody = function (swaggerJson, option) {
     var schemaP;
     var type;
     var value;
-    prefix = option.prefix + "." + encodeURIComponent(option.key);
+    prefix = opt.prefix + "." + encodeURIComponent(opt.key);
     definition = {
         properties: {},
-        "x-swgg-tags0": option["x-swgg-tags0"]
+        "x-swgg-tags0": opt["x-swgg-tags0"]
     };
     swaggerJson.definitions[prefix] = definition;
-    Object.keys(option.data).forEach(function (key) {
-        value = option.data[key];
+    Object.keys(opt.data).forEach(function (key) {
+        value = opt.data[key];
         isArray = Array.isArray(value);
         if (isArray) {
             value = value[0];
@@ -4026,7 +4111,7 @@ local.swaggerJsonFromPostBody = function (swaggerJson, option) {
         schemaP = (
             isArray
             ? {
-                default: option.data[key],
+                default: opt.data[key],
                 items: {
                     type
                 },
@@ -4038,16 +4123,16 @@ local.swaggerJsonFromPostBody = function (swaggerJson, option) {
             }
         );
         definition.properties[key] = schemaP;
-        if (!(type === "object" && option.depth > 1)) {
+        if (!(type === "object" && opt.depth > 1)) {
             return;
         }
         // recurse
         type = local.swaggerJsonFromPostBody(swaggerJson, {
             data: value,
-            depth: option.depth - 1,
+            depth: opt.depth - 1,
             key,
             prefix,
-            "x-swgg-tags0": option["x-swgg-tags0"]
+            "x-swgg-tags0": opt["x-swgg-tags0"]
         });
         if (isArray) {
             schemaP.items = type;
@@ -4075,13 +4160,17 @@ local.swaggerValidate = function (swaggerJson) {
     local.swaggerValidateDataSchema({
         data: swaggerJson,
         modeSchema: true,
-        prefix: ["swaggerJson"],
+        prefix: [
+            "swaggerJson"
+        ],
         schema: local.swaggerSchemaJson,
         swaggerJson
     });
     pathDict = {};
     Object.keys(swaggerJson.paths).forEach(function (path) {
-        prefix = ["swaggerJson", "paths", path];
+        prefix = [
+            "swaggerJson", "paths", path
+        ];
         // validate semanticPaths1
         test = path.indexOf("?") < 0;
         local.throwSwaggerError(!test && {
@@ -4095,7 +4184,9 @@ local.swaggerValidate = function (swaggerJson) {
         test = !pathDict[tmp];
         local.throwSwaggerError(!test && {
             errorType: "semanticPaths2",
-            pathList: [pathDict[tmp], path],
+            pathList: [
+                pathDict[tmp], path
+            ],
             prefix
         });
         pathDict[tmp] = path;
@@ -4124,14 +4215,18 @@ local.swaggerValidate = function (swaggerJson) {
         tmp = local.swaggerValidateDataSchema({
             // dereference definition
             modeDereference: true,
-            prefix: ["swaggerJson", "definitions", schemaName],
+            prefix: [
+                "swaggerJson", "definitions", schemaName
+            ],
             schema: swaggerJson.definitions[schemaName],
             swaggerJson
         });
         Object.keys(tmp.properties || {}).forEach(function (key) {
             local.swaggerValidateDataSchema({
                 modeDefault: true,
-                prefix: ["swaggerJson", "definitions", schemaName, "properties", key],
+                prefix: [
+                    "swaggerJson", "definitions", schemaName, "properties", key
+                ],
                 schema: tmp.properties[key],
                 swaggerJson
             });
@@ -4141,7 +4236,9 @@ local.swaggerValidate = function (swaggerJson) {
     Object.keys(swaggerJson.parameters || []).forEach(function (key) {
         local.swaggerValidateDataSchema({
             modeDefault: true,
-            prefix: ["swaggerJson", "parameters", key],
+            prefix: [
+                "swaggerJson", "parameters", key
+            ],
             schema: swaggerJson.parameters[key],
             swaggerJson
         });
@@ -4149,7 +4246,9 @@ local.swaggerValidate = function (swaggerJson) {
     // validate swaggerJson.paths[key][key].parameters[ii].default
     Object.keys(swaggerJson.paths).forEach(function (path) {
         Object.keys(swaggerJson.paths[path]).forEach(function (method) {
-            prefix = ["swaggerJson", "paths", path, method];
+            prefix = [
+                "swaggerJson", "paths", path, method
+            ];
             operation = local.swaggerValidateDataSchema({
                 // dereference operation
                 modeDereference: true,
@@ -4284,23 +4383,23 @@ local.swaggerValidate = function (swaggerJson) {
     });
 };
 
-local.swaggerValidateDataParameters = function (option) {
+local.swaggerValidateDataParameters = function (opt) {
 /*
- * this function will validate the items in option.paramDict
- * against the schemaP's in option.parameters
+ * this function will validate the items in <opt>.paramDict
+ * against the schemaP's in <opt>.parameters
  */
-    var errorList;
-    errorList = [];
-    option.parameters.forEach(function (schemaP) {
+    var errList;
+    errList = [];
+    opt.parameters.forEach(function (schemaP) {
         local.tryCatchOnError(function () {
             local.swaggerValidateDataSchema({
-                data: option.data[schemaP.name],
+                data: opt.data[schemaP.name],
                 dataReadonlyRemove: [
-                    option.dataReadonlyRemove || {},
+                    opt.dataReadonlyRemove || {},
                     schemaP.name,
-                    option.dataReadonlyRemove && option.dataReadonlyRemove[schemaP.name]
+                    opt.dataReadonlyRemove && opt.dataReadonlyRemove[schemaP.name]
                 ],
-                prefix: option.prefix.concat([
+                prefix: opt.prefix.concat([
                     schemaP.name
                 ]),
                 schema: schemaP,
@@ -4308,16 +4407,16 @@ local.swaggerValidateDataParameters = function (option) {
             });
         }, function (errCaught) {
             console.error(errCaught.message);
-            errorList.push(errCaught);
-            errCaught.errorList = errorList;
+            errList.push(errCaught);
+            errCaught.errList = errList;
         });
     });
-    return errorList;
+    return errList;
 };
 
-local.swaggerValidateDataSchema = function (option) {
+local.swaggerValidateDataSchema = function (opt) {
 /*
- * this function will validate option.data against the swagger option.schema
+ * this function will validate <opt>.data against the swagger <opt>.schema
  * http://json-schema.org/draft-04/json-schema-validation.html#rfc.section.5
  */
     var $ref;
@@ -4330,13 +4429,15 @@ local.swaggerValidateDataSchema = function (option) {
     var schema;
     var test;
     var tmp;
-    if (!option.schema) {
+    if (!opt.schema) {
         return;
     }
-    data = option.data;
-    option.dataReadonlyRemove = option.dataReadonlyRemove || [{}, "", null];
-    dataReadonlyRemove2 = option.dataReadonlyRemove[2] || {};
-    schema = option.schema;
+    data = opt.data;
+    opt.dataReadonlyRemove = opt.dataReadonlyRemove || [
+        {}, "", null
+    ];
+    dataReadonlyRemove2 = opt.dataReadonlyRemove[2] || {};
+    schema = opt.schema;
     circularSet = new Set();
     while (true) {
         // dereference schema.schema
@@ -4380,7 +4481,7 @@ local.swaggerValidateDataSchema = function (option) {
         local.throwSwaggerError(!test && {
             data,
             errorType: "schemaDereferenceCircular",
-            prefix: option.prefix,
+            prefix: opt.prefix,
             schema
         });
         circularSet.add($ref);
@@ -4392,18 +4493,18 @@ local.swaggerValidateDataSchema = function (option) {
         local.throwSwaggerError(!test && {
             data: $ref,
             errorType: "semanticWalker6",
-            prefix: option.prefix.concat([
+            prefix: opt.prefix.concat([
                 "$ref"
             ])
         });
-        switch (option.modeSchema && $ref) {
+        switch (opt.modeSchema && $ref) {
         case "http://json-schema.org/draft-04/schema#/definitions/parameter":
             // validate semanticFormData1
             test = data.in !== "formdata";
             local.throwSwaggerError(!test && {
                 data: data.in,
                 errorType: "semanticFormData1",
-                prefix: option.prefix.concat([
+                prefix: opt.prefix.concat([
                     "in"
                 ])
             });
@@ -4412,14 +4513,14 @@ local.swaggerValidateDataSchema = function (option) {
             local.throwSwaggerError(!test && {
                 data,
                 errorType: "semanticFormData3",
-                prefix: option.prefix
+                prefix: opt.prefix
             });
             // validate semanticParameters2
             test = data.in === "body" || !local.isNullOrUndefined(data.type);
             local.throwSwaggerError(!test && {
                 data,
                 errorType: "semanticParameters2",
-                prefix: option.prefix
+                prefix: opt.prefix
             });
             break;
         case "http://json-schema.org/draft-04/schema#/definitions/schema":
@@ -4436,18 +4537,21 @@ local.swaggerValidateDataSchema = function (option) {
                 local.throwSwaggerError(!test && {
                     data: data.properties[tmp],
                     errorType: "semanticSchema1",
-                    prefix: option.prefix.concat([
+                    prefix: opt.prefix.concat([
                         "properties", tmp
                     ])
                 });
                 ii += 1;
             }
             // validate semanticWalker1
-            test = local.isNullOrUndefined(data.type) || typeof data.type === "string";
+            test = (
+                local.isNullOrUndefined(data.type)
+                || typeof data.type === "string"
+            );
             local.throwSwaggerError(!test && {
                 data: data.type,
                 errorType: "semanticWalker1",
-                prefix: option.prefix.concat([
+                prefix: opt.prefix.concat([
                     "type"
                 ])
             });
@@ -4456,21 +4560,21 @@ local.swaggerValidateDataSchema = function (option) {
             local.throwSwaggerError(!test && {
                 data,
                 errorType: "semanticWalker2",
-                prefix: option.prefix
+                prefix: opt.prefix
             });
             // validate semanticWalker3
             test = !(data.maxProperties < data.minProperties);
             local.throwSwaggerError(!test && {
                 data,
                 errorType: "semanticWalker3",
-                prefix: option.prefix
+                prefix: opt.prefix
             });
             // validate semanticWalker4
             test = !(data.maxLength < data.minLength);
             local.throwSwaggerError(!test && {
                 data,
                 errorType: "semanticWalker4",
-                prefix: option.prefix,
+                prefix: opt.prefix,
                 schema
             });
             break;
@@ -4479,42 +4583,42 @@ local.swaggerValidateDataSchema = function (option) {
         schema = (
             $ref.indexOf("http://json-schema.org/draft-04/schema#/") === 0
             ? local.swaggerSchemaJson[tmp[0]]
-            : option.swaggerJson[tmp[0]]
+            : opt.swaggerJson[tmp[0]]
         );
         schema = schema && schema[tmp[1]];
         test = schema;
         local.throwSwaggerError(!test && {
             data,
             errorType: "schemaDereference",
-            prefix: option.prefix,
-            schema: option.schema
+            prefix: opt.prefix,
+            schema: opt.schema
         });
     }
-    if (option.modeDereference) {
-        if (option.modeDereferenceDepth > 1) {
+    if (opt.modeDereference) {
+        if (opt.modeDereferenceDepth > 1) {
             schema = local.jsonCopy(schema);
             Object.keys(schema.properties || {}).forEach(function (key) {
                 schema.properties[key] = local.swaggerValidateDataSchema({
                     // dereference property
                     modeDereference: true,
-                    modeDereferenceDepth: option.modeDereferenceDepth - 1,
-                    prefix: option.prefix.concat([
+                    modeDereferenceDepth: opt.modeDereferenceDepth - 1,
+                    prefix: opt.prefix.concat([
                         "properties", key
                     ]),
                     schema: schema.properties[key],
-                    swaggerJson: option.swaggerJson
+                    swaggerJson: opt.swaggerJson
                 });
             });
         }
         return schema;
     }
     // validate schema.default
-    if (option.modeDefault) {
+    if (opt.modeDefault) {
         data = schema.default;
     }
     // validate schema.required
     test = (
-        option.modeDefault
+        opt.modeDefault
         || !local.isNullOrUndefined(data)
         || schema.required !== true
         || schema["x-swgg-notRequired"]
@@ -4522,7 +4626,7 @@ local.swaggerValidateDataSchema = function (option) {
     local.throwSwaggerError(!test && {
         data,
         errorType: "objectRequired",
-        prefix: option.prefix,
+        prefix: opt.prefix,
         schema
     });
     if (local.isNullOrUndefined(data)) {
@@ -4530,17 +4634,17 @@ local.swaggerValidateDataSchema = function (option) {
     }
     // validate semanticItemsRequiredForArrayObjects1
     test = (
-        !option.modeSchema || local.schemaPType(data) !== "array"
+        !opt.modeSchema || local.schemaPType(data) !== "array"
         || (typeof local.schemaPItems(data) === "object" && local.schemaPItems(data))
     );
     local.throwSwaggerError(!test && {
         errorType: "semanticItemsRequiredForArrayObjects1",
-        prefix: option.prefix,
+        prefix: opt.prefix,
         schema: data
     });
     // remove readOnly property
     if (schema.readOnly) {
-        delete option.dataReadonlyRemove[0][option.dataReadonlyRemove[1]];
+        delete opt.dataReadonlyRemove[0][opt.dataReadonlyRemove[1]];
     }
     // optimization - validate schema.type first
     // 5.5.2. type
@@ -4554,7 +4658,7 @@ local.swaggerValidateDataSchema = function (option) {
         test = typeof data === "boolean";
         break;
     case "file":
-        test = !option.modeSchema;
+        test = !opt.modeSchema;
         break;
     case "integer":
         test = Number.isInteger(data);
@@ -4577,9 +4681,9 @@ local.swaggerValidateDataSchema = function (option) {
     case "string":
         test = (
             typeof data === "string"
-            || (!option.modeSchema && schema.format === "binary")
+            || (!opt.modeSchema && schema.format === "binary")
         );
-        switch (test && !option.modeSchema && schema.format) {
+        switch (test && !opt.modeSchema && schema.format) {
         // Clarify 'byte' format #50
         // https://github.com/swagger-api/swagger-spec/issues/50
         case "byte":
@@ -4606,12 +4710,12 @@ local.swaggerValidateDataSchema = function (option) {
         }
         break;
     default:
-        test = option.modeSchema || typeof data === "object";
+        test = opt.modeSchema || typeof data === "object";
     }
     local.throwSwaggerError(!test && {
         data,
         errorType: "itemType",
-        prefix: option.prefix,
+        prefix: opt.prefix,
         schema,
         typeof: local.identity(typeof data)
     });
@@ -4628,21 +4732,26 @@ local.swaggerValidateDataSchema = function (option) {
             // recurse - schema.additionalItems and schema.items
             local.swaggerValidateDataSchema({
                 data: element,
-                dataReadonlyRemove: [dataReadonlyRemove2, ii, dataReadonlyRemove2[ii]],
-                modeSchema: option.modeSchema,
-                prefix: option.prefix.concat([
+                dataReadonlyRemove: [
+                    dataReadonlyRemove2, ii, dataReadonlyRemove2[ii]
+                ],
+                modeSchema: opt.modeSchema,
+                prefix: opt.prefix.concat([
                     ii
                 ]),
                 schema: local.schemaPItems(schema) || schema.additionalItems,
-                swaggerJson: option.swaggerJson
+                swaggerJson: opt.swaggerJson
             });
         });
         // 5.3.2. maxItems
-        test = typeof schema.maxItems !== "number" || data.length <= schema.maxItems;
+        test = (
+            typeof schema.maxItems !== "number"
+            || data.length <= schema.maxItems
+        );
         local.throwSwaggerError(!test && {
             data,
             errorType: "arrayMaxItems",
-            prefix: option.prefix,
+            prefix: opt.prefix,
             schema
         });
         // 5.3.3. minItems
@@ -4650,7 +4759,7 @@ local.swaggerValidateDataSchema = function (option) {
         local.throwSwaggerError(!test && {
             data,
             errorType: "arrayMinItems",
-            prefix: option.prefix,
+            prefix: opt.prefix,
             schema
         });
         // 5.3.4. uniqueItems
@@ -4661,7 +4770,7 @@ local.swaggerValidateDataSchema = function (option) {
         local.throwSwaggerError(!test && {
             data,
             errorType: "arrayUniqueItems",
-            prefix: option.prefix,
+            prefix: opt.prefix,
             schema,
             tmp
         });
@@ -4669,11 +4778,14 @@ local.swaggerValidateDataSchema = function (option) {
     // 5.1. Validation keywords for numeric instances (number and integer)
     case "number":
         // 5.1.1. multipleOf
-        test = typeof schema.multipleOf !== "number" || data % schema.multipleOf === 0;
+        test = (
+            typeof schema.multipleOf !== "number"
+            || data % schema.multipleOf === 0
+        );
         local.throwSwaggerError(!test && {
             data,
             errorType: "numberMultipleOf",
-            prefix: option.prefix,
+            prefix: opt.prefix,
             schema
         });
         // 5.1.2. maximum and exclusiveMaximum
@@ -4690,7 +4802,7 @@ local.swaggerValidateDataSchema = function (option) {
                 ? "numberExclusiveMaximum"
                 : "numberMaximum"
             ),
-            prefix: option.prefix,
+            prefix: opt.prefix,
             schema
         });
         // 5.1.3. minimum and exclusiveMinimum
@@ -4707,7 +4819,7 @@ local.swaggerValidateDataSchema = function (option) {
                 ? "numberExclusiveMinimum"
                 : "numberMinimum"
             ),
-            prefix: option.prefix,
+            prefix: opt.prefix,
             schema
         });
         break;
@@ -4721,7 +4833,7 @@ local.swaggerValidateDataSchema = function (option) {
         local.throwSwaggerError(!test && {
             data,
             errorType: "objectMaxProperties",
-            prefix: option.prefix,
+            prefix: opt.prefix,
             schema
         });
         // 5.4.2. minProperties
@@ -4732,7 +4844,7 @@ local.swaggerValidateDataSchema = function (option) {
         local.throwSwaggerError(!test && {
             data,
             errorType: "objectMinProperties",
-            prefix: option.prefix,
+            prefix: opt.prefix,
             schema
         });
         // 5.4.3. required
@@ -4743,7 +4855,7 @@ local.swaggerValidateDataSchema = function (option) {
                 data,
                 errorType: "semanticItemsRequiredForArrayObjects2",
                 key,
-                prefix: option.prefix,
+                prefix: opt.prefix,
                 schema
             });
         });
@@ -4760,12 +4872,12 @@ local.swaggerValidateDataSchema = function (option) {
                         key,
                         dataReadonlyRemove2[key]
                     ],
-                    modeSchema: option.modeSchema,
-                    prefix: option.prefix.concat([
+                    modeSchema: opt.modeSchema,
+                    prefix: opt.prefix.concat([
                         key
                     ]),
                     schema: schema.properties[key],
-                    swaggerJson: option.swaggerJson
+                    swaggerJson: opt.swaggerJson
                 });
             }
             Object.keys(schema.patternProperties || {}).forEach(function (rgx) {
@@ -4774,12 +4886,12 @@ local.swaggerValidateDataSchema = function (option) {
                     // recurse - schema.patternProperties
                     local.swaggerValidateDataSchema({
                         data: data[key],
-                        modeSchema: option.modeSchema,
-                        prefix: option.prefix.concat([
+                        modeSchema: opt.modeSchema,
+                        prefix: opt.prefix.concat([
                             key
                         ]),
                         schema: schema.patternProperties[rgx],
-                        swaggerJson: option.swaggerJson
+                        swaggerJson: opt.swaggerJson
                     });
                 }
             });
@@ -4810,18 +4922,18 @@ local.swaggerValidateDataSchema = function (option) {
                 data,
                 errorType: "objectAdditionalProperties",
                 key,
-                prefix: option.prefix,
+                prefix: opt.prefix,
                 schema
             });
             // recurse - schema.additionalProperties
             local.swaggerValidateDataSchema({
                 data: data[key],
-                modeSchema: option.modeSchema,
-                prefix: option.prefix.concat([
+                modeSchema: opt.modeSchema,
+                prefix: opt.prefix.concat([
                     key
                 ]),
                 schema: schema.additionalProperties,
-                swaggerJson: option.swaggerJson
+                swaggerJson: opt.swaggerJson
             });
         });
         // 5.4.5. dependencies
@@ -4833,12 +4945,12 @@ local.swaggerValidateDataSchema = function (option) {
             // recurse - schema.dependencies
             local.swaggerValidateDataSchema({
                 data: data[key],
-                modeSchema: option.modeSchema,
-                prefix: option.prefix.concat([
+                modeSchema: opt.modeSchema,
+                prefix: opt.prefix.concat([
                     key
                 ]),
                 schema: schema.dependencies[key],
-                swaggerJson: option.swaggerJson
+                swaggerJson: opt.swaggerJson
             });
             // 5.4.5.2.2. Property dependencies
             schema.dependencies[key].every(function (key2) {
@@ -4848,7 +4960,7 @@ local.swaggerValidateDataSchema = function (option) {
                     errorType: "objectDependencies",
                     key,
                     key2,
-                    prefix: option.prefix,
+                    prefix: opt.prefix,
                     schema
                 });
             });
@@ -4857,19 +4969,24 @@ local.swaggerValidateDataSchema = function (option) {
     // 5.2. Validation keywords for strings
     case "string":
         // 5.2.1. maxLength
-        test = typeof schema.maxLength !== "number" || data.length <= schema.maxLength;
+        test = (
+            typeof schema.maxLength !== "number" || data.length <= schema.maxLength
+        );
         local.throwSwaggerError(!test && {
             data,
             errorType: "stringMaxLength",
-            prefix: option.prefix,
+            prefix: opt.prefix,
             schema
         });
         // 5.2.2. minLength
-        test = typeof schema.minLength !== "number" || data.length >= schema.minLength;
+        test = (
+            typeof schema.minLength !== "number"
+            || data.length >= schema.minLength
+        );
         local.throwSwaggerError(!test && {
             data,
             errorType: "stringMinLength",
-            prefix: option.prefix,
+            prefix: opt.prefix,
             schema
         });
         // 5.2.3. pattern
@@ -4877,25 +4994,30 @@ local.swaggerValidateDataSchema = function (option) {
         local.throwSwaggerError(!test && {
             data,
             errorType: "stringPattern",
-            prefix: option.prefix,
+            prefix: opt.prefix,
             schema
         });
         break;
     }
     // 5.5. Validation keywords for any instance type
     // 5.5.1. enum
-    tmp = schema.enum || (!option.modeSchema && (local.schemaPItems(schema) || {}).enum);
+    tmp = (
+        schema.enum
+        || (!opt.modeSchema && (local.schemaPItems(schema) || {}).enum)
+    );
     test = !tmp || (
         Array.isArray(data)
         ? data
-        : [data]
+        : [
+            data
+        ]
     ).every(function (element) {
         return tmp.indexOf(element) >= 0;
     });
     local.throwSwaggerError(!test && {
         data,
         errorType: "itemEnum",
-        prefix: option.prefix,
+        prefix: opt.prefix,
         schema,
         tmp
     });
@@ -4906,10 +5028,10 @@ local.swaggerValidateDataSchema = function (option) {
         // recurse - schema.allOf
         local.swaggerValidateDataSchema({
             data,
-            prefix: option.prefix,
-            modeSchema: option.modeSchema,
+            prefix: opt.prefix,
+            modeSchema: opt.modeSchema,
             schema: element,
-            swaggerJson: option.swaggerJson
+            swaggerJson: opt.swaggerJson
         });
     });
     // 5.5.4. anyOf
@@ -4919,10 +5041,10 @@ local.swaggerValidateDataSchema = function (option) {
             // recurse - schema.anyOf
             local.swaggerValidateDataSchema({
                 data,
-                modeSchema: option.modeSchema,
-                prefix: option.prefix,
+                modeSchema: opt.modeSchema,
+                prefix: opt.prefix,
                 schema: element,
-                swaggerJson: option.swaggerJson
+                swaggerJson: opt.swaggerJson
             });
             return true;
         }, local.nop);
@@ -4932,7 +5054,7 @@ local.swaggerValidateDataSchema = function (option) {
     local.throwSwaggerError(!test && {
         data,
         errorType: "itemOneOf",
-        prefix: option.prefix,
+        prefix: opt.prefix,
         schema,
         tmp
     });
@@ -4947,10 +5069,10 @@ local.swaggerValidateDataSchema = function (option) {
             // recurse - schema.oneOf
             local.swaggerValidateDataSchema({
                 data,
-                modeSchema: option.modeSchema,
-                prefix: option.prefix,
+                modeSchema: opt.modeSchema,
+                prefix: opt.prefix,
                 schema: element,
-                swaggerJson: option.swaggerJson
+                swaggerJson: opt.swaggerJson
             });
             tmp += 1;
         }, local.nop);
@@ -4960,7 +5082,7 @@ local.swaggerValidateDataSchema = function (option) {
     local.throwSwaggerError(!test && {
         data,
         errorType: "itemOneOf",
-        prefix: option.prefix,
+        prefix: opt.prefix,
         schema,
         tmp
     });
@@ -4969,17 +5091,17 @@ local.swaggerValidateDataSchema = function (option) {
         // recurse - schema.not
         local.swaggerValidateDataSchema({
             data,
-            modeSchema: option.modeSchema,
-            prefix: option.prefix,
+            modeSchema: opt.modeSchema,
+            prefix: opt.prefix,
             schema: schema.not,
-            swaggerJson: option.swaggerJson
+            swaggerJson: opt.swaggerJson
         });
         return true;
     }, local.nop);
     local.throwSwaggerError(!test && {
         data,
         errorType: "itemNot",
-        prefix: option.prefix,
+        prefix: opt.prefix,
         schema
     });
     // 5.5.7. definitions
@@ -4988,43 +5110,43 @@ local.swaggerValidateDataSchema = function (option) {
     if (schema === local.swaggerSchemaJson.definitions.jsonReference) {
         local.swaggerValidateDataSchema({
             modeDereference: true,
-            modeSchema: option.modeSchema,
-            prefix: option.prefix,
+            modeSchema: opt.modeSchema,
+            prefix: opt.prefix,
             schema: data,
-            swaggerJson: option.swaggerJson
+            swaggerJson: opt.swaggerJson
         });
     }
     return schema;
 };
 
-local.swaggerValidateFile = function (option, onError) {
+local.swaggerValidateFile = function (opt, onError) {
 /*
- * this function will validate the json-file option.file
+ * this function will validate the json-file <opt>.file
  */
-    local.onNext(option, function (error, data) {
-        switch (option.modeNext) {
+    local.onNext(opt, function (err, data) {
+        switch (opt.modeNext) {
         case 1:
-            if (typeof option.data === "string") {
-                option.onNext(null, option.data);
+            if (typeof opt.data === "string") {
+                opt.onNext(null, opt.data);
                 return;
             }
             // fetch url
             if ((
                 /^(?:http|https):\/\//
-            ).test(option.file)) {
+            ).test(opt.file)) {
                 local.ajax({
-                    url: option.file
-                }, function (error, xhr) {
-                    option.onNext(error, xhr && xhr.responseText);
+                    url: opt.file
+                }, function (err, xhr) {
+                    opt.onNext(err, xhr && xhr.responseText);
                 });
                 return;
             }
             // read file
-            local.fs.readFile(option.file, "utf8", option.onNext);
+            local.fs.readFile(opt.file, "utf8", opt.onNext);
             break;
         case 2:
             // jslint
-            local.jslint.jslintAndPrint(data, option.file);
+            local.jslint.jslintAndPrint(data, opt.file);
             local.assertThrow(
                 !local.jslint.jslintResult.errorText,
                 local.jslint.jslintResult.errorText.replace((
@@ -5033,66 +5155,71 @@ local.swaggerValidateFile = function (option, onError) {
             );
             // validate
             local.swgg.swaggerValidate(JSON.parse(data));
-            option.onNext();
+            opt.onNext();
             break;
         default:
             console.error(
-                error
-                ? "\u001b[31mswagger-validate - failed - " + option.file + "\n"
-                + error.message + "\u001b[39m"
-                : "swagger-validate - passed - " + option.file
+                err
+                ? "\u001b[31mswagger-validate - failed - " + opt.file + "\n"
+                + err.message + "\u001b[39m"
+                : "swagger-validate - passed - " + opt.file
             );
-            onError(error);
+            onError(err);
         }
     });
-    option.modeNext = 0;
-    option.onNext();
+    opt.modeNext = 0;
+    opt.onNext();
 };
 
-local.throwSwaggerError = function (option) {
+local.throwSwaggerError = function (opt) {
 /*
- * this function will throw a swaggerError with given option.errorType
+ * this function will throw a swaggerError with given <opt>.errorType
  */
-    var error;
-    if (!option) {
+    var err;
+    if (!opt) {
         return;
     }
-    [0, 2].forEach(function (ii) {
-        option["prefix" + ii] = option.prefix[ii] + option.prefix.slice(
+    [
+        0, 2
+    ].forEach(function (ii) {
+        opt["prefix" + ii] = opt.prefix[ii] + opt.prefix.slice(
             ii + 1
         ).map(function (element) {
             return "[" + JSON.stringify(element) + "]";
         }).join("");
     });
-    option.prefix0 += " = " + local.stringTruncate(
-        JSON.stringify(option.data) || "undefined",
+    opt.prefix0 += " = " + local.stringTruncate(
+        JSON.stringify(opt.data) || "undefined",
         100
     );
-    option.schema2 = local.stringTruncate(
-        JSON.stringify(option.schema) || "undefined",
+    opt.schema2 = local.stringTruncate(
+        JSON.stringify(opt.schema) || "undefined",
         500
     );
-    option.type2 = (option.schema && local.schemaPType(option.schema)) || "object";
-    if (option.schema && option.schema.format) {
-        option.type2 += " (" + option.schema.format + ")";
+    opt.type2 = (opt.schema && local.schemaPType(opt.schema)) || "object";
+    if (opt.schema && opt.schema.format) {
+        opt.type2 += " (" + opt.schema.format + ")";
     }
-    error = new Error("error." + option.errorType + " - " + local.templateRender(
-        local.swaggerErrorTypeDict[option.errorType],
-        option,
+    err = new Error("error." + opt.errorType + " - " + local.templateRender(
+        local.swaggerErrorTypeDict[opt.errorType],
+        opt,
         {
             notHtmlSafe: true
         }
     ));
-    error.messageShort = local.templateRender(
-        local.swaggerErrorTypeDict[option.errorType].replace("{{prefix0}}", "{{prefix2}}"),
-        option,
+    err.messageShort = local.templateRender(
+        local.swaggerErrorTypeDict[opt.errorType].replace(
+            "{{prefix0}}",
+            "{{prefix2}}"
+        ),
+        opt,
         {
             notHtmlSafe: true
         }
     );
-    error.option = option;
-    error.statusCode = 400;
-    throw error;
+    err.opt = opt;
+    err.statusCode = 400;
+    throw err;
 };
 
 local.uiEventDelegate = function (event) {
@@ -5158,10 +5285,10 @@ local.uiEventListenerDict.onEventInputTextareaChange = function (event) {
     });
 };
 
-local.uiEventListenerDict.onEventInputValidateAndAjax = function (option, onError) {
+local.uiEventListenerDict.onEventInputValidateAndAjax = function (opt, onError) {
 /*
  * this function will validate the input parameters
- * against the schemas in option.parameters
+ * against the schemas in <opt>.parameters
  */
     var errorDict;
     var jsonParse;
@@ -5177,17 +5304,17 @@ local.uiEventListenerDict.onEventInputValidateAndAjax = function (option, onErro
         });
     };
     // jslint-hack
-    option.targetOnEvent = option.targetOnEvent.closest(
+    opt.targetOnEvent = opt.targetOnEvent.closest(
         ".operation"
     );
-    option.api = local.apiDict[option.targetOnEvent.dataset._methodPath];
-    option.headers = {};
-    option.modeAjax = option.modeAjax || "validate";
-    option.modeNoDefault = true;
-    option.paramDict = {};
-    option.url = "";
-    option.api.parameters.forEach(function (schemaP) {
-        tmp = option.targetOnEvent.querySelector(
+    opt.api = local.apiDict[opt.targetOnEvent.dataset._methodPath];
+    opt.headers = {};
+    opt.modeAjax = opt.modeAjax || "validate";
+    opt.modeNoDefault = true;
+    opt.paramDict = {};
+    opt.url = "";
+    opt.api.parameters.forEach(function (schemaP) {
+        tmp = opt.targetOnEvent.querySelector(
             ".schemaP[data-name=" + JSON.stringify(schemaP.name) + "] .input"
         );
         switch (tmp.tagName) {
@@ -5229,7 +5356,10 @@ local.uiEventListenerDict.onEventInputValidateAndAjax = function (option, onErro
                 return;
             }
             // ignore string (json)
-            if (schemaP.format === "json" && local.schemaPType(schemaP) === "string") {
+            if (
+                schemaP.format === "json"
+                && local.schemaPType(schemaP) === "string"
+            ) {
                 break;
             }
             if (
@@ -5254,16 +5384,16 @@ local.uiEventListenerDict.onEventInputValidateAndAjax = function (option, onErro
             });
             break;
         }
-        option.paramDict[schemaP.name] = tmp;
+        opt.paramDict[schemaP.name] = tmp;
     });
-    option.api.ajax(option, onError || local.nop);
+    opt.api.ajax(opt, onError || local.nop);
     // init errorDict
     errorDict = {};
-    ((option.error && option.error.errorList) || []).forEach(function (error) {
-        errorDict[error.option.prefix[2]] = error;
+    ((opt.err && opt.err.errList) || []).forEach(function (err) {
+        errorDict[err.opt.prefix[2]] = err;
     });
-    // shake input on error
-    Array.from(option.targetOnEvent.querySelectorAll(
+    // shake input on err
+    Array.from(opt.targetOnEvent.querySelectorAll(
         ".schemaP[data-name]"
     )).forEach(function (element) {
         tmp = errorDict[element.dataset.name];
@@ -5278,44 +5408,44 @@ local.uiEventListenerDict.onEventInputValidateAndAjax = function (option, onErro
             : ""
         );
     });
-    // shake submit-button on error
+    // shake submit-button on err
     local.uiAnimateShakeIfError(
-        option.error,
-        option.targetOnEvent.querySelector(
+        opt.err,
+        opt.targetOnEvent.querySelector(
             ".onEventOperationAjax"
         )
     );
-    // init requestCurl
-    tmp = option.data;
+    // init reqCurl
+    tmp = opt.data;
     local.tryCatchOnError(function () {
-        tmp = JSON.stringify(JSON.parse(option.data), null, 4);
+        tmp = JSON.stringify(JSON.parse(opt.data), null, 4);
     }, local.nop);
     tmp = (
-        "curl \\\n" + "--request " + option.api._method + " \\\n"
-        + Object.keys(option.headers).map(function (key) {
-            return "--header '" + key + ": " + option.headers[key] + "' \\\n";
+        "curl \\\n" + "--request " + opt.api._method + " \\\n"
+        + Object.keys(opt.headers).map(function (key) {
+            return "--header '" + key + ": " + opt.headers[key] + "' \\\n";
         }).join("") + "--data-binary " + (
             typeof tmp === "string"
             ? "'" + tmp.replace((
                 /'/g
             ), "'\"'\"'") + "'"
             : "<blob>"
-        ) + " \\\n\"" + option.url.replace((
+        ) + " \\\n\"" + opt.url.replace((
             /&/g
         ), "&\\\n") + "\""
     );
-    option.targetOnEvent.querySelector(
-        ".requestCurl"
+    opt.targetOnEvent.querySelector(
+        ".reqCurl"
     ).textContent = tmp;
-    // init requestJavascript
-    option.targetOnEvent.querySelector(
-        ".requestJavascript"
+    // init reqJs
+    opt.targetOnEvent.querySelector(
+        ".reqJs"
     ).textContent = local.templateRender(
-        local.templateUiRequestJavascript,
+        local.templateUiReqJs,
         {
-            option,
+            opt,
             optionJson: JSON.stringify({
-                paramDict: option.paramDict
+                paramDict: opt.paramDict
             }, null, 4)
         },
         {
@@ -5324,61 +5454,61 @@ local.uiEventListenerDict.onEventInputValidateAndAjax = function (option, onErro
     );
 };
 
-local.uiEventListenerDict.onEventOperationAjax = function (option) {
+local.uiEventListenerDict.onEventOperationAjax = function (opt) {
 /*
  * this function will submit the operation to the backend
  */
-    // ensure option is stateless
-    option = {
-        targetOnEvent: option.targetOnEvent.closest(
+    // ensure opt is stateless
+    opt = {
+        targetOnEvent: opt.targetOnEvent.closest(
             ".operation"
         )
     };
-    local.onNext(option, function (error, data) {
-        switch (option.modeNext) {
+    local.onNext(opt, function (err, data) {
+        switch (opt.modeNext) {
         case 1:
             // force ajax
-            option.modeAjax = "ajax";
+            opt.modeAjax = "ajax";
             // validate input
             local.uiEventListenerDict.onEventInputValidateAndAjax(
-                option,
-                option.onNext
+                opt,
+                opt.onNext
             );
-            // reset response output
-            Array.from(option.targetOnEvent.querySelectorAll(
+            // reset res output
+            Array.from(opt.targetOnEvent.querySelectorAll(
                 ".resBody, .resHeaders, .resStatusCode"
             )).forEach(function (element) {
                 element.classList.remove("hasError");
                 element.textContent = "loading ...";
             });
-            option.targetOnEvent.querySelector(
+            opt.targetOnEvent.querySelector(
                 ".resMedia"
             ).innerHTML = "";
-            // scrollTo response
-            option.targetOnEvent.querySelector(
+            // scrollTo res
+            opt.targetOnEvent.querySelector(
                 ".resStatusCode"
             ).focus();
             break;
         default:
-            local.onErrorDefault(error);
+            local.onErrorDefault(err);
             data = local.objectSetDefault(data, {
                 contentType: "undefined",
                 statusCode: "undefined"
             });
             // init responseStatusCode
-            option.targetOnEvent.querySelector(
+            opt.targetOnEvent.querySelector(
                 ".resStatusCode"
             ).textContent = (
                 data.statusCode
             );
             // init resHeaders
-            option.targetOnEvent.querySelector(
+            opt.targetOnEvent.querySelector(
                 ".resHeaders"
             ).textContent = Object.keys(data.resHeaders).map(function (key) {
                 return key + ": " + data.resHeaders[key] + "\r\n";
             }).join("");
             // init responseBody
-            option.targetOnEvent.querySelector(
+            opt.targetOnEvent.querySelector(
                 ".resHeaders"
             ).textContent.replace((
                 /^content-type:(.*?)$/im
@@ -5390,12 +5520,12 @@ local.uiEventListenerDict.onEventOperationAjax = function (option) {
             case "audio":
             case "img":
             case "video":
-                option.targetOnEvent.querySelector(
+                opt.targetOnEvent.querySelector(
                     ".resBody"
                 ).textContent = (
                     data.contentType
                 );
-                option.targetOnEvent.querySelector(
+                opt.targetOnEvent.querySelector(
                     ".resMedia"
                 ).innerHTML = (
                     "<" + data.mediaType
@@ -5407,7 +5537,7 @@ local.uiEventListenerDict.onEventOperationAjax = function (option) {
                 globalThis.domOnEventMediaHotkeys("init");
                 break;
             default:
-                option.targetOnEvent.querySelector(
+                opt.targetOnEvent.querySelector(
                     ".resBody"
                 ).textContent = (
                     data.responseJson
@@ -5415,16 +5545,16 @@ local.uiEventListenerDict.onEventOperationAjax = function (option) {
                     : data.response
                 );
             }
-            // shake response on error
-            Array.from(option.targetOnEvent.querySelectorAll(
+            // shake res on err
+            Array.from(opt.targetOnEvent.querySelectorAll(
                 ".resBody, .resHeaders, .resStatusCode"
             )).forEach(function (element) {
                 local.uiAnimateShakeIfError(data.statusCode >= 400, element);
             });
         }
     });
-    option.modeNext = 0;
-    option.onNext();
+    opt.modeNext = 0;
+    opt.onNext();
 };
 
 local.uiEventListenerDict.onEventOperationDisplayShow = function (event, onError) {
@@ -5537,16 +5667,16 @@ local.uiEventListenerDict.onEventResourceDisplayAction = function (event) {
     });
 };
 
-local.uiEventListenerDict.onEventUiReload = function (option, onError) {
+local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
 /*
  * this function will reload the ui
  */
     var resource;
     var swaggerJson;
-    option = option || {};
-    swaggerJson = option;
-    local.onNext(option, function (error, data) {
-        switch (option.modeNext) {
+    opt = opt || {};
+    swaggerJson = opt;
+    local.onNext(opt, function (err, data) {
+        switch (opt.modeNext) {
         case 1:
             if (
                 event
@@ -5559,13 +5689,13 @@ local.uiEventListenerDict.onEventUiReload = function (option, onError) {
             ) {
                 return;
             }
-            option.inputUrl = document.querySelector(
+            opt.inputUrl = document.querySelector(
                 ".swggUiContainer > .thead > .td2"
             );
             // clear all apiKeyValue's from localStorage
             if (
-                option.targetOnEvent
-                && option.targetOnEvent.id === "swggApiKeyClearButton1"
+                opt.targetOnEvent
+                && opt.targetOnEvent.id === "swggApiKeyClearButton1"
             ) {
                 local.apiKeyValue = "";
                 Object.keys(localStorage).forEach(function (key) {
@@ -5574,9 +5704,9 @@ local.uiEventListenerDict.onEventUiReload = function (option, onError) {
                     }
                 });
             // restore apiKeyValue
-            } else if (option.swggInit) {
+            } else if (opt.swggInit) {
                 local.apiKeyKey = "utility2_swgg_apiKeyKey_" + encodeURIComponent(
-                    local.urlParse(option.inputUrl.value.replace((
+                    local.urlParse(opt.inputUrl.value.replace((
                         /^\//
                     ), "")).href
                 );
@@ -5590,12 +5720,12 @@ local.uiEventListenerDict.onEventUiReload = function (option, onError) {
             }
             // if keyup-event is not return-key, then return
             if (
-                (option.type === "keyup" && option.code !== "Enter")
+                (opt.type === "keyup" && opt.code !== "Enter")
                 // do not reload ui during test
                 || globalThis.utility2_modeTest >= 4
             ) {
-                option.modeNext = Infinity;
-                option.onNext();
+                opt.modeNext = Infinity;
+                opt.onNext();
                 return;
             }
             // reset ui
@@ -5608,8 +5738,8 @@ local.uiEventListenerDict.onEventUiReload = function (option, onError) {
                 element.remove();
             });
             // normalize swaggerJsonUrl
-            option.inputUrl.value = local.urlParse(
-                option.inputUrl.value.replace((
+            opt.inputUrl.value = local.urlParse(
+                opt.inputUrl.value.replace((
                     /^\//
                 ), "")
             ).href;
@@ -5618,19 +5748,19 @@ local.uiEventListenerDict.onEventUiReload = function (option, onError) {
             ).innerHTML = (
                 "loading swagger.json"
             );
-            option.onNext();
+            opt.onNext();
             break;
         case 2:
             // fetch swagger.json file
             local.ajax({
-                url: option.inputUrl.value
-            }, option.onNext);
+                url: opt.inputUrl.value
+            }, opt.onNext);
             break;
         case 3:
             // JSON.parse swagger.json string
             local.tryCatchOnError(function () {
-                option.onNext(null, JSON.parse(data.responseText));
-            }, option.onNext);
+                opt.onNext(null, JSON.parse(data.responseText));
+            }, opt.onNext);
             break;
         case 4:
             // reset state
@@ -5652,7 +5782,7 @@ local.uiEventListenerDict.onEventUiReload = function (option, onError) {
                 swaggerJson
             ).trim();
             // init urlSwaggerJson
-            swaggerJson.urlSwaggerJson = option.inputUrl.value;
+            swaggerJson.urlSwaggerJson = opt.inputUrl.value;
             // templateRender main
             document.querySelector(
                 ".swggUiContainer"
@@ -5664,28 +5794,28 @@ local.uiEventListenerDict.onEventUiReload = function (option, onError) {
                 // recurse - render .resourceList
                 local.uiEventListenerDict.onEventUiReload(
                     swaggerJson,
-                    option.onNext
+                    opt.onNext
                 );
             }, 100);
             break;
         default:
-            local.onErrorDefault(error);
-            // debug error
-            local._debugOnEventUiReload = error || local._debugOnEventUiReload;
+            local.onErrorDefault(err);
+            // debug err
+            local._debugOnEventUiReload = err || local._debugOnEventUiReload;
             document.querySelector(
                 "#swggUiReloadErrorDiv1"
             ).textContent = (
-                (error || {
+                (err || {
                     message: ""
                 }).message
             );
-            local.setTimeoutOnError(onError, 0, error);
+            local.setTimeoutOnError(onError, 0, err);
         }
     });
     // optimization - render .swggUiContainer first
     if (!swaggerJson.swagger) {
-        option.modeNext = 0;
-        option.onNext();
+        opt.modeNext = 0;
+        opt.onNext();
         return;
     }
     // optimization - render .resourceList in separate event-loop
@@ -5728,7 +5858,10 @@ local.uiEventListenerDict.onEventUiReload = function (option, onError) {
     Object.keys(swaggerJson.resourceDict).sort().forEach(function (key) {
         // templateRender resource
         swaggerJson.uiFragment.appendChild(
-            local.domElementRender(local.templateUiResource, swaggerJson.resourceDict[key])
+            local.domFragmentRender(
+                local.templateUiResource,
+                swaggerJson.resourceDict[key]
+            )
         );
     });
     Object.keys(swaggerJson.operationDict).sort(function (aa, bb) {
@@ -5743,14 +5876,18 @@ local.uiEventListenerDict.onEventUiReload = function (option, onError) {
         );
     }).forEach(function (operation) {
         operation = swaggerJson.operationDict[operation];
-        operation.id = local.idDomElementCreate("swgg_id_" + operation.operationId);
+        operation.id = local.idDomElementCreate(
+            "swgg_id_" + operation.operationId
+        );
         operation.tags.forEach(function (tag) {
             // create new operation for each tag
             operation = local.jsonCopy(operation);
             resource = swaggerJson.resourceDict[tag];
             local.objectSetDefault(operation, {
                 description: "no description",
-                responseList: Object.keys(operation.responses).sort().map(function (key) {
+                responseList: Object.keys(
+                    operation.responses
+                ).sort().map(function (key) {
                     return {
                         key,
                         value: operation.responses[key]
@@ -5765,8 +5902,9 @@ local.uiEventListenerDict.onEventUiReload = function (option, onError) {
             // templateRender operation
             swaggerJson.uiFragment.querySelector(
                 "#" + resource.id + " .operationList"
-            )
-            .appendChild(local.domElementRender(local.templateUiOperation, operation));
+            ).appendChild(
+                local.domFragmentRender(local.templateUiOperation, operation)
+            );
         });
     });
     // emulate <ol></ol> for operations
@@ -5802,7 +5940,9 @@ local.uiEventListenerDict.onEventUiReload = function (option, onError) {
         }
     });
     // init event-handling
-    ["Change", "Click", "Keyup", "Submit"].forEach(function (eventType) {
+    [
+        "Change", "Click", "Keyup", "Submit"
+    ].forEach(function (eventType) {
         Array.from(document.querySelectorAll(
             ".eventDelegate" + eventType
         )).forEach(function (element) {
@@ -5836,7 +5976,9 @@ local.uiRenderSchemaP = function (schemaP) {
     schemaP.enum2 = (
         schemaP.enum
         || (local.schemaPItems(schemaP) || {}).enum
-        || (local.schemaPType(schemaP) === "boolean" && [false, true])
+        || (local.schemaPType(schemaP) === "boolean" && [
+            false, true
+        ])
     );
     // init input - file
     if (local.schemaPType(schemaP) === "file") {
@@ -5852,7 +5994,9 @@ local.uiRenderSchemaP = function (schemaP) {
             schemaP.enumDefault = (
                 local.schemaPType(schemaP) === "array"
                 ? schemaP.default
-                : [schemaP.default]
+                : [
+                    schemaP.default
+                ]
             );
         }
         schemaP.isSelectMultiple = local.schemaPType(schemaP) === "array";
@@ -5938,7 +6082,9 @@ local.uiRenderSchemaP = function (schemaP) {
             // dereference schemaP
             modeDereference: true,
             modeDereferenceDepth: 2,
-            prefix: ["parameters", schemaP.name],
+            prefix: [
+                "parameters", schemaP.name
+            ],
             schema: element,
             swaggerJson: local.swaggerJson
         }) || {});
@@ -5948,7 +6094,9 @@ local.uiRenderSchemaP = function (schemaP) {
         schemaP.schemaText = JSON.stringify((
             // ternary-operator
             schemaP.type2 === "array"
-            ? [schemaP.schema2.properties]
+            ? [
+                schemaP.schema2.properties
+            ]
             : schemaP.schema2.properties
         ), null, 4);
     }
@@ -5976,7 +6124,11 @@ local.uiRenderSchemaP = function (schemaP) {
             schemaP.placeholder = JSON.stringify(schemaP.placeholder);
         }
     } else if (schemaP.format === "json") {
-        schemaP.placeholder = JSON.stringify(JSON.parse(schemaP.placeholder), null, 4);
+        schemaP.placeholder = JSON.stringify(
+            JSON.parse(schemaP.placeholder),
+            null,
+            4
+        );
     }
     // init valueText
     schemaP.valueText = (
@@ -6007,23 +6159,23 @@ local.urlParseWithBraket = function (url) {
     ).replace(new RegExp(tmp + 1, "g"), "{").replace(new RegExp(tmp + 2, "g"), "}"));
 };
 
-local.userLoginByPassword = function (option, onError) {
+local.userLoginByPassword = function (opt, onError) {
 /*
- * this function will send a login-by-password request
+ * this function will send a login-by-password req
  */
     local.apiDict["GET /user/userLoginByPassword"].ajax({
         paramDict: {
-            password: option.password,
-            username: option.username
+            password: opt.password,
+            username: opt.username
         }
     }, onError);
 };
 
-local.userLogout = function (option, onError) {
+local.userLogout = function (opt, onError) {
 /*
- * this function will send a logout request
+ * this function will send a logout req
  */
-    local.apiDict["GET /user/userLogout"].ajax(option, onError);
+    local.apiDict["GET /user/userLogout"].ajax(opt, onError);
 };
 }());
 
@@ -6043,9 +6195,10 @@ local.assetsDict["/assets.swagger-ui.logo.small.png"] = Buffer.from(
     local.templateSwaggerUiLogoSmallBase64,
     "base64"
 );
-local.swgg.apiUpdate(
-    local.fsReadFileOrEmptyStringSync(local.__dirname + "/assets.swgg.swagger.json", "json")
-);
+local.swgg.apiUpdate(local.fsReadFileOrEmptyStringSync(
+    local.__dirname + "/assets.swgg.swagger.json",
+    "json"
+));
 }());
 
 

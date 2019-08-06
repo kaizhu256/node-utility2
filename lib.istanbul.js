@@ -56,7 +56,7 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw error-<message> if <passed> is falsy
+     * this function will throw err.<message> if <passed> is falsy
      */
         var err;
         if (passed) {
@@ -69,7 +69,7 @@
                 && typeof message.message === "string"
                 && typeof message.stack === "string"
             )
-            // if message is error-object, then leave as is
+            // if message is errObj, then leave as is
             ? message
             : new Error(
                 typeof message === "string"
@@ -212,15 +212,21 @@ local.cliRun = function (opt) {
         var packageJson;
         var text;
         var textDict;
-        commandList = [{
-            argList: "<arg2>  ...",
-            description: "usage:",
-            command: ["<arg1>"]
-        }, {
-            argList: "'console.log(\"hello world\")'",
-            description: "example:",
-            command: ["--eval"]
-        }];
+        commandList = [
+            {
+                argList: "<arg2>  ...",
+                description: "usage:",
+                command: [
+                    "<arg1>"
+                ]
+            }, {
+                argList: "'console.log(\"hello world\")'",
+                description: "example:",
+                command: [
+                    "--eval"
+                ]
+            }
+        ];
         file = __filename.replace((
             /.*\//
         ), "");
@@ -249,7 +255,9 @@ local.cliRun = function (opt) {
                 commandList[ii] = opt.rgxComment.exec(text);
                 commandList[ii] = {
                     argList: (commandList[ii][1] || "").trim(),
-                    command: [key],
+                    command: [
+                        key
+                    ],
                     description: commandList[ii][2]
                 };
             } catch (ignore) {
@@ -279,7 +287,9 @@ local.cliRun = function (opt) {
             switch (ii) {
             case 0:
             case 1:
-                elem.argList = [elem.argList];
+                elem.argList = [
+                    elem.argList
+                ];
                 break;
             default:
                 elem.argList = elem.argList.split(" ");
@@ -365,9 +375,13 @@ local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
         // mkdir -p
         require("child_process").spawnSync(
             "mkdir",
-            ["-p", require("path").dirname(file)],
+            [
+                "-p", require("path").dirname(file)
+            ],
             {
-                stdio: ["ignore", 1, 2]
+                stdio: [
+                    "ignore", 1, 2
+                ]
             }
         );
         // re-write to file
@@ -461,7 +475,9 @@ local.coverageMerge = function (coverage1, coverage2) {
             return;
         }
         // merge file from coverage2 into coverage1
-        ["b", "f", "s"].forEach(function (key) {
+        [
+            "b", "f", "s"
+        ].forEach(function (key) {
             dict1 = coverage1[file][key];
             dict2 = coverage2[file][key];
             switch (key) {
@@ -493,30 +509,30 @@ local.coverageReportCreate = function () {
  * 2. write coverage in html-format to filesystem
  * 3. return coverage in html-format as single document
  */
-    var option;
+    var opt;
     /* istanbul ignore next */
     if (!globalThis.__coverage__) {
         return "";
     }
-    option = {};
-    option.dir = process.cwd() + "/tmp/build/coverage.html";
+    opt = {};
+    opt.dir = process.cwd() + "/tmp/build/coverage.html";
     // merge previous coverage
     if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
-        console.log("merging file " + option.dir + "/coverage.json to coverage");
+        console.log("merging file " + opt.dir + "/coverage.json to coverage");
         try {
             local.coverageMerge(globalThis.__coverage__, JSON.parse(
-                local.fs.readFileSync(option.dir + "/coverage.json", "utf8")
+                local.fs.readFileSync(opt.dir + "/coverage.json", "utf8")
             ));
         } catch (ignore) {}
         try {
-            option.coverageCodeDict = JSON.parse(local.fs.readFileSync(
-                option.dir + "/coverage.code-dict.json",
+            opt.coverageCodeDict = JSON.parse(local.fs.readFileSync(
+                opt.dir + "/coverage.code-dict.json",
                 "utf8"
             ));
-            Object.keys(option.coverageCodeDict).forEach(function (key) {
+            Object.keys(opt.coverageCodeDict).forEach(function (key) {
                 globalThis.__coverageCodeDict__[key] = (
                     globalThis.__coverageCodeDict__[key]
-                    || option.coverageCodeDict[key]
+                    || opt.coverageCodeDict[key]
                 );
             });
         } catch (ignore) {}
@@ -526,53 +542,54 @@ local.coverageReportCreate = function () {
     local.coverageReportHtml += (
         "<div class=\"coverageReportDiv\">\n"
         + "<h1>coverage-report</h1>\n"
-        + "<div style=\"background: #fff; border: 1px solid #000; margin 0; padding: 0;"
+        + "<div style=\""
+        + "background: #fff; border: 1px solid #000; margin 0; padding: 0;"
         + "\">\n"
     );
     local.writerData = "";
-    option.sourceStore = {};
-    option.writer = local.writer;
+    opt.sourceStore = {};
+    opt.writer = local.writer;
     // 1. print coverage in text-format to stdout
-    new local.TextReport(option).writeReport(local.collector);
+    new local.TextReport(opt).writeReport(local.collector);
     // 2. write coverage in html-format to filesystem
-    new local.HtmlReport(option).writeReport(local.collector);
+    new local.HtmlReport(opt).writeReport(local.collector);
     local.writer.writeFile("", local.nop);
     if (!local.isBrowser) {
         // write coverage.json
         local.fsWriteFileWithMkdirpSync(
-            option.dir + "/coverage.json",
+            opt.dir + "/coverage.json",
             JSON.stringify(globalThis.__coverage__)
         );
         // write coverage.code-dict.json
         local.fsWriteFileWithMkdirpSync(
-            option.dir + "/coverage.code-dict.json",
+            opt.dir + "/coverage.code-dict.json",
             JSON.stringify(globalThis.__coverageCodeDict__)
         );
         // write coverage.badge.svg
-        option.pct = local.coverageReportSummary.root.metrics.lines.pct;
+        opt.pct = local.coverageReportSummary.root.metrics.lines.pct;
         local.fsWriteFileWithMkdirpSync(
-            local._istanbul_path.dirname(option.dir) + "/coverage.badge.svg",
+            local._istanbul_path.dirname(opt.dir) + "/coverage.badge.svg",
             local.templateCoverageBadgeSvg
             // edit coverage badge percent
             .replace((
                 /100.0/g
-            ), option.pct)
+            ), opt.pct)
             // edit coverage badge color
             .replace((
                 /0d0/g
             ), (
-                ("0" + Math.round((100 - option.pct) * 2.21).toString(16)).slice(-2)
-                + ("0" + Math.round(option.pct * 2.21).toString(16)).slice(-2) + "00"
+                ("0" + Math.round((100 - opt.pct) * 2.21).toString(16)).slice(-2)
+                + ("0" + Math.round(opt.pct * 2.21).toString(16)).slice(-2) + "00"
             ))
         );
     }
-    console.log("created coverage file " + option.dir + "/index.html");
+    console.log("created coverage file " + opt.dir + "/index.html");
     // 3. return coverage in html-format as a single document
     local.coverageReportHtml += "</div>\n</div>\n";
     // write coverage.rollup.html
     if (!local.isBrowser) {
         local.fsWriteFileWithMkdirpSync(
-            option.dir + "/coverage.rollup.html",
+            opt.dir + "/coverage.rollup.html",
             local.coverageReportHtml
         );
     }

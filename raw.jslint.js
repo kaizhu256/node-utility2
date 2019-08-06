@@ -1420,7 +1420,7 @@ t+1)+": "+e.type+" at line "+e.line+", col "+e.col,s+="\n"+e.message,s+="\n"+e.e
 
 /*
 file https://github.com/douglascrockford/JSLint/blob/ea8401c6a72e21d66f49766af692b09e81d7a79f/jslint.js
-shGithubDateCommitted https://github.com/douglascrockford/JSLint/commits/ea8401c6a72e21d66f49766af692b09e81d7a79f # 2018-11-14T03:04:33Z
+shGithubDateCommitted https://github.com/douglascrockford/JSLint/commits/ea8401c6a72e21d66f49766af692b09e81d7a79f # 2019-01-31T16:38:40Z
 curl https://raw.githubusercontent.com/douglascrockford/JSLint/ea8401c6a72e21d66f49766af692b09e81d7a79f/jslint.js > /tmp/aa.js
 node -e '
 "use strict";
@@ -2085,7 +2085,8 @@ function warn_at(code, line, column, a, b, c, d) {
 // Report an error at some line and column of the program. The warning object
 // resembles an exception.
 
-    var warning = { // ~~
+    var warning = {
+        // ~~
         name: "JSLintError",
         column,
         line,
@@ -4591,7 +4592,9 @@ prefix("(", function () {
             return stop("expected_identifier_a", the_value);
         }
         the_paren.expression = [the_value];
-        return fart([the_paren.expression, "(" + the_value.id + ")"]);
+        return fart([
+            the_paren.expression, "(" + the_value.id + ")"
+        ]);
     }
     return the_value;
 });

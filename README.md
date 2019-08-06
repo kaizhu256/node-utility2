@@ -1,5 +1,5 @@
 # utility2
-the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps
+the zero-dependency, swiss-army-knife utility to build, test, and deploy webapps
 
 # live web demo
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/)
@@ -56,16 +56,16 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- audit `{}` may have been `[]`
 - rename var value to val
-- jslint - auto-newline function-calls with names longer than 20 char
 - replace uglifyjs-lite with terser-lite (v2.8.29)
+- jslint - refactor files to 80 chr column-limit
 - jslint - remove bad_property_a and unexpected_a hacks
 - jslint - allow space after semi-colon in jslint-macro
 - jslint - fix lineOffset issue with ignored-lines
 - jslint - jslintUtility2 with ignore-region blank
 - jslint - sort nested switch-statements
 - jslint-autofix - move inner-loop to outer
-- jslint - refactor files to 80 chr column-limit
 - add default testCase _testCase_cliRun_help
 - merge class _http.IncomingMessage -> _http.ServerResponse
 - integrate db-lite and github-crud into a cloud-based db on github
@@ -74,12 +74,15 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 
 #### changelog 2019.8.2
 - npm publish 2019.8.2
+- csslint - reset sorted-line with \n\n instead of macro /* validateLineSortedReset */
+- add env var \$npm_config_mode_inspect, \$npm_config_mode_winpty
+- disable travis-ci cache
+- rename function local.domElementRender to local.domFragmentRender
+- rename var request to req, response to res, local.errorDefault to local.errDefault, error to err, option to opt, event to evt, nextMiddleware to next
 - jslint-autofix - split ([aa, bb]) into multiple-lines
 - add partial support for git-for-windows/MINGW env
 - update to jslint commit ea8401c6a72e21d66f49766af692b09e81d7a79f
 - csslint - validateLineSortedReset @media
-- rename var event to evt
-- rename var nextMiddleware to next
 - none
 
 #### this package requires
@@ -184,7 +187,7 @@ instruction
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw error-<message> if <passed> is falsy
+     * this function will throw err.<message> if <passed> is falsy
      */
         var err;
         if (passed) {
@@ -197,7 +200,7 @@ instruction
                 && typeof message.message === "string"
                 && typeof message.stack === "string"
             )
-            // if message is error-object, then leave as is
+            // if message is errObj, then leave as is
             ? message
             : new Error(
                 typeof message === "string"
@@ -307,70 +310,70 @@ local.assetsDict["/assets.index.template.html"] = "";
 
 // run shared js-env code - function
 (function () {
-local.testCase_ajax_200 = function (option, onError) {
+local.testCase_ajax_200 = function (opt, onError) {
 /*
  * this function will test ajax's "200 ok" handling-behavior
  */
     if (!local.isBrowser) {
-        onError(null, option);
+        onError(null, opt);
         return;
     }
-    option = {};
+    opt = {};
     // test ajax-path "assets.hello.txt"
     local.ajax({
         url: "assets.hello.txt"
-    }, function (error, xhr) {
+    }, function (err, xhr) {
         local.tryCatchOnError(function () {
             // validate no err occurred
-            local.assertThrow(!error, error);
+            local.assertThrow(!err, err);
             // validate data
-            option.data = xhr.responseText;
+            opt.data = xhr.responseText;
             local.assertThrow(
-                option.data === "hello \ud83d\ude01\n",
-                option.data
+                opt.data === "hello \ud83d\ude01\n",
+                opt.data
             );
             onError();
         }, onError);
     });
 };
 
-local.testCase_ajax_404 = function (option, onError) {
+local.testCase_ajax_404 = function (opt, onError) {
 /*
  * this function will test ajax's "404 not found" handling-behavior
  */
     if (!local.isBrowser) {
-        onError(null, option);
+        onError(null, opt);
         return;
     }
-    option = {};
+    opt = {};
     // test ajax-path "/undefined"
     local.ajax({
         url: "/undefined"
-    }, function (error) {
+    }, function (err) {
         local.tryCatchOnError(function () {
             // validate err occurred
-            local.assertThrow(error, error);
-            option.statusCode = error.statusCode;
+            local.assertThrow(err, err);
+            opt.statusCode = err.statusCode;
             // validate 404 http statusCode
-            local.assertThrow(option.statusCode === 404, option.statusCode);
+            local.assertThrow(opt.statusCode === 404, opt.statusCode);
             onError();
         }, onError);
     });
 };
 
-local.testCase_webpage_default = function (option, onError) {
+local.testCase_webpage_default = function (opt, onError) {
 /*
  * this function will test webpage's default handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, option);
+        onError(null, opt);
         return;
     }
-    option = {
+    opt = {
         modeCoverageMerge: true,
         url: local.serverLocalHost + "?modeTest=1"
     };
-    local.browserTest(option, onError);
+    local.browserTest(opt, onError);
 };
 }());
 
@@ -952,27 +955,27 @@ utility2-comment -->\n\
     testCaseDict = {};\n\
     testCaseDict.modeTest = 1;\n\
 \n\
-    // comment this testCase to disable the failed error demo\n\
-    testCaseDict.testCase_failed_error_demo = function (option, onError) {\n\
+    // comment this testCase to disable failed error demo\n\
+    testCaseDict.testCase_failed_error_demo = function (opt, onError) {\n\
     /*\n\
-     * this function will demo a failed error test\n\
+     * this function will run a failed error demo\n\
      */\n\
         // jslint-hack\n\
-        window.utility2.nop(option);\n\
+        window.utility2.nop(opt);\n\
         onError(new Error("this is a failed error demo"));\n\
     };\n\
 \n\
-    testCaseDict.testCase_passed_ajax_demo = function (option, onError) {\n\
+    testCaseDict.testCase_passed_ajax_demo = function (opt, onError) {\n\
     /*\n\
      * this function will demo a passed ajax test\n\
      */\n\
         var data;\n\
-        option = {url: "/"};\n\
-        // test ajax request for main-page "/"\n\
-        window.utility2.ajax(option, function (error, xhr) {\n\
+        opt = {url: "/"};\n\
+        // test ajax-req for main-page "/"\n\
+        window.utility2.ajax(opt, function (err, xhr) {\n\
             try {\n\
                 // validate no err occurred\n\
-                console.assert(!error, error);\n\
+                console.assert(!err, err);\n\
                 // validate "200 ok" status\n\
                 console.assert(xhr.statusCode === 200, xhr.statusCode);\n\
                 // validate non-empty data\n\
@@ -1147,7 +1150,7 @@ local.http.createServer(function (req, res) {
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js"
     },
-    "description": "the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps",
+    "description": "the zero-dependency, swiss-army-knife utility to build, test, and deploy webapps",
     "devDependencies": {
         "electron-lite": "kaizhu256/node-electron-lite#alpha"
     },

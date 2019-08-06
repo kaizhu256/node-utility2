@@ -2,7 +2,7 @@
 /*
  * lib.utility2.js (2019.8.2)
  * https://github.com/kaizhu256/node-utility2
- * the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps
+ * the zero-dependency, swiss-army-knife utility to build, test, and deploy webapps
  *
  */
 
@@ -56,7 +56,7 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw error-<message> if <passed> is falsy
+     * this function will throw err.<message> if <passed> is falsy
      */
         var err;
         if (passed) {
@@ -69,7 +69,7 @@
                 && typeof message.message === "string"
                 && typeof message.stack === "string"
             )
-            // if message is error-object, then leave as is
+            // if message is errObj, then leave as is
             ? message
             : new Error(
                 typeof message === "string"
@@ -666,7 +666,7 @@ local.assetsDict["/assets.example.begin.js"] = '\
     // init function\n\
     local.assertThrow = function (passed, message) {\n\
     /*\n\
-     * this function will throw error-<message> if <passed> is falsy\n\
+     * this function will throw err.<message> if <passed> is falsy\n\
      */\n\
         var err;\n\
         if (passed) {\n\
@@ -679,7 +679,7 @@ local.assetsDict["/assets.example.begin.js"] = '\
                 && typeof message.message === "string"\n\
                 && typeof message.stack === "string"\n\
             )\n\
-            // if message is error-object, then leave as is\n\
+            // if message is errObj, then leave as is\n\
             ? message\n\
             : new Error(\n\
                 typeof message === "string"\n\
@@ -1717,10 +1717,10 @@ local.cliDict["utility2.testReportCreate"] = function () {
     };
     if (!local.isBrowser) {
         globalThis.TextDecoder = (
-            globalThis.TextDecoder || local.util.TextDecoder
+            globalThis.TextDecoder || require("util").TextDecoder
         );
         globalThis.TextEncoder = (
-            globalThis.TextEncoder || local.util.TextEncoder
+            globalThis.TextEncoder || require("util").TextEncoder
         );
     }
     TextXxcoder = function () {
@@ -1926,10 +1926,12 @@ local.FormData.prototype.read = function (onError) {
         var value;
         value = option2.elem.value;
         if (!(value && value.constructor === local.Blob)) {
-            result[option2.ii] = [(
-                boundary + "\r\nContent-Disposition: form-data; name=\""
-                + option2.elem.name + "\"\r\n\r\n"
-            ), value, "\r\n"];
+            result[option2.ii] = [
+                (
+                    boundary + "\r\nContent-Disposition: form-data; name=\""
+                    + option2.elem.name + "\"\r\n\r\n"
+                ), value, "\r\n"
+            ];
             onParallel.counter += 1;
             onParallel();
             return;
@@ -1937,20 +1939,22 @@ local.FormData.prototype.read = function (onError) {
         // read from blob in parallel
         onParallel.counter += 1;
         local.blobRead(value, function (err, data) {
-            result[option2.ii] = !err && [(
-                boundary + "\r\nContent-Disposition: form-data; name=\""
-                + option2.elem.name + "\"" + (
-                    (value && value.name)
-                    // read param filename
-                    ? "; filename=\"" + value.name + "\""
-                    : ""
-                ) + "\r\n" + (
-                    (value && value.type)
-                    // read param Content-Type
-                    ? "Content-Type: " + value.type + "\r\n"
-                    : ""
-                ) + "\r\n"
-            ), data, "\r\n"];
+            result[option2.ii] = !err && [
+                (
+                    boundary + "\r\nContent-Disposition: form-data; name=\""
+                    + option2.elem.name + "\"" + (
+                        (value && value.name)
+                        // read param filename
+                        ? "; filename=\"" + value.name + "\""
+                        : ""
+                    ) + "\r\n" + (
+                        (value && value.type)
+                        // read param Content-Type
+                        ? "Content-Type: " + value.type + "\r\n"
+                        : ""
+                    ) + "\r\n"
+                ), data, "\r\n"
+            ];
             onParallel(err);
         });
     }, function (err) {
@@ -1975,9 +1979,9 @@ local._http = {};
 local._http.IncomingMessage = function (xhr) {
 /*
  * An IncomingMessage object is created by http.Server or http.ClientRequest
- * and passed as the first argument to the 'request' and 'response' event
+ * and passed as the first argument to the 'req' and 'res' event
  * respectively.
- * It may be used to access response status, headers and data.
+ * It may be used to access res status, headers and data.
  * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_http_incomingmessage
  */
     this.headers = xhr.headers;
@@ -2113,7 +2117,7 @@ local._http.STATUS_CODES = {
 local._http.ServerResponse = function (onResponse) {
 /*
  * This object is created internally by a HTTP server--not by the user.
- * It is passed as the second parameter to the 'request' event.
+ * It is passed as the second parameter to the 'req' event.
  * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_class_http_serverresponse
  */
     this.chunkList = [];
@@ -2143,9 +2147,9 @@ local._http.ServerResponse.prototype.emit = (
 
 local._http.ServerResponse.prototype.end = function (data) {
 /*
- * This method signals to the server that all of the response headers and body
+ * This method signals to the server that all of the res headers and body
  * have been sent; that server should consider this message complete.
- * The method, response.end(), MUST be called on each response.
+ * The method, res.end(), MUST be called on each res.
  * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_response_end_data_encoding_callback
  */
     var that;
@@ -2155,9 +2159,9 @@ local._http.ServerResponse.prototype.end = function (data) {
     }
     that._isDone = true;
     that.chunkList.push(data);
-    // notify server response is finished
+    // notify server res is finished
     that.emit("finish");
-    // asynchronously send response from server -> client
+    // asynchronously send res from server -> client
     setTimeout(function () {
         that.onResponse(that);
         that.emit("data", local.bufferConcat(that.chunkList));
@@ -2190,7 +2194,7 @@ local._http.ServerResponse.prototype.setHeader = function (key, value) {
 
 local._http.ServerResponse.prototype.write = function (data) {
 /*
- * This sends a chunk of the response body.
+ * This sends a chunk of the res body.
  * This method may be called multiple times
  * to provide successive parts of the body.
  * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_response_write_chunk_encoding_callback
@@ -2230,11 +2234,11 @@ local._http.request = function (xhr, onResponse) {
             return;
         }
         isDone = true;
-        xhr.serverRequest.data = data;
-        // asynchronously send request from client -> server
+        xhr.serverReq.data = data;
+        // asynchronously send req from client -> server
         setTimeout(function () {
-            local.serverLocalRequestHandler(
-                xhr.serverRequest,
+            local.serverLocalReqHandler(
+                xhr.serverReq,
                 xhr.serverResponse
             );
         });
@@ -2242,7 +2246,7 @@ local._http.request = function (xhr, onResponse) {
     xhr.on = function () {
         return xhr;
     };
-    xhr.serverRequest = new local._http.IncomingMessage(xhr);
+    xhr.serverReq = new local._http.IncomingMessage(xhr);
     xhr.serverResponse = new local._http.ServerResponse(onResponse);
     return xhr;
 };
@@ -2336,8 +2340,9 @@ local._testCase_webpage_default = function (opt, onError) {
 
 local.ajax = function (opt, onError) {
 /*
- * this function will send an ajax-request with given <opt>.url,
- * with error-handling and timeout
+ * this function will send an ajax-req
+ * with given <opt>.url and callback <onError>
+ * with err and timeout handling
  * example usage:
     local.ajax({
         data: "hello world",
@@ -2408,7 +2413,7 @@ local.ajax = function (opt, onError) {
                 0
             );
             ajaxProgressUpdate();
-            // handle abort or error event
+            // handle abort or err event
             switch (!xhr.err && evt.type) {
             case "abort":
             case "error":
@@ -2449,7 +2454,7 @@ local.ajax = function (opt, onError) {
                 });
             }
             // debug ajaxResponse
-            xhr.responseContentLength = (
+            xhr.resContentLength = (
                 xhr.response
                 && (xhr.response.byteLength || xhr.response.length)
             ) | 0;
@@ -2463,7 +2468,7 @@ local.ajax = function (opt, onError) {
                     statusCode: xhr.statusCode,
                     timeElapsed: xhr.timeElapsed,
                     // extra
-                    responseContentLength: xhr.responseContentLength
+                    resContentLength: xhr.resContentLength
                 }));
             }
             // init responseType
@@ -2524,7 +2529,7 @@ local.ajax = function (opt, onError) {
         });
         // init timeout
         timeout = xhr.timeout || local2.timeoutDefault || 30000;
-        // init defaults
+        // init default
         local.objectAssignDefault(xhr, {
             corsForwardProxyHost: local2.corsForwardProxyHost,
             headers: {},
@@ -2558,7 +2563,7 @@ local.ajax = function (opt, onError) {
     // init xhr - XMLHttpRequest
     xhr = (
         local.isBrowser
-        && !opt.httpRequest
+        && !opt.httpReq
         && !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(opt.url))
         && new XMLHttpRequest()
     );
@@ -2569,7 +2574,7 @@ local.ajax = function (opt, onError) {
         xhrInit();
         // init xhr - http.request
         xhr = local.identity(
-            opt.httpRequest
+            opt.httpReq
             || (local.isBrowser && local2.http.request)
             || require(xhr.protocol.slice(0, -1)).request
         )(xhr, function (resStream) {
@@ -2621,7 +2626,7 @@ local.ajax = function (opt, onError) {
     // init timerTimeout
     xhr.timerTimeout = setTimeout(function () {
         xhr.err = xhr.err || new Error(
-            "onTimeout - timeout-error - "
+            "onTimeout - errTimeout - "
             + timeout + " ms - " + "ajax " + xhr.method + " " + xhr.url
         );
         xhr.abort();
@@ -2752,7 +2757,9 @@ local.assertJsonEqual = function (aa, bb, message) {
  */
     aa = local.jsonStringifyOrdered(aa);
     bb = JSON.stringify(bb);
-    local.assertThrow(aa === bb, message || [aa, bb]);
+    local.assertThrow(aa === bb, message || [
+        aa, bb
+    ]);
 };
 
 local.assertJsonNotEqual = function (aa, bb, message) {
@@ -2761,7 +2768,9 @@ local.assertJsonNotEqual = function (aa, bb, message) {
  */
     aa = local.jsonStringifyOrdered(aa);
     bb = JSON.stringify(bb);
-    local.assertThrow(aa !== bb, [aa], message || aa);
+    local.assertThrow(aa !== bb, [
+        aa
+    ], message || aa);
 };
 
 local.base64FromBuffer = function (bff) {
@@ -2916,15 +2925,17 @@ local.browserTest = function (opt, onError) {
     // init utility2_testReport
     window.utility2_testReport = window.utility2_testReport || {
         coverage: window.__coverage__,
-        testPlatformList: [{
-            name: (
-                local.isBrowser
-                ? "browser - " + location.pathname + " - " + navigator.userAgent
-                : "node - " + process.platform + " " + process.version
-            ) + " - " + new Date().toISOString(),
-            screenshot: local.env && local.env.MODE_BUILD_SCREENSHOT_IMG,
-            testCaseList: []
-        }]
+        testPlatformList: [
+            {
+                name: (
+                    local.isBrowser
+                    ? "browser - " + location.pathname + " - " + navigator.userAgent
+                    : "node - " + process.platform + " " + process.version
+                ) + " - " + new Date().toISOString(),
+                screenshot: local.env && local.env.MODE_BUILD_SCREENSHOT_IMG,
+                testCaseList: []
+            }
+        ]
     };
     window.utility2_testReportSave = (
         window.utility2_testReportSave
@@ -3102,7 +3113,9 @@ local.browserTest = function (opt, onError) {
                 stdio: (
                     (!opt.modeDebug && opt.modeSilent)
                     ? "ignore"
-                    : ["ignore", 1, 2]
+                    : [
+                        "ignore", 1, 2
+                    ]
                 ),
                 timeout: opt.timeoutDefault
             }).once("error", opt.onNext).once("exit", opt.onNext);
@@ -3344,7 +3357,9 @@ local.bufferConcat = function (bffList) {
     var jj;
     var result;
     isString = true;
-    result = [""];
+    result = [
+        ""
+    ];
     byteLength = 0;
     bffList.forEach(function (bff) {
         if (bff !== 0 && !(bff && bff.length)) {
@@ -3506,58 +3521,60 @@ local.buildApp = function (opt, onError) {
     // build assets
     local.fsRmrSync("tmp/build/app");
     local.onParallelList({
-        list: [{
-            file: "/LICENSE",
-            url: "/LICENSE"
-        }, {
-            file: "/assets." + local.env.npm_package_nameLib + ".html",
-            url: "/index.html"
-        }, {
-            file: "/assets." + local.env.npm_package_nameLib + ".js",
-            url: "/assets." + local.env.npm_package_nameLib + ".js"
-        }, {
-            file: "/assets.app.js",
-            url: "/assets.app.js"
-        }, {
-            file: "/assets.example.html",
-            url: "/assets.example.html"
-        }, {
-            file: "/assets.example.js",
-            url: "/assets.example.js"
-        }, {
-            file: "/assets.swgg.html",
-            url: "/assets.swgg.html"
-        }, {
-            file: "/assets.swgg.swagger.json",
-            url: "/assets.swgg.swagger.json"
-        }, {
-            file: "/assets.swgg.swagger.petstore.json",
-            url: "/assets.swgg.swagger.petstore.json"
-        }, {
-            file: "/assets.swgg.swagger.server.json",
-            url: "/assets.swgg.swagger.server.json"
-        }, {
-            file: "/assets.test.js",
-            url: "/assets.test.js"
-        }, {
-            file: "/assets.utility2.html",
-            url: "/assets.utility2.html"
-        }, {
-            file: "/assets.utility2.base.html",
-            url: "/assets.utility2.base.html"
-        }, {
-            file: "/assets.utility2.rollup.js",
-            url: "/assets.utility2.rollup.js"
-        }, {
-            file: "/index.html",
-            url: "/index.html"
-        }, {
-            file: "/index.rollup.html",
-            url: "/index.rollup.html"
-        }, {
-            file: "/jsonp.utility2.stateInit",
-            url: "/jsonp.utility2.stateInit?callback=window.utility2.stateInit"
-        }].concat(opt.assetsList)
+        list: [
+            {
+                file: "/LICENSE",
+                url: "/LICENSE"
+            }, {
+                file: "/assets." + local.env.npm_package_nameLib + ".html",
+                url: "/index.html"
+            }, {
+                file: "/assets." + local.env.npm_package_nameLib + ".js",
+                url: "/assets." + local.env.npm_package_nameLib + ".js"
+            }, {
+                file: "/assets.app.js",
+                url: "/assets.app.js"
+            }, {
+                file: "/assets.example.html",
+                url: "/assets.example.html"
+            }, {
+                file: "/assets.example.js",
+                url: "/assets.example.js"
+            }, {
+                file: "/assets.swgg.html",
+                url: "/assets.swgg.html"
+            }, {
+                file: "/assets.swgg.swagger.json",
+                url: "/assets.swgg.swagger.json"
+            }, {
+                file: "/assets.swgg.swagger.petstore.json",
+                url: "/assets.swgg.swagger.petstore.json"
+            }, {
+                file: "/assets.swgg.swagger.server.json",
+                url: "/assets.swgg.swagger.server.json"
+            }, {
+                file: "/assets.test.js",
+                url: "/assets.test.js"
+            }, {
+                file: "/assets.utility2.html",
+                url: "/assets.utility2.html"
+            }, {
+                file: "/assets.utility2.base.html",
+                url: "/assets.utility2.base.html"
+            }, {
+                file: "/assets.utility2.rollup.js",
+                url: "/assets.utility2.rollup.js"
+            }, {
+                file: "/index.html",
+                url: "/index.html"
+            }, {
+                file: "/index.rollup.html",
+                url: "/index.rollup.html"
+            }, {
+                file: "/jsonp.utility2.stateInit",
+                url: "/jsonp.utility2.stateInit?callback=window.utility2.stateInit"
+            }
+        ].concat(opt.assetsList)
     }, function (option2, onParallel) {
         option2 = option2.elem;
         onParallel.counter += 1;
@@ -3588,14 +3605,18 @@ local.buildApp = function (opt, onError) {
             "tmp/buildApp/assets.app.js",
             local.assetsDict["/assets.app.js"]
         );
-        local.childProcessSpawnWithTimeout("node", ["assets.app.js"], {
+        local.childProcessSpawnWithTimeout("node", [
+            "assets.app.js"
+        ], {
             cwd: "tmp/buildApp",
             env: {
                 PATH: local.env.PATH,
                 PORT: (Math.random() * 0x10000) | 0x8000,
                 npm_config_timeout_exit: 5000
             },
-            stdio: ["ignore", "ignore", 2]
+            stdio: [
+                "ignore", "ignore", 2
+            ]
         })
         .on("error", onError)
         .on("exit", function (exitCode) {
@@ -3800,7 +3821,9 @@ local.buildReadme = function (opt, onError) {
         );
     }
     // customize version
-    ["dataFrom", "dataTo"].forEach(function (elem) {
+    [
+        "dataFrom", "dataTo"
+    ].forEach(function (elem) {
         opt[elem] = opt[elem].replace((
             /\n(####\u0020changelog\u0020|-\u0020npm\u0020publish\u0020)\d+?\.\d+?\.\d+?.*?\n/g
         ), "\n$1" + opt.packageJson.version + "\n");
@@ -3876,28 +3899,35 @@ local.buildReadme = function (opt, onError) {
             "$ npm install " + local.env.npm_package_name,
             "$ npm install " + local.env.GITHUB_REPO + "#alpha"
         );
-        [(
-            /\n.*?\bhttps:\/\/www.npmjs.com\/package\/.*?\n/
-        ), (
-            /\n.*?npmPackageDependencyTree.*?\n/
-        )].forEach(function (rgx) {
+        [
+            (
+                /\n.*?\bhttps:\/\/www.npmjs.com\/package\/.*?\n/
+            ), (
+                /\n.*?npmPackageDependencyTree.*?\n/
+            )
+        ].forEach(function (rgx) {
             opt.dataTo = opt.dataTo.replace(rgx, "");
         });
     }
     // customize shBuildCiAfter and shBuildCiBefore
     [
-        ["shDeployGithub", (
-            /.*?\/screenshot\.deployGithub.*?\n/g
-        )],
-        ["shDeployHeroku", (
-            /.*?\/screenshot\.deployHeroku.*?\n/g
-        )],
-        ["shReadmeTest example.js", (
-            /.*?\/screenshot\.testExampleJs.*?\n/g
-        )],
-        ["shReadmeTest example.sh", (
-            /.*?\/screenshot\.testExampleSh.*?\n/g
-        )]
+        [
+            "shDeployGithub", (
+                /.*?\/screenshot\.deployGithub.*?\n/g
+            )
+        ], [
+            "shDeployHeroku", (
+                /.*?\/screenshot\.deployHeroku.*?\n/g
+            )
+        ], [
+            "shReadmeTest example.js", (
+                /.*?\/screenshot\.testExampleJs.*?\n/g
+            )
+        ], [
+            "shReadmeTest example.sh", (
+                /.*?\/screenshot\.testExampleSh.*?\n/g
+            )
+        ]
     ].forEach(function (elem) {
         if (opt.dataFrom.indexOf("    " + elem[0] + "\n") >= 0) {
             return;
@@ -4059,7 +4089,9 @@ local.childProcessSpawnWithUtility2 = function (script, onError) {
         + "/lib.utility2.sh; " + script,
         {
             shell: true,
-            stdio: ["ignore", 1, 2]
+            stdio: [
+                "ignore", 1, 2
+            ]
         }
     ).on("exit", function (exitCode) {
         onError(exitCode && Object.assign(new Error(), {
@@ -4092,15 +4124,21 @@ local.cliRun = function (opt) {
         var packageJson;
         var text;
         var textDict;
-        commandList = [{
-            argList: "<arg2>  ...",
-            description: "usage:",
-            command: ["<arg1>"]
-        }, {
-            argList: "'console.log(\"hello world\")'",
-            description: "example:",
-            command: ["--eval"]
-        }];
+        commandList = [
+            {
+                argList: "<arg2>  ...",
+                description: "usage:",
+                command: [
+                    "<arg1>"
+                ]
+            }, {
+                argList: "'console.log(\"hello world\")'",
+                description: "example:",
+                command: [
+                    "--eval"
+                ]
+            }
+        ];
         file = __filename.replace((
             /.*\//
         ), "");
@@ -4129,7 +4167,9 @@ local.cliRun = function (opt) {
                 commandList[ii] = opt.rgxComment.exec(text);
                 commandList[ii] = {
                     argList: (commandList[ii][1] || "").trim(),
-                    command: [key],
+                    command: [
+                        key
+                    ],
                     description: commandList[ii][2]
                 };
             } catch (ignore) {
@@ -4159,7 +4199,9 @@ local.cliRun = function (opt) {
             switch (ii) {
             case 0:
             case 1:
-                elem.argList = [elem.argList];
+                elem.argList = [
+                    elem.argList
+                ];
                 break;
             default:
                 elem.argList = elem.argList.split(" ");
@@ -4333,7 +4375,9 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
     }
     crypto.subtle.importKey("raw", key, {
         name: "AES-CBC"
-    }, false, ["decrypt"]).then(function (key) {
+    }, false, [
+        "decrypt"
+    ]).then(function (key) {
         crypto.subtle.decrypt({
             iv,
             name: "AES-CBC"
@@ -4406,7 +4450,9 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
     iv.set(crypto.getRandomValues(new Uint8Array(16)));
     crypto.subtle.importKey("raw", key, {
         name: "AES-CBC"
-    }, false, ["encrypt"]).then(function (key) {
+    }, false, [
+        "encrypt"
+    ]).then(function (key) {
         crypto.subtle.encrypt({
             iv: iv.subarray(0, 16),
             name: "AES-CBC"
@@ -4500,7 +4546,7 @@ local.dateUtcToLocal = function (date, timezoneOffset) {
     ).toISOString();
 };
 
-local.domElementRender = function (template, dict) {
+local.domFragmentRender = function (template, dict) {
 /*
  * this function will return dom-elem rendered from <template>
  */
@@ -4584,7 +4630,7 @@ local.errorMessagePrepend = function (err, message) {
 /*
  * this function will prepend message to <err>.message and <err>.stack
  */
-    if (err === local.errorDefault) {
+    if (err === local.errDefault) {
         return;
     }
     err.message = message + err.message;
@@ -4645,9 +4691,13 @@ local.fsRmrSync = function (dir) {
  */
     local.child_process.execFileSync(
         "rm",
-        ["-fr", local.path.resolve(process.cwd(), dir)],
+        [
+            "-fr", local.path.resolve(process.cwd(), dir)
+        ],
         {
-            stdio: ["ignore", 1, 2]
+            stdio: [
+                "ignore", 1, 2
+            ]
         }
     );
 };
@@ -4673,9 +4723,13 @@ local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
         // mkdir -p
         require("child_process").spawnSync(
             "mkdir",
-            ["-p", require("path").dirname(file)],
+            [
+                "-p", require("path").dirname(file)
+            ],
             {
-                stdio: ["ignore", 1, 2]
+                stdio: [
+                    "ignore", 1, 2
+                ]
             }
         );
         // re-write to file
@@ -4750,8 +4804,11 @@ local.jslintAutofixLocalFunction = function (code, file) {
     }
     // init functionAllDict and functionBaseDict
     [
-        ["utility2", "swgg"],
-        ["utility2", "apidoc", "db", "github_crud", "swgg"]
+        [
+            "utility2", "swgg"
+        ], [
+            "utility2", "apidoc", "db", "github_crud", "swgg"
+        ]
     ].forEach(function (dictList, ii) {
         tmp = (
             ii
@@ -4829,7 +4886,9 @@ local.jslintAutofixLocalFunction = function (code, file) {
             dictProp[match1] = true;
         }
     });
-    [dictFnc, dictProp].forEach(function (dict) {
+    [
+        dictFnc, dictProp
+    ].forEach(function (dict) {
         Object.keys(dict).forEach(function (key) {
             dict[key] = dict[key] && local.functionBaseDict[key];
         });
@@ -5123,14 +5182,14 @@ local.localStorageSetItemOrClear = function (key, value) {
     }
 };
 
-local.middlewareAssetsCached = function (request, response, next) {
+local.middlewareAssetsCached = function (req, res, next) {
 /*
  * this function will run middleware that will serve cached-assets
  */
     var opt;
     opt = {};
     local.onNext(opt, function (err, data) {
-        opt.result = opt.result || local.assetsDict[request.urlParsed.pathname];
+        opt.result = opt.result || local.assetsDict[req.urlParsed.pathname];
         if (opt.result === undefined) {
             next(err);
             return;
@@ -5139,10 +5198,10 @@ local.middlewareAssetsCached = function (request, response, next) {
         case 1:
             // skip gzip
             if (
-                response.headersSent
+                res.headersSent
                 || !(
                     /\bgzip\b/
-                ).test(request.headers["accept-encoding"])
+                ).test(req.headers["accept-encoding"])
             ) {
                 opt.modeNext += 1;
                 opt.onNext();
@@ -5151,7 +5210,7 @@ local.middlewareAssetsCached = function (request, response, next) {
             // gzip and cache result
             local.taskCreateCached({
                 cacheDict: "middlewareAssetsCachedGzip",
-                key: request.urlParsed.pathname
+                key: req.urlParsed.pathname
             }, function (onError) {
                 local.zlib.gzip(opt.result, function (err, data) {
                     onError(err, !err && data.toString("base64"));
@@ -5161,19 +5220,19 @@ local.middlewareAssetsCached = function (request, response, next) {
         case 2:
             // set gzip header
             opt.result = local.base64ToBuffer(data);
-            response.setHeader("Content-Encoding", "gzip");
-            response.setHeader("Content-Length", opt.result.length);
+            res.setHeader("Content-Encoding", "gzip");
+            res.setHeader("Content-Length", opt.result.length);
             opt.onNext();
             break;
         case 3:
             local.middlewareCacheControlLastModified(
-                request,
-                response,
+                req,
+                res,
                 opt.onNext
             );
             break;
         case 4:
-            response.end(opt.result);
+            res.end(opt.result);
             break;
         }
     });
@@ -5181,29 +5240,28 @@ local.middlewareAssetsCached = function (request, response, next) {
     opt.onNext();
 };
 
-local.middlewareBodyRead = function (request, ignore, next) {
+local.middlewareBodyRead = function (req, ignore, next) {
 /*
  * this function will run middleware that will
- * read and save the request-body to <request>.bodyRaw
+ * read and save the <req>-body to <req>.bodyRaw
  */
-    // if request is already read, then goto next
-    if (!request.readable) {
+    // if req is already read, then goto next
+    if (!req.readable) {
         next();
         return;
     }
-    local.streamReadAll(request, function (err, data) {
-        request.bodyRaw = request.bodyRaw || data;
+    local.streamReadAll(req, function (err, data) {
+        req.bodyRaw = req.bodyRaw || data;
         next(err);
     });
 };
 
-local.middlewareCacheControlLastModified = function (request, response, next) {
+local.middlewareCacheControlLastModified = function (req, res, next) {
 /*
- * this function will run middleware that will
- * update the response-header Last-Modified
+ * this function will run middleware that will update res-header last-modified
  */
     // do not cache if headers already sent or url has '?' search indicator
-    if (response.headersSent || request.url.indexOf("?") >= 0) {
+    if (res.headersSent || req.url.indexOf("?") >= 0) {
         next();
         return;
     }
@@ -5215,51 +5273,51 @@ local.middlewareCacheControlLastModified = function (request, response, next) {
     );
     // respond with 304 If-Modified-Since serverResponseHeaderLastModified
     if (
-        new Date(request.headers["if-modified-since"])
+        new Date(req.headers["if-modified-since"])
         >= local.serverResponseHeaderLastModified
     ) {
-        response.statusCode = 304;
-        response.end();
+        res.statusCode = 304;
+        res.end();
         return;
     }
-    response.setHeader("Cache-Control", "no-cache");
-    response.setHeader(
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader(
         "Last-Modified",
         local.serverResponseHeaderLastModified.toUTCString()
     );
     next();
 };
 
-local.middlewareError = function (err, request, response) {
+local.middlewareError = function (err, req, res) {
 /*
  * this function will run middleware that will handle errors
  */
     // default - 404 Not Found
     if (!err) {
-        local.serverRespondDefault(request, response, 404);
+        local.serverRespondDefault(req, res, 404);
         return;
     }
     // http://jsonapi.org/format/#errors
     if (local.swgg && typeof local.swgg.serverRespondJsonapi === "function") {
-        local.swgg.serverRespondJsonapi(request, response, err);
+        local.swgg.serverRespondJsonapi(req, res, err);
     }
     // statusCode [400, 600)
-    local.serverRespondDefault(request, response, (
+    local.serverRespondDefault(req, res, (
         (err.statusCode >= 400 && err.statusCode < 600)
         ? err.statusCode
         : 500
     ), err);
 };
 
-local.middlewareFileServer = function (request, response, next) {
+local.middlewareFileServer = function (req, res, next) {
 /*
  * this function will run middleware that will serve files
  */
-    if (request.method !== "GET" || local.isBrowser) {
+    if (req.method !== "GET" || local.isBrowser) {
         next();
         return;
     }
-    request.urlFile = (process.cwd() + request.urlParsed.pathname
+    req.urlFile = (process.cwd() + req.urlParsed.pathname
     // security - disable parent directory lookup
     .replace((
         /.*\/\.\.\//g
@@ -5271,10 +5329,10 @@ local.middlewareFileServer = function (request, response, next) {
     // serve file from cache
     local.taskCreateCached({
         cacheDict: "middlewareFileServer",
-        key: request.urlFile
+        key: req.urlFile
     // run background-task to re-cache file
     }, function (onError) {
-        local.fs.readFile(request.urlFile, function (err, data) {
+        local.fs.readFile(req.urlFile, function (err, data) {
             onError(err, data && local.base64FromBuffer(data));
         });
     }, function (err, data) {
@@ -5283,20 +5341,20 @@ local.middlewareFileServer = function (request, response, next) {
             next();
             return;
         }
-        // init response-header content-type
-        local.serverRespondHeadSet(request, response, null, {
+        // init res-header content-type
+        local.serverRespondHeadSet(req, res, null, {
             "Content-Type": local.contentTypeDict[(
                 /\.[^.]*?$|$/m
-            ).exec(request.urlParsed.pathname)[0]]
+            ).exec(req.urlParsed.pathname)[0]]
         });
         // serve file from cache
-        response.end(local.base64ToBuffer(data));
+        res.end(local.base64ToBuffer(data));
     });
 };
 
-local.middlewareForwardProxy = function (request, response, next) {
+local.middlewareForwardProxy = function (req, res, next) {
 /*
- * this function will run middleware that will forward-proxy the request
+ * this function will run middleware that will forward-proxy <req>
  * to its destination-host
  */
     var isDone;
@@ -5304,19 +5362,19 @@ local.middlewareForwardProxy = function (request, response, next) {
     var opt;
     var timerTimeout;
     // handle preflight-cors
-    if (request.method === "OPTIONS" && (
+    if (req.method === "OPTIONS" && (
         /forward-proxy-url/
     )
-    .test(request.headers["access-control-request-headers"])) {
-        local.serverRespondCors(request, response);
-        response.end();
+    .test(req.headers["access-control-request-headers"])) {
+        local.serverRespondCors(req, res);
+        res.end();
         return;
     }
-    if (!request.headers["forward-proxy-url"]) {
+    if (!req.headers["forward-proxy-url"]) {
         next();
         return;
     }
-    local.serverRespondCors(request, response);
+    local.serverRespondCors(req, res);
     // init onError
     onError = function (err) {
         if (isDone) {
@@ -5331,7 +5389,7 @@ local.middlewareForwardProxy = function (request, response, next) {
             type: "middlewareForwardProxyResponse",
             method: opt.method,
             url: opt.url,
-            statusCode: response.statusCode | 0,
+            statusCode: res.statusCode | 0,
             timeElapsed: Date.now() - opt.timeStart,
             // extra
             headers: opt.headers
@@ -5339,15 +5397,15 @@ local.middlewareForwardProxy = function (request, response, next) {
         if (!err) {
             return;
         }
-        // cleanup clientRequest and clientResponse
-        local.streamCleanup(opt.clientRequest);
+        // cleanup clientReq and clientRes
+        local.streamCleanup(opt.clientReq);
         local.streamCleanup(opt.clientResponse);
         next(err);
     };
     // init opt
-    opt = local.urlParse(request.headers["forward-proxy-url"]);
-    opt.method = request.method;
-    opt.url = request.headers["forward-proxy-url"];
+    opt = local.urlParse(req.headers["forward-proxy-url"]);
+    opt.method = req.method;
+    opt.url = req.headers["forward-proxy-url"];
     // init timerTimeout
     timerTimeout = local.onTimeout(
         onError,
@@ -5357,53 +5415,53 @@ local.middlewareForwardProxy = function (request, response, next) {
     // parse headers
     opt.headers = {};
     local.tryCatchOnError(function () {
-        opt.headers = JSON.parse(request.headers["forward-proxy-headers"]);
+        opt.headers = JSON.parse(req.headers["forward-proxy-headers"]);
     }, local.nop);
     // debug opt
     local._debugForwardProxy = opt;
-    opt.clientRequest = (
+    opt.clientReq = (
         opt.protocol === "https:"
         ? local.https
         : local.http
     ).request(opt, function (clientResponse) {
         opt.clientResponse = clientResponse.on("error", onError);
-        response.statusCode = opt.clientResponse.statusCode;
+        res.statusCode = opt.clientResponse.statusCode;
         // pipe clientResponse to serverResponse
-        opt.clientResponse.pipe(response);
+        opt.clientResponse.pipe(res);
     }).on("error", onError);
     opt.timeStart = Date.now();
     // init event-handling
-    request.on("error", onError);
-    response.on("finish", onError).on("error", onError);
-    // pipe serverRequest to clientRequest
-    request.pipe(opt.clientRequest);
+    req.on("error", onError);
+    res.on("finish", onError).on("error", onError);
+    // pipe serverReq to clientReq
+    req.pipe(opt.clientReq);
 };
 
-local.middlewareInit = function (request, response, next) {
+local.middlewareInit = function (req, res, next) {
 /*
- * this function will run middleware that will init the request and response
+ * this function will run middleware that will init <req> and <res>
  */
-    // debug request and response
-    local._debugServerRequestResponse4 = local._debugServerRequestResponse3;
-    local._debugServerRequestResponse3 = local._debugServerRequestResponse2;
-    local._debugServerRequestResponse2 = local._debugServerRequestResponse1;
-    local._debugServerRequestResponse1 = {
-        request,
-        response
+    // debug req and res
+    local._debugServerReqRes4 = local._debugServerReqRes3;
+    local._debugServerReqRes3 = local._debugServerReqRes2;
+    local._debugServerReqRes2 = local._debugServerReqRes1;
+    local._debugServerReqRes1 = {
+        req,
+        res
     };
     // init timerTimeout
-    local.serverRespondTimeoutDefault(request, response, local.timeoutDefault);
-    // init request.urlParsed
-    request.urlParsed = local.urlParse(request.url);
-    // init response-header content-type
-    local.serverRespondHeadSet(request, response, null, {
+    local.serverRespondTimeoutDefault(req, res, local.timeoutDefault);
+    // init req.urlParsed
+    req.urlParsed = local.urlParse(req.url);
+    // init res-header content-type
+    local.serverRespondHeadSet(req, res, null, {
         "Content-Type": local.contentTypeDict[(
             /\.[^.]*?$|$/m
-        ).exec(request.urlParsed.pathname)[0]]
+        ).exec(req.urlParsed.pathname)[0]]
     });
     // set main-page content-type to text/html
-    if (request.urlParsed.pathname === "/") {
-        local.serverRespondHeadSet(request, response, null, {
+    if (req.urlParsed.pathname === "/") {
+        local.serverRespondHeadSet(req, res, null, {
             "Content-Type": "text/html; charset=utf-8"
         });
     }
@@ -5411,15 +5469,15 @@ local.middlewareInit = function (request, response, next) {
     next();
 };
 
-local.middlewareJsonpStateInit = function (request, response, next) {
+local.middlewareJsonpStateInit = function (req, res, next) {
 /*
  * this function will run middleware that will
  * serve the browser-state wrapped in given jsonp-callback
  */
     var state;
-    if (!(request.stateInit || (
-        request.urlParsed
-        && request.urlParsed.pathname === "/jsonp.utility2.stateInit"
+    if (!(req.stateInit || (
+        req.urlParsed
+        && req.urlParsed.pathname === "/jsonp.utility2.stateInit"
     ))) {
         next();
         return;
@@ -5458,11 +5516,11 @@ local.middlewareJsonpStateInit = function (request, response, next) {
         );
         state.utility2.assetsDict["/" + file] = local.assetsDict["/" + file];
     });
-    if (request.stateInit) {
+    if (req.stateInit) {
         return state;
     }
-    response.end(
-        request.urlParsed.query.callback + "(" + JSON.stringify(state) + ");"
+    res.end(
+        req.urlParsed.query.callback + "(" + JSON.stringify(state) + ");"
     );
 };
 
@@ -5476,7 +5534,9 @@ local.moduleDirname = function (module, modulePathList) {
         return require("path").resolve(process.cwd(), module || "");
     }
     // search modulePathList
-    ["node_modules"]
+    [
+        "node_modules"
+    ]
     .concat(modulePathList)
     .concat(require("module").globalPaths)
     .concat([
@@ -5675,7 +5735,7 @@ local.onErrorWithStack = function (onError) {
         if (
             err
             && typeof err.stack === "string"
-            && err !== local.errorDefault
+            && err !== local.errDefault
             && String(err.stack).indexOf(stack.split("\n")[2]) < 0
         ) {
             // append current-stack to err.stack
@@ -5716,7 +5776,7 @@ local.onFileModifiedRestart = function (file) {
 local.onNext = function (opt, onError) {
 /*
  * this function will wrap onError inside recursive-function <opt>.onNext,
- * and append the current stack to any error
+ * and append the current-stack to any err
  */
     opt.onNext = local.onErrorWithStack(function (err, data, meta) {
         try {
@@ -5751,36 +5811,36 @@ local.onParallel = function (onError, onEach, onRetry) {
 /*
  * this function will create a function that will
  * 1. run async tasks in parallel
- * 2. if counter === 0 or error occurred, then call onError with error
+ * 2. if counter === 0 or err occurred, then call onError(err)
  */
     var onParallel;
     onError = local.onErrorWithStack(onError);
     onEach = onEach || local.nop;
     onRetry = onRetry || local.nop;
-    onParallel = function (error, data) {
-        if (onRetry(error, data)) {
+    onParallel = function (err, data) {
+        if (onRetry(err, data)) {
             return;
         }
         // decrement counter
         onParallel.counter -= 1;
         // validate counter
-        if (!(onParallel.counter >= 0 || error || onParallel.error)) {
-            error = new Error(
+        if (!(onParallel.counter >= 0 || err || onParallel.err)) {
+            err = new Error(
                 "invalid onParallel.counter = " + onParallel.counter
             );
         // ensure onError is run only once
         } else if (onParallel.counter < 0) {
             return;
         }
-        // handle error
-        if (error) {
-            onParallel.error = error;
+        // handle err
+        if (err) {
+            onParallel.err = err;
             // ensure counter <= 0
             onParallel.counter = -Math.abs(onParallel.counter);
         }
         // call onError when isDone
         if (onParallel.counter <= 0) {
-            onError(error, data);
+            onError(err, data);
             return;
         }
         onEach();
@@ -5847,14 +5907,14 @@ local.onParallelList = function (opt, onEach, onError) {
 
 local.onTimeout = function (onError, timeout, message) {
 /*
- * this function will create a timeout-error-handler,
- * that will append the current stack to any error encountered
+ * this function will create a timeout-err-handler,
+ * that appends current-stack to any err encountered
  */
     onError = local.onErrorWithStack(onError);
     // create timerTimeout
     return setTimeout(function () {
         onError(new Error(
-            "onTimeout - timeout-error - " + timeout + " ms - " + message
+            "onTimeout - errTimeout - " + timeout + " ms - " + message
         ));
     // coerce to finite integer
     }, timeout);
@@ -5902,7 +5962,7 @@ local.replStart = function () {
     globalThis.utility2_repl1 = that;
     that.onError = function (err) {
     /*
-     * this function will debug repl-error
+     * this function will debug repl-err
      */
         globalThis.utility2_debugReplError = err;
         console.error(err);
@@ -5952,7 +6012,9 @@ local.replStart = function () {
                 // run async shell-command
                 require("child_process").spawn(match2, {
                     shell: true,
-                    stdio: ["ignore", 1, 2]
+                    stdio: [
+                        "ignore", 1, 2
+                    ]
                 // on shell exit, print return prompt
                 }).on("exit", function (exitCode) {
                     console.error("exit-code " + exitCode);
@@ -6001,7 +6063,7 @@ jquery|\
 log|\
 min|misc|mock|\
 node_module|\
-rollup|\
+raw|\rollup|\
 swp|\
 tmp|\
 vendor)s{0,1}(\\b|_)\
@@ -6011,7 +6073,9 @@ vendor)s{0,1}(\\b|_)\
                     + match2 + "\""
                 ), {
                     shell: true,
-                    stdio: ["ignore", 1, 2]
+                    stdio: [
+                        "ignore", 1, 2
+                    ]
                 })
                 // on shell exit, print return prompt
                 .on("exit", function (exitCode) {
@@ -6105,23 +6169,36 @@ local.requireInSandbox = function (file) {
     var mockList;
     var tmp;
     mockList = [
-        [globalThis, {
-            setImmediate: local.nop,
-            setInterval: local.nop,
-            setTimeout: local.nop
-        }]
+        [
+            globalThis, {
+                setImmediate: local.nop,
+                setInterval: local.nop,
+                setTimeout: local.nop
+            }
+        ]
     ];
     [
-        [local, "child_process"],
-        [local, "cluster"],
-        [local, "http"],
-        [local, "https"],
-        [local, "net"],
-        [local, "repl"],
-        [local.events, "prototype"],
-        [globalThis, "process"],
-        [local.stream, "prototype"],
-        [process, "stdin"]
+        [
+            local, "child_process"
+        ], [
+            local, "cluster"
+        ], [
+            local, "http"
+        ], [
+            local, "https"
+        ], [
+            local, "net"
+        ], [
+            local, "repl"
+        ], [
+            local.events, "prototype"
+        ], [
+            globalThis, "process"
+        ], [
+            local.stream, "prototype"
+        ], [
+            process, "stdin"
+        ]
     ].forEach(function (elem) {
         tmp = elem[0][elem[1]];
         mockDict = {};
@@ -6202,17 +6279,21 @@ local.requireReadme = function () {
     });
     // jslint process.cwd()
     if (!local.env.npm_config_mode_library) {
-        local.child_process.spawn("node", ["-e", (
-            "require("
-            + JSON.stringify(__filename)
-            + ").jslint.jslintAndPrintDir("
-            + JSON.stringify(process.cwd())
-            + ", {autofix:true,conditional:true}, process.exit);"
-        )], {
+        local.child_process.spawn("node", [
+            "-e", (
+                "require("
+                + JSON.stringify(__filename)
+                + ").jslint.jslintAndPrintDir("
+                + JSON.stringify(process.cwd())
+                + ", {autofix:true,conditional:true}, process.exit);"
+            )
+        ], {
             env: local.objectAssignDefault({
                 npm_config_mode_library: "1"
             }, local.env),
-            stdio: ["ignore", "ignore", 2]
+            stdio: [
+                "ignore", "ignore", 2
+            ]
         });
     }
     if (globalThis.utility2_rollup || local.env.npm_config_mode_start) {
@@ -6302,8 +6383,12 @@ local.requireReadme = function () {
         process.cwd() + "/test.js"
     );
     // init assets index.html
-    ["", ".rollup"].forEach(function (isRollup) {
-        ["index", "utility2"].forEach(function (file) {
+    [
+        "", ".rollup"
+    ].forEach(function (isRollup) {
+        [
+            "index", "utility2"
+        ].forEach(function (file) {
             tmp = "assets." + file + ".template.html";
             local.assetsDict["/" + tmp] = (
                 local.fsReadFileOrEmptyStringSync(tmp, "utf8")
@@ -6438,9 +6523,13 @@ local.semverCompare = function (aa, bb) {
  *  1 if aa > bb
  * https://semver.org/#spec-item-11
  */
-    return [aa, bb].map(function (aa) {
+    return [
+        aa, bb
+    ].map(function (aa) {
         aa = aa.split("-");
-        return [aa[0], aa.slice(1).join("-") || "\u00ff"].map(function (aa) {
+        return [
+            aa[0], aa.slice(1).join("-") || "\u00ff"
+        ].map(function (aa) {
             return aa.split(".").map(function (aa) {
                 return ("0000000000000000" + aa).slice(-16);
             }).join(".");
@@ -6456,29 +6545,29 @@ local.semverCompare = function (aa, bb) {
     });
 };
 
-local.serverRespondCors = function (request, response) {
+local.serverRespondCors = function (req, res) {
 /*
- * this function will enable cors for the request
+ * this function will enable cors for the req
  * http://en.wikipedia.org/wiki/Cross-origin_resource_sharing
  */
-    local.serverRespondHeadSet(request, response, null, local.jsonCopy({
+    local.serverRespondHeadSet(req, res, null, local.jsonCopy({
         "access-control-allow-headers":
-        request.headers["access-control-request-headers"],
+        req.headers["access-control-request-headers"],
         "access-control-allow-methods":
-        request.headers["access-control-request-method"],
+        req.headers["access-control-request-method"],
         "access-control-allow-origin": "*"
     }));
 };
 
-local.serverRespondDefault = function (request, response, statusCode, err) {
+local.serverRespondDefault = function (req, res, statusCode, err) {
 /*
  * this function will respond with a default message,
  * or <err>.stack for given statusCode
  */
     // init statusCode and contentType
     local.serverRespondHeadSet(
-        request,
-        response,
+        req,
+        res,
         statusCode,
         {
             "Content-Type": "text/plain; charset=utf-8"
@@ -6488,57 +6577,57 @@ local.serverRespondDefault = function (request, response, statusCode, err) {
         // debug statusCode / method / url
         local.errorMessagePrepend(
             err,
-            response.statusCode + " " + request.method + " " + request.url
+            res.statusCode + " " + req.method + " " + req.url
             + "\n"
         );
         // print err.stack to stderr
         local.onErrorDefault(err);
-        // end response with err.stack
-        response.end(err.stack);
+        // end res with err.stack
+        res.end(err.stack);
         return;
     }
-    // end response with default statusCode message
-    response.end(
+    // end res with default statusCode message
+    res.end(
         statusCode + " " + local.http.STATUS_CODES[statusCode]
     );
 };
 
-local.serverRespondEcho = function (request, response) {
+local.serverRespondEcho = function (req, res) {
 /*
  * this function will respond with debug info
  */
-    response.write(
-        request.method + " " + request.url
-        + " HTTP/" + request.httpVersion + "\r\n"
-        + Object.keys(request.headers).map(function (key) {
-            return key + ": " + request.headers[key] + "\r\n";
+    res.write(
+        req.method + " " + req.url
+        + " HTTP/" + req.httpVersion + "\r\n"
+        + Object.keys(req.headers).map(function (key) {
+            return key + ": " + req.headers[key] + "\r\n";
         }).join("") + "\r\n"
     );
-    request.pipe(response);
+    req.pipe(res);
 };
 
-local.serverRespondHeadSet = function (ignore, response, statusCode, headers) {
+local.serverRespondHeadSet = function (ignore, res, statusCode, headers) {
 /*
- * this function will set the <response> object's <statusCode> and <headers>
+ * this function will set the <res> object's <statusCode> and <headers>
  */
-    if (response.headersSent) {
+    if (res.headersSent) {
         return;
     }
-    // init response.statusCode
+    // init res.statusCode
     if (Number(statusCode)) {
-        response.statusCode = Number(statusCode);
+        res.statusCode = Number(statusCode);
     }
     Object.keys(headers).forEach(function (key) {
         if (headers[key]) {
-            response.setHeader(key, headers[key]);
+            res.setHeader(key, headers[key]);
         }
     });
     return true;
 };
 
-local.serverRespondTimeoutDefault = function (request, response, timeout) {
+local.serverRespondTimeoutDefault = function (req, res, timeout) {
 /*
- * this function will create a timeout-error-handler for the server-request
+ * this function will create a timeout-err-handler for server-<req>
  */
     var isDone;
     var onError;
@@ -6549,48 +6638,48 @@ local.serverRespondTimeoutDefault = function (request, response, timeout) {
         isDone = true;
         // debug serverResponse
         console.error("serverLog - " + JSON.stringify({
-            time: new Date(request.timeStart).toISOString(),
+            time: new Date(req.timeStart).toISOString(),
             type: "serverResponse",
-            method: request.method,
-            url: request.url,
-            statusCode: response.statusCode | 0,
-            timeElapsed: Date.now() - request.timeStart,
+            method: req.method,
+            url: req.url,
+            statusCode: res.statusCode | 0,
+            timeElapsed: Date.now() - req.timeStart,
             // extra
-            requestContentLength: request.dataLength || 0,
-            responseContentLength: response.contentLength,
+            requestContentLength: req.dataLength || 0,
+            resContentLength: res.contentLength,
             requestHeaderXForwardedFor:
-            request.headers["x-forwarded-for"] || "",
-            requestHeaderOrigin: request.headers.origin || "",
-            requestHeaderReferer: request.headers.referer || "",
-            requestHeaderUserAgent: request.headers["user-agent"]
+            req.headers["x-forwarded-for"] || "",
+            requestHeaderOrigin: req.headers.origin || "",
+            requestHeaderReferer: req.headers.referer || "",
+            requestHeaderUserAgent: req.headers["user-agent"]
         }));
         // cleanup timerTimeout
-        clearTimeout(request.timerTimeout);
+        clearTimeout(req.timerTimeout);
     };
-    request.timeStart = Date.now();
-    request.onTimeout = request.onTimeout || function (err) {
-        local.serverRespondDefault(request, response, 500, err);
+    req.timeStart = Date.now();
+    req.onTimeout = req.onTimeout || function (err) {
+        local.serverRespondDefault(req, res, 500, err);
         setTimeout(function () {
-            // cleanup request and response
-            local.streamCleanup(request);
-            local.streamCleanup(response);
+            // cleanup <req> and <res>
+            local.streamCleanup(req);
+            local.streamCleanup(res);
         }, 1000);
     };
     // init timerTimeout
-    request.timerTimeout = local.onTimeout(
-        request.onTimeout,
+    req.timerTimeout = local.onTimeout(
+        req.onTimeout,
         timeout || local.timeoutDefault,
-        "server " + request.method + " " + request.url
+        "server " + req.method + " " + req.url
     );
-    response.contentLength = 0;
-    response.writeContentLength = response.writeContentLength || response.write;
-    response.write = function (chunk, encoding, callback) {
+    res.contentLength = 0;
+    res.writeContentLength = res.writeContentLength || res.write;
+    res.write = function (chunk, encoding, callback) {
         chunk = local.normalizeChunk(chunk);
-        response.contentLength += chunk.length;
-        response.writeContentLength(chunk, encoding, callback);
+        res.contentLength += chunk.length;
+        res.writeContentLength(chunk, encoding, callback);
     };
-    response.on("error", onError);
-    response.on("finish", onError);
+    res.on("error", onError);
+    res.on("finish", onError);
 };
 
 local.setTimeoutOnError = function (onError, timeout, err, data) {
@@ -6610,7 +6699,9 @@ local.sjclHashScryptCreate = function (password, opt) {
 /*
  * this function will create a scrypt-hash of the password
  * with given <opt> (default = $s0$10801)
- * e.g. $s0$e0801$epIxT/h6HbbwHaehFnh/bw==$7H0vsXlY8UxxyW/BWx/9GuY7jEvGjT71GFd6O4SZND0=
+ * e.g.
+ * $s0$e0801$epIxT/h6HbbwHaehFnh/bw==$7H0vs
+ * XlY8UxxyW/BWx/9GuY7jEvGjT71GFd6O4SZND0=
  * https://github.com/wg/scrypt
  */
     // init opt
@@ -6716,8 +6807,8 @@ local.streamCleanup = function (stream) {
 
 local.streamReadAll = function (stream, onError) {
 /*
- * this function will concat data from the stream,
- * and pass it to onError when isDone reading
+ * this function will concat data from <stream>
+ * and pass to <onError> when finished reading
  */
     var chunkList;
     chunkList = [];
@@ -6781,7 +6872,8 @@ local.stringMerge = function (str1, str2, rgx) {
 
 local.stringQuotedToAscii = function (str) {
 /*
- * this function will replace non-ascii-chr -> unicode-escaped ascii-chr in the quoted-str
+ * this function will replace non-ascii-chr to unicode-escaped-ascii-chr
+ * in quoted-<str>
  */
     return str
     .replace((
@@ -7340,7 +7432,9 @@ local.testReportMerge = function (testReport1, testReport2) {
     var testReport;
     testReport2 = testReport2 || {};
     // 1. merge testReport2 into testReport1
-    [testReport1, testReport2].forEach(function (testReport, ii) {
+    [
+        testReport1, testReport2
+    ].forEach(function (testReport, ii) {
         ii += 1;
         local.objectSetDefault(testReport, {
             date: new Date().toISOString(),
@@ -7401,7 +7495,10 @@ local.testReportMerge = function (testReport1, testReport2) {
                 // validate timeElapsed
                 local.assertThrow(
                     typeof testCase.timeElapsed === "number",
-                    ii + " invalid testCase.timeElapsed " + typeof testCase.timeElapsed
+                    (
+                        ii + " invalid testCase.timeElapsed "
+                        + typeof testCase.timeElapsed
+                    )
                 );
             });
         });
@@ -7707,7 +7804,7 @@ local.testRunDefault = function (opt) {
                     + " called multiple times"
                 );
             }
-            // if error occurred, then fail testCase
+            // if err occurred, then fail testCase
             if (err) {
                 // restore console.log
                 console.error = local._testRunConsoleError;
@@ -7823,22 +7920,22 @@ local.testRunServer = function (opt) {
         local.middlewareJsonpStateInit,
         local.middlewareFileServer
     ];
-    local.serverLocalRequestHandler = function (request, response) {
+    local.serverLocalReqHandler = function (req, res) {
         var that;
         that = {};
         local.onNext(that, function (err) {
             if (err || that.modeNext >= local.middlewareList.length) {
-                local.middlewareError(err, request, response);
+                local.middlewareError(err, req, res);
                 return;
             }
             // recurse with next middleware in middlewareList
-            local.middlewareList[that.modeNext](request, response, that.onNext);
+            local.middlewareList[that.modeNext](req, res, that.onNext);
         });
         that.modeNext = -1;
         that.onNext();
     };
     globalThis.utility2_serverHttp1 = local.http.createServer(
-        local.serverLocalRequestHandler
+        local.serverLocalReqHandler
     );
     // 2. start server on local.env.PORT
     if (local.env.npm_config_mode_library) {
@@ -8092,7 +8189,9 @@ local.urlParse = function (url) {
             // parse repeating query-param as an array
             if (urlParsed.query[item[0]]) {
                 if (!Array.isArray(urlParsed.query[item[0]])) {
-                    urlParsed.query[item[0]] = [urlParsed.query[item[0]]];
+                    urlParsed.query[item[0]] = [
+                        urlParsed.query[item[0]]
+                    ];
                 }
                 urlParsed.query[item[0]].push(item[1]);
             } else {
@@ -8201,7 +8300,7 @@ local.objectSetDefault(local.env, {
     npm_package_nameLib: "my_app",
     npm_package_version: "0.0.1"
 });
-local.errorDefault = new Error("default-error");
+local.errDefault = new Error("default-error");
 globalThis.utility2_onReadyAfter = globalThis.utility2_onReadyAfter || function (
     onError
 ) {
@@ -8230,8 +8329,12 @@ globalThis.utility2_onReadyBefore = (
 );
 local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.identity;
 // cbranch-no cstat-no fstat-no missing-if-branch
-local.istanbulCoverageReportCreate = local.istanbul.coverageReportCreate || local.identity;
-local.istanbulInstrumentInPackage = local.istanbul.instrumentInPackage || local.identity;
+local.istanbulCoverageReportCreate = (
+    local.istanbul.coverageReportCreate || local.identity
+);
+local.istanbulInstrumentInPackage = (
+    local.istanbul.instrumentInPackage || local.identity
+);
 local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.identity;
 local.jslintAndPrint = local.jslint.jslintAndPrint || local.identity;
 local.regexpCharsetEncodeUri = (

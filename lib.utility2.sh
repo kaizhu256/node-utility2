@@ -18,29 +18,29 @@
 
 shBaseInit () {
 # this function will init the base bash-login env, and is intended for aws-ec2 setup
-    local FILE || return $?
+    local FILE || return "$?"
     # PATH=/usr/local/bin:/usr/bin:/bin
     # init $PATH_BIN
     if [ ! "$PATH_BIN" ]
     then
-        export PATH_BIN="$HOME/bin:$HOME/node_modules/.bin:/usr/local/n/bin:/usr/local/bin:/usr/local/sbin" ||
-            return $?
-        export PATH="$PATH_BIN:$PATH" || return $?
+        export PATH_BIN="$HOME/bin:$HOME/node_modules/.bin\
+:/usr/local/n/bin:/usr/local/bin:/usr/local/sbin" || return "$?"
+        export PATH="$PATH_BIN:$PATH" || return "$?"
     fi
     # init $PATH_OS
     case "$(uname)" in
     Darwin)
         if [ ! "$PATH_OS" ]
         then
-            export PATH_OS="$HOME/bin/darwin" || return $?
-            export PATH="$PATH_OS:$PATH" || return $?
+            export PATH_OS="$HOME/bin/darwin" || return "$?"
+            export PATH="$PATH_OS:$PATH" || return "$?"
         fi
         ;;
     Linux)
         if [ ! "$PATH_OS" ]
         then
-            export PATH_OS="$HOME/bin/linux" || return $?
-            export PATH="$PATH_OS:$PATH" || return $?
+            export PATH_OS="$HOME/bin/linux" || return "$?"
+            export PATH="$PATH_OS:$PATH" || return "$?"
         fi
         ;;
     esac
@@ -50,13 +50,13 @@ shBaseInit () {
         # source $FILE
         if [ -f "$FILE" ]
         then
-            . "$FILE" || return $?
+            . "$FILE" || return "$?"
         fi
     done
     # init ubuntu .bashrc
-    shUbuntuInit || return $?
+    shUbuntuInit || return "$?"
     # init custom alias
-    alias lld="ls -adlF" || return $?
+    alias lld="ls -adlF" || return "$?"
 }
 
 shBaseInstall () {
@@ -67,22 +67,23 @@ shBaseInstall () {
     for FILE in .screenrc .vimrc lib.utility2.sh
     do
         curl -Lfs -o "$HOME/$FILE" \
-            "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE" || return $?
+"https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE" \
+            || return "$?"
     done
     # backup .bashrc
     if [ -f "$HOME/.bashrc" ] && [ ! -f "$HOME/.bashrc.00" ]
     then
-        cp "$HOME/.bashrc" "$HOME/.bashrc.00" || return $?
+        cp "$HOME/.bashrc" "$HOME/.bashrc.00" || return "$?"
     fi
     # create .bashrc
-    printf '. "$HOME/lib.utility2.sh" && shBaseInit\n' > "$HOME/.bashrc" || return $?
+    printf '. "$HOME/lib.utility2.sh" && shBaseInit\n' > "$HOME/.bashrc" || return "$?"
     # init .ssh/authorized_keys.root
     if [ -f "$HOME/.ssh/authorized_keys.root" ]
     then
-        mv "$HOME/.ssh/authorized_keys.root" "$HOME/.ssh/authorized_keys" || return $?
+        mv "$HOME/.ssh/authorized_keys.root" "$HOME/.ssh/authorized_keys" || return "$?"
     fi
     # source .bashrc
-    . "$HOME/.bashrc" || return $?
+    . "$HOME/.bashrc" || return "$?"
 }
 
 shBaseInstallLinode () {(set -e
@@ -716,10 +717,10 @@ shBuildInit () {
             export npm_config_dir_electron="$HOME/Documents/electron-lite"
         fi
         export npm_config_dir_electron="${npm_config_dir_electron:-\
-$(shModuleDirname electron-lite)}" || return $?
+$(shModuleDirname electron-lite)}" || return "$?"
         export npm_config_dir_electron="${npm_config_dir_electron:-\
-$HOME/node_modules/electron-lite}" || return $?
-        export PATH="$PATH:$npm_config_dir_electron:$npm_config_dir_electron/../.bin" || return $?
+$HOME/node_modules/electron-lite}" || return "$?"
+        export PATH="$PATH:$npm_config_dir_electron:$npm_config_dir_electron/../.bin" || return "$?"
     fi
     # init $npm_config_dir_utility2
     if [ ! "$npm_config_dir_utility2" ]
@@ -732,10 +733,10 @@ $HOME/node_modules/electron-lite}" || return $?
             export npm_config_dir_utility2="$HOME/Documents/utility2"
         fi
         export npm_config_dir_utility2="${npm_config_dir_utility2:-\
-$(shModuleDirname utility2)}" || return $?
+$(shModuleDirname utility2)}" || return "$?"
         export npm_config_dir_utility2="${npm_config_dir_utility2:-\
-$HOME/node_modules/utility2}" || return $?
-        export PATH="$PATH:$npm_config_dir_utility2:$npm_config_dir_utility2/../.bin" || return $?
+$HOME/node_modules/utility2}" || return "$?"
+        export PATH="$PATH:$npm_config_dir_utility2:$npm_config_dir_utility2/../.bin" || return "$?"
     fi
     # init $npm_package_*
     if [ -f package.json ]
@@ -794,20 +795,20 @@ if ((
     }
 }
 }());
-')" || return $?
+')" || return "$?"
     else
-        export npm_package_name=my-app-lite || return $?
-        export npm_package_version=0.0.1 || return $?
+        export npm_package_name=my-app-lite || return "$?"
+        export npm_package_version=0.0.1 || return "$?"
     fi
     export npm_package_nameLib="${npm_package_nameLib:-$(
         printf "$npm_package_name" | sed -e "s/[^0-9A-Z_a-z]/_/g"
-    )}" || return $?
+    )}" || return "$?"
     # init $npm_config_*
-    export npm_config_dir_build="${npm_config_dir_build:-$PWD/tmp/build}" || return $?
-    mkdir -p "$npm_config_dir_build/coverage.html" || return $?
-    export npm_config_dir_tmp="$PWD/tmp" || return $?
-    mkdir -p "$npm_config_dir_tmp" || return $?
-    export npm_config_file_tmp="${npm_config_file_tmp:-$PWD/tmp/tmpfile}" || return $?
+    export npm_config_dir_build="${npm_config_dir_build:-$PWD/tmp/build}" || return "$?"
+    mkdir -p "$npm_config_dir_build/coverage.html" || return "$?"
+    export npm_config_dir_tmp="$PWD/tmp" || return "$?"
+    mkdir -p "$npm_config_dir_tmp" || return "$?"
+    export npm_config_file_tmp="${npm_config_file_tmp:-$PWD/tmp/tmpfile}" || return "$?"
     # extract and save the scripts embedded in README.md to tmp/
     if [ -f README.md ]
     then
@@ -876,12 +877,12 @@ shChromeSocks5 () {(set -e
         /Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary\
             --proxy-bypass-list="127.*;192.*;localhost"\
             --proxy-server="socks5://localhost:5080"\
-            --host-resolver-rules="MAP * 0.0.0.0, EXCLUDE localhost" "$@" || return $?
+            --host-resolver-rules="MAP * 0.0.0.0, EXCLUDE localhost" "$@" || return "$?"
     else
         /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome\
             --proxy-bypass-list="127.*;192.*;localhost"\
             --proxy-server="socks5://localhost:5080"\
-            --host-resolver-rules="MAP * 0.0.0.0, EXCLUDE localhost" "$@" || return $?
+            --host-resolver-rules="MAP * 0.0.0.0, EXCLUDE localhost" "$@" || return "$?"
     fi
 )}
 
@@ -908,8 +909,8 @@ process.stdin.on("end", function () {
         ),
         key: process.argv[1],
         mode: process.argv[2]
-    }, function (error, data) {
-        local.assertThrow(!error, error);
+    }, function (err, data) {
+        local.assertThrow(!err, err);
         Object.setPrototypeOf(data, Buffer.prototype);
         process.stdout.write(data);
     });
@@ -936,8 +937,8 @@ process.stdin.on("end", function () {
         data: Buffer.concat(chunkList),
         key: process.argv[1],
         mode: process.argv[2]
-    }, function (error, data) {
-        local.assertThrow(!error, error);
+    }, function (err, data) {
+        local.assertThrow(!err, err);
         Object.setPrototypeOf(data, Buffer.prototype);
         process.stdout.write(data);
     });
@@ -1680,7 +1681,7 @@ shGitCommandWithGithubToken () {(set -e
         URL="https://$GITHUB_TOKEN@github.com/$GITHUB_REPO"
         ;;
     esac
-    # hide $GITHUB_TOKEN in case of error
+    # hide $GITHUB_TOKEN in case of err
     git "$COMMAND" "$URL" "$@" 2>/dev/null
 )}
 
@@ -1689,7 +1690,7 @@ shGitGc () {(set -e
 # http://stackoverflow.com/questions/3797907/how-to-remove-unused-objects-from-a-git-repository
     # git remote rm origin || true
     # git branch -D in || true
-    # (cd .git && rm -fr refs/remotes/ refs/original/ *_HEAD logs/) || return $?
+    # (cd .git && rm -fr refs/remotes/ refs/original/ *_HEAD logs/) || return "$?"
     # git for-each-ref --format="%(refname)" refs/original/ | xargs -n1 --no-run-if-empty git update-ref -d
     git \
         -c gc.reflogExpire=0 \
@@ -1968,7 +1969,7 @@ jquery|\
 log|\
 min|misc|mock|\
 node_module|\
-rollup|\
+raw|\rollup|\
 swp|\
 tmp|\
 vendor)s{0,1}(\\b|_)\
@@ -2034,25 +2035,25 @@ processCwd = process.cwd() + (
 );
 process.env.PORT = process.env.PORT || "8080";
 console.error("http-file-server listening on port " + process.env.PORT);
-require("http").createServer(function (request, response) {
+require("http").createServer(function (req, res) {
     var file;
     file = require("path").resolve(
         processCwd,
-        require("url").parse(request.url).pathname.slice(1)
+        require("url").parse(req.url).pathname.slice(1)
     );
     // security - disable parent-directory lookup
     if (file.indexOf(processCwd) !== 0) {
-        response.statusCode = 404;
-        response.end();
+        res.statusCode = 404;
+        res.end();
         return;
     }
-    require("fs").readFile(file, function (error, data) {
-        if (error) {
-            response.statusCode = 404;
-            response.end();
+    require("fs").readFile(file, function (err, data) {
+        if (err) {
+            res.statusCode = 404;
+            res.end();
             return;
         }
-        response.end(data);
+        res.end(data);
     });
 }).listen(process.env.PORT);
 }());
@@ -2164,19 +2165,26 @@ COMMIT
 )}
 
 shIstanbulCover () {(set -e
-# this function will run the command "$@" with istanbul-coverage
+# this function will run command "$NODE_BINARY" "$@" with istanbul-coverage
     export NODE_BINARY="${NODE_BINARY:-node}"
-    if [ ! "$npm_config_mode_coverage" ]
+    if [ "$npm_config_mode_coverage" ]
     then
-        if [ "$MSYSTEM" ] && (winpty --version > /dev/null 2>&1)
-        then
-            winpty "$NODE_BINARY" "$@"
-        else
-            "$NODE_BINARY" "$@"
-        fi
-        return
+        "$NODE_BINARY" "$npm_config_dir_utility2/lib.istanbul.js" cover "$@"
+        return "$?"
     fi
-    "$NODE_BINARY" "$npm_config_dir_utility2/lib.istanbul.js" cover "$@"
+    if [ "$npm_config_mode_inspect" ]
+    then
+        "$NODE_BINARY" inspect "$@"
+        return "$?"
+    fi
+    if [ "$npm_config_mode_winpty" ] \
+        && [ "$MSYSTEM" ] \
+        && (winpty --version > /dev/null 2>&1)
+    then
+        winpty "$NODE_BINARY" "$@"
+        return "$?"
+    fi
+    "$NODE_BINARY" "$@"
 )}
 
 shKillallElectron () {(set -e
@@ -2220,1503 +2228,6 @@ shMacAddressSpoof () {(set -e
     ifconfig en0
 )}
 
-shMain () {
-# this function will run the main program
-    export UTILITY2_GIT_BASE_ID=9fe8c2255f4ac330c86af7f624d381d768304183
-    export UTILITY2_DEPENDENTS="$(shUtility2Dependents)"
-    export UTILITY2_MACRO_JS='
-/* istanbul instrument in package utility2 */
-/* istanbul ignore next */
-/* jslint utility2:true */
-(function (globalThis) {
-    "use strict";
-    var consoleError;
-    var local;
-    // init globalThis
-    (function () {
-        try {
-            globalThis = Function("return this")(); // jslint ignore:line
-        } catch (ignore) {}
-    }());
-    globalThis.globalThis = globalThis;
-    // init debug_inline
-    if (!globalThis["debug\u0049nline"]) {
-        consoleError = console.error;
-        globalThis["debug\u0049nline"] = function () {
-        /*
-         * this function will both print <arguments> to stderr
-         * and return <arguments>[0]
-         */
-            var argList;
-            argList = Array.from(arguments); // jslint ignore:line
-            // debug arguments
-            globalThis["debug\u0049nlineArguments"] = argList;
-            consoleError("\n\ndebug\u0049nline");
-            consoleError.apply(console, argList);
-            consoleError("\n");
-            // return arg0 for inspection
-            return argList[0];
-        };
-    }
-    // init local
-    local = {};
-    local.local = local;
-    globalThis.globalLocal = local;
-    // init isBrowser
-    local.isBrowser = (
-        typeof window === "object"
-        && window === globalThis
-        && typeof window.XMLHttpRequest === "function"
-        && window.document
-        && typeof window.document.querySelector === "function"
-    );
-    // init function
-    local.assertThrow = function (passed, message) {
-    /*
-     * this function will throw error-<message> if <passed> is falsy
-     */
-        var err;
-        if (passed) {
-            return;
-        }
-        err = (
-            // ternary-operator
-            (
-                message
-                && typeof message.message === "string"
-                && typeof message.stack === "string"
-            )
-            // if message is error-object, then leave as is
-            ? message
-            : new Error(
-                typeof message === "string"
-                // if message is a string, then leave as is
-                ? message
-                // else JSON.stringify message
-                : JSON.stringify(message, null, 4)
-            )
-        );
-        throw err;
-    };
-    local.functionOrNop = function (fnc) {
-    /*
-     * this function will if <fnc> exists,
-     * them return <fnc>,
-     * else return <nop>
-     */
-        return fnc || local.nop;
-    };
-    local.identity = function (value) {
-    /*
-     * this function will return <value>
-     */
-        return value;
-    };
-    local.nop = function () {
-    /*
-     * this function will do nothing
-     */
-        return;
-    };
-    local.objectAssignDefault = function (target, source) {
-    /*
-     * this function will if items from <target> are
-     * null, undefined, or empty-string,
-     * then overwrite them with items from <source>
-     */
-        target = target || {};
-        Object.keys(source || {}).forEach(function (key) {
-            if (
-                target[key] === null
-                || target[key] === undefined
-                || target[key] === ""
-            ) {
-                target[key] = target[key] || source[key];
-            }
-        });
-        return target;
-    };
-    // require builtin
-    if (!local.isBrowser) {
-        local.assert = require("assert");
-        local.buffer = require("buffer");
-        local.child_process = require("child_process");
-        local.cluster = require("cluster");
-        local.crypto = require("crypto");
-        local.dgram = require("dgram");
-        local.dns = require("dns");
-        local.domain = require("domain");
-        local.events = require("events");
-        local.fs = require("fs");
-        local.http = require("http");
-        local.https = require("https");
-        local.net = require("net");
-        local.os = require("os");
-        local.path = require("path");
-        local.querystring = require("querystring");
-        local.readline = require("readline");
-        local.repl = require("repl");
-        local.stream = require("stream");
-        local.string_decoder = require("string_decoder");
-        local.timers = require("timers");
-        local.tls = require("tls");
-        local.tty = require("tty");
-        local.url = require("url");
-        local.util = require("util");
-        local.vm = require("vm");
-        local.zlib = require("zlib");
-    }
-}(this));
-
-
-
-(function (local) {
-"use strict";
-
-
-
-/* istanbul ignore next */
-// run shared js-env code - init-before
-(function () {
-// init local
-local = (
-    globalThis.utility2_rollup
-    // || globalThis.utility2_rollup_old
-    // || require("./assets.utility2.rollup.js")
-    || globalThis.globalLocal
-);
-// init exports
-if (local.isBrowser) {
-    globalThis.utility2_utility2 = local;
-} else {
-    module.exports = local;
-    module.exports.__dirname = __dirname;
-}
-// init lib main
-local.utility2 = local;
-
-
-
-/* validateLineSortedReset */
-globalThis.local = local;
-
-
-
-local.TextDecoder = globalThis.TextDecoder || function () {
-/*
- * this function will polyfill TextDecoder
- */
-    return;
-};
-
-local.TextDecoder.prototype.decode = (
-    local.TextDecoder.prototype.decode || function (bff) {
-        /*
-         * this function will polyfill TextDecoder.prototype.decode
-         */
-        return (
-            (bff && bff.length)
-            ? String(Object.setPrototypeOf(bff, Buffer.prototype))
-            : ""
-        );
-    }
-);
-
-globalThis.TextDecoder = local.TextDecoder;
-
-local.TextEncoder = globalThis.TextEncoder || function () {
-/*
- * this function will polyfill TextEncoder
- */
-    return;
-};
-
-local.ajax = function (opt, onError) {
-/*
- * this function will send an ajax-request with given <opt>.url,
- * with error-handling and timeout
- * example usage:
-    local.ajax({
-        data: "hello world",
-        header: {"x-header-hello": "world"},
-        method: "POST",
-        url: "/index.html"
-    }, function (err, xhr) {
-        console.log(xhr.statusCode);
-        console.log(xhr.responseText);
-    });
- */
-    var ajaxProgressUpdate;
-    var bufferValidateAndCoerce;
-    var isDone;
-    var local2;
-    var onEvent;
-    var streamCleanup;
-    var timeout;
-    var tmp;
-    var xhr;
-    var xhrInit;
-    // init local2
-    local2 = opt.local2 || local.utility2 || {};
-    // init function
-    ajaxProgressUpdate = local2.ajaxProgressUpdate || local.nop;
-    bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (
-        bff,
-        mode
-    ) {
-    /*
-     * this function will validate and coerce/convert <bff> -> Buffer
-     * (or String if <mode> = "string")
-     */
-        // coerce ArrayBuffer -> Buffer
-        if (Object.prototype.toString.call(bff) === "[object ArrayBuffer]") {
-            bff = new Uint8Array(bff);
-        }
-        // convert Buffer -> utf8
-        if (mode === "string" && typeof bff !== "string") {
-            bff = String(bff);
-        }
-        return bff;
-    };
-    onEvent = function (evt) {
-    /*
-     * this function will handle events
-     */
-        if (Object.prototype.toString.call(evt) === "[object Error]") {
-            xhr.err = xhr.err || evt;
-            xhr.onEvent({
-                type: "error"
-            });
-            return;
-        }
-        // init statusCode
-        xhr.statusCode = (xhr.statusCode || xhr.status) | 0;
-        switch (evt.type) {
-        case "abort":
-        case "error":
-        case "load":
-            if (isDone) {
-                return;
-            }
-            isDone = true;
-            // decrement ajaxProgressCounter
-            local2.ajaxProgressCounter = Math.max(
-                local2.ajaxProgressCounter - 1,
-                0
-            );
-            ajaxProgressUpdate();
-            // handle abort or error event
-            switch (!xhr.err && evt.type) {
-            case "abort":
-            case "error":
-                xhr.err = new Error("ajax - event " + evt.type);
-                break;
-            case "load":
-                if (xhr.statusCode >= 400) {
-                    xhr.err = new Error(
-                        "ajax - statusCode " + xhr.statusCode
-                    );
-                }
-                break;
-            }
-            // debug statusCode / method / url
-            if (xhr.err) {
-                xhr.statusCode = xhr.statusCode || 500;
-                xhr.err.statusCode = xhr.statusCode;
-                tmp = (
-                    // ternary-operator
-                    (
-                        local.isBrowser
-                        ? "browser"
-                        : "node"
-                    )
-                    + " - " + xhr.statusCode + " " + xhr.method + " " + xhr.url
-                    + "\n"
-                );
-                xhr.err.message = tmp + xhr.err.message;
-                xhr.err.stack = tmp + xhr.err.stack;
-            }
-            // update resHeaders
-            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders
-            if (xhr.getAllResponseHeaders) {
-                xhr.getAllResponseHeaders().replace((
-                    /(.*?):\u0020*(.*?)\r\n/g
-                ), function (ignore, match1, match2) {
-                    xhr.resHeaders[match1.toLowerCase()] = match2;
-                });
-            }
-            // debug ajaxResponse
-            xhr.responseContentLength = (
-                xhr.response
-                && (xhr.response.byteLength || xhr.response.length)
-            ) | 0;
-            xhr.timeElapsed = Date.now() - xhr.timeStart;
-            if (xhr.modeDebug) {
-                console.error("serverLog - " + JSON.stringify({
-                    time: new Date(xhr.timeStart).toISOString(),
-                    type: "ajaxResponse",
-                    method: xhr.method,
-                    url: xhr.url,
-                    statusCode: xhr.statusCode,
-                    timeElapsed: xhr.timeElapsed,
-                    // extra
-                    responseContentLength: xhr.responseContentLength
-                }));
-            }
-            // init responseType
-            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType
-            switch (xhr.response && xhr.responseType) {
-            // init responseText
-            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseText
-            case "":
-            case "text":
-                if (typeof xhr.responseText === "string") {
-                    break;
-                }
-                xhr.responseText = bufferValidateAndCoerce(
-                    xhr.response,
-                    "string"
-                );
-                break;
-            case "arraybuffer":
-                xhr.responseBuffer = bufferValidateAndCoerce(xhr.response);
-                break;
-            }
-            // cleanup timerTimeout
-            clearTimeout(xhr.timerTimeout);
-            // cleanup reqStream and resStream
-            streamCleanup(xhr.reqStream);
-            streamCleanup(xhr.resStream);
-            onError(xhr.err, xhr);
-            break;
-        }
-    };
-    streamCleanup = function (stream) {
-    /*
-     * this function will try to end or destroy <stream>
-     */
-        var err;
-        // try to end stream
-        try {
-            stream.end();
-        } catch (errCaught) {
-            err = errCaught;
-        }
-        // if err, then try to destroy stream
-        if (err) {
-            try {
-                stream.destroy();
-            } catch (ignore) {}
-        }
-    };
-    xhrInit = function () {
-    /*
-     * this function will init xhr
-     */
-        // init opt
-        Object.keys(opt).forEach(function (key) {
-            if (key[0] !== "_") {
-                xhr[key] = opt[key];
-            }
-        });
-        // init timeout
-        timeout = xhr.timeout || local2.timeoutDefault || 30000;
-        // init defaults
-        local.objectAssignDefault(xhr, {
-            corsForwardProxyHost: local2.corsForwardProxyHost,
-            headers: {},
-            location: (local.isBrowser && location) || {},
-            method: "GET",
-            responseType: ""
-        });
-        // init headers
-        Object.keys(xhr.headers).forEach(function (key) {
-            xhr.headers[key.toLowerCase()] = xhr.headers[key];
-        });
-        // coerce Uint8Array -> Buffer
-        if (
-            !local.isBrowser
-            && !Buffer.isBuffer(xhr.data)
-            && Object.prototype.toString.call(xhr.data)
-            === "[object Uint8Array]"
-        ) {
-            Object.setPrototypeOf(xhr.data, Buffer.prototype);
-        }
-        // init misc
-        local2._debugXhr = xhr;
-        xhr.onEvent = onEvent;
-        xhr.resHeaders = {};
-        xhr.timeStart = xhr.timeStart || Date.now();
-    };
-    // init onError
-    if (local2.onErrorWithStack) {
-        onError = local2.onErrorWithStack(onError);
-    }
-    // init xhr - XMLHttpRequest
-    xhr = (
-        local.isBrowser
-        && !opt.httpRequest
-        && !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(opt.url))
-        && new XMLHttpRequest()
-    );
-    // init xhr - http.request
-    if (!xhr) {
-        xhr = local.identity(local2.urlParse || require("url").parse)(opt.url);
-        // init xhr
-        xhrInit();
-        // init xhr - http.request
-        xhr = local.identity(
-            opt.httpRequest
-            || (local.isBrowser && local2.http.request)
-            || require(xhr.protocol.slice(0, -1)).request
-        )(xhr, function (resStream) {
-        /*
-         * this function will read <resStream>
-         */
-            var chunkList;
-            chunkList = [];
-            xhr.resHeaders = resStream.resHeaders || resStream.headers;
-            xhr.resStream = resStream;
-            xhr.statusCode = resStream.statusCode;
-            resStream.dataLength = 0;
-            resStream.on("data", function (chunk) {
-                chunkList.push(chunk);
-            });
-            resStream.on("end", function () {
-                xhr.response = (
-                    local.isBrowser
-                    ? chunkList[0]
-                    : Buffer.concat(chunkList)
-                );
-                resStream.dataLength = (
-                    xhr.response.byteLength || xhr.response.length
-                );
-                xhr.onEvent({
-                    type: "load"
-                });
-            });
-            resStream.on("error", xhr.onEvent);
-        });
-        xhr.abort = function () {
-        /*
-         * this function will abort xhr-req
-         * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/abort
-         */
-            xhr.onEvent({
-                type: "abort"
-            });
-        };
-        xhr.addEventListener = local.nop;
-        xhr.open = local.nop;
-        xhr.reqStream = xhr;
-        xhr.send = xhr.end;
-        xhr.setRequestHeader = local.nop;
-        xhr.on("error", onEvent);
-    }
-    // init xhr
-    xhrInit();
-    // init timerTimeout
-    xhr.timerTimeout = setTimeout(function () {
-        xhr.err = xhr.err || new Error(
-            "onTimeout - timeout-error - "
-            + timeout + " ms - " + "ajax " + xhr.method + " " + xhr.url
-        );
-        xhr.abort();
-        // cleanup reqStream and resStream
-        streamCleanup(xhr.reqStream);
-        streamCleanup(xhr.resStream);
-    }, timeout);
-    // increment ajaxProgressCounter
-    local2.ajaxProgressCounter = local2.ajaxProgressCounter || 0;
-    local2.ajaxProgressCounter += 1;
-    // init event-handling
-    xhr.addEventListener("abort", xhr.onEvent);
-    xhr.addEventListener("error", xhr.onEvent);
-    xhr.addEventListener("load", xhr.onEvent);
-    xhr.addEventListener("loadstart", ajaxProgressUpdate);
-    xhr.addEventListener("progress", ajaxProgressUpdate);
-    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
-    if (xhr.upload && xhr.upload.addEventListener) {
-        xhr.upload.addEventListener("progress", ajaxProgressUpdate);
-    }
-    // open url - corsForwardProxyHost
-    if (local.functionOrNop(local2.corsForwardProxyHostIfNeeded)(xhr)) {
-        xhr.open(xhr.method, local2.corsForwardProxyHostIfNeeded(xhr));
-        xhr.setRequestHeader(
-            "forward-proxy-headers",
-            JSON.stringify(xhr.headers)
-        );
-        xhr.setRequestHeader("forward-proxy-url", xhr.url);
-    // open url - default
-    } else {
-        xhr.open(xhr.method, xhr.url);
-    }
-    // send headers
-    Object.keys(xhr.headers).forEach(function (key) {
-        xhr.setRequestHeader(key, xhr.headers[key]);
-    });
-    // send data
-    switch ((xhr.data && xhr.data.constructor) || true) {
-    // Blob
-    // https://developer.mozilla.org/en-US/docs/Web/API/Blob
-    case local2.Blob:
-    // FormData
-    // https://developer.mozilla.org/en-US/docs/Web/API/FormData
-    case local2.FormData:
-        local2.blobRead(xhr.data, function (err, data) {
-            if (err) {
-                xhr.onEvent(err);
-                return;
-            }
-            // send data
-            xhr.send(data);
-        });
-        break;
-    default:
-        xhr.send(xhr.data);
-    }
-    return xhr;
-};
-
-local.assertJsonEqual = function (aa, bb, message) {
-/*
- * this function will assert jsonStringifyOrdered(<aa>) === JSON.stringify(<bb>)
- */
-    aa = local.jsonStringifyOrdered(aa);
-    bb = JSON.stringify(bb);
-    local.assertThrow(aa === bb, message || [aa, bb]);
-};
-
-local.assertJsonNotEqual = function (aa, bb, message) {
-/*
- * this function will assert jsonStringifyOrdered(<aa>) !== JSON.stringify(<bb>)
- */
-    aa = local.jsonStringifyOrdered(aa);
-    bb = JSON.stringify(bb);
-    local.assertThrow(aa !== bb, [aa], message || aa);
-};
-
-local.base64FromBuffer = function (bff) {
-/*
- * this function will convert Uint8Array <bff> to base64
- * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
- */
-    var ii;
-    var mod3;
-    var text;
-    var uint24;
-    var uint6ToB64;
-    // convert utf8 -> Uint8Array
-    if (typeof bff === "string") {
-        bff = new TextEncoder().encode(bff);
-    }
-    bff = bff || [];
-    text = "";
-    uint24 = 0;
-    uint6ToB64 = function (uint6) {
-        return (
-            uint6 < 26
-            ? uint6 + 65
-            : uint6 < 52
-            ? uint6 + 71
-            : uint6 < 62
-            ? uint6 - 4
-            : uint6 === 62
-            ? 43
-            : 47
-        );
-    };
-    ii = 0;
-    while (ii < bff.length) {
-        mod3 = ii % 3;
-        uint24 |= bff[ii] << (16 >>> mod3 & 24);
-        if (mod3 === 2 || bff.length - ii === 1) {
-            text += String.fromCharCode(
-                uint6ToB64(uint24 >>> 18 & 63),
-                uint6ToB64(uint24 >>> 12 & 63),
-                uint6ToB64(uint24 >>> 6 & 63),
-                uint6ToB64(uint24 & 63)
-            );
-            uint24 = 0;
-        }
-        ii += 1;
-    }
-    return text.replace((
-        /A(?=A$|$)/gm
-    ), "=");
-};
-
-local.base64ToBuffer = function (b64, mode) {
-/*
- * this function will convert <b64> to Uint8Array
- * https://gist.github.com/wang-bin/7332335
- */
-    var bff;
-    var byte;
-    var chr;
-    var ii;
-    var jj;
-    var map64;
-    var mod4;
-    b64 = b64 || "";
-    bff = new Uint8Array(b64.length); // 3/4
-    byte = 0;
-    jj = 0;
-    map64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    mod4 = 0;
-    ii = 0;
-    while (ii < b64.length) {
-        chr = map64.indexOf(b64[ii]);
-        if (chr >= 0) {
-            mod4 %= 4;
-            if (mod4 === 0) {
-                byte = chr;
-            } else {
-                byte = byte * 64 + chr;
-                bff[jj] = 255 & (byte >> ((-2 * (mod4 + 1)) & 6));
-                jj += 1;
-            }
-            mod4 += 1;
-        }
-        ii += 1;
-    }
-    // optimization - create resized-view of bff
-    bff = bff.subarray(0, jj);
-    return local.bufferValidateAndCoerce(bff, mode);
-};
-
-local.base64ToUtf8 = function (b64) {
-/*
- * this function will convert <b64> -> utf8
- */
-    return local.base64ToBuffer(b64, "string");
-};
-
-local.bufferValidateAndCoerce = function (bff, mode) {
-/*
- * this function will validate and coerce/convert <bff> -> Buffer
- * (or String if <mode> = "string")
- */
-    // validate not 0
-    if (bff !== 0) {
-        bff = bff || "";
-    }
-    if (typeof bff === "string" && mode === "string") {
-        return bff;
-    }
-    // convert utf8 -> Uint8Array
-    if (typeof bff === "string") {
-        bff = (
-            local.isBrowser
-            ? new TextEncoder().encode(bff)
-            : Buffer.from(bff)
-        );
-    // validate instanceof Uint8Array
-    } else if (Object.prototype.toString.call(bff) !== "[object Uint8Array]") {
-        throw new Error(
-            "bufferValidateAndCoerce - value is not instanceof "
-            + "ArrayBuffer, String, or Uint8Array"
-        );
-    }
-    // convert Uint8Array -> utf8
-    if (mode === "string") {
-        return new TextDecoder().decode(bff);
-    }
-    // coerce Uint8Array -> Buffer
-    if (!local.isBrowser && !Buffer.isBuffer(bff)) {
-        Object.setPrototypeOf(bff, Buffer.prototype);
-    }
-    return bff;
-};
-
-local.childProcessSpawnWithUtility2 = function (script, onError) {
-/*
- * this function will run child_process.spawn, with lib.utility2.sh sourced
- */
-    require("child_process").spawn(
-        ". " + (process.env.npm_config_dir_utility2 || __dirname)
-        + "/lib.utility2.sh; " + script,
-        {
-            shell: true,
-            stdio: ["ignore", 1, 2]
-        }
-    ).on("exit", function (exitCode) {
-        onError(exitCode && Object.assign(new Error(), {
-            exitCode
-        }));
-    });
-};
-
-local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
-/*
- * this function will aes-xxx-cbc decrypt with given <opt>
- * example usage:
-    data = new Uint8Array([1,2,3]);
-    key = '"'"'0123456789abcdef0123456789abcdef'"'"';
-    mode = null;
-    local.cryptoAesXxxCbcRawEncrypt({
-        data: data,
-        key: key,
-        mode: mode
-    }, function (err, data) {
-        console.assert(!err, err);
-        local.cryptoAesXxxCbcRawDecrypt({
-            data: data,
-            key: key,
-            mode: mode
-        }, console.log);
-    });
- */
-    var cipher;
-    var crypto;
-    var data;
-    var ii;
-    var iv;
-    var key;
-    // init key
-    key = new Uint8Array(0.5 * opt.key.length);
-    ii = 0;
-    while (ii < key.byteLength) {
-        key[ii] = parseInt(opt.key.slice(2 * ii, 2 * ii + 2), 16);
-        ii += 2;
-    }
-    data = opt.data;
-    // base64
-    if (opt.mode === "base64") {
-        data = local.base64ToBuffer(data);
-    }
-    // normalize data
-    if (Object.prototype.toString.call(data) !== "[object Uint8Array]") {
-        data = new Uint8Array(data);
-    }
-    // init iv
-    iv = data.subarray(0, 16);
-    // optimization - create resized-view of data
-    data = data.subarray(16);
-    crypto = globalThis.crypto;
-    if (!local.isBrowser) {
-        setTimeout(function () {
-            crypto = require("crypto");
-            cipher = crypto.createDecipheriv(
-                "aes-" + (8 * key.byteLength) + "-cbc",
-                key,
-                iv
-            );
-            onError(null, Buffer.concat([
-                cipher.update(data), cipher.final()
-            ]));
-        });
-        return;
-    }
-    crypto.subtle.importKey("raw", key, {
-        name: "AES-CBC"
-    }, false, ["decrypt"]).then(function (key) {
-        crypto.subtle.decrypt({
-            iv,
-            name: "AES-CBC"
-        }, key, data).then(function (data) {
-            onError(null, new Uint8Array(data));
-        }).catch(onError);
-    }).catch(onError);
-};
-
-local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
-/*
- * this function will aes-xxx-cbc encrypt with given <opt>
- * example usage:
-    data = new Uint8Array([1,2,3]);
-    key = '"'"'0123456789abcdef0123456789abcdef'"'"';
-    mode = null;
-    local.cryptoAesXxxCbcRawEncrypt({
-        data: data,
-        key: key,
-        mode: mode
-    }, function (err, data) {
-        console.assert(!err, err);
-        local.cryptoAesXxxCbcRawDecrypt({
-            data: data,
-            key: key,
-            mode: mode
-        }, console.log);
-    });
- */
-    var cipher;
-    var crypto;
-    var data;
-    var ii;
-    var iv;
-    var key;
-    // init key
-    key = new Uint8Array(0.5 * opt.key.length);
-    ii = 0;
-    while (ii < key.byteLength) {
-        key[ii] = parseInt(opt.key.slice(2 * ii, 2 * ii + 2), 16);
-        ii += 2;
-    }
-    data = opt.data;
-    // init iv
-    iv = new Uint8Array((((data.byteLength) >> 4) << 4) + 32);
-    crypto = globalThis.crypto;
-    if (!local.isBrowser) {
-        setTimeout(function () {
-            crypto = require("crypto");
-            // init iv
-            iv.set(crypto.randomBytes(16));
-            cipher = crypto.createCipheriv(
-                "aes-" + (8 * key.byteLength) + "-cbc",
-                key,
-                iv.subarray(0, 16)
-            );
-            data = cipher.update(data);
-            iv.set(data, 16);
-            iv.set(cipher.final(), 16 + data.byteLength);
-            if (opt.mode === "base64") {
-                iv = local.base64FromBuffer(iv);
-                iv += "\n";
-            }
-            onError(null, iv);
-        });
-        return;
-    }
-    // init iv
-    iv.set(crypto.getRandomValues(new Uint8Array(16)));
-    crypto.subtle.importKey("raw", key, {
-        name: "AES-CBC"
-    }, false, ["encrypt"]).then(function (key) {
-        crypto.subtle.encrypt({
-            iv: iv.subarray(0, 16),
-            name: "AES-CBC"
-        }, key, data).then(function (data) {
-            iv.set(new Uint8Array(data), 16);
-            // base64
-            if (opt.mode === "base64") {
-                iv = local.base64FromBuffer(iv);
-                iv += "\n";
-            }
-            onError(null, iv);
-        }).catch(onError);
-    }).catch(onError);
-};
-
-local.fsReadFileOrEmptyStringSync = function (file, opt) {
-/*
- * this function will try to read file or return empty-string, or
- * if <opt> === "json", then try to JSON.parse file or return null
- */
-    try {
-        return (
-            opt === "json"
-            ? JSON.parse(local.fs.readFileSync(file, "utf8"))
-            : local.fs.readFileSync(file, opt)
-        );
-    } catch (ignore) {
-        return (
-            opt === "json"
-            ? {}
-            : ""
-        );
-    }
-};
-
-local.fsRmrSync = function (dir) {
-/*
- * this function will synchronously "rm -fr" dir
- */
-    local.child_process.execFileSync(
-        "rm",
-        ["-fr", local.path.resolve(process.cwd(), dir)],
-        {
-            stdio: ["ignore", 1, 2]
-        }
-    );
-};
-
-local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
-/*
- * this function will synchronously "mkdir -p" and write <data> to <file>
- */
-    try {
-        if (
-            mode === "noWrite"
-            || typeof require("fs").writeFileSync !== "function"
-        ) {
-            return;
-        }
-    } catch (ignore) {
-        return;
-    }
-    // try to write to file
-    try {
-        require("fs").writeFileSync(file, data);
-    } catch (ignore) {
-        // mkdir -p
-        require("child_process").spawnSync(
-            "mkdir",
-            ["-p", require("path").dirname(file)],
-            {
-                stdio: ["ignore", 1, 2]
-            }
-        );
-        // re-write to file
-        require("fs").writeFileSync(file, data);
-    }
-};
-
-local.isNullOrUndefined = function (arg0) {
-/*
- * this function will test if arg0 is null or undefined
- */
-    return arg0 === null || arg0 === undefined;
-};
-
-local.jsonCopy = function (obj) {
-/*
- * this function will deep-copy obj
- */
-    return (
-        obj === undefined
-        ? undefined
-        : JSON.parse(JSON.stringify(obj))
-    );
-};
-
-local.jsonStringifyOrdered = function (obj, replacer, space) {
-/*
- * this function will JSON.stringify <obj>,
- * with object-keys sorted and circular-references removed
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Syntax
- */
-    var circularSet;
-    var stringify;
-    var tmp;
-    stringify = function (obj) {
-    /*
-     * this function will recursively JSON.stringify obj,
-     * with object-keys sorted and circular-references removed
-     */
-        // if obj is not an object or function, then JSON.stringify as normal
-        if (!(
-            obj
-            && typeof obj === "object"
-            && typeof obj.toJSON !== "function"
-        )) {
-            return JSON.stringify(obj);
-        }
-        // ignore circular-reference
-        if (circularSet.has(obj)) {
-            return;
-        }
-        circularSet.add(obj);
-        // if obj is an array, then recurse its items
-        if (Array.isArray(obj)) {
-            tmp = "[" + obj.map(function (obj) {
-                // recurse
-                tmp = stringify(obj);
-                return (
-                    typeof tmp === "string"
-                    ? tmp
-                    : "null"
-                );
-            }).join(",") + "]";
-            circularSet.delete(obj);
-            return tmp;
-        }
-        // if obj is not an array,
-        // then recurse its items with object-keys sorted
-        tmp = "{" + Object.keys(obj).sort().map(function (key) {
-            // recurse
-            tmp = stringify(obj[key]);
-            if (typeof tmp === "string") {
-                return JSON.stringify(key) + ":" + tmp;
-            }
-        }).filter(function (obj) {
-            return typeof obj === "string";
-        }).join(",") + "}";
-        circularSet.delete(obj);
-        return tmp;
-    };
-    circularSet = new Set();
-    return JSON.stringify((
-        (typeof obj === "object" && obj)
-        // recurse
-        ? JSON.parse(stringify(obj))
-        : obj
-    ), replacer, space);
-};
-
-local.moduleDirname = function (module, modulePathList) {
-/*
- * this function will search modulePathList for the module'"'"'s __dirname
- */
-    var result;
-    // search process.cwd()
-    if (!module || module === "." || module.indexOf("/") >= 0) {
-        return require("path").resolve(process.cwd(), module || "");
-    }
-    // search modulePathList
-    ["node_modules"]
-    .concat(modulePathList)
-    .concat(require("module").globalPaths)
-    .concat([
-        process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
-    ])
-    .some(function (modulePath) {
-        try {
-            result = require("path").resolve(
-                process.cwd(),
-                modulePath + "/" + module
-            );
-            result = require("fs").statSync(result).isDirectory() && result;
-            return result;
-        } catch (ignore) {
-            result = null;
-        }
-        return result;
-    });
-    return result || "";
-};
-
-local.objectSetDefault = function (dict, defaults, depth) {
-/*
- * this function will recursively set defaults for undefined-items in dict
- */
-    dict = dict || {};
-    defaults = defaults || {};
-    Object.keys(defaults).forEach(function (key) {
-        var defaults2;
-        var dict2;
-        dict2 = dict[key];
-        // handle misbehaving getter
-        try {
-            defaults2 = defaults[key];
-        } catch (ignore) {}
-        if (defaults2 === undefined) {
-            return;
-        }
-        // init dict[key] to default value defaults[key]
-        switch (dict2) {
-        case "":
-        case null:
-        case undefined:
-            dict[key] = defaults2;
-            return;
-        }
-        // if dict2 and defaults2 are both non-null and non-array objects,
-        // then recurse with dict2 and defaults2
-        if (
-            depth > 1
-            // dict2 is a non-null and non-array object
-            && typeof dict2 === "object" && dict2 && !Array.isArray(dict2)
-            // defaults2 is a non-null and non-array object
-            && typeof defaults2 === "object" && defaults2
-            && !Array.isArray(defaults2)
-        ) {
-            // recurse
-            local.objectSetDefault(dict2, defaults2, depth - 1);
-        }
-    });
-    return dict;
-};
-
-local.objectSetOverride = function (dict, overrides, depth, env) {
-/*
- * this function will recursively set overrides for items in dict
- */
-    dict = dict || {};
-    env = env || (typeof process === "object" && process.env) || {};
-    overrides = overrides || {};
-    Object.keys(overrides).forEach(function (key) {
-        var dict2;
-        var overrides2;
-        dict2 = dict[key];
-        overrides2 = overrides[key];
-        if (overrides2 === undefined) {
-            return;
-        }
-        // if both dict2 and overrides2 are non-null and non-array objects,
-        // then recurse with dict2 and overrides2
-        if (
-            depth > 1
-            // dict2 is a non-null and non-array object
-            && typeof dict2 === "object" && dict2 && !Array.isArray(dict2)
-            // overrides2 is a non-null and non-array object
-            && typeof overrides2 === "object" && overrides2
-            && !Array.isArray(overrides2)
-        ) {
-            local.objectSetOverride(dict2, overrides2, depth - 1, env);
-            return;
-        }
-        // else set dict[key] with overrides[key]
-        dict[key] = (
-            dict === env
-            // if dict is env, then overrides falsy-value with empty-string
-            ? overrides2 || ""
-            : overrides2
-        );
-    });
-    return dict;
-};
-
-local.onErrorDefault = function (err) {
-/*
- * this function will if <err> exists, then print it to stderr
- */
-    if (err) {
-        console.error(err);
-    }
-    return err;
-};
-
-local.onErrorThrow = function (err) {
-/*
- * this function will if <err> exists, then throw it
- */
-    if (err) {
-        throw err;
-    }
-    return err;
-};
-
-local.onErrorWithStack = function (onError) {
-/*
- * this function will create wrapper around <onError>
- * that will append current-stack to err.stack
- */
-    var onError2;
-    var stack;
-    stack = new Error().stack.replace((
-        /(.*?)\n.*?$/m
-    ), "$1");
-    onError2 = function (err, data, meta) {
-        if (
-            err
-            && typeof err.stack === "string"
-            && err !== local.errorDefault
-            && String(err.stack).indexOf(stack.split("\n")[2]) < 0
-        ) {
-            // append current-stack to err.stack
-            err.stack += "\n" + stack;
-        }
-        onError(err, data, meta);
-    };
-    // debug onError
-    onError2.toString = function () {
-        return String(onError);
-    };
-    return onError2;
-};
-
-local.onNext = function (opt, onError) {
-/*
- * this function will wrap onError inside recursive-function <opt>.onNext,
- * and append the current stack to any error
- */
-    opt.onNext = local.onErrorWithStack(function (err, data, meta) {
-        try {
-            opt.modeNext += (
-                (err && !opt.modeErrorIgnore)
-                ? 1000
-                : 1
-            );
-            if (opt.modeDebug) {
-                console.error("onNext - " + JSON.stringify({
-                    modeNext: opt.modeNext,
-                    errorMessage: err && err.message
-                }));
-                if (err && err.stack) {
-                    console.error(err.stack);
-                }
-            }
-            onError(err, data, meta);
-        } catch (errCaught) {
-            // throw errCaught to break infinite recursion-loop
-            if (opt.errCaught) {
-                local.assertThrow(null, opt.errCaught);
-            }
-            opt.errCaught = errCaught;
-            opt.onNext(errCaught, data, meta);
-        }
-    });
-    return opt;
-};
-
-local.onParallel = function (onError, onEach, onRetry) {
-/*
- * this function will create a function that will
- * 1. run async tasks in parallel
- * 2. if counter === 0 or error occurred, then call onError with error
- */
-    var onParallel;
-    onError = local.onErrorWithStack(onError);
-    onEach = onEach || local.nop;
-    onRetry = onRetry || local.nop;
-    onParallel = function (error, data) {
-        if (onRetry(error, data)) {
-            return;
-        }
-        // decrement counter
-        onParallel.counter -= 1;
-        // validate counter
-        if (!(onParallel.counter >= 0 || error || onParallel.error)) {
-            error = new Error(
-                "invalid onParallel.counter = " + onParallel.counter
-            );
-        // ensure onError is run only once
-        } else if (onParallel.counter < 0) {
-            return;
-        }
-        // handle error
-        if (error) {
-            onParallel.error = error;
-            // ensure counter <= 0
-            onParallel.counter = -Math.abs(onParallel.counter);
-        }
-        // call onError when isDone
-        if (onParallel.counter <= 0) {
-            onError(error, data);
-            return;
-        }
-        onEach();
-    };
-    // init counter
-    onParallel.counter = 0;
-    // return callback
-    return onParallel;
-};
-
-local.onParallelList = function (opt, onEach, onError) {
-/*
- * this function will
- * 1. async-run onEach in parallel,
- *    with given <opt>.rateLimit and <opt>.retryLimit
- * 2. call <onError> when onParallel.ii + 1 === <opt>.list.length
- */
-    var isListEnd;
-    var onEach2;
-    var onParallel;
-    opt.list = opt.list || [];
-    onEach2 = function () {
-        while (true) {
-            if (!(onParallel.ii + 1 < opt.list.length)) {
-                isListEnd = true;
-                return;
-            }
-            if (!(onParallel.counter < opt.rateLimit + 1)) {
-                return;
-            }
-            onParallel.ii += 1;
-            onEach({
-                elem: opt.list[onParallel.ii],
-                ii: onParallel.ii,
-                list: opt.list,
-                retry: 0
-            }, onParallel);
-        }
-    };
-    onParallel = local.onParallel(onError, onEach2, function (err, data) {
-        if (err && data && data.retry < opt.retryLimit) {
-            local.onErrorDefault(err);
-            data.retry += 1;
-            setTimeout(function () {
-                onParallel.counter -= 1;
-                onEach(data, onParallel);
-            }, 1000);
-            return true;
-        }
-        // restart if opt.list has grown
-        if (isListEnd && (onParallel.ii + 1 < opt.list.length)) {
-            isListEnd = null;
-            onEach2();
-        }
-    });
-    onParallel.ii = -1;
-    opt.rateLimit = Number(opt.rateLimit) || 6;
-    opt.rateLimit = Math.max(opt.rateLimit, 1);
-    opt.retryLimit = Number(opt.retryLimit) || 2;
-    onParallel.counter += 1;
-    onEach2();
-    onParallel();
-};
-
-local.semverCompare = function (aa, bb) {
-/*
- * this function will compare semver versions aa ? bb and return
- * -1 if aa < bb
- *  0 if aa = bb
- *  1 if aa > bb
- * https://semver.org/#spec-item-11
- */
-    return [aa, bb].map(function (aa) {
-        aa = aa.split("-");
-        return [aa[0], aa.slice(1).join("-") || "\u00ff"].map(function (aa) {
-            return aa.split(".").map(function (aa) {
-                return ("0000000000000000" + aa).slice(-16);
-            }).join(".");
-        }).join("-");
-    }).reduce(function (aa, bb) {
-        return (
-            aa === bb
-            ? 0
-            : aa < bb
-            ? -1
-            : 1
-        );
-    });
-};
-
-local.stringHtmlSafe = function (text) {
-/*
- * this function will make the text html-safe
- * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
- */
-    return text
-    .replace((
-        /&/g
-    ), "&amp;")
-    .replace((
-        /"/g
-    ), "&quot;")
-    .replace((
-        /'"'"'/g
-    ), "&apos;")
-    .replace((
-        /</g
-    ), "&lt;")
-    .replace((
-        />/g
-    ), "&gt;")
-    .replace((
-        /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
-    ), "&$1");
-};
-
-local.stringMerge = function (str1, str2, rgx) {
-/*
- * this function will merge <str2> -> <str1>, for sections where both match <rgx>
- */
-    str2.replace(rgx, function (match2) {
-        str1.replace(rgx, function (match1) {
-            str1 = str1.replace(match1, function () {
-                return match2;
-            });
-        });
-    });
-    return str1;
-};
-
-local.templateRenderMyApp = function (template, opt) {
-/*
- * this function will render my-app-lite template with given <opt>.packageJson
- */
-    opt.packageJson = local.fsReadFileOrEmptyStringSync("package.json", "json");
-    local.objectSetDefault(opt.packageJson, {
-        nameLib: opt.packageJson.name.replace((
-            /\W/g
-        ), "_"),
-        repository: {
-            url: (
-                "https://github.com/kaizhu256/node-"
-                + opt.packageJson.name
-                + ".git"
-            )
-        }
-    }, 2);
-    opt.githubRepo = opt.packageJson.repository.url.replace((
-        /\.git$/
-    ), "").split("/").slice(-2);
-    template = template.replace((
-        /kaizhu256(\.github\.io\/|%252F|\/)/g
-    ), opt.githubRepo[0] + ("$1"));
-    template = template.replace((
-        /node-my-app-lite/g
-    ), opt.githubRepo[1]);
-    template = template.replace((
-        /\bh1-my-app\b/g
-    ), (
-        opt.packageJson.nameHeroku
-        || ("h1-" + opt.packageJson.nameLib.replace((
-            /_/g
-        ), "-"))
-    ));
-    template = template.replace((
-        /my-app-lite/g
-    ), opt.packageJson.name);
-    template = template.replace((
-        /my_app/g
-    ), opt.packageJson.nameLib);
-    template = template.replace((
-        /\{\{packageJson\.(\S+)\}\}/g
-    ), function (ignore, match1) {
-        return opt.packageJson[match1];
-    });
-    return template;
-};
-
-local.throwError = function () {
-/*
- * this function will throw new err
- */
-    throw new Error();
-};
-}());
-
-
-
-}());
-'
-(set -e
-    if [ ! "$1" ]
-    then
-        return
-    fi
-    COMMAND="$1"
-    shift
-    case "$COMMAND" in
-    -*)
-        shBuildInit
-        lib.utility2.js "$COMMAND" "$@"
-        ;;
-    help)
-        shBuildInit
-        lib.utility2.js "$COMMAND" "$@"
-        ;;
-    source)
-        shBuildInit
-        printf ". $npm_config_dir_utility2/lib.utility2.sh\n"
-        ;;
-    start)
-        shBuildInit
-        if [ "$#" != 0 ]
-        then
-            FILE="$1"
-            shift
-        else
-            export npm_config_mode_start="1"
-            FILE="$npm_config_dir_utility2/test.js"
-        fi
-        export npm_config_mode_auto_restart=1
-        shBuildInit
-        shRun shIstanbulCover "$FILE"
-        ;;
-    test)
-        shBuildInit
-        shRunWithScreenshotTxt shNpmTest "$@"
-        ;;
-    utility2.*)
-        shBuildInit
-        lib.utility2.js "$COMMAND" "$@"
-        ;;
-    utility2Dirname)
-        shBuildInit
-        printf "$npm_config_dir_utility2\n"
-        ;;
-    *)
-        shBuildInit
-        "$COMMAND" "$@"
-        ;;
-    esac
-)}
-
 shMediaHlsEncrypt () {(set -e
 # this function encrypt the hls-media with given hls.m3u8 file
 # example usage:
@@ -3734,15 +2245,15 @@ data = data.replace((
 ), function (match0, match1) {
     ii += 1;
     match1 = "aa." + ("0000" + ii).slice(-4) + ".bin";
-    require("fs").readFile(match0, function (error, data) {
-        console.assert(!error, error);
+    require("fs").readFile(match0, function (err, data) {
+        console.assert(!err, err);
         local.cryptoAesXxxCbcRawEncrypt({
             data,
             key: process.env.CRYPTO_AES_KEY_MEDIA
-        }, function (error, data) {
-            console.assert(!error, error);
-            require("fs").writeFile(match1, data, function (error) {
-                console.assert(!error, error);
+        }, function (err, data) {
+            console.assert(!err, err);
+            require("fs").writeFile(match1, data, function (err) {
+                console.assert(!err, err);
                 console.error("encrypted file " + match0 + " -> " + match1);
             });
         });
@@ -3754,12 +2265,12 @@ local.cryptoAesXxxCbcRawEncrypt({
     key: process.env.CRYPTO_AES_KEY_MEDIA,
     mode: "base64"
 }, function (
-    error,
+    err,
     data
 ) {
-    console.assert(!error, error);
-    require("fs").writeFile("aa.0001.bin", data, function (error) {
-        console.assert(!error, error);
+    console.assert(!err, err);
+    require("fs").writeFile("aa.0001.bin", data, function (err) {
+        console.assert(!err, err);
         console.error("encrypted file hls.m3u8 -> aa.0001.bin");
     });
 });
@@ -4035,13 +2546,13 @@ shNpmTest () {(set -e
     # npm-test without coverage
     if [ ! "$npm_config_mode_coverage" ]
     then
-        ("$NODE_BINARY" "$@") || EXIT_CODE=$?
+        ("$NODE_BINARY" "$@") || EXIT_CODE="$?"
     # npm-test with coverage
     else
         # cleanup old coverage
         rm -f "$npm_config_dir_build/coverage.html/"coverage.*.json
         # npm-test with coverage
-        (shIstanbulCover "$@") || EXIT_CODE=$?
+        (shIstanbulCover "$@") || EXIT_CODE="$?"
         # if $EXIT_CODE != 0, then debug covered-test by re-running it uncovered
         if [ "$EXIT_CODE" != 0 ] && [ "$EXIT_CODE" != 130 ]
         then
@@ -4049,7 +2560,7 @@ shNpmTest () {(set -e
         fi
     fi
     # create test-report artifacts
-    (lib.utility2.js utility2.testReportCreate) || EXIT_CODE=$?
+    (lib.utility2.js utility2.testReportCreate) || EXIT_CODE="$?"
     shBuildPrint "EXIT_CODE - $EXIT_CODE"
     return "$EXIT_CODE"
 )}
@@ -4116,39 +2627,43 @@ shReadmeLinkValidate () {(set -e
 /* jslint utility2:true */
 (function () {
 "use strict";
-var request;
+var set;
+set = new Set();
 require("fs").readFileSync("README.md", "utf8").replace((
-    /\b(http|https):\/\/.*?[)\]]/g
+    /\b(https?):\/\/.*?[)\]]/g
 ), function (match0, match1) {
-    match0 = match0
-    .slice(0, -1)
-    .replace("\u0022", "")
-    .replace("\u0027", "")
-    .replace((
+    var req;
+    match0 = match0.slice(0, -1).replace((
+        /[\u0022\u0027]/g
+    ), "").replace((
         /\bbeta\b|\bmaster\b/g
-    ), "alpha")
-    .replace((
+    ), "alpha").replace((
         /\/build\//g
     ), "/build..alpha..travis-ci.org/");
+    // ignore private-link
     if (
         process.env.npm_package_private
         && match0.indexOf("https://github.com/") === 0
     ) {
         return;
     }
-    request = require(match1).request(require("url").parse(match0), function (
-        response
-    ) {
+    // ignore duplicate-link
+    if (set.has(match0)) {
+        return;
+    }
+    set.add(match0);
+    req = require(match1).request(require("url").parse(match0), function (res) {
         console.log(
-            "shReadmeLinkValidate " + response.statusCode + " " + match0
+            "shReadmeLinkValidate " + res.statusCode + " " + match0
         );
-        response.destroy();
-        if (!(response.statusCode < 400)) {
+        if (!(res.statusCode < 400)) {
             throw new Error("shReadmeLinkValidate - invalid link " + match0);
         }
+        req.abort();
+        res.destroy();
     });
-    request.setTimeout(30000);
-    request.end();
+    req.setTimeout(30000);
+    req.end();
 });
 }());
 '
@@ -4288,33 +2803,34 @@ shRmDsStore () {(set -e
 shRun () {(set -e
 # this function will run the command "$@" with auto-restart
     EXIT_CODE=0
-    # eval argv and auto-restart on non-zero exit-code, unless exited by SIGINT
-    if [ "$npm_config_mode_auto_restart" ] && [ ! "$npm_config_mode_auto_restart_child" ]
-    then
-        export npm_config_mode_auto_restart_child=1
-        while true
-        do
-            printf "\n"
-            git diff --color 2>/dev/null | cat || true
-            printf "\n"
-            printf "(re)starting $*\n"
-            ("$@") || EXIT_CODE=$?
-            printf "process exited with code $EXIT_CODE\n"
-            # if $EXIT_CODE != 77, then exit process
-            # http://en.wikipedia.org/wiki/Unix_signal
-            if [ "$EXIT_CODE" != 77 ]
-            then
-                break
-            fi
-            # else restart process after 1 second
-            sleep 1
-        done
-        printf "EXIT_CODE - $EXIT_CODE\n"
-        return "$EXIT_CODE"
     # eval argv
-    else
+    if [ ! "$npm_config_mode_auto_restart" ] \
+        || [ "$npm_config_mode_auto_restart_child" ]
+    then
         "$@"
+        return "$?"
     fi
+    # eval argv and auto-restart on non-zero exit-code, unless exited by SIGINT
+    export npm_config_mode_auto_restart_child=1
+    while true
+    do
+        printf "\n"
+        git diff --color 2>/dev/null | cat || true
+        printf "\n"
+        printf "(re)starting $*\n"
+        ("$@") || EXIT_CODE="$?"
+        printf "process exited with code $EXIT_CODE\n"
+        # if $EXIT_CODE != 77, then exit process
+        # http://en.wikipedia.org/wiki/Unix_signal
+        if [ "$EXIT_CODE" != 77 ]
+        then
+            break
+        fi
+        # else restart process after 1 second
+        sleep 1
+    done
+    printf "EXIT_CODE - $EXIT_CODE\n"
+    return "$EXIT_CODE"
 )}
 
 shRunWithScreenshotTxt () {(set -e
@@ -4327,7 +2843,7 @@ shRunWithScreenshotTxt () {(set -e
     (
     printf "0" > "$npm_config_file_tmp"
     shBuildPrint "(shRun "$*" 2>&1)"
-    (shRun "$@" 2>&1) || printf $? > "$npm_config_file_tmp"
+    (shRun "$@" 2>&1) || printf "$?" > "$npm_config_file_tmp"
     ) | tee "$npm_config_dir_tmp/runWithScreenshotTxt"
     EXIT_CODE="$(cat "$npm_config_file_tmp")"
     shBuildPrint "EXIT_CODE - $EXIT_CODE"
@@ -4524,12 +3040,12 @@ shTravisRepoCreate () {(set -e
 (function (local) {
 "use strict";
 var onParallel;
-var option;
-option = {};
-local.onNext(option, function (err, data) {
-    switch (option.modeNext) {
+var opt;
+opt = {};
+local.onNext(opt, function (err, data) {
+    switch (opt.modeNext) {
     case 1:
-        option.shBuildPrintPrefix = (
+        opt.shBuildPrintPrefix = (
             "\n\u001b[35m[MODE_BUILD=shCustomOrgRepoCreate]\u001b[0m - "
         );
         local.ajax({
@@ -4541,11 +3057,11 @@ local.onNext(option, function (err, data) {
                 + process.env.TRAVIS_DOMAIN + "/repos/"
                 + process.env.GITHUB_REPO
             )
-        }, option.onNext);
+        }, opt.onNext);
         break;
     case 2:
-        option.id = JSON.parse(data.responseText).id;
-        setTimeout(option.onNext, 5000);
+        opt.id = JSON.parse(data.responseText).id;
+        setTimeout(opt.onNext, 5000);
         break;
     case 3:
         local.ajax({
@@ -4558,15 +3074,15 @@ local.onNext(option, function (err, data) {
             url: (
                 "https://api."
                 + process.env.TRAVIS_DOMAIN
-                + "/hooks/" + option.id
+                + "/hooks/" + opt.id
             )
-        }, option.onNext);
+        }, opt.onNext);
         break;
     case 4:
-        setTimeout(option.onNext, 5000);
+        setTimeout(opt.onNext, 5000);
         break;
     case 5:
-        onParallel = local.onParallel(option.onNext);
+        onParallel = local.onParallel(opt.onNext);
         onParallel.counter += 1;
         onParallel.counter += 1;
         local.ajax({
@@ -4579,7 +3095,7 @@ local.onNext(option, function (err, data) {
             method: "PATCH",
             url: (
                 "https://api." + process.env.TRAVIS_DOMAIN + "/repo/"
-                + option.id + "/setting/builds_only_with_travis_yml"
+                + opt.id + "/setting/builds_only_with_travis_yml"
             )
         }, onParallel);
         onParallel.counter += 1;
@@ -4594,7 +3110,7 @@ local.onNext(option, function (err, data) {
             method: "PATCH",
             url: (
                 "https://api." + process.env.TRAVIS_DOMAIN + "/repo/"
-                + option.id + "/setting/auto_cancel_pushes"
+                + opt.id + "/setting/auto_cancel_pushes"
             )
         }, onParallel);
         onParallel();
@@ -4663,17 +3179,17 @@ local.onNext(option, function (err, data) {
         break;
     default:
         console.error(
-            option.shBuildPrintPrefix + new Date().toISOString()
+            opt.shBuildPrintPrefix + new Date().toISOString()
             + process.env.GITHUB_REPO + (
                 err
-                ? " - ... failed to create - modeNext = " + option.modeNext
+                ? " - ... failed to create - modeNext = " + opt.modeNext
                 : " - ... created"
             )
         );
     }
 });
-option.modeNext = 0;
-option.onNext();
+opt.modeNext = 0;
+opt.onNext();
 }(globalThis.globalLocal));
 '
     cd "/tmp/githubRepo/$GITHUB_REPO"
@@ -4977,5 +3493,1523 @@ shXvfbStart () {
     fi
 }
 
-# run command
-shMain "$@"
+# run main-program
+export UTILITY2_GIT_BASE_ID=9fe8c2255f4ac330c86af7f624d381d768304183
+export UTILITY2_DEPENDENTS="$(shUtility2Dependents)"
+export UTILITY2_MACRO_JS='
+/* istanbul instrument in package utility2 */
+/* istanbul ignore next */
+/* jslint utility2:true */
+(function (globalThis) {
+    "use strict";
+    var consoleError;
+    var local;
+    // init globalThis
+    (function () {
+        try {
+            globalThis = Function("return this")(); // jslint ignore:line
+        } catch (ignore) {}
+    }());
+    globalThis.globalThis = globalThis;
+    // init debug_inline
+    if (!globalThis["debug\u0049nline"]) {
+        consoleError = console.error;
+        globalThis["debug\u0049nline"] = function () {
+        /*
+         * this function will both print <arguments> to stderr
+         * and return <arguments>[0]
+         */
+            var argList;
+            argList = Array.from(arguments); // jslint ignore:line
+            // debug arguments
+            globalThis["debug\u0049nlineArguments"] = argList;
+            consoleError("\n\ndebug\u0049nline");
+            consoleError.apply(console, argList);
+            consoleError("\n");
+            // return arg0 for inspection
+            return argList[0];
+        };
+    }
+    // init local
+    local = {};
+    local.local = local;
+    globalThis.globalLocal = local;
+    // init isBrowser
+    local.isBrowser = (
+        typeof window === "object"
+        && window === globalThis
+        && typeof window.XMLHttpRequest === "function"
+        && window.document
+        && typeof window.document.querySelector === "function"
+    );
+    // init function
+    local.assertThrow = function (passed, message) {
+    /*
+     * this function will throw err.<message> if <passed> is falsy
+     */
+        var err;
+        if (passed) {
+            return;
+        }
+        err = (
+            // ternary-operator
+            (
+                message
+                && typeof message.message === "string"
+                && typeof message.stack === "string"
+            )
+            // if message is errObj, then leave as is
+            ? message
+            : new Error(
+                typeof message === "string"
+                // if message is a string, then leave as is
+                ? message
+                // else JSON.stringify message
+                : JSON.stringify(message, null, 4)
+            )
+        );
+        throw err;
+    };
+    local.functionOrNop = function (fnc) {
+    /*
+     * this function will if <fnc> exists,
+     * them return <fnc>,
+     * else return <nop>
+     */
+        return fnc || local.nop;
+    };
+    local.identity = function (value) {
+    /*
+     * this function will return <value>
+     */
+        return value;
+    };
+    local.nop = function () {
+    /*
+     * this function will do nothing
+     */
+        return;
+    };
+    local.objectAssignDefault = function (target, source) {
+    /*
+     * this function will if items from <target> are
+     * null, undefined, or empty-string,
+     * then overwrite them with items from <source>
+     */
+        target = target || {};
+        Object.keys(source || {}).forEach(function (key) {
+            if (
+                target[key] === null
+                || target[key] === undefined
+                || target[key] === ""
+            ) {
+                target[key] = target[key] || source[key];
+            }
+        });
+        return target;
+    };
+    // require builtin
+    if (!local.isBrowser) {
+        local.assert = require("assert");
+        local.buffer = require("buffer");
+        local.child_process = require("child_process");
+        local.cluster = require("cluster");
+        local.crypto = require("crypto");
+        local.dgram = require("dgram");
+        local.dns = require("dns");
+        local.domain = require("domain");
+        local.events = require("events");
+        local.fs = require("fs");
+        local.http = require("http");
+        local.https = require("https");
+        local.net = require("net");
+        local.os = require("os");
+        local.path = require("path");
+        local.querystring = require("querystring");
+        local.readline = require("readline");
+        local.repl = require("repl");
+        local.stream = require("stream");
+        local.string_decoder = require("string_decoder");
+        local.timers = require("timers");
+        local.tls = require("tls");
+        local.tty = require("tty");
+        local.url = require("url");
+        local.util = require("util");
+        local.vm = require("vm");
+        local.zlib = require("zlib");
+    }
+}(this));
+
+
+
+(function (local) {
+"use strict";
+
+
+
+/* istanbul ignore next */
+// run shared js-env code - init-before
+(function () {
+// init local
+local = (
+    globalThis.utility2_rollup
+    // || globalThis.utility2_rollup_old
+    // || require("./assets.utility2.rollup.js")
+    || globalThis.globalLocal
+);
+// init exports
+if (local.isBrowser) {
+    globalThis.utility2_utility2 = local;
+} else {
+    module.exports = local;
+    module.exports.__dirname = __dirname;
+}
+// init lib main
+local.utility2 = local;
+
+
+
+/* validateLineSortedReset */
+globalThis.local = local;
+
+
+
+local.TextDecoder = globalThis.TextDecoder || function () {
+/*
+ * this function will polyfill TextDecoder
+ */
+    return;
+};
+
+local.TextDecoder.prototype.decode = (
+    local.TextDecoder.prototype.decode || function (bff) {
+        /*
+         * this function will polyfill TextDecoder.prototype.decode
+         */
+        return (
+            (bff && bff.length)
+            ? String(Object.setPrototypeOf(bff, Buffer.prototype))
+            : ""
+        );
+    }
+);
+
+globalThis.TextDecoder = local.TextDecoder;
+
+local.TextEncoder = globalThis.TextEncoder || function () {
+/*
+ * this function will polyfill TextEncoder
+ */
+    return;
+};
+
+local.ajax = function (opt, onError) {
+/*
+ * this function will send an ajax-req
+ * with given <opt>.url and callback <onError>
+ * with err and timeout handling
+ * example usage:
+    local.ajax({
+        data: "hello world",
+        header: {"x-header-hello": "world"},
+        method: "POST",
+        url: "/index.html"
+    }, function (err, xhr) {
+        console.log(xhr.statusCode);
+        console.log(xhr.responseText);
+    });
+ */
+    var ajaxProgressUpdate;
+    var bufferValidateAndCoerce;
+    var isDone;
+    var local2;
+    var onEvent;
+    var streamCleanup;
+    var timeout;
+    var tmp;
+    var xhr;
+    var xhrInit;
+    // init local2
+    local2 = opt.local2 || local.utility2 || {};
+    // init function
+    ajaxProgressUpdate = local2.ajaxProgressUpdate || local.nop;
+    bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (
+        bff,
+        mode
+    ) {
+    /*
+     * this function will validate and coerce/convert <bff> -> Buffer
+     * (or String if <mode> = "string")
+     */
+        // coerce ArrayBuffer -> Buffer
+        if (Object.prototype.toString.call(bff) === "[object ArrayBuffer]") {
+            bff = new Uint8Array(bff);
+        }
+        // convert Buffer -> utf8
+        if (mode === "string" && typeof bff !== "string") {
+            bff = String(bff);
+        }
+        return bff;
+    };
+    onEvent = function (evt) {
+    /*
+     * this function will handle events
+     */
+        if (Object.prototype.toString.call(evt) === "[object Error]") {
+            xhr.err = xhr.err || evt;
+            xhr.onEvent({
+                type: "error"
+            });
+            return;
+        }
+        // init statusCode
+        xhr.statusCode = (xhr.statusCode || xhr.status) | 0;
+        switch (evt.type) {
+        case "abort":
+        case "error":
+        case "load":
+            if (isDone) {
+                return;
+            }
+            isDone = true;
+            // decrement ajaxProgressCounter
+            local2.ajaxProgressCounter = Math.max(
+                local2.ajaxProgressCounter - 1,
+                0
+            );
+            ajaxProgressUpdate();
+            // handle abort or err event
+            switch (!xhr.err && evt.type) {
+            case "abort":
+            case "error":
+                xhr.err = new Error("ajax - event " + evt.type);
+                break;
+            case "load":
+                if (xhr.statusCode >= 400) {
+                    xhr.err = new Error(
+                        "ajax - statusCode " + xhr.statusCode
+                    );
+                }
+                break;
+            }
+            // debug statusCode / method / url
+            if (xhr.err) {
+                xhr.statusCode = xhr.statusCode || 500;
+                xhr.err.statusCode = xhr.statusCode;
+                tmp = (
+                    // ternary-operator
+                    (
+                        local.isBrowser
+                        ? "browser"
+                        : "node"
+                    )
+                    + " - " + xhr.statusCode + " " + xhr.method + " " + xhr.url
+                    + "\n"
+                );
+                xhr.err.message = tmp + xhr.err.message;
+                xhr.err.stack = tmp + xhr.err.stack;
+            }
+            // update resHeaders
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders
+            if (xhr.getAllResponseHeaders) {
+                xhr.getAllResponseHeaders().replace((
+                    /(.*?):\u0020*(.*?)\r\n/g
+                ), function (ignore, match1, match2) {
+                    xhr.resHeaders[match1.toLowerCase()] = match2;
+                });
+            }
+            // debug ajaxResponse
+            xhr.resContentLength = (
+                xhr.response
+                && (xhr.response.byteLength || xhr.response.length)
+            ) | 0;
+            xhr.timeElapsed = Date.now() - xhr.timeStart;
+            if (xhr.modeDebug) {
+                console.error("serverLog - " + JSON.stringify({
+                    time: new Date(xhr.timeStart).toISOString(),
+                    type: "ajaxResponse",
+                    method: xhr.method,
+                    url: xhr.url,
+                    statusCode: xhr.statusCode,
+                    timeElapsed: xhr.timeElapsed,
+                    // extra
+                    resContentLength: xhr.resContentLength
+                }));
+            }
+            // init responseType
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType
+            switch (xhr.response && xhr.responseType) {
+            // init responseText
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseText
+            case "":
+            case "text":
+                if (typeof xhr.responseText === "string") {
+                    break;
+                }
+                xhr.responseText = bufferValidateAndCoerce(
+                    xhr.response,
+                    "string"
+                );
+                break;
+            case "arraybuffer":
+                xhr.responseBuffer = bufferValidateAndCoerce(xhr.response);
+                break;
+            }
+            // cleanup timerTimeout
+            clearTimeout(xhr.timerTimeout);
+            // cleanup reqStream and resStream
+            streamCleanup(xhr.reqStream);
+            streamCleanup(xhr.resStream);
+            onError(xhr.err, xhr);
+            break;
+        }
+    };
+    streamCleanup = function (stream) {
+    /*
+     * this function will try to end or destroy <stream>
+     */
+        var err;
+        // try to end stream
+        try {
+            stream.end();
+        } catch (errCaught) {
+            err = errCaught;
+        }
+        // if err, then try to destroy stream
+        if (err) {
+            try {
+                stream.destroy();
+            } catch (ignore) {}
+        }
+    };
+    xhrInit = function () {
+    /*
+     * this function will init xhr
+     */
+        // init opt
+        Object.keys(opt).forEach(function (key) {
+            if (key[0] !== "_") {
+                xhr[key] = opt[key];
+            }
+        });
+        // init timeout
+        timeout = xhr.timeout || local2.timeoutDefault || 30000;
+        // init default
+        local.objectAssignDefault(xhr, {
+            corsForwardProxyHost: local2.corsForwardProxyHost,
+            headers: {},
+            location: (local.isBrowser && location) || {},
+            method: "GET",
+            responseType: ""
+        });
+        // init headers
+        Object.keys(xhr.headers).forEach(function (key) {
+            xhr.headers[key.toLowerCase()] = xhr.headers[key];
+        });
+        // coerce Uint8Array -> Buffer
+        if (
+            !local.isBrowser
+            && !Buffer.isBuffer(xhr.data)
+            && Object.prototype.toString.call(xhr.data)
+            === "[object Uint8Array]"
+        ) {
+            Object.setPrototypeOf(xhr.data, Buffer.prototype);
+        }
+        // init misc
+        local2._debugXhr = xhr;
+        xhr.onEvent = onEvent;
+        xhr.resHeaders = {};
+        xhr.timeStart = xhr.timeStart || Date.now();
+    };
+    // init onError
+    if (local2.onErrorWithStack) {
+        onError = local2.onErrorWithStack(onError);
+    }
+    // init xhr - XMLHttpRequest
+    xhr = (
+        local.isBrowser
+        && !opt.httpReq
+        && !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(opt.url))
+        && new XMLHttpRequest()
+    );
+    // init xhr - http.request
+    if (!xhr) {
+        xhr = local.identity(local2.urlParse || require("url").parse)(opt.url);
+        // init xhr
+        xhrInit();
+        // init xhr - http.request
+        xhr = local.identity(
+            opt.httpReq
+            || (local.isBrowser && local2.http.request)
+            || require(xhr.protocol.slice(0, -1)).request
+        )(xhr, function (resStream) {
+        /*
+         * this function will read <resStream>
+         */
+            var chunkList;
+            chunkList = [];
+            xhr.resHeaders = resStream.resHeaders || resStream.headers;
+            xhr.resStream = resStream;
+            xhr.statusCode = resStream.statusCode;
+            resStream.dataLength = 0;
+            resStream.on("data", function (chunk) {
+                chunkList.push(chunk);
+            });
+            resStream.on("end", function () {
+                xhr.response = (
+                    local.isBrowser
+                    ? chunkList[0]
+                    : Buffer.concat(chunkList)
+                );
+                resStream.dataLength = (
+                    xhr.response.byteLength || xhr.response.length
+                );
+                xhr.onEvent({
+                    type: "load"
+                });
+            });
+            resStream.on("error", xhr.onEvent);
+        });
+        xhr.abort = function () {
+        /*
+         * this function will abort xhr-req
+         * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/abort
+         */
+            xhr.onEvent({
+                type: "abort"
+            });
+        };
+        xhr.addEventListener = local.nop;
+        xhr.open = local.nop;
+        xhr.reqStream = xhr;
+        xhr.send = xhr.end;
+        xhr.setRequestHeader = local.nop;
+        xhr.on("error", onEvent);
+    }
+    // init xhr
+    xhrInit();
+    // init timerTimeout
+    xhr.timerTimeout = setTimeout(function () {
+        xhr.err = xhr.err || new Error(
+            "onTimeout - errTimeout - "
+            + timeout + " ms - " + "ajax " + xhr.method + " " + xhr.url
+        );
+        xhr.abort();
+        // cleanup reqStream and resStream
+        streamCleanup(xhr.reqStream);
+        streamCleanup(xhr.resStream);
+    }, timeout);
+    // increment ajaxProgressCounter
+    local2.ajaxProgressCounter = local2.ajaxProgressCounter || 0;
+    local2.ajaxProgressCounter += 1;
+    // init event-handling
+    xhr.addEventListener("abort", xhr.onEvent);
+    xhr.addEventListener("error", xhr.onEvent);
+    xhr.addEventListener("load", xhr.onEvent);
+    xhr.addEventListener("loadstart", ajaxProgressUpdate);
+    xhr.addEventListener("progress", ajaxProgressUpdate);
+    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
+    if (xhr.upload && xhr.upload.addEventListener) {
+        xhr.upload.addEventListener("progress", ajaxProgressUpdate);
+    }
+    // open url - corsForwardProxyHost
+    if (local.functionOrNop(local2.corsForwardProxyHostIfNeeded)(xhr)) {
+        xhr.open(xhr.method, local2.corsForwardProxyHostIfNeeded(xhr));
+        xhr.setRequestHeader(
+            "forward-proxy-headers",
+            JSON.stringify(xhr.headers)
+        );
+        xhr.setRequestHeader("forward-proxy-url", xhr.url);
+    // open url - default
+    } else {
+        xhr.open(xhr.method, xhr.url);
+    }
+    // send headers
+    Object.keys(xhr.headers).forEach(function (key) {
+        xhr.setRequestHeader(key, xhr.headers[key]);
+    });
+    // send data
+    switch ((xhr.data && xhr.data.constructor) || true) {
+    // Blob
+    // https://developer.mozilla.org/en-US/docs/Web/API/Blob
+    case local2.Blob:
+    // FormData
+    // https://developer.mozilla.org/en-US/docs/Web/API/FormData
+    case local2.FormData:
+        local2.blobRead(xhr.data, function (err, data) {
+            if (err) {
+                xhr.onEvent(err);
+                return;
+            }
+            // send data
+            xhr.send(data);
+        });
+        break;
+    default:
+        xhr.send(xhr.data);
+    }
+    return xhr;
+};
+
+local.assertJsonEqual = function (aa, bb, message) {
+/*
+ * this function will assert jsonStringifyOrdered(<aa>) === JSON.stringify(<bb>)
+ */
+    aa = local.jsonStringifyOrdered(aa);
+    bb = JSON.stringify(bb);
+    local.assertThrow(aa === bb, message || [
+        aa, bb
+    ]);
+};
+
+local.assertJsonNotEqual = function (aa, bb, message) {
+/*
+ * this function will assert jsonStringifyOrdered(<aa>) !== JSON.stringify(<bb>)
+ */
+    aa = local.jsonStringifyOrdered(aa);
+    bb = JSON.stringify(bb);
+    local.assertThrow(aa !== bb, [
+        aa
+    ], message || aa);
+};
+
+local.base64FromBuffer = function (bff) {
+/*
+ * this function will convert Uint8Array <bff> to base64
+ * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
+ */
+    var ii;
+    var mod3;
+    var text;
+    var uint24;
+    var uint6ToB64;
+    // convert utf8 -> Uint8Array
+    if (typeof bff === "string") {
+        bff = new TextEncoder().encode(bff);
+    }
+    bff = bff || [];
+    text = "";
+    uint24 = 0;
+    uint6ToB64 = function (uint6) {
+        return (
+            uint6 < 26
+            ? uint6 + 65
+            : uint6 < 52
+            ? uint6 + 71
+            : uint6 < 62
+            ? uint6 - 4
+            : uint6 === 62
+            ? 43
+            : 47
+        );
+    };
+    ii = 0;
+    while (ii < bff.length) {
+        mod3 = ii % 3;
+        uint24 |= bff[ii] << (16 >>> mod3 & 24);
+        if (mod3 === 2 || bff.length - ii === 1) {
+            text += String.fromCharCode(
+                uint6ToB64(uint24 >>> 18 & 63),
+                uint6ToB64(uint24 >>> 12 & 63),
+                uint6ToB64(uint24 >>> 6 & 63),
+                uint6ToB64(uint24 & 63)
+            );
+            uint24 = 0;
+        }
+        ii += 1;
+    }
+    return text.replace((
+        /A(?=A$|$)/gm
+    ), "=");
+};
+
+local.base64ToBuffer = function (b64, mode) {
+/*
+ * this function will convert <b64> to Uint8Array
+ * https://gist.github.com/wang-bin/7332335
+ */
+    var bff;
+    var byte;
+    var chr;
+    var ii;
+    var jj;
+    var map64;
+    var mod4;
+    b64 = b64 || "";
+    bff = new Uint8Array(b64.length); // 3/4
+    byte = 0;
+    jj = 0;
+    map64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    mod4 = 0;
+    ii = 0;
+    while (ii < b64.length) {
+        chr = map64.indexOf(b64[ii]);
+        if (chr >= 0) {
+            mod4 %= 4;
+            if (mod4 === 0) {
+                byte = chr;
+            } else {
+                byte = byte * 64 + chr;
+                bff[jj] = 255 & (byte >> ((-2 * (mod4 + 1)) & 6));
+                jj += 1;
+            }
+            mod4 += 1;
+        }
+        ii += 1;
+    }
+    // optimization - create resized-view of bff
+    bff = bff.subarray(0, jj);
+    return local.bufferValidateAndCoerce(bff, mode);
+};
+
+local.base64ToUtf8 = function (b64) {
+/*
+ * this function will convert <b64> -> utf8
+ */
+    return local.base64ToBuffer(b64, "string");
+};
+
+local.bufferValidateAndCoerce = function (bff, mode) {
+/*
+ * this function will validate and coerce/convert <bff> -> Buffer
+ * (or String if <mode> = "string")
+ */
+    // validate not 0
+    if (bff !== 0) {
+        bff = bff || "";
+    }
+    if (typeof bff === "string" && mode === "string") {
+        return bff;
+    }
+    // convert utf8 -> Uint8Array
+    if (typeof bff === "string") {
+        bff = (
+            local.isBrowser
+            ? new TextEncoder().encode(bff)
+            : Buffer.from(bff)
+        );
+    // validate instanceof Uint8Array
+    } else if (Object.prototype.toString.call(bff) !== "[object Uint8Array]") {
+        throw new Error(
+            "bufferValidateAndCoerce - value is not instanceof "
+            + "ArrayBuffer, String, or Uint8Array"
+        );
+    }
+    // convert Uint8Array -> utf8
+    if (mode === "string") {
+        return new TextDecoder().decode(bff);
+    }
+    // coerce Uint8Array -> Buffer
+    if (!local.isBrowser && !Buffer.isBuffer(bff)) {
+        Object.setPrototypeOf(bff, Buffer.prototype);
+    }
+    return bff;
+};
+
+local.childProcessSpawnWithUtility2 = function (script, onError) {
+/*
+ * this function will run child_process.spawn, with lib.utility2.sh sourced
+ */
+    require("child_process").spawn(
+        ". " + (process.env.npm_config_dir_utility2 || __dirname)
+        + "/lib.utility2.sh; " + script,
+        {
+            shell: true,
+            stdio: [
+                "ignore", 1, 2
+            ]
+        }
+    ).on("exit", function (exitCode) {
+        onError(exitCode && Object.assign(new Error(), {
+            exitCode
+        }));
+    });
+};
+
+local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
+/*
+ * this function will aes-xxx-cbc decrypt with given <opt>
+ * example usage:
+    data = new Uint8Array([1,2,3]);
+    key = '"'"'0123456789abcdef0123456789abcdef'"'"';
+    mode = null;
+    local.cryptoAesXxxCbcRawEncrypt({
+        data: data,
+        key: key,
+        mode: mode
+    }, function (err, data) {
+        console.assert(!err, err);
+        local.cryptoAesXxxCbcRawDecrypt({
+            data: data,
+            key: key,
+            mode: mode
+        }, console.log);
+    });
+ */
+    var cipher;
+    var crypto;
+    var data;
+    var ii;
+    var iv;
+    var key;
+    // init key
+    key = new Uint8Array(0.5 * opt.key.length);
+    ii = 0;
+    while (ii < key.byteLength) {
+        key[ii] = parseInt(opt.key.slice(2 * ii, 2 * ii + 2), 16);
+        ii += 2;
+    }
+    data = opt.data;
+    // base64
+    if (opt.mode === "base64") {
+        data = local.base64ToBuffer(data);
+    }
+    // normalize data
+    if (Object.prototype.toString.call(data) !== "[object Uint8Array]") {
+        data = new Uint8Array(data);
+    }
+    // init iv
+    iv = data.subarray(0, 16);
+    // optimization - create resized-view of data
+    data = data.subarray(16);
+    crypto = globalThis.crypto;
+    if (!local.isBrowser) {
+        setTimeout(function () {
+            crypto = require("crypto");
+            cipher = crypto.createDecipheriv(
+                "aes-" + (8 * key.byteLength) + "-cbc",
+                key,
+                iv
+            );
+            onError(null, Buffer.concat([
+                cipher.update(data), cipher.final()
+            ]));
+        });
+        return;
+    }
+    crypto.subtle.importKey("raw", key, {
+        name: "AES-CBC"
+    }, false, [
+        "decrypt"
+    ]).then(function (key) {
+        crypto.subtle.decrypt({
+            iv,
+            name: "AES-CBC"
+        }, key, data).then(function (data) {
+            onError(null, new Uint8Array(data));
+        }).catch(onError);
+    }).catch(onError);
+};
+
+local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
+/*
+ * this function will aes-xxx-cbc encrypt with given <opt>
+ * example usage:
+    data = new Uint8Array([1,2,3]);
+    key = '"'"'0123456789abcdef0123456789abcdef'"'"';
+    mode = null;
+    local.cryptoAesXxxCbcRawEncrypt({
+        data: data,
+        key: key,
+        mode: mode
+    }, function (err, data) {
+        console.assert(!err, err);
+        local.cryptoAesXxxCbcRawDecrypt({
+            data: data,
+            key: key,
+            mode: mode
+        }, console.log);
+    });
+ */
+    var cipher;
+    var crypto;
+    var data;
+    var ii;
+    var iv;
+    var key;
+    // init key
+    key = new Uint8Array(0.5 * opt.key.length);
+    ii = 0;
+    while (ii < key.byteLength) {
+        key[ii] = parseInt(opt.key.slice(2 * ii, 2 * ii + 2), 16);
+        ii += 2;
+    }
+    data = opt.data;
+    // init iv
+    iv = new Uint8Array((((data.byteLength) >> 4) << 4) + 32);
+    crypto = globalThis.crypto;
+    if (!local.isBrowser) {
+        setTimeout(function () {
+            crypto = require("crypto");
+            // init iv
+            iv.set(crypto.randomBytes(16));
+            cipher = crypto.createCipheriv(
+                "aes-" + (8 * key.byteLength) + "-cbc",
+                key,
+                iv.subarray(0, 16)
+            );
+            data = cipher.update(data);
+            iv.set(data, 16);
+            iv.set(cipher.final(), 16 + data.byteLength);
+            if (opt.mode === "base64") {
+                iv = local.base64FromBuffer(iv);
+                iv += "\n";
+            }
+            onError(null, iv);
+        });
+        return;
+    }
+    // init iv
+    iv.set(crypto.getRandomValues(new Uint8Array(16)));
+    crypto.subtle.importKey("raw", key, {
+        name: "AES-CBC"
+    }, false, [
+        "encrypt"
+    ]).then(function (key) {
+        crypto.subtle.encrypt({
+            iv: iv.subarray(0, 16),
+            name: "AES-CBC"
+        }, key, data).then(function (data) {
+            iv.set(new Uint8Array(data), 16);
+            // base64
+            if (opt.mode === "base64") {
+                iv = local.base64FromBuffer(iv);
+                iv += "\n";
+            }
+            onError(null, iv);
+        }).catch(onError);
+    }).catch(onError);
+};
+
+local.fsReadFileOrEmptyStringSync = function (file, opt) {
+/*
+ * this function will try to read file or return empty-string, or
+ * if <opt> === "json", then try to JSON.parse file or return null
+ */
+    try {
+        return (
+            opt === "json"
+            ? JSON.parse(local.fs.readFileSync(file, "utf8"))
+            : local.fs.readFileSync(file, opt)
+        );
+    } catch (ignore) {
+        return (
+            opt === "json"
+            ? {}
+            : ""
+        );
+    }
+};
+
+local.fsRmrSync = function (dir) {
+/*
+ * this function will synchronously "rm -fr" dir
+ */
+    local.child_process.execFileSync(
+        "rm",
+        [
+            "-fr", local.path.resolve(process.cwd(), dir)
+        ],
+        {
+            stdio: [
+                "ignore", 1, 2
+            ]
+        }
+    );
+};
+
+local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
+/*
+ * this function will synchronously "mkdir -p" and write <data> to <file>
+ */
+    try {
+        if (
+            mode === "noWrite"
+            || typeof require("fs").writeFileSync !== "function"
+        ) {
+            return;
+        }
+    } catch (ignore) {
+        return;
+    }
+    // try to write to file
+    try {
+        require("fs").writeFileSync(file, data);
+    } catch (ignore) {
+        // mkdir -p
+        require("child_process").spawnSync(
+            "mkdir",
+            [
+                "-p", require("path").dirname(file)
+            ],
+            {
+                stdio: [
+                    "ignore", 1, 2
+                ]
+            }
+        );
+        // re-write to file
+        require("fs").writeFileSync(file, data);
+    }
+};
+
+local.isNullOrUndefined = function (arg0) {
+/*
+ * this function will test if arg0 is null or undefined
+ */
+    return arg0 === null || arg0 === undefined;
+};
+
+local.jsonCopy = function (obj) {
+/*
+ * this function will deep-copy obj
+ */
+    return (
+        obj === undefined
+        ? undefined
+        : JSON.parse(JSON.stringify(obj))
+    );
+};
+
+local.jsonStringifyOrdered = function (obj, replacer, space) {
+/*
+ * this function will JSON.stringify <obj>,
+ * with object-keys sorted and circular-references removed
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Syntax
+ */
+    var circularSet;
+    var stringify;
+    var tmp;
+    stringify = function (obj) {
+    /*
+     * this function will recursively JSON.stringify obj,
+     * with object-keys sorted and circular-references removed
+     */
+        // if obj is not an object or function, then JSON.stringify as normal
+        if (!(
+            obj
+            && typeof obj === "object"
+            && typeof obj.toJSON !== "function"
+        )) {
+            return JSON.stringify(obj);
+        }
+        // ignore circular-reference
+        if (circularSet.has(obj)) {
+            return;
+        }
+        circularSet.add(obj);
+        // if obj is an array, then recurse its items
+        if (Array.isArray(obj)) {
+            tmp = "[" + obj.map(function (obj) {
+                // recurse
+                tmp = stringify(obj);
+                return (
+                    typeof tmp === "string"
+                    ? tmp
+                    : "null"
+                );
+            }).join(",") + "]";
+            circularSet.delete(obj);
+            return tmp;
+        }
+        // if obj is not an array,
+        // then recurse its items with object-keys sorted
+        tmp = "{" + Object.keys(obj).sort().map(function (key) {
+            // recurse
+            tmp = stringify(obj[key]);
+            if (typeof tmp === "string") {
+                return JSON.stringify(key) + ":" + tmp;
+            }
+        }).filter(function (obj) {
+            return typeof obj === "string";
+        }).join(",") + "}";
+        circularSet.delete(obj);
+        return tmp;
+    };
+    circularSet = new Set();
+    return JSON.stringify((
+        (typeof obj === "object" && obj)
+        // recurse
+        ? JSON.parse(stringify(obj))
+        : obj
+    ), replacer, space);
+};
+
+local.moduleDirname = function (module, modulePathList) {
+/*
+ * this function will search modulePathList for the module'"'"'s __dirname
+ */
+    var result;
+    // search process.cwd()
+    if (!module || module === "." || module.indexOf("/") >= 0) {
+        return require("path").resolve(process.cwd(), module || "");
+    }
+    // search modulePathList
+    [
+        "node_modules"
+    ]
+    .concat(modulePathList)
+    .concat(require("module").globalPaths)
+    .concat([
+        process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
+    ])
+    .some(function (modulePath) {
+        try {
+            result = require("path").resolve(
+                process.cwd(),
+                modulePath + "/" + module
+            );
+            result = require("fs").statSync(result).isDirectory() && result;
+            return result;
+        } catch (ignore) {
+            result = null;
+        }
+        return result;
+    });
+    return result || "";
+};
+
+local.objectSetDefault = function (dict, defaults, depth) {
+/*
+ * this function will recursively set defaults for undefined-items in dict
+ */
+    dict = dict || {};
+    defaults = defaults || {};
+    Object.keys(defaults).forEach(function (key) {
+        var defaults2;
+        var dict2;
+        dict2 = dict[key];
+        // handle misbehaving getter
+        try {
+            defaults2 = defaults[key];
+        } catch (ignore) {}
+        if (defaults2 === undefined) {
+            return;
+        }
+        // init dict[key] to default value defaults[key]
+        switch (dict2) {
+        case "":
+        case null:
+        case undefined:
+            dict[key] = defaults2;
+            return;
+        }
+        // if dict2 and defaults2 are both non-null and non-array objects,
+        // then recurse with dict2 and defaults2
+        if (
+            depth > 1
+            // dict2 is a non-null and non-array object
+            && typeof dict2 === "object" && dict2 && !Array.isArray(dict2)
+            // defaults2 is a non-null and non-array object
+            && typeof defaults2 === "object" && defaults2
+            && !Array.isArray(defaults2)
+        ) {
+            // recurse
+            local.objectSetDefault(dict2, defaults2, depth - 1);
+        }
+    });
+    return dict;
+};
+
+local.objectSetOverride = function (dict, overrides, depth, env) {
+/*
+ * this function will recursively set overrides for items in dict
+ */
+    dict = dict || {};
+    env = env || (typeof process === "object" && process.env) || {};
+    overrides = overrides || {};
+    Object.keys(overrides).forEach(function (key) {
+        var dict2;
+        var overrides2;
+        dict2 = dict[key];
+        overrides2 = overrides[key];
+        if (overrides2 === undefined) {
+            return;
+        }
+        // if both dict2 and overrides2 are non-null and non-array objects,
+        // then recurse with dict2 and overrides2
+        if (
+            depth > 1
+            // dict2 is a non-null and non-array object
+            && typeof dict2 === "object" && dict2 && !Array.isArray(dict2)
+            // overrides2 is a non-null and non-array object
+            && typeof overrides2 === "object" && overrides2
+            && !Array.isArray(overrides2)
+        ) {
+            local.objectSetOverride(dict2, overrides2, depth - 1, env);
+            return;
+        }
+        // else set dict[key] with overrides[key]
+        dict[key] = (
+            dict === env
+            // if dict is env, then overrides falsy-value with empty-string
+            ? overrides2 || ""
+            : overrides2
+        );
+    });
+    return dict;
+};
+
+local.onErrorDefault = function (err) {
+/*
+ * this function will if <err> exists, then print it to stderr
+ */
+    if (err) {
+        console.error(err);
+    }
+    return err;
+};
+
+local.onErrorThrow = function (err) {
+/*
+ * this function will if <err> exists, then throw it
+ */
+    if (err) {
+        throw err;
+    }
+    return err;
+};
+
+local.onErrorWithStack = function (onError) {
+/*
+ * this function will create wrapper around <onError>
+ * that will append current-stack to err.stack
+ */
+    var onError2;
+    var stack;
+    stack = new Error().stack.replace((
+        /(.*?)\n.*?$/m
+    ), "$1");
+    onError2 = function (err, data, meta) {
+        if (
+            err
+            && typeof err.stack === "string"
+            && err !== local.errDefault
+            && String(err.stack).indexOf(stack.split("\n")[2]) < 0
+        ) {
+            // append current-stack to err.stack
+            err.stack += "\n" + stack;
+        }
+        onError(err, data, meta);
+    };
+    // debug onError
+    onError2.toString = function () {
+        return String(onError);
+    };
+    return onError2;
+};
+
+local.onNext = function (opt, onError) {
+/*
+ * this function will wrap onError inside recursive-function <opt>.onNext,
+ * and append the current-stack to any err
+ */
+    opt.onNext = local.onErrorWithStack(function (err, data, meta) {
+        try {
+            opt.modeNext += (
+                (err && !opt.modeErrorIgnore)
+                ? 1000
+                : 1
+            );
+            if (opt.modeDebug) {
+                console.error("onNext - " + JSON.stringify({
+                    modeNext: opt.modeNext,
+                    errorMessage: err && err.message
+                }));
+                if (err && err.stack) {
+                    console.error(err.stack);
+                }
+            }
+            onError(err, data, meta);
+        } catch (errCaught) {
+            // throw errCaught to break infinite recursion-loop
+            if (opt.errCaught) {
+                local.assertThrow(null, opt.errCaught);
+            }
+            opt.errCaught = errCaught;
+            opt.onNext(errCaught, data, meta);
+        }
+    });
+    return opt;
+};
+
+local.onParallel = function (onError, onEach, onRetry) {
+/*
+ * this function will create a function that will
+ * 1. run async tasks in parallel
+ * 2. if counter === 0 or err occurred, then call onError(err)
+ */
+    var onParallel;
+    onError = local.onErrorWithStack(onError);
+    onEach = onEach || local.nop;
+    onRetry = onRetry || local.nop;
+    onParallel = function (err, data) {
+        if (onRetry(err, data)) {
+            return;
+        }
+        // decrement counter
+        onParallel.counter -= 1;
+        // validate counter
+        if (!(onParallel.counter >= 0 || err || onParallel.err)) {
+            err = new Error(
+                "invalid onParallel.counter = " + onParallel.counter
+            );
+        // ensure onError is run only once
+        } else if (onParallel.counter < 0) {
+            return;
+        }
+        // handle err
+        if (err) {
+            onParallel.err = err;
+            // ensure counter <= 0
+            onParallel.counter = -Math.abs(onParallel.counter);
+        }
+        // call onError when isDone
+        if (onParallel.counter <= 0) {
+            onError(err, data);
+            return;
+        }
+        onEach();
+    };
+    // init counter
+    onParallel.counter = 0;
+    // return callback
+    return onParallel;
+};
+
+local.onParallelList = function (opt, onEach, onError) {
+/*
+ * this function will
+ * 1. async-run onEach in parallel,
+ *    with given <opt>.rateLimit and <opt>.retryLimit
+ * 2. call <onError> when onParallel.ii + 1 === <opt>.list.length
+ */
+    var isListEnd;
+    var onEach2;
+    var onParallel;
+    opt.list = opt.list || [];
+    onEach2 = function () {
+        while (true) {
+            if (!(onParallel.ii + 1 < opt.list.length)) {
+                isListEnd = true;
+                return;
+            }
+            if (!(onParallel.counter < opt.rateLimit + 1)) {
+                return;
+            }
+            onParallel.ii += 1;
+            onEach({
+                elem: opt.list[onParallel.ii],
+                ii: onParallel.ii,
+                list: opt.list,
+                retry: 0
+            }, onParallel);
+        }
+    };
+    onParallel = local.onParallel(onError, onEach2, function (err, data) {
+        if (err && data && data.retry < opt.retryLimit) {
+            local.onErrorDefault(err);
+            data.retry += 1;
+            setTimeout(function () {
+                onParallel.counter -= 1;
+                onEach(data, onParallel);
+            }, 1000);
+            return true;
+        }
+        // restart if opt.list has grown
+        if (isListEnd && (onParallel.ii + 1 < opt.list.length)) {
+            isListEnd = null;
+            onEach2();
+        }
+    });
+    onParallel.ii = -1;
+    opt.rateLimit = Number(opt.rateLimit) || 6;
+    opt.rateLimit = Math.max(opt.rateLimit, 1);
+    opt.retryLimit = Number(opt.retryLimit) || 2;
+    onParallel.counter += 1;
+    onEach2();
+    onParallel();
+};
+
+local.semverCompare = function (aa, bb) {
+/*
+ * this function will compare semver versions aa ? bb and return
+ * -1 if aa < bb
+ *  0 if aa = bb
+ *  1 if aa > bb
+ * https://semver.org/#spec-item-11
+ */
+    return [
+        aa, bb
+    ].map(function (aa) {
+        aa = aa.split("-");
+        return [
+            aa[0], aa.slice(1).join("-") || "\u00ff"
+        ].map(function (aa) {
+            return aa.split(".").map(function (aa) {
+                return ("0000000000000000" + aa).slice(-16);
+            }).join(".");
+        }).join("-");
+    }).reduce(function (aa, bb) {
+        return (
+            aa === bb
+            ? 0
+            : aa < bb
+            ? -1
+            : 1
+        );
+    });
+};
+
+local.stringHtmlSafe = function (text) {
+/*
+ * this function will make the text html-safe
+ * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
+ */
+    return text
+    .replace((
+        /&/g
+    ), "&amp;")
+    .replace((
+        /"/g
+    ), "&quot;")
+    .replace((
+        /'"'"'/g
+    ), "&apos;")
+    .replace((
+        /</g
+    ), "&lt;")
+    .replace((
+        />/g
+    ), "&gt;")
+    .replace((
+        /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
+    ), "&$1");
+};
+
+local.stringMerge = function (str1, str2, rgx) {
+/*
+ * this function will merge <str2> -> <str1>, for sections where both match <rgx>
+ */
+    str2.replace(rgx, function (match2) {
+        str1.replace(rgx, function (match1) {
+            str1 = str1.replace(match1, function () {
+                return match2;
+            });
+        });
+    });
+    return str1;
+};
+
+local.templateRenderMyApp = function (template, opt) {
+/*
+ * this function will render my-app-lite template with given <opt>.packageJson
+ */
+    opt.packageJson = local.fsReadFileOrEmptyStringSync("package.json", "json");
+    local.objectSetDefault(opt.packageJson, {
+        nameLib: opt.packageJson.name.replace((
+            /\W/g
+        ), "_"),
+        repository: {
+            url: (
+                "https://github.com/kaizhu256/node-"
+                + opt.packageJson.name
+                + ".git"
+            )
+        }
+    }, 2);
+    opt.githubRepo = opt.packageJson.repository.url.replace((
+        /\.git$/
+    ), "").split("/").slice(-2);
+    template = template.replace((
+        /kaizhu256(\.github\.io\/|%252F|\/)/g
+    ), opt.githubRepo[0] + ("$1"));
+    template = template.replace((
+        /node-my-app-lite/g
+    ), opt.githubRepo[1]);
+    template = template.replace((
+        /\bh1-my-app\b/g
+    ), (
+        opt.packageJson.nameHeroku
+        || ("h1-" + opt.packageJson.nameLib.replace((
+            /_/g
+        ), "-"))
+    ));
+    template = template.replace((
+        /my-app-lite/g
+    ), opt.packageJson.name);
+    template = template.replace((
+        /my_app/g
+    ), opt.packageJson.nameLib);
+    template = template.replace((
+        /\{\{packageJson\.(\S+)\}\}/g
+    ), function (ignore, match1) {
+        return opt.packageJson[match1];
+    });
+    return template;
+};
+
+local.throwError = function () {
+/*
+ * this function will throw new err
+ */
+    throw new Error();
+};
+}());
+
+
+
+}());
+'
+(set -e
+    if [ ! "$1" ]
+    then
+        exit
+    fi
+    COMMAND="$1"
+    shift
+    case "$COMMAND" in
+    -*)
+        shBuildInit
+        lib.utility2.js "$COMMAND" "$@"
+        ;;
+    help)
+        shBuildInit
+        lib.utility2.js "$COMMAND" "$@"
+        ;;
+    source)
+        shBuildInit
+        printf ". $npm_config_dir_utility2/lib.utility2.sh\n"
+        ;;
+    start)
+        shBuildInit
+        if [ "$#" != 0 ]
+        then
+            FILE="$1"
+            shift
+        else
+            export npm_config_mode_start=1
+            FILE="$npm_config_dir_utility2/test.js"
+        fi
+        export npm_config_mode_auto_restart=1
+        shBuildInit
+        shRun shIstanbulCover "$FILE"
+        ;;
+    test)
+        shBuildInit
+        shRunWithScreenshotTxt shNpmTest "$@"
+        ;;
+    utility2.*)
+        shBuildInit
+        lib.utility2.js "$COMMAND" "$@"
+        ;;
+    utility2Dirname)
+        shBuildInit
+        printf "$npm_config_dir_utility2\n"
+        ;;
+    *)
+        shBuildInit
+        "$COMMAND" "$@"
+        ;;
+    esac
+)

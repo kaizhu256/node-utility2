@@ -56,7 +56,7 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw error-<message> if <passed> is falsy
+     * this function will throw err.<message> if <passed> is falsy
      */
         var err;
         if (passed) {
@@ -69,7 +69,7 @@
                 && typeof message.message === "string"
                 && typeof message.stack === "string"
             )
-            // if message is error-object, then leave as is
+            // if message is errObj, then leave as is
             ? message
             : new Error(
                 typeof message === "string"
@@ -205,15 +205,21 @@ local.cliRun = function (opt) {
         var packageJson;
         var text;
         var textDict;
-        commandList = [{
-            argList: "<arg2>  ...",
-            description: "usage:",
-            command: ["<arg1>"]
-        }, {
-            argList: "'console.log(\"hello world\")'",
-            description: "example:",
-            command: ["--eval"]
-        }];
+        commandList = [
+            {
+                argList: "<arg2>  ...",
+                description: "usage:",
+                command: [
+                    "<arg1>"
+                ]
+            }, {
+                argList: "'console.log(\"hello world\")'",
+                description: "example:",
+                command: [
+                    "--eval"
+                ]
+            }
+        ];
         file = __filename.replace((
             /.*\//
         ), "");
@@ -242,7 +248,9 @@ local.cliRun = function (opt) {
                 commandList[ii] = opt.rgxComment.exec(text);
                 commandList[ii] = {
                     argList: (commandList[ii][1] || "").trim(),
-                    command: [key],
+                    command: [
+                        key
+                    ],
                     description: commandList[ii][2]
                 };
             } catch (ignore) {
@@ -272,7 +280,9 @@ local.cliRun = function (opt) {
             switch (ii) {
             case 0:
             case 1:
-                elem.argList = [elem.argList];
+                elem.argList = [
+                    elem.argList
+                ];
                 break;
             default:
                 elem.argList = elem.argList.split(" ");
@@ -415,7 +425,7 @@ local.onErrorWithStack = function (onError) {
         if (
             err
             && typeof err.stack === "string"
-            && err !== local.errorDefault
+            && err !== local.errDefault
             && String(err.stack).indexOf(stack.split("\n")[2]) < 0
         ) {
             // append current-stack to err.stack
@@ -434,36 +444,36 @@ local.onParallel = function (onError, onEach, onRetry) {
 /*
  * this function will create a function that will
  * 1. run async tasks in parallel
- * 2. if counter === 0 or error occurred, then call onError with error
+ * 2. if counter === 0 or err occurred, then call onError(err)
  */
     var onParallel;
     onError = local.onErrorWithStack(onError);
     onEach = onEach || local.nop;
     onRetry = onRetry || local.nop;
-    onParallel = function (error, data) {
-        if (onRetry(error, data)) {
+    onParallel = function (err, data) {
+        if (onRetry(err, data)) {
             return;
         }
         // decrement counter
         onParallel.counter -= 1;
         // validate counter
-        if (!(onParallel.counter >= 0 || error || onParallel.error)) {
-            error = new Error(
+        if (!(onParallel.counter >= 0 || err || onParallel.err)) {
+            err = new Error(
                 "invalid onParallel.counter = " + onParallel.counter
             );
         // ensure onError is run only once
         } else if (onParallel.counter < 0) {
             return;
         }
-        // handle error
-        if (error) {
-            onParallel.error = error;
+        // handle err
+        if (err) {
+            onParallel.err = err;
             // ensure counter <= 0
             onParallel.counter = -Math.abs(onParallel.counter);
         }
         // call onError when isDone
         if (onParallel.counter <= 0) {
-            onError(error, data);
+            onError(err, data);
             return;
         }
         onEach();
@@ -2566,7 +2576,7 @@ function tokenize(source) {
             // jslint-hack - 100
             && whole_line.length > (
                 option.utility2
-                ? 100
+                ? 89
                 : 80
             )
             && !json_mode
@@ -4160,7 +4170,9 @@ function assignment(id) {
             the_token.names = left;
             the_token.expression = right;
         } else {
-            the_token.expression = [left, right];
+            the_token.expression = [
+                left, right
+            ];
         }
         if (
             right.arity === "assignment"
@@ -4208,7 +4220,9 @@ function infix(id, bp, f) {
         if (f !== undefined) {
             return f(left);
         }
-        the_token.expression = [left, expression(bp)];
+        the_token.expression = [
+            left, expression(bp)
+        ];
         return the_token;
     };
     return the_symbol;
@@ -4222,7 +4236,9 @@ function infixr(id, bp) {
     the_symbol.led = function (left) {
         var the_token = token;
         the_token.arity = "binary";
-        the_token.expression = [left, expression(bp - 1)];
+        the_token.expression = [
+            left, expression(bp - 1)
+        ];
         return the_token;
     };
     return the_symbol;
@@ -4297,7 +4313,9 @@ function ternary(id1, id2) {
         advance(id2);
         token.arity = "ternary";
         the_token.arity = "ternary";
-        the_token.expression = [left, second, expression(10)];
+        the_token.expression = [
+            left, second, expression(10)
+        ];
         if (next_token.id !== ")") {
             warn("use_open", the_token);
         }
@@ -4430,7 +4448,9 @@ infix("(", 160, function (left) {
     if (functionage.arity === "statement" && left.identifier) {
         functionage.name.calls[left.id] = left;
     }
-    the_paren.expression = [left];
+    the_paren.expression = [
+        left
+    ];
     if (next_token.id !== ")") {
         (function next() {
             var ellipsis;
@@ -4537,7 +4557,9 @@ infix("[", 170, function (left) {
         }
     }
     left_check(left, the_token);
-    the_token.expression = [left, the_subscript];
+    the_token.expression = [
+        left, the_subscript
+    ];
     advance("]");
     return the_token;
 });
@@ -4568,7 +4590,9 @@ function do_tick() {
 infix("`", 160, function (left) {
     var the_tick = do_tick();
     left_check(left, the_tick);
-    the_tick.expression = [left].concat(the_tick.expression);
+    the_tick.expression = [
+        left
+    ].concat(the_tick.expression);
     return the_tick;
 });
 
@@ -4633,7 +4657,9 @@ prefix("void", function () {
 function parameter_list() {
     var list = [];
     var optional;
-    var signature = ["("];
+    var signature = [
+        "("
+    ];
     if (next_token.id !== ")" && next_token.id !== "(end)") {
         (function parameter() {
             var ellipsis = false;
@@ -4774,7 +4800,9 @@ function parameter_list() {
     }
     advance(")");
     signature.push(")");
-    return [list, signature.join("")];
+    return [
+        list, signature.join("")
+    ];
 }
 
 function do_function(the_function) {
@@ -4847,7 +4875,9 @@ function do_function(the_function) {
     advance("(");
     token.free = false;
     token.arity = "function";
-    [functionage.parameters, functionage.signature] = parameter_list();
+    [
+        functionage.parameters, functionage.signature
+    ] = parameter_list();
     functionage.parameters.forEach(function enroll_parameter(name) {
         if (name.identifier) {
             enroll(name, "parameter", false);
@@ -4951,7 +4981,9 @@ prefix("(", function () {
             }
             return stop("expected_identifier_a", the_value);
         }
-        the_paren.expression = [the_value];
+        the_paren.expression = [
+            the_value
+        ];
         return fart([
             the_paren.expression, "(" + the_value.id + ")"
         ]);
@@ -6932,8 +6964,12 @@ var jslint0 = Object.freeze(function (
 /*
 file none
 */
+// jslint-hack - ignore bad_property_a
+rx_bad_property = (
+    /$^/m
+);
 // jslint-hack - extra
-jslint_extra = function (source, option, global_array) {
+jslint_extra = function (source, opt, global_array) {
 /*
  * this function will run with extra-features inside jslint-function jslint()
  */
@@ -6949,7 +6985,7 @@ jslint_extra = function (source, option, global_array) {
         return {};
     });
     // jslint
-    jslint_result = jslint0(lines, option, global_array);
+    jslint_result = jslint0(lines, opt, global_array);
     // autofix
     // expected_space_a_b: "Expected one space between '{a}' and '{b}'.",
     // unexpected_space_a_b: "Unexpected space between '{a}' and '{b}'.",
@@ -7005,8 +7041,9 @@ next_line_extra = function (source_line, line) {
         option.utility2 = true;
         [
             allowed_option.browser,
-            allowed_option.node,
-            ["globalThis"]
+            allowed_option.node, [
+                "globalThis"
+            ]
         ].forEach(function (list) {
             list.forEach(function (key) {
                 declared_globals[key] = false;
@@ -7032,7 +7069,9 @@ warn_at_extra = function (warning, warnings) {
     var tmp;
     Object.assign(warning, lines_extra[warning.line]);
     // left, right
-    ["c", "d"].forEach(function (key) {
+    [
+        "c", "d"
+    ].forEach(function (key) {
         if (warning[key] === undefined || typeof warning[key] === "object") {
             warning[key] = Object.assign({}, warning[key]);
             Object.keys(warning[key]).forEach(function (key2) {
@@ -7056,10 +7095,6 @@ warn_at_extra = function (warning, warnings) {
         return;
     }
     switch (option.utility2 && warning.code) {
-    // bad_property_a: "Bad property name '{a}'.",
-    case "bad_property_a":
-        delete warning.d.warning;
-        return;
     // unexpected_a: "Unexpected '{a}'.",
     case "unexpected_a":
         switch (
@@ -7164,31 +7199,31 @@ warn_at_extra = function (warning, warnings) {
 
 // run shared js-env code - function
 (function () {
-local.jslintAndPrint = function (code, file, option) {
+local.jslintAndPrint = function (code, file, opt) {
 /*
  * this function will jslint / csslint <code> and print any errors to stderr
  */
     var tmp;
-    if (!(option && option.modeNext)) {
+    if (!(opt && opt.modeNext)) {
         local.jslintResult = {
             modeNext: 0
         };
     }
     code = code || "";
     file = file || "undefined";
-    option = Object.assign(local.jslintResult, option || {}, {
+    opt = Object.assign(local.jslintResult, opt || {}, {
         code,
         file
     });
-    option.modeNext += 1;
-    switch (option.modeNext) {
+    opt.modeNext += 1;
+    switch (opt.modeNext) {
     // jslint - init
     case 1:
         // cleanup
-        option.errorList = [];
-        option.errorText = "";
+        opt.errList = [];
+        opt.errorText = "";
         // fileType0
-        switch (option.fileType0) {
+        switch (opt.fileType0) {
         case ".\\n\\":
             code = code.replace((
                 /\\n\\$|\\(.)/gm
@@ -7207,7 +7242,7 @@ local.jslintAndPrint = function (code, file, option) {
             break;
         }
         // init
-        option = Object.assign(option, {
+        opt = Object.assign(opt, {
             ".css": (
                 /^\/\*csslint\b|(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$)/m
             ),
@@ -7230,67 +7265,67 @@ local.jslintAndPrint = function (code, file, option) {
         });
         // jslint - .json
         if (
-            code && (option.fileType === ".js" || option.fileType === ".json")
-            && !option.fileType0
+            code && (opt.fileType === ".js" || opt.fileType === ".json")
+            && !opt.fileType0
         ) {
             try {
                 tmp = JSON.parse(code);
-                option.fileType = ".json";
-                if (option.autofix) {
+                opt.fileType = ".json";
+                if (opt.autofix) {
                     code = JSON.stringify(tmp, null, 4) + "\n";
-                    option.code0 = code;
+                    opt.code0 = code;
                 }
-                option.modeNext = Infinity;
+                opt.modeNext = Infinity;
                 break;
             } catch (errCaught) {
-                if (option.fileType === ".json") {
-                    option.errorList.push({
+                if (opt.fileType === ".json") {
+                    opt.errList.push({
                         column: 0,
                         evidence: code.slice(0, 100),
                         line: 0,
                         message: errCaught.message
                     });
-                    option.modeNext = Infinity;
+                    opt.modeNext = Infinity;
                     break;
                 }
             }
         }
         try {
-            option.conditionalPassed = option[option.fileType].exec(code);
+            opt.conditionalPassed = opt[opt.fileType].exec(code);
         } catch (ignore) {}
-        option.utility2 = (
-            option.conditionalPassed
-            && option.conditionalPassed[1]
-        ) || option.autofix;
+        opt.utility2 = (
+            opt.conditionalPassed
+            && opt.conditionalPassed[1]
+        ) || opt.autofix;
         if (
-            option.conditional
-            && (!option.conditionalPassed || option.coverage)
+            opt.conditional
+            && (!opt.conditionalPassed || opt.coverage)
         ) {
             break;
         }
-        option.modeNext = 10;
+        opt.modeNext = 10;
         break;
     // jslint - autofix
     case 11:
-        code = local.jslintAutofix(code, file, option);
-        local.jslintResult = option;
+        code = local.jslintAutofix(code, file, opt);
+        local.jslintResult = opt;
         break;
     // jslint - csslint and jslint
     case 12:
         // restore lineOffset
-        code = "\n".repeat(option.lineOffset | 0) + code;
-        switch (option.fileType) {
+        code = "\n".repeat(opt.lineOffset | 0) + code;
+        switch (opt.fileType) {
         case ".css":
             // csslint
-            Object.assign(option, local.CSSLint.verify(code));
-            // init errorList
-            option.errorList = option.messages.map(function (error) {
-                error.column = error.col;
-                error.message = (
-                    error.type + " - " + error.rule.id + " - " + error.message
-                    + "\n    " + error.rule.desc
+            Object.assign(opt, local.CSSLint.verify(code));
+            // init errList
+            opt.errList = opt.messages.map(function (err) {
+                err.column = err.col;
+                err.message = (
+                    err.type + " - " + err.rule.id + " - " + err.message
+                    + "\n    " + err.rule.desc
                 );
-                return error;
+                return err;
             });
             break;
         case ".html":
@@ -7299,37 +7334,37 @@ local.jslintAndPrint = function (code, file, option) {
             break;
         default:
             // jslint - .js
-            Object.assign(option, local.jslint_extra(code, option));
-            code = option.source_autofix || code;
-            // prioritize fatal error
-            option.warnings.forEach(function (error, ii) {
-                if (error.early_stop) {
-                    error.message = (
+            Object.assign(opt, local.jslint_extra(code, opt));
+            code = opt.source_autofix || code;
+            // prioritize fatal err
+            opt.warnings.forEach(function (err, ii) {
+                if (err.early_stop) {
+                    err.message = (
                         "[JSLint was unable to finish] - "
-                        + error.message
+                        + err.message
                     );
-                    option.warnings.unshift(error);
-                    option.warnings.splice(ii, 1);
+                    opt.warnings.unshift(err);
+                    opt.warnings.splice(ii, 1);
                 }
             });
-            // init errorList
-            option.errorList = option.warnings.filter(function (error) {
-                return error && error.message;
-            }).map(function (error) {
-                error.column = error.column + 1;
-                error.evidence = error.source;
-                error.line = error.line + 1;
-                return error;
+            // init errList
+            opt.errList = opt.warnings.filter(function (err) {
+                return err && err.message;
+            }).map(function (err) {
+                err.column = err.column + 1;
+                err.evidence = err.source;
+                err.line = err.line + 1;
+                return err;
             });
         }
         break;
     // jslint - utility2
     case 13:
-        local.jslintUtility2(code, file, option);
+        local.jslintUtility2(code, file, opt);
         break;
     // jslint - print
     default:
-        switch (Boolean(option.fileType0) && option.fileType0) {
+        switch (Boolean(opt.fileType0) && opt.fileType0) {
         case ".\\n\\":
             code = code.trim().replace((
                 /\\/g
@@ -7353,19 +7388,23 @@ local.jslintAndPrint = function (code, file, option) {
         // autofix - save
         if (
             !local.isBrowser
-            && option.autofix
-            && !option.fileType0
-            && !option.stop
-            && code !== option.code0
+            && opt.autofix
+            && !opt.fileType0
+            && !opt.stop
+            && code !== opt.code0
             && local.fs.existsSync(file)
         ) {
             local.fs.writeFileSync(file, code);
-            local.fs.writeFileSync(file + ".autofix.old", option.code0);
+            local.fs.writeFileSync(file + ".autofix.old", opt.code0);
             local.child_process.spawnSync(
                 "diff",
-                ["-u", file + ".autofix.old", file],
+                [
+                    "-u", file + ".autofix.old", file
+                ],
                 {
-                    stdio: ["ignore", 2, "ignore"]
+                    stdio: [
+                        "ignore", 2, "ignore"
+                    ]
                 }
             );
             local.fs.unlinkSync(file + ".autofix.old");
@@ -7374,46 +7413,46 @@ local.jslintAndPrint = function (code, file, option) {
                 + "\u001b[22m"
             );
         }
-        // print colorized error-messages to stderr
+        // print colorized err.message to stderr
         // https://github.com/kaizhu256/JSLint/blob/cli/cli.js#L99
-        option.errorList.filter(function (warning) {
+        opt.errList.filter(function (warning) {
             return warning && warning.message;
         // print only first 10 warnings
-        }).slice(0, 10).forEach(function (error, ii) {
-            option.errorText = (
-                option.errorText
+        }).slice(0, 10).forEach(function (err, ii) {
+            opt.errorText = (
+                opt.errorText
                 || " \u001b[1mjslint " + file + "\u001b[22m\n"
             );
-            option.errorText += (
+            opt.errorText += (
                 ("  " + String(ii + 1)).slice(-3)
-                + " \u001b[31m" + error.message + "\u001b[39m"
-                + " \u001b[90m\/\/ line " + error.line + ", column "
-                + error.column
+                + " \u001b[31m" + err.message + "\u001b[39m"
+                + " \u001b[90m\/\/ line " + err.line + ", column "
+                + err.column
                 + "\u001b[39m\n"
-                + ("    " + String(error.evidence).trim()).slice(0, 80) + "\n"
+                + ("    " + String(err.evidence).trim()).slice(0, 80) + "\n"
             );
-            if (!ii && error.stack && error.a !== "debug\u0049nline") {
-                tmp = error.stack;
-                error.stack = null;
-                option.errorText += (
-                    JSON.stringify(error, null, 4) + "\n" + tmp.trim() + "\n"
+            if (!ii && err.stack && err.a !== "debug\u0049nline") {
+                tmp = err.stack;
+                err.stack = null;
+                opt.errorText += (
+                    JSON.stringify(err, null, 4) + "\n" + tmp.trim() + "\n"
                 );
             }
         });
-        option.errorText = option.errorText.trim();
-        if (option.errorText) {
+        opt.errorText = opt.errorText.trim();
+        if (opt.errorText) {
             // debug jslintResult
             local._debugJslintResult = local.jslintResult;
-            // print error to stderr
-            console.error(option.errorText);
+            // print err to stderr
+            console.error(opt.errorText);
         }
         return code;
     }
     // recurse
-    return local.jslintAndPrint(code, file, option);
+    return local.jslintAndPrint(code, file, opt);
 };
 
-local.jslintAndPrintDir = function (dir, option, onError) {
+local.jslintAndPrintDir = function (dir, opt, onError) {
 /*
  * this function will jslint files in shallow <dir>
  */
@@ -7438,11 +7477,11 @@ local.jslintAndPrintDir = function (dir, option, onError) {
             }
             onParallel.counter += 1;
             // jslint file
-            local.fs.readFile(file, "utf8", function (error, data) {
+            local.fs.readFile(file, "utf8", function (err, data) {
                 // validate no err occurred
-                local.assertThrow(!error, error);
+                local.assertThrow(!err, err);
                 timeStart = Date.now();
-                local.jslintAndPrint(data, file, option);
+                local.jslintAndPrint(data, file, opt);
                 console.error(
                     "jslint - " + (Date.now() - timeStart) + "ms " + file
                 );
@@ -7453,7 +7492,7 @@ local.jslintAndPrintDir = function (dir, option, onError) {
     });
 };
 
-local.jslintAutofix = function (code, file, option) {
+local.jslintAutofix = function (code, file, opt) {
 /*
  * this function will jslint-autofix <code>
  */
@@ -7466,7 +7505,7 @@ local.jslintAutofix = function (code, file, option) {
     var rgx2;
     var tmp;
     // jslintAutofix - all
-    if (option.autofix) {
+    if (opt.autofix) {
         // autofix - local-function
         if (typeof(
             globalThis.utility2
@@ -7501,10 +7540,10 @@ local.jslintAutofix = function (code, file, option) {
                     ? ".<style>.css"
                     : ".<script>.js"
                 ),
-                Object.assign({}, option, {
+                Object.assign({}, opt, {
                     fileType0: ".\\n\\",
                     lineOffset: (
-                        option.lineOffset | 0
+                        opt.lineOffset | 0
                     ) + code.slice(0, ii).replace((
                         /.+/g
                     ), "").length,
@@ -7513,7 +7552,7 @@ local.jslintAutofix = function (code, file, option) {
             ) + match2;
         });
     }
-    switch (option.autofix && option.fileType) {
+    switch (opt.autofix && opt.fileType) {
     // jslintAutofix - .css
     case ".css":
         break;
@@ -7531,15 +7570,15 @@ local.jslintAutofix = function (code, file, option) {
                     : ".<script>.js"
                 ),
                 local.objectAssignDefault({
-                    fileType0: option.fileType,
+                    fileType0: opt.fileType,
                     lineOffset: (
-                        (option.lineOffset | 0)
+                        (opt.lineOffset | 0)
                         + code.slice(0, ii).replace((
                             /.+/g
                         ), "").length
                     ),
                     modeNext: 0
-                }, option)
+                }, opt)
             ) + match2;
         });
         break;
@@ -7650,7 +7689,7 @@ local.jslintAutofix = function (code, file, option) {
         code = code.replace((
             /\/_\*\//g
         ), "/_/");
-        option.codeDemux = code;
+        opt.codeDemux = code;
         // autofix - comment - left-align
         tmp = null;
         code = code.split("\n").reverse().map(function (line) {
@@ -7722,7 +7761,7 @@ local.jslintAutofix = function (code, file, option) {
         ), "");
         // autofix - braket - "{\n    ..."
         code = code.replace((
-            /^(\u0020*)(.*?(?:\(\[|\{))\u0020*?(\S)/gm
+            /^(\u0020*)(.*?(?:\u0020\[|\(\[|\{))\u0020*?(\S)/gm
         ), "$1$2\n$1    $3");
         // autofix - braket - "{}"
         code = code.replace((
@@ -7835,9 +7874,9 @@ local.jslintAutofix = function (code, file, option) {
         while (true) {
             ii += 1;
             code0 = code;
-            Object.assign(option, local.jslint_extra(code, option));
-            code = option.source_autofix;
-            if (ii >= 10 || option.stop || code0 === code) {
+            Object.assign(opt, local.jslint_extra(code, opt));
+            code = opt.source_autofix;
+            if (ii >= 10 || opt.stop || code0 === code) {
                 break;
             }
         }
@@ -7869,8 +7908,8 @@ local.jslintAutofix = function (code, file, option) {
             return match1 + local.jslintAndPrint(
                 match2,
                 file + ".<```javascript>.js",
-                Object.assign({}, option, {
-                    fileType0: option.fileType,
+                Object.assign({}, opt, {
+                    fileType0: opt.fileType,
                     lineOffset: code.slice(0, ii).replace((
                         /.+/g
                     ), "").length + 1,
@@ -7888,8 +7927,8 @@ local.jslintAutofix = function (code, file, option) {
             return match1 + local.jslintAndPrint(
                 match2,
                 file + ".<node -e>.js",
-                Object.assign({}, option, {
-                    fileType0: option.fileType,
+                Object.assign({}, opt, {
+                    fileType0: opt.fileType,
                     lineOffset: code.slice(0, ii).replace((
                         /.+/g
                     ), "").length + 1,
@@ -7922,16 +7961,16 @@ local.jslintGetColumnLine = function (code, ii) {
 
 local.jslintResult = {};
 
-local.jslintUtility2 = function (code, ignore, option) {
+local.jslintUtility2 = function (code, ignore, opt) {
 /*
  * this function will jslint <code> with utiity2-specific rules
  */
     var code2;
-    var error;
+    var err;
     var indent;
     var previous;
     // jslintUtility2 - all
-    if (option.utility2) {
+    if (opt.utility2) {
         code2 = code;
         code2.replace((
             /^\/\*\u0020jslint\u0020ignore:start\u0020\*\/$[\S\s]+?^\/\*\u0020jslint\u0020ignore:end\u0020\*\/$|^\u0020+?(?:\*|\/\/!!)|^\u0020+|[\r\t]/gm
@@ -7941,42 +7980,39 @@ local.jslintUtility2 = function (code, ignore, option) {
                 if (match0.length % 4 === 0) {
                     return;
                 }
-                error = {
+                err = {
                     message: "non 4-space indent"
                 };
                 break;
             case "\r":
-                error = {
+                err = {
                     message: "unexpected \\r"
                 };
                 break;
             case "\t":
-                error = {
+                err = {
                     message: "unexpected \\t"
                 };
                 break;
             default:
                 return;
             }
-            Object.assign(error, local.jslintGetColumnLine(code2, ii));
-            option.errorList.push({
-                column: error.column + 1,
-                evidence: JSON.stringify(error.evidence),
-                line: error.line + 1,
-                message: error.message
+            Object.assign(err, local.jslintGetColumnLine(code2, ii));
+            opt.errList.push({
+                column: err.column + 1,
+                evidence: JSON.stringify(err.evidence),
+                line: err.line + 1,
+                message: err.message
             });
         });
     }
-    switch (option.utility2 && option.fileType) {
+    switch (opt.utility2 && opt.fileType) {
     // jslintUtility2 - .css
     case ".css":
         // ignore comment
         code2 = code2.replace((
-            /^\/\*\u0020csslint\u0020ignore:start\u0020\*\/$[\S\s]+?^\/\*\u0020csslint\u0020ignore:end\u0020\*\/$|^\u0020*?\/\*[\S\s]*?\*\/\u0020*?$/gm
+            /^\u0020*?\/\*[\S\s]*?\*\/\u0020*?$/gm
         ), function (match0) {
-            if (match0 === "/* validateLineSortedReset */") {
-                return match0;
-            }
             // preserve lineno
             return match0.replace((
                 /^.+?$/gm
@@ -7987,29 +8023,29 @@ local.jslintUtility2 = function (code, ignore, option) {
         ), function (match0, ii) {
             switch (match0.slice(-2)) {
             case "  ":
-                error = {
+                err = {
                     colOffset: 2,
                     message: "unexpected multi-whitespace"
                 };
                 break;
             case " ,":
-                error = {
+                err = {
                     colOffset: 1,
                     message: "unexpected whitespace before comma"
                 };
                 break;
             default:
-                error = {
+                err = {
                     colOffset: match0.length,
                     message: "unexpected multiline-statement"
                 };
             }
-            Object.assign(error, local.jslintGetColumnLine(code2, ii));
-            option.errorList.push({
-                column: error.column + error.colOffset,
-                evidence: JSON.stringify(error.evidence),
-                line: error.line + 1,
-                message: error.message
+            Object.assign(err, local.jslintGetColumnLine(code2, ii));
+            opt.errList.push({
+                column: err.column + err.colOffset,
+                evidence: JSON.stringify(err.evidence),
+                line: err.line + 1,
+                message: err.message
             });
         });
         // validate line-sorted - css-selector
@@ -8037,18 +8073,18 @@ local.jslintUtility2 = function (code, ignore, option) {
             }
         });
         code2.replace((
-            /^\u0000\/\*\u0020.validateLineSortedReset\u0020\*\/$|\u0000@|^(?:\S.*?\n)+/gm
+            /\n\n|\u0000@|^(?:\S.*?\n)+/gm
         ), function (match0, ii) {
-            error = null;
+            err = null;
             switch (match0[1]) {
-            case "/":
+            case "\n":
             case "@":
                 previous = "";
                 break;
             default:
                 match0 = match0.trim();
                 if (!(previous < match0)) {
-                    error = {
+                    err = {
                         message: (
                             "lines not sorted\n" + previous + "\n" + match0
                         )
@@ -8056,19 +8092,19 @@ local.jslintUtility2 = function (code, ignore, option) {
                 } else if (
                     match0.split("\n").sort().join("\n") !== match0
                 ) {
-                    error = {
+                    err = {
                         message: "lines not sorted\n" + match0
                     };
                 }
                 previous = match0;
             }
-            if (error) {
-                Object.assign(error, local.jslintGetColumnLine(code2, ii));
-                option.errorList.push({
-                    column: error.column + 1,
-                    evidence: error.evidence,
-                    line: error.line + 1,
-                    message: error.message.replace((
+            if (err) {
+                Object.assign(err, local.jslintGetColumnLine(code2, ii));
+                opt.errList.push({
+                    column: err.column + 1,
+                    evidence: err.evidence,
+                    line: err.line + 1,
+                    message: err.message.replace((
                         /[\u0000-\u0007]/g
                     ), "")
                 });
@@ -8093,15 +8129,15 @@ local.jslintUtility2 = function (code, ignore, option) {
                 return;
             }
             if (!(previous < match1)) {
-                error = {
+                err = {
                     message: "lines not sorted\n" + previous + "\n" + match1
                 };
-                Object.assign(error, local.jslintGetColumnLine(code2, ii));
-                option.errorList.push({
-                    column: error.column + 1,
-                    evidence: error.evidence,
-                    line: error.line + 1,
-                    message: error.message
+                Object.assign(err, local.jslintGetColumnLine(code2, ii));
+                opt.errList.push({
+                    column: err.column + 1,
+                    evidence: err.evidence,
+                    line: err.line + 1,
+                    message: err.message
                 });
             }
             previous = match1;
@@ -8111,7 +8147,7 @@ local.jslintUtility2 = function (code, ignore, option) {
         code2.replace((
             /^(\u0020+?)(\/\*\u0020validateLineSortedReset\u0020\*\/|switch\u0020.+?\u0020\{|\}|case\u0020.+?:(?:\n\u0020+?case\u0020.+?:)*|default:)$/gm
         ), function (ignore, match1, match2, ii) {
-            error = null;
+            err = null;
             switch (match2.slice(-1)) {
             case "/":
                 if (match1 === indent) {
@@ -8137,7 +8173,7 @@ local.jslintUtility2 = function (code, ignore, option) {
                     return ("0000" + match0).slice(-4);
                 });
                 if (!(previous < match2)) {
-                    error = {
+                    err = {
                         message: (
                             "lines not sorted\n" + previous + "\n" + match2
                         )
@@ -8145,13 +8181,13 @@ local.jslintUtility2 = function (code, ignore, option) {
                 }
                 previous = match2;
             }
-            if (error) {
-                Object.assign(error, local.jslintGetColumnLine(code2, ii));
-                option.errorList.push({
-                    column: error.column + 1,
-                    evidence: error.evidence,
-                    line: error.line + 1,
-                    message: error.message
+            if (err) {
+                Object.assign(err, local.jslintGetColumnLine(code2, ii));
+                opt.errList.push({
+                    column: err.column + 1,
+                    evidence: err.evidence,
+                    line: err.line + 1,
+                    message: err.message
                 });
             }
         });
@@ -8165,14 +8201,14 @@ local.jslintUtility2 = function (code, ignore, option) {
         code2.replace((
             /(^sh\w+?\u0020\(\)\u0020\{)|^sh\w+?\u0020*?\(\)\u0020*?\{/gm
         ), function (ignore, match1, ii) {
-            error = null;
+            err = null;
             if (!match1) {
-                error = {
+                err = {
                     message: "invalid whitespace"
                 };
             } else {
                 if (!(previous < match1)) {
-                    error = {
+                    err = {
                         message: (
                             "lines not sorted\n" + previous + "\n" + match1
                         )
@@ -8180,13 +8216,13 @@ local.jslintUtility2 = function (code, ignore, option) {
                 }
                 previous = match1;
             }
-            if (error) {
-                Object.assign(error, local.jslintGetColumnLine(code2, ii));
-                option.errorList.push({
-                    column: error.column + 1,
-                    evidence: error.evidence,
-                    line: error.line + 1,
-                    message: error.message
+            if (err) {
+                Object.assign(err, local.jslintGetColumnLine(code2, ii));
+                opt.errList.push({
+                    column: err.column + 1,
+                    evidence: err.evidence,
+                    line: err.line + 1,
+                    message: err.message
                 });
             }
         });
@@ -8195,7 +8231,7 @@ local.jslintUtility2 = function (code, ignore, option) {
         code2.replace((
             /^(\u0020+?)(case\u0020.+?\u0020in|esac|[^\u0020()]+?\))$/gm
         ), function (ignore, match1, match2, ii) {
-            error = null;
+            err = null;
             match2 = match2.replace("*", "~*");
             switch (match2.slice(0, 5)) {
             case "case ":
@@ -8212,7 +8248,7 @@ local.jslintUtility2 = function (code, ignore, option) {
                     break;
                 }
                 if (!(previous < match2)) {
-                    error = {
+                    err = {
                         message: (
                             "lines not sorted\n" + previous + "\n" + match2
                         )
@@ -8220,13 +8256,13 @@ local.jslintUtility2 = function (code, ignore, option) {
                 }
                 previous = match2;
             }
-            if (error) {
-                Object.assign(error, local.jslintGetColumnLine(code2, ii));
-                option.errorList.push({
-                    column: error.column + 1,
-                    evidence: error.evidence,
-                    line: error.line + 1,
-                    message: error.message
+            if (err) {
+                Object.assign(err, local.jslintGetColumnLine(code2, ii));
+                opt.errList.push({
+                    column: err.column + 1,
+                    evidence: err.evidence,
+                    line: err.line + 1,
+                    message: err.message
                 });
             }
         });
@@ -8265,8 +8301,8 @@ local.cliDict._default = function () {
             }
         );
     });
-    // if error occurred, then exit with non-zero code
-    process.exit(Boolean(local.jslintResult.errorList.length));
+    // if err occurred, then exit with non-zero code
+    process.exit(Boolean(local.jslintResult.errList.length));
 };
 
 local.cliDict.dir = function () {

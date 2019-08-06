@@ -56,7 +56,7 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw error-<message> if <passed> is falsy
+     * this function will throw err.<message> if <passed> is falsy
      */
         var err;
         if (passed) {
@@ -69,7 +69,7 @@
                 && typeof message.message === "string"
                 && typeof message.stack === "string"
             )
-            // if message is error-object, then leave as is
+            // if message is errObj, then leave as is
             ? message
             : new Error(
                 typeof message === "string"
@@ -183,8 +183,9 @@ local.github_crud = local;
 /* validateLineSortedReset */
 local.ajax = function (opt, onError) {
 /*
- * this function will send an ajax-request with given <opt>.url,
- * with error-handling and timeout
+ * this function will send an ajax-req
+ * with given <opt>.url and callback <onError>
+ * with err and timeout handling
  * example usage:
     local.ajax({
         data: "hello world",
@@ -255,7 +256,7 @@ local.ajax = function (opt, onError) {
                 0
             );
             ajaxProgressUpdate();
-            // handle abort or error event
+            // handle abort or err event
             switch (!xhr.err && evt.type) {
             case "abort":
             case "error":
@@ -296,7 +297,7 @@ local.ajax = function (opt, onError) {
                 });
             }
             // debug ajaxResponse
-            xhr.responseContentLength = (
+            xhr.resContentLength = (
                 xhr.response
                 && (xhr.response.byteLength || xhr.response.length)
             ) | 0;
@@ -310,7 +311,7 @@ local.ajax = function (opt, onError) {
                     statusCode: xhr.statusCode,
                     timeElapsed: xhr.timeElapsed,
                     // extra
-                    responseContentLength: xhr.responseContentLength
+                    resContentLength: xhr.resContentLength
                 }));
             }
             // init responseType
@@ -371,7 +372,7 @@ local.ajax = function (opt, onError) {
         });
         // init timeout
         timeout = xhr.timeout || local2.timeoutDefault || 30000;
-        // init defaults
+        // init default
         local.objectAssignDefault(xhr, {
             corsForwardProxyHost: local2.corsForwardProxyHost,
             headers: {},
@@ -405,7 +406,7 @@ local.ajax = function (opt, onError) {
     // init xhr - XMLHttpRequest
     xhr = (
         local.isBrowser
-        && !opt.httpRequest
+        && !opt.httpReq
         && !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(opt.url))
         && new XMLHttpRequest()
     );
@@ -416,7 +417,7 @@ local.ajax = function (opt, onError) {
         xhrInit();
         // init xhr - http.request
         xhr = local.identity(
-            opt.httpRequest
+            opt.httpReq
             || (local.isBrowser && local2.http.request)
             || require(xhr.protocol.slice(0, -1)).request
         )(xhr, function (resStream) {
@@ -468,7 +469,7 @@ local.ajax = function (opt, onError) {
     // init timerTimeout
     xhr.timerTimeout = setTimeout(function () {
         xhr.err = xhr.err || new Error(
-            "onTimeout - timeout-error - "
+            "onTimeout - errTimeout - "
             + timeout + " ms - " + "ajax " + xhr.method + " " + xhr.url
         );
         xhr.abort();
@@ -552,15 +553,21 @@ local.cliRun = function (opt) {
         var packageJson;
         var text;
         var textDict;
-        commandList = [{
-            argList: "<arg2>  ...",
-            description: "usage:",
-            command: ["<arg1>"]
-        }, {
-            argList: "'console.log(\"hello world\")'",
-            description: "example:",
-            command: ["--eval"]
-        }];
+        commandList = [
+            {
+                argList: "<arg2>  ...",
+                description: "usage:",
+                command: [
+                    "<arg1>"
+                ]
+            }, {
+                argList: "'console.log(\"hello world\")'",
+                description: "example:",
+                command: [
+                    "--eval"
+                ]
+            }
+        ];
         file = __filename.replace((
             /.*\//
         ), "");
@@ -589,7 +596,9 @@ local.cliRun = function (opt) {
                 commandList[ii] = opt.rgxComment.exec(text);
                 commandList[ii] = {
                     argList: (commandList[ii][1] || "").trim(),
-                    command: [key],
+                    command: [
+                        key
+                    ],
                     description: commandList[ii][2]
                 };
             } catch (ignore) {
@@ -619,7 +628,9 @@ local.cliRun = function (opt) {
             switch (ii) {
             case 0:
             case 1:
-                elem.argList = [elem.argList];
+                elem.argList = [
+                    elem.argList
+                ];
                 break;
             default:
                 elem.argList = elem.argList.split(" ");
@@ -708,7 +719,7 @@ local.onErrorWithStack = function (onError) {
         if (
             err
             && typeof err.stack === "string"
-            && err !== local.errorDefault
+            && err !== local.errDefault
             && String(err.stack).indexOf(stack.split("\n")[2]) < 0
         ) {
             // append current-stack to err.stack
@@ -726,7 +737,7 @@ local.onErrorWithStack = function (onError) {
 local.onNext = function (opt, onError) {
 /*
  * this function will wrap onError inside recursive-function <opt>.onNext,
- * and append the current stack to any error
+ * and append the current-stack to any err
  */
     opt.onNext = local.onErrorWithStack(function (err, data, meta) {
         try {
@@ -761,36 +772,36 @@ local.onParallel = function (onError, onEach, onRetry) {
 /*
  * this function will create a function that will
  * 1. run async tasks in parallel
- * 2. if counter === 0 or error occurred, then call onError with error
+ * 2. if counter === 0 or err occurred, then call onError(err)
  */
     var onParallel;
     onError = local.onErrorWithStack(onError);
     onEach = onEach || local.nop;
     onRetry = onRetry || local.nop;
-    onParallel = function (error, data) {
-        if (onRetry(error, data)) {
+    onParallel = function (err, data) {
+        if (onRetry(err, data)) {
             return;
         }
         // decrement counter
         onParallel.counter -= 1;
         // validate counter
-        if (!(onParallel.counter >= 0 || error || onParallel.error)) {
-            error = new Error(
+        if (!(onParallel.counter >= 0 || err || onParallel.err)) {
+            err = new Error(
                 "invalid onParallel.counter = " + onParallel.counter
             );
         // ensure onError is run only once
         } else if (onParallel.counter < 0) {
             return;
         }
-        // handle error
-        if (error) {
-            onParallel.error = error;
+        // handle err
+        if (err) {
+            onParallel.err = err;
             // ensure counter <= 0
             onParallel.counter = -Math.abs(onParallel.counter);
         }
         // call onError when isDone
         if (onParallel.counter <= 0) {
-            onError(error, data);
+            onError(err, data);
             return;
         }
         onEach();
@@ -860,14 +871,14 @@ local.onParallelList = function (opt, onEach, onError) {
 
 // run shared js-env code - function
 (function () {
-local.githubCrudAjax = function (option, onError) {
+local.githubCrudAjax = function (opt, onError) {
 /*
- * this function will make a low-level content-request to github
+ * this function will make a low-level content-req to github
  * https://developer.github.com/v3/repos/contents/
  */
-    // init option
-    option = {
-        content: option.content,
+    // init opt
+    opt = {
+        content: opt.content,
         headers: Object.assign({
             // github oauth authentication
             Authorization: "token " + (
@@ -877,15 +888,15 @@ local.githubCrudAjax = function (option, onError) {
             // bug-workaround
             // https://developer.github.com/v3/#user-agent-required
             "User-Agent": "undefined"
-        }, option.headers),
-        httpRequest: option.httpRequest,
-        message: option.message,
-        method: option.method || "GET",
+        }, opt.headers),
+        httpReq: opt.httpReq,
+        message: opt.message,
+        method: opt.method || "GET",
         responseJson: {},
-        sha: option.sha,
-        url: option.url
+        sha: opt.sha,
+        url: opt.url
     };
-    option.url = option.url
+    opt.url = opt.url
 /* jslint ignore:start */
 // parse https://github.com/:owner/:repo/blob/:branch/:path
 .replace(
@@ -916,63 +927,63 @@ local.githubCrudAjax = function (option, onError) {
     .replace((
         /\?branch=(.*)/
     ), function (match0, match1) {
-        option.branch = match1;
-        if (option.method === "GET") {
+        opt.branch = match1;
+        if (opt.method === "GET") {
             match0 = match0.replace("branch", "ref");
         }
         return match0;
     });
     if ((
         /^https:\/\/github\.com\/[^\/]+?\/[^\/]+?$/
-    ).test(option.url)) {
-        option.data = JSON.stringify({
-            name: option.url.split("/")[4]
+    ).test(opt.url)) {
+        opt.data = JSON.stringify({
+            name: opt.url.split("/")[4]
         });
-        switch (option.method) {
+        switch (opt.method) {
         case "DELETE":
-            option.url = (
+            opt.url = (
                 "https://api.github.com/repos/"
-                + option.url.split("/").slice(3).join("/")
+                + opt.url.split("/").slice(3).join("/")
             );
             break;
         case "POST_ORG":
-            option.url = (
+            opt.url = (
                 "https://api.github.com/orgs/"
-                + option.url.split("/")[3] + "/repos"
+                + opt.url.split("/")[3] + "/repos"
             );
             break;
         case "POST_USER":
-            option.url = "https://api.github.com/user/repos";
+            opt.url = "https://api.github.com/user/repos";
             break;
         }
-        option.method = option.method.split("_")[0];
+        opt.method = opt.method.split("_")[0];
     } else {
-        if (option.url.indexOf("https://api.github.com/repos/") !== 0) {
-            console.error("githubCrud - invalid url " + option.url);
-            onError(new Error("invalid url " + option.url));
+        if (opt.url.indexOf("https://api.github.com/repos/") !== 0) {
+            console.error("githubCrud - invalid url " + opt.url);
+            onError(new Error("invalid url " + opt.url));
             return;
         }
-        if (option.method !== "GET") {
-            option.message = (
-                option.message
-                || "[ci skip] " + option.method + " file "
-                + option.url.replace((
+        if (opt.method !== "GET") {
+            opt.message = (
+                opt.message
+                || "[ci skip] " + opt.method + " file "
+                + opt.url.replace((
                     /\?.*/
                 ), "")
             );
-            option.url += "&message=" + encodeURIComponent(option.message);
-            if (option.sha) {
-                option.url += "&sha=" + option.sha;
+            opt.url += "&message=" + encodeURIComponent(opt.message);
+            if (opt.sha) {
+                opt.url += "&sha=" + opt.sha;
             }
-            option.data = JSON.stringify({
-                branch: option.branch,
-                content: Buffer.from(option.content || "").toString("base64"),
-                message: option.message,
-                sha: option.sha
+            opt.data = JSON.stringify({
+                branch: opt.branch,
+                content: Buffer.from(opt.content || "").toString("base64"),
+                message: opt.message,
+                sha: opt.sha
             });
         }
     }
-    local.ajax(option, function (error, xhr) {
+    local.ajax(opt, function (err, xhr) {
         console.error("serverLog - " + JSON.stringify({
             time: new Date(xhr.timeStart).toISOString(),
             type: "githubCrudResponse",
@@ -982,50 +993,50 @@ local.githubCrudAjax = function (option, onError) {
             timeElapsed: xhr.timeElapsed
         }));
         local.onErrorDefault(
-            error
-            && error.statusCode !== 404
+            err
+            && err.statusCode !== 404
             && xhr
             && ("githubCrud - " + xhr.responseText)
         );
         try {
-            option.responseJson = JSON.parse(xhr.responseText);
+            opt.responseJson = JSON.parse(xhr.responseText);
         } catch (ignore) {}
         onError(
-            !(option.method === "DELETE" && xhr.statusCode === 404) && error,
-            option.responseJson
+            !(opt.method === "DELETE" && xhr.statusCode === 404) && err,
+            opt.responseJson
         );
     });
 };
 
-local.githubCrudContentDelete = function (option, onError) {
+local.githubCrudContentDelete = function (opt, onError) {
 /*
- * this function will delete github-file <option>.url
+ * this function will delete github-file <opt>.url
  * https://developer.github.com/v3/repos/contents/#delete-a-file
  */
-    option = {
-        httpRequest: option.httpRequest,
-        message: option.message,
-        url: option.url
+    opt = {
+        httpReq: opt.httpReq,
+        message: opt.message,
+        url: opt.url
     };
-    local.onNext(option, function (error, data) {
-        switch (option.modeNext) {
+    local.onNext(opt, function (err, data) {
+        switch (opt.modeNext) {
         case 1:
             // get sha
             local.githubCrudAjax({
-                httpRequest: option.httpRequest,
-                url: option.url
-            }, option.onNext);
+                httpReq: opt.httpReq,
+                url: opt.url
+            }, opt.onNext);
             break;
         case 2:
             // delete file with sha
-            if (!error && data.sha) {
+            if (!err && data.sha) {
                 local.githubCrudAjax({
-                    httpRequest: option.httpRequest,
-                    message: option.message,
+                    httpReq: opt.httpReq,
+                    message: opt.message,
                     method: "DELETE",
                     sha: data.sha,
-                    url: option.url
-                }, option.onNext);
+                    url: opt.url
+                }, opt.onNext);
                 return;
             }
             // delete tree
@@ -1035,259 +1046,259 @@ local.githubCrudContentDelete = function (option, onError) {
                 onParallel.counter += 1;
                 // recurse
                 local.githubCrudContentDelete({
-                    httpRequest: option.httpRequest,
-                    message: option.message,
+                    httpReq: opt.httpReq,
+                    message: opt.message,
                     url: option2.elem.url
                 }, onParallel);
-            }, option.onNext);
+            }, opt.onNext);
             break;
         default:
-            onError(error, data);
+            onError(err, data);
         }
     });
-    option.modeNext = 0;
-    option.onNext();
+    opt.modeNext = 0;
+    opt.onNext();
 };
 
-local.githubCrudContentGet = function (option, onError) {
+local.githubCrudContentGet = function (opt, onError) {
 /*
- * this function will get github-file <option>.url
+ * this function will get github-file <opt>.url
  * https://developer.github.com/v3/repos/contents/#get-contents
  */
-    option = {
-        httpRequest: option.httpRequest,
-        url: option.url
+    opt = {
+        httpReq: opt.httpReq,
+        url: opt.url
     };
-    local.onNext(option, function (error, data) {
-        switch (option.modeNext) {
+    local.onNext(opt, function (err, data) {
+        switch (opt.modeNext) {
         case 1:
             local.githubCrudAjax({
-                httpRequest: option.httpRequest,
-                url: option.url
-            }, option.onNext);
+                httpReq: opt.httpReq,
+                url: opt.url
+            }, opt.onNext);
             break;
         case 2:
-            option.onNext(null, Buffer.from(data.content || "", "base64"));
+            opt.onNext(null, Buffer.from(data.content || "", "base64"));
             break;
         default:
-            onError(error, !error && data);
+            onError(err, !err && data);
         }
     });
-    option.modeNext = 0;
-    option.onNext();
+    opt.modeNext = 0;
+    opt.onNext();
 };
 
-local.githubCrudContentPut = function (option, onError) {
+local.githubCrudContentPut = function (opt, onError) {
 /*
- * this function will put <option>.content to github-file <option>.url
+ * this function will put <opt>.content to github-file <opt>.url
  * https://developer.github.com/v3/repos/contents/#create-a-file
  * https://developer.github.com/v3/repos/contents/#update-a-file
  */
-    option = {
-        content: option.content,
-        httpRequest: option.httpRequest,
-        message: option.message,
+    opt = {
+        content: opt.content,
+        httpReq: opt.httpReq,
+        message: opt.message,
         modeErrorIgnore: true,
-        url: option.url
+        url: opt.url
     };
-    local.onNext(option, function (error, data) {
-        switch (option.modeNext) {
+    local.onNext(opt, function (err, data) {
+        switch (opt.modeNext) {
         case 1:
             // get sha
             local.githubCrudAjax({
-                httpRequest: option.httpRequest,
-                url: option.url
-            }, option.onNext);
+                httpReq: opt.httpReq,
+                url: opt.url
+            }, opt.onNext);
             break;
         case 2:
             // put file with sha
             local.githubCrudAjax({
-                content: option.content,
-                httpRequest: option.httpRequest,
-                message: option.message,
+                content: opt.content,
+                httpReq: opt.httpReq,
+                message: opt.message,
                 method: "PUT",
                 sha: data.sha,
-                url: option.url
-            }, option.onNext);
+                url: opt.url
+            }, opt.onNext);
             break;
         default:
-            onError(error, data);
+            onError(err, data);
         }
     });
-    option.modeNext = 0;
-    option.onNext();
+    opt.modeNext = 0;
+    opt.onNext();
 };
 
-local.githubCrudContentPutFile = function (option, onError) {
+local.githubCrudContentPutFile = function (opt, onError) {
 /*
- * this function will put option.file to github-file <option>.url
+ * this function will put opt.file to github-file <opt>.url
  * https://developer.github.com/v3/repos/contents/#update-a-file
  */
-    option = {
-        file: option.file,
-        httpRequest: option.httpRequest,
-        message: option.message,
-        url: option.url
+    opt = {
+        file: opt.file,
+        httpReq: opt.httpReq,
+        message: opt.message,
+        url: opt.url
     };
-    local.onNext(option, function (error, data) {
-        switch (option.modeNext) {
+    local.onNext(opt, function (err, data) {
+        switch (opt.modeNext) {
         case 1:
             // get file from url
             if ((
                 /^(?:http|https):\/\//
-            ).test(option.file)) {
+            ).test(opt.file)) {
                 local.ajax({
-                    httpRequest: option.httpRequest,
-                    url: option.file
-                }, function (error, response) {
-                    option.onNext(error, response && response.data);
+                    httpReq: opt.httpReq,
+                    url: opt.file
+                }, function (err, res) {
+                    opt.onNext(err, res && res.data);
                 });
                 return;
             }
             // get file
-            local.fs.readFile(option.file, option.onNext);
+            local.fs.readFile(opt.file, opt.onNext);
             break;
         case 2:
             local.githubCrudContentPut({
                 content: data,
-                httpRequest: option.httpRequest,
-                message: option.message,
+                httpReq: opt.httpReq,
+                message: opt.message,
                 // resolve file in url
                 url: (
                     // ternary-operator
                     (
                         /\/$/
-                    ).test(option.url)
-                    ? option.url + local.path.basename(option.file)
-                    : option.url
+                    ).test(opt.url)
+                    ? opt.url + local.path.basename(opt.file)
+                    : opt.url
                 )
-            }, option.onNext);
+            }, opt.onNext);
             break;
         default:
-            onError(error, data);
+            onError(err, data);
         }
     });
-    option.modeNext = 0;
-    option.onNext();
+    opt.modeNext = 0;
+    opt.onNext();
 };
 
-local.githubCrudContentTouch = function (option, onError) {
+local.githubCrudContentTouch = function (opt, onError) {
 /*
- * this function will touch github-file <option>.url
+ * this function will touch github-file <opt>.url
  * https://developer.github.com/v3/repos/contents/#update-a-file
  */
-    option = {
-        httpRequest: option.httpRequest,
-        message: option.message,
+    opt = {
+        httpReq: opt.httpReq,
+        message: opt.message,
         modeErrorIgnore: true,
-        url: option.url
+        url: opt.url
     };
-    local.onNext(option, function (error, data) {
-        switch (option.modeNext) {
+    local.onNext(opt, function (err, data) {
+        switch (opt.modeNext) {
         case 1:
             // get sha
             local.githubCrudAjax({
-                httpRequest: option.httpRequest,
-                url: option.url
-            }, option.onNext);
+                httpReq: opt.httpReq,
+                url: opt.url
+            }, opt.onNext);
             break;
         case 2:
             // put file with sha
             local.githubCrudAjax({
                 content: Buffer.from(data.content || "", "base64"),
-                httpRequest: option.httpRequest,
-                message: option.message,
+                httpReq: opt.httpReq,
+                message: opt.message,
                 method: "PUT",
                 sha: data.sha,
-                url: option.url
-            }, option.onNext);
+                url: opt.url
+            }, opt.onNext);
             break;
         default:
-            onError(error, data);
+            onError(err, data);
         }
     });
-    option.modeNext = 0;
-    option.onNext();
+    opt.modeNext = 0;
+    opt.onNext();
 };
 
-local.githubCrudContentTouchList = function (option, onError) {
+local.githubCrudContentTouchList = function (opt, onError) {
 /*
- * this function will touch github-files <option>.urlList in parallel
+ * this function will touch github-files <opt>.urlList in parallel
  * https://developer.github.com/v3/repos/contents/#update-a-file
  */
     local.onParallelList({
-        list: option.urlList
+        list: opt.urlList
     }, function (option2, onParallel) {
         onParallel.counter += 1;
         local.githubCrudContentTouch({
-            httpRequest: option.httpRequest,
-            message: option.message,
+            httpReq: opt.httpReq,
+            message: opt.message,
             url: option2.elem
         }, onParallel);
     }, onError);
 };
 
-local.githubCrudRepoCreate = function (option, onError) {
+local.githubCrudRepoCreate = function (opt, onError) {
 /*
- * this function will create github-repo <option>.url
+ * this function will create github-repo <opt>.url
  * https://developer.github.com/v3/repos/#create
  */
     local.githubCrudAjax({
-        httpRequest: option.httpRequest,
+        httpReq: opt.httpReq,
         method: "POST_ORG",
-        url: option.url
-    }, function (error, data) {
-        if (!(error && error.statusCode === 404)) {
-            onError(error, data);
+        url: opt.url
+    }, function (err, data) {
+        if (!(err && err.statusCode === 404)) {
+            onError(err, data);
             return;
         }
         local.githubCrudAjax({
-            httpRequest: option.httpRequest,
+            httpReq: opt.httpReq,
             method: "POST_USER",
-            url: option.url
+            url: opt.url
         }, onError);
     });
 };
 
-local.githubCrudRepoCreateList = function (option, onError) {
+local.githubCrudRepoCreateList = function (opt, onError) {
 /*
- * this function will create github-repos <option>.urlList in parallel
+ * this function will create github-repos <opt>.urlList in parallel
  * https://developer.github.com/v3/repos/#create
  */
     local.onParallelList({
-        list: option.urlList
+        list: opt.urlList
     }, function (option2, onParallel) {
         onParallel.counter += 1;
         local.githubCrudRepoCreate({
-            httpRequest: option.httpRequest,
+            httpReq: opt.httpReq,
             url: option2.elem
         }, onParallel);
     }, onError);
 };
 
-local.githubCrudRepoDelete = function (option, onError) {
+local.githubCrudRepoDelete = function (opt, onError) {
 /*
- * this function will delete github-repo <option>.url
+ * this function will delete github-repo <opt>.url
  * https://developer.github.com/v3/repos/#delete-a-repository
  */
     local.githubCrudAjax({
-        httpRequest: option.httpRequest,
+        httpReq: opt.httpReq,
         method: "DELETE",
-        url: option.url
+        url: opt.url
     }, onError);
 };
 
-local.githubCrudRepoDeleteList = function (option, onError) {
+local.githubCrudRepoDeleteList = function (opt, onError) {
 /*
- * this function will delete github-repos <option>.urlList in parallel
+ * this function will delete github-repos <opt>.urlList in parallel
  * https://developer.github.com/v3/repos/#delete-a-repository
  */
     local.onParallelList({
-        list: option.urlList
+        list: opt.urlList
     }, function (option2, onParallel) {
         onParallel.counter += 1;
         local.githubCrudRepoDelete({
-            httpRequest: option.httpRequest,
+            httpReq: opt.httpReq,
             url: option2.elem
         }, onParallel);
     }, onError);
@@ -1314,8 +1325,8 @@ local.cliDict.delete = function () {
     local.github_crud.githubCrudContentDelete({
         message: process.argv[4],
         url: process.argv[3]
-    }, function (error) {
-        process.exit(Boolean(error));
+    }, function (err) {
+        process.exit(Boolean(err));
     });
 };
 
@@ -1326,11 +1337,11 @@ local.cliDict.get = function () {
  */
     local.github_crud.githubCrudContentGet({
         url: process.argv[3]
-    }, function (error, data) {
+    }, function (err, data) {
         try {
             process.stdout.write(data);
         } catch (ignore) {}
-        process.exit(Boolean(error));
+        process.exit(Boolean(err));
     });
 };
 
@@ -1343,8 +1354,8 @@ local.cliDict.put = function () {
         message: process.argv[5],
         url: process.argv[3],
         file: process.argv[4]
-    }, function (error) {
-        process.exit(Boolean(error));
+    }, function (err) {
+        process.exit(Boolean(err));
     });
 };
 
@@ -1357,8 +1368,8 @@ local.cliDict.repo_create = function () {
         urlList: process.argv[3].split(
             /[,\s]/g
         ).filter(local.identity)
-    }, function (error) {
-        process.exit(Boolean(error));
+    }, function (err) {
+        process.exit(Boolean(err));
     });
 };
 
@@ -1371,8 +1382,8 @@ local.cliDict.repo_delete = function () {
         urlList: process.argv[3].split(
             /[,\s]/g
         ).filter(local.identity)
-    }, function (error) {
-        process.exit(Boolean(error));
+    }, function (err) {
+        process.exit(Boolean(err));
     });
 };
 
@@ -1386,8 +1397,8 @@ local.cliDict.touch = function () {
         urlList: process.argv[3].split(
             /[,\s]/g
         ).filter(local.identity)
-    }, function (error) {
-        process.exit(Boolean(error));
+    }, function (err) {
+        process.exit(Boolean(err));
     });
 };
 

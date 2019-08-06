@@ -8,7 +8,9 @@
  *     <script src="assets.db-lite.js"></script>
  *     <script>
  *     var dbTable1;
- *     dbTable1 = window.dbTable1 = window.utility2_db.dbTableCreateOne({ name: "dbTable1" });
+ *     dbTable1 = window.dbTable1 = window.utility2_db.dbTableCreateOne({
+ *         name: "dbTable1"
+ *     });
  *     dbTable1.idIndexCreate({ name: "field1" });
  *     dbTable1.crudSetOneById({ field1: "hello", field2: "world" });
  *     console.log(dbTable1.crudGetManyByQuery({
@@ -83,7 +85,7 @@
     // init function
     local.assertThrow = function (passed, message) {
     /*
-     * this function will throw error-<message> if <passed> is falsy
+     * this function will throw err.<message> if <passed> is falsy
      */
         var err;
         if (passed) {
@@ -96,7 +98,7 @@
                 && typeof message.message === "string"
                 && typeof message.stack === "string"
             )
-            // if message is error-object, then leave as is
+            // if message is errObj, then leave as is
             ? message
             : new Error(
                 typeof message === "string"
@@ -232,15 +234,21 @@ local.cliRun = function (opt) {
         var packageJson;
         var text;
         var textDict;
-        commandList = [{
-            argList: "<arg2>  ...",
-            description: "usage:",
-            command: ["<arg1>"]
-        }, {
-            argList: "'console.log(\"hello world\")'",
-            description: "example:",
-            command: ["--eval"]
-        }];
+        commandList = [
+            {
+                argList: "<arg2>  ...",
+                description: "usage:",
+                command: [
+                    "<arg1>"
+                ]
+            }, {
+                argList: "'console.log(\"hello world\")'",
+                description: "example:",
+                command: [
+                    "--eval"
+                ]
+            }
+        ];
         file = __filename.replace((
             /.*\//
         ), "");
@@ -269,7 +277,9 @@ local.cliRun = function (opt) {
                 commandList[ii] = opt.rgxComment.exec(text);
                 commandList[ii] = {
                     argList: (commandList[ii][1] || "").trim(),
-                    command: [key],
+                    command: [
+                        key
+                    ],
                     description: commandList[ii][2]
                 };
             } catch (ignore) {
@@ -299,7 +309,9 @@ local.cliRun = function (opt) {
             switch (ii) {
             case 0:
             case 1:
-                elem.argList = [elem.argList];
+                elem.argList = [
+                    elem.argList
+                ];
                 break;
             default:
                 elem.argList = elem.argList.split(" ");
@@ -521,7 +533,7 @@ local.onErrorWithStack = function (onError) {
         if (
             err
             && typeof err.stack === "string"
-            && err !== local.errorDefault
+            && err !== local.errDefault
             && String(err.stack).indexOf(stack.split("\n")[2]) < 0
         ) {
             // append current-stack to err.stack
@@ -540,36 +552,36 @@ local.onParallel = function (onError, onEach, onRetry) {
 /*
  * this function will create a function that will
  * 1. run async tasks in parallel
- * 2. if counter === 0 or error occurred, then call onError with error
+ * 2. if counter === 0 or err occurred, then call onError(err)
  */
     var onParallel;
     onError = local.onErrorWithStack(onError);
     onEach = onEach || local.nop;
     onRetry = onRetry || local.nop;
-    onParallel = function (error, data) {
-        if (onRetry(error, data)) {
+    onParallel = function (err, data) {
+        if (onRetry(err, data)) {
             return;
         }
         // decrement counter
         onParallel.counter -= 1;
         // validate counter
-        if (!(onParallel.counter >= 0 || error || onParallel.error)) {
-            error = new Error(
+        if (!(onParallel.counter >= 0 || err || onParallel.err)) {
+            err = new Error(
                 "invalid onParallel.counter = " + onParallel.counter
             );
         // ensure onError is run only once
         } else if (onParallel.counter < 0) {
             return;
         }
-        // handle error
-        if (error) {
-            onParallel.error = error;
+        // handle err
+        if (err) {
+            onParallel.err = err;
             // ensure counter <= 0
             onParallel.counter = -Math.abs(onParallel.counter);
         }
         // call onError when isDone
         if (onParallel.counter <= 0) {
-            onError(error, data);
+            onError(err, data);
             return;
         }
         onEach();
@@ -595,7 +607,7 @@ local.replStart = function () {
     globalThis.utility2_repl1 = that;
     that.onError = function (err) {
     /*
-     * this function will debug repl-error
+     * this function will debug repl-err
      */
         globalThis.utility2_debugReplError = err;
         console.error(err);
@@ -645,7 +657,9 @@ local.replStart = function () {
                 // run async shell-command
                 require("child_process").spawn(match2, {
                     shell: true,
-                    stdio: ["ignore", 1, 2]
+                    stdio: [
+                        "ignore", 1, 2
+                    ]
                 // on shell exit, print return prompt
                 }).on("exit", function (exitCode) {
                     console.error("exit-code " + exitCode);
@@ -694,7 +708,7 @@ jquery|\
 log|\
 min|misc|mock|\
 node_module|\
-rollup|\
+raw|\rollup|\
 swp|\
 tmp|\
 vendor)s{0,1}(\\b|_)\
@@ -704,7 +718,9 @@ vendor)s{0,1}(\\b|_)\
                     + match2 + "\""
                 ), {
                     shell: true,
-                    stdio: ["ignore", 1, 2]
+                    stdio: [
+                        "ignore", 1, 2
+                    ]
                 })
                 // on shell exit, print return prompt
                 .on("exit", function (exitCode) {
@@ -843,23 +859,23 @@ clear = function (onError) {
     }, onError);
 };
 
-defer = function (option, onError) {
+defer = function (opt, onError) {
 /*
- * this function will defer option.action until storage is ready
+ * this function will defer <opt>.action until storage is ready
  */
     var data;
     var isDone;
     var objectStore;
     var onError2;
-    var request;
+    var req;
     var tmp;
-    onError = onError || function (error) {
+    onError = onError || function (err) {
         // validate no err occurred
-        local.assertThrow(!error, error);
+        local.assertThrow(!err, err);
     };
     if (!storage) {
         deferList.push(function () {
-            defer(option, onError);
+            defer(opt, onError);
         });
         init();
         return;
@@ -872,11 +888,11 @@ defer = function (option, onError) {
             }
             isDone = true;
             onError(
-                request && (request.error || request.transaction.error),
-                data || request.result || ""
+                req && (req.error || req.transaction.error),
+                data || req.result || ""
             );
         };
-        switch (option.action) {
+        switch (opt.action) {
         case "clear":
         case "removeItem":
         case "setItem":
@@ -889,52 +905,56 @@ defer = function (option, onError) {
             .transaction(storageDir, "readonly")
             .objectStore(storageDir);
         }
-        switch (option.action) {
+        switch (opt.action) {
         case "clear":
-            request = objectStore.clear();
+            req = objectStore.clear();
             break;
         case "getItem":
-            request = objectStore.get(String(option.key));
+            req = objectStore.get(String(opt.key));
             break;
         case "keys":
             data = [];
-            request = objectStore.openCursor();
-            request.onsuccess = function () {
-                if (!request.result) {
+            req = objectStore.openCursor();
+            req.onsuccess = function () {
+                if (!req.result) {
                     onError2();
                     return;
                 }
-                data.push(request.result.key);
-                request.result.continue();
+                data.push(req.result.key);
+                req.result.continue();
             };
             break;
         case "length":
-            request = objectStore.count();
+            req = objectStore.count();
             break;
         case "removeItem":
-            request = objectStore.delete(String(option.key));
+            req = objectStore.delete(String(opt.key));
             break;
         case "setItem":
-            request = objectStore.put(option.value, String(option.key));
+            req = objectStore.put(opt.value, String(opt.key));
             break;
         }
-        ["onabort", "onerror", "onsuccess"].forEach(function (handler) {
-            request[handler] = request[handler] || onError2;
+        [
+            "onabort", "onerror", "onsuccess"
+        ].forEach(function (handler) {
+            req[handler] = req[handler] || onError2;
         });
-        // debug request
-        local._debugStorageRequest = request;
+        // debug req
+        local._debugStorageReq = req;
     } else {
-        switch (option.action) {
+        switch (opt.action) {
         case "clear":
             child_process.spawnSync("rm -f " + storage + "/*", {
                 shell: true,
-                stdio: ["ignore", 1, 2]
+                stdio: [
+                    "ignore", 1, 2
+                ]
             });
             setTimeout(onError);
             break;
         case "getItem":
             fs.readFile(
-                storage + "/" + encodeURIComponent(String(option.key)),
+                storage + "/" + encodeURIComponent(String(opt.key)),
                 "utf8",
                 function (ignore, data) {
                     onError(null, data || "");
@@ -942,19 +962,19 @@ defer = function (option, onError) {
             );
             break;
         case "keys":
-            fs.readdir(storage, function (error, data) {
-                onError(error, data && data.map(decodeURIComponent));
+            fs.readdir(storage, function (err, data) {
+                onError(err, data && data.map(decodeURIComponent));
             });
             break;
         case "length":
-            fs.readdir(storage, function (error, data) {
-                onError(error, data && data.length);
+            fs.readdir(storage, function (err, data) {
+                onError(err, data && data.length);
             });
             break;
         case "removeItem":
             fs.unlink(
-                storage + "/" + encodeURIComponent(String(option.key)),
-                // ignore error
+                storage + "/" + encodeURIComponent(String(opt.key)),
+                // ignore err
                 function () {
                     onError();
                 }
@@ -963,13 +983,13 @@ defer = function (option, onError) {
         case "setItem":
             tmp = os.tmpdir() + "/" + Date.now() + Math.random();
             // save to tmp
-            fs.writeFile(tmp, option.value, function (error) {
+            fs.writeFile(tmp, opt.value, function (err) {
                 // validate no err occurred
-                local.assertThrow(!error, error);
+                local.assertThrow(!err, err);
                 // rename tmp to key
                 fs.rename(
                     tmp,
-                    storage + "/" + encodeURIComponent(String(option.key)),
+                    storage + "/" + encodeURIComponent(String(opt.key)),
                     onError
                 );
             });
@@ -995,10 +1015,10 @@ init = function () {
  * this function will init storage
  */
     var onError;
-    var request;
-    onError = function (error) {
+    var req;
+    onError = function (err) {
         // validate no err occurred
-        local.assertThrow(!error, error);
+        local.assertThrow(!err, err);
         if (local.isBrowser) {
             storage = globalThis[storageDir];
         }
@@ -1016,25 +1036,29 @@ init = function () {
     if (local.isBrowser) {
         // init indexedDB
         try {
-            request = globalThis.indexedDB.open(storageDir);
-            // debug request
-            local._debugStorageRequestIndexedDB = request;
-            request.onerror = onError;
-            request.onsuccess = function () {
-                globalThis[storageDir] = request.result;
+            req = globalThis.indexedDB.open(storageDir);
+            // debug req
+            local._debugStorageReqIndexedDB = req;
+            req.onerror = onError;
+            req.onsuccess = function () {
+                globalThis[storageDir] = req.result;
                 onError();
             };
-            request.onupgradeneeded = function () {
-                if (!request.result.objectStoreNames.contains(storageDir)) {
-                    request.result.createObjectStore(storageDir);
+            req.onupgradeneeded = function () {
+                if (!req.result.objectStoreNames.contains(storageDir)) {
+                    req.result.createObjectStore(storageDir);
                 }
             };
         } catch (ignore) {}
     } else {
         // mkdirp storage
         storage = storageDir;
-        child_process.spawnSync("mkdir", ["-p", storage], {
-            stdio: ["ignore", 1, 2]
+        child_process.spawnSync("mkdir", [
+            "-p", storage
+        ], {
+            stdio: [
+                "ignore", 1, 2
+            ]
         });
         onError();
     }
@@ -1097,22 +1121,24 @@ local.storageSetItem = setItem;
 
 // run shared js-env code - lib.dbTable.js
 (function () {
-local._DbTable = function (option) {
+local._DbTable = function (opt) {
 /*
  * this function will create a dbTable
  */
-    this.name = String(option.name);
+    this.name = String(opt.name);
     // register dbTable in dbTableDict
     local.dbTableDict[this.name] = this;
     this.dbRowList = [];
     this.isDirty = null;
-    this.idIndexList = [{
-        isInteger: false,
-        name: "_id",
-        dict: {}
-    }];
+    this.idIndexList = [
+        {
+            isInteger: false,
+            name: "_id",
+            dict: {}
+        }
+    ];
     this.onSaveList = [];
-    this.sizeLimit = option.sizeLimit || 0;
+    this.sizeLimit = opt.sizeLimit || 0;
 };
 
 local._DbTable.prototype._cleanup = function () {
@@ -1140,7 +1166,12 @@ local._DbTable.prototype._cleanup = function () {
         ii += 1;
     }
     if (this.sizeLimit && this.dbRowList.length >= 1.5 * this.sizeLimit) {
-        this.dbRowList = this._crudGetManyByQuery({}, this.sortDefault, 0, this.sizeLimit);
+        this.dbRowList = this._crudGetManyByQuery(
+            {},
+            this.sortDefault,
+            0,
+            this.sizeLimit
+        );
     }
 };
 
@@ -1381,21 +1412,21 @@ local._DbTable.prototype.crudGetManyById = function (idDictList, onError) {
     ));
 };
 
-local._DbTable.prototype.crudGetManyByQuery = function (option, onError) {
+local._DbTable.prototype.crudGetManyByQuery = function (opt, onError) {
 /*
- * this function will get the dbRow's in the dbTable with given option.query
+ * this function will get the dbRow's in the dbTable with given <opt>.query
  */
     this._cleanup();
-    option = local.objectSetOverride(option);
+    opt = local.objectSetOverride(opt);
     return local.setTimeoutOnError(onError, 0, null, local.dbRowProject(
         this._crudGetManyByQuery(
-            option.query,
-            option.sort || this.sortDefault,
-            option.skip,
-            option.limit,
-            option.shuffle
+            opt.query,
+            opt.sort || this.sortDefault,
+            opt.skip,
+            opt.limit,
+            opt.shuffle
         ),
-        option.fieldList
+        opt.fieldList
     ));
 };
 
@@ -1592,26 +1623,26 @@ local._DbTable.prototype.export = function (onError) {
     return local.setTimeoutOnError(onError, 0, null, result.trim());
 };
 
-local._DbTable.prototype.idIndexCreate = function (option, onError) {
+local._DbTable.prototype.idIndexCreate = function (opt, onError) {
 /*
- * this function will create an idIndex with given option.name
+ * this function will create an idIndex with given <opt>.name
  */
     var dbRow;
     var idIndex;
     var ii;
     var name;
-    option = local.objectSetOverride(option);
-    name = String(option.name);
+    opt = local.objectSetOverride(opt);
+    name = String(opt.name);
     // disallow idIndex with dot-name
     if (name.indexOf(".") >= 0 || name === "_id") {
         return local.setTimeoutOnError(onError);
     }
     // remove existing idIndex
-    this.idIndexRemove(option);
+    this.idIndexRemove(opt);
     // init idIndex
     idIndex = {
         dict: {},
-        isInteger: Boolean(option.isInteger),
+        isInteger: Boolean(opt.isInteger),
         name
     };
     this.idIndexList.push(idIndex);
@@ -1630,13 +1661,13 @@ local._DbTable.prototype.idIndexCreate = function (option, onError) {
     return local.setTimeoutOnError(onError);
 };
 
-local._DbTable.prototype.idIndexRemove = function (option, onError) {
+local._DbTable.prototype.idIndexRemove = function (opt, onError) {
 /*
- * this function will remove the idIndex with given option.name
+ * this function will remove the idIndex with given <opt>.name
  */
     var name;
-    option = local.objectSetOverride(option);
-    name = String(option.name);
+    opt = local.objectSetOverride(opt);
+    name = String(opt.name);
     this.idIndexList = this.idIndexList.filter(function (idIndex) {
         return idIndex.name !== name || idIndex.name === "_id";
     });
@@ -1659,13 +1690,15 @@ local._DbTable.prototype.save = function (onError) {
     // throttle storage-writes to once every 1000 ms
     that.timerSave = that.timerSave || setTimeout(function () {
         that.timerSave = null;
-        local.storageSetItem("dbTable." + that.name + ".json", that.export(), function (
-            error
-        ) {
-            while (that.onSaveList.length) {
-                that.onSaveList.shift()(error);
+        local.storageSetItem(
+            "dbTable." + that.name + ".json",
+            that.export(),
+            function (err) {
+                while (that.onSaveList.length) {
+                    that.onSaveList.shift()(err);
+                }
             }
-        });
+        );
     }, 1000);
 };
 
@@ -1674,8 +1707,8 @@ local.dbCrudRemoveAll = function (onError) {
  * this function will remove all dbRow's from the db
  */
     var onParallel;
-    onParallel = local.onParallel(function (error) {
-        local.setTimeoutOnError(onError, 0, error);
+    onParallel = local.onParallel(function (err) {
+        local.setTimeoutOnError(onError, 0, err);
     });
     onParallel.counter += 1;
     Object.keys(local.dbTableDict).forEach(function (key) {
@@ -1691,8 +1724,8 @@ local.dbDrop = function (onError) {
  */
     var onParallel;
     console.error("db - dropping database ...");
-    onParallel = local.onParallel(function (error) {
-        local.setTimeoutOnError(onError, 0, error);
+    onParallel = local.onParallel(function (err) {
+        local.setTimeoutOnError(onError, 0, err);
     });
     onParallel.counter += 1;
     onParallel.counter += 1;
@@ -1711,7 +1744,9 @@ local.dbExport = function (onError) {
     var result;
     result = "";
     Object.keys(local.dbTableDict).forEach(function (key) {
-        console.error("db - exporting dbTable " + local.dbTableDict[key].name + " ...");
+        console.error(
+            "db - exporting dbTable " + local.dbTableDict[key].name + " ..."
+        );
         result += local.dbTableDict[key].export();
         result += "\n\n";
     });
@@ -1783,22 +1818,22 @@ local.dbLoad = function (onError) {
  * this function will load the db from storage
  */
     var onParallel;
-    onParallel = local.onParallel(function (error) {
-        local.setTimeoutOnError(onError, 0, error);
+    onParallel = local.onParallel(function (err) {
+        local.setTimeoutOnError(onError, 0, err);
     });
-    local.storageKeys(function (error, data) {
+    local.storageKeys(function (err, data) {
         onParallel.counter += 1;
         // validate no err occurred
         onParallel.counter += 1;
-        onParallel(error);
+        onParallel(err);
         (data || []).forEach(function (key) {
             if (key.indexOf("dbTable.") !== 0) {
                 return;
             }
             onParallel.counter += 1;
-            local.storageGetItem(key, function (error, data) {
+            local.storageGetItem(key, function (err, data) {
                 onParallel.counter += 1;
-                onParallel(error);
+                onParallel(err);
                 local.dbImport(data, onParallel);
             });
         });
@@ -1815,8 +1850,8 @@ local.dbReset = function (dbSeedList, onError) {
     onParallel.counter += 1;
     // drop db
     onParallel.counter += 1;
-    local.dbDrop(function (error) {
-        local.onErrorDefault(error);
+    local.dbDrop(function (err) {
+        local.onErrorDefault(err);
         // seed db
         local.dbSeed(dbSeedList, !globalThis.utility2_onReadyBefore && onParallel);
         local.functionOrNop(globalThis.utility2_onReadyBefore)();
@@ -1846,7 +1881,13 @@ local.dbRowGetItem = function (dbRow, key) {
     );
 };
 
-local.dbRowListGetManyByOperator = function (dbRowList, fieldName, operator, bb, not) {
+local.dbRowListGetManyByOperator = function (
+    dbRowList,
+    fieldName,
+    operator,
+    bb,
+    not
+) {
 /*
  * this function will get the dbRow's in dbRowList with given operator
  */
@@ -1954,13 +1995,17 @@ local.dbRowListGetManyByOperator = function (dbRowList, fieldName, operator, bb,
         fieldValue = local.dbRowGetItem(dbRowList[ii], fieldName);
         // normalize to list
         if (!Array.isArray(fieldValue)) {
-            fieldValue = [fieldValue];
+            fieldValue = [
+                fieldValue
+            ];
         }
         // optimization - while-loop
         jj = fieldValue.length;
         while (jj >= 1) {
             jj -= 1;
-            if (Boolean(not ^ test(fieldValue[jj], bb, typeof fieldValue[jj], typeof2))) {
+            if (Boolean(
+                not ^ test(fieldValue[jj], bb, typeof fieldValue[jj], typeof2)
+            )) {
                 result.push(dbRowList[ii]);
                 break;
             }
@@ -1980,7 +2025,13 @@ local.dbRowListGetManyByQuery = function (dbRowList, query, fieldName, not) {
     not = Boolean(not);
     result = dbRowList;
     if (!(typeof query === "object" && query)) {
-        result = local.dbRowListGetManyByOperator(result, fieldName, "$eq", query, not);
+        result = local.dbRowListGetManyByOperator(
+            result,
+            fieldName,
+            "$eq",
+            query,
+            not
+        );
         return result;
     }
     Object.keys(query).some(function (key) {
@@ -1997,7 +2048,9 @@ local.dbRowListGetManyByQuery = function (dbRowList, query, fieldName, not) {
             dbRowDict = {};
             bb.forEach(function (query) {
                 // recurse
-                local.dbRowListGetManyByQuery(result, query).forEach(function (dbRow) {
+                local.dbRowListGetManyByQuery(result, query).forEach(function (
+                    dbRow
+                ) {
                     dbRowDict[dbRow._id] = dbRow;
                 });
             });
@@ -2007,7 +2060,13 @@ local.dbRowListGetManyByQuery = function (dbRowList, query, fieldName, not) {
             return !result.length;
         }
         if (key[0] === "$") {
-            result = local.dbRowListGetManyByOperator(result, fieldName, key, bb, not);
+            result = local.dbRowListGetManyByOperator(
+                result,
+                fieldName,
+                key,
+                bb,
+                not
+            );
             return !result.length;
         }
         // recurse
@@ -2057,7 +2116,9 @@ local.dbRowSetId = function (dbRow, idIndex) {
             id = (
                 idIndex.isInteger
                 ? (1 + Math.random()) * 0x10000000000000
-                : "a" + ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1)
+                : "a" + (
+                    (1 + Math.random()) * 0x10000000000000
+                ).toString(36).slice(1)
             );
         // optimization - hasOwnProperty
         } while (idIndex.dict.hasOwnProperty(id));
@@ -2071,8 +2132,8 @@ local.dbSave = function (onError) {
  * this function will save the db to storage
  */
     var onParallel;
-    onParallel = local.onParallel(function (error) {
-        local.setTimeoutOnError(onError, 0, error);
+    onParallel = local.onParallel(function (err) {
+        local.setTimeoutOnError(onError, 0, err);
     });
     onParallel.counter += 1;
     Object.keys(local.dbTableDict).forEach(function (key) {
@@ -2094,8 +2155,8 @@ local.dbSeed = function (dbSeedList, onError) {
     // seed db
     onParallel.counter += 1;
     local.dbTableCreateMany(dbSeedList, onParallel);
-    (dbSeedList || []).forEach(function (option) {
-        dbTableDict[option.name] = true;
+    (dbSeedList || []).forEach(function (opt) {
+        dbTableDict[opt.name] = true;
     });
     Object.keys(dbTableDict).forEach(function (name) {
         console.error("db - seeding dbTable " + name + " ...");
@@ -2110,52 +2171,54 @@ local.dbTableCreateMany = function (optionList, onError) {
  */
     var onParallel;
     var result;
-    onParallel = local.onParallel(function (error) {
-        local.setTimeoutOnError(onError, 0, error, result);
+    onParallel = local.onParallel(function (err) {
+        local.setTimeoutOnError(onError, 0, err, result);
     });
     onParallel.counter += 1;
-    result = (optionList || []).map(function (option) {
+    result = (optionList || []).map(function (opt) {
         onParallel.counter += 1;
-        return local.dbTableCreateOne(option, onParallel);
+        return local.dbTableCreateOne(opt, onParallel);
     });
     return local.setTimeoutOnError(onParallel, 0, null, result);
 };
 
-local.dbTableCreateOne = function (option, onError) {
+local.dbTableCreateOne = function (opt, onError) {
 /*
- * this function will create a dbTable with given option
+ * this function will create a dbTable with given <opt>
  */
     var DbTable;
     var that;
-    option = local.objectSetOverride(option);
+    opt = local.objectSetOverride(opt);
     // register dbTable
     DbTable = local._DbTable;
-    local.dbTableDict[option.name] = local.dbTableDict[option.name] || new DbTable(option);
-    that = local.dbTableDict[option.name];
+    local.dbTableDict[opt.name] = local.dbTableDict[opt.name] || new DbTable(opt);
+    that = local.dbTableDict[opt.name];
     that.sortDefault = (
-        option.sortDefault
+        opt.sortDefault
         || that.sortDefault
-        || [{
-            fieldName: "_timeUpdated",
-            isDescending: true
-        }]
+        || [
+            {
+                fieldName: "_timeUpdated",
+                isDescending: true
+            }
+        ]
     );
     // remove idIndex
-    (option.idIndexRemoveList || []).forEach(function (idIndex) {
+    (opt.idIndexRemoveList || []).forEach(function (idIndex) {
         that.idIndexRemove(idIndex);
     });
     // create idIndex
-    (option.idIndexCreateList || []).forEach(function (idIndex) {
+    (opt.idIndexCreateList || []).forEach(function (idIndex) {
         that.idIndexCreate(idIndex);
     });
     // upsert dbRow
-    that.crudSetManyById(option.dbRowList);
+    that.crudSetManyById(opt.dbRowList);
     // restore dbTable from persistent-storage
-    that.isLoaded = that.isLoaded || option.isLoaded;
+    that.isLoaded = that.isLoaded || opt.isLoaded;
     if (!that.isLoaded) {
-        local.storageGetItem("dbTable." + that.name + ".json", function (error, data) {
+        local.storageGetItem("dbTable." + that.name + ".json", function (err, data) {
             // validate no err occurred
-            local.assertThrow(!error, error);
+            local.assertThrow(!err, err);
             if (!that.isLoaded) {
                 local.dbImport(data);
             }
@@ -2213,11 +2276,12 @@ local.onEventDomDb = function (evt) {
         break;
     case "dbReset":
         ajaxProgressUpdate();
-        local.dbReset(globalThis.utility2_dbSeedList, function (error) {
-            local.onErrorDefault(error);
+        local.dbReset(globalThis.utility2_dbSeedList, function (err) {
+            local.onErrorDefault(err);
             if (
                 utility2.uiEventListenerDict
-                && typeof utility2.uiEventListenerDict[".onEventUiReload"] === "function"
+                && typeof utility2.uiEventListenerDict[".onEventUiReload"]
+                === "function"
             ) {
                 utility2.uiEventListenerDict[".onEventUiReload"]();
             }
@@ -2303,9 +2367,9 @@ local.cliDict.dbTableCrudGetManyByQuery = function () {
  */
     local.dbTableCreateOne({
         name: process.argv[3]
-    }, function (error, that) {
+    }, function (err, that) {
         // validate no err occurred
-        local.assertThrow(!error, error);
+        local.assertThrow(!err, err);
         console.log(JSON.stringify(that.crudGetManyByQuery(
             JSON.parse(process.argv[4] || "{}")
         ), null, 4));
@@ -2319,9 +2383,9 @@ local.cliDict.dbTableCrudRemoveManyByQuery = function () {
  */
     local.dbTableCreateOne({
         name: process.argv[3]
-    }, function (error, that) {
+    }, function (err, that) {
         // validate no err occurred
-        local.assertThrow(!error, error);
+        local.assertThrow(!err, err);
         console.log(JSON.stringify(that.crudRemoveManyByQuery(
             JSON.parse(process.argv[4])
         ), null, 4));
@@ -2335,9 +2399,9 @@ local.cliDict.dbTableCrudSetManyById = function () {
  */
     local.dbTableCreateOne({
         name: process.argv[3]
-    }, function (error, that) {
+    }, function (err, that) {
         // validate no err occurred
-        local.assertThrow(!error, error);
+        local.assertThrow(!err, err);
         that.crudSetManyById(JSON.parse(process.argv[4]));
     });
 };
@@ -2349,9 +2413,9 @@ local.cliDict.dbTableHeaderDictGet = function () {
  */
     local.dbTableCreateOne({
         name: process.argv[3]
-    }, function (error, that) {
+    }, function (err, that) {
         // validate no err occurred
-        local.assertThrow(!error, error);
+        local.assertThrow(!err, err);
         var tmp;
         tmp = [];
         that.idIndexList.forEach(function (idIndex) {
@@ -2375,9 +2439,9 @@ local.cliDict.dbTableHeaderDictSet = function () {
  */
     local.dbTableCreateOne({
         name: process.argv[3]
-    }, function (error, that) {
+    }, function (err, that) {
         // validate no err occurred
-        local.assertThrow(!error, error);
+        local.assertThrow(!err, err);
         local.tmp = JSON.parse(process.argv[4]);
         that.sizeLimit = local.tmp.sizeLimit || that.sizeLimit;
         that.sortDefault = local.tmp.sortDefault || that.sortDefault;
@@ -2400,9 +2464,9 @@ local.cliDict.dbTableIdIndexCreate = function () {
  */
     local.dbTableCreateOne({
         name: process.argv[3]
-    }, function (error, that) {
+    }, function (err, that) {
         // validate no err occurred
-        local.assertThrow(!error, error);
+        local.assertThrow(!err, err);
         that.idIndexCreate(JSON.parse(process.argv[4]));
         that.save();
         local.tmp = [];
@@ -2423,9 +2487,9 @@ local.cliDict.dbTableIdIndexRemove = function () {
  */
     local.dbTableCreateOne({
         name: process.argv[3]
-    }, function (error, that) {
+    }, function (err, that) {
         // validate no err occurred
-        local.assertThrow(!error, error);
+        local.assertThrow(!err, err);
         that.idIndexRemove(JSON.parse(process.argv[4]));
         that.save();
         local.cliDict.dbTableHeaderDictGet();
@@ -2437,9 +2501,9 @@ local.cliDict.dbTableList = function () {
  *
  * will get from db, <dbTableList>
  */
-    local.storageKeys(function (error, data) {
+    local.storageKeys(function (err, data) {
         // validate no err occurred
-        local.assertThrow(!error, error);
+        local.assertThrow(!err, err);
         console.log(JSON.stringify(data.map(function (element) {
             return element.split(".").slice(1, -1).join(".");
         }), null, 4));
@@ -2451,9 +2515,9 @@ local.cliDict.dbTableRemove = function () {
  * <dbTable>
  * will remove from db, <dbTable>
  */
-    local.storageRemoveItem("dbTable." + process.argv[3] + ".json", function (error) {
+    local.storageRemoveItem("dbTable." + process.argv[3] + ".json", function (err) {
         // validate no err occurred
-        local.assertThrow(!error, error);
+        local.assertThrow(!err, err);
         local.cliDict.dbTableList();
     });
 };

@@ -180,9 +180,9 @@ vnoremap <silent> #u <esc>:call MyCommentRegion('u')<cr>
 if exists("+columns")
     set columns=161
 endif
-" if exists("+lines")
-    " set lines=999
-" endif
+if exists("+lines")
+    set lines=80
+endif
 if has("gui_running")
     " https://www.bulafish.com/centos/2018/05/05/change-vim-color-scheme/
     " colorscheme blue
