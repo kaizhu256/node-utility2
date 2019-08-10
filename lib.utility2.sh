@@ -238,7 +238,10 @@ if (!local.fs.existsSync("README.md", "utf8")) {
         {}
     ));
 }
-if (!local.fs.existsSync("lib." + process.env.npm_package_nameLib + ".js", "utf8")) {
+if (!local.fs.existsSync(
+    "lib." + process.env.npm_package_nameLib + ".js",
+    "utf8"
+)) {
     tmp = local.assetsDict["/assets.my_app.template.js"];
     if (local.fs.existsSync("assets.utility2.rollup.js")) {
         tmp = tmp.replace(
@@ -837,7 +840,10 @@ require("fs").readFileSync("README.md", "utf8").replace((
     if (match2.slice(-5) === ".json") {
         match0 = match0.trim();
     }
-    require("fs").writeFileSync("tmp/README." + match2, match0.trimRight() + "\n");
+    require("fs").writeFileSync(
+        "tmp/README." + match2,
+        match0.trimRight() + "\n"
+    );
 });
 }());
 '
@@ -1576,7 +1582,10 @@ console.error([
     aa, bb, packageJson.version
 ]);
 // update package.json
-require("fs").writeFileSync("package.json", JSON.stringify(packageJson, null, 4) + "\n");
+require("fs").writeFileSync(
+    "package.json",
+    JSON.stringify(packageJson, null, 4) + "\n"
+);
 // update README.md
 require("fs").writeFileSync(
     "README.md",
@@ -2381,7 +2390,10 @@ Object.keys(packageJson).forEach(function (key) {
         delete packageJson[key];
     }
 });
-require("fs").writeFileSync("package.json", JSON.stringify(packageJson, null, 4) + "\n");
+require("fs").writeFileSync(
+    "package.json",
+    JSON.stringify(packageJson, null, 4) + "\n"
+);
 }());
 ' "$MESSAGE"
     shFilePackageJsonVersionUpdate "" publishedIncrement
@@ -4889,7 +4901,8 @@ local.stringHtmlSafe = function (text) {
 
 local.stringMerge = function (str1, str2, rgx) {
 /*
- * this function will merge <str2> -> <str1>, for sections where both match <rgx>
+ * this function will merge <str2> into <str1>,
+ * for sections where both match <rgx>
  */
     str2.replace(rgx, function (match2) {
         str1.replace(rgx, function (match1) {

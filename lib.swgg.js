@@ -1182,12 +1182,12 @@ local.templateUiOperation = '\
     <h4 class="label">curl request</h4>\n\
     <pre class="reqCurl" tabIndex="0"></pre>\n\
     <h4 class="label">response status code</h4>\n\
-    <pre class="responseStatusCode" tabindex="0"></pre>\n\
+    <pre class="resStatusCode" tabindex="0"></pre>\n\
     <h4 class="label">response headers</h4>\n\
     <pre class="resHeaders" tabIndex="0"></pre>\n\
     <h4 class="label">response body</h4>\n\
-    <pre class="responseBody" tabIndex="0"></pre>\n\
-    <div class="responseMedia"></div>\n\
+    <pre class="resBody" tabIndex="0"></pre>\n\
+    <div class="resMedia"></div>\n\
 </form>\n\
 </div>\n\
 ';
@@ -1717,9 +1717,9 @@ local.assetsDict["/assets.swgg.html"] = local.assetsDict["/assets.utility2.templ
      */\n\
         return value;\n\
     };\n\
-    window.domOnEventMediaHotkeys = function (event) {\n\
+    window.domOnEventMediaHotkeys = function (evt) {\n\
         var media;\n\
-        if (event === "init") {\n\
+        if (evt === "init") {\n\
             Array.from(document.querySelectorAll(\n\
                 ".domOnEventMediaHotkeysInit"\n\
             )).forEach(function (media) {\n\
@@ -1727,47 +1727,47 @@ local.assetsDict["/assets.swgg.html"] = local.assetsDict["/assets.utility2.templ
                 media.classList.add("domOnEventMediaHotkeys");\n\
                 [\n\
                     "play", "pause", "seeking"\n\
-                ].forEach(function (event) {\n\
-                    media.addEventListener(event, onEvent);\n\
+                ].forEach(function (evt) {\n\
+                    media.addEventListener(evt, onEvent);\n\
                 });\n\
             });\n\
             return;\n\
         }\n\
-        if (event.currentTarget.classList.contains("domOnEventMediaHotkeys")) {\n\
-            currentTarget = event.currentTarget;\n\
+        if (evt.currentTarget.classList.contains("domOnEventMediaHotkeys")) {\n\
+            currentTarget = evt.currentTarget;\n\
             input.focus();\n\
             return;\n\
         }\n\
         media = currentTarget;\n\
         try {\n\
-            switch (event.key || event.type) {\n\
+            switch (evt.key || evt.type) {\n\
             case ",":\n\
             case ".":\n\
                 media.currentTime += (\n\
-                    event.key === "," && identity(-0.03125)\n\
+                    evt.key === "," && identity(-0.03125)\n\
                 ) || 0.03125;\n\
                 break;\n\
             case "<":\n\
             case ">":\n\
                 media.playbackRate *= (\n\
-                    event.key === "<" && identity(0.5)\n\
+                    evt.key === "<" && identity(0.5)\n\
                 ) || 2;\n\
                 break;\n\
             case "ArrowDown":\n\
             case "ArrowUp":\n\
                 media.volume += (\n\
-                    event.key === "ArrowDown" && identity(-0.05)\n\
+                    evt.key === "ArrowDown" && identity(-0.05)\n\
                 ) || 0.05;\n\
                 break;\n\
             case "ArrowLeft":\n\
             case "ArrowRight":\n\
                 media.currentTime += (\n\
-                    event.key === "ArrowLeft" && identity(-5)\n\
+                    evt.key === "ArrowLeft" && identity(-5)\n\
                 ) || 5;\n\
                 break;\n\
             case "j":\n\
             case "l":\n\
-                media.currentTime += (event.key === "j" && identity(-10)) || 10;\n\
+                media.currentTime += (evt.key === "j" && identity(-10)) || 10;\n\
                 break;\n\
             case "k":\n\
             case " ":\n\
@@ -1781,14 +1781,14 @@ local.assetsDict["/assets.swgg.html"] = local.assetsDict["/assets.utility2.templ
                 media.muted = !media.muted;\n\
                 break;\n\
             default:\n\
-                if (event.key >= 0) {\n\
-                    media.currentTime = 0.1 * event.key * media.duration;\n\
+                if (evt.key >= 0) {\n\
+                    media.currentTime = 0.1 * evt.key * media.duration;\n\
                     break;\n\
                 }\n\
                 return;\n\
             }\n\
         } catch (ignore) {}\n\
-        event.preventDefault();\n\
+        evt.preventDefault();\n\
     };\n\
     onEvent = window.domOnEventMediaHotkeys;\n\
     input = document.createElement("button");\n\
@@ -1824,7 +1824,9 @@ window.swgg.uiEventListenerDict.onEventUiReload({\n\
 </html>\n\
 ');
 /* jslint ignore:end */
-local.assetsDict["/assets.swgg.swagger.schema.json"] = local.jsonStringifyOrdered(
+local.assetsDict[
+    "/assets.swgg.swagger.schema.json"
+] = local.jsonStringifyOrdered(
     local.objectSetOverride(
         JSON.parse(local.assetsDict["/assets.swgg.json-schema.json"].replace((
             /"\$ref":".*?#/g
@@ -1903,7 +1905,9 @@ local.apiAjax = function (that, opt, onError) {
         }
         // serialize array
         if (Array.isArray(tmp) && schemaP.in !== "body") {
-            switch (schemaP.collectionFormat || schemaP["x-swgg-collectionFormat"]) {
+            switch (
+                schemaP.collectionFormat || schemaP["x-swgg-collectionFormat"]
+            ) {
             case "json":
                 tmp = JSON.stringify(tmp);
                 break;
@@ -2237,7 +2241,10 @@ local.apiUpdate = function (swaggerJson) {
             that._method = method.toUpperCase();
             that._path = path;
             tmp = "operationId." + that.operationId;
-            local.apiDict[tmp] = local.objectSetOverride(local.apiDict[tmp], that);
+            local.apiDict[tmp] = local.objectSetOverride(
+                local.apiDict[tmp],
+                that
+            );
         });
     });
     // init apiDict from x-swgg-apiDict
@@ -2392,7 +2399,9 @@ local.apiUpdate = function (swaggerJson) {
                 + JSON.stringify(that._methodPath) + "\n"
                 + " * example usage:" + (
                     "\n"
-                    + "swgg.apiDict[" + JSON.stringify(key.join(".")) + "].ajax("
+                    + "swgg.apiDict["
+                    + JSON.stringify(key.join("."))
+                    + "].ajax("
                     + JSON.stringify(local.normalizeSwaggerParamDict({
                         modeDefault: true,
                         operation: that,
@@ -2403,7 +2412,8 @@ local.apiUpdate = function (swaggerJson) {
                     + "        console.error(err);\n"
                     + "        return;\n"
                     + "    }\n"
-                    + "    console.log(data.responseJson || data.responseText);\n"
+                    + "    console.log(data.responseJson"
+                    + " || data.responseText);\n"
                     + "});"
                 ).replace((
                     /\n/g
@@ -2701,8 +2711,8 @@ local.dbRowRandomCreate = function (opt) {
 
 local.idDomElementCreate = function (seed) {
 /*
- * this function will create a deterministic and unique dom-element id from the seed,
- * that is both dom-selector and url friendly
+ * this function will create a deterministic and unique dom-element id
+ * from <seed> that is both dom-selector and url friendly
  */
     local.idDomElementDict[seed] = (local.idDomElementDict[seed] || 0) + 1;
     return encodeURIComponent(
@@ -2787,7 +2797,9 @@ local.middlewareBodyParse = function (req, res, next) {
             name = match1;
             name = decodeURIComponent(name);
             req.swgg.bodyParsed[name] = (
-                local.schemaPType(req.swgg.operation._schemaPDict[name]) === "string"
+                local.schemaPType(
+                    req.swgg.operation._schemaPDict[name]
+                ) === "string"
                 ? value
                 : JSON.parse(value)
             );
@@ -2976,7 +2988,9 @@ local.middlewareCrudBuiltin = function (req, res, next) {
                     tmp.id = tmp.id || ((1 + Math.random()) * 0x10000000000000)
                     .toString(36).slice(1);
                     local.objectSetOverride(tmp, {
-                        fileBlob: local.base64FromBuffer(req.swgg.bodyParsed[key]),
+                        fileBlob: local.base64FromBuffer(
+                            req.swgg.bodyParsed[key]
+                        ),
                         fileContentType: req.swgg.bodyMeta[key].contentType,
                         fileFilename: req.swgg.bodyMeta[key].filename,
                         fileInputName: req.swgg.bodyMeta[key].name,
@@ -3206,7 +3220,9 @@ local.middlewareUserLogin = function (req, res, next) {
                 user.jwtDecrypted = {};
                 user.jwtDecrypted.sub = user.data.username;
                 // update jwtEncrypted in client
-                user.jwtEncrypted = local.jwtAes256GcmEncrypt(user.jwtDecrypted);
+                user.jwtEncrypted = local.jwtAes256GcmEncrypt(
+                    user.jwtDecrypted
+                );
                 local.serverRespondHeadSet(req, res, null, {
                     "swgg-jwt-encrypted": user.jwtEncrypted
                 });
@@ -3377,7 +3393,9 @@ local.middlewareValidate = function (req, res, next) {
                     && local.schemaPType(schemaP) === "string"
                     && crud.data[schemaP.name]
                 ) {
-                    crud.data[schemaP.name] = JSON.parse(crud.data[schemaP.name]);
+                    crud.data[schemaP.name] = JSON.parse(
+                        crud.data[schemaP.name]
+                    );
                 }
             });
             // init crud.query*
@@ -3426,7 +3444,9 @@ local.middlewareValidate = function (req, res, next) {
                 if (!local.isNullOrUndefined(crud.data[crud.idName])) {
                     break;
                 }
-                crud.data[crud.idName] = (crud.body && crud.body[crud.idBackend]);
+                crud.data[crud.idName] = (
+                    crud.body && crud.body[crud.idBackend]
+                );
                 break;
             }
             // init-after crud.idName
@@ -3510,11 +3530,15 @@ local.normalizeSwaggerJson = function (swaggerJson, opt) {
                 swaggerJson["x-swgg-tags0-override"][tag.name],
                 {
                     description: tag.description,
-                    "x-swgg-descriptionLineList": tag["x-swgg-descriptionLineList"]
+                    "x-swgg-descriptionLineList": (
+                        tag["x-swgg-descriptionLineList"]
+                    )
                 }
             );
             tag.description = tmp.description;
-            tag["x-swgg-descriptionLineList"] = tmp["x-swgg-descriptionLineList"];
+            tag["x-swgg-descriptionLineList"] = (
+                tmp["x-swgg-descriptionLineList"]
+            );
             // objectSetDescription
             opt.objectSetDescription(tmp);
             opt.objectSetDescription(tag);
@@ -3561,7 +3585,9 @@ local.normalizeSwaggerJson = function (swaggerJson, opt) {
         swaggerJson,
         (
             swaggerJson["x-swgg-tags0-override"]
-            && swaggerJson["x-swgg-tags0-override"][local.env.npm_package_swggTags0]
+            && swaggerJson["x-swgg-tags0-override"][
+                local.env.npm_package_swggTags0
+            ]
         ),
         10
     );
@@ -3572,7 +3598,9 @@ local.normalizeSwaggerJson = function (swaggerJson, opt) {
         schema = swaggerJson[schema] || {};
         Object.keys(schema).forEach(function (key) {
             tmp = schema[key]["x-swgg-tags0"];
-            if (tmp && tmp !== "all" && tmp !== local.env.npm_package_swggTags0) {
+            if (
+                tmp && tmp !== "all" && tmp !== local.env.npm_package_swggTags0
+            ) {
                 delete schema[key];
             }
         });
@@ -3581,7 +3609,9 @@ local.normalizeSwaggerJson = function (swaggerJson, opt) {
     Object.keys(swaggerJson.paths).forEach(function (path) {
         Object.keys(swaggerJson.paths[path]).forEach(function (method) {
             tmp = swaggerJson.paths[path][method]["x-swgg-tags0"];
-            if (tmp && tmp !== "all" && tmp !== local.env.npm_package_swggTags0) {
+            if (
+                tmp && tmp !== "all" && tmp !== local.env.npm_package_swggTags0
+            ) {
                 delete swaggerJson.paths[path][method];
                 return;
             }
@@ -4358,7 +4388,9 @@ local.swaggerValidate = function (swaggerJson) {
             // validate semanticFormData4
             test = (
                 !tmp.type.file
-                || (operation.consumes || []).indexOf("multipart/form-data") >= 0
+                || (operation.consumes || []).indexOf(
+                    "multipart/form-data"
+                ) >= 0
             );
             local.throwSwaggerError(!test && {
                 data: operation,
@@ -4371,7 +4403,9 @@ local.swaggerValidate = function (swaggerJson) {
                 || (operation.consumes || []).indexOf(
                     "application/x-www-form-urlencoded"
                 ) >= 0
-                || (operation.consumes || []).indexOf("multipart/form-data") >= 0
+                || (operation.consumes || []).indexOf(
+                    "multipart/form-data"
+                ) >= 0
             );
             local.throwSwaggerError(!test && {
                 data: operation,
@@ -4397,7 +4431,8 @@ local.swaggerValidateDataParameters = function (opt) {
                 dataReadonlyRemove: [
                     opt.dataReadonlyRemove || {},
                     schemaP.name,
-                    opt.dataReadonlyRemove && opt.dataReadonlyRemove[schemaP.name]
+                    opt.dataReadonlyRemove
+                    && opt.dataReadonlyRemove[schemaP.name]
                 ],
                 prefix: opt.prefix.concat([
                     schemaP.name
@@ -4450,7 +4485,9 @@ local.swaggerValidateDataSchema = function (opt) {
         while (ii < oneOf.length) {
             tmp = String(oneOf[ii] && oneOf[ii].$ref)
             .replace("http://json-schema.org/draft-04/schema#", "#");
-            switch (tmp + " " + (!local.isNullOrUndefined(data.$ref) || data.in)) {
+            switch (
+                tmp + " " + (!local.isNullOrUndefined(data.$ref) || data.in)
+            ) {
             case "#/definitions/bodyParameter body":
             case "#/definitions/formDataParameterSubSchema formData":
             case "#/definitions/headerParameterSubSchema header":
@@ -4634,8 +4671,12 @@ local.swaggerValidateDataSchema = function (opt) {
     }
     // validate semanticItemsRequiredForArrayObjects1
     test = (
-        !opt.modeSchema || local.schemaPType(data) !== "array"
-        || (typeof local.schemaPItems(data) === "object" && local.schemaPItems(data))
+        !opt.modeSchema
+        || local.schemaPType(data) !== "array"
+        || (
+            typeof local.schemaPItems(data) === "object"
+            && local.schemaPItems(data)
+        )
     );
     local.throwSwaggerError(!test && {
         errorType: "semanticItemsRequiredForArrayObjects1",
@@ -4755,7 +4796,10 @@ local.swaggerValidateDataSchema = function (opt) {
             schema
         });
         // 5.3.3. minItems
-        test = typeof schema.minItems !== "number" || data.length >= schema.minItems;
+        test = (
+            typeof schema.minItems !== "number"
+            || data.length >= schema.minItems
+        );
         local.throwSwaggerError(!test && {
             data,
             errorType: "arrayMinItems",
@@ -4915,7 +4959,8 @@ local.swaggerValidateDataSchema = function (opt) {
 *
 * remove from "s" all elements of "p", if any;
 * for each regex in "pp", remove all elements of "s" which this regex matches.
-* Validation of the instance succeeds if, after these two steps, set "s" is empty.
+* Validation of the instance succeeds if, after these two steps,
+* set "s" is empty.
 */
             test = tmp || schema.additionalProperties !== false;
             local.throwSwaggerError(!test && {
@@ -4970,7 +5015,8 @@ local.swaggerValidateDataSchema = function (opt) {
     case "string":
         // 5.2.1. maxLength
         test = (
-            typeof schema.maxLength !== "number" || data.length <= schema.maxLength
+            typeof schema.maxLength !== "number"
+            || data.length <= schema.maxLength
         );
         local.throwSwaggerError(!test && {
             data,
@@ -5266,26 +5312,31 @@ local.uiEventListenerDict = local.objectAssignDefault(
 
 local.uiEventListenerDict.onEventDomDb = local.db.onEventDomDb;
 
-local.uiEventListenerDict.onEventInputTextareaChange = function (event) {
+local.uiEventListenerDict.onEventInputTextareaChange = function (evt) {
 /*
  * this function will show/hide the textarea's multiline placeholder
  */
     var isTransparent;
     var value;
-    isTransparent = event.targetOnEvent.style.background.indexOf("transparent") >= 0;
-    value = event.targetOnEvent.value;
+    isTransparent = evt.targetOnEvent.style.background.indexOf(
+        "transparent"
+    ) >= 0;
+    value = evt.targetOnEvent.value;
     if (value && isTransparent) {
-        event.targetOnEvent.style.background = "";
+        evt.targetOnEvent.style.background = "";
     }
     if (!value && !isTransparent) {
-        event.targetOnEvent.style.background = "transparent";
+        evt.targetOnEvent.style.background = "transparent";
     }
     local.uiEventListenerDict.onEventInputValidateAndAjax({
-        targetOnEvent: event.targetOnEvent
+        targetOnEvent: evt.targetOnEvent
     });
 };
 
-local.uiEventListenerDict.onEventInputValidateAndAjax = function (opt, onError) {
+local.uiEventListenerDict.onEventInputValidateAndAjax = function (
+    opt,
+    onError
+) {
 /*
  * this function will validate the input parameters
  * against the schemas in <opt>.parameters
@@ -5495,7 +5546,7 @@ local.uiEventListenerDict.onEventOperationAjax = function (opt) {
                 contentType: "undefined",
                 statusCode: "undefined"
             });
-            // init responseStatusCode
+            // init resStatusCode
             opt.targetOnEvent.querySelector(
                 ".resStatusCode"
             ).textContent = (
@@ -5507,7 +5558,7 @@ local.uiEventListenerDict.onEventOperationAjax = function (opt) {
             ).textContent = Object.keys(data.resHeaders).map(function (key) {
                 return key + ": " + data.resHeaders[key] + "\r\n";
             }).join("");
-            // init responseBody
+            // init resBody
             opt.targetOnEvent.querySelector(
                 ".resHeaders"
             ).textContent.replace((
@@ -5515,7 +5566,10 @@ local.uiEventListenerDict.onEventOperationAjax = function (opt) {
             ), function (ignore, match1) {
                 data.contentType = match1.trim();
             });
-            data.mediaType = data.contentType.split("/")[0].replace("image", "img");
+            data.mediaType = data.contentType.split("/")[0].replace(
+                "image",
+                "img"
+            );
             switch (data.mediaType) {
             case "audio":
             case "img":
@@ -5529,10 +5583,11 @@ local.uiEventListenerDict.onEventOperationAjax = function (opt) {
                     ".resMedia"
                 ).innerHTML = (
                     "<" + data.mediaType
-                    + " class=\"domOnEventMediaHotkeysInit\" controls src=\"data:"
+                    + " class=\"domOnEventMediaHotkeysInit\""
+                    + " controls src=\"data:"
                     + data.contentType
-                    + ";base64," + local.base64FromBuffer(data.resBuffer) + "\"></"
-                    + data.mediaType + ">"
+                    + ";base64," + local.base64FromBuffer(data.resBuffer)
+                    + "\"></" + data.mediaType + ">"
                 );
                 globalThis.domOnEventMediaHotkeys("init");
                 break;
@@ -5557,12 +5612,15 @@ local.uiEventListenerDict.onEventOperationAjax = function (opt) {
     opt.onNext();
 };
 
-local.uiEventListenerDict.onEventOperationDisplayShow = function (event, onError) {
+local.uiEventListenerDict.onEventOperationDisplayShow = function (
+    evt,
+    onError
+) {
 /*
  * this function will toggle the display of the operation
  */
     var element;
-    element = event.targetOnEvent;
+    element = evt.targetOnEvent;
     element = element.querySelector(
         ".operation"
     ) || element.closest(
@@ -5605,17 +5663,17 @@ local.uiEventListenerDict.onEventOperationDisplayShow = function (event, onError
     );
 };
 
-local.uiEventListenerDict.onEventResourceDisplayAction = function (event) {
+local.uiEventListenerDict.onEventResourceDisplayAction = function (evt) {
 /*
  * this function will toggle the display of the resource
  */
-    location.hash = "!" + event.currentTarget.id;
-    event.targetOnEvent.className.split(" ").some(function (className) {
+    location.hash = "!" + evt.currentTarget.id;
+    evt.targetOnEvent.className.split(" ").some(function (className) {
         switch (className) {
         case "td1":
             // show the resource, but hide all other resources
             local.uiAnimateSlideAccordian(
-                event.currentTarget.querySelector(
+                evt.currentTarget.querySelector(
                     ".operationList"
                 ),
                 Array.from(document.querySelectorAll(
@@ -5624,9 +5682,9 @@ local.uiEventListenerDict.onEventResourceDisplayAction = function (event) {
             );
             // show at least one operation in the resource
             local.uiEventListenerDict.onEventOperationDisplayShow({
-                targetOnEvent: event.currentTarget.querySelector(
+                targetOnEvent: evt.currentTarget.querySelector(
                     ".operation .uiAnimateSlide[style*=\"max-height: 100%\"]"
-                ) || event.currentTarget.querySelector(
+                ) || evt.currentTarget.querySelector(
                     ".operation"
                 )
             });
@@ -5634,7 +5692,7 @@ local.uiEventListenerDict.onEventResourceDisplayAction = function (event) {
         case "td2":
             // show the resource, but hide all other resources
             local.uiAnimateSlideAccordian(
-                event.currentTarget.querySelector(
+                evt.currentTarget.querySelector(
                     ".operationList"
                 ),
                 Array.from(document.querySelectorAll(
@@ -5642,17 +5700,17 @@ local.uiEventListenerDict.onEventResourceDisplayAction = function (event) {
                 ))
             );
             // collapse all operations in the resource
-            if (event.currentTarget.classList.contains("expanded")) {
-                event.currentTarget.classList.remove("expanded");
-                Array.from(event.currentTarget.querySelectorAll(
+            if (evt.currentTarget.classList.contains("expanded")) {
+                evt.currentTarget.classList.remove("expanded");
+                Array.from(evt.currentTarget.querySelectorAll(
                     ".operation > form"
                 )).forEach(function (element) {
                     local.uiAnimateSlideUp(element);
                 });
             // expand all operations in the resource
             } else {
-                event.currentTarget.classList.add("expanded");
-                Array.from(event.currentTarget.querySelectorAll(
+                evt.currentTarget.classList.add("expanded");
+                Array.from(evt.currentTarget.querySelectorAll(
                     ".operation > form"
                 )).forEach(function (element) {
                     local.uiAnimateSlideDown(element);
@@ -5705,10 +5763,12 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
                 });
             // restore apiKeyValue
             } else if (opt.swggInit) {
-                local.apiKeyKey = "utility2_swgg_apiKeyKey_" + encodeURIComponent(
-                    local.urlParse(opt.inputUrl.value.replace((
-                        /^\//
-                    ), "")).href
+                local.apiKeyKey = (
+                    "utility2_swgg_apiKeyKey_" + encodeURIComponent(
+                        local.urlParse(opt.inputUrl.value.replace((
+                            /^\//
+                        ), "")).href
+                    )
                 );
                 local.apiKeyValue = localStorage.getItem(local.apiKeyKey) || "";
             // save apiKeyValue
@@ -5716,7 +5776,10 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
                 local.apiKeyValue = document.querySelector(
                     "#swggApiKeyInput1"
                 ).value;
-                local.localStorageSetItemOrClear(local.apiKeyKey, local.apiKeyValue);
+                local.localStorageSetItemOrClear(
+                    local.apiKeyKey,
+                    local.apiKeyValue
+                );
             }
             // if keyup-event is not return-key, then return
             if (
@@ -5845,9 +5908,12 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
                 }
             );
             resource = swaggerJson.resourceDict[tag];
-            resource.id = resource.id || local.idDomElementCreate("swgg_id_" + tag);
-            resource.summary = resource.summary || String(resource.description)
-            .replace((
+            resource.id = resource.id || local.idDomElementCreate(
+                "swgg_id_" + tag
+            );
+            resource.summary = resource.summary || String(
+                resource.description
+            ).replace((
                 /\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/g
             ), "");
         });
@@ -6141,7 +6207,10 @@ local.uiRenderSchemaP = function (schemaP) {
         : ""
     );
     // templateRender schemaP
-    schemaP.innerHTML = local.templateRender(local.templateUiParameter, schemaP);
+    schemaP.innerHTML = local.templateRender(
+        local.templateUiParameter,
+        schemaP
+    );
 };
 
 local.urlParseWithBraket = function (url) {
@@ -6156,7 +6225,13 @@ local.urlParseWithBraket = function (url) {
         ), tmp + 1).replace((
             /\}/g
         ), tmp + 2))
-    ).replace(new RegExp(tmp + 1, "g"), "{").replace(new RegExp(tmp + 2, "g"), "}"));
+    ).replace(
+        new RegExp(tmp + 1, "g"),
+        "{"
+    ).replace(
+        new RegExp(tmp + 2, "g"),
+        "}"
+    ));
 };
 
 local.userLoginByPassword = function (opt, onError) {

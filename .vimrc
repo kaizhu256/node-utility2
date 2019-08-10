@@ -177,13 +177,13 @@ vnoremap <silent> #< <esc>:call MyCommentRegion('<')<cr>
 vnoremap <silent> #<char-0x23> <esc>:call MyCommentRegion('#')<cr>
 vnoremap <silent> #u <esc>:call MyCommentRegion('u')<cr>
 
-if exists("+columns")
-    set columns=161
-endif
-if exists("+lines")
-    set lines=80
-endif
 if has("gui_running")
+    if exists("+columns")
+        set columns=161
+    endif
+    if exists("+lines")
+        set lines=80
+    endif
     " https://www.bulafish.com/centos/2018/05/05/change-vim-color-scheme/
     " colorscheme blue
     " colorscheme darkblue

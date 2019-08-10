@@ -8,7 +8,7 @@
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js"
     },
-    "description": "the zero-dependency, swiss-army-knife utility to build, test, and deploy webapps",
+    "description": "this zero-dependency package will provide a collection of high-level functions to to build, test, and deploy webapps",
     "devDependencies": {
         "electron-lite": "kaizhu256/node-electron-lite#alpha"
     },

@@ -429,10 +429,16 @@ local._istanbul_fs.readFileSync = function (file) {
         ), "$1div");
     }
     if (!local.isBrowser && process.env.npm_package_homepage) {
-        file = file
-        .replace("{{env.npm_package_homepage}}", process.env.npm_package_homepage)
-        .replace("{{env.npm_package_name}}", process.env.npm_package_name)
-        .replace("{{env.npm_package_version}}", process.env.npm_package_version);
+        file = file.replace(
+            "{{env.npm_package_homepage}}",
+            process.env.npm_package_homepage
+        ).replace(
+            "{{env.npm_package_name}}",
+            process.env.npm_package_name
+        ).replace(
+            "{{env.npm_package_version}}",
+            process.env.npm_package_version
+        );
     } else {
         file = file.replace((
             /<h1\u0020[\S\s]*<\/h1>/
@@ -577,10 +583,11 @@ local.coverageReportCreate = function () {
             // edit coverage badge color
             .replace((
                 /0d0/g
-            ), (
-                ("0" + Math.round((100 - opt.pct) * 2.21).toString(16)).slice(-2)
-                + ("0" + Math.round(opt.pct * 2.21).toString(16)).slice(-2) + "00"
-            ))
+            ), ((
+                "0" + Math.round((100 - opt.pct) * 2.21).toString(16)
+            ).slice(-2) + (
+                "0" + Math.round(opt.pct * 2.21).toString(16)
+            ).slice(-2) + "00"))
         );
     }
     console.log("created coverage file " + opt.dir + "/index.html");

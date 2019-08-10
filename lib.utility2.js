@@ -2,7 +2,7 @@
 /*
  * lib.utility2.js (2019.8.2)
  * https://github.com/kaizhu256/node-utility2
- * the zero-dependency, swiss-army-knife utility to build, test, and deploy webapps
+ * this zero-dependency package will provide a collection of high-level functions to to build, test, and deploy webapps
  *
  */
 
@@ -2161,7 +2161,7 @@ local._http.ServerResponse.prototype.end = function (data) {
     that.chunkList.push(data);
     // notify server res is finished
     that.emit("finish");
-    // asynchronously send res from server -> client
+    // asynchronously send res from server to client
     setTimeout(function () {
         that.onResponse(that);
         that.emit("data", local.bufferConcat(that.chunkList));
@@ -2929,7 +2929,10 @@ local.browserTest = function (opt, onError) {
             {
                 name: (
                     local.isBrowser
-                    ? "browser - " + location.pathname + " - " + navigator.userAgent
+                    ? (
+                        "browser - "
+                        + location.pathname + " - " + navigator.userAgent
+                    )
                     : "node - " + process.platform + " " + process.version
                 ) + " - " + new Date().toISOString(),
                 screenshot: local.env && local.env.MODE_BUILD_SCREENSHOT_IMG,
@@ -3572,7 +3575,10 @@ local.buildApp = function (opt, onError) {
                 url: "/index.rollup.html"
             }, {
                 file: "/jsonp.utility2.stateInit",
-                url: "/jsonp.utility2.stateInit?callback=window.utility2.stateInit"
+                url: (
+                    "/jsonp.utility2.stateInit"
+                    + "?callback=window.utility2.stateInit"
+                )
             }
         ].concat(opt.assetsList)
     }, function (option2, onParallel) {
@@ -6429,7 +6435,9 @@ local.requireReadme = function () {
 /* jslint ignore:start */
 case 'header':
 return '\
-/* this rollup was created with utility2 (https://github.com/kaizhu256/node-utility2) */\n\
+/* this rollup was created with utility2\n\
+ * https://github.com/kaizhu256/node-utility2\n\
+ */\n\
 \n\
 \n\
 \n\
@@ -6858,7 +6866,8 @@ local.stringHtmlSafe = function (text) {
 
 local.stringMerge = function (str1, str2, rgx) {
 /*
- * this function will merge <str2> -> <str1>, for sections where both match <rgx>
+ * this function will merge <str2> into <str1>,
+ * for sections where both match <rgx>
  */
     str2.replace(rgx, function (match2) {
         str1.replace(rgx, function (match1) {
@@ -6926,8 +6935,8 @@ local.stringUniqueKey = function (text) {
 
 local.taskCreate = function (opt, onTask, onError) {
 /*
- * this function will create the task onTask named <opt>.key, if it does not exist,
- * and push onError to its onErrorList
+ * this function will create the task onTask named <opt>.key,
+ * if it does not exist, and push onError to its onErrorList
  */
     var task;
     // init task
@@ -7352,23 +7361,23 @@ local.testReportCreate = function (testReport) {
         testPlatformList: []
     });
     // print test-report summary
-    console.error("\n" + new Array(56).join("-") + "\n" + testReport.testPlatformList
-    .filter(function (testPlatform) {
-        // if testPlatform has no tests, then filter it out
-        return testPlatform.testCaseList.length;
-    })
-    .map(function (testPlatform) {
-        return (
-            "| test-report - " + testPlatform.name + "\n|"
-            + ("        " + testPlatform.timeElapsed + " ms     ")
-            .slice(-16)
-            + ("        " + testPlatform.testsFailed + " failed ")
-            .slice(-16)
-            + ("        " + testPlatform.testsPassed + " passed ")
-            .slice(-16) + "     |\n" + new Array(56).join("-")
-        );
-    })
-    .join("\n") + "\n");
+    console.error(
+        "\n" + new Array(56).join("-")
+        + "\n" + testReport.testPlatformList.filter(function (testPlatform) {
+            // if testPlatform has no tests, then filter it out
+            return testPlatform.testCaseList.length;
+        }).map(function (testPlatform) {
+            return (
+                "| test-report - " + testPlatform.name + "\n|"
+                + ("        " + testPlatform.timeElapsed + " ms     ")
+                .slice(-16)
+                + ("        " + testPlatform.testsFailed + " failed ")
+                .slice(-16)
+                + ("        " + testPlatform.testsPassed + " passed ")
+                .slice(-16) + "     |\n" + new Array(56).join("-")
+            );
+        }).join("\n") + "\n"
+    );
     // create test-report.html
     local.fs.writeFileSync(
         "tmp/build/test-report.html",
@@ -7450,7 +7459,8 @@ local.testReportMerge = function (testReport1, testReport2) {
         // validate timeElapsed
         local.assertThrow(
             typeof testReport.timeElapsed === "number",
-            ii + " invalid testReport.timeElapsed " + typeof testReport.timeElapsed
+            ii + " invalid testReport.timeElapsed "
+            + typeof testReport.timeElapsed
         );
         // security - handle malformed testReport.testPlatformList
         testReport.testPlatformList.forEach(function (testPlatform) {
@@ -7486,7 +7496,8 @@ local.testReportMerge = function (testReport1, testReport2) {
                 }, 8);
                 local.assertThrow(
                     typeof testCase.errorStack === "string",
-                    ii + " invalid testCase.errorStack " + typeof testCase.errorStack
+                    ii + " invalid testCase.errorStack "
+                    + typeof testCase.errorStack
                 );
                 local.assertThrow(
                     typeof testCase.name === "string",
@@ -7595,19 +7606,21 @@ local.testReportMerge = function (testReport1, testReport2) {
         local.objectSetOverride(testReport, {
             env: local.env,
             // map testPlatformList
-            testPlatformList: testReport.testPlatformList
-            .filter(function (testPlatform) {
+            testPlatformList: testReport.testPlatformList.filter(function (
+                testPlatform
+            ) {
                 // if testPlatform has no tests, then filter it out
                 return testPlatform.testCaseList.length;
-            })
-            .map(function (testPlatform, ii) {
+            }).map(function (testPlatform, ii) {
                 errorStackList = [];
                 return local.objectSetOverride(testPlatform, {
                     errorStackList,
                     name: testPlatform.name,
                     screenshot: testPlatform.screenshot,
                     // map testCaseList
-                    testCaseList: testPlatform.testCaseList.map(function (testCase) {
+                    testCaseList: testPlatform.testCaseList.map(function (
+                        testCase
+                    ) {
                         testCaseNumber += 1;
                         if (testCase.errorStack) {
                             errorStackList.push({
@@ -8301,19 +8314,19 @@ local.objectSetDefault(local.env, {
     npm_package_version: "0.0.1"
 });
 local.errDefault = new Error("default-error");
-globalThis.utility2_onReadyAfter = globalThis.utility2_onReadyAfter || function (
-    onError
-) {
-/*
- * this function will call onError when utility2_onReadyBefore.counter === 0
- */
-    globalThis.utility2_onReadyBefore.counter += 1;
-    local.taskCreate({
-        key: "globalThis.utility2_onReadyAfter"
-    }, null, onError);
-    setTimeout(globalThis.utility2_onReadyBefore);
-    return onError;
-};
+globalThis.utility2_onReadyAfter = (
+    globalThis.utility2_onReadyAfter || function (onError) {
+    /*
+     * this function will call onError when utility2_onReadyBefore.counter === 0
+     */
+        globalThis.utility2_onReadyBefore.counter += 1;
+        local.taskCreate({
+            key: "globalThis.utility2_onReadyAfter"
+        }, null, onError);
+        setTimeout(globalThis.utility2_onReadyBefore);
+        return onError;
+    }
+);
 globalThis.utility2_onReadyBefore = (
     globalThis.utility2_onReadyBefore
     || local.onParallel(function (err) {
@@ -8486,7 +8499,10 @@ if (module === require.main && (!globalThis.utility2_rollup || (
     local.assetsDict[file] = local.assetsDict[file] || "";
     if (process.argv[2] !== "--help" && local.fs.existsSync(__dirname + file)) {
         console.error("override assets " + __dirname + file);
-        local.assetsDict[file] = local.fs.readFileSync(__dirname + file, "utf8");
+        local.assetsDict[file] = local.fs.readFileSync(
+            __dirname + file,
+            "utf8"
+        );
     }
 });
 if (globalThis.utility2_rollup) {
@@ -8640,8 +8656,9 @@ local.assetsDict["/assets.utility2.rollup.js"] = [
         break;
     case "header":
         return (
-            "/* this rollup was created with utility2 "
-            + "(https://github.com/kaizhu256/node-utility2) */\n"
+            "/* this rollup was created with utility2\n"
+            + " * https://github.com/kaizhu256/node-utility2\n"
+            + " */\n"
         );
     case "lib.swgg.js":
     case "lib.utility2.js":

@@ -1,5 +1,5 @@
 # utility2
-the zero-dependency, swiss-army-knife utility to build, test, and deploy webapps
+this zero-dependency package will provide a collection of high-level functions to to build, test, and deploy webapps
 
 # live web demo
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/)
@@ -59,7 +59,6 @@ the zero-dependency, swiss-army-knife utility to build, test, and deploy webapps
 - audit `{}` may have been `[]`
 - rename var value to val
 - replace uglifyjs-lite with terser-lite (v2.8.29)
-- jslint - refactor files to 80 chr column-limit
 - jslint - remove bad_property_a and unexpected_a hacks
 - jslint - allow space after semi-colon in jslint-macro
 - jslint - fix lineOffset issue with ignored-lines
@@ -74,6 +73,7 @@ the zero-dependency, swiss-army-knife utility to build, test, and deploy webapps
 
 #### changelog 2019.8.2
 - npm publish 2019.8.2
+- jslint - refactor files to 80 chr column-limit
 - csslint - reset sorted-line with \n\n instead of macro /* validateLineSortedReset */
 - add env var \$npm_config_mode_inspect, \$npm_config_mode_winpty
 - disable travis-ci cache
@@ -1150,7 +1150,7 @@ local.http.createServer(function (req, res) {
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js"
     },
-    "description": "the zero-dependency, swiss-army-knife utility to build, test, and deploy webapps",
+    "description": "this zero-dependency package will provide a collection of high-level functions to to build, test, and deploy webapps",
     "devDependencies": {
         "electron-lite": "kaizhu256/node-electron-lite#alpha"
     },

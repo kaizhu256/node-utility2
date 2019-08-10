@@ -5,34 +5,36 @@
  * this zero-dependency package will provide a persistent, in-browser database, with a working web-demo
  *
  * browser example:
- *     <script src="assets.db-lite.js"></script>
- *     <script>
- *     var dbTable1;
- *     dbTable1 = window.dbTable1 = window.utility2_db.dbTableCreateOne({
- *         name: "dbTable1"
- *     });
- *     dbTable1.idIndexCreate({ name: "field1" });
- *     dbTable1.crudSetOneById({ field1: "hello", field2: "world" });
- *     console.log(dbTable1.crudGetManyByQuery({
- *         limit: Infinity,
- *         query: { field1: "hello" },
- *         skip: 0,
- *         sort: [{ fieldName: 'field1', isDescending: false }]
- *     }));
- *     </script>
+    <script src="assets.db-lite.js"></script>
+    <script>
+    var dbTable1;
+    dbTable1 = window.dbTable1 = window.utility2_db.dbTableCreateOne({
+        name: "dbTable1"
+    });
+    dbTable1.idIndexCreate({ name: "field1" });
+    dbTable1.crudSetOneById({ field1: "hello", field2: "world" });
+    console.log(dbTable1.crudGetManyByQuery({
+        limit: Infinity,
+        query: { field1: "hello" },
+        skip: 0,
+        sort: [{ fieldName: 'field1', isDescending: false }]
+    }));
+    </script>
  *
  * node example:
- *     var db, dbTable1;
- *     utility2_db = require("./assets.db-lite.js");
- *     dbTable1 = global.dbTable1 = utility2_db.dbTableCreateOne({ name: "dbTable1" });
- *     dbTable1.idIndexCreate({ name: "field1" });
- *     dbTable1.crudSetOneById({ field1: "hello", field2: "world" });
- *     console.log(dbTable1.crudGetManyByQuery({
- *         limit: Infinity,
- *         query: { field1: "hello" },
- *         skip: 0,
- *         sort: [{ fieldName: 'field1', isDescending: false }]
- *     }));
+    var db, dbTable1;
+    utility2_db = require("./assets.db-lite.js");
+    dbTable1 = global.dbTable1 = utility2_db.dbTableCreateOne({
+        name: "dbTable1"
+    });
+    dbTable1.idIndexCreate({ name: "field1" });
+    dbTable1.crudSetOneById({ field1: "hello", field2: "world" });
+    console.log(dbTable1.crudGetManyByQuery({
+        limit: Infinity,
+        query: { field1: "hello" },
+        skip: 0,
+        sort: [{ fieldName: 'field1', isDescending: false }]
+    }));
  */
 
 
@@ -1379,7 +1381,7 @@ local._DbTable.prototype._crudUpdateOneById = function (dbRow) {
 
 local._DbTable.prototype.crudCountAll = function (onError) {
 /*
- * this function will count all of dbRow's in the dbTable
+ * this function will count all of dbRow's in dbTable
  */
     this._cleanup();
     return local.setTimeoutOnError(onError, 0, null, this.dbRowList.length);
@@ -1387,7 +1389,7 @@ local._DbTable.prototype.crudCountAll = function (onError) {
 
 local._DbTable.prototype.crudCountManyByQuery = function (query, onError) {
 /*
- * this function will count the number of dbRow's in the dbTable with given query
+ * this function will count the number of dbRow's in dbTable with given query
  */
     this._cleanup();
     return local.setTimeoutOnError(
@@ -1458,7 +1460,12 @@ local._DbTable.prototype.crudGetOneByQuery = function (query, onError) {
         }
         ii += 1;
     }
-    return local.setTimeoutOnError(onError, 0, null, local.dbRowProject(result));
+    return local.setTimeoutOnError(
+        onError,
+        0,
+        null,
+        local.dbRowProject(result)
+    );
 };
 
 local._DbTable.prototype.crudGetOneByRandom = function (onError) {
@@ -1558,7 +1565,11 @@ local._DbTable.prototype.crudUpdateManyById = function (dbRowList, onError) {
     ));
 };
 
-local._DbTable.prototype.crudUpdateManyByQuery = function (query, dbRow, onError) {
+local._DbTable.prototype.crudUpdateManyByQuery = function (
+    query,
+    dbRow,
+    onError
+) {
 /*
  * this function will update the dbRow's in the dbTable with given query
  */
@@ -1616,7 +1627,9 @@ local._DbTable.prototype.export = function (onError) {
         }) + "\n";
     });
     result += that.name + " sizeLimit " + that.sizeLimit + "\n";
-    result += that.name + " sortDefault " + JSON.stringify(that.sortDefault) + "\n";
+    result += that.name + " sortDefault " + JSON.stringify(
+        that.sortDefault
+    ) + "\n";
     that.crudGetManyByQuery({}).forEach(function (dbRow) {
         result += that.name + " dbRowSet " + JSON.stringify(dbRow) + "\n";
     });
@@ -1853,7 +1866,10 @@ local.dbReset = function (dbSeedList, onError) {
     local.dbDrop(function (err) {
         local.onErrorDefault(err);
         // seed db
-        local.dbSeed(dbSeedList, !globalThis.utility2_onReadyBefore && onParallel);
+        local.dbSeed(
+            dbSeedList,
+            !globalThis.utility2_onReadyBefore && onParallel
+        );
         local.functionOrNop(globalThis.utility2_onReadyBefore)();
     });
     local.functionOrNop(globalThis.utility2_onReadyAfter)(onError);
@@ -2191,7 +2207,9 @@ local.dbTableCreateOne = function (opt, onError) {
     opt = local.objectSetOverride(opt);
     // register dbTable
     DbTable = local._DbTable;
-    local.dbTableDict[opt.name] = local.dbTableDict[opt.name] || new DbTable(opt);
+    local.dbTableDict[opt.name] = local.dbTableDict[opt.name] || new DbTable(
+        opt
+    );
     that = local.dbTableDict[opt.name];
     that.sortDefault = (
         opt.sortDefault
@@ -2216,7 +2234,10 @@ local.dbTableCreateOne = function (opt, onError) {
     // restore dbTable from persistent-storage
     that.isLoaded = that.isLoaded || opt.isLoaded;
     if (!that.isLoaded) {
-        local.storageGetItem("dbTable." + that.name + ".json", function (err, data) {
+        local.storageGetItem("dbTable." + that.name + ".json", function (
+            err,
+            data
+        ) {
             // validate no err occurred
             local.assertThrow(!err, err);
             if (!that.isLoaded) {
@@ -2515,7 +2536,9 @@ local.cliDict.dbTableRemove = function () {
  * <dbTable>
  * will remove from db, <dbTable>
  */
-    local.storageRemoveItem("dbTable." + process.argv[3] + ".json", function (err) {
+    local.storageRemoveItem("dbTable." + process.argv[3] + ".json", function (
+        err
+    ) {
         // validate no err occurred
         local.assertThrow(!err, err);
         local.cliDict.dbTableList();

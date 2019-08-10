@@ -2573,12 +2573,6 @@ function tokenize(source) {
         if (
             !option.long
             && whole_line.length > 80
-            // jslint-hack - 100
-            && whole_line.length > (
-                option.utility2
-                ? 89
-                : 80
-            )
             && !json_mode
             && first
             && !regexp_seen
@@ -3367,7 +3361,7 @@ function tokenize(source) {
         if (snippet === "//") {
             // jslint-hack - too_long
             if (option.utility2 && (
-                /^!!|^\u0020https:\/\//m
+                /^!!\u0020|^\u0020https:\/\//m
             ).test(source_line)) {
                 regexp_seen = true;
             }
@@ -7761,7 +7755,7 @@ local.jslintAutofix = function (code, file, opt) {
         ), "");
         // autofix - braket - "{\n    ..."
         code = code.replace((
-            /^(\u0020*)(.*?(?:\u0020\[|\(\[|\{))\u0020*?(\S)/gm
+            /^(\u0020+)(.*?(?:\u0020\[|\(\[|\{))\u0020*?(\S)/gm
         ), "$1$2\n$1    $3");
         // autofix - braket - "{}"
         code = code.replace((
