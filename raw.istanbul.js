@@ -2,6 +2,57 @@
 file https://github.com/jquery/esprima/blob/2.7.3/esprima.js
 shGithubDateCommitted https://github.com/jquery/esprima/commits/2.7.3 # 2016-08-22T15:14:14Z
 curl https://raw.githubusercontent.com/jquery/esprima/2.7.3/esprima.js > /tmp/aa.js
+node -e '
+"use strict";
+var aa;
+aa = require("fs").readFileSync("/tmp/aa.js", "utf8");
+process.argv[1].replace((
+    /^(-[\S\s]*?\n)(\+[\S\s]*?\n)\n/gm
+), function (ignore, match1, match2) {
+    aa = aa.replace(
+        match1.replace((
+            /^-/gm
+        ), ""),
+        match2.replace((
+            /^\+/gm
+        ), "")
+    );
+});
+require("fs").writeFileSync("/tmp/aa.js", aa);
+' '
+-            throwUnexpectedToken();
+-        }
+-
+-        if (isIdentifierStart(source.charCodeAt(index))) {
++            throwUnexpectedToken();
++        }
++
++        // coverage-hack - bigint
++        if (source[index] === '"'"'n'"'"') { number += source[index++]; }
++        if (isIdentifierStart(source.charCodeAt(index))) {
+
+-        if (index < length) {
++        // coverage-hack - bigint
++        if (source[index] === '"'"'n'"'"') { number += source[index++]; }
++        if (index < length) {
+
+-        if (isIdentifierStart(source.charCodeAt(index)) || isDecimalDigit(source.charCodeAt(index))) {
++        // coverage-hack - bigint
++        if (source[index] === '"'"'n'"'"') { number += source[index++]; }
++        if (isIdentifierStart(source.charCodeAt(index)) || isDecimalDigit(source.charCodeAt(index))) {
+
+-            }
+-        }
+-
+-        if (isIdentifierStart(source.charCodeAt(index))) {
++            }
++        }
++
++        // coverage-hack - bigint
++        if (source[index] === '"'"'n'"'"') { number += source[index++]; }
++        if (isIdentifierStart(source.charCodeAt(index))) {
+
+'
 */
 /*
   Copyright (c) jQuery Foundation, Inc. and Contributors, All Rights Reserved.
@@ -868,6 +919,8 @@ curl https://raw.githubusercontent.com/jquery/esprima/2.7.3/esprima.js > /tmp/aa
             throwUnexpectedToken();
         }
 
+        // coverage-hack - bigint
+        if (source[index] === 'n') { number += source[index++]; }
         if (isIdentifierStart(source.charCodeAt(index))) {
             throwUnexpectedToken();
         }
@@ -900,6 +953,8 @@ curl https://raw.githubusercontent.com/jquery/esprima/2.7.3/esprima.js > /tmp/aa
             throwUnexpectedToken();
         }
 
+        // coverage-hack - bigint
+        if (source[index] === 'n') { number += source[index++]; }
         if (index < length) {
             ch = source.charCodeAt(index);
             /* istanbul ignore else */
@@ -942,6 +997,8 @@ curl https://raw.githubusercontent.com/jquery/esprima/2.7.3/esprima.js > /tmp/aa
             throwUnexpectedToken();
         }
 
+        // coverage-hack - bigint
+        if (source[index] === 'n') { number += source[index++]; }
         if (isIdentifierStart(source.charCodeAt(index)) || isDecimalDigit(source.charCodeAt(index))) {
             throwUnexpectedToken();
         }
@@ -1042,6 +1099,8 @@ curl https://raw.githubusercontent.com/jquery/esprima/2.7.3/esprima.js > /tmp/aa
             }
         }
 
+        // coverage-hack - bigint
+        if (source[index] === 'n') { number += source[index++]; }
         if (isIdentifierStart(source.charCodeAt(index))) {
             throwUnexpectedToken();
         }
@@ -5747,9 +5806,9 @@ curl https://raw.githubusercontent.com/jquery/esprima/2.7.3/esprima.js > /tmp/aa
 
 
 /*
-file https://github.com/estools/estraverse/blob/1.9.3/estraverse.js
-shGithubDateCommitted https://github.com/estools/estraverse/commits/1.9.3 # 2015-03-05T15:53:45Z
-curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > /tmp/aa.js
+file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
+shGithubDateCommitted https://github.com/estools/estraverse/commits/4.2.0 # 2016-03-10T21:51:59Z
+curl https://raw.githubusercontent.com/estools/estraverse/4.2.0/estraverse.js > /tmp/aa.js
 */
 /*
   Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
@@ -5777,20 +5836,8 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
 */
 /*jslint vars:false, bitwise:true*/
 /*jshint indent:4*/
-/*global exports:true, define:true*/
-(function (root, factory) {
-    'use strict';
-
-    // Universal Module Definition (UMD) to support AMD, CommonJS/Node.js,
-    // and plain browser loading,
-    if (typeof define === 'function' && define.amd) {
-        define(['exports'], factory);
-    } else if (typeof exports !== 'undefined') {
-        factory(exports);
-    } else {
-        factory((root.estraverse = {}));
-    }
-}(this, function clone(exports) {
+/*global exports:true*/
+(function clone(exports) {
     'use strict';
 
     var Syntax,
@@ -5908,6 +5955,7 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
 
     Syntax = {
         AssignmentExpression: 'AssignmentExpression',
+        AssignmentPattern: 'AssignmentPattern',
         ArrayExpression: 'ArrayExpression',
         ArrayPattern: 'ArrayPattern',
         ArrowFunctionExpression: 'ArrowFunctionExpression',
@@ -5928,8 +5976,9 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
         DirectiveStatement: 'DirectiveStatement',
         DoWhileStatement: 'DoWhileStatement',
         EmptyStatement: 'EmptyStatement',
-        ExportBatchSpecifier: 'ExportBatchSpecifier',
-        ExportDeclaration: 'ExportDeclaration',
+        ExportAllDeclaration: 'ExportAllDeclaration',
+        ExportDefaultDeclaration: 'ExportDefaultDeclaration',
+        ExportNamedDeclaration: 'ExportNamedDeclaration',
         ExportSpecifier: 'ExportSpecifier',
         ExpressionStatement: 'ExpressionStatement',
         ForStatement: 'ForStatement',
@@ -5948,6 +5997,7 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
         LabeledStatement: 'LabeledStatement',
         LogicalExpression: 'LogicalExpression',
         MemberExpression: 'MemberExpression',
+        MetaProperty: 'MetaProperty',
         MethodDefinition: 'MethodDefinition',
         ModuleSpecifier: 'ModuleSpecifier',
         NewExpression: 'NewExpression',
@@ -5955,9 +6005,11 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
         ObjectPattern: 'ObjectPattern',
         Program: 'Program',
         Property: 'Property',
+        RestElement: 'RestElement',
         ReturnStatement: 'ReturnStatement',
         SequenceExpression: 'SequenceExpression',
         SpreadElement: 'SpreadElement',
+        Super: 'Super',
         SwitchStatement: 'SwitchStatement',
         SwitchCase: 'SwitchCase',
         TaggedTemplateExpression: 'TaggedTemplateExpression',
@@ -5977,9 +6029,10 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
 
     VisitorKeys = {
         AssignmentExpression: ['left', 'right'],
+        AssignmentPattern: ['left', 'right'],
         ArrayExpression: ['elements'],
         ArrayPattern: ['elements'],
-        ArrowFunctionExpression: ['params', 'defaults', 'rest', 'body'],
+        ArrowFunctionExpression: ['params', 'body'],
         AwaitExpression: ['argument'], // CAUTION: It's deferred to ES7.
         BlockStatement: ['body'],
         BinaryExpression: ['left', 'right'],
@@ -5987,8 +6040,8 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
         CallExpression: ['callee', 'arguments'],
         CatchClause: ['param', 'body'],
         ClassBody: ['body'],
-        ClassDeclaration: ['id', 'body', 'superClass'],
-        ClassExpression: ['id', 'body', 'superClass'],
+        ClassDeclaration: ['id', 'superClass', 'body'],
+        ClassExpression: ['id', 'superClass', 'body'],
         ComprehensionBlock: ['left', 'right'],  // CAUTION: It's deferred to ES7.
         ComprehensionExpression: ['blocks', 'filter', 'body'],  // CAUTION: It's deferred to ES7.
         ConditionalExpression: ['test', 'consequent', 'alternate'],
@@ -5997,26 +6050,28 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
         DirectiveStatement: [],
         DoWhileStatement: ['body', 'test'],
         EmptyStatement: [],
-        ExportBatchSpecifier: [],
-        ExportDeclaration: ['declaration', 'specifiers', 'source'],
-        ExportSpecifier: ['id', 'name'],
+        ExportAllDeclaration: ['source'],
+        ExportDefaultDeclaration: ['declaration'],
+        ExportNamedDeclaration: ['declaration', 'specifiers', 'source'],
+        ExportSpecifier: ['exported', 'local'],
         ExpressionStatement: ['expression'],
         ForStatement: ['init', 'test', 'update', 'body'],
         ForInStatement: ['left', 'right', 'body'],
         ForOfStatement: ['left', 'right', 'body'],
-        FunctionDeclaration: ['id', 'params', 'defaults', 'rest', 'body'],
-        FunctionExpression: ['id', 'params', 'defaults', 'rest', 'body'],
+        FunctionDeclaration: ['id', 'params', 'body'],
+        FunctionExpression: ['id', 'params', 'body'],
         GeneratorExpression: ['blocks', 'filter', 'body'],  // CAUTION: It's deferred to ES7.
         Identifier: [],
         IfStatement: ['test', 'consequent', 'alternate'],
         ImportDeclaration: ['specifiers', 'source'],
-        ImportDefaultSpecifier: ['id'],
-        ImportNamespaceSpecifier: ['id'],
-        ImportSpecifier: ['id', 'name'],
+        ImportDefaultSpecifier: ['local'],
+        ImportNamespaceSpecifier: ['local'],
+        ImportSpecifier: ['imported', 'local'],
         Literal: [],
         LabeledStatement: ['label', 'body'],
         LogicalExpression: ['left', 'right'],
         MemberExpression: ['object', 'property'],
+        MetaProperty: ['meta', 'property'],
         MethodDefinition: ['key', 'value'],
         ModuleSpecifier: [],
         NewExpression: ['callee', 'arguments'],
@@ -6024,9 +6079,11 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
         ObjectPattern: ['properties'],
         Program: ['body'],
         Property: ['key', 'value'],
+        RestElement: [ 'argument' ],
         ReturnStatement: ['argument'],
         SequenceExpression: ['expressions'],
         SpreadElement: ['argument'],
+        Super: [],
         SwitchStatement: ['discriminant', 'cases'],
         SwitchCase: ['test', 'consequent'],
         TaggedTemplateExpression: ['tag', 'quasi'],
@@ -6034,7 +6091,7 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
         TemplateLiteral: ['quasis', 'expressions'],
         ThisExpression: [],
         ThrowStatement: ['argument'],
-        TryStatement: ['block', 'handlers', 'handler', 'guardedHandlers', 'finalizer'],
+        TryStatement: ['block', 'handler', 'finalizer'],
         UnaryExpression: ['argument'],
         UpdateExpression: ['argument'],
         VariableDeclaration: ['declarations'],
@@ -6187,7 +6244,13 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
         this.__leavelist = [];
         this.__current = null;
         this.__state = null;
-        this.__fallback = visitor.fallback === 'iteration';
+        this.__fallback = null;
+        if (visitor.fallback === 'iteration') {
+            this.__fallback = objectKeys;
+        } else if (typeof visitor.fallback === 'function') {
+            this.__fallback = visitor.fallback;
+        }
+
         this.__keys = VisitorKeys;
         if (visitor.keys) {
             this.__keys = extend(objectCreate(this.__keys), visitor.keys);
@@ -6261,11 +6324,11 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
                 }
 
                 node = element.node;
-                nodeType = element.wrap || node.type;
+                nodeType = node.type || element.wrap;
                 candidates = this.__keys[nodeType];
                 if (!candidates) {
                     if (this.__fallback) {
-                        candidates = objectKeys(node);
+                        candidates = this.__fallback(node);
                     } else {
                         throw new Error('Unknown node type ' + nodeType + '.');
                     }
@@ -6303,6 +6366,20 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
     };
 
     Controller.prototype.replace = function replace(root, visitor) {
+        var worklist,
+            leavelist,
+            node,
+            nodeType,
+            target,
+            element,
+            current,
+            current2,
+            candidates,
+            candidate,
+            sentinel,
+            outer,
+            key;
+
         function removeElem(element) {
             var i,
                 key,
@@ -6327,20 +6404,6 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
                 }
             }
         }
-
-        var worklist,
-            leavelist,
-            node,
-            nodeType,
-            target,
-            element,
-            current,
-            current2,
-            candidates,
-            candidate,
-            sentinel,
-            outer,
-            key;
 
         this.__initialize(root, visitor);
 
@@ -6415,11 +6478,11 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
                 continue;
             }
 
-            nodeType = element.wrap || node.type;
+            nodeType = node.type || element.wrap;
             candidates = this.__keys[nodeType];
             if (!candidates) {
                 if (this.__fallback) {
-                    candidates = objectKeys(node);
+                    candidates = this.__fallback(node);
                 } else {
                     throw new Error('Unknown node type ' + nodeType + '.');
                 }
@@ -6583,7 +6646,7 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
         return tree;
     }
 
-    exports.version = '1.8.1-dev';
+    exports.version = require('./package.json').version;
     exports.Syntax = Syntax;
     exports.traverse = traverse;
     exports.replace = replace;
@@ -6594,7 +6657,7 @@ curl https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js > 
     exports.cloneEnvironment = function () { return clone({}); };
 
     return exports;
-}));
+}(exports));
 /* vim: set sw=4 ts=4 et tw=80 : */
 
 
@@ -9615,6 +9678,34 @@ module.exports = InsertionText;
 file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.4.5 # 2016-08-21T19:53:22Z
 curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.4.5/lib/instrumenter.js > /tmp/aa.js
+node -e '
+"use strict";
+var aa;
+aa = require("fs").readFileSync("/tmp/aa.js", "utf8");
+process.argv[1].replace((
+    /^(-[\S\s]*?\n)(\+[\S\s]*?\n)\n/gm
+), function (ignore, match1, match2) {
+    aa = aa.replace(
+        match1.replace((
+            /^-/gm
+        ), ""),
+        match2.replace((
+            /^\+/gm
+        ), "")
+    );
+});
+require("fs").writeFileSync("/tmp/aa.js", aa);
+' '
+-        return '"'"'__cov_'"'"' + (omitSuffix ? '"'"''"'"' : suffix);
++        // coverage-hack - pseudorandom coverage-identifier
++        return '"'"'__cov_'"'"' + Math.random().toString(16).slice(2);
+
+-            this.currentState.currentHint = null;
++            this.currentState.currentHint = null;
++            // coverage-hack - allow top-level istanbul-ignore-next
++            if (node.type === "Program") { return; }
+
+'
 */
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
@@ -9673,7 +9764,8 @@ curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.4.5/lib/instrument
             window.__cov_seq += 1;
             suffix = window.__cov_seq;
         }
-        return '__cov_' + (omitSuffix ? '' : suffix);
+        // coverage-hack - pseudorandom coverage-identifier
+        return '__cov_' + Math.random().toString(16).slice(2);
     }
 
     function pushAll(ary, thing) {
@@ -10124,6 +10216,8 @@ curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.4.5/lib/instrument
                 nodeStart = node.range[0],
                 hint;
             this.currentState.currentHint = null;
+            // coverage-hack - allow top-level istanbul-ignore-next
+            if (node.type === "Program") { return; }
             while (i < hints.length) {
                 hint = hints[i];
                 if (hint.end < nodeStart) {
@@ -11094,6 +11188,33 @@ curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/object-ut
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/common/defaults.js
 shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
 curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/common/defaults.js > /tmp/aa.js
+node -e '
+"use strict";
+var aa;
+aa = require("fs").readFileSync("/tmp/aa.js", "utf8");
+process.argv[1].replace((
+    /^(-[\S\s]*?\n)(\+[\S\s]*?\n)\n/gm
+), function (ignore, match1, match2) {
+    aa = aa.replace(
+        match1.replace((
+            /^-/gm
+        ), ""),
+        match2.replace((
+            /^\+/gm
+        ), "")
+    );
+});
+require("fs").writeFileSync("/tmp/aa.js", aa);
+' '
+-                case '"'"'low'"'"' : str = '"'"'\033[91m'"'"' + str + '"'"'\033[0m'"'"'; break;
+-                case '"'"'medium'"'"': str = '"'"'\033[93m'"'"' + str + '"'"'\033[0m'"'"'; break;
+-                case '"'"'high'"'"': str = '"'"'\033[92m'"'"' + str + '"'"'\033[0m'"'"'; break;
++                // coverage-hack - Octal escape sequences are not allowed in strict mode.
++                case '"'"'low'"'"' : str = '"'"'\0x1b[91m'"'"' + str + '"'"'\0x1b[0m'"'"'; break;
++                case '"'"'medium'"'"': str = '"'"'\0x1b[93m'"'"' + str + '"'"'\0x1b[0m'"'"'; break;
++                case '"'"'high'"'"': str = '"'"'\0x1b[92m'"'"' + str + '"'"'\0x1b[0m'"'"'; break;
+
+'
 */
 /*
  Copyright (c) 2013, Yahoo! Inc.  All rights reserved.
@@ -11119,14 +11240,16 @@ module.exports = {
         /* istanbul ignore if: untestable in batch mode */
         if (process.stdout.isTTY) {
             switch (clazz) {
-                case 'low' : str = '\033[91m' + str + '\033[0m'; break;
-                case 'medium': str = '\033[93m' + str + '\033[0m'; break;
-                case 'high': str = '\033[92m' + str + '\033[0m'; break;
+                // coverage-hack - Octal escape sequences are not allowed in strict mode.
+                case 'low' : str = '\0x1b[91m' + str + '\0x1b[0m'; break;
+                case 'medium': str = '\0x1b[93m' + str + '\0x1b[0m'; break;
+                case 'high': str = '\0x1b[92m' + str + '\0x1b[0m'; break;
             }
         }
         return str;
     }
 };
+
 
 
 
@@ -11898,6 +12021,101 @@ module.exports = TreeSummarizer;
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
 curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/html.js > /tmp/aa.js
+node -e '
+"use strict";
+var aa;
+aa = require("fs").readFileSync("/tmp/aa.js", "utf8");
+process.argv[1].replace((
+    /^(-[\S\s]*?\n)(\+[\S\s]*?\n)\n/gm
+), function (ignore, match1, match2) {
+    aa = aa.replace(
+        match1.replace((
+            /^-/gm
+        ), ""),
+        match2.replace((
+            /^\+/gm
+        ), "")
+    );
+});
+require("fs").writeFileSync("/tmp/aa.js", aa);
+' '
+-        '"'"'<td class="text"><pre class="prettyprint lang-js">{{#show_code structured}}{{/show_code}}</pre></td>'"'"',
++        // coverage-hack - domOnEventSelectAllWithinPre
++        '"'"'<td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code structured}}{{/show_code}}</pre></td>'"'"',
+
+-        '"'"'   <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>'"'"',
+-        '"'"'   <th data-col="pic" data-type="number" data-fmt="html" data-html="true" class="pic"></th>'"'"',
+-        '"'"'   <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>'"'"',
+-        '"'"'   <th data-col="statements_raw" data-type="number" data-fmt="html" class="abs"></th>'"'"',
+-        '"'"'   <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>'"'"',
+-        '"'"'   <th data-col="branches_raw" data-type="number" data-fmt="html" class="abs"></th>'"'"',
+-        '"'"'   <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>'"'"',
+-        '"'"'   <th data-col="functions_raw" data-type="number" data-fmt="html" class="abs"></th>'"'"',
+-        '"'"'   <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>'"'"',
+-        '"'"'   <th data-col="lines_raw" data-type="number" data-fmt="html" class="abs"></th>'"'"',
++        // coverage-hack - compact summary
++        '"'"'   <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>'"'"',
++        '"'"'   <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>'"'"',
++        '"'"'   <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>'"'"',
++        '"'"'   <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>'"'"',
++        '"'"'   <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>'"'"',
+
+-        '"'"'<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}">{{file}}</a></td>'"'"',
+-        '"'"'<td data-value="{{metrics.statements.pct}}" class="pic {{reportClasses.statements}}">{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</td>'"'"',
+-        '"'"'<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%</td>'"'"',
+-        '"'"'<td data-value="{{metrics.statements.total}}" class="abs {{reportClasses.statements}}">({{metrics.statements.covered}}&nbsp;/&nbsp;{{metrics.statements.total}})</td>'"'"',
+-        '"'"'<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%</td>'"'"',
+-        '"'"'<td data-value="{{metrics.branches.total}}" class="abs {{reportClasses.branches}}">({{metrics.branches.covered}}&nbsp;/&nbsp;{{metrics.branches.total}})</td>'"'"',
+-        '"'"'<td data-value="{{metrics.functions.pct}}" class="pct {{reportClasses.functions}}">{{metrics.functions.pct}}%</td>'"'"',
+-        '"'"'<td data-value="{{metrics.functions.total}}" class="abs {{reportClasses.functions}}">({{metrics.functions.covered}}&nbsp;/&nbsp;{{metrics.functions.total}})</td>'"'"',
+-        '"'"'<td data-value="{{metrics.lines.pct}}" class="pct {{reportClasses.lines}}">{{metrics.lines.pct}}%</td>'"'"',
+-        '"'"'<td data-value="{{metrics.lines.total}}" class="abs {{reportClasses.lines}}">({{metrics.lines.covered}}&nbsp;/&nbsp;{{metrics.lines.total}})</td>'"'"',
++        // coverage-hack - compact summary
++        '"'"'<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>'"'"',
++        '"'"'<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>'"'"',
++        '"'"'<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>'"'"',
++        '"'"'<td data-value="{{metrics.functions.pct}}" class="pct {{reportClasses.functions}}">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>'"'"',
++        '"'"'<td data-value="{{metrics.lines.pct}}" class="pct {{reportClasses.lines}}">{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>'"'"',
+
+-    if (statements >0) { result.push(statements === 1 ? '"'"'1 statement'"'"': statements + '"'"' statements'"'"'); }
+-    if (functions >0) { result.push(functions === 1 ? '"'"'1 function'"'"' : functions + '"'"' functions'"'"'); }
+-    if (branches >0) { result.push(branches === 1 ? '"'"'1 branch'"'"' : branches + '"'"' branches'"'"'); }
+-
+-    return result.join('"'"', '"'"');
++    // coverage-hack - compact summary
++    if (statements >0) { result.push('"'"'statements: '"'"' + statements); }
++    if (branches >0) { result.push('"'"'branches: '"'"' + branches); }
++    if (functions >0) { result.push('"'"'functions: '"'"' + functions); }
++
++    return result.join('"'"'<br>'"'"');
+
+-handlebars.registerHelper('"'"'show_lines'"'"', function (opts) {
+-    var maxLines = Number(opts.fn(this)),
+-        i,
+-        array = [];
+-
+-    for (i = 0; i < maxLines; i += 1) {
+-        array[i] = i + 1;
+-    }
+-    return array.join('"'"'\n'"'"');
+-});
++// coverage-hack - hashtag lineno
++handlebars.registerHelper('"'"'show_lines'"'"', function (opts) {
++    var maxLines = Number(opts.fn(this)),
++        i,
++        array = "";
++
++    for (i = 1; i <= maxLines; i += 1) {
++        array += '"'"'<a href="#L'"'"' + i + '"'"'" id="L'"'"' + i + '"'"'">'"'"' + i + '"'"'</a>\n'"'"';
++    }
++    return array;
++});
+
+-    this.opts.templateData = { datetime: Date() };
++    // coverage-hack - new Date() bugfix
++    this.opts.templateData = { datetime: new Date().toGMTString() };
+
+'
 */
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
@@ -11925,7 +12143,8 @@ var handlebars = require('handlebars'),
         '<tr>',
         '<td class="line-count">{{#show_lines}}{{maxLines}}{{/show_lines}}</td>',
         '<td class="line-coverage">{{#show_line_execution_counts fileCoverage}}{{maxLines}}{{/show_line_execution_counts}}</td>',
-        '<td class="text"><pre class="prettyprint lang-js">{{#show_code structured}}{{/show_code}}</pre></td>',
+        // coverage-hack - domOnEventSelectAllWithinPre
+        '<td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code structured}}{{/show_code}}</pre></td>',
         '</tr>\n'
     ].join('')),
     summaryTableHeader = [
@@ -11933,32 +12152,24 @@ var handlebars = require('handlebars'),
         '<table>',
         '<thead>',
         '<tr>',
+        // coverage-hack - compact summary
         '   <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>',
-        '   <th data-col="pic" data-type="number" data-fmt="html" data-html="true" class="pic"></th>',
         '   <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>',
-        '   <th data-col="statements_raw" data-type="number" data-fmt="html" class="abs"></th>',
         '   <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>',
-        '   <th data-col="branches_raw" data-type="number" data-fmt="html" class="abs"></th>',
         '   <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>',
-        '   <th data-col="functions_raw" data-type="number" data-fmt="html" class="abs"></th>',
         '   <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>',
-        '   <th data-col="lines_raw" data-type="number" data-fmt="html" class="abs"></th>',
         '</tr>',
         '</thead>',
         '<tbody>'
     ].join('\n'),
     summaryLineTemplate = handlebars.compile([
         '<tr>',
-        '<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}">{{file}}</a></td>',
-        '<td data-value="{{metrics.statements.pct}}" class="pic {{reportClasses.statements}}">{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</td>',
-        '<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%</td>',
-        '<td data-value="{{metrics.statements.total}}" class="abs {{reportClasses.statements}}">({{metrics.statements.covered}}&nbsp;/&nbsp;{{metrics.statements.total}})</td>',
-        '<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%</td>',
-        '<td data-value="{{metrics.branches.total}}" class="abs {{reportClasses.branches}}">({{metrics.branches.covered}}&nbsp;/&nbsp;{{metrics.branches.total}})</td>',
-        '<td data-value="{{metrics.functions.pct}}" class="pct {{reportClasses.functions}}">{{metrics.functions.pct}}%</td>',
-        '<td data-value="{{metrics.functions.total}}" class="abs {{reportClasses.functions}}">({{metrics.functions.covered}}&nbsp;/&nbsp;{{metrics.functions.total}})</td>',
-        '<td data-value="{{metrics.lines.pct}}" class="pct {{reportClasses.lines}}">{{metrics.lines.pct}}%</td>',
-        '<td data-value="{{metrics.lines.total}}" class="abs {{reportClasses.lines}}">({{metrics.lines.covered}}&nbsp;/&nbsp;{{metrics.lines.total}})</td>',
+        // coverage-hack - compact summary
+        '<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>',
+        '<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>',
+        '<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>',
+        '<td data-value="{{metrics.functions.pct}}" class="pct {{reportClasses.functions}}">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>',
+        '<td data-value="{{metrics.lines.pct}}" class="pct {{reportClasses.lines}}">{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>',
         '</tr>\n'
     ].join('\n\t')),
     summaryTableFooter = [
@@ -12002,22 +12213,24 @@ handlebars.registerHelper('show_ignores', function (metrics) {
     }
 
     result = [];
-    if (statements >0) { result.push(statements === 1 ? '1 statement': statements + ' statements'); }
-    if (functions >0) { result.push(functions === 1 ? '1 function' : functions + ' functions'); }
-    if (branches >0) { result.push(branches === 1 ? '1 branch' : branches + ' branches'); }
+    // coverage-hack - compact summary
+    if (statements >0) { result.push('statements: ' + statements); }
+    if (branches >0) { result.push('branches: ' + branches); }
+    if (functions >0) { result.push('functions: ' + functions); }
 
-    return result.join(', ');
+    return result.join('<br>');
 });
 
+// coverage-hack - hashtag lineno
 handlebars.registerHelper('show_lines', function (opts) {
     var maxLines = Number(opts.fn(this)),
         i,
-        array = [];
+        array = "";
 
-    for (i = 0; i < maxLines; i += 1) {
-        array[i] = i + 1;
+    for (i = 1; i <= maxLines; i += 1) {
+        array += '<a href="#L' + i + '" id="L' + i + '">' + i + '</a>\n';
     }
-    return array.join('\n');
+    return array;
 });
 
 handlebars.registerHelper('show_line_execution_counts', function (context, opts) {
@@ -12229,7 +12442,8 @@ function HtmlReport(opts) {
     this.opts.sourceStore = this.opts.sourceStore || Store.create('fslookup');
     this.opts.linkMapper = this.opts.linkMapper || this.standardLinkMapper();
     this.opts.writer = this.opts.writer || null;
-    this.opts.templateData = { datetime: Date() };
+    // coverage-hack - new Date() bugfix
+    this.opts.templateData = { datetime: new Date().toGMTString() };
     this.opts.watermarks = this.opts.watermarks || defaults.watermarks();
 }
 
@@ -12436,6 +12650,7 @@ Report.mix(HtmlReport, {
 });
 
 module.exports = HtmlReport;
+
 
 
 

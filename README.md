@@ -73,6 +73,8 @@ this zero-dependency package will provide a collection of high-level functions t
 
 #### changelog 2019.8.2
 - npm publish 2019.8.2
+- csslint - unminify csslint v1.0.5
+- istanbul - unminify files and upgrade to estravers.js v4.2.0
 - jslint - refactor files to 80 chr column-limit
 - csslint - reset sorted-line with \n\n instead of macro /* validateLineSortedReset */
 - add env var \$npm_config_mode_inspect, \$npm_config_mode_winpty
