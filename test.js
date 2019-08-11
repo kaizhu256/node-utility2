@@ -1070,8 +1070,10 @@ local.testCase_buildReadme_default = function (opt, onError) {
     }
     opt = {};
     // test shNpmTestPublished handling-behavior
-    opt.dataFrom = local.fs.readFileSync("README.md", "utf8")
-    .replace("#\u0021! shNpmTestPublished", "shNpmTestPublished");
+    opt.dataFrom = local.fs.readFileSync("README.md", "utf8").replace(
+        "#\u0021! shNpmTestPublished",
+        "shNpmTestPublished"
+    );
     opt = {};
     opt.customize = function () {
         // search-and-replace - customize dataTo

@@ -60,31 +60,17 @@ this zero-dependency package will provide a collection of high-level functions t
 - rename var value to val
 - replace uglifyjs-lite with terser-lite (v2.8.29)
 - jslint - remove bad_property_a and unexpected_a hacks
-- jslint - allow space after semi-colon in jslint-macro
 - jslint - fix lineOffset issue with ignored-lines
-- jslint - jslintUtility2 with ignore-region blank
 - jslint - sort nested switch-statements
 - jslint-autofix - move inner-loop to outer
 - add default testCase _testCase_cliRun_help
 - merge class _http.IncomingMessage -> _http.ServerResponse
 - integrate db-lite and github-crud into a cloud-based db on github
-- add server stress-test using electron
+- add server stress-test using puppeteer
 - none
 
-#### changelog 2019.8.2
-- npm publish 2019.8.2
-- csslint - unminify csslint v1.0.5
-- istanbul - unminify files and upgrade to estravers.js v4.2.0
-- jslint - refactor files to 80 chr column-limit
-- csslint - reset sorted-line with \n\n instead of macro /* validateLineSortedReset */
-- add env var \$npm_config_mode_inspect, \$npm_config_mode_winpty
-- disable travis-ci cache
-- rename function local.domElementRender to local.domFragmentRender
-- rename var request to req, response to res, local.errorDefault to local.errDefault, error to err, option to opt, event to evt, nextMiddleware to next
-- jslint-autofix - split ([aa, bb]) into multiple-lines
-- add partial support for git-for-windows/MINGW env
-- update to jslint commit ea8401c6a72e21d66f49766af692b09e81d7a79f
-- csslint - validateLineSortedReset @media
+#### changelog 2019.8.11
+- npm publish 2019.8.11
 - none
 
 #### this package requires
@@ -463,7 +449,7 @@ local.testRunBrowser = function (evt) {
         document.querySelector(
             "#outputJslintPre1"
         ).textContent = (
-            local.jslint.jslintResult.errorText
+            local.jslint.jslintResult.errText
         ).replace((
             /\u001b\[\d*m/g
         ), "").trim();
@@ -1191,7 +1177,17 @@ local.http.createServer(function (req, res) {
         "test": "sh ./npm_scripts.sh",
         "utility2": "sh ./npm_scripts.sh"
     },
-    "version": "2019.8.2"
+    "utility2Dependents": [
+        "2018.09.29 apidoc-lite",
+        "2018.12.30 db-lite",
+        "2019.01.21 github-crud",
+        "2019.01.30 bootstrap-lite",
+        "2019.02.20 swgg",
+        "2019.08.09 istanbul-lite",
+        "2019.08.10 jslint-lite",
+        "2019.08.01 utility2"
+    ],
+    "version": "2019.8.11"
 }
 ```
 
@@ -1365,7 +1361,9 @@ shBuildCiAfter () {(set -e
         return
     fi
     # docker build
-    docker build -f "tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" .
+    docker build \
+        -f "tmp/README.Dockerfile.$DOCKER_TAG" \
+        -t "$GITHUB_REPO:$DOCKER_TAG" .
     # docker test
     case "$CI_BRANCH" in
     docker.base)

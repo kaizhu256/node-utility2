@@ -5194,8 +5194,8 @@ local.swaggerValidateFile = function (opt, onError) {
             // jslint
             local.jslint.jslintAndPrint(data, opt.file);
             local.assertThrow(
-                !local.jslint.jslintResult.errorText,
-                local.jslint.jslintResult.errorText.replace((
+                !local.jslint.jslintResult.errText,
+                local.jslint.jslintResult.errText.replace((
                     /\u001b\[\d*m/g
                 ), "")
             );

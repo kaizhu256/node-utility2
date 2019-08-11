@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2019.8.2)
+ * lib.utility2.js (2019.8.11)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide a collection of high-level functions to to build, test, and deploy webapps
  *
@@ -3594,8 +3594,8 @@ local.buildApp = function (opt, onError) {
             });
             // validate no err occurred
             local.assertThrow(
-                !local.jslint.jslintResult.errorText,
-                local.jslint.jslintResult.errorText
+                !local.jslint.jslintResult.errText,
+                local.jslint.jslintResult.errText
             );
             local.fsWriteFileWithMkdirpSync(
                 "tmp/build/app" + option2.file,

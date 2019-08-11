@@ -47,5 +47,15 @@
         "test": "sh ./npm_scripts.sh",
         "utility2": "sh ./npm_scripts.sh"
     },
-    "version": "2019.8.2"
+    "utility2Dependents": [
+        "2018.09.29 apidoc-lite",
+        "2018.12.30 db-lite",
+        "2019.01.21 github-crud",
+        "2019.01.30 bootstrap-lite",
+        "2019.02.20 swgg",
+        "2019.08.09 istanbul-lite",
+        "2019.08.10 jslint-lite",
+        "2019.08.01 utility2"
+    ],
+    "version": "2019.8.11"
 }

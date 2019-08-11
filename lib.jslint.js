@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.jslint.js (2019.8.9)
+ * lib.jslint.js (2019.8.10)
  * https://github.com/kaizhu256/node-jslint-lite
  * this zero-dependency package will provide browser-compatible versions of jslint (v2018.10.26) and csslint (v1.0.5), with a working web-demo
  *
@@ -16474,7 +16474,7 @@ local.jslintAndPrint = function (code, file, opt) {
     case 1:
         // cleanup
         opt.errList = [];
-        opt.errorText = "";
+        opt.errText = "";
         switch (opt.fileType0) {
         // deembed-js - '\\n\\\n...\\n\\\n'
         case ".\\n\\":
@@ -16685,11 +16685,10 @@ local.jslintAndPrint = function (code, file, opt) {
             return warning && warning.message;
         // print only first 10 warnings
         }).slice(0, 10).forEach(function (err, ii) {
-            opt.errorText = (
-                opt.errorText
-                || " \u001b[1mjslint " + file + "\u001b[22m\n"
+            opt.errText = (
+                opt.errText || " \u001b[1mjslint " + file + "\u001b[22m\n"
             );
-            opt.errorText += (
+            opt.errText += (
                 ("  " + String(ii + 1)).slice(-3)
                 + " \u001b[31m" + err.message + "\u001b[39m"
                 + " \u001b[90m\/\/ line " + err.line + ", column "
@@ -16700,17 +16699,17 @@ local.jslintAndPrint = function (code, file, opt) {
             if (!ii && err.stack && err.a !== "debug\u0049nline") {
                 tmp = err.stack;
                 err.stack = null;
-                opt.errorText += (
+                opt.errText += (
                     JSON.stringify(err, null, 4) + "\n" + tmp.trim() + "\n"
                 );
             }
         });
-        opt.errorText = opt.errorText.trim();
-        if (opt.errorText) {
+        opt.errText = opt.errText.trim();
+        if (opt.errText) {
             // debug jslintResult
             local._debugJslintResult = local.jslintResult;
             // print err to stderr
-            console.error(opt.errorText);
+            console.error(opt.errText);
         }
         return code;
     }
@@ -17334,37 +17333,35 @@ local.jslintUtility2 = function (code, ignore, opt) {
             case ">":
                 return "\u0003" + match0;
             case "}":
-                return "";
+                return match0;
             default:
                 return "\u0000" + match0;
             }
         });
         code2.replace((
-            /\n\n|\u0000@|^(?:\S.*?\n)+/gm
+            /\n{2,}|^\u0000@|^\}\n\}|\}|^(?:\S.*?\n)+/gm
         ), function (match0, ii) {
-            err = null;
-            switch (match0[1]) {
-            case "\n":
-            case "@":
+            switch (match0.slice(0, 2)) {
+            case "\n\n":
+            case "\u0000@":
+            case "}\n":
                 previous = "";
-                break;
-            default:
-                match0 = match0.trim();
-                if (!(previous < match0)) {
-                    err = {
-                        message: (
-                            "lines not sorted\n" + previous + "\n" + match0
-                        )
-                    };
-                } else if (
-                    match0.split("\n").sort().join("\n") !== match0
-                ) {
-                    err = {
-                        message: "lines not sorted\n" + match0
-                    };
-                }
-                previous = match0;
+                return;
+            case "}":
+                return;
             }
+            match0 = match0.trim();
+            err = (
+                !(previous < match0)
+                ? {
+                    message: "lines not sorted\n" + previous + "\n" + match0
+                }
+                : match0.split("\n").sort().join("\n") !== match0
+                ? {
+                    message: "lines not sorted\n" + match0
+                }
+                : null
+            );
             if (err) {
                 Object.assign(err, local.jslintGetColumnLine(code2, ii));
                 opt.errList.push({
@@ -17376,6 +17373,7 @@ local.jslintUtility2 = function (code, ignore, opt) {
                     ), "")
                 });
             }
+            previous = match0;
         });
         break;
     // jslintUtility2 - .html
