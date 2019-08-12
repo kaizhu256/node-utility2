@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2019.8.11)
+ * lib.utility2.js (2019.8.12)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide a collection of high-level functions to to build, test, and deploy webapps
  *
@@ -1230,14 +1230,14 @@ PORT=8081 node ./assets.app.js\n\
         "url": "https://github.com/kaizhu256/node-my-app-lite.git"\n\
     },\n\
     "scripts": {\n\
-        "build-ci": "sh ./npm_scripts.sh",\n\
+        "build-ci": "./npm_scripts.sh",\n\
         "env": "env",\n\
-        "eval": "sh ./npm_scripts.sh",\n\
-        "heroku-postbuild": "sh ./npm_scripts.sh",\n\
-        "postinstall": "sh ./npm_scripts.sh",\n\
-        "start": "sh ./npm_scripts.sh",\n\
-        "test": "sh ./npm_scripts.sh",\n\
-        "utility2": "sh ./npm_scripts.sh"\n\
+        "eval": "./npm_scripts.sh",\n\
+        "heroku-postbuild": "./npm_scripts.sh",\n\
+        "postinstall": "./npm_scripts.sh",\n\
+        "start": "./npm_scripts.sh",\n\
+        "test": "./npm_scripts.sh",\n\
+        "utility2": "./npm_scripts.sh"\n\
     },\n\
     "version": "0.0.1"\n\
 }\n\
@@ -3742,14 +3742,14 @@ local.buildReadme = function (opt, onError) {
         delete opt.packageJson.devDependencies[opt.packageJson.name];
         // reset scripts
         opt.packageJson.scripts = {
-            "build-ci": "sh ./npm_scripts.sh",
+            "build-ci": "./npm_scripts.sh",
             env: "env",
-            eval: "sh ./npm_scripts.sh",
-            "heroku-postbuild": "sh ./npm_scripts.sh",
-            postinstall: "sh ./npm_scripts.sh",
-            start: "sh ./npm_scripts.sh",
-            test: "sh ./npm_scripts.sh",
-            utility2: "sh ./npm_scripts.sh"
+            eval: "./npm_scripts.sh",
+            "heroku-postbuild": "./npm_scripts.sh",
+            postinstall: "./npm_scripts.sh",
+            start: "./npm_scripts.sh",
+            test: "./npm_scripts.sh",
+            utility2: "./npm_scripts.sh"
         };
         // save package.json
         local.fsWriteFileWithMkdirpSync(

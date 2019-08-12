@@ -169,6 +169,85 @@ shBaseInstallLinode () {(set -e
     fi
 )}
 
+shBrowserScreenshot () {(set -e
+# this function will run headless-chromium to screenshot url "$1"
+    node -e '
+/* jslint utility2:true */
+(function () {
+"use strict";
+var opt;
+opt = {};
+opt.argv = process.argv;
+opt.cwd = process.cwd();
+opt.timeStart = Date.now();
+opt.url = opt.argv[1];
+if (!(
+    /^\w+?:/
+).test(opt.url)) {
+    opt.url = require("path").resolve(opt.url);
+}
+opt.file = require("url").parse(opt.url).pathname;
+if (opt.file.indexOf(opt.cwd) === 0) {
+    opt.file = opt.file.replace(opt.cwd, "");
+}
+opt.file = (
+    process.env.npm_config_dir_build
+    + "/screenshot."
+    + process.env.MODE_BUILD + ".browser."
+    + encodeURIComponent(opt.file.replace(
+        "/build.." + process.env.CI_BRANCH + ".." + process.env.CI_HOST,
+        "/build"
+    ))
+    + ".png"
+);
+opt.argList = [
+    "--disable-gpu",
+    "--headless",
+    "--screenshot",
+    "--timeout=30000",
+    "--window-size=1024,768",
+    //!! "--gl-composited-overlay-candidate-quad-border",
+    //!! "--show-composited-layer-borders",
+    //!! "--show-mac-overlay-borders",
+    //!! "--show-paint-rects",
+    //!! "--ui-show-composited-layer-borders",
+    "-screenshot=" + opt.file,
+    opt.url
+];
+opt.command = process.env.CHROME_BIN;
+if (opt.argv[2] === "--debug") {
+    console.error(JSON.stringify(opt, null, 4));
+}
+process.on("exit", function (exitCode) {
+    if (typeof exitCode === "object" && exitCode) {
+        console.error(exitCode);
+        exitCode = 1;
+    }
+    console.error(
+        "\nshBrowserScreenshot"
+        + " - " + (Date.now() - opt.timeStart) + " ms"
+        + " - exitCode " + exitCode
+        + " - " + opt.url
+        + "\n"
+    );
+});
+process.on("uncaughtException", process.exit);
+require("child_process").spawn(opt.command, opt.argList, {
+    stdio: [
+        "ignore", 1, 2
+    ]
+});
+require("child_process").spawn(opt.command, opt.argList.concat("--dump-dom"), {
+    stdio: [
+        "ignore", "pipe", 2
+    ]
+}).stdout.pipe(require("fs").createWriteStream(opt.file.replace((
+    /\.png$/
+), ".html")));
+}());
+' "$1" "$2"
+)}
+
 shBrowserTest () {(set -e
 # this function will spawn an electron process to test given url $LIST,
 # and merge the test-report into the existing test-report
@@ -609,21 +688,20 @@ shBuildCiInternal () {(set -e
 
 
     # screenshot coverage
-    FILE="$(find "$npm_config_dir_build" -name *.js.html 2>/dev/null | tail -n 1)"
+    FILE="$(find "$npm_config_dir_build" -name *.js.html 2>/dev/null \
+        | tail -n 1)"
     if [ -f "$FILE" ]
     then
         cp "$FILE" "$npm_config_dir_build/coverage.lib.html"
     fi
-    # bug-workaround - travis-ci cannot run node in certain subprocesses
-    LIST=""
     for FILE in apidoc.html coverage.lib.html test-report.html
     do
-        if [ -f "$npm_config_dir_build/$FILE" ]
+        FILE="$npm_config_dir_build/$FILE"
+        if [ -f "$FILE" ]
         then
-            LIST="$LIST,$npm_config_dir_build/$FILE"
+            MODE_BUILD=buildCi shBrowserScreenshot "file://$FILE" &
         fi
     done
-    MODE_BUILD=buildCi shBrowserTest "$LIST" screenshot
 
 
 
@@ -654,7 +732,8 @@ shBuildCiInternal () {(set -e
     shGitInfo | head -n 4096 || true
     # validate http-links embedded in README.md
     if [ ! "$npm_package_private" ] &&
-        ! (printf "$CI_COMMIT_MESSAGE_META" | grep -q -E "^npm publishAfterCommitAfterBuild")
+        ! (printf "$CI_COMMIT_MESSAGE_META" \
+            | grep -q -E "^npm publishAfterCommitAfterBuild")
     then
         shSleep 60
         shReadmeLinkValidate
@@ -706,6 +785,22 @@ shBuildGithubUpload () {(set -e
 
 shBuildInit () {
 # this function will init the env
+    # init $CHROME_BIN
+    CHROME_BIN="${CHROME_BIN:-$(which chromium-browser 2>/dev/null)}" || true
+    CHROME_BIN="${CHROME_BIN:-$(which google-chrome-stable 2>/dev/null)}" \
+        || true
+    local FILE
+    for FILE in \
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+        "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" \
+        "C:\Program Files\Google\Chrome\Application\chrome.exe"
+    do
+        if [ ! "$CHROME_BIN" ] && [ -f "$FILE" ]
+        then
+            CHROME_BIN="$FILE"
+        fi
+    done
+    export CHROME_BIN
     # init $CI_BRANCH
     export CI_BRANCH="${CI_BRANCH:-$TRAVIS_BRANCH}"
     export CI_BRANCH="${CI_BRANCH:-alpha}"
@@ -723,7 +818,8 @@ shBuildInit () {
 $(shModuleDirname electron-lite)}" || return "$?"
         export npm_config_dir_electron="${npm_config_dir_electron:-\
 $HOME/node_modules/electron-lite}" || return "$?"
-        export PATH="$PATH:$npm_config_dir_electron:$npm_config_dir_electron/../.bin" || return "$?"
+        export PATH="$PATH\
+:$npm_config_dir_electron:$npm_config_dir_electron/../.bin" || return "$?"
     fi
     # init $npm_config_dir_utility2
     if [ ! "$npm_config_dir_utility2" ]
@@ -739,7 +835,8 @@ $HOME/node_modules/electron-lite}" || return "$?"
 $(shModuleDirname utility2)}" || return "$?"
         export npm_config_dir_utility2="${npm_config_dir_utility2:-\
 $HOME/node_modules/utility2}" || return "$?"
-        export PATH="$PATH:$npm_config_dir_utility2:$npm_config_dir_utility2/../.bin" || return "$?"
+        export PATH="$PATH\
+:$npm_config_dir_utility2:$npm_config_dir_utility2/../.bin" || return "$?"
     fi
     # init $npm_package_*
     if [ -f package.json ]
@@ -872,7 +969,7 @@ shBuildInsideDocker () {(set -e
 
 shBuildPrint () {(set -e
 # this function will print debug info about the build state
-    printf '%b' "\n\033[35m[MODE_BUILD=$MODE_BUILD]\033[0m - $(shDateIso) - $*\n\n" 1>&2
+    printf '%b' "\n\x1b[35m[MODE_BUILD=$MODE_BUILD]\x1b[0m - $(shDateIso) - $*\n\n" 1>&2
 )}
 
 shChromeSocks5 () {(set -e
@@ -1081,7 +1178,7 @@ shDeployGithub () {(set -e
     export TEST_URL="https://$(printf "$GITHUB_REPO" \
         | sed -e "s/\//.github.io\//")/build..$CI_BRANCH..travis-ci.org/app"
     shBuildPrint "deployed to $TEST_URL"
-    # verify deployed app's main-page returns status-code < 400
+    # verify deployed app''s main-page returns status-code < 400
     shSleep 15
     if [ "$(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL")" -lt 400 ]
     then
@@ -1091,10 +1188,11 @@ shDeployGithub () {(set -e
         return 1
     fi
     # screenshot deployed app
-    shBrowserTest "$TEST_URL,$TEST_URL/assets.swgg.html" screenshot
+    shBrowserScreenshot "$TEST_URL" &
+    shBrowserScreenshot "$TEST_URL/assets.swgg.html" &
     # test deployed app
-    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" \
-        test
+    MODE_BUILD="${MODE_BUILD}Test" \
+        shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" test
 )}
 
 shDeployHeroku () {(set -e
@@ -1115,7 +1213,7 @@ shDeployHeroku () {(set -e
     export MODE_BUILD=deployHeroku
     export TEST_URL="https://$npm_package_nameHeroku-$CI_BRANCH.herokuapp.com"
     shBuildPrint "deployed to $TEST_URL"
-    # verify deployed app's main-page returns status-code < 400
+    # verify deployed app''s main-page returns status-code < 400
     shSleep 15
     if [ "$(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL")" -lt 400 ]
     then
@@ -1125,10 +1223,11 @@ shDeployHeroku () {(set -e
         return 1
     fi
     # screenshot deployed app
-    shBrowserTest "$TEST_URL,$TEST_URL/assets.swgg.html" screenshot
+    shBrowserScreenshot "$TEST_URL" &
+    shBrowserScreenshot "$TEST_URL/assets.swgg.html" &
     # test deployed app
-    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" \
-        test
+    MODE_BUILD="${MODE_BUILD}Test" \
+        shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" test
 )}
 
 shDiffRaw () {(set -e
@@ -1927,7 +2026,7 @@ local.ajax({
 )}
 
 shGithubRepoDescriptionUpdate () {(set -e
-# this function will update the github-repo's description
+# this function will update the github-repo''s description
     shSleep 5
     GITHUB_REPO="$1"
     DESCRIPTION="$2"
@@ -2746,10 +2845,7 @@ shReadmeTest () {(set -e
     export PORT="${PORT:-8081}"
     export npm_config_timeout_exit="${npm_config_timeout_exit:-30000}"
     # screenshot
-    (
-    shSleep 15
-    shBrowserTest "http://127.0.0.1:$PORT" screenshot
-    ) &
+    (shSleep 15 && shBrowserScreenshot "http://127.0.0.1:$PORT") &
     shBuildPrint "testing $FILE ..."
     case "$FILE" in
     example.js)
@@ -3388,6 +3484,10 @@ shUtility2DependentsSync () {(set -e
     cd "$HOME/Documents/utility2" && shBuildApp
     cd "$HOME/Documents"
     ln -f "utility2/lib.utility2.sh" "$HOME"
+    if [ -d "$HOME/bin" ]
+    then
+        ln -f "utility2/lib.utility2.sh" "$HOME/bin/utility2"
+    fi
     for DIR in $UTILITY2_DEPENDENTS $(ls -d swgg-* 2>/dev/null)
     do
         if [ "$DIR" = utility2 ] || [ ! -d "$DIR" ]
@@ -3414,7 +3514,8 @@ shUtility2DependentsSync () {(set -e
         # hardlink assets.utility2.rollup.js
         if [ -f "assets.utility2.rollup.js" ]
         then
-            ln -f "$HOME/Documents/utility2/tmp/build/app/assets.utility2.rollup.js" .
+            ln -f "$HOME\
+/Documents/utility2/tmp/build/app/assets.utility2.rollup.js" .
         fi
         cd ..
     done
@@ -4216,6 +4317,49 @@ local.bufferValidateAndCoerce = function (bff, mode) {
         Object.setPrototypeOf(bff, Buffer.prototype);
     }
     return bff;
+};
+
+local.childProcessSpawnWithTimeout = function (command, args, opt) {
+/*
+ * this function will run like child_process.spawn,
+ * but with auto-timeout after timeout milliseconds
+ * example usage:
+    var child = local.childProcessSpawnWithTimeout(
+        "/bin/sh",
+        ["-c", "echo hello world"],
+        {stdio: ["ignore", 1, 2], timeout: 5000}
+    );
+    child.on("error", console.error);
+    child.on("exit", function (exitCode) {
+        console.error("exitCode " + exitCode);
+    });
+ */
+    var child;
+    var child_process;
+    var timerTimeout;
+    child_process = require("child_process");
+    // spawn child
+    child = child_process.spawn(command, args, opt).on("exit", function () {
+        // cleanup timerTimeout
+        try {
+            process.kill(timerTimeout.pid);
+        } catch (ignore) {}
+    });
+    // init timerTimeout
+    timerTimeout = child_process.spawn(
+        // convert timeout to integer seconds with 2 second delay
+        "sleep "
+        + Math.floor(
+            0.001 * (Number(opt && opt.timeout) || local.timeoutDefault)
+            + 2
+        )
+        + "; kill -9 " + child.pid + " 2>/dev/null",
+        {
+            shell: true,
+            stdio: "ignore"
+        }
+    );
+    return child;
 };
 
 local.childProcessSpawnWithUtility2 = function (script, onError) {

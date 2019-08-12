@@ -56,6 +56,7 @@ this zero-dependency package will provide a collection of high-level functions t
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- migrate browser-testing from electron to headless-chromium
 - audit `{}` may have been `[]`
 - rename var value to val
 - replace uglifyjs-lite with terser-lite (v2.8.29)
@@ -69,8 +70,10 @@ this zero-dependency package will provide a collection of high-level functions t
 - add server stress-test using puppeteer
 - none
 
-#### changelog 2019.8.11
-- npm publish 2019.8.11
+#### changelog 2019.8.12
+- npm publish 2019.8.12
+- shorten name event to evt
+- build-ci - use headless-chromium for screenshot-automation with shell-function shScreenCapture
 - none
 
 #### this package requires
@@ -1168,14 +1171,14 @@ local.http.createServer(function (req, res) {
         "url": "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
-        "build-ci": "sh ./npm_scripts.sh",
+        "build-ci": "./npm_scripts.sh",
         "env": "env",
-        "eval": "sh ./npm_scripts.sh",
-        "heroku-postbuild": "sh ./npm_scripts.sh",
-        "postinstall": "sh ./npm_scripts.sh",
-        "start": "sh ./npm_scripts.sh",
-        "test": "sh ./npm_scripts.sh",
-        "utility2": "sh ./npm_scripts.sh"
+        "eval": "./npm_scripts.sh",
+        "heroku-postbuild": "./npm_scripts.sh",
+        "postinstall": "./npm_scripts.sh",
+        "start": "./npm_scripts.sh",
+        "test": "./npm_scripts.sh",
+        "utility2": "./npm_scripts.sh"
     },
     "utility2Dependents": [
         "2018.09.29 apidoc-lite",
@@ -1187,7 +1190,7 @@ local.http.createServer(function (req, res) {
         "2019.08.10 jslint-lite",
         "2019.08.01 utility2"
     ],
-    "version": "2019.8.11"
+    "version": "2019.8.12"
 }
 ```
 
@@ -1394,10 +1397,10 @@ shBuildCiBefore () {(set -e
     shNpmTestPublished
     shReadmeTest example.js
     # screenshot
-    MODE_BUILD=testExampleJs shBrowserTest \
-/tmp/app/tmp/build/coverage.html/app/example.js.html,\
-/tmp/app/tmp/build/test-report.html \
-        screenshot
+    MODE_BUILD=testExampleJs shBrowserScreenshot \
+        file:///tmp/app/tmp/build/coverage.html/app/example.js.html
+    MODE_BUILD=testExampleJs shBrowserScreenshot \
+        file:///tmp/app/tmp/build/test-report.html
 )}
 
 # run shBuildCi

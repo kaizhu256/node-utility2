@@ -38,14 +38,14 @@
         "url": "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
-        "build-ci": "sh ./npm_scripts.sh",
+        "build-ci": "./npm_scripts.sh",
         "env": "env",
-        "eval": "sh ./npm_scripts.sh",
-        "heroku-postbuild": "sh ./npm_scripts.sh",
-        "postinstall": "sh ./npm_scripts.sh",
-        "start": "sh ./npm_scripts.sh",
-        "test": "sh ./npm_scripts.sh",
-        "utility2": "sh ./npm_scripts.sh"
+        "eval": "./npm_scripts.sh",
+        "heroku-postbuild": "./npm_scripts.sh",
+        "postinstall": "./npm_scripts.sh",
+        "start": "./npm_scripts.sh",
+        "test": "./npm_scripts.sh",
+        "utility2": "./npm_scripts.sh"
     },
     "utility2Dependents": [
         "2018.09.29 apidoc-lite",
@@ -57,5 +57,5 @@
         "2019.08.10 jslint-lite",
         "2019.08.01 utility2"
     ],
-    "version": "2019.8.11"
+    "version": "2019.8.12"
 }

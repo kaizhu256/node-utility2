@@ -5268,17 +5268,17 @@ local.throwSwaggerError = function (opt) {
     throw err;
 };
 
-local.uiEventDelegate = function (event) {
-    // filter non-input keyup-event
-    event.targetOnEvent = event.target.closest(
+local.uiEventDelegate = function (evt) {
+    // filter non-input keyup-evt
+    evt.targetOnEvent = evt.target.closest(
         "[data-onevent]"
     );
-    if (!event.targetOnEvent) {
+    if (!evt.targetOnEvent) {
         return;
     }
     // rate-limit keyup
-    if (event.type === "keyup") {
-        local.uiEventDelegateKeyupEvent = event;
+    if (evt.type === "keyup") {
+        local.uiEventDelegateKeyupEvent = evt;
         if (local.uiEventDelegateKeyupTimerTimeout !== 2) {
             local.uiEventDelegateKeyupTimerTimeout = (
                 local.uiEventDelegateKeyupTimerTimeout
@@ -5290,20 +5290,20 @@ local.uiEventDelegate = function (event) {
             return;
         }
         local.uiEventDelegateKeyupTimerTimeout = null;
-        if (!event.target.closest(
+        if (!evt.target.closest(
             "input, option, select, textarea"
         )) {
             return;
         }
     }
-    switch (event.targetOnEvent.tagName) {
+    switch (evt.targetOnEvent.tagName) {
     case "BUTTON":
     case "FORM":
-        event.preventDefault();
+        evt.preventDefault();
         break;
     }
-    event.stopPropagation();
-    local.uiEventListenerDict[event.targetOnEvent.dataset.onevent](event);
+    evt.stopPropagation();
+    local.uiEventListenerDict[evt.targetOnEvent.dataset.onevent](evt);
 };
 
 local.uiEventListenerDict = local.objectAssignDefault(
@@ -5737,12 +5737,13 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
         switch (opt.modeNext) {
         case 1:
             if (
-                event
-                && event.targetOnEvent
-                && !event.targetOnEvent.classList.contains(
+                opt
+                && opt.targetOnEvent
+                && opt.targetOnEvent.classList
+                && !opt.targetOnEvent.classList.contains(
                     "eventDelegate"
-                    + event.type[0].toUpperCase()
-                    + event.type.slice(1)
+                    + opt.type[0].toUpperCase()
+                    + opt.type.slice(1)
                 )
             ) {
                 return;
@@ -5781,7 +5782,7 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
                     local.apiKeyValue
                 );
             }
-            // if keyup-event is not return-key, then return
+            // if keyup-evt is not return-key, then return
             if (
                 (opt.type === "keyup" && opt.code !== "Enter")
                 // do not reload ui during test
@@ -5881,7 +5882,7 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
         opt.onNext();
         return;
     }
-    // optimization - render .resourceList in separate event-loop
+    // optimization - render .resourceList in separate evt-loop
     // reset state
     local.idDomElementDict = {};
     local.objectSetDefault(swaggerJson, {
@@ -6005,7 +6006,7 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
             });
         }
     });
-    // init event-handling
+    // init evt-handling
     [
         "Change", "Click", "Keyup", "Submit"
     ].forEach(function (eventType) {
