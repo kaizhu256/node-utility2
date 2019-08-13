@@ -72,6 +72,7 @@ this zero-dependency package will provide a collection of high-level functions t
 
 #### changelog 2019.8.12
 - npm publish 2019.8.12
+- istanbul - upgrade to esprima v4.0.1
 - shorten name event to evt
 - build-ci - use headless-chromium for screenshot-automation with shell-function shScreenCapture
 - none
