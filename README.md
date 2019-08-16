@@ -72,6 +72,8 @@ this zero-dependency package will provide a collection of high-level functions t
 
 #### changelog 2019.8.12
 - npm publish 2019.8.12
+- istanbul - add env-var-state \$npm_config_mode_coverage="node_modules"
+- istanbul - switch parser from esprima to acorn v6.3.0
 - istanbul - upgrade to escodegen v1.12.0
 - istanbul - upgrade to estools/lib/code.js v2.0.1
 - istanbul - upgrade to esprima v4.0.1

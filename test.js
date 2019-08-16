@@ -866,7 +866,7 @@ local.testCase_browserTest_screenshot = function (opt, onError) {
     }
     local.browserTest({
         modeBrowserTest: "screenshot",
-        timeoutDefault: 20000,
+        timeoutDefault: 30000,
         url: "tmp/build/test-report.html"
     }, onError);
 };

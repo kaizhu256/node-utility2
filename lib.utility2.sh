@@ -5149,7 +5149,6 @@ local.throwError = function () {
             FILE="$npm_config_dir_utility2/test.js"
         fi
         export npm_config_mode_auto_restart=1
-        shBuildInit
         shRun shIstanbulCover "$FILE"
         ;;
     test)
