@@ -56,7 +56,6 @@ this zero-dependency package will provide a collection of high-level functions t
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- istanbul - fix pragma-istanbul-ignore in acorn
 - migrate browser-testing from electron to headless-chromium
 - audit `{}` may have been `[]`
 - rename var value to val
@@ -71,15 +70,9 @@ this zero-dependency package will provide a collection of high-level functions t
 - add server stress-test using puppeteer
 - none
 
-#### changelog 2019.8.12
-- npm publish 2019.8.12
-- istanbul - add env-var-state \$npm_config_mode_coverage="node_modules"
-- istanbul - switch parser from esprima to acorn v6.3.0
-- istanbul - upgrade to escodegen v1.12.0
-- istanbul - upgrade to estools/lib/code.js v2.0.1
-- istanbul - upgrade to esprima v4.0.1
-- shorten name event to evt
-- build-ci - use headless-chromium for screenshot-automation with shell-function shScreenCapture
+#### changelog 2019.8.17
+- npm publish 2019.8.17
+- istanbul - fix pragma-istanbul-ignore in acorn
 - none
 
 #### this package requires
@@ -1196,7 +1189,7 @@ local.http.createServer(function (req, res) {
         "2019.08.16 apidoc-lite",
         "2019.08.01 utility2"
     ],
-    "version": "2019.8.12"
+    "version": "2019.8.17"
 }
 ```
 

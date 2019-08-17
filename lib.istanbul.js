@@ -9979,6 +9979,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
                     sourceType: this.opts.esModules ? 'module' : 'script'
                 };
                 program = ESP.parse(code, opt);
+                program.comments = opt.onComment
             } catch (e) {
                 console.log('Failed to parse file: ' + filename);
                 throw e;
