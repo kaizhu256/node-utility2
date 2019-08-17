@@ -56,6 +56,7 @@ this zero-dependency package will provide a collection of high-level functions t
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- istanbul - fix pragma-istanbul-ignore in acorn
 - migrate browser-testing from electron to headless-chromium
 - audit `{}` may have been `[]`
 - rename var value to val
@@ -1186,13 +1187,13 @@ local.http.createServer(function (req, res) {
         "utility2": "./npm_scripts.sh"
     },
     "utility2Dependents": [
-        "2018.09.29 apidoc-lite",
         "2018.12.30 db-lite",
         "2019.01.21 github-crud",
         "2019.01.30 bootstrap-lite",
         "2019.02.20 swgg",
         "2019.08.09 istanbul-lite",
         "2019.08.10 jslint-lite",
+        "2019.08.16 apidoc-lite",
         "2019.08.01 utility2"
     ],
     "version": "2019.8.12"

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.apidoc.js (2019.8.1)
+ * lib.apidoc.js (2019.8.16)
  * https://github.com/kaizhu256/node-apidoc-lite
  * this zero-dependency package will auto-generate documentation for your npm-package with zero-config
  *
@@ -578,7 +578,9 @@ local.templateRender = function (template, dict, opt) {
         }
         // iteratively lookup nested values in the dict
         argList[0].split(".").forEach(function (key) {
-            value = value && value[key];
+            if (key !== "this") {
+                value = value && value[key];
+            }
         });
         return value;
     };

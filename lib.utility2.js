@@ -4695,17 +4695,13 @@ local.fsRmrSync = function (dir) {
 /*
  * this function will synchronously "rm -fr" dir
  */
-    local.child_process.execFileSync(
-        "rm",
-        [
-            "-fr", local.path.resolve(process.cwd(), dir)
-        ],
-        {
-            stdio: [
-                "ignore", 1, 2
-            ]
-        }
-    );
+    local.child_process.execFileSync("rm", [
+        "-fr", local.path.resolve(process.cwd(), dir)
+    ], {
+        stdio: [
+            "ignore", 1, 2
+        ]
+    });
 };
 
 local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
@@ -7067,7 +7063,9 @@ local.templateRender = function (template, dict, opt) {
         }
         // iteratively lookup nested values in the dict
         argList[0].split(".").forEach(function (key) {
-            value = value && value[key];
+            if (key !== "this") {
+                value = value && value[key];
+            }
         });
         return value;
     };

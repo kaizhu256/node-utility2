@@ -4561,17 +4561,13 @@ local.fsRmrSync = function (dir) {
 /*
  * this function will synchronously "rm -fr" dir
  */
-    local.child_process.execFileSync(
-        "rm",
-        [
-            "-fr", local.path.resolve(process.cwd(), dir)
-        ],
-        {
-            stdio: [
-                "ignore", 1, 2
-            ]
-        }
-    );
+    local.child_process.execFileSync("rm", [
+        "-fr", local.path.resolve(process.cwd(), dir)
+    ], {
+        stdio: [
+            "ignore", 1, 2
+        ]
+    });
 };
 
 local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
