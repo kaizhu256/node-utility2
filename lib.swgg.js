@@ -2883,33 +2883,36 @@ local.middlewareCrudBuiltin = function (req, res, next) {
     var tmp;
     var user;
     opt = {};
-    local.onNext(opt, function (err, data, meta) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err, data, meta) {
+        switch (opt.gotoState) {
         case 1:
             crud = req.swgg.crud;
             user = req.swgg.user;
             switch (crud.crudType[0]) {
             case "crudCountManyByQuery":
-                crud.dbTable.crudCountManyByQuery(crud.queryWhere, opt.onNext);
+                crud.dbTable.crudCountManyByQuery(
+                    crud.queryWhere,
+                    opt.gotoNext
+                );
                 break;
             case "crudSetManyById":
-                crud.dbTable.crudSetManyById(crud.body, opt.onNext);
+                crud.dbTable.crudSetManyById(crud.body, opt.gotoNext);
                 break;
             case "crudSetOneById":
                 // replace idName with idBackend in body
                 delete crud.body.id;
                 delete crud.body[crud.idName];
                 crud.body[crud.idBackend] = crud.data[crud.idName];
-                crud.dbTable.crudSetOneById(crud.body, opt.onNext);
+                crud.dbTable.crudSetOneById(crud.body, opt.gotoNext);
                 break;
             case "crudUpdateOneById":
                 // replace idName with idBackend in body
                 delete crud.body.id;
                 delete crud.body[crud.idName];
                 crud.body[crud.idBackend] = crud.data[crud.idName];
-                crud.dbTable.crudUpdateOneById(crud.body, opt.onNext);
+                crud.dbTable.crudUpdateOneById(crud.body, opt.gotoNext);
                 break;
-            // coverage-hack - test err handling-behavior
+            // hack-istanbul - test err handling-behavior
             case "crudErrorDelete":
             case "crudErrorGet":
             case "crudErrorHead":
@@ -2917,10 +2920,10 @@ local.middlewareCrudBuiltin = function (req, res, next) {
             case "crudErrorPatch":
             case "crudErrorPost":
             case "crudErrorPut":
-                opt.onNext(local.errDefault);
+                opt.gotoNext(local.errDefault);
                 break;
             case "crudGetManyByQuery":
-                onParallel = local.onParallel(opt.onNext);
+                onParallel = local.onParallel(opt.gotoNext);
                 onParallel.counter += 1;
                 crud.dbTable.crudGetManyByQuery({
                     fieldList: crud.queryFields,
@@ -2939,12 +2942,12 @@ local.middlewareCrudBuiltin = function (req, res, next) {
                 });
                 break;
             case "crudGetOneById":
-                crud.dbTable.crudGetOneById(crud.queryById, opt.onNext);
+                crud.dbTable.crudGetOneById(crud.queryById, opt.gotoNext);
                 break;
             case "crudGetOneByQuery":
                 crud.dbTable.crudGetOneByQuery({
                     query: crud.queryWhere
-                }, opt.onNext);
+                }, opt.gotoNext);
                 break;
             case "crudNullDelete":
             case "crudNullGet":
@@ -2953,19 +2956,22 @@ local.middlewareCrudBuiltin = function (req, res, next) {
             case "crudNullPatch":
             case "crudNullPost":
             case "crudNullPut":
-                opt.onNext();
+                opt.gotoNext();
                 break;
             case "crudRemoveManyByQuery":
-                crud.dbTable.crudRemoveManyByQuery(crud.queryWhere, opt.onNext);
+                crud.dbTable.crudRemoveManyByQuery(
+                    crud.queryWhere,
+                    opt.gotoNext
+                );
                 break;
             case "crudRemoveOneById":
-                crud.dbTable.crudRemoveOneById(crud.queryById, opt.onNext);
+                crud.dbTable.crudRemoveOneById(crud.queryById, opt.gotoNext);
                 break;
             case "fileGetOneById":
                 local.dbTableFile = local.db.dbTableCreateOne({
                     name: "File"
                 });
-                crud.dbTable.crudGetOneById(crud.queryById, opt.onNext);
+                crud.dbTable.crudGetOneById(crud.queryById, opt.gotoNext);
                 break;
             case "fileUploadManyByForm":
                 local.dbTableFile = local.db.dbTableCreateOne({
@@ -3003,7 +3009,7 @@ local.middlewareCrudBuiltin = function (req, res, next) {
                     });
                     return tmp;
                 });
-                local.dbTableFile.crudSetManyById(crud.body, opt.onNext);
+                local.dbTableFile.crudSetManyById(crud.body, opt.gotoNext);
                 break;
             case "userLoginByPassword":
             case "userLogout":
@@ -3013,36 +3019,36 @@ local.middlewareCrudBuiltin = function (req, res, next) {
                     req.swgg.crud.endArgList = [
                         req, res
                     ];
-                    opt.modeNext = Infinity;
-                    opt.onNext();
+                    opt.gotoState = Infinity;
+                    opt.gotoNext();
                     return;
                 }
-                opt.onNext();
+                opt.gotoNext();
                 break;
             default:
-                opt.modeNext = Infinity;
-                opt.onNext();
+                opt.gotoState = Infinity;
+                opt.gotoNext();
             }
             break;
         case 2:
             switch (crud.crudType[0]) {
             case "crudSetOneById":
             case "crudUpdateOneById":
-                opt.onNext(null, data);
+                opt.gotoNext(null, data);
                 break;
             case "crudGetManyByQuery":
-                opt.onNext(null, crud.queryData, {
+                opt.gotoNext(null, crud.queryData, {
                     paginationCountTotal: crud.paginationCountTotal
                 });
                 break;
             case "fileUploadManyByForm":
-                opt.onNext(null, data.map(function (element) {
+                opt.gotoNext(null, data.map(function (element) {
                     delete element.fileBlob;
                     return element;
                 }));
                 break;
             case "userLoginByPassword":
-                opt.onNext(null, {
+                opt.gotoNext(null, {
                     jwtEncrypted: user.jwtEncrypted
                 });
                 break;
@@ -3050,10 +3056,10 @@ local.middlewareCrudBuiltin = function (req, res, next) {
                 crud.dbTable.crudUpdateOneById({
                     jwtEncrypted: null,
                     username: user.username
-                }, opt.onNext);
+                }, opt.gotoNext);
                 break;
             default:
-                opt.onNext(null, data, meta);
+                opt.gotoNext(null, data, meta);
             }
             break;
         case 3:
@@ -3069,24 +3075,24 @@ local.middlewareCrudBuiltin = function (req, res, next) {
                 res.end(local.base64ToBuffer(data.fileBlob));
                 break;
             case "userLogout":
-                opt.onNext();
+                opt.gotoNext();
                 break;
             default:
-                opt.onNext(null, data, meta);
+                opt.gotoNext(null, data, meta);
             }
             break;
         case 4:
             req.swgg.crud.endArgList = [
                 req, res, null, data, meta
             ];
-            opt.onNext();
+            opt.gotoNext();
             break;
         default:
             next(err);
         }
     });
-    opt.modeNext = 0;
-    opt.onNext();
+    opt.gotoState = 0;
+    opt.gotoNext();
 };
 
 local.middlewareCrudEnd = function (req, res, next) {
@@ -3159,8 +3165,8 @@ local.middlewareUserLogin = function (req, res, next) {
     var opt;
     var user;
     opt = {};
-    local.onNext(opt, function (err, data) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err, data) {
+        switch (opt.gotoState) {
         case 1:
             local.dbTableUser = local.db.dbTableCreateOne({
                 name: "User"
@@ -3174,9 +3180,9 @@ local.middlewareUserLogin = function (req, res, next) {
             );
             user.jwtDecrypted = local.jwtAes256GcmDecrypt(user.jwtEncrypted);
             switch (crud.crudType[0]) {
-            // coverage-hack - test err handling-behavior
+            // hack-istanbul - test err handling-behavior
             case "crudErrorLogin":
-                opt.onNext(local.errDefault);
+                opt.gotoNext(local.errDefault);
                 return;
             case "userLoginByPassword":
                 user.password = req.urlParsed.query.password;
@@ -3184,7 +3190,7 @@ local.middlewareUserLogin = function (req, res, next) {
                 if (user.password && user.username) {
                     local.dbTableUser.crudGetOneById({
                         username: user.username
-                    }, opt.onNext);
+                    }, opt.gotoNext);
                     return;
                 }
                 break;
@@ -3194,12 +3200,12 @@ local.middlewareUserLogin = function (req, res, next) {
                     user.username = user.jwtDecrypted.sub;
                     local.dbTableUser.crudGetOneById({
                         username: user.username
-                    }, opt.onNext);
+                    }, opt.gotoNext);
                     return;
                 }
             }
-            opt.modeNext = Infinity;
-            opt.onNext();
+            opt.gotoState = Infinity;
+            opt.gotoNext();
             break;
         case 2:
             switch (crud.crudType[0]) {
@@ -3209,8 +3215,8 @@ local.middlewareUserLogin = function (req, res, next) {
                     user.password,
                     user.data && user.data.password
                 )) {
-                    opt.modeNext = Infinity;
-                    opt.onNext();
+                    opt.gotoState = Infinity;
+                    opt.gotoNext();
                     return;
                 }
                 // init isAuthenticated
@@ -3230,7 +3236,7 @@ local.middlewareUserLogin = function (req, res, next) {
                 local.dbTableUser.crudUpdateOneById({
                     jwtEncrypted: user.jwtEncrypted,
                     username: user.jwtDecrypted.sub
-                }, opt.onNext);
+                }, opt.gotoNext);
                 return;
             default:
                 data = data || {};
@@ -3250,14 +3256,14 @@ local.middlewareUserLogin = function (req, res, next) {
                     }
                 }
             }
-            opt.onNext();
+            opt.gotoNext();
             break;
         default:
             next(err);
         }
     });
-    opt.modeNext = 0;
-    opt.onNext();
+    opt.gotoState = 0;
+    opt.gotoNext();
 };
 
 local.middlewareValidate = function (req, res, next) {
@@ -3268,12 +3274,12 @@ local.middlewareValidate = function (req, res, next) {
     var opt;
     var tmp;
     opt = {};
-    local.onNext(opt, function (err) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err) {
+        switch (opt.gotoState) {
         case 1:
             if (!req.swgg.operation) {
-                opt.modeNext = Infinity;
-                opt.onNext();
+                opt.gotoState = Infinity;
+                opt.gotoNext();
                 return;
             }
             // init paramDict
@@ -3363,7 +3369,7 @@ local.middlewareValidate = function (req, res, next) {
                 parameters: req.swgg.operation.parameters,
                 swaggerJson: local.swaggerJson
             })[0];
-            opt.onNext(err);
+            opt.gotoNext(err);
             break;
         case 2:
             // init crud
@@ -3458,8 +3464,8 @@ local.middlewareValidate = function (req, res, next) {
             next(err, req, res);
         }
     });
-    opt.modeNext = 0;
-    opt.onNext();
+    opt.gotoState = 0;
+    opt.gotoNext();
 };
 
 local.normalizeSwaggerJson = function (swaggerJson, opt) {
@@ -5169,11 +5175,11 @@ local.swaggerValidateFile = function (opt, onError) {
 /*
  * this function will validate the json-file <opt>.file
  */
-    local.onNext(opt, function (err, data) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err, data) {
+        switch (opt.gotoState) {
         case 1:
             if (typeof opt.data === "string") {
-                opt.onNext(null, opt.data);
+                opt.gotoNext(null, opt.data);
                 return;
             }
             // fetch url
@@ -5183,12 +5189,12 @@ local.swaggerValidateFile = function (opt, onError) {
                 local.ajax({
                     url: opt.file
                 }, function (err, xhr) {
-                    opt.onNext(err, xhr && xhr.responseText);
+                    opt.gotoNext(err, xhr && xhr.responseText);
                 });
                 return;
             }
             // read file
-            local.fs.readFile(opt.file, "utf8", opt.onNext);
+            local.fs.readFile(opt.file, "utf8", opt.gotoNext);
             break;
         case 2:
             // jslint
@@ -5201,7 +5207,7 @@ local.swaggerValidateFile = function (opt, onError) {
             );
             // validate
             local.swgg.swaggerValidate(JSON.parse(data));
-            opt.onNext();
+            opt.gotoNext();
             break;
         default:
             console.error(
@@ -5213,8 +5219,8 @@ local.swaggerValidateFile = function (opt, onError) {
             onError(err);
         }
     });
-    opt.modeNext = 0;
-    opt.onNext();
+    opt.gotoState = 0;
+    opt.gotoNext();
 };
 
 local.throwSwaggerError = function (opt) {
@@ -5354,7 +5360,7 @@ local.uiEventListenerDict.onEventInputValidateAndAjax = function (
             return text;
         });
     };
-    // jslint-hack
+    // hack-jslint
     opt.targetOnEvent = opt.targetOnEvent.closest(
         ".operation"
     );
@@ -5515,15 +5521,15 @@ local.uiEventListenerDict.onEventOperationAjax = function (opt) {
             ".operation"
         )
     };
-    local.onNext(opt, function (err, data) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err, data) {
+        switch (opt.gotoState) {
         case 1:
             // force ajax
             opt.modeAjax = "ajax";
             // validate input
             local.uiEventListenerDict.onEventInputValidateAndAjax(
                 opt,
-                opt.onNext
+                opt.gotoNext
             );
             // reset res output
             Array.from(opt.targetOnEvent.querySelectorAll(
@@ -5608,8 +5614,8 @@ local.uiEventListenerDict.onEventOperationAjax = function (opt) {
             });
         }
     });
-    opt.modeNext = 0;
-    opt.onNext();
+    opt.gotoState = 0;
+    opt.gotoNext();
 };
 
 local.uiEventListenerDict.onEventOperationDisplayShow = function (
@@ -5733,8 +5739,8 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
     var swaggerJson;
     opt = opt || {};
     swaggerJson = opt;
-    local.onNext(opt, function (err, data) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err, data) {
+        switch (opt.gotoState) {
         case 1:
             if (
                 opt
@@ -5788,8 +5794,8 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
                 // do not reload ui during test
                 || globalThis.utility2_modeTest >= 4
             ) {
-                opt.modeNext = Infinity;
-                opt.onNext();
+                opt.gotoState = Infinity;
+                opt.gotoNext();
                 return;
             }
             // reset ui
@@ -5812,19 +5818,19 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
             ).innerHTML = (
                 "loading swagger.json"
             );
-            opt.onNext();
+            opt.gotoNext();
             break;
         case 2:
             // fetch swagger.json file
             local.ajax({
                 url: opt.inputUrl.value
-            }, opt.onNext);
+            }, opt.gotoNext);
             break;
         case 3:
             // JSON.parse swagger.json string
             local.tryCatchOnError(function () {
-                opt.onNext(null, JSON.parse(data.responseText));
-            }, opt.onNext);
+                opt.gotoNext(null, JSON.parse(data.responseText));
+            }, opt.gotoNext);
             break;
         case 4:
             // reset state
@@ -5858,7 +5864,7 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
                 // recurse - render .resourceList
                 local.uiEventListenerDict.onEventUiReload(
                     swaggerJson,
-                    opt.onNext
+                    opt.gotoNext
                 );
             }, 100);
             break;
@@ -5878,8 +5884,8 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
     });
     // optimization - render .swggUiContainer first
     if (!swaggerJson.swagger) {
-        opt.modeNext = 0;
-        opt.onNext();
+        opt.gotoState = 0;
+        opt.gotoNext();
         return;
     }
     // optimization - render .resourceList in separate evt-loop

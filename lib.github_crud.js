@@ -701,6 +701,40 @@ local.cliRun = function (opt) {
     local.cliDict._default();
 };
 
+local.gotoNext = function (opt, onError) {
+/*
+ * this function will wrap onError inside recursive-function <opt>.gotoNext,
+ * and append the current-stack to any err
+ */
+    opt.gotoNext = local.onErrorWithStack(function (err, data, meta) {
+        try {
+            opt.gotoState += (
+                (err && !opt.modeErrorIgnore)
+                ? 1000
+                : 1
+            );
+            if (opt.modeDebug) {
+                console.error("gotoNext - " + JSON.stringify({
+                    gotoState: opt.gotoState,
+                    errorMessage: err && err.message
+                }));
+                if (err && err.stack) {
+                    console.error(err.stack);
+                }
+            }
+            onError(err, data, meta);
+        } catch (errCaught) {
+            // throw errCaught to break infinite recursion-loop
+            if (opt.errCaught) {
+                local.assertThrow(null, opt.errCaught);
+            }
+            opt.errCaught = errCaught;
+            opt.gotoNext(errCaught, data, meta);
+        }
+    });
+    return opt;
+};
+
 local.onErrorDefault = function (err) {
 /*
  * this function will if <err> exists, then print it to stderr
@@ -738,40 +772,6 @@ local.onErrorWithStack = function (onError) {
         return String(onError);
     };
     return onError2;
-};
-
-local.onNext = function (opt, onError) {
-/*
- * this function will wrap onError inside recursive-function <opt>.onNext,
- * and append the current-stack to any err
- */
-    opt.onNext = local.onErrorWithStack(function (err, data, meta) {
-        try {
-            opt.modeNext += (
-                (err && !opt.modeErrorIgnore)
-                ? 1000
-                : 1
-            );
-            if (opt.modeDebug) {
-                console.error("onNext - " + JSON.stringify({
-                    modeNext: opt.modeNext,
-                    errorMessage: err && err.message
-                }));
-                if (err && err.stack) {
-                    console.error(err.stack);
-                }
-            }
-            onError(err, data, meta);
-        } catch (errCaught) {
-            // throw errCaught to break infinite recursion-loop
-            if (opt.errCaught) {
-                local.assertThrow(null, opt.errCaught);
-            }
-            opt.errCaught = errCaught;
-            opt.onNext(errCaught, data, meta);
-        }
-    });
-    return opt;
 };
 
 local.onParallel = function (onError, onEach, onRetry) {
@@ -1024,14 +1024,14 @@ local.githubCrudContentDelete = function (opt, onError) {
         message: opt.message,
         url: opt.url
     };
-    local.onNext(opt, function (err, data) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err, data) {
+        switch (opt.gotoState) {
         case 1:
             // get sha
             local.githubCrudAjax({
                 httpReq: opt.httpReq,
                 url: opt.url
-            }, opt.onNext);
+            }, opt.gotoNext);
             break;
         case 2:
             // delete file with sha
@@ -1042,7 +1042,7 @@ local.githubCrudContentDelete = function (opt, onError) {
                     method: "DELETE",
                     sha: data.sha,
                     url: opt.url
-                }, opt.onNext);
+                }, opt.gotoNext);
                 return;
             }
             // delete tree
@@ -1056,14 +1056,14 @@ local.githubCrudContentDelete = function (opt, onError) {
                     message: opt.message,
                     url: option2.elem.url
                 }, onParallel);
-            }, opt.onNext);
+            }, opt.gotoNext);
             break;
         default:
             onError(err, data);
         }
     });
-    opt.modeNext = 0;
-    opt.onNext();
+    opt.gotoState = 0;
+    opt.gotoNext();
 };
 
 local.githubCrudContentGet = function (opt, onError) {
@@ -1075,23 +1075,23 @@ local.githubCrudContentGet = function (opt, onError) {
         httpReq: opt.httpReq,
         url: opt.url
     };
-    local.onNext(opt, function (err, data) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err, data) {
+        switch (opt.gotoState) {
         case 1:
             local.githubCrudAjax({
                 httpReq: opt.httpReq,
                 url: opt.url
-            }, opt.onNext);
+            }, opt.gotoNext);
             break;
         case 2:
-            opt.onNext(null, Buffer.from(data.content || "", "base64"));
+            opt.gotoNext(null, Buffer.from(data.content || "", "base64"));
             break;
         default:
             onError(err, !err && data);
         }
     });
-    opt.modeNext = 0;
-    opt.onNext();
+    opt.gotoState = 0;
+    opt.gotoNext();
 };
 
 local.githubCrudContentPut = function (opt, onError) {
@@ -1107,14 +1107,14 @@ local.githubCrudContentPut = function (opt, onError) {
         modeErrorIgnore: true,
         url: opt.url
     };
-    local.onNext(opt, function (err, data) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err, data) {
+        switch (opt.gotoState) {
         case 1:
             // get sha
             local.githubCrudAjax({
                 httpReq: opt.httpReq,
                 url: opt.url
-            }, opt.onNext);
+            }, opt.gotoNext);
             break;
         case 2:
             // put file with sha
@@ -1125,14 +1125,14 @@ local.githubCrudContentPut = function (opt, onError) {
                 method: "PUT",
                 sha: data.sha,
                 url: opt.url
-            }, opt.onNext);
+            }, opt.gotoNext);
             break;
         default:
             onError(err, data);
         }
     });
-    opt.modeNext = 0;
-    opt.onNext();
+    opt.gotoState = 0;
+    opt.gotoNext();
 };
 
 local.githubCrudContentPutFile = function (opt, onError) {
@@ -1146,8 +1146,8 @@ local.githubCrudContentPutFile = function (opt, onError) {
         message: opt.message,
         url: opt.url
     };
-    local.onNext(opt, function (err, data) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err, data) {
+        switch (opt.gotoState) {
         case 1:
             // get file from url
             if ((
@@ -1157,12 +1157,12 @@ local.githubCrudContentPutFile = function (opt, onError) {
                     httpReq: opt.httpReq,
                     url: opt.file
                 }, function (err, res) {
-                    opt.onNext(err, res && res.data);
+                    opt.gotoNext(err, res && res.data);
                 });
                 return;
             }
             // get file
-            local.fs.readFile(opt.file, opt.onNext);
+            local.fs.readFile(opt.file, opt.gotoNext);
             break;
         case 2:
             local.githubCrudContentPut({
@@ -1178,14 +1178,14 @@ local.githubCrudContentPutFile = function (opt, onError) {
                     ? opt.url + local.path.basename(opt.file)
                     : opt.url
                 )
-            }, opt.onNext);
+            }, opt.gotoNext);
             break;
         default:
             onError(err, data);
         }
     });
-    opt.modeNext = 0;
-    opt.onNext();
+    opt.gotoState = 0;
+    opt.gotoNext();
 };
 
 local.githubCrudContentTouch = function (opt, onError) {
@@ -1199,14 +1199,14 @@ local.githubCrudContentTouch = function (opt, onError) {
         modeErrorIgnore: true,
         url: opt.url
     };
-    local.onNext(opt, function (err, data) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err, data) {
+        switch (opt.gotoState) {
         case 1:
             // get sha
             local.githubCrudAjax({
                 httpReq: opt.httpReq,
                 url: opt.url
-            }, opt.onNext);
+            }, opt.gotoNext);
             break;
         case 2:
             // put file with sha
@@ -1217,14 +1217,14 @@ local.githubCrudContentTouch = function (opt, onError) {
                 method: "PUT",
                 sha: data.sha,
                 url: opt.url
-            }, opt.onNext);
+            }, opt.gotoNext);
             break;
         default:
             onError(err, data);
         }
     });
-    opt.modeNext = 0;
-    opt.onNext();
+    opt.gotoState = 0;
+    opt.gotoNext();
 };
 
 local.githubCrudContentTouchList = function (opt, onError) {

@@ -397,7 +397,7 @@ local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
 var __dirname;
 var process;
 var require;
-// jslint-hack
+// hack-jslint
 local.nop(__dirname, require);
 /* istanbul ignore next */
 globalThis.__coverageCodeDict__ = globalThis.__coverageCodeDict__ || {};
@@ -9568,7 +9568,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
             window.__cov_seq += 1;
             suffix = window.__cov_seq;
         }
-        // coverage-hack - pseudorandom coverage-identifier
+        // hack-istanbul - pseudorandom coverage-identifier
         return '__cov_' + Math.random().toString(16).slice(2);
     }
 
@@ -9970,7 +9970,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
                 code = LEADER_WRAP + code + TRAILER_WRAP;
             }
             try {
-                // coverage-hack - acorn opt
+                // hack-istanbul - acorn opt
                 var opt = {
                     locations: true,
                     onComment: [],
@@ -10023,7 +10023,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
                 nodeStart = node.range[0],
                 hint;
             this.currentState.currentHint = null;
-            // coverage-hack - allow top-level istanbul-ignore-next
+            // hack-istanbul - allow top-level istanbul-ignore-next
             if (node.type === "Program") { return; }
             while (i < hints.length) {
                 hint = hints[i];
@@ -11021,7 +11021,7 @@ module.exports = {
         /* istanbul ignore if: untestable in batch mode */
         if (process.stdout.isTTY) {
             switch (clazz) {
-                // coverage-hack - Octal escape sequences are not allowed in strict mode.
+                // hack-istanbul - Octal escape sequences are not allowed in strict mode.
                 case 'low' : str = '\0x1b[91m' + str + '\0x1b[0m'; break;
                 case 'medium': str = '\0x1b[93m' + str + '\0x1b[0m'; break;
                 case 'high': str = '\0x1b[92m' + str + '\0x1b[0m'; break;
@@ -11662,7 +11662,7 @@ var handlebars = require('handlebars'),
         '<tr>',
         '<td class="line-count">{{#show_lines}}{{maxLines}}{{/show_lines}}</td>',
         '<td class="line-coverage">{{#show_line_execution_counts fileCoverage}}{{maxLines}}{{/show_line_execution_counts}}</td>',
-        // coverage-hack - domOnEventSelectAllWithinPre
+        // hack-istanbul - domOnEventSelectAllWithinPre
         '<td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code structured}}{{/show_code}}</pre></td>',
         '</tr>\n'
     ].join('')),
@@ -11671,7 +11671,7 @@ var handlebars = require('handlebars'),
         '<table>',
         '<thead>',
         '<tr>',
-        // coverage-hack - compact summary
+        // hack-istanbul - compact summary
         '   <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>',
         '   <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>',
         '   <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>',
@@ -11683,7 +11683,7 @@ var handlebars = require('handlebars'),
     ].join('\n'),
     summaryLineTemplate = handlebars.compile([
         '<tr>',
-        // coverage-hack - compact summary
+        // hack-istanbul - compact summary
         '<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>',
         '<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>',
         '<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>',
@@ -11732,7 +11732,7 @@ handlebars.registerHelper('show_ignores', function (metrics) {
     }
 
     result = [];
-    // coverage-hack - compact summary
+    // hack-istanbul - compact summary
     if (statements >0) { result.push('statements: ' + statements); }
     if (branches >0) { result.push('branches: ' + branches); }
     if (functions >0) { result.push('functions: ' + functions); }
@@ -11740,7 +11740,7 @@ handlebars.registerHelper('show_ignores', function (metrics) {
     return result.join('<br>');
 });
 
-// coverage-hack - hashtag lineno
+// hack-istanbul - hashtag lineno
 handlebars.registerHelper('show_lines', function (opts) {
     var maxLines = Number(opts.fn(this)),
         i,
@@ -11961,7 +11961,7 @@ function HtmlReport(opts) {
     this.opts.sourceStore = this.opts.sourceStore || Store.create('fslookup');
     this.opts.linkMapper = this.opts.linkMapper || this.standardLinkMapper();
     this.opts.writer = this.opts.writer || null;
-    // coverage-hack - new Date() bugfix
+    // hack-istanbul - new Date() bugfix
     this.opts.templateData = { datetime: new Date().toGMTString() };
     this.opts.watermarks = this.opts.watermarks || defaults.watermarks();
 }

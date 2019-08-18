@@ -3151,8 +3151,8 @@ shTravisRepoCreate () {(set -e
 var onParallel;
 var opt;
 opt = {};
-local.onNext(opt, function (err, data) {
-    switch (opt.modeNext) {
+local.gotoNext(opt, function (err, data) {
+    switch (opt.gotoState) {
     case 1:
         opt.shBuildPrintPrefix = (
             "\n\u001b[35m[MODE_BUILD=shCustomOrgRepoCreate]\u001b[0m - "
@@ -3166,11 +3166,11 @@ local.onNext(opt, function (err, data) {
                 + process.env.TRAVIS_DOMAIN + "/repos/"
                 + process.env.GITHUB_REPO
             )
-        }, opt.onNext);
+        }, opt.gotoNext);
         break;
     case 2:
         opt.id = JSON.parse(data.responseText).id;
-        setTimeout(opt.onNext, 5000);
+        setTimeout(opt.gotoNext, 5000);
         break;
     case 3:
         local.ajax({
@@ -3185,13 +3185,13 @@ local.onNext(opt, function (err, data) {
                 + process.env.TRAVIS_DOMAIN
                 + "/hooks/" + opt.id
             )
-        }, opt.onNext);
+        }, opt.gotoNext);
         break;
     case 4:
-        setTimeout(opt.onNext, 5000);
+        setTimeout(opt.gotoNext, 5000);
         break;
     case 5:
-        onParallel = local.onParallel(opt.onNext);
+        onParallel = local.onParallel(opt.gotoNext);
         onParallel.counter += 1;
         onParallel.counter += 1;
         local.ajax({
@@ -3291,14 +3291,14 @@ local.onNext(opt, function (err, data) {
             opt.shBuildPrintPrefix + new Date().toISOString()
             + process.env.GITHUB_REPO + (
                 err
-                ? " - ... failed to create - modeNext = " + opt.modeNext
+                ? " - ... failed to create - gotoState = " + opt.gotoState
                 : " - ... created"
             )
         );
     }
 });
-opt.modeNext = 0;
-opt.onNext();
+opt.gotoState = 0;
+opt.gotoNext();
 }(globalThis.globalLocal));
 '
     cd "/tmp/githubRepo/$GITHUB_REPO"
@@ -4612,6 +4612,40 @@ local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
     }
 };
 
+local.gotoNext = function (opt, onError) {
+/*
+ * this function will wrap onError inside recursive-function <opt>.gotoNext,
+ * and append the current-stack to any err
+ */
+    opt.gotoNext = local.onErrorWithStack(function (err, data, meta) {
+        try {
+            opt.gotoState += (
+                (err && !opt.modeErrorIgnore)
+                ? 1000
+                : 1
+            );
+            if (opt.modeDebug) {
+                console.error("gotoNext - " + JSON.stringify({
+                    gotoState: opt.gotoState,
+                    errorMessage: err && err.message
+                }));
+                if (err && err.stack) {
+                    console.error(err.stack);
+                }
+            }
+            onError(err, data, meta);
+        } catch (errCaught) {
+            // throw errCaught to break infinite recursion-loop
+            if (opt.errCaught) {
+                local.assertThrow(null, opt.errCaught);
+            }
+            opt.errCaught = errCaught;
+            opt.gotoNext(errCaught, data, meta);
+        }
+    });
+    return opt;
+};
+
 local.isNullOrUndefined = function (arg0) {
 /*
  * this function will test if arg0 is null or undefined
@@ -4856,40 +4890,6 @@ local.onErrorWithStack = function (onError) {
         return String(onError);
     };
     return onError2;
-};
-
-local.onNext = function (opt, onError) {
-/*
- * this function will wrap onError inside recursive-function <opt>.onNext,
- * and append the current-stack to any err
- */
-    opt.onNext = local.onErrorWithStack(function (err, data, meta) {
-        try {
-            opt.modeNext += (
-                (err && !opt.modeErrorIgnore)
-                ? 1000
-                : 1
-            );
-            if (opt.modeDebug) {
-                console.error("onNext - " + JSON.stringify({
-                    modeNext: opt.modeNext,
-                    errorMessage: err && err.message
-                }));
-                if (err && err.stack) {
-                    console.error(err.stack);
-                }
-            }
-            onError(err, data, meta);
-        } catch (errCaught) {
-            // throw errCaught to break infinite recursion-loop
-            if (opt.errCaught) {
-                local.assertThrow(null, opt.errCaught);
-            }
-            opt.errCaught = errCaught;
-            opt.onNext(errCaught, data, meta);
-        }
-    });
-    return opt;
 };
 
 local.onParallel = function (onError, onEach, onRetry) {

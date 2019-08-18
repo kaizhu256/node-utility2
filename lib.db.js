@@ -783,7 +783,7 @@ vendor)s{0,1}(\\b|_)\
     );
     process.stdout._write = function (chunk, encoding, callback) {
         process.stdout._writeDefault(chunk, encoding, callback);
-        // coverage-hack - ignore else-statement
+        // hack-istanbul - ignore else-statement
         local.nop(that.socket.writable && (function () {
             that.socket.write(chunk, encoding);
         }()));
@@ -798,7 +798,7 @@ vendor)s{0,1}(\\b|_)\
         that.socket.on("error", that.onError);
         that.socket.setKeepAlive(true);
     });
-    // coverage-hack - ignore else-statement
+    // hack-istanbul - ignore else-statement
     local.nop(process.env.PORT_REPL && (function () {
         console.error(
             "repl-server listening on port " + process.env.PORT_REPL

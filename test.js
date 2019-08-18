@@ -327,13 +327,13 @@ local.testCase_ajax_cache = function (opt, onError) {
         return;
     }
     opt = {};
-    local.onNext(opt, function (err, data) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err, data) {
+        switch (opt.gotoState) {
         case 1:
             // test http GET handling-behavior
             local.ajax({
                 url: "assets.hello.txt"
-            }, opt.onNext);
+            }, opt.gotoNext);
             break;
         case 2:
             // validate responseText
@@ -346,19 +346,19 @@ local.testCase_ajax_cache = function (opt, onError) {
                     )
                 },
                 url: "assets.hello.txt"
-            }, opt.onNext);
+            }, opt.gotoNext);
             break;
         case 3:
             // validate statusCode
             local.assertJsonEqual(data.statusCode, 304);
-            opt.onNext();
+            opt.gotoNext();
             break;
         default:
             onError(err, opt);
         }
     });
-    opt.modeNext = 0;
-    opt.onNext();
+    opt.gotoState = 0;
+    opt.gotoNext();
 };
 
 local.testCase_ajax_default = function (opt, onError) {
@@ -752,7 +752,7 @@ local.testCase_browserTest_electron = function (opt, onError) {
         ].forEach(function (fnc, ii) {
             if (typeof fnc === "function") {
                 fnc(ii && opt);
-                opt.onNext(null, opt);
+                opt.gotoNext(null, opt);
                 opt.utility2_testReportSave();
             }
         });
@@ -838,14 +838,14 @@ local.testCase_browserTest_electron = function (opt, onError) {
         ].forEach(function (modeBrowserTest) {
             [
                 1, 10, 11, 20, 100
-            ].forEach(function (modeNext) {
+            ].forEach(function (gotoState) {
                 opt.modeBrowserTest = modeBrowserTest;
-                opt.modeNext = modeNext;
-                switch (modeNext) {
+                opt.gotoState = gotoState;
+                switch (gotoState) {
                 case 100:
                     local.tryCatchOnError(function () {
                         local.browserTest({
-                            modeNext
+                            gotoState
                         }, opt);
                     }, local.nop);
                     break;
@@ -1338,24 +1338,24 @@ local.testCase_cryptoAesXxxCbcRawXxx_default = function (opt, onError) {
         return;
     }
     opt = {};
-    local.onNext(opt, function (err, data) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err, data) {
+        switch (opt.gotoState) {
         case 1:
             // encrypt data
             opt.data = new TextEncoder().encode("aa");
             opt.key = "0123456789abcdef0123456789abcdef";
             opt.mode = null;
-            local.cryptoAesXxxCbcRawEncrypt(opt, opt.onNext);
+            local.cryptoAesXxxCbcRawEncrypt(opt, opt.gotoNext);
             break;
         case 2:
             // decrypt data
             opt.data = data.buffer;
-            local.cryptoAesXxxCbcRawDecrypt(opt, opt.onNext);
+            local.cryptoAesXxxCbcRawDecrypt(opt, opt.gotoNext);
             break;
         case 3:
             // validate data
             local.assertJsonEqual(local.bufferToUtf8(data), "aa");
-            opt.onNext();
+            opt.gotoNext();
             break;
         case 4:
             // encrypt data - base64
@@ -1365,24 +1365,24 @@ local.testCase_cryptoAesXxxCbcRawXxx_default = function (opt, onError) {
                 + "0123456789abcdef0123456789abcdef"
             );
             opt.mode = "base64";
-            local.cryptoAesXxxCbcRawEncrypt(opt, opt.onNext);
+            local.cryptoAesXxxCbcRawEncrypt(opt, opt.gotoNext);
             break;
         case 5:
             // decrypt data - base64
             opt.data = data;
-            local.cryptoAesXxxCbcRawDecrypt(opt, opt.onNext);
+            local.cryptoAesXxxCbcRawDecrypt(opt, opt.gotoNext);
             break;
         case 6:
             // validate data
             local.assertJsonEqual(local.bufferToUtf8(data), "aa");
-            opt.onNext();
+            opt.gotoNext();
             break;
         default:
             onError(err, opt);
         }
     });
-    opt.modeNext = 0;
-    opt.onNext();
+    opt.gotoState = 0;
+    opt.gotoNext();
 };
 
 local.testCase_domFragmentRender_default = function (opt, onError) {
@@ -2246,17 +2246,17 @@ local.testCase_onFileModifiedRestart_watchFile = function (opt, onError) {
 
 local.testCase_onNext_err = function (opt, onError) {
 /*
- * this function will test onNext's err handling-behavior
+ * this function will test gotoNext's err handling-behavior
  */
 
     opt = {};
     opt.modeDebug = true;
-    local.onNext(opt, function () {
+    local.gotoNext(opt, function () {
         throw local.errDefault;
     });
-    opt.modeNext = 0;
+    opt.gotoState = 0;
     local.tryCatchOnError(function () {
-        opt.onNext();
+        opt.gotoNext();
     }, function (err) {
         // validate err occurred
         local.assertThrow(err, err);
@@ -2269,11 +2269,11 @@ local.testCase_onParallelList_default = function (opt, onError) {
  * this function will test onParallelList's default handling-behavior
  */
     opt = {};
-    local.onNext(opt, function (err) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err) {
+        switch (opt.gotoState) {
         case 1:
             // test null-case handling-behavior
-            local.onParallelList({}, local.onErrorThrow, opt.onNext);
+            local.onParallelList({}, local.onErrorThrow, opt.gotoNext);
             break;
         case 2:
             opt.list = [
@@ -2290,7 +2290,7 @@ local.testCase_onParallelList_default = function (opt, onError) {
             }, function (err) {
                 // validate err occurred
                 local.assertThrow(err, err);
-                opt.onNext();
+                opt.gotoNext();
             });
             break;
         case 3:
@@ -2322,7 +2322,7 @@ local.testCase_onParallelList_default = function (opt, onError) {
                     local.assertThrow(option2.retry < 1);
                     onParallel(null, option2);
                 });
-            }, opt.onNext, opt.rateLimit);
+            }, opt.gotoNext, opt.rateLimit);
             break;
         case 4:
             // validate data
@@ -2344,7 +2344,7 @@ local.testCase_onParallelList_default = function (opt, onError) {
                 opt.rateMax = Math.max(onParallel.counter, opt.rateMax);
                 opt.data[option2.ii] = option2.elem;
                 onParallel(null, opt);
-            }, opt.onNext);
+            }, opt.gotoNext);
             break;
         case 5:
             // validate data
@@ -2352,14 +2352,14 @@ local.testCase_onParallelList_default = function (opt, onError) {
                 1, 2, 3, 4, 5
             ]);
             local.assertJsonEqual(opt.rateMax, 2);
-            opt.onNext();
+            opt.gotoNext();
             break;
         default:
             onError(err, opt);
         }
     });
-    opt.modeNext = 0;
-    opt.onNext();
+    opt.gotoState = 0;
+    opt.gotoNext();
 };
 
 local.testCase_onParallel_default = function (opt, onError) {
@@ -2455,7 +2455,7 @@ local.testCase_replStart_default = function (opt, onError) {
         return;
     }
     local.replStart();
-    // coverage-hack - test replStart's muliple-call handling-behavior
+    // hack-istanbul - test replStart's muliple-call handling-behavior
     local.replStart();
     local.testMock([
         [
@@ -2817,8 +2817,8 @@ local.testCase_taskCreateCached_default = function (opt, onError) {
     var onTask;
     var option2;
     opt = {};
-    local.onNext(opt, function (err, data) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err, data) {
+        switch (opt.gotoState) {
         // test no cache handling-behavior
         case 1:
             onTask = function (onError) {
@@ -2833,9 +2833,9 @@ local.testCase_taskCreateCached_default = function (opt, onError) {
                 cacheDict: opt.cacheDict,
                 key: opt.key,
                 // test onCacheWrite handling-behavior
-                onCacheWrite: opt.onNext
+                onCacheWrite: opt.gotoNext
             };
-            local.taskCreateCached(option2, onTask, opt.onNext);
+            local.taskCreateCached(option2, onTask, opt.gotoNext);
             break;
         case 2:
             // validate data
@@ -2852,9 +2852,9 @@ local.testCase_taskCreateCached_default = function (opt, onError) {
                 // test modeCacheUpdate handling-behavior
                 modeCacheUpdate: true,
                 // test onCacheWrite handling-behavior
-                onCacheWrite: opt.onNext
+                onCacheWrite: opt.gotoNext
             };
-            local.taskCreateCached(option2, onTask, opt.onNext);
+            local.taskCreateCached(option2, onTask, opt.gotoNext);
             break;
         case 4:
             // validate data
@@ -2868,21 +2868,21 @@ local.testCase_taskCreateCached_default = function (opt, onError) {
                 cacheDict: opt.cacheDict,
                 key: opt.key
             };
-            local.taskCreateCached(option2, onTask, opt.onNext);
+            local.taskCreateCached(option2, onTask, opt.gotoNext);
             break;
         case 6:
             // validate data
             local.assertJsonEqual(data, "bb");
             // validate modeCacheHit
             local.assertJsonEqual(option2.modeCacheHit, true);
-            opt.onNext();
+            opt.gotoNext();
             break;
         default:
             onError(err, opt);
         }
     });
-    opt.modeNext = 0;
-    opt.onNext();
+    opt.gotoState = 0;
+    opt.gotoNext();
 };
 
 local.testCase_taskCreate_multipleCallback = function (opt, onError) {
@@ -3301,9 +3301,9 @@ local.assetsDict["/assets.swgg.swagger.json"] = (
     || local.assetsDict["/assets.swgg.swagger.json"]
     || local.assetsDict["/assets.swgg.swagger.petstore.json"]
 );
-// coverage-hack - re-run test-server
+// hack-istanbul - re-run test-server
 local.testRunServer(local);
-// coverage-hack - stateInit
+// hack-istanbul - stateInit
 local.stateInit({});
 // init test-middleware
 local.middlewareList.push(function (req, res, next) {

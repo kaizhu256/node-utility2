@@ -56,7 +56,7 @@ this zero-dependency package will provide a collection of high-level functions t
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- rename function onNext to gotoNext and var modeNext to gotoState
+- jslint - add async/await support
 - migrate browser-testing from electron to headless-chromium
 - audit `{}` may have been `[]`
 - rename var value to val
@@ -73,6 +73,7 @@ this zero-dependency package will provide a collection of high-level functions t
 
 #### changelog 2019.8.17
 - npm publish 2019.8.17
+- rename coverage-hack to hack-istanbul, gotoNext to gotoNext, gotoState to gotoState, jslint-hack to hack-jslint
 - istanbul - add cli-command report
 - add files lib.puppeteer.js, raw.puppeteer.js
 - istanbul - fix pragma-istanbul-ignore in acorn
@@ -953,7 +954,7 @@ utility2-comment -->\n\
     /*\n\
      * this function will run a failed error demo\n\
      */\n\
-        // jslint-hack\n\
+        // hack-jslint\n\
         window.utility2.nop(opt);\n\
         onError(new Error("this is a failed error demo"));\n\
     };\n\
@@ -1187,9 +1188,9 @@ local.http.createServer(function (req, res) {
         "2019.01.21 github-crud",
         "2019.01.30 bootstrap-lite",
         "2019.02.20 swgg",
-        "2019.08.09 istanbul-lite",
-        "2019.08.10 jslint-lite",
-        "2019.08.16 apidoc-lite",
+        "2019.08.09 istanbul-lite master",
+        "2019.08.10 jslint-lite master",
+        "2019.08.16 apidoc-lite master",
         "2019.08.01 utility2"
     ],
     "version": "2019.8.17"
@@ -1350,7 +1351,7 @@ RUN (set -e; \
 # this shell script will run the build for this package
 
 shBuildCiAfter () {(set -e
-    #// coverage-hack - test comment handling-behavior
+    #// hack-istanbul - test comment handling-behavior
     # shDeployCustom
     shDeployGithub
     shDeployHeroku

@@ -2996,8 +2996,8 @@ local.browserTest = function (opt, onError) {
             return;
         }
     };
-    local.onNext(opt, function (err, data) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err, data) {
+        switch (opt.gotoState) {
         // node - init
         case 1:
             // init fileElectronHtml
@@ -3050,7 +3050,7 @@ local.browserTest = function (opt, onError) {
             }, 1);
             // init timerTimeout
             timerTimeout = local.onTimeout(
-                opt.onNext,
+                opt.gotoNext,
                 opt.timeoutDefault,
                 opt.testName
             ).unref();
@@ -3060,7 +3060,7 @@ local.browserTest = function (opt, onError) {
                     data[key] = opt[key];
                 }
             });
-            data.modeNext = 20;
+            data.gotoState = 20;
             // init file fileElectronHtml
             local.fsWriteFileWithMkdirpSync(opt.fileElectronHtml, (
                 "//<body "
@@ -3088,14 +3088,14 @@ local.browserTest = function (opt, onError) {
                     "browserTest",
                     "nop",
                     "onErrorWithStack",
-                    "onNext"
+                    "gotoNext"
                 ].map(function (key) {
                     return "local." + key + "=" + String(local[key])
                     // html-safe
                     .replace((
                         /<\//g
                     ), "<\\/")
-                    // coverage-hack - un-instrument
+                    // hack-istanbul - un-instrument
                     .replace((
                         /\b__cov_.*?\+\+/g
                     ), "0") + ";\n";
@@ -3111,7 +3111,7 @@ local.browserTest = function (opt, onError) {
             );
             // spawn an electron process to test a url
             opt.npm_config_time_exit = opt.timeExit;
-            data.modeNext = 10;
+            data.gotoState = 10;
             local.childProcessSpawnWithTimeout("electron", [
                 __filename,
                 "utility2.browserTest",
@@ -3127,7 +3127,7 @@ local.browserTest = function (opt, onError) {
                     ]
                 ),
                 timeout: opt.timeoutDefault
-            }).once("error", opt.onNext).once("exit", opt.onNext);
+            }).once("error", opt.gotoNext).once("exit", opt.gotoNext);
             return;
         // node - after electron
         case 2:
@@ -3135,8 +3135,8 @@ local.browserTest = function (opt, onError) {
                 "\nbrowserTest - exit-code " + err + " - " + opt.url + "\n"
             );
             if (opt.modeBrowserTest !== "test") {
-                opt.modeNext += 1000;
-                opt.onNext();
+                opt.gotoState += 1000;
+                opt.gotoNext();
                 return;
             }
             // merge browser coverage
@@ -3169,15 +3169,17 @@ local.browserTest = function (opt, onError) {
                 local.env.npm_config_dir_build + "/test-report.json",
                 JSON.stringify(window.utility2_testReport)
             );
-            opt.onNext(data && data.testsFailed && new Error(data.testsFailed));
+            opt.gotoNext(
+                data && data.testsFailed && new Error(data.testsFailed)
+            );
             return;
         // node.electron - init
         case 11:
             // handle uncaughtException
-            window.process.once("uncaughtException", opt.onNext);
+            window.process.once("uncaughtException", opt.gotoNext);
             // wait for electron to init
             opt.electron.app.once("ready", function () {
-                opt.onNext();
+                opt.gotoNext();
             });
             return;
         // node.electron - after ready
@@ -3193,7 +3195,7 @@ local.browserTest = function (opt, onError) {
                 x: 0,
                 y: 0
             });
-            onParallel = local.onParallel(opt.onNext);
+            onParallel = local.onParallel(opt.gotoNext);
             // onParallel - html
             onParallel.counter += 1;
             // onParallel - test
@@ -3209,7 +3211,7 @@ local.browserTest = function (opt, onError) {
                 try {
                     onMessage(evt, type, data);
                 } catch (errCaught) {
-                    opt.onNext(errCaught);
+                    opt.gotoNext(errCaught);
                 }
             }, false);
             // init browserWindow
@@ -3220,11 +3222,11 @@ local.browserTest = function (opt, onError) {
         // node.electron - screenshot
         case 13:
             opt.browserWindow.capturePage(opt, function (data) {
-                opt.onNext(null, data);
+                opt.gotoNext(null, data);
             });
             return;
         case 14:
-            opt.fs.writeFile(opt.fileScreenshot, data.toPNG(), opt.onNext);
+            opt.fs.writeFile(opt.fileScreenshot, data.toPNG(), opt.gotoNext);
             return;
         case 15:
             console.error(
@@ -3267,10 +3269,10 @@ local.browserTest = function (opt, onError) {
             }());
             // init event-handling - load
             window.addEventListener("load", function () {
-                setTimeout(opt.onNext, 5000);
+                setTimeout(opt.gotoNext, 5000);
             });
             // wait for render before screenshot
-            setTimeout(opt.onNext, opt.timeoutScreenshot);
+            setTimeout(opt.gotoNext, opt.timeoutScreenshot);
             if (opt.modeBrowserTest !== "test") {
                 return;
             }
@@ -3326,7 +3328,7 @@ local.browserTest = function (opt, onError) {
         "modeBrowserTest",
         "modeCoverageMerge",
         "modeDebug",
-        "modeNext",
+        "gotoState",
         "modeSilent",
         "npm_config_dir_build",
         "npm_config_dir_tmp",
@@ -3345,15 +3347,15 @@ local.browserTest = function (opt, onError) {
             opt[key] = opt[key] || local.env[key];
         }
     });
-    opt.modeNext = Number(opt.modeNext) || 0;
+    opt.gotoState = Number(opt.gotoState) || 0;
     opt.timeoutDefault = (
         Number(opt.timeoutDefault) || Number(local.timeoutDefault)
     );
-    if (10 <= opt.modeNext) {
+    if (10 <= opt.gotoState) {
         opt.electron = opt.electron || require("electron");
     }
     opt.fs = opt.fs || require("fs");
-    opt.onNext();
+    opt.gotoNext();
 };
 
 local.bufferConcat = function (bffList) {
@@ -4745,6 +4747,40 @@ local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
     }
 };
 
+local.gotoNext = function (opt, onError) {
+/*
+ * this function will wrap onError inside recursive-function <opt>.gotoNext,
+ * and append the current-stack to any err
+ */
+    opt.gotoNext = local.onErrorWithStack(function (err, data, meta) {
+        try {
+            opt.gotoState += (
+                (err && !opt.modeErrorIgnore)
+                ? 1000
+                : 1
+            );
+            if (opt.modeDebug) {
+                console.error("gotoNext - " + JSON.stringify({
+                    gotoState: opt.gotoState,
+                    errorMessage: err && err.message
+                }));
+                if (err && err.stack) {
+                    console.error(err.stack);
+                }
+            }
+            onError(err, data, meta);
+        } catch (errCaught) {
+            // throw errCaught to break infinite recursion-loop
+            if (opt.errCaught) {
+                local.assertThrow(null, opt.errCaught);
+            }
+            opt.errCaught = errCaught;
+            opt.gotoNext(errCaught, data, meta);
+        }
+    });
+    return opt;
+};
+
 local.isNullOrUndefined = function (arg0) {
 /*
  * this function will test if arg0 is null or undefined
@@ -5196,20 +5232,20 @@ local.middlewareAssetsCached = function (req, res, next) {
  */
     var opt;
     opt = {};
-    local.onNext(opt, function (err, data) {
+    local.gotoNext(opt, function (err, data) {
         opt.result = opt.result || local.assetsDict[req.urlParsed.pathname];
         if (opt.result === undefined) {
             next(err);
             return;
         }
-        switch (opt.modeNext) {
+        switch (opt.gotoState) {
         case 1:
             // skip gzip
             if (res.headersSent || !(
                 /\bgzip\b/
             ).test(req.headers["accept-encoding"])) {
-                opt.modeNext += 1;
-                opt.onNext();
+                opt.gotoState += 1;
+                opt.gotoNext();
                 return;
             }
             // gzip and cache result
@@ -5220,20 +5256,20 @@ local.middlewareAssetsCached = function (req, res, next) {
                 local.zlib.gzip(opt.result, function (err, data) {
                     onError(err, !err && data.toString("base64"));
                 });
-            }, opt.onNext);
+            }, opt.gotoNext);
             break;
         case 2:
             // set gzip header
             opt.result = local.base64ToBuffer(data);
             res.setHeader("Content-Encoding", "gzip");
             res.setHeader("Content-Length", opt.result.length);
-            opt.onNext();
+            opt.gotoNext();
             break;
         case 3:
             local.middlewareCacheControlLastModified(
                 req,
                 res,
-                opt.onNext
+                opt.gotoNext
             );
             break;
         case 4:
@@ -5241,8 +5277,8 @@ local.middlewareAssetsCached = function (req, res, next) {
             break;
         }
     });
-    opt.modeNext = 0;
-    opt.onNext();
+    opt.gotoState = 0;
+    opt.gotoNext();
 };
 
 local.middlewareBodyRead = function (req, ignore, next) {
@@ -5778,40 +5814,6 @@ local.onFileModifiedRestart = function (file) {
     }
 };
 
-local.onNext = function (opt, onError) {
-/*
- * this function will wrap onError inside recursive-function <opt>.onNext,
- * and append the current-stack to any err
- */
-    opt.onNext = local.onErrorWithStack(function (err, data, meta) {
-        try {
-            opt.modeNext += (
-                (err && !opt.modeErrorIgnore)
-                ? 1000
-                : 1
-            );
-            if (opt.modeDebug) {
-                console.error("onNext - " + JSON.stringify({
-                    modeNext: opt.modeNext,
-                    errorMessage: err && err.message
-                }));
-                if (err && err.stack) {
-                    console.error(err.stack);
-                }
-            }
-            onError(err, data, meta);
-        } catch (errCaught) {
-            // throw errCaught to break infinite recursion-loop
-            if (opt.errCaught) {
-                local.assertThrow(null, opt.errCaught);
-            }
-            opt.errCaught = errCaught;
-            opt.onNext(errCaught, data, meta);
-        }
-    });
-    return opt;
-};
-
 local.onParallel = function (onError, onEach, onRetry) {
 /*
  * this function will create a function that will
@@ -6139,7 +6141,7 @@ vendor)s{0,1}(\\b|_)\
     );
     process.stdout._write = function (chunk, encoding, callback) {
         process.stdout._writeDefault(chunk, encoding, callback);
-        // coverage-hack - ignore else-statement
+        // hack-istanbul - ignore else-statement
         local.nop(that.socket.writable && (function () {
             that.socket.write(chunk, encoding);
         }()));
@@ -6154,7 +6156,7 @@ vendor)s{0,1}(\\b|_)\
         that.socket.on("error", that.onError);
         that.socket.setKeepAlive(true);
     });
-    // coverage-hack - ignore else-statement
+    // hack-istanbul - ignore else-statement
     local.nop(process.env.PORT_REPL && (function () {
         console.error(
             "repl-server listening on port " + process.env.PORT_REPL
@@ -6216,7 +6218,7 @@ local.requireInSandbox = function (file) {
                 mockDict[key] = function () {
                     return;
                 };
-                // coverage-hack
+                // hack-istanbul
                 mockDict[key]();
             }
         });
@@ -7000,8 +7002,8 @@ local.taskCreateCached = function (opt, onTask, onError) {
  * 3. save onTask's result to cache
  * 4. if cache-miss, then call onError with onTask's result
  */
-    local.onNext(opt, function (err, data) {
-        switch (opt.modeNext) {
+    local.gotoNext(opt, function (err, data) {
+        switch (opt.gotoState) {
         // 1. if cache-hit, then call onError with cacheValue
         case 1:
             // read cacheValue from memory-cache
@@ -7019,11 +7021,11 @@ local.taskCreateCached = function (opt, onTask, onError) {
                 }
             }
             // run background-task with lower priority for cache-hit
-            setTimeout(opt.onNext, opt.modeCacheHit && opt.cacheTtl);
+            setTimeout(opt.gotoNext, opt.modeCacheHit && opt.cacheTtl);
             break;
         // 2. run onTask in background to update cache
         case 2:
-            local.taskCreate(opt, onTask, opt.onNext);
+            local.taskCreate(opt, onTask, opt.gotoNext);
             break;
         default:
             // 3. save onTask's result to cache
@@ -7039,8 +7041,8 @@ local.taskCreateCached = function (opt, onTask, onError) {
             local.functionOrNop(opt.onCacheWrite)();
         }
     });
-    opt.modeNext = 0;
-    opt.onNext();
+    opt.gotoState = 0;
+    opt.gotoNext();
 };
 
 local.templateRender = function (template, dict, opt) {
@@ -7907,7 +7909,7 @@ local.testRunDefault = function (opt) {
             globalThis.utility2_modeTest = 0;
             // exit with number of tests failed
             local.exit(testReport.testsFailed, testReport);
-        // coverage-hack - wait 1000 ms for timerInterval
+        // hack-istanbul - wait 1000 ms for timerInterval
         }, 1000);
     });
 };
@@ -7934,16 +7936,16 @@ local.testRunServer = function (opt) {
     local.serverLocalReqHandler = function (req, res) {
         var that;
         that = {};
-        local.onNext(that, function (err) {
-            if (err || that.modeNext >= local.middlewareList.length) {
+        local.gotoNext(that, function (err) {
+            if (err || that.gotoState >= local.middlewareList.length) {
                 local.middlewareError(err, req, res);
                 return;
             }
             // recurse with next middleware in middlewareList
-            local.middlewareList[that.modeNext](req, res, that.onNext);
+            local.middlewareList[that.gotoState](req, res, that.gotoNext);
         });
-        that.modeNext = -1;
-        that.onNext();
+        that.gotoState = -1;
+        that.gotoNext();
     };
     globalThis.utility2_serverHttp1 = local.http.createServer(
         local.serverLocalReqHandler
