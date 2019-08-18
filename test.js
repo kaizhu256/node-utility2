@@ -548,6 +548,7 @@ local.testCase_ajax_default = function (opt, onError) {
             onParallel.counter += 1;
             local.ajax({
                 responseType,
+                timeout: 60000,
                 url: (
                     local.isBrowser
                     ? location.href
@@ -564,6 +565,7 @@ local.testCase_ajax_default = function (opt, onError) {
             onParallel.counter += 1;
             local.ajax({
                 responseType,
+                timeout: 60000,
                 undefined,
                 url: (
                     local.isBrowser

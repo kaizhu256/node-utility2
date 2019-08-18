@@ -538,7 +538,7 @@ local.coverageReportCreate = function () {
             Object.keys(opt.coverageCodeDict).forEach(function (key) {
                 globalThis.__coverageCodeDict__[key] = (
                     globalThis.__coverageCodeDict__[key]
-                    || opt.coverageCodeDict[key]
+                    || true
                 );
             });
         } catch (ignore) {}
@@ -642,7 +642,7 @@ local.instrumentSync = function (code, file) {
     // 1. normalize the file
     file = local._istanbul_path.resolve("/", file);
     // 2. save code to __coverageCodeDict__[file] for future html-report
-    globalThis.__coverageCodeDict__[file] = code;
+    globalThis.__coverageCodeDict__[file] = true;
     // 3. return instrumented code
     return new local.Instrumenter({
         embedSource: true,
@@ -12478,7 +12478,23 @@ local.cliDict.instrument = function () {
     ));
 };
 
-//
+local.cliDict.report = function () {
+/*
+ * <coverageJson>
+ * will create coverage-report from file <coverageJson>
+ */
+    process.argv[3] = local.path.resolve(process.cwd(), process.argv[3]);
+    globalThis.__coverage__ = JSON.parse(
+        local.fs.readFileSync(process.argv[3])
+    );
+    globalThis.__coverageCodeDict__ = {};
+    Object.entries(globalThis.__coverage__).forEach(function (entry) {
+        globalThis.__coverageCodeDict__[entry[0]] = true;
+        entry[1].code = entry[1].code || (entry[1].text || "").split("\n");
+    });
+    local.coverageReportCreate();
+};
+
 local.cliDict.test = function () {
 /*
  * <script>

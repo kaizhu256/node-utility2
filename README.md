@@ -56,6 +56,7 @@ this zero-dependency package will provide a collection of high-level functions t
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- rename function onNext to gotoNext and var modeNext to gotoState
 - migrate browser-testing from electron to headless-chromium
 - audit `{}` may have been `[]`
 - rename var value to val
@@ -72,6 +73,8 @@ this zero-dependency package will provide a collection of high-level functions t
 
 #### changelog 2019.8.17
 - npm publish 2019.8.17
+- istanbul - add cli-command report
+- add files lib.puppeteer.js, raw.puppeteer.js
 - istanbul - fix pragma-istanbul-ignore in acorn
 - none
 

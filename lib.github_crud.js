@@ -201,7 +201,9 @@ local.ajax = function (opt, onError) {
     var bufferValidateAndCoerce;
     var isDone;
     var local2;
+    var onError2;
     var onEvent;
+    var stack;
     var streamCleanup;
     var timeout;
     var tmp;
@@ -338,9 +340,17 @@ local.ajax = function (opt, onError) {
             // cleanup reqStream and resStream
             streamCleanup(xhr.reqStream);
             streamCleanup(xhr.resStream);
-            onError(xhr.err, xhr);
+            onError2(xhr.err, xhr);
             break;
         }
+    };
+    // init onError2
+    stack = new Error().stack;
+    onError2 = function (err, xhr) {
+        if (err && typeof err.stack === "string") {
+            err.stack += "\n" + stack;
+        }
+        onError(err, xhr);
     };
     streamCleanup = function (stream) {
     /*
@@ -399,10 +409,6 @@ local.ajax = function (opt, onError) {
         xhr.resHeaders = {};
         xhr.timeStart = xhr.timeStart || Date.now();
     };
-    // init onError
-    if (local2.onErrorWithStack) {
-        onError = local2.onErrorWithStack(onError);
-    }
     // init xhr - XMLHttpRequest
     xhr = (
         local.isBrowser
@@ -469,7 +475,7 @@ local.ajax = function (opt, onError) {
     // init timerTimeout
     xhr.timerTimeout = setTimeout(function () {
         xhr.err = xhr.err || new Error(
-            "onTimeout - errTimeout - "
+            "onTimeout - "
             + timeout + " ms - " + "ajax " + xhr.method + " " + xhr.url
         );
         xhr.abort();
@@ -716,13 +722,13 @@ local.onErrorWithStack = function (onError) {
         /(.*?)\n.*?$/m
     ), "$1");
     onError2 = function (err, data, meta) {
+        // append current-stack to err.stack
         if (
             err
             && typeof err.stack === "string"
             && err !== local.errDefault
             && String(err.stack).indexOf(stack.split("\n")[2]) < 0
         ) {
-            // append current-stack to err.stack
             err.stack += "\n" + stack;
         }
         onError(err, data, meta);

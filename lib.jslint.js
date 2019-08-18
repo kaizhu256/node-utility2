@@ -422,13 +422,13 @@ local.onErrorWithStack = function (onError) {
         /(.*?)\n.*?$/m
     ), "$1");
     onError2 = function (err, data, meta) {
+        // append current-stack to err.stack
         if (
             err
             && typeof err.stack === "string"
             && err !== local.errDefault
             && String(err.stack).indexOf(stack.split("\n")[2]) < 0
         ) {
-            // append current-stack to err.stack
             err.stack += "\n" + stack;
         }
         onError(err, data, meta);
