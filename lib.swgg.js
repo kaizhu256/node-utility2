@@ -2419,7 +2419,7 @@ local.apiUpdate = function (swaggerJson) {
                     /\n/g
                 ), "\n    ") + "\n */"
             )
-                .replace((
+            .replace((
                 /\n/g
             ), "\n                "))
         );
@@ -6282,7 +6282,4 @@ local.swgg.apiUpdate(local.fsReadFileOrEmptyStringSync(
     "json"
 ));
 }());
-
-
-
 }());

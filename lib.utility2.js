@@ -994,9 +994,6 @@ local.http.createServer(function (req, res) {\n\
     res.end();\n\
 }).listen(process.env.PORT);\n\
 }());\n\
-\n\
-\n\
-\n\
 }());\n\
 ';
 
@@ -1050,9 +1047,6 @@ local.my_app = local;\n\
 /* validateLineSortedReset */\n\
 return;\n\
 }());\n\
-\n\
-\n\
-\n\
 }());\n\
 ';
 
@@ -1312,9 +1306,6 @@ local.testRunDefault(local);\n\
 (function () {\n\
 return;\n\
 }());\n\
-\n\
-\n\
-\n\
 }());\n\
 ';
 
@@ -4228,7 +4219,7 @@ local.cliRun = function (opt) {
             return (
                 elem.description + "\n  " + file
                 + ("  " + elem.command.sort().join("|") + "  ")
-                    .replace((
+                .replace((
                     /^\u0020{4}$/
                 ), "  ")
                 + elem.argList.join("  ")
@@ -5363,8 +5354,8 @@ local.middlewareFileServer = function (req, res, next) {
     .replace((
         /.*\/\.\.\//g
     ), "/"))
-        // replace trailing '/' with '/index.html'
-        .replace((
+    // replace trailing '/' with '/index.html'
+    .replace((
         /\/$/
     ), "/index.html");
     // serve file from cache
@@ -6167,7 +6158,7 @@ vendor)s{0,1}(\\b|_)\
 
 local.requireInSandbox = function (file) {
 /*
- * this function will require the file in a sandbox-lite env
+ * this function will require <file> in sandbox-env
  */
     var exports;
     var mockDict;
@@ -6208,13 +6199,9 @@ local.requireInSandbox = function (file) {
         tmp = elem[0][elem[1]];
         mockDict = {};
         Object.keys(tmp).forEach(function (key) {
-            if (
-                typeof tmp[key] === "function"
-                && !(
-                    /^(?:fs\.Read|fs\.read|process\.binding|process\.dlopen)/
-                )
-                .test(elem[1] + "." + key)
-            ) {
+            if (typeof tmp[key] === "function" && !(
+                /^(?:fs\.Read|fs\.read|process\.binding|process\.dlopen)/
+            ).test(elem[1] + "." + key)) {
                 mockDict[key] = function () {
                     return;
                 };
@@ -8687,7 +8674,4 @@ local.assetsDict["/assets.utility2.rollup.js"] = [
     }
 });
 }());
-
-
-
 }());

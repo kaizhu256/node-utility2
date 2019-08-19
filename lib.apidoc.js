@@ -295,7 +295,7 @@ local.cliRun = function (opt) {
             return (
                 elem.description + "\n  " + file
                 + ("  " + elem.command.sort().join("|") + "  ")
-                    .replace((
+                .replace((
                     /^\u0020{4}$/
                 ), "  ")
                 + elem.argList.join("  ")
@@ -815,8 +815,8 @@ local.apidocCreate = function (opt) {
             elem.typeof + " <span class=\"apidocSignatureSpan\">"
             + elem.moduleName + ".</span>" + key
         )
-            // handle case where module is a function
-            .replace(">.<", "><");
+        // handle case where module is a function
+        .replace(">.<", "><");
         if (elem.typeof !== "function") {
             return elem;
         }
@@ -1351,7 +1351,4 @@ if (module === require.main && !globalThis.utility2_rollup) {
     local.cliRun();
 }
 }());
-
-
-
 }());

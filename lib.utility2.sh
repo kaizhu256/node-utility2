@@ -3487,6 +3487,10 @@ shUtility2DependentsSync () {(set -e
     ln -f "utility2/lib.utility2.sh" "$HOME"
     if [ -d "$HOME/bin" ]
     then
+        ln -f "utility2/lib.apidoc.js" "$HOME/bin/utility2-apidoc"
+        ln -f "utility2/lib.github_crud.js" "$HOME/bin/utility2-github_crud"
+        ln -f "utility2/lib.istanbul.js" "$HOME/bin/utility2-istanbul"
+        ln -f "utility2/lib.jslint.js" "$HOME/bin/utility2-jslint"
         ln -f "utility2/lib.utility2.sh" "$HOME/bin/utility2"
     fi
     for DIR in $UTILITY2_DEPENDENTS $(ls -d swgg-* 2>/dev/null)
@@ -5116,9 +5120,6 @@ local.throwError = function () {
     throw new Error();
 };
 }());
-
-
-
 }());
 '
 (set -e

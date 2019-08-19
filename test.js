@@ -1465,7 +1465,7 @@ local.testCase_jsonStringifyOrdered_default = function (opt, onError) {
  * this function will test jsonStringifyOrdered's default handling-behavior
  */
     // test data-type handling-behavior
-    local.identity([
+    ([
         undefined,
         null,
         false,
@@ -3462,7 +3462,4 @@ if (process.argv[2]) {
     local.Module.runMain();
 }
 }());
-
-
-
 }());

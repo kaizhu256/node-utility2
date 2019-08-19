@@ -56,15 +56,11 @@ this zero-dependency package will provide a collection of high-level functions t
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- jslint - add async/await support
 - migrate browser-testing from electron to headless-chromium
-- audit `{}` may have been `[]`
 - rename var value to val
 - replace uglifyjs-lite with terser-lite (v2.8.29)
 - jslint - remove bad_property_a and unexpected_a hacks
-- jslint - fix lineOffset issue with ignored-lines
 - jslint - sort nested switch-statements
-- jslint-autofix - move inner-loop to outer
 - add default testCase _testCase_cliRun_help
 - merge class _http.IncomingMessage -> _http.ServerResponse
 - integrate db-lite and github-crud into a cloud-based db on github
@@ -73,6 +69,11 @@ this zero-dependency package will provide a collection of high-level functions t
 
 #### changelog 2019.8.17
 - npm publish 2019.8.17
+- jslint - internalize hacks to function warn_at_extra
+- jslint - unhack const, let from var
+- jslint - upgrade to jslint edition 2019.8.3
+- jslint - add async/await support
+- jslint - remove autofix-js-whitespace - ...}()); to ...}());\n\n\n\n
 - rename coverage-hack to hack-istanbul, gotoNext to gotoNext, gotoState to gotoState, jslint-hack to hack-jslint
 - istanbul - add cli-command report
 - add files lib.puppeteer.js, raw.puppeteer.js
@@ -1079,9 +1080,6 @@ local.http.createServer(function (req, res) {
     res.end();
 }).listen(process.env.PORT);
 }());
-
-
-
 }());
 ```
 

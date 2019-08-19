@@ -783,7 +783,4 @@ if (local.isBrowser) {
     module.exports.__dirname = __dirname;
 }
 }());
-
-
-
 }());

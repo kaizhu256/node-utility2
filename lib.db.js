@@ -326,7 +326,7 @@ local.cliRun = function (opt) {
             return (
                 elem.description + "\n  " + file
                 + ("  " + elem.command.sort().join("|") + "  ")
-                    .replace((
+                .replace((
                     /^\u0020{4}$/
                 ), "  ")
                 + elem.argList.join("  ")
@@ -2550,7 +2550,4 @@ if (module === require.main && !globalThis.utility2_rollup) {
     local.cliRun();
 }
 }());
-
-
-
 }());

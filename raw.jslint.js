@@ -10875,9 +10875,9 @@ return CSSLint;
 
 
 /*
-file https://github.com/douglascrockford/JSLint/blob/ea8401c6a72e21d66f49766af692b09e81d7a79f/jslint.js
-shGithubDateCommitted https://github.com/douglascrockford/JSLint/commits/ea8401c6a72e21d66f49766af692b09e81d7a79f # 2019-01-31T16:38:40Z
-curl https://raw.githubusercontent.com/douglascrockford/JSLint/ea8401c6a72e21d66f49766af692b09e81d7a79f/jslint.js > /tmp/aa.js
+file https://github.com/douglascrockford/JSLint/blob/efefb7d4e22359b6fb1977d33712bcc2fda95f14/jslint.js
+shGithubDateCommitted https://github.com/douglascrockford/JSLint/commits/efefb7d4e22359b6fb1977d33712bcc2fda95f14 # 2019-08-03T17:24:13Z
+curl https://raw.githubusercontent.com/douglascrockford/JSLint/efefb7d4e22359b6fb1977d33712bcc2fda95f14/jslint.js > /tmp/aa.js
 node -e '
 "use strict";
 var aa;
@@ -10898,15 +10898,13 @@ aa = aa.replace((
     /(\n\u0020*?)throw\u0020/g
 ), "$1// hack-jslint - early_stop = true$1early_stop = true;$&").replace((
     /(\n\u0020*?)if\u0020\(right.from\u0020\S+/g
-), "$1// hack-jslint - expected_at$1if (right.from !==").replace((
-    /\bconst\u0020|\blet\u0020/g
-), "var ");
+), "$1// hack-jslint - expected_at$1if (right.from !==");
 require("fs").writeFileSync("/tmp/aa.js", aa);
 ' '
 -// jslint.js
 +/* jslint utility2:true */
-+var next_line_extra = null;
-+var warn_at_extra = null;
++let next_line_extra = null;
++let warn_at_extra = null;
 +// jslint.js
 
 -/*property
@@ -10914,8 +10912,9 @@ require("fs").writeFileSync("/tmp/aa.js", aa);
 +/*\property
 
 -    warnings.push(warning);
+-    return warning;
 +    // hack-jslint - warn_at_extra
-+    warn_at_extra(warning, warnings);
++    return warn_at_extra(warning, warnings);
 
 -            d
 +            // hack-jslint - the_token
@@ -10925,32 +10924,6 @@ require("fs").writeFileSync("/tmp/aa.js", aa);
 +        if (source_line !== undefined) {
 +            // hack-jslint - next_line_extra
 +            source_line = next_line_extra(source_line, line);
-
--        if (!source_line) {
--            source_line = next_line();
--            from = 0;
--            return (
--                source_line === undefined
--                ? (
--                    mega_mode
--                    ? stop_at("unclosed_mega", mega_line, mega_from)
--                    : make("(end)")
--                )
--                : lex()
--            );
--        }
-+        // hack-jslint - un-recurse
-+        while (!source_line) {
-+            source_line = next_line();
-+            from = 0;
-+            if (source_line === undefined) {
-+                return (
-+                    mega_mode
-+                    ? stop_at("unclosed_mega", mega_line, mega_from)
-+                    : make("(end)")
-+                );
-+            }
-+        }
 
 -        if (snippet === "//") {
 +        if (snippet === "//") {
@@ -10969,6 +10942,22 @@ require("fs").writeFileSync("/tmp/aa.js", aa);
 +                ).test(source_line)) {
 +                    regexp_seen = true;
 +                }
+
+-    if (cadet.id === "(comment)") {
++    // hack-jslint - advance token async/await to next_token based on context
++    const next_cadet_id = (tokens[token_nr] || {
++        id: ""
++    }).id;
++    if (
++        (cadet.id === "async" && next_cadet_id === "function")
++        || (cadet.id === "await" && next_cadet_id[0].match(
++            /[a-zA-Z_$]/
++        ))
++    ) {
++        cadet.id = next_cadet_id;
++        token_nr += 1;
++    }
++     if (cadet.id === "(comment)") {
 
 -        warn("unexpected_a", right);
 +        // hack-jslint - unexpected_a
@@ -10996,7 +10985,7 @@ require("fs").writeFileSync("/tmp/aa.js", aa);
 
 -export default Object.freeze(function jslint(
 +// hack-jslint - jslint0
-+var jslint0 = Object.freeze(function (
++const jslint0 = Object.freeze(function (
 
 -        early_stop = true;
 +        // hack-jslint - early_stop = false
@@ -11014,10 +11003,10 @@ require("fs").writeFileSync("/tmp/aa.js", aa);
 ' && utility2-jslint --autofix /tmp/aa.js
 */
 /* jslint utility2:true */
-var next_line_extra = null;
-var warn_at_extra = null;
+let next_line_extra = null;
+let warn_at_extra = null;
 // jslint.js
-// 2019-01-31
+// 2019-08-03
 // Copyright (c) 2015 Douglas Crockford  (www.JSLint.com)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -11160,7 +11149,7 @@ function populate(array, object = empty(), value = true) {
     return object;
 }
 
-var allowed_option = {
+const allowed_option = {
 
 // These are the options that are recognized in the option object or that may
 // appear in a /*jslint*/ directive. Most options will have a boolean value,
@@ -11200,23 +11189,23 @@ var allowed_option = {
     white: true
 };
 
-var anticondition = populate([
+const anticondition = populate([
     "?", "~", "&", "|", "^", "<<", ">>", ">>>", "+", "-", "*", "/", "%",
     "typeof", "(number)", "(string)"
 ]);
 
 // These are the bitwise operators.
 
-var bitwiseop = populate([
+const bitwiseop = populate([
     "~", "^", "^=", "&", "&=", "|", "|=", "<<", "<<=", ">>", ">>=",
     ">>>", ">>>="
 ]);
 
-var escapeable = populate([
+const escapeable = populate([
     "\\", "/", "`", "b", "f", "n", "r", "t"
 ]);
 
-var opener = {
+const opener = {
 
 // The open and close pairs.
 
@@ -11228,19 +11217,19 @@ var opener = {
 
 // The relational operators.
 
-var relationop = populate([
+const relationop = populate([
     "!=", "!==", "==", "===", "<", "<=", ">", ">="
 ]);
 
 // This is the set of infix operators that require a space on each side.
 
-var spaceop = populate([
+const spaceop = populate([
     "!=", "!==", "%", "%=", "&", "&=", "&&", "*", "*=", "+=", "-=", "/",
     "/=", "<", "<=", "<<", "<<=", "=", "==", "===", "=>", ">", ">=",
     ">>", ">>=", ">>>", ">>>=", "^", "^=", "|", "|=", "||"
 ]);
 
-var standard = [
+const standard = [
 
 // These are the globals that are provided by the language standard.
 
@@ -11255,7 +11244,7 @@ var standard = [
     "URIError", "WeakMap", "WeakSet"
 ];
 
-var bundle = {
+const bundle = {
 
 // The bundle contains the raw text messages that are generated by jslint. It
 // seems that they are all error messages and warnings. There are no "Atta
@@ -11376,80 +11365,80 @@ var bundle = {
 // Regular expression literals:
 
 // supplant {variables}
-var rx_supplant = (
+const rx_supplant = (
     /\{([^{}]*)\}/g
 );
 // carriage return, carriage return linefeed, or linefeed
-var rx_crlf = (
+const rx_crlf = (
     /\n|\r\n?/
 );
 // unsafe characters that are silently deleted by one or more browsers
-var rx_unsafe = (
+const rx_unsafe = (
     /[\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/
 );
 // identifier
-var rx_identifier = (
+const rx_identifier = (
     /^([a-zA-Z_$][a-zA-Z0-9_$]*)$/
 );
-var rx_module = (
+const rx_module = (
     /^[a-zA-Z0-9_$:.@\-\/]+$/
 );
-var rx_bad_property = (
+const rx_bad_property = (
     /^_|\$|Sync\$|_$/
 );
 // star slash
-var rx_star_slash = (
+const rx_star_slash = (
     /\*\//
 );
 // slash star
-var rx_slash_star = (
+const rx_slash_star = (
     /\/\*/
 );
 // slash star or ending slash
-var rx_slash_star_or_slash = (
+const rx_slash_star_or_slash = (
     /\/\*|\/$/
 );
 // uncompleted work comment
-var rx_todo = (
+const rx_todo = (
     /\b(?:todo|TO\s?DO|HACK)\b/
 );
 // tab
-var rx_tab = (
+const rx_tab = (
     /\t/g
 );
 // directive
-var rx_directive = (
+const rx_directive = (
     /^(jslint|property|global)\s+(.*)$/
 );
-var rx_directive_part = (
+const rx_directive_part = (
     /^([a-zA-Z$_][a-zA-Z0-9$_]*)(?::\s*(true|false))?,?\s*(.*)$/
 );
 // token (sorry it is so long)
-var rx_token = (
+const rx_token = (
     /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0|[1-9][0-9]*))(.*)$/
 );
-var rx_digits = (
+const rx_digits = (
     /^([0-9]+)(.*)$/
 );
-var rx_hexs = (
+const rx_hexs = (
     /^([0-9a-fA-F]+)(.*)$/
 );
-var rx_octals = (
+const rx_octals = (
     /^([0-7]+)(.*)$/
 );
-var rx_bits = (
+const rx_bits = (
     /^([01]+)(.*)$/
 );
 // mega
-var rx_mega = (
+const rx_mega = (
     /[`\\]|\$\{/
 );
 // JSON number
-var rx_JSON_number = (
+const rx_JSON_number = (
     /^-?\d+(?:\.\d*)?(?:e[\-+]?\d+)?$/i
 );
 // initial cap
-var rx_cap = (
+const rx_cap = (
     /^[A-Z]/
 );
 
@@ -11462,7 +11451,7 @@ function is_letter(string) {
 
 function supplant(string, object) {
     return string.replace(rx_supplant, function (found, filling) {
-        var replacement = object[filling];
+        const replacement = object[filling];
         return (
             replacement !== undefined
             ? replacement
@@ -11471,36 +11460,36 @@ function supplant(string, object) {
     });
 }
 
-var anon; // The guessed name for anonymous functions.
-var block_stack; // The stack of blocks.
-var blockage; // The current block.
-var declared_globals; // The object containing the global declarations.
-var directive_mode; // true if directives are still allowed.
-var directives; // The directive comments.
-var early_stop; // true if JSLint cannot finish.
-var exports; // The exported names and values.
-var froms; // The array collecting all import-from strings.
-var fudge; // true if the natural numbers start with 1.
-var functionage; // The current function.
-var functions; // The array containing all of the functions.
-var global; // The global object; the outermost context.
-var json_mode; // true if parsing JSON.
-var lines; // The array containing source lines.
-var mega_mode; // true if currently parsing a megastring literal.
-var module_mode; // true if import or export was used.
-var next_token; // The next token to be examined in the parse.
-var option; // The options parameter.
-var property; // The object containing the tallied property names.
-var shebang; // true if a #! was seen on the first line.
-var stack; // The stack of functions.
-var syntax; // The object containing the parser.
-var tenure; // The predefined property registry.
-var token; // The current token being examined in the parse.
-var token_nr; // The number of the next token.
-var tokens; // The array of tokens.
-var tree; // The abstract parse tree.
-var var_mode; // "var" if using var; "let" if using let.
-var warnings; // The array collecting all generated warnings.
+let anon; // The guessed name for anonymous functions.
+let block_stack; // The stack of blocks.
+let blockage; // The current block.
+let declared_globals; // The object containing the global declarations.
+let directive_mode; // true if directives are still allowed.
+let directives; // The directive comments.
+let early_stop; // true if JSLint cannot finish.
+let exports; // The exported names and values.
+let froms; // The array collecting all import-from strings.
+let fudge; // true if the natural numbers start with 1.
+let functionage; // The current function.
+let functions; // The array containing all of the functions.
+let global; // The global object; the outermost context.
+let json_mode; // true if parsing JSON.
+let lines; // The array containing source lines.
+let mega_mode; // true if currently parsing a megastring literal.
+let module_mode; // true if import or export was used.
+let next_token; // The next token to be examined in the parse.
+let option; // The options parameter.
+let property; // The object containing the tallied property names.
+let shebang; // true if a #! was seen on the first line.
+let stack; // The stack of functions.
+let syntax; // The object containing the parser.
+let tenure; // The predefined property registry.
+let token; // The current token being examined in the parse.
+let token_nr; // The number of the next token.
+let tokens; // The array of tokens.
+let tree; // The abstract parse tree.
+let var_mode; // "var" if using var; "let" if using let.
+let warnings; // The array collecting all generated warnings.
 
 // Error reportage functions:
 
@@ -11543,7 +11532,7 @@ function warn_at(code, line, column, a, b, c, d) {
 // Report an error at some line and column of the program. The warning object
 // resembles an exception.
 
-    var warning = {
+    const warning = {
         // ~~
         name: "JSLintError",
         column,
@@ -11564,8 +11553,7 @@ function warn_at(code, line, column, a, b, c, d) {
     }
     warning.message = supplant(bundle[code] || code, warning);
     // hack-jslint - warn_at_extra
-    warn_at_extra(warning, warnings);
-    return warning;
+    return warn_at_extra(warning, warnings);
 }
 
 function stop_at(code, line, column, a, b, c, d) {
@@ -11637,20 +11625,20 @@ function tokenize(source) {
     );
     tokens = [];
 
-    var char; // a popular character
-    var column = 0; // the column number of the next character
-    var first; // the first token
-    var from; // the starting column number of the token
-    var line = -1; // the line number of the next character
-    var nr = 0; // the next token number
-    var previous = global; // the previous token including comments
-    var prior = global; // the previous token excluding comments
-    var mega_from; // the starting column of megastring
-    var mega_line; // the starting line of megastring
-    var regexp_seen; // regular expression literal seen on this line
-    var snippet; // a piece of string
-    var source_line = ""; // the remaining line source string
-    var whole_line = ""; // the whole line source string
+    let char; // a popular character
+    let column = 0; // the column number of the next character
+    let first; // the first token
+    let from; // the starting column number of the token
+    let line = -1; // the line number of the next character
+    let nr = 0; // the next token number
+    let previous = global; // the previous token including comments
+    let prior = global; // the previous token excluding comments
+    let mega_from; // the starting column of megastring
+    let mega_line; // the starting line of megastring
+    let regexp_seen; // regular expression literal seen on this line
+    let snippet; // a piece of string
+    let source_line = ""; // the remaining line source string
+    let whole_line = ""; // the whole line source string
 
     if (lines[0].startsWith("#!")) {
         line = 0;
@@ -11663,7 +11651,7 @@ function tokenize(source) {
 // replace them with spaces and give a warning. Also warn if the line contains
 // unsafe characters or is too damn long.
 
-        var at;
+        let at;
         if (
             !option.long
             && whole_line.length > 80
@@ -11764,7 +11752,7 @@ function tokenize(source) {
     }
 
     function some_digits(rx, quiet) {
-        var result = source_line.match(rx);
+        const result = source_line.match(rx);
         if (result) {
             char = result[1];
             column += char.length;
@@ -11821,7 +11809,7 @@ function tokenize(source) {
 
 // Make the token object and append it to the tokens list.
 
-        var the_token = {
+        const the_token = {
             from,
             id,
             identifier: Boolean(identifier),
@@ -11889,11 +11877,11 @@ function tokenize(source) {
 // function processes one item, and calls itself recursively to process the
 // next one.
 
-        var result = body.match(rx_directive_part);
+        const result = body.match(rx_directive_part);
         if (result) {
-            var allowed;
-            var name = result[1];
-            var value = result[2];
+            let allowed;
+            const name = result[1];
+            const value = result[2];
             if (the_comment.directive === "jslint") {
                 allowed = allowed_option[name];
                 if (
@@ -11941,14 +11929,14 @@ function tokenize(source) {
 // Make a comment object. Comments are not allowed in JSON text. Comments can
 // include directives and notices of incompletion.
 
-        var the_comment = make("(comment)", snippet);
+        const the_comment = make("(comment)", snippet);
         if (Array.isArray(snippet)) {
             snippet = snippet.join(" ");
         }
         if (!option.devel && rx_todo.test(snippet)) {
             warn("todo_comment", the_comment);
         }
-        var result = snippet.match(rx_directive);
+        const result = snippet.match(rx_directive);
         if (result) {
             if (!directive_mode) {
                 warn_at("misplaced_directive_a", line, from, result[1]);
@@ -11965,9 +11953,9 @@ function tokenize(source) {
 
 // Parse a regular expression literal.
 
-        var multi_mode = false;
-        var result;
-        var value;
+        let multi_mode = false;
+        let result;
+        let value;
         regexp_seen = true;
 
         function quantifier() {
@@ -12183,14 +12171,14 @@ function tokenize(source) {
 
 // Process dangling flag letters.
 
-        var allowed = {
+        const allowed = {
             g: true,
             i: true,
             m: true,
             u: true,
             y: true
         };
-        var flag = empty();
+        const flag = empty();
         (function make_flag() {
             if (is_letter(char)) {
                 if (allowed[char] !== true) {
@@ -12219,7 +12207,7 @@ function tokenize(source) {
 
 // Make a string token.
 
-        var the_token;
+        let the_token;
         snippet = "";
         next_char();
 
@@ -12303,13 +12291,33 @@ function tokenize(source) {
     }
 
     function lex() {
-        var array;
-        var i = 0;
-        var j = 0;
-        var last;
-        var result;
-        var the_token;
-        // hack-jslint - un-recurse
+        let array;
+        let i = 0;
+        let j = 0;
+        let last;
+        let result;
+        let the_token;
+
+// This should properly be a tail recursive function, but sadly, conformant
+// implementations of ES6 are still rare. This is the ideal code:
+
+//      if (!source_line) {
+//          source_line = next_line();
+//          from = 0;
+//          return (
+//              source_line === undefined
+//              ? (
+//                  mega_mode
+//                  ? stop_at("unclosed_mega", mega_line, mega_from)
+//                  : make("(end)")
+//              )
+//              : lex()
+//          );
+//      }
+
+// Unfortunately, incompetent JavaScript engines will sometimes fail to execute
+// it correctly. So for now, we do it the old fashioned way.
+
         while (!source_line) {
             source_line = next_line();
             from = 0;
@@ -12321,6 +12329,7 @@ function tokenize(source) {
                 );
             }
         }
+
         from = column;
         result = source_line.match(rx_token);
 
@@ -12394,7 +12403,7 @@ function tokenize(source) {
 // string.
 
             (function part() {
-                var at = source_line.search(rx_mega);
+                const at = source_line.search(rx_mega);
 
 // If neither ` nor ${ is seen, then the whole line joins the snippet.
 
@@ -12427,7 +12436,7 @@ function tokenize(source) {
                     make("${");
                     source_line = source_line.slice(2);
                     (function expr() {
-                        var id = lex().id;
+                        const id = lex().id;
                         if (id === "{") {
                             return stop_at(
                                 "expected_a_b",
@@ -12567,8 +12576,8 @@ function tokenize(source) {
     first = lex();
     json_mode = first.id === "{" || first.id === "[";
 
-// This is the only loop in JSLint. It will turn into a recursive call to lex
-// when ES6 has been finished and widely deployed and adopted.
+// This loop will be replaced with a recursive call to lex when ES6 has been
+// finished and widely deployed and adopted.
 
     while (true) {
         if (lex().id === "(end)") {
@@ -12592,7 +12601,7 @@ function tokenize(source) {
 // Specialized tokens may have additional properties.
 
 function survey(name) {
-    var id = name.id;
+    let id = name.id;
 
 // Tally the property name. If it is a string, only tally strings that conform
 // to the identifier rules.
@@ -12640,8 +12649,21 @@ function dispense() {
 
 // Deliver the next token, skipping the comments.
 
-    var cadet = tokens[token_nr];
+    const cadet = tokens[token_nr];
     token_nr += 1;
+    // hack-jslint - advance token async/await to next_token based on context
+    const next_cadet_id = (tokens[token_nr] || {
+        id: ""
+    }).id;
+    if (
+        (cadet.id === "async" && next_cadet_id === "function")
+        || (cadet.id === "await" && next_cadet_id[0].match(
+            /[a-zA-Z_$]/
+        ))
+    ) {
+        cadet.id = next_cadet_id;
+        token_nr += 1;
+    }
     if (cadet.id === "(comment)") {
         if (json_mode) {
             warn("unexpected_a", cadet);
@@ -12656,8 +12678,8 @@ function lookahead() {
 
 // Look ahead one token without advancing.
 
-    var old_token_nr = token_nr;
-    var cadet = dispense(true);
+    const old_token_nr = token_nr;
+    const cadet = dispense(true);
     token_nr = old_token_nr;
     return cadet;
 }
@@ -12703,18 +12725,18 @@ function advance(id, match) {
 // Parsing of JSON is simple:
 
 function json_value() {
-    var negative;
+    let negative;
     if (next_token.id === "{") {
         return (function json_object() {
-            var brace = next_token;
-            var object = empty();
-            var properties = [];
+            const brace = next_token;
+            const object = empty();
+            const properties = [];
             brace.expression = properties;
             advance("{");
             if (next_token.id !== "}") {
                 (function next() {
-                    var name;
-                    var value;
+                    let name;
+                    let value;
                     if (next_token.quote !== "\"") {
                         warn(
                             "unexpected_a",
@@ -12747,8 +12769,8 @@ function json_value() {
     }
     if (next_token.id === "[") {
         return (function json_array() {
-            var bracket = next_token;
-            var elements = [];
+            const bracket = next_token;
+            const elements = [];
             bracket.expression = elements;
             advance("[");
             if (next_token.id !== "]") {
@@ -12805,7 +12827,7 @@ function enroll(name, role, readonly) {
 // function, label, parameter, or variable. We look for variable redefinition
 // because it causes confusion.
 
-    var id = name.id;
+    const id = name.id;
 
 // Reserved words may not be enrolled.
 
@@ -12815,7 +12837,7 @@ function enroll(name, role, readonly) {
 
 // Has the name been enrolled in this context?
 
-        var earlier = functionage.context[id];
+        let earlier = functionage.context[id];
         if (earlier) {
             warn(
                 "redefinition_a_b",
@@ -12827,7 +12849,7 @@ function enroll(name, role, readonly) {
 // Has the name been enrolled in an outer context?
         } else {
             stack.forEach(function (value) {
-                var item = value.context[id];
+                const item = value.context[id];
                 if (item !== undefined) {
                     earlier = item;
                 }
@@ -12879,8 +12901,8 @@ function expression(rbp, initial) {
 // process leds (infix operators) until the bind powers cause it to stop. It
 // returns the expression's parse tree.
 
-    var left;
-    var the_symbol;
+    let left;
+    let the_symbol;
 
 // Statements will have already advanced, so advance now only if the token is
 // not the first of a statement,
@@ -12916,8 +12938,8 @@ function condition() {
 
 // Parse the condition part of a do, if, while.
 
-    var the_paren = next_token;
-    var the_value;
+    const the_paren = next_token;
+    let the_value;
     the_paren.free = true;
     advance("(");
     the_value = expression(0);
@@ -12960,8 +12982,8 @@ function are_similar(a, b) {
     if (a.id === "(number)" && b.id === "(number)") {
         return a.value === b.value;
     }
-    var a_string;
-    var b_string;
+    let a_string;
+    let b_string;
     if (a.id === "(string)") {
         a_string = a.value;
     } else if (a.id === "`" && a.constant) {
@@ -13034,10 +13056,10 @@ function statement() {
 // have use for one. A statement can be one of the standard statements, or
 // an assignment expression, or an invocation expression.
 
-    var first;
-    var the_label;
-    var the_statement;
-    var the_symbol;
+    let first;
+    let the_label;
+    let the_statement;
+    let the_symbol;
     advance();
     if (token.identifier && next_token.id === ":") {
         the_label = token;
@@ -13093,7 +13115,7 @@ function statements() {
 // Parse a list of statements. Give a warning if an unreachable statement
 // follows a disruptive statement.
 
-    var array = [];
+    const array = [];
     (function next(disrupt) {
         if (
             next_token.id !== "}"
@@ -13102,7 +13124,7 @@ function statements() {
             && next_token.id !== "else"
             && next_token.id !== "(end)"
         ) {
-            var a_statement = statement();
+            let a_statement = statement();
             array.push(a_statement);
             if (disrupt) {
                 warn("unreachable_a", a_statement);
@@ -13139,8 +13161,8 @@ function block(special) {
 //          "naked"     No advance.
 //          undefined   An ordinary block.
 
-    var stmts;
-    var the_block;
+    let stmts;
+    let the_block;
     if (special !== "naked") {
         advance("{");
     }
@@ -13203,7 +13225,7 @@ function left_check(left, right) {
 //      ?:
 //      identifier
 
-    var id = left.id;
+    const id = left.id;
     if (
         !left.identifier
         && (
@@ -13231,7 +13253,7 @@ function symbol(id, bp) {
 
 // Make a symbol if it does not already exist in the language's syntax.
 
-    var the_symbol = syntax[id];
+    let the_symbol = syntax[id];
     if (the_symbol === undefined) {
         the_symbol = empty();
         the_symbol.id = id;
@@ -13248,10 +13270,10 @@ function assignment(id) {
 // That case is special because that is when a variable gets initialized. The
 // other assignment operators can modify, but they cannot initialize.
 
-    var the_symbol = symbol(id, 20);
+    const the_symbol = symbol(id, 20);
     the_symbol.led = function (left) {
-        var the_token = token;
-        var right;
+        const the_token = token;
+        let right;
         the_token.arity = "assignment";
         right = expression(20 - 1);
         if (id === "=" && left.arity === "variable") {
@@ -13279,7 +13301,7 @@ function constant(id, type, value) {
 
 // Make a constant symbol.
 
-    var the_symbol = symbol(id);
+    const the_symbol = symbol(id);
     the_symbol.constant = true;
     the_symbol.nud = (
         typeof value === "function"
@@ -13301,9 +13323,9 @@ function infix(id, bp, f) {
 
 // Make an infix operator.
 
-    var the_symbol = symbol(id, bp);
+    const the_symbol = symbol(id, bp);
     the_symbol.led = function (left) {
-        var the_token = token;
+        const the_token = token;
         the_token.arity = "binary";
         if (f !== undefined) {
             return f(left);
@@ -13320,9 +13342,9 @@ function infixr(id, bp) {
 
 // Make a right associative infix operator.
 
-    var the_symbol = symbol(id, bp);
+    const the_symbol = symbol(id, bp);
     the_symbol.led = function (left) {
-        var the_token = token;
+        const the_token = token;
         the_token.arity = "binary";
         the_token.expression = [
             left, expression(bp - 1)
@@ -13336,7 +13358,7 @@ function post(id) {
 
 // Make one of the post operators.
 
-    var the_symbol = symbol(id, 150);
+    const the_symbol = symbol(id, 150);
     the_symbol.led = function (left) {
         token.expression = left;
         token.arity = "post";
@@ -13350,9 +13372,9 @@ function pre(id) {
 
 // Make one of the pre operators.
 
-    var the_symbol = symbol(id);
+    const the_symbol = symbol(id);
     the_symbol.nud = function () {
-        var the_token = token;
+        const the_token = token;
         the_token.arity = "pre";
         the_token.expression = expression(150);
         mutation_check(the_token.expression);
@@ -13365,9 +13387,9 @@ function prefix(id, f) {
 
 // Make a prefix operator.
 
-    var the_symbol = symbol(id);
+    const the_symbol = symbol(id);
     the_symbol.nud = function () {
-        var the_token = token;
+        const the_token = token;
         the_token.arity = "unary";
         if (typeof f === "function") {
             return f();
@@ -13382,7 +13404,7 @@ function stmt(id, f) {
 
 // Make a statement.
 
-    var the_symbol = symbol(id);
+    const the_symbol = symbol(id);
     the_symbol.fud = function () {
         token.arity = "statement";
         return f();
@@ -13394,10 +13416,10 @@ function ternary(id1, id2) {
 
 // Make a ternary operator.
 
-    var the_symbol = symbol(id1, 30);
+    const the_symbol = symbol(id1, 30);
     the_symbol.led = function (left) {
-        var the_token = token;
-        var second = expression(20);
+        const the_token = token;
+        const second = expression(20);
         advance(id2);
         token.arity = "ternary";
         the_token.arity = "ternary";
@@ -13528,8 +13550,8 @@ infix("/", 140);
 infix("%", 140);
 infixr("**", 150);
 infix("(", 160, function (left) {
-    var the_paren = token;
-    var the_argument;
+    const the_paren = token;
+    let the_argument;
     if (left.id !== "function") {
         left_check(left, the_paren);
     }
@@ -13541,7 +13563,7 @@ infix("(", 160, function (left) {
     ];
     if (next_token.id !== ")") {
         (function next() {
-            var ellipsis;
+            let ellipsis;
             if (next_token.id === "...") {
                 ellipsis = true;
                 advance("...");
@@ -13572,8 +13594,8 @@ infix("(", 160, function (left) {
     return the_paren;
 });
 infix(".", 170, function (left) {
-    var the_token = token;
-    var name = next_token;
+    const the_token = token;
+    const name = next_token;
     if ((
         left.id !== "(string)"
         || (name.id !== "indexOf" && name.id !== "repeat")
@@ -13604,8 +13626,8 @@ infix(".", 170, function (left) {
     return the_token;
 });
 infix("?.", 170, function (left) {
-    var the_token = token;
-    var name = next_token;
+    const the_token = token;
+    const name = next_token;
     if ((
         left.id !== "(string)"
         || (name.id !== "indexOf" && name.id !== "repeat")
@@ -13636,10 +13658,10 @@ infix("?.", 170, function (left) {
     return the_token;
 });
 infix("[", 170, function (left) {
-    var the_token = token;
-    var the_subscript = expression(0);
+    const the_token = token;
+    const the_subscript = expression(0);
     if (the_subscript.id === "(string)" || the_subscript.id === "`") {
-        var name = survey(the_subscript);
+        const name = survey(the_subscript);
         if (rx_identifier.test(name)) {
             warn("subscript_a", the_subscript, name);
         }
@@ -13656,7 +13678,7 @@ infix("=>", 170, function (left) {
 });
 
 function do_tick() {
-    var the_tick = token;
+    const the_tick = token;
     the_tick.value = [];
     the_tick.expression = [];
     if (next_token.id !== "`") {
@@ -13676,7 +13698,7 @@ function do_tick() {
 }
 
 infix("`", 160, function (left) {
-    var the_tick = do_tick();
+    const the_tick = do_tick();
     left_check(left, the_tick);
     the_tick.expression = [
         left
@@ -13695,12 +13717,12 @@ prefix("~");
 prefix("!");
 prefix("!!");
 prefix("[", function () {
-    var the_token = token;
+    const the_token = token;
     the_token.expression = [];
     if (next_token.id !== "]") {
         (function next() {
-            var element;
-            var ellipsis = false;
+            let element;
+            let ellipsis = false;
             if (next_token.id === "...") {
                 ellipsis = true;
                 advance("...");
@@ -13726,8 +13748,8 @@ prefix("=>", function () {
     return stop("expected_a_before_b", token, "()", "=>");
 });
 prefix("new", function () {
-    var the_new = token;
-    var right = expression(160);
+    const the_new = token;
+    const right = expression(160);
     if (next_token.id !== "(") {
         warn("expected_a_before_b", next_token, "()", artifact(next_token));
     }
@@ -13736,22 +13758,22 @@ prefix("new", function () {
 });
 prefix("typeof");
 prefix("void", function () {
-    var the_void = token;
+    const the_void = token;
     warn("unexpected_a", the_void);
     the_void.expression = expression(0);
     return the_void;
 });
 
 function parameter_list() {
-    var list = [];
-    var optional;
-    var signature = [
+    const list = [];
+    let optional;
+    const signature = [
         "("
     ];
     if (next_token.id !== ")" && next_token.id !== "(end)") {
         (function parameter() {
-            var ellipsis = false;
-            var param;
+            let ellipsis = false;
+            let param;
             if (next_token.id === "{") {
                 if (optional !== undefined) {
                     warn(
@@ -13766,7 +13788,7 @@ function parameter_list() {
                 advance("{");
                 signature.push("{");
                 (function subparameter() {
-                    var subparam = next_token;
+                    let subparam = next_token;
                     if (!subparam.identifier) {
                         return stop("expected_identifier_a");
                     }
@@ -13816,7 +13838,7 @@ function parameter_list() {
                 advance("[");
                 signature.push("[]");
                 (function subparameter() {
-                    var subparam = next_token;
+                    const subparam = next_token;
                     if (!subparam.identifier) {
                         return stop("expected_identifier_a");
                     }
@@ -13894,7 +13916,7 @@ function parameter_list() {
 }
 
 function do_function(the_function) {
-    var name;
+    let name;
     if (the_function === undefined) {
         the_function = token;
 
@@ -14001,7 +14023,7 @@ prefix("function", do_function);
 
 function fart(pl) {
     advance("=>");
-    var the_fart = token;
+    const the_fart = token;
     the_fart.arity = "binary";
     the_fart.name = "=>";
     the_fart.level = functionage.level + 1;
@@ -14039,9 +14061,9 @@ function fart(pl) {
 }
 
 prefix("(", function () {
-    var the_paren = token;
-    var the_value;
-    var cadet = lookahead().id;
+    const the_paren = token;
+    let the_value;
+    const cadet = lookahead().id;
 
 // We can distinguish between a parameter list for => and a wrapped expression
 // with one token of lookahead.
@@ -14080,16 +14102,16 @@ prefix("(", function () {
 });
 prefix("`", do_tick);
 prefix("{", function () {
-    var the_brace = token;
-    var seen = empty();
+    const the_brace = token;
+    const seen = empty();
     the_brace.expression = [];
     if (next_token.id !== "}") {
         (function member() {
-            var extra;
-            var full;
-            var id;
-            var name = next_token;
-            var value;
+            let extra;
+            let full;
+            let id;
+            let name = next_token;
+            let value;
             advance();
             if (
                 (name.id === "get" || name.id === "set")
@@ -14138,7 +14160,7 @@ prefix("{", function () {
                     if (typeof extra === "string") {
                         advance("(");
                     }
-                    var the_colon = next_token;
+                    let the_colon = next_token;
                     advance(":");
                     value = expression(0);
                     if (value.id === name.id) {
@@ -14175,8 +14197,8 @@ stmt("{", function () {
     return block("naked");
 });
 stmt("break", function () {
-    var the_break = token;
-    var the_label;
+    const the_break = token;
+    let the_label;
     if (
         (functionage.loop < 1 && functionage.switch < 1)
         || functionage.finally > 0
@@ -14207,8 +14229,8 @@ stmt("break", function () {
 });
 
 function do_var() {
-    var the_statement = token;
-    var is_const = the_statement.id === "const";
+    const the_statement = token;
+    const is_const = the_statement.id === "const";
     the_statement.names = [];
 
 // A program may use var or let, but not both.
@@ -14236,13 +14258,13 @@ function do_var() {
     }
     (function next() {
         if (next_token.id === "{" && the_statement.id !== "var") {
-            var the_brace = next_token;
+            const the_brace = next_token;
             advance("{");
             (function pair() {
                 if (!next_token.identifier) {
                     return stop("expected_identifier_a", next_token);
                 }
-                var name = next_token;
+                const name = next_token;
                 survey(name);
                 advance();
                 if (next_token.id === ":") {
@@ -14275,10 +14297,10 @@ function do_var() {
             advance("=");
             the_statement.expression = expression(0);
         } else if (next_token.id === "[" && the_statement.id !== "var") {
-            var the_bracket = next_token;
+            const the_bracket = next_token;
             advance("[");
             (function element() {
-                var ellipsis;
+                let ellipsis;
                 if (next_token.id === "...") {
                     ellipsis = true;
                     advance("...");
@@ -14286,7 +14308,7 @@ function do_var() {
                 if (!next_token.identifier) {
                     return stop("expected_identifier_a", next_token);
                 }
-                var name = next_token;
+                const name = next_token;
                 advance();
                 the_statement.names.push(name);
                 enroll(name, "variable", is_const);
@@ -14310,7 +14332,7 @@ function do_var() {
             advance("=");
             the_statement.expression = expression(0);
         } else if (next_token.identifier) {
-            var name = next_token;
+            const name = next_token;
             advance();
             if (name.id === "ignore") {
                 warn("unexpected_a", name);
@@ -14333,7 +14355,7 @@ function do_var() {
 
 stmt("const", do_var);
 stmt("continue", function () {
-    var the_continue = token;
+    const the_continue = token;
     if (functionage.loop < 1 || functionage.finally > 0) {
         warn("unexpected_a", the_continue);
     }
@@ -14344,7 +14366,7 @@ stmt("continue", function () {
     return the_continue;
 });
 stmt("debugger", function () {
-    var the_debug = token;
+    const the_debug = token;
     if (!option.devel) {
         warn("unexpected_a", the_debug);
     }
@@ -14352,8 +14374,8 @@ stmt("debugger", function () {
     return the_debug;
 });
 stmt("delete", function () {
-    var the_token = token;
-    var the_value = expression(0);
+    const the_token = token;
+    const the_value = expression(0);
     if (
         (the_value.id !== "." && the_value.id !== "[")
         || the_value.arity !== "binary"
@@ -14365,7 +14387,7 @@ stmt("delete", function () {
     return the_token;
 });
 stmt("do", function () {
-    var the_do = token;
+    const the_do = token;
     not_top_level(the_do);
     functionage.loop += 1;
     the_do.block = block();
@@ -14379,10 +14401,10 @@ stmt("do", function () {
     return the_do;
 });
 stmt("export", function () {
-    var the_export = token;
-    var the_id;
-    var the_name;
-    var the_thing;
+    const the_export = token;
+    let the_id;
+    let the_name;
+    let the_thing;
 
     function export_id() {
         if (!next_token.identifier) {
@@ -14463,8 +14485,8 @@ stmt("export", function () {
     return the_export;
 });
 stmt("for", function () {
-    var first;
-    var the_for = token;
+    let first;
+    const the_for = token;
     if (!option.for) {
         warn("unexpected_a", the_for);
     }
@@ -14510,8 +14532,8 @@ stmt("for", function () {
 });
 stmt("function", do_function);
 stmt("if", function () {
-    var the_else;
-    var the_if = token;
+    let the_else;
+    const the_if = token;
     the_if.expression = condition();
     the_if.block = block();
     if (next_token.id === "else") {
@@ -14533,8 +14555,8 @@ stmt("if", function () {
     return the_if;
 });
 stmt("import", function () {
-    var the_import = token;
-    var name;
+    const the_import = token;
+    let name;
     if (typeof module_mode === "object") {
         warn("unexpected_directive_a", module_mode, module_mode.directive);
     }
@@ -14548,7 +14570,7 @@ stmt("import", function () {
         enroll(name, "variable", true);
         the_import.name = name;
     } else {
-        var names = [];
+        const names = [];
         advance("{");
         if (next_token.id !== "}") {
             while (true) {
@@ -14583,7 +14605,7 @@ stmt("import", function () {
 });
 stmt("let", do_var);
 stmt("return", function () {
-    var the_return = token;
+    const the_return = token;
     not_top_level(the_return);
     if (functionage.finally > 0) {
         warn("unexpected_a", the_return);
@@ -14596,12 +14618,12 @@ stmt("return", function () {
     return the_return;
 });
 stmt("switch", function () {
-    var dups = [];
-    var last;
-    var stmts;
-    var the_cases = [];
-    var the_disrupt = true;
-    var the_switch = token;
+    let dups = [];
+    let last;
+    let stmts;
+    const the_cases = [];
+    let the_disrupt = true;
+    const the_switch = token;
     not_top_level(the_switch);
     if (functionage.finally > 0) {
         warn("unexpected_a", the_switch);
@@ -14614,13 +14636,13 @@ stmt("switch", function () {
     advance(")");
     advance("{");
     (function major() {
-        var the_case = next_token;
+        const the_case = next_token;
         the_case.arity = "statement";
         the_case.expression = [];
         (function minor() {
             advance("case");
             token.switch = true;
-            var exp = expression(0);
+            const exp = expression(0);
             if (dups.some(function (thing) {
                 return are_similar(thing, exp);
             })) {
@@ -14659,7 +14681,7 @@ stmt("switch", function () {
     }());
     dups = undefined;
     if (next_token.id === "default") {
-        var the_default = next_token;
+        const the_default = next_token;
         advance("default");
         token.switch = true;
         advance(":");
@@ -14668,7 +14690,7 @@ stmt("switch", function () {
             warn("unexpected_a", the_default);
             the_disrupt = false;
         } else {
-            var the_last = the_switch.else[the_switch.else.length - 1];
+            const the_last = the_switch.else[the_switch.else.length - 1];
             if (the_last.id === "break" && the_last.label === undefined) {
                 warn("unexpected_a", the_last);
                 the_last.disrupt = false;
@@ -14684,7 +14706,7 @@ stmt("switch", function () {
     return the_switch;
 });
 stmt("throw", function () {
-    var the_throw = token;
+    const the_throw = token;
     the_throw.disrupt = true;
     the_throw.expression = expression(10);
     semicolon();
@@ -14694,9 +14716,9 @@ stmt("throw", function () {
     return the_throw;
 });
 stmt("try", function () {
-    var the_catch;
-    var the_disrupt;
-    var the_try = token;
+    let the_catch;
+    let the_disrupt;
+    const the_try = token;
     if (functionage.try > 0) {
         warn("unexpected_a", the_try);
     }
@@ -14704,7 +14726,7 @@ stmt("try", function () {
     the_try.block = block();
     the_disrupt = the_try.block.disrupt;
     if (next_token.id === "catch") {
-        var ignored = "ignore";
+        let ignored = "ignore";
         the_catch = next_token;
         the_try.catch = the_catch;
         advance("catch");
@@ -14746,7 +14768,7 @@ stmt("try", function () {
 });
 stmt("var", do_var);
 stmt("while", function () {
-    var the_while = token;
+    const the_while = token;
     not_top_level(the_while);
     functionage.loop += 1;
     the_while.expression = condition();
@@ -14771,8 +14793,8 @@ function action(when) {
 // the tree is traversed.
 
     return function (arity, id, task) {
-        var a_set = when[arity];
-        var i_set;
+        let a_set = when[arity];
+        let i_set;
 
 // The id parameter is optional. If excluded, the task will be applied to all
 // ids.
@@ -14814,8 +14836,8 @@ function amble(when) {
 // Given a task set that was built by an action function, run all of the
 // relevant tasks on the token.
 
-        var a_set = when[the_token.arity];
-        var i_set;
+        let a_set = when[the_token.arity];
+        let i_set;
 
 // If there are tasks associated with the token's arity...
 
@@ -14842,12 +14864,12 @@ function amble(when) {
     };
 }
 
-var posts = empty();
-var pres = empty();
-var preaction = action(pres);
-var postaction = action(posts);
-var preamble = amble(pres);
-var postamble = amble(posts);
+const posts = empty();
+const pres = empty();
+const preaction = action(pres);
+const postaction = action(posts);
+const preamble = amble(pres);
+const postamble = amble(posts);
 
 function walk_expression(thing) {
     if (thing) {
@@ -14901,14 +14923,14 @@ function lookup(thing) {
 
 // Look up the variable in the current context.
 
-        var the_variable = functionage.context[thing.id];
+        let the_variable = functionage.context[thing.id];
 
 // If it isn't local, search all the other contexts. If there are name
 // collisions, take the most recent.
 
         if (the_variable === undefined) {
             stack.forEach(function (outer) {
-                var a_variable = outer.context[thing.id];
+                const a_variable = outer.context[thing.id];
                 if (
                     a_variable !== undefined
                     && a_variable.role !== "label"
@@ -15042,8 +15064,8 @@ preaction("assignment", bitwise_check);
 preaction("binary", bitwise_check);
 preaction("binary", function (thing) {
     if (relationop[thing.id] === true) {
-        var left = thing.expression[0];
-        var right = thing.expression[1];
+        const left = thing.expression[0];
+        const right = thing.expression[1];
         if (left.id === "NaN" || right.id === "NaN") {
             warn("number_isNaN", thing);
         } else if (left.id === "typeof") {
@@ -15052,7 +15074,7 @@ preaction("binary", function (thing) {
                     warn("expected_string_a", right);
                 }
             } else {
-                var value = right.value;
+                const value = right.value;
                 if (value === "null" || value === "undefined") {
                     warn("unexpected_typeof_a", right, value);
                 } else if (
@@ -15084,15 +15106,15 @@ preaction("binary", "||", function (thing) {
     });
 });
 preaction("binary", "(", function (thing) {
-    var left = thing.expression[0];
+    const left = thing.expression[0];
     if (
         left.identifier
         && functionage.context[left.id] === undefined
         && typeof functionage.name === "object"
     ) {
-        var parent = functionage.name.parent;
+        const parent = functionage.name.parent;
         if (parent) {
-            var left_variable = parent.context[left.id];
+            const left_variable = parent.context[left.id];
             if (
                 left_variable !== undefined
                 && left_variable.dead
@@ -15123,7 +15145,7 @@ preaction("statement", "{", function (thing) {
 });
 preaction("statement", "for", function (thing) {
     if (thing.name !== undefined) {
-        var the_variable = lookup(thing.name);
+        const the_variable = lookup(thing.name);
         if (the_variable !== undefined) {
             the_variable.init = true;
             if (!the_variable.writable) {
@@ -15137,7 +15159,7 @@ preaction("statement", "function", preaction_function);
 preaction("unary", "~", bitwise_check);
 preaction("unary", "function", preaction_function);
 preaction("variable", function (thing) {
-    var the_variable = lookup(thing);
+    const the_variable = lookup(thing);
     if (the_variable !== undefined) {
         thing.variable = the_variable;
         the_variable.used += 1;
@@ -15145,7 +15167,7 @@ preaction("variable", function (thing) {
 });
 
 function init_variable(name) {
-    var the_variable = lookup(name);
+    const the_variable = lookup(name);
     if (the_variable !== undefined) {
         if (the_variable.writable) {
             the_variable.init = true;
@@ -15156,7 +15178,7 @@ function init_variable(name) {
 }
 
 postaction("assignment", "+=", function (thing) {
-    var right = thing.expression[1];
+    let right = thing.expression[1];
     if (right.constant) {
         if (
             right.value === ""
@@ -15176,7 +15198,7 @@ postaction("assignment", function (thing) {
 // operator can do this. A = token keeps that variable (or array of variables
 // in case of destructuring) in its name property.
 
-    var lvalue = thing.expression[0];
+    const lvalue = thing.expression[0];
     if (thing.id === "=") {
         if (thing.names !== undefined) {
             if (Array.isArray(thing.names)) {
@@ -15209,7 +15231,7 @@ postaction("assignment", function (thing) {
                 warn("bad_assignment_a", lvalue);
             }
         }
-        var right = syntax[thing.expression[1].id];
+        const right = syntax[thing.expression[1].id];
         if (
             right !== undefined
             && (
@@ -15240,7 +15262,7 @@ function postaction_function(thing) {
 }
 
 postaction("binary", function (thing) {
-    var right;
+    let right;
     if (relationop[thing.id]) {
         if (
             is_weird(thing.expression[0])
@@ -15312,9 +15334,9 @@ postaction("binary", "||", function (thing) {
 });
 postaction("binary", "=>", postaction_function);
 postaction("binary", "(", function (thing) {
-    var left = thing.expression[0];
-    var arg;
-    var the_new;
+    let left = thing.expression[0];
+    let arg;
+    let the_new;
     if (left.id === "new") {
         the_new = left;
         left = left.expression;
@@ -15368,7 +15390,7 @@ postaction("binary", "(", function (thing) {
             }
         }
     } else if (left.id === ".") {
-        var cack = the_new !== undefined;
+        let cack = the_new !== undefined;
         if (left.expression.id === "Date" && left.name.id === "UTC") {
             cack = !cack;
         }
@@ -15385,11 +15407,11 @@ postaction("binary", "(", function (thing) {
             }
         }
         if (left.name.id === "getTime") {
-            var paren = left.expression;
+            const paren = left.expression;
             if (paren.id === "(") {
-                var array = paren.expression;
+                const array = paren.expression;
                 if (array.length === 1) {
-                    var new_date = array[0];
+                    const new_date = array[0];
                     if (
                         new_date.id === "new"
                         && new_date.expression.id === "Date"
@@ -15422,7 +15444,7 @@ postaction("statement", "for", function (thing) {
 });
 postaction("statement", "function", postaction_function);
 postaction("statement", "import", function (the_thing) {
-    var name = the_thing.name;
+    const name = the_thing.name;
     if (Array.isArray(name)) {
         name.forEach(function (name) {
             name.dead = false;
@@ -15439,9 +15461,9 @@ postaction("statement", "import", function (the_thing) {
 postaction("statement", "let", action_var);
 postaction("statement", "try", function (thing) {
     if (thing.catch !== undefined) {
-        var the_name = thing.catch.name;
+        const the_name = thing.catch.name;
         if (the_name !== undefined) {
-            var the_variable = functionage.context[the_name.id];
+            const the_variable = functionage.context[the_name.id];
             the_variable.dead = false;
             the_variable.init = true;
         }
@@ -15511,7 +15533,7 @@ postaction("unary", "+", function (thing) {
     if (!option.convert) {
         warn("expected_a_b", thing, "Number(...)", "+");
     }
-    var right = thing.expression;
+    const right = thing.expression;
     if (right.id === "(" && right.expression[0].id === "new") {
         warn("unexpected_a_before_b", thing, "+", "new");
     } else if (
@@ -15526,7 +15548,7 @@ postaction("unary", "+", function (thing) {
 function delve(the_function) {
     Object.keys(the_function.context).forEach(function (id) {
         if (id !== "ignore") {
-            var name = the_function.context[id];
+            const name = the_function.context[id];
             if (name.parent === the_function) {
                 if (
                     name.used === 0
@@ -15559,17 +15581,17 @@ function uninitialized_and_unused() {
 // Go through the token list, looking at usage of whitespace.
 
 function whitage() {
-    var closer = "(end)";
-    var free = false;
-    var left = global;
-    var margin = 0;
-    var nr_comments_skipped = 0;
-    var open = true;
-    var opening = true;
-    var right;
+    let closer = "(end)";
+    let free = false;
+    let left = global;
+    let margin = 0;
+    let nr_comments_skipped = 0;
+    let open = true;
+    let opening = true;
+    let right;
 
     function pop() {
-        var previous = stack.pop();
+        const previous = stack.pop();
         closer = previous.closer;
         free = previous.free;
         margin = previous.margin;
@@ -15598,7 +15620,7 @@ function whitage() {
     }
 
     function at_margin(fit) {
-        var at = margin + fit;
+        const at = margin + fit;
         // hack-jslint - expected_at
         if (right.from !== at) {
             return expected_at(at);
@@ -15635,7 +15657,7 @@ function whitage() {
             }
         } else {
             if (open) {
-                var at = (
+                const at = (
                     free
                     ? margin
                     : margin + 8
@@ -15696,7 +15718,7 @@ function whitage() {
 // etc) starting on its own line. Closed form is more compact. Statement blocks
 // are always in open form.
 
-            var new_closer = opener[left.id];
+            const new_closer = opener[left.id];
             if (typeof new_closer === "string") {
                 if (new_closer !== right.id) {
                     opening = left.open || (left.line !== right.line);
@@ -15909,7 +15931,7 @@ function whitage() {
 // The jslint function itself.
 
 // hack-jslint - jslint0
-var jslint0 = Object.freeze(function (
+const jslint0 = Object.freeze(function (
     source = "",
     option_object = empty(),
     global_array = []
@@ -15961,7 +15983,7 @@ var jslint0 = Object.freeze(function (
         populate(global_array, declared_globals, false);
         Object.keys(option).forEach(function (name) {
             if (option[name] === true) {
-                var allowed = allowed_option[name];
+                const allowed = allowed_option[name];
                 if (Array.isArray(allowed)) {
                     populate(allowed, declared_globals, false);
                 }
@@ -16021,7 +16043,7 @@ var jslint0 = Object.freeze(function (
     }
     return {
         directives,
-        edition: "2019-01-31",
+        edition: "2019-08-03",
         exports,
         froms,
         functions,
