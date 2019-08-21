@@ -868,12 +868,7 @@ value = String(
     (packageJson.repository && packageJson.repository.url)
     || packageJson.repository
     || ""
-)
-.split(":").slice(-1)[0].toString()
-.split("/")
-.slice(-2)
-.join("/")
-.replace((
+).split(":").slice(-1)[0].toString().split("/").slice(-2).join("/").replace((
     /\.git$/
 ), "");
 if ((
@@ -923,9 +918,8 @@ require("fs").readFileSync("README.md", "utf8").replace((
     // preserve lineno
     match0 = text.slice(0, ii).replace((
         /.+/g
-    ), "") + match1
-    // parse "\" line-continuation
-    .replace((
+    ), "") + match1.replace((
+        // parse "\" line-continuation
         /(?:.*\\\n)+.*/g
     ), function (match0) {
         return match0.replace((
@@ -2975,14 +2969,11 @@ wordwrap = function (line, ii) {
         return "";
     }
     yy += 16;
-    return "<tspan x=\"10\" y=\"" + yy + "\">" + line
-    .replace((
+    return "<tspan x=\"10\" y=\"" + yy + "\">" + line.replace((
         /&/g
-    ), "&amp;")
-    .replace((
+    ), "&amp;").replace((
         /</g
-    ), "&lt;")
-    .replace((
+    ), "&lt;").replace((
         />/g
     ), "&gt;") + "</tspan>\n";
 };
@@ -2990,30 +2981,23 @@ yy = 10;
 result = require("fs").readFileSync(
     process.env.npm_config_dir_tmp + "/runWithScreenshotTxt",
     "utf8"
-)
+);
 // remove ansi escape-code
-.replace((
+result = result.replace((
     /\u001b.*?m/g
-), "")
+), "");
 // format unicode
-.replace((
+result = result.replace((
     /\\u[0-9a-f]{4}/g
 ), function (match0) {
     return String.fromCharCode("0x" + match0.slice(-4));
-})
-.trimRight()
-.split("\n")
-.map(function (line) {
-    return line
-    .replace((
+}).trimRight().split("\n").map(function (line) {
+    return line.replace((
         /.{0,96}/g
-    ), wordwrap)
-    .replace((
+    ), wordwrap).replace((
         /(<\/tspan>\n<tspan)/g
-    ), "\\$1")
-    .slice();
-})
-.join("\n") + "\n";
+    ), "\\$1").slice();
+}).join("\n") + "\n";
 result = (
     "<svg height=\"" + (yy + 20)
     + "\" width=\"720\" xmlns=\"http://www.w3.org/2000/svg\">\n"
@@ -4744,13 +4728,9 @@ local.moduleDirname = function (module, modulePathList) {
     // search modulePathList
     [
         "node_modules"
-    ]
-    .concat(modulePathList)
-    .concat(require("module").globalPaths)
-    .concat([
+    ].concat(modulePathList).concat(require("module").globalPaths).concat([
         process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
-    ])
-    .some(function (modulePath) {
+    ]).some(function (modulePath) {
         try {
             result = require("path").resolve(
                 process.cwd(),
@@ -5029,23 +5009,17 @@ local.stringHtmlSafe = function (text) {
  * this function will make the text html-safe
  * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
  */
-    return text
-    .replace((
+    return text.replace((
         /&/g
-    ), "&amp;")
-    .replace((
+    ), "&amp;").replace((
         /"/g
-    ), "&quot;")
-    .replace((
+    ), "&quot;").replace((
         /'"'"'/g
-    ), "&apos;")
-    .replace((
+    ), "&apos;").replace((
         /</g
-    ), "&lt;")
-    .replace((
+    ), "&lt;").replace((
         />/g
-    ), "&gt;")
-    .replace((
+    ), "&gt;").replace((
         /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
     ), "&$1");
 };

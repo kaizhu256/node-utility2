@@ -10916,48 +10916,22 @@ require("fs").writeFileSync("/tmp/aa.js", aa);
 +    // hack-jslint - warn_at_extra
 +    return warn_at_extra(warning, warnings);
 
--            d
-+            // hack-jslint - the_token
-+            d || the_token
-
 -        if (source_line !== undefined) {
 +        if (source_line !== undefined) {
 +            // hack-jslint - next_line_extra
 +            source_line = next_line_extra(source_line, line);
 
--        if (snippet === "//") {
-+        if (snippet === "//") {
-+            // hack-jslint - too_long
-+            if (option.utility2 && (
-+                /^!!\u0020|^\u0020https:\/\//m
-+            ).test(source_line)) {
-+                regexp_seen = true;
-+            }
-
--                array.push(source_line);
-+                array.push(source_line);
-+                // hack-jslint - too_long
-+                if (option.utility2 && (
-+                    /^\S|^\u0020{2}|\u0020https:\/\/|\u0020this\u0020.*?\u0020package\u0020will\u0020/m
-+                ).test(source_line)) {
-+                    regexp_seen = true;
-+                }
-
 -    if (cadet.id === "(comment)") {
-+    // hack-jslint - advance token async/await to next_token based on context
-+    const next_cadet_id = (tokens[token_nr] || {
-+        id: ""
-+    }).id;
-+    if (
-+        (cadet.id === "async" && next_cadet_id === "function")
-+        || (cadet.id === "await" && next_cadet_id[0].match(
-+            /[a-zA-Z_$]/
-+        ))
-+    ) {
-+        cadet.id = next_cadet_id;
++    // hack-jslint - advance token async/await to next_token by context
++    const next_cadet = tokens[token_nr] || {};
++    if (next_cadet.identifier && (
++        cadet.id === "await"
++        || (cadet.id === "async" && next_cadet.id === "function")
++    )) {
++        cadet.id = next_cadet.id;
 +        token_nr += 1;
 +    }
-+     if (cadet.id === "(comment)") {
++    if (cadet.id === "(comment)") {
 
 -        warn("unexpected_a", right);
 +        // hack-jslint - unexpected_a
@@ -11582,8 +11556,7 @@ function warn(code, the_token, a, b, c, d) {
             a || artifact(the_token),
             b,
             c,
-            // hack-jslint - the_token
-            d || the_token
+            d
         );
         return the_token.warning;
     }
@@ -12462,12 +12435,6 @@ function tokenize(source) {
 // The token is a // comment.
 
         if (snippet === "//") {
-            // hack-jslint - too_long
-            if (option.utility2 && (
-                /^!!\u0020|^\u0020https:\/\//m
-            ).test(source_line)) {
-                regexp_seen = true;
-            }
             snippet = source_line;
             source_line = "";
             the_token = comment(snippet);
@@ -12496,12 +12463,6 @@ function tokenize(source) {
                     }
                 }
                 array.push(source_line);
-                // hack-jslint - too_long
-                if (option.utility2 && (
-                    /^\S|^\u0020{2}|\u0020https:\/\/|\u0020this\u0020.*?\u0020package\u0020will\u0020/m
-                ).test(source_line)) {
-                    regexp_seen = true;
-                }
                 source_line = next_line();
                 if (source_line === undefined) {
                     return stop_at("unclosed_comment", line, column);
@@ -12651,17 +12612,13 @@ function dispense() {
 
     const cadet = tokens[token_nr];
     token_nr += 1;
-    // hack-jslint - advance token async/await to next_token based on context
-    const next_cadet_id = (tokens[token_nr] || {
-        id: ""
-    }).id;
-    if (
-        (cadet.id === "async" && next_cadet_id === "function")
-        || (cadet.id === "await" && next_cadet_id[0].match(
-            /[a-zA-Z_$]/
-        ))
-    ) {
-        cadet.id = next_cadet_id;
+    // hack-jslint - advance token async/await to next_token by context
+    const next_cadet = tokens[token_nr] || {};
+    if (next_cadet.identifier && (
+        cadet.id === "await"
+        || (cadet.id === "async" && next_cadet.id === "function")
+    )) {
+        cadet.id = next_cadet.id;
         token_nr += 1;
     }
     if (cadet.id === "(comment)") {

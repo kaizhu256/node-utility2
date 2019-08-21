@@ -648,14 +648,12 @@ local.cliRun = function (opt) {
             }
             return (
                 elem.description + "\n  " + file
-                + ("  " + elem.command.sort().join("|") + "  ")
-                .replace((
+                + ("  " + elem.command.sort().join("|") + "  ").replace((
                     /^\u0020{4}$/
                 ), "  ")
                 + elem.argList.join("  ")
             );
-        })
-        .join("\n\n");
+        }).join("\n\n");
         console.log(text);
     };
     local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
@@ -902,35 +900,27 @@ local.githubCrudAjax = function (opt, onError) {
         sha: opt.sha,
         url: opt.url
     };
-    opt.url = opt.url
-/* jslint ignore:start */
-// parse https://github.com/:owner/:repo/blob/:branch/:path
-.replace(
-    (/^https:\/\/github.com\/([^\/]+?\/[^\/]+?)\/blob\/([^\/]+?)\/(.+)/),
-    'https://api.github.com/repos/$1/contents/$3?branch=$2'
-)
-// parse https://github.com/:owner/:repo/tree/:branch/:path
-.replace(
-    (/^https:\/\/github.com\/([^\/]+?\/[^\/]+?)\/tree\/([^\/]+?)\/(.+)/),
-    'https://api.github.com/repos/$1/contents/$3?branch=$2'
-)
-// parse https://raw.githubusercontent.com/:owner/:repo/:branch/:path
-.replace(
-(/^https:\/\/raw.githubusercontent.com\/([^\/]+?\/[^\/]+?)\/([^\/]+?)\/(.+)/),
-    'https://api.github.com/repos/$1/contents/$3?branch=$2'
-)
-// parse https://:owner.github.io/:repo/:path
-.replace(
-    (/^https:\/\/([^\.]+?)\.github\.io\/([^\/]+?)\/(.+)/),
-    'https://api.github.com/repos/$1/$2/contents/$3?branch=gh-pages'
-)
-// parse :owner/:repo
-.replace(
-    (/^([^\/]+?\/[^\/]+?)$/),
-    'https://github.com/$1'
-)
-/* jslint ignore:end */
-    .replace((
+    // parse https://github.com/:owner/:repo/blob/:branch/:path
+    opt.url = opt.url.replace((
+        /^https:\/\/github.com\/([^\/]+?\/[^\/]+?)\/blob\/([^\/]+?)\/(.+)/
+    ), "https://api.github.com/repos/$1/contents/$3?branch=$2");
+    // parse https://github.com/:owner/:repo/tree/:branch/:path
+    opt.url = opt.url.replace((
+        /^https:\/\/github.com\/([^\/]+?\/[^\/]+?)\/tree\/([^\/]+?)\/(.+)/
+    ), "https://api.github.com/repos/$1/contents/$3?branch=$2");
+    // parse https://raw.githubusercontent.com/:owner/:repo/:branch/:path
+    opt.url = opt.url.replace((
+        /^https:\/\/raw.githubusercontent.com\/([^\/]+?\/[^\/]+?)\/([^\/]+?)\/(.+)/
+    ), "https://api.github.com/repos/$1/contents/$3?branch=$2");
+    // parse https://:owner.github.io/:repo/:path
+    opt.url = opt.url.replace((
+        /^https:\/\/([^.]+?)\.github\.io\/([^\/]+?)\/(.+)/
+    ), "https://api.github.com/repos/$1/$2/contents/$3?branch=gh-pages");
+    // parse :owner/:repo
+    opt.url = opt.url.replace((
+        /^([^\/]+?\/[^\/]+?)$/
+    ), "https://github.com/$1");
+    opt.url = opt.url.replace((
         /\?branch=(.*)/
     ), function (match0, match1) {
         opt.branch = match1;

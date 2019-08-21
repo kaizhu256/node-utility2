@@ -944,8 +944,9 @@ local.assetsDict["/assets.my_app.js"] =\n\
 ).replace((/^#!\\//), "// ");\n\
 /* jslint ignore:end */\n\
 /* validateLineSortedReset */\n\
-local.assetsDict["/"] = local.assetsDict["/assets.index.template.html"]\n\
-.replace((\n\
+local.assetsDict["/"] = local.assetsDict[\n\
+    "/assets.index.template.html"\n\
+].replace((\n\
     /\\{\\{env\\.(\\w+?)\\}\\}/g\n\
 ), function (match0, match1) {\n\
     switch (match1) {\n\
@@ -3081,13 +3082,11 @@ local.browserTest = function (opt, onError) {
                     "onErrorWithStack",
                     "gotoNext"
                 ].map(function (key) {
-                    return "local." + key + "=" + String(local[key])
-                    // html-safe
-                    .replace((
+                    return "local." + key + "=" + String(local[key]).replace((
+                        // html-safe
                         /<\//g
-                    ), "<\\/")
-                    // hack-istanbul - un-instrument
-                    .replace((
+                    ), "<\\/").replace((
+                        // hack-istanbul - un-instrument
                         /\b__cov_.*?\+\+/g
                     ), "0") + ";\n";
                 }).join("")
@@ -3622,9 +3621,7 @@ local.buildApp = function (opt, onError) {
             stdio: [
                 "ignore", "ignore", 2
             ]
-        })
-        .on("error", onError)
-        .on("exit", function (exitCode) {
+        }).on("error", onError).on("exit", function (exitCode) {
             // validate exitCode
             local.assertThrow(!exitCode, exitCode);
             onError();
@@ -3811,19 +3808,16 @@ local.buildReadme = function (opt, onError) {
     });
     // customize private-repository
     if (local.env.npm_package_private) {
-        opt.dataTo = (
-            opt.dataTo.replace((
-                /\n\[!\[NPM\]\(https:\/\/nodei.co\/npm\/.*?\n/
-            ), "\n").replace(
-                "$ npm install ",
-                (
-                    "$ git clone "
-                    + local.env.npm_package_repository_url
-                    .replace("git+https://github.com/", "git@github.com:")
-                    + " --single-branch -b beta node_modules/"
-                )
-            )
-        );
+        opt.dataTo = opt.dataTo.replace((
+            /\n\[!\[NPM\]\(https:\/\/nodei.co\/npm\/.*?\n/
+        ), "\n");
+        opt.dataTo = opt.dataTo.replace("$ npm install ", (
+            "$ git clone "
+            + local.env.npm_package_repository_url.replace(
+                "git+https://github.com/",
+                "git@github.com:"
+            ) + " --single-branch -b beta node_modules/"
+        ));
     }
     // customize version
     [
@@ -4218,14 +4212,12 @@ local.cliRun = function (opt) {
             }
             return (
                 elem.description + "\n  " + file
-                + ("  " + elem.command.sort().join("|") + "  ")
-                .replace((
+                + ("  " + elem.command.sort().join("|") + "  ").replace((
                     /^\u0020{4}$/
                 ), "  ")
                 + elem.argList.join("  ")
             );
-        })
-        .join("\n\n");
+        }).join("\n\n");
         console.log(text);
     };
     local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
@@ -5057,14 +5049,11 @@ local.jwtAes256GcmDecrypt = function (token, key) {
  * https://tools.ietf.org/html/rfc7516
  */
     return local.tryCatchOnError(function () {
-        token = token
-        .replace((
+        token = token.replace((
             /-/g
-        ), "+")
-        .replace((
+        ), "+").replace((
             /_/g
-        ), "/")
-        .split(".");
+        ), "/").split(".");
         token = local.sjcl.decrypt(
             local.sjcl.codec.base64url.toBits(local.jwtAes256KeyInit(key)),
             JSON.stringify({
@@ -5349,13 +5338,11 @@ local.middlewareFileServer = function (req, res, next) {
         next();
         return;
     }
-    req.urlFile = (process.cwd() + req.urlParsed.pathname
-    // security - disable parent directory lookup
-    .replace((
+    req.urlFile = (process.cwd() + req.urlParsed.pathname.replace((
+        // security - disable parent directory lookup
         /.*\/\.\.\//g
-    ), "/"))
-    // replace trailing '/' with '/index.html'
-    .replace((
+    ), "/")).replace((
+        // replace trailing '/' with '/index.html'
         /\/$/
     ), "/index.html");
     // serve file from cache
@@ -5396,8 +5383,7 @@ local.middlewareForwardProxy = function (req, res, next) {
     // handle preflight-cors
     if (req.method === "OPTIONS" && (
         /forward-proxy-url/
-    )
-    .test(req.headers["access-control-request-headers"])) {
+    ).test(req.headers["access-control-request-headers"])) {
         local.serverRespondCors(req, res);
         res.end();
         return;
@@ -5568,13 +5554,9 @@ local.moduleDirname = function (module, modulePathList) {
     // search modulePathList
     [
         "node_modules"
-    ]
-    .concat(modulePathList)
-    .concat(require("module").globalPaths)
-    .concat([
+    ].concat(modulePathList).concat(require("module").globalPaths).concat([
         process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
-    ])
-    .some(function (modulePath) {
+    ]).some(function (modulePath) {
         try {
             result = require("path").resolve(
                 process.cwd(),
@@ -5616,14 +5598,11 @@ local.normalizeJwtBase64Url = function (b64) {
 /*
  * this function will normlize <b64> to base64url format
  */
-    return b64
-    .replace((
+    return b64.replace((
         /\=/g
-    ), "")
-    .replace((
+    ), "").replace((
         /\+/g
-    ), "-")
-    .replace((
+    ), "-").replace((
         /\//g
     ), "_");
 };
@@ -6072,9 +6051,8 @@ vendor)s{0,1}(\\b|_)\
                     stdio: [
                         "ignore", 1, 2
                     ]
-                })
                 // on shell exit, print return prompt
-                .on("exit", function (exitCode) {
+                }).on("exit", function (exitCode) {
                     console.error("exit-code " + exitCode);
                     that.evalDefault(
                         "\n",
@@ -6326,13 +6304,11 @@ local.requireReadme = function () {
             /.+/g
         ), "") + tmp[1];
     }, local.nop);
-    code = code
     // alias require($npm_package_name) to utility2_moduleExports;
-    .replace(
+    code = code.replace(
         new RegExp("require\\(." + local.env.npm_package_name + ".\\)"),
         "globalThis.utility2_moduleExports"
-    )
-    .replace(
+    ).replace(
         new RegExp("require\\(." + local.env.npm_package_nameOriginal + ".\\)"),
         "globalThis.utility2_moduleExports"
     );
@@ -6439,14 +6415,16 @@ instruction\n\
     3. open a browser to http://127.0.0.1:8081 and play with the web-demo\n\
     4. edit this script to suit your needs\n\
 */\n\
-' + local.assetsDict["/assets.utility2.rollup.begin.js"]
-    .replace((/utility2_rollup/g), 'utility2_app');
+' + local.assetsDict["/assets.utility2.rollup.begin.js"].replace((
+    /utility2_rollup/g
+), "utility2_app");
 /* jslint ignore:end */
         case "/assets.my_app.js":
             // handle large string-replace
             tmp = "/assets." + local.env.npm_package_nameLib + ".js";
-            code = local.assetsDict["/assets.utility2.rollup.content.js"]
-            .split("/* utility2.rollup.js content */");
+            code = local.assetsDict["/assets.utility2.rollup.content.js"].split(
+                "/* utility2.rollup.js content */"
+            );
             code.splice(
                 1,
                 0,
@@ -6465,8 +6443,9 @@ instruction\n\
             break;
         case "local.stateInit":
             // handle large string-replace
-            code = local.assetsDict["/assets.utility2.rollup.content.js"]
-            .split("/* utility2.rollup.js content */");
+            code = local.assetsDict["/assets.utility2.rollup.content.js"].split(
+                "/* utility2.rollup.js content */"
+            );
             tmp = local.middlewareJsonpStateInit({
                 stateInit: true
             });
@@ -6829,23 +6808,17 @@ local.stringHtmlSafe = function (text) {
  * this function will make the text html-safe
  * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
  */
-    return text
-    .replace((
+    return text.replace((
         /&/g
-    ), "&amp;")
-    .replace((
+    ), "&amp;").replace((
         /"/g
-    ), "&quot;")
-    .replace((
+    ), "&quot;").replace((
         /'/g
-    ), "&apos;")
-    .replace((
+    ), "&apos;").replace((
         /</g
-    ), "&lt;")
-    .replace((
+    ), "&lt;").replace((
         />/g
-    ), "&gt;")
-    .replace((
+    ), "&gt;").replace((
         /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
     ), "&$1");
 };
@@ -6870,14 +6843,11 @@ local.stringQuotedToAscii = function (str) {
  * this function will replace non-ascii-chr to unicode-escaped-ascii-chr
  * in quoted-<str>
  */
-    return str
-    .replace((
+    return str.replace((
         /\r/g
-    ), "\\r")
-    .replace((
+    ), "\\r").replace((
         /\t/g
-    ), "\\t")
-    .replace((
+    ), "\\t").replace((
         /[^\n\u0020-\u007e]/g
     ), function (chr) {
         return "\\u" + ("0000" + chr.charCodeAt(0).toString(16)).slice(-4);
@@ -7043,19 +7013,19 @@ local.templateRender = function (template, dict, opt) {
     var rgx;
     var skip;
     var value;
-    dict = dict || {};
+    if (dict === null || dict === undefined) {
+        dict = {};
+    }
     opt = opt || {};
     getValue = function (key) {
         argList = key.split(" ");
         value = dict;
         if (argList[0] === "#this/") {
-            return;
+            return value;
         }
         // iteratively lookup nested values in the dict
         argList[0].split(".").forEach(function (key) {
-            if (key !== "this") {
-                value = value && value[key];
-            }
+            value = value && value[key];
         });
         return value;
     };
@@ -7190,23 +7160,17 @@ local.templateRender = function (template, dict, opt) {
             value = String(value);
             // default to htmlSafe
             if (!notHtmlSafe) {
-                value = value
-                .replace((
+                value = value.replace((
                     /&/g
-                ), "&amp;")
-                .replace((
+                ), "&amp;").replace((
                     /"/g
-                ), "&quot;")
-                .replace((
+                ), "&quot;").replace((
                     /'/g
-                ), "&apos;")
-                .replace((
+                ), "&apos;").replace((
                     /</g
-                ), "&lt;")
-                .replace((
+                ), "&lt;").replace((
                     />/g
-                ), "&gt;")
-                .replace((
+                ), "&gt;").replace((
                     /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
                 ), "&$1");
             }
@@ -7215,8 +7179,7 @@ local.templateRender = function (template, dict, opt) {
                 && (typeof local.marked === "function" && local.marked)
             );
             if (markdownToHtml) {
-                value = markdownToHtml(value)
-                .replace((
+                value = markdownToHtml(value).replace((
                     /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
                 ), "&$1");
             }
@@ -7357,12 +7320,10 @@ local.testReportCreate = function (testReport) {
         }).map(function (testPlatform) {
             return (
                 "| test-report - " + testPlatform.name + "\n|"
-                + ("        " + testPlatform.timeElapsed + " ms     ")
-                .slice(-16)
-                + ("        " + testPlatform.testsFailed + " failed ")
-                .slice(-16)
-                + ("        " + testPlatform.testsPassed + " passed ")
-                .slice(-16) + "     |\n" + new Array(56).join("-")
+                + (testPlatform.timeElapsed + " ms     ").padStart(16, " ")
+                + (testPlatform.testsFailed + " failed ").padStart(16, " ")
+                + (testPlatform.testsPassed + " passed ").padStart(16, " ")
+                + "     |\n" + new Array(56).join("-")
             );
         }).join("\n") + "\n"
     );
@@ -7384,13 +7345,11 @@ local.testReportCreate = function (testReport) {
     // create test-report.badge.svg
     local.fs.writeFileSync(
         "tmp/build/test-report.badge.svg",
-        local.assetsDict["/assets.testReportBadge.template.svg"]
-        // edit number of tests failed
-        .replace((
+        local.assetsDict["/assets.testReportBadge.template.svg"].replace((
+            // edit number of tests failed
             /999/g
-        ), testReport.testsFailed)
-        // edit badge color
-        .replace((
+        ), testReport.testsFailed).replace((
+            // edit badge color
             /d00/g
         ), (
             testReport.testsFailed
@@ -7773,12 +7732,9 @@ local.testRunDefault = function (opt) {
             local._testRunConsoleError(
                 "testRunDefault - "
                 + testPlatform.timeElapsed + " ms - testCase pending - "
-                + testPlatform.testCaseList
-                .filter(function (testCase) {
+                + testPlatform.testCaseList.filter(function (testCase) {
                     return testCase.status === "pending";
-                })
-                .slice(0, 4)
-                .map(function (testCase) {
+                }).slice(0, 4).map(function (testCase) {
                     return testCase.name;
                 }).join(", ") + " ..."
             );
@@ -8156,11 +8112,9 @@ local.urlParse = function (url) {
                 );
             }
             urlParsed = new globalThis.URL(url);
-            urlParsed.path = "/" + urlParsed.href
-            .split("/")
-            .slice(3)
-            .join("/")
-            .split("#")[0];
+            urlParsed.path = (
+                "/" + urlParsed.href.split("/").slice(3).join("/").split("#")[0]
+            );
         } else {
             local.env.PORT = local.env.PORT || "8081";
             local.serverLocalHost = (
@@ -8539,37 +8493,34 @@ if (globalThis.utility2_rollup) {
             local.fs.readFileSync(__dirname + "/README.md", "utf8").replace((
                 /<!doctype\u0020html>[\S\s]*?<\/html>\\n\\\n/
             ), function (match0) {
-                local.assetsDict[key] = (
-                    local.templateRender(match0
-                    .replace((
-                        /\\n\\$/gm
-                    ), "")
-                    .replace(
-                        "<script src=\"assets.app.js\"></script>\n",
-                        (
-                            "<script "
-                            + "src=\"assets.utility2.rollup.js\"></script>\n"
-                            + "<script "
-                            + "src=\"assets.utility2.example.js\"></script>\n"
-                            + "<script "
-                            + "src=\"assets.utility2.test.js\"></script>\n"
-                        )
+                local.assetsDict[key] = local.templateRender(match0.replace((
+                    /\\n\\$/gm
+                ), "").replace(
+                    "<script src=\"assets.app.js\"></script>\n",
+                    (
+                        "<script "
+                        + "src=\"assets.utility2.rollup.js\"></script>\n"
+                        + "<script "
+                        + "src=\"assets.utility2.example.js\"></script>\n"
+                        + "<script "
+                        + "src=\"assets.utility2.test.js\"></script>\n"
                     )
-                    .replace("assets.example.js", "assets.utility2.example.js")
-                    .replace("assets.test.js", "assets.utility2.test.js")
-                    .replace((
-                        /npm_package_/g
-                    ), "")
-                    // uncomment utility2-comment
-                    .replace((
-                        /<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g
-                    ), "$1"), {
-                        env: local.objectSetDefault({
-                            version: "0.0.1"
-                        }, require(__dirname + "/package.json")),
-                        isRollup: true
-                    })
-                );
+                ).replace(
+                    "assets.example.js",
+                    "assets.utility2.example.js"
+                ).replace(
+                    "assets.test.js",
+                    "assets.utility2.test.js"
+                ).replace((
+                    /npm_package_/g
+                ), "").replace((
+                    /<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g
+                ), "$1"), {
+                    env: local.objectSetDefault({
+                        version: "0.0.1"
+                    }, require(__dirname + "/package.json")),
+                    isRollup: true
+                });
             });
         }, local.nop);
         break;
@@ -8623,8 +8574,9 @@ local.assetsDict["/assets.utility2.rollup.js"] = [
     case "/assets.utility2.html":
     case "/assets.utility2.test.js":
         // handle large string-replace
-        script = local.assetsDict["/assets.utility2.rollup.content.js"]
-        .split("/* utility2.rollup.js content */");
+        script = local.assetsDict["/assets.utility2.rollup.content.js"].split(
+            "/* utility2.rollup.js content */"
+        );
         script.splice(1, 0, (
             "local.assetsDict[\"" + key + "\"] = "
             + JSON.stringify(local.assetsDict[key])

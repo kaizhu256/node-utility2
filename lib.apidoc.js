@@ -294,14 +294,12 @@ local.cliRun = function (opt) {
             }
             return (
                 elem.description + "\n  " + file
-                + ("  " + elem.command.sort().join("|") + "  ")
-                .replace((
+                + ("  " + elem.command.sort().join("|") + "  ").replace((
                     /^\u0020{4}$/
                 ), "  ")
                 + elem.argList.join("  ")
             );
-        })
-        .join("\n\n");
+        }).join("\n\n");
         console.log(text);
     };
     local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
@@ -359,13 +357,9 @@ local.moduleDirname = function (module, modulePathList) {
     // search modulePathList
     [
         "node_modules"
-    ]
-    .concat(modulePathList)
-    .concat(require("module").globalPaths)
-    .concat([
+    ].concat(modulePathList).concat(require("module").globalPaths).concat([
         process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
-    ])
-    .some(function (modulePath) {
+    ]).some(function (modulePath) {
         try {
             result = require("path").resolve(
                 process.cwd(),
@@ -428,23 +422,17 @@ local.stringHtmlSafe = function (text) {
  * this function will make the text html-safe
  * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
  */
-    return text
-    .replace((
+    return text.replace((
         /&/g
-    ), "&amp;")
-    .replace((
+    ), "&amp;").replace((
         /"/g
-    ), "&quot;")
-    .replace((
+    ), "&quot;").replace((
         /'/g
-    ), "&apos;")
-    .replace((
+    ), "&apos;").replace((
         /</g
-    ), "&lt;")
-    .replace((
+    ), "&lt;").replace((
         />/g
-    ), "&gt;")
-    .replace((
+    ), "&gt;").replace((
         /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
     ), "&$1");
 };
@@ -568,19 +556,19 @@ local.templateRender = function (template, dict, opt) {
     var rgx;
     var skip;
     var value;
-    dict = dict || {};
+    if (dict === null || dict === undefined) {
+        dict = {};
+    }
     opt = opt || {};
     getValue = function (key) {
         argList = key.split(" ");
         value = dict;
         if (argList[0] === "#this/") {
-            return;
+            return value;
         }
         // iteratively lookup nested values in the dict
         argList[0].split(".").forEach(function (key) {
-            if (key !== "this") {
-                value = value && value[key];
-            }
+            value = value && value[key];
         });
         return value;
     };
@@ -715,23 +703,17 @@ local.templateRender = function (template, dict, opt) {
             value = String(value);
             // default to htmlSafe
             if (!notHtmlSafe) {
-                value = value
-                .replace((
+                value = value.replace((
                     /&/g
-                ), "&amp;")
-                .replace((
+                ), "&amp;").replace((
                     /"/g
-                ), "&quot;")
-                .replace((
+                ), "&quot;").replace((
                     /'/g
-                ), "&apos;")
-                .replace((
+                ), "&apos;").replace((
                     /</g
-                ), "&lt;")
-                .replace((
+                ), "&lt;").replace((
                     />/g
-                ), "&gt;")
-                .replace((
+                ), "&gt;").replace((
                     /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
                 ), "&$1");
             }
@@ -740,8 +722,7 @@ local.templateRender = function (template, dict, opt) {
                 && (typeof local.marked === "function" && local.marked)
             );
             if (markdownToHtml) {
-                value = markdownToHtml(value)
-                .replace((
+                value = markdownToHtml(value).replace((
                     /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
                 ), "&$1");
             }
@@ -814,9 +795,8 @@ local.apidocCreate = function (opt) {
         elem.name = (
             elem.typeof + " <span class=\"apidocSignatureSpan\">"
             + elem.moduleName + ".</span>" + key
-        )
         // handle case where module is a function
-        .replace(">.<", "><");
+        ).replace(">.<", "><");
         if (elem.typeof !== "function") {
             return elem;
         }
@@ -829,19 +809,15 @@ local.apidocCreate = function (opt) {
             // init signature
             elem.signature = match0.replace((
                 /\u0020*?\/\*[\S\s]*?\*\/\u0020*/g
-            ), "")
-            .replace((
+            ), "").replace((
                 /,/g
-            ), ", ")
-            .replace((
+            ), ", ").replace((
                 /\s+/g
             ), " ");
             return elem.signature;
-        })
-        .replace((
+        }).replace((
             /(\u0020*?\/\*[\S\s]*?\*\/\n)/
-        ), "<span class=\"apidocCodeCommentSpan\">$1</span>")
-        .replace((
+        ), "<span class=\"apidocCodeCommentSpan\">$1</span>").replace((
             /^function\u0020\(/
         ), key + " = function (");
         // init example
@@ -1001,8 +977,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
 " '
 /* jslint ignore:end */
                 + " | sort | head -n 256"
-            ).toString()
-            .split("\n")
+            ).toString().split("\n")
         );
     });
     opt.exampleList = opt.exampleList.filter(function (file) {
@@ -1147,20 +1122,16 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
 " '
 /* jslint ignore:end */
                 + " | sort | head -n 256"
-            ).toString()
-            .split("\n")
+            ).toString().split("\n")
         );
     });
     opt.ii = 256;
     opt.libFileList.every(function (file) {
         local.tryCatchOnError(function () {
             tmp = {};
-            tmp.name = local.path.basename(file)
-            .replace("lib.", "")
-            .replace((
+            tmp.name = local.path.basename(file).replace("lib.", "").replace((
                 /\.[^.]*?$/
-            ), "")
-            .replace((
+            ), "").replace((
                 /\W/g
             ), "_");
             ([
@@ -1196,9 +1167,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
         moduleMain[tmp] = moduleMain[tmp] || opt.moduleDict[key];
     });
     // init moduleList
-    opt.moduleList = Object.keys(opt.moduleDict)
-    .sort()
-    .map(function (prefix) {
+    opt.moduleList = Object.keys(opt.moduleDict).sort().map(function (prefix) {
         module = opt.moduleDict[prefix];
         // handle case where module is a function
         if (typeof module === "function") {
@@ -1239,9 +1208,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
     // render apidoc
     opt.result = local.templateRender(opt.template, opt, {
         notHtmlSafe: true
-    })
-    .trim()
-    .replace((
+    }).trim().replace((
         /\u0020+$/gm
     ), "") + "\n";
     return opt.result;

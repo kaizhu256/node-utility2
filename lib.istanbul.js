@@ -301,14 +301,12 @@ local.cliRun = function (opt) {
             }
             return (
                 elem.description + "\n  " + file
-                + ("  " + elem.command.sort().join("|") + "  ")
-                .replace((
+                + ("  " + elem.command.sort().join("|") + "  ").replace((
                     /^\u0020{4}$/
                 ), "  ")
                 + elem.argList.join("  ")
             );
-        })
-        .join("\n\n");
+        }).join("\n\n");
         console.log(text);
     };
     local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
@@ -422,9 +420,7 @@ local._istanbul_fs.readFileSync = function (file) {
     // return head.txt or foot.txt
     file = local[file.slice(-8)];
     if (local.isBrowser) {
-        file = file
-        .replace("<!doctype html>\n", "")
-        .replace((
+        file = file.replace("<!doctype html>\n", "").replace((
             /(<\/?)(?:body|html)/g
         ), "$1div");
     }
@@ -575,19 +571,17 @@ local.coverageReportCreate = function () {
         opt.pct = local.coverageReportSummary.root.metrics.lines.pct;
         local.fsWriteFileWithMkdirpSync(
             local._istanbul_path.dirname(opt.dir) + "/coverage.badge.svg",
-            local.templateCoverageBadgeSvg
             // edit coverage badge percent
-            .replace((
-                /100.0/g
-            ), opt.pct)
             // edit coverage badge color
-            .replace((
+            local.templateCoverageBadgeSvg.replace((
+                /100.0/g
+            ), opt.pct).replace((
                 /0d0/g
-            ), ((
-                "0" + Math.round((100 - opt.pct) * 2.21).toString(16)
-            ).slice(-2) + (
-                "0" + Math.round(opt.pct * 2.21).toString(16)
-            ).slice(-2) + "00"))
+            ), (
+                Math.round((100 - opt.pct) * 2.21).toString(16).padStart(2, "0")
+                + Math.round(opt.pct * 2.21).toString(16).padStart(2, "0")
+                + "00"
+            ))
         );
     }
     console.log("created coverage file " + opt.dir + "/index.html");

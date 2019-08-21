@@ -325,14 +325,12 @@ local.cliRun = function (opt) {
             }
             return (
                 elem.description + "\n  " + file
-                + ("  " + elem.command.sort().join("|") + "  ")
-                .replace((
+                + ("  " + elem.command.sort().join("|") + "  ").replace((
                     /^\u0020{4}$/
                 ), "  ")
                 + elem.argList.join("  ")
             );
-        })
-        .join("\n\n");
+        }).join("\n\n");
         console.log(text);
     };
     local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
@@ -723,9 +721,8 @@ vendor)s{0,1}(\\b|_)\
                     stdio: [
                         "ignore", 1, 2
                     ]
-                })
                 // on shell exit, print return prompt
-                .on("exit", function (exitCode) {
+                }).on("exit", function (exitCode) {
                     console.error("exit-code " + exitCode);
                     that.evalDefault(
                         "\n",
@@ -898,14 +895,16 @@ defer = function (opt, onError) {
         case "clear":
         case "removeItem":
         case "setItem":
-            objectStore = storage
-            .transaction(storageDir, "readwrite")
-            .objectStore(storageDir);
+            objectStore = storage.transaction(
+                storageDir,
+                "readwrite"
+            ).objectStore(storageDir);
             break;
         default:
-            objectStore = storage
-            .transaction(storageDir, "readonly")
-            .objectStore(storageDir);
+            objectStore = storage.transaction(
+                storageDir,
+                "readonly"
+            ).objectStore(storageDir);
         }
         switch (opt.action) {
         case "clear":

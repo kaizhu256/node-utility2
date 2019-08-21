@@ -1645,21 +1645,21 @@ local.assetsDict["/assets.swgg.html"] = local.assetsDict["/assets.utility2.templ
 /* validateLineSortedReset */\n\
 /* @media */\n\
 @media screen and (max-width: 640px) {\n\
-    .swggUiContainer .operation {\n\
-        font-size: small;\n\
-    }\n\
-    .swggUiContainer .resource > .thead > .td {\n\
-        flex: 1;\n\
-    }\n\
-    .swggUiContainer > .thead {\n\
-        display: block;\n\
-        padding: 0;\n\
-    }\n\
-    .swggUiContainer > .thead > .td {\n\
-        display: block;\n\
-        margin: 0;\n\
-        width: 100%;\n\
-    }\n\
+.swggUiContainer .operation {\n\
+    font-size: small;\n\
+}\n\
+.swggUiContainer .resource > .thead > .td {\n\
+    flex: 1;\n\
+}\n\
+.swggUiContainer > .thead {\n\
+    display: block;\n\
+    padding: 0;\n\
+}\n\
+.swggUiContainer > .thead > .td {\n\
+    display: block;\n\
+    margin: 0;\n\
+    width: 100%;\n\
+}\n\
 }\n\
 /* validateLineSortedReset */\n\
 /* hover */\n\
@@ -1684,8 +1684,9 @@ local.assetsDict["/assets.swgg.html"] = local.assetsDict["/assets.utility2.templ
     border: 5px solid #d00;\n\
 }\n\
 </style>\n\
-')
-    .replace((/\n<\/script>\n[\S\s]*\n<\/html>\n/), '\
+').replace((
+    /\n<\/script>\n[\S\s]*\n<\/html>\n/
+), '\
 \n\
 </script>\n\
 <div class="swggUiContainer" style="margin: 0 auto; max-width: 1200px;">\n\
@@ -1982,8 +1983,10 @@ local.apiAjax = function (that, opt, onError) {
             opt.inHeader[encodeURIComponent(schemaP.name.toLowerCase())] = tmp;
             break;
         case "path":
-            opt.inPath = opt.inPath
-            .replace("{" + schemaP.name + "}", encodeURIComponent(tmp));
+            opt.inPath = opt.inPath.replace(
+                "{" + schemaP.name + "}",
+                encodeURIComponent(tmp)
+            );
             break;
         case "query":
             opt.inQuery += (
@@ -2284,23 +2287,17 @@ local.apiUpdate = function (swaggerJson) {
         if (local.templateApiDict[that._crudType[0]]) {
             local.objectSetDefault(
                 that,
-                JSON.parse(local.templateApiDict[that._crudType[0]]
-                .replace((
+                JSON.parse(local.templateApiDict[that._crudType[0]].replace((
                     /\{\{_fileUploadNumber\}\}/g
-                ), that._fileUploadNumber)
-                .replace((
+                ), that._fileUploadNumber).replace((
                     /\{\{_idBackend\}\}/g
-                ), that._idBackend)
-                .replace((
+                ), that._idBackend).replace((
                     /\{\{_idName\}\}/g
-                ), that._idName)
-                .replace((
+                ), that._idName).replace((
                     /\{\{_operationId\}\}/g
-                ), that.operationId)
-                .replace((
+                ), that.operationId).replace((
                     /\{\{_schemaName\}\}/g
-                ), that._schemaName)
-                .replace((
+                ), that._schemaName).replace((
                     /\{\{_tags0\}\}/g
                 ), that.tags[0]))
             );
@@ -2391,8 +2388,7 @@ local.apiUpdate = function (swaggerJson) {
             return local.apiAjax(that, swaggerJson, onError);
         };
         that._ajaxToString = (
-            that.ajax.toString()
-            .replace("{", (
+            that.ajax.toString().replace("{", (
                 "{\n"
                 + "/*\n"
                 + " * this function will run the api-call "
@@ -2418,8 +2414,7 @@ local.apiUpdate = function (swaggerJson) {
                 ).replace((
                     /\n/g
                 ), "\n    ") + "\n */"
-            )
-            .replace((
+            ).replace((
                 /\n/g
             ), "\n                "))
         );
@@ -2985,14 +2980,15 @@ local.middlewareCrudBuiltin = function (req, res, next) {
                         );
                     }
                 });
-                crud.body = Object.keys(req.swgg.bodyMeta)
-                .filter(function (key) {
+                crud.body = Object.keys(req.swgg.bodyMeta).filter(function (
+                    key
+                ) {
                     return typeof req.swgg.bodyMeta[key].filename === "string";
-                })
-                .map(function (key) {
+                }).map(function (key) {
                     tmp = local.jsonCopy(req.swgg.paramDict);
-                    tmp.id = tmp.id || ((1 + Math.random()) * 0x10000000000000)
-                    .toString(36).slice(1);
+                    tmp.id = tmp.id || (
+                        (1 + Math.random()) * 0x10000000000000
+                    ).toString(36).slice(1);
                     local.objectSetOverride(tmp, {
                         fileBlob: local.base64FromBuffer(
                             req.swgg.bodyParsed[key]
@@ -3285,9 +3281,10 @@ local.middlewareValidate = function (req, res, next) {
             // init paramDict
             req.swgg.paramDict = {};
             // parse path param
-            tmp = req.urlParsed.pathname
-            .replace(local.swaggerJsonBasePath, "")
-            .split("/");
+            tmp = req.urlParsed.pathname.replace(
+                local.swaggerJsonBasePath,
+                ""
+            ).split("/");
             req.swgg.operation._path.split("/").forEach(function (key, ii) {
                 if ((
                     /^\{\S*?\}$/
@@ -4489,8 +4486,10 @@ local.swaggerValidateDataSchema = function (opt) {
         oneOf = (data && schema.oneOf) || [];
         ii = 0;
         while (ii < oneOf.length) {
-            tmp = String(oneOf[ii] && oneOf[ii].$ref)
-            .replace("http://json-schema.org/draft-04/schema#", "#");
+            tmp = String(oneOf[ii] && oneOf[ii].$ref).replace(
+                "http://json-schema.org/draft-04/schema#",
+                "#"
+            );
             switch (
                 tmp + " " + (!local.isNullOrUndefined(data.$ref) || data.in)
             ) {
@@ -5391,11 +5390,9 @@ local.uiEventListenerDict.onEventInputValidateAndAjax = function (
             }
             break;
         case "SELECT":
-            tmp = Array.from(tmp.options)
-            .filter(function (element) {
+            tmp = Array.from(tmp.options).filter(function (element) {
                 return element.selected;
-            })
-            .map(function (element) {
+            }).map(function (element) {
                 return jsonParse(decodeURIComponent(
                     element.dataset.valueSelectOption
                 ));
@@ -5967,8 +5964,9 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
                     };
                 })
             });
-            operation.summary = operation.summary || operation.description
-            .replace((
+            operation.summary = (
+                operation.summary || operation.description
+            ).replace((
                 /\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/g
             ), "");
             operation.parameters.forEach(local.uiRenderSchemaP);

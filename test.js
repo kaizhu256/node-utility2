@@ -794,7 +794,9 @@ local.testCase_browserTest_electron = function (opt, onError) {
     });
     opt.ipcMain = {
         on: function (_, fnc) {
-            ["html", "testReport", "undefined"].forEach(function (type) {
+            [
+                "html", "testReport", "undefined"
+            ].forEach(function (type) {
                 [
                     "<div></div>",
                     null,
@@ -1180,9 +1182,10 @@ local.testCase_childProcessSpawnWithTimeout_default = function (
         );
         onError(null, opt);
     }, local.onErrorThrow);
-    opt.childProcess
-    .on("error", onParallel)
-    .on("exit", function (exitCode, signal) {
+    opt.childProcess.on(
+        "error",
+        onParallel
+    ).on("exit", function (exitCode, signal) {
         // validate exitCode
         local.assertJsonEqual(exitCode, null);
         // validate signal

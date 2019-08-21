@@ -10,8 +10,6 @@ this zero-dependency package will provide a collection of high-level functions t
 
 [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html)
 
-[![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
-
 [![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 | git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
@@ -23,8 +21,6 @@ this zero-dependency package will provide a collection of high-level functions t
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
 
 [![npmPackageListing](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
-
-![npmPackageDependencyTree](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageDependencyTree.svg)
 
 
 
@@ -56,6 +52,7 @@ this zero-dependency package will provide a collection of high-level functions t
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- jslint - remove ternary-operator/newline comment preceding bra
 - migrate browser-testing from electron to headless-chromium
 - rename var value to val
 - replace uglifyjs-lite with terser-lite (v2.8.29)
@@ -69,6 +66,8 @@ this zero-dependency package will provide a collection of high-level functions t
 
 #### changelog 2019.8.17
 - npm publish 2019.8.17
+- jslint - remove allow-method-chain-newline hack
+- jslint - remove autofix - autofix-js-braket - remove leading-whitespace from bra
 - jslint - internalize hacks to function warn_at_extra
 - jslint - unhack const, let from var
 - jslint - upgrade to jslint edition 2019.8.3
@@ -118,12 +117,13 @@ PORT=8081 node ./assets.app.js
 /*
 example.js
 
-this script will demo automated browser-tests with coverage (via electron and istanbul)
+this script will demo automated browser-tests with coverage
+(via electron and istanbul)
 
 instruction
     1. save this script as example.js
     2. run the shell-command:
-        $ npm install utility2 electron-lite && \
+        $ npm install kaizhu256/node-utility2#alpha electron-lite && \
             PATH="$(pwd)/node_modules/.bin:$PATH" \
             PORT=8081 \
             npm_config_mode_coverage=utility2 \
@@ -1030,8 +1030,9 @@ local.assetsDict["/assets.utility2.js"] =
 ).replace((/^#!\//), "// ");
 /* jslint ignore:end */
 /* validateLineSortedReset */
-local.assetsDict["/"] = local.assetsDict["/assets.index.template.html"]
-.replace((
+local.assetsDict["/"] = local.assetsDict[
+    "/assets.index.template.html"
+].replace((
     /\{\{env\.(\w+?)\}\}/g
 ), function (match0, match1) {
     switch (match1) {
@@ -1395,7 +1396,7 @@ shBuildCiAfter () {(set -e
 )}
 
 shBuildCiBefore () {(set -e
-    shNpmTestPublished
+    #!! shNpmTestPublished
     shReadmeTest example.js
     # screenshot
     MODE_BUILD=testExampleJs shBrowserScreenshot \

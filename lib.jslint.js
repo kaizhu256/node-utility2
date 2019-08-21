@@ -294,14 +294,12 @@ local.cliRun = function (opt) {
             }
             return (
                 elem.description + "\n  " + file
-                + ("  " + elem.command.sort().join("|") + "  ")
-                .replace((
+                + ("  " + elem.command.sort().join("|") + "  ").replace((
                     /^\u0020{4}$/
                 ), "  ")
                 + elem.argList.join("  ")
             );
-        })
-        .join("\n\n");
+        }).join("\n\n");
         console.log(text);
     };
     local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
@@ -11694,8 +11692,7 @@ function warn(code, the_token, a, b, c, d) {
             a || artifact(the_token),
             b,
             c,
-            // hack-jslint - the_token
-            d || the_token
+            d
         );
         return the_token.warning;
     }
@@ -12574,12 +12571,6 @@ function tokenize(source) {
 // The token is a // comment.
 
         if (snippet === "//") {
-            // hack-jslint - too_long
-            if (option.utility2 && (
-                /^!!\u0020|^\u0020https:\/\//m
-            ).test(source_line)) {
-                regexp_seen = true;
-            }
             snippet = source_line;
             source_line = "";
             the_token = comment(snippet);
@@ -12608,12 +12599,6 @@ function tokenize(source) {
                     }
                 }
                 array.push(source_line);
-                // hack-jslint - too_long
-                if (option.utility2 && (
-                    /^\S|^\u0020{2}|\u0020https:\/\/|\u0020this\u0020.*?\u0020package\u0020will\u0020/m
-                ).test(source_line)) {
-                    regexp_seen = true;
-                }
                 source_line = next_line();
                 if (source_line === undefined) {
                     return stop_at("unclosed_comment", line, column);
@@ -12763,17 +12748,13 @@ function dispense() {
 
     const cadet = tokens[token_nr];
     token_nr += 1;
-    // hack-jslint - advance token async/await to next_token based on context
-    const next_cadet_id = (tokens[token_nr] || {
-        id: ""
-    }).id;
-    if (
-        (cadet.id === "async" && next_cadet_id === "function")
-        || (cadet.id === "await" && next_cadet_id[0].match(
-            /[a-zA-Z_$]/
-        ))
-    ) {
-        cadet.id = next_cadet_id;
+    // hack-jslint - advance token async/await to next_token by context
+    const next_cadet = tokens[token_nr] || {};
+    if (next_cadet.identifier && (
+        cadet.id === "await"
+        || (cadet.id === "async" && next_cadet.id === "function")
+    )) {
+        cadet.id = next_cadet.id;
         token_nr += 1;
     }
     if (cadet.id === "(comment)") {
@@ -15727,7 +15708,9 @@ function whitage() {
             right,
             artifact(right),
             fudge + at,
-            artifact_column(right)
+            // hack-jslint
+            artifact_column(right),
+            left.line
         );
     }
 
@@ -15953,13 +15936,14 @@ function whitage() {
                     ) {
                         no_space_only();
                     } else if (right.id === "." || right.id === "?.") {
-                        // hack-jslint - method-chain
-                        // https://github.com/douglascrockford/JSLint/commit/752c82d860ac14d35d492dc5c6ad0a0ed8227e76#diff-01d3d81a6eb6d82af3c377b55dc4fa28L4692
-                        if (left.line === right.line) {
-                            no_space();
-                        } else {
-                            at_margin(0);
-                        }
+                        no_space();
+                        //!! // hack-jslint - method-chain
+                        //!! // https://github.com/douglascrockford/JSLint/commit/752c82d860ac14d35d492dc5c6ad0a0ed8227e76#diff-01d3d81a6eb6d82af3c377b55dc4fa28L4692
+                        //!! if (left.line === right.line) {
+                            //!! no_space();
+                        //!! } else {
+                            //!! at_margin(0);
+                        //!! }
                     } else if (left.id === ";") {
                         if (open) {
                             at_margin(0);
@@ -16283,28 +16267,15 @@ warn_at_extra = function (warning, warnings) {
  */
     var tmp;
     Object.assign(warning, lines_extra[warning.line]);
-    // left, right
-    ([
-        "c", "d"
-    ]).forEach(function (key) {
-        if (warning[key] === undefined || typeof warning[key] === "object") {
-            warning[key] = Object.assign({}, warning[key]);
-            Object.keys(warning[key]).forEach(function (key2) {
-                if (typeof warning[key][key2] === "object") {
-                    warning[key][key2] = null;
-                }
-            });
-        }
-    });
-    // early_stop
+    // warning - early_stop
     if (early_stop) {
         if (option.utility2) {
             warning.stack = warning.stack || new Error().stack;
         }
         warnings.push(warning);
-        return warnings;
+        return warning;
     }
-    // ignore
+    // warning - ignore
     if (warning.ignore) {
         return;
     }
@@ -16314,38 +16285,45 @@ warn_at_extra = function (warning, warnings) {
         return;
     // expected_a_b: "Expected '{a}' and instead saw '{b}'.",
     case "expected_a_b":
-        switch (warning.a + "." + warning.b) {
-        case "let.var":
-        case "var.let":
+        switch (warning.a + " " + warning.b) {
+        case "let var":
+        case "var let":
+            return;
+        }
+        break;
+    // too_long: "Line is longer than 80 characters.",
+    case "too_long":
+        if ((
+            /^\s*?(?:\/\/(?:!!\u0020|\u0020https:\/\/)|(?:\S+?\u0020)?(?:https:\/\/|this\u0020.*?\u0020package\u0020will\u0020))/m
+        ).test(warning.source)) {
             return;
         }
         break;
     // unexpected_a: "Unexpected '{a}'.",
     case "unexpected_a":
-        switch (
-            JSON.stringify(warning.c.wrapped || warning.c.id)
-            + " " + warning.d.id
-        ) {
-        case "true .":
+        if (warning.a === "." && warning.c && warning.c.wrapped === true) {
             return;
         }
         break;
     }
-    // autofix
+    // warning - autofix
     warning.a = warning.a || warning.source.trim();
     switch (option.autofix && warning.code) {
     // expected_a_at_b_c: "Expected '{a}' at column {b}, not column {c}.",
     case "expected_a_at_b_c":
-        tmp = warning.b - warning.c;
+        if (warning.a === ".") {
+            break;
+        }
         // autofix indent - increment
+        tmp = warning.b - warning.c;
         if (tmp >= 0) {
             lines_extra[warning.line].source_autofix = (
                 " ".repeat(tmp) + warning.source
             );
             break;
         }
-        tmp = -tmp;
         // autofix indent - decrement
+        tmp = -tmp;
         if ((
             /^\u0020*?$/m
         ).test(warning.source.slice(0, warning.column))) {
@@ -16394,11 +16372,12 @@ warn_at_extra = function (warning, warnings) {
         );
         break;
     }
+    // warning - sort by lineno
     if (warnings.length && warnings[warnings.length - 1].line < warning.line) {
         warnings.push(warning);
         return warning;
     }
-    // debug
+    // warning - debug
     if (option.utility2) {
         warning.option = Object.assign({}, option);
         Object.keys(warning.option).forEach(function (key) {
@@ -16845,7 +16824,7 @@ local.jslintAutofix = function (code, file, opt) {
         // parse rgx
         // https://github.com/douglascrockford/JSLint/blob/557afd32bcaa35480d31a86f02d3a8c06a4e5b5c/jslint.js#L1383
         rgx2 = (
-            /(?:[^.]\b(?:case|delete|in|instanceof|new|return|typeof|void|yield)|[!%&\u0028*+,\-:;<=>?\[\^{|}~])[\s\u0028]*?\/[^*\/]/g
+            /(?:[^.]\b(?:case|delete|in|instanceof|new|return|typeof|void|yield)|[!%&(*+,\-\/:;<=>?\[\^{|}~])[\s\u0028]*?\/[^*\/]/g
         );
         tmp = "";
         // autofix-js - demux shebang
@@ -16983,16 +16962,6 @@ local.jslintAutofix = function (code, file, opt) {
         code = code.replace((
             /(\(\n)(\S)/g
         ), "$1    $2");
-        // autofix-js-braket - remove leading-whitespace from ([{
-        code = code.replace((
-            /\n+\s*?([(\[{])\n/g
-        ), "\u0000$1\n");
-        code = code.replace((
-            /\/\*_\*\/\u0000|\/\/_\u0000/g
-        ), "$&\n");
-        code = code.replace((
-            /\u0000/g
-        ), "");
         // autofix-js-braket - normalize {... to {\n   ...
         code = code.replace((
             /^(\u0020+)(.*?(?:\u0020\[|\(\[|\{))\u0020*?(\S)/gm
