@@ -545,7 +545,7 @@ local.coverageReportCreate = function () {
         "<div class=\"coverageReportDiv\">\n"
         + "<h1>coverage-report</h1>\n"
         + "<div style=\""
-        + "background: #fff; border: 1px solid #000; margin 0; padding: 0;"
+        + "background: #fff; border: 1px solid #999; margin 0; padding: 0;"
         + "\">\n"
     );
     local.writerData = "";
@@ -11109,7 +11109,7 @@ local["head.txt"] = '\
 .x-istanbul .cover-empty,\n\
 .x-istanbul .cover-fill {\n\
     background: white;\n\
-    border: 1px solid #444;\n\
+    border: 1px solid #999;\n\
     display: inline-block;\n\
     height: 12px;\n\
 }\n\
@@ -11119,7 +11119,7 @@ local["head.txt"] = '\
 }\n\
 .x-istanbul .cover-fill {\n\
     background: #ccc;\n\
-    border-right: 1px solid #444;\n\
+    border-right: 1px solid #999;\n\
 }\n\
 .x-istanbul .cover-full {\n\
     border-right: none !important;\n\
@@ -11159,8 +11159,8 @@ local["head.txt"] = '\
     text-decoration: none;\n\
 }\n\
 .x-istanbul .coverage .line-coverage {\n\
-    border-left: 1px solid #666;\n\
-    border-right: 1px solid #666;\n\
+    border-left: 1px solid #999;\n\
+    border-right: 1px solid #999;\n\
     color: #777 !important;\n\
     text-align: right;\n\
 }\n\
@@ -11175,7 +11175,7 @@ local["head.txt"] = '\
     width: 100%\n\
 }\n\
 .x-istanbul .coverage-summary td {\n\
-    border: 1px solid #666;\n\
+    border: 1px solid #999;\n\
     margin: 0;\n\
     padding: 5px;\n\
     white-space: nowrap;\n\
@@ -11205,7 +11205,7 @@ local["head.txt"] = '\
     padding: 20px;\n\
 }\n\
 .x-istanbul .footer {\n\
-    border-top: 1px solid #666;\n\
+    border-top: 1px solid #999;\n\
 }\n\
 .x-istanbul .fstat-no {\n\
     background: #ffc520;\n\
@@ -11216,7 +11216,7 @@ local["head.txt"] = '\
     color: #111 !important;\n\
 }\n\
 .x-istanbul .header {\n\
-    border-bottom: 1px solid #666;\n\
+    border-bottom: 1px solid #999;\n\
     top: 0;\n\
     width: 100%;\n\
 }\n\
@@ -11238,7 +11238,7 @@ local["head.txt"] = '\
 }\n\
 .x-istanbul .metric {\n\
     background: white;\n\
-    border: 1px solid #333;\n\
+    border: 1px solid #999;\n\
     display: inline-block;\n\
     padding: .3em;\n\
 }\n\
@@ -11291,7 +11291,7 @@ local["head.txt"] = '\
 }\n\
 .x-istanbul .tableHeader td {\n\
     background: #fff;\n\
-    border: 1px solid #666;\n\
+    border: 1px solid #999;\n\
     padding: 5px;\n\
 }\n\
 .x-istanbul .tableHeader th {\n\

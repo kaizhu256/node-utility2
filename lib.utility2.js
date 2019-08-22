@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2019.8.17)
+ * lib.utility2.js (2019.8.21)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide a collection of high-level functions to to build, test, and deploy webapps
  *
@@ -298,24 +298,17 @@ pre {\n\
     white-space: pre-wrap;\n\
 }\n\
 .button {\n\
-    background-color: #fff;\n\
-    border: 1px solid;\n\
-    border-bottom-color: rgb(186, 186, 186);\n\
-    border-left-color: rgb(209, 209, 209);\n\
-    border-radius: 4px;\n\
-    border-right-color: rgb(209, 209, 209);\n\
-    border-top-color: rgb(216, 216, 216);\n\
-    color: #00d;\n\
+    background: #ddd;\n\
+    border: 1px solid #999;\n\
+    color: #000;\n\
     cursor: pointer;\n\
     display: inline-block;\n\
-    font-family: Arial, Helvetica, sans-serif;\n\
-    font-size: 12px;\n\
-    font-style: normal;\n\
-    font-weight: normal;\n\
-    margin: 0;\n\
-    padding: 2px 7px 3px 7px;\n\
+    padding: 2px 5px;\n\
     text-align: center;\n\
-    text-decoration: underline;\n\
+    text-decoration: none;\n\
+}\n\
+.button:hover {\n\
+    background: #bbb;\n\
 }\n\
 .colorError {\n\
     color: #d00;\n\
@@ -440,9 +433,9 @@ pre {\n\
         );\n\
     };\n\
     window.domOnEventDelegateDict.domOnEventResetOutput = function () {\n\
-        Array.from(document.querySelectorAll(\n\
+        document.querySelectorAll(\n\
             ".onevent-reset-output"\n\
-        )).forEach(function (elem) {\n\
+        ).forEach(function (elem) {\n\
             switch (elem.tagName) {\n\
             case "INPUT":\n\
             case "TEXTAREA":\n\
@@ -579,7 +572,7 @@ utility2-comment -->\n\
 <h3>{{env.npm_package_description}}</h3>\n\
 <!-- utility2-comment\n\
 <a class="button" download href="assets.app.js">download standalone app</a><br>\n\
-<button class="button" data-onevent="testRunBrowser" data-onevent-reset-output="1" id="testRunButton1">run internal test</button><br>\n\
+<button class="button" data-onevent="testRunBrowser" id="testRunButton1">run internal test</button><br>\n\
 <div class="uiAnimateSlide" id="testReportDiv1" style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"></div>\n\
 utility2-comment -->\n\
 \n\
@@ -845,11 +838,9 @@ if (!local.isBrowser) {\n\
         elem.scrollTop = elem.scrollHeight;\n\
     };\n\
 });\n\
-Object.assign(local, globalThis.domOnEventDelegateDict);\n\
+local.objectAssignDefault(local, globalThis.domOnEventDelegateDict);\n\
 globalThis.domOnEventDelegateDict = local;\n\
-local.onEventDomDb = (\n\
-    local.db && local.db.onEventDomDb\n\
-);\n\
+local.onEventDomDb = local.db && local.db.onEventDomDb;\n\
 local.testRunBrowser = function (evt) {\n\
 /*\n\
  * this function will run browser-tests\n\
@@ -1322,14 +1313,14 @@ local.assetsDict["/assets.testReport.template.html"] =
 /*csslint\n\
 */\n\
 .testReportDiv img {\n\
-    border: 1px solid black;\n\
+    border: 1px solid #999;\n\
     margin: 5px 0 5px 0;\n\
     max-height: 256px;\n\
     max-width: 512px;\n\
 }\n\
 .testReportDiv pre {\n\
     background: #fdd;\n\
-    border-top: 1px solid black;\n\
+    border-top: 1px solid #999;\n\
     margin-bottom: 0;\n\
     padding: 10px;\n\
 }\n\
@@ -1338,7 +1329,7 @@ local.assetsDict["/assets.testReport.template.html"] =
     width: 120px;\n\
 }\n\
 .testReportDiv table {\n\
-    border-top: 1px solid black;\n\
+    border-top: 1px solid #999;\n\
     text-align: left;\n\
     width: 100%;\n\
 }\n\
@@ -1353,7 +1344,7 @@ local.assetsDict["/assets.testReport.template.html"] =
 }\n\
 .testReportDiv .platform {\n\
     background: #fff;\n\
-    border: 1px solid black;\n\
+    border: 1px solid #999;\n\
     margin-bottom: 20px;\n\
     padding: 0 10px 10px 10px;\n\
     text-align: left;\n\
@@ -4559,9 +4550,7 @@ local.domQuerySelectorAllTagName = function (selector) {
  */
     var set;
     set = new Set();
-    Array.from(document.querySelectorAll(
-        selector
-    )).forEach(function (elem) {
+    document.querySelectorAll(selector).forEach(function (elem) {
         set.add(elem.tagName);
     });
     return Array.from(set).sort();
@@ -6026,7 +6015,7 @@ local.replStart = function () {
                     "find . -type f | grep -v -E "
 /* jslint ignore:start */
 + '"\
-/\\.|(\\b|_)(\\.\\d|\
+/\\.|~\$|(\\b|_)(\\.\\d|\
 archive|artifact|\
 bower_component|build|\
 coverage|\

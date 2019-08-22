@@ -10946,17 +10946,6 @@ require("fs").writeFileSync("/tmp/aa.js", aa);
 +                            margin += 4;
 +                        }
 
--                    } else if (right.id === "." || right.id === "?.") {
--                        no_space_only();
-+                    } else if (right.id === "." || right.id === "?.") {
-+                        // hack-jslint - method-chain
-+                        // https://github.com/douglascrockford/JSLint/commit/752c82d860ac14d35d492dc5c6ad0a0ed8227e76#diff-01d3d81a6eb6d82af3c377b55dc4fa28L4692
-+                        if (left.line === right.line) {
-+                            no_space();
-+                        } else {
-+                            at_margin(0);
-+                        }
-
 -export default Object.freeze(function jslint(
 +// hack-jslint - jslint0
 +const jslint0 = Object.freeze(function (
@@ -15798,13 +15787,7 @@ function whitage() {
                     ) {
                         no_space_only();
                     } else if (right.id === "." || right.id === "?.") {
-                        // hack-jslint - method-chain
-                        // https://github.com/douglascrockford/JSLint/commit/752c82d860ac14d35d492dc5c6ad0a0ed8227e76#diff-01d3d81a6eb6d82af3c377b55dc4fa28L4692
-                        if (left.line === right.line) {
-                            no_space();
-                        } else {
-                            at_margin(0);
-                        }
+                        no_space();
                     } else if (left.id === ";") {
                         if (open) {
                             at_margin(0);

@@ -10,6 +10,8 @@ this zero-dependency package will provide a collection of high-level functions t
 
 [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html)
 
+[![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
+
 [![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 | git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
@@ -21,6 +23,8 @@ this zero-dependency package will provide a collection of high-level functions t
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
 
 [![npmPackageListing](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
+
+![npmPackageDependencyTree](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageDependencyTree.svg)
 
 
 
@@ -64,8 +68,8 @@ this zero-dependency package will provide a collection of high-level functions t
 - add server stress-test using puppeteer
 - none
 
-#### changelog 2019.8.17
-- npm publish 2019.8.17
+#### changelog 2019.8.21
+- npm publish 2019.8.21
 - jslint - remove allow-method-chain-newline hack
 - jslint - remove autofix - autofix-js-braket - remove leading-whitespace from bra
 - jslint - internalize hacks to function warn_at_extra
@@ -123,7 +127,7 @@ this script will demo automated browser-tests with coverage
 instruction
     1. save this script as example.js
     2. run the shell-command:
-        $ npm install kaizhu256/node-utility2#alpha electron-lite && \
+        $ npm install utility2 electron-lite && \
             PATH="$(pwd)/node_modules/.bin:$PATH" \
             PORT=8081 \
             npm_config_mode_coverage=utility2 \
@@ -409,11 +413,9 @@ if (!local.isBrowser) {
         elem.scrollTop = elem.scrollHeight;
     };
 });
-Object.assign(local, globalThis.domOnEventDelegateDict);
+local.objectAssignDefault(local, globalThis.domOnEventDelegateDict);
 globalThis.domOnEventDelegateDict = local;
-local.onEventDomDb = (
-    local.db && local.db.onEventDomDb
-);
+local.onEventDomDb = local.db && local.db.onEventDomDb;
 local.testRunBrowser = function (evt) {
 /*
  * this function will run browser-tests
@@ -428,15 +430,13 @@ local.testRunBrowser = function (evt) {
     ) {
     // custom-case
     case "click.jslintAutofixButton1":
-    case "keydown.inputEval1":
+    case "keydown.inputTextarea1":
     case true:
         globalThis.domOnEventDelegateDict.domOnEventResetOutput();
-        // jslint #inputEval1
+        // jslint #inputTextarea1
         local.jslint.jslintAndPrint(
-            document.querySelector(
-                "#inputEval1"
-            ).value,
-            "inputEval1.js",
+            document.querySelector("#inputTextarea1").value,
+            "inputTextarea1.js",
             {
                 autofix: (
                     evt
@@ -447,51 +447,37 @@ local.testRunBrowser = function (evt) {
             }
         );
         if (local.jslint.jslintResult.autofix) {
-            document.querySelector(
-                "#inputEval1"
-            ).value = (
+            document.querySelector("#inputTextarea1").value = (
                 local.jslint.jslintResult.code
             );
         }
-        document.querySelector(
-            "#outputJslintPre1"
-        ).textContent = (
+        document.querySelector("#outputJslintPre1").textContent = (
             local.jslint.jslintResult.errText
         ).replace((
             /\u001b\[\d*m/g
         ), "").trim();
         // try to cleanup __coverage__
         try {
-            delete globalThis.__coverage__["/inputEval1.js"];
+            delete globalThis.__coverage__["/inputTextarea1.js"];
         } catch (ignore) {}
-        // try to cover and eval input-code
+        // try to cover and eval #inputTextarea1
         try {
-            document.querySelector(
-                "#outputCode1"
-            ).textContent = (
+            document.querySelector("#outputCode1").textContent = (
                 local.istanbul.instrumentSync(
-                    document.querySelector(
-                        "#inputEval1"
-                    ).value,
-                    "/inputEval1.js"
+                    document.querySelector("#inputTextarea1").value,
+                    "/inputTextarea1.js"
                 )
             );
             eval( // jslint ignore:line
-                document.querySelector(
-                    "#outputCode1"
-                ).textContent.replace((
-                    /^#!\//
-                ), "// ")
+                document.querySelector("#outputCode1").textContent
             );
-            document.querySelector(
-                "#coverageReportDiv1"
-            ).innerHTML = (
+            document.querySelector("#coverageReportDiv1").innerHTML = (
                 local.istanbul.coverageReportCreate({
-                    coverage: window.__coverage__
+                    coverage: globalThis.__coverage__
                 })
             );
-        } catch (errorCaught2) {
-            console.error(errorCaught2);
+        } catch (errCaught) {
+            console.error(errCaught);
         }
         return;
     case "click.testRunButton1":
@@ -653,24 +639,17 @@ pre {\n\
     white-space: pre-wrap;\n\
 }\n\
 .button {\n\
-    background-color: #fff;\n\
-    border: 1px solid;\n\
-    border-bottom-color: rgb(186, 186, 186);\n\
-    border-left-color: rgb(209, 209, 209);\n\
-    border-radius: 4px;\n\
-    border-right-color: rgb(209, 209, 209);\n\
-    border-top-color: rgb(216, 216, 216);\n\
-    color: #00d;\n\
+    background: #ddd;\n\
+    border: 1px solid #999;\n\
+    color: #000;\n\
     cursor: pointer;\n\
     display: inline-block;\n\
-    font-family: Arial, Helvetica, sans-serif;\n\
-    font-size: 12px;\n\
-    font-style: normal;\n\
-    font-weight: normal;\n\
-    margin: 0;\n\
-    padding: 2px 7px 3px 7px;\n\
+    padding: 2px 5px;\n\
     text-align: center;\n\
-    text-decoration: underline;\n\
+    text-decoration: none;\n\
+}\n\
+.button:hover {\n\
+    background: #bbb;\n\
 }\n\
 .colorError {\n\
     color: #d00;\n\
@@ -795,9 +774,9 @@ pre {\n\
         );\n\
     };\n\
     window.domOnEventDelegateDict.domOnEventResetOutput = function () {\n\
-        Array.from(document.querySelectorAll(\n\
+        document.querySelectorAll(\n\
             ".onevent-reset-output"\n\
-        )).forEach(function (elem) {\n\
+        ).forEach(function (elem) {\n\
             switch (elem.tagName) {\n\
             case "INPUT":\n\
             case "TEXTAREA":\n\
@@ -940,7 +919,7 @@ utility2-comment -->\n\
 \n\
 \n\
 <label>edit or paste script below to cover and test</label>\n\
-<textarea class="textarea" data-onevent="testRunBrowser" id="inputEval1">\n\
+<textarea class="textarea" data-onevent="testRunBrowser" id="inputTextarea1">\n\
 // remove comment below to disable jslint\n\
 /*jslint browser, devel*/\n\
 /*global window*/\n\
@@ -977,8 +956,8 @@ utility2-comment -->\n\
                 data = xhr.responseText;\n\
                 console.assert(data && data.length > 0, data);\n\
                 onError();\n\
-            } catch (errorCaught) {\n\
-                onError(errorCaught);\n\
+            } catch (errCaught) {\n\
+                onError(errCaught);\n\
             }\n\
         });\n\
     };\n\
@@ -1183,16 +1162,16 @@ local.http.createServer(function (req, res) {
         "utility2": "./npm_scripts.sh"
     },
     "utility2Dependents": [
-        "2018.12.30 db-lite",
         "2019.01.21 github-crud",
         "2019.01.30 bootstrap-lite",
         "2019.02.20 swgg",
         "2019.08.09 istanbul-lite master",
         "2019.08.10 jslint-lite master",
         "2019.08.16 apidoc-lite master",
+        "2019.08.20 db-lite",
         "2019.08.01 utility2"
     ],
-    "version": "2019.8.17"
+    "version": "2019.8.21"
 }
 ```
 
@@ -1396,7 +1375,7 @@ shBuildCiAfter () {(set -e
 )}
 
 shBuildCiBefore () {(set -e
-    #!! shNpmTestPublished
+    shNpmTestPublished
     shReadmeTest example.js
     # screenshot
     MODE_BUILD=testExampleJs shBrowserScreenshot \

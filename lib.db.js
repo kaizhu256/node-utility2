@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.db.js (2018.12.31)
+ * lib.db.js (2019.8.20)
  * https://github.com/kaizhu256/node-db-lite
  * this zero-dependency package will provide a persistent, in-browser database, with a working web-demo
  *
@@ -696,7 +696,7 @@ local.replStart = function () {
                     "find . -type f | grep -v -E "
 /* jslint ignore:start */
 + '"\
-/\\.|(\\b|_)(\\.\\d|\
+/\\.|~\$|(\\b|_)(\\.\\d|\
 archive|artifact|\
 bower_component|build|\
 coverage|\

@@ -2060,7 +2060,7 @@ shGrep () {(set -e
     REGEXP="$1"
     shift
     FILE_FILTER="\
-/\\.|(\\b|_)(\\.\\d|\
+/\\.|~\$|(\\b|_)(\\.\\d|\
 archive|artifact|\
 bower_component|build|\
 coverage|\
@@ -3433,13 +3433,15 @@ shUtility2BuildApp () {(set -e
 # this function will run shBuildApp in $UTILITY2_DEPENDENTS
     shUtility2DependentsSync
     cd "$HOME/Documents"
+    # shUtility2DependentsSync
+    (cd utility2 && shUtility2DependentsSync)
     # shBuildApp
     for DIR in $UTILITY2_DEPENDENTS
     do
         if [ -d "$DIR" ] && [ "$DIR" != utility2 ]
         then
             printf "\n\n\n\n$DIR\n\n\n\n"
-            (cd "$DIR" && rm -fr node_modules && shBuildApp)
+            (cd "$DIR" && shBuildApp)
         fi
     done
     shUtility2GitDiff
@@ -3452,7 +3454,6 @@ printf "
 apidoc-lite
 bootstrap-lite
 db-lite
-electron-lite
 github-crud
 istanbul-lite
 jslint-lite

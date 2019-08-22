@@ -1721,9 +1721,9 @@ local.assetsDict["/assets.swgg.html"] = local.assetsDict["/assets.utility2.templ
     window.domOnEventMediaHotkeys = function (evt) {\n\
         var media;\n\
         if (evt === "init") {\n\
-            Array.from(document.querySelectorAll(\n\
+            document.querySelectorAll(\n\
                 ".domOnEventMediaHotkeysInit"\n\
-            )).forEach(function (media) {\n\
+            ).forEach(function (media) {\n\
                 media.classList.remove("domOnEventMediaHotkeysInit");\n\
                 media.classList.add("domOnEventMediaHotkeys");\n\
                 [\n\
@@ -5514,9 +5514,7 @@ local.uiEventListenerDict.onEventOperationAjax = function (opt) {
  */
     // ensure opt is stateless
     opt = {
-        targetOnEvent: opt.targetOnEvent.closest(
-            ".operation"
-        )
+        targetOnEvent: opt.targetOnEvent.closest(".operation")
     };
     local.gotoNext(opt, function (err, data) {
         switch (opt.gotoState) {
@@ -5799,9 +5797,9 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
             document.querySelector(
                 "#swggUiReloadErrorDiv1"
             ).textContent = "";
-            Array.from(document.querySelectorAll(
+            document.querySelectorAll(
                 ".swggUiContainer > .reset"
-            )).forEach(function (element) {
+            ).forEach(function (element) {
                 element.remove();
             });
             // normalize swaggerJsonUrl
@@ -5997,9 +5995,9 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
     ).appendChild(
         swaggerJson.uiFragment
     );
-    Array.from(document.querySelectorAll(
+    document.querySelectorAll(
         ".swggUiContainer [data-value-text]"
-    )).forEach(function (element) {
+    ).forEach(function (element) {
         // render valueText
         element.value = decodeURIComponent(element.dataset.valueText);
         delete element.dataset.valueText;
@@ -6014,9 +6012,9 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
     [
         "Change", "Click", "Keyup", "Submit"
     ].forEach(function (eventType) {
-        Array.from(document.querySelectorAll(
+        document.querySelectorAll(
             ".eventDelegate" + eventType
-        )).forEach(function (element) {
+        ).forEach(function (element) {
             element.addEventListener(
                 eventType.toLowerCase(),
                 local.uiEventDelegate
