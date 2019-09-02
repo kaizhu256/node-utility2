@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2019.8.21)
+ * lib.utility2.js (2019.8.22)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide a collection of high-level functions to to build, test, and deploy webapps
  *
@@ -16,24 +16,17 @@
     var consoleError;
     var local;
     // init globalThis
-    (function () {
-        try {
-            globalThis = Function("return this")(); // jslint ignore:line
-        } catch (ignore) {}
-    }());
-    globalThis.globalThis = globalThis;
+    globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debug_inline
     if (!globalThis["debug\u0049nline"]) {
         consoleError = console.error;
-        globalThis["debug\u0049nline"] = function () {
+        globalThis["debug\u0049nline"] = function (...argList) {
         /*
-         * this function will both print <arguments> to stderr
-         * and return <arguments>[0]
+         * this function will both print <argList> to stderr
+         * and return <argList>[0]
          */
-            var argList;
-            argList = Array.from(arguments); // jslint ignore:line
-            // debug arguments
-            globalThis["debug\u0049nlineArguments"] = argList;
+            // debug argList
+            globalThis["debug\u0049nlineArgList"] = argList;
             consoleError("\n\ndebug\u0049nline");
             consoleError.apply(console, argList);
             consoleError("\n");
@@ -63,7 +56,6 @@
             return;
         }
         err = (
-            // ternary-operator
             (
                 message
                 && typeof message.message === "string"
@@ -80,6 +72,54 @@
             )
         );
         throw err;
+    };
+    local.fsRmrfSync = function (dir) {
+    /*
+     * this function will sync "rm -rf" <dir>
+     */
+        var child_process;
+        try {
+            child_process = require("child_process");
+        } catch (ignore) {
+            return;
+        }
+        child_process.spawnSync("rm", [
+            "-rf", dir
+        ], {
+            stdio: [
+                "ignore", 1, 2
+            ]
+        });
+    };
+    local.fsWriteFileWithMkdirpSync = function (file, data) {
+    /*
+     * this function will sync write <data> to <file> with "mkdir -p"
+     */
+        var fs;
+        try {
+            fs = require("fs");
+        } catch (ignore) {
+            return;
+        }
+        // try to write file
+        try {
+            fs.writeFileSync(file, data);
+        } catch (ignore) {
+            // mkdir -p
+            require("child_process").spawnSync(
+                "mkdir",
+                [
+                    "-p", require("path").dirname(file)
+                ],
+                {
+                    stdio: [
+                        "ignore", 1, 2
+                    ]
+                }
+            );
+            // rewrite file
+            fs.writeFileSync(file, data);
+        }
     };
     local.functionOrNop = function (fnc) {
     /*
@@ -149,7 +189,9 @@
         local.vm = require("vm");
         local.zlib = require("zlib");
     }
-}(this));
+}((typeof globalThis === "object" && globalThis) || (function () {
+    return Function("return this")(); // jslint ignore:line
+}())));
 
 
 
@@ -342,7 +384,6 @@ pre {\n\
 </style>\n\
 </head>\n\
 <body>\n\
-<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
 <a class="zeroPixel" download="db.persistence.json" href="" id="dbExportA1"></a>\n\
 <input class="zeroPixel" data-onevent="onEventDomDb" data-onevent-db="dbImportInput" type="file">\n\
@@ -370,6 +411,121 @@ pre {\n\
             );\n\
         }, 100);\n\
     });\n\
+}());\n\
+\n\
+\n\
+\n\
+// init domOnEventAjaxProgressUpdate\n\
+(function () {\n\
+/*\n\
+ * this function will display incrementing ajax-progress-bar\n\
+ */\n\
+    "use strict";\n\
+    var opt;\n\
+    if (window.domOnEventAjaxProgressUpdate) {\n\
+        return;\n\
+    }\n\
+    window.domOnEventAjaxProgressUpdate = function (gotoState, onError) {\n\
+        gotoState = (gotoState | 0) + 1;\n\
+        switch (gotoState) {\n\
+        // ajaxProgress - show\n\
+        case 1:\n\
+            // init timerInterval and timerTimeout\n\
+            opt.timerInterval = (\n\
+                opt.timerInterval || setInterval(opt, 2000, 1, onError)\n\
+            );\n\
+            opt.timerTimeout = (\n\
+                opt.timerTimeout || setTimeout(opt, 30000, 2, onError)\n\
+            );\n\
+            // show ajaxProgress\n\
+            if (opt.width !== -1) {\n\
+                opt.style.background = opt.background;\n\
+            }\n\
+            setTimeout(opt, 50, gotoState, onError);\n\
+            break;\n\
+        // ajaxProgress - increment\n\
+        case 2:\n\
+            // show ajaxProgress\n\
+            if (opt.width === -1) {\n\
+                return;\n\
+            }\n\
+            opt.style.background = opt.background;\n\
+            // reset ajaxProgress if it goes too high\n\
+            if ((opt.style.width.slice(0, -1) | 0) > 95) {\n\
+                opt.width = 0;\n\
+            }\n\
+            // this algorithm will indefinitely increment ajaxProgress\n\
+            // with successively smaller increments without ever reaching 100%\n\
+            opt.width += 1;\n\
+            opt.style.width = Math.max(\n\
+                100 - 75 * Math.exp(-0.125 * opt.width),\n\
+                opt.style.width.slice(0, -1) | 0\n\
+            ) + "%";\n\
+            if (!opt.counter) {\n\
+                setTimeout(opt, 0, gotoState, onError);\n\
+            }\n\
+            break;\n\
+        // ajaxProgress - 100%\n\
+        case 3:\n\
+            opt.width = -1;\n\
+            opt.style.width = "100%";\n\
+            setTimeout(opt, 1000, gotoState, onError);\n\
+            break;\n\
+        // ajaxProgress - hide\n\
+        case 4:\n\
+            // cleanup timerInterval and timerTimeout\n\
+            clearInterval(opt.timerInterval);\n\
+            opt.timerInterval = null;\n\
+            clearTimeout(opt.timerTimeout);\n\
+            opt.timerTimeout = null;\n\
+            // hide ajaxProgress\n\
+            opt.style.background = "transparent";\n\
+            if (onError) {\n\
+                onError();\n\
+            }\n\
+            setTimeout(opt, 250, gotoState);\n\
+            break;\n\
+        // ajaxProgress - reset\n\
+        default:\n\
+            // reset ajaxProgress\n\
+            opt.counter = 0;\n\
+            opt.width = 0;\n\
+            opt.style.width = "0%";\n\
+        }\n\
+    };\n\
+    opt = window.domOnEventAjaxProgressUpdate;\n\
+    opt.end = function (onError) {\n\
+        opt.counter = 0;\n\
+        window.domOnEventAjaxProgressUpdate(2, onError);\n\
+    };\n\
+    opt.elem = document.getElementById("domElementAjaxProgress1");\n\
+    if (!opt.elem) {\n\
+        opt.elem = document.createElement("div");\n\
+        setTimeout(function () {\n\
+            document.body.insertBefore(opt.elem, document.body.firstChild);\n\
+        });\n\
+    }\n\
+    opt.elem.id = "domElementAjaxProgress1";\n\
+    opt.style = opt.elem.style;\n\
+    // init style\n\
+    Object.entries({\n\
+        background: "#d00",\n\
+        height: "2px",\n\
+        left: "0",\n\
+        margin: "0",\n\
+        padding: "0",\n\
+        position: "fixed",\n\
+        top: "0",\n\
+        transition: "background 250ms, width 750ms",\n\
+        width: "0%",\n\
+        "z-index": "1"\n\
+    }).forEach(function (entry) {\n\
+        opt.style[entry[0]] = opt.style[entry[0]] || entry[1];\n\
+    });\n\
+    // init state\n\
+    opt.background = opt.style.background;\n\
+    opt.counter = 0;\n\
+    opt.width = 0;\n\
 }());\n\
 \n\
 \n\
@@ -460,58 +616,6 @@ pre {\n\
             eventType,\n\
             window.domOnEventDelegateDict.domOnEventDelegate\n\
         );\n\
-    });\n\
-}());\n\
-\n\
-\n\
-\n\
-// init timerIntervalAjaxProgressUpdate\n\
-(function () {\n\
-/*\n\
- * this function will increment ajax-progress-bar\n\
- * until webpage has loaded\n\
- */\n\
-    "use strict";\n\
-    var ajaxProgressDiv1;\n\
-    var ajaxProgressState;\n\
-    var ajaxProgressUpdate;\n\
-    if (\n\
-        window.timerIntervalAjaxProgressUpdate\n\
-        || !document.querySelector(\n\
-            "#ajaxProgressDiv1"\n\
-        )\n\
-    ) {\n\
-        return;\n\
-    }\n\
-    ajaxProgressDiv1 = document.querySelector(\n\
-        "#ajaxProgressDiv1"\n\
-    );\n\
-    setTimeout(function () {\n\
-        ajaxProgressDiv1.style.width = "25%";\n\
-    });\n\
-    ajaxProgressState = 0;\n\
-    ajaxProgressUpdate = (\n\
-        window.local\n\
-        && window.local.ajaxProgressUpdate\n\
-    ) || function () {\n\
-        ajaxProgressDiv1.style.width = "100%";\n\
-        setTimeout(function () {\n\
-            ajaxProgressDiv1.style.background = "transparent";\n\
-            setTimeout(function () {\n\
-                ajaxProgressDiv1.style.width = "0%";\n\
-            }, 500);\n\
-        }, 1000);\n\
-    };\n\
-    window.timerIntervalAjaxProgressUpdate = setInterval(function () {\n\
-        ajaxProgressState += 1;\n\
-        ajaxProgressDiv1.style.width = Math.max(\n\
-            100 - 75 * Math.exp(-0.125 * ajaxProgressState),\n\
-            ajaxProgressDiv1.style.width.slice(0, -1) | 0\n\
-        ) + "%";\n\
-    }, 1000);\n\
-    window.addEventListener("load", function () {\n\
-        clearInterval(window.timerIntervalAjaxProgressUpdate);\n\
-        ajaxProgressUpdate();\n\
     });\n\
 }());\n\
 \n\
@@ -619,24 +723,17 @@ local.assetsDict["/assets.example.begin.js"] = '\
     var consoleError;\n\
     var local;\n\
     // init globalThis\n\
-    (function () {\n\
-        try {\n\
-            globalThis = Function("return this")(); // jslint ignore:line\n\
-        } catch (ignore) {}\n\
-    }());\n\
-    globalThis.globalThis = globalThis;\n\
+    globalThis.globalThis = globalThis.globalThis || globalThis;\n\
     // init debug_inline\n\
     if (!globalThis["debug\\u0049nline"]) {\n\
         consoleError = console.error;\n\
-        globalThis["debug\\u0049nline"] = function () {\n\
+        globalThis["debug\\u0049nline"] = function (...argList) {\n\
         /*\n\
-         * this function will both print <arguments> to stderr\n\
-         * and return <arguments>[0]\n\
+         * this function will both print <argList> to stderr\n\
+         * and return <argList>[0]\n\
          */\n\
-            var argList;\n\
-            argList = Array.from(arguments); // jslint ignore:line\n\
-            // debug arguments\n\
-            globalThis["debug\\u0049nlineArguments"] = argList;\n\
+            // debug argList\n\
+            globalThis["debug\\u0049nlineArgList"] = argList;\n\
             consoleError("\\n\\ndebug\\u0049nline");\n\
             consoleError.apply(console, argList);\n\
             consoleError("\\n");\n\
@@ -666,7 +763,6 @@ local.assetsDict["/assets.example.begin.js"] = '\
             return;\n\
         }\n\
         err = (\n\
-            // ternary-operator\n\
             (\n\
                 message\n\
                 && typeof message.message === "string"\n\
@@ -683,6 +779,54 @@ local.assetsDict["/assets.example.begin.js"] = '\
             )\n\
         );\n\
         throw err;\n\
+    };\n\
+    local.fsRmrfSync = function (dir) {\n\
+    /*\n\
+     * this function will sync "rm -rf" <dir>\n\
+     */\n\
+        var child_process;\n\
+        try {\n\
+            child_process = require("child_process");\n\
+        } catch (ignore) {\n\
+            return;\n\
+        }\n\
+        child_process.spawnSync("rm", [\n\
+            "-rf", dir\n\
+        ], {\n\
+            stdio: [\n\
+                "ignore", 1, 2\n\
+            ]\n\
+        });\n\
+    };\n\
+    local.fsWriteFileWithMkdirpSync = function (file, data) {\n\
+    /*\n\
+     * this function will sync write <data> to <file> with "mkdir -p"\n\
+     */\n\
+        var fs;\n\
+        try {\n\
+            fs = require("fs");\n\
+        } catch (ignore) {\n\
+            return;\n\
+        }\n\
+        // try to write file\n\
+        try {\n\
+            fs.writeFileSync(file, data);\n\
+        } catch (ignore) {\n\
+            // mkdir -p\n\
+            require("child_process").spawnSync(\n\
+                "mkdir",\n\
+                [\n\
+                    "-p", require("path").dirname(file)\n\
+                ],\n\
+                {\n\
+                    stdio: [\n\
+                        "ignore", 1, 2\n\
+                    ]\n\
+                }\n\
+            );\n\
+            // rewrite file\n\
+            fs.writeFileSync(file, data);\n\
+        }\n\
     };\n\
     local.functionOrNop = function (fnc) {\n\
     /*\n\
@@ -752,7 +896,9 @@ local.assetsDict["/assets.example.begin.js"] = '\
         local.vm = require("vm");\n\
         local.zlib = require("zlib");\n\
     }\n\
-}(this));\n\
+}((typeof globalThis === "object" && globalThis) || (function () {\n\
+    return Function("return this")(); // jslint ignore:line\n\
+}())));\n\
 '
 
 
@@ -770,7 +916,8 @@ this script will run a web-demo of my-app-lite\n\
 instruction\n\
     1. save this script as example.js\n\
     2. run shell-command:\n\
-        $ npm install my-app-lite && PORT=8081 node example.js\n\
+        $ npm install my-app-lite && \\\n\
+            PORT=8081 node example.js\n\
     3. open a browser to http://127.0.0.1:8081 and play with web-demo\n\
     4. edit this script to suit your needs\n\
 */\n\
@@ -811,7 +958,6 @@ if (!local.isBrowser) {\n\
 }\n\
 // log stderr and stdout to #outputStdout1\n\
 ["error", "log"].forEach(function (key) {\n\
-    var argList;\n\
     var elem;\n\
     var fnc;\n\
     elem = document.querySelector(\n\
@@ -821,8 +967,7 @@ if (!local.isBrowser) {\n\
         return;\n\
     }\n\
     fnc = console[key];\n\
-    console[key] = function () {\n\
-        argList = Array.from(arguments); // jslint ignore:line\n\
+    console[key] = function (...argList) {\n\
         fnc.apply(console, argList);\n\
         // append text to #outputStdout1\n\
         elem.textContent += argList.map(function (arg) {\n\
@@ -1823,7 +1968,6 @@ local.Blob = (
          */
         this.bff = local.bufferConcat(array.map(function (elem) {
             return (
-                // ternary-operator
                 (
                     typeof elem === "string"
                     || Object.prototype.toString.call(elem)
@@ -2144,7 +2288,7 @@ local._http.ServerResponse.prototype.end = function (data) {
     that.chunkList.push(data);
     // notify server res is finished
     that.emit("finish");
-    // asynchronously send res from server to client
+    // async send res from server to client
     setTimeout(function () {
         that.onResponse(that);
         that.emit("data", local.bufferConcat(that.chunkList));
@@ -2218,7 +2362,7 @@ local._http.request = function (xhr, onResponse) {
         }
         isDone = true;
         xhr.serverReq.data = data;
-        // asynchronously send req from client -> server
+        // async send req from client -> server
         setTimeout(function () {
             local.serverLocalReqHandler(
                 xhr.serverReq,
@@ -2352,7 +2496,9 @@ local.ajax = function (opt, onError) {
     // init local2
     local2 = opt.local2 || local.utility2 || {};
     // init function
-    ajaxProgressUpdate = local2.ajaxProgressUpdate || local.nop;
+    ajaxProgressUpdate = local2.ajaxProgressUpdate || function () {
+        return;
+    };
     bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (
         bff,
         mode
@@ -2392,9 +2538,9 @@ local.ajax = function (opt, onError) {
                 return;
             }
             isDone = true;
-            // decrement ajaxProgressCounter
-            local2.ajaxProgressCounter = Math.max(
-                local2.ajaxProgressCounter - 1,
+            // decrement counter
+            ajaxProgressUpdate.counter = Math.max(
+                ajaxProgressUpdate.counter - 1,
                 0
             );
             ajaxProgressUpdate();
@@ -2417,7 +2563,6 @@ local.ajax = function (opt, onError) {
                 xhr.statusCode = xhr.statusCode || 500;
                 xhr.err.statusCode = xhr.statusCode;
                 tmp = (
-                    // ternary-operator
                     (
                         local.isBrowser
                         ? "browser"
@@ -2623,9 +2768,9 @@ local.ajax = function (opt, onError) {
         streamCleanup(xhr.reqStream);
         streamCleanup(xhr.resStream);
     }, timeout);
-    // increment ajaxProgressCounter
-    local2.ajaxProgressCounter = local2.ajaxProgressCounter || 0;
-    local2.ajaxProgressCounter += 1;
+    // increment counter
+    ajaxProgressUpdate.counter |= 0;
+    ajaxProgressUpdate.counter += 1;
     // init event-handling
     xhr.addEventListener("abort", xhr.onEvent);
     xhr.addEventListener("error", xhr.onEvent);
@@ -2673,71 +2818,6 @@ local.ajax = function (opt, onError) {
         xhr.send(xhr.data);
     }
     return xhr;
-};
-
-local.ajaxProgressUpdate = function () {
-/*
- * this function will update ajaxProgress
- */
-    var ajaxProgressDiv1;
-    // init state
-    local.ajaxProgressCounter = local.ajaxProgressCounter || 0;
-    local.ajaxProgressState = local.ajaxProgressState || 0;
-    ajaxProgressDiv1 = (local.isBrowser && document.querySelector(
-        "#ajaxProgressDiv1"
-    )) || {
-        style: {
-            width: ""
-        }
-    };
-    // init ajaxProgressDiv1StyleBackground
-    local.ajaxProgressDiv1StyleBackground = (
-        local.ajaxProgressDiv1StyleBackground
-        || ajaxProgressDiv1.style.background
-    );
-    // show ajaxProgress
-    ajaxProgressDiv1.style.background = local.ajaxProgressDiv1StyleBackground;
-    // increment ajaxProgress
-    if (local.ajaxProgressCounter > 0) {
-        local.timerIntervalAjaxProgressHide = (
-            local.timerIntervalAjaxProgressHide
-            || setInterval(local.ajaxProgressUpdate, 2000)
-        );
-        // this algorithm will indefinitely increment ajaxProgressBar
-        // with successively smaller increments without ever reaching 100%
-        if ((ajaxProgressDiv1.style.width.slice(0, -1) | 0) > 95) {
-            ajaxProgressDiv1.style.width = "0%";
-            local.ajaxProgressState = 0;
-        }
-        local.ajaxProgressState += 1;
-        ajaxProgressDiv1.style.width = Math.max(
-            100 - 75 * Math.exp(-0.125 * local.ajaxProgressState),
-            ajaxProgressDiv1.style.width.slice(0, -1) | 0
-        ) + "%";
-    } else {
-        // finish ajaxProgress
-        ajaxProgressDiv1.style.width = "100%";
-    }
-    // cleanup timerTimeout
-    clearTimeout(local.timerTimeoutAjaxProgressHide);
-    // hide ajaxProgress
-    local.timerTimeoutAjaxProgressHide = setTimeout(function () {
-        ajaxProgressDiv1.style.background = "transparent";
-        local.ajaxProgressCounter = 0;
-        local.ajaxProgressState = 0;
-        // reset ajaxProgress
-        clearInterval(local.timerIntervalAjaxProgressHide);
-        local.timerIntervalAjaxProgressHide = null;
-        setTimeout(function () {
-            if (!local.ajaxProgressState) {
-                ajaxProgressDiv1.style.width = "0%";
-            }
-        }, 500);
-    }, (
-        local.ajaxProgressCounter > 0
-        ? local.timeoutDefault
-        : 1000
-    ));
 };
 
 local.assertJsonEqual = function (aa, bb, message) {
@@ -3422,7 +3502,6 @@ local.bufferRandomBytes = function (length) {
  * filled with cryptographically-strong random-values
  */
     return (
-        // ternary-operator
         (
             typeof window === "object"
             && window.crypto
@@ -3511,7 +3590,7 @@ local.buildApp = function (opt, onError) {
         assetsList: []
     });
     // build assets
-    local.fsRmrSync("tmp/build/app");
+    local.fsRmrfSync("tmp/build/app");
     local.onParallelList({
         list: [
             {
@@ -3664,11 +3743,12 @@ local.buildLib = function (opt, onError) {
     }
     // save lib
     result = opt.dataTo;
-    local.fsWriteFileWithMkdirpSync(
-        "lib." + local.env.npm_package_nameLib + ".js",
-        result,
-        local.env.npm_config_mode_coverage && local.identity("noWrite")
-    );
+    if (!local.env.npm_config_mode_coverage) {
+        local.fs.writeFileSync(
+            "lib." + local.env.npm_package_nameLib + ".js",
+            result
+        );
+    }
     opt.customize(opt);
     onError();
     return result;
@@ -3739,7 +3819,7 @@ local.buildReadme = function (opt, onError) {
             utility2: "./npm_scripts.sh"
         };
         // save package.json
-        local.fsWriteFileWithMkdirpSync(
+        local.fs.writeFileSync(
             "package.json",
             local.jsonStringifyOrdered(opt.packageJson, null, 4) + "\n"
         );
@@ -3976,11 +4056,12 @@ local.buildReadme = function (opt, onError) {
             !local.env.npm_package_private && match0
         );
     });
-    local.fsWriteFileWithMkdirpSync(
-        "assets.swgg.swagger.json",
-        local.jsonStringifyOrdered(opt.swaggerJson, null, 4) + "\n",
-        !opt.swaggerJson.swagger && local.identity("noWrite")
-    );
+    if (opt.swaggerJson.swagger) {
+        local.fs.writeFileSync(
+            "assets.swgg.swagger.json",
+            local.jsonStringifyOrdered(opt.swaggerJson, null, 4) + "\n"
+        );
+    }
     onError();
     return result;
 };
@@ -4575,7 +4656,6 @@ local.domStyleValidate = function () {
     );
     tmp = [];
     Array.from(
-        // ternary-operator
         (
             typeof document === "object"
             && document
@@ -4668,54 +4748,6 @@ local.fsReadFileOrEmptyStringSync = function (file, opt) {
             ? {}
             : ""
         );
-    }
-};
-
-local.fsRmrSync = function (dir) {
-/*
- * this function will synchronously "rm -fr" dir
- */
-    local.child_process.execFileSync("rm", [
-        "-fr", local.path.resolve(process.cwd(), dir)
-    ], {
-        stdio: [
-            "ignore", 1, 2
-        ]
-    });
-};
-
-local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
-/*
- * this function will synchronously "mkdir -p" and write <data> to <file>
- */
-    try {
-        if (
-            mode === "noWrite"
-            || typeof require("fs").writeFileSync !== "function"
-        ) {
-            return;
-        }
-    } catch (ignore) {
-        return;
-    }
-    // try to write to file
-    try {
-        require("fs").writeFileSync(file, data);
-    } catch (ignore) {
-        // mkdir -p
-        require("child_process").spawnSync(
-            "mkdir",
-            [
-                "-p", require("path").dirname(file)
-            ],
-            {
-                stdio: [
-                    "ignore", 1, 2
-                ]
-            }
-        );
-        // re-write to file
-        require("fs").writeFileSync(file, data);
     }
 };
 
@@ -4946,6 +4978,11 @@ local.jslintAutofixLocalFunction = function (code, file) {
         break;
     default:
         Object.keys(dictFnc).forEach(function (key) {
+            switch (key) {
+            case "fsRmrfSync":
+            case "fsWriteFileWithMkdirpSync":
+                return;
+            }
             if (!dictProp.hasOwnProperty(key)) {
                 console.error(
                     "local-function - unused (" + file + ") local." + key
@@ -7270,7 +7307,6 @@ local.testMock = function (mockList, onTestCase, onError) {
         // backup mock[0] into mock[2]
         Object.keys(mock[1]).forEach(function (key) {
             mock[2][key] = (
-                // ternary-operator
                 (
                     typeof process === "object"
                     && process.env === mock[0]
@@ -8201,9 +8237,14 @@ local.uuid4Create = function () {
 
 // run shared js-env code - init-after
 (function () {
+local.ajaxProgressUpdate = (
+    globalThis.domOnEventAjaxProgressUpdate || function () {
+        return;
+    }
+);
 local.apidocCreate = local.apidoc.apidocCreate;
 local.browserTest({
-modeTestReportCreate: true
+    modeTestReportCreate: true
 });
 local.cacheDict = {};
 local.contentTypeDict = {
@@ -8227,7 +8268,6 @@ local.contentTypeDict = {
     ".md": "text/markdown; charset=utf-8",
     ".txt": "text/plain; charset=utf-8"
 };
-// init env
 local.env = (
     local.isBrowser
     ? {}
@@ -8245,32 +8285,6 @@ local.objectSetDefault(local.env, {
     npm_package_version: "0.0.1"
 });
 local.errDefault = new Error("default-error");
-globalThis.utility2_onReadyAfter = (
-    globalThis.utility2_onReadyAfter || function (onError) {
-    /*
-     * this function will call onError when utility2_onReadyBefore.counter === 0
-     */
-        globalThis.utility2_onReadyBefore.counter += 1;
-        local.taskCreate({
-            key: "globalThis.utility2_onReadyAfter"
-        }, null, onError);
-        setTimeout(globalThis.utility2_onReadyBefore);
-        return onError;
-    }
-);
-globalThis.utility2_onReadyBefore = (
-    globalThis.utility2_onReadyBefore
-    || local.onParallel(function (err) {
-    /*
-     * this function will keep track of utility2_onReadyBefore.counter
-     */
-        local.taskCreate({
-            key: "globalThis.utility2_onReadyAfter"
-        }, function (onError) {
-            onError(err);
-        }, local.onErrorThrow);
-    })
-);
 local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.identity;
 // cbranch-no cstat-no fstat-no missing-if-branch
 local.istanbulCoverageReportCreate = (
@@ -8355,6 +8369,31 @@ if (local.timeExit) {
 }
 // re-init timeoutDefault
 local.timeoutDefault = Number(local.timeoutDefault) || 30000;
+globalThis.utility2_onReadyAfter = (
+    globalThis.utility2_onReadyAfter || function (onError) {
+    /*
+     * this function will call onError when utility2_onReadyBefore.counter === 0
+     */
+        globalThis.utility2_onReadyBefore.counter += 1;
+        local.taskCreate({
+            key: "globalThis.utility2_onReadyAfter"
+        }, null, onError);
+        setTimeout(globalThis.utility2_onReadyBefore);
+        return onError;
+    }
+);
+globalThis.utility2_onReadyBefore = (
+    globalThis.utility2_onReadyBefore || local.onParallel(function (err) {
+    /*
+     * this function will keep track of utility2_onReadyBefore.counter
+     */
+        local.taskCreate({
+            key: "globalThis.utility2_onReadyAfter"
+        }, function (onError) {
+            onError(err);
+        }, local.onErrorThrow);
+    })
+);
 globalThis.utility2_onReadyAfter(local.nop);
 }());
 

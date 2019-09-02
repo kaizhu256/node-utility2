@@ -1,7 +1,7 @@
 /*
 file https://registry.npmjs.org/acorn/-/acorn-6.3.0.tgz
 shGithubDateCommitted https://github.com/acornjs/acorn/commits/6.3.0 # 2019-08-12T09:40:59Z
-curl https://registry.npmjs.org/acorn/-/acorn-6.3.0.tgz | tar -O -xz package/dist/acorn.js > /tmp/aa.js
+curl https://registry.npmjs.org/acorn/-/acorn-6.3.0.tgz | tar -O -xz package/dist/acorn.js > tmp/aa.js
 */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -4977,7 +4977,7 @@ curl https://registry.npmjs.org/acorn/-/acorn-6.3.0.tgz | tar -O -xz package/dis
 /*
 file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
 shGithubDateCommitted https://github.com/estools/estraverse/commits/4.2.0 # 2016-03-10T21:51:59Z
-curl https://raw.githubusercontent.com/estools/estraverse/4.2.0/estraverse.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/estools/estraverse/4.2.0/estraverse.js > tmp/aa.js
 */
 /*
   Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
@@ -5834,7 +5834,7 @@ curl https://raw.githubusercontent.com/estools/estraverse/4.2.0/estraverse.js > 
 /*
 file https://github.com/estools/esutils/blob/2.0.3/lib/code.js
 shGithubDateCommitted https://github.com/estools/esutils/commits/2.0.3 # 2019-07-31T01:06:44Z
-curl https://raw.githubusercontent.com/estools/esutils/2.0.3/lib/code.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/estools/esutils/2.0.3/lib/code.js > tmp/aa.js
 */
 /*
   Copyright (C) 2013-2014 Yusuke Suzuki <utatane.tea@gmail.com>
@@ -5977,7 +5977,7 @@ curl https://raw.githubusercontent.com/estools/esutils/2.0.3/lib/code.js > /tmp/
 /*
 file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
 shGithubDateCommitted https://github.com/estools/escodegen/commits/v1.12.0 # 2016-08-06T18:04:07Z
-curl https://raw.githubusercontent.com/estools/escodegen/v1.12.0/escodegen.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/estools/escodegen/v1.12.0/escodegen.js > tmp/aa.js
 */
 /*
   Copyright (C) 2012-2014 Yusuke Suzuki <utatane.tea@gmail.com>
@@ -8596,7 +8596,7 @@ curl https://raw.githubusercontent.com/estools/escodegen/v1.12.0/escodegen.js > 
 /*
 file https://github.com/components/handlebars.js/blob/v1.2.1/handlebars.js
 shGithubDateCommitted https://github.com/components/handlebars.js/commits/v1.2.1 # 2013-12-26T22:37:39Z
-curl https://raw.githubusercontent.com/components/handlebars.js/v1.2.1/handlebars.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/components/handlebars.js/v1.2.1/handlebars.js > tmp/aa.js
 */
 
 
@@ -8604,7 +8604,7 @@ curl https://raw.githubusercontent.com/components/handlebars.js/v1.2.1/handlebar
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/collector.js
 shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/collector.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/collector.js > tmp/aa.js
 */
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
@@ -8733,7 +8733,7 @@ module.exports = Collector;
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/insertion-text.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/insertion-text.js > tmp/aa.js
 */
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
@@ -8850,11 +8850,11 @@ module.exports = InsertionText;
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.4.5 # 2016-08-21T19:53:22Z
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.4.5/lib/instrumenter.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.4.5/lib/instrumenter.js > tmp/aa.js
 node -e '
 "use strict";
 var aa;
-aa = require("fs").readFileSync("/tmp/aa.js", "utf8");
+aa = require("fs").readFileSync("tmp/aa.js", "utf8");
 process.argv[1].replace((
     /^(-[\S\s]*?\n)(\+[\S\s]*?\n)\n/gm
 ), function (ignore, match1, match2) {
@@ -8867,7 +8867,7 @@ process.argv[1].replace((
         ), "")
     );
 });
-require("fs").writeFileSync("/tmp/aa.js", aa);
+require("fs").writeFileSync("tmp/aa.js", aa);
 ' '
 -        return '"'"'__cov_'"'"' + (omitSuffix ? '"'"''"'"' : suffix);
 +        // coverage-hack - pseudorandom coverage-identifier
@@ -9986,7 +9986,7 @@ require("fs").writeFileSync("/tmp/aa.js", aa);
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
 shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/object-utils.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/object-utils.js > tmp/aa.js
 */
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
@@ -10360,11 +10360,11 @@ curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/object-ut
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/common/defaults.js
 shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/common/defaults.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/common/defaults.js > tmp/aa.js
 node -e '
 "use strict";
 var aa;
-aa = require("fs").readFileSync("/tmp/aa.js", "utf8");
+aa = require("fs").readFileSync("tmp/aa.js", "utf8");
 process.argv[1].replace((
     /^(-[\S\s]*?\n)(\+[\S\s]*?\n)\n/gm
 ), function (ignore, match1, match2) {
@@ -10377,7 +10377,7 @@ process.argv[1].replace((
         ), "")
     );
 });
-require("fs").writeFileSync("/tmp/aa.js", aa);
+require("fs").writeFileSync("tmp/aa.js", aa);
 ' '
 -                case '"'"'low'"'"' : str = '"'"'\033[91m'"'"' + str + '"'"'\033[0m'"'"'; break;
 -                case '"'"'medium'"'"': str = '"'"'\033[93m'"'"' + str + '"'"'\033[0m'"'"'; break;
@@ -10429,7 +10429,7 @@ module.exports = {
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/index.js
 shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/index.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/index.js > tmp/aa.js
 */
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
@@ -10495,7 +10495,7 @@ module.exports = Report;
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/foot.txt
 shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/templates/foot.txt > /tmp/aa.js
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/templates/foot.txt > tmp/aa.js
 */
 /*
 </div>
@@ -10606,7 +10606,7 @@ curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/te
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
 shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/templates/head.txt > /tmp/aa.js
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/templates/head.txt > tmp/aa.js
 */
 /*
 <!doctype html>
@@ -10833,7 +10833,7 @@ curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/te
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
 shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/file-writer.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/file-writer.js > tmp/aa.js
 */
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
@@ -10972,7 +10972,7 @@ module.exports = FileWriter;
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
 shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/tree-summarizer.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/tree-summarizer.js > tmp/aa.js
 */
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
@@ -11193,11 +11193,11 @@ module.exports = TreeSummarizer;
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/html.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/html.js > tmp/aa.js
 node -e '
 "use strict";
 var aa;
-aa = require("fs").readFileSync("/tmp/aa.js", "utf8");
+aa = require("fs").readFileSync("tmp/aa.js", "utf8");
 process.argv[1].replace((
     /^(-[\S\s]*?\n)(\+[\S\s]*?\n)\n/gm
 ), function (ignore, match1, match2) {
@@ -11210,7 +11210,7 @@ process.argv[1].replace((
         ), "")
     );
 });
-require("fs").writeFileSync("/tmp/aa.js", aa);
+require("fs").writeFileSync("tmp/aa.js", aa);
 ' '
 -        '"'"'<td class="text"><pre class="prettyprint lang-js">{{#show_code structured}}{{/show_code}}</pre></td>'"'"',
 +        // coverage-hack - domOnEventSelectAllWithinPre
@@ -11830,7 +11830,7 @@ module.exports = HtmlReport;
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 shGithubDateCommitted https://github.com/gotwarlost/istanbul/commits/v0.2.16 # 2014-07-04T07:47:53Z
-curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/text.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/text.js > tmp/aa.js
 */
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.

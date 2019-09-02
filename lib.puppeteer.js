@@ -63,7 +63,6 @@
             return;
         }
         err = (
-            // ternary-operator
             (
                 message
                 && typeof message.message === "string"
@@ -197,10 +196,10 @@ var mime = {
 };
 const removeFolder = function (dir, onError) {
 /*
- * this function will asynchronously "rm -fr" <dir>
+ * this function will asynchronously "rm -rf" <dir>
  */
     child_process.spawn("rm", [
-        "-fr", path.resolve(process.cwd(), dir)
+        "-rf", path.resolve(process.cwd(), dir)
     ], {
         stdio: [
             "ignore", 1, 2
@@ -209,10 +208,10 @@ const removeFolder = function (dir, onError) {
 };
 removeFolder.sync = function (dir) {
 /*
- * this function will synchronously "rm -fr" <dir>
+ * this function will synchronously "rm -rf" <dir>
  */
     child_process.spawnSync("rm", [
-        "-fr", path.resolve(process.cwd(), dir)
+        "-rf", path.resolve(process.cwd(), dir)
     ], {
         stdio: [
             "ignore", 1, 2

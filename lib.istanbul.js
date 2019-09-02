@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.istanbul.js (2019.8.12)
+ * lib.istanbul.js (2019.8.24)
  * https://github.com/kaizhu256/node-istanbul-lite
  * this zero-dependency package will provide a browser-compatible version of the istanbul (v0.4.5) coverage-tool, with a working web-demo
  *
@@ -16,24 +16,17 @@
     var consoleError;
     var local;
     // init globalThis
-    (function () {
-        try {
-            globalThis = Function("return this")(); // jslint ignore:line
-        } catch (ignore) {}
-    }());
-    globalThis.globalThis = globalThis;
+    globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debug_inline
     if (!globalThis["debug\u0049nline"]) {
         consoleError = console.error;
-        globalThis["debug\u0049nline"] = function () {
+        globalThis["debug\u0049nline"] = function (...argList) {
         /*
-         * this function will both print <arguments> to stderr
-         * and return <arguments>[0]
+         * this function will both print <argList> to stderr
+         * and return <argList>[0]
          */
-            var argList;
-            argList = Array.from(arguments); // jslint ignore:line
-            // debug arguments
-            globalThis["debug\u0049nlineArguments"] = argList;
+            // debug argList
+            globalThis["debug\u0049nlineArgList"] = argList;
             consoleError("\n\ndebug\u0049nline");
             consoleError.apply(console, argList);
             consoleError("\n");
@@ -63,7 +56,6 @@
             return;
         }
         err = (
-            // ternary-operator
             (
                 message
                 && typeof message.message === "string"
@@ -80,6 +72,54 @@
             )
         );
         throw err;
+    };
+    local.fsRmrfSync = function (dir) {
+    /*
+     * this function will sync "rm -rf" <dir>
+     */
+        var child_process;
+        try {
+            child_process = require("child_process");
+        } catch (ignore) {
+            return;
+        }
+        child_process.spawnSync("rm", [
+            "-rf", dir
+        ], {
+            stdio: [
+                "ignore", 1, 2
+            ]
+        });
+    };
+    local.fsWriteFileWithMkdirpSync = function (file, data) {
+    /*
+     * this function will sync write <data> to <file> with "mkdir -p"
+     */
+        var fs;
+        try {
+            fs = require("fs");
+        } catch (ignore) {
+            return;
+        }
+        // try to write file
+        try {
+            fs.writeFileSync(file, data);
+        } catch (ignore) {
+            // mkdir -p
+            require("child_process").spawnSync(
+                "mkdir",
+                [
+                    "-p", require("path").dirname(file)
+                ],
+                {
+                    stdio: [
+                        "ignore", 1, 2
+                    ]
+                }
+            );
+            // rewrite file
+            fs.writeFileSync(file, data);
+        }
     };
     local.functionOrNop = function (fnc) {
     /*
@@ -149,7 +189,9 @@
         local.vm = require("vm");
         local.zlib = require("zlib");
     }
-}(this));
+}((typeof globalThis === "object" && globalThis) || (function () {
+    return Function("return this")(); // jslint ignore:line
+}())));
 
 
 
@@ -350,41 +392,6 @@ local.cliRun = function (opt) {
         return;
     }
     local.cliDict._default();
-};
-
-local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
-/*
- * this function will synchronously "mkdir -p" and write <data> to <file>
- */
-    try {
-        if (
-            mode === "noWrite"
-            || typeof require("fs").writeFileSync !== "function"
-        ) {
-            return;
-        }
-    } catch (ignore) {
-        return;
-    }
-    // try to write to file
-    try {
-        require("fs").writeFileSync(file, data);
-    } catch (ignore) {
-        // mkdir -p
-        require("child_process").spawnSync(
-            "mkdir",
-            [
-                "-p", require("path").dirname(file)
-            ],
-            {
-                stdio: [
-                    "ignore", 1, 2
-                ]
-            }
-        );
-        // re-write to file
-        require("fs").writeFileSync(file, data);
-    }
 };
 }());
 
@@ -605,7 +612,6 @@ local.instrumentInPackage = function (code, file) {
  * exists in the code
  */
     return (
-        // ternary-operator
         (
             process.env.npm_config_mode_coverage
             && code.indexOf("/* istanbul ignore all */\n") < 0 && (

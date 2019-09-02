@@ -56,7 +56,7 @@ this zero-dependency package will provide a collection of high-level functions t
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- jslint - remove ternary-operator/newline comment preceding bra
+- replace db-lite with sql.js
 - migrate browser-testing from electron to headless-chromium
 - rename var value to val
 - replace uglifyjs-lite with terser-lite (v2.8.29)
@@ -68,19 +68,14 @@ this zero-dependency package will provide a collection of high-level functions t
 - add server stress-test using puppeteer
 - none
 
-#### changelog 2019.8.21
-- npm publish 2019.8.21
-- jslint - remove allow-method-chain-newline hack
-- jslint - remove autofix - autofix-js-braket - remove leading-whitespace from bra
-- jslint - internalize hacks to function warn_at_extra
-- jslint - unhack const, let from var
-- jslint - upgrade to jslint edition 2019.8.3
-- jslint - add async/await support
-- jslint - remove autofix-js-whitespace - ...}()); to ...}());\n\n\n\n
-- rename coverage-hack to hack-istanbul, gotoNext to gotoNext, gotoState to gotoState, jslint-hack to hack-jslint
-- istanbul - add cli-command report
-- add files lib.puppeteer.js, raw.puppeteer.js
-- istanbul - fix pragma-istanbul-ignore in acorn
+#### changelog 2019.8.22
+- npm publish 2019.8.22
+- replace arguments with ...argList
+- add shell-function shRawJsFetch
+- rename rm -fr to rm -rf
+- revamp function local.ajaxProgressUpdate with window.domOnEventAjaxProgressUpdate
+- cleanup globalThis
+- jslint - remove ternary-operator/newline comment preceding bra
 - none
 
 #### this package requires
@@ -146,24 +141,17 @@ instruction
     var consoleError;
     var local;
     // init globalThis
-    (function () {
-        try {
-            globalThis = Function("return this")(); // jslint ignore:line
-        } catch (ignore) {}
-    }());
-    globalThis.globalThis = globalThis;
+    globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debug_inline
     if (!globalThis["debug\u0049nline"]) {
         consoleError = console.error;
-        globalThis["debug\u0049nline"] = function () {
+        globalThis["debug\u0049nline"] = function (...argList) {
         /*
-         * this function will both print <arguments> to stderr
-         * and return <arguments>[0]
+         * this function will both print <argList> to stderr
+         * and return <argList>[0]
          */
-            var argList;
-            argList = Array.from(arguments); // jslint ignore:line
-            // debug arguments
-            globalThis["debug\u0049nlineArguments"] = argList;
+            // debug argList
+            globalThis["debug\u0049nlineArgList"] = argList;
             consoleError("\n\ndebug\u0049nline");
             consoleError.apply(console, argList);
             consoleError("\n");
@@ -193,7 +181,6 @@ instruction
             return;
         }
         err = (
-            // ternary-operator
             (
                 message
                 && typeof message.message === "string"
@@ -210,6 +197,54 @@ instruction
             )
         );
         throw err;
+    };
+    local.fsRmrfSync = function (dir) {
+    /*
+     * this function will sync "rm -rf" <dir>
+     */
+        var child_process;
+        try {
+            child_process = require("child_process");
+        } catch (ignore) {
+            return;
+        }
+        child_process.spawnSync("rm", [
+            "-rf", dir
+        ], {
+            stdio: [
+                "ignore", 1, 2
+            ]
+        });
+    };
+    local.fsWriteFileWithMkdirpSync = function (file, data) {
+    /*
+     * this function will sync write <data> to <file> with "mkdir -p"
+     */
+        var fs;
+        try {
+            fs = require("fs");
+        } catch (ignore) {
+            return;
+        }
+        // try to write file
+        try {
+            fs.writeFileSync(file, data);
+        } catch (ignore) {
+            // mkdir -p
+            require("child_process").spawnSync(
+                "mkdir",
+                [
+                    "-p", require("path").dirname(file)
+                ],
+                {
+                    stdio: [
+                        "ignore", 1, 2
+                    ]
+                }
+            );
+            // rewrite file
+            fs.writeFileSync(file, data);
+        }
     };
     local.functionOrNop = function (fnc) {
     /*
@@ -279,7 +314,9 @@ instruction
         local.vm = require("vm");
         local.zlib = require("zlib");
     }
-}(this));
+}((typeof globalThis === "object" && globalThis) || (function () {
+    return Function("return this")(); // jslint ignore:line
+}())));
 
 
 
@@ -386,7 +423,6 @@ if (!local.isBrowser) {
 }
 // log stderr and stdout to #outputStdout1
 ["error", "log"].forEach(function (key) {
-    var argList;
     var elem;
     var fnc;
     elem = document.querySelector(
@@ -396,8 +432,7 @@ if (!local.isBrowser) {
         return;
     }
     fnc = console[key];
-    console[key] = function () {
-        argList = Array.from(arguments); // jslint ignore:line
+    console[key] = function (...argList) {
         fnc.apply(console, argList);
         // append text to #outputStdout1
         elem.textContent += argList.map(function (arg) {
@@ -683,7 +718,6 @@ pre {\n\
 </style>\n\
 </head>\n\
 <body>\n\
-<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
 <a class="zeroPixel" download="db.persistence.json" href="" id="dbExportA1"></a>\n\
 <input class="zeroPixel" data-onevent="onEventDomDb" data-onevent-db="dbImportInput" type="file">\n\
@@ -711,6 +745,121 @@ pre {\n\
             );\n\
         }, 100);\n\
     });\n\
+}());\n\
+\n\
+\n\
+\n\
+// init domOnEventAjaxProgressUpdate\n\
+(function () {\n\
+/*\n\
+ * this function will display incrementing ajax-progress-bar\n\
+ */\n\
+    "use strict";\n\
+    var opt;\n\
+    if (window.domOnEventAjaxProgressUpdate) {\n\
+        return;\n\
+    }\n\
+    window.domOnEventAjaxProgressUpdate = function (gotoState, onError) {\n\
+        gotoState = (gotoState | 0) + 1;\n\
+        switch (gotoState) {\n\
+        // ajaxProgress - show\n\
+        case 1:\n\
+            // init timerInterval and timerTimeout\n\
+            opt.timerInterval = (\n\
+                opt.timerInterval || setInterval(opt, 2000, 1, onError)\n\
+            );\n\
+            opt.timerTimeout = (\n\
+                opt.timerTimeout || setTimeout(opt, 30000, 2, onError)\n\
+            );\n\
+            // show ajaxProgress\n\
+            if (opt.width !== -1) {\n\
+                opt.style.background = opt.background;\n\
+            }\n\
+            setTimeout(opt, 50, gotoState, onError);\n\
+            break;\n\
+        // ajaxProgress - increment\n\
+        case 2:\n\
+            // show ajaxProgress\n\
+            if (opt.width === -1) {\n\
+                return;\n\
+            }\n\
+            opt.style.background = opt.background;\n\
+            // reset ajaxProgress if it goes too high\n\
+            if ((opt.style.width.slice(0, -1) | 0) > 95) {\n\
+                opt.width = 0;\n\
+            }\n\
+            // this algorithm will indefinitely increment ajaxProgress\n\
+            // with successively smaller increments without ever reaching 100%\n\
+            opt.width += 1;\n\
+            opt.style.width = Math.max(\n\
+                100 - 75 * Math.exp(-0.125 * opt.width),\n\
+                opt.style.width.slice(0, -1) | 0\n\
+            ) + "%";\n\
+            if (!opt.counter) {\n\
+                setTimeout(opt, 0, gotoState, onError);\n\
+            }\n\
+            break;\n\
+        // ajaxProgress - 100%\n\
+        case 3:\n\
+            opt.width = -1;\n\
+            opt.style.width = "100%";\n\
+            setTimeout(opt, 1000, gotoState, onError);\n\
+            break;\n\
+        // ajaxProgress - hide\n\
+        case 4:\n\
+            // cleanup timerInterval and timerTimeout\n\
+            clearInterval(opt.timerInterval);\n\
+            opt.timerInterval = null;\n\
+            clearTimeout(opt.timerTimeout);\n\
+            opt.timerTimeout = null;\n\
+            // hide ajaxProgress\n\
+            opt.style.background = "transparent";\n\
+            if (onError) {\n\
+                onError();\n\
+            }\n\
+            setTimeout(opt, 250, gotoState);\n\
+            break;\n\
+        // ajaxProgress - reset\n\
+        default:\n\
+            // reset ajaxProgress\n\
+            opt.counter = 0;\n\
+            opt.width = 0;\n\
+            opt.style.width = "0%";\n\
+        }\n\
+    };\n\
+    opt = window.domOnEventAjaxProgressUpdate;\n\
+    opt.end = function (onError) {\n\
+        opt.counter = 0;\n\
+        window.domOnEventAjaxProgressUpdate(2, onError);\n\
+    };\n\
+    opt.elem = document.getElementById("domElementAjaxProgress1");\n\
+    if (!opt.elem) {\n\
+        opt.elem = document.createElement("div");\n\
+        setTimeout(function () {\n\
+            document.body.insertBefore(opt.elem, document.body.firstChild);\n\
+        });\n\
+    }\n\
+    opt.elem.id = "domElementAjaxProgress1";\n\
+    opt.style = opt.elem.style;\n\
+    // init style\n\
+    Object.entries({\n\
+        background: "#d00",\n\
+        height: "2px",\n\
+        left: "0",\n\
+        margin: "0",\n\
+        padding: "0",\n\
+        position: "fixed",\n\
+        top: "0",\n\
+        transition: "background 250ms, width 750ms",\n\
+        width: "0%",\n\
+        "z-index": "1"\n\
+    }).forEach(function (entry) {\n\
+        opt.style[entry[0]] = opt.style[entry[0]] || entry[1];\n\
+    });\n\
+    // init state\n\
+    opt.background = opt.style.background;\n\
+    opt.counter = 0;\n\
+    opt.width = 0;\n\
 }());\n\
 \n\
 \n\
@@ -801,58 +950,6 @@ pre {\n\
             eventType,\n\
             window.domOnEventDelegateDict.domOnEventDelegate\n\
         );\n\
-    });\n\
-}());\n\
-\n\
-\n\
-\n\
-// init timerIntervalAjaxProgressUpdate\n\
-(function () {\n\
-/*\n\
- * this function will increment ajax-progress-bar\n\
- * until webpage has loaded\n\
- */\n\
-    "use strict";\n\
-    var ajaxProgressDiv1;\n\
-    var ajaxProgressState;\n\
-    var ajaxProgressUpdate;\n\
-    if (\n\
-        window.timerIntervalAjaxProgressUpdate\n\
-        || !document.querySelector(\n\
-            "#ajaxProgressDiv1"\n\
-        )\n\
-    ) {\n\
-        return;\n\
-    }\n\
-    ajaxProgressDiv1 = document.querySelector(\n\
-        "#ajaxProgressDiv1"\n\
-    );\n\
-    setTimeout(function () {\n\
-        ajaxProgressDiv1.style.width = "25%";\n\
-    });\n\
-    ajaxProgressState = 0;\n\
-    ajaxProgressUpdate = (\n\
-        window.local\n\
-        && window.local.ajaxProgressUpdate\n\
-    ) || function () {\n\
-        ajaxProgressDiv1.style.width = "100%";\n\
-        setTimeout(function () {\n\
-            ajaxProgressDiv1.style.background = "transparent";\n\
-            setTimeout(function () {\n\
-                ajaxProgressDiv1.style.width = "0%";\n\
-            }, 500);\n\
-        }, 1000);\n\
-    };\n\
-    window.timerIntervalAjaxProgressUpdate = setInterval(function () {\n\
-        ajaxProgressState += 1;\n\
-        ajaxProgressDiv1.style.width = Math.max(\n\
-            100 - 75 * Math.exp(-0.125 * ajaxProgressState),\n\
-            ajaxProgressDiv1.style.width.slice(0, -1) | 0\n\
-        ) + "%";\n\
-    }, 1000);\n\
-    window.addEventListener("load", function () {\n\
-        clearInterval(window.timerIntervalAjaxProgressUpdate);\n\
-        ajaxProgressUpdate();\n\
     });\n\
 }());\n\
 \n\
@@ -1169,9 +1266,9 @@ local.http.createServer(function (req, res) {
         "2019.08.10 jslint-lite master",
         "2019.08.16 apidoc-lite master",
         "2019.08.20 db-lite",
-        "2019.08.01 utility2"
+        "2019.08.21 utility2"
     ],
-    "version": "2019.8.21"
+    "version": "2019.8.22"
 }
 ```
 

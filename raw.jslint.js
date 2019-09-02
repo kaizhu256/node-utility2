@@ -1,15 +1,15 @@
 /*
 file https://github.com/CSSLint/csslint/blob/v1.0.5/dist/csslint.js
 shGithubDateCommitted https://github.com/CSSLint/csslint/commits/v1.0.5 # 2016-12-06T08:50:07Z
-curl https://raw.githubusercontent.com/CSSLint/csslint/v1.0.5/dist/csslint.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/CSSLint/csslint/v1.0.5/dist/csslint.js > tmp/aa.js
 node -e '
 "use strict";
 var aa;
-aa = require("fs").readFileSync("/tmp/aa.js", "utf8");
+aa = require("fs").readFileSync("tmp/aa.js", "utf8");
 aa = aa.replace((
     /\t/g
 ), " ");
-require("fs").writeFileSync("/tmp/aa.js", aa);
+require("fs").writeFileSync("tmp/aa.js", aa);
 '
 */
 /*!
@@ -10877,11 +10877,11 @@ return CSSLint;
 /*
 file https://github.com/douglascrockford/JSLint/blob/efefb7d4e22359b6fb1977d33712bcc2fda95f14/jslint.js
 shGithubDateCommitted https://github.com/douglascrockford/JSLint/commits/efefb7d4e22359b6fb1977d33712bcc2fda95f14 # 2019-08-03T17:24:13Z
-curl https://raw.githubusercontent.com/douglascrockford/JSLint/efefb7d4e22359b6fb1977d33712bcc2fda95f14/jslint.js > /tmp/aa.js
+curl https://raw.githubusercontent.com/douglascrockford/JSLint/efefb7d4e22359b6fb1977d33712bcc2fda95f14/jslint.js > tmp/aa.js
 node -e '
 "use strict";
 var aa;
-aa = require("fs").readFileSync("/tmp/aa.js", "utf8");
+aa = require("fs").readFileSync("tmp/aa.js", "utf8");
 process.argv[1].replace((
     /^(-[\S\s]*?\n)(\+[\S\s]*?\n)\n/gm
 ), function (ignore, match1, match2) {
@@ -10899,7 +10899,7 @@ aa = aa.replace((
 ), "$1// hack-jslint - early_stop = true$1early_stop = true;$&").replace((
     /(\n\u0020*?)if\u0020\(right.from\u0020\S+/g
 ), "$1// hack-jslint - expected_at$1if (right.from !==");
-require("fs").writeFileSync("/tmp/aa.js", aa);
+require("fs").writeFileSync("tmp/aa.js", aa);
 ' '
 -// jslint.js
 +/* jslint utility2:true */
@@ -10963,7 +10963,7 @@ require("fs").writeFileSync("/tmp/aa.js", aa);
 +        // hack-jslint - e.early_stop = true
 +        e.early_stop = true;
 
-' && utility2-jslint --autofix /tmp/aa.js
+' && utility2-jslint --autofix tmp/aa.js
 */
 /* jslint utility2:true */
 let next_line_extra = null;
@@ -11679,11 +11679,17 @@ function tokenize(source) {
 // matched an expected value.
 
         if (match !== undefined && char !== match) {
-            return stop_at((
-                char === ""
-                ? "expected_a"
-                : "expected_a_b"
-            ), line, column - 1, match, char);
+            return stop_at(
+                (
+                    char === ""
+                    ? "expected_a"
+                    : "expected_a_b"
+                ),
+                line,
+                column - 1,
+                match,
+                char
+            );
         }
         if (source_line) {
             char = source_line[0];
@@ -12806,10 +12812,14 @@ function enroll(name, role, readonly) {
                         warn("unexpected_a", name);
                     }
                 } else {
-                    if ((
-                        role !== "exception"
-                        || earlier.role !== "exception"
-                    ) && role !== "parameter" && role !== "function") {
+                    if (
+                        (
+                            role !== "exception"
+                            || earlier.role !== "exception"
+                        )
+                        && role !== "parameter"
+                        && role !== "function"
+                    ) {
                         warn(
                             "redefinition_a_b",
                             name,
@@ -13542,21 +13552,26 @@ infix("(", 160, function (left) {
 infix(".", 170, function (left) {
     const the_token = token;
     const name = next_token;
-    if ((
-        left.id !== "(string)"
-        || (name.id !== "indexOf" && name.id !== "repeat")
-    ) && (
-        left.id !== "["
-        || (
-            name.id !== "concat"
-            && name.id !== "forEach"
-            && name.id !== "join"
-            && name.id !== "map"
+    if (
+        (
+            left.id !== "(string)"
+            || (name.id !== "indexOf" && name.id !== "repeat")
         )
-    ) && (left.id !== "+" || name.id !== "slice") && (
-        left.id !== "(regexp)"
-        || (name.id !== "exec" && name.id !== "test")
-    )) {
+        && (
+            left.id !== "["
+            || (
+                name.id !== "concat"
+                && name.id !== "forEach"
+                && name.id !== "join"
+                && name.id !== "map"
+            )
+        )
+        && (left.id !== "+" || name.id !== "slice")
+        && (
+            left.id !== "(regexp)"
+            || (name.id !== "exec" && name.id !== "test")
+        )
+    ) {
         left_check(left, the_token);
     }
     if (!name.identifier) {
@@ -13574,21 +13589,26 @@ infix(".", 170, function (left) {
 infix("?.", 170, function (left) {
     const the_token = token;
     const name = next_token;
-    if ((
-        left.id !== "(string)"
-        || (name.id !== "indexOf" && name.id !== "repeat")
-    ) && (
-        left.id !== "["
-        || (
-            name.id !== "concat"
-            && name.id !== "forEach"
-            && name.id !== "join"
-            && name.id !== "map"
+    if (
+        (
+            left.id !== "(string)"
+            || (name.id !== "indexOf" && name.id !== "repeat")
         )
-    ) && (left.id !== "+" || name.id !== "slice") && (
-        left.id !== "(regexp)"
-        || (name.id !== "exec" && name.id !== "test")
-    )) {
+        && (
+            left.id !== "["
+            || (
+                name.id !== "concat"
+                && name.id !== "forEach"
+                && name.id !== "join"
+                && name.id !== "map"
+            )
+        )
+        && (left.id !== "+" || name.id !== "slice")
+        && (
+            left.id !== "(regexp)"
+            || (name.id !== "exec" && name.id !== "test")
+        )
+    ) {
         left_check(left, the_token);
     }
     if (!name.identifier) {
@@ -15787,7 +15807,7 @@ function whitage() {
                     ) {
                         no_space_only();
                     } else if (right.id === "." || right.id === "?.") {
-                        no_space();
+                        no_space_only();
                     } else if (left.id === ";") {
                         if (open) {
                             at_margin(0);
@@ -15839,15 +15859,18 @@ function whitage() {
                         )
                         || left.id === "function"
                         || left.id === ":"
-                        || ((
-                            left.identifier
-                            || left.id === "(string)"
-                            || left.id === "(number)"
-                        ) && (
-                            right.identifier
-                            || right.id === "(string)"
-                            || right.id === "(number)"
-                        ))
+                        || (
+                            (
+                                left.identifier
+                                || left.id === "(string)"
+                                || left.id === "(number)"
+                            )
+                            && (
+                                right.identifier
+                                || right.id === "(string)"
+                                || right.id === "(number)"
+                            )
+                        )
                         || (left.arity === "statement" && right.id !== ";")
                     ) {
                         one_space();

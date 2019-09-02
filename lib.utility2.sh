@@ -133,7 +133,7 @@ shBaseInstallLinode () {(set -e
     shIptablesReset
     # cleanup
     apt-get clean
-    rm -fr /var/cache/* /var/tmp/*
+    rm -rf /var/cache/* /var/tmp/*
     # mount /mnt/data
     if [ -b /dev/sdc ] && ! (grep -q -E '/mnt/data' /etc/fstab)
     then
@@ -454,7 +454,7 @@ shBuildCi () {(set -e
                 shBuildApp
             fi
             # shBuildAppSync
-            rm -fr "$npm_config_dir_utility2"
+            rm -rf "$npm_config_dir_utility2"
             git clone https://github.com/kaizhu256/node-utility2 "$npm_config_dir_utility2" \
                 --branch=alpha --single-branch --depth=50
             mkdir -p "$npm_config_dir_utility2/tmp/build/app"
@@ -571,7 +571,7 @@ shBuildCi () {(set -e
         "[npm publishAfterCommit]"*)
             export CI_BRANCH=publish
             export CI_BRANCH_OLD=publish
-            find node_modules -name .git -print0 | xargs -0 rm -fr
+            find node_modules -name .git -print0 | xargs -0 rm -rf
             npm run build-ci
             ;;
         "[npm publishAfterCommitAfterBuild]"*)
@@ -587,7 +587,7 @@ shBuildCi () {(set -e
             shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" \
                 -f HEAD:alpha
             export CI_COMMIT_ID="$(git rev-parse --verify HEAD)"
-            find node_modules -name .git -print0 | xargs -0 rm -fr
+            find node_modules -name .git -print0 | xargs -0 rm -rf
             npm run build-ci
             ;;
         esac
@@ -748,7 +748,7 @@ shBuildGithubUpload () {(set -e
     URL="https://github.com/$GITHUB_REPO"
     # init $DIR
     DIR="$npm_config_dir_tmp/buildGithubUpload"
-    rm -fr "$DIR"
+    rm -rf "$DIR"
     shGitCommandWithGithubToken clone "$URL" --single-branch -b gh-pages "$DIR"
     cd "$DIR"
     # cleanup screenshot
@@ -756,12 +756,12 @@ shBuildGithubUpload () {(set -e
     case "$CI_COMMIT_MESSAGE" in
     "[build clean]"*)
         shBuildPrint "[build clean]"
-        rm -fr build
+        rm -rf build
         ;;
     esac
     # copy build-artifacts
     cp -a "$npm_config_dir_build" .
-    rm -fr "build..$CI_BRANCH..$CI_HOST"
+    rm -rf "build..$CI_BRANCH..$CI_HOST"
     cp -a "$npm_config_dir_build" "build..$CI_BRANCH..$CI_HOST"
     # disable github-jekyll
     touch .nojekyll
@@ -957,7 +957,7 @@ shBuildInsideDocker () {(set -e
     # npm-test
     npm test --mode-coverage
     # cleanup tmp
-    rm -fr tmp
+    rm -rf tmp
     # cleanup build
     shDockerBuildCleanup
 )}
@@ -1000,7 +1000,6 @@ process.stdin.on("data", function (chunk) {
 process.stdin.on("end", function () {
     local.cryptoAesXxxCbcRawDecrypt({
         data: (
-            // ternary-operator
             process.argv[2] === "base64"
             ? Buffer.concat(chunkList).toString()
             : Buffer.concat(chunkList)
@@ -1202,7 +1201,7 @@ shDeployHeroku () {(set -e
         shBuildApp
         cp "$npm_config_dir_build"/app/*.js .
         printf "web: npm_config_mode_backend=1 node assets.app.js\n" > Procfile
-        rm -fr tmp
+        rm -rf tmp
         return
     fi
     export MODE_BUILD=deployHeroku
@@ -1225,16 +1224,10 @@ shDeployHeroku () {(set -e
         shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" test
 )}
 
-shDiffRaw () {(set -e
-# this function will diff-compare raw.xxx.js -> lib.xxx.js
-    diff -u "$(printf "$1" | sed -e "s/lib/raw/")" "$1" > /tmp/shDiffRaw.diff || true
-    vim -R /tmp/shDiffRaw.diff
-)}
-
 shDockerBuildCleanup () {(set -e
 # this function will cleanup the docker build
 # apt list --installed
-    rm -fr \
+    rm -rf \
         /root/.npm \
         /tmp/.* \
         /tmp/* \
@@ -1584,11 +1577,9 @@ shEnvSanitize () {
 "use strict";
 console.log(Object.keys(process.env).sort().map(function (key) {
     return (
-        // ternary-operator
         ((
             /(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/i
         ).test(key) || (
-            // ternary-operator
             (
                 /Crypt|Decrypt|Key|Pass|Private|Secret|Token/
             ).test(key)
@@ -1793,7 +1784,7 @@ shGitGc () {(set -e
 # http://stackoverflow.com/questions/3797907/how-to-remove-unused-objects-from-a-git-repository
     # git remote rm origin || true
     # git branch -D in || true
-    # (cd .git && rm -fr refs/remotes/ refs/original/ *_HEAD logs/) || return "$?"
+    # (cd .git && rm -rf refs/remotes/ refs/original/ *_HEAD logs/) || return "$?"
     # git for-each-ref --format="%(refname)" refs/original/ | xargs -n1 --no-run-if-empty git update-ref -d
     git \
         -c gc.reflogExpire=0 \
@@ -1964,7 +1955,7 @@ shGithubRepoCreate () {(set -e
         git checkout alpha
     )
     fi
-    rm -fr "/tmp/githubRepo/$GITHUB_REPO"
+    rm -rf "/tmp/githubRepo/$GITHUB_REPO"
     mkdir -p "/tmp/githubRepo/$(printf "$GITHUB_REPO" | sed -e "s/\/.*//")"
     cp -a /tmp/githubRepo/kaizhu256/base "/tmp/githubRepo/$GITHUB_REPO"
     cd "/tmp/githubRepo/$GITHUB_REPO"
@@ -2466,7 +2457,7 @@ shNpmDeprecateAlias () {(set -e
     export MODE_BUILD=npmDeprecate
     shBuildPrint "npm-deprecate $NAME"
     DIR=/tmp/npmDeprecate
-    rm -fr "$DIR" && mkdir -p "$DIR" && cd "$DIR"
+    rm -rf "$DIR" && mkdir -p "$DIR" && cd "$DIR"
     npm install "$NAME" --prefix .
     cd "node_modules/$NAME"
     # update README.md
@@ -2535,12 +2526,12 @@ shNpmPackageDependencyTreeCreate () {(set -e
     # init /tmp/node_modules
     if [ -d /tmp/node_modules ]
     then
-        rm -fr /tmp/node_modules.00
+        rm -rf /tmp/node_modules.00
         mv /tmp/node_modules /tmp/node_modules.00
         export PATH="$PATH:/tmp/node_modules.00/.bin"
     fi
     DIR=/tmp/npmPackageDependencyTreeCreate
-    rm -fr "$DIR" && mkdir -p "$DIR" && cd "$DIR"
+    rm -rf "$DIR" && mkdir -p "$DIR" && cd "$DIR"
     shBuildInit
     export MODE_BUILD=npmPackageDependencyTree
     shBuildPrint "creating npmDependencyTree ..."
@@ -2556,7 +2547,7 @@ shNpmPackageDependencyTreeCreate () {(set -e
     shRunWithScreenshotTxt npm ls || true
     if [ -d /tmp/node_modules.00 ]
     then
-        rm -fr /tmp/node_modules
+        rm -rf /tmp/node_modules
         mv /tmp/node_modules.00 /tmp/node_modules
     fi
     shBuildPrint "... created npmDependencyTree"
@@ -2596,14 +2587,14 @@ lineList[NR] = $0
 )}
 
 shNpmPublishAlias () {(set -e
-# this function will npm-publish the $DIR as $NAME@$VERSION with a clean repo
+# this function will npm-publish $DIR as $NAME@$VERSION with a clean repo
     cd "$1"
     NAME="$2"
     VERSION="$3"
     export MODE_BUILD=npmPublishAlias
     shBuildPrint "npm-publish alias $NAME"
     DIR=/tmp/npmPublishAlias
-    rm -fr "$DIR" && mkdir -p "$DIR"
+    rm -rf "$DIR" && mkdir -p "$DIR"
     # clean-copy . to $DIR
     git ls-tree --name-only -r HEAD | xargs tar -czf - | tar -C "$DIR" -xvzf -
     cd "$DIR"
@@ -2632,7 +2623,7 @@ require("fs").writeFileSync(
 shNpmPublishV0 () {(set -e
 # this function will npm-publish the name $1 with a bare package.json
     DIR=/tmp/npmPublishV0
-    rm -fr "$DIR" && mkdir -p "$DIR" && cd "$DIR"
+    rm -rf "$DIR" && mkdir -p "$DIR" && cd "$DIR"
     printf "{\"name\":\"$1\",\"version\":\"0.0.1\"}" > package.json
     npm publish
 )}
@@ -2687,7 +2678,7 @@ shNpmTestPublished () {(set -e
     fi
     shBuildPrint "npm-testing published-package $npm_package_name"
     DIR=/tmp/npmTestPublished
-    rm -fr "$DIR" && mkdir -p "$DIR" && cd "$DIR"
+    rm -rf "$DIR" && mkdir -p "$DIR" && cd "$DIR"
     # npm-install package
     npm install "$npm_package_name" --prefix .
     cd "node_modules/$npm_package_name"
@@ -2725,6 +2716,123 @@ shRandomIntegerInRange () {(set -e
     LC_CTYPE=C tr -cd 0-9 </dev/urandom \
         | head -c 9 \
         | awk "{ printf(\"%s\n\", $1 + (\$0 % ($2 - $1))); }"
+)}
+
+shRawJsDiff () {(set -e
+# this function will diff-compare raw.xxx.js to lib.xxx.js
+    diff -u "$(printf "$1" | sed -e "s/lib/raw/")" "$1" > /tmp/shDiffRaw.diff || true
+    vim -R /tmp/shDiffRaw.diff
+)}
+
+shRawJsFetch () {(set -e
+# this function will fetch raw js-lib from $LIST
+    export DIR="tmp/raw.lib"
+    export LIST="$1"
+    rm -fr "$DIR"
+    mkdir -p "$DIR"
+    node -e '
+/* jslint utility2:true */
+(function () {
+"use strict";
+var aa;
+var fetch;
+var repo0;
+var repoList;
+fetch = function (repo, ii, file, jj) {
+    ii = String(ii).padStart(2, "0");
+    jj = String(jj).padStart(2, "0");
+    require("https").request(repo.prefix.replace(
+        "https://github.com/",
+        "https://raw.githubusercontent.com/"
+    ).replace("/blob/", "/") + "/" + file, function (res) {
+        res.pipe(require("fs").createWriteStream(
+            `${process.env.DIR}/${ii}__${jj}__` + file.replace((
+                /\//g
+            ), "__")
+        ));
+    }).end();
+};
+repoList = JSON.parse(process.argv[1]);
+repoList.forEach(function (repo, ii) {
+    repo.fileList.forEach(function (file, jj) {
+        fetch(repo, ii, file, jj);
+    });
+});
+process.on("exit", function () {
+    aa = "";
+    require("fs").readdirSync(process.env.DIR).sort().forEach(function (data) {
+        var exports;
+        var file;
+        var prefix;
+        var repo;
+        repo = repoList[Number(data.slice(0, 2))];
+        file = repo.fileList[Number(data.slice(4, 6))];
+        prefix = (
+            "exports_"
+            + repo.prefix.split("/").slice(3, 5).join("_") + "_"
+            + require("path").dirname(file)
+        ).replace((
+            /\W/g
+        ), "_");
+        exports = prefix + "_" + require("path").basename(file).replace((
+            /\.js$/
+        ), "").replace((
+            /\W/g
+        ), "_");
+        if (repo.prefix !== repo0) {
+            repo0 = repo.prefix;
+            aa += (
+                "\n\n\n\n/*\nrepo "
+                + repo.prefix.replace("/blob/", "/tree/")
+                + "\n*/\n"
+            );
+        }
+        data = require("fs").readFileSync(process.env.DIR + "/" + data, "utf8");
+        // mangle module.exports
+        data = data.replace((
+            /^exports\b|\bmodule\.exports\b/gm
+        ), exports);
+        // inline require(...)
+        data = data.replace((
+            /\brequire\(.\.\/(\w.*?).\)/gm
+        ), function (ignore, match1) {
+            return prefix + "_" + match1.replace((
+                /\.js$/
+            ), "").replace((
+                /\W/g
+            ), "_");
+        });
+        aa += (
+            "\n\n\n\n/*\n" + `file ${repo.prefix}/${file}` + "\n*/\n"
+            + `var ${exports} = {};` + "\n"
+            + data.trim()
+        );
+    });
+    // comment #!
+    aa = aa.replace((
+        /^#!/gm
+    ), "// $&");
+    // comment ... = require(...)
+    aa = aa.replace((
+        /^\u0020*?(?:const|let|var)\u0020.+?\u0020=\u0020require\(/gm
+    ), "// $&").replace((
+        /\w+?:\u0020require\(/gm
+    ), "// $&");
+    // normalize whitespace
+    aa = aa.replace((
+        /\u0020+$/gm
+    ), "").replace((
+        /\n{3,}/g
+    ), function (match0) {
+        if (match0.length === 3) {
+            return "\n\n";
+        }
+        return "\n\n\n\n";
+    });
+    console.log(aa.trim());
+});
+}());
+' "$LIST"
 )}
 
 shReadmeLinkValidate () {(set -e
@@ -2815,7 +2923,7 @@ shReadmeTest () {(set -e
     if [ "$FILE" = example.js ] || [ "$FILE" = example.sh ]
     then
         DIR=/tmp/app
-        rm -fr "$DIR" && mkdir -p "$DIR"
+        rm -rf "$DIR" && mkdir -p "$DIR"
         # cp script from README.md
         cp "tmp/README.$FILE" "$DIR/$FILE"
         cp "tmp/README.$FILE" "$npm_config_dir_build/$FILE"
@@ -3608,24 +3716,17 @@ export UTILITY2_MACRO_JS='
     var consoleError;
     var local;
     // init globalThis
-    (function () {
-        try {
-            globalThis = Function("return this")(); // jslint ignore:line
-        } catch (ignore) {}
-    }());
-    globalThis.globalThis = globalThis;
+    globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debug_inline
     if (!globalThis["debug\u0049nline"]) {
         consoleError = console.error;
-        globalThis["debug\u0049nline"] = function () {
+        globalThis["debug\u0049nline"] = function (...argList) {
         /*
-         * this function will both print <arguments> to stderr
-         * and return <arguments>[0]
+         * this function will both print <argList> to stderr
+         * and return <argList>[0]
          */
-            var argList;
-            argList = Array.from(arguments); // jslint ignore:line
-            // debug arguments
-            globalThis["debug\u0049nlineArguments"] = argList;
+            // debug argList
+            globalThis["debug\u0049nlineArgList"] = argList;
             consoleError("\n\ndebug\u0049nline");
             consoleError.apply(console, argList);
             consoleError("\n");
@@ -3655,7 +3756,6 @@ export UTILITY2_MACRO_JS='
             return;
         }
         err = (
-            // ternary-operator
             (
                 message
                 && typeof message.message === "string"
@@ -3672,6 +3772,54 @@ export UTILITY2_MACRO_JS='
             )
         );
         throw err;
+    };
+    local.fsRmrfSync = function (dir) {
+    /*
+     * this function will sync "rm -rf" <dir>
+     */
+        var child_process;
+        try {
+            child_process = require("child_process");
+        } catch (ignore) {
+            return;
+        }
+        child_process.spawnSync("rm", [
+            "-rf", dir
+        ], {
+            stdio: [
+                "ignore", 1, 2
+            ]
+        });
+    };
+    local.fsWriteFileWithMkdirpSync = function (file, data) {
+    /*
+     * this function will sync write <data> to <file> with "mkdir -p"
+     */
+        var fs;
+        try {
+            fs = require("fs");
+        } catch (ignore) {
+            return;
+        }
+        // try to write file
+        try {
+            fs.writeFileSync(file, data);
+        } catch (ignore) {
+            // mkdir -p
+            require("child_process").spawnSync(
+                "mkdir",
+                [
+                    "-p", require("path").dirname(file)
+                ],
+                {
+                    stdio: [
+                        "ignore", 1, 2
+                    ]
+                }
+            );
+            // rewrite file
+            fs.writeFileSync(file, data);
+        }
     };
     local.functionOrNop = function (fnc) {
     /*
@@ -3741,7 +3889,9 @@ export UTILITY2_MACRO_JS='
         local.vm = require("vm");
         local.zlib = require("zlib");
     }
-}(this));
+}((typeof globalThis === "object" && globalThis) || (function () {
+    return Function("return this")(); // jslint ignore:line
+}())));
 
 
 
@@ -3837,7 +3987,9 @@ local.ajax = function (opt, onError) {
     // init local2
     local2 = opt.local2 || local.utility2 || {};
     // init function
-    ajaxProgressUpdate = local2.ajaxProgressUpdate || local.nop;
+    ajaxProgressUpdate = local2.ajaxProgressUpdate || function () {
+        return;
+    };
     bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (
         bff,
         mode
@@ -3877,9 +4029,9 @@ local.ajax = function (opt, onError) {
                 return;
             }
             isDone = true;
-            // decrement ajaxProgressCounter
-            local2.ajaxProgressCounter = Math.max(
-                local2.ajaxProgressCounter - 1,
+            // decrement counter
+            ajaxProgressUpdate.counter = Math.max(
+                ajaxProgressUpdate.counter - 1,
                 0
             );
             ajaxProgressUpdate();
@@ -3902,7 +4054,6 @@ local.ajax = function (opt, onError) {
                 xhr.statusCode = xhr.statusCode || 500;
                 xhr.err.statusCode = xhr.statusCode;
                 tmp = (
-                    // ternary-operator
                     (
                         local.isBrowser
                         ? "browser"
@@ -4108,9 +4259,9 @@ local.ajax = function (opt, onError) {
         streamCleanup(xhr.reqStream);
         streamCleanup(xhr.resStream);
     }, timeout);
-    // increment ajaxProgressCounter
-    local2.ajaxProgressCounter = local2.ajaxProgressCounter || 0;
-    local2.ajaxProgressCounter += 1;
+    // increment counter
+    ajaxProgressUpdate.counter |= 0;
+    ajaxProgressUpdate.counter += 1;
     // init event-handling
     xhr.addEventListener("abort", xhr.onEvent);
     xhr.addEventListener("error", xhr.onEvent);
@@ -4550,54 +4701,6 @@ local.fsReadFileOrEmptyStringSync = function (file, opt) {
             ? {}
             : ""
         );
-    }
-};
-
-local.fsRmrSync = function (dir) {
-/*
- * this function will synchronously "rm -fr" dir
- */
-    local.child_process.execFileSync("rm", [
-        "-fr", local.path.resolve(process.cwd(), dir)
-    ], {
-        stdio: [
-            "ignore", 1, 2
-        ]
-    });
-};
-
-local.fsWriteFileWithMkdirpSync = function (file, data, mode) {
-/*
- * this function will synchronously "mkdir -p" and write <data> to <file>
- */
-    try {
-        if (
-            mode === "noWrite"
-            || typeof require("fs").writeFileSync !== "function"
-        ) {
-            return;
-        }
-    } catch (ignore) {
-        return;
-    }
-    // try to write to file
-    try {
-        require("fs").writeFileSync(file, data);
-    } catch (ignore) {
-        // mkdir -p
-        require("child_process").spawnSync(
-            "mkdir",
-            [
-                "-p", require("path").dirname(file)
-            ],
-            {
-                stdio: [
-                    "ignore", 1, 2
-                ]
-            }
-        );
-        // re-write to file
-        require("fs").writeFileSync(file, data);
     }
 };
 

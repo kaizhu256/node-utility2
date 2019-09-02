@@ -16,24 +16,17 @@
     var consoleError;
     var local;
     // init globalThis
-    (function () {
-        try {
-            globalThis = Function("return this")(); // jslint ignore:line
-        } catch (ignore) {}
-    }());
-    globalThis.globalThis = globalThis;
+    globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debug_inline
     if (!globalThis["debug\u0049nline"]) {
         consoleError = console.error;
-        globalThis["debug\u0049nline"] = function () {
+        globalThis["debug\u0049nline"] = function (...argList) {
         /*
-         * this function will both print <arguments> to stderr
-         * and return <arguments>[0]
+         * this function will both print <argList> to stderr
+         * and return <argList>[0]
          */
-            var argList;
-            argList = Array.from(arguments); // jslint ignore:line
-            // debug arguments
-            globalThis["debug\u0049nlineArguments"] = argList;
+            // debug argList
+            globalThis["debug\u0049nlineArgList"] = argList;
             consoleError("\n\ndebug\u0049nline");
             consoleError.apply(console, argList);
             consoleError("\n");
@@ -63,7 +56,6 @@
             return;
         }
         err = (
-            // ternary-operator
             (
                 message
                 && typeof message.message === "string"
@@ -80,6 +72,54 @@
             )
         );
         throw err;
+    };
+    local.fsRmrfSync = function (dir) {
+    /*
+     * this function will sync "rm -rf" <dir>
+     */
+        var child_process;
+        try {
+            child_process = require("child_process");
+        } catch (ignore) {
+            return;
+        }
+        child_process.spawnSync("rm", [
+            "-rf", dir
+        ], {
+            stdio: [
+                "ignore", 1, 2
+            ]
+        });
+    };
+    local.fsWriteFileWithMkdirpSync = function (file, data) {
+    /*
+     * this function will sync write <data> to <file> with "mkdir -p"
+     */
+        var fs;
+        try {
+            fs = require("fs");
+        } catch (ignore) {
+            return;
+        }
+        // try to write file
+        try {
+            fs.writeFileSync(file, data);
+        } catch (ignore) {
+            // mkdir -p
+            require("child_process").spawnSync(
+                "mkdir",
+                [
+                    "-p", require("path").dirname(file)
+                ],
+                {
+                    stdio: [
+                        "ignore", 1, 2
+                    ]
+                }
+            );
+            // rewrite file
+            fs.writeFileSync(file, data);
+        }
     };
     local.functionOrNop = function (fnc) {
     /*
@@ -149,7 +189,9 @@
         local.vm = require("vm");
         local.zlib = require("zlib");
     }
-}(this));
+}((typeof globalThis === "object" && globalThis) || (function () {
+    return Function("return this")(); // jslint ignore:line
+}())));
 
 
 
@@ -11826,11 +11868,17 @@ function tokenize(source) {
 // matched an expected value.
 
         if (match !== undefined && char !== match) {
-            return stop_at((
-                char === ""
-                ? "expected_a"
-                : "expected_a_b"
-            ), line, column - 1, match, char);
+            return stop_at(
+                (
+                    char === ""
+                    ? "expected_a"
+                    : "expected_a_b"
+                ),
+                line,
+                column - 1,
+                match,
+                char
+            );
         }
         if (source_line) {
             char = source_line[0];
@@ -12953,10 +13001,14 @@ function enroll(name, role, readonly) {
                         warn("unexpected_a", name);
                     }
                 } else {
-                    if ((
-                        role !== "exception"
-                        || earlier.role !== "exception"
-                    ) && role !== "parameter" && role !== "function") {
+                    if (
+                        (
+                            role !== "exception"
+                            || earlier.role !== "exception"
+                        )
+                        && role !== "parameter"
+                        && role !== "function"
+                    ) {
                         warn(
                             "redefinition_a_b",
                             name,
@@ -13689,21 +13741,26 @@ infix("(", 160, function (left) {
 infix(".", 170, function (left) {
     const the_token = token;
     const name = next_token;
-    if ((
-        left.id !== "(string)"
-        || (name.id !== "indexOf" && name.id !== "repeat")
-    ) && (
-        left.id !== "["
-        || (
-            name.id !== "concat"
-            && name.id !== "forEach"
-            && name.id !== "join"
-            && name.id !== "map"
+    if (
+        (
+            left.id !== "(string)"
+            || (name.id !== "indexOf" && name.id !== "repeat")
         )
-    ) && (left.id !== "+" || name.id !== "slice") && (
-        left.id !== "(regexp)"
-        || (name.id !== "exec" && name.id !== "test")
-    )) {
+        && (
+            left.id !== "["
+            || (
+                name.id !== "concat"
+                && name.id !== "forEach"
+                && name.id !== "join"
+                && name.id !== "map"
+            )
+        )
+        && (left.id !== "+" || name.id !== "slice")
+        && (
+            left.id !== "(regexp)"
+            || (name.id !== "exec" && name.id !== "test")
+        )
+    ) {
         left_check(left, the_token);
     }
     if (!name.identifier) {
@@ -13721,21 +13778,26 @@ infix(".", 170, function (left) {
 infix("?.", 170, function (left) {
     const the_token = token;
     const name = next_token;
-    if ((
-        left.id !== "(string)"
-        || (name.id !== "indexOf" && name.id !== "repeat")
-    ) && (
-        left.id !== "["
-        || (
-            name.id !== "concat"
-            && name.id !== "forEach"
-            && name.id !== "join"
-            && name.id !== "map"
+    if (
+        (
+            left.id !== "(string)"
+            || (name.id !== "indexOf" && name.id !== "repeat")
         )
-    ) && (left.id !== "+" || name.id !== "slice") && (
-        left.id !== "(regexp)"
-        || (name.id !== "exec" && name.id !== "test")
-    )) {
+        && (
+            left.id !== "["
+            || (
+                name.id !== "concat"
+                && name.id !== "forEach"
+                && name.id !== "join"
+                && name.id !== "map"
+            )
+        )
+        && (left.id !== "+" || name.id !== "slice")
+        && (
+            left.id !== "(regexp)"
+            || (name.id !== "exec" && name.id !== "test")
+        )
+    ) {
         left_check(left, the_token);
     }
     if (!name.identifier) {
@@ -15708,9 +15770,7 @@ function whitage() {
             right,
             artifact(right),
             fudge + at,
-            // hack-jslint
-            artifact_column(right),
-            left.line
+            artifact_column(right)
         );
     }
 
@@ -15936,7 +15996,7 @@ function whitage() {
                     ) {
                         no_space_only();
                     } else if (right.id === "." || right.id === "?.") {
-                        no_space();
+                        no_space_only();
                     } else if (left.id === ";") {
                         if (open) {
                             at_margin(0);
@@ -15988,15 +16048,18 @@ function whitage() {
                         )
                         || left.id === "function"
                         || left.id === ":"
-                        || ((
-                            left.identifier
-                            || left.id === "(string)"
-                            || left.id === "(number)"
-                        ) && (
-                            right.identifier
-                            || right.id === "(string)"
-                            || right.id === "(number)"
-                        ))
+                        || (
+                            (
+                                left.identifier
+                                || left.id === "(string)"
+                                || left.id === "(number)"
+                            )
+                            && (
+                                right.identifier
+                                || right.id === "(string)"
+                                || right.id === "(number)"
+                            )
+                        )
                         || (left.arity === "statement" && right.id !== ";")
                     ) {
                         one_space();
@@ -16171,7 +16234,6 @@ jslint_extra = function (source, opt, global_array) {
     // init
     line_ignore = null;
     lines = (
-        // ternary-operator
         Array.isArray(source)
         ? source
         : source.split(rx_crlf)
@@ -16304,9 +16366,6 @@ warn_at_extra = function (warning, warnings) {
     switch (option.autofix && warning.code) {
     // expected_a_at_b_c: "Expected '{a}' at column {b}, not column {c}.",
     case "expected_a_at_b_c":
-        if (warning.a === ".") {
-            break;
-        }
         // autofix indent - increment
         tmp = warning.b - warning.c;
         if (tmp >= 0) {
@@ -16334,7 +16393,6 @@ warn_at_extra = function (warning, warnings) {
     // expected_identifier_a: "Expected an identifier and instead saw '{a}'.",
     case "expected_identifier_a":
         if (!(
-            // newline
             (
                 /^\d+$/m
             ).test(warning.a)
@@ -16831,6 +16889,7 @@ local.jslintAutofix = function (code, file, opt) {
             });
             rgx1.lastIndex = match0.length;
             ii = rgx1.lastIndex;
+            return "";
         });
         while (rgx1.lastIndex < code.length) {
             tmp = rgx1.exec(code);
@@ -17174,7 +17233,7 @@ local.jslintUtility2 = function (code, ignore, opt) {
             switch (match0.slice(-1)) {
             case " ":
                 if (match0.length % 4 === 0) {
-                    return;
+                    return "";
                 }
                 err = {
                     message: "non 4-space indent"
@@ -17191,7 +17250,7 @@ local.jslintUtility2 = function (code, ignore, opt) {
                 };
                 break;
             default:
-                return;
+                return "";
             }
             Object.assign(err, local.jslintGetColumnLine(code2, ii));
             opt.errList.push({
@@ -17200,6 +17259,7 @@ local.jslintUtility2 = function (code, ignore, opt) {
                 line: err.line + 1,
                 message: err.message
             });
+            return "";
         });
     }
     switch (opt.utility2 && opt.fileType) {
@@ -17243,6 +17303,7 @@ local.jslintUtility2 = function (code, ignore, opt) {
                 line: err.line + 1,
                 message: err.message
             });
+            return "";
         });
         // validate line-sorted - css-selector
         previous = "";
@@ -17276,9 +17337,9 @@ local.jslintUtility2 = function (code, ignore, opt) {
             case "\u0000@":
             case "}\n":
                 previous = "";
-                return;
+                return "";
             case "}":
-                return;
+                return "";
             }
             match0 = match0.trim();
             err = (
@@ -17304,6 +17365,7 @@ local.jslintUtility2 = function (code, ignore, opt) {
                 });
             }
             previous = match0;
+            return "";
         });
         break;
     // jslintUtility2 - .html
@@ -17385,6 +17447,7 @@ local.jslintUtility2 = function (code, ignore, opt) {
                     message: err.message
                 });
             }
+            return "";
         });
         break;
     // jslintUtility2 - .md
@@ -17420,6 +17483,7 @@ local.jslintUtility2 = function (code, ignore, opt) {
                     message: err.message
                 });
             }
+            return "";
         });
         // validate line-sorted - case-esac-statement
         previous = "";
@@ -17460,6 +17524,7 @@ local.jslintUtility2 = function (code, ignore, opt) {
                     message: err.message
                 });
             }
+            return "";
         });
         break;
     }

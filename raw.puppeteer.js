@@ -5,7 +5,7 @@ file https://github.com/websockets/ws/tree/6.2.1
 shGithubDateCommitted https://github.com/websockets/ws/commits/6.2.1 # 2019-08-12T15:47:05Z
 file https://github.com/GoogleChrome/puppeteer/tree/v1.19.0
 shGithubDateCommitted https://github.com/GoogleChrome/puppeteer/commits/v1.19.0 # 2019-07-23T05:02:45Z
-rm -f /tmp/aa.js && for GITHUB_REPO in STRML/async-limiter websockets/ws GoogleChrome/puppeteer; do rm -fr /tmp/aa && mkdir -p /tmp/aa && GITHUB_REPO="$GITHUB_REPO" node -e '
+rm -f tmp/aa.js && for GITHUB_REPO in STRML/async-limiter websockets/ws GoogleChrome/puppeteer; do rm -fr tmp/aa && mkdir -p tmp/aa && GITHUB_REPO="$GITHUB_REPO" node -e '
 /* jslint utility2:true */
 (function () {
 /*jslint node*/
@@ -81,7 +81,7 @@ list.forEach(function (elem, ii) {
         + version + "/" + elem
     ), function (res) {
         res.pipe(require("fs").createWriteStream(
-            "/tmp/aa/" + String(ii + 1).padStart(2, "0") + "_"
+            "tmp/aa/" + String(ii + 1).padStart(2, "0") + "_"
             + require("path").basename(elem)
         ));
     }).end();
@@ -89,12 +89,12 @@ list.forEach(function (elem, ii) {
 process.on("exit", function () {
     var aa;
     aa = "";
-    require("fs").readdirSync("/tmp/aa").sort().forEach(function (elem) {
+    require("fs").readdirSync("tmp/aa").sort().forEach(function (elem) {
         aa += (
             "\n\n\n\n/*\nlib https://github.com/"
             + process.env.GITHUB_REPO + "/blob/" + version
             + "/" + elem.split("_")[1] + "\n*/\n"
-            + require("fs").readFileSync("/tmp/aa/" + elem, "utf8").trim()
+            + require("fs").readFileSync("tmp/aa/" + elem, "utf8").trim()
         );
     });
     dict = {};
@@ -119,7 +119,7 @@ process.on("exit", function () {
         /(\w+?):\u0020require\(.*?,/gm
     ), "$1,");
     aa = aa.trim() + "\n\n\n\n";
-    require("fs").appendFileSync("/tmp/aa.js", aa);
+    require("fs").appendFileSync("tmp/aa.js", aa);
 });
 }());
 '; done
