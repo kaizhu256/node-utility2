@@ -70,6 +70,7 @@ this zero-dependency package will provide a collection of high-level functions t
 
 #### changelog 2019.8.22
 - npm publish 2019.8.22
+- remove shell-function shBaseInstallLinode
 - replace arguments with ...argList
 - add shell-function shRawJsFetch
 - rename rm -fr to rm -rf
