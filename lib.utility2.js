@@ -3010,13 +3010,17 @@ local.browserTest = function (opt, onError) {
 /*
  * this function will spawn an electron process to test <opt>.url
  */
+    var browser;
+    var fileScreenshot;
     var isDone;
+    var onParallel;
+    var page;
+    var testId;
+    var testName;
     var timerTimeout;
-    var window;
-    window = opt.window || globalThis;
     // init utility2_testReport
-    window.utility2_testReport = window.utility2_testReport || {
-        coverage: window.__coverage__,
+    globalThis.utility2_testReport = globalThis.utility2_testReport || {
+        coverage: globalThis.__coverage__,
         testPlatformList: [
             {
                 name: (
@@ -3027,7 +3031,6 @@ local.browserTest = function (opt, onError) {
                     )
                     : "node - " + process.platform + " " + process.version
                 ) + " - " + new Date().toISOString(),
-                screenshot: local.env && local.env.MODE_BUILD_SCREENSHOT_IMG,
                 testCaseList: []
             }
         ]
@@ -3039,331 +3042,118 @@ local.browserTest = function (opt, onError) {
         switch (opt.gotoState) {
         // node - init
         case 1:
-            // init fileElectronHtml
-            opt.fileElectronHtml = (
-                opt.npm_config_dir_tmp
-                + "/electron."
-                + Date.now().toString(16)
-                + Math.random().toString(16)
-                + ".html"
+            onParallel = local.onParallel(opt.gotoNext);
+            onParallel.counter += 1;
+            fileScreenshot = (
+                local.env.npm_config_dir_build + "/screenshot."
+                + testName
+                + ".png"
             );
-            // init url
-            if (!(
-                /^\w+:\/\//
-            ).test(opt.url)) {
-                opt.url = local.path.resolve(process.cwd(), opt.url);
-            }
-            opt.urlParsed = local.urlParse(opt.url);
-            // init testName
-            opt.testName = opt.urlParsed.pathname;
-            if (opt.testName.indexOf(process.cwd()) === 0) {
-                opt.testName = opt.testName.replace(process.cwd(), "");
-            }
-            opt.testName = (
-                opt.MODE_BUILD + ".browser."
-                + encodeURIComponent(opt.testName.replace(
+            isDone = 0;
+            testId = Math.random().toString(16);
+            testName = new local.url.URL(opt.url).pathname;
+            testName = (
+                local.env.MODE_BUILD + ".browser."
+                + encodeURIComponent(testName.replace(
                     "/build.."
-                    + opt.CI_BRANCH
-                    + ".." + opt.CI_HOST,
+                    + local.env.CI_BRANCH
+                    + ".." + local.env.CI_HOST,
                     "/build"
                 ))
             );
-            local.objectSetDefault(opt, {
-                fileScreenshot: (
-                    opt.npm_config_dir_build + "/screenshot."
-                    + opt.testName
-                    + ".png"
-                ),
-                fileTestReport: (
-                    opt.npm_config_dir_tmp + "/test-report."
-                    + opt.testName
-                    + ".json"
-                ),
-                timeExit: Date.now() + opt.timeoutDefault,
-                timeoutScreenshot: opt.timeoutScreenshot || 15000
-            }, 1);
+            opt.url = opt.url.replace(
+                "{{timeExit}}",
+                Date.now() + local.timeoutDefault
+            );
             // init timerTimeout
             timerTimeout = local.onTimeout(
                 opt.gotoNext,
-                opt.timeoutDefault,
-                opt.testName
-            ).unref();
-            data = {};
-            Object.keys(opt).forEach(function (key) {
-                if (typeof opt[key] !== "object") {
-                    data[key] = opt[key];
+                local.timeoutDefault,
+                testName
+            );
+            // create puppeteer browser
+            require("./lib.puppeteer.js").launch({
+                args: [
+                    "--disable-setuid-sandbox",
+                    "--headless",
+                    "--hide-scrollbars",
+                    "--incognito",
+                    "--mute-audio",
+                    "--no-sandbox",
+                    "--remote-debugging-port=0"
+                ],
+                dumpio: true,
+                executablePath: local.env.CHROME_BIN,
+                ignoreDefaultArgs: true
+            }).then(opt.gotoNextData);
+            break;
+        case 2:
+            browser = data;
+            browser.newPage().then(opt.gotoNextData);
+            break;
+        case 3:
+            page = data;
+            page.goto(opt.url).then(opt.gotoNextData);
+            break;
+        case 4:
+            onParallel.counter += 1;
+            setTimeout(function () {
+                page.screenshot({
+                    path: fileScreenshot
+                }).then(onParallel.bind(null, null));
+            }, 100);
+            page.evaluate(function (testId) {
+                window.utility2_testId = testId;
+            }, testId);
+            page.on("metrics", function (metric) {
+                if (isDone < 1 && metric.title === testId) {
+                    isDone += 1;
+                    opt.gotoNext();
                 }
             });
-            data.gotoState = 20;
-            // init file fileElectronHtml
-            local.fsWriteFileWithMkdirpSync(opt.fileElectronHtml, (
-                "//<body "
-                + "style=\"border:1px solid black;margin:0;padding:0;\">"
-                + "<webview "
-                + "preload=\""
-                + opt.fileElectronHtml
-                + "\" src=\""
-                + opt.url.replace("{{timeExit}}", opt.timeExit)
-                + "\" style="
-                + "\"border:none;height:100%;margin:0;padding:0;width:100%;\">"
-                + "</webview>"
-                + "<script>document.body.removeChild(document.body.firstChild);"
-                + "</script>"
-                + "</body>"
-                + "<textarea disabled style=\"display:none;\">\n"
-                + local.assetsDict["/assets.example.begin.js"]
-                + "(function(local){\n"
-                + "\"use strict\";\n"
-                + "local=globalThis.globalLocal;\n"
-                + "local.env={};\n"
-                + "local.isBrowser=true;\n"
-                + "var opt=" + JSON.stringify(data) + ";\n"
-                + [
-                    "browserTest",
-                    "nop",
-                    "onErrorWithStack",
-                    "gotoNext"
-                ].map(function (key) {
-                    return "local." + key + "=" + String(local[key]).replace((
-                        // html-safe
-                        /<\//g
-                    ), "<\\/").replace((
-                        // hack-istanbul - un-instrument
-                        /\b__cov_.*?\+\+/g
-                    ), "0") + ";\n";
-                }).join("")
-                + "local.browserTest(opt,console.error);\n"
-                + "}());\n"
-                + "//</textarea>\n"
-            ));
-            console.error(
-                "\nbrowserTest - created fileElectronHtml "
-                + opt.fileElectronHtml
-                + "\n"
-            );
-            // spawn an electron process to test a url
-            opt.npm_config_time_exit = opt.timeExit;
-            data.gotoState = 10;
-            local.childProcessSpawnWithTimeout("electron", [
-                __filename,
-                "utility2.browserTest",
-                opt.url,
-                "--enable-logging"
-            ], {
-                env: data,
-                stdio: (
-                    (!opt.modeDebug && opt.modeSilent)
-                    ? "ignore"
-                    : [
-                        "ignore", 1, 2
-                    ]
-                ),
-                timeout: opt.timeoutDefault
-            }).once("error", opt.gotoNext).once("exit", opt.gotoNext);
-            return;
-        // node - after electron
-        case 2:
-            console.error(
-                "\nbrowserTest - exit-code " + err + " - " + opt.url + "\n"
-            );
-            // merge browser test-report
-            data = local.fsReadFileOrEmptyStringSync(
-                opt.fileTestReport,
-                "json"
-            );
+            break;
+        case 5:
+            page.evaluate(function () {
+                return JSON.stringify(window.utility2_testReport);
+            }).then(opt.gotoNextData);
+            break;
+        case 6:
+            browser.close();
+            data = JSON.parse(data);
+            // merge browser-screenshot
+            data.testPlatformList[0].screenshot = fileScreenshot.replace((
+                /.*\//
+            ), "");
+            // merge browser-coverage
+            local.istanbulCoverageMerge(globalThis.__coverage__, data.coverage);
+            // merge browser-test-report
             local.testReportMerge(
-                window.utility2_testReport,
+                globalThis.utility2_testReport,
                 !opt.modeSilent && data
             );
-            console.error(
-                "\nbrowserTest - merged test-report from file "
-                + opt.fileTestReport
-                + "\n"
-            );
-            // create test-report.json
-            local.fs.writeFileSync(
+            // save test-report.json
+            console.error("\n\n\n\n\n");
+            console.error(local.env.npm_config_dir_build + "/test-report.json");
+            local.fs.writeFile(
                 local.env.npm_config_dir_build + "/test-report.json",
-                JSON.stringify(window.utility2_testReport)
+                JSON.stringify(globalThis.utility2_testReport),
+                onParallel
             );
-            opt.gotoNext(
-                data && data.testsFailed && new Error(data.testsFailed)
-            );
-            return;
-        // node.electron - init
-        case 11:
-            // handle uncaughtException
-            window.process.once("uncaughtException", opt.gotoNext);
-            // wait for electron to init
-            opt.electron.app.once("ready", function () {
-                opt.gotoNext();
-            });
-            return;
-        // node.electron - after ready
-        case 12:
-            Object.assign(opt, {
-                frame: false,
-                height: 768,
-                // disable nodeIntegration
-                // https://github.com/electron/electron/blob/v2.0.0/docs/tutorial/security.md#how-1
-                nodeIntegration: false,
-                show: false,
-                width: 1024,
-                x: 0,
-                y: 0
-            });
-            // init event-handling - ipc
-            opt.electron.ipcMain.on(opt.fileElectronHtml, function (
-                evt,
-                type,
-                data
-            ) {
-                try {
-                    switch (evt && type) {
-                    case "testReport":
-                        if (opt.isDoneTestReport) {
-                            break;
-                        }
-                        opt.isDoneTestReport = true;
-                        // save browser-screenshot
-                        data.testPlatformList[0].screenshot = (
-                            opt.fileScreenshot.replace((
-                                /.*\//
-                            ), "")
-                        );
-                        // save browser-test-report
-                        opt.fs.writeFile(
-                            opt.fileTestReport,
-                            JSON.stringify(data, null, 4),
-                            opt.gotoNext
-                        );
-                        break;
-                    }
-                } catch (errCaught) {
-                    opt.gotoNext(errCaught);
-                }
-            }, false);
-            // init browserWindow
-            opt.browserWindow = new opt.electron.BrowserWindow(opt);
-            // load url in browserWindow
-            opt.browserWindow.loadURL("file://" + opt.fileElectronHtml);
-            return;
-        // node.electron - screenshot
-        case 13:
-            opt.browserWindow.capturePage(opt, function (data) {
-                opt.gotoNext(null, data);
-            });
-            return;
-        case 14:
-            opt.fs.writeFile(opt.fileScreenshot, data.toPNG(), opt.gotoNext);
-            return;
-        case 15:
-            console.error(
-                "\nbrowserTest - created screenshot file "
-                + opt.fileScreenshot
-                + "\n"
-            );
-            process.exit();
-            return;
-        // node.electron.browserWindow.webview.preload - init
-        case 21:
-            // init domOnEventWindowOnloadTimeElapsed
-            (function () {
-            /*
-             * this function will measure and print time-elapsed
-             * for window.onload
-             */
-                if (window.domOnEventWindowOnloadTimeElapsed) {
-                    return;
-                }
-                window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;
-                window.addEventListener("load", function () {
-                    setTimeout(function () {
-                        window.domOnEventWindowOnloadTimeElapsed = (
-                            Date.now()
-                            - window.domOnEventWindowOnloadTimeElapsed
-                        );
-                        console.error(
-                            "domOnEventWindowOnloadTimeElapsed = "
-                            + window.domOnEventWindowOnloadTimeElapsed
-                        );
-                    }, 100);
-                });
-            }());
-            // init event-handling - load
-            window.addEventListener("load", function () {
-                setTimeout(opt.gotoNext, 5000);
-            });
-            // wait for render before screenshot
-            setTimeout(opt.gotoNext, opt.timeoutScreenshot);
-            // listen utility2.testRunEnd
-            window.addEventListener("load", function () {
-                window.utility2.on("utility2.testRunEnd", function () {
-                    window.utility2_testReport.coverage = window.__coverage__;
-                    opt.electron.ipcRenderer.send(
-                        opt.fileElectronHtml,
-                        "testReport",
-                        window.utility2_testReport
-                    );
-                });
-            });
-            return;
-        // node.electron.browserWindow.webview.preload - screenshot
-        case 22:
-            // cleanup fileElectronHtml
-            opt.fs.rename(
-                opt.fileElectronHtml,
-                opt.npm_config_dir_tmp + "/electron.html",
-                console.error
-            );
-            return;
+            break;
         default:
-            if (isDone) {
+            if (isDone >= 2) {
                 return;
             }
-            isDone = true;
+            isDone += 1;
             // cleanup timerTimeout
             clearTimeout(timerTimeout);
+            try {
+                browser.close();
+            } catch (ignore) {}
             onError(err);
         }
     });
-    // init opt
-    [
-        "CI_BRANCH",
-        "CI_HOST",
-        "DISPLAY",
-        "MODE_BUILD",
-        "PATH",
-        "fileElectronHtml",
-        "fileScreenshot",
-        "fileTestReport",
-        "modeDebug",
-        "gotoState",
-        "modeSilent",
-        "npm_config_dir_build",
-        "npm_config_dir_tmp",
-        "npm_config_time_exit",
-        "npm_config_timeout_default",
-        "timeExit",
-        "timeoutDefault",
-        "timeoutScreenshot",
-        "url"
-    ].forEach(function (key) {
-        if (
-            local.env
-            && local.env[key] !== undefined
-            && typeof opt[key] !== "number"
-        ) {
-            opt[key] = opt[key] || local.env[key];
-        }
-    });
-    opt.gotoState = Number(opt.gotoState) || 0;
-    opt.timeoutDefault = (
-        Number(opt.timeoutDefault) || Number(local.timeoutDefault)
-    );
-    if (10 <= opt.gotoState) {
-        opt.electron = opt.electron || require("electron");
-    }
-    opt.fs = opt.fs || require("fs");
+    opt.gotoState = 0;
     opt.gotoNext();
 };
 

@@ -52,7 +52,6 @@ this zero-dependency package will provide a collection of high-level functions t
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- migrate browser-testing from electron to headless-chromium
 - replace taskCreateCached with debounce
 - rename counter to count
 - replace db-lite with sql.js
@@ -68,6 +67,7 @@ this zero-dependency package will provide a collection of high-level functions t
 
 #### changelog 2019.8.22
 - npm publish 2019.8.22
+- migrate browser-testing from electron to headless-chromium
 - streamline customizing README.md with custom-html-start and custom-html-end tags
 - make utility2-object an EventEmitter
 - update local.isBrowser check to include web-worker
