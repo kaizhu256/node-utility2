@@ -40,11 +40,9 @@
     globalThis.globalLocal = local;
     // init isBrowser
     local.isBrowser = (
-        typeof window === "object"
-        && window === globalThis
-        && typeof window.XMLHttpRequest === "function"
-        && window.document
-        && typeof window.document.querySelector === "function"
+        typeof globalThis.XMLHttpRequest === "function"
+        && globalThis.navigator
+        && typeof globalThis.navigator.userAgent === "string"
     );
     // init function
     local.assertThrow = function (passed, message) {
@@ -874,6 +872,7 @@ local.apidocCreate = function (opt) {
                         + "</span>"
                         + local.stringHtmlSafe(match3)
                     ).trimRight() + "\n...";
+                    return "";
                 }
             );
             return elem.example;
@@ -924,6 +923,7 @@ local.apidocCreate = function (opt) {
             if (!whitespace || match0.length < whitespace.length) {
                 whitespace = match0;
             }
+            return "";
         });
         text = text.replace(new RegExp("^" + whitespace, "gm"), "");
         // enforce 128 character column limit

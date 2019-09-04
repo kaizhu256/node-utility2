@@ -52,7 +52,6 @@ shMain () {(set -e
             export PORT=$(./lib.utility2.sh shServerPortRandom)
             export PORT_REPL=$(./lib.utility2.sh shServerPortRandom)
             export npm_config_mode_auto_restart=1
-            export npm_config_timeout_default=60000
             ./lib.utility2.sh test test.js
             return
         fi

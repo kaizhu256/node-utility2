@@ -12,6 +12,7 @@ set hlsearch
 set ignorecase
 set incsearch
 set laststatus=2
+set nobackup
 set nocompatible
 set noerrorbells
 set noswapfile

@@ -40,11 +40,9 @@
     globalThis.globalLocal = local;
     // init isBrowser
     local.isBrowser = (
-        typeof window === "object"
-        && window === globalThis
-        && typeof window.XMLHttpRequest === "function"
-        && window.document
-        && typeof window.document.querySelector === "function"
+        typeof globalThis.XMLHttpRequest === "function"
+        && globalThis.navigator
+        && typeof globalThis.navigator.userAgent === "string"
     );
     // init function
     local.assertThrow = function (passed, message) {
@@ -1060,7 +1058,7 @@ local.templateUiMain = '\
     <button class="button eventDelegateClick td td4" data-onevent="onEventUiReload">explore</button>\n\
     <button\n\
         class="button eventDelegateClick td td5" data-onevent="onEventUiReload"\n\
-        id="swggApiKeyClearButton1"\n\
+        id="buttonSwggApiKeyClear1"\n\
     >\n\
         clear api-keys\n\
     </button>\n\
@@ -5790,7 +5788,7 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
             // clear all apiKeyValue's from localStorage
             if (
                 opt.targetOnEvent
-                && opt.targetOnEvent.id === "swggApiKeyClearButton1"
+                && opt.targetOnEvent.id === "buttonSwggApiKeyClear1"
             ) {
                 local.apiKeyValue = "";
                 Object.keys(localStorage).forEach(function (key) {

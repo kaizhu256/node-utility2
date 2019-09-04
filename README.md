@@ -10,8 +10,6 @@ this zero-dependency package will provide a collection of high-level functions t
 
 [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html)
 
-[![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
-
 [![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 | git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
@@ -23,8 +21,6 @@ this zero-dependency package will provide a collection of high-level functions t
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
 
 [![npmPackageListing](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
-
-![npmPackageDependencyTree](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageDependencyTree.svg)
 
 
 
@@ -56,8 +52,10 @@ this zero-dependency package will provide a collection of high-level functions t
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- replace db-lite with sql.js
 - migrate browser-testing from electron to headless-chromium
+- replace taskCreateCached with debounce
+- rename counter to count
+- replace db-lite with sql.js
 - rename var value to val
 - replace uglifyjs-lite with terser-lite (v2.8.29)
 - jslint - remove bad_property_a and unexpected_a hacks
@@ -70,6 +68,11 @@ this zero-dependency package will provide a collection of high-level functions t
 
 #### changelog 2019.8.22
 - npm publish 2019.8.22
+- streamline customizing README.md with custom-html-start and custom-html-end tags
+- make utility2-object an EventEmitter
+- update local.isBrowser check to include web-worker
+- disable testCase_buildApidoc_default during npm test, to make it run faster
+- add file raw.puppeteer.js
 - remove shell-function shBaseInstallLinode
 - replace arguments with ...argList
 - add shell-function shRawJsFetch
@@ -123,7 +126,7 @@ this script will demo automated browser-tests with coverage
 instruction
     1. save this script as example.js
     2. run the shell-command:
-        $ npm install utility2 electron-lite && \
+        $ npm install kaizhu256/node-utility2#alpha electron-lite && \
             PATH="$(pwd)/node_modules/.bin:$PATH" \
             PORT=8081 \
             npm_config_mode_coverage=utility2 \
@@ -166,11 +169,9 @@ instruction
     globalThis.globalLocal = local;
     // init isBrowser
     local.isBrowser = (
-        typeof window === "object"
-        && window === globalThis
-        && typeof window.XMLHttpRequest === "function"
-        && window.document
-        && typeof window.document.querySelector === "function"
+        typeof globalThis.XMLHttpRequest === "function"
+        && globalThis.navigator
+        && typeof globalThis.navigator.userAgent === "string"
     );
     // init function
     local.assertThrow = function (passed, message) {
@@ -407,7 +408,6 @@ local.testCase_webpage_default = function (opt, onError) {
         return;
     }
     opt = {
-        modeCoverageMerge: true,
         url: local.serverLocalHost + "?modeTest=1"
     };
     local.browserTest(opt, onError);
@@ -465,7 +465,7 @@ local.testRunBrowser = function (evt) {
         )
     ) {
     // custom-case
-    case "click.jslintAutofixButton1":
+    case "click.buttonJslintAutofix1":
     case "keydown.inputTextarea1":
     case true:
         globalThis.domOnEventDelegateDict.domOnEventResetOutput();
@@ -477,7 +477,7 @@ local.testRunBrowser = function (evt) {
                 autofix: (
                     evt
                     && evt.currentTarget
-                    && evt.currentTarget.id === "jslintAutofixButton1"
+                    && evt.currentTarget.id === "buttonJslintAutofix1"
                 ),
                 conditional: true
             }
@@ -507,7 +507,7 @@ local.testRunBrowser = function (evt) {
             eval( // jslint ignore:line
                 document.querySelector("#outputCode1").textContent
             );
-            document.querySelector("#coverageReportDiv1").innerHTML = (
+            document.querySelector("#htmlCoverageReport1").innerHTML = (
                 local.istanbul.coverageReportCreate({
                     coverage: globalThis.__coverage__
                 })
@@ -516,14 +516,14 @@ local.testRunBrowser = function (evt) {
             console.error(errCaught);
         }
         return;
-    case "click.testRunButton1":
+    case "click.buttonTestRun1":
         local.modeTest = 1;
         local.testRunDefault(local);
         return;
     // run browser-tests
     default:
         if (
-            (evt.target && evt.target.id) !== "testRunButton1"
+            (evt.target && evt.target.id) !== "buttonTestRun1"
             && !(evt.modeInit && (
                 /\bmodeTest=1\b/
             ).test(location.search))
@@ -532,14 +532,14 @@ local.testRunBrowser = function (evt) {
         }
         // show browser-tests
         if (document.querySelector(
-            "#testReportDiv1"
+            "#htmlTestReport1"
         ).style.maxHeight === "0px") {
             globalThis.domOnEventDelegateDict.domOnEventResetOutput();
             local.uiAnimateSlideDown(document.querySelector(
-                "#testReportDiv1"
+                "#htmlTestReport1"
             ));
             document.querySelector(
-                "#testRunButton1"
+                "#buttonTestRun1"
             ).textContent = "hide internal test";
             local.modeTest = 1;
             local.testRunDefault(local);
@@ -547,10 +547,10 @@ local.testRunBrowser = function (evt) {
         }
         // hide browser-tests
         local.uiAnimateSlideUp(document.querySelector(
-            "#testReportDiv1"
+            "#htmlTestReport1"
         ));
         document.querySelector(
-            "#testRunButton1"
+            "#buttonTestRun1"
         ).textContent = "run internal test";
     }
 };
@@ -632,7 +632,7 @@ a {\n\
     overflow-wrap: break-word;\n\
 }\n\
 body {\n\
-    background: #eef;\n\
+    background: #f7f7f7;\n\
     font-family: Arial, Helvetica, sans-serif;\n\
     font-size: small;\n\
     margin: 0 40px;\n\
@@ -996,26 +996,28 @@ pre {\n\
 </script>\n\
 <h1>\n\
 <!-- utility2-comment\n\
-    <a\n\
-        {{#if env.npm_package_homepage}}\n\
-        href="{{env.npm_package_homepage}}"\n\
-        {{/if env.npm_package_homepage}}\n\
-        target="_blank"\n\
-    >\n\
+<a\n\
+    {{#if env.npm_package_homepage}}\n\
+    href="{{env.npm_package_homepage}}"\n\
+    {{/if env.npm_package_homepage}}\n\
+    target="_blank"\n\
+>\n\
 utility2-comment -->\n\
-        {{env.npm_package_name}} ({{env.npm_package_version}})\n\
+    {{env.npm_package_name}} ({{env.npm_package_version}})\n\
 <!-- utility2-comment\n\
-    </a>\n\
+</a>\n\
 utility2-comment -->\n\
 </h1>\n\
 <h3>{{env.npm_package_description}}</h3>\n\
 <!-- utility2-comment\n\
 <a class="button" download href="assets.app.js">download standalone app</a><br>\n\
-<button class="button" data-onevent="testRunBrowser" id="testRunButton1">run internal test</button><br>\n\
+<button class="button" data-onevent="testRunBrowser" id="buttonTestRun1">run internal test</button><br>\n\
+<div class="uiAnimateSlide" id="htmlTestReport1" style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"></div>\n\
 utility2-comment -->\n\
 \n\
 \n\
 \n\
+<!-- custom-html-start -->\n\
 <label>edit or paste script below to cover and test</label>\n\
 <textarea class="textarea" data-onevent="testRunBrowser" id="inputTextarea1">\n\
 // remove comment below to disable jslint\n\
@@ -1063,14 +1065,32 @@ utility2-comment -->\n\
     window.utility2.testRunDefault(testCaseDict);\n\
 }());\n\
 </textarea>\n\
-<button class="button" data-onevent="testRunBrowser" id="jslintAutofixButton1">jslint autofix</button><br>\n\
+<button class="button" data-onevent="testRunBrowser" id="buttonJslintAutofix1">jslint autofix</button><br>\n\
 <pre class= "colorError" id="outputJslintPre1" tabindex="0"></pre>\n\
 <label>instrumented-code</label>\n\
 <pre class="readonly textarea" id="outputCode1" tabindex="0"></pre>\n\
 <label>stderr and stdout</label>\n\
 <pre class="onevent-reset-output readonly textarea" id="outputStdout1" tabindex="0"></pre>\n\
-<div id="testReportDiv1"></div>\n\
-<div id="coverageReportDiv1"></div>\n\
+<div id="htmlTestReport1"></div>\n\
+<div id="htmlCoverageReport1"></div>\n\
+<script>\n\
+/* jslint utility2:true */\n\
+(function () {\n\
+"use strict";\n\
+document.querySelector("#htmlTestReport1").remove();\n\
+window.addEventListener("load", function () {\n\
+    window.utility2.on("utility2.testRunEnd", function () {\n\
+        (document.querySelector(\n\
+            "#htmlCoverageReport1"\n\
+        ) || {}).innerHTML = window.utility2.istanbulCoverageReportCreate();\n\
+    });\n\
+});\n\
+}());\n\
+</script>\n\
+<!-- custom-html-end -->\n\
+\n\
+\n\
+\n\
 <!-- utility2-comment\n\
 {{#if isRollup}}\n\
 <script src="assets.app.js"></script>\n\
@@ -1087,6 +1107,26 @@ utility2-comment -->\n\
 <script src="assets.example.js"></script>\n\
 <script src="assets.test.js"></script>\n\
 <script>window.utility2_onReadyBefore();</script>\n\
+<script>\n\
+/* jslint utility2:true */\n\
+(function () {\n\
+"use strict";\n\
+var htmlTestReport1;\n\
+var local;\n\
+htmlTestReport1 = document.querySelector("#htmlTestReport1");\n\
+if (!htmlTestReport1) {\n\
+    return;\n\
+}\n\
+local = window.utility2;\n\
+local.on("utility2.testRunProgressUpdate", function (testReport) {\n\
+    htmlTestReport1.innerHTML = local.testReportMerge(testReport, {});\n\
+});\n\
+local.on("utility2.testRunStart", function (testReport) {\n\
+    local.uiAnimateSlideDown(htmlTestReport1);\n\
+    htmlTestReport1.innerHTML = local.testReportMerge(testReport, {});\n\
+});\n\
+}());\n\
+</script>\n\
 <!-- utility2-comment\n\
 {{/if isRollup}}\n\
 utility2-comment -->\n\
@@ -1162,7 +1202,7 @@ local.http.createServer(function (req, res) {
 ```
 
 #### output from browser
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252Ftmp%252Fapp%252Ftmp%252Fbuild%252Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252Ftmp%252Fapp%252Ftmp%252Fbuild%252Ftest-report.html.html)
+![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252Ftmp%252Fapp%252Ftmp%252Fbuild%252Ftest-report.html.png)
 
 #### output from shell
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.svg)
@@ -1313,11 +1353,44 @@ RUN (set -e; \
         curl \
         git \
         gnupg; \
-    (busybox --list | xargs -n1 /bin/sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true); \
-    curl -#L https://deb.nodesource.com/setup_10.x | /bin/bash -; \
+    (busybox --list | xargs -n1 /bin/sh -c \
+        'ln -s /bin/busybox /bin/$0 2>/dev/null' || true); \
+    curl -Ls https://deb.nodesource.com/setup_10.x | /bin/bash -; \
     apt-get install -y nodejs; \
     (cd /usr/lib && npm install sqlite3@4); \
 )
+# install google-chrome-stable
+RUN (set -e; \
+    curl -Ls https://dl.google.com/linux/linux_signing_key.pub | \
+        apt-key add -; \
+    printf "deb http://dl.google.com/linux/chrome/deb/ stable main\n" > \
+        /etc/apt/sources.list.d/google.list; \
+    apt-get update && apt-get install google-chrome-stable -y; \
+)
+# install extra
+RUN (set -e; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    apt-get update; \
+    apt-get install --no-install-recommends -y \
+        aptitude \
+        ffmpeg \
+        imagemagick \
+        nginx-extras \
+        screen \
+        sqlite3 \
+        transmission-daemon \
+        ssh \
+        vim \
+        wget \
+        xvfb; \
+)
+```
+
+- Dockerfile.latest
+```shell
+# Dockerfile.latest
+FROM kaizhu256/node-utility2:base
+MAINTAINER kai zhu <kaizhu256@gmail.com>
 # install electron-lite
 # COPY electron-*.zip /tmp
 # libasound.so.2: cannot open shared object file: No such file or directory
@@ -1345,27 +1418,6 @@ RUN (set -e; \
     npm install --unsafe-perm; \
     npm test; \
 )
-# install extra
-RUN (set -e; \
-    export DEBIAN_FRONTEND=noninteractive; \
-    apt-get update; \
-    apt-get install --no-install-recommends -y \
-        ffmpeg \
-        imagemagick \
-        nginx-extras \
-        sqlite3 \
-        transmission-daemon \
-        ssh \
-        vim \
-        wget; \
-)
-```
-
-- Dockerfile.latest
-```shell
-# Dockerfile.latest
-FROM kaizhu256/node-utility2:base
-MAINTAINER kai zhu <kaizhu256@gmail.com>
 # install utility2
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
@@ -1397,26 +1449,42 @@ RUN (set -e; \
 # Dockerfile.tmp
 FROM kaizhu256/node-utility2:base
 MAINTAINER kai zhu <kaizhu256@gmail.com>
-# install extra
+# install electron-lite
+# COPY electron-*.zip /tmp
+# libasound.so.2: cannot open shared object file: No such file or directory
+# libgconf-2.so.4: cannot open shared object file: No such file or directory
+# libgtk-3.so.0: cannot open shared object file: No such file or directory
+# libnss3.so: cannot open shared object file: No such file or directory
+# libXss.so.1: cannot open shared object file: No such file or directory
+# libXtst.so.6: cannot open shared object file: No such file or directory
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
     apt-get update; \
     apt-get install --no-install-recommends -y \
-        aptitude \
-        cmake \
-        g++ \
-        make; \
+        libasound2 \
+        libgconf-2-4 \
+        libgtk-3-0 \
+        libnss3 \
+        libxss1 \
+        libxtst6 \
+        xvfb; \
+    rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
+    npm install kaizhu256/node-electron-lite#alpha; \
+    mv node_modules/electron-lite/external /opt/electron; \
+    ln -fs /opt/electron/electron /bin/electron; \
+    cd node_modules/electron-lite; \
+    npm install --unsafe-perm; \
+    npm test; \
 )
-# install binaryen
+# install utility2
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
-    git clone https://github.com/WebAssembly/binaryen.git \
-        --branch version_31 \
-        --depth 1; \
-    cd binaryen; \
-    cmake .; \
-    make; \
-    mv bin /opt/binaryen; \
+    rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
+    npm install kaizhu256/node-utility2#alpha; \
+    cp -a node_modules /; \
+    cd node_modules/utility2; \
+    npm install; \
+    npm test; \
 )
 ```
 
@@ -1448,7 +1516,7 @@ shBuildCiAfter () {(set -e
         -t "$GITHUB_REPO:$DOCKER_TAG" .
     # docker test
     case "$CI_BRANCH" in
-    docker.base)
+    docker.latest)
         # npm test utility2
         for PACKAGE in utility2 "kaizhu256/node-utility2#alpha"
         do
@@ -1473,7 +1541,7 @@ shBuildCiAfter () {(set -e
 )}
 
 shBuildCiBefore () {(set -e
-    shNpmTestPublished
+    #!! shNpmTestPublished
     shReadmeTest example.js
     # screenshot
     MODE_BUILD=testExampleJs shBrowserScreenshot \

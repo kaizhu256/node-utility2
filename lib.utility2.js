@@ -40,11 +40,9 @@
     globalThis.globalLocal = local;
     // init isBrowser
     local.isBrowser = (
-        typeof window === "object"
-        && window === globalThis
-        && typeof window.XMLHttpRequest === "function"
-        && window.document
-        && typeof window.document.querySelector === "function"
+        typeof globalThis.XMLHttpRequest === "function"
+        && globalThis.navigator
+        && typeof globalThis.navigator.userAgent === "string"
     );
     // init function
     local.assertThrow = function (passed, message) {
@@ -246,7 +244,10 @@ globalThis.utility2 = local;
     }
     local[key] = local[key] || {};
 });
-// init assets and templates
+
+
+
+// run shared js-env code - assets
 local.assetsDict = local.assetsDict || {};
 
 
@@ -297,7 +298,7 @@ a {\n\
     overflow-wrap: break-word;\n\
 }\n\
 body {\n\
-    background: #eef;\n\
+    background: #f7f7f7;\n\
     font-family: Arial, Helvetica, sans-serif;\n\
     font-size: small;\n\
     margin: 0 40px;\n\
@@ -661,29 +662,34 @@ pre {\n\
 </script>\n\
 <h1>\n\
 <!-- utility2-comment\n\
-    <a\n\
-        {{#if env.npm_package_homepage}}\n\
-        href="{{env.npm_package_homepage}}"\n\
-        {{/if env.npm_package_homepage}}\n\
-        target="_blank"\n\
-    >\n\
+<a\n\
+    {{#if env.npm_package_homepage}}\n\
+    href="{{env.npm_package_homepage}}"\n\
+    {{/if env.npm_package_homepage}}\n\
+    target="_blank"\n\
+>\n\
 utility2-comment -->\n\
-        {{env.npm_package_name}} ({{env.npm_package_version}})\n\
+    {{env.npm_package_name}} ({{env.npm_package_version}})\n\
 <!-- utility2-comment\n\
-    </a>\n\
+</a>\n\
 utility2-comment -->\n\
 </h1>\n\
 <h3>{{env.npm_package_description}}</h3>\n\
 <!-- utility2-comment\n\
 <a class="button" download href="assets.app.js">download standalone app</a><br>\n\
-<button class="button" data-onevent="testRunBrowser" id="testRunButton1">run internal test</button><br>\n\
-<div class="uiAnimateSlide" id="testReportDiv1" style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"></div>\n\
+<button class="button" data-onevent="testRunBrowser" id="buttonTestRun1">run internal test</button><br>\n\
+<div class="uiAnimateSlide" id="htmlTestReport1" style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"></div>\n\
 utility2-comment -->\n\
 \n\
 \n\
 \n\
+<!-- custom-html-start -->\n\
 <label>stderr and stdout</label>\n\
 <pre class="onevent-reset-output readonly textarea" id="outputStdout1" tabIndex="0"></pre>\n\
+<!-- custom-html-end -->\n\
+\n\
+\n\
+\n\
 <!-- utility2-comment\n\
 {{#if isRollup}}\n\
 <script src="assets.app.js"></script>\n\
@@ -696,6 +702,26 @@ utility2-comment -->\n\
 <script src="assets.example.js"></script>\n\
 <script src="assets.test.js"></script>\n\
 <script>window.utility2_onReadyBefore();</script>\n\
+<script>\n\
+/* jslint utility2:true */\n\
+(function () {\n\
+"use strict";\n\
+var htmlTestReport1;\n\
+var local;\n\
+htmlTestReport1 = document.querySelector("#htmlTestReport1");\n\
+if (!htmlTestReport1) {\n\
+    return;\n\
+}\n\
+local = window.utility2;\n\
+local.on("utility2.testRunProgressUpdate", function (testReport) {\n\
+    htmlTestReport1.innerHTML = local.testReportMerge(testReport, {});\n\
+});\n\
+local.on("utility2.testRunStart", function (testReport) {\n\
+    local.uiAnimateSlideDown(htmlTestReport1);\n\
+    htmlTestReport1.innerHTML = local.testReportMerge(testReport, {});\n\
+});\n\
+}());\n\
+</script>\n\
 <!-- utility2-comment\n\
 {{/if isRollup}}\n\
 utility2-comment -->\n\
@@ -747,11 +773,9 @@ local.assetsDict["/assets.example.begin.js"] = '\
     globalThis.globalLocal = local;\n\
     // init isBrowser\n\
     local.isBrowser = (\n\
-        typeof window === "object"\n\
-        && window === globalThis\n\
-        && typeof window.XMLHttpRequest === "function"\n\
-        && window.document\n\
-        && typeof window.document.querySelector === "function"\n\
+        typeof globalThis.XMLHttpRequest === "function"\n\
+        && globalThis.navigator\n\
+        && typeof globalThis.navigator.userAgent === "string"\n\
     );\n\
     // init function\n\
     local.assertThrow = function (passed, message) {\n\
@@ -1004,7 +1028,7 @@ local.testRunBrowser = function (evt) {\n\
     // run browser-tests\n\
     default:\n\
         if (\n\
-            (evt.target && evt.target.id) !== "testRunButton1"\n\
+            (evt.target && evt.target.id) !== "buttonTestRun1"\n\
             && !(evt.modeInit && (\n\
                 /\\bmodeTest=1\\b/\n\
             ).test(location.search))\n\
@@ -1013,14 +1037,14 @@ local.testRunBrowser = function (evt) {\n\
         }\n\
         // show browser-tests\n\
         if (document.querySelector(\n\
-            "#testReportDiv1"\n\
+            "#htmlTestReport1"\n\
         ).style.maxHeight === "0px") {\n\
             globalThis.domOnEventDelegateDict.domOnEventResetOutput();\n\
             local.uiAnimateSlideDown(document.querySelector(\n\
-                "#testReportDiv1"\n\
+                "#htmlTestReport1"\n\
             ));\n\
             document.querySelector(\n\
-                "#testRunButton1"\n\
+                "#buttonTestRun1"\n\
             ).textContent = "hide internal test";\n\
             local.modeTest = 1;\n\
             local.testRunDefault(local);\n\
@@ -1028,10 +1052,10 @@ local.testRunBrowser = function (evt) {\n\
         }\n\
         // hide browser-tests\n\
         local.uiAnimateSlideUp(document.querySelector(\n\
-            "#testReportDiv1"\n\
+            "#htmlTestReport1"\n\
         ));\n\
         document.querySelector(\n\
-            "#testRunButton1"\n\
+            "#buttonTestRun1"\n\
         ).textContent = "run internal test";\n\
     }\n\
 };\n\
@@ -1655,6 +1679,7 @@ local.assetsDict["/favicon.ico"] = "";
 
 
 
+// run shared js-env code - cli
 local.cliDict = {};
 
 local.cliDict["utility2.browserTest"] = function () {
@@ -1662,19 +1687,9 @@ local.cliDict["utility2.browserTest"] = function () {
  * <urlList> <mode>
  * will browser-test in parallel, comma-separated <urlList> with given <mode>
  */
-    process.argv[3].split(
-        process.argv[3].indexOf("?") >= 0
-        ? (
-            /\s/g
-        )
-        : (
-            /[,\s]/g
-        )
-    ).filter(local.identity).forEach(function (url) {
-        local.browserTest({
-            url
-        }, local.onErrorDefault);
-    });
+    local.browserTest({
+        url: process.argv[3]
+    }, local.onErrorDefault);
 };
 
 local.cliDict["utility2.githubCrudContentDelete"] = function () {
@@ -1793,13 +1808,9 @@ local.cliDict["utility2.testReportCreate"] = function () {
  *
  * will create test-report
  */
-    local.exit(
-        local.testReportCreate(
-            JSON.parse(local.fs.readFileSync(
-                local.env.npm_config_dir_build + "/test-report.json"
-            ))
-        ).testsFailed
-    );
+    process.exit(local.testReportCreate(JSON.parse(local.fs.readFileSync(
+        local.env.npm_config_dir_build + "/test-report.json"
+    ))).testsFailed);
 };
 }());
 
@@ -2382,11 +2393,27 @@ local._testCase_buildApidoc_default = function (opt, onError) {
 /*
  * this function will test buildApidoc's default handling-behavior
  */
-    if (local.isBrowser) {
+    if (
+        local.isBrowser
+        || local.env.npm_config_mode_coverage
+        || local.env.npm_config_mode_test_case
+        !== "testCase_buildApidoc_default"
+    ) {
         onError(null, opt);
         return;
     }
-    return local.buildApidoc(opt, onError);
+    // save apidoc.html
+    local.fsWriteFileWithMkdirpSync(
+        "tmp/build/apidoc.html",
+        local.apidocCreate(local.objectAssignDefault(opt, {
+            blacklistDict: local,
+            require: local.requireInSandbox
+        }))
+    );
+    console.error(
+        "created apidoc file " + process.cwd() + "/apidoc.html\n"
+    );
+    onError();
 };
 
 local._testCase_buildApp_default = function (opt, onError) {
@@ -2450,7 +2477,6 @@ local._testCase_webpage_default = function (opt, onError) {
             local.env.npm_config_dir_build
             + "/screenshot." + local.env.MODE_BUILD + ".browser.%2F.png"
         ),
-        modeCoverageMerge: true,
         url: (
             local.assetsDict["/"].indexOf(
                 "<script src=\"assets.test.js\"></script>"
@@ -2985,9 +3011,6 @@ local.browserTest = function (opt, onError) {
  * this function will spawn an electron process to test <opt>.url
  */
     var isDone;
-    var isDoneHtml;
-    var onMessage;
-    var onParallel;
     var timerTimeout;
     var window;
     window = opt.window || globalThis;
@@ -3009,56 +3032,9 @@ local.browserTest = function (opt, onError) {
             }
         ]
     };
-    window.utility2_testReportSave = (
-        window.utility2_testReportSave
-        || local.nop
-    );
     if (opt.modeTestReportCreate) {
         return;
     }
-    onMessage = function (evt, type, data) {
-        switch (evt && type) {
-        case "html":
-            if (isDoneHtml) {
-                return;
-            }
-            isDoneHtml = true;
-            opt.fs.writeFile(opt.fileScreenshot.replace((
-                /\.\w+$/
-            ), ".html"), data, onParallel);
-            return;
-        case "testReport":
-            if (opt.isDoneTestReport || opt.modeBrowserTest !== "test") {
-                return;
-            }
-            opt.isDoneTestReport = true;
-            // save browser-coverage
-            if (data.coverage) {
-                onParallel.counter += 1;
-                opt.fs.writeFile(
-                    opt.fileCoverage,
-                    JSON.stringify(data.coverage),
-                    onParallel
-                );
-                data.coverage = null;
-            }
-            // save browser-screenshot
-            data.testPlatformList[0].screenshot = (
-                opt.fileScreenshot.replace((
-                    /.*\//
-                ), "")
-            );
-            // save browser-test-report
-            onParallel.counter += 1;
-            opt.fs.writeFile(
-                opt.fileTestReport,
-                JSON.stringify(data, null, 4),
-                onParallel
-            );
-            onParallel();
-            return;
-        }
-    };
     local.gotoNext(opt, function (err, data) {
         switch (opt.gotoState) {
         // node - init
@@ -3093,10 +3069,6 @@ local.browserTest = function (opt, onError) {
                 ))
             );
             local.objectSetDefault(opt, {
-                fileCoverage: (
-                    opt.npm_config_dir_tmp + "/coverage."
-                    + opt.testName + ".json"
-                ),
                 fileScreenshot: (
                     opt.npm_config_dir_build + "/screenshot."
                     + opt.testName
@@ -3107,7 +3079,6 @@ local.browserTest = function (opt, onError) {
                     + opt.testName
                     + ".json"
                 ),
-                modeBrowserTest: "test",
                 timeExit: Date.now() + opt.timeoutDefault,
                 timeoutScreenshot: opt.timeoutScreenshot || 15000
             }, 1);
@@ -3195,22 +3166,6 @@ local.browserTest = function (opt, onError) {
             console.error(
                 "\nbrowserTest - exit-code " + err + " - " + opt.url + "\n"
             );
-            if (opt.modeBrowserTest !== "test") {
-                opt.gotoState += 1000;
-                opt.gotoNext();
-                return;
-            }
-            // merge browser coverage
-            data = (
-                opt.modeCoverageMerge
-                && local.fsReadFileOrEmptyStringSync(opt.fileCoverage, "json")
-            );
-            local.istanbulCoverageMerge(window.__coverage__, data);
-            console.error(
-                "\nbrowserTest - merged coverage from file "
-                + opt.fileCoverage
-                + "\n"
-            );
             // merge browser test-report
             data = local.fsReadFileOrEmptyStringSync(
                 opt.fileTestReport,
@@ -3256,13 +3211,6 @@ local.browserTest = function (opt, onError) {
                 x: 0,
                 y: 0
             });
-            onParallel = local.onParallel(opt.gotoNext);
-            // onParallel - html
-            onParallel.counter += 1;
-            // onParallel - test
-            if (opt.modeBrowserTest === "test") {
-                onParallel.counter += 1;
-            }
             // init event-handling - ipc
             opt.electron.ipcMain.on(opt.fileElectronHtml, function (
                 evt,
@@ -3270,7 +3218,26 @@ local.browserTest = function (opt, onError) {
                 data
             ) {
                 try {
-                    onMessage(evt, type, data);
+                    switch (evt && type) {
+                    case "testReport":
+                        if (opt.isDoneTestReport) {
+                            break;
+                        }
+                        opt.isDoneTestReport = true;
+                        // save browser-screenshot
+                        data.testPlatformList[0].screenshot = (
+                            opt.fileScreenshot.replace((
+                                /.*\//
+                            ), "")
+                        );
+                        // save browser-test-report
+                        opt.fs.writeFile(
+                            opt.fileTestReport,
+                            JSON.stringify(data, null, 4),
+                            opt.gotoNext
+                        );
+                        break;
+                    }
                 } catch (errCaught) {
                     opt.gotoNext(errCaught);
                 }
@@ -3295,13 +3262,7 @@ local.browserTest = function (opt, onError) {
                 + opt.fileScreenshot
                 + "\n"
             );
-            console.error(
-                "browserTest - created screenshot file "
-                + opt.fileScreenshot.replace((
-                    /\.\w+$/
-                ), ".html")
-            );
-            local.exit();
+            process.exit();
             return;
         // node.electron.browserWindow.webview.preload - init
         case 21:
@@ -3334,19 +3295,17 @@ local.browserTest = function (opt, onError) {
             });
             // wait for render before screenshot
             setTimeout(opt.gotoNext, opt.timeoutScreenshot);
-            if (opt.modeBrowserTest !== "test") {
-                return;
-            }
-            // init utility2_testReportSave
-            window.utility2_testReportSave = function () {
-                window.utility2_testReportSave = local.nop;
-                window.utility2_testReport.coverage = window.__coverage__;
-                opt.electron.ipcRenderer.send(
-                    opt.fileElectronHtml,
-                    "testReport",
-                    window.utility2_testReport
-                );
-            };
+            // listen utility2.testRunEnd
+            window.addEventListener("load", function () {
+                window.utility2.on("utility2.testRunEnd", function () {
+                    window.utility2_testReport.coverage = window.__coverage__;
+                    opt.electron.ipcRenderer.send(
+                        opt.fileElectronHtml,
+                        "testReport",
+                        window.utility2_testReport
+                    );
+                });
+            });
             return;
         // node.electron.browserWindow.webview.preload - screenshot
         case 22:
@@ -3356,14 +3315,6 @@ local.browserTest = function (opt, onError) {
                 opt.npm_config_dir_tmp + "/electron.html",
                 console.error
             );
-            opt.electron.ipcRenderer.send(
-                opt.fileElectronHtml,
-                "html",
-                window.document.documentElement.outerHTML
-            );
-            if (opt.modeBrowserTest === "test" && !window.utility2_modeTest) {
-                window.utility2_testReportSave();
-            }
             return;
         default:
             if (isDone) {
@@ -3382,12 +3333,9 @@ local.browserTest = function (opt, onError) {
         "DISPLAY",
         "MODE_BUILD",
         "PATH",
-        "fileCoverage",
         "fileElectronHtml",
         "fileScreenshot",
         "fileTestReport",
-        "modeBrowserTest",
-        "modeCoverageMerge",
         "modeDebug",
         "gotoState",
         "modeSilent",
@@ -3554,32 +3502,6 @@ local.bufferValidateAndCoerce = function (bff, mode) {
         Object.setPrototypeOf(bff, Buffer.prototype);
     }
     return bff;
-};
-
-local.buildApidoc = function (opt, onError) {
-/*
- * this function will build apidoc with given <opt>
- */
-    var result;
-    // optimization - do not run if $npm_config_mode_coverage = all
-    if (local.env.npm_config_mode_coverage === "all") {
-        onError();
-        return;
-    }
-    opt = local.objectSetDefault(opt, {
-        blacklistDict: local,
-        require: local.requireInSandbox
-    });
-    // save apidoc.html
-    result = (
-        local.fsReadFileOrEmptyStringSync("apidoc.html", "utf8")
-        || local.apidocCreate(opt)
-    );
-    local.fsWriteFileWithMkdirpSync("tmp/build/apidoc.html", result);
-    console.error(
-        "created apidoc file " + process.cwd() + "/apidoc.html\n"
-    );
-    onError();
 };
 
 local.buildApp = function (opt, onError) {
@@ -3860,7 +3782,7 @@ local.buildReadme = function (opt, onError) {
         ),
         // customize example.js - html-body
         (
-            /\nutility2-comment\u0020-->(?:\\n\\\n){4}[^`]*?^<!--\u0020utility2-comment\\n\\\n/m
+            /\n<!--\u0020custom-html-start\u0020-->\\n\\\n[^`]*?\n<!--\u0020custom-html-end\u0020-->\\n\\\n/
         ),
         // customize example.js - testRunBrowser
         (
@@ -4704,33 +4626,6 @@ local.errorMessagePrepend = function (err, message) {
     return err;
 };
 
-local.exit = function (exitCode, testReport) {
-/*
- * this function will exit current process with given <exitCode>
- */
-    local.onErrorDefault(typeof exitCode !== "number" && exitCode);
-    exitCode = (
-        (!exitCode || Number(exitCode) === 0)
-        ? 0
-        : Number(exitCode) || 1
-    );
-    if (!local.isBrowser) {
-        process.exit(exitCode);
-        return;
-    }
-    if (testReport !== globalThis.utility2_testReport) {
-        return;
-    }
-    // update coverage
-    (document.querySelector(
-        "#coverageReportDiv1"
-    ) || {}).innerHTML = (
-        local.istanbulCoverageReportCreate()
-    );
-    // save testReport
-    globalThis.utility2_testReportSave();
-};
-
 local.fsReadFileOrEmptyStringSync = function (file, opt) {
 /*
  * this function will try to read file or return empty-string, or
@@ -4782,6 +4677,7 @@ local.gotoNext = function (opt, onError) {
             opt.gotoNext(errCaught, data, meta);
         }
     });
+    opt.gotoNextData = opt.gotoNext.bind(null, null);
     return opt;
 };
 
@@ -5219,6 +5115,68 @@ local.listShuffle = function (list) {
     }
     return list;
 };
+
+local.listenerAdd = function (type, listener) {
+/*
+ * this function will listen to evt <type> with <listener>
+ */
+    local.listenerDict[type] = local.listenerDict[type] || [];
+    local.listenerDict[type].push(listener);
+    return local;
+};
+
+local.listenerAddOnce = function (type, listener) {
+/*
+ * this function will listen to evt <type> once with <listener>
+ */
+    var fired;
+    var listener2;
+    listener2 = function (msg) {
+        local.listenerRemove(type, listener2);
+        if (!fired) {
+            fired = true;
+            listener(msg);
+        }
+    };
+    local.listenerAdd(type, listener2);
+    return local;
+};
+
+local.listenerDict = local.listenerDict || {};
+
+local.listenerEmit = function (type, msg) {
+/*
+ * this function will emit evt <type> with <msg>
+ */
+    (local.listenerDict[type] || []).forEach(function (listener) {
+        listener(msg);
+    });
+};
+
+local.listenerRemove = function (type, listener) {
+/*
+ * this function will stop listening to evt <type> with <listener>
+ */
+    var ii;
+    var list;
+    list = local.listenerDict[type] || [];
+    ii = list.length;
+    while (ii > 0) {
+        ii -= 1;
+        if (list[ii] === listener) {
+            list.splice(ii, 1);
+        }
+    }
+    return local;
+};
+
+/* validateLineSortedReset */
+local.addListener = local.listenerAdd;
+local.emit = local.listenerEmit;
+local.on = local.listenerAdd;
+local.once = local.listenerAddOnce;
+local.removeListener = local.listenerRemove;
+/* validateLineSortedReset */
 
 local.localStorageSetItemOrClear = function (key, value) {
 /*
@@ -5803,7 +5761,7 @@ local.onFileModifiedRestart = function (file) {
             if (stat2.mtime > stat1.mtime) {
                 console.error("file modified - " + file);
                 setTimeout(function () {
-                    local.exit(77);
+                    process.exit(77);
                 }, 1000);
             }
         });
@@ -6859,7 +6817,9 @@ local.stringMerge = function (str1, str2, rgx) {
             str1 = str1.replace(match1, function () {
                 return match2;
             });
+            return "";
         });
+        return "";
     });
     return str1;
 };
@@ -7635,7 +7595,6 @@ local.testRunDefault = function (opt) {
     var processExit;
     var testPlatform;
     var testReport;
-    var testReportDiv1;
     var timerInterval;
     // run-server
     if (!local.isBrowser) {
@@ -7730,29 +7689,19 @@ local.testRunDefault = function (opt) {
             });
         }
     });
-    // visual notification - update test-progress until isDone
-    // init testReportDiv1 elem
-    if (local.isBrowser) {
-        testReportDiv1 = document.querySelector(
-            "#testReportDiv1"
-        );
-    }
-    testReportDiv1 = testReportDiv1 || {
-        style: {}
-    };
-    local.uiAnimateSlideDown(testReportDiv1);
-    testReportDiv1.innerHTML = local.testReportMerge(testReport, {});
-    // update test-report status every 1000 ms until isDone
+    local.testReportMerge(testReport, {});
+    local.emit("utility2.testRunStart", testReport);
+    // testRunProgressUpdate every 1000 ms until isDone
     timerInterval = setInterval(function () {
         // update testPlatform.timeElapsed
         local.timeElapsedPoll(testPlatform);
-        // update testReportDiv1 in browser
-        testReportDiv1.innerHTML = local.testReportMerge(testReport, {});
+        local.testReportMerge(testReport, {});
+        local.emit("utility2.testRunProgressUpdate", testReport);
+        // cleanup timerInterval
         if (!testReport.testsPending) {
-            // cleanup timerInterval
             clearInterval(timerInterval);
         }
-        // notify of remaining tests
+        // list pending testCase every 5000 ms
         if (testPlatform.timeElapsed % 5000 < 1000) {
             local._testRunConsoleError(
                 "testRunDefault - "
@@ -7875,8 +7824,16 @@ local.testRunDefault = function (opt) {
             }
             // reset utility2_modeTest
             globalThis.utility2_modeTest = 0;
+            // save testReport and coverage
+            if (testReport === globalThis.utility2_testReport) {
+                testReport.coverage = globalThis.__coverage__;
+                console.timeStamp(globalThis.utility2_testId);
+            }
+            local.emit("utility2.testRunEnd", testReport);
             // exit with number of tests failed
-            local.exit(testReport.testsFailed, testReport);
+            if (processExit) {
+                process.exit(testReport.testsFailed, testReport);
+            }
         // hack-istanbul - wait 1000 ms for timerInterval
         }, 1000);
     });
@@ -7950,12 +7907,12 @@ local.timeElapsedPoll = function (opt) {
     return opt;
 };
 
-local.timeElapsedStart = function (opt, timeStart) {
+local.timeElapsedStart = function (opt) {
 /*
  * this function will start <opt>.timeElapsed
  */
     opt = opt || {};
-    opt.timeStart = timeStart || opt.timeStart || Date.now();
+    opt.timeStart = opt.timeStart || Date.now();
     return opt;
 };
 
@@ -8365,7 +8322,9 @@ local.timeExit = (
 );
 if (local.timeExit) {
     local.timeoutDefault = local.timeExit - Date.now();
-    setTimeout(local.exit, local.timeoutDefault);
+    if (!local.isBrowser) {
+        setTimeout(process.exit, local.timeoutDefault);
+    }
 }
 // re-init timeoutDefault
 local.timeoutDefault = Number(local.timeoutDefault) || 30000;

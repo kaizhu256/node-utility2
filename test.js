@@ -30,11 +30,9 @@
     globalThis.globalLocal = local;
     // init isBrowser
     local.isBrowser = (
-        typeof window === "object"
-        && window === globalThis
-        && typeof window.XMLHttpRequest === "function"
-        && window.document
-        && typeof window.document.querySelector === "function"
+        typeof globalThis.XMLHttpRequest === "function"
+        && globalThis.navigator
+        && typeof globalThis.navigator.userAgent === "string"
     );
     // init function
     local.assertThrow = function (passed, message) {
@@ -550,7 +548,6 @@ local.testCase_ajax_default = function (opt, onError) {
             onParallel.counter += 1;
             local.ajax({
                 responseType,
-                timeout: 60000,
                 url: (
                     local.isBrowser
                     ? location.href
@@ -567,7 +564,6 @@ local.testCase_ajax_default = function (opt, onError) {
             onParallel.counter += 1;
             local.ajax({
                 responseType,
-                timeout: 60000,
                 undefined,
                 url: (
                     local.isBrowser
@@ -744,139 +740,6 @@ local.testCase_blobRead_default = function (opt, onError) {
     onParallel();
 };
 
-local.testCase_browserTest_electron = function (opt, onError) {
-/*
- * this function will test browserTest's electron handling-behavior
- */
-    opt = function (aa, bb, cc) {
-        [
-            aa, bb, cc
-        ].forEach(function (fnc, ii) {
-            if (typeof fnc === "function") {
-                fnc(ii && opt);
-                opt.gotoNext(null, opt);
-                opt.utility2_testReportSave();
-            }
-        });
-        return opt;
-    };
-    [
-        "BrowserWindow",
-        "addEventListener",
-        "app",
-        "browserWindow",
-        "capturePage",
-        "document",
-        "documentElement",
-        "electron",
-        "fileCoverage",
-        "fileElectronHtml",
-        "fileScreenshot",
-        "fileTestReport",
-        "fs",
-        "ipcRenderer",
-        "loadURL",
-        "modeCoverageMerge",
-        "on",
-        "once",
-        "process",
-        "prototype",
-        "rename",
-        "send",
-        "toPNG",
-        "unref",
-        "window",
-        "writeFile"
-    ].forEach(function (key) {
-        opt[key] = (
-            key.indexOf("file") === 0
-            ? "undefined"
-            : opt
-        );
-    });
-    opt.ipcMain = {
-        on: function (_, fnc) {
-            [
-                "html", "testReport", "undefined"
-            ].forEach(function (type) {
-                [
-                    "<div></div>",
-                    null,
-                    {}, {
-                        testPlatformList: [
-                            {}
-                        ]
-                    }, {
-                        coverage: {},
-                        testPlatformList: [
-                            {}
-                        ]
-                    }
-                ].forEach(function (data) {
-                    opt.isDoneTestReport = null;
-                    fnc(_, type, data);
-                });
-            });
-        }
-    };
-    opt.utility2_testReportSave = local.nop;
-    local.testMock([
-        [
-            globalThis, {
-                setTimeout: opt,
-                utility2_testReport: null
-            }
-        ], [
-            local, {
-                fs: opt,
-                fsReadFileOrEmptyStringSync: function () {
-                    return "";
-                },
-                fsWriteFileWithMkdirpSync: opt,
-                onParallel: opt
-            }
-        ]
-    ], function (onError) {
-        [
-            "test", "undefined"
-        ].forEach(function (modeBrowserTest) {
-            [
-                1, 10, 11, 20, 100
-            ].forEach(function (gotoState) {
-                opt.modeBrowserTest = modeBrowserTest;
-                opt.gotoState = gotoState;
-                switch (gotoState) {
-                case 100:
-                    local.tryCatchOnError(function () {
-                        local.browserTest({
-                            gotoState
-                        }, opt);
-                    }, local.nop);
-                    break;
-                default:
-                    local.browserTest(opt, opt);
-                }
-            });
-        });
-        onError(null, opt);
-    }, onError);
-};
-
-local.testCase_browserTest_screenshot = function (opt, onError) {
-/*
- * this function will test browserTest's screenshot handling-behavior
- */
-    if (local.isBrowser) {
-        onError(null, opt);
-        return;
-    }
-    local.browserTest({
-        modeBrowserTest: "screenshot",
-        timeoutDefault: 30000,
-        url: "tmp/build/test-report.html"
-    }, onError);
-};
-
 local.testCase_bufferIndexOfSubBuffer_default = function (opt, onError) {
 /*
  * this function will test bufferIndexOfSubBuffer's default handling-behavior
@@ -958,23 +821,9 @@ local.testCase_buildApidoc_default = function (opt, onError) {
 /*
  * this function will test buildApidoc's default handling-behavior
  */
-    if (local.isBrowser) {
-        onError(null, opt);
-        return;
-    }
-    // test $npm_config_mode_coverage=all handling-behavior
-    local.testMock([
-        [
-            local.env, {
-                npm_config_mode_coverage: "all"
-            }
-        ]
-    ], function (onError) {
-        local.buildApidoc(null, onError);
-    }, local.onErrorThrow);
-    local.buildApidoc({
+    local._testCase_buildApidoc_default({
         blacklistDict: {}
-    }, onError);
+    }, onError, opt);
 };
 
 local.testCase_buildApp_default = function (opt, onError) {
@@ -1084,14 +933,16 @@ local.testCase_buildReadme_default = function (opt, onError) {
     opt.customize = function () {
         // search-and-replace - customize dataTo
         [
-            // customize quickstart-example-js
+            // customize quickstart-example-js-instruction
             (
                 /#\u0020quickstart\u0020example.js[\S\s]*?istanbul\u0020instrument\u0020in\u0020package/
             ),
-            // customize quickstart-footer
+            // customize quickstart-example-js-html-script
             (
-                />download\u0020standalone\u0020app<[^`]*?"utility2FooterDiv"/
-            ), (
+                /<script\u0020src="assets\.utility2\.[\S\s]*?<script\u0020src="assets\.example\.js">/
+            ),
+            // customize quickstart-example-js-screenshot
+            (
                 /```[^`]*?\n#\u0020extra\u0020screenshots/
             ),
             // customize build-script
@@ -1401,14 +1252,6 @@ local.testCase_domFragmentRender_default = function (opt, onError) {
     local.assertJsonEqual(local.domFragmentRender("<div>{{value}}</div>", {
         value: "aa"
     }).children[0].outerHTML, "<div>aa</div>");
-    onError(null, opt);
-};
-
-local.testCase_exit_err = function (opt, onError) {
-/*
- * this function will test exit's err handling-behavior
- */
-    local.exit("invalid-exitCode");
     onError(null, opt);
 };
 
@@ -3226,37 +3069,36 @@ local.testCase_uuid4Create_default = function (opt, onError) {
     onError(null, opt);
 };
 
-local.testCase_webpage_err = function (opt, onError) {
-/*
- * this function will test webpage's err handling-behavior
- */
-    if (local.isBrowser) {
-        onError(null, opt);
-        return;
-    }
-    local.browserTest({
-        modeCoverageMerge: true,
-        modeSilent: true,
-        timeoutDefault: local.timeoutDefault - 5000,
-        // https://localhost:8080/assets.script_only.html?modeTest=1&modeTestCase=_testCase_testRunDefault_failure&timeExit=
-        url: (
-            local.serverLocalHost
-            // test script_only handling-behavior
-            + "/assets.script_only.html"
-            // test electron-callback handling-behavior
-            + "?modeTest=1&"
-            // test specific testCase handling-behavior
-            // test testRunDefault's failure handling-behavior
-            + "modeTestCase=_testCase_testRunDefault_failure&"
-            // test timeExit handling-behavior
-            + "timeExit={{timeExit}}"
-        )
-    }, function (err) {
-        // validate err occurred
-        local.assertThrow(err, err);
-        onError(null, opt);
-    });
-};
+//!! local.testCase_webpage_err = function (opt, onError) {
+//!! /*
+ //!! * this function will test webpage's err handling-behavior
+ //!! */
+    //!! if (local.isBrowser) {
+        //!! onError(null, opt);
+        //!! return;
+    //!! }
+    //!! local.browserTest({
+        //!! modeSilent: true,
+        //!! timeoutDefault: local.timeoutDefault - 5000,
+        //!! // https://localhost:8080/assets.script_only.html?modeTest=1&modeTestCase=_testCase_testRunDefault_failure&timeExit=
+        //!! url: (
+            //!! local.serverLocalHost
+            //!! // test script_only handling-behavior
+            //!! + "/assets.script_only.html"
+            //!! // test electron-callback handling-behavior
+            //!! + "?modeTest=1&"
+            //!! // test specific testCase handling-behavior
+            //!! // test testRunDefault's failure handling-behavior
+            //!! + "modeTestCase=_testCase_testRunDefault_failure&"
+            //!! // test timeExit handling-behavior
+            //!! + "timeExit={{timeExit}}"
+        //!! )
+    //!! }, function (err) {
+        //!! // validate err occurred
+        //!! local.assertThrow(err, err);
+        //!! onError(null, opt);
+    //!! });
+//!! };
 
 local.utility2.serverLocalUrlTest = function (url) {
 /*

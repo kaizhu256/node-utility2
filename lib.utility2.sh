@@ -123,12 +123,6 @@ opt.argList = [
     "--incognito",
     "--screenshot",
     "--timeout=30000",
-    //!! "--window-size=1024,768",
-    //!! "--gl-composited-overlay-candidate-quad-border",
-    //!! "--show-composited-layer-borders",
-    //!! "--show-mac-overlay-borders",
-    //!! "--show-paint-rects",
-    //!! "--ui-show-composited-layer-borders",
     "-screenshot=" + opt.file,
     opt.url
 ];
@@ -155,32 +149,20 @@ require("child_process").spawn(opt.command, opt.argList, {
         "ignore", 1, 2
     ]
 });
-require("child_process").spawn(opt.command, opt.argList.concat("--dump-dom"), {
-    stdio: [
-        "ignore", "pipe", 2
-    ]
-}).stdout.pipe(require("fs").createWriteStream(opt.file.replace((
-    /\.png$/
-), ".html")));
 }());
 ' "$1" "$2"
 )}
 
 shBrowserTest () {(set -e
-# this function will spawn an electron process to test given url $LIST,
+# this function will spawn an electron process to test given url $1,
 # and merge the test-report into the existing test-report
-    LIST="$1"
-    export modeBrowserTest="$2"
     shBuildInit
     export MODE_BUILD="${MODE_BUILD:-browserTest}"
     shBuildPrint "shBrowserTest $*"
     # run browser-test
-    lib.utility2.js utility2.browserTest "$LIST"
-    if [ "$modeBrowserTest" = test ]
-    then
-        # create test-report artifacts
-        lib.utility2.js utility2.testReportCreate
-    fi
+    lib.utility2.js utility2.browserTest "$1"
+    # create test-report artifacts
+    lib.utility2.js utility2.testReportCreate
 )}
 
 shBuildApidoc () {(set -e
@@ -1103,7 +1085,7 @@ shDeployGithub () {(set -e
     shBrowserScreenshot "$TEST_URL/assets.swgg.html" &
     # test deployed app
     MODE_BUILD="${MODE_BUILD}Test" \
-        shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" test
+        shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
 )}
 
 shDeployHeroku () {(set -e
@@ -1138,7 +1120,7 @@ shDeployHeroku () {(set -e
     shBrowserScreenshot "$TEST_URL/assets.swgg.html" &
     # test deployed app
     MODE_BUILD="${MODE_BUILD}Test" \
-        shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" test
+        shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
 )}
 
 shDockerBuildCleanup () {(set -e
@@ -2655,6 +2637,7 @@ var aa;
 var fetch;
 var repo0;
 var repoList;
+var requireDict;
 fetch = function (repo, ii, file, jj) {
     ii = String(ii).padStart(2, "0");
     jj = String(jj).padStart(2, "0");
@@ -2669,12 +2652,15 @@ fetch = function (repo, ii, file, jj) {
         ));
     }).end();
 };
-repoList = JSON.parse(process.argv[1]);
+repoList = JSON.parse(process.argv[1].replace((
+    /^\u0020*?\/\/.*?$/gm
+), ""));
 repoList.forEach(function (repo, ii) {
     repo.fileList.forEach(function (file, jj) {
         fetch(repo, ii, file, jj);
     });
 });
+requireDict = {};
 process.on("exit", function () {
     aa = "";
     require("fs").readdirSync(process.env.DIR).sort().forEach(function (data) {
@@ -2725,9 +2711,22 @@ process.on("exit", function () {
             + data.trim()
         );
     });
+    // update requireDict
+    aa.replace((
+        /^.*?\brequire\(.*?$/gm
+    ), function (match0) {
+        requireDict["// " + match0.trim()] = true;
+        return "";
+    });
     // comment #!
     aa = aa.replace((
         /^#!/gm
+    ), "// $&");
+    // comment ... = require(...)
+    aa = aa.replace((
+        /^\u0020*?(?:const|let|var)\u0020.+?\u0020=\u0020require\(/gm
+    ), "// $&").replace((
+        /\w+?:\u0020require\(/gm
     ), "// $&");
     // comment ... = require(...)
     aa = aa.replace((
@@ -2746,6 +2745,7 @@ process.on("exit", function () {
         }
         return "\n\n\n\n";
     });
+    console.log(Object.keys(requireDict).sort().join("\n"));
     console.log(aa.trim());
 });
 }());
@@ -2924,7 +2924,7 @@ shRmDsStore () {(set -e
 # http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
     for NAME in "._*" ".DS_Store" "desktop.ini" "npm-debug.log" "*~"
     do
-        find . -iname "$NAME" -print0 | xargs -0 rm || true
+        find . -iname "$NAME" -print0 | xargs -0 rm -f || true
     done
 )}
 
@@ -3657,11 +3657,9 @@ export UTILITY2_MACRO_JS='
     globalThis.globalLocal = local;
     // init isBrowser
     local.isBrowser = (
-        typeof window === "object"
-        && window === globalThis
-        && typeof window.XMLHttpRequest === "function"
-        && window.document
-        && typeof window.document.querySelector === "function"
+        typeof globalThis.XMLHttpRequest === "function"
+        && globalThis.navigator
+        && typeof globalThis.navigator.userAgent === "string"
     );
     // init function
     local.assertThrow = function (passed, message) {
@@ -4652,6 +4650,7 @@ local.gotoNext = function (opt, onError) {
             opt.gotoNext(errCaught, data, meta);
         }
     });
+    opt.gotoNextData = opt.gotoNext.bind(null, null);
     return opt;
 };
 
@@ -5055,7 +5054,9 @@ local.stringMerge = function (str1, str2, rgx) {
             str1 = str1.replace(match1, function () {
                 return match2;
             });
+            return "";
         });
+        return "";
     });
     return str1;
 };

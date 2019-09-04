@@ -40,11 +40,9 @@
     globalThis.globalLocal = local;
     // init isBrowser
     local.isBrowser = (
-        typeof window === "object"
-        && window === globalThis
-        && typeof window.XMLHttpRequest === "function"
-        && window.document
-        && typeof window.document.querySelector === "function"
+        typeof globalThis.XMLHttpRequest === "function"
+        && globalThis.navigator
+        && typeof globalThis.navigator.userAgent === "string"
     );
     // init function
     local.assertThrow = function (passed, message) {
@@ -773,6 +771,7 @@ local.gotoNext = function (opt, onError) {
             opt.gotoNext(errCaught, data, meta);
         }
     });
+    opt.gotoNextData = opt.gotoNext.bind(null, null);
     return opt;
 };
 
