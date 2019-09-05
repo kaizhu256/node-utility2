@@ -496,15 +496,15 @@ local.testCase_ajax_default = function (opt, onError) {
             }, {
                 // test undefined-status-code handling-behavior
                 url: "/test.err-undefined"
-            }, {
-                // test corsForwardProxyHost handling-behavior
-                corsForwardProxyHost: "https://undefined:0",
-                location: {
-                    host: "undefined.github.io"
-                },
-                timeout: 1,
-                // test undefined-https-url handling-behavior
-                url: "https://undefined:0"
+            //!! }, {
+                //!! // test corsForwardProxyHost handling-behavior
+                //!! corsForwardProxyHost: "https://undefined:0",
+                //!! location: {
+                    //!! host: "undefined.github.io"
+                //!! },
+                //!! timeout: 1,
+                //!! // test undefined-https-url handling-behavior
+                //!! url: "https://undefined:0"
             }
         ]
     }, function (option2, onParallel) {

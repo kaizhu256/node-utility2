@@ -1,3 +1,5 @@
+addons:
+    chrome: stable
 before_install:
     # init xvfb
     # http://docs.travis-ci.com/user/gui-and-headless-browsers/

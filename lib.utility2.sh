@@ -118,8 +118,8 @@ opt.file = (
     + ".png"
 );
 opt.argList = [
-    "--disable-gpu",
     "--headless",
+    "--hide-scrollbars",
     "--incognito",
     "--screenshot",
     "--timeout=30000",
@@ -686,7 +686,6 @@ shBuildGithubUpload () {(set -e
 shBuildInit () {
 # this function will init the env
     # init $CHROME_BIN
-    CHROME_BIN="${CHROME_BIN:-$(which chromium-browser 2>/dev/null)}" || true
     CHROME_BIN="${CHROME_BIN:-$(which google-chrome-stable 2>/dev/null)}" \
         || true
     local FILE

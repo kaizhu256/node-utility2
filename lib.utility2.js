@@ -3044,11 +3044,6 @@ local.browserTest = function (opt, onError) {
         case 1:
             onParallel = local.onParallel(opt.gotoNext);
             onParallel.counter += 1;
-            fileScreenshot = (
-                local.env.npm_config_dir_build + "/screenshot."
-                + testName
-                + ".png"
-            );
             isDone = 0;
             testId = Math.random().toString(16);
             testName = new local.url.URL(opt.url).pathname;
@@ -3060,6 +3055,11 @@ local.browserTest = function (opt, onError) {
                     + ".." + local.env.CI_HOST,
                     "/build"
                 ))
+            );
+            fileScreenshot = (
+                local.env.npm_config_dir_build + "/screenshot."
+                + testName
+                + ".png"
             );
             opt.url = opt.url.replace(
                 "{{timeExit}}",
@@ -3074,11 +3074,9 @@ local.browserTest = function (opt, onError) {
             // create puppeteer browser
             require("./lib.puppeteer.js").launch({
                 args: [
-                    "--disable-setuid-sandbox",
                     "--headless",
                     "--hide-scrollbars",
                     "--incognito",
-                    "--mute-audio",
                     "--no-sandbox",
                     "--remote-debugging-port=0"
                 ],
@@ -3100,16 +3098,24 @@ local.browserTest = function (opt, onError) {
             setTimeout(function () {
                 page.screenshot({
                     path: fileScreenshot
-                }).then(onParallel.bind(null, null));
+                }).then(function () {
+                    console.error(
+                        "\nbrowserTest - created screenshot file "
+                        + fileScreenshot
+                        + "\n"
+                    );
+                    onParallel();
+                });
             }, 100);
             page.evaluate(function (testId) {
                 window.utility2_testId = testId;
             }, testId);
             page.on("metrics", function (metric) {
-                if (isDone < 1 && metric.title === testId) {
-                    isDone += 1;
-                    opt.gotoNext();
+                if (isDone >= 1 || metric.title !== testId) {
+                    return;
                 }
+                isDone = 1;
+                opt.gotoNext();
             });
             break;
         case 5:
@@ -3118,7 +3124,6 @@ local.browserTest = function (opt, onError) {
             }).then(opt.gotoNextData);
             break;
         case 6:
-            browser.close();
             data = JSON.parse(data);
             // merge browser-screenshot
             data.testPlatformList[0].screenshot = fileScreenshot.replace((
@@ -3132,24 +3137,29 @@ local.browserTest = function (opt, onError) {
                 !opt.modeSilent && data
             );
             // save test-report.json
-            console.error("\n\n\n\n\n");
-            console.error(local.env.npm_config_dir_build + "/test-report.json");
+            onParallel.counter += 1;
             local.fs.writeFile(
                 local.env.npm_config_dir_build + "/test-report.json",
                 JSON.stringify(globalThis.utility2_testReport),
-                onParallel
+                function (err) {
+                    console.error(
+                        "\nbrowserTest - merged test-report "
+                        + local.env.npm_config_dir_build + "/test-report.json"
+                        + "\n"
+                    );
+                    onParallel(err);
+                }
             );
+            onParallel();
             break;
         default:
             if (isDone >= 2) {
                 return;
             }
-            isDone += 1;
+            isDone = 2;
             // cleanup timerTimeout
             clearTimeout(timerTimeout);
-            try {
-                browser.close();
-            } catch (ignore) {}
+            browser.close();
             onError(err);
         }
     });
@@ -7103,7 +7113,7 @@ local.testReportCreate = function (testReport) {
         }).join("\n") + "\n"
     );
     // create test-report.html
-    local.fs.writeFileSync(
+    local.fsWriteFileWithMkdirpSync(
         "tmp/build/test-report.html",
         local.testReportMerge(testReport, {})
     );
