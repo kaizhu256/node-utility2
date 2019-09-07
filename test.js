@@ -2405,39 +2405,55 @@ local.testCase_semverCompare_default = function (opt, onError) {
 /*
  * this function will test semverCompare's default handling-behavior
  */
-    var aa;
     // test aa = bb
     opt = [
-        "1.2.3",
-        "1.2.3-",
-        "1.2.3-alpha.beta",
-        "1.2.3-alpha.beta"
+        [
+            "",
+            "1",
+            "1.2",
+            null,
+            undefined
+        ],
+        [
+            "1.2.3",
+            "1.2.3+aa"
+        ],
+        [
+            "1.2.3-aa",
+            "1.2.3-aa+bb"
+        ]
     ];
-    opt.forEach(function (bb, ii) {
-        if (Boolean(ii & 1)) {
-            local.assertThrow(
-                local.semverCompare(aa, bb) === 0,
-                [
-                    local.semverCompare(aa, bb), aa, bb
-                ]
-            );
-        }
-        aa = bb;
+    opt.forEach(function ([
+        aa, bb
+    ]) {
+        local.assertThrow(
+            local.semverCompare(aa, bb) === 0,
+            [
+                aa, bb, local.semverCompare(aa, bb)
+            ]
+        );
     });
-    opt = [
-        "1.2.3-a",
-        "1.2.3-a.2",
-        "1.2.3-a.10",
-        "1.2.3-b",
-        "1.2.3",
-        "1.2.10"
-    ];
     // test aa < bb
+    opt = [
+        "syntax-err",
+        "1.0.0-alpha",
+        "1.0.0-alpha.1",
+        "1.0.0-alpha.beta",
+        "1.0.0-beta",
+        "1.0.0-beta.2",
+        "1.0.0-beta.11",
+        "1.0.0-rc.1",
+        "1.0.0",
+        "2.2.2",
+        "2.2.10",
+        "2.10.2",
+        "10.2.2"
+    ];
     opt.reduce(function (aa, bb) {
         local.assertThrow(
             local.semverCompare(aa, bb) === -1,
             [
-                local.semverCompare(aa, bb), aa, bb
+                aa, bb, local.semverCompare(aa, bb)
             ]
         );
         return bb;
@@ -2447,7 +2463,7 @@ local.testCase_semverCompare_default = function (opt, onError) {
         local.assertThrow(
             local.semverCompare(aa, bb) === 1,
             [
-                local.semverCompare(aa, bb), aa, bb
+                aa, bb, local.semverCompare(aa, bb)
             ]
         );
         return bb;

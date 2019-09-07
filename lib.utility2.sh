@@ -198,7 +198,7 @@ shBuildApp () {(set -e
         fi
     done
     # create file package.json
-    shFileJsonNormalize package.json "{
+    shJsonNormalize package.json "{
     \"description\": \"the greatest app in the world!\",
     \"main\": \"lib.$npm_package_nameLib.js\",
     \"name\": \"$npm_package_name\",
@@ -473,7 +473,7 @@ shBuildCi () {(set -e
             rm -f package-lock.json
             git add .
             # increment $npm_package_version
-            shFilePackageJsonVersionUpdate today publishedIncrement
+            shPackageJsonVersionUpdate today publishedIncrement
             # update file touch.txt
             printf "$(shDateIso)\n" > .touch.txt
             git add -f .touch.txt
@@ -496,7 +496,7 @@ shBuildCi () {(set -e
             ;;
         "[npm publishAfterCommitAfterBuild]"*)
             # increment $npm_package_version
-            shFilePackageJsonVersionUpdate today publishedIncrement
+            shPackageJsonVersionUpdate today publishedIncrement
             # update file touch.txt
             printf "$(shDateIso)\n" > .touch.txt
             git add -f .touch.txt
@@ -1538,79 +1538,6 @@ require("fs").writeFileSync(process.argv[2], dataTo);
 ' "$@"
 )}
 
-shFileJsonNormalize () {(set -e
-# this function will
-# 1. read the json-data from file $1
-# 2. normalize the json-data
-# 3. write the normalized json-data back to file $1
-    node -e "$UTILITY2_MACRO_JS"'
-/* jslint utility2:true */
-(function (local) {
-"use strict";
-console.error("shFileJsonNormalize " + process.argv[1]);
-var tmp;
-tmp = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8").trim());
-if (process.argv[2]) {
-    local.objectSetDefault(tmp, JSON.parse(process.argv[2]), Infinity);
-}
-if (process.argv[3]) {
-    local.objectSetOverride(tmp, JSON.parse(process.argv[3]), Infinity);
-}
-require("fs").writeFileSync(
-    process.argv[1],
-    local.jsonStringifyOrdered(tmp, null, 4) + "\n"
-);
-}(globalThis.globalLocal));
-' "$@"
-)}
-
-shFilePackageJsonVersionUpdate () {(set -e
-# this function will increment the package.json version before npm-publish
-    node -e "$UTILITY2_MACRO_JS"'
-/* jslint utility2:true */
-(function (local) {
-"use strict";
-var aa;
-var bb;
-var packageJson;
-packageJson = require("./package.json");
-aa = (process.argv[1] || packageJson.version).replace((
-    /^today$/
-), new Date().toISOString().replace((
-    /T.*?$/
-), "").replace((
-    /-0?/g
-), "."));
-bb = (process.argv[2] || "0.0.0").replace((
-    /^(\d+?\.\d+?\.)(\d+)(\.*?)$/
-), function (ignore, match1, match2, match3) {
-    return match1 + (Number(match2) + 1) + match3;
-});
-packageJson.version = (
-    local.semverCompare(aa, bb) === 1
-    ? aa
-    : bb
-);
-console.error([
-    aa, bb, packageJson.version
-]);
-// update package.json
-require("fs").writeFileSync(
-    "package.json",
-    JSON.stringify(packageJson, null, 4) + "\n"
-);
-// update README.md
-require("fs").writeFileSync(
-    "README.md",
-    require("fs").readFileSync("README.md", "utf8").replace((
-        /^(####\u0020changelog\u0020|-\u0020npm\u0020publish\u0020|\u0020{4}"version":\u0020")\d+?\.\d+?\.\d[^\n",]*/gm
-    ), "$1" + packageJson.version, null)
-);
-console.error("shFilePackageJsonVersionUpdate - " + packageJson.version);
-}(globalThis.globalLocal));
-' "$1" "$([ "$2" = publishedIncrement ] && npm info "" version 2>/dev/null)"
-)}
-
 shFileTrimLeft () {(set -e
 # this function will remove all leading blank-lines from top of file $1
 # http://stackoverflow.com/questions/1935081/remove-leading-whitespace-from-file
@@ -2165,6 +2092,25 @@ shIstanbulCover () {(set -e
     "$NODE_BINARY" "$@"
 )}
 
+shJsonNormalize () {(set -e
+# this function will
+# 1. read json-data from file $1
+# 2. normalize json-data
+# 3. write normalized json-data back to file $1
+    node -e "$UTILITY2_MACRO_JS"'
+/* jslint utility2:true */
+(function (local) {
+"use strict";
+console.error("shJsonNormalize " + process.argv[1]);
+require("fs").writeFileSync(process.argv[1], local.jsonStringifyOrdered(
+    JSON.parse(require("fs").readFileSync(process.argv[1])),
+    null,
+    4
+) + "\n");
+}(globalThis.globalLocal));
+' "$1"
+)}
+
 shListUnflattenAndApply () {(set -e
 # this function will unflatten $LIST into $SUB_LIST with given $LENGTH,
 # and apply shListUnflattenAndApplyFunction to $SUB_LIST
@@ -2360,7 +2306,7 @@ require("fs").writeFileSync(
 );
 }());
 ' "$MESSAGE"
-    shFilePackageJsonVersionUpdate "" publishedIncrement
+    shPackageJsonVersionUpdate "" publishedIncrement
     npm publish
     npm deprecate "$NAME" "$MESSAGE"
 )}
@@ -2572,6 +2518,53 @@ shNpmTestPublished () {(set -e
     npm install
     # npm-test package
     npm test --mode-coverage
+)}
+
+shPackageJsonVersionUpdate () {(set -e
+# this function will increment the package.json version before npm-publish
+    node -e "$UTILITY2_MACRO_JS"'
+/* jslint utility2:true */
+(function (local) {
+"use strict";
+var aa;
+var bb;
+var packageJson;
+packageJson = require("./package.json");
+aa = (process.argv[1] || packageJson.version).replace((
+    /^today$/
+), new Date().toISOString().replace((
+    /T.*?$/
+), "").replace((
+    /-0?/g
+), "."));
+bb = (process.argv[2] || "0.0.0").replace((
+    /^(\d+?\.\d+?\.)(\d+)(\.*?)$/
+), function (ignore, match1, match2, match3) {
+    return match1 + (Number(match2) + 1) + match3;
+});
+packageJson.version = (
+    local.semverCompare(aa, bb) === 1
+    ? aa
+    : bb
+);
+console.error([
+    aa, bb, packageJson.version
+]);
+// update package.json
+require("fs").writeFileSync(
+    "package.json",
+    JSON.stringify(packageJson, null, 4) + "\n"
+);
+// update README.md
+require("fs").writeFileSync(
+    "README.md",
+    require("fs").readFileSync("README.md", "utf8").replace((
+        /^(####\u0020changelog\u0020|-\u0020npm\u0020publish\u0020|\u0020{4}"version":\u0020")\d+?\.\d+?\.\d[^\n",]*/gm
+    ), "$1" + packageJson.version, null)
+);
+console.error("shPackageJsonVersionUpdate - " + packageJson.version);
+}(globalThis.globalLocal));
+' "$1" "$([ "$2" = publishedIncrement ] && npm info "" version 2>/dev/null)"
 )}
 
 shPasswordRandom () {(set -e
@@ -3454,7 +3447,6 @@ db-lite
 github-crud
 istanbul-lite
 jslint-lite
-swagger-ui-lite
 swagger-validate-lite
 swgg
 utility2
@@ -4964,26 +4956,53 @@ local.semverCompare = function (aa, bb) {
  *  1 if aa > bb
  * https://semver.org/#spec-item-11
  */
-    return [
+    var ii;
+    var len;
+    [
         aa, bb
-    ].map(function (aa) {
-        aa = aa.split("-");
-        return [
-            aa[0], aa.slice(1).join("-") || "\u00ff"
-        ].map(function (aa) {
-            return aa.split(".").map(function (aa) {
-                return ("0000000000000000" + aa).slice(-16);
-            }).join(".");
-        }).join("-");
-    }).reduce(function (aa, bb) {
-        return (
-            aa === bb
-            ? 0
-            : aa < bb
-            ? -1
-            : 1
-        );
+    ] = [
+        aa, bb
+    ].map(function (val) {
+        val = (
+            /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z\-][0-9a-zA-Z\-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z\-][0-9a-zA-Z\-]*))*))?(?:\+([0-9a-zA-Z\-]+(?:\.[0-9a-zA-Z\-]+)*))?$/
+        ).exec(val) || [
+            "", "", "", ""
+        ];
+        return val.slice(1, 4).concat((val[4] || "").split("."));
     });
+    ii = -1;
+    len = Math.max(aa.length, bb.length);
+    while (true) {
+        ii += 1;
+        if (ii >= len) {
+            return 0;
+        }
+        aa[ii] = aa[ii] || "";
+        bb[ii] = bb[ii] || "";
+        if (ii === 3 && aa[ii] !== bb[ii]) {
+            // 1.2.3 > 1.2.3-alpha
+            if (!aa[ii]) {
+                return 1;
+            }
+            // 1.2.3-alpha < 1.2.3
+            if (!bb[ii]) {
+                return -1;
+            }
+        }
+        if (aa[ii] !== bb[ii]) {
+            aa = aa[ii];
+            bb = bb[ii];
+            return (
+                Number(aa) < Number(bb)
+                ? -1
+                : Number(aa) > Number(bb)
+                ? 1
+                : aa < bb
+                ? -1
+                : 1
+            );
+        }
+    }
 };
 
 local.stringHtmlSafe = function (text) {

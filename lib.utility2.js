@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2019.8.22)
+ * lib.utility2.js (2019.9.7)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide a collection of high-level functions to to build, test, and deploy webapps
  *
@@ -372,9 +372,6 @@ pre {\n\
     overflow-y: hidden;\n\
     transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;\n\
 }\n\
-.utility2FooterDiv {\n\
-    text-align: center;\n\
-}\n\
 .zeroPixel {\n\
     border: 0;\n\
     height: 0;\n\
@@ -702,6 +699,7 @@ utility2-comment -->\n\
 <script src="assets.example.js"></script>\n\
 <script src="assets.test.js"></script>\n\
 <script>window.utility2_onReadyBefore();</script>\n\
+{{/if isRollup}}\n\
 <script>\n\
 /* jslint utility2:true */\n\
 (function () {\n\
@@ -723,11 +721,13 @@ local.on("utility2.testRunStart", function (testReport) {\n\
 }());\n\
 </script>\n\
 <!-- utility2-comment\n\
-{{/if isRollup}}\n\
 utility2-comment -->\n\
-<div class="utility2FooterDiv">\n\
-    [ this app was created with\n\
-    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>\n\
+<div style="text-align: center;">\n\
+    [\n\
+    this app was created with\n\
+    <a\n\
+        href="https://github.com/kaizhu256/node-utility2" target="_blank"\n\
+    >utility2</a>\n\
     ]\n\
 </div>\n\
 </body>\n\
@@ -6278,26 +6278,53 @@ local.semverCompare = function (aa, bb) {
  *  1 if aa > bb
  * https://semver.org/#spec-item-11
  */
-    return [
+    var ii;
+    var len;
+    [
         aa, bb
-    ].map(function (aa) {
-        aa = aa.split("-");
-        return [
-            aa[0], aa.slice(1).join("-") || "\u00ff"
-        ].map(function (aa) {
-            return aa.split(".").map(function (aa) {
-                return ("0000000000000000" + aa).slice(-16);
-            }).join(".");
-        }).join("-");
-    }).reduce(function (aa, bb) {
-        return (
-            aa === bb
-            ? 0
-            : aa < bb
-            ? -1
-            : 1
-        );
+    ] = [
+        aa, bb
+    ].map(function (val) {
+        val = (
+            /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z\-][0-9a-zA-Z\-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z\-][0-9a-zA-Z\-]*))*))?(?:\+([0-9a-zA-Z\-]+(?:\.[0-9a-zA-Z\-]+)*))?$/
+        ).exec(val) || [
+            "", "", "", ""
+        ];
+        return val.slice(1, 4).concat((val[4] || "").split("."));
     });
+    ii = -1;
+    len = Math.max(aa.length, bb.length);
+    while (true) {
+        ii += 1;
+        if (ii >= len) {
+            return 0;
+        }
+        aa[ii] = aa[ii] || "";
+        bb[ii] = bb[ii] || "";
+        if (ii === 3 && aa[ii] !== bb[ii]) {
+            // 1.2.3 > 1.2.3-alpha
+            if (!aa[ii]) {
+                return 1;
+            }
+            // 1.2.3-alpha < 1.2.3
+            if (!bb[ii]) {
+                return -1;
+            }
+        }
+        if (aa[ii] !== bb[ii]) {
+            aa = aa[ii];
+            bb = bb[ii];
+            return (
+                Number(aa) < Number(bb)
+                ? -1
+                : Number(aa) > Number(bb)
+                ? 1
+                : aa < bb
+                ? -1
+                : 1
+            );
+        }
+    }
 };
 
 local.serverRespondCors = function (req, res) {
@@ -6885,8 +6912,8 @@ local.templateRender = function (template, dict, opt) {
             if (value === undefined) {
                 return match0;
             }
-            argList.slice(1).forEach(function (arg0, ii, list) {
-                switch (arg0) {
+            argList.slice(1).forEach(function (fmt, ii, list) {
+                switch (fmt) {
                 case "alphanumeric":
                     value = value.replace((
                         /\W/g
@@ -6919,7 +6946,7 @@ local.templateRender = function (template, dict, opt) {
                 case "padStart":
                 case "slice":
                     skip = ii + 2;
-                    value = String(value)[arg0](
+                    value = String(value)[fmt](
                         list[skip - 1],
                         list[skip]
                     );
@@ -6933,12 +6960,12 @@ local.templateRender = function (template, dict, opt) {
                         ).trimRight() + "...";
                     }
                     break;
-                // default to String.prototype[arg0]()
+                // default to String.prototype[fmt]()
                 default:
                     if (ii <= skip) {
                         break;
                     }
-                    value = value[arg0]();
+                    value = value[fmt]();
                 }
             });
             value = String(value);

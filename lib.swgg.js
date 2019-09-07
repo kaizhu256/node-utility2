@@ -1158,9 +1158,12 @@ console.log("initialized nodejs swgg-client");\n\
     <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: inline-block; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
 </div>\n\
 <ol class="reset resourceList" style="list-style-type: upper-roman;"></ol>\n\
-<div class="utility2FooterDiv">\n\
-    [ this document was created with\n\
-    <a href="https://github.com/kaizhu256/node-swgg" target="_blank">swgg</a>\n\
+<div style="text-align: center;">\n\
+    [\n\
+    this document was created with\n\
+    <a\n\
+        href="https://github.com/kaizhu256/node-swgg" target="_blank"\n\
+    >swgg</a>\n\
     ]\n\
 </div>\n\
 <!-- </div> -->\n\

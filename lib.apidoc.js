@@ -684,8 +684,8 @@ local.templateRender = function (template, dict, opt) {
             if (value === undefined) {
                 return match0;
             }
-            argList.slice(1).forEach(function (arg0, ii, list) {
-                switch (arg0) {
+            argList.slice(1).forEach(function (fmt, ii, list) {
+                switch (fmt) {
                 case "alphanumeric":
                     value = value.replace((
                         /\W/g
@@ -718,7 +718,7 @@ local.templateRender = function (template, dict, opt) {
                 case "padStart":
                 case "slice":
                     skip = ii + 2;
-                    value = String(value)[arg0](
+                    value = String(value)[fmt](
                         list[skip - 1],
                         list[skip]
                     );
@@ -732,12 +732,12 @@ local.templateRender = function (template, dict, opt) {
                         ).trimRight() + "...";
                     }
                     break;
-                // default to String.prototype[arg0]()
+                // default to String.prototype[fmt]()
                 default:
                     if (ii <= skip) {
                         break;
                     }
-                    value = value[arg0]();
+                    value = value[fmt]();
                 }
             });
             value = String(value);

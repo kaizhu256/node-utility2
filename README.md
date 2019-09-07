@@ -10,6 +10,8 @@ this zero-dependency package will provide a collection of high-level functions t
 
 [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html)
 
+[![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
+
 [![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 | git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
@@ -21,6 +23,8 @@ this zero-dependency package will provide a collection of high-level functions t
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
 
 [![npmPackageListing](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
+
+![npmPackageDependencyTree](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageDependencyTree.svg)
 
 
 
@@ -52,6 +56,8 @@ this zero-dependency package will provide a collection of high-level functions t
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- inline lib.puppeteer.js into assets.app.js
+- remove unused shell-function from lib.utility2.sh
 - rename message to msg
 - remove "the" from comments
 - replace taskCreateCached with debounce
@@ -67,8 +73,9 @@ this zero-dependency package will provide a collection of high-level functions t
 - add server stress-test using puppeteer
 - none
 
-#### changelog 2019.8.22
-- npm publish 2019.8.22
+#### changelog 2019.9.7
+- npm publish 2019.9.7
+- revamp function local.semverCompare
 - lint 80-char-column-limit and line-continuation in lib.utility2.sh
 - remove electron dependency
 - migrate browser-testing from electron to puppeteer
@@ -130,7 +137,7 @@ this script will demo automated browser-tests with coverage
 instruction
     1. save this script as example.js
     2. run the shell-command:
-        $ npm install kaizhu256/node-utility2#alpha && \
+        $ npm install utility2 && \
             PATH="$(pwd)/node_modules/.bin:$PATH" \
             PORT=8081 \
             npm_config_mode_coverage=utility2 \
@@ -710,9 +717,6 @@ pre {\n\
     overflow-y: hidden;\n\
     transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;\n\
 }\n\
-.utility2FooterDiv {\n\
-    text-align: center;\n\
-}\n\
 .zeroPixel {\n\
     border: 0;\n\
     height: 0;\n\
@@ -1111,6 +1115,7 @@ utility2-comment -->\n\
 <script src="assets.example.js"></script>\n\
 <script src="assets.test.js"></script>\n\
 <script>window.utility2_onReadyBefore();</script>\n\
+{{/if isRollup}}\n\
 <script>\n\
 /* jslint utility2:true */\n\
 (function () {\n\
@@ -1132,11 +1137,13 @@ local.on("utility2.testRunStart", function (testReport) {\n\
 }());\n\
 </script>\n\
 <!-- utility2-comment\n\
-{{/if isRollup}}\n\
 utility2-comment -->\n\
-<div class="utility2FooterDiv">\n\
-    [ this app was created with\n\
-    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>\n\
+<div style="text-align: center;">\n\
+    [\n\
+    this app was created with\n\
+    <a\n\
+        href="https://github.com/kaizhu256/node-utility2" target="_blank"\n\
+    >utility2</a>\n\
     ]\n\
 </div>\n\
 </body>\n\
@@ -1280,7 +1287,7 @@ local.http.createServer(function (req, res) {
     "license": "MIT",
     "main": "lib.utility2.js",
     "name": "utility2",
-    "nameAliasPublish": "busybox npmtest-lite test-lite",
+    "nameAliasPublish": "npmtest-lite test-lite",
     "nameLib": "utility2",
     "nameOriginal": "utility2",
     "os": [
@@ -1302,7 +1309,6 @@ local.http.createServer(function (req, res) {
         "utility2": "./npm_scripts.sh"
     },
     "utility2Dependents": [
-        "2018.12.08 swagger-ui-lite",
         "2019.01.21 github-crud",
         "2019.01.30 bootstrap-lite",
         "2019.02.12 swagger-validate-lite",
@@ -1313,7 +1319,7 @@ local.http.createServer(function (req, res) {
         "2019.08.20 db-lite",
         "2019.08.21 utility2"
     ],
-    "version": "2019.8.22"
+    "version": "2019.9.7"
 }
 ```
 
@@ -1491,7 +1497,7 @@ shBuildCiAfter () {(set -e
 )}
 
 shBuildCiBefore () {(set -e
-    #!! shNpmTestPublished
+    shNpmTestPublished
     shReadmeTest example.js
     # screenshot
     MODE_BUILD=testExampleJs shBrowserScreenshot \
