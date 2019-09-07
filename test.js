@@ -1601,11 +1601,6 @@ local.testCase_moduleDirname_default = function (opt, onError) {
         local.moduleDirname("./", module.paths),
         process.cwd()
     );
-    // test module-exists handling-behavior
-    opt = local.moduleDirname("electron-lite", module.paths);
-    local.assertThrow((
-        /\/electron-lite$/
-    ).test(opt), opt);
     // test module-does-not-exist handling-behavior
     local.assertJsonEqual(
         local.moduleDirname("syntax-err", module.paths),

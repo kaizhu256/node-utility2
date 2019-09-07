@@ -16699,9 +16699,11 @@ local.jslintAndPrint = function (code, file, opt) {
             if (!ii && err.stack && err.a !== "debug\u0049nline") {
                 tmp = err.stack;
                 err.stack = null;
-                opt.errText += (
-                    JSON.stringify(err, null, 4) + "\n" + tmp.trim() + "\n"
-                );
+                try {
+                    opt.errText += (
+                        JSON.stringify(err, null, 4) + "\n" + tmp.trim() + "\n"
+                    );
+                } catch (ignore) {}
             }
         });
         opt.errText = opt.errText.trim();

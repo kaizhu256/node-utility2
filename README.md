@@ -52,6 +52,8 @@ this zero-dependency package will provide a collection of high-level functions t
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- rename message to msg
+- remove "the" from comments
 - replace taskCreateCached with debounce
 - rename counter to count
 - replace db-lite with sql.js
@@ -67,7 +69,9 @@ this zero-dependency package will provide a collection of high-level functions t
 
 #### changelog 2019.8.22
 - npm publish 2019.8.22
-- migrate browser-testing from electron to headless-chromium
+- lint 80-char-column-limit and line-continuation in lib.utility2.sh
+- remove electron dependency
+- migrate browser-testing from electron to puppeteer
 - streamline customizing README.md with custom-html-start and custom-html-end tags
 - make utility2-object an EventEmitter
 - update local.isBrowser check to include web-worker
@@ -121,12 +125,12 @@ PORT=8081 node ./assets.app.js
 example.js
 
 this script will demo automated browser-tests with coverage
-(via electron and istanbul)
+(via puppeteer and istanbul)
 
 instruction
     1. save this script as example.js
     2. run the shell-command:
-        $ npm install kaizhu256/node-utility2#alpha electron-lite && \
+        $ npm install kaizhu256/node-utility2#alpha && \
             PATH="$(pwd)/node_modules/.bin:$PATH" \
             PORT=8081 \
             npm_config_mode_coverage=utility2 \
@@ -1261,9 +1265,7 @@ local.http.createServer(function (req, res) {
         "utility2-jslint": "lib.jslint.js"
     },
     "description": "this zero-dependency package will provide a collection of high-level functions to to build, test, and deploy webapps",
-    "devDependencies": {
-        "electron-lite": "kaizhu256/node-electron-lite#alpha"
-    },
+    "devDependencies": {},
     "engines": {
         "node": ">=10.0"
     },
@@ -1300,8 +1302,10 @@ local.http.createServer(function (req, res) {
         "utility2": "./npm_scripts.sh"
     },
     "utility2Dependents": [
+        "2018.12.08 swagger-ui-lite",
         "2019.01.21 github-crud",
         "2019.01.30 bootstrap-lite",
+        "2019.02.12 swagger-validate-lite",
         "2019.02.20 swgg",
         "2019.08.09 istanbul-lite master",
         "2019.08.10 jslint-lite master",
@@ -1391,33 +1395,6 @@ RUN (set -e; \
 # Dockerfile.latest
 FROM kaizhu256/node-utility2:base
 MAINTAINER kai zhu <kaizhu256@gmail.com>
-# install electron-lite
-# COPY electron-*.zip /tmp
-# libasound.so.2: cannot open shared object file: No such file or directory
-# libgconf-2.so.4: cannot open shared object file: No such file or directory
-# libgtk-3.so.0: cannot open shared object file: No such file or directory
-# libnss3.so: cannot open shared object file: No such file or directory
-# libXss.so.1: cannot open shared object file: No such file or directory
-# libXtst.so.6: cannot open shared object file: No such file or directory
-RUN (set -e; \
-    export DEBIAN_FRONTEND=noninteractive; \
-    apt-get update; \
-    apt-get install --no-install-recommends -y \
-        libasound2 \
-        libgconf-2-4 \
-        libgtk-3-0 \
-        libnss3 \
-        libxss1 \
-        libxtst6 \
-        xvfb; \
-    rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
-    npm install kaizhu256/node-electron-lite#alpha; \
-    mv node_modules/electron-lite/external /opt/electron; \
-    ln -fs /opt/electron/electron /bin/electron; \
-    cd node_modules/electron-lite; \
-    npm install --unsafe-perm; \
-    npm test; \
-)
 # install utility2
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
@@ -1449,33 +1426,6 @@ RUN (set -e; \
 # Dockerfile.tmp
 FROM kaizhu256/node-utility2:base
 MAINTAINER kai zhu <kaizhu256@gmail.com>
-# install electron-lite
-# COPY electron-*.zip /tmp
-# libasound.so.2: cannot open shared object file: No such file or directory
-# libgconf-2.so.4: cannot open shared object file: No such file or directory
-# libgtk-3.so.0: cannot open shared object file: No such file or directory
-# libnss3.so: cannot open shared object file: No such file or directory
-# libXss.so.1: cannot open shared object file: No such file or directory
-# libXtst.so.6: cannot open shared object file: No such file or directory
-RUN (set -e; \
-    export DEBIAN_FRONTEND=noninteractive; \
-    apt-get update; \
-    apt-get install --no-install-recommends -y \
-        libasound2 \
-        libgconf-2-4 \
-        libgtk-3-0 \
-        libnss3 \
-        libxss1 \
-        libxtst6 \
-        xvfb; \
-    rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
-    npm install kaizhu256/node-electron-lite#alpha; \
-    mv node_modules/electron-lite/external /opt/electron; \
-    ln -fs /opt/electron/electron /bin/electron; \
-    cd node_modules/electron-lite; \
-    npm install --unsafe-perm; \
-    npm test; \
-)
 # install utility2
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \

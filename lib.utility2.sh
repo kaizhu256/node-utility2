@@ -11,7 +11,7 @@
 # git ls-remote --heads origin
 # shCryptoWithGithubOrg aa shTravisRepoCreate aa/node-aa-bb
 # shCryptoWithGithubOrg aa shGithubApiRateLimitGet
-# shCryptoWithGithubOrg aa shGithubRepoTouch aa/bb "touch" alpha
+# shCryptoWithGithubOrg aa shGithubRepoTouch aa/node-aa-bb "touch" alpha
 # shGitAddTee npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
 # shGitAddTee shUtility2DependentsSync
 # utility2 shReadmeTest example.js
@@ -67,8 +67,8 @@ shBaseInstall () {
     for FILE in .screenrc .vimrc lib.utility2.sh
     do
         curl -Lfs -o "$HOME/$FILE" \
-"https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE" \
-            || return "$?"
+"https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE" ||
+            return "$?"
     done
     # backup .bashrc
     if [ -f "$HOME/.bashrc" ] && [ ! -f "$HOME/.bashrc.00" ]
@@ -76,11 +76,13 @@ shBaseInstall () {
         cp "$HOME/.bashrc" "$HOME/.bashrc.00" || return "$?"
     fi
     # create .bashrc
-    printf '. "$HOME/lib.utility2.sh" && shBaseInit\n' > "$HOME/.bashrc" || return "$?"
+    printf '. "$HOME/lib.utility2.sh" && shBaseInit\n' > "$HOME/.bashrc" ||
+        return "$?"
     # init .ssh/authorized_keys.root
     if [ -f "$HOME/.ssh/authorized_keys.root" ]
     then
-        mv "$HOME/.ssh/authorized_keys.root" "$HOME/.ssh/authorized_keys" || return "$?"
+        mv "$HOME/.ssh/authorized_keys.root" "$HOME/.ssh/authorized_keys" ||
+            return "$?"
     fi
     # source .bashrc
     . "$HOME/.bashrc" || return "$?"
@@ -119,7 +121,6 @@ opt.file = (
 );
 opt.argList = [
     "--headless",
-    "--hide-scrollbars",
     "--incognito",
     "--screenshot",
     "--timeout=30000",
@@ -154,7 +155,7 @@ require("child_process").spawn(opt.command, opt.argList, {
 )}
 
 shBrowserTest () {(set -e
-# this function will spawn an electron process to test given url $1,
+# this function will spawn google-puppeteer-process to test url $1,
 # and merge the test-report into the existing test-report
     shBuildInit
     export MODE_BUILD="${MODE_BUILD:-browserTest}"
@@ -192,7 +193,8 @@ shBuildApp () {(set -e
     do
         if [ ! -f "$FILE" ]
         then
-            curl -Lfs -O "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE"
+            curl -Lfs -O \
+"https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE"
         fi
     done
     # create file package.json
@@ -259,11 +261,15 @@ shBuildAppSync () {
     # update .travis.yml
     if [ -f "$npm_config_dir_utility2/.travis.yml" ]
     then
-        shFileCustomizeFromToRgx "$npm_config_dir_utility2/.travis.yml" ".travis.yml" \
+        shFileCustomizeFromToRgx \
+            "$npm_config_dir_utility2/.travis.yml" \
+            ".travis.yml" \
             '\n    - secure: .*? # CRYPTO_AES_KEY\n'
     fi
     # update npm_scripts.sh
-    shFileCustomizeFromToRgx "$npm_config_dir_utility2/npm_scripts.sh" "npm_scripts.sh" \
+    shFileCustomizeFromToRgx \
+        "$npm_config_dir_utility2/npm_scripts.sh" \
+        "npm_scripts.sh" \
         '\n    # run command - custom\n[\S\s]*?\n    esac\n' \
         '\n\)\}\n[\S\s]*?\n# run command\n'
     # hardlink .gitignore
@@ -273,9 +279,13 @@ shBuildAppSync () {
     fi
     # hardlink assets.utility2.rollup.js
     if [ -f "assets.utility2.rollup.js" ] &&
-            [ -f "$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js" ]
+        [ \
+            -f \
+            "$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js" \
+        ]
     then
-        ln -f "$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js" .
+        ln -f \
+            "$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js" .
     fi
 }
 
@@ -334,9 +344,12 @@ shBuildCi () {(set -e
         # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc "[git squashPop HEAD~1] [npm publishAfterCommitAfterBuild]"
         "[git squashPop "*)
             shGitSquashPop \
-                "$(shGithubRepoBranchId $(printf "$CI_COMMIT_MESSAGE_META" | sed -e "s/.* //"))" \
+                "$(shGithubRepoBranchId $(
+                    printf "$CI_COMMIT_MESSAGE_META" | sed -e "s/.* //"
+                ))" \
                 "$(printf "$CI_COMMIT_MESSAGE" | sed -e "s/\[[^]]*\] //")"
-            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f HEAD:alpha
+            shGitCommandWithGithubToken push \
+                "https://github.com/$GITHUB_REPO" -f HEAD:alpha
             return
             ;;
         # example usage:
@@ -354,12 +367,14 @@ shBuildCi () {(set -e
             fi
             # shBuildAppSync
             rm -rf "$npm_config_dir_utility2"
-            git clone https://github.com/kaizhu256/node-utility2 "$npm_config_dir_utility2" \
+            git clone https://github.com/kaizhu256/node-utility2 \
+                "$npm_config_dir_utility2" \
                 --branch=alpha --single-branch --depth=50
             mkdir -p "$npm_config_dir_utility2/tmp/build/app"
             curl -Lfs https://raw.githubusercontent.com\
-/kaizhu256/node-utility2/gh-pages/build..alpha..travis-ci.org/app/assets.utility2.rollup.js > \
-                "$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js"
+/kaizhu256/node-utility2/gh-pages/build..alpha..travis-ci.org/app\
+/assets.utility2.rollup.js > \
+"$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js"
             ;;
         esac
         shBuildCiInternal
@@ -419,7 +434,9 @@ shBuildCi () {(set -e
             ssh-keygen -y -f id_rsa > authorized_keys
             )
             # ssh reverse-tunnel local-machine to middleman
-            eval "$(printf "$CI_COMMIT_MESSAGE_META" | sed -e "s/debug/shSsh5022R/")"
+            eval "$(
+                printf "$CI_COMMIT_MESSAGE_META" | sed -e "s/debug/shSsh5022R/"
+            )"
             PID="$(pgrep -n -f ssh)"
             while (kill -0 "$PID" 2>/dev/null)
             do
@@ -429,8 +446,10 @@ shBuildCi () {(set -e
         # example usage:
         # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc "[git push origin beta:master]" task
         "[git push origin "*)
-            git fetch --depth=50 origin "$(printf "$CI_COMMIT_MESSAGE_META" | sed \
-                -e "s/:.*//" -e "s/.* //")"
+            git fetch --depth=50 origin "$(
+                printf "$CI_COMMIT_MESSAGE_META" |
+                sed -e "s/:.*//" -e "s/.* //"
+            )"
             eval "$(printf "$CI_COMMIT_MESSAGE_META" | sed \
                 -e "s/git/shGitCommandWithGithubToken/" \
                 -e "s/\([^ ]*:\)/origin\/\1/")"
@@ -460,12 +479,14 @@ shBuildCi () {(set -e
             git add -f .touch.txt
             # git commit and push
             git commit -am "[ci skip] $CI_COMMIT_MESSAGE"
-            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f HEAD:alpha
+            shGitCommandWithGithubToken push \
+                "https://github.com/$GITHUB_REPO" -f HEAD:alpha
             npm run build-ci
             return
             ;;
         "[npm publish]"*)
-            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" HEAD:publish
+            shGitCommandWithGithubToken push \
+                "https://github.com/$GITHUB_REPO" HEAD:publish
             ;;
         "[npm publishAfterCommit]"*)
             export CI_BRANCH=publish
@@ -483,8 +504,8 @@ shBuildCi () {(set -e
             git add .
             git rm --cached -f .travis.yml
             git commit -am "[npm publishAfterCommit]"
-            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" \
-                -f HEAD:alpha
+            shGitCommandWithGithubToken push \
+                "https://github.com/$GITHUB_REPO" -f HEAD:alpha
             export CI_COMMIT_ID="$(git rev-parse --verify HEAD)"
             find node_modules -name .git -print0 | xargs -0 rm -rf
             npm run build-ci
@@ -496,14 +517,14 @@ shBuildCi () {(set -e
     master)
         git tag "$npm_package_version" || true
         shGitCommandWithGithubToken push \
-            "https://github.com/$GITHUB_REPO" \
-            "$npm_package_version" || true
+            "https://github.com/$GITHUB_REPO" "$npm_package_version" || true
         ;;
     publish)
         if (grep -q -E '    shNpmTestPublished' README.md)
         then
             # init .npmrc
-            printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
+            printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > \
+                "$HOME/.npmrc"
             # npm-publish aliases
             for NAME in $npm_package_nameAliasPublish
             do
@@ -522,25 +543,23 @@ shBuildCi () {(set -e
         rm -f "$HOME/.npmrc"
         case "$CI_COMMIT_MESSAGE" in
         "[npm publishAfterCommit]"*)
-            shGitSquashPop HEAD~1 "[ci skip] [npm published \
+            shGitSquashPop HEAD~1 \
+"[ci skip] [npm published \
 $(node -e 'process.stdout.write(require("./package.json").version)')]"
-            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" \
-                -f HEAD:alpha
-            shSleep 5
-            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" \
-                -f HEAD:alpha
+            shGitCommandWithGithubToken push \
+                "https://github.com/$GITHUB_REPO" -f HEAD:alpha
             ;;
         *)
-            shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" \
-                HEAD:beta
+            shGitCommandWithGithubToken push \
+                "https://github.com/$GITHUB_REPO" HEAD:beta
             ;;
         esac
         ;;
     esac
     # sync with $npm_package_githubRepoAlias
-    if [ "$CI_BRANCH" = alpha ] \
-        || [ "$CI_BRANCH" = beta ] \
-        || [ "$CI_BRANCH" = master ]
+    if [ "$CI_BRANCH" = alpha ] ||
+        [ "$CI_BRANCH" = beta ] ||
+        [ "$CI_BRANCH" = master ]
     then
         for GITHUB_REPO_ALIAS in $npm_package_githubRepoAlias
         do
@@ -564,7 +583,8 @@ shBuildCiInternal () {(set -e
     then
         shBuildCiBefore
     fi
-    export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json"
+    export npm_config_file_test_report_merge=\
+"$npm_config_dir_build/test-report.json"
 
 
 
@@ -572,7 +592,9 @@ shBuildCiInternal () {(set -e
     (
     shEnvSanitize
     export MODE_BUILD=npmTest
-    shBuildPrint "$(du -ms node_modules | awk '{print "npm install - " $1 " megabytes"}')"
+    shBuildPrint "$(
+        du -ms node_modules | awk '{print "npm install - " $1 " megabytes"}'
+    )"
     npm test --mode-coverage
     )
     # create apidoc
@@ -588,8 +610,9 @@ shBuildCiInternal () {(set -e
 
 
     # screenshot coverage
-    FILE="$(find "$npm_config_dir_build" -name *.js.html 2>/dev/null \
-        | tail -n 1)"
+    FILE="$(
+        find "$npm_config_dir_build" -name *.js.html 2>/dev/null | tail -n 1
+    )"
     if [ -f "$FILE" ]
     then
         cp "$FILE" "$npm_config_dir_build/coverage.lib.html"
@@ -617,11 +640,10 @@ shBuildCiInternal () {(set -e
     then
         shBuildCiAfter
     fi
-    # wait for background tasks to finish
-    shSleep 15
     # list $npm_config_dir_build
     find "$npm_config_dir_build" | sort
-    # upload build-artifacts to github, and if number of commits > $COMMIT_LIMIT,
+    # upload build-artifacts to github
+    # and if number of commits > $COMMIT_LIMIT
     # then squash older commits
     if [ "$CI_BRANCH" = alpha ] ||
         [ "$CI_BRANCH" = beta ] ||
@@ -632,8 +654,10 @@ shBuildCiInternal () {(set -e
     shGitInfo | head -n 4096 || true
     # validate http-links embedded in README.md
     if [ ! "$npm_package_private" ] &&
-        ! (printf "$CI_COMMIT_MESSAGE_META" \
-            | grep -q -E "^npm publishAfterCommitAfterBuild")
+        ! (
+            printf "$CI_COMMIT_MESSAGE_META" |
+            grep -q -E "^npm publishAfterCommitAfterBuild"
+        )
     then
         shSleep 60
         shReadmeLinkValidate
@@ -671,7 +695,8 @@ shBuildGithubUpload () {(set -e
     # if number of commits > $COMMIT_LIMIT,
     # then backup current git-repo-branch to git-repo-branch.backup,
     # and then squash to $COMMIT_LIMIT/2 in git-repo-branch
-    if [ "$COMMIT_LIMIT" ] && [ "$(git rev-list HEAD --count)" -gt "$COMMIT_LIMIT" ]
+    if [ "$COMMIT_LIMIT" ] &&
+        [ "$(git rev-list HEAD --count)" -gt "$COMMIT_LIMIT" ]
     then
         shGitCommandWithGithubToken push "$URL" -f HEAD:gh-pages.backup
         shGitSquashShift "$(($COMMIT_LIMIT / 2))"
@@ -679,15 +704,16 @@ shBuildGithubUpload () {(set -e
     shGitCommandWithGithubToken push "$URL" -f HEAD:gh-pages
     if [ "$CI_BRANCH" = alpha ] && [ "$npm_package_description" ]
     then
-        shGithubRepoDescriptionUpdate "$GITHUB_REPO" "$npm_package_description" || true
+        shGithubRepoDescriptionUpdate \
+            "$GITHUB_REPO" "$npm_package_description" || true
     fi
 )}
 
 shBuildInit () {
 # this function will init the env
     # init $CHROME_BIN
-    CHROME_BIN="${CHROME_BIN:-$(which google-chrome-stable 2>/dev/null)}" \
-        || true
+    CHROME_BIN="${CHROME_BIN:-$(which google-chrome-stable 2>/dev/null)}" ||
+        true
     local FILE
     for FILE in \
         "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
@@ -703,23 +729,6 @@ shBuildInit () {
     # init $CI_BRANCH
     export CI_BRANCH="${CI_BRANCH:-$TRAVIS_BRANCH}"
     export CI_BRANCH="${CI_BRANCH:-alpha}"
-    # init $npm_config_dir_electron
-    if [ ! "$npm_config_dir_electron" ]
-    then
-        if [ -f lib.electron.js ]
-        then
-            export npm_config_dir_electron="$PWD"
-        elif [ -f "$HOME/Documents/electron-lite/lib.electron.js" ]
-        then
-            export npm_config_dir_electron="$HOME/Documents/electron-lite"
-        fi
-        export npm_config_dir_electron="${npm_config_dir_electron:-\
-$(shModuleDirname electron-lite)}" || return "$?"
-        export npm_config_dir_electron="${npm_config_dir_electron:-\
-$HOME/node_modules/electron-lite}" || return "$?"
-        export PATH="$PATH\
-:$npm_config_dir_electron:$npm_config_dir_electron/../.bin" || return "$?"
-    fi
     # init $npm_config_dir_utility2
     if [ ! "$npm_config_dir_utility2" ]
     then
@@ -798,11 +807,13 @@ if ((
         printf "$npm_package_name" | sed -e "s/[^0-9A-Z_a-z]/_/g"
     )}" || return "$?"
     # init $npm_config_*
-    export npm_config_dir_build="${npm_config_dir_build:-$PWD/tmp/build}" || return "$?"
+    export npm_config_dir_build="${npm_config_dir_build:-$PWD/tmp/build}" ||
+        return "$?"
     mkdir -p "$npm_config_dir_build/coverage.html" || return "$?"
     export npm_config_dir_tmp="$PWD/tmp" || return "$?"
     mkdir -p "$npm_config_dir_tmp" || return "$?"
-    export npm_config_file_tmp="${npm_config_file_tmp:-$PWD/tmp/tmpfile}" || return "$?"
+    export npm_config_file_tmp="${npm_config_file_tmp:-$PWD/tmp/tmpfile}" ||
+        return "$?"
     # extract and save the scripts embedded in README.md to tmp/
     if [ -f README.md ]
     then
@@ -862,7 +873,8 @@ shBuildInsideDocker () {(set -e
 
 shBuildPrint () {(set -e
 # this function will print debug info about the build state
-    printf '%b' "\n\x1b[35m[MODE_BUILD=$MODE_BUILD]\x1b[0m - $(shDateIso) - $*\n\n" 1>&2
+    printf '%b' \
+        "\n\x1b[35m[MODE_BUILD=$MODE_BUILD]\x1b[0m - $(shDateIso) - $*\n\n" 1>&2
 )}
 
 shChromeSocks5 () {(set -e
@@ -870,15 +882,17 @@ shChromeSocks5 () {(set -e
 # https://sites.google.com/a/chromium.org/dev/developers/design-documents/network-stack/socks-proxy
     if [ "$1" = "canary" ]
     then
-        /Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary\
-            --proxy-bypass-list="127.*;192.*;localhost"\
-            --proxy-server="socks5://localhost:5080"\
-            --host-resolver-rules="MAP * 0.0.0.0, EXCLUDE localhost" "$@" || return "$?"
+"/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary" \
+        --proxy-bypass-list="127.*;192.*;localhost"\
+        --proxy-server="socks5://localhost:5080"\
+        --host-resolver-rules="MAP * 0.0.0.0, EXCLUDE localhost" "$@" ||
+        return "$?"
     else
-        /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome\
-            --proxy-bypass-list="127.*;192.*;localhost"\
-            --proxy-server="socks5://localhost:5080"\
-            --host-resolver-rules="MAP * 0.0.0.0, EXCLUDE localhost" "$@" || return "$?"
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+        --proxy-bypass-list="127.*;192.*;localhost"\
+        --proxy-server="socks5://localhost:5080"\
+        --host-resolver-rules="MAP * 0.0.0.0, EXCLUDE localhost" "$@" ||
+        return "$?"
     fi
 )}
 
@@ -965,8 +979,8 @@ shCryptoTravisDecrypt () {(set -e
     URL="https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG"
     shBuildPrint "decrypting $URL ..."
-    printf "${1:-"$(curl -#Lf "$URL")"}" \
-        | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
+    printf "${1:-"$(curl -#Lf "$URL")"}" |
+        shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
 )}
 
 shCryptoTravisEncrypt () {(set -e
@@ -990,23 +1004,25 @@ shCryptoTravisEncrypt () {(set -e
         TMPFILE="$(mktemp)"
         URL="https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/key"
         shBuildPrint "fetch $URL"
-        curl -#Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" \
-            | sed -n -e \
+        curl -#Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" |
+            sed -n -e \
 "s/.*-----BEGIN [RSA ]*PUBLIC KEY-----\(.*\)-----END [RSA ]*PUBLIC KEY-----.*/\
 -----BEGIN PUBLIC KEY-----\\1-----END PUBLIC KEY-----/" \
-            -e "s/\\\\n/%/gp" \
-            | tr "%" "\n" > "$TMPFILE"
-        CRYPTO_AES_KEY_ENCRYPTED="$(printf "CRYPTO_AES_KEY=$CRYPTO_AES_KEY" \
-            | openssl rsautl -encrypt -pubin -inkey "$TMPFILE" \
-            | base64 \
-            | tr -d "\n")"
+            -e "s/\\\\n/%/gp" |
+            tr "%" "\n" > "$TMPFILE"
+        CRYPTO_AES_KEY_ENCRYPTED="$(
+            printf "CRYPTO_AES_KEY=$CRYPTO_AES_KEY" |
+            openssl rsautl -encrypt -pubin -inkey "$TMPFILE" |
+            base64 |
+            tr -d "\n"
+        )"
         rm "$TMPFILE"
         if [ ! "$CRYPTO_AES_KEY_ENCRYPTED" ]
         then
             shBuildPrint "no CRYPTO_AES_KEY_ENCRYPTED"
         else
-            sed -in \
-                -e "s|\(- secure: \).*\( # CRYPTO_AES_KEY$\)|\\1$CRYPTO_AES_KEY_ENCRYPTED\\2|" \
+            sed -in -e \
+"s|\(- secure: \).*\( # CRYPTO_AES_KEY$\)|\\1$CRYPTO_AES_KEY_ENCRYPTED\\2|" \
                 .travis.yml
             rm -f .travis.ymln
             shBuildPrint "updated .travis.yml with CRYPTO_AES_KEY_ENCRYPTED"
@@ -1030,8 +1046,10 @@ shCryptoWithGithubOrg () {(set -e
 )}
 
 shDateIso () {(set -e
-# this function will print the current date in ISO format with given offset $1 in ms
-    node -e 'console.log(new Date(Date.now() + Number(process.argv[1])).toISOString())' "$1"
+# this function will print current date in ISO format with given offset $1 in ms
+    node -e 'console.log(
+        new Date(Date.now() + Number(process.argv[1])).toISOString()
+    )' "$1"
 )}
 
 shDebugArgv () {
@@ -1067,12 +1085,15 @@ shDeployGithub () {(set -e
 # and run a simple curl check for $TEST_URL
 # and test $TEST_URL
     export MODE_BUILD=deployGithub
-    export TEST_URL="https://$(printf "$GITHUB_REPO" \
-        | sed -e "s/\//.github.io\//")/build..$CI_BRANCH..travis-ci.org/app"
+    export TEST_URL="https://$(
+        printf "$GITHUB_REPO" | sed -e "s/\//.github.io\//"
+    )/build..$CI_BRANCH..travis-ci.org/app"
     shBuildPrint "deployed to $TEST_URL"
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
-    if [ "$(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL")" -lt 400 ]
+    if [ "$(
+        curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL"
+    )" -lt 400 ]
     then
         shBuildPrint "curl test passed for $TEST_URL"
     else
@@ -1107,7 +1128,9 @@ shDeployHeroku () {(set -e
     shBuildPrint "deployed to $TEST_URL"
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
-    if [ "$(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL")" -lt 400 ]
+    if [ "$(
+        curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL"
+    )" -lt 400 ]
     then
         shBuildPrint "curl test passed for $TEST_URL"
     else
@@ -1183,7 +1206,8 @@ shDockerNpmRestart () {(set -e
     DOCKER_PORT="$4"
     shDockerRestart $NAME $IMAGE /bin/sh -c "set -e
         curl -Lfs \
-            https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh \
+https://raw.githubusercontent.com\
+/kaizhu256/node-utility2/alpha/lib.utility2.sh \
             > /tmp/lib.utility2.sh
         . /tmp/lib.utility2.sh
         cd $DIR
@@ -1240,7 +1264,8 @@ server {
         touch /var/log/nginx/error.log
         tail -f /dev/stderr /var/log/nginx/error.log &
         /etc/init.d/nginx start
-        sed -in -e 's/http:\/\/petstore.swagger.io\/v2/\/assets/' /swagger-ui/index.html
+        sed -in -e 's/http:\/\/petstore.swagger.io\/v2/\/assets/' \
+            /swagger-ui/index.html
         rm -f /swagger-ui/index.htmln
         /elasticsearch/bin/elasticsearch -Des.http.port=9201
         sleep infinity
@@ -1271,14 +1296,18 @@ shDockerRestartMssql () {(set -e
 shDockerRestartNginx () {(set -e
 # this function will restart the docker-container nginx
     # init htpasswd
-    # printf "aa:$(openssl passwd -crypt bb)\n" > "$HOME/docker/etc.nginx.htpasswd.private"
-    # printf "aa:$(openssl passwd -crypt bb)\n" > "$HOME/docker/etc.nginx.htpasswd.share"
+    # printf "aa:$(openssl passwd -crypt bb)\n" > \
+        "$HOME/docker/etc.nginx.htpasswd.private"
+    # printf "aa:$(openssl passwd -crypt bb)\n" > \
+        "$HOME/docker/etc.nginx.htpasswd.share"
     for FILE in private share
     do
         FILE="$HOME/docker/etc.nginx.htpasswd.$FILE"
         if [ ! -f "$FILE" ]
         then
-            printf "aa:openssl passwd -crypt $(cat /dev/urandom | head --bytes 8)\n" > "$FILE"
+            printf "aa:openssl passwd -crypt $(
+                cat /dev/urandom | head --bytes 8
+            )\n" > "$FILE"
         fi
     done
     # init $HOME/docker/etc.nginx.conf.d.default.conf
@@ -1430,7 +1459,7 @@ shDockerSh () {(set -e
 )}
 
 shDockerStart () {(set -e
-# this function will start the docker-container $IMAGE:$NAME with the command "$@"
+# this function will start docker-container $IMAGE:$NAME with command "$@"
     case "$(uname)" in
     Linux)
         LOCALHOST="${LOCALHOST:-127.0.0.1}"
@@ -1461,12 +1490,12 @@ shDockerStart () {(set -e
 )}
 
 shDuList () {(set -e
-# this function will run du, and create a list of all child dir in $1 sorted by size
+# this function will du $1 and sort its subdir by size
     du -md1 "$1" | sort -nr
 )}
 
 shEnvSanitize () {
-# this function will unset the password-env, e.g.
+# this function will unset password-env, e.g.
 # (export CRYPTO_AES_SH=abcd1234; shEnvSanitize; printf "$CRYPTO_AES_SH\n")
 # undefined
     eval "$(node -e '
@@ -1491,7 +1520,8 @@ console.log(Object.keys(process.env).sort().map(function (key) {
 }
 
 shFileCustomizeFromToRgx () {(set -e
-# this function will customize a segment of file $2 with a segment of file $1, with given rgx
+# this function will customize segment of file $2 with segment of file $1,
+# with rgx-list $3...
     node -e "$UTILITY2_MACRO_JS"'
 /* jslint utility2:true */
 (function (local) {
@@ -1591,67 +1621,22 @@ shFileTrimLeft () {(set -e
 shGitAddTee () {(set -e
 # this function will run "git add ." and "$@ 2>&1 | tee -a ..."
     git add .
-    printf "\n\n\n\n$(shDateIso) - shGitAddTee\n\n" 2>&1 | tee -a /tmp/shGitAddTee.diff
+    printf "\n\n\n\n$(shDateIso) - shGitAddTee\n\n" 2>&1 | \
+        tee -a /tmp/shGitAddTee.diff
     "$@" 2>&1 | tee -a /tmp/shGitAddTee.diff
     git diff 2>&1 | tee -a /tmp/shGitAddTee.diff
     git status 2>&1 | tee -a /tmp/shGitAddTee.diff
 )}
 
-shGitBranchPush () {(set -e
-# this function will run "git push ./origin $COMMIT:$BRANCH"
-    COMMIT="$(printf "$1" | sed -e "s/:.*//")"
-    BRANCH="$(printf "$1" | sed -e "s/.*://")"
-    shift
-    # git push ./origin :$BRANCH
-    if [ ! "$COMMIT" ]
-    then
-        if (git show-ref "$BRANCH" --heads --tags 2>&1 > /dev/null)
-        then
-            shGitCommandWithGithubToken push . ":$BRANCH"
-        fi
-        shGitCommandWithGithubToken push origin ":$BRANCH"
-        return
-    fi
-    if ! (git show-ref "$COMMIT" --heads --tags 2>&1 > /dev/null)
-    then
-        shBuildPrint "commit does not exist - $COMMIT"
-        return 1
-    fi
-    # git tag $BRANCH $COMMIT
-    if (git show-ref "$COMMIT" --tags 2>&1 > /dev/null) ||
-        (git show-ref "$BRANCH" --tags 2>&1 > /dev/null)
-    then
-        shGitCommandWithGithubToken tag "$BRANCH" "$COMMIT" "$@"
-    # git push . $COMMIT:$BRANCH
-    elif (git show-ref "$BRANCH" --heads 2>&1 > /dev/null)
-    then
-        shGitCommandWithGithubToken push . "$COMMIT:$BRANCH" "$@"
-    # git push . $BRANCH
-    else
-        shGitCommandWithGithubToken push . "HEAD:$BRANCH"
-        shGitCommandWithGithubToken push . "$COMMIT:$BRANCH" -f
-    fi
-    # git push origin $BRANCH
-    shGitCommandWithGithubToken push origin "$BRANCH" "$@"
-)}
-
-shGitBranchRename () {(set -e
-# this function will rename in . and origin, $BRANCH1 -> $BRANCH2
-    BRANCH1="$(printf "$1" | sed -e "s/:.*//")"
-    BRANCH2="$(printf "$1" | sed -e "s/.*://")"
-    if [ "$BRANCH1" ]
-    then
-        shGitBranchPush "$BRANCH1:$BRANCH2" -f
-    fi
-    shGitBranchPush ":$BRANCH1"
-)}
-
 shGitCommandWithGithubToken () {(set -e
-# this function will run the git-command using $GITHUB_TOKEN
+# this function will run git $COMMAND with $GITHUB_TOKEN
 # http://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
     export MODE_BUILD="${MODE_BUILD:-shGitCommandWithGithubToken}"
     # security - filter basic-auth
-    shBuildPrint "$(printf "shGitCommandWithGithubToken $*" | sed -e "s/:\/\/[^@]*@/:\/\/...@/")"
+    shBuildPrint "$(
+        printf "shGitCommandWithGithubToken $*" |
+        sed -e "s/:\/\/[^@]*@/:\/\/...@/"
+    )"
     COMMAND="$1"
     shift
     URL="$1"
@@ -1680,10 +1665,6 @@ shGitCommandWithGithubToken () {(set -e
 shGitGc () {(set -e
 # this function will gc unreachable .git objects
 # http://stackoverflow.com/questions/3797907/how-to-remove-unused-objects-from-a-git-repository
-    # git remote rm origin || true
-    # git branch -D in || true
-    # (cd .git && rm -rf refs/remotes/ refs/original/ *_HEAD logs/) || return "$?"
-    # git for-each-ref --format="%(refname)" refs/original/ | xargs -n1 --no-run-if-empty git update-ref -d
     git \
         -c gc.reflogExpire=0 \
         -c gc.reflogExpireUnreachable=0 \
@@ -1807,7 +1788,8 @@ shGitSquashShift () {(set -e
     git reset -q "$(git rev-list --max-parents=0 HEAD)"
     git add .
     git commit -m squash > /dev/null || true
-    git cherry-pick -X theirs --allow-empty --strategy=recursive "$BRANCH~$RANGE..$BRANCH"
+    git cherry-pick -X theirs --allow-empty --strategy=recursive \
+        "$BRANCH~$RANGE..$BRANCH"
     git push . "HEAD:$BRANCH" -f
     git checkout "$BRANCH"
 )}
@@ -1822,20 +1804,20 @@ shGithubDateCommitted () {(set -e
 # example usage:
 # shGithubDateCommitted https://github.com/kaizhu256/node-utility2/commits/master
     printf "shGithubDateCommitted $1 # "
-    curl -Lfs "$1" | grep -m 1 -o -E "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z"
+    curl -Lfs "$1" | grep -m 1 -o -E \
+        "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z"
 )}
 
 shGithubRepoBranchId () {(set -e
 # this function will print the $COMMIT_ID for $GITHUB_REPO:#$BRANCH
     BRANCH="$1"
-    curl -H "user-agent: undefined" -Lfs \
-"https://api.github.com/repos\
-/$GITHUB_REPO/commits?access_token=$GITHUB_TOKEN&sha=$BRANCH" \
-        | sed -e 's/^\[{"sha":"//' -e 's/".*//'
+    curl -H "user-agent: undefined" -Lfs "https://api.github.com\
+/repos/$GITHUB_REPO/commits?access_token=$GITHUB_TOKEN&sha=$BRANCH" |
+        sed -e 's/^\[{"sha":"//' -e 's/".*//'
 )}
 
 shGithubRepoCreate () {(set -e
-# this function will create the base github-repo https://github.com/$GITHUB_REPO
+# this function will create base github-repo https://github.com/$GITHUB_REPO
     GITHUB_REPO="$1"
     export MODE_BUILD="${MODE_BUILD:-shGithubRepoCreate}"
     # init /tmp/githubRepo/kaizhu256/base
@@ -1858,8 +1840,8 @@ shGithubRepoCreate () {(set -e
     cp -a /tmp/githubRepo/kaizhu256/base "/tmp/githubRepo/$GITHUB_REPO"
     cd "/tmp/githubRepo/$GITHUB_REPO"
     curl -Lfs \
-https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig \
-        | sed -e "s|kaizhu256/node-utility2|$GITHUB_REPO|" > .git/config
+https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig |
+        sed -e "s|kaizhu256/node-utility2|$GITHUB_REPO|" > .git/config
     # create github-repo
     node -e "$UTILITY2_MACRO_JS"'
 /* jslint utility2:true */
@@ -1902,11 +1884,11 @@ local.ajax({
 }(globalThis.globalLocal));
 ' "$GITHUB_REPO"
     # set default-branch to beta
-    shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" beta \
-        || true
+    shGitCommandWithGithubToken push \
+        "https://github.com/$GITHUB_REPO" beta || true
     # push all branches
-    shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" --all \
-        || true
+    shGitCommandWithGithubToken push \
+        "https://github.com/$GITHUB_REPO" --all || true
 )}
 
 shGithubRepoDescriptionUpdate () {(set -e
@@ -1966,13 +1948,13 @@ swp|\
 tmp|\
 vendor)s{0,1}(\\b|_)\
 "
-    find "$DIR" -type f \
-        | grep -v -E "$FILE_FILTER" \
-        | tr "\n" "\000" \
-        | xargs -0 grep -HIn -E "$REGEXP" "$@" || true
-    find "$DIR" -name .travis.yml \
-        | tr "\n" "\000" \
-        | xargs -0 grep -HIn -E "$REGEXP" "$@" || true
+    find "$DIR" -type f |
+        grep -v -E "$FILE_FILTER" |
+        tr "\n" "\000" |
+        xargs -0 grep -HIn -E "$REGEXP" "$@" || true
+    find "$DIR" -name .travis.yml |
+        tr "\n" "\000" |
+        xargs -0 grep -HIn -E "$REGEXP" "$@" || true
 )}
 
 shGrepReplace () {(set -e
@@ -2104,7 +2086,8 @@ shIptablesReset () {(set -e
 # You could modify this to only allow certain traffic
 -A OUTPUT -j ACCEPT
 
-# Allows HTTP and HTTPS connections from anywhere (the normal ports for websites)
+# Allows HTTP and HTTPS connections from anywhere
+# (the normal ports for websites)
 -A INPUT -p tcp --dport 80 -j ACCEPT
 -A INPUT -p tcp --dport 443 -j ACCEPT
 
@@ -2114,16 +2097,19 @@ shIptablesReset () {(set -e
 -A INPUT -p tcp -m state --state NEW --dport 5022 -j ACCEPT
 
 # Now you should read up on iptables rules and consider whether ssh access
-# for everyone is really desired. Most likely you will only allow access from certain IPs.
+# for everyone is really desired. Most likely you will only allow access
+# from certain IPs.
 
 # Allow ping
-#  note that blocking other types of icmp packets is considered a bad idea by some
-#  remove -m icmp --icmp-type 8 from this line to allow all kinds of icmp:
-#  https://security.stackexchange.com/questions/22711
+# note that blocking other types of icmp packets is considered a bad idea
+# by some
+# remove -m icmp --icmp-type 8 from this line to allow all kinds of icmp:
+# https://security.stackexchange.com/questions/22711
 -A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
 
 # log iptables denied calls (access via "dmesg" command)
--A INPUT -m limit --limit 5/min -j LOG --log-prefix "iptables denied: " --log-level 7
+-A INPUT -m limit --limit 5/min -j LOG --log-prefix "iptables denied: \
+    " --log-level 7
 
 # allow forwarding between docker0 and eth0
 # https://blog.andyet.com/2014/09/11/docker-host-iptables-forwarding
@@ -2169,19 +2155,14 @@ shIstanbulCover () {(set -e
         "$NODE_BINARY" inspect "$@"
         return "$?"
     fi
-    if [ "$npm_config_mode_winpty" ] \
-        && [ "$MSYSTEM" ] \
-        && (winpty --version > /dev/null 2>&1)
+    if [ "$npm_config_mode_winpty" ] &&
+        [ "$MSYSTEM" ] &&
+        (winpty --version > /dev/null 2>&1)
     then
         winpty "$NODE_BINARY" "$@"
         return "$?"
     fi
     "$NODE_BINARY" "$@"
-)}
-
-shKillallElectron () {(set -e
-# this function will killall electron
-    killall Electron electron
 )}
 
 shListUnflattenAndApply () {(set -e
@@ -2388,8 +2369,9 @@ shNpmInstallTarball () {(set -e
 # this function will npm-install the tarball instead of the full module
     NAME="$1"
     mkdir -p "node_modules/$NAME"
-    curl -Lfs "$(npm view "$NAME" dist.tarball)" \
-        | tar --strip-components 1 -C "node_modules/$NAME" -xzf -
+    curl -Lfs "$(
+        npm view "$NAME" dist.tarball
+    )" | tar --strip-components 1 -C "node_modules/$NAME" -xzf -
 )}
 
 shNpmPackageCliHelpCreate () {(set -e
@@ -2435,8 +2417,8 @@ shNpmPackageDependencyTreeCreate () {(set -e
     shBuildPrint "creating npmDependencyTree ..."
     npm install "${2:-$1}" --prefix . || true
     shRunWithScreenshotTxtAfter () {(set -e
-        du -ms "$DIR" \
-            | awk '{print "npm install - " $1 " megabytes\n\nnode_modules"}' \
+        du -ms "$DIR" |
+            awk '{print "npm install - " $1 " megabytes\n\nnode_modules"}' \
             > "$npm_config_file_tmp"
         grep -E '^ *[│└├]' "$npm_config_dir_tmp/runWithScreenshotTxt" \
             >> "$npm_config_file_tmp"
@@ -2563,8 +2545,10 @@ shNpmTest () {(set -e
 shNpmTestPublished () {(set -e
 # this function will npm-test the published npm-package $npm_package_name
     export MODE_BUILD=npmTestPublished
-    if [ "$TRAVIS" ] && ([ ! "$NPM_TOKEN" ] ||
-        ([ "$CI_BRANCH" = alpha ] && (printf "$CI_COMMIT_MESSAGE" | grep -q -E "^\[npm publish")))
+    if [ "$TRAVIS" ] && ([ ! "$NPM_TOKEN" ] || (
+        [ "$CI_BRANCH" = alpha ] &&
+        (printf "$CI_COMMIT_MESSAGE" | grep -q -E "^\[npm publish")
+    ))
     then
         shBuildPrint "skip npm-testing published-package $npm_package_name"
         return
@@ -2611,14 +2595,16 @@ shPidByPort () {(set -e
 
 shRandomIntegerInRange () {(set -e
 # this function will print a random number in the interval [$1..$2)
-    LC_CTYPE=C tr -cd 0-9 </dev/urandom \
-        | head -c 9 \
-        | awk "{ printf(\"%s\n\", $1 + (\$0 % ($2 - $1))); }"
+    LC_CTYPE=C tr -cd 0-9 </dev/urandom |
+        head -c 9 |
+        awk "{ printf(\"%s\n\", $1 + (\$0 % ($2 - $1))); }"
 )}
 
 shRawJsDiff () {(set -e
 # this function will diff-compare raw.xxx.js to lib.xxx.js
-    diff -u "$(printf "$1" | sed -e "s/lib/raw/")" "$1" > /tmp/shDiffRaw.diff || true
+    diff -u "$(
+        printf "$1" | sed -e "s/lib/raw/"
+    )" "$1" > /tmp/shDiffRaw.diff || true
     vim -R /tmp/shDiffRaw.diff
 )}
 
@@ -2851,13 +2837,14 @@ shReadmeTest () {(set -e
         if [ "$CI_BRANCH" = alpha ]
         then
             sed -in \
-                -e "s|/build..beta..travis-ci.org/|/build..alpha..travis-ci.org/|g" \
-                -e "s|npm install $npm_package_name|npm install $GITHUB_REPO#alpha|g" \
-                -e "s| -b beta | -b alpha |g" \
+-e "s|/build..beta..travis-ci.org/|/build..alpha..travis-ci.org/|g" \
+-e "s|npm install $npm_package_name|npm install $GITHUB_REPO#alpha|g" \
+-e "s| -b beta | -b alpha |g" \
                 "$FILE"
             rm -f "$FILE"n
         fi
-        sed -in -e "s|git clone git@github.com:|git clone https://$GITHUB_TOKEN@github.com/|g" \
+        sed -in \
+-e "s|git clone git@github.com:|git clone https://$GITHUB_TOKEN@github.com/|g" \
             "$FILE"
         rm -f "$FILE"n
     fi
@@ -2896,8 +2883,6 @@ shReadmeTest () {(set -e
         unset PORT && unset npm_config_timeout_exit && /bin/sh "$FILE"
         ;;
     esac
-    shSleep 15
-    ! shKillallElectron 2>/dev/null
     shBuildPrint "... finished running command 'shReadmeTest $*'"
 )}
 
@@ -2931,8 +2916,8 @@ shRun () {(set -e
 # this function will run the command "$@" with auto-restart
     EXIT_CODE=0
     # eval argv
-    if [ ! "$npm_config_mode_auto_restart" ] \
-        || [ "$npm_config_mode_auto_restart_child" ]
+    if [ ! "$npm_config_mode_auto_restart" ] ||
+        [ "$npm_config_mode_auto_restart_child" ]
     then
         "$@"
         return "$?"
@@ -3037,7 +3022,8 @@ require("fs").writeFileSync(
 );
 }());
 '
-    shBuildPrint "created screenshot file $npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
+    shBuildPrint \
+"created screenshot file $npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
     return "$EXIT_CODE"
 )}
 
@@ -3078,7 +3064,9 @@ shSsh5022F () {(set -e
 # shSsh5022F travis@proxy.com -D 5080
     USER_HOST="$1"
     shift
-    ssh-keygen -R "[$(printf "$USER_HOST" | sed -e "s/.*\@//")]:5022" > /dev/null 2>&1 || true
+    ssh-keygen -R \
+        "[$(printf "$USER_HOST" | sed -e "s/.*\@//")]:5022" > /dev/null 2>&1 ||
+        true
     ssh "$USER_HOST" -p 5022 -o StrictHostKeyChecking=no "$@"
 )}
 
@@ -3095,31 +3083,23 @@ shSsh5022R () {(set -e
     USER_REMOTE="$1"
     shift
     printf "\nssh $USER_REMOTE@$HOST\n"
-    ssh "$USER_REMOTE@$HOST" -Tf -R 5022:127.0.0.1:22 -o StrictHostKeyChecking=no "
+    ssh "$USER_REMOTE@$HOST" -R 5022:127.0.0.1:22 -Tf \
+        -o StrictHostKeyChecking=no "
 ssh-keygen -R [127.0.0.1]:5022 > /dev/null 2>&1
-ssh $USER@127.0.0.1 -p 5022 -L $HOST:5022:127.0.0.1:22 -NTf -o StrictHostKeyChecking=no"
-)}
-
-shTravisHookListGet () {(set -e
-# this function will get the json-list of travis-repos with the search paramters $1
-# Parameter - Default - Description
-# ids - "" - list of repository ids to fetch, cannot be combined with other parameters
-# member - "" - filter by user that has access to it (github login)
-# owner_name - "" - filter by owner name (first segment of slug)
-# slug - "" - filter by slug
-# search - "" - filter by search term
-# active - false - if true, will only return repositories that are enabled
-# https://docs.travis-ci.com/api#repositories
-    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf \
-        "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/hooks?$1"
+ssh $USER@127.0.0.1 -p 5022 -L $HOST:5022:127.0.0.1:22 -NTf \
+    -o StrictHostKeyChecking=no
+"
 )}
 
 shTravisRepoBuildCancel () {(set -e
 # this function will cancel the travis-repo build
 # https://docs.travis-ci.com/api#builds
     GITHUB_REPO="$1"
-    BUILD_ID="$(curl -#Lf "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/builds" \
-        | grep -o -E "[0-9]{1,}" | head -n 1)"
+    BUILD_ID="$(
+        curl -#Lf \
+"https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/builds" |
+        grep -o -E "[0-9]{1,}" | head -n 1
+    )"
     curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
         "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/builds/$BUILD_ID/cancel"
 )}
@@ -3128,8 +3108,11 @@ shTravisRepoBuildRestart () {(set -e
 # this function will restart the travis-repo build
 # https://docs.travis-ci.com/api#builds
     GITHUB_REPO="$1"
-    BUILD_ID="$(curl -#Lf "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/builds" \
-        | grep -o -E "[0-9]{1,}" | head -n 1)"
+    BUILD_ID="$(
+        curl -#Lf \
+"https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/builds" |
+        grep -o -E "[0-9]{1,}" | head -n 1
+    )"
     curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
         "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/builds/$BUILD_ID/restart"
 )}
@@ -3272,8 +3255,6 @@ local.gotoNext(opt, function (err, data) {
             "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/package.json",
             JSON.stringify({
                 devDependencies: {
-                    "electron-lite":
-                    "kaizhu256/node-electron-lite#alpha",
                     utility2: "kaizhu256/node-utility2#alpha"
                 },
                 name: process.env.GITHUB_REPO.replace((
@@ -3324,14 +3305,6 @@ shTravisSync () {(set -e
 # this is an expensive operation that will use up your github rate-limit quota
     curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
         "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/users/sync"
-)}
-
-shTravisTaskPush () {(set -e
-# this function will push the shell-task-script $1 with the message $2 to travis
-# example usage:
-# shCryptoWithGithubOrg kaizhu256 shTravisTaskPush "$HOME/Documents/sandbox2/.task.sh"
-    utility2-github-crud put https://github.com/kaizhu256/node-sandbox2/blob/task/.task.sh \
-        "$1" "[\$ /bin/sh .task.sh] $2"
 )}
 
 shUbuntuInit () {
@@ -3577,25 +3550,13 @@ shUtility2GitDiffHead () {(set -e
 
 shUtility2Grep () {(set -e
 # this function will recursively grep $UTILITY2_DEPENDENTS for the regexp $1
-    for DIR in $UTILITY2_DEPENDENTS $(cd "$HOME/Documents"; ls -d swgg-* 2>/dev/null)
+    for DIR in $UTILITY2_DEPENDENTS \
+        $(cd "$HOME/Documents"; ls -d swgg-* 2>/dev/null)
     do
         DIR="$HOME/Documents/$DIR"
         if [ -d "$DIR" ]
         then
             shGrep "$DIR" "$@"
-        fi
-    done
-)}
-
-shUtility2GrepTravisYml () {(set -e
-# this function will recursively grep .travis.yml in $UTILITY2_DEPENDENTS for the regexp $REGEXP
-    REGEXP="$1"
-    for DIR in $UTILITY2_DEPENDENTS
-    do
-        DIR="$HOME/Documents/$DIR"
-        if [ -d "$DIR" ]
-        then
-            grep -HIin -E "$REGEXP" "$DIR/.travis.yml" || true
         fi
     done
 )}
@@ -3616,7 +3577,9 @@ shXvfbStart () {
 # this function will start xvfb
     if [ "$(uname)" = Linux ] && [ ! "$DISPLAY" ]
     then
-        rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &) 2>/dev/null || true
+        rm -f /tmp/.X99-lock &&
+            export DISPLAY=:99.0 &&
+            (Xvfb "$DISPLAY" &) 2>/dev/null || true
     fi
 }
 

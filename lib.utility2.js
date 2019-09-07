@@ -1364,7 +1364,6 @@ PORT=8081 node ./assets.app.js\n\
     "author": "kai zhu <kaizhu256@gmail.com>",\n\
     "description": "the greatest app in the world!",\n\
     "devDependencies": {\n\
-        "electron-lite": "kaizhu256/node-electron-lite#alpha",\n\
         "utility2": "kaizhu256/node-utility2#alpha"\n\
     },\n\
     "engines": {\n\
@@ -3008,7 +3007,7 @@ local.blobRead = function (blob, onError) {
 
 local.browserTest = function (opt, onError) {
 /*
- * this function will spawn an electron process to test <opt>.url
+ * this function will spawn google-puppeteer-process to test <opt>.url
  */
     var browser;
     var fileScreenshot;
@@ -3075,7 +3074,6 @@ local.browserTest = function (opt, onError) {
             require("./lib.puppeteer.js").launch({
                 args: [
                     "--headless",
-                    "--hide-scrollbars",
                     "--incognito",
                     "--no-sandbox",
                     "--remote-debugging-port=0"

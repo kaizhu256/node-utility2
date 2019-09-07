@@ -73,5 +73,7 @@ shMain () {(set -e
 
 # run command
 shMain "$npm_lifecycle_event" "$(node -e 'console.log(
-    JSON.parse(process.env.npm_config_argv).original.join(" ").replace((/^(?:run )?\S+ /), "")
+    JSON.parse(process.env.npm_config_argv).original.join(" ").replace((
+        /^(?:run )?\S+ /
+    ), "")
 )')"
