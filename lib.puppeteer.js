@@ -8,9 +8,9 @@
 
 
 
-//!! /* istanbul instrument in package jslint */
-//!! /* istanbul ignore next */
-//!! /* jslint utility2:true */
+/* istanbul instrument in package puppeteer */
+/* istanbul ignore next */
+/* jslint utility2:true */
 (function (globalThis) {
     "use strict";
     var consoleError;
@@ -40,11 +40,9 @@
     globalThis.globalLocal = local;
     // init isBrowser
     local.isBrowser = (
-        typeof window === "object"
-        && window === globalThis
-        && typeof window.XMLHttpRequest === "function"
-        && window.document
-        && typeof window.document.querySelector === "function"
+        typeof globalThis.XMLHttpRequest === "function"
+        && globalThis.navigator
+        && typeof globalThis.navigator.userAgent === "string"
     );
     // init function
     local.assertThrow = function (passed, message) {
@@ -195,35 +193,286 @@
 
 
 
-/* validateLineSortedReset */
 (function (local) {
 "use strict";
-// hack-puppeteer - module.exports
-const EventEmitter = require('events');
-const URL = require('url');
-const childProcess = require('child_process');
-const crypto = require('crypto');
-const fs = require('fs');
-const http = require('http');
-const https = require('https');
-const net = require('net');
-const os = require('os');
-const path = require('path');
-const readline = require('readline');
-const tls = require('tls');
-const url = require('url');
-const util = require('util');
-const { Writable } = require('stream');
-const { randomBytes } = require('crypto');
 
 
 
-const child_process = require('child_process');
+/* istanbul ignore next */
+// run shared js-env code - init-before
+(function () {
+// init local
+local = (
+    globalThis.utility2_rollup
+    // || globalThis.utility2_rollup_old
+    // || require("./assets.utility2.rollup.js")
+    || globalThis.globalLocal
+);
+// init exports
+if (local.isBrowser) {
+    globalThis.utility2_puppeteer = local;
+} else {
+    module.exports = local;
+    module.exports.__dirname = __dirname;
+}
+// init lib main
+local.puppeteer = local;
+
+
+
+/* validateLineSortedReset */
+local.cliRun = function (opt) {
+/*
+ * this function will run the cli with given <opt>
+ */
+    local.cliDict._eval = local.cliDict._eval || function () {
+    /*
+     * <code>
+     * will eval <code>
+     */
+        globalThis.local = local;
+        local.vm.runInThisContext(process.argv[3]);
+    };
+    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
+    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
+    local.cliDict._help = local.cliDict._help || function () {
+    /*
+     *
+     * will print help
+     */
+        var commandList;
+        var file;
+        var packageJson;
+        var text;
+        var textDict;
+        commandList = [
+            {
+                argList: "<arg2>  ...",
+                description: "usage:",
+                command: [
+                    "<arg1>"
+                ]
+            }, {
+                argList: "'console.log(\"hello world\")'",
+                description: "example:",
+                command: [
+                    "--eval"
+                ]
+            }
+        ];
+        file = __filename.replace((
+            /.*\//
+        ), "");
+        opt = Object.assign({}, opt);
+        packageJson = require("./package.json");
+        // validate comment
+        opt.rgxComment = opt.rgxComment || (
+            /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
+        );
+        textDict = {};
+        Object.keys(local.cliDict).sort().forEach(function (key, ii) {
+            if (key[0] === "_" && key !== "_default") {
+                return;
+            }
+            text = String(local.cliDict[key]);
+            if (key === "_default") {
+                key = "";
+            }
+            textDict[text] = textDict[text] || (ii + 2);
+            ii = textDict[text];
+            if (commandList[ii]) {
+                commandList[ii].command.push(key);
+                return;
+            }
+            try {
+                commandList[ii] = opt.rgxComment.exec(text);
+                commandList[ii] = {
+                    argList: (commandList[ii][1] || "").trim(),
+                    command: [
+                        key
+                    ],
+                    description: commandList[ii][2]
+                };
+            } catch (ignore) {
+                local.assertThrow(null, new Error(
+                    "cliRun - cannot parse comment in COMMAND "
+                    + key
+                    + ":\nnew RegExp("
+                    + JSON.stringify(opt.rgxComment.source)
+                    + ").exec(" + JSON.stringify(text).replace((
+                        /\\\\/g
+                    ), "\u0000").replace((
+                        /\\n/g
+                    ), "\\n\\\n").replace((
+                        /\u0000/g
+                    ), "\\\\") + ");"
+                ));
+            }
+        });
+        text = "";
+        text += packageJson.name + " (" + packageJson.version + ")\n\n";
+        text += commandList.filter(function (elem) {
+            return elem;
+        }).map(function (elem, ii) {
+            elem.command = elem.command.filter(function (elem) {
+                return elem;
+            });
+            switch (ii) {
+            case 0:
+            case 1:
+                elem.argList = [
+                    elem.argList
+                ];
+                break;
+            default:
+                elem.argList = elem.argList.split(" ");
+                elem.description = (
+                    "# COMMAND "
+                    + (elem.command[0] || "<none>") + "\n# "
+                    + elem.description
+                );
+            }
+            return (
+                elem.description + "\n  " + file
+                + ("  " + elem.command.sort().join("|") + "  ").replace((
+                    /^\u0020{4}$/
+                ), "  ")
+                + elem.argList.join("  ")
+            );
+        }).join("\n\n");
+        console.log(text);
+    };
+    local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
+    local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
+    local.cliDict._default = local.cliDict._default || local.cliDict._help;
+    local.cliDict.help = local.cliDict.help || local.cliDict._help;
+    local.cliDict._interactive = local.cliDict._interactive || function () {
+    /*
+     *
+     * will start interactive-mode
+     */
+        globalThis.local = local;
+        local.identity(local.replStart || require("repl").start)({
+            useGlobal: true
+        });
+    };
+    local.cliDict["--interactive"] = (
+        local.cliDict["--interactive"]
+        || local.cliDict._interactive
+    );
+    local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
+    local.cliDict._version = local.cliDict._version || function () {
+    /*
+     *
+     * will print version
+     */
+        console.log(require(__dirname + "/package.json").version);
+    };
+    local.cliDict["--version"] = (
+        local.cliDict["--version"]
+        || local.cliDict._version
+    );
+    local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
+    // default to --help command if no arguments are given
+    if (process.argv.length <= 2) {
+        local.cliDict._help();
+        return;
+    }
+    if (local.cliDict[process.argv[2]]) {
+        local.cliDict[process.argv[2]]();
+        return;
+    }
+    local.cliDict._default();
+};
+
+local.onErrorWithStack = function (onError) {
+/*
+ * this function will create wrapper around <onError>
+ * that will append current-stack to err.stack
+ */
+    var onError2;
+    var stack;
+    stack = new Error().stack.replace((
+        /(.*?)\n.*?$/m
+    ), "$1");
+    onError2 = function (err, data, meta) {
+        // append current-stack to err.stack
+        if (
+            err
+            && typeof err.stack === "string"
+            && err !== local.errDefault
+            && String(err.stack).indexOf(stack.split("\n")[2]) < 0
+        ) {
+            err.stack += "\n" + stack;
+        }
+        onError(err, data, meta);
+    };
+    // debug onError
+    onError2.toString = function () {
+        return String(onError);
+    };
+    return onError2;
+};
+
+local.onParallel = function (onError, onEach, onRetry) {
+/*
+ * this function will create a function that will
+ * 1. run async tasks in parallel
+ * 2. if counter === 0 or err occurred, then call onError(err)
+ */
+    var onParallel;
+    onError = local.onErrorWithStack(onError);
+    onEach = onEach || local.nop;
+    onRetry = onRetry || local.nop;
+    onParallel = function (err, data) {
+        if (onRetry(err, data)) {
+            return;
+        }
+        // decrement counter
+        onParallel.counter -= 1;
+        // validate counter
+        if (!(onParallel.counter >= 0 || err || onParallel.err)) {
+            err = new Error(
+                "invalid onParallel.counter = " + onParallel.counter
+            );
+        // ensure onError is run only once
+        } else if (onParallel.counter < 0) {
+            return;
+        }
+        // handle err
+        if (err) {
+            onParallel.err = err;
+            // ensure counter <= 0
+            onParallel.counter = -Math.abs(onParallel.counter);
+        }
+        // call onError when isDone
+        if (onParallel.counter <= 0) {
+            onError(err, data);
+            return;
+        }
+        onEach();
+    };
+    // init counter
+    onParallel.counter = 0;
+    // return callback
+    return onParallel;
+};
+}());
+
+
+
+/* istanbul ignore next */
+// run node js-env code - function
+(function () {
+if (local.isBrowser) {
+    return;
+}
+/* jslint ignore:start */
 const debugError = console.error;
 const debugProtocol = function () {
     return;
 }
-var mime = {
+const mime = {
     getType: function (file) {
         file = path.extname(String(file).toLowerCase());
         switch (file) {
@@ -239,158 +488,167 @@ var mime = {
     }
 };
 const removeFolder = function (dir, onError) {
-/*
- * this function will asynchronously "rm -rf" <dir>
- */
-    child_process.spawn("rm", [
-        "-rf", path.resolve(process.cwd(), dir)
-    ], {
-        stdio: [
-            "ignore", 1, 2
-        ]
-    }).on("exit", onError);
+    local.fsRmrfSync(dir);
+    onError();
 };
-removeFolder.sync = function (dir) {
-/*
- * this function will synchronously "rm -rf" <dir>
- */
-    child_process.spawnSync("rm", [
-        "-rf", path.resolve(process.cwd(), dir)
-    ], {
-        stdio: [
-            "ignore", 1, 2
-        ]
-    });
-};
+removeFolder.sync = local.fsRmrfSync;
 const removeRecursive = removeFolder;
-
-
-
+let EventEmitter = require('events');
+let URL = require('url');
+// let WebSocket = require('ws');
+let Writable = require('stream').Writable;
+// let bufferUtil = require('bufferutil');
+let childProcess = require('child_process');
+let crypto = require('crypto');
+// let debugError = require('debug')(`puppeteer:error`);
+// let debugProtocol = require('debug')('puppeteer:protocol');
+let fs = require('fs');
+let http = require('http');
+let https = require('https');
+// let isValidUTF8 = require('utf-8-validate');
+// let mime = require('mime');
+let net = require('net');
+let os = require('os');
+let path = require('path');
+let randomBytes = require('crypto').randomBytes;
+let readline = require('readline');
+// let removeFolder = require('rimraf');
+let tls = require('tls');
+let url = require('url');
+let exports_GoogleChrome_puppeteer_index = {};
+let exports_GoogleChrome_puppeteer_lib_Accessibility = {};
+let exports_GoogleChrome_puppeteer_lib_Browser = {};
+let exports_GoogleChrome_puppeteer_lib_BrowserFetcher = {};
+let exports_GoogleChrome_puppeteer_lib_Connection = {};
+let exports_GoogleChrome_puppeteer_lib_Coverage = {};
+let exports_GoogleChrome_puppeteer_lib_DOMWorld = {};
+let exports_GoogleChrome_puppeteer_lib_DeviceDescriptors = {};
+let exports_GoogleChrome_puppeteer_lib_Dialog = {};
+let exports_GoogleChrome_puppeteer_lib_EmulationManager = {};
+let exports_GoogleChrome_puppeteer_lib_Errors = {};
+let exports_GoogleChrome_puppeteer_lib_Events = {};
+let exports_GoogleChrome_puppeteer_lib_ExecutionContext = {};
+let exports_GoogleChrome_puppeteer_lib_FrameManager = {};
+let exports_GoogleChrome_puppeteer_lib_Input = {};
+let exports_GoogleChrome_puppeteer_lib_JSHandle = {};
+let exports_GoogleChrome_puppeteer_lib_Launcher = {};
+let exports_GoogleChrome_puppeteer_lib_LifecycleWatcher = {};
+let exports_GoogleChrome_puppeteer_lib_Multimap = {};
+let exports_GoogleChrome_puppeteer_lib_NetworkManager = {};
+let exports_GoogleChrome_puppeteer_lib_Page = {};
+let exports_GoogleChrome_puppeteer_lib_PipeTransport = {};
+let exports_GoogleChrome_puppeteer_lib_Puppeteer = {};
+let exports_GoogleChrome_puppeteer_lib_Target = {};
+let exports_GoogleChrome_puppeteer_lib_TaskQueue = {};
+let exports_GoogleChrome_puppeteer_lib_TimeoutSettings = {};
+let exports_GoogleChrome_puppeteer_lib_Tracing = {};
+let exports_GoogleChrome_puppeteer_lib_USKeyboardLayout = {};
+let exports_GoogleChrome_puppeteer_lib_WebSocketTransport = {};
+let exports_GoogleChrome_puppeteer_lib_Worker = {};
+let exports_GoogleChrome_puppeteer_lib_api = {};
+let exports_GoogleChrome_puppeteer_lib_helper = {};
+let exports_GoogleChrome_puppeteer_node6_lib_Puppeteer = {};
+let exports_GoogleChrome_puppeteer_package_json = {};
+let exports_websockets_ws_index = {};
+let exports_websockets_ws_lib_buffer_util = {};
+let exports_websockets_ws_lib_constants = {};
+let exports_websockets_ws_lib_event_target = {};
+let exports_websockets_ws_lib_extension = {};
+let exports_websockets_ws_lib_permessage_deflate = {};
+let exports_websockets_ws_lib_receiver = {};
+let exports_websockets_ws_lib_sender = {};
+let exports_websockets_ws_lib_validation = {};
+let exports_websockets_ws_lib_websocket = {};
+let exports_websockets_ws_lib_websocket_server = {};
+let exports_websockets_ws_package_json = {};
 /*
-file https://github.com/STRML/async-limiter/tree/v1.0.1
+repo https://github.com/websockets/ws/tree/6.2.1
 */
 
 
 
 /*
-lib https://github.com/STRML/async-limiter/blob/v1.0.1/index.js
+file https://github.com/websockets/ws/blob/6.2.1/package.json
+*/
+exports_websockets_ws_package_json = {
+  "name": "ws",
+  "version": "6.2.1",
+  "description": "Simple to use, blazing fast and thoroughly tested websocket client and server for Node.js",
+  "keywords": [
+    "HyBi",
+    "Push",
+    "RFC-6455",
+    "WebSocket",
+    "WebSockets",
+    "real-time"
+  ],
+  "homepage": "https://github.com/websockets/ws",
+  "bugs": "https://github.com/websockets/ws/issues",
+  "repository": "websockets/ws",
+  "author": "Einar Otto Stangvik <einaros@gmail.com> (http://2x.io)",
+  "license": "MIT",
+  "main": "index.js",
+  "browser": "browser.js",
+  "files": [
+    "browser.js",
+    "index.js",
+    "lib/*.js"
+  ],
+  "scripts": {
+    "test": "npm run lint && nyc --reporter=html --reporter=text mocha test/*.test.js",
+    "integration": "npm run lint && mocha test/*.integration.js",
+    "lint": "eslint --ignore-path .gitignore . && prettier --check --ignore-path .gitignore \"**/*.{json,md,yml}\""
+  },
+  "dependencies": {
+    "async-limiter": "~1.0.0"
+  },
+  "devDependencies": {
+    "benchmark": "~2.1.4",
+    "bufferutil": "~4.0.0",
+    "coveralls": "~3.0.3",
+    "eslint": "~5.15.0",
+    "eslint-config-prettier": "~4.1.0",
+    "eslint-plugin-prettier": "~3.0.0",
+    "mocha": "~6.0.0",
+    "nyc": "~13.3.0",
+    "prettier": "~1.16.1",
+    "utf-8-validate": "~5.0.0"
+  }
+}
+
+
+
+/*
+file https://github.com/websockets/ws/blob/6.2.1/lib/constants.js
 */
 'use strict';
 
-function Queue(options) {
-  if (!(this instanceof Queue)) {
-    return new Queue(options);
-  }
-
-  options = options || {};
-  this.concurrency = options.concurrency || Infinity;
-  this.pending = 0;
-  this.jobs = [];
-  this.cbs = [];
-  this._done = done.bind(this);
-}
-
-var arrayAddMethods = [
-  'push',
-  'unshift',
-  'splice'
-];
-
-arrayAddMethods.forEach(function(method) {
-  Queue.prototype[method] = function() {
-    var methodResult = Array.prototype[method].apply(this.jobs, arguments);
-    this._run();
-    return methodResult;
-  };
-});
-
-Object.defineProperty(Queue.prototype, 'length', {
-  get: function() {
-    return this.pending + this.jobs.length;
-  }
-});
-
-Queue.prototype._run = function() {
-  if (this.pending === this.concurrency) {
-    return;
-  }
-  if (this.jobs.length) {
-    var job = this.jobs.shift();
-    this.pending++;
-    job(this._done);
-    this._run();
-  }
-
-  if (this.pending === 0) {
-    while (this.cbs.length !== 0) {
-      var cb = this.cbs.pop();
-      process.nextTick(cb);
-    }
-  }
+exports_websockets_ws_lib_constants = {
+  BINARY_TYPES: ['nodebuffer', 'arraybuffer', 'fragments'],
+  GUID: '258EAFA5-E914-47DA-95CA-C5AB0DC85B11',
+  kStatusCode: Symbol('status-code'),
+  kWebSocket: Symbol('websocket'),
+  EMPTY_BUFFER: Buffer.alloc(0),
+  NOOP: () => {}
 };
-
-Queue.prototype.onDone = function(cb) {
-  if (typeof cb === 'function') {
-    this.cbs.push(cb);
-    this._run();
-  }
-};
-
-function done() {
-  this.pending--;
-  this._run();
-}
-
-// hack-puppeteer - module.exports
-const Limiter = Queue;
 
 
 
 /*
-file https://github.com/websockets/ws/tree/6.2.1
-*/
-// require('./buffer-util') // const bufferUtil = require('./buffer-util');
-// require('./buffer-util') // const { concat, toArrayBuffer, unmask } = require('./buffer-util');
-// require('./buffer-util') // const { mask: applyMask, toBuffer } = require('./buffer-util');
-// require('./constants') // const { EMPTY_BUFFER } = require('./constants');
-// require('./constants') // const { GUID } = require('./constants');
-// require('./constants') // const { kStatusCode, NOOP } = require('./constants');
-// require('./constants') // } = require('./constants');
-// require('./event-target') // const EventTarget = require('./event-target');
-// require('./extension') // const extension = require('./extension');
-// require('./lib/receiver') // WebSocket.Receiver = require('./lib/receiver');
-// require('./lib/sender') // WebSocket.Sender = require('./lib/sender');
-// require('./lib/websocket') // const WebSocket = require('./lib/websocket');
-// require('./lib/websocket-server') // WebSocket.Server = require('./lib/websocket-server');
-// require('./permessage-deflate') // const PerMessageDeflate = require('./permessage-deflate');
-// require('./receiver') // const Receiver = require('./receiver');
-// require('./sender') // const Sender = require('./sender');
-// require('./validation') // const { isValidStatusCode } = require('./validation');
-// require('./validation') // const { isValidStatusCode, isValidUTF8 } = require('./validation');
-// require('./websocket') // const WebSocket = require('./websocket');
-// require('async-limiter') // const Limiter = require('async-limiter');
-// require('bufferutil') // const bufferUtil = require('bufferutil');
-// require('crypto') // const crypto = require('crypto');
-// require('crypto') // const { randomBytes } = require('crypto');
-// require('events') // const EventEmitter = require('events');
-// require('http') // const http = require('http');
-// require('https') // const https = require('https');
-// require('net') // const net = require('net');
-// require('stream') // const { Writable } = require('stream');
-// require('tls') // const tls = require('tls');
-// require('url') // const url = require('url');
-// require('utf-8-validate') // const isValidUTF8 = require('utf-8-validate');
-// require('zlib') // const zlib = require('zlib');
-
-
-
-/*
-lib https://github.com/websockets/ws/blob/6.2.1/validation.js
+file https://github.com/websockets/ws/blob/6.2.1/lib/validation.js
 */
 'use strict';
 
-// hack-puppeteer - module.exports
-const isValidUTF8 = () => true;
+try {
+//   const isValidUTF8 = require('utf-8-validate');
+
+  exports_websockets_ws_lib_validation.isValidUTF8 =
+    typeof isValidUTF8 === 'object'
+      ? isValidUTF8.Validation.isValidUTF8 // utf-8-validate@<3.0.0
+      : isValidUTF8;
+} catch (e) /* istanbul ignore next */ {
+  exports_websockets_ws_lib_validation.isValidUTF8 = () => true;
+}
 
 /**
  * Checks if a status code is allowed in a close frame.
@@ -399,8 +657,7 @@ const isValidUTF8 = () => true;
  * @return {Boolean} `true` if the status code is valid, else `false`
  * @public
  */
-// hack-puppeteer - module.exports
-const isValidStatusCode = (code) => {
+exports_websockets_ws_lib_validation.isValidStatusCode = (code) => {
   return (
     (code >= 1000 &&
       code <= 1013 &&
@@ -414,11 +671,11 @@ const isValidStatusCode = (code) => {
 
 
 /*
-lib https://github.com/websockets/ws/blob/6.2.1/buffer-util.js
+file https://github.com/websockets/ws/blob/6.2.1/lib/buffer-util.js
 */
 'use strict';
 
-// const { EMPTY_BUFFER } = require('./constants');
+// const { EMPTY_BUFFER } = exports_websockets_ws_lib_constants;
 
 /**
  * Merges an array of buffers into a new buffer.
@@ -534,41 +791,37 @@ function viewToBuffer(view) {
   return buf;
 }
 
-// hack-puppeteer - module.exports
-const applyMask = _mask;
-const bufferUtil = { concat };
-const mask = _mask;
-const unmask = _mask;
+try {
+//   const bufferUtil = require('bufferutil');
+  const bu = bufferUtil.BufferUtil || bufferUtil;
+
+  exports_websockets_ws_lib_buffer_util = {
+    concat,
+    mask(source, mask, output, offset, length) {
+      if (length < 48) _mask(source, mask, output, offset, length);
+      else bu.mask(source, mask, output, offset, length);
+    },
+    toArrayBuffer,
+    toBuffer,
+    unmask(buffer, mask) {
+      if (buffer.length < 32) _unmask(buffer, mask);
+      else bu.unmask(buffer, mask);
+    }
+  };
+} catch (e) /* istanbul ignore next */ {
+  exports_websockets_ws_lib_buffer_util = {
+    concat,
+    mask: _mask,
+    toArrayBuffer,
+    toBuffer,
+    unmask: _unmask
+  };
+}
 
 
 
 /*
-lib https://github.com/websockets/ws/blob/6.2.1/constants.js
-*/
-'use strict';
-
-module.exports = {
-  BINARY_TYPES: ['nodebuffer', 'arraybuffer', 'fragments'],
-  GUID: '258EAFA5-E914-47DA-95CA-C5AB0DC85B11',
-  kStatusCode: Symbol('status-code'),
-  kWebSocket: Symbol('websocket'),
-  EMPTY_BUFFER: Buffer.alloc(0),
-  NOOP: () => {}
-};
-// hack-puppeteer - module.exports
-const {
-  BINARY_TYPES,
-  GUID,
-  kStatusCode,
-  kWebSocket,
-  EMPTY_BUFFER,
-  NOOP
-} = module.exports;
-
-
-
-/*
-lib https://github.com/websockets/ws/blob/6.2.1/event-target.js
+file https://github.com/websockets/ws/blob/6.2.1/lib/event-target.js
 */
 'use strict';
 
@@ -739,15 +992,12 @@ const EventTarget = {
   }
 };
 
-module.exports = EventTarget;
-// hack-puppeteer - module.exports
-const addEventListener = EventTarget.addEventListener;
-const removeEventListener = EventTarget.removeEventListener;
+exports_websockets_ws_lib_event_target = EventTarget;
 
 
 
 /*
-lib https://github.com/websockets/ws/blob/6.2.1/extension.js
+file https://github.com/websockets/ws/blob/6.2.1/lib/extension.js
 */
 'use strict';
 
@@ -970,535 +1220,26 @@ function format(extensions) {
     .join(', ');
 }
 
-module.exports = { format, parse };
+exports_websockets_ws_lib_extension = { format, parse };
 
 
 
 /*
-lib https://github.com/websockets/ws/blob/6.2.1/permessage-deflate.js
-*/
-'use strict';
-
-// const Limiter = require('async-limiter');
-// const zlib = require('zlib');
-
-// const bufferUtil = require('./buffer-util');
-// const { kStatusCode, NOOP } = require('./constants');
-
-const TRAILER = Buffer.from([0x00, 0x00, 0xff, 0xff]);
-const EMPTY_BLOCK = Buffer.from([0x00]);
-
-const kPerMessageDeflate = Symbol('permessage-deflate');
-const kTotalLength = Symbol('total-length');
-const kCallback = Symbol('callback');
-const kBuffers = Symbol('buffers');
-const kError = Symbol('error');
-
-//
-// We limit zlib concurrency, which prevents severe memory fragmentation
-// as documented in https://github.com/nodejs/node/issues/8871#issuecomment-250915913
-// and https://github.com/websockets/ws/issues/1202
-//
-// Intentionally global; it's the global thread pool that's an issue.
-//
-let zlibLimiter;
-
-/**
- * permessage-deflate implementation.
- */
-class PerMessageDeflate {
-  /**
-   * Creates a PerMessageDeflate instance.
-   *
-   * @param {Object} options Configuration options
-   * @param {Boolean} options.serverNoContextTakeover Request/accept disabling
-   *     of server context takeover
-   * @param {Boolean} options.clientNoContextTakeover Advertise/acknowledge
-   *     disabling of client context takeover
-   * @param {(Boolean|Number)} options.serverMaxWindowBits Request/confirm the
-   *     use of a custom server window size
-   * @param {(Boolean|Number)} options.clientMaxWindowBits Advertise support
-   *     for, or request, a custom client window size
-   * @param {Object} options.zlibDeflateOptions Options to pass to zlib on deflate
-   * @param {Object} options.zlibInflateOptions Options to pass to zlib on inflate
-   * @param {Number} options.threshold Size (in bytes) below which messages
-   *     should not be compressed
-   * @param {Number} options.concurrencyLimit The number of concurrent calls to
-   *     zlib
-   * @param {Boolean} isServer Create the instance in either server or client
-   *     mode
-   * @param {Number} maxPayload The maximum allowed message length
-   */
-  constructor(options, isServer, maxPayload) {
-    this._maxPayload = maxPayload | 0;
-    this._options = options || {};
-    this._threshold =
-      this._options.threshold !== undefined ? this._options.threshold : 1024;
-    this._isServer = !!isServer;
-    this._deflate = null;
-    this._inflate = null;
-
-    this.params = null;
-
-    if (!zlibLimiter) {
-      const concurrency =
-        this._options.concurrencyLimit !== undefined
-          ? this._options.concurrencyLimit
-          : 10;
-      zlibLimiter = new Limiter({ concurrency });
-    }
-  }
-
-  /**
-   * @type {String}
-   */
-  static get extensionName() {
-    return 'permessage-deflate';
-  }
-
-  /**
-   * Create an extension negotiation offer.
-   *
-   * @return {Object} Extension parameters
-   * @public
-   */
-  offer() {
-    const params = {};
-
-    if (this._options.serverNoContextTakeover) {
-      params.server_no_context_takeover = true;
-    }
-    if (this._options.clientNoContextTakeover) {
-      params.client_no_context_takeover = true;
-    }
-    if (this._options.serverMaxWindowBits) {
-      params.server_max_window_bits = this._options.serverMaxWindowBits;
-    }
-    if (this._options.clientMaxWindowBits) {
-      params.client_max_window_bits = this._options.clientMaxWindowBits;
-    } else if (this._options.clientMaxWindowBits == null) {
-      params.client_max_window_bits = true;
-    }
-
-    return params;
-  }
-
-  /**
-   * Accept an extension negotiation offer/response.
-   *
-   * @param {Array} configurations The extension negotiation offers/reponse
-   * @return {Object} Accepted configuration
-   * @public
-   */
-  accept(configurations) {
-    configurations = this.normalizeParams(configurations);
-
-    this.params = this._isServer
-      ? this.acceptAsServer(configurations)
-      : this.acceptAsClient(configurations);
-
-    return this.params;
-  }
-
-  /**
-   * Releases all resources used by the extension.
-   *
-   * @public
-   */
-  cleanup() {
-    if (this._inflate) {
-      this._inflate.close();
-      this._inflate = null;
-    }
-
-    if (this._deflate) {
-      this._deflate.close();
-      this._deflate = null;
-    }
-  }
-
-  /**
-   *  Accept an extension negotiation offer.
-   *
-   * @param {Array} offers The extension negotiation offers
-   * @return {Object} Accepted configuration
-   * @private
-   */
-  acceptAsServer(offers) {
-    const opts = this._options;
-    const accepted = offers.find((params) => {
-      if (
-        (opts.serverNoContextTakeover === false &&
-          params.server_no_context_takeover) ||
-        (params.server_max_window_bits &&
-          (opts.serverMaxWindowBits === false ||
-            (typeof opts.serverMaxWindowBits === 'number' &&
-              opts.serverMaxWindowBits > params.server_max_window_bits))) ||
-        (typeof opts.clientMaxWindowBits === 'number' &&
-          !params.client_max_window_bits)
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-
-    if (!accepted) {
-      throw new Error('None of the extension offers can be accepted');
-    }
-
-    if (opts.serverNoContextTakeover) {
-      accepted.server_no_context_takeover = true;
-    }
-    if (opts.clientNoContextTakeover) {
-      accepted.client_no_context_takeover = true;
-    }
-    if (typeof opts.serverMaxWindowBits === 'number') {
-      accepted.server_max_window_bits = opts.serverMaxWindowBits;
-    }
-    if (typeof opts.clientMaxWindowBits === 'number') {
-      accepted.client_max_window_bits = opts.clientMaxWindowBits;
-    } else if (
-      accepted.client_max_window_bits === true ||
-      opts.clientMaxWindowBits === false
-    ) {
-      delete accepted.client_max_window_bits;
-    }
-
-    return accepted;
-  }
-
-  /**
-   * Accept the extension negotiation response.
-   *
-   * @param {Array} response The extension negotiation response
-   * @return {Object} Accepted configuration
-   * @private
-   */
-  acceptAsClient(response) {
-    const params = response[0];
-
-    if (
-      this._options.clientNoContextTakeover === false &&
-      params.client_no_context_takeover
-    ) {
-      throw new Error('Unexpected parameter "client_no_context_takeover"');
-    }
-
-    if (!params.client_max_window_bits) {
-      if (typeof this._options.clientMaxWindowBits === 'number') {
-        params.client_max_window_bits = this._options.clientMaxWindowBits;
-      }
-    } else if (
-      this._options.clientMaxWindowBits === false ||
-      (typeof this._options.clientMaxWindowBits === 'number' &&
-        params.client_max_window_bits > this._options.clientMaxWindowBits)
-    ) {
-      throw new Error(
-        'Unexpected or invalid parameter "client_max_window_bits"'
-      );
-    }
-
-    return params;
-  }
-
-  /**
-   * Normalize parameters.
-   *
-   * @param {Array} configurations The extension negotiation offers/reponse
-   * @return {Array} The offers/response with normalized parameters
-   * @private
-   */
-  normalizeParams(configurations) {
-    configurations.forEach((params) => {
-      Object.keys(params).forEach((key) => {
-        var value = params[key];
-
-        if (value.length > 1) {
-          throw new Error(`Parameter "${key}" must have only a single value`);
-        }
-
-        value = value[0];
-
-        if (key === 'client_max_window_bits') {
-          if (value !== true) {
-            const num = +value;
-            if (!Number.isInteger(num) || num < 8 || num > 15) {
-              throw new TypeError(
-                `Invalid value for parameter "${key}": ${value}`
-              );
-            }
-            value = num;
-          } else if (!this._isServer) {
-            throw new TypeError(
-              `Invalid value for parameter "${key}": ${value}`
-            );
-          }
-        } else if (key === 'server_max_window_bits') {
-          const num = +value;
-          if (!Number.isInteger(num) || num < 8 || num > 15) {
-            throw new TypeError(
-              `Invalid value for parameter "${key}": ${value}`
-            );
-          }
-          value = num;
-        } else if (
-          key === 'client_no_context_takeover' ||
-          key === 'server_no_context_takeover'
-        ) {
-          if (value !== true) {
-            throw new TypeError(
-              `Invalid value for parameter "${key}": ${value}`
-            );
-          }
-        } else {
-          throw new Error(`Unknown parameter "${key}"`);
-        }
-
-        params[key] = value;
-      });
-    });
-
-    return configurations;
-  }
-
-  /**
-   * Decompress data. Concurrency limited by async-limiter.
-   *
-   * @param {Buffer} data Compressed data
-   * @param {Boolean} fin Specifies whether or not this is the last fragment
-   * @param {Function} callback Callback
-   * @public
-   */
-  decompress(data, fin, callback) {
-    zlibLimiter.push((done) => {
-      this._decompress(data, fin, (err, result) => {
-        done();
-        callback(err, result);
-      });
-    });
-  }
-
-  /**
-   * Compress data. Concurrency limited by async-limiter.
-   *
-   * @param {Buffer} data Data to compress
-   * @param {Boolean} fin Specifies whether or not this is the last fragment
-   * @param {Function} callback Callback
-   * @public
-   */
-  compress(data, fin, callback) {
-    zlibLimiter.push((done) => {
-      this._compress(data, fin, (err, result) => {
-        done();
-        callback(err, result);
-      });
-    });
-  }
-
-  /**
-   * Decompress data.
-   *
-   * @param {Buffer} data Compressed data
-   * @param {Boolean} fin Specifies whether or not this is the last fragment
-   * @param {Function} callback Callback
-   * @private
-   */
-  _decompress(data, fin, callback) {
-    const endpoint = this._isServer ? 'client' : 'server';
-
-    if (!this._inflate) {
-      const key = `${endpoint}_max_window_bits`;
-      const windowBits =
-        typeof this.params[key] !== 'number'
-          ? zlib.Z_DEFAULT_WINDOWBITS
-          : this.params[key];
-
-      this._inflate = zlib.createInflateRaw(
-        Object.assign({}, this._options.zlibInflateOptions, { windowBits })
-      );
-      this._inflate[kPerMessageDeflate] = this;
-      this._inflate[kTotalLength] = 0;
-      this._inflate[kBuffers] = [];
-      this._inflate.on('error', inflateOnError);
-      this._inflate.on('data', inflateOnData);
-    }
-
-    this._inflate[kCallback] = callback;
-
-    this._inflate.write(data);
-    if (fin) this._inflate.write(TRAILER);
-
-    this._inflate.flush(() => {
-      const err = this._inflate[kError];
-
-      if (err) {
-        this._inflate.close();
-        this._inflate = null;
-        callback(err);
-        return;
-      }
-
-      const data = bufferUtil.concat(
-        this._inflate[kBuffers],
-        this._inflate[kTotalLength]
-      );
-
-      if (fin && this.params[`${endpoint}_no_context_takeover`]) {
-        this._inflate.close();
-        this._inflate = null;
-      } else {
-        this._inflate[kTotalLength] = 0;
-        this._inflate[kBuffers] = [];
-      }
-
-      callback(null, data);
-    });
-  }
-
-  /**
-   * Compress data.
-   *
-   * @param {Buffer} data Data to compress
-   * @param {Boolean} fin Specifies whether or not this is the last fragment
-   * @param {Function} callback Callback
-   * @private
-   */
-  _compress(data, fin, callback) {
-    if (!data || data.length === 0) {
-      process.nextTick(callback, null, EMPTY_BLOCK);
-      return;
-    }
-
-    const endpoint = this._isServer ? 'server' : 'client';
-
-    if (!this._deflate) {
-      const key = `${endpoint}_max_window_bits`;
-      const windowBits =
-        typeof this.params[key] !== 'number'
-          ? zlib.Z_DEFAULT_WINDOWBITS
-          : this.params[key];
-
-      this._deflate = zlib.createDeflateRaw(
-        Object.assign({}, this._options.zlibDeflateOptions, { windowBits })
-      );
-
-      this._deflate[kTotalLength] = 0;
-      this._deflate[kBuffers] = [];
-
-      //
-      // An `'error'` event is emitted, only on Node.js < 10.0.0, if the
-      // `zlib.DeflateRaw` instance is closed while data is being processed.
-      // This can happen if `PerMessageDeflate#cleanup()` is called at the wrong
-      // time due to an abnormal WebSocket closure.
-      //
-      this._deflate.on('error', NOOP);
-      this._deflate.on('data', deflateOnData);
-    }
-
-    this._deflate.write(data);
-    this._deflate.flush(zlib.Z_SYNC_FLUSH, () => {
-      if (!this._deflate) {
-        //
-        // This `if` statement is only needed for Node.js < 10.0.0 because as of
-        // commit https://github.com/nodejs/node/commit/5e3f5164, the flush
-        // callback is no longer called if the deflate stream is closed while
-        // data is being processed.
-        //
-        return;
-      }
-
-      var data = bufferUtil.concat(
-        this._deflate[kBuffers],
-        this._deflate[kTotalLength]
-      );
-
-      if (fin) data = data.slice(0, data.length - 4);
-
-      if (fin && this.params[`${endpoint}_no_context_takeover`]) {
-        this._deflate.close();
-        this._deflate = null;
-      } else {
-        this._deflate[kTotalLength] = 0;
-        this._deflate[kBuffers] = [];
-      }
-
-      callback(null, data);
-    });
-  }
-}
-
-module.exports = PerMessageDeflate;
-
-/**
- * The listener of the `zlib.DeflateRaw` stream `'data'` event.
- *
- * @param {Buffer} chunk A chunk of data
- * @private
- */
-function deflateOnData(chunk) {
-  this[kBuffers].push(chunk);
-  this[kTotalLength] += chunk.length;
-}
-
-/**
- * The listener of the `zlib.InflateRaw` stream `'data'` event.
- *
- * @param {Buffer} chunk A chunk of data
- * @private
- */
-function inflateOnData(chunk) {
-  this[kTotalLength] += chunk.length;
-
-  if (
-    this[kPerMessageDeflate]._maxPayload < 1 ||
-    this[kTotalLength] <= this[kPerMessageDeflate]._maxPayload
-  ) {
-    this[kBuffers].push(chunk);
-    return;
-  }
-
-  this[kError] = new RangeError('Max payload size exceeded');
-  this[kError][kStatusCode] = 1009;
-  this.removeListener('data', inflateOnData);
-  this.reset();
-}
-
-/**
- * The listener of the `zlib.InflateRaw` stream `'error'` event.
- *
- * @param {Error} err The emitted error
- * @private
- */
-function inflateOnError(err) {
-  //
-  // There is no need to call `Zlib#close()` as the handle is automatically
-  // closed when an error is emitted.
-  //
-  this[kPerMessageDeflate]._inflate = null;
-  err[kStatusCode] = 1007;
-  this[kCallback](err);
-}
-
-
-
-/*
-lib https://github.com/websockets/ws/blob/6.2.1/receiver.js
+file https://github.com/websockets/ws/blob/6.2.1/lib/receiver.js
 */
 'use strict';
 
 // const { Writable } = require('stream');
 
-// const PerMessageDeflate = require('./permessage-deflate');
-// hack-puppeteer - module.exports
+// const PerMessageDeflate = exports_websockets_ws_lib_permessage_deflate;
 // const {
-  // BINARY_TYPES,
-  // EMPTY_BUFFER,
-  // kStatusCode,
-  // kWebSocket
-// } = require('./constants');
-// const { concat, toArrayBuffer, unmask } = require('./buffer-util');
-// const { isValidStatusCode, isValidUTF8 } = require('./validation');
+//   BINARY_TYPES,
+//   EMPTY_BUFFER,
+//   kStatusCode,
+//   kWebSocket
+// } = exports_websockets_ws_lib_constants;
+// const { concat, toArrayBuffer, unmask } = exports_websockets_ws_lib_buffer_util;
+// const { isValidStatusCode, isValidUTF8 } = exports_websockets_ws_lib_validation;
 
 const GET_INFO = 0;
 const GET_PAYLOAD_LENGTH_16 = 1;
@@ -1956,7 +1697,7 @@ class Receiver extends Writable {
   }
 }
 
-module.exports = Receiver;
+exports_websockets_ws_lib_receiver = Receiver;
 
 /**
  * Builds an error object.
@@ -1982,16 +1723,16 @@ function error(ErrorCtor, message, prefix, statusCode) {
 
 
 /*
-lib https://github.com/websockets/ws/blob/6.2.1/sender.js
+file https://github.com/websockets/ws/blob/6.2.1/lib/sender.js
 */
 'use strict';
 
 // const { randomBytes } = require('crypto');
 
-// const PerMessageDeflate = require('./permessage-deflate');
-// const { EMPTY_BUFFER } = require('./constants');
-// const { isValidStatusCode } = require('./validation');
-// const { mask: applyMask, toBuffer } = require('./buffer-util');
+// const PerMessageDeflate = exports_websockets_ws_lib_permessage_deflate;
+// const { EMPTY_BUFFER } = exports_websockets_ws_lib_constants;
+// const { isValidStatusCode } = exports_websockets_ws_lib_validation;
+// const { mask: applyMask, toBuffer } = exports_websockets_ws_lib_buffer_util;
 
 /**
  * HyBi Sender implementation.
@@ -2341,12 +2082,12 @@ class Sender {
   }
 }
 
-module.exports = Sender;
+exports_websockets_ws_lib_sender = Sender;
 
 
 
 /*
-lib https://github.com/websockets/ws/blob/6.2.1/websocket-server.js
+file https://github.com/websockets/ws/blob/6.2.1/lib/websocket-server.js
 */
 'use strict';
 
@@ -2354,10 +2095,10 @@ lib https://github.com/websockets/ws/blob/6.2.1/websocket-server.js
 // const crypto = require('crypto');
 // const http = require('http');
 
-// const PerMessageDeflate = require('./permessage-deflate');
-// const extension = require('./extension');
-// const WebSocket = require('./websocket');
-// const { GUID } = require('./constants');
+// const PerMessageDeflate = exports_websockets_ws_lib_permessage_deflate;
+// const extension = exports_websockets_ws_lib_extension;
+// const WebSocket = exports_websockets_ws_lib_websocket;
+// const { GUID } = exports_websockets_ws_lib_constants;
 
 const keyRegex = /^[+/0-9A-Za-z]{22}==$/;
 
@@ -2675,7 +2416,7 @@ class WebSocketServer extends EventEmitter {
   }
 }
 
-module.exports = WebSocketServer;
+exports_websockets_ws_lib_websocket_server = WebSocketServer;
 
 /**
  * Add event listeners on an `EventEmitter` using a map of <event, listener>
@@ -2753,7 +2494,7 @@ function abortHandshake(socket, code, message, headers) {
 
 
 /*
-lib https://github.com/websockets/ws/blob/6.2.1/websocket.js
+file https://github.com/websockets/ws/blob/6.2.1/lib/websocket.js
 */
 'use strict';
 
@@ -2765,12 +2506,11 @@ lib https://github.com/websockets/ws/blob/6.2.1/websocket.js
 // const tls = require('tls');
 // const url = require('url');
 
-// const PerMessageDeflate = require('./permessage-deflate');
-// const EventTarget = require('./event-target');
-// const extension = require('./extension');
-// const Receiver = require('./receiver');
-// const Sender = require('./sender');
-// hack-puppeteer - module.exports
+// const PerMessageDeflate = exports_websockets_ws_lib_permessage_deflate;
+// const EventTarget = exports_websockets_ws_lib_event_target;
+// const extension = exports_websockets_ws_lib_extension;
+// const Receiver = exports_websockets_ws_lib_receiver;
+// const Sender = exports_websockets_ws_lib_sender;
 // const {
 //   BINARY_TYPES,
 //   EMPTY_BUFFER,
@@ -2778,7 +2518,7 @@ lib https://github.com/websockets/ws/blob/6.2.1/websocket.js
 //   kStatusCode,
 //   kWebSocket,
 //   NOOP
-// } = require('./constants');
+// } = exports_websockets_ws_lib_constants;
 
 const readyStates = ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'];
 const protocolVersions = [8, 13];
@@ -3177,7 +2917,7 @@ readyStates.forEach((readyState, i) => {
 WebSocket.prototype.addEventListener = EventTarget.addEventListener;
 WebSocket.prototype.removeEventListener = EventTarget.removeEventListener;
 
-module.exports = WebSocket;
+exports_websockets_ws_lib_websocket = WebSocket;
 
 /**
  * Initialize a WebSocket client.
@@ -3655,121 +3395,30 @@ function socketOnError() {
 
 
 /*
-lib https://github.com/websockets/ws/blob/6.2.1/index.js
+file https://github.com/websockets/ws/blob/6.2.1/index.js
 */
 'use strict';
 
-// const WebSocket = require('./lib/websocket');
+// const WebSocket = exports_websockets_ws_lib_websocket;
 
-// hack-puppeteer - module.exports
-WebSocket.Server = WebSocketServer;
-WebSocket.Receiver = Receiver;
-WebSocket.Sender = Sender.js;
+WebSocket.Server = exports_websockets_ws_lib_websocket_server;
+WebSocket.Receiver = exports_websockets_ws_lib_receiver;
+WebSocket.Sender = exports_websockets_ws_lib_sender;
 
-module.exports = WebSocket;
-
-
-
-/*
-file https://github.com/GoogleChrome/puppeteer/tree/v1.19.0
-*/
-// require('./Accessibility') // Accessibility,
-// require('./Accessibility') // const {Accessibility} = require('./Accessibility');
-// require('./Browser') // Browser,
-// require('./Browser') // BrowserContext,
-// require('./Browser') // const {Browser} = require('./Browser');
-// require('./BrowserFetcher') // BrowserFetcher,
-// require('./BrowserFetcher') // const BrowserFetcher = require('./BrowserFetcher');
-// require('./Connection') // CDPSession,
-// require('./Connection') // const {Connection} = require('./Connection');
-// require('./Coverage') // Coverage,
-// require('./Coverage') // const {Coverage} = require('./Coverage');
-// require('./DOMWorld') // const {DOMWorld} = require('./DOMWorld');
-// require('./DeviceDescriptors') // const DeviceDescriptors = require('./DeviceDescriptors');
-// require('./Dialog') // Dialog,
-// require('./Dialog') // const {Dialog} = require('./Dialog');
-// require('./EmulationManager') // const {EmulationManager} = require('./EmulationManager');
-// require('./Errors') // TimeoutError,
-// require('./Errors') // const Errors = require('./Errors');
-// require('./Errors') // const {TimeoutError} = require('./Errors');
-// require('./Events') // const {Events} = require('./Events');
-// require('./ExecutionContext') // ExecutionContext,
-// require('./ExecutionContext') // const {EVALUATION_SCRIPT_URL} = require('./ExecutionContext');
-// require('./ExecutionContext') // const {ExecutionContext, EVALUATION_SCRIPT_URL} = require('./ExecutionContext');
-// require('./ExecutionContext') // const {ExecutionContext} = require('./ExecutionContext');
-// require('./FrameManager') // Frame,
-// require('./FrameManager') // const {FrameManager} = require('./FrameManager');
-// require('./Input') // Keyboard,
-// require('./Input') // Mouse,
-// require('./Input') // Touchscreen,
-// require('./Input') // const {Keyboard, Mouse, Touchscreen} = require('./Input');
-// require('./JSHandle') // ElementHandle,
-// require('./JSHandle') // JSHandle,
-// require('./JSHandle') // const {JSHandle} = require('./JSHandle');
-// require('./JSHandle') // const {createJSHandle, JSHandle} = require('./JSHandle');
-// require('./JSHandle') // const {createJSHandle} = require('./JSHandle');
-// require('./Launcher') // const Launcher = require('./Launcher');
-// require('./LifecycleWatcher') // const {LifecycleWatcher} = require('./LifecycleWatcher');
-// require('./NetworkManager') // Request,
-// require('./NetworkManager') // Response,
-// require('./NetworkManager') // SecurityDetails,
-// require('./NetworkManager') // const {NetworkManager} = require('./NetworkManager');
-// require('./Page') // ConsoleMessage,
-// require('./Page') // FileChooser,
-// require('./Page') // Page,
-// require('./Page') // const {Page} = require('./Page');
-// require('./PipeTransport') // const PipeTransport = require('./PipeTransport');
-// require('./Puppeteer') // Puppeteer,
-// require('./Target') // Target,
-// require('./Target') // const {Target} = require('./Target');
-// require('./TaskQueue') // const {TaskQueue} = require('./TaskQueue');
-// require('./TimeoutSettings') // const {TimeoutSettings} = require('./TimeoutSettings');
-// require('./Tracing') // Tracing,
-// require('./Tracing') // const Tracing = require('./Tracing');
-// require('./USKeyboardLayout') // const keyDefinitions = require('./USKeyboardLayout');
-// require('./WebSocketTransport') // const WebSocketTransport = require('./WebSocketTransport');
-// require('./Worker') // Worker,
-// require('./Worker') // const {Worker} = require('./Worker');
-// require('./helper') // const { helper, assert } = require('./helper');
-// require('./helper') // const {assert} = require('./helper');
-// require('./helper') // const {debugError} = require('./helper');
-// require('./helper') // const {helper, assert, debugError} = require('./helper');
-// require('./helper') // const {helper, assert} = require('./helper');
-// require('./helper') // const {helper, debugError, assert} = require('./helper');
-// require('./helper') // const {helper, debugError} = require('./helper');
-// require('./lib/Puppeteer') // const Puppeteer = asyncawait ? require('./lib/Puppeteer') : require('./node6/lib/Puppeteer');
-// require('./lib/api') // const api = require('./lib/api');
-// require('./lib/helper') // const {helper} = require('./lib/helper');
-// require('./package.json') // const packageJson = require('./package.json');
-// require('child_process') // const childProcess = require('child_process');
-// require('debug') // const debugError = require('debug')(`puppeteer:error`);
-// require('debug') // const debugProtocol = require('debug')('puppeteer:protocol');
-// require('events') // const EventEmitter = require('events');
-// require('extract-zip') // const extract = require('extract-zip');
-// require('fs') // const fs = require('fs');
-// require('http') // const http = require('http');
-// require('http') // require('http').request(options, requestCallback);
-// require('https') // const https = require('https');
-// require('https') // require('https').request(options, requestCallback) :
-// require('https-proxy-agent') // const ProxyAgent = require('https-proxy-agent');
-// require('mime') // const mime = require('mime');
-// require('os') // const os = require('os');
-// require('path') // const path = require('path');
-// require('proxy-from-env') // const getProxyForUrl = require('proxy-from-env').getProxyForUrl;
-// require('readline') // const readline = require('readline');
-// require('rimraf') // const removeFolder = require('rimraf');
-// require('rimraf') // const removeRecursive = require('rimraf');
-// require('url') // const URL = require('url');
-// require('util') // const util = require('util');
-// require('ws') // const WebSocket = require('ws');
+exports_websockets_ws_index = WebSocket;
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/package.json
+repo https://github.com/GoogleChrome/puppeteer/tree/v1.19.0
 */
-// hack-puppeteer - module.exports
-const packageJson = {
+
+
+
+/*
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/package.json
+*/
+exports_GoogleChrome_puppeteer_package_json = {
   "name": "puppeteer",
   "version": "1.19.0",
   "description": "A high-level API to control headless Chrome over the DevTools Protocol",
@@ -3846,7 +3495,7 @@ const packageJson = {
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/helper.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/helper.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -3863,7 +3512,7 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/helper.js
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// const {TimeoutError} = require('./Errors');
+// const {TimeoutError} = exports_GoogleChrome_puppeteer_lib_Errors;
 // const debugError = require('debug')(`puppeteer:error`);
 // const fs = require('fs');
 
@@ -4120,18 +3769,17 @@ function assert(value, message) {
     throw new Error(message);
 }
 
-module.exports = {
+exports_GoogleChrome_puppeteer_lib_helper = {
   helper: Helper,
   assert,
   debugError
 };
-// hack-puppeteer - module.exports
-const helper = Helper;
+let helper = exports_GoogleChrome_puppeteer_lib_helper.helper;
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Accessibility.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Accessibility.js
 */
 /**
  * Copyright 2018 Google Inc. All rights reserved.
@@ -4262,7 +3910,6 @@ function serializeTree(node, whitelistedNodes) {
     serializedNode.children = children;
   return [serializedNode];
 }
-
 
 class AXNode {
   /**
@@ -4554,12 +4201,12 @@ class AXNode {
   }
 }
 
-module.exports = {Accessibility};
+exports_GoogleChrome_puppeteer_lib_Accessibility = {Accessibility};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Browser.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Browser.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -4577,11 +4224,11 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Browser.js
  * limitations under the License.
  */
 
-// const { helper, assert } = require('./helper');
-// const {Target} = require('./Target');
+// const { helper, assert } = exports_GoogleChrome_puppeteer_lib_helper;
+// const {Target} = exports_GoogleChrome_puppeteer_lib_Target;
 // const EventEmitter = require('events');
-// const {TaskQueue} = require('./TaskQueue');
-// const {Events} = require('./Events');
+// const {TaskQueue} = exports_GoogleChrome_puppeteer_lib_TaskQueue;
+// const {Events} = exports_GoogleChrome_puppeteer_lib_Events;
 
 class Browser extends EventEmitter {
   /**
@@ -4943,12 +4590,12 @@ class BrowserContext extends EventEmitter {
   }
 }
 
-module.exports = {Browser, BrowserContext};
+exports_GoogleChrome_puppeteer_lib_Browser = {Browser, BrowserContext};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Connection.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Connection.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -4965,8 +4612,8 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Connection.js
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// const {assert} = require('./helper');
-// const {Events} = require('./Events');
+// const {assert} = exports_GoogleChrome_puppeteer_lib_helper;
+// const {Events} = exports_GoogleChrome_puppeteer_lib_Events;
 // const debugProtocol = require('debug')('puppeteer:protocol');
 // const EventEmitter = require('events');
 
@@ -5191,12 +4838,12 @@ function rewriteError(error, message) {
   return error;
 }
 
-module.exports = {Connection, CDPSession};
+exports_GoogleChrome_puppeteer_lib_Connection = {Connection, CDPSession};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Coverage.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Coverage.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -5214,9 +4861,9 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Coverage.js
  * limitations under the License.
  */
 
-// const {helper, debugError, assert} = require('./helper');
+// const {helper, debugError, assert} = exports_GoogleChrome_puppeteer_lib_helper;
 
-// const {EVALUATION_SCRIPT_URL} = require('./ExecutionContext');
+// const {EVALUATION_SCRIPT_URL} = exports_GoogleChrome_puppeteer_lib_ExecutionContext;
 
 /**
  * @typedef {Object} CoverageEntry
@@ -5263,7 +4910,7 @@ class Coverage {
   }
 }
 
-module.exports = {Coverage};
+exports_GoogleChrome_puppeteer_lib_Coverage = {Coverage};
 
 class JSCoverage {
   /**
@@ -5514,7 +5161,7 @@ function convertToDisjointRanges(nestedRanges) {
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/DOMWorld.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/DOMWorld.js
 */
 /**
  * Copyright 2019 Google Inc. All rights reserved.
@@ -5533,9 +5180,9 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/DOMWorld.js
  */
 
 // const fs = require('fs');
-// const {helper, assert} = require('./helper');
-// const {LifecycleWatcher} = require('./LifecycleWatcher');
-// const {TimeoutError} = require('./Errors');
+// const {helper, assert} = exports_GoogleChrome_puppeteer_lib_helper;
+// const {LifecycleWatcher} = exports_GoogleChrome_puppeteer_lib_LifecycleWatcher;
+// const {TimeoutError} = exports_GoogleChrome_puppeteer_lib_Errors;
 const readFileAsync = helper.promisify(fs.readFile);
 
 /**
@@ -6234,12 +5881,12 @@ async function waitForPredicatePageFunction(predicateBody, polling, timeout, ...
   }
 }
 
-module.exports = {DOMWorld};
+exports_GoogleChrome_puppeteer_lib_DOMWorld = {DOMWorld};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/DeviceDescriptors.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/DeviceDescriptors.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -6257,7 +5904,7 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/DeviceDescriptors.js
  * limitations under the License.
  */
 
-module.exports = [
+exports_GoogleChrome_puppeteer_lib_DeviceDescriptors = [
   {
     'name': 'Blackberry PlayBook',
     'userAgent': 'Mozilla/5.0 (PlayBook; U; RIM Tablet OS 2.1.0; en-US) AppleWebKit/536.2+ (KHTML like Gecko) Version/7.2.1.0 Safari/536.2+',
@@ -7087,15 +6734,13 @@ module.exports = [
     }
   }
 ];
-for (const device of module.exports)
-  module.exports[device.name] = device;
-// hack-puppeteer - module.exports
-const DeviceDescriptors = module.exports;
+for (const device of exports_GoogleChrome_puppeteer_lib_DeviceDescriptors)
+  exports_GoogleChrome_puppeteer_lib_DeviceDescriptors[device.name] = device;
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Dialog.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Dialog.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -7113,7 +6758,7 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Dialog.js
  * limitations under the License.
  */
 
-// const {assert} = require('./helper');
+// const {assert} = exports_GoogleChrome_puppeteer_lib_helper;
 
 class Dialog {
   /**
@@ -7179,12 +6824,12 @@ Dialog.Type = {
   Prompt: 'prompt'
 };
 
-module.exports = {Dialog};
+exports_GoogleChrome_puppeteer_lib_Dialog = {Dialog};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/EmulationManager.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/EmulationManager.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -7239,12 +6884,12 @@ class EmulationManager {
   }
 }
 
-module.exports = {EmulationManager};
+exports_GoogleChrome_puppeteer_lib_EmulationManager = {EmulationManager};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Errors.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Errors.js
 */
 /**
  * Copyright 2018 Google Inc. All rights reserved.
@@ -7272,16 +6917,14 @@ class CustomError extends Error {
 
 class TimeoutError extends CustomError {}
 
-module.exports = {
+exports_GoogleChrome_puppeteer_lib_Errors = {
   TimeoutError,
 };
-// hack-puppeteer - module.exports
-const Errors = module.exports;
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Events.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Events.js
 */
 /**
  * Copyright 2019 Google Inc. All rights reserved.
@@ -7362,12 +7005,12 @@ const Events = {
   },
 };
 
-module.exports = { Events };
+exports_GoogleChrome_puppeteer_lib_Events = { Events };
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/ExecutionContext.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/ExecutionContext.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -7385,8 +7028,8 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/ExecutionContext.js
  * limitations under the License.
  */
 
-// const {helper, assert} = require('./helper');
-// const {createJSHandle, JSHandle} = require('./JSHandle');
+// const {helper, assert} = exports_GoogleChrome_puppeteer_lib_helper;
+// const {createJSHandle, JSHandle} = exports_GoogleChrome_puppeteer_lib_JSHandle;
 
 const EVALUATION_SCRIPT_URL = '__puppeteer_evaluation_script__';
 const SOURCE_URL_REGEX = /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m;
@@ -7573,12 +7216,12 @@ class ExecutionContext {
   }
 }
 
-module.exports = {ExecutionContext, EVALUATION_SCRIPT_URL};
+exports_GoogleChrome_puppeteer_lib_ExecutionContext = {ExecutionContext, EVALUATION_SCRIPT_URL};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/FrameManager.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/FrameManager.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -7597,12 +7240,12 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/FrameManager.js
  */
 
 // const EventEmitter = require('events');
-// const {helper, assert, debugError} = require('./helper');
-// const {Events} = require('./Events');
-// const {ExecutionContext, EVALUATION_SCRIPT_URL} = require('./ExecutionContext');
-// const {LifecycleWatcher} = require('./LifecycleWatcher');
-// const {DOMWorld} = require('./DOMWorld');
-// const {NetworkManager} = require('./NetworkManager');
+// const {helper, assert, debugError} = exports_GoogleChrome_puppeteer_lib_helper;
+// const {Events} = exports_GoogleChrome_puppeteer_lib_Events;
+// const {ExecutionContext, EVALUATION_SCRIPT_URL} = exports_GoogleChrome_puppeteer_lib_ExecutionContext;
+// const {LifecycleWatcher} = exports_GoogleChrome_puppeteer_lib_LifecycleWatcher;
+// const {DOMWorld} = exports_GoogleChrome_puppeteer_lib_DOMWorld;
+// const {NetworkManager} = exports_GoogleChrome_puppeteer_lib_NetworkManager;
 
 const UTILITY_WORLD_NAME = '__puppeteer_utility_world__';
 
@@ -8297,12 +7940,12 @@ function assertNoLegacyNavigationOptions(options) {
   assert(options.waitUntil !== 'networkidle', 'ERROR: "networkidle" option is no longer supported. Use "networkidle2" instead');
 }
 
-module.exports = {FrameManager, Frame};
+exports_GoogleChrome_puppeteer_lib_FrameManager = {FrameManager, Frame};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Input.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Input.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -8320,8 +7963,8 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Input.js
  * limitations under the License.
  */
 
-// const {assert} = require('./helper');
-// const keyDefinitions = require('./USKeyboardLayout');
+// const {assert} = exports_GoogleChrome_puppeteer_lib_helper;
+// const keyDefinitions = exports_GoogleChrome_puppeteer_lib_USKeyboardLayout;
 
 /**
  * @typedef {Object} KeyDescription
@@ -8616,12 +8259,12 @@ class Touchscreen {
   }
 }
 
-module.exports = { Keyboard, Mouse, Touchscreen};
+exports_GoogleChrome_puppeteer_lib_Input = { Keyboard, Mouse, Touchscreen};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/JSHandle.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/JSHandle.js
 */
 /**
  * Copyright 2019 Google Inc. All rights reserved.
@@ -8639,7 +8282,7 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/JSHandle.js
  * limitations under the License.
  */
 
-// const {helper, assert, debugError} = require('./helper');
+// const {helper, assert, debugError} = exports_GoogleChrome_puppeteer_lib_helper;
 // const path = require('path');
 
 function createJSHandle(context, remoteObject) {
@@ -9147,12 +8790,12 @@ function computeQuadArea(quad) {
  * @property {number} height
  */
 
-module.exports = {createJSHandle, JSHandle, ElementHandle};
+exports_GoogleChrome_puppeteer_lib_JSHandle = {createJSHandle, JSHandle, ElementHandle};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Launcher.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Launcher.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -9176,15 +8819,15 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Launcher.js
 // const URL = require('url');
 // const removeFolder = require('rimraf');
 // const childProcess = require('child_process');
-// const BrowserFetcher = require('./BrowserFetcher');
-// const {Connection} = require('./Connection');
-// const {Browser} = require('./Browser');
+// const BrowserFetcher = exports_GoogleChrome_puppeteer_lib_BrowserFetcher;
+// const {Connection} = exports_GoogleChrome_puppeteer_lib_Connection;
+// const {Browser} = exports_GoogleChrome_puppeteer_lib_Browser;
 // const readline = require('readline');
 // const fs = require('fs');
-// const {helper, assert, debugError} = require('./helper');
-// const {TimeoutError} = require('./Errors');
-// const WebSocketTransport = require('./WebSocketTransport');
-// const PipeTransport = require('./PipeTransport');
+// const {helper, assert, debugError} = exports_GoogleChrome_puppeteer_lib_helper;
+// const {TimeoutError} = exports_GoogleChrome_puppeteer_lib_Errors;
+// const WebSocketTransport = exports_GoogleChrome_puppeteer_lib_WebSocketTransport;
+// const PipeTransport = exports_GoogleChrome_puppeteer_lib_PipeTransport;
 
 const mkdtempAsync = helper.promisify(fs.mkdtemp);
 const removeFolderAsync = helper.promisify(removeFolder);
@@ -9286,8 +8929,6 @@ class Launcher {
       else
         stdio = ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'];
     }
-    // debug
-    console.error(JSON.stringify([chromeExecutable, chromeArguments], null, 4));
     const chromeProcess = childProcess.spawn(
         chromeExecutable,
         chromeArguments,
@@ -9465,20 +9106,19 @@ class Launcher {
         return { executablePath, missingText };
       }
     }
-    //!! const browserFetcher = new BrowserFetcher(this._projectRoot);
-    //!! if (!this._isPuppeteerCore) {
-      //!! const revision = process.env['PUPPETEER_CHROMIUM_REVISION'];
-      //!! if (revision) {
-        //!! const revisionInfo = browserFetcher.revisionInfo(revision);
-        //!! const missingText = !revisionInfo.local ? 'Tried to use PUPPETEER_CHROMIUM_REVISION env variable to launch browser but did not find executable at: ' + revisionInfo.executablePath : null;
-        //!! return {executablePath: revisionInfo.executablePath, missingText};
-      //!! }
-    //!! }
-    //!! const revisionInfo = browserFetcher.revisionInfo(this._preferredRevision);
+    const browserFetcher = new BrowserFetcher(this._projectRoot);
+    if (!this._isPuppeteerCore) {
+      const revision = process.env['PUPPETEER_CHROMIUM_REVISION'];
+      if (revision) {
+        const revisionInfo = browserFetcher.revisionInfo(revision);
+        const missingText = !revisionInfo.local ? 'Tried to use PUPPETEER_CHROMIUM_REVISION env variable to launch browser but did not find executable at: ' + revisionInfo.executablePath : null;
+        return {executablePath: revisionInfo.executablePath, missingText};
+      }
+    }
+    const revisionInfo = browserFetcher.revisionInfo(this._preferredRevision);
     const missingText = !revisionInfo.local ? `Chromium revision is not downloaded. Run "npm install" or "yarn install"` : null;
     return {executablePath: revisionInfo.executablePath, missingText};
   }
-
 }
 
 /**
@@ -9599,13 +9239,12 @@ function getWSEndpoint(browserURL) {
  * @property {number=} slowMo
  */
 
-
-module.exports = Launcher;
+exports_GoogleChrome_puppeteer_lib_Launcher = Launcher;
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/LifecycleWatcher.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/LifecycleWatcher.js
 */
 /**
  * Copyright 2019 Google Inc. All rights reserved.
@@ -9623,9 +9262,9 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/LifecycleWatcher.js
  * limitations under the License.
  */
 
-// const {helper, assert} = require('./helper');
-// const {Events} = require('./Events');
-// const {TimeoutError} = require('./Errors');
+// const {helper, assert} = exports_GoogleChrome_puppeteer_lib_helper;
+// const {Events} = exports_GoogleChrome_puppeteer_lib_Events;
+// const {TimeoutError} = exports_GoogleChrome_puppeteer_lib_Errors;
 
 class LifecycleWatcher {
   /**
@@ -9804,12 +9443,12 @@ const puppeteerToProtocolLifecycle = {
   'networkidle2': 'networkAlmostIdle',
 };
 
-module.exports = {LifecycleWatcher};
+exports_GoogleChrome_puppeteer_lib_LifecycleWatcher = {LifecycleWatcher};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Multimap.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Multimap.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -9946,12 +9585,12 @@ class Multimap {
   }
 }
 
-module.exports = Multimap;
+exports_GoogleChrome_puppeteer_lib_Multimap = Multimap;
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/NetworkManager.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/NetworkManager.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -9969,8 +9608,8 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/NetworkManager.js
  * limitations under the License.
  */
 // const EventEmitter = require('events');
-// const {helper, assert, debugError} = require('./helper');
-// const {Events} = require('./Events');
+// const {helper, assert, debugError} = exports_GoogleChrome_puppeteer_lib_helper;
+// const {Events} = exports_GoogleChrome_puppeteer_lib_Events;
 
 class NetworkManager extends EventEmitter {
   /**
@@ -10194,7 +9833,6 @@ class NetworkManager extends EventEmitter {
     this._requestIdToRequest.set(event.requestId, request);
     this.emit(Events.NetworkManager.Request, request);
   }
-
 
   /**
    * @param {!Protocol.Network.requestServedFromCachePayload} event
@@ -10750,12 +10388,12 @@ const STATUS_TEXTS = {
   '511': 'Network Authentication Required',
 };
 
-module.exports = {Request, Response, NetworkManager, SecurityDetails};
+exports_GoogleChrome_puppeteer_lib_NetworkManager = {Request, Response, NetworkManager, SecurityDetails};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Page.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Page.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -10777,19 +10415,19 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Page.js
 // const path = require('path');
 // const EventEmitter = require('events');
 // const mime = require('mime');
-// const {Events} = require('./Events');
-// const {Connection} = require('./Connection');
-// const {Dialog} = require('./Dialog');
-// const {EmulationManager} = require('./EmulationManager');
-// const {FrameManager} = require('./FrameManager');
-// const {Keyboard, Mouse, Touchscreen} = require('./Input');
-// const Tracing = require('./Tracing');
-// const {helper, debugError, assert} = require('./helper');
-// const {Coverage} = require('./Coverage');
-// const {Worker} = require('./Worker');
-// const {createJSHandle} = require('./JSHandle');
-// const {Accessibility} = require('./Accessibility');
-// const {TimeoutSettings} = require('./TimeoutSettings');
+// const {Events} = exports_GoogleChrome_puppeteer_lib_Events;
+// const {Connection} = exports_GoogleChrome_puppeteer_lib_Connection;
+// const {Dialog} = exports_GoogleChrome_puppeteer_lib_Dialog;
+// const {EmulationManager} = exports_GoogleChrome_puppeteer_lib_EmulationManager;
+// const {FrameManager} = exports_GoogleChrome_puppeteer_lib_FrameManager;
+// const {Keyboard, Mouse, Touchscreen} = exports_GoogleChrome_puppeteer_lib_Input;
+// const Tracing = exports_GoogleChrome_puppeteer_lib_Tracing;
+// const {helper, debugError, assert} = exports_GoogleChrome_puppeteer_lib_helper;
+// const {Coverage} = exports_GoogleChrome_puppeteer_lib_Coverage;
+// const {Worker} = exports_GoogleChrome_puppeteer_lib_Worker;
+// const {createJSHandle} = exports_GoogleChrome_puppeteer_lib_JSHandle;
+// const {Accessibility} = exports_GoogleChrome_puppeteer_lib_Accessibility;
+// const {TimeoutSettings} = exports_GoogleChrome_puppeteer_lib_TimeoutSettings;
 const writeFileAsync = helper.promisify(fs.writeFile);
 
 class Page extends EventEmitter {
@@ -11998,7 +11636,6 @@ function convertPrintParameterToInches(parameter) {
  * @property {("Strict"|"Lax"|"Extended"|"None")=} sameSite
  */
 
-
 /**
  * @typedef {Object} Network.CookieParam
  * @property {string} name
@@ -12106,12 +11743,12 @@ class FileChooser {
   }
 }
 
-module.exports = {Page, ConsoleMessage, FileChooser};
+exports_GoogleChrome_puppeteer_lib_Page = {Page, ConsoleMessage, FileChooser};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/PipeTransport.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/PipeTransport.js
 */
 /**
  * Copyright 2018 Google Inc. All rights reserved.
@@ -12128,7 +11765,7 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/PipeTransport.js
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// const {helper, debugError} = require('./helper');
+// const {helper, debugError} = exports_GoogleChrome_puppeteer_lib_helper;
 
 /**
  * @implements {!Puppeteer.ConnectionTransport}
@@ -12192,12 +11829,12 @@ class PipeTransport {
   }
 }
 
-module.exports = PipeTransport;
+exports_GoogleChrome_puppeteer_lib_PipeTransport = PipeTransport;
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Puppeteer.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Puppeteer.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -12214,12 +11851,12 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Puppeteer.js
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// const Launcher = require('./Launcher');
-// const BrowserFetcher = require('./BrowserFetcher');
-// const Errors = require('./Errors');
-// const DeviceDescriptors = require('./DeviceDescriptors');
+// const Launcher = exports_GoogleChrome_puppeteer_lib_Launcher;
+// const BrowserFetcher = exports_GoogleChrome_puppeteer_lib_BrowserFetcher;
+const Errors = exports_GoogleChrome_puppeteer_lib_Errors;
+const DeviceDescriptors = exports_GoogleChrome_puppeteer_lib_DeviceDescriptors;
 
-module.exports = class {
+exports_GoogleChrome_puppeteer_lib_Puppeteer = class {
   /**
    * @param {string} projectRoot
    * @param {string} preferredRevision
@@ -12283,13 +11920,11 @@ module.exports = class {
     return new BrowserFetcher(this._projectRoot, options);
   }
 };
-// hack-puppeteer - module.exports
-const Puppeteer = module.exports;
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Target.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Target.js
 */
 /**
  * Copyright 2019 Google Inc. All rights reserved.
@@ -12307,10 +11942,10 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Target.js
  * limitations under the License.
  */
 
-// const {Events} = require('./Events');
-// const {Page} = require('./Page');
-// const {Worker} = require('./Worker');
-// const {Connection} = require('./Connection');
+// const {Events} = exports_GoogleChrome_puppeteer_lib_Events;
+// const {Page} = exports_GoogleChrome_puppeteer_lib_Page;
+// const {Worker} = exports_GoogleChrome_puppeteer_lib_Worker;
+// const {Connection} = exports_GoogleChrome_puppeteer_lib_Connection;
 
 class Target {
   /**
@@ -12446,12 +12081,12 @@ class Target {
   }
 }
 
-module.exports = {Target};
+exports_GoogleChrome_puppeteer_lib_Target = {Target};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/TaskQueue.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/TaskQueue.js
 */
 class TaskQueue {
   constructor() {
@@ -12469,12 +12104,12 @@ class TaskQueue {
   }
 }
 
-module.exports = {TaskQueue};
+exports_GoogleChrome_puppeteer_lib_TaskQueue = {TaskQueue};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/TimeoutSettings.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/TimeoutSettings.js
 */
 /**
  * Copyright 2019 Google Inc. All rights reserved.
@@ -12532,12 +12167,12 @@ class TimeoutSettings {
   }
 }
 
-module.exports = {TimeoutSettings};
+exports_GoogleChrome_puppeteer_lib_TimeoutSettings = {TimeoutSettings};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Tracing.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Tracing.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -12554,7 +12189,7 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Tracing.js
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// const {helper, assert} = require('./helper');
+// const {helper, assert} = exports_GoogleChrome_puppeteer_lib_helper;
 
 class Tracing {
   /**
@@ -12610,12 +12245,12 @@ class Tracing {
   }
 }
 
-module.exports = Tracing;
+exports_GoogleChrome_puppeteer_lib_Tracing = Tracing;
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/USKeyboardLayout.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/USKeyboardLayout.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -12648,7 +12283,7 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/USKeyboardLayout.js
 /**
  * @type {Object<string, KeyDefinition>}
  */
-module.exports = {
+exports_GoogleChrome_puppeteer_lib_USKeyboardLayout = {
   '0': {'keyCode': 48, 'key': '0', 'code': 'Digit0'},
   '1': {'keyCode': 49, 'key': '1', 'code': 'Digit1'},
   '2': {'keyCode': 50, 'key': '2', 'code': 'Digit2'},
@@ -12905,13 +12540,11 @@ module.exports = {
   'VolumeDown': {'keyCode': 182, 'key': 'VolumeDown', 'code': 'VolumeDown', 'location': 4},
   'VolumeUp': {'keyCode': 183, 'key': 'VolumeUp', 'code': 'VolumeUp', 'location': 4},
 };
-// hack-puppeteer - module.exports
-const USKeyboardLayout = module.exports;
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/WebSocketTransport.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/WebSocketTransport.js
 */
 /**
  * Copyright 2018 Google Inc. All rights reserved.
@@ -12980,12 +12613,12 @@ class WebSocketTransport {
   }
 }
 
-module.exports = WebSocketTransport;
+exports_GoogleChrome_puppeteer_lib_WebSocketTransport = WebSocketTransport;
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Worker.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Worker.js
 */
 /**
  * Copyright 2018 Google Inc. All rights reserved.
@@ -13003,9 +12636,9 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/Worker.js
  * limitations under the License.
  */
 // const EventEmitter = require('events');
-// const {debugError} = require('./helper');
-// const {ExecutionContext} = require('./ExecutionContext');
-// const {JSHandle} = require('./JSHandle');
+// const {debugError} = exports_GoogleChrome_puppeteer_lib_helper;
+// const {ExecutionContext} = exports_GoogleChrome_puppeteer_lib_ExecutionContext;
+// const {JSHandle} = exports_GoogleChrome_puppeteer_lib_JSHandle;
 
 class Worker extends EventEmitter {
   /**
@@ -13066,12 +12699,12 @@ class Worker extends EventEmitter {
   }
 }
 
-module.exports = {Worker};
+exports_GoogleChrome_puppeteer_lib_Worker = {Worker};
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/api.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/api.js
 */
 /**
  * Copyright 2019 Google Inc. All rights reserved.
@@ -13089,40 +12722,38 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/api.js
  * limitations under the License.
  */
 
-module.exports = {
-  Accessibility,
-  Browser,
-  BrowserContext,
-  //!! BrowserFetcher,
-  CDPSession,
-  ConsoleMessage,
-  Coverage,
-  Dialog,
-  ElementHandle,
-  ExecutionContext,
-  FileChooser,
-  Frame,
-  JSHandle,
-  Keyboard,
-  Mouse,
-  Page,
-  Puppeteer,
-  Request,
-  Response,
-  SecurityDetails,
-  Target,
-  TimeoutError,
-  Touchscreen,
-  Tracing,
-  Worker,
+exports_GoogleChrome_puppeteer_lib_api = {
+  Accessibility: exports_GoogleChrome_puppeteer_lib_Accessibility.Accessibility,
+  Browser: exports_GoogleChrome_puppeteer_lib_Browser.Browser,
+  BrowserContext: exports_GoogleChrome_puppeteer_lib_Browser.BrowserContext,
+  BrowserFetcher: exports_GoogleChrome_puppeteer_lib_BrowserFetcher,
+  CDPSession: exports_GoogleChrome_puppeteer_lib_Connection.CDPSession,
+  ConsoleMessage: exports_GoogleChrome_puppeteer_lib_Page.ConsoleMessage,
+  Coverage: exports_GoogleChrome_puppeteer_lib_Coverage.Coverage,
+  Dialog: exports_GoogleChrome_puppeteer_lib_Dialog.Dialog,
+  ElementHandle: exports_GoogleChrome_puppeteer_lib_JSHandle.ElementHandle,
+  ExecutionContext: exports_GoogleChrome_puppeteer_lib_ExecutionContext.ExecutionContext,
+  FileChooser: exports_GoogleChrome_puppeteer_lib_Page.FileChooser,
+  Frame: exports_GoogleChrome_puppeteer_lib_FrameManager.Frame,
+  JSHandle: exports_GoogleChrome_puppeteer_lib_JSHandle.JSHandle,
+  Keyboard: exports_GoogleChrome_puppeteer_lib_Input.Keyboard,
+  Mouse: exports_GoogleChrome_puppeteer_lib_Input.Mouse,
+  Page: exports_GoogleChrome_puppeteer_lib_Page.Page,
+  Puppeteer: exports_GoogleChrome_puppeteer_lib_Puppeteer,
+  Request: exports_GoogleChrome_puppeteer_lib_NetworkManager.Request,
+  Response: exports_GoogleChrome_puppeteer_lib_NetworkManager.Response,
+  SecurityDetails: exports_GoogleChrome_puppeteer_lib_NetworkManager.SecurityDetails,
+  Target: exports_GoogleChrome_puppeteer_lib_Target.Target,
+  TimeoutError: exports_GoogleChrome_puppeteer_lib_Errors.TimeoutError,
+  Touchscreen: exports_GoogleChrome_puppeteer_lib_Input.Touchscreen,
+  Tracing: exports_GoogleChrome_puppeteer_lib_Tracing,
+  Worker: exports_GoogleChrome_puppeteer_lib_Worker.Worker,
 };
-// hack-puppeteer - module.exports
-const api = module.exports;
 
 
 
 /*
-lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/index.js
+file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/index.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -13140,12 +12771,16 @@ lib https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/index.js
  * limitations under the License.
  */
 
-// hack-puppeteer - module.exports
 let asyncawait = true;
+try {
+  new Function('async function test(){await 1}');
+} catch (error) {
+  asyncawait = false;
+}
 
 if (asyncawait) {
-//   const {helper} = require('./lib/helper');
-//   const api = require('./lib/api');
+//   const {helper} = exports_GoogleChrome_puppeteer_lib_helper;
+  const api = exports_GoogleChrome_puppeteer_lib_api;
   for (const className in api) {
     // Puppeteer-web excludes certain classes from bundle, e.g. BrowserFetcher.
     if (typeof api[className] === 'function')
@@ -13154,17 +12789,78 @@ if (asyncawait) {
 }
 
 // If node does not support async await, use the compiled version.
-// hack-puppeteer - module.exports
-// const Puppeteer = asyncawait ? require('./lib/Puppeteer') : require('./node6/lib/Puppeteer');
-// const packageJson = require('./package.json');
+const Puppeteer = asyncawait ? exports_GoogleChrome_puppeteer_lib_Puppeteer : exports_GoogleChrome_puppeteer_node6_lib_Puppeteer;
+const packageJson = exports_GoogleChrome_puppeteer_package_json;
 const preferredRevision = packageJson.puppeteer.chromium_revision;
 const isPuppeteerCore = packageJson.name === 'puppeteer-core';
 
-module.exports = new Puppeteer(__dirname, preferredRevision, isPuppeteerCore);
+exports_GoogleChrome_puppeteer_index = new Puppeteer(__dirname, preferredRevision, isPuppeteerCore);
+// let Accessibility   = exports_GoogleChrome_puppeteer_lib_Accessibility.Accessibility;
+// let Browser         = exports_GoogleChrome_puppeteer_lib_Browser.Browser;
+let BrowserFetcher  = exports_GoogleChrome_puppeteer_lib_BrowserFetcher;
+// let Connection      = exports_GoogleChrome_puppeteer_lib_Connection.Connection;
+// let Coverage        = exports_GoogleChrome_puppeteer_lib_Coverage.Coverage;
+// let DOMWorld        = exports_GoogleChrome_puppeteer_lib_DOMWorld.DOMWorld;
+// let DeviceDescriptors = exports_GoogleChrome_puppeteer_lib_DeviceDescriptors;
+// let Dialog          = exports_GoogleChrome_puppeteer_lib_Dialog.Dialog;
+// let EmulationManager = exports_GoogleChrome_puppeteer_lib_EmulationManager.EmulationManager;
+// let TimeoutError    = exports_GoogleChrome_puppeteer_lib_Errors.TimeoutError;
+// let Errors          = exports_GoogleChrome_puppeteer_lib_Errors;
+// let Events          = exports_GoogleChrome_puppeteer_lib_Events.Events;
+// let EVALUATION_SCRIPT_URL = exports_GoogleChrome_puppeteer_lib_ExecutionContext.EVALUATION_SCRIPT_URL;
+// let ExecutionContext = exports_GoogleChrome_puppeteer_lib_ExecutionContext.ExecutionContext;
+// let FrameManager    = exports_GoogleChrome_puppeteer_lib_FrameManager.FrameManager;
+// let Keyboard        = exports_GoogleChrome_puppeteer_lib_Input.Keyboard;
+// let Mouse           = exports_GoogleChrome_puppeteer_lib_Input.Mouse;
+// let Touchscreen     = exports_GoogleChrome_puppeteer_lib_Input.Touchscreen;
+// let JSHandle        = exports_GoogleChrome_puppeteer_lib_JSHandle.JSHandle;
+// let createJSHandle  = exports_GoogleChrome_puppeteer_lib_JSHandle.createJSHandle;
+// let Launcher        = exports_GoogleChrome_puppeteer_lib_Launcher;
+// let LifecycleWatcher = exports_GoogleChrome_puppeteer_lib_LifecycleWatcher.LifecycleWatcher;
+// let NetworkManager  = exports_GoogleChrome_puppeteer_lib_NetworkManager.NetworkManager;
+// let Page            = exports_GoogleChrome_puppeteer_lib_Page.Page;
+// let PipeTransport   = exports_GoogleChrome_puppeteer_lib_PipeTransport;
+// let Target          = exports_GoogleChrome_puppeteer_lib_Target.Target;
+// let TaskQueue       = exports_GoogleChrome_puppeteer_lib_TaskQueue.TaskQueue;
+// let TimeoutSettings = exports_GoogleChrome_puppeteer_lib_TimeoutSettings.TimeoutSettings;
+// let Tracing         = exports_GoogleChrome_puppeteer_lib_Tracing;
+let keyDefinitions  = exports_GoogleChrome_puppeteer_lib_USKeyboardLayout;
+// let WebSocketTransport = exports_GoogleChrome_puppeteer_lib_WebSocketTransport;
+// let Worker          = exports_GoogleChrome_puppeteer_lib_Worker.Worker;
+let api             = exports_GoogleChrome_puppeteer_lib_api;
+// let assert          = exports_GoogleChrome_puppeteer_lib_helper.assert;
+// let debugError      = exports_GoogleChrome_puppeteer_lib_helper.debugError;
+// let helper          = exports_GoogleChrome_puppeteer_lib_helper.helper;
+// let packageJson     = exports_GoogleChrome_puppeteer_package_json;
+let applyMask       = exports_websockets_ws_lib_buffer_util.mask;
+// let concat          = exports_websockets_ws_lib_buffer_util.concat;
+// let mask            = exports_websockets_ws_lib_buffer_util.mask;
+// let toArrayBuffer   = exports_websockets_ws_lib_buffer_util.toArrayBuffer;
+// let toBuffer        = exports_websockets_ws_lib_buffer_util.toBuffer;
+let unmask          = exports_websockets_ws_lib_buffer_util.unmask;
+let BINARY_TYPES    = exports_websockets_ws_lib_constants.BINARY_TYPES;
+let EMPTY_BUFFER    = exports_websockets_ws_lib_constants.EMPTY_BUFFER;
+let GUID            = exports_websockets_ws_lib_constants.GUID;
+let NOOP            = exports_websockets_ws_lib_constants.NOOP;
+let kStatusCode     = exports_websockets_ws_lib_constants.kStatusCode;
+let kWebSocket      = exports_websockets_ws_lib_constants.kWebSocket;
+// let EventTarget     = exports_websockets_ws_lib_event_target;
+let extension       = exports_websockets_ws_lib_extension;
+let PerMessageDeflate = exports_websockets_ws_lib_permessage_deflate;
+// let Receiver        = exports_websockets_ws_lib_receiver;
+// let Sender          = exports_websockets_ws_lib_sender;
+let isValidStatusCode = exports_websockets_ws_lib_validation.isValidStatusCode;
+let isValidUTF8     = exports_websockets_ws_lib_validation.isValidUTF8;
+// let WebSocket       = exports_websockets_ws_lib_websocket;
+local._puppeteer = exports_GoogleChrome_puppeteer_index;
+local.puppeteerApi = exports_GoogleChrome_puppeteer_lib_api;
 
 
 
 /*
 file none
 */
-}(globalThis.globalLocal));
+/* jslint ignore:end */
+local.puppeteerLaunch = local._puppeteer.launch.bind(local._puppeteer);
+}());
+}());

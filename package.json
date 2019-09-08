@@ -48,13 +48,11 @@
     "utility2Dependents": [
         "2019.01.21 github-crud",
         "2019.01.30 bootstrap-lite",
-        "2019.02.12 swagger-validate-lite",
         "2019.02.20 swgg",
         "2019.08.09 istanbul-lite master",
-        "2019.08.10 jslint-lite master",
         "2019.08.16 apidoc-lite master",
-        "2019.08.20 db-lite",
-        "2019.08.21 utility2"
+        "2019.09.06 jslint-lite",
+        "2019.09.07 utility2"
     ],
-    "version": "2019.9.7"
+    "version": "2019.9.8"
 }

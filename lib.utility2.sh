@@ -2648,13 +2648,16 @@ process.on("exit", function () {
         var repo;
         repo = repoList[Number(data.slice(0, 2))];
         file = repo.fileList[Number(data.slice(4, 6))];
+        // init prefix
         prefix = (
             "exports_"
             + repo.prefix.split("/").slice(3, 5).join("_") + "_"
             + require("path").dirname(file)
         ).replace((
             /\W/g
-        ), "_");
+        ), "_").replace((
+            /_+?$/
+        ), "");
         exports = prefix + "_" + require("path").basename(file).replace((
             /\.js$/
         ), "").replace((
@@ -2668,11 +2671,11 @@ process.on("exit", function () {
                 + "\n*/\n"
             );
         }
-        data = require("fs").readFileSync(process.env.DIR + "/" + data, "utf8");
         // mangle module.exports
+        data = require("fs").readFileSync(process.env.DIR + "/" + data, "utf8");
         data = data.replace((
-            /^exports\b|\bmodule\.exports\b/gm
-        ), exports);
+            /\bmodule\.exports\b|(^\u0020*?)exports\b/gm
+        ), "$1" + exports);
         // inline require(...)
         data = data.replace((
             /\brequire\(.\.\/(\w.*?).\)/gm
@@ -2683,18 +2686,13 @@ process.on("exit", function () {
                 /\W/g
             ), "_");
         });
-        aa += (
-            "\n\n\n\n/*\n" + `file ${repo.prefix}/${file}` + "\n*/\n"
-            + `var ${exports} = {};` + "\n"
-            + data.trim()
-        );
-    });
-    // update requireDict
-    aa.replace((
-        /^.*?\brequire\(.*?$/gm
-    ), function (match0) {
-        requireDict["// " + match0.trim()] = true;
-        return "";
+        aa += "\n\n\n\n/*\n" + `file ${repo.prefix}/${file}` + "\n*/\n";
+        if ((
+            /\bpackage\.json$/
+        ).test(file)) {
+            aa += exports + " = ";
+        }
+        aa += data.trim();
     });
     // comment #!
     aa = aa.replace((
@@ -2702,16 +2700,23 @@ process.on("exit", function () {
     ), "// $&");
     // comment ... = require(...)
     aa = aa.replace((
-        /^\u0020*?(?:const|let|var)\u0020.+?\u0020=\u0020require\(/gm
-    ), "// $&").replace((
-        /\w+?:\u0020require\(/gm
-    ), "// $&");
-    // comment ... = require(...)
+        /^\u0020*?[$A-Z_a-z].*?\brequire\(.*$/gm
+    ), function (match0) {
+        requireDict[match0.replace((
+            /\bconst\b|\bvar\b/
+        ), "let").trim()] = "";
+        return "// " + match0;
+    });
     aa = aa.replace((
-        /^\u0020*?(?:const|let|var)\u0020.+?\u0020=\u0020require\(/gm
-    ), "// $&").replace((
-        /\w+?:\u0020require\(/gm
-    ), "// $&");
+        /^\u0020*?(?:const|let|var)\u0020(?:\w+?|\{[^}]+?\})\u0020=\u0020exports_.*$/gm
+    ), function (match0) {
+        requireDict[match0.replace((
+            /\bconst\b|\bvar\b/
+        ), "let").trim()] = "";
+        return match0.replace((
+            /^/gm
+        ), "// ");
+    });
     // normalize whitespace
     aa = aa.replace((
         /\u0020+$/gm
@@ -2723,8 +2728,98 @@ process.on("exit", function () {
         }
         return "\n\n\n\n";
     });
-    console.log(Object.keys(requireDict).sort().join("\n"));
+    // normalize requireDict - let exports_... = {}
+    aa.replace((
+        /\bexports_\w+/g
+    ), function (match0) {
+        requireDict["let " + match0 + " = {};"] = "";
+        return "";
+    });
+    // normalize requireDict - let {...} = exports_...
+    Object.keys(requireDict).forEach(function (key) {
+        if (key.indexOf("let {") === 0) {
+            delete requireDict[key];
+            key = key.split(" = ");
+            key[1] = key[1].trim().replace(";", "");
+            key[0].split("{")[1].replace((
+                /\w+/g
+            ), function (match0) {
+                requireDict[`let ${match0} = ${key[1]}.${match0};`] = "";
+                return "";
+            });
+            return;
+        }
+        if (key.slice(-1) !== ";") {
+            delete requireDict[key];
+            requireDict[key + ";"] = "";
+        }
+    });
+    // normalize requireDict - collate let
+    Object.keys(requireDict).forEach(function (key, val) {
+        val = key;
+        key = key.split(" ")[1];
+        requireDict[key] = requireDict[key] || [];
+        requireDict[key].push(val);
+    });
+    // normalize requireDict - comment duplicate in code
+    aa.replace((
+        /^\u0020*?(?:class|const|function|let|var)\u0020(\w+?)\b/gm
+    ), function (ignore, match1) {
+        (requireDict[match1] || []).forEach(function (key) {
+            requireDict[key] = "// ";
+        });
+        delete requireDict[match1];
+        return "";
+    });
+    // normalize requireDict - comment duplicate in let
+    Object.entries(requireDict).forEach(function ([
+        key, val
+    ]) {
+        if (Array.isArray(val)) {
+            delete requireDict[key];
+            val.sort().slice(1).forEach(function (key) {
+                requireDict[key] = "// ";
+            });
+        }
+    });
+    console.log("(function () {\n\"use strict\";");
+    console.log(Object.keys(requireDict).map(function (key) {
+        return (
+            key.indexOf(" = exports_") > 0
+            ? ""
+            : key.indexOf(" = require(") > 0
+            ? "1\u0000" + key
+            : "2\u0000" + key
+        );
+    }).filter(function (elem) {
+        return elem;
+    }).sort().map(function (key) {
+        key = key.split("\u0000")[1];
+        return requireDict[key] + key;
+    }).join("\n"));
     console.log(aa.trim());
+    console.log(Object.keys(requireDict).map(function (key) {
+        return (
+            key.indexOf(" = exports_") > 0
+            ? key.replace((
+                /(.*?)\u0020=\u0020(.*?)$/gm
+            ), function (ignore, match1, match2) {
+                return (
+                    match2 + "\u0000"
+                    + match1.padEnd(19, " ") + " = " + match2
+                );
+            })
+            : ""
+        );
+    }).filter(function (elem) {
+        return elem;
+    }).sort().map(function (key) {
+        key = key.split("\u0000")[1];
+        return requireDict[key.replace((
+            /\u0020{2,}/
+        ), " ")] + key;
+    }).join("\n"));
+    console.log("}());\n\n\n");
 });
 }());
 ' "$LIST"
@@ -3443,11 +3538,10 @@ shUtility2Dependents () {(set -e
 printf "
 apidoc-lite
 bootstrap-lite
-db-lite
 github-crud
 istanbul-lite
 jslint-lite
-swagger-validate-lite
+sql.js-lite
 swgg
 utility2
 "
@@ -4955,6 +5049,10 @@ local.semverCompare = function (aa, bb) {
  *  0 if aa = bb
  *  1 if aa > bb
  * https://semver.org/#spec-item-11
+ * example usage:
+    semverCompare("2.2.2", "10.2.2"); // -1
+    semverCompare("1.2.3", "1.2.3");  //  0
+    semverCompare("10.2.2", "2.2.2"); //  1
  */
     var ii;
     var len;
@@ -4968,7 +5066,8 @@ local.semverCompare = function (aa, bb) {
         ).exec(val) || [
             "", "", "", ""
         ];
-        return val.slice(1, 4).concat((val[4] || "").split("."));
+        val[4] = val[4] || "";
+        return val.slice(1, 4).concat(val[4].split("."));
     });
     ii = -1;
     len = Math.max(aa.length, bb.length);

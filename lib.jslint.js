@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.jslint.js (2019.9.6)
+ * lib.jslint.js (2019.9.7)
  * https://github.com/kaizhu256/node-jslint-lite
  * this zero-dependency package will provide browser-compatible versions of jslint (v2019.8.3) and csslint (v1.0.5), with a working web-demo
  *
@@ -16698,12 +16698,16 @@ local.jslintAndPrint = function (code, file, opt) {
             );
             if (!ii && err.stack && err.a !== "debug\u0049nline") {
                 tmp = err.stack;
-                err.stack = null;
-                try {
-                    opt.errText += (
-                        JSON.stringify(err, null, 4) + "\n" + tmp.trim() + "\n"
-                    );
-                } catch (ignore) {}
+                Object.entries(err).forEach(function ([
+                    key, val
+                ]) {
+                    if ((typeof val === "object" && val) || key === "stack") {
+                        delete err[key];
+                    }
+                });
+                opt.errText += (
+                    JSON.stringify(err, null, 4) + "\n" + tmp.trim() + "\n"
+                );
             }
         });
         opt.errText = opt.errText.trim();

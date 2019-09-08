@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2019.9.7)
+ * lib.utility2.js (2019.9.8)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide a collection of high-level functions to to build, test, and deploy webapps
  *
@@ -231,6 +231,7 @@ globalThis.utility2 = local;
     "istanbul",
     "jslint",
     "marked",
+    "puppeteer",
     "sjcl"
 ].forEach(function (key) {
     try {
@@ -3071,7 +3072,7 @@ local.browserTest = function (opt, onError) {
                 testName
             );
             // create puppeteer browser
-            require("./lib.puppeteer.js").launch({
+            local.puppeteerLaunch({
                 args: [
                     "--headless",
                     "--incognito",
@@ -4508,6 +4509,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
     case "lib.istanbul.js":
     case "lib.jslint.js":
     case "lib.marked.js":
+    case "lib.puppeteer.js":
     case "lib.sjcl.js":
     case "lib.swgg.js":
     case "npm_scripts.sh":
@@ -6277,6 +6279,10 @@ local.semverCompare = function (aa, bb) {
  *  0 if aa = bb
  *  1 if aa > bb
  * https://semver.org/#spec-item-11
+ * example usage:
+    semverCompare("2.2.2", "10.2.2"); // -1
+    semverCompare("1.2.3", "1.2.3");  //  0
+    semverCompare("10.2.2", "2.2.2"); //  1
  */
     var ii;
     var len;
@@ -6290,7 +6296,8 @@ local.semverCompare = function (aa, bb) {
         ).exec(val) || [
             "", "", "", ""
         ];
-        return val.slice(1, 4).concat((val[4] || "").split("."));
+        val[4] = val[4] || "";
+        return val.slice(1, 4).concat(val[4].split("."));
     });
     ii = -1;
     len = Math.max(aa.length, bb.length);
@@ -8077,6 +8084,7 @@ local.istanbulInstrumentInPackage = (
 );
 local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.identity;
 local.jslintAndPrint = local.jslint.jslintAndPrint || local.identity;
+local.puppeteerLaunch = local.puppeteer.puppeteerLaunch || local.identity;
 local.regexpCharsetEncodeUri = (
     /\w!#\$%&'\(\)\*\+,\-\.\/:;=\?@~/
 );
@@ -8280,6 +8288,7 @@ if (globalThis.utility2_rollup) {
     "lib.istanbul.js",
     "lib.jslint.js",
     "lib.marked.js",
+    "lib.puppeteer.js",
     "lib.sjcl.js",
     "lib.swgg.js",
     "lib.utility2.js",
@@ -8372,6 +8381,7 @@ local.assetsDict["/assets.utility2.rollup.js"] = [
     "lib.istanbul.js",
     "lib.jslint.js",
     "lib.marked.js",
+    "lib.puppeteer.js",
     "lib.sjcl.js",
     "lib.utility2.js",
     "lib.swgg.js",

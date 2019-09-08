@@ -10,8 +10,6 @@ this zero-dependency package will provide a collection of high-level functions t
 
 [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html)
 
-[![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
-
 [![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 | git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
@@ -23,8 +21,6 @@ this zero-dependency package will provide a collection of high-level functions t
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
 
 [![npmPackageListing](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
-
-![npmPackageDependencyTree](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageDependencyTree.svg)
 
 
 
@@ -56,7 +52,9 @@ this zero-dependency package will provide a collection of high-level functions t
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- inline lib.puppeteer.js into assets.app.js
+- jslint - rename errText to errMsg
+- jslint - fix off-by-one line-error
+- jslint - rename assertThrow to assertOrThrow
 - remove unused shell-function from lib.utility2.sh
 - rename message to msg
 - remove "the" from comments
@@ -73,24 +71,9 @@ this zero-dependency package will provide a collection of high-level functions t
 - add server stress-test using puppeteer
 - none
 
-#### changelog 2019.9.7
-- npm publish 2019.9.7
-- revamp function local.semverCompare
-- lint 80-char-column-limit and line-continuation in lib.utility2.sh
-- remove electron dependency
-- migrate browser-testing from electron to puppeteer
-- streamline customizing README.md with custom-html-start and custom-html-end tags
-- make utility2-object an EventEmitter
-- update local.isBrowser check to include web-worker
-- disable testCase_buildApidoc_default during npm test, to make it run faster
-- add file raw.puppeteer.js
-- remove shell-function shBaseInstallLinode
-- replace arguments with ...argList
-- add shell-function shRawJsFetch
-- rename rm -fr to rm -rf
-- revamp function local.ajaxProgressUpdate with window.domOnEventAjaxProgressUpdate
-- cleanup globalThis
-- jslint - remove ternary-operator/newline comment preceding bra
+#### changelog 2019.9.8
+- npm publish 2019.9.8
+- inline lib.puppeteer.js into assets.app.js
 - none
 
 #### this package requires
@@ -137,7 +120,7 @@ this script will demo automated browser-tests with coverage
 instruction
     1. save this script as example.js
     2. run the shell-command:
-        $ npm install utility2 && \
+        $ npm install kaizhu256/node-utility2#alpha && \
             PATH="$(pwd)/node_modules/.bin:$PATH" \
             PORT=8081 \
             npm_config_mode_coverage=utility2 \
@@ -1311,15 +1294,13 @@ local.http.createServer(function (req, res) {
     "utility2Dependents": [
         "2019.01.21 github-crud",
         "2019.01.30 bootstrap-lite",
-        "2019.02.12 swagger-validate-lite",
         "2019.02.20 swgg",
         "2019.08.09 istanbul-lite master",
-        "2019.08.10 jslint-lite master",
         "2019.08.16 apidoc-lite master",
-        "2019.08.20 db-lite",
-        "2019.08.21 utility2"
+        "2019.09.06 jslint-lite",
+        "2019.09.07 utility2"
     ],
-    "version": "2019.9.7"
+    "version": "2019.9.8"
 }
 ```
 
@@ -1497,7 +1478,7 @@ shBuildCiAfter () {(set -e
 )}
 
 shBuildCiBefore () {(set -e
-    shNpmTestPublished
+    #!! shNpmTestPublished
     shReadmeTest example.js
     # screenshot
     MODE_BUILD=testExampleJs shBrowserScreenshot \
