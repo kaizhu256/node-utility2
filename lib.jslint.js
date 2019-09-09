@@ -13,8 +13,8 @@
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
-    var consoleError;
-    var local;
+    let consoleError;
+    let local;
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debug_inline
@@ -45,11 +45,11 @@
         && typeof globalThis.navigator.userAgent === "string"
     );
     // init function
-    local.assertThrow = function (passed, message) {
+    local.assertOrThrow = function (passed, message) {
     /*
      * this function will throw err.<message> if <passed> is falsy
      */
-        var err;
+        let err;
         if (passed) {
             return;
         }
@@ -75,7 +75,7 @@
     /*
      * this function will sync "rm -rf" <dir>
      */
-        var child_process;
+        let child_process;
         try {
             child_process = require("child_process");
         } catch (ignore) {
@@ -93,7 +93,7 @@
     /*
      * this function will sync write <data> to <file> with "mkdir -p"
      */
-        var fs;
+        let fs;
         try {
             fs = require("fs");
         } catch (ignore) {
@@ -122,16 +122,10 @@
     local.functionOrNop = function (fnc) {
     /*
      * this function will if <fnc> exists,
-     * them return <fnc>,
+     * return <fnc>,
      * else return <nop>
      */
         return fnc || local.nop;
-    };
-    local.identity = function (value) {
-    /*
-     * this function will return <value>
-     */
-        return value;
     };
     local.nop = function () {
     /*
@@ -156,6 +150,30 @@
             }
         });
         return target;
+    };
+    local.value = function (val) {
+    /*
+     * this function will return <val>
+     */
+        return val;
+    };
+    local.valueOrEmptyList = function (val) {
+    /*
+     * this function will return <val> or []
+     */
+        return val || [];
+    };
+    local.valueOrEmptyObject = function (val) {
+    /*
+     * this function will return <val> or {}
+     */
+        return val || {};
+    };
+    local.valueOrEmptyString = function (val) {
+    /*
+     * this function will return <val> or ""
+     */
+        return val || "";
     };
     // require builtin
     if (!local.isBrowser) {
@@ -233,18 +251,16 @@ local.cliRun = function (opt) {
         globalThis.local = local;
         local.vm.runInThisContext(process.argv[3]);
     };
-    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
-    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
     local.cliDict._help = local.cliDict._help || function () {
     /*
      *
      * will print help
      */
-        var commandList;
-        var file;
-        var packageJson;
-        var text;
-        var textDict;
+        let commandList;
+        let file;
+        let packageJson;
+        let text;
+        let textDict;
         commandList = [
             {
                 argList: "<arg2>  ...",
@@ -287,14 +303,16 @@ local.cliRun = function (opt) {
             try {
                 commandList[ii] = opt.rgxComment.exec(text);
                 commandList[ii] = {
-                    argList: (commandList[ii][1] || "").trim(),
+                    argList: local.valueOrEmptyString(
+                        commandList[ii][1]
+                    ).trim(),
                     command: [
                         key
                     ],
                     description: commandList[ii][2]
                 };
             } catch (ignore) {
-                local.assertThrow(null, new Error(
+                local.assertOrThrow(null, new Error(
                     "cliRun - cannot parse comment in COMMAND "
                     + key
                     + ":\nnew RegExp("
@@ -334,15 +352,15 @@ local.cliRun = function (opt) {
             }
             return (
                 elem.description + "\n  " + file
-                + ("  " + elem.command.sort().join("|") + "  ").replace((
-                    /^\u0020{4}$/
-                ), "  ")
+                + "  " + elem.command.sort().join("|") + "  "
                 + elem.argList.join("  ")
             );
         }).join("\n\n");
         console.log(text);
     };
+    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
     local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
+    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
     local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
     local.cliDict._default = local.cliDict._default || local.cliDict._help;
     local.cliDict.help = local.cliDict.help || local.cliDict._help;
@@ -352,7 +370,7 @@ local.cliRun = function (opt) {
      * will start interactive-mode
      */
         globalThis.local = local;
-        local.identity(local.replStart || require("repl").start)({
+        local.value(local.replStart || require("repl").start)({
             useGlobal: true
         });
     };
@@ -390,8 +408,8 @@ local.onErrorWithStack = function (onError) {
  * this function will create wrapper around <onError>
  * that will append current-stack to err.stack
  */
-    var onError2;
-    var stack;
+    let onError2;
+    let stack;
     stack = new Error().stack.replace((
         /(.*?)\n.*?$/m
     ), "$1");
@@ -420,7 +438,7 @@ local.onParallel = function (onError, onEach, onRetry) {
  * 1. run async tasks in parallel
  * 2. if counter === 0 or err occurred, then call onError(err)
  */
-    var onParallel;
+    let onParallel;
     onError = local.onErrorWithStack(onError);
     onEach = onEach || local.nop;
     onRetry = onRetry || local.nop;
@@ -11334,6 +11352,7 @@ const allowed_option = {
         "setImmediate", "setInterval", "setTimeout", "TextDecoder",
         "TextEncoder", "URL", "URLSearchParams", "__dirname", "__filename"
     ],
+    nomen: true,
     single: true,
     this: true,
     white: true
@@ -12779,7 +12798,7 @@ function survey(name) {
                 warn("unregistered_property_a", name);
             }
         } else {
-            if (name.identifier && rx_bad_property.test(id)) {
+            if (!option.nomen && name.identifier && rx_bad_property.test(id)) {
                 warn("bad_property_a", name);
             }
         }
@@ -16264,8 +16283,8 @@ next_line_extra = function (source_line, line) {
 /*
  * this function will run with extra-features inside jslint-function next_line()
  */
-    var line_extra;
-    var tmp;
+    let line_extra;
+    let tmp;
     line_extra = {};
     line_extra.line = line;
     line_extra.source = source_line;
@@ -16292,6 +16311,7 @@ next_line_extra = function (source_line, line) {
         option.bitwise = true;
         option.browser = true;
         option.node = true;
+        option.nomen = true;
         option.this = true;
         option.utility2 = true;
         [].concat(
@@ -16318,7 +16338,7 @@ warn_at_extra = function (warning, warnings) {
 /*
  * this function will run with extra-features inside jslint-function warn_at()
  */
-    var tmp;
+    let tmp;
     Object.assign(warning, lines_extra[warning.line]);
     // warning - early_stop
     if (early_stop) {
@@ -16333,28 +16353,11 @@ warn_at_extra = function (warning, warnings) {
         return;
     }
     switch (option.utility2 && warning.code) {
-    // bad_property_a: "Bad property name '{a}'.",
-    case "bad_property_a":
-        return;
-    // expected_a_b: "Expected '{a}' and instead saw '{b}'.",
-    case "expected_a_b":
-        switch (warning.a + " " + warning.b) {
-        case "let var":
-        case "var let":
-            return;
-        }
-        break;
     // too_long: "Line is longer than 80 characters.",
     case "too_long":
         if ((
             /^\s*?(?:\/\/(?:!!\u0020|\u0020https:\/\/)|(?:\S+?\u0020)?(?:https:\/\/|this\u0020.*?\u0020package\u0020will\u0020))/m
         ).test(warning.source)) {
-            return;
-        }
-        break;
-    // unexpected_a: "Unexpected '{a}'.",
-    case "unexpected_a":
-        if (warning.a === "." && warning.c && warning.c.wrapped === true) {
             return;
         }
         break;
@@ -16430,10 +16433,7 @@ warn_at_extra = function (warning, warnings) {
     if (option.utility2) {
         warning.option = Object.assign({}, option);
         Object.keys(warning.option).forEach(function (key) {
-            if (
-                typeof warning.option[key] === "object"
-                || (warning.option[key] || "").length >= 100
-            ) {
+            if (typeof warning.option[key] === "object") {
                 delete warning.option[key];
             }
         });
@@ -16456,7 +16456,7 @@ local.jslintAndPrint = function (code, file, opt) {
 /*
  * this function will jslint / csslint <code> and print any errors to stderr
  */
-    var tmp;
+    let tmp;
     if (!(opt && opt.gotoState)) {
         local.jslintResult = {
             gotoState: 0
@@ -16474,7 +16474,7 @@ local.jslintAndPrint = function (code, file, opt) {
     case 1:
         // cleanup
         opt.errList = [];
-        opt.errText = "";
+        opt.errMsg = "";
         switch (opt.fileType0) {
         // deembed-js - '\\n\\\n...\\n\\\n'
         case ".\\n\\":
@@ -16685,10 +16685,10 @@ local.jslintAndPrint = function (code, file, opt) {
             return warning && warning.message;
         // print only first 10 warnings
         }).slice(0, 10).forEach(function (err, ii) {
-            opt.errText = (
-                opt.errText || " \u001b[1mjslint " + file + "\u001b[22m\n"
+            opt.errMsg = (
+                opt.errMsg || " \u001b[1mjslint " + file + "\u001b[22m\n"
             );
-            opt.errText += (
+            opt.errMsg += (
                 ("  " + String(ii + 1)).slice(-3)
                 + " \u001b[31m" + err.message + "\u001b[39m"
                 + " \u001b[90m\/\/ line " + err.line + ", column "
@@ -16705,17 +16705,17 @@ local.jslintAndPrint = function (code, file, opt) {
                         delete err[key];
                     }
                 });
-                opt.errText += (
+                opt.errMsg += (
                     JSON.stringify(err, null, 4) + "\n" + tmp.trim() + "\n"
                 );
             }
         });
-        opt.errText = opt.errText.trim();
-        if (opt.errText) {
+        opt.errMsg = opt.errMsg.trim();
+        if (opt.errMsg) {
             // debug jslintResult
             local._debugJslintResult = local.jslintResult;
             // print err to stderr
-            console.error(opt.errText);
+            console.error(opt.errMsg);
         }
         return code;
     }
@@ -16727,10 +16727,10 @@ local.jslintAndPrintDir = function (dir, opt, onError) {
 /*
  * this function will jslint files in shallow <dir>
  */
-    var onParallel;
+    let onParallel;
     onParallel = local.onParallel(onError);
     local.fs.readdirSync(dir).forEach(function (file) {
-        var timeStart;
+        let timeStart;
         file = process.cwd() + "/" + file;
         switch ((
             /\.\w+?$|$/m
@@ -16750,7 +16750,7 @@ local.jslintAndPrintDir = function (dir, opt, onError) {
             // jslint file
             local.fs.readFile(file, "utf8", function (err, data) {
                 // validate no err occurred
-                local.assertThrow(!err, err);
+                local.assertOrThrow(!err, err);
                 timeStart = Date.now();
                 local.jslintAndPrint(data, file, opt);
                 console.error(
@@ -16767,14 +16767,14 @@ local.jslintAutofix = function (code, file, opt) {
 /*
  * this function will jslint-autofix <code>
  */
-    var code0;
-    var code2;
-    var dataList;
-    var ignoreList;
-    var ii;
-    var rgx1;
-    var rgx2;
-    var tmp;
+    let code0;
+    let code2;
+    let dataList;
+    let ignoreList;
+    let ii;
+    let rgx1;
+    let rgx2;
+    let tmp;
     // autofix-all
     if (opt.autofix) {
         // autofix-all - normalize local-function
@@ -16921,7 +16921,8 @@ local.jslintAutofix = function (code, file, opt) {
                 ii = rgx1.lastIndex;
                 while (rgx1.lastIndex < code.length) {
                     tmp[1] = rgx1.exec(code)[0];
-                    switch (tmp[0] + "_" + tmp[1]) {
+                    tmp[2] = tmp[0] + "_" + tmp[1];
+                    switch (tmp[2]) {
                     case "\"_\"":
                     case "'_'":
                     case "/*_*/":
@@ -16933,7 +16934,7 @@ local.jslintAutofix = function (code, file, opt) {
                         code2 += "_" + tmp[1];
                         dataList.push({
                             code: tmp[0] + code.slice(ii, rgx1.lastIndex),
-                            type: (tmp[0] + "_" + tmp[1]).replace("/_*/", "/_/")
+                            type: tmp[2].replace("/_*/", "/_/")
                         });
                         ii = 0;
                         break;
@@ -17196,9 +17197,9 @@ local.jslintGetColumnLine = function (code, ii) {
 /*
  * this function will transform <code> and <ii> -> {column, line, evidence}
  */
-    var column;
-    var evidence;
-    var line;
+    let column;
+    let evidence;
+    let line;
     evidence = code.slice(0, ii).split("\n");
     line = evidence.length - 1;
     column = evidence[line].length;
@@ -17216,10 +17217,10 @@ local.jslintUtility2 = function (code, ignore, opt) {
 /*
  * this function will jslint <code> with utiity2-specific rules
  */
-    var code2;
-    var err;
-    var indent;
-    var previous;
+    let code2;
+    let err;
+    let indent;
+    let previous;
     // jslintUtility2 - all
     if (opt.utility2) {
         code2 = code;

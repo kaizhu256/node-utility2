@@ -13,8 +13,8 @@
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
-    var consoleError;
-    var local;
+    let consoleError;
+    let local;
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debug_inline
@@ -45,11 +45,11 @@
         && typeof globalThis.navigator.userAgent === "string"
     );
     // init function
-    local.assertThrow = function (passed, message) {
+    local.assertOrThrow = function (passed, message) {
     /*
      * this function will throw err.<message> if <passed> is falsy
      */
-        var err;
+        let err;
         if (passed) {
             return;
         }
@@ -75,7 +75,7 @@
     /*
      * this function will sync "rm -rf" <dir>
      */
-        var child_process;
+        let child_process;
         try {
             child_process = require("child_process");
         } catch (ignore) {
@@ -93,7 +93,7 @@
     /*
      * this function will sync write <data> to <file> with "mkdir -p"
      */
-        var fs;
+        let fs;
         try {
             fs = require("fs");
         } catch (ignore) {
@@ -122,16 +122,10 @@
     local.functionOrNop = function (fnc) {
     /*
      * this function will if <fnc> exists,
-     * them return <fnc>,
+     * return <fnc>,
      * else return <nop>
      */
         return fnc || local.nop;
-    };
-    local.identity = function (value) {
-    /*
-     * this function will return <value>
-     */
-        return value;
     };
     local.nop = function () {
     /*
@@ -156,6 +150,30 @@
             }
         });
         return target;
+    };
+    local.value = function (val) {
+    /*
+     * this function will return <val>
+     */
+        return val;
+    };
+    local.valueOrEmptyList = function (val) {
+    /*
+     * this function will return <val> or []
+     */
+        return val || [];
+    };
+    local.valueOrEmptyObject = function (val) {
+    /*
+     * this function will return <val> or {}
+     */
+        return val || {};
+    };
+    local.valueOrEmptyString = function (val) {
+    /*
+     * this function will return <val> or ""
+     */
+        return val || "";
     };
     // require builtin
     if (!local.isBrowser) {
@@ -240,18 +258,16 @@ local.cliRun = function (opt) {
         globalThis.local = local;
         local.vm.runInThisContext(process.argv[3]);
     };
-    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
-    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
     local.cliDict._help = local.cliDict._help || function () {
     /*
      *
      * will print help
      */
-        var commandList;
-        var file;
-        var packageJson;
-        var text;
-        var textDict;
+        let commandList;
+        let file;
+        let packageJson;
+        let text;
+        let textDict;
         commandList = [
             {
                 argList: "<arg2>  ...",
@@ -294,14 +310,16 @@ local.cliRun = function (opt) {
             try {
                 commandList[ii] = opt.rgxComment.exec(text);
                 commandList[ii] = {
-                    argList: (commandList[ii][1] || "").trim(),
+                    argList: local.valueOrEmptyString(
+                        commandList[ii][1]
+                    ).trim(),
                     command: [
                         key
                     ],
                     description: commandList[ii][2]
                 };
             } catch (ignore) {
-                local.assertThrow(null, new Error(
+                local.assertOrThrow(null, new Error(
                     "cliRun - cannot parse comment in COMMAND "
                     + key
                     + ":\nnew RegExp("
@@ -341,15 +359,15 @@ local.cliRun = function (opt) {
             }
             return (
                 elem.description + "\n  " + file
-                + ("  " + elem.command.sort().join("|") + "  ").replace((
-                    /^\u0020{4}$/
-                ), "  ")
+                + "  " + elem.command.sort().join("|") + "  "
                 + elem.argList.join("  ")
             );
         }).join("\n\n");
         console.log(text);
     };
+    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
     local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
+    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
     local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
     local.cliDict._default = local.cliDict._default || local.cliDict._help;
     local.cliDict.help = local.cliDict.help || local.cliDict._help;
@@ -359,7 +377,7 @@ local.cliRun = function (opt) {
      * will start interactive-mode
      */
         globalThis.local = local;
-        local.identity(local.replStart || require("repl").start)({
+        local.value(local.replStart || require("repl").start)({
             useGlobal: true
         });
     };
@@ -397,9 +415,9 @@ local.cliRun = function (opt) {
 
 // run shared js-env code - function
 (function () {
-var __dirname;
-var process;
-var require;
+let __dirname;
+let process;
+let require;
 // hack-jslint
 local.nop(__dirname, require);
 /* istanbul ignore next */
@@ -468,8 +486,8 @@ local.coverageMerge = function (coverage1, coverage2) {
 /*
  * this function will inplace-merge coverage2 into coverage1
  */
-    var dict1;
-    var dict2;
+    let dict1;
+    let dict2;
     coverage1 = coverage1 || {};
     coverage2 = coverage2 || {};
     Object.keys(coverage2).forEach(function (file) {
@@ -516,7 +534,7 @@ local.coverageReportCreate = function () {
  * 2. write coverage in html-format to filesystem
  * 3. return coverage in html-format as single document
  */
-    var opt;
+    let opt;
     /* istanbul ignore next */
     if (!globalThis.__coverage__) {
         return "";
@@ -660,7 +678,7 @@ file https://registry.npmjs.org/acorn/-/acorn-6.3.0.tgz
 */
 /* istanbul ignore next */
 /* jslint ignore:start */
-(function () { var exports, module; exports = module = local.esprima = {};
+(function () { let exports, module; exports = module = local.esprima = {};
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -5636,7 +5654,7 @@ file https://registry.npmjs.org/acorn/-/acorn-6.3.0.tgz
 file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
 */
 /* istanbul ignore next */
-(function () { var exports; exports = local.estraverse = {};
+(function () { let exports; exports = local.estraverse = {};
 /*
   Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
@@ -6494,7 +6512,7 @@ file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
 file https://github.com/estools/esutils/blob/2.0.3/lib/code.js
 */
 /* istanbul ignore next */
-(function () { var module; module = {};
+(function () { let module; module = {};
 /*
   Copyright (C) 2013-2014 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2014 Ivan Nikulin <ifaaan@gmail.com>
@@ -6638,7 +6656,7 @@ local.esutils = { code: module.exports }; }());
 file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
 */
 /* istanbul ignore next */
-(function () { var exports; exports = local.escodegen = {};
+(function () { let exports; exports = local.escodegen = {};
 /*
   Copyright (C) 2012-2014 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2015 Ingvar Stepanyan <me@rreverser.com>
@@ -9262,7 +9280,7 @@ local.handlebars.compile = function (template) {
  * that will render <template> with given <dict>
  */
     return function (dict) {
-        var result;
+        let result;
         result = template;
         // render triple-curly-brace
         result = result.replace((
@@ -9343,14 +9361,16 @@ local.handlebars.replace = function (template, dict, withPrefix) {
 /*
  * this function will render <template> with given <dict>
  */
-    var value;
+    let value;
     // search for keys in the template
     return template.replace((
         /\{\{.+?\}\}/g
     ), function (match0) {
         value = dict;
         // iteratively lookup nested values in the dict
-        (withPrefix + match0.slice(2, -2)).split(".").forEach(function (key) {
+        String(
+            withPrefix + match0.slice(2, -2)
+        ).split(".").forEach(function (key) {
             value = value && value[key];
         });
         return (
@@ -9390,7 +9410,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text
 */
 /* istanbul ignore next */
 /* jslint ignore:start */
-(function () { var module; module = {};
+(function () { let module; module = {};
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
  Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
@@ -9508,7 +9528,7 @@ local["../util/insertion-text"] = module.exports; }());
 file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 */
 /* istanbul ignore next */
-(function () { var escodegen, esprima, module, window; escodegen = local.escodegen; esprima = local.esprima; module = undefined; window = local;
+(function () { let escodegen, esprima, module, window; escodegen = local.escodegen; esprima = local.esprima; module = undefined; window = local;
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
  Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
@@ -10619,7 +10639,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
 */
 /* istanbul ignore next */
-(function () { var module, window; module = undefined; window = local;
+(function () { let module, window; module = undefined; window = local;
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
  Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
@@ -10994,7 +11014,7 @@ local["../object-utils"] = window.coverageUtils; }());
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/common/defaults.js
 */
 /* istanbul ignore next */
-(function () { var module; module = {};
+(function () { let module; module = {};
 /*
  Copyright (c) 2013, Yahoo! Inc.  All rights reserved.
  Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
@@ -11399,7 +11419,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarize
 */
 /* istanbul ignore next */
 (function () {
-    var module;
+    let module;
     module = {};
 /* jslint ignore:start */
 /*
@@ -11633,7 +11653,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
 /* istanbul ignore next */
 /* jslint ignore:start */
-(function () { var module; module = {};
+(function () { let module; module = {};
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
  Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
@@ -12412,7 +12432,7 @@ local.cliDict.cover = function () {
  * <script>
  * will run and cover <script>
  */
-    var tmp;
+    let tmp;
     try {
         tmp = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
         process.env.npm_package_nameLib = (
@@ -12488,7 +12508,7 @@ local.cliDict.report = function () {
     globalThis.__coverageCodeDict__ = {};
     Object.entries(globalThis.__coverage__).forEach(function (entry) {
         globalThis.__coverageCodeDict__[entry[0]] = true;
-        entry[1].code = entry[1].code || (entry[1].text || "").split("\n");
+        entry[1].code = entry[1].code || entry[1].text.split("\n");
     });
     local.coverageReportCreate();
 };
@@ -12496,7 +12516,7 @@ local.cliDict.report = function () {
 local.cliDict.test = function () {
 /*
  * <script>
- * will run and cover <script> if env var $npm_config_mode_coverage is set
+ * will run and cover <script> if env-var $npm_config_mode_coverage is set
  */
     if (process.env.npm_config_mode_coverage) {
         process.argv[2] = "cover";

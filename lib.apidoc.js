@@ -13,8 +13,8 @@
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
-    var consoleError;
-    var local;
+    let consoleError;
+    let local;
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debug_inline
@@ -45,11 +45,11 @@
         && typeof globalThis.navigator.userAgent === "string"
     );
     // init function
-    local.assertThrow = function (passed, message) {
+    local.assertOrThrow = function (passed, message) {
     /*
      * this function will throw err.<message> if <passed> is falsy
      */
-        var err;
+        let err;
         if (passed) {
             return;
         }
@@ -75,7 +75,7 @@
     /*
      * this function will sync "rm -rf" <dir>
      */
-        var child_process;
+        let child_process;
         try {
             child_process = require("child_process");
         } catch (ignore) {
@@ -93,7 +93,7 @@
     /*
      * this function will sync write <data> to <file> with "mkdir -p"
      */
-        var fs;
+        let fs;
         try {
             fs = require("fs");
         } catch (ignore) {
@@ -122,16 +122,10 @@
     local.functionOrNop = function (fnc) {
     /*
      * this function will if <fnc> exists,
-     * them return <fnc>,
+     * return <fnc>,
      * else return <nop>
      */
         return fnc || local.nop;
-    };
-    local.identity = function (value) {
-    /*
-     * this function will return <value>
-     */
-        return value;
     };
     local.nop = function () {
     /*
@@ -156,6 +150,30 @@
             }
         });
         return target;
+    };
+    local.value = function (val) {
+    /*
+     * this function will return <val>
+     */
+        return val;
+    };
+    local.valueOrEmptyList = function (val) {
+    /*
+     * this function will return <val> or []
+     */
+        return val || [];
+    };
+    local.valueOrEmptyObject = function (val) {
+    /*
+     * this function will return <val> or {}
+     */
+        return val || {};
+    };
+    local.valueOrEmptyString = function (val) {
+    /*
+     * this function will return <val> or ""
+     */
+        return val || "";
     };
     // require builtin
     if (!local.isBrowser) {
@@ -233,18 +251,16 @@ local.cliRun = function (opt) {
         globalThis.local = local;
         local.vm.runInThisContext(process.argv[3]);
     };
-    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
-    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
     local.cliDict._help = local.cliDict._help || function () {
     /*
      *
      * will print help
      */
-        var commandList;
-        var file;
-        var packageJson;
-        var text;
-        var textDict;
+        let commandList;
+        let file;
+        let packageJson;
+        let text;
+        let textDict;
         commandList = [
             {
                 argList: "<arg2>  ...",
@@ -287,14 +303,16 @@ local.cliRun = function (opt) {
             try {
                 commandList[ii] = opt.rgxComment.exec(text);
                 commandList[ii] = {
-                    argList: (commandList[ii][1] || "").trim(),
+                    argList: local.valueOrEmptyString(
+                        commandList[ii][1]
+                    ).trim(),
                     command: [
                         key
                     ],
                     description: commandList[ii][2]
                 };
             } catch (ignore) {
-                local.assertThrow(null, new Error(
+                local.assertOrThrow(null, new Error(
                     "cliRun - cannot parse comment in COMMAND "
                     + key
                     + ":\nnew RegExp("
@@ -334,15 +352,15 @@ local.cliRun = function (opt) {
             }
             return (
                 elem.description + "\n  " + file
-                + ("  " + elem.command.sort().join("|") + "  ").replace((
-                    /^\u0020{4}$/
-                ), "  ")
+                + "  " + elem.command.sort().join("|") + "  "
                 + elem.argList.join("  ")
             );
         }).join("\n\n");
         console.log(text);
     };
+    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
     local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
+    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
     local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
     local.cliDict._default = local.cliDict._default || local.cliDict._help;
     local.cliDict.help = local.cliDict.help || local.cliDict._help;
@@ -352,7 +370,7 @@ local.cliRun = function (opt) {
      * will start interactive-mode
      */
         globalThis.local = local;
-        local.identity(local.replStart || require("repl").start)({
+        local.value(local.replStart || require("repl").start)({
             useGlobal: true
         });
     };
@@ -389,7 +407,7 @@ local.moduleDirname = function (module, modulePathList) {
 /*
  * this function will search modulePathList for the module's __dirname
  */
-    var result;
+    let result;
     // search process.cwd()
     if (!module || module === "." || module.indexOf("/") >= 0) {
         return require("path").resolve(process.cwd(), module || "");
@@ -422,8 +440,8 @@ local.objectSetDefault = function (dict, defaults, depth) {
     dict = dict || {};
     defaults = defaults || {};
     Object.keys(defaults).forEach(function (key) {
-        var defaults2;
-        var dict2;
+        let defaults2;
+        let dict2;
         dict2 = dict[key];
         // handle misbehaving getter
         try {
@@ -589,13 +607,13 @@ local.templateRender = function (template, dict, opt) {
 /*
  * this function will render the template with given dict
  */
-    var argList;
-    var getValue;
-    var match;
-    var renderPartial;
-    var rgx;
-    var skip;
-    var value;
+    let argList;
+    let getValue;
+    let match;
+    let renderPartial;
+    let rgx;
+    let skip;
+    let value;
     if (dict === null || dict === undefined) {
         dict = {};
     }
@@ -676,8 +694,8 @@ local.templateRender = function (template, dict, opt) {
     return template.replace((
         /\{\{[^}]+?\}\}/g
     ), function (match0) {
-        var markdownToHtml;
-        var notHtmlSafe;
+        let markdownToHtml;
+        let notHtmlSafe;
         notHtmlSafe = opt.notHtmlSafe;
         try {
             getValue(match0.slice(2, -2));
@@ -773,7 +791,7 @@ local.templateRender = function (template, dict, opt) {
                 + JSON.stringify(match0)
                 + "\n"
             ) + errCaught.message;
-            local.assertThrow(null, errCaught);
+            local.assertOrThrow(null, errCaught);
         }
     });
 };
@@ -783,9 +801,9 @@ local.tryCatchOnError = function (fnc, onError) {
  * this function will run the fnc in a tryCatch block,
  * else call onError with errCaught
  */
-    var result;
+    let result;
     // validate onError
-    local.assertThrow(typeof onError === "function", typeof onError);
+    local.assertOrThrow(typeof onError === "function", typeof onError);
     try {
         // reset errCaught
         local._debugTryCatchError = null;
@@ -808,18 +826,18 @@ local.apidocCreate = function (opt) {
 /*
  * this function will create the apidoc from <opt>.dir
  */
-    var elemCreate;
-    var module;
-    var moduleMain;
-    var readExample;
-    var tmp;
-    var toString;
-    var trimLeft;
+    let elemCreate;
+    let module;
+    let moduleMain;
+    let readExample;
+    let tmp;
+    let toString;
+    let trimLeft;
     elemCreate = function (module, prefix, key) {
     /*
      * this function will create the apidoc-elem in given <module>
      */
-        var elem;
+        let elem;
         if (opt.modeNoApidoc) {
             return elem;
         }
@@ -835,8 +853,9 @@ local.apidocCreate = function (opt) {
         elem.name = (
             elem.typeof + " <span class=\"apidocSignatureSpan\">"
             + elem.moduleName + ".</span>" + key
+        );
         // handle case where module is a function
-        ).replace(">.<", "><");
+        elem.name = elem.name.replace(">.<", "><");
         if (elem.typeof !== "function") {
             return elem;
         }
@@ -884,12 +903,12 @@ local.apidocCreate = function (opt) {
     /*
      * this function will read the example from given file
      */
-        var result;
+        let result;
         local.tryCatchOnError(function () {
             file = local.path.resolve(opt.dir, file);
             console.error("apidocCreate - readExample " + file);
             result = "";
-            result = (
+            result = local.value(
                 "\n\n\n\n\n\n\n\n"
                 // bug-workaround - truncate example to manageable size
                 + local.fs.readFileSync(file, "utf8").slice(0, 262144)
@@ -904,7 +923,7 @@ local.apidocCreate = function (opt) {
     /*
      * this function will try to return the string form of the value
      */
-        var result;
+        let result;
         local.tryCatchOnError(function () {
             result = "";
             result = String(value);
@@ -915,7 +934,7 @@ local.apidocCreate = function (opt) {
     /*
      * this function will normalize the whitespace around the text
      */
-        var whitespace;
+        let whitespace;
         whitespace = "";
         text.trim().replace((
             /^\u0020*/gm
@@ -1047,7 +1066,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
     // handle case where module is a function
     if (typeof moduleMain === "function") {
         (function () {
-            var text;
+            let text;
             text = toString(moduleMain);
             tmp = function () {
                 return;
@@ -1176,13 +1195,13 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             ), "").replace((
                 /\W/g
             ), "_");
-            ([
+            Array.from([
                 tmp.name,
                 tmp.name.slice(0, 1).toUpperCase() + tmp.name.slice(1)
             ]).some(function (name) {
                 tmp.isFiltered = name && (
                     !opt.packageJson.main
-                    || ("./" + file).indexOf(opt.packageJson.main) < 0
+                    || String("./" + file).indexOf(opt.packageJson.main) < 0
                 ) && !module[name];
                 return !tmp.isFiltered;
             });
@@ -1260,9 +1279,9 @@ local.apidocModuleDictAdd = function (opt, moduleDict) {
 /*
  * this function will add the modules in <moduleDict> to <opt>.moduleDict
  */
-    var isModule;
-    var objectKeys;
-    var tmp;
+    let isModule;
+    let objectKeys;
+    let tmp;
     objectKeys = function (dict) {
     /*
      * this function will return a list of the dict's keys, with valid getters
@@ -1311,7 +1330,7 @@ local.apidocModuleDictAdd = function (opt, moduleDict) {
                 ) {
                     return;
                 }
-                isModule = ([
+                isModule = Array.from([
                     tmp.module,
                     tmp.module.prototype
                 ]).some(function (dict) {

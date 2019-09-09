@@ -1,5 +1,5 @@
 # utility2
-this zero-dependency package will provide a collection of high-level functions to to build, test, and deploy webapps
+this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
 
 # live web demo
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/)
@@ -43,27 +43,23 @@ this zero-dependency package will provide a collection of high-level functions t
 
 
 # documentation
-#### cli help
-![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
-
 #### api doc
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
+#### cli help
+![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
+
 #### todo
-- jslint - rename errText to errMsg
+- jslint - autofix - break querySelector and querySelectorAll into multiple-lines
 - jslint - fix off-by-one line-error
-- jslint - rename assertThrow to assertOrThrow
-- remove unused shell-function from lib.utility2.sh
 - rename message to msg
-- remove "the" from comments
+- remove excessive "the" from comments
 - replace taskCreateCached with debounce
-- rename counter to count
+- rename counter to cnt
 - replace db-lite with sql.js
-- rename var value to val
 - replace uglifyjs-lite with terser-lite (v2.8.29)
-- jslint - remove bad_property_a and unexpected_a hacks
 - jslint - sort nested switch-statements
 - add default testCase _testCase_cliRun_help
 - merge class _http.IncomingMessage -> _http.ServerResponse
@@ -73,6 +69,13 @@ this zero-dependency package will provide a collection of high-level functions t
 
 #### changelog 2019.9.8
 - npm publish 2019.9.8
+- jslint - remove unexpected_a hacks
+- jslint - reintroduce flag option.nomen to ignore bad_property_a
+- jslint - migrate from let-declaration to var-declaration
+- merge function local.streamReadAll into local.middlewareBodyRead
+- remove little-used shell-function from lib.utility2.sh
+- rename function assertThrow to assertOrThrow
+- jslint - rename errText to errMsg
 - inline lib.puppeteer.js into assets.app.js
 - none
 
@@ -136,8 +139,8 @@ instruction
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
-    var consoleError;
-    var local;
+    let consoleError;
+    let local;
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debug_inline
@@ -168,11 +171,11 @@ instruction
         && typeof globalThis.navigator.userAgent === "string"
     );
     // init function
-    local.assertThrow = function (passed, message) {
+    local.assertOrThrow = function (passed, message) {
     /*
      * this function will throw err.<message> if <passed> is falsy
      */
-        var err;
+        let err;
         if (passed) {
             return;
         }
@@ -198,7 +201,7 @@ instruction
     /*
      * this function will sync "rm -rf" <dir>
      */
-        var child_process;
+        let child_process;
         try {
             child_process = require("child_process");
         } catch (ignore) {
@@ -216,7 +219,7 @@ instruction
     /*
      * this function will sync write <data> to <file> with "mkdir -p"
      */
-        var fs;
+        let fs;
         try {
             fs = require("fs");
         } catch (ignore) {
@@ -245,16 +248,10 @@ instruction
     local.functionOrNop = function (fnc) {
     /*
      * this function will if <fnc> exists,
-     * them return <fnc>,
+     * return <fnc>,
      * else return <nop>
      */
         return fnc || local.nop;
-    };
-    local.identity = function (value) {
-    /*
-     * this function will return <value>
-     */
-        return value;
     };
     local.nop = function () {
     /*
@@ -279,6 +276,30 @@ instruction
             }
         });
         return target;
+    };
+    local.value = function (val) {
+    /*
+     * this function will return <val>
+     */
+        return val;
+    };
+    local.valueOrEmptyList = function (val) {
+    /*
+     * this function will return <val> or []
+     */
+        return val || [];
+    };
+    local.valueOrEmptyObject = function (val) {
+    /*
+     * this function will return <val> or {}
+     */
+        return val || {};
+    };
+    local.valueOrEmptyString = function (val) {
+    /*
+     * this function will return <val> or ""
+     */
+        return val || "";
     };
     // require builtin
     if (!local.isBrowser) {
@@ -357,10 +378,10 @@ local.testCase_ajax_200 = function (opt, onError) {
     }, function (err, xhr) {
         local.tryCatchOnError(function () {
             // validate no err occurred
-            local.assertThrow(!err, err);
+            local.assertOrThrow(!err, err);
             // validate data
             opt.data = xhr.responseText;
-            local.assertThrow(
+            local.assertOrThrow(
                 opt.data === "hello \ud83d\ude01\n",
                 opt.data
             );
@@ -384,10 +405,10 @@ local.testCase_ajax_404 = function (opt, onError) {
     }, function (err) {
         local.tryCatchOnError(function () {
             // validate err occurred
-            local.assertThrow(err, err);
+            local.assertOrThrow(err, err);
             opt.statusCode = err.statusCode;
             // validate 404 http statusCode
-            local.assertThrow(opt.statusCode === 404, opt.statusCode);
+            local.assertOrThrow(opt.statusCode === 404, opt.statusCode);
             onError();
         }, onError);
     });
@@ -418,8 +439,8 @@ if (!local.isBrowser) {
 }
 // log stderr and stdout to #outputStdout1
 ["error", "log"].forEach(function (key) {
-    var elem;
-    var fnc;
+    let elem;
+    let fnc;
     elem = document.querySelector(
         "#outputStdout1"
     );
@@ -482,7 +503,7 @@ local.testRunBrowser = function (evt) {
             );
         }
         document.querySelector("#outputJslintPre1").textContent = (
-            local.jslint.jslintResult.errText
+            local.jslint.jslintResult.errMsg
         ).replace((
             /\u001b\[\d*m/g
         ), "").trim();
@@ -747,7 +768,7 @@ pre {\n\
  * this function will display incrementing ajax-progress-bar\n\
  */\n\
     "use strict";\n\
-    var opt;\n\
+    let opt;\n\
     if (window.domOnEventAjaxProgressUpdate) {\n\
         return;\n\
     }\n\
@@ -862,7 +883,7 @@ pre {\n\
  * this function will handle delegated dom-event\n\
  */\n\
     "use strict";\n\
-    var timerTimeoutDict;\n\
+    let timerTimeoutDict;\n\
     if (window.domOnEventDelegateDict) {\n\
         return;\n\
     }\n\
@@ -958,8 +979,8 @@ pre {\n\
         return;\n\
     }\n\
     window.domOnEventSelectAllWithinPre = function (evt) {\n\
-        var range;\n\
-        var selection;\n\
+        let range;\n\
+        let selection;\n\
         if (\n\
             evt\n\
             && evt.key === "a"\n\
@@ -1016,7 +1037,7 @@ utility2-comment -->\n\
 /*global window*/\n\
 (function () {\n\
     "use strict";\n\
-    var testCaseDict;\n\
+    let testCaseDict;\n\
     testCaseDict = {};\n\
     testCaseDict.modeTest = 1;\n\
 \n\
@@ -1034,7 +1055,7 @@ utility2-comment -->\n\
     /*\n\
      * this function will demo a passed ajax test\n\
      */\n\
-        var data;\n\
+        let data;\n\
         opt = {url: "/"};\n\
         // test ajax-req for main-page "/"\n\
         window.utility2.ajax(opt, function (err, xhr) {\n\
@@ -1071,9 +1092,11 @@ utility2-comment -->\n\
 document.querySelector("#htmlTestReport1").remove();\n\
 window.addEventListener("load", function () {\n\
     window.utility2.on("utility2.testRunEnd", function () {\n\
-        (document.querySelector(\n\
+        document.querySelectorAll(\n\
             "#htmlCoverageReport1"\n\
-        ) || {}).innerHTML = window.utility2.istanbulCoverageReportCreate();\n\
+        ).forEach(function (elem) {\n\
+            elem.innerHTML = window.utility2.istanbulCoverageReportCreate();\n\
+        });\n\
     });\n\
 });\n\
 }());\n\
@@ -1082,11 +1105,11 @@ window.addEventListener("load", function () {\n\
 \n\
 \n\
 \n\
-<!-- utility2-comment\n\
 {{#if isRollup}}\n\
+<!-- utility2-comment\n\
 <script src="assets.app.js"></script>\n\
-{{#unless isRollup}}\n\
 utility2-comment -->\n\
+{{#unless isRollup}}\n\
 <script src="assets.utility2.lib.istanbul.js"></script>\n\
 <script src="assets.utility2.lib.jslint.js"></script>\n\
 <script src="assets.utility2.lib.db.js"></script>\n\
@@ -1097,19 +1120,23 @@ utility2-comment -->\n\
 <script src="jsonp.utility2.stateInit?callback=window.utility2.stateInit"></script>\n\
 <script src="assets.example.js"></script>\n\
 <script src="assets.test.js"></script>\n\
-<script>window.utility2_onReadyBefore();</script>\n\
+<script>\n\
+if(window.utility2_onReadyBefore) {\n\
+    window.utility2_onReadyBefore();\n\
+}\n\
+</script>\n\
 {{/if isRollup}}\n\
 <script>\n\
 /* jslint utility2:true */\n\
 (function () {\n\
 "use strict";\n\
-var htmlTestReport1;\n\
-var local;\n\
+let htmlTestReport1;\n\
+let local;\n\
 htmlTestReport1 = document.querySelector("#htmlTestReport1");\n\
-if (!htmlTestReport1) {\n\
+local = window.utility2;\n\
+if (!(htmlTestReport1 && local)) {\n\
     return;\n\
 }\n\
-local = window.utility2;\n\
 local.on("utility2.testRunProgressUpdate", function (testReport) {\n\
     htmlTestReport1.innerHTML = local.testReportMerge(testReport, {});\n\
 });\n\
@@ -1254,7 +1281,7 @@ local.http.createServer(function (req, res) {
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js"
     },
-    "description": "this zero-dependency package will provide a collection of high-level functions to to build, test, and deploy webapps",
+    "description": "this zero-dependency package will provide high-level functions to to build, test, and deploy webapps",
     "devDependencies": {},
     "engines": {
         "node": ">=10.0"

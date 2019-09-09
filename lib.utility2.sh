@@ -94,7 +94,7 @@ shBrowserScreenshot () {(set -e
 /* jslint utility2:true */
 (function () {
 "use strict";
-var opt;
+let opt;
 opt = {};
 opt.argv = process.argv;
 opt.cwd = process.cwd();
@@ -198,21 +198,33 @@ shBuildApp () {(set -e
         fi
     done
     # create file package.json
-    shJsonNormalize package.json "{
-    \"description\": \"the greatest app in the world!\",
-    \"main\": \"lib.$npm_package_nameLib.js\",
-    \"name\": \"$npm_package_name\",
-    \"scripts\": {
-        \"test\": \"\$PWD/npm_scripts.sh\"
+    node -e "$UTILITY2_MACRO_JS"'
+/* jslint utility2:true */
+(function (local) {
+"use strict";
+let result;
+result = Object.assign({
+    "description": "the greatest app in the world!",
+    "main": "lib." + process.env.npm_package_nameLib + ".js",
+    "name": process.env.npm_package_name,
+    "scripts": {
+        "test": "./npm_scripts.sh"
     },
-    \"version\": \"0.0.1\"
-}"
+    "version": "0.0.1"
+}, JSON.parse(require("fs").readFileSync("package.json")));
+result.scripts.test = result.scripts.test || "./npm_scripts.sh";
+require("fs").writeFileSync(
+    "package.json",
+    local.jsonStringifyOrdered(result, null, 4) + "\n"
+);
+}(globalThis.globalLocal));
+'
     # create files README.md, lib.$npm_package.nameLib.js, test.js
     node -e '
 /* jslint utility2:true */
 (function (local) {
 "use strict";
-var tmp;
+let tmp;
 if (!local.fs.existsSync("README.md", "utf8")) {
     local.fs.writeFileSync("README.md", local.templateRenderMyApp(
         local.assetsDict["/assets.readme.template.md"],
@@ -753,8 +765,8 @@ $HOME/node_modules/utility2}" || return "$?"
 /* jslint utility2:true */
 (function () {
 "use strict";
-var packageJson;
-var value;
+let packageJson;
+let value;
 packageJson = require("./package.json");
 Object.keys(packageJson).forEach(function (key) {
     value = packageJson[key];
@@ -904,7 +916,7 @@ shCryptoAesXxxCbcRawDecrypt () {(set -e
 /* jslint utility2:true */
 (function (local) {
 "use strict";
-var chunkList;
+let chunkList;
 chunkList = [];
 process.stdin.on("data", function (chunk) {
     chunkList.push(chunk);
@@ -919,7 +931,7 @@ process.stdin.on("end", function () {
         key: process.argv[1],
         mode: process.argv[2]
     }, function (err, data) {
-        local.assertThrow(!err, err);
+        local.assertOrThrow(!err, err);
         Object.setPrototypeOf(data, Buffer.prototype);
         process.stdout.write(data);
     });
@@ -936,7 +948,7 @@ shCryptoAesXxxCbcRawEncrypt () {(set -e
 /* jslint utility2:true */
 (function (local) {
 "use strict";
-var chunkList;
+let chunkList;
 chunkList = [];
 process.stdin.on("data", function (chunk) {
     chunkList.push(chunk);
@@ -947,7 +959,7 @@ process.stdin.on("end", function () {
         key: process.argv[1],
         mode: process.argv[2]
     }, function (err, data) {
-        local.assertThrow(!err, err);
+        local.assertOrThrow(!err, err);
         Object.setPrototypeOf(data, Buffer.prototype);
         process.stdout.write(data);
     });
@@ -1052,29 +1064,6 @@ shDateIso () {(set -e
     )' "$1"
 )}
 
-shDebugArgv () {
-# this function will print $1 $2 $3 $4 in separte lines
-    DEBUG_ARG1="$1"
-    DEBUG_ARG2="$2"
-    DEBUG_ARG3="$3"
-    DEBUG_ARG4="$4"
-    DEBUG_ARG5="$5"
-    DEBUG_ARG6="$6"
-    DEBUG_ARG7="$7"
-    DEBUG_ARG8="$8"
-    DEBUG_ARG9="$9"
-    printf "DEBUG_ARG1='$DEBUG_ARG1'
-DEBUG_ARG2='$DEBUG_ARG2'
-DEBUG_ARG3='$DEBUG_ARG3'
-DEBUG_ARG4='$DEBUG_ARG4'
-DEBUG_ARG5='$DEBUG_ARG5'
-DEBUG_ARG6='$DEBUG_ARG6'
-DEBUG_ARG7='$DEBUG_ARG7'
-DEBUG_ARG8='$DEBUG_ARG8'
-DEBUG_ARG9='$DEBUG_ARG9'
-"
-}
-
 shDeployCustom () {
 # this function will do nothing
     return
@@ -1161,136 +1150,10 @@ shDockerBuildCleanup () {(set -e
         2>/dev/null || true
 )}
 
-shDockerCopyFromImage () {(set -e
-# this function will copy the $FILE_FROM from the docker $IMAGE to $FILE_TO
-# http://stackoverflow.com/questions/25292198
-# /docker-how-can-i-copy-a-file-from-an-image-to-a-host
-    IMAGE="$1"
-    FILE_FROM="$2"
-    FILE_TO="$3"
-    # create $CONTAINER from $IMAGE
-    CONTAINER="$(docker create "$IMAGE")"
-    docker cp "$CONTAINER:$FILE_FROM" "$FILE_TO"
-    # cleanup $CONTAINER
-    docker rm -fv "$CONTAINER"
-)}
-
-shDockerLogs () {(set -e
-# this function log the  $1
-    docker logs --tail=256 -f "$1"
-)}
-
-shDockerMssqlcommand () {(set -e
-# this function will restart the docker-container mssql
-# http://transmission:transmission@127.0.0.1:9091
-    case "$(uname)" in
-    Linux)
-        LOCALHOST="${LOCALHOST:-127.0.0.1}"
-        ;;
-    *)
-        LOCALHOST="${LOCALHOST:-192.168.99.100}"
-        ;;
-    esac
-    sqlcmd \
-        -S "$LOCALHOST,1433" \
-        -P "${SA_PASSWORD:-yourStrong(\!)Passw0rd}" \
-        -U SA
-)}
-
-shDockerNpmRestart () {(set -e
-# this function will npm-restart the app
-# inside the docker-container $IMAGE:$NAME
-    NAME="$1"
-    IMAGE="$2"
-    DIR="$3"
-    DOCKER_PORT="$4"
-    shDockerRestart $NAME $IMAGE /bin/sh -c "set -e
-        curl -Lfs \
-https://raw.githubusercontent.com\
-/kaizhu256/node-utility2/alpha/lib.utility2.sh \
-            > /tmp/lib.utility2.sh
-        . /tmp/lib.utility2.sh
-        cd $DIR
-        PORT=$DOCKER_PORT npm start
-"
-)}
-
 shDockerRestart () {(set -e
 # this function will restart the docker-container
     docker rm -fv "$1" || true
     shDockerStart "$@"
-)}
-
-shDockerRestartElasticsearch () {(set -e
-# this function will restart the docker-container elasticsearch
-# https://hub.docker.com/_/elasticsearch/
-    case "$(uname)" in
-    Linux)
-        LOCALHOST="${LOCALHOST:-127.0.0.1}"
-        ;;
-    *)
-        LOCALHOST="${LOCALHOST:-192.168.99.100}"
-        ;;
-    esac
-    docker rm -fv elasticsearch || true
-    mkdir -p "$HOME/docker/elasticsearch.data"
-    docker run --name elasticsearch -d \
-        -p "$LOCALHOST:9200:9200" \
-        -v "$HOME/docker/elasticsearch.data:/elasticsearch/data" \
-        kaizhu256/node-utility2:elasticsearch \
-    /bin/sh -c "set -e
-        printf '
-server {
-    listen 9200;
-    location / {
-        client_max_body_size 256M;
-        proxy_pass http://127.0.0.1:9201\$request_uri;
-    }
-    location /assets {
-        root /elasticsearch/data;
-        sendfile off;
-    }
-    location /kibana {
-        root /;
-    }
-    location /swagger-ui {
-        root /;
-    }
-}
-' > /etc/nginx/conf.d/default.conf
-        mkdir -p /var/log/nginx
-        touch /var/log/nginx/access.log
-        tail -f /var/log/nginx/access.log &
-        touch /var/log/nginx/error.log
-        tail -f /dev/stderr /var/log/nginx/error.log &
-        /etc/init.d/nginx start
-        sed -in -e 's/http:\/\/petstore.swagger.io\/v2/\/assets/' \
-            /swagger-ui/index.html
-        rm -f /swagger-ui/index.htmln
-        /elasticsearch/bin/elasticsearch -Des.http.port=9201
-        sleep infinity
-"
-)}
-
-shDockerRestartMssql () {(set -e
-# this function will restart the docker-container mssql
-# http://transmission:transmission@127.0.0.1:9091
-    case "$(uname)" in
-    Linux)
-        LOCALHOST="${LOCALHOST:-127.0.0.1}"
-        ;;
-    *)
-        LOCALHOST="${LOCALHOST:-192.168.99.100}"
-        ;;
-    esac
-    docker rm -fv mssql || true
-    mkdir -p "$HOME/docker/mssql.data"
-    docker run --name mssql -d \
-        -e "ACCEPT_EULA=Y" \
-        -e "SA_PASSWORD=${SA_PASSWORD:-yourStrong(\!)Passw0rd}" \
-        -p "$LOCALHOST:1433:1433" \
-        -v "$HOME/docker/mssql.data:/var/opt/mssql" \
-        mcr.microsoft.com/mssql/server:2017-latest
 )}
 
 shDockerRestartNginx () {(set -e
@@ -1526,8 +1389,8 @@ shFileCustomizeFromToRgx () {(set -e
 /* jslint utility2:true */
 (function (local) {
 "use strict";
-var dataFrom;
-var dataTo;
+let dataFrom;
+let dataTo;
 dataFrom = require("fs").readFileSync(process.argv[2], "utf8");
 dataTo = require("fs").readFileSync(process.argv[1], "utf8");
 process.argv.slice(3).forEach(function (rgx) {
@@ -1536,13 +1399,6 @@ process.argv.slice(3).forEach(function (rgx) {
 require("fs").writeFileSync(process.argv[2], dataTo);
 }(globalThis.globalLocal));
 ' "$@"
-)}
-
-shFileTrimLeft () {(set -e
-# this function will remove all leading blank-lines from top of file $1
-# http://stackoverflow.com/questions/1935081/remove-leading-whitespace-from-file
-    sed -in -e '/./,$!d' "$1"
-    rm -f "$1"n
 )}
 
 shGitAddTee () {(set -e
@@ -1587,6 +1443,13 @@ shGitCommandWithGithubToken () {(set -e
     esac
     # hide $GITHUB_TOKEN in case of err
     git "$COMMAND" "$URL" "$@" 2>/dev/null
+)}
+
+shGitDirCommitAndPush () {(set -e
+# this function will git-commit and git-push dir $1 with msg $2
+    cd "$1"
+    git commit -am "$2" || true
+    git push
 )}
 
 shGitGc () {(set -e
@@ -1664,7 +1527,7 @@ shGitLsTreeSort () {(set -e
 /* jslint utility2:true */
 (function () {
 "use strict";
-var dict;
+let dict;
 dict = {};
 require("fs").readFileSync(".gitlstree", "utf8").replace((
     /(.*?)\u0020bytes\u0020(.*?)$/gm
@@ -1890,7 +1753,7 @@ shGrepReplace () {(set -e
 /* jslint utility2:true */
 (function () {
 "use strict";
-var dict;
+let dict;
 dict = {};
 require("fs").readFileSync(
     process.argv[1],
@@ -1928,7 +1791,7 @@ shHttpFileServer () {(set -e
 /* jslint utility2:true */
 (function () {
 "use strict";
-var processCwd;
+let processCwd;
 processCwd = process.cwd() + (
     process.platform === "win32"
     ? "\\"
@@ -1937,7 +1800,7 @@ processCwd = process.cwd() + (
 process.env.PORT = process.env.PORT || "8080";
 console.error("http-file-server listening on port " + process.env.PORT);
 require("http").createServer(function (req, res) {
-    var file;
+    let file;
     file = require("path").resolve(
         processCwd,
         require("url").parse(req.url).pathname.slice(1)
@@ -1990,85 +1853,6 @@ console.log(
 ' "$FILE"
 )}
 
-shIptablesReset () {(set -e
-# this function will reset iptables
-    if ! (iptables-restore /etc/iptables/rules.v4.00 > /dev/null 2>&1)
-    then
-        export DEBIAN_FRONTEND=noninteractive
-        apt-get update
-        apt-get install --no-install-recommends -y iptables-persistent
-    fi
-    printf '
-# https://wiki.debian.org/iptables
-*filter
-
-# Allows all loopback (lo0) traffic and drop all traffic to 127/8 that does not use lo0
--A INPUT -i lo -j ACCEPT
--A INPUT ! -i lo -d 127.0.0.0/8 -j REJECT
-
-# Accepts all established inbound connections
--A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-
-# Allows all outbound traffic
-# You could modify this to only allow certain traffic
--A OUTPUT -j ACCEPT
-
-# Allows HTTP and HTTPS connections from anywhere
-# (the normal ports for websites)
--A INPUT -p tcp --dport 80 -j ACCEPT
--A INPUT -p tcp --dport 443 -j ACCEPT
-
-# Allows SSH connections
-# The --dport number is the same as in /etc/ssh/sshd_config
--A INPUT -p tcp -m state --state NEW --dport 22 -j ACCEPT
--A INPUT -p tcp -m state --state NEW --dport 5022 -j ACCEPT
-
-# Now you should read up on iptables rules and consider whether ssh access
-# for everyone is really desired. Most likely you will only allow access
-# from certain IPs.
-
-# Allow ping
-# note that blocking other types of icmp packets is considered a bad idea
-# by some
-# remove -m icmp --icmp-type 8 from this line to allow all kinds of icmp:
-# https://security.stackexchange.com/questions/22711
--A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
-
-# log iptables denied calls (access via "dmesg" command)
--A INPUT -m limit --limit 5/min -j LOG --log-prefix "iptables denied: \
-    " --log-level 7
-
-# allow forwarding between docker0 and eth0
-# https://blog.andyet.com/2014/09/11/docker-host-iptables-forwarding
-# Forward chain between docker0 and eth0
--A FORWARD -i docker0 -o eth0 -j ACCEPT
--A FORWARD -i eth0 -o docker0 -j ACCEPT
-
-# Reject all other inbound - default deny unless explicitly allowed policy:
--A INPUT -j REJECT
--A FORWARD -j REJECT
-
-COMMIT
-
-*nat
-# https://github.com/moby/moby/issues/1871#issuecomment-28139275
-:DOCKER - [0:0]
--A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
--A PREROUTING -m addrtype --dst-type LOCAL ! --dst 127.0.0.0/8 -j DOCKER
-COMMIT
-' > /etc/iptables/rules.v4.00
-    iptables-restore < /etc/iptables/rules.v4.00
-    printf '
-# disable ipv6
-*filter
--A INPUT -j REJECT
--A FORWARD -j DROP
--A OUTPUT -j REJECT
-COMMIT
-' > /etc/iptables/rules.v6.00
-    ip6tables-restore < /etc/iptables/rules.v6.00
-)}
-
 shIstanbulCover () {(set -e
 # this function will run command "$NODE_BINARY" "$@" with istanbul-coverage
     export NODE_BINARY="${NODE_BINARY:-node}"
@@ -2101,7 +1885,7 @@ shJsonNormalize () {(set -e
 /* jslint utility2:true */
 (function (local) {
 "use strict";
-console.error("shJsonNormalize " + process.argv[1]);
+console.error("shJsonNormalize - " + process.argv[1]);
 require("fs").writeFileSync(process.argv[1], local.jsonStringifyOrdered(
     JSON.parse(require("fs").readFileSync(process.argv[1])),
     null,
@@ -2109,33 +1893,6 @@ require("fs").writeFileSync(process.argv[1], local.jsonStringifyOrdered(
 ) + "\n");
 }(globalThis.globalLocal));
 ' "$1"
-)}
-
-shListUnflattenAndApply () {(set -e
-# this function will unflatten $LIST into $SUB_LIST with given $LENGTH,
-# and apply shListUnflattenAndApplyFunction to $SUB_LIST
-    LIST="$1"
-    LENGTH="${2:-6}"
-    II=0
-    SUB_LIST=""
-    for ELEMENT in $LIST
-    do
-        SUB_LIST="$SUB_LIST
-$ELEMENT"
-        II="$((II + 1))"
-        if [ "$II" -ge "$LENGTH" ]
-        then
-            sleep 1
-            shListUnflattenAndApplyFunction "$SUB_LIST"
-            II=0
-            SUB_LIST=""
-        fi
-    done
-    if [ "$SUB_LIST" ]
-    then
-        sleep 1
-        shListUnflattenAndApplyFunction "$SUB_LIST"
-    fi
 )}
 
 shMacAddressSpoof () {(set -e
@@ -2155,8 +1912,8 @@ shMediaHlsEncrypt () {(set -e
 /* jslint utility2:true */
 (function (local) {
 "use strict";
-var data;
-var ii;
+let data;
+let ii;
 data = require("fs").readFileSync("hls.m3u8", "utf8");
 ii = 1;
 data = data.replace((
@@ -2212,48 +1969,6 @@ shMediaHlsFromMp4 () {(set -e
         hls.m3u8
 )}
 
-shMkisofs () {(set -e
-# this function will mkisofs .
-    mkdir -p tmp
-    if [ ! -f .gitginore ]
-    then
-        touch .gitignore
-    fi
-    # mkisofs plain-cd
-    if [ ! "$2" ]
-    then
-        mkisofs \
-            -J \
-            -R \
-            -V "$1" \
-            -exclude .git \
-            -exclude tmp \
-            -exclude-list .gitignore \
-            -joliet-long \
-            -o "tmp/$1.iso" \
-            .
-        return
-    fi
-    # mkisofs boot-cd
-    cp "$2" "$2.modified"
-    mkisofs \
-        -J \
-        -R \
-        -V "$1" \
-        -exclude .git \
-        -exclude tmp \
-        -exclude-list .gitignore \
-        -exclude "$2" \
-        -joliet-long \
-        -o "tmp/$1.iso" \
-        -b "$2.modified" \
-        -boot-info-table \
-        -boot-load-size 4 \
-        -no-emul-boot \
-        .
-    rm "$2.modified"
-)}
-
 shModuleDirname () {(set -e
 # this function will print the __dirname of the module $1
     MODULE="$1"
@@ -2292,7 +2007,7 @@ shNpmDeprecateAlias () {(set -e
 /* jslint utility2:true */
 (function () {
 "use strict";
-var packageJson;
+let packageJson;
 packageJson = require("./package.json");
 packageJson.description = process.argv[1];
 Object.keys(packageJson).forEach(function (key) {
@@ -2329,7 +2044,7 @@ shNpmPackageCliHelpCreate () {(set -e
 /* jslint utility2:true */
 (function () {
 "use strict";
-var dict;
+let dict;
 dict = require("./package.json").bin || {};
 process.stdout.write(String(dict[Object.keys(dict)[0]]));
 }());
@@ -2428,9 +2143,9 @@ shNpmPublishAlias () {(set -e
 /* jslint utility2:true */
 (function () {
 "use strict";
-var name;
-var packageJson;
-var version;
+let name;
+let packageJson;
+let version;
 name = process.argv[1];
 version = process.argv[2];
 packageJson = require("./package.json");
@@ -2526,18 +2241,18 @@ shPackageJsonVersionUpdate () {(set -e
 /* jslint utility2:true */
 (function (local) {
 "use strict";
-var aa;
-var bb;
-var packageJson;
+let aa;
+let bb;
+let packageJson;
 packageJson = require("./package.json");
-aa = (process.argv[1] || packageJson.version).replace((
+aa = String(process.argv[1] || packageJson.version).replace((
     /^today$/
 ), new Date().toISOString().replace((
     /T.*?$/
 ), "").replace((
     /-0?/g
 ), "."));
-bb = (process.argv[2] || "0.0.0").replace((
+bb = String(process.argv[2] || "0.0.0").replace((
     /^(\d+?\.\d+?\.)(\d+)(\.*?)$/
 ), function (ignore, match1, match2, match3) {
     return match1 + (Number(match2) + 1) + match3;
@@ -2568,29 +2283,8 @@ console.error("shPackageJsonVersionUpdate - " + packageJson.version);
 )}
 
 shPasswordRandom () {(set -e
-# this function will create a random password
+# this function will create random-password
     openssl rand -base64 32
-)}
-
-shPidByPort () {(set -e
-# this function will print the process pid for given port $1
-# https://stackoverflow.com/questions/4421633/who-is-listening-on-a-given-tcp-port-on-mac-os-x
-# https://unix.stackexchange.com/questions/106561/finding-the-pid-of-the-process-using-a-specific-port
-    case "$(uname)" in
-    Darwin)
-        lsof -n -i:"$1" | grep -E LISTEN
-        ;;
-    Linux)
-        netstat -nlp | grep -E 9000
-        ;;
-    esac
-)}
-
-shRandomIntegerInRange () {(set -e
-# this function will print a random number in the interval [$1..$2)
-    LC_CTYPE=C tr -cd 0-9 </dev/urandom |
-        head -c 9 |
-        awk "{ printf(\"%s\n\", $1 + (\$0 % ($2 - $1))); }"
 )}
 
 shRawJsDiff () {(set -e
@@ -2611,11 +2305,11 @@ shRawJsFetch () {(set -e
 /* jslint utility2:true */
 (function () {
 "use strict";
-var aa;
-var fetch;
-var repo0;
-var repoList;
-var requireDict;
+let aa;
+let fetch;
+let repo0;
+let repoList;
+let requireDict;
 fetch = function (repo, ii, file, jj) {
     ii = String(ii).padStart(2, "0");
     jj = String(jj).padStart(2, "0");
@@ -2642,14 +2336,14 @@ requireDict = {};
 process.on("exit", function () {
     aa = "";
     require("fs").readdirSync(process.env.DIR).sort().forEach(function (data) {
-        var exports;
-        var file;
-        var prefix;
-        var repo;
+        let exports;
+        let file;
+        let prefix;
+        let repo;
         repo = repoList[Number(data.slice(0, 2))];
         file = repo.fileList[Number(data.slice(4, 6))];
         // init prefix
-        prefix = (
+        prefix = String(
             "exports_"
             + repo.prefix.split("/").slice(3, 5).join("_") + "_"
             + require("path").dirname(file)
@@ -2765,7 +2459,7 @@ process.on("exit", function () {
     aa.replace((
         /^\u0020*?(?:class|const|function|let|var)\u0020(\w+?)\b/gm
     ), function (ignore, match1) {
-        (requireDict[match1] || []).forEach(function (key) {
+        Array.from(requireDict[match1] || []).forEach(function (key) {
             requireDict[key] = "// ";
         });
         delete requireDict[match1];
@@ -2831,12 +2525,12 @@ shReadmeLinkValidate () {(set -e
 /* jslint utility2:true */
 (function () {
 "use strict";
-var set;
+let set;
 set = new Set();
 require("fs").readFileSync("README.md", "utf8").replace((
     /\b(https?):\/\/.*?[)\]]/g
 ), function (match0, match1) {
-    var req;
+    let req;
     match0 = match0.slice(0, -1).replace((
         /[\u0022\u0027]/g
     ), "").replace((
@@ -2981,7 +2675,7 @@ shReplClient () {(set -e
 /* jslint utility2:true */
 (function () {
 "use strict";
-var socket;
+let socket;
 console.log("node repl-client connecting to tcp-port " + process.argv[1]);
 socket = require("net").connect(process.argv[1]);
 process.stdin.pipe(socket);
@@ -3058,9 +2752,9 @@ shRunWithScreenshotTxt () {(set -e
 /* jslint utility2:true */
 (function () {
 "use strict";
-var result;
-var wordwrap;
-var yy;
+let result;
+let wordwrap;
+let yy;
 wordwrap = function (line, ii) {
     if (ii && !line) {
         return "";
@@ -3115,23 +2809,18 @@ require("fs").writeFileSync(
     return "$EXIT_CODE"
 )}
 
-shScreencastToGif () {(set -e
-# this function will convert the quicktime.mov $1 to the animated gif $2
-# https://gist.github.com/dergachev/4627207
-# https://gist.github.com/baumandm/1dba6a055356d183bbf7
-    ffmpeg -y -i "$1" -vf fps=10,palettegen /tmp/palette.png
-    ffmpeg -i "$1" -i /tmp/palette.png -filter_complex "fps=10,paletteuse" "$2"
-)}
-
 shServerPortRandom () {(set -e
-# this function will print a random unused tcp-port in the inclusive range 0x400 to 0xffff
-# http://stackoverflow.com/questions/2556190/random-number-from-a-range-in-a-bash-script
-    PORT="$(shRandomIntegerInRange 32768 65536)"
-    while (nc -z 127.0.0.1 "$PORT" 2>/dev/null)
+# this function will print random unused tcp-port in the inclusive range
+# 0x8000 to 0xffff
+    while true
     do
-        PORT="$(shRandomIntegerInRange 32768 65536)"
+        PORT="$(shuf -i 32768-65535 -n 1)"
+        if ! (nc -z 127.0.0.1 "$PORT" 2>/dev/null)
+        then
+            printf "$PORT\n"
+            return
+        fi
     done
-    printf "$PORT\n"
 )}
 
 shSleep () {(set -e
@@ -3206,9 +2895,9 @@ shTravisRepoBuildRestart () {(set -e
 )}
 
 shTravisRepoCreate () {(set -e
-# this function will create the travis-repo https://github.com/$GITHUB_REPO
+# this function will create travis-repo https://github.com/$GITHUB_REPO
     export GITHUB_REPO="$1"
-    export MODE_BUILD="${MODE_BUILD:-shGithubRepoCiCreate}"
+    export MODE_BUILD="${MODE_BUILD:-shTravisRepoCreate}"
     export TRAVIS_DOMAIN=${TRAVIS_DOMAIN:-travis-ci.org}
     shBuildPrint "$GITHUB_REPO - creating ..."
     shGithubRepoCreate "$GITHUB_REPO"
@@ -3227,14 +2916,14 @@ shTravisRepoCreate () {(set -e
 /* jslint utility2:true */
 (function (local) {
 "use strict";
-var onParallel;
-var opt;
+let onParallel;
+let opt;
 opt = {};
 local.gotoNext(opt, function (err, data) {
     switch (opt.gotoState) {
     case 1:
         opt.shBuildPrintPrefix = (
-            "\n\u001b[35m[MODE_BUILD=shCustomOrgRepoCreate]\u001b[0m - "
+            "\n\u001b[35m[MODE_BUILD=shTravisRepoCreate]\u001b[0m - "
         );
         local.ajax({
             headers: {
@@ -3312,7 +3001,7 @@ local.gotoNext(opt, function (err, data) {
                 + "/kaizhu256/node-utility2/alpha/.gitignore"
             )
         }, function (err, xhr) {
-            local.assertThrow(!err, err);
+            local.assertOrThrow(!err, err);
             local.fs.writeFile(
                 "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.gitignore",
                 xhr.responseText,
@@ -3326,7 +3015,7 @@ local.gotoNext(opt, function (err, data) {
                 + "/kaizhu256/node-utility2/alpha/.travis.yml"
             )
         }, function (err, xhr) {
-            local.assertThrow(!err, err);
+            local.assertOrThrow(!err, err);
             local.fs.writeFile(
                 "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.travis.yml",
                 xhr.responseText,
@@ -3335,7 +3024,7 @@ local.gotoNext(opt, function (err, data) {
         });
         onParallel.counter += 1;
         local.fs.open("README.md", "w", function (err, fd) {
-            local.assertThrow(!err, err);
+            local.assertOrThrow(!err, err);
             local.fs.close(fd, onParallel);
         });
         onParallel.counter += 1;
@@ -3529,7 +3218,7 @@ shUtility2BuildApp () {(set -e
             (cd "$DIR" && shBuildApp)
         fi
     done
-    shUtility2GitDiff
+    shUtility2GitDiffHead
 )}
 
 shUtility2Dependents () {(set -e
@@ -3541,15 +3230,18 @@ bootstrap-lite
 github-crud
 istanbul-lite
 jslint-lite
-sql.js-lite
+sqljs-lite
 swgg
 utility2
 "
 )}
 
 shUtility2DependentsSync () {(set -e
-# this function will sync files between utility2 and its dependents
-    CWD="$PWD"
+# this function will
+# 1. sync files between utility2 and its dependents
+# 2. shBuildApp dir $HOME/Documents/$1
+# 3. git commit -am $2
+    CWD="${1:-$PWD}"
     cd "$HOME/Documents/utility2" && shBuildApp
     cd "$HOME/Documents"
     ln -f "utility2/lib.utility2.sh" "$HOME"
@@ -3593,6 +3285,42 @@ shUtility2DependentsSync () {(set -e
         cd ..
     done
     cd "$CWD" && shBuildApp
+    if [ "$2" ]
+    then
+        git commit -am "$2"
+    fi
+)}
+
+shUtility2FncStat () {(set -e
+# this function will print histogram of utility2-fnc code-frequency
+# in current dir
+    #!! git grep -i "local\.\w\w*\|\<sh[A-Z]\w*\>"
+    node -e '
+/* jslint utility2:true */
+(function () {
+"use strict";
+let dict;
+dict = {};
+require("child_process").spawnSync("git", [
+    "grep", "-i", "local\\.\\w\\w*\\|\\<sh[A-Z]\\w*\\>"
+], {
+    encoding: "utf8",
+    stdio: [
+        "ignore", "pipe", 2
+    ]
+}).stdout.replace((
+    /\blocal\.\w\w*?\b|\bsh[A-Z]\w*?\b/g
+), function (match0) {
+    dict[match0] = (dict[match0] | 0) + 1;
+    return "";
+});
+console.log(Object.entries(dict).map(function ([
+    key, val
+]) {
+    return String(val).padStart(8, " ") + " -- " + key;
+}).sort().join("\n"));
+}());
+'
 )}
 
 shUtility2GitCommit () {(set -e
@@ -3607,21 +3335,8 @@ shUtility2GitCommit () {(set -e
     done
 )}
 
-shUtility2GitCommitAndPush () {(set -e
-# this function will git-commit and git-push $UTILITY2_DEPENDENTS with given $MESSAGE
-    # init $MESSAGE
-    MESSAGE="$1"
-    for DIR in $UTILITY2_DEPENDENTS
-    do
-        cd "$HOME/Documents/$DIR" || continue
-        printf "\n\n\n\n$PWD\n"
-        git commit -am "'$MESSAGE'" || true
-        git push || true
-    done
-)}
-
 shUtility2GitDiffHead () {(set -e
-# this function will print the git-status of $UTILITY2_DEPENDENTS to stdout
+# this function will the git-status of $UTILITY2_DEPENDENTS to stdout
     rm -f /tmp/shUtility2GitDiffHead.diff
     for DIR in $UTILITY2_DEPENDENTS
     do
@@ -3678,8 +3393,8 @@ export UTILITY2_MACRO_JS='
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
-    var consoleError;
-    var local;
+    let consoleError;
+    let local;
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debug_inline
@@ -3710,11 +3425,11 @@ export UTILITY2_MACRO_JS='
         && typeof globalThis.navigator.userAgent === "string"
     );
     // init function
-    local.assertThrow = function (passed, message) {
+    local.assertOrThrow = function (passed, message) {
     /*
      * this function will throw err.<message> if <passed> is falsy
      */
-        var err;
+        let err;
         if (passed) {
             return;
         }
@@ -3740,7 +3455,7 @@ export UTILITY2_MACRO_JS='
     /*
      * this function will sync "rm -rf" <dir>
      */
-        var child_process;
+        let child_process;
         try {
             child_process = require("child_process");
         } catch (ignore) {
@@ -3758,7 +3473,7 @@ export UTILITY2_MACRO_JS='
     /*
      * this function will sync write <data> to <file> with "mkdir -p"
      */
-        var fs;
+        let fs;
         try {
             fs = require("fs");
         } catch (ignore) {
@@ -3787,16 +3502,10 @@ export UTILITY2_MACRO_JS='
     local.functionOrNop = function (fnc) {
     /*
      * this function will if <fnc> exists,
-     * them return <fnc>,
+     * return <fnc>,
      * else return <nop>
      */
         return fnc || local.nop;
-    };
-    local.identity = function (value) {
-    /*
-     * this function will return <value>
-     */
-        return value;
     };
     local.nop = function () {
     /*
@@ -3821,6 +3530,30 @@ export UTILITY2_MACRO_JS='
             }
         });
         return target;
+    };
+    local.value = function (val) {
+    /*
+     * this function will return <val>
+     */
+        return val;
+    };
+    local.valueOrEmptyList = function (val) {
+    /*
+     * this function will return <val> or []
+     */
+        return val || [];
+    };
+    local.valueOrEmptyObject = function (val) {
+    /*
+     * this function will return <val> or {}
+     */
+        return val || {};
+    };
+    local.valueOrEmptyString = function (val) {
+    /*
+     * this function will return <val> or ""
+     */
+        return val || "";
     };
     // require builtin
     if (!local.isBrowser) {
@@ -3935,18 +3668,18 @@ local.ajax = function (opt, onError) {
         console.log(xhr.responseText);
     });
  */
-    var ajaxProgressUpdate;
-    var bufferValidateAndCoerce;
-    var isDone;
-    var local2;
-    var onError2;
-    var onEvent;
-    var stack;
-    var streamCleanup;
-    var timeout;
-    var tmp;
-    var xhr;
-    var xhrInit;
+    let ajaxProgressUpdate;
+    let bufferValidateAndCoerce;
+    let isDone;
+    let local2;
+    let onError2;
+    let onEvent;
+    let stack;
+    let streamCleanup;
+    let timeout;
+    let tmp;
+    let xhr;
+    let xhrInit;
     // init local2
     local2 = opt.local2 || local.utility2 || {};
     // init function
@@ -4095,7 +3828,7 @@ local.ajax = function (opt, onError) {
     /*
      * this function will try to end or destroy <stream>
      */
-        var err;
+        let err;
         // try to end stream
         try {
             stream.end();
@@ -4157,11 +3890,11 @@ local.ajax = function (opt, onError) {
     );
     // init xhr - http.request
     if (!xhr) {
-        xhr = local.identity(local2.urlParse || require("url").parse)(opt.url);
+        xhr = local.value(local2.urlParse || require("url").parse)(opt.url);
         // init xhr
         xhrInit();
         // init xhr - http.request
-        xhr = local.identity(
+        xhr = local.value(
             opt.httpReq
             || (local.isBrowser && local2.http.request)
             || require(xhr.protocol.slice(0, -1)).request
@@ -4169,7 +3902,7 @@ local.ajax = function (opt, onError) {
         /*
          * this function will read <resStream>
          */
-            var chunkList;
+            let chunkList;
             chunkList = [];
             xhr.resHeaders = resStream.resHeaders || resStream.headers;
             xhr.resStream = resStream;
@@ -4280,7 +4013,7 @@ local.assertJsonEqual = function (aa, bb, message) {
  */
     aa = local.jsonStringifyOrdered(aa);
     bb = JSON.stringify(bb);
-    local.assertThrow(aa === bb, message || [
+    local.assertOrThrow(aa === bb, message || [
         aa, bb
     ]);
 };
@@ -4291,7 +4024,7 @@ local.assertJsonNotEqual = function (aa, bb, message) {
  */
     aa = local.jsonStringifyOrdered(aa);
     bb = JSON.stringify(bb);
-    local.assertThrow(aa !== bb, [
+    local.assertOrThrow(aa !== bb, [
         aa
     ], message || aa);
 };
@@ -4301,11 +4034,11 @@ local.base64FromBuffer = function (bff) {
  * this function will convert Uint8Array <bff> to base64
  * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
  */
-    var ii;
-    var mod3;
-    var text;
-    var uint24;
-    var uint6ToB64;
+    let ii;
+    let mod3;
+    let text;
+    let uint24;
+    let uint6ToB64;
     // convert utf8 -> Uint8Array
     if (typeof bff === "string") {
         bff = new TextEncoder().encode(bff);
@@ -4351,13 +4084,13 @@ local.base64ToBuffer = function (b64, mode) {
  * this function will convert <b64> to Uint8Array
  * https://gist.github.com/wang-bin/7332335
  */
-    var bff;
-    var byte;
-    var chr;
-    var ii;
-    var jj;
-    var map64;
-    var mod4;
+    let bff;
+    let byte;
+    let chr;
+    let ii;
+    let jj;
+    let map64;
+    let mod4;
     b64 = b64 || "";
     bff = new Uint8Array(b64.length); // 3/4
     byte = 0;
@@ -4434,7 +4167,7 @@ local.childProcessSpawnWithTimeout = function (command, args, opt) {
  * this function will run like child_process.spawn,
  * but with auto-timeout after timeout milliseconds
  * example usage:
-    var child = local.childProcessSpawnWithTimeout(
+    let child = local.childProcessSpawnWithTimeout(
         "/bin/sh",
         ["-c", "echo hello world"],
         {stdio: ["ignore", 1, 2], timeout: 5000}
@@ -4444,9 +4177,9 @@ local.childProcessSpawnWithTimeout = function (command, args, opt) {
         console.error("exitCode " + exitCode);
     });
  */
-    var child;
-    var child_process;
-    var timerTimeout;
+    let child;
+    let child_process;
+    let timerTimeout;
     child_process = require("child_process");
     // spawn child
     child = child_process.spawn(command, args, opt).on("exit", function () {
@@ -4512,12 +4245,12 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
         }, console.log);
     });
  */
-    var cipher;
-    var crypto;
-    var data;
-    var ii;
-    var iv;
-    var key;
+    let cipher;
+    let crypto;
+    let data;
+    let ii;
+    let iv;
+    let key;
     // init key
     key = new Uint8Array(0.5 * opt.key.length);
     ii = 0;
@@ -4587,12 +4320,12 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
         }, console.log);
     });
  */
-    var cipher;
-    var crypto;
-    var data;
-    var ii;
-    var iv;
-    var key;
+    let cipher;
+    let crypto;
+    let data;
+    let ii;
+    let iv;
+    let key;
     // init key
     key = new Uint8Array(0.5 * opt.key.length);
     ii = 0;
@@ -4670,7 +4403,7 @@ local.fsReadFileOrEmptyStringSync = function (file, opt) {
 local.gotoNext = function (opt, onError) {
 /*
  * this function will wrap onError inside recursive-function <opt>.gotoNext,
- * and append the current-stack to any err
+ * and append current-stack to any err
  */
     opt.gotoNext = local.onErrorWithStack(function (err, data, meta) {
         try {
@@ -4692,7 +4425,7 @@ local.gotoNext = function (opt, onError) {
         } catch (errCaught) {
             // throw errCaught to break infinite recursion-loop
             if (opt.errCaught) {
-                local.assertThrow(null, opt.errCaught);
+                local.assertOrThrow(null, opt.errCaught);
             }
             opt.errCaught = errCaught;
             opt.gotoNext(errCaught, data, meta);
@@ -4726,9 +4459,9 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
  * with object-keys sorted and circular-references removed
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Syntax
  */
-    var circularSet;
-    var stringify;
-    var tmp;
+    let circularSet;
+    let stringify;
+    let tmp;
     stringify = function (obj) {
     /*
      * this function will recursively JSON.stringify obj,
@@ -4788,7 +4521,7 @@ local.moduleDirname = function (module, modulePathList) {
 /*
  * this function will search modulePathList for the module'"'"'s __dirname
  */
-    var result;
+    let result;
     // search process.cwd()
     if (!module || module === "." || module.indexOf("/") >= 0) {
         return require("path").resolve(process.cwd(), module || "");
@@ -4821,8 +4554,8 @@ local.objectSetDefault = function (dict, defaults, depth) {
     dict = dict || {};
     defaults = defaults || {};
     Object.keys(defaults).forEach(function (key) {
-        var defaults2;
-        var dict2;
+        let defaults2;
+        let dict2;
         dict2 = dict[key];
         // handle misbehaving getter
         try {
@@ -4864,8 +4597,8 @@ local.objectSetOverride = function (dict, overrides, depth, env) {
     env = env || (typeof process === "object" && process.env) || {};
     overrides = overrides || {};
     Object.keys(overrides).forEach(function (key) {
-        var dict2;
-        var overrides2;
+        let dict2;
+        let overrides2;
         dict2 = dict[key];
         overrides2 = overrides[key];
         if (overrides2 === undefined) {
@@ -4920,8 +4653,8 @@ local.onErrorWithStack = function (onError) {
  * this function will create wrapper around <onError>
  * that will append current-stack to err.stack
  */
-    var onError2;
-    var stack;
+    let onError2;
+    let stack;
     stack = new Error().stack.replace((
         /(.*?)\n.*?$/m
     ), "$1");
@@ -4950,7 +4683,7 @@ local.onParallel = function (onError, onEach, onRetry) {
  * 1. run async tasks in parallel
  * 2. if counter === 0 or err occurred, then call onError(err)
  */
-    var onParallel;
+    let onParallel;
     onError = local.onErrorWithStack(onError);
     onEach = onEach || local.nop;
     onRetry = onRetry || local.nop;
@@ -4995,9 +4728,9 @@ local.onParallelList = function (opt, onEach, onError) {
  *    with given <opt>.rateLimit and <opt>.retryLimit
  * 2. call <onError> when onParallel.ii + 1 === <opt>.list.length
  */
-    var isListEnd;
-    var onEach2;
-    var onParallel;
+    let isListEnd;
+    let onEach2;
+    let onParallel;
     opt.list = opt.list || [];
     onEach2 = function () {
         while (true) {
@@ -5054,8 +4787,8 @@ local.semverCompare = function (aa, bb) {
     semverCompare("1.2.3", "1.2.3");  //  0
     semverCompare("10.2.2", "2.2.2"); //  1
  */
-    var ii;
-    var len;
+    let ii;
+    let len;
     [
         aa, bb
     ] = [

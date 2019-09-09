@@ -13,8 +13,8 @@
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
-    var consoleError;
-    var local;
+    let consoleError;
+    let local;
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debug_inline
@@ -45,11 +45,11 @@
         && typeof globalThis.navigator.userAgent === "string"
     );
     // init function
-    local.assertThrow = function (passed, message) {
+    local.assertOrThrow = function (passed, message) {
     /*
      * this function will throw err.<message> if <passed> is falsy
      */
-        var err;
+        let err;
         if (passed) {
             return;
         }
@@ -75,7 +75,7 @@
     /*
      * this function will sync "rm -rf" <dir>
      */
-        var child_process;
+        let child_process;
         try {
             child_process = require("child_process");
         } catch (ignore) {
@@ -93,7 +93,7 @@
     /*
      * this function will sync write <data> to <file> with "mkdir -p"
      */
-        var fs;
+        let fs;
         try {
             fs = require("fs");
         } catch (ignore) {
@@ -122,16 +122,10 @@
     local.functionOrNop = function (fnc) {
     /*
      * this function will if <fnc> exists,
-     * them return <fnc>,
+     * return <fnc>,
      * else return <nop>
      */
         return fnc || local.nop;
-    };
-    local.identity = function (value) {
-    /*
-     * this function will return <value>
-     */
-        return value;
     };
     local.nop = function () {
     /*
@@ -156,6 +150,30 @@
             }
         });
         return target;
+    };
+    local.value = function (val) {
+    /*
+     * this function will return <val>
+     */
+        return val;
+    };
+    local.valueOrEmptyList = function (val) {
+    /*
+     * this function will return <val> or []
+     */
+        return val || [];
+    };
+    local.valueOrEmptyObject = function (val) {
+    /*
+     * this function will return <val> or {}
+     */
+        return val || {};
+    };
+    local.valueOrEmptyString = function (val) {
+    /*
+     * this function will return <val> or ""
+     */
+        return val || "";
     };
     // require builtin
     if (!local.isBrowser) {
@@ -1142,7 +1160,7 @@ local.templateUiMain = '\
  * 3. run code below to initialize nodejs swgg-client\n\
  * 4. (optional) edit file swagger.json to suit your needs\n\
  */\n\
-var swgg;\n\
+let swgg;\n\
 swgg = require("swgg");\n\
 swgg.apiUpdate(require("./swagger.json"));\n\
 console.log("printing currently loaded apis ...");\n\
@@ -1748,10 +1766,10 @@ local.assetsDict["/assets.swgg.html"] = local.assetsDict["/assets.utility2.templ
  * with class=".domOnEventMediaHotkeysInit"\n\
  */\n\
     "use strict";\n\
-    var currentTarget;\n\
-    var identity;\n\
-    var input;\n\
-    var onEvent;\n\
+    let currentTarget;\n\
+    let identity;\n\
+    let input;\n\
+    let onEvent;\n\
     if (window.domOnEventMediaHotkeys) {\n\
         return;\n\
     }\n\
@@ -1762,7 +1780,7 @@ local.assetsDict["/assets.swgg.html"] = local.assetsDict["/assets.utility2.templ
         return value;\n\
     };\n\
     window.domOnEventMediaHotkeys = function (evt) {\n\
-        var media;\n\
+        let media;\n\
         if (evt === "init") {\n\
             document.querySelectorAll(\n\
                 ".domOnEventMediaHotkeysInit"\n\
@@ -1894,7 +1912,7 @@ local.apiAjax = function (that, opt, onError) {
 /*
  * this function will send a swagger-api ajax-req with the operation that
  */
-    var tmp;
+    let tmp;
     local.objectSetDefault(opt, {
         data: "",
         operation: that,
@@ -2053,7 +2071,7 @@ local.apiAjax = function (that, opt, onError) {
     // init url
     opt.url = "";
     opt.url += (
-        local.identity(
+        local.value(
             that["x-swgg-schemes"] || local.swaggerJson.schemes || []
         )[0] || local.urlParse("").protocol.slice(0, -1)
     );
@@ -2092,8 +2110,8 @@ local.apiUpdate = function (swaggerJson) {
 /*
  * this function will update the swagger-api dict of api-calls
  */
-    var pathDict;
-    var tmp;
+    let pathDict;
+    let tmp;
     swaggerJson = swaggerJson || {};
     // normalize swaggerJson
     swaggerJson = local.normalizeSwaggerJson(swaggerJson, {
@@ -2259,7 +2277,7 @@ local.apiUpdate = function (swaggerJson) {
             })
         );
         tmp = swaggerJson.definitions[schemaName];
-        (tmp.allOf || []).forEach(function (element) {
+        local.valueOrEmptyList(tmp.allOf).forEach(function (element) {
             local.objectSetDefault(
                 tmp,
                 local.jsonCopy(local.swaggerValidateDataSchema({
@@ -2279,7 +2297,7 @@ local.apiUpdate = function (swaggerJson) {
     // init apiDict from paths
     Object.keys(swaggerJson.paths).forEach(function (path) {
         Object.keys(swaggerJson.paths[path]).forEach(function (method) {
-            var that;
+            let that;
             that = local.jsonCopy(swaggerJson.paths[path][method]);
             that._method = method.toUpperCase();
             that._path = path;
@@ -2299,7 +2317,7 @@ local.apiUpdate = function (swaggerJson) {
     });
     // init apiDict
     Object.keys(local.apiDict).forEach(function (key) {
-        var that;
+        let that;
         if (key.indexOf("operationId.") !== 0) {
             return;
         }
@@ -2365,7 +2383,7 @@ local.apiUpdate = function (swaggerJson) {
             tmp = tmp || (
                 schemaP.in === "body"
                 && schemaP.schema.type === "string"
-                && local.identity("text/plain")
+                && local.value("text/plain")
             );
             return tmp;
         });
@@ -2404,7 +2422,7 @@ local.apiUpdate = function (swaggerJson) {
             that["x-swgg-notRequired"],
             that["x-swgg-required"]
         ].forEach(function (element, ii) {
-            (element || []).forEach(function (name) {
+            local.valueOrEmptyList(element).forEach(function (name) {
                 that._schemaPDict[name].required = Boolean(ii);
             });
         });
@@ -2427,37 +2445,35 @@ local.apiUpdate = function (swaggerJson) {
         that.ajax = function (swaggerJson, onError) {
             return local.apiAjax(that, swaggerJson, onError);
         };
-        that._ajaxToString = (
-            that.ajax.toString().replace("{", (
-                "{\n"
-                + "/*\n"
-                + " * this function will run the api-call "
-                + JSON.stringify(that._methodPath) + "\n"
-                + " * example usage:" + (
-                    "\n"
-                    + "swgg.apiDict["
-                    + JSON.stringify(key.join("."))
-                    + "].ajax("
-                    + JSON.stringify(local.normalizeSwaggerParamDict({
-                        modeDefault: true,
-                        operation: that,
-                        paramDict: {}
-                    }).paramDict, null, 4)
-                    + ", function (err, data) {\n"
-                    + "    if (err) {\n"
-                    + "        console.error(err);\n"
-                    + "        return;\n"
-                    + "    }\n"
-                    + "    console.log(data.responseJson"
-                    + " || data.responseText);\n"
-                    + "});"
-                ).replace((
-                    /\n/g
-                ), "\n    ") + "\n */"
+        that._ajaxToString = that.ajax.toString().replace("{", String(
+            "{\n"
+            + "/*\n"
+            + " * this function will run the api-call "
+            + JSON.stringify(that._methodPath) + "\n"
+            + " * example usage:" + String(
+                "\n"
+                + "swgg.apiDict["
+                + JSON.stringify(key.join("."))
+                + "].ajax("
+                + JSON.stringify(local.normalizeSwaggerParamDict({
+                    modeDefault: true,
+                    operation: that,
+                    paramDict: {}
+                }).paramDict, null, 4)
+                + ", function (err, data) {\n"
+                + "    if (err) {\n"
+                + "        console.error(err);\n"
+                + "        return;\n"
+                + "    }\n"
+                + "    console.log(data.responseJson"
+                + " || data.responseText);\n"
+                + "});"
             ).replace((
                 /\n/g
-            ), "\n                "))
-        );
+            ), "\n    ") + "\n */"
+        ).replace((
+            /\n/g
+        ), "\n                "));
         that.ajax.toString = function () {
             return that._ajaxToString;
         };
@@ -2497,12 +2513,12 @@ local.dbFieldRandomCreate = function (opt) {
 /*
  * this function will create a random dbField from <opt>.schemaP
  */
-    var depth;
-    var ii;
-    var max;
-    var min;
-    var schemaP;
-    var value;
+    let depth;
+    let ii;
+    let max;
+    let min;
+    let schemaP;
+    let value;
     depth = (
         Number.isFinite(opt.depth)
         ? opt.depth
@@ -2622,7 +2638,9 @@ local.dbFieldRandomCreate = function (opt) {
         value = (
             opt.modeNotRandom
             ? "abcd1234"
-            : ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1)
+            : Number(
+                (1 + Math.random()) * 0x10000000000000
+            ).toString(36).slice(1)
         );
         switch (schemaP.format) {
         case "byte":
@@ -2678,7 +2696,7 @@ local.dbRowListRandomCreate = function (opt) {
 /*
  * this function will create a dbRowList of <opt>.length random dbRow's
  */
-    var ii;
+    let ii;
     ii = 0;
     while (ii < opt.length) {
         opt.dbRowList.push(local.dbRowRandomCreate(opt));
@@ -2691,9 +2709,9 @@ local.dbRowRandomCreate = function (opt) {
 /*
  * this function will create a random dbRow from opt.properties
  */
-    var dbRow;
-    var ii;
-    var properties;
+    let dbRow;
+    let ii;
+    let properties;
     dbRow = {};
     opt = local.objectSetDefault(opt, {
         override: local.nop,
@@ -2761,8 +2779,8 @@ local.idNameInit = function (opt) {
 /*
  * this function will init <opt>.idBackend, <opt>.idName, and <opt>.queryById
  */
-    var idBackend;
-    var idName;
+    let idBackend;
+    let idName;
     // init idName
     idName = opt.crudType[1] || "id";
     opt.idName = idName;
@@ -2783,15 +2801,15 @@ local.idNameInit = function (opt) {
 
 local.middlewareBodyParse = function (req, res, next) {
 /*
- * this function will run middleware that will parse req.bodyRaw
+ * this function will run middleware to parse <req>.bodyRaw
  */
-    var boundary;
-    var crlf;
-    var data;
-    var headerParse;
-    var ii;
-    var jj;
-    var name;
+    let boundary;
+    let crlf;
+    let data;
+    let headerParse;
+    let ii;
+    let jj;
+    let name;
     // if req is already parsed, then goto next
     if (!req.swgg.operation || !local.isNullOrUndefined(req.swgg.bodyParsed)) {
         next();
@@ -2909,14 +2927,14 @@ local.middlewareBodyParse = function (req, res, next) {
 
 local.middlewareCrudBuiltin = function (req, res, next) {
 /*
- * this function will run middleware that will
+ * this function will run middleware to
  * run the builtin crud-operations backed by db-lite
  */
-    var crud;
-    var onParallel;
-    var opt;
-    var tmp;
-    var user;
+    let crud;
+    let onParallel;
+    let opt;
+    let tmp;
+    let user;
     opt = {};
     local.gotoNext(opt, function (err, data, meta) {
         switch (opt.gotoState) {
@@ -3026,7 +3044,7 @@ local.middlewareCrudBuiltin = function (req, res, next) {
                     return typeof req.swgg.bodyMeta[key].filename === "string";
                 }).map(function (key) {
                     tmp = local.jsonCopy(req.swgg.paramDict);
-                    tmp.id = tmp.id || (
+                    tmp.id = tmp.id || Number(
                         (1 + Math.random()) * 0x10000000000000
                     ).toString(36).slice(1);
                     local.objectSetOverride(tmp, {
@@ -3133,7 +3151,7 @@ local.middlewareCrudBuiltin = function (req, res, next) {
 
 local.middlewareCrudEnd = function (req, res, next) {
 /*
- * this function will run middleware that will end the builtin crud-operations
+ * this function will run middleware to end builtin crud-operations
  */
     if (req.swgg.crud.endArgList) {
         local.serverRespondJsonapi.apply(null, req.swgg.crud.endArgList);
@@ -3144,10 +3162,10 @@ local.middlewareCrudEnd = function (req, res, next) {
 
 local.middlewareRouter = function (req, res, next) {
 /*
- * this function will run middleware that will
+ * this function will run middleware to
  * map the req's method-path to swagger's tags[0]-crudType
  */
-    var tmp;
+    let tmp;
     // init swgg object
     local.objectSetDefault(req, {
         swgg: {
@@ -3195,11 +3213,11 @@ local.middlewareRouter = function (req, res, next) {
 
 local.middlewareUserLogin = function (req, res, next) {
 /*
- * this function will run middleware that will handle user login
+ * this function will run middleware to handle user login
  */
-    var crud;
-    var opt;
-    var user;
+    let crud;
+    let opt;
+    let user;
     opt = {};
     local.gotoNext(opt, function (err, data) {
         switch (opt.gotoState) {
@@ -3304,11 +3322,11 @@ local.middlewareUserLogin = function (req, res, next) {
 
 local.middlewareValidate = function (req, res, next) {
 /*
- * this function will run middleware that will validate the swagger-<req>
+ * this function will run middleware to validate the swagger-<req>
  */
-    var crud;
-    var opt;
-    var tmp;
+    let crud;
+    let opt;
+    let tmp;
     opt = {};
     local.gotoNext(opt, function (err) {
         switch (opt.gotoState) {
@@ -3509,8 +3527,8 @@ local.normalizeSwaggerJson = function (swaggerJson, opt) {
 /*
  * this function will normalize swaggerJson and filter $npm_package_swggTags0
  */
-    var pathDict;
-    var tmp;
+    let pathDict;
+    let tmp;
     opt = local.objectSetDefault(opt, {
         objectSetDescription: function (dict) {
             if (
@@ -3559,7 +3577,9 @@ local.normalizeSwaggerJson = function (swaggerJson, opt) {
                 });
             }
             // normalize parameter.required
-            (tmp.parameters || []).forEach(function (schemaP) {
+            local.valueOrEmptyList(
+                tmp.parameters
+            ).forEach(function (schemaP) {
                 if (schemaP.required === false) {
                     delete schemaP.required;
                 }
@@ -3610,7 +3630,9 @@ local.normalizeSwaggerJson = function (swaggerJson, opt) {
         Object.keys(swaggerJson.paths[path]).forEach(function (method) {
             tmp = swaggerJson.paths[path][method];
             opt.objectSetDescription(tmp);
-            (tmp.parameters || []).forEach(opt.objectSetDescription);
+            local.valueOrEmptyList(
+                tmp.parameters
+            ).forEach(opt.objectSetDescription);
             Object.keys(tmp.responses || {}).forEach(function (key) {
                 opt.objectSetDescription(tmp.responses[key]);
             });
@@ -3678,7 +3700,7 @@ local.normalizeSwaggerParamDict = function (opt) {
 /*
  * this function will parse the <opt> according to <opt>.operation.parameters
  */
-    var tmp;
+    let tmp;
     opt.operation.parameters.forEach(function (schemaP) {
         tmp = opt.paramDict[schemaP.name];
         // init default
@@ -3838,7 +3860,7 @@ local.operationIdFromAjax = function (opt) {
  * this function will create a sortable operationId
  * from given ajax-<opt>
  */
-    var urlParsed;
+    let urlParsed;
     urlParsed = local.urlParseWithBraket(opt.url);
     return encodeURIComponent(
         urlParsed.pathname + urlParsed.hash + " " + opt.method.toUpperCase()
@@ -3899,13 +3921,13 @@ local.swaggerJsonFromAjax = function (swaggerJson, opt) {
  * this function will update swaggerJson
  * with definitions and paths created from given ajax-<opt>
  */
-    var data;
-    var isArray;
-    var operation;
-    var pathDict;
-    var type;
-    var upsertSchemaP;
-    var urlParsed;
+    let data;
+    let isArray;
+    let operation;
+    let pathDict;
+    let type;
+    let upsertSchemaP;
+    let urlParsed;
     upsertSchemaP = function (schemaP) {
         if (!operation.parameters.some(function (element) {
             if (element.in === schemaP.in && element.name === schemaP.name) {
@@ -4052,11 +4074,11 @@ local.swaggerJsonFromCurl = function (swaggerJson, text) {
  * this function will update swaggerJson
  * with definitions and paths created from given curl-command-text
  */
-    var arg;
-    var argList;
-    var doubleBackslash;
-    var opt;
-    var quote;
+    let arg;
+    let argList;
+    let doubleBackslash;
+    let opt;
+    let quote;
     arg = "";
     argList = [];
     doubleBackslash = local.stringUniqueKey(text);
@@ -4156,12 +4178,12 @@ local.swaggerJsonFromPostBody = function (swaggerJson, opt) {
  * this function will update swaggerJson
  * with definitions created from the post-body-data
  */
-    var definition;
-    var isArray;
-    var prefix;
-    var schemaP;
-    var type;
-    var value;
+    let definition;
+    let isArray;
+    let prefix;
+    let schemaP;
+    let type;
+    let value;
     prefix = opt.prefix + "." + encodeURIComponent(opt.key);
     definition = {
         properties: {},
@@ -4220,12 +4242,12 @@ local.swaggerValidate = function (swaggerJson) {
 /*
  * this function will validate the json-object swaggerJson
  */
-    var operation;
-    var operationIdDict;
-    var pathDict;
-    var prefix;
-    var test;
-    var tmp;
+    let operation;
+    let operationIdDict;
+    let pathDict;
+    let prefix;
+    let test;
+    let tmp;
     operationIdDict = {};
     swaggerJson = swaggerJson || {};
     local.swaggerValidateDataSchema({
@@ -4350,7 +4372,9 @@ local.swaggerValidate = function (swaggerJson) {
                 tmp.path[match0] = tmp.path[match0] || [];
                 tmp.path[match0][0] = true;
             });
-            (operation.parameters || []).forEach(function (schemaP, ii) {
+            local.valueOrEmptyList(
+                operation.parameters
+            ).forEach(function (schemaP, ii) {
                 // dereference schemaP
                 String(schemaP["x-swgg-$ref"] || schemaP.$ref).replace((
                     /#\/parameters\/(.+?$)/m
@@ -4429,7 +4453,7 @@ local.swaggerValidate = function (swaggerJson) {
             // validate semanticFormData4
             test = (
                 !tmp.type.file
-                || (operation.consumes || []).indexOf(
+                || local.valueOrEmptyList(operation.consumes).indexOf(
                     "multipart/form-data"
                 ) >= 0
             );
@@ -4441,10 +4465,10 @@ local.swaggerValidate = function (swaggerJson) {
             // validate semanticFormData5
             test = (
                 !tmp.in.formData
-                || (operation.consumes || []).indexOf(
+                || local.valueOrEmptyList(operation.consumes).indexOf(
                     "application/x-www-form-urlencoded"
                 ) >= 0
-                || (operation.consumes || []).indexOf(
+                || local.valueOrEmptyList(operation.consumes).indexOf(
                     "multipart/form-data"
                 ) >= 0
             );
@@ -4463,7 +4487,7 @@ local.swaggerValidateDataParameters = function (opt) {
  * this function will validate the items in <opt>.paramDict
  * against the schemaP's in <opt>.parameters
  */
-    var errList;
+    let errList;
     errList = [];
     opt.parameters.forEach(function (schemaP) {
         local.tryCatchOnError(function () {
@@ -4495,16 +4519,16 @@ local.swaggerValidateDataSchema = function (opt) {
  * this function will validate <opt>.data against the swagger <opt>.schema
  * http://json-schema.org/draft-04/json-schema-validation.html#rfc.section.5
  */
-    var $ref;
-    var circularSet;
-    var data;
-    var dataReadonlyRemove2;
-    var ii;
-    var list;
-    var oneOf;
-    var schema;
-    var test;
-    var tmp;
+    let $ref;
+    let circularSet;
+    let data;
+    let dataReadonlyRemove2;
+    let ii;
+    let list;
+    let oneOf;
+    let schema;
+    let test;
+    let tmp;
     if (!opt.schema) {
         return;
     }
@@ -4801,7 +4825,7 @@ local.swaggerValidateDataSchema = function (opt) {
         errorType: "itemType",
         prefix: opt.prefix,
         schema,
-        typeof: local.identity(typeof data)
+        typeof: local.value(typeof data)
     });
     tmp = typeof data;
     if (tmp === "object" && Array.isArray(data)) {
@@ -4933,7 +4957,7 @@ local.swaggerValidateDataSchema = function (opt) {
             schema
         });
         // 5.4.3. required
-        (schema.required || []).forEach(function (key) {
+        local.valueOrEmptyList(schema.required).forEach(function (key) {
             // validate semanticItemsRequiredForArrayObjects2
             test = !local.isNullOrUndefined(data[key]);
             local.throwSwaggerError(!test && {
@@ -5088,9 +5112,9 @@ local.swaggerValidateDataSchema = function (opt) {
     }
     // 5.5. Validation keywords for any instance type
     // 5.5.1. enum
-    tmp = (
-        schema.enum
-        || (!opt.modeSchema && (local.schemaPItems(schema) || {}).enum)
+    tmp = schema.enum || (
+        !opt.modeSchema
+        && local.valueOrEmptyList(local.schemaPItems(schema) || {}).enum
     );
     test = !tmp || (
         Array.isArray(data)
@@ -5111,7 +5135,7 @@ local.swaggerValidateDataSchema = function (opt) {
     // 5.5.2. type
     local.nop();
     // 5.5.3. allOf
-    (schema.allOf || []).forEach(function (element) {
+    local.valueOrEmptyList(schema.allOf).forEach(function (element) {
         // recurse - schema.allOf
         local.swaggerValidateDataSchema({
             data,
@@ -5151,7 +5175,7 @@ local.swaggerValidateDataSchema = function (opt) {
         ? 1
         : 0
     );
-    (schema.oneOf || []).some(function (element) {
+    local.valueOrEmptyList(schema.oneOf).some(function (element) {
         local.tryCatchOnError(function () {
             // recurse - schema.oneOf
             local.swaggerValidateDataSchema({
@@ -5234,9 +5258,9 @@ local.swaggerValidateFile = function (opt, onError) {
         case 2:
             // jslint
             local.jslint.jslintAndPrint(data, opt.file);
-            local.assertThrow(
-                !local.jslint.jslintResult.errText,
-                local.jslint.jslintResult.errText.replace((
+            local.assertOrThrow(
+                !local.jslint.jslintResult.errMsg,
+                local.jslint.jslintResult.errMsg.replace((
                     /\u001b\[\d*m/g
                 ), "")
             );
@@ -5262,7 +5286,7 @@ local.throwSwaggerError = function (opt) {
 /*
  * this function will throw a swaggerError with given <opt>.errorType
  */
-    var err;
+    let err;
     if (!opt) {
         return;
     }
@@ -5357,8 +5381,8 @@ local.uiEventListenerDict.onEventInputTextareaChange = function (evt) {
 /*
  * this function will show/hide the textarea's multiline placeholder
  */
-    var isTransparent;
-    var value;
+    let isTransparent;
+    let value;
     isTransparent = evt.targetOnEvent.style.background.indexOf(
         "transparent"
     ) >= 0;
@@ -5382,9 +5406,9 @@ local.uiEventListenerDict.onEventInputValidateAndAjax = function (
  * this function will validate the input parameters
  * against the schemas in <opt>.parameters
  */
-    var errorDict;
-    var jsonParse;
-    var tmp;
+    let errorDict;
+    let jsonParse;
+    let tmp;
     jsonParse = function (text) {
     /*
      * this function will try to JSON.parse(text)
@@ -5479,7 +5503,7 @@ local.uiEventListenerDict.onEventInputValidateAndAjax = function (
     opt.api.ajax(opt, onError || local.nop);
     // init errorDict
     errorDict = {};
-    ((opt.err && opt.err.errList) || []).forEach(function (err) {
+    local.valueOrEmptyList(opt.err && opt.err.errList).forEach(function (err) {
         errorDict[err.opt.prefix[2]] = err;
     });
     // shake input on err
@@ -5656,7 +5680,7 @@ local.uiEventListenerDict.onEventOperationDisplayShow = function (
 /*
  * this function will toggle the display of the operation
  */
-    var element;
+    let element;
     element = evt.targetOnEvent;
     element = element.querySelector(
         ".operation"
@@ -5766,8 +5790,8 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
 /*
  * this function will reload the ui
  */
-    var resource;
-    var swaggerJson;
+    let resource;
+    let swaggerJson;
     opt = opt || {};
     swaggerJson = opt;
     local.gotoNext(opt, function (err, data) {
@@ -5905,11 +5929,9 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
             local._debugOnEventUiReload = err || local._debugOnEventUiReload;
             document.querySelector(
                 "#swggUiReloadErrorDiv1"
-            ).textContent = (
-                (err || {
-                    message: ""
-                }).message
-            );
+            ).textContent = local.value(err || {
+                message: ""
+            }).message;
             local.setTimeoutOnError(onError, 0, err);
         }
     });
@@ -5998,9 +6020,8 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
                     };
                 })
             });
-            operation.summary = (
-                operation.summary || operation.description
-            ).replace((
+            operation.summary = operation.summary || operation.description;
+            operation.summary = operation.summary.replace((
                 /\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/g
             ), "");
             operation.parameters.forEach(local.uiRenderSchemaP);
@@ -6080,7 +6101,7 @@ local.uiRenderSchemaP = function (schemaP) {
     // init enum
     schemaP.enum2 = (
         schemaP.enum
-        || (local.schemaPItems(schemaP) || {}).enum
+        || local.valueOrEmptyObject(local.schemaPItems(schemaP)).enum
         || (local.schemaPType(schemaP) === "boolean" && [
             false, true
         ])
@@ -6164,7 +6185,7 @@ local.uiRenderSchemaP = function (schemaP) {
         schemaP.isInputText = true;
     }
     // init format2 / type2
-    ([
+    Array.from([
         schemaP, schemaP.schema || {}
     ]).some(function (element) {
         local.objectSetDefault(schemaP, {
@@ -6175,7 +6196,7 @@ local.uiRenderSchemaP = function (schemaP) {
     });
     schemaP.type2 = schemaP.type2 || "object";
     // init schema2
-    ([
+    Array.from([
         schemaP,
         local.schemaPItems(schemaP),
         schemaP.schema,
@@ -6253,7 +6274,7 @@ local.urlParseWithBraket = function (url) {
 /*
  * this function will urlParse the url with curly-brackets preserved
  */
-    var tmp;
+    let tmp;
     tmp = local.stringUniqueKey(url);
     return JSON.parse(JSON.stringify(
         local.urlParse(url.replace((

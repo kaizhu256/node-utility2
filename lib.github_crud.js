@@ -13,8 +13,8 @@
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
-    var consoleError;
-    var local;
+    let consoleError;
+    let local;
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debug_inline
@@ -45,11 +45,11 @@
         && typeof globalThis.navigator.userAgent === "string"
     );
     // init function
-    local.assertThrow = function (passed, message) {
+    local.assertOrThrow = function (passed, message) {
     /*
      * this function will throw err.<message> if <passed> is falsy
      */
-        var err;
+        let err;
         if (passed) {
             return;
         }
@@ -75,7 +75,7 @@
     /*
      * this function will sync "rm -rf" <dir>
      */
-        var child_process;
+        let child_process;
         try {
             child_process = require("child_process");
         } catch (ignore) {
@@ -93,7 +93,7 @@
     /*
      * this function will sync write <data> to <file> with "mkdir -p"
      */
-        var fs;
+        let fs;
         try {
             fs = require("fs");
         } catch (ignore) {
@@ -122,16 +122,10 @@
     local.functionOrNop = function (fnc) {
     /*
      * this function will if <fnc> exists,
-     * them return <fnc>,
+     * return <fnc>,
      * else return <nop>
      */
         return fnc || local.nop;
-    };
-    local.identity = function (value) {
-    /*
-     * this function will return <value>
-     */
-        return value;
     };
     local.nop = function () {
     /*
@@ -156,6 +150,30 @@
             }
         });
         return target;
+    };
+    local.value = function (val) {
+    /*
+     * this function will return <val>
+     */
+        return val;
+    };
+    local.valueOrEmptyList = function (val) {
+    /*
+     * this function will return <val> or []
+     */
+        return val || [];
+    };
+    local.valueOrEmptyObject = function (val) {
+    /*
+     * this function will return <val> or {}
+     */
+        return val || {};
+    };
+    local.valueOrEmptyString = function (val) {
+    /*
+     * this function will return <val> or ""
+     */
+        return val || "";
     };
     // require builtin
     if (!local.isBrowser) {
@@ -237,18 +255,18 @@ local.ajax = function (opt, onError) {
         console.log(xhr.responseText);
     });
  */
-    var ajaxProgressUpdate;
-    var bufferValidateAndCoerce;
-    var isDone;
-    var local2;
-    var onError2;
-    var onEvent;
-    var stack;
-    var streamCleanup;
-    var timeout;
-    var tmp;
-    var xhr;
-    var xhrInit;
+    let ajaxProgressUpdate;
+    let bufferValidateAndCoerce;
+    let isDone;
+    let local2;
+    let onError2;
+    let onEvent;
+    let stack;
+    let streamCleanup;
+    let timeout;
+    let tmp;
+    let xhr;
+    let xhrInit;
     // init local2
     local2 = opt.local2 || local.utility2 || {};
     // init function
@@ -397,7 +415,7 @@ local.ajax = function (opt, onError) {
     /*
      * this function will try to end or destroy <stream>
      */
-        var err;
+        let err;
         // try to end stream
         try {
             stream.end();
@@ -459,11 +477,11 @@ local.ajax = function (opt, onError) {
     );
     // init xhr - http.request
     if (!xhr) {
-        xhr = local.identity(local2.urlParse || require("url").parse)(opt.url);
+        xhr = local.value(local2.urlParse || require("url").parse)(opt.url);
         // init xhr
         xhrInit();
         // init xhr - http.request
-        xhr = local.identity(
+        xhr = local.value(
             opt.httpReq
             || (local.isBrowser && local2.http.request)
             || require(xhr.protocol.slice(0, -1)).request
@@ -471,7 +489,7 @@ local.ajax = function (opt, onError) {
         /*
          * this function will read <resStream>
          */
-            var chunkList;
+            let chunkList;
             chunkList = [];
             xhr.resHeaders = resStream.resHeaders || resStream.headers;
             xhr.resStream = resStream;
@@ -588,18 +606,16 @@ local.cliRun = function (opt) {
         globalThis.local = local;
         local.vm.runInThisContext(process.argv[3]);
     };
-    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
-    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
     local.cliDict._help = local.cliDict._help || function () {
     /*
      *
      * will print help
      */
-        var commandList;
-        var file;
-        var packageJson;
-        var text;
-        var textDict;
+        let commandList;
+        let file;
+        let packageJson;
+        let text;
+        let textDict;
         commandList = [
             {
                 argList: "<arg2>  ...",
@@ -642,14 +658,16 @@ local.cliRun = function (opt) {
             try {
                 commandList[ii] = opt.rgxComment.exec(text);
                 commandList[ii] = {
-                    argList: (commandList[ii][1] || "").trim(),
+                    argList: local.valueOrEmptyString(
+                        commandList[ii][1]
+                    ).trim(),
                     command: [
                         key
                     ],
                     description: commandList[ii][2]
                 };
             } catch (ignore) {
-                local.assertThrow(null, new Error(
+                local.assertOrThrow(null, new Error(
                     "cliRun - cannot parse comment in COMMAND "
                     + key
                     + ":\nnew RegExp("
@@ -689,15 +707,15 @@ local.cliRun = function (opt) {
             }
             return (
                 elem.description + "\n  " + file
-                + ("  " + elem.command.sort().join("|") + "  ").replace((
-                    /^\u0020{4}$/
-                ), "  ")
+                + "  " + elem.command.sort().join("|") + "  "
                 + elem.argList.join("  ")
             );
         }).join("\n\n");
         console.log(text);
     };
+    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
     local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
+    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
     local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
     local.cliDict._default = local.cliDict._default || local.cliDict._help;
     local.cliDict.help = local.cliDict.help || local.cliDict._help;
@@ -707,7 +725,7 @@ local.cliRun = function (opt) {
      * will start interactive-mode
      */
         globalThis.local = local;
-        local.identity(local.replStart || require("repl").start)({
+        local.value(local.replStart || require("repl").start)({
             useGlobal: true
         });
     };
@@ -743,7 +761,7 @@ local.cliRun = function (opt) {
 local.gotoNext = function (opt, onError) {
 /*
  * this function will wrap onError inside recursive-function <opt>.gotoNext,
- * and append the current-stack to any err
+ * and append current-stack to any err
  */
     opt.gotoNext = local.onErrorWithStack(function (err, data, meta) {
         try {
@@ -765,7 +783,7 @@ local.gotoNext = function (opt, onError) {
         } catch (errCaught) {
             // throw errCaught to break infinite recursion-loop
             if (opt.errCaught) {
-                local.assertThrow(null, opt.errCaught);
+                local.assertOrThrow(null, opt.errCaught);
             }
             opt.errCaught = errCaught;
             opt.gotoNext(errCaught, data, meta);
@@ -790,8 +808,8 @@ local.onErrorWithStack = function (onError) {
  * this function will create wrapper around <onError>
  * that will append current-stack to err.stack
  */
-    var onError2;
-    var stack;
+    let onError2;
+    let stack;
     stack = new Error().stack.replace((
         /(.*?)\n.*?$/m
     ), "$1");
@@ -820,7 +838,7 @@ local.onParallel = function (onError, onEach, onRetry) {
  * 1. run async tasks in parallel
  * 2. if counter === 0 or err occurred, then call onError(err)
  */
-    var onParallel;
+    let onParallel;
     onError = local.onErrorWithStack(onError);
     onEach = onEach || local.nop;
     onRetry = onRetry || local.nop;
@@ -865,9 +883,9 @@ local.onParallelList = function (opt, onEach, onError) {
  *    with given <opt>.rateLimit and <opt>.retryLimit
  * 2. call <onError> when onParallel.ii + 1 === <opt>.list.length
  */
-    var isListEnd;
-    var onEach2;
-    var onParallel;
+    let isListEnd;
+    let onEach2;
+    let onParallel;
     opt.list = opt.list || [];
     onEach2 = function () {
         while (true) {
@@ -1404,7 +1422,7 @@ local.cliDict.repo_create = function () {
     local.github_crud.githubCrudRepoCreateList({
         urlList: process.argv[3].split(
             /[,\s]/g
-        ).filter(local.identity)
+        ).filter(local.value)
     }, function (err) {
         process.exit(Boolean(err));
     });
@@ -1418,7 +1436,7 @@ local.cliDict.repo_delete = function () {
     local.github_crud.githubCrudRepoDeleteList({
         urlList: process.argv[3].split(
             /[,\s]/g
-        ).filter(local.identity)
+        ).filter(local.value)
     }, function (err) {
         process.exit(Boolean(err));
     });
@@ -1433,7 +1451,7 @@ local.cliDict.touch = function () {
         message: process.argv[4],
         urlList: process.argv[3].split(
             /[,\s]/g
-        ).filter(local.identity)
+        ).filter(local.value)
     }, function (err) {
         process.exit(Boolean(err));
     });
