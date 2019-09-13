@@ -1404,8 +1404,8 @@ require("fs").writeFileSync(process.argv[2], dataTo);
 shGitAddTee () {(set -e
 # this function will run "git add ." and "$@ 2>&1 | tee -a ..."
     git add .
-    printf "\n\n\n\n$(shDateIso) - shGitAddTee\n\n" 2>&1 | \
-        tee -a /tmp/shGitAddTee.diff
+    printf "\n\n\n\n$(shDateIso) - shGitAddTee\n\n" 2>&1 |
+        tee -a tmp/shGitAddTee.diff
     "$@" 2>&1 | tee -a /tmp/shGitAddTee.diff
     git diff 2>&1 | tee -a /tmp/shGitAddTee.diff
     git status 2>&1 | tee -a /tmp/shGitAddTee.diff
@@ -1930,7 +1930,7 @@ data = data.replace((
             console.assert(!err, err);
             require("fs").writeFile(match1, data, function (err) {
                 console.assert(!err, err);
-                console.error("encrypted file " + match0 + " -> " + match1);
+                console.error("encrypted file " + match0 + " to " + match1);
             });
         });
     });
@@ -1947,7 +1947,7 @@ local.cryptoAesXxxCbcRawEncrypt({
     console.assert(!err, err);
     require("fs").writeFile("aa.0001.bin", data, function (err) {
         console.assert(!err, err);
-        console.error("encrypted file hls.m3u8 -> aa.0001.bin");
+        console.error("encrypted file hls.m3u8 to aa.0001.bin");
     });
 });
 }(globalThis.globalLocal));
@@ -2812,15 +2812,7 @@ require("fs").writeFileSync(
 shServerPortRandom () {(set -e
 # this function will print random unused tcp-port in the inclusive range
 # 0x8000 to 0xffff
-    while true
-    do
-        PORT="$(shuf -i 32768-65535 -n 1)"
-        if ! (nc -z 127.0.0.1 "$PORT" 2>/dev/null)
-        then
-            printf "$PORT\n"
-            return
-        fi
-    done
+    node -e 'console.log(Math.random() * 65536 | 0x8000);'
 )}
 
 shSleep () {(set -e
@@ -3393,6 +3385,8 @@ export UTILITY2_MACRO_JS='
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
+    let ArrayPrototypeFlat;
+    let TextXxcoder;
     let consoleError;
     let local;
     // init globalThis
@@ -3414,6 +3408,150 @@ export UTILITY2_MACRO_JS='
             return argList[0];
         };
     }
+    // polyfill
+    ArrayPrototypeFlat = function (depth) {
+    /*
+     * this function will polyfill Array.prototype.flat
+     * https://github.com/jonathantneal/array-flat-polyfill
+     */
+        depth = (
+            globalThis.isNaN(depth)
+            ? 1
+            : Number(depth)
+        );
+        if (!depth) {
+            return Array.prototype.slice.call(this);
+        }
+        return Array.prototype.reduce.call(this, function (acc, cur) {
+            if (Array.isArray(cur)) {
+                // recurse
+                acc.push.apply(acc, ArrayPrototypeFlat.call(cur, depth - 1));
+            } else {
+                acc.push(cur);
+            }
+            return acc;
+        }, []);
+    };
+    Array.prototype.flat = Array.prototype.flat || ArrayPrototypeFlat;
+    Array.prototype.flatMap = Array.prototype.flatMap || function flatMap(
+        ...argList
+    ) {
+    /*
+     * this function will polyfill Array.prototype.flatMap
+     * https://github.com/jonathantneal/array-flat-polyfill
+     */
+        return this.map(...argList).flat();
+    };
+    (function () {
+        try {
+            globalThis.TextDecoder = (
+                globalThis.TextDecoder || require("util").TextDecoder
+            );
+            globalThis.TextEncoder = (
+                globalThis.TextEncoder || require("util").TextEncoder
+            );
+        } catch (ignore) {}
+    }());
+    TextXxcoder = function () {
+    /*
+     * this function will polyfill TextDecoder/TextEncoder
+     * https://gist.github.com/Yaffle/5458286
+     */
+        return;
+    };
+    TextXxcoder.prototype.decode = function (octets) {
+    /*
+     * this function will polyfill TextDecoder.prototype.decode
+     * https://gist.github.com/Yaffle/5458286
+     */
+        let bytesNeeded;
+        let codePoint;
+        let ii;
+        let kk;
+        let octet;
+        let string;
+        string = "";
+        ii = 0;
+        while (ii < octets.length) {
+            octet = octets[ii];
+            bytesNeeded = 0;
+            codePoint = 0;
+            if (octet <= 0x7F) {
+                bytesNeeded = 0;
+                codePoint = octet & 0xFF;
+            } else if (octet <= 0xDF) {
+                bytesNeeded = 1;
+                codePoint = octet & 0x1F;
+            } else if (octet <= 0xEF) {
+                bytesNeeded = 2;
+                codePoint = octet & 0x0F;
+            } else if (octet <= 0xF4) {
+                bytesNeeded = 3;
+                codePoint = octet & 0x07;
+            }
+            if (octets.length - ii - bytesNeeded > 0) {
+                kk = 0;
+                while (kk < bytesNeeded) {
+                    octet = octets[ii + kk + 1];
+                    codePoint = (codePoint << 6) | (octet & 0x3F);
+                    kk += 1;
+                }
+            } else {
+                codePoint = 0xFFFD;
+                bytesNeeded = octets.length - ii;
+            }
+            string += String.fromCodePoint(codePoint);
+            ii += bytesNeeded + 1;
+        }
+        return string;
+    };
+    TextXxcoder.prototype.encode = function (string) {
+    /*
+     * this function will polyfill TextEncoder.prototype.encode
+     * https://gist.github.com/Yaffle/5458286
+     */
+        let bits;
+        let cc;
+        let codePoint;
+        let ii;
+        let length;
+        let octets;
+        octets = [];
+        length = string.length;
+        ii = 0;
+        while (ii < length) {
+            codePoint = string.codePointAt(ii);
+            cc = 0;
+            bits = 0;
+            if (codePoint <= 0x0000007F) {
+                cc = 0;
+                bits = 0x00;
+            } else if (codePoint <= 0x000007FF) {
+                cc = 6;
+                bits = 0xC0;
+            } else if (codePoint <= 0x0000FFFF) {
+                cc = 12;
+                bits = 0xE0;
+            } else if (codePoint <= 0x001FFFFF) {
+                cc = 18;
+                bits = 0xF0;
+            }
+            octets.push(bits | (codePoint >> cc));
+            cc -= 6;
+            while (cc >= 0) {
+                octets.push(0x80 | ((codePoint >> cc) & 0x3F));
+                cc -= 6;
+            }
+            ii += (
+                codePoint >= 0x10000
+                ? 2
+                : 1
+            );
+        }
+        return octets;
+    };
+    globalThis.TextDecoder = globalThis.TextDecoder || TextXxcoder;
+    globalThis.TextEncoder = globalThis.TextEncoder || TextXxcoder;
     // init local
     local = {};
     local.local = local;
@@ -3621,37 +3759,6 @@ local.utility2 = local;
 /* validateLineSortedReset */
 globalThis.local = local;
 
-
-
-local.TextDecoder = globalThis.TextDecoder || function () {
-/*
- * this function will polyfill TextDecoder
- */
-    return;
-};
-
-local.TextDecoder.prototype.decode = (
-    local.TextDecoder.prototype.decode || function (bff) {
-        /*
-         * this function will polyfill TextDecoder.prototype.decode
-         */
-        return (
-            (bff && bff.length)
-            ? String(Object.setPrototypeOf(bff, Buffer.prototype))
-            : ""
-        );
-    }
-);
-
-globalThis.TextDecoder = local.TextDecoder;
-
-local.TextEncoder = globalThis.TextEncoder || function () {
-/*
- * this function will polyfill TextEncoder
- */
-    return;
-};
-
 local.ajax = function (opt, onError) {
 /*
  * this function will send an ajax-req
@@ -3687,22 +3794,22 @@ local.ajax = function (opt, onError) {
         return;
     };
     bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (
-        bff,
+        buf,
         mode
     ) {
     /*
-     * this function will validate and coerce/convert <bff> -> Buffer
-     * (or String if <mode> = "string")
+     * this function will validate and coerce/convert
+     * <buf> to Buffer/Uint8Array, or String if <mode> = "string"
      */
-        // coerce ArrayBuffer -> Buffer
-        if (Object.prototype.toString.call(bff) === "[object ArrayBuffer]") {
-            bff = new Uint8Array(bff);
+        // coerce ArrayBuffer to Buffer
+        if (Object.prototype.toString.call(buf) === "[object ArrayBuffer]") {
+            buf = new Uint8Array(buf);
         }
-        // convert Buffer -> utf8
-        if (mode === "string" && typeof bff !== "string") {
-            bff = String(bff);
+        // convert Buffer to utf8
+        if (mode === "string" && typeof buf !== "string") {
+            buf = String(buf);
         }
-        return bff;
+        return buf;
     };
     onEvent = function (evt) {
     /*
@@ -3766,8 +3873,8 @@ local.ajax = function (opt, onError) {
             if (xhr.getAllResponseHeaders) {
                 xhr.getAllResponseHeaders().replace((
                     /(.*?):\u0020*(.*?)\r\n/g
-                ), function (ignore, match1, match2) {
-                    xhr.resHeaders[match1.toLowerCase()] = match2;
+                ), function (ignore, key, val) {
+                    xhr.resHeaders[key.toLowerCase()] = val;
                 });
             }
             // debug ajaxResponse
@@ -3866,7 +3973,7 @@ local.ajax = function (opt, onError) {
         Object.keys(xhr.headers).forEach(function (key) {
             xhr.headers[key.toLowerCase()] = xhr.headers[key];
         });
-        // coerce Uint8Array -> Buffer
+        // coerce Uint8Array to Buffer
         if (
             !local.isBrowser
             && !Buffer.isBuffer(xhr.data)
@@ -3902,20 +4009,20 @@ local.ajax = function (opt, onError) {
         /*
          * this function will read <resStream>
          */
-            let chunkList;
-            chunkList = [];
-            xhr.resHeaders = resStream.resHeaders || resStream.headers;
+            let bufList;
+            bufList = [];
+            xhr.resHeaders = resStream.headers || xhr.resHeaders;
             xhr.resStream = resStream;
             xhr.statusCode = resStream.statusCode;
             resStream.dataLength = 0;
-            resStream.on("data", function (chunk) {
-                chunkList.push(chunk);
+            resStream.on("data", function (buf) {
+                bufList.push(buf);
             });
             resStream.on("end", function () {
                 xhr.response = (
                     local.isBrowser
-                    ? chunkList[0]
-                    : Buffer.concat(chunkList)
+                    ? bufList[0]
+                    : Buffer.concat(bufList)
                 );
                 resStream.dataLength = (
                     xhr.response.byteLength || xhr.response.length
@@ -4029,9 +4136,9 @@ local.assertJsonNotEqual = function (aa, bb, message) {
     ], message || aa);
 };
 
-local.base64FromBuffer = function (bff) {
+local.base64FromBuffer = function (buf) {
 /*
- * this function will convert Uint8Array <bff> to base64
+ * this function will convert Uint8Array <buf> to base64
  * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
  */
     let ii;
@@ -4039,11 +4146,11 @@ local.base64FromBuffer = function (bff) {
     let text;
     let uint24;
     let uint6ToB64;
-    // convert utf8 -> Uint8Array
-    if (typeof bff === "string") {
-        bff = new TextEncoder().encode(bff);
+    // convert utf8 to Uint8Array
+    if (typeof buf === "string") {
+        buf = new TextEncoder().encode(buf);
     }
-    bff = bff || [];
+    buf = buf || [];
     text = "";
     uint24 = 0;
     uint6ToB64 = function (uint6) {
@@ -4060,10 +4167,10 @@ local.base64FromBuffer = function (bff) {
         );
     };
     ii = 0;
-    while (ii < bff.length) {
+    while (ii < buf.length) {
         mod3 = ii % 3;
-        uint24 |= bff[ii] << (16 >>> mod3 & 24);
-        if (mod3 === 2 || bff.length - ii === 1) {
+        uint24 |= buf[ii] << (16 >>> mod3 & 24);
+        if (mod3 === 2 || buf.length - ii === 1) {
             text += String.fromCharCode(
                 uint6ToB64(uint24 >>> 18 & 63),
                 uint6ToB64(uint24 >>> 12 & 63),
@@ -4084,7 +4191,7 @@ local.base64ToBuffer = function (b64, mode) {
  * this function will convert <b64> to Uint8Array
  * https://gist.github.com/wang-bin/7332335
  */
-    let bff;
+    let buf;
     let byte;
     let chr;
     let ii;
@@ -4092,7 +4199,7 @@ local.base64ToBuffer = function (b64, mode) {
     let map64;
     let mod4;
     b64 = b64 || "";
-    bff = new Uint8Array(b64.length); // 3/4
+    buf = new Uint8Array(b64.length); // 3/4
     byte = 0;
     jj = 0;
     map64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -4106,60 +4213,56 @@ local.base64ToBuffer = function (b64, mode) {
                 byte = chr;
             } else {
                 byte = byte * 64 + chr;
-                bff[jj] = 255 & (byte >> ((-2 * (mod4 + 1)) & 6));
+                buf[jj] = 255 & (byte >> ((-2 * (mod4 + 1)) & 6));
                 jj += 1;
             }
             mod4 += 1;
         }
         ii += 1;
     }
-    // optimization - create resized-view of bff
-    bff = bff.subarray(0, jj);
-    return local.bufferValidateAndCoerce(bff, mode);
+    // optimization - create resized-view of buf
+    buf = buf.subarray(0, jj);
+    return local.bufferValidateAndCoerce(buf, mode);
 };
 
 local.base64ToUtf8 = function (b64) {
 /*
- * this function will convert <b64> -> utf8
+ * this function will convert <b64> to utf8
  */
     return local.base64ToBuffer(b64, "string");
 };
 
-local.bufferValidateAndCoerce = function (bff, mode) {
+local.bufferValidateAndCoerce = function (buf, mode) {
 /*
- * this function will validate and coerce/convert <bff> -> Buffer
- * (or String if <mode> = "string")
+ * this function will validate and coerce/convert
+ * <buf> to Buffer/Uint8Array, or String if <mode> = "string"
  */
     // validate not 0
-    if (bff !== 0) {
-        bff = bff || "";
+    if (buf !== 0) {
+        buf = buf || "";
     }
-    if (typeof bff === "string" && mode === "string") {
-        return bff;
+    if (typeof buf === "string" && mode === "string") {
+        return buf;
     }
-    // convert utf8 -> Uint8Array
-    if (typeof bff === "string") {
-        bff = (
-            local.isBrowser
-            ? new TextEncoder().encode(bff)
-            : Buffer.from(bff)
-        );
+    // convert utf8 to Uint8Array
+    if (typeof buf === "string") {
+        buf = new TextEncoder().encode(buf);
     // validate instanceof Uint8Array
-    } else if (Object.prototype.toString.call(bff) !== "[object Uint8Array]") {
+    } else if (Object.prototype.toString.call(buf) !== "[object Uint8Array]") {
         throw new Error(
             "bufferValidateAndCoerce - value is not instanceof "
             + "ArrayBuffer, String, or Uint8Array"
         );
     }
-    // convert Uint8Array -> utf8
+    // convert Uint8Array to utf8
     if (mode === "string") {
-        return new TextDecoder().decode(bff);
+        return new TextDecoder().decode(buf);
     }
-    // coerce Uint8Array -> Buffer
-    if (!local.isBrowser && !Buffer.isBuffer(bff)) {
-        Object.setPrototypeOf(bff, Buffer.prototype);
+    // coerce Uint8Array to Buffer
+    if (globalThis.Buffer && Buffer.isBuffer && !Buffer.isBuffer(buf)) {
+        Object.setPrototypeOf(buf, Buffer.prototype);
     }
-    return bff;
+    return buf;
 };
 
 local.childProcessSpawnWithTimeout = function (command, args, opt) {

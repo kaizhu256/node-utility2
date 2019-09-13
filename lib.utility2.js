@@ -13,6 +13,8 @@
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
+    let ArrayPrototypeFlat;
+    let TextXxcoder;
     let consoleError;
     let local;
     // init globalThis
@@ -34,6 +36,150 @@
             return argList[0];
         };
     }
+    // polyfill
+    ArrayPrototypeFlat = function (depth) {
+    /*
+     * this function will polyfill Array.prototype.flat
+     * https://github.com/jonathantneal/array-flat-polyfill
+     */
+        depth = (
+            globalThis.isNaN(depth)
+            ? 1
+            : Number(depth)
+        );
+        if (!depth) {
+            return Array.prototype.slice.call(this);
+        }
+        return Array.prototype.reduce.call(this, function (acc, cur) {
+            if (Array.isArray(cur)) {
+                // recurse
+                acc.push.apply(acc, ArrayPrototypeFlat.call(cur, depth - 1));
+            } else {
+                acc.push(cur);
+            }
+            return acc;
+        }, []);
+    };
+    Array.prototype.flat = Array.prototype.flat || ArrayPrototypeFlat;
+    Array.prototype.flatMap = Array.prototype.flatMap || function flatMap(
+        ...argList
+    ) {
+    /*
+     * this function will polyfill Array.prototype.flatMap
+     * https://github.com/jonathantneal/array-flat-polyfill
+     */
+        return this.map(...argList).flat();
+    };
+    (function () {
+        try {
+            globalThis.TextDecoder = (
+                globalThis.TextDecoder || require("util").TextDecoder
+            );
+            globalThis.TextEncoder = (
+                globalThis.TextEncoder || require("util").TextEncoder
+            );
+        } catch (ignore) {}
+    }());
+    TextXxcoder = function () {
+    /*
+     * this function will polyfill TextDecoder/TextEncoder
+     * https://gist.github.com/Yaffle/5458286
+     */
+        return;
+    };
+    TextXxcoder.prototype.decode = function (octets) {
+    /*
+     * this function will polyfill TextDecoder.prototype.decode
+     * https://gist.github.com/Yaffle/5458286
+     */
+        let bytesNeeded;
+        let codePoint;
+        let ii;
+        let kk;
+        let octet;
+        let string;
+        string = "";
+        ii = 0;
+        while (ii < octets.length) {
+            octet = octets[ii];
+            bytesNeeded = 0;
+            codePoint = 0;
+            if (octet <= 0x7F) {
+                bytesNeeded = 0;
+                codePoint = octet & 0xFF;
+            } else if (octet <= 0xDF) {
+                bytesNeeded = 1;
+                codePoint = octet & 0x1F;
+            } else if (octet <= 0xEF) {
+                bytesNeeded = 2;
+                codePoint = octet & 0x0F;
+            } else if (octet <= 0xF4) {
+                bytesNeeded = 3;
+                codePoint = octet & 0x07;
+            }
+            if (octets.length - ii - bytesNeeded > 0) {
+                kk = 0;
+                while (kk < bytesNeeded) {
+                    octet = octets[ii + kk + 1];
+                    codePoint = (codePoint << 6) | (octet & 0x3F);
+                    kk += 1;
+                }
+            } else {
+                codePoint = 0xFFFD;
+                bytesNeeded = octets.length - ii;
+            }
+            string += String.fromCodePoint(codePoint);
+            ii += bytesNeeded + 1;
+        }
+        return string;
+    };
+    TextXxcoder.prototype.encode = function (string) {
+    /*
+     * this function will polyfill TextEncoder.prototype.encode
+     * https://gist.github.com/Yaffle/5458286
+     */
+        let bits;
+        let cc;
+        let codePoint;
+        let ii;
+        let length;
+        let octets;
+        octets = [];
+        length = string.length;
+        ii = 0;
+        while (ii < length) {
+            codePoint = string.codePointAt(ii);
+            cc = 0;
+            bits = 0;
+            if (codePoint <= 0x0000007F) {
+                cc = 0;
+                bits = 0x00;
+            } else if (codePoint <= 0x000007FF) {
+                cc = 6;
+                bits = 0xC0;
+            } else if (codePoint <= 0x0000FFFF) {
+                cc = 12;
+                bits = 0xE0;
+            } else if (codePoint <= 0x001FFFFF) {
+                cc = 18;
+                bits = 0xF0;
+            }
+            octets.push(bits | (codePoint >> cc));
+            cc -= 6;
+            while (cc >= 0) {
+                octets.push(0x80 | ((codePoint >> cc) & 0x3F));
+                cc -= 6;
+            }
+            ii += (
+                codePoint >= 0x10000
+                ? 2
+                : 1
+            );
+        }
+        return octets;
+    };
+    globalThis.TextDecoder = globalThis.TextDecoder || TextXxcoder;
+    globalThis.TextEncoder = globalThis.TextEncoder || TextXxcoder;
     // init local
     local = {};
     local.local = local;
@@ -706,12 +852,10 @@ utility2-comment -->\n\
 \n\
 \n\
 \n\
+<!-- utility2-comment\n\
 {{#if isRollup}}\n\
-<!-- utility2-comment\n\
 <script src="assets.app.js"></script>\n\
-utility2-comment -->\n\
 {{#unless isRollup}}\n\
-<!-- utility2-comment\n\
 <script src="assets.utility2.rollup.js"></script>\n\
 <script>window.utility2_onReadyBefore.counter += 1;</script>\n\
 <script src="jsonp.utility2.stateInit?callback=window.utility2.stateInit"></script>\n\
@@ -720,11 +864,13 @@ utility2-comment -->\n\
 <script src="assets.example.js"></script>\n\
 <script src="assets.test.js"></script>\n\
 <script>\n\
-if(window.utility2_onReadyBefore) {\n\
+if (window.utility2_onReadyBefore) {\n\
     window.utility2_onReadyBefore();\n\
 }\n\
 </script>\n\
+<!-- utility2-comment\n\
 {{/if isRollup}}\n\
+utility2-comment -->\n\
 <script>\n\
 /* jslint utility2:true */\n\
 (function () {\n\
@@ -771,6 +917,8 @@ local.assetsDict["/assets.buildBadge.template.svg"] =
 local.assetsDict["/assets.example.begin.js"] = '\
 (function (globalThis) {\n\
     "use strict";\n\
+    let ArrayPrototypeFlat;\n\
+    let TextXxcoder;\n\
     let consoleError;\n\
     let local;\n\
     // init globalThis\n\
@@ -792,6 +940,150 @@ local.assetsDict["/assets.example.begin.js"] = '\
             return argList[0];\n\
         };\n\
     }\n\
+    // polyfill\n\
+    ArrayPrototypeFlat = function (depth) {\n\
+    /*\n\
+     * this function will polyfill Array.prototype.flat\n\
+     * https://github.com/jonathantneal/array-flat-polyfill\n\
+     */\n\
+        depth = (\n\
+            globalThis.isNaN(depth)\n\
+            ? 1\n\
+            : Number(depth)\n\
+        );\n\
+        if (!depth) {\n\
+            return Array.prototype.slice.call(this);\n\
+        }\n\
+        return Array.prototype.reduce.call(this, function (acc, cur) {\n\
+            if (Array.isArray(cur)) {\n\
+                // recurse\n\
+                acc.push.apply(acc, ArrayPrototypeFlat.call(cur, depth - 1));\n\
+            } else {\n\
+                acc.push(cur);\n\
+            }\n\
+            return acc;\n\
+        }, []);\n\
+    };\n\
+    Array.prototype.flat = Array.prototype.flat || ArrayPrototypeFlat;\n\
+    Array.prototype.flatMap = Array.prototype.flatMap || function flatMap(\n\
+        ...argList\n\
+    ) {\n\
+    /*\n\
+     * this function will polyfill Array.prototype.flatMap\n\
+     * https://github.com/jonathantneal/array-flat-polyfill\n\
+     */\n\
+        return this.map(...argList).flat();\n\
+    };\n\
+    (function () {\n\
+        try {\n\
+            globalThis.TextDecoder = (\n\
+                globalThis.TextDecoder || require("util").TextDecoder\n\
+            );\n\
+            globalThis.TextEncoder = (\n\
+                globalThis.TextEncoder || require("util").TextEncoder\n\
+            );\n\
+        } catch (ignore) {}\n\
+    }());\n\
+    TextXxcoder = function () {\n\
+    /*\n\
+     * this function will polyfill TextDecoder/TextEncoder\n\
+     * https://gist.github.com/Yaffle/5458286\n\
+     */\n\
+        return;\n\
+    };\n\
+    TextXxcoder.prototype.decode = function (octets) {\n\
+    /*\n\
+     * this function will polyfill TextDecoder.prototype.decode\n\
+     * https://gist.github.com/Yaffle/5458286\n\
+     */\n\
+        let bytesNeeded;\n\
+        let codePoint;\n\
+        let ii;\n\
+        let kk;\n\
+        let octet;\n\
+        let string;\n\
+        string = "";\n\
+        ii = 0;\n\
+        while (ii < octets.length) {\n\
+            octet = octets[ii];\n\
+            bytesNeeded = 0;\n\
+            codePoint = 0;\n\
+            if (octet <= 0x7F) {\n\
+                bytesNeeded = 0;\n\
+                codePoint = octet & 0xFF;\n\
+            } else if (octet <= 0xDF) {\n\
+                bytesNeeded = 1;\n\
+                codePoint = octet & 0x1F;\n\
+            } else if (octet <= 0xEF) {\n\
+                bytesNeeded = 2;\n\
+                codePoint = octet & 0x0F;\n\
+            } else if (octet <= 0xF4) {\n\
+                bytesNeeded = 3;\n\
+                codePoint = octet & 0x07;\n\
+            }\n\
+            if (octets.length - ii - bytesNeeded > 0) {\n\
+                kk = 0;\n\
+                while (kk < bytesNeeded) {\n\
+                    octet = octets[ii + kk + 1];\n\
+                    codePoint = (codePoint << 6) | (octet & 0x3F);\n\
+                    kk += 1;\n\
+                }\n\
+            } else {\n\
+                codePoint = 0xFFFD;\n\
+                bytesNeeded = octets.length - ii;\n\
+            }\n\
+            string += String.fromCodePoint(codePoint);\n\
+            ii += bytesNeeded + 1;\n\
+        }\n\
+        return string;\n\
+    };\n\
+    TextXxcoder.prototype.encode = function (string) {\n\
+    /*\n\
+     * this function will polyfill TextEncoder.prototype.encode\n\
+     * https://gist.github.com/Yaffle/5458286\n\
+     */\n\
+        let bits;\n\
+        let cc;\n\
+        let codePoint;\n\
+        let ii;\n\
+        let length;\n\
+        let octets;\n\
+        octets = [];\n\
+        length = string.length;\n\
+        ii = 0;\n\
+        while (ii < length) {\n\
+            codePoint = string.codePointAt(ii);\n\
+            cc = 0;\n\
+            bits = 0;\n\
+            if (codePoint <= 0x0000007F) {\n\
+                cc = 0;\n\
+                bits = 0x00;\n\
+            } else if (codePoint <= 0x000007FF) {\n\
+                cc = 6;\n\
+                bits = 0xC0;\n\
+            } else if (codePoint <= 0x0000FFFF) {\n\
+                cc = 12;\n\
+                bits = 0xE0;\n\
+            } else if (codePoint <= 0x001FFFFF) {\n\
+                cc = 18;\n\
+                bits = 0xF0;\n\
+            }\n\
+            octets.push(bits | (codePoint >> cc));\n\
+            cc -= 6;\n\
+            while (cc >= 0) {\n\
+                octets.push(0x80 | ((codePoint >> cc) & 0x3F));\n\
+                cc -= 6;\n\
+            }\n\
+            ii += (\n\
+                codePoint >= 0x10000\n\
+                ? 2\n\
+                : 1\n\
+            );\n\
+        }\n\
+        return octets;\n\
+    };\n\
+    globalThis.TextDecoder = globalThis.TextDecoder || TextXxcoder;\n\
+    globalThis.TextEncoder = globalThis.TextEncoder || TextXxcoder;\n\
     // init local\n\
     local = {};\n\
     local.local = local;\n\
@@ -1858,181 +2150,26 @@ local.cliDict["utility2.testReportCreate"] = function () {
 
 
 
-/* istanbul ignore next */
-// run shared js-env code - polyfill
-(function () {
-    let ArrayPrototypeFlat;
-    let TextXxcoder;
-    ArrayPrototypeFlat = function (depth) {
-    /*
-     * this function will polyfill Array.prototype.flat
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        depth = (
-            globalThis.isNaN(depth)
-            ? 1
-            : Number(depth)
-        );
-        if (!depth) {
-            return Array.prototype.slice.call(this);
-        }
-        return Array.prototype.reduce.call(this, function (acc, cur) {
-            if (Array.isArray(cur)) {
-                // recurse
-                acc.push.apply(acc, ArrayPrototypeFlat.call(cur, depth - 1));
-            } else {
-                acc.push(cur);
-            }
-            return acc;
-        }, []);
-    };
-    Array.prototype.flat = Array.prototype.flat || ArrayPrototypeFlat;
-    Array.prototype.flatMap = Array.prototype.flatMap || function flatMap(
-        ...argList
-    ) {
-    /*
-     * this function will polyfill Array.prototype.flatMap
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        return this.map(...argList).flat();
-    };
-    if (!local.isBrowser) {
-        globalThis.TextDecoder = (
-            globalThis.TextDecoder || require("util").TextDecoder
-        );
-        globalThis.TextEncoder = (
-            globalThis.TextEncoder || require("util").TextEncoder
-        );
-    }
-    TextXxcoder = function () {
-    /*
-     * this function will polyfill TextDecoder/TextEncoder
-     * https://gist.github.com/Yaffle/5458286
-     */
-        return;
-    };
-    TextXxcoder.prototype.decode = function (octets) {
-    /*
-     * this function will polyfill TextDecoder.prototype.decode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bytesNeeded;
-        let codePoint;
-        let ii;
-        let kk;
-        let octet;
-        let string;
-        string = "";
-        ii = 0;
-        while (ii < octets.length) {
-            octet = octets[ii];
-            bytesNeeded = 0;
-            codePoint = 0;
-            if (octet <= 0x7F) {
-                bytesNeeded = 0;
-                codePoint = octet & 0xFF;
-            } else if (octet <= 0xDF) {
-                bytesNeeded = 1;
-                codePoint = octet & 0x1F;
-            } else if (octet <= 0xEF) {
-                bytesNeeded = 2;
-                codePoint = octet & 0x0F;
-            } else if (octet <= 0xF4) {
-                bytesNeeded = 3;
-                codePoint = octet & 0x07;
-            }
-            if (octets.length - ii - bytesNeeded > 0) {
-                kk = 0;
-                while (kk < bytesNeeded) {
-                    octet = octets[ii + kk + 1];
-                    codePoint = (codePoint << 6) | (octet & 0x3F);
-                    kk += 1;
-                }
-            } else {
-                codePoint = 0xFFFD;
-                bytesNeeded = octets.length - ii;
-            }
-            string += String.fromCodePoint(codePoint);
-            ii += bytesNeeded + 1;
-        }
-        return string;
-    };
-    TextXxcoder.prototype.encode = function (string) {
-    /*
-     * this function will polyfill TextEncoder.prototype.encode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bits;
-        let cc;
-        let codePoint;
-        let ii;
-        let length;
-        let octets;
-        octets = [];
-        length = string.length;
-        ii = 0;
-        while (ii < length) {
-            codePoint = string.codePointAt(ii);
-            cc = 0;
-            bits = 0;
-            if (codePoint <= 0x0000007F) {
-                cc = 0;
-                bits = 0x00;
-            } else if (codePoint <= 0x000007FF) {
-                cc = 6;
-                bits = 0xC0;
-            } else if (codePoint <= 0x0000FFFF) {
-                cc = 12;
-                bits = 0xE0;
-            } else if (codePoint <= 0x001FFFFF) {
-                cc = 18;
-                bits = 0xF0;
-            }
-            octets.push(bits | (codePoint >> cc));
-            cc -= 6;
-            while (cc >= 0) {
-                octets.push(0x80 | ((codePoint >> cc) & 0x3F));
-                cc -= 6;
-            }
-            ii += (
-                codePoint >= 0x10000
-                ? 2
-                : 1
-            );
-        }
-        return octets;
-    };
-    globalThis.TextDecoder = globalThis.TextDecoder || TextXxcoder;
-    globalThis.TextEncoder = globalThis.TextEncoder || TextXxcoder;
-}());
-
-
-
 // run shared js-env code - function
 (function () {
 // init lib Blob
-local.Blob = (
-    local.isBrowser
-    ? globalThis.Blob
-    : function (array, opt) {
-        /*
-         * this function will create a node-compatible Blob instance
-         * https://developer.mozilla.org/en-US/docs/Web/API/Blob/Blob
-         */
-        this.bff = local.bufferConcat(array.map(function (elem) {
-            return (
-                (
-                    typeof elem === "string"
-                    || Object.prototype.toString.call(elem)
-                    === "[object Uint8Array]"
-                )
-                ? elem
-                : String(elem)
-            );
-        }));
-        this.type = opt && opt.type;
-    }
-);
+local.Blob = globalThis.Blob || function (list, opt) {
+    /*
+     * this function will emulate in node, browser's Blob class
+     * https://developer.mozilla.org/en-US/docs/Web/API/Blob/Blob
+     */
+    this.buf = local.bufferConcat(list.map(function (elem) {
+        if (
+            typeof elem === "string"
+            || Object.prototype.toString.call(elem) === "[object Uint8Array]"
+        ) {
+            return elem;
+        }
+        // emulate in node, browser-behavior - auto-stringify arbitrary data
+        return String(elem);
+    }));
+    this.type = (opt && opt.type) || "";
+};
 
 // init lib FormData
 local.FormData = function () {
@@ -2155,83 +2292,11 @@ local.FormData.prototype.read = function (onError) {
 // init lib _http
 local._http = {};
 
-// init _http.IncomingMessage
-local._http.IncomingMessage = function (xhr) {
-/*
- * An IncomingMessage object is created by http.Server or http.ClientRequest
- * and passed as the first argument to the 'req' and 'res' event
- * respectively.
- * It may be used to access res status, headers and data.
- * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_http_incomingmessage
- */
-    this.headers = xhr.headers;
-    this.httpVersion = "1.1";
-    this.method = xhr.method;
-    this.onEvent = document.createDocumentFragment();
-    this.readable = true;
-    this.url = xhr.url;
-};
-
-local._http.IncomingMessage.prototype.addListener = function (evt, onEvent) {
-/*
- * Adds a listener to the end of the listeners array for the specified event.
- * No checks are made to see if the listener has already been added.
- * Multiple calls passing the same combination of event and listener will result
- * in the listener being added multiple times.
- * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_emitter_addlistener_event_listener
- */
-    this.onEvent.addEventListener(evt, function (evt) {
-        onEvent(evt.data);
-    });
-    if (this.readable && evt === "end") {
-        this.readable = null;
-        this.emit("data", this.data);
-        this.emit("end");
-    }
-    return this;
-};
-
-local._http.IncomingMessage.prototype.emit = function (evt, data) {
-/*
- * Execute each of the listeners in order with the supplied arguments.
- * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_emitter_emit_event_arg1_arg2
- */
-    evt = new Event(evt);
-    evt.data = data;
-    this.onEvent.dispatchEvent(evt);
-};
-
-/*
- * Adds a listener to the end of the listeners array for the specified event.
- * No checks are made to see if the listener has already been added.
- * Multiple calls passing the same combination of event and listener will result
- * in the listener being added multiple times.
- * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_emitter_on_event_listener
- */
-local._http.IncomingMessage.prototype.on = (
-    local._http.IncomingMessage.prototype.addListener
-);
-
-local._http.IncomingMessage.prototype.pipe = function (writable) {
-/*
- * This method pulls all the data out of a readable stream, and writes it
- * to the supplied destination, automatically managing the flow
- * so that the destination is not overwhelmed by a fast readable stream.
- * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_readable_pipe_destination_options
- */
-    this.on("data", function (chunk) {
-        writable.write(chunk);
-    });
-    this.on("end", function () {
-        writable.end();
-    });
-    return writable;
-};
-
 local._http.STATUS_CODES = {
     "100": "Continue",
     "101": "Switching Protocols",
     "102": "Processing",
+    "103": "Early Hints",
     "200": "OK",
     "201": "Created",
     "202": "Accepted",
@@ -2268,7 +2333,7 @@ local._http.STATUS_CODES = {
     "415": "Unsupported Media Type",
     "416": "Range Not Satisfiable",
     "417": "Expectation Failed",
-    "418": "I'm a teapot",
+    "418": "I'm a Teapot",
     "421": "Misdirected Request",
     "422": "Unprocessable Entity",
     "423": "Locked",
@@ -2293,141 +2358,116 @@ local._http.STATUS_CODES = {
     "511": "Network Authentication Required"
 };
 
-// init _http.ServerResponse
-local._http.ServerResponse = function (onResponse) {
-/*
- * This object is created internally by a HTTP server--not by the user.
- * It is passed as the second parameter to the 'req' event.
- * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_class_http_serverresponse
- */
-    this.chunkList = [];
-    this.onEvent = document.createDocumentFragment();
-    this.onResponse = onResponse;
-    this.resHeaders = {};
-    this.statusCode = 200;
-};
-
-/*
- * Adds a listener to the end of the listeners array for the specified event.
- * No checks are made to see if the listener has already been added.
- * Multiple calls passing the same combination of event and listener will result
- * in the listener being added multiple times.
- * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_emitter_addlistener_event_listener
- */
-local._http.ServerResponse.prototype.addListener = (
-    local._http.IncomingMessage.prototype.addListener
-);
-/*
- * Execute each of the listeners in order with the supplied arguments.
- * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_emitter_emit_event_arg1_arg2
- */
-local._http.ServerResponse.prototype.emit = (
-    local._http.IncomingMessage.prototype.emit
-);
-
-local._http.ServerResponse.prototype.end = function (data) {
-/*
- * This method signals to the server that all of the res headers and body
- * have been sent; that server should consider this message complete.
- * The method, res.end(), MUST be called on each res.
- * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_response_end_data_encoding_callback
- */
-    let that;
-    that = this;
-    if (that._isDone) {
-        return;
-    }
-    that._isDone = true;
-    that.chunkList.push(data);
-    // notify server res is finished
-    that.emit("finish");
-    // async send res from server to client
-    setTimeout(function () {
-        that.onResponse(that);
-        that.emit("data", local.bufferConcat(that.chunkList));
-        that.emit("end");
-    });
-};
-
-/*
- * Adds a listener to the end of the listeners array for the specified event.
- * No checks are made to see if the listener has already been added.
- * Multiple calls passing the same combination of event and listener
- * will result in the listener being added multiple times.
- * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_emitter_on_event_listener
- */
-local._http.ServerResponse.prototype.on = (
-    local._http.IncomingMessage.prototype.addListener
-);
-
-local._http.ServerResponse.prototype.setHeader = function (key, value) {
-/*
- * Sets a single header value for implicit headers.
- * If this header already exists in the to-be-sent headers,
- * its value will be replaced.
- * Use an array of strings here if you need to send multiple headers
- * with the same name.
- * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_response_setheader_name_value
- */
-    this.resHeaders[key.toLowerCase()] = value;
-};
-
-local._http.ServerResponse.prototype.write = function (data) {
-/*
- * This sends a chunk of the res body.
- * This method may be called multiple times
- * to provide successive parts of the body.
- * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_response_write_chunk_encoding_callback
- */
-    this.chunkList.push(data);
-};
-
 local._http.createServer = function () {
 /*
- * Returns a new instance of http.Server.
+ * this function will emulate in browser, node's http.createServer function
  * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_http_createserver_requestlistener
  */
     return {
         listen: function (port, onError) {
-        /*
-         * This will cause the server to accept connections
-         * on the specified handle,
-         * but it is presumed that the file descriptor or handle
-         * has already been bound to a port or domain socket.
-         * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_server_listen_handle_callback
-         */
             onError(null, port);
         }
     };
 };
 
 local._http.request = function (xhr, onResponse) {
+/*
+ * this function will emulate in browser, node's http.request function
+ * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_http_request_options_callback
+ */
+    let bufList;
+    let data;
+    let handler;
     let isDone;
+    let req;
+    let res;
     xhr = {
+        end: function (_data) {
+            if (isDone) {
+                return;
+            }
+            isDone = true;
+            data = _data;
+            // async send req from client to server
+            setTimeout(function () {
+                local.serverLocalReqHandler(req, res);
+            });
+        },
         headers: xhr.headers,
         method: xhr.method,
+        on: function () {
+            return xhr;
+        },
         timeout: xhr.timeout,
         url: xhr.href
     };
-    xhr.end = function (data) {
-        if (isDone) {
-            return;
+    bufList = [];
+    handler = new globalThis.EventTarget();
+    req = {
+        emit: function (type, data) {
+            handler.dispatchEvent(new globalThis.CustomEvent("req." + type, {
+                detail: data
+            }));
+        },
+        headers: xhr.headers,
+        httpVersion: "1.1",
+        method: xhr.method,
+        on: function (type, onEvent) {
+            handler.addEventListener("req." + type, function (evt) {
+                onEvent(evt.detail);
+            });
+            if (req.readable && type === "end") {
+                req.readable = null;
+                req.emit("data", data);
+                req.emit("end");
+            }
+            return req;
+        },
+        pipe: function (writable) {
+            req.on("data", function (buf) {
+                writable.write(buf);
+            });
+            req.on("end", function () {
+                writable.end();
+            });
+            return writable;
+        },
+        readable: true,
+        url: xhr.url
+    };
+    res = {
+        emit: function (type, data) {
+            handler.dispatchEvent(new globalThis.CustomEvent("res." + type, {
+                detail: data
+            }));
+        },
+        end: function (data) {
+            if (res._isDone) {
+                return;
+            }
+            res._isDone = true;
+            bufList.push(data);
+            // notify server res is finished
+            res.emit("finish");
+            // pass res to client
+            onResponse(res);
+            res.emit("data", local.bufferConcat(bufList));
+            res.emit("end");
+        },
+        on: function (type, onEvent) {
+            handler.addEventListener("res." + type, function (evt) {
+                onEvent(evt.detail);
+            });
+            return res;
+        },
+        setHeader: function (key, val) {
+            xhr.resHeaders[key.toLowerCase()] = val;
+        },
+        statusCode: 200,
+        write: function (data) {
+            bufList.push(data);
         }
-        isDone = true;
-        xhr.serverReq.data = data;
-        // async send req from client -> server
-        setTimeout(function () {
-            local.serverLocalReqHandler(
-                xhr.serverReq,
-                xhr.serverResponse
-            );
-        });
     };
-    xhr.on = function () {
-        return xhr;
-    };
-    xhr.serverReq = new local._http.IncomingMessage(xhr);
-    xhr.serverResponse = new local._http.ServerResponse(onResponse);
     return xhr;
 };
 
@@ -2568,22 +2608,22 @@ local.ajax = function (opt, onError) {
         return;
     };
     bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (
-        bff,
+        buf,
         mode
     ) {
     /*
-     * this function will validate and coerce/convert <bff> -> Buffer
-     * (or String if <mode> = "string")
+     * this function will validate and coerce/convert
+     * <buf> to Buffer/Uint8Array, or String if <mode> = "string"
      */
-        // coerce ArrayBuffer -> Buffer
-        if (Object.prototype.toString.call(bff) === "[object ArrayBuffer]") {
-            bff = new Uint8Array(bff);
+        // coerce ArrayBuffer to Buffer
+        if (Object.prototype.toString.call(buf) === "[object ArrayBuffer]") {
+            buf = new Uint8Array(buf);
         }
-        // convert Buffer -> utf8
-        if (mode === "string" && typeof bff !== "string") {
-            bff = String(bff);
+        // convert Buffer to utf8
+        if (mode === "string" && typeof buf !== "string") {
+            buf = String(buf);
         }
-        return bff;
+        return buf;
     };
     onEvent = function (evt) {
     /*
@@ -2647,8 +2687,8 @@ local.ajax = function (opt, onError) {
             if (xhr.getAllResponseHeaders) {
                 xhr.getAllResponseHeaders().replace((
                     /(.*?):\u0020*(.*?)\r\n/g
-                ), function (ignore, match1, match2) {
-                    xhr.resHeaders[match1.toLowerCase()] = match2;
+                ), function (ignore, key, val) {
+                    xhr.resHeaders[key.toLowerCase()] = val;
                 });
             }
             // debug ajaxResponse
@@ -2747,7 +2787,7 @@ local.ajax = function (opt, onError) {
         Object.keys(xhr.headers).forEach(function (key) {
             xhr.headers[key.toLowerCase()] = xhr.headers[key];
         });
-        // coerce Uint8Array -> Buffer
+        // coerce Uint8Array to Buffer
         if (
             !local.isBrowser
             && !Buffer.isBuffer(xhr.data)
@@ -2783,20 +2823,20 @@ local.ajax = function (opt, onError) {
         /*
          * this function will read <resStream>
          */
-            let chunkList;
-            chunkList = [];
-            xhr.resHeaders = resStream.resHeaders || resStream.headers;
+            let bufList;
+            bufList = [];
+            xhr.resHeaders = resStream.headers || xhr.resHeaders;
             xhr.resStream = resStream;
             xhr.statusCode = resStream.statusCode;
             resStream.dataLength = 0;
-            resStream.on("data", function (chunk) {
-                chunkList.push(chunk);
+            resStream.on("data", function (buf) {
+                bufList.push(buf);
             });
             resStream.on("end", function () {
                 xhr.response = (
                     local.isBrowser
-                    ? chunkList[0]
-                    : Buffer.concat(chunkList)
+                    ? bufList[0]
+                    : Buffer.concat(bufList)
                 );
                 resStream.dataLength = (
                     xhr.response.byteLength || xhr.response.length
@@ -2910,9 +2950,9 @@ local.assertJsonNotEqual = function (aa, bb, message) {
     ], message || aa);
 };
 
-local.base64FromBuffer = function (bff) {
+local.base64FromBuffer = function (buf) {
 /*
- * this function will convert Uint8Array <bff> to base64
+ * this function will convert Uint8Array <buf> to base64
  * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
  */
     let ii;
@@ -2920,11 +2960,11 @@ local.base64FromBuffer = function (bff) {
     let text;
     let uint24;
     let uint6ToB64;
-    // convert utf8 -> Uint8Array
-    if (typeof bff === "string") {
-        bff = new TextEncoder().encode(bff);
+    // convert utf8 to Uint8Array
+    if (typeof buf === "string") {
+        buf = new TextEncoder().encode(buf);
     }
-    bff = bff || [];
+    buf = buf || [];
     text = "";
     uint24 = 0;
     uint6ToB64 = function (uint6) {
@@ -2941,10 +2981,10 @@ local.base64FromBuffer = function (bff) {
         );
     };
     ii = 0;
-    while (ii < bff.length) {
+    while (ii < buf.length) {
         mod3 = ii % 3;
-        uint24 |= bff[ii] << (16 >>> mod3 & 24);
-        if (mod3 === 2 || bff.length - ii === 1) {
+        uint24 |= buf[ii] << (16 >>> mod3 & 24);
+        if (mod3 === 2 || buf.length - ii === 1) {
             text += String.fromCharCode(
                 uint6ToB64(uint24 >>> 18 & 63),
                 uint6ToB64(uint24 >>> 12 & 63),
@@ -2965,7 +3005,7 @@ local.base64ToBuffer = function (b64, mode) {
  * this function will convert <b64> to Uint8Array
  * https://gist.github.com/wang-bin/7332335
  */
-    let bff;
+    let buf;
     let byte;
     let chr;
     let ii;
@@ -2973,7 +3013,7 @@ local.base64ToBuffer = function (b64, mode) {
     let map64;
     let mod4;
     b64 = b64 || "";
-    bff = new Uint8Array(b64.length); // 3/4
+    buf = new Uint8Array(b64.length); // 3/4
     byte = 0;
     jj = 0;
     map64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -2987,21 +3027,21 @@ local.base64ToBuffer = function (b64, mode) {
                 byte = chr;
             } else {
                 byte = byte * 64 + chr;
-                bff[jj] = 255 & (byte >> ((-2 * (mod4 + 1)) & 6));
+                buf[jj] = 255 & (byte >> ((-2 * (mod4 + 1)) & 6));
                 jj += 1;
             }
             mod4 += 1;
         }
         ii += 1;
     }
-    // optimization - create resized-view of bff
-    bff = bff.subarray(0, jj);
-    return local.bufferValidateAndCoerce(bff, mode);
+    // optimization - create resized-view of buf
+    buf = buf.subarray(0, jj);
+    return local.bufferValidateAndCoerce(buf, mode);
 };
 
 local.base64ToUtf8 = function (b64) {
 /*
- * this function will convert <b64> -> utf8
+ * this function will convert <b64> to utf8
  */
     return local.base64ToBuffer(b64, "string");
 };
@@ -3017,7 +3057,7 @@ local.blobRead = function (blob, onError) {
         return;
     }
     if (!local.isBrowser) {
-        onError(null, local.bufferValidateAndCoerce(blob.bff));
+        onError(null, local.bufferValidateAndCoerce(blob.buf));
         return;
     }
     reader = new FileReader();
@@ -3036,7 +3076,7 @@ local.blobRead = function (blob, onError) {
                 null,
                 Object.prototype.toString.call(reader.result)
                 === "[object ArrayBuffer]"
-                // convert ArrayBuffer -> Uint8Array
+                // convert ArrayBuffer to Uint8Array
                 ? new Uint8Array(reader.result)
                 : reader.result
             );
@@ -3208,9 +3248,9 @@ local.browserTest = function (opt, onError) {
     opt.gotoNext();
 };
 
-local.bufferConcat = function (bffList) {
+local.bufferConcat = function (bufList) {
 /*
- * this function will emulate node's Buffer.concat for Uint8Array in browser
+ * this function will emulate in browser, node's Buffer.concat
  */
     let byteLength;
     let ii;
@@ -3222,19 +3262,19 @@ local.bufferConcat = function (bffList) {
         ""
     ];
     byteLength = 0;
-    bffList.forEach(function (bff) {
-        if (bff !== 0 && !(bff && bff.length)) {
+    bufList.forEach(function (buf) {
+        if (buf !== 0 && !(buf && buf.length)) {
             return;
         }
         // optimization - concat string
-        if (isString && typeof bff === "string") {
-            result[0] += bff;
+        if (isString && typeof buf === "string") {
+            result[0] += buf;
             return;
         }
         isString = null;
-        bff = local.bufferValidateAndCoerce(bff);
-        byteLength += bff.byteLength;
-        result.push(bff);
+        buf = local.bufferValidateAndCoerce(buf);
+        byteLength += buf.byteLength;
+        result.push(buf);
     });
     // optimization - return string
     if (isString) {
@@ -3242,13 +3282,13 @@ local.bufferConcat = function (bffList) {
     }
     result[0] = local.bufferValidateAndCoerce(result[0]);
     byteLength += result[0].byteLength;
-    bffList = result;
+    bufList = result;
     result = local.bufferValidateAndCoerce(new Uint8Array(byteLength));
     ii = 0;
-    bffList.forEach(function (bff) {
+    bufList.forEach(function (buf) {
         jj = 0;
-        while (jj < bff.byteLength) {
-            result[ii] = bff[jj];
+        while (jj < buf.byteLength) {
+            result[ii] = buf[jj];
             ii += 1;
             jj += 1;
         }
@@ -3256,9 +3296,9 @@ local.bufferConcat = function (bffList) {
     return result;
 };
 
-local.bufferIndexOfSubBuffer = function (bff, subBff, fromIndex) {
+local.bufferIndexOfSubBuffer = function (buf, subBff, fromIndex) {
 /*
- * this function will search <bff> for <fromIndex> position of <subBff>
+ * this function will search <buf> from <fromIndex> for position of <subBff>
  */
     let ii;
     let jj;
@@ -3267,11 +3307,11 @@ local.bufferIndexOfSubBuffer = function (bff, subBff, fromIndex) {
         return 0;
     }
     ii = fromIndex || 0;
-    while (ii < bff.length) {
+    while (ii < buf.length) {
         kk = ii;
         jj = 0;
         while (jj < subBff.length) {
-            if (subBff[jj] !== bff[kk]) {
+            if (subBff[jj] !== buf[kk]) {
                 break;
             }
             kk += 1;
@@ -3301,48 +3341,44 @@ local.bufferRandomBytes = function (length) {
     );
 };
 
-local.bufferToUtf8 = function (bff) {
+local.bufferToUtf8 = function (buf) {
 /*
- * this function will convert Uint8Array <bff> -> utf8
+ * this function will convert Uint8Array <buf> to utf8
  */
-    return local.bufferValidateAndCoerce(bff, "string");
+    return local.bufferValidateAndCoerce(buf, "string");
 };
 
-local.bufferValidateAndCoerce = function (bff, mode) {
+local.bufferValidateAndCoerce = function (buf, mode) {
 /*
- * this function will validate and coerce/convert <bff> -> Buffer
- * (or String if <mode> = "string")
+ * this function will validate and coerce/convert
+ * <buf> to Buffer/Uint8Array, or String if <mode> = "string"
  */
     // validate not 0
-    if (bff !== 0) {
-        bff = bff || "";
+    if (buf !== 0) {
+        buf = buf || "";
     }
-    if (typeof bff === "string" && mode === "string") {
-        return bff;
+    if (typeof buf === "string" && mode === "string") {
+        return buf;
     }
-    // convert utf8 -> Uint8Array
-    if (typeof bff === "string") {
-        bff = (
-            local.isBrowser
-            ? new TextEncoder().encode(bff)
-            : Buffer.from(bff)
-        );
+    // convert utf8 to Uint8Array
+    if (typeof buf === "string") {
+        buf = new TextEncoder().encode(buf);
     // validate instanceof Uint8Array
-    } else if (Object.prototype.toString.call(bff) !== "[object Uint8Array]") {
+    } else if (Object.prototype.toString.call(buf) !== "[object Uint8Array]") {
         throw new Error(
             "bufferValidateAndCoerce - value is not instanceof "
             + "ArrayBuffer, String, or Uint8Array"
         );
     }
-    // convert Uint8Array -> utf8
+    // convert Uint8Array to utf8
     if (mode === "string") {
-        return new TextDecoder().decode(bff);
+        return new TextDecoder().decode(buf);
     }
-    // coerce Uint8Array -> Buffer
-    if (!local.isBrowser && !Buffer.isBuffer(bff)) {
-        Object.setPrototypeOf(bff, Buffer.prototype);
+    // coerce Uint8Array to Buffer
+    if (globalThis.Buffer && Buffer.isBuffer && !Buffer.isBuffer(buf)) {
+        Object.setPrototypeOf(buf, Buffer.prototype);
     }
-    return bff;
+    return buf;
 };
 
 local.buildApp = function (opt, onError) {
@@ -4467,6 +4503,81 @@ local.errorMessagePrepend = function (err, message) {
     return err;
 };
 
+local.eventEmitterCreate = function (that = {}) {
+/*
+ * this function will create a simple, node-like event-emitter with <that>,
+ * with methods emit, on, once, removeListener
+ */
+    let dict;
+    let emit;
+    let on;
+    let once;
+    let remove;
+    emit = function (type, msg) {
+    /*
+     * this function will emit evt <type> with <msg>
+     */
+        let list;
+        list = dict[type] || [];
+        list.forEach(function (listener) {
+            listener(msg);
+        });
+    };
+    on = function (type, listener) {
+    /*
+     * this function will listen to evt <type> with <listener>
+     */
+        dict[type] = dict[type] || [];
+        dict[type].push(listener);
+        return that;
+    };
+    once = function (type, listener) {
+    /*
+     * this function will listen to evt <type> once with <listener>
+     */
+        let isDone;
+        let listener2;
+        listener2 = function (msg) {
+            remove(type, listener2);
+            if (!isDone) {
+                isDone = true;
+                listener(msg);
+            }
+        };
+        on(type, listener2);
+        return that;
+    };
+    remove = function (type, listener) {
+    /*
+     * this function will stop listening to evt <type> with <listener>
+     */
+        let ii;
+        let list;
+        list = dict[type] || [];
+        ii = list.length;
+        while (ii > 0) {
+            ii -= 1;
+            if (list[ii] === listener) {
+                list.splice(ii, 1);
+            }
+        }
+        return that;
+    };
+    dict = {};
+    that.emit = that.emit || emit;
+    that.listenerEmit = that.listenerEmit || emit;
+    that.on = that.on || on;
+    that.once = that.once || once;
+    that.removeListener = that.removeListener || remove;
+    that.removeEventListener = that.removeEventListener || remove;
+    that.listenerOn = that.listenerOn || on;
+    that.listenerOnce = that.listenerOnce || once;
+    that.listenerRemove = that.listenerRemove || remove;
+    return that;
+};
+
+local.eventEmitterCreate(local);
+
 local.fsReadFileOrEmptyStringSync = function (file, opt) {
 /*
  * this function will try to read file or return empty-string, or
@@ -4958,70 +5069,6 @@ local.listShuffle = function (list) {
     return list;
 };
 
-local.listenerAdd = function (type, listener) {
-/*
- * this function will listen to evt <type> with <listener>
- */
-    local.listenerDict[type] = local.listenerDict[type] || [];
-    local.listenerDict[type].push(listener);
-    return local;
-};
-
-local.listenerAddOnce = function (type, listener) {
-/*
- * this function will listen to evt <type> once with <listener>
- */
-    let fired;
-    let listener2;
-    listener2 = function (msg) {
-        local.listenerRemove(type, listener2);
-        if (!fired) {
-            fired = true;
-            listener(msg);
-        }
-    };
-    local.listenerAdd(type, listener2);
-    return local;
-};
-
-local.listenerDict = local.listenerDict || {};
-
-local.listenerEmit = function (type, msg) {
-/*
- * this function will emit evt <type> with <msg>
- */
-    local.valueOrEmptyList(
-        local.listenerDict[type]
-    ).forEach(function (listener) {
-        listener(msg);
-    });
-};
-
-local.listenerRemove = function (type, listener) {
-/*
- * this function will stop listening to evt <type> with <listener>
- */
-    let ii;
-    let list;
-    list = local.listenerDict[type] || [];
-    ii = list.length;
-    while (ii > 0) {
-        ii -= 1;
-        if (list[ii] === listener) {
-            list.splice(ii, 1);
-        }
-    }
-    return local;
-};
-
-/* validateLineSortedReset */
-local.addListener = local.listenerAdd;
-local.emit = local.listenerEmit;
-local.on = local.listenerAdd;
-local.once = local.listenerAddOnce;
-local.removeListener = local.listenerRemove;
-/* validateLineSortedReset */
-
 local.localStorageSetItemOrClear = function (key, value) {
 /*
  * this function will try to set <key>/<value> pair to localStorage,
@@ -5099,15 +5146,15 @@ local.middlewareBodyRead = function (req, ignore, next) {
         next();
         return;
     }
-    let chunkList;
-    chunkList = [];
-    req.on("data", function (chunk) {
-        chunkList.push(chunk);
+    let bufList;
+    bufList = [];
+    req.on("data", function (buf) {
+        bufList.push(buf);
     }).on("end", function () {
         req.bodyRaw = (
             local.isBrowser
-            ? chunkList[0]
-            : Buffer.concat(chunkList)
+            ? bufList[0]
+            : Buffer.concat(bufList)
         );
         next();
     // on event-error, pass error to onError
@@ -5254,7 +5301,7 @@ local.middlewareForwardProxy = function (req, res, next) {
         }
         // cleanup clientReq and clientRes
         local.streamCleanup(opt.clientReq);
-        local.streamCleanup(opt.clientResponse);
+        local.streamCleanup(opt.clientReq);
         next(err);
     };
     // init opt
@@ -5278,17 +5325,17 @@ local.middlewareForwardProxy = function (req, res, next) {
         opt.protocol === "https:"
         ? local.https
         : local.http
-    ).request(opt, function (clientResponse) {
-        opt.clientResponse = clientResponse.on("error", onError);
-        res.statusCode = opt.clientResponse.statusCode;
-        // pipe clientResponse to serverResponse
-        opt.clientResponse.pipe(res);
+    ).request(opt, function (clientReq) {
+        opt.clientReq = clientReq.on("error", onError);
+        res.statusCode = opt.clientReq.statusCode;
+        // pipe clientReq to res
+        opt.clientReq.pipe(res);
     }).on("error", onError);
     opt.timeStart = Date.now();
     // init event-handling
     req.on("error", onError);
     res.on("finish", onError).on("error", onError);
-    // pipe serverReq to clientReq
+    // pipe req to clientReq
     req.pipe(opt.clientReq);
 };
 
@@ -5397,13 +5444,6 @@ local.moduleDirname = function (module, modulePathList) {
         return result;
     });
     return result || "";
-};
-
-local.normalizeChunk = function (chunk) {
-/*
- * this function will normalize the chunk
- */
-    return chunk || "";
 };
 
 local.normalizeJwt = function (data) {
@@ -5935,11 +5975,11 @@ vendor)s{0,1}(\\b|_)\
         process.stdout._writeDefault
         || process.stdout._write
     );
-    process.stdout._write = function (chunk, encoding, callback) {
-        process.stdout._writeDefault(chunk, encoding, callback);
+    process.stdout._write = function (buf, encoding, callback) {
+        process.stdout._writeDefault(buf, encoding, callback);
         // hack-istanbul - ignore else-statement
         local.nop(that.socket.writable && (function () {
-            that.socket.write(chunk, encoding);
+            that.socket.write(buf, encoding);
         }()));
     };
     // start serverRepl1
@@ -6468,7 +6508,7 @@ local.serverRespondTimeoutDefault = function (req, res, timeout) {
             return;
         }
         isDone = true;
-        // debug serverResponse
+        // debug res
         console.error("serverLog - " + JSON.stringify({
             time: new Date(req.timeStart).toISOString(),
             type: "serverResponse",
@@ -6477,13 +6517,12 @@ local.serverRespondTimeoutDefault = function (req, res, timeout) {
             statusCode: res.statusCode | 0,
             timeElapsed: Date.now() - req.timeStart,
             // extra
-            requestContentLength: req.dataLength || 0,
+            reqContentLength: req.dataLength || 0,
             resContentLength: res.contentLength,
-            requestHeaderXForwardedFor:
-            req.headers["x-forwarded-for"] || "",
-            requestHeaderOrigin: req.headers.origin || "",
-            requestHeaderReferer: req.headers.referer || "",
-            requestHeaderUserAgent: req.headers["user-agent"]
+            reqHeaderXForwardedFor: req.headers["x-forwarded-for"] || "",
+            reqHeaderOrigin: req.headers.origin || "",
+            reqHeaderReferer: req.headers.referer || "",
+            reqHeaderUserAgent: req.headers["user-agent"]
         }));
         // cleanup timerTimeout
         clearTimeout(req.timerTimeout);
@@ -6505,10 +6544,10 @@ local.serverRespondTimeoutDefault = function (req, res, timeout) {
     );
     res.contentLength = 0;
     res.writeContentLength = res.writeContentLength || res.write;
-    res.write = function (chunk, encoding, callback) {
-        chunk = local.normalizeChunk(chunk);
-        res.contentLength += chunk.length;
-        res.writeContentLength(chunk, encoding, callback);
+    res.write = function (buf, encoding, callback) {
+        buf = local.bufferValidateAndCoerce(buf, typeof buf);
+        res.contentLength += buf.length;
+        res.writeContentLength(buf, encoding, callback);
     };
     res.on("error", onError);
     res.on("finish", onError);
@@ -6971,11 +7010,12 @@ local.templateRender = function (template, dict, opt) {
                     break;
                 case "padEnd":
                 case "padStart":
+                case "replace":
                 case "slice":
                     skip = ii + 2;
                     value = String(value)[fmt](
                         list[skip - 1],
-                        list[skip]
+                        list[skip].replace("\"\"", "")
                     );
                     break;
                 case "truncate":
@@ -8342,9 +8382,10 @@ if (globalThis.utility2_rollup) {
             local.fs.readFileSync(__dirname + "/README.md", "utf8").replace((
                 /<!doctype\u0020html>[\S\s]*?<\/html>\\n\\\n/
             ), function (match0) {
-                local.assetsDict[key] = local.templateRender(match0.replace((
+                match0 = match0.replace((
                     /\\n\\$/gm
-                ), "").replace(
+                ), "");
+                match0 = match0.replace(
                     "<script src=\"assets.app.js\"></script>\n",
                     (
                         "<script "
@@ -8354,17 +8395,22 @@ if (globalThis.utility2_rollup) {
                         + "<script "
                         + "src=\"assets.utility2.test.js\"></script>\n"
                     )
-                ).replace(
+                );
+                match0 = match0.replace(
                     "assets.example.js",
                     "assets.utility2.example.js"
-                ).replace(
+                );
+                match0 = match0.replace(
                     "assets.test.js",
                     "assets.utility2.test.js"
-                ).replace((
+                );
+                match0 = match0.replace((
                     /npm_package_/g
-                ), "").replace((
+                ), "");
+                match0 = match0.replace((
                     /<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g
-                ), "$1"), {
+                ), "$1");
+                local.assetsDict[key] = local.templateRender(match0, {
                     env: local.objectSetDefault({
                         version: "0.0.1"
                     }, require(__dirname + "/package.json")),
