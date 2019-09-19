@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2019.9.16)
+ * lib.utility2.js (2019.9.17)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -193,8 +193,7 @@
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser
-        && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScript === "function"
     );
     // init function
     local.assertOrThrow = function (passed, message) {
@@ -302,6 +301,26 @@
             }
         });
         return target;
+    };
+    local.querySelector = function (selectors) {
+    /*
+     * this function will return first dom-elem that match <selectors>
+     */
+        return (
+            typeof document === "object" && document
+            && typeof document.querySelector === "function"
+            && document.querySelector(selectors)
+        ) || {};
+    };
+    local.querySelectorAll = function (selectors) {
+    /*
+     * this function will return dom-elem-list that match <selectors>
+     */
+        return (
+            typeof document === "object" && document
+            && typeof document.querySelectorAll === "function"
+            && Array.from(document.querySelectorAll(selectors))
+        ) || [];
     };
     local.value = function (val) {
     /*
@@ -610,8 +629,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
     );\n\
     // init isWebWorker\n\
     local.isWebWorker = (\n\
-        local.isBrowser\n\
-        && typeof globalThis.importScript === "function"\n\
+        local.isBrowser && typeof globalThis.importScript === "function"\n\
     );\n\
     // init function\n\
     local.assertOrThrow = function (passed, message) {\n\
@@ -719,6 +737,26 @@ local.assetsDict["/assets.utility2.header.js"] = '\
             }\n\
         });\n\
         return target;\n\
+    };\n\
+    local.querySelector = function (selectors) {\n\
+    /*\n\
+     * this function will return first dom-elem that match <selectors>\n\
+     */\n\
+        return (\n\
+            typeof document === "object" && document\n\
+            && typeof document.querySelector === "function"\n\
+            && document.querySelector(selectors)\n\
+        ) || {};\n\
+    };\n\
+    local.querySelectorAll = function (selectors) {\n\
+    /*\n\
+     * this function will return dom-elem-list that match <selectors>\n\
+     */\n\
+        return (\n\
+            typeof document === "object" && document\n\
+            && typeof document.querySelectorAll === "function"\n\
+            && Array.from(document.querySelectorAll(selectors))\n\
+        ) || [];\n\
     };\n\
     local.value = function (val) {\n\
     /*\n\
@@ -1081,9 +1119,7 @@ pre {\n\
         if (\n\
             !evt.targetOnEvent\n\
             || evt.targetOnEvent.dataset.onevent === "domOnEventNop"\n\
-            || evt.target.closest(\n\
-                ".disabled, .readonly, [disabled], [readonly]"\n\
-            )\n\
+            || evt.target.closest(".disabled,.readonly")\n\
         ) {\n\
             return;\n\
         }\n\
@@ -1303,9 +1339,7 @@ if (!local.isBrowser) {\n\
 ["error", "log"].forEach(function (key) {\n\
     let elem;\n\
     let fnc;\n\
-    elem = document.querySelector(\n\
-        "#outputStdout1"\n\
-    );\n\
+    elem = local.querySelector("#outputStdout1");\n\
     if (!elem) {\n\
         return;\n\
     }\n\
@@ -4354,7 +4388,7 @@ local.domQuerySelectorAllTagName = function (selector) {
  */
     let set;
     set = new Set();
-    document.querySelectorAll(selector).forEach(function (elem) {
+    local.querySelectorAll(selector).forEach(function (elem) {
         set.add(elem.tagName);
     });
     return Array.from(set).sort();
@@ -4378,26 +4412,14 @@ local.domStyleValidate = function () {
         /^0\u0020(?:(body\u0020>\u0020)?(?:\.testReportDiv\u0020.+|\.x-istanbul\u0020.+|\.button|\.colorError|\.readonly|\.textarea|\.uiAnimateShake|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
     );
     tmp = [];
-    Array.from(
-        (
-            typeof document === "object"
-            && document
-            && typeof document.querySelector === "function"
-        )
-        ? document.querySelectorAll(
-            "style"
-        )
-        : []
-    ).map(function (elem, ii) {
+    local.querySelectorAll("style").map(function (elem, ii) {
         elem.innerHTML.replace((
             /\/\*[\S\s]*?\*\/|;|\}/g
         ), "\n").replace((
             /^([^\n\u0020@].*?)[,{:].*?$/gm
         ), function (match0, match1) {
             try {
-                ii = document.querySelectorAll(
-                    match1
-                ).length;
+                ii = local.querySelectorAll(match1).length;
             } catch (errCaught) {
                 console.error(errCaught);
             }
@@ -4441,35 +4463,37 @@ local.eventEmitterCreate = function (that = {}) {
     /*
      * this function will emit evt <type> with <msg>
      */
-        let list;
-        list = dict[type] || [];
-        list.forEach(function (listener) {
+        Array.from(dict[type] || []).forEach(function (listener) {
             listener(msg);
         });
     };
-    on = function (type, listener) {
+    on = function (type, listener, opt = {}) {
     /*
      * this function will listen to evt <type> with <listener>
      */
-        dict[type] = dict[type] || [];
-        dict[type].push(listener);
+        let isDone;
+        if (typeof listener === "function") {
+            dict[type] = dict[type] || [];
+            dict[type].push(
+                opt.once
+                ? function listener2(msg) {
+                    remove(type, listener2);
+                    if (!isDone) {
+                        isDone = true;
+                        listener(msg);
+                    }
+                }
+                : listener
+            );
+        }
         return that;
     };
-    once = function (type, listener) {
+    once = function (type, listener, opt = {}) {
     /*
      * this function will listen to evt <type> once with <listener>
      */
-        let isDone;
-        let listener2;
-        listener2 = function (msg) {
-            remove(type, listener2);
-            if (!isDone) {
-                isDone = true;
-                listener(msg);
-            }
-        };
-        on(type, listener2);
-        return that;
+        opt.once = true;
+        return on(type, listener, opt);
     };
     remove = function (type, listener) {
     /*
@@ -4684,7 +4708,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
                 /\$\$|\$/g
             ), "$$$$"));
         }
-        return match0.trimRight() + "\n\n";
+        return match0.trimEnd() + "\n\n";
     });
     // comment
     code2 = code;
@@ -4723,6 +4747,8 @@ local.jslintAutofixLocalFunction = function (code, file) {
         "functionOrNop",
         "nop",
         "objectAssignDefault",
+        "querySelector",
+        "querySelectorAll",
         "value",
         "valueOrEmptyList",
         "valueOrEmptyObject",
@@ -5009,55 +5035,34 @@ local.middlewareAssetsCached = function (req, res, next) {
 /*
  * this function will run middleware to serve cached-assets
  */
-    let opt;
-    opt = {};
-    local.gotoNext(opt, function (err, data) {
-        opt.result = opt.result || local.assetsDict[req.urlParsed.pathname];
-        if (opt.result === undefined) {
-            next(err);
+    if (!local.assetsDict.hasOwnProperty(req.urlParsed.pathname)) {
+        next();
+        return;
+    }
+    // do not cache if headers already sent or url has '?' search indicator
+    if (!(res.headersSent || req.url.indexOf("?") >= 0)) {
+        // init serverResponseHeaderLastModified
+        local.serverResponseHeaderLastModified = (
+            local.serverResponseHeaderLastModified
+            // resolve to 1000 ms
+            || new Date(new Date().toUTCString())
+        );
+        // respond with 304 If-Modified-Since serverResponseHeaderLastModified
+        if (
+            new Date(req.headers["if-modified-since"])
+            >= local.serverResponseHeaderLastModified
+        ) {
+            res.statusCode = 304;
+            res.end();
             return;
         }
-        switch (opt.gotoState) {
-        case 1:
-            // skip gzip
-            if (res.headersSent || !(
-                /\bgzip\b/
-            ).test(req.headers["accept-encoding"])) {
-                opt.gotoState += 1;
-                opt.gotoNext();
-                return;
-            }
-            // gzip and cache result
-            local.taskCreateCached({
-                cacheDict: "middlewareAssetsCachedGzip",
-                key: req.urlParsed.pathname
-            }, function (onError) {
-                local.zlib.gzip(opt.result, function (err, data) {
-                    onError(err, !err && data.toString("base64"));
-                });
-            }, opt.gotoNext);
-            break;
-        case 2:
-            // set gzip header
-            opt.result = local.base64ToBuffer(data);
-            res.setHeader("Content-Encoding", "gzip");
-            res.setHeader("Content-Length", opt.result.length);
-            opt.gotoNext();
-            break;
-        case 3:
-            local.middlewareCacheControlLastModified(
-                req,
-                res,
-                opt.gotoNext
-            );
-            break;
-        case 4:
-            res.end(opt.result);
-            break;
-        }
-    });
-    opt.gotoState = 0;
-    opt.gotoNext();
+        res.setHeader("Cache-Control", "no-cache");
+        res.setHeader(
+            "Last-Modified",
+            local.serverResponseHeaderLastModified.toUTCString()
+        );
+    }
+    res.end(local.assetsDict[req.urlParsed.pathname]);
 };
 
 local.middlewareBodyRead = function (req, ignore, next) {
@@ -5085,38 +5090,6 @@ local.middlewareBodyRead = function (req, ignore, next) {
     }).on("error", next);
 };
 
-local.middlewareCacheControlLastModified = function (req, res, next) {
-/*
- * this function will run middleware to update res-header last-modified
- */
-    // do not cache if headers already sent or url has '?' search indicator
-    if (res.headersSent || req.url.indexOf("?") >= 0) {
-        next();
-        return;
-    }
-    // init serverResponseHeaderLastModified
-    local.serverResponseHeaderLastModified = (
-        local.serverResponseHeaderLastModified
-        // resolve to 1000 ms
-        || new Date(new Date().toUTCString())
-    );
-    // respond with 304 If-Modified-Since serverResponseHeaderLastModified
-    if (
-        new Date(req.headers["if-modified-since"])
-        >= local.serverResponseHeaderLastModified
-    ) {
-        res.statusCode = 304;
-        res.end();
-        return;
-    }
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader(
-        "Last-Modified",
-        local.serverResponseHeaderLastModified.toUTCString()
-    );
-    next();
-};
-
 local.middlewareError = function (err, req, res) {
 /*
  * this function will run middleware to handle errors
@@ -5142,40 +5115,30 @@ local.middlewareFileServer = function (req, res, next) {
 /*
  * this function will run middleware to serve files
  */
+    let file;
     if (req.method !== "GET" || local.isBrowser) {
         next();
         return;
     }
-    req.urlFile = local.value(process.cwd() + req.urlParsed.pathname.replace((
-        // security - disable parent directory lookup
-        /.*\/\.\.\//g
-    ), "/")).replace((
-        // replace trailing '/' with '/index.html'
+    // security - disable parent directory lookup
+    file = local.path.resolve("/", req.urlParsed.pathname).slice(1);
+    // replace trailing '/' with '/index.html'
+    file = file.replace((
         /\/$/
     ), "/index.html");
-    // serve file from cache
-    local.taskCreateCached({
-        cacheDict: "middlewareFileServer",
-        key: req.urlFile
-    // run background-task to re-cache file
-    }, function (onError) {
-        local.fs.readFile(req.urlFile, function (err, data) {
-            onError(err, data && local.base64FromBuffer(data));
-        });
-    }, function (err, data) {
+    local.fs.readFile(file, function (err, data) {
         // default to next
         if (err) {
             next();
             return;
         }
-        // init res-header content-type
+        // respond with data
         local.serverRespondHeadSet(req, res, null, {
             "Content-Type": local.contentTypeDict[(
                 /\.[^.]*?$|$/m
-            ).exec(req.urlParsed.pathname)[0]]
+            ).exec(file)[0]]
         });
-        // serve file from cache
-        res.end(local.base64ToBuffer(data));
+        res.end(data);
     });
 };
 
@@ -5298,7 +5261,7 @@ local.middlewareInit = function (req, res, next) {
 local.middlewareJsonpStateInit = function (req, res, next) {
 /*
  * this function will run middleware to
- * serve the browser-state wrapped in given jsonp-callback
+ * serve browser-state wrapped in given jsonp-callback
  */
     let state;
     if (!(req.stateInit || (
@@ -5340,34 +5303,35 @@ local.middlewareJsonpStateInit = function (req, res, next) {
     );
 };
 
-local.moduleDirname = function (module, modulePathList) {
+local.moduleDirname = function (module, pathList) {
 /*
- * this function will search modulePathList for the module's __dirname
+ * this function will search <pathList> for <module>'s __dirname
  */
     let result;
     // search process.cwd()
     if (!module || module === "." || module.indexOf("/") >= 0) {
         return require("path").resolve(process.cwd(), module || "");
     }
-    // search modulePathList
-    [
-        "node_modules"
-    ].concat(modulePathList).concat(require("module").globalPaths).concat([
-        process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
-    ]).some(function (modulePath) {
+    // search pathList
+    Array.from([
+        pathList,
+        require("module").globalPaths,
+        [
+            process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
+        ]
+    ]).flat().some(function (path) {
         try {
             result = require("path").resolve(
                 process.cwd(),
-                modulePath + "/" + module
+                path + "/" + module
             );
             result = require("fs").statSync(result).isDirectory() && result;
             return result;
         } catch (ignore) {
-            result = null;
+            result = "";
         }
-        return result;
     });
-    return result || "";
+    return result;
 };
 
 local.normalizeJwt = function (data) {
@@ -5525,8 +5489,7 @@ local.onErrorThrow = function (err) {
 
 local.onErrorWithStack = function (onError) {
 /*
- * this function will create wrapper around <onError>
- * that will append current-stack to err.stack
+ * this function will wrap <onError> with wrapper preserving current-stack
  */
     let onError2;
     let stack;
@@ -6126,7 +6089,7 @@ local.requireReadme = function () {
             /^#!\//
         ), "// ")
     );
-    local.objectSetOverride(local.assetsDict, module.exports.assetsDict);
+    Object.assign(local.assetsDict, module.exports.assetsDict);
     local.assetsDict["/assets." + local.env.npm_package_nameLib + ".js"] = (
         local.istanbulInstrumentInPackage(
             local.assetsDict[
@@ -6669,7 +6632,7 @@ local.stringTruncate = function (text, maxLength) {
  */
     return (
         text.length > maxLength
-        ? text.slice(0, maxLength - 3).trimRight() + "..."
+        ? text.slice(0, maxLength - 3).trimEnd() + "..."
         : text
     );
 };
@@ -6688,119 +6651,6 @@ local.stringUniqueKey = function (text) {
         ).toString(36).slice(1);
     } while (text.indexOf(key) >= 0);
     return key;
-};
-
-local.taskCreate = function (opt, onTask, onError) {
-/*
- * this function will create the task onTask named <opt>.key,
- * if it does not exist, and push onError to its onErrorList
- */
-    let task;
-    // init task
-    local.taskOnTaskDict[opt.key] = (
-        local.taskOnTaskDict[opt.key]
-        || {
-            onErrorList: []
-        }
-    );
-    task = local.taskOnTaskDict[opt.key];
-    // push callback onError to the task
-    if (onError) {
-        onError = local.onErrorWithStack(onError);
-        task.onErrorList.push(onError);
-    }
-    // if task exists, then return it
-    if (!onTask || task.onTask) {
-        return task;
-    }
-    task.onDone = function (err, data, meta) {
-        // if isDone, then do nothing
-        if (task.isDone) {
-            return;
-        }
-        task.isDone = true;
-        // cleanup timerTimeout
-        clearTimeout(task.timerTimeout);
-        // cleanup task
-        delete local.taskOnTaskDict[opt.key];
-        // preserve err.message and err.stack
-        task.result = JSON.stringify([
-            (
-                (err && err.stack)
-                ? Object.assign(local.jsonCopy(err), {
-                    message: err.message,
-                    name: err.name,
-                    stack: err.stack
-                })
-                : err
-            ), data, meta
-        ]);
-        // pass result to callbacks in onErrorList
-        task.onErrorList.forEach(function (onError) {
-            onError.apply(null, JSON.parse(task.result));
-        });
-    };
-    // init timerTimeout
-    task.timerTimeout = local.onTimeout(
-        task.onDone,
-        opt.timeout || local.timeoutDefault,
-        "taskCreate " + opt.key
-    );
-    task.onTask = onTask;
-    // run onTask
-    task.onTask(task.onDone);
-    return task;
-};
-
-local.taskCreateCached = function (opt, onTask, onError) {
-/*
- * this function will
- * 1. if cache-hit, then call onError with cacheValue
- * 2. run onTask in background to update cache
- * 3. save onTask's result to cache
- * 4. if cache-miss, then call onError with onTask's result
- */
-    local.gotoNext(opt, function (err, data) {
-        switch (opt.gotoState) {
-        // 1. if cache-hit, then call onError with cacheValue
-        case 1:
-            // read cacheValue from memory-cache
-            local.cacheDict[opt.cacheDict] = (
-                local.cacheDict[opt.cacheDict]
-                || {}
-            );
-            opt.cacheValue = local.cacheDict[opt.cacheDict][opt.key];
-            if (opt.cacheValue) {
-                // call onError with cacheValue
-                opt.modeCacheHit = true;
-                onError(null, JSON.parse(opt.cacheValue));
-                if (!opt.modeCacheUpdate) {
-                    break;
-                }
-            }
-            // run background-task with lower priority for cache-hit
-            setTimeout(opt.gotoNext, opt.modeCacheHit && opt.cacheTtl);
-            break;
-        // 2. run onTask in background to update cache
-        case 2:
-            local.taskCreate(opt, onTask, opt.gotoNext);
-            break;
-        default:
-            // 3. save onTask's result to cache
-            // JSON.stringify data to prevent side-effects on cache
-            opt.cacheValue = JSON.stringify(data);
-            if (!err && opt.cacheValue) {
-                local.cacheDict[opt.cacheDict][opt.key] = opt.cacheValue;
-            }
-            // 4. if cache-miss, then call onError with onTask's result
-            if (!opt.modeCacheHit) {
-                onError(err, opt.cacheValue && JSON.parse(opt.cacheValue));
-            }
-            local.functionOrNop(opt.onCacheWrite)();
-        }
-    });
-    opt.gotoState = 0;
-    opt.gotoNext();
 };
 
 local.templateRender = function (template, dict, opt, ii) {
@@ -6836,7 +6686,7 @@ local.templateRender = function (template, dict, opt, ii) {
     renderPartial = function (match0, helper, key, partial) {
         switch (helper) {
         case "each":
-        case "eachTrimRightComma":
+        case "eachTrimEndComma":
             val = getVal(key);
             val = (
                 Array.isArray(val)
@@ -6847,8 +6697,8 @@ local.templateRender = function (template, dict, opt, ii) {
                 : ""
             );
             // remove trailing-comma from last elem
-            if (helper === "eachTrimRightComma") {
-                val = val.trimRight().replace((
+            if (helper === "eachTrimEndComma") {
+                val = val.trimEnd().replace((
                     /,$/
                 ), "");
             }
@@ -6960,7 +6810,7 @@ local.templateRender = function (template, dict, opt, ii) {
                         val = val.slice(
                             0,
                             Math.max(list[skip] - 3, 0)
-                        ).trimRight() + "...";
+                        ).trimEnd() + "...";
                     }
                     break;
                 // default to String.prototype[fmt]()
@@ -7378,7 +7228,7 @@ local.testReportMerge = function (testReport1, testReport2) {
                 return testPlatform.testCaseList.length;
             }).map(function (testPlatform, ii) {
                 errorStackList = [];
-                return local.objectSetOverride(testPlatform, {
+                return Object.assign(testPlatform, {
                     errorStackList,
                     name: testPlatform.name,
                     screenshot: testPlatform.screenshot,
@@ -7426,22 +7276,20 @@ local.testRunBrowser = function () {
  * this function will run browser-tests
  */
     // hide browser-tests
-    if (document.querySelector("#htmlTestReport1").style.maxHeight !== "0px") {
-        local.uiAnimateSlideUp(document.querySelector("#htmlTestReport1"));
-        document.querySelector(
+    if (local.querySelector("#htmlTestReport1").style.maxHeight !== "0px") {
+        local.uiAnimateSlideUp(local.querySelector("#htmlTestReport1"));
+        local.querySelector(
             "#buttonTestRun1"
         ).textContent = "run browser-tests";
         return;
     }
     // show browser-tests
-    local.uiAnimateSlideDown(document.querySelector("#htmlTestReport1"));
-    document.querySelector(
-        "#buttonTestRun1"
-    ).textContent = "hide browser-tests";
+    local.uiAnimateSlideDown(local.querySelector("#htmlTestReport1"));
+    local.querySelector("#buttonTestRun1").textContent = "hide browser-tests";
     local.modeTest = 1;
     local.testRunDefault(local);
     // reset output
-    document.querySelectorAll(".onevent-reset-output").forEach(function (elem) {
+    local.querySelectorAll(".onevent-reset-output").forEach(function (elem) {
         elem.textContent = "";
     });
 };
@@ -7552,24 +7400,18 @@ local.testRunDefault = function (opt) {
         }
     });
     local.testReportMerge(testReport, {});
-    if (local.isBrowser) {
-        document.querySelectorAll(
-            "#htmlTestReport1"
-        ).forEach(function (elem) {
-            local.uiAnimateSlideDown(elem);
-            elem.innerHTML = local.testReportMerge(testReport, {});
-        });
-    }
+    local.querySelectorAll("#htmlTestReport1").forEach(function (elem) {
+        local.uiAnimateSlideDown(elem);
+        elem.innerHTML = local.testReportMerge(testReport, {});
+    });
     local.emit("utility2.testRunStart", testReport);
     // testRunProgressUpdate every 2000 ms until isDone
     timerInterval = setInterval(function () {
         // update testPlatform.timeElapsed
         local.timeElapsedPoll(testPlatform);
-        if (local.isBrowser) {
-            local.valueOrEmptyObject(document.querySelector(
-                "#htmlTestReport1"
-            )).innerHTML = local.testReportMerge(testReport, {});
-        }
+        local.querySelector(
+            "#htmlTestReport1"
+        ).innerHTML = local.testReportMerge(testReport, {});
         local.emit("utility2.testRunProgressUpdate", testReport);
         // cleanup timerInterval
         if (!testReport.testsPending) {
@@ -8208,9 +8050,7 @@ globalThis.utility2_onReadyAfter = (
      * this function will call onError when utility2_onReadyBefore.counter === 0
      */
         globalThis.utility2_onReadyBefore.counter += 1;
-        local.taskCreate({
-            key: "globalThis.utility2_onReadyAfter"
-        }, null, onError);
+        local.once("utility2_onReadyAfter", onError);
         setTimeout(globalThis.utility2_onReadyBefore);
         return onError;
     }
@@ -8220,11 +8060,7 @@ globalThis.utility2_onReadyBefore = (
     /*
      * this function will keep track of utility2_onReadyBefore.counter
      */
-        local.taskCreate({
-            key: "globalThis.utility2_onReadyAfter"
-        }, function (onError) {
-            onError(err);
-        }, local.onErrorThrow);
+        local.emit("utility2_onReadyAfter", err);
     })
 );
 globalThis.utility2_onReadyAfter(local.nop);

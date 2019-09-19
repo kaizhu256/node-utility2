@@ -183,8 +183,7 @@
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser
-        && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScript === "function"
     );
     // init function
     local.assertOrThrow = function (passed, message) {
@@ -292,6 +291,26 @@
             }
         });
         return target;
+    };
+    local.querySelector = function (selectors) {
+    /*
+     * this function will return first dom-elem that match <selectors>
+     */
+        return (
+            typeof document === "object" && document
+            && typeof document.querySelector === "function"
+            && document.querySelector(selectors)
+        ) || {};
+    };
+    local.querySelectorAll = function (selectors) {
+    /*
+     * this function will return dom-elem-list that match <selectors>
+     */
+        return (
+            typeof document === "object" && document
+            && typeof document.querySelectorAll === "function"
+            && Array.from(document.querySelectorAll(selectors))
+        ) || [];
     };
     local.value = function (val) {
     /*
@@ -2787,126 +2806,6 @@ local.testCase_stringUniqueKey_default = function (opt, onError) {
     onError(null, opt);
 };
 
-local.testCase_taskCreateCached_default = function (opt, onError) {
-/*
- * this function will test taskCreateCached's default handling-behavior
- */
-    let cacheValue;
-    let onTask;
-    let option2;
-    opt = {};
-    local.gotoNext(opt, function (err, data) {
-        switch (opt.gotoState) {
-        // test no cache handling-behavior
-        case 1:
-            onTask = function (onError) {
-                onError(null, cacheValue);
-            };
-            opt.cacheDict = "testCase_taskCreateCached_default";
-            opt.key = "memory";
-            // cleanup memory-cache
-            local.cacheDict[opt.cacheDict] = null;
-            cacheValue = "aa";
-            option2 = {
-                cacheDict: opt.cacheDict,
-                key: opt.key,
-                // test onCacheWrite handling-behavior
-                onCacheWrite: opt.gotoNext
-            };
-            local.taskCreateCached(option2, onTask, opt.gotoNext);
-            break;
-        case 2:
-            // validate data
-            local.assertJsonEqual(data, "aa");
-            // validate no cache-hit
-            local.assertOrThrow(!option2.modeCacheHit, option2.modeCacheHit);
-            break;
-        // test cache with update handling-behavior
-        case 3:
-            cacheValue = "bb";
-            option2 = {
-                cacheDict: opt.cacheDict,
-                key: opt.key,
-                // test modeCacheUpdate handling-behavior
-                modeCacheUpdate: true,
-                // test onCacheWrite handling-behavior
-                onCacheWrite: opt.gotoNext
-            };
-            local.taskCreateCached(option2, onTask, opt.gotoNext);
-            break;
-        case 4:
-            // validate data
-            local.assertJsonEqual(data, "aa");
-            // validate modeCacheHit
-            local.assertJsonEqual(option2.modeCacheHit, true);
-            break;
-        // test cache handling-behavior
-        case 5:
-            option2 = {
-                cacheDict: opt.cacheDict,
-                key: opt.key
-            };
-            local.taskCreateCached(option2, onTask, opt.gotoNext);
-            break;
-        case 6:
-            // validate data
-            local.assertJsonEqual(data, "bb");
-            // validate modeCacheHit
-            local.assertJsonEqual(option2.modeCacheHit, true);
-            opt.gotoNext();
-            break;
-        default:
-            onError(err, opt);
-        }
-    });
-    opt.gotoState = 0;
-    opt.gotoNext();
-};
-
-local.testCase_taskCreate_multipleCallback = function (opt, onError) {
-/*
- * this function will test taskCreate's multiple-callback handling-behavior
- */
-    opt = {
-        counter: 0,
-        key: "testCase_taskCreate_multiCallback"
-    };
-    local.taskCreate(opt, function (onError) {
-        onError(null, opt);
-        // test multiple-callback handling-behavior
-        onError(null, opt);
-    }, function () {
-        opt.counter += 1;
-    });
-    // validate counter incremented once
-    local.assertJsonEqual(opt.counter, 1);
-    onError(null, opt);
-};
-
-local.testCase_taskCreate_upsert = function (opt, onError) {
-/*
- * this function will test taskCreate's upsert handling-behavior
- */
-    opt = {
-        counter: 0,
-        key: "testCase_taskCreate_upsert"
-    };
-    // test upsert handling-behavior
-    [
-        null, null
-    ].forEach(function () {
-        local.taskCreate(opt, function (onError) {
-            opt.counter += 1;
-            setTimeout(onError);
-        });
-    });
-    // validate counter incremented once
-    setTimeout(function () {
-        local.assertJsonEqual(opt.counter, 1);
-        onError(null, opt);
-    });
-};
-
 local.testCase_templateRender_default = function (opt, onError) {
 /*
  * this function will test templateRender's default handling-behavior
@@ -2971,7 +2870,7 @@ local.testCase_templateRender_default = function (opt, onError) {
             "{{#undefined aa}}\n"
             + "list1{{#each list1}}\n"
             + "    aa - {{aa}}\n"
-            + "    list2{{#eachTrimRightComma list2}}\n"
+            + "    list2{{#eachTrimEndComma list2}}\n"
             + "        {{#this/ notHtmlSafe jsonStringify}}\n"
             + "        bb - {{bb}}\n"
             + "        {{#if bb}}\n"
@@ -2983,7 +2882,7 @@ local.testCase_templateRender_default = function (opt, onError) {
             + "        unless\n"
             + "        {{/unless bb}}\n"
             + "        ,\n"
-            + "    {{/eachTrimRightComma list2}}\n"
+            + "    {{/eachTrimEndComma list2}}\n"
             + "{{/each list1}}\n"
             + "{{/undefined aa}}\n"
         ), {

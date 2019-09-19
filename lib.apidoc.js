@@ -193,8 +193,7 @@
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser
-        && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScript === "function"
     );
     // init function
     local.assertOrThrow = function (passed, message) {
@@ -302,6 +301,26 @@
             }
         });
         return target;
+    };
+    local.querySelector = function (selectors) {
+    /*
+     * this function will return first dom-elem that match <selectors>
+     */
+        return (
+            typeof document === "object" && document
+            && typeof document.querySelector === "function"
+            && document.querySelector(selectors)
+        ) || {};
+    };
+    local.querySelectorAll = function (selectors) {
+    /*
+     * this function will return dom-elem-list that match <selectors>
+     */
+        return (
+            typeof document === "object" && document
+            && typeof document.querySelectorAll === "function"
+            && Array.from(document.querySelectorAll(selectors))
+        ) || [];
     };
     local.value = function (val) {
     /*
@@ -556,34 +575,35 @@ local.cliRun = function (opt) {
     local.cliDict._default();
 };
 
-local.moduleDirname = function (module, modulePathList) {
+local.moduleDirname = function (module, pathList) {
 /*
- * this function will search modulePathList for the module's __dirname
+ * this function will search <pathList> for <module>'s __dirname
  */
     let result;
     // search process.cwd()
     if (!module || module === "." || module.indexOf("/") >= 0) {
         return require("path").resolve(process.cwd(), module || "");
     }
-    // search modulePathList
-    [
-        "node_modules"
-    ].concat(modulePathList).concat(require("module").globalPaths).concat([
-        process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
-    ]).some(function (modulePath) {
+    // search pathList
+    Array.from([
+        pathList,
+        require("module").globalPaths,
+        [
+            process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
+        ]
+    ]).flat().some(function (path) {
         try {
             result = require("path").resolve(
                 process.cwd(),
-                modulePath + "/" + module
+                path + "/" + module
             );
             result = require("fs").statSync(result).isDirectory() && result;
             return result;
         } catch (ignore) {
-            result = null;
+            result = "";
         }
-        return result;
     });
-    return result || "";
+    return result;
 };
 
 local.objectSetDefault = function (dict, defaults, depth) {
@@ -789,7 +809,7 @@ local.templateRender = function (template, dict, opt, ii) {
     renderPartial = function (match0, helper, key, partial) {
         switch (helper) {
         case "each":
-        case "eachTrimRightComma":
+        case "eachTrimEndComma":
             val = getVal(key);
             val = (
                 Array.isArray(val)
@@ -800,8 +820,8 @@ local.templateRender = function (template, dict, opt, ii) {
                 : ""
             );
             // remove trailing-comma from last elem
-            if (helper === "eachTrimRightComma") {
-                val = val.trimRight().replace((
+            if (helper === "eachTrimEndComma") {
+                val = val.trimEnd().replace((
                     /,$/
                 ), "");
             }
@@ -913,7 +933,7 @@ local.templateRender = function (template, dict, opt, ii) {
                         val = val.slice(
                             0,
                             Math.max(list[skip] - 3, 0)
-                        ).trimRight() + "...";
+                        ).trimEnd() + "...";
                     }
                     break;
                 // default to String.prototype[fmt]()
@@ -997,7 +1017,7 @@ local.apidocCreate = function (opt) {
     let readExample;
     let tmp;
     let toString;
-    let trimLeft;
+    let trimStart;
     elemCreate = function (module, prefix, key) {
     /*
      * this function will create the apidoc-elem in given <module>
@@ -1026,7 +1046,7 @@ local.apidocCreate = function (opt) {
         }
         // init source
         elem.source = local.stringHtmlSafe(
-            trimLeft(toString(module[key])) || "n/a"
+            trimStart(toString(module[key])) || "n/a"
         ).replace((
             /\([\S\s]*?\)/
         ), function (match0) {
@@ -1049,13 +1069,13 @@ local.apidocCreate = function (opt) {
             example.replace(
                 new RegExp("((?:\n.*?){8}\\.)(" + key + ")(\\((?:.*?\n){8})"),
                 function (ignore, match1, match2, match3) {
-                    elem.example = "..." + trimLeft(
+                    elem.example = "..." + trimStart(
                         local.stringHtmlSafe(match1)
                         + "<span class=\"apidocCodeKeywordSpan\">"
                         + local.stringHtmlSafe(match2)
                         + "</span>"
                         + local.stringHtmlSafe(match3)
-                    ).trimRight() + "\n...";
+                    ).trimEnd() + "\n...";
                     return "";
                 }
             );
@@ -1095,9 +1115,9 @@ local.apidocCreate = function (opt) {
         }, console.error);
         return result;
     };
-    trimLeft = function (text) {
+    trimStart = function (text) {
     /*
-     * this function will normalize the whitespace around the text
+     * this function will normalize whitespace before <text>
      */
         let whitespace;
         whitespace = "";
@@ -1116,7 +1136,7 @@ local.apidocCreate = function (opt) {
         ), function (match0) {
             return match0.replace((
                 /(.{128}(?:\b|\w+))/g
-            ), "$1\n").trimRight();
+            ), "$1\n").trimEnd();
         });
         return text;
     };

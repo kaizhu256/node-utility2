@@ -855,7 +855,7 @@ require("fs").readFileSync("README.md", "utf8").replace((
     }
     require("fs").writeFileSync(
         "tmp/README." + match2,
-        match0.trimRight() + "\n"
+        match0.trimEnd() + "\n"
     );
 });
 }());
@@ -2782,7 +2782,7 @@ result = result.replace((
     /\\u[0-9a-f]{4}/g
 ), function (match0) {
     return String.fromCharCode("0x" + match0.slice(-4));
-}).trimRight().split("\n").map(function (line) {
+}).trimEnd().split("\n").map(function (line) {
     return line.replace((
         /.{0,96}/g
     ), wordwrap).replace((
@@ -4629,34 +4629,35 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
     ), replacer, space);
 };
 
-local.moduleDirname = function (module, modulePathList) {
+local.moduleDirname = function (module, pathList) {
 /*
- * this function will search modulePathList for the module'"'"'s __dirname
+ * this function will search <pathList> for <module>'"'"'s __dirname
  */
     let result;
     // search process.cwd()
     if (!module || module === "." || module.indexOf("/") >= 0) {
         return require("path").resolve(process.cwd(), module || "");
     }
-    // search modulePathList
-    [
-        "node_modules"
-    ].concat(modulePathList).concat(require("module").globalPaths).concat([
-        process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
-    ]).some(function (modulePath) {
+    // search pathList
+    Array.from([
+        pathList,
+        require("module").globalPaths,
+        [
+            process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
+        ]
+    ]).flat().some(function (path) {
         try {
             result = require("path").resolve(
                 process.cwd(),
-                modulePath + "/" + module
+                path + "/" + module
             );
             result = require("fs").statSync(result).isDirectory() && result;
             return result;
         } catch (ignore) {
-            result = null;
+            result = "";
         }
-        return result;
     });
-    return result || "";
+    return result;
 };
 
 local.objectSetDefault = function (dict, defaults, depth) {
@@ -4762,8 +4763,7 @@ local.onErrorThrow = function (err) {
 
 local.onErrorWithStack = function (onError) {
 /*
- * this function will create wrapper around <onError>
- * that will append current-stack to err.stack
+ * this function will wrap <onError> with wrapper preserving current-stack
  */
     let onError2;
     let stack;

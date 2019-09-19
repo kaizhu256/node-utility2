@@ -56,14 +56,10 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### todo
-- add isomorphic function local.querySelector, local.querySelectorAll
-- remove little-used zlib-support
-- backport s.p.trimStart, s.p.trimEnd to node v8.x
-- jslint - autofix - break querySelector and querySelectorAll into multiple-lines
+- replace function local.objectSetOverride with Object.assign
 - jslint - fix off-by-one line-error
 - rename message to msg
 - remove excessive "the" from comments
-- replace taskCreateCached with debounce
 - rename counter to cnt
 - replace db-lite with sql.js
 - replace uglifyjs-lite with terser-lite (v2.8.29)
@@ -73,26 +69,13 @@ this zero-dependency package will provide high-level functions to to build, test
 - add server stress-test using puppeteer
 - none
 
-#### changelog 2019.9.16
-- npm publish 2019.9.16
-- update function templateRender with counter #ii/
-- rewrite function window.domOnEventDelegateDict.domOnEventDelegate's handle-evt-keyup to detect change in input, textarea
-- move utility2.testRunXxx evt-handlers from example.js to function testRunDefault
-- streamline evt-handling in example.js
-- rename assets.example.begin.js to assets.utility2.header.js
-- add replace-string-operation to function templateRender
-- merge polyfills into assets.example.begin.js
-- rename bff and chunk to buf
-- create function eventEmitterCreate
-- merge class _http.IncomingMessage, _http.ServerResponse into function _http.request
-- jslint - remove unexpected_a hacks
-- jslint - reintroduce flag option.nomen to ignore bad_property_a
-- jslint - migrate from let-declaration to var-declaration
-- merge function local.streamReadAll into local.middlewareBodyRead
-- remove little-used shell-function from lib.utility2.sh
-- rename function assertThrow to assertOrThrow
-- jslint - rename errText to errMsg
-- inline lib.puppeteer.js into assets.app.js
+#### changelog 2019.9.17
+- npm publish 2019.9.17
+- replace functions local.taskCreate, local.taskCreateCached with event-emitter
+- rename trimLeft to trimStart, and trimRight to trimEnd
+- add isomorphic function local.querySelector, local.querySelectorAll
+- merge function local.middlewareCacheControlLastModified into local.middlewareAssetsCached
+- remove little-used http-server-zlib-compression
 - none
 
 #### this package requires
@@ -335,8 +318,7 @@ instruction
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser
-        && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScript === "function"
     );
     // init function
     local.assertOrThrow = function (passed, message) {
@@ -444,6 +426,26 @@ instruction
             }
         });
         return target;
+    };
+    local.querySelector = function (selectors) {
+    /*
+     * this function will return first dom-elem that match <selectors>
+     */
+        return (
+            typeof document === "object" && document
+            && typeof document.querySelector === "function"
+            && document.querySelector(selectors)
+        ) || {};
+    };
+    local.querySelectorAll = function (selectors) {
+    /*
+     * this function will return dom-elem-list that match <selectors>
+     */
+        return (
+            typeof document === "object" && document
+            && typeof document.querySelectorAll === "function"
+            && Array.from(document.querySelectorAll(selectors))
+        ) || [];
     };
     local.value = function (val) {
     /*
@@ -612,9 +614,7 @@ if (!local.isBrowser) {
 ["error", "log"].forEach(function (key) {
     let elem;
     let fnc;
-    elem = document.querySelector(
-        "#outputStdout1"
-    );
+    elem = local.querySelector("#outputStdout1");
     if (!elem) {
         return;
     }
@@ -970,9 +970,7 @@ pre {\n\
         if (\n\
             !evt.targetOnEvent\n\
             || evt.targetOnEvent.dataset.onevent === "domOnEventNop"\n\
-            || evt.target.closest(\n\
-                ".disabled, .readonly, [disabled], [readonly]"\n\
-            )\n\
+            || evt.target.closest(".disabled,.readonly")\n\
         ) {\n\
             return;\n\
         }\n\
@@ -1147,34 +1145,31 @@ utility2-comment -->\n\
 <div id="htmlCoverageReport1"></div>\n\
 <script>\n\
 /* jslint utility2:true */\n\
-window.addEventListener("load", function () {\n\
+window.addEventListener("load", function (local) {\n\
 "use strict";\n\
-let htmlTestReport2;\n\
-let local;\n\
-document.querySelectorAll(\n\
+local = window.utility2;\n\
+local.querySelectorAll(\n\
     "#buttonTestRun1, #htmlTestReport1"\n\
 ).forEach(function (elem) {\n\
     elem.style.display = "none";\n\
 });\n\
-htmlTestReport2 = document.querySelector("#htmlTestReport2");\n\
-local = window.utility2;\n\
 local.domOnEventInputChange = function (evt) {\n\
     switch (evt.type + "." + evt.target.id) {\n\
     case "click.buttonJslintAutofix1":\n\
     case "keyup.inputTextarea1":\n\
         // jslint #inputTextarea1\n\
-        local.jslintAndPrint(document.querySelector(\n\
+        local.jslintAndPrint(local.querySelector(\n\
             "#inputTextarea1"\n\
         ).value, "inputTextarea1.js", {\n\
             autofix: evt.target.id === "buttonJslintAutofix1",\n\
             conditional: evt.target.id !== "buttonJslintAutofix1"\n\
         });\n\
         if (local.jslint.jslintResult.autofix) {\n\
-            document.querySelector(\n\
+            local.querySelector(\n\
                 "#inputTextarea1"\n\
             ).value = local.jslint.jslintResult.code;\n\
         }\n\
-        document.querySelector(\n\
+        local.querySelector(\n\
             "#outputJslintPre1"\n\
         ).textContent = local.jslint.jslintResult.errMsg.replace((\n\
             /\\u001b\\[\\d*m/g\n\
@@ -1185,14 +1180,14 @@ local.domOnEventInputChange = function (evt) {\n\
         } catch (ignore) {}\n\
         // try to cover and eval #inputTextarea1\n\
         try {\n\
-            document.querySelector(\n\
+            local.querySelector(\n\
                 "#outputTextarea1"\n\
             ).value = local.istanbul.instrumentSync(\n\
-                document.querySelector("#inputTextarea1").value,\n\
+                local.querySelector("#inputTextarea1").value,\n\
                 "/inputTextarea1.js"\n\
             );\n\
             eval( // jslint ignore:line\n\
-                document.querySelector("#outputTextarea1").value\n\
+                local.querySelector("#outputTextarea1").value\n\
             );\n\
         } catch (errCaught) {\n\
             console.error(errCaught);\n\
@@ -1202,14 +1197,16 @@ local.domOnEventInputChange = function (evt) {\n\
 };\n\
 // handle evt\n\
 local.on("utility2.testRunEnd", function () {\n\
-    document.querySelector(\n\
+    local.querySelector(\n\
         "#htmlCoverageReport1"\n\
     ).innerHTML = local.istanbul.coverageReportCreate({\n\
         coverage: globalThis.__coverage__\n\
     });\n\
 });\n\
 local.on("utility2.testRunProgressUpdate", function (testReport) {\n\
-    htmlTestReport2.innerHTML = local.testReportMerge(testReport, {});\n\
+    local.querySelector(\n\
+        "#htmlTestReport2"\n\
+    ).innerHTML = local.testReportMerge(testReport, {});\n\
 });\n\
 local.domOnEventInputChange({\n\
     target: {\n\
@@ -1419,9 +1416,9 @@ local.http.createServer(function (req, res) {
         "2019.09.06 jslint-lite",
         "2019.09.14 swgg",
         "2019.09.15 istanbul-lite master",
-        "2019.09.07 utility2"
+        "2019.09.16 utility2"
     ],
-    "version": "2019.9.16"
+    "version": "2019.9.17"
 }
 ```
 

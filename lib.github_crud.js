@@ -193,8 +193,7 @@
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser
-        && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScript === "function"
     );
     // init function
     local.assertOrThrow = function (passed, message) {
@@ -302,6 +301,26 @@
             }
         });
         return target;
+    };
+    local.querySelector = function (selectors) {
+    /*
+     * this function will return first dom-elem that match <selectors>
+     */
+        return (
+            typeof document === "object" && document
+            && typeof document.querySelector === "function"
+            && document.querySelector(selectors)
+        ) || {};
+    };
+    local.querySelectorAll = function (selectors) {
+    /*
+     * this function will return dom-elem-list that match <selectors>
+     */
+        return (
+            typeof document === "object" && document
+            && typeof document.querySelectorAll === "function"
+            && Array.from(document.querySelectorAll(selectors))
+        ) || [];
     };
     local.value = function (val) {
     /*
@@ -958,8 +977,7 @@ local.onErrorDefault = function (err) {
 
 local.onErrorWithStack = function (onError) {
 /*
- * this function will create wrapper around <onError>
- * that will append current-stack to err.stack
+ * this function will wrap <onError> with wrapper preserving current-stack
  */
     let onError2;
     let stack;

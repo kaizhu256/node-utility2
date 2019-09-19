@@ -193,8 +193,7 @@
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser
-        && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScript === "function"
     );
     // init function
     local.assertOrThrow = function (passed, message) {
@@ -302,6 +301,26 @@
             }
         });
         return target;
+    };
+    local.querySelector = function (selectors) {
+    /*
+     * this function will return first dom-elem that match <selectors>
+     */
+        return (
+            typeof document === "object" && document
+            && typeof document.querySelector === "function"
+            && document.querySelector(selectors)
+        ) || {};
+    };
+    local.querySelectorAll = function (selectors) {
+    /*
+     * this function will return dom-elem-list that match <selectors>
+     */
+        return (
+            typeof document === "object" && document
+            && typeof document.querySelectorAll === "function"
+            && Array.from(document.querySelectorAll(selectors))
+        ) || [];
     };
     local.value = function (val) {
     /*
@@ -558,8 +577,7 @@ local.cliRun = function (opt) {
 
 local.onErrorWithStack = function (onError) {
 /*
- * this function will create wrapper around <onError>
- * that will append current-stack to err.stack
+ * this function will wrap <onError> with wrapper preserving current-stack
  */
     let onError2;
     let stack;
@@ -16799,7 +16817,7 @@ local.jslintAndPrint = function (code, file, opt) {
             ), "'\"'\"'") + "\n";
             break;
         case false:
-            code = code.trimRight() + "\n";
+            code = code.trimEnd() + "\n";
             break;
         default:
             code = code.trim() + "\n";
@@ -17122,7 +17140,7 @@ local.jslintAutofix = function (code, file, opt) {
             ).test(line)) {
                 return (
                     tmp
-                    ? tmp[0].slice(0, -1) + line.trimLeft()
+                    ? tmp[0].slice(0, -1) + line.trimStart()
                     : line
                 );
             }
@@ -17303,7 +17321,7 @@ local.jslintAutofix = function (code, file, opt) {
         code = code.replace((
             /^\u0020*?\/\*\u0020jslint\u0020ignore:start:end\u0020\*\/$/gm
         ), function () {
-            return ignoreList.shift().trimLeft();
+            return ignoreList.shift().trimStart();
         });
         break;
     case ".md":
