@@ -40,6 +40,7 @@
 
 
 /* istanbul instrument in package db */
+// assets.utility2.header.js - start
 /* istanbul ignore next */
 /* jslint utility2:true */
 (function (globalThis) {
@@ -47,20 +48,20 @@
     let ArrayPrototypeFlat;
     let TextXxcoder;
     let consoleError;
+    let debugName;
     let local;
+    debugName = "debug" + String("Inline");
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debug_inline
-    if (!globalThis["debug\u0049nline"]) {
+    if (!globalThis[debugName]) {
         consoleError = console.error;
-        globalThis["debug\u0049nline"] = function (...argList) {
+        globalThis[debugName] = function (...argList) {
         /*
          * this function will both print <argList> to stderr
          * and return <argList>[0]
          */
-            // debug argList
-            globalThis["debug\u0049nlineArgList"] = argList;
-            consoleError("\n\ndebug\u0049nline");
+            consoleError("\n\n" + debugName);
             consoleError.apply(console, argList);
             consoleError("\n");
             // return arg0 for inspection
@@ -220,6 +221,11 @@
         typeof globalThis.XMLHttpRequest === "function"
         && globalThis.navigator
         && typeof globalThis.navigator.userAgent === "string"
+    );
+    // init isWebWorker
+    local.isWebWorker = (
+        local.isBrowser
+        && typeof globalThis.importScript === "function"
     );
     // init function
     local.assertOrThrow = function (passed, message) {
@@ -385,6 +391,7 @@
 }((typeof globalThis === "object" && globalThis) || (function () {
     return Function("return this")(); // jslint ignore:line
 }())));
+// assets.utility2.header.js - end
 
 
 
@@ -1073,7 +1080,7 @@ defer = function (opt, onError) {
     let req;
     let tmp;
     onError = onError || function (err) {
-        // validate no err occurred
+        // handle err
         local.assertOrThrow(!err, err);
     };
     if (!storage) {
@@ -1189,7 +1196,7 @@ defer = function (opt, onError) {
             tmp = os.tmpdir() + "/" + Date.now() + Math.random();
             // save to tmp
             fs.writeFile(tmp, opt.value, function (err) {
-                // validate no err occurred
+                // handle err
                 local.assertOrThrow(!err, err);
                 // rename tmp to key
                 fs.rename(
@@ -1222,7 +1229,7 @@ init = function () {
     let onError;
     let req;
     onError = function (err) {
-        // validate no err occurred
+        // handle err
         local.assertOrThrow(!err, err);
         if (local.isBrowser) {
             storage = globalThis[storageDir];
@@ -2039,7 +2046,7 @@ local.dbLoad = function (onError) {
     });
     local.storageKeys(function (err, data) {
         onParallel.counter += 1;
-        // validate no err occurred
+        // handle err
         onParallel.counter += 1;
         onParallel(err);
         local.valueOrEmptyList(data).forEach(function (key) {
@@ -2441,7 +2448,7 @@ local.dbTableCreateOne = function (opt, onError) {
             err,
             data
         ) {
-            // validate no err occurred
+            // handle err
             local.assertOrThrow(!err, err);
             if (!that.isLoaded) {
                 local.dbImport(data);
@@ -2592,7 +2599,7 @@ local.cliDict.dbTableCrudGetManyByQuery = function () {
     local.dbTableCreateOne({
         name: process.argv[3]
     }, function (err, that) {
-        // validate no err occurred
+        // handle err
         local.assertOrThrow(!err, err);
         console.log(JSON.stringify(that.crudGetManyByQuery(
             JSON.parse(process.argv[4] || "{}")
@@ -2608,7 +2615,7 @@ local.cliDict.dbTableCrudRemoveManyByQuery = function () {
     local.dbTableCreateOne({
         name: process.argv[3]
     }, function (err, that) {
-        // validate no err occurred
+        // handle err
         local.assertOrThrow(!err, err);
         console.log(JSON.stringify(that.crudRemoveManyByQuery(
             JSON.parse(process.argv[4])
@@ -2624,7 +2631,7 @@ local.cliDict.dbTableCrudSetManyById = function () {
     local.dbTableCreateOne({
         name: process.argv[3]
     }, function (err, that) {
-        // validate no err occurred
+        // handle err
         local.assertOrThrow(!err, err);
         that.crudSetManyById(JSON.parse(process.argv[4]));
     });
@@ -2638,7 +2645,7 @@ local.cliDict.dbTableHeaderDictGet = function () {
     local.dbTableCreateOne({
         name: process.argv[3]
     }, function (err, that) {
-        // validate no err occurred
+        // handle err
         local.assertOrThrow(!err, err);
         let tmp;
         tmp = [];
@@ -2664,7 +2671,7 @@ local.cliDict.dbTableHeaderDictSet = function () {
     local.dbTableCreateOne({
         name: process.argv[3]
     }, function (err, that) {
-        // validate no err occurred
+        // handle err
         local.assertOrThrow(!err, err);
         local.tmp = JSON.parse(process.argv[4]);
         that.sizeLimit = local.tmp.sizeLimit || that.sizeLimit;
@@ -2689,7 +2696,7 @@ local.cliDict.dbTableIdIndexCreate = function () {
     local.dbTableCreateOne({
         name: process.argv[3]
     }, function (err, that) {
-        // validate no err occurred
+        // handle err
         local.assertOrThrow(!err, err);
         that.idIndexCreate(JSON.parse(process.argv[4]));
         that.save();
@@ -2712,7 +2719,7 @@ local.cliDict.dbTableIdIndexRemove = function () {
     local.dbTableCreateOne({
         name: process.argv[3]
     }, function (err, that) {
-        // validate no err occurred
+        // handle err
         local.assertOrThrow(!err, err);
         that.idIndexRemove(JSON.parse(process.argv[4]));
         that.save();
@@ -2726,7 +2733,7 @@ local.cliDict.dbTableList = function () {
  * will get from db, <dbTableList>
  */
     local.storageKeys(function (err, data) {
-        // validate no err occurred
+        // handle err
         local.assertOrThrow(!err, err);
         console.log(JSON.stringify(data.map(function (element) {
             return element.split(".").slice(1, -1).join(".");
@@ -2742,7 +2749,7 @@ local.cliDict.dbTableRemove = function () {
     local.storageRemoveItem("dbTable." + process.argv[3] + ".json", function (
         err
     ) {
-        // validate no err occurred
+        // handle err
         local.assertOrThrow(!err, err);
         local.cliDict.dbTableList();
     });

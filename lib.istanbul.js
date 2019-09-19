@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.istanbul.js (2019.8.24)
+ * lib.istanbul.js (2019.9.16)
  * https://github.com/kaizhu256/node-istanbul-lite
  * this zero-dependency package will provide a browser-compatible version of the istanbul (v0.4.5) coverage-tool, with a working web-demo
  *
@@ -9,6 +9,7 @@
 
 
 /* istanbul instrument in package istanbul */
+// assets.utility2.header.js - start
 /* istanbul ignore next */
 /* jslint utility2:true */
 (function (globalThis) {
@@ -16,20 +17,20 @@
     let ArrayPrototypeFlat;
     let TextXxcoder;
     let consoleError;
+    let debugName;
     let local;
+    debugName = "debug" + String("Inline");
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debug_inline
-    if (!globalThis["debug\u0049nline"]) {
+    if (!globalThis[debugName]) {
         consoleError = console.error;
-        globalThis["debug\u0049nline"] = function (...argList) {
+        globalThis[debugName] = function (...argList) {
         /*
          * this function will both print <argList> to stderr
          * and return <argList>[0]
          */
-            // debug argList
-            globalThis["debug\u0049nlineArgList"] = argList;
-            consoleError("\n\ndebug\u0049nline");
+            consoleError("\n\n" + debugName);
             consoleError.apply(console, argList);
             consoleError("\n");
             // return arg0 for inspection
@@ -189,6 +190,11 @@
         typeof globalThis.XMLHttpRequest === "function"
         && globalThis.navigator
         && typeof globalThis.navigator.userAgent === "string"
+    );
+    // init isWebWorker
+    local.isWebWorker = (
+        local.isBrowser
+        && typeof globalThis.importScript === "function"
     );
     // init function
     local.assertOrThrow = function (passed, message) {
@@ -354,6 +360,7 @@
 }((typeof globalThis === "object" && globalThis) || (function () {
     return Function("return this")(); // jslint ignore:line
 }())));
+// assets.utility2.header.js - end
 
 
 
@@ -566,8 +573,9 @@ let process;
 let require;
 // hack-jslint
 local.nop(__dirname, require);
-/* istanbul ignore next */
-globalThis.__coverageCodeDict__ = globalThis.__coverageCodeDict__ || {};
+globalThis.__coverageCodeDict__ = local.valueOrEmptyObject(
+    globalThis.__coverageCodeDict__
+);
 // mock builtins
 __dirname = "";
 process = local.process || {
@@ -673,16 +681,14 @@ local.coverageMerge = function (coverage1, coverage2) {
     return coverage1;
 };
 
-local.coverageReportCreate = function () {
+local.coverageReportCreate = function (opt) {
 /*
  * this function will
  * 1. print coverage in text-format to stdout
  * 2. write coverage in html-format to filesystem
  * 3. return coverage in html-format as single document
  */
-    let opt;
-    /* istanbul ignore next */
-    if (!globalThis.__coverage__) {
+    if (!(opt && opt.coverage)) {
         return "";
     }
     opt = {};
@@ -691,16 +697,15 @@ local.coverageReportCreate = function () {
     if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
         console.log("merging file " + opt.dir + "/coverage.json to coverage");
         try {
-            local.coverageMerge(globalThis.__coverage__, JSON.parse(
+            local.coverageMerge(opt.coverage, JSON.parse(
                 local.fs.readFileSync(opt.dir + "/coverage.json", "utf8")
             ));
         } catch (ignore) {}
         try {
-            opt.coverageCodeDict = JSON.parse(local.fs.readFileSync(
+            Object.keys(JSON.parse(local.fs.readFileSync(
                 opt.dir + "/coverage.code-dict.json",
                 "utf8"
-            ));
-            Object.keys(opt.coverageCodeDict).forEach(function (key) {
+            ))).forEach(function (key) {
                 globalThis.__coverageCodeDict__[key] = (
                     globalThis.__coverageCodeDict__[key]
                     || true
@@ -729,7 +734,7 @@ local.coverageReportCreate = function () {
         // write coverage.json
         local.fsWriteFileWithMkdirpSync(
             opt.dir + "/coverage.json",
-            JSON.stringify(globalThis.__coverage__)
+            JSON.stringify(opt.coverage)
         );
         // write coverage.code-dict.json
         local.fsWriteFileWithMkdirpSync(
@@ -766,7 +771,6 @@ local.coverageReportCreate = function () {
     return local.coverageReportHtml;
 };
 
-/* istanbul ignore next */
 local.instrumentInPackage = function (code, file) {
 /*
  * this function will instrument the code
@@ -11502,7 +11506,7 @@ local["head.txt"] = '\
             evt.preventDefault();\n\
         }\n\
     };\n\
-    // init event-handling\n\
+    // handle evt\n\
     document.addEventListener(\n\
         "keydown",\n\
         window.domOnEventSelectAllWithinPre\n\
@@ -12656,7 +12660,9 @@ local.cliDict.report = function () {
         globalThis.__coverageCodeDict__[entry[0]] = true;
         entry[1].code = entry[1].code || entry[1].text.split("\n");
     });
-    local.coverageReportCreate();
+    local.coverageReportCreate({
+        coverage: globalThis.__coverage__
+    });
 };
 
 local.cliDict.test = function () {

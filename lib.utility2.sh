@@ -3388,20 +3388,20 @@ export UTILITY2_MACRO_JS='
     let ArrayPrototypeFlat;
     let TextXxcoder;
     let consoleError;
+    let debugName;
     let local;
+    debugName = "debug" + String("Inline");
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debug_inline
-    if (!globalThis["debug\u0049nline"]) {
+    if (!globalThis[debugName]) {
         consoleError = console.error;
-        globalThis["debug\u0049nline"] = function (...argList) {
+        globalThis[debugName] = function (...argList) {
         /*
          * this function will both print <argList> to stderr
          * and return <argList>[0]
          */
-            // debug argList
-            globalThis["debug\u0049nlineArgList"] = argList;
-            consoleError("\n\ndebug\u0049nline");
+            consoleError("\n\n" + debugName);
             consoleError.apply(console, argList);
             consoleError("\n");
             // return arg0 for inspection
@@ -3561,6 +3561,11 @@ export UTILITY2_MACRO_JS='
         typeof globalThis.XMLHttpRequest === "function"
         && globalThis.navigator
         && typeof globalThis.navigator.userAgent === "string"
+    );
+    // init isWebWorker
+    local.isWebWorker = (
+        local.isBrowser
+        && typeof globalThis.importScript === "function"
     );
     // init function
     local.assertOrThrow = function (passed, message) {
@@ -3722,6 +3727,10 @@ export UTILITY2_MACRO_JS='
         local.util = require("util");
         local.vm = require("vm");
         local.zlib = require("zlib");
+        return;
+    }
+    if (local.isWebWorker) {
+        return;
     }
 }((typeof globalThis === "object" && globalThis) || (function () {
     return Function("return this")(); // jslint ignore:line
@@ -4065,7 +4074,7 @@ local.ajax = function (opt, onError) {
     // increment counter
     ajaxProgressUpdate.counter |= 0;
     ajaxProgressUpdate.counter += 1;
-    // init event-handling
+    // handle evt
     xhr.addEventListener("abort", xhr.onEvent);
     xhr.addEventListener("error", xhr.onEvent);
     xhr.addEventListener("load", xhr.onEvent);

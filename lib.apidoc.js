@@ -9,6 +9,7 @@
 
 
 /* istanbul instrument in package apidoc */
+// assets.utility2.header.js - start
 /* istanbul ignore next */
 /* jslint utility2:true */
 (function (globalThis) {
@@ -16,20 +17,20 @@
     let ArrayPrototypeFlat;
     let TextXxcoder;
     let consoleError;
+    let debugName;
     let local;
+    debugName = "debug" + String("Inline");
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debug_inline
-    if (!globalThis["debug\u0049nline"]) {
+    if (!globalThis[debugName]) {
         consoleError = console.error;
-        globalThis["debug\u0049nline"] = function (...argList) {
+        globalThis[debugName] = function (...argList) {
         /*
          * this function will both print <argList> to stderr
          * and return <argList>[0]
          */
-            // debug argList
-            globalThis["debug\u0049nlineArgList"] = argList;
-            consoleError("\n\ndebug\u0049nline");
+            consoleError("\n\n" + debugName);
             consoleError.apply(console, argList);
             consoleError("\n");
             // return arg0 for inspection
@@ -189,6 +190,11 @@
         typeof globalThis.XMLHttpRequest === "function"
         && globalThis.navigator
         && typeof globalThis.navigator.userAgent === "string"
+    );
+    // init isWebWorker
+    local.isWebWorker = (
+        local.isBrowser
+        && typeof globalThis.importScript === "function"
     );
     // init function
     local.assertOrThrow = function (passed, message) {
@@ -354,6 +360,7 @@
 }((typeof globalThis === "object" && globalThis) || (function () {
     return Function("return this")(); // jslint ignore:line
 }())));
+// assets.utility2.header.js - end
 
 
 
@@ -749,57 +756,60 @@ local.templateApidocHtml = '\
 ';
 /* jslint ignore:end */
 
-local.templateRender = function (template, dict, opt) {
+local.templateRender = function (template, dict, opt, ii) {
 /*
- * this function will render the template with given dict
+ * this function will render <template> with given <dict>
  */
     let argList;
-    let getValue;
+    let getVal;
     let match;
     let renderPartial;
     let rgx;
     let skip;
-    let value;
+    let val;
     if (dict === null || dict === undefined) {
         dict = {};
     }
     opt = opt || {};
-    getValue = function (key) {
+    getVal = function (key) {
         argList = key.split(" ");
-        value = dict;
+        val = dict;
         if (argList[0] === "#this/") {
-            return value;
+            return val;
         }
-        // iteratively lookup nested values in the dict
+        if (argList[0] === "#ii/") {
+            return ii;
+        }
+        // iteratively lookup nested val in dict
         argList[0].split(".").forEach(function (key) {
-            value = value && value[key];
+            val = val && val[key];
         });
-        return value;
+        return val;
     };
     renderPartial = function (match0, helper, key, partial) {
         switch (helper) {
         case "each":
         case "eachTrimRightComma":
-            value = getValue(key);
-            value = (
-                Array.isArray(value)
-                ? value.map(function (dict) {
+            val = getVal(key);
+            val = (
+                Array.isArray(val)
+                ? val.map(function (dict, ii) {
                     // recurse with partial
-                    return local.templateRender(partial, dict, opt);
+                    return local.templateRender(partial, dict, opt, ii);
                 }).join("")
                 : ""
             );
             // remove trailing-comma from last elem
             if (helper === "eachTrimRightComma") {
-                value = value.trimRight().replace((
+                val = val.trimRight().replace((
                     /,$/
                 ), "");
             }
-            return value;
+            return val;
         case "if":
             partial = partial.split("{{#unless " + key + "}}");
             partial = (
-                getValue(key)
+                getVal(key)
                 ? partial[0]
                 // handle 'unless' case
                 : partial.slice(1).join("{{#unless " + key + "}}")
@@ -808,7 +818,7 @@ local.templateRender = function (template, dict, opt) {
             return local.templateRender(partial, dict, opt);
         case "unless":
             return (
-                getValue(key)
+                getVal(key)
                 ? ""
                 // recurse with partial
                 : local.templateRender(partial, dict, opt)
@@ -844,31 +854,40 @@ local.templateRender = function (template, dict, opt) {
         let notHtmlSafe;
         notHtmlSafe = opt.notHtmlSafe;
         try {
-            getValue(match0.slice(2, -2));
-            if (value === undefined) {
+            val = getVal(match0.slice(2, -2));
+            if (val === undefined) {
                 return match0;
             }
             argList.slice(1).forEach(function (fmt, ii, list) {
                 switch (fmt) {
+                case "+":
+                case "-":
+                    skip = ii + 1;
+                    val = String(
+                        fmt === "+"
+                        ? Number(val) + Number(list[skip])
+                        : Number(val) - Number(list[skip])
+                    );
+                    break;
                 case "alphanumeric":
-                    value = value.replace((
+                    val = val.replace((
                         /\W/g
                     ), "_");
                     break;
                 case "decodeURIComponent":
-                    value = decodeURIComponent(value);
+                    val = decodeURIComponent(val);
                     break;
                 case "encodeURIComponent":
-                    value = encodeURIComponent(value);
+                    val = encodeURIComponent(val);
                     break;
                 case "jsonStringify":
-                    value = JSON.stringify(value);
+                    val = JSON.stringify(val);
                     break;
                 case "jsonStringify4":
-                    value = JSON.stringify(value, null, 4);
+                    val = JSON.stringify(val, null, 4);
                     break;
                 case "markdownSafe":
-                    value = value.replace((
+                    val = val.replace((
                         /`/g
                     ), "'");
                     break;
@@ -883,15 +902,15 @@ local.templateRender = function (template, dict, opt) {
                 case "replace":
                 case "slice":
                     skip = ii + 2;
-                    value = String(value)[fmt](
+                    val = String(val)[fmt](
                         list[skip - 1],
-                        list[skip].replace("\"\"", "")
+                        list[skip].replace("\"\"", "").replace("\"_\"", " ")
                     );
                     break;
                 case "truncate":
                     skip = ii + 1;
-                    if (value.length > list[skip]) {
-                        value = value.slice(
+                    if (val.length > list[skip]) {
+                        val = val.slice(
                             0,
                             Math.max(list[skip] - 3, 0)
                         ).trimRight() + "...";
@@ -902,13 +921,13 @@ local.templateRender = function (template, dict, opt) {
                     if (ii <= skip) {
                         break;
                     }
-                    value = value[fmt]();
+                    val = val[fmt]();
                 }
             });
-            value = String(value);
+            val = String(val);
             // default to htmlSafe
             if (!notHtmlSafe) {
-                value = value.replace((
+                val = val.replace((
                     /&/g
                 ), "&amp;").replace((
                     /"/g
@@ -927,16 +946,15 @@ local.templateRender = function (template, dict, opt) {
                 && (typeof local.marked === "function" && local.marked)
             );
             if (markdownToHtml) {
-                value = markdownToHtml(value).replace((
+                val = markdownToHtml(val).replace((
                     /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
                 ), "&$1");
             }
-            return value;
+            return val;
         } catch (errCaught) {
             errCaught.message = (
                 "templateRender could not render expression "
-                + JSON.stringify(match0)
-                + "\n"
+                + JSON.stringify(match0) + "\n"
             ) + errCaught.message;
             local.assertOrThrow(null, errCaught);
         }

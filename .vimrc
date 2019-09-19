@@ -23,7 +23,7 @@ set showmatch
 set smartcase
 set softtabstop=2
 " https://vimhelp.org/options.txt.html#%27statusline%27
-set statusline=%F%m%r%h%w\ %y\ %L\ %l:%c\ 0x%B
+set statusline=%F%m%r%h%w\ %y\ %l:%c\ %L\ 0x%B
 set tabstop=4
 
 autocmd!
