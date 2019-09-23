@@ -71,6 +71,7 @@ this zero-dependency package will provide high-level functions to to build, test
 
 #### changelog 2019.9.17
 - npm publish 2019.9.17
+- jslint - update function jslintAndPrint's opt.lineOffset with opt.iiStart, opt.iiEnd
 - replace functions local.taskCreate, local.taskCreateCached with event-emitter
 - rename trimLeft to trimStart, and trimRight to trimEnd
 - add isomorphic function local.querySelector, local.querySelectorAll
@@ -658,7 +659,6 @@ module.exports = local;
 // init assets
 local.assetsDict = local.assetsDict || {};
 [
-    "assets.index.template.html",
     "assets.swgg.swagger.json",
     "assets.swgg.swagger.server.json"
 ].forEach(function (file) {
@@ -1254,11 +1254,16 @@ utility2-comment -->\n\
 </body>\n\
 </html>\n\
 ';
-local.assetsDict["/assets.utility2.js"] =
-    local.assetsDict["/assets.utility2.js"] ||
-    local.fs.readFileSync(local.__dirname + "/lib.utility2.js", "utf8"
-).replace((/^#!\//), "// ");
 /* jslint ignore:end */
+local.assetsDict["/assets.utility2.js"] = (
+    local.assetsDict["/assets.utility2.js"]
+    || local.fs.readFileSync(
+        local.__dirname + "/lib.utility2.js",
+        "utf8"
+    ).replace((
+        /^#!\//
+    ), "// ")
+);
 /* validateLineSortedReset */
 local.assetsDict["/"] = local.assetsDict[
     "/assets.index.template.html"

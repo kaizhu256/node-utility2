@@ -1383,7 +1383,6 @@ module.exports = local;\n\
 // init assets\n\
 local.assetsDict = local.assetsDict || {};\n\
 [\n\
-    "assets.index.template.html",\n\
     "assets.swgg.swagger.json",\n\
     "assets.swgg.swagger.server.json"\n\
 ].forEach(function (file) {\n\
@@ -1398,12 +1397,19 @@ local.assetsDict = local.assetsDict || {};\n\
 });\n\
 /* jslint ignore:start */\n\
 local.assetsDict["/assets.index.template.html"] = \'\\\n\
-' + local.assetsDict["/assets.index.template.html"].replace((/\n/g), "\\n\\\n") + '\';\n\
-local.assetsDict["/assets.my_app.js"] =\n\
-    local.assetsDict["/assets.my_app.js"] ||\n\
-    local.fs.readFileSync(local.__dirname + "/lib.my_app.js", "utf8"\n\
-).replace((/^#!\\//), "// ");\n\
+'
++ local.assetsDict["/assets.index.template.html"].replace((/\n/g), "\\n\\\n")
++ '\';\n\
 /* jslint ignore:end */\n\
+local.assetsDict["/assets.my_app.js"] = (\n\
+    local.assetsDict["/assets.my_app.js"]\n\
+    || local.fs.readFileSync(\n\
+        local.__dirname + "/lib.my_app.js",\n\
+        "utf8"\n\
+    ).replace((\n\
+        /^#!\\//\n\
+    ), "// ")\n\
+);\n\
 /* validateLineSortedReset */\n\
 local.assetsDict["/"] = local.assetsDict[\n\
     "/assets.index.template.html"\n\
@@ -2455,7 +2461,7 @@ local._testCase_buildApidoc_default = function (opt, onError) {
         }))
     );
     console.error(
-        "created apidoc file " + process.cwd() + "/apidoc.html\n"
+        "created apidoc file " + process.cwd() + "/tmp/build/apidoc.html\n"
     );
     onError();
 };
@@ -7350,12 +7356,12 @@ local.testRunDefault = function (opt) {
      */
         /* istanbul ignore next */
         if (!(
-            globalThis.__coverage__
+            typeof globalThis.__coverage__ === "object"
+            && globalThis.__coverage__
             && Object.keys(globalThis.__coverage__).length
-            && !(
-                /^serverLog\u0020-\u0020\{/
-            ).test(argList[0])
-        )) {
+        ) && !(
+            /^serverLog\u0020-\u0020\{/
+        ).test(argList[0])) {
             local._testRunConsoleError(...argList);
         }
     };

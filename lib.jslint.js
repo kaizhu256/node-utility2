@@ -16623,22 +16623,18 @@ warn_at_extra = function (warning, warnings) {
 
 // run shared js-env code - function
 (function () {
-local.jslintAndPrint = function (code, file, opt) {
+local.jslintAndPrint = function (code = "", file = "undefined", opt = {}) {
 /*
  * this function will jslint / csslint <code> and print any errors to stderr
  */
+    let ii;
     let tmp;
     if (!(opt && opt.gotoState)) {
         local.jslintResult = {
             gotoState: 0
         };
     }
-    code = code || "";
-    file = file || "undefined";
-    opt = Object.assign(local.jslintResult, opt || {}, {
-        code,
-        file
-    });
+    opt = Object.assign(local.jslintResult, opt);
     opt.gotoState += 1;
     switch (opt.gotoState) {
     // jslint - init
@@ -16646,18 +16642,28 @@ local.jslintAndPrint = function (code, file, opt) {
         // cleanup
         opt.errList = [];
         opt.errMsg = "";
+        // preserve lineno
+        if (opt.iiStart) {
+            opt.lineOffset |= 0;
+            ii = 0;
+            while (true) {
+                ii = code.indexOf("\n", ii);
+                if (ii === 0 || ii > opt.iiStart) {
+                    break;
+                }
+                ii += 1;
+                opt.lineOffset += 1;
+            }
+            code = code.slice(opt.iiStart, opt.iiEnd || code.length);
+        }
         switch (opt.fileType0) {
         // deembed-js - '\\n\\\n...\\n\\\n'
         case ".\\n\\":
             // rgx - remove \\n\\
             code = code.replace((
                 /\\n\\$|\\(.)/gm
-            ), function (match0) {
-                return (
-                    match0 === "\\n\\"
-                    ? ""
-                    : match0[1]
-                );
+            ), function (ignore, match1) {
+                return match1 || "";
             });
             break;
         // deembed-js - '\n...\n'
@@ -16807,6 +16813,10 @@ local.jslintAndPrint = function (code, file, opt) {
             code = code.replace((
                 /'/g
             ), "\\'");
+            // rgx - escape js-env to js\-env
+            code = code.replace((
+                /\u0020js-env\u0020/g
+            ), " js\\-env ");
             code += "\n";
             break;
         // reembed-js - '\n...\n'
@@ -16850,7 +16860,7 @@ local.jslintAndPrint = function (code, file, opt) {
                 + "\u001b[22m"
             );
         }
-        // print colorized err.message to stderr
+        // print colorized errMsg to stderr
         // https://github.com/kaizhu256/JSLint/blob/cli/cli.js#L99
         opt.errList.filter(function (warning) {
             return warning && warning.message;
@@ -16949,10 +16959,11 @@ local.jslintAutofix = function (code, file, opt) {
     // autofix-all
     if (opt.autofix) {
         // autofix-all - normalize local-function
-        if (typeof(
+        if (
             globalThis.utility2
-            && globalThis.utility2.jslintAutofixLocalFunction
-        ) === "function") {
+            && typeof globalThis.utility2.jslintAutofixLocalFunction
+            === "function"
+        ) {
             code = globalThis.utility2.jslintAutofixLocalFunction(code, file);
         }
         // autofix-all - remove trailing-whitespace
@@ -16973,22 +16984,19 @@ local.jslintAutofix = function (code, file, opt) {
         ), "\n\n\n\n");
         // autofix-all - recurse <script>...</script>, <style>...</style>
         code = code.replace((
-            /(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/\\n\\\n(?:^.*?\\n\\\n)*?)(^(?:\/\/\u0020)?<\/(?:script|style)>\\n\\\n)/gm
+            /(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/\\n\\\n(?:^.*?\\n\\\n)*?)(';$|<\/script>\\n\\$|<\/style>\\n\\$)/gm
         ), function (ignore, match1, match2, ii) {
             return local.jslintAndPrint(
-                match1,
+                code,
                 file + (
-                    match2.indexOf("style") >= 0
+                    match2.indexOf("style") > -1
                     ? ".<style>.css"
                     : ".<script>.js"
                 ),
                 Object.assign({}, opt, {
                     fileType0: ".\\n\\",
-                    lineOffset: (
-                        opt.lineOffset | 0
-                    ) + code.slice(0, ii).replace((
-                        /.+/g
-                    ), "").length,
+                    iiEnd: ii + match1.length,
+                    iiStart: ii,
                     gotoState: 0
                 })
             ) + match2;
@@ -17000,25 +17008,21 @@ local.jslintAutofix = function (code, file, opt) {
     case ".html":
         // autofix-html - recurse <script>...</script>, <style>...</style>
         code = code.replace((
-            /(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/\n(?:^.*?\n)*?)(^<\/(?:script|style)>\n)/gm
+            /^(\/\*\u0020jslint\u0020utility2:true\u0020\*\/\n[\S\s]*?\n)(<\/(?:script|style)>)$/gm
         ), function (ignore, match1, match2, ii) {
             return local.jslintAndPrint(
-                match1,
+                code,
                 file + (
                     match2.indexOf("style") >= 0
                     ? ".<style>.css"
                     : ".<script>.js"
                 ),
-                local.objectAssignDefault({
+                Object.assign({}, opt, {
                     fileType0: opt.fileType,
-                    lineOffset: (
-                        (opt.lineOffset | 0)
-                        + code.slice(0, ii).replace((
-                            /.+/g
-                        ), "").length
-                    ),
+                    iiEnd: ii + match1.length,
+                    iiStart: ii,
                     gotoState: 0
-                }, opt)
+                })
             ) + match2;
         });
         break;
@@ -17327,16 +17331,15 @@ local.jslintAutofix = function (code, file, opt) {
     case ".md":
         // autofix-md - recurse ```javascript...```
         code = code.replace((
-            /(```javascript\n)([\S\s]*?)\n```/g
+            /^(```javascript\n)([\S\s]*?\n)```$/gm
         ), function (ignore, match1, match2, ii) {
             return match1 + local.jslintAndPrint(
-                match2,
+                code,
                 file + ".<```javascript>.js",
                 Object.assign({}, opt, {
                     fileType0: opt.fileType,
-                    lineOffset: code.slice(0, ii).replace((
-                        /.+/g
-                    ), "").length + 1,
+                    iiEnd: ii + match1.length + match2.length,
+                    iiStart: ii + match1.length,
                     gotoState: 0
                 })
             ) + "```";
@@ -17345,16 +17348,15 @@ local.jslintAutofix = function (code, file, opt) {
     case ".sh":
         // autofix-sh - recurse node -e '...'
         code = code.replace((
-            /(\bUTILITY2_MACRO_JS='\n|\bnode\u0020-e\u0020(?:"\$UTILITY2_MACRO_JS")?'\n)([\S\s]*?)\n'/g
-        ), function (ignore, match1, match2, ii) {
-            return match1 + local.jslintAndPrint(
-                match2,
+            /^\/\*\u0020jslint\u0020utility2:true\u0020\*\/\n[\S\s]*?\n'/gm
+        ), function (match0, ii) {
+            return local.jslintAndPrint(
+                code,
                 file + ".<node -e>.js",
                 Object.assign({}, opt, {
                     fileType0: opt.fileType,
-                    lineOffset: code.slice(0, ii).replace((
-                        /.+/g
-                    ), "").length + 1,
+                    iiEnd: ii + match0.length - 1,
+                    iiStart: ii,
                     gotoState: 0
                 })
             ) + "'";
