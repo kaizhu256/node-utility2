@@ -395,35 +395,6 @@ local.testRunDefault(local);
 
 // run shared js-env code - function
 (function () {
-local._testCase_testRunDefault_failure = function (opt, onError) {
-/*
- * this function will test testRunDefault's failure handling-behavior
- */
-    // test failure from callback handling-behavior
-    onError(local.errDefault);
-    // test failure from multiple-callback handling-behavior
-    onError(null, opt);
-    // test failure from ajax handling-behavior
-    local.ajax({
-        url: "/undefined"
-    }, onError);
-    // test failure from uncaught-uncaughtexception handling-behavior
-    setTimeout(local.throwError);
-    // test console.error handling-behavior
-    local.testMock([
-        [
-            globalThis, {
-                __coverage__: null
-            }
-        ]
-    ], function (onError) {
-        console.error();
-        onError(null, opt);
-    }, local.onErrorThrow);
-    // test failure from thrown err handling-behavior
-    throw local.errDefault;
-};
-
 local.testCase_FormData_default = function (opt, onError) {
 /*
  * this function will test FormData's default handling-behavior
@@ -1127,7 +1098,7 @@ local.testCase_buildReadme_default = function (opt, onError) {
         [
             // customize quickstart-example-js-instruction
             (
-                /#\u0020quickstart\u0020example.js[\S\s]*?istanbul\u0020instrument\u0020in\u0020package/
+                /#\u0020quickstart\u0020example.js[\S\s]*?\n\n\n\n/
             ),
             // customize quickstart-example-js-script
             (
@@ -3125,36 +3096,39 @@ local.testCase_uuid4Create_default = function (opt, onError) {
     onError(null, opt);
 };
 
-//!! local.testCase_webpage_err = function (opt, onError) {
-//!! /*
- //!! * this function will test webpage's err handling-behavior
- //!! */
-    //!! if (local.isBrowser) {
-        //!! onError(null, opt);
-        //!! return;
-    //!! }
-    //!! local.browserTest({
-        //!! modeSilent: true,
-        //!! timeoutDefault: local.timeoutDefault - 5000,
-        //!! // https://localhost:8080/assets.script_only.html?modeTest=1&modeTestCase=_testCase_testRunDefault_failure&timeExit=
-        //!! url: (
-            //!! local.serverLocalHost
-            //!! // test script_only handling-behavior
-            //!! + "/assets.script_only.html"
-            //!! // test electron-callback handling-behavior
-            //!! + "?modeTest=1&"
-            //!! // test specific testCase handling-behavior
-            //!! // test testRunDefault's failure handling-behavior
-            //!! + "modeTestCase=_testCase_testRunDefault_failure&"
-            //!! // test timeExit handling-behavior
-            //!! + "timeExit={{timeExit}}"
-        //!! )
-    //!! }, function (err) {
-        //!! // handle err
-        //!! local.assertOrThrow(err, err);
-        //!! onError(null, opt);
-    //!! });
-//!! };
+local.testCase_webpage_err = function (opt, onError) {
+/*
+ * this function will test webpage's err handling-behavior
+ */
+    if (!local.isBrowser) {
+        local.browserTest({
+            modeSilent: true,
+            url: (
+                local.serverLocalHost
+                + "?modeTest=1"
+                + "&modeTestCase=testCase_webpage_err"
+            )
+        }, function (err) {
+            onError(undefined, err);
+        });
+        return;
+    }
+    if (local.modeTestCase !== "testCase_webpage_err") {
+        onError();
+        return;
+    }
+    // ignore err in coverage-case
+    globalThis.utility2_testReport.testPlatformList[0].testCaseList = [];
+    globalThis.utility2_testReport.testsPending = 0;
+    setTimeout(function () {
+        // test err from callback handling-behavior
+        onError(local.errDefault, opt);
+        // test err from multiple-callback handling-behavior
+        onError(undefined, opt);
+    }, 2000);
+    // test uncaught-err handling-behavior
+    setTimeout(local.throwError);
+};
 
 local.utility2.serverLocalUrlTest = function (url) {
 /*

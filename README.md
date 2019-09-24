@@ -71,6 +71,9 @@ this zero-dependency package will provide high-level functions to to build, test
 
 #### changelog 2019.9.17
 - npm publish 2019.9.17
+- re-enable testCase_webpage_err
+- update function local.templateRender with arithmetic operators
+- update function local.testRunDefault's mock console.error
 - jslint - update function jslintAndPrint's opt.lineOffset with opt.iiStart, opt.iiEnd
 - replace functions local.taskCreate, local.taskCreateCached with event-emitter
 - rename trimLeft to trimStart, and trimRight to trimEnd
@@ -134,7 +137,6 @@ instruction
 
 
 
-/* istanbul instrument in package utility2 */
 // assets.utility2.header.js - start
 /* istanbul ignore next */
 /* jslint utility2:true */
@@ -509,7 +511,6 @@ instruction
 
 
 
-/* istanbul ignore next */
 /* jslint utility2:true */
 (function (local) {
 "use strict";
@@ -648,7 +649,6 @@ if ((
 
 
 
-/* istanbul ignore next */
 // run node js-env code - init-test
 (function () {
 if (local.isBrowser) {

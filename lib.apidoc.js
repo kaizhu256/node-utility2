@@ -880,13 +880,19 @@ local.templateRender = function (template, dict, opt, ii) {
             }
             argList.slice(1).forEach(function (fmt, ii, list) {
                 switch (fmt) {
+                case "*":
                 case "+":
                 case "-":
+                case "/":
                     skip = ii + 1;
                     val = String(
-                        fmt === "+"
+                        fmt === "*"
+                        ? Number(val) * Number(list[skip])
+                        : fmt === "+"
                         ? Number(val) + Number(list[skip])
-                        : Number(val) - Number(list[skip])
+                        : fmt === "-"
+                        ? Number(val) - Number(list[skip])
+                        : Number(val) / Number(list[skip])
                     );
                     break;
                 case "alphanumeric":

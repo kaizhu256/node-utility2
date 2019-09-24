@@ -1303,12 +1303,10 @@ instruction\n\
 \n\
 \n\
 \n\
-/* istanbul instrument in package my_app */\n\
 ' + local.assetsDict["/assets.utility2.header.js"] + '\
 \n\
 \n\
 \n\
-/* istanbul ignore next */\n\
 /* jslint utility2:true */\n\
 (function (local) {\n\
 "use strict";\n\
@@ -1329,7 +1327,6 @@ globalThis.local = local;\n\
 \n\
 \n\
 \n\
-/* istanbul ignore next */\n\
 // run browser js\-env code - init-test\n\
 (function () {\n\
 if (!local.isBrowser) {\n\
@@ -1372,7 +1369,6 @@ if ((\n\
 \n\
 \n\
 \n\
-/* istanbul ignore next */\n\
 // run node js\-env code - init-test\n\
 (function () {\n\
 if (local.isBrowser) {\n\
@@ -2531,8 +2527,8 @@ local._testCase_webpage_default = function (opt, onError) {
             local.assetsDict["/"].indexOf(
                 "<script src=\"assets.test.js\"></script>"
             ) >= 0
-            ? local.serverLocalHost + "?modeTest=1&timeoutDefault="
-            + local.timeoutDefault
+            ? local.serverLocalHost
+            + "?modeTest=1&timeoutDefault=" + local.timeoutDefault
             : local.serverLocalHost
             + "/assets.utility2.base.html?modeTest=1&timeoutDefault=1"
         ) + "&modeTestCase=" + local.modeTestCase.replace((
@@ -3129,7 +3125,7 @@ local.browserTest = function (opt, onError) {
                     "--no-sandbox",
                     "--remote-debugging-port=0"
                 ],
-                dumpio: true,
+                dumpio: !opt.modeSilent,
                 executablePath: local.env.CHROME_BIN,
                 ignoreDefaultArgs: true
             }).then(opt.gotoNextData);
@@ -3181,10 +3177,7 @@ local.browserTest = function (opt, onError) {
             // merge browser-coverage
             local.istanbulCoverageMerge(globalThis.__coverage__, data.coverage);
             // merge browser-test-report
-            local.testReportMerge(
-                globalThis.utility2_testReport,
-                !opt.modeSilent && data
-            );
+            local.testReportMerge(globalThis.utility2_testReport, data);
             // save test-report.json
             onParallel.counter += 1;
             local.fs.writeFile(
@@ -6018,9 +6011,9 @@ local.requireReadme = function () {
                 + ", {autofix:true,conditional:true}, process.exit);"
             )
         ], {
-            env: local.objectAssignDefault({
+            env: Object.assign({}, local.env, {
                 npm_config_mode_library: "1"
-            }, local.env),
+            }),
             stdio: [
                 "ignore", "ignore", 2
             ]
@@ -6763,13 +6756,19 @@ local.templateRender = function (template, dict, opt, ii) {
             }
             argList.slice(1).forEach(function (fmt, ii, list) {
                 switch (fmt) {
+                case "*":
                 case "+":
                 case "-":
+                case "/":
                     skip = ii + 1;
                     val = String(
-                        fmt === "+"
+                        fmt === "*"
+                        ? Number(val) * Number(list[skip])
+                        : fmt === "+"
                         ? Number(val) + Number(list[skip])
-                        : Number(val) - Number(list[skip])
+                        : fmt === "-"
+                        ? Number(val) - Number(list[skip])
+                        : Number(val) / Number(list[skip])
                     );
                     break;
                 case "alphanumeric":
@@ -7004,7 +7003,7 @@ local.testReportCreate = function (testReport) {
     // create test-report.html
     local.fsWriteFileWithMkdirpSync(
         "tmp/build/test-report.html",
-        local.testReportMerge(testReport, {})
+        local.testReportMerge(testReport)
     );
     // create build.badge.svg
     local.fs.writeFileSync(
@@ -7304,6 +7303,8 @@ local.testRunDefault = function (opt) {
 /*
  * this function will run tests in testPlatform.testCaseList
  */
+    let consoleError;
+    let isCoverage;
     let processExit;
     let testPlatform;
     let testReport;
@@ -7348,21 +7349,20 @@ local.testRunDefault = function (opt) {
     }
     // visual notification - testRun
     local.ajaxProgressUpdate();
-    // mock serverLog
-    local._testRunConsoleError = local._testRunConsoleError || console.error;
+    // mock console.error
+    consoleError = console.error;
+    isCoverage = (
+        typeof globalThis.__coverage__ === "object" && globalThis.__coverage__
+        && Object.keys(globalThis.__coverage__).length
+    );
     console.error = function (...argList) {
     /*
      * this function will ignore serverLog-messages during test-run
      */
-        /* istanbul ignore next */
-        if (!(
-            typeof globalThis.__coverage__ === "object"
-            && globalThis.__coverage__
-            && Object.keys(globalThis.__coverage__).length
-        ) && !(
+        if (!isCoverage && !(
             /^serverLog\u0020-\u0020\{/
         ).test(argList[0])) {
-            local._testRunConsoleError(...argList);
+            consoleError(...argList);
         }
     };
     // mock proces.exit
@@ -7405,10 +7405,10 @@ local.testRunDefault = function (opt) {
             });
         }
     });
-    local.testReportMerge(testReport, {});
+    local.testReportMerge(testReport);
     local.querySelectorAll("#htmlTestReport1").forEach(function (elem) {
         local.uiAnimateSlideDown(elem);
-        elem.innerHTML = local.testReportMerge(testReport, {});
+        elem.innerHTML = local.testReportMerge(testReport);
     });
     local.emit("utility2.testRunStart", testReport);
     // testRunProgressUpdate every 2000 ms until isDone
@@ -7417,15 +7417,15 @@ local.testRunDefault = function (opt) {
         local.timeElapsedPoll(testPlatform);
         local.querySelector(
             "#htmlTestReport1"
-        ).innerHTML = local.testReportMerge(testReport, {});
+        ).innerHTML = local.testReportMerge(testReport);
         local.emit("utility2.testRunProgressUpdate", testReport);
         // cleanup timerInterval
         if (!testReport.testsPending) {
             clearInterval(timerInterval);
         }
         // list pending testCase every 5000 ms
-        if (testPlatform.timeElapsed % 5000 < 1000) {
-            local._testRunConsoleError(
+        if (testPlatform.timeElapsed % 5000 < 2000) {
+            consoleError(
                 "testRunDefault - "
                 + testPlatform.timeElapsed + " ms - testCase pending - "
                 + testPlatform.testCaseList.filter(function (testCase) {
@@ -7459,9 +7459,9 @@ local.testRunDefault = function (opt) {
             // if err occurred, then fail testCase
             if (err) {
                 // restore console.log
-                console.error = local._testRunConsoleError;
+                console.error = consoleError;
                 testCase.status = "failed";
-                local._testRunConsoleError(
+                consoleError(
                     "\ntestRunDefault - "
                     + testPlatform.timeElapsed + " ms - testCase failed - "
                     + testCase.name + "\n" + err.message + "\n" + err.stack
@@ -7485,7 +7485,7 @@ local.testRunDefault = function (opt) {
             }
             // stop testCase timer
             local.timeElapsedPoll(testCase);
-            local._testRunConsoleError(
+            consoleError(
                 "testRunDefault - "
                 + testPlatform.timeElapsed + " ms - [" + (
                     local.isBrowser
@@ -7530,7 +7530,7 @@ local.testRunDefault = function (opt) {
             );
         }
         // finalize testReport
-        local.testReportMerge(testReport, {});
+        local.testReportMerge(testReport);
         // create test-report.json
         delete testReport.coverage;
         local.fsWriteFileWithMkdirpSync(
@@ -7538,7 +7538,7 @@ local.testRunDefault = function (opt) {
             JSON.stringify(testReport, null, 4)
         );
         // restore console.log
-        console.error = local._testRunConsoleError;
+        console.error = consoleError;
         // restore process.exit
         if (processExit) {
             process.exit = processExit;
@@ -7546,10 +7546,8 @@ local.testRunDefault = function (opt) {
         // reset utility2_modeTest
         globalThis.utility2_modeTest = 0;
         // save testReport and coverage
-        if (testReport === globalThis.utility2_testReport) {
-            testReport.coverage = globalThis.__coverage__;
-            console.timeStamp(globalThis.utility2_testId);
-        }
+        testReport.coverage = globalThis.__coverage__;
+        console.timeStamp(globalThis.utility2_testId);
         local.emit("utility2.testRunEnd", testReport);
         // exit with number of tests failed
         if (processExit) {
@@ -7565,10 +7563,6 @@ local.testRunServer = function (opt) {
  * 2. start server on local.env.PORT
  * 3. run tests
  */
-    if (globalThis.utility2_serverHttp1) {
-        return;
-    }
-    globalThis.utility2_onReadyBefore.counter += 1;
     // 1. create server from local.middlewareList
     local.middlewareList = local.middlewareList || [
         local.middlewareInit,
@@ -7577,6 +7571,10 @@ local.testRunServer = function (opt) {
         local.middlewareJsonpStateInit,
         local.middlewareFileServer
     ];
+    if (local.env.npm_config_mode_library || globalThis.utility2_serverHttp1) {
+        return;
+    }
+    globalThis.utility2_onReadyBefore.counter += 1;
     local.serverLocalReqHandler = function (req, res) {
         let that;
         that = {};
@@ -7595,10 +7593,6 @@ local.testRunServer = function (opt) {
         local.serverLocalReqHandler
     );
     // 2. start server on local.env.PORT
-    if (local.env.npm_config_mode_library) {
-        globalThis.utility2_onReadyBefore();
-        return;
-    }
     console.error("http-server listening on port " + local.env.PORT);
     globalThis.utility2_onReadyBefore.counter += 1;
     globalThis.utility2_serverHttp1.listen(
@@ -7911,6 +7905,7 @@ local.uuid4Create = function () {
 
 
 
+/* istanbul ignore next */
 // run shared js-env code - init-after
 (function () {
 local.ajaxProgressUpdate = (
