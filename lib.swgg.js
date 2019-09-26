@@ -217,10 +217,26 @@
                 // if message is a string, then leave as is
                 ? message
                 // else JSON.stringify message
-                : JSON.stringify(message, null, 4)
+                : JSON.stringify(message, undefined, 4)
             )
         );
         throw err;
+    };
+    local.coalesce = function (...argList) {
+    /*
+     * this function will coalesce null, undefined, or "" in <argList>
+     */
+        let arg;
+        let ii;
+        ii = 0;
+        while (ii < argList.length) {
+            arg = argList[ii];
+            if (arg !== null && arg !== undefined && arg !== "") {
+                break;
+            }
+            ii += 1;
+        }
+        return arg;
     };
     local.fsRmrfSync = function (dir) {
     /*
@@ -286,8 +302,7 @@
     };
     local.objectAssignDefault = function (target, source) {
     /*
-     * this function will if items from <target> are
-     * null, undefined, or empty-string,
+     * this function will if items from <target> are null, undefined, or "",
      * then overwrite them with items from <source>
      */
         target = target || {};
@@ -339,12 +354,6 @@
      * this function will return <val> or {}
      */
         return val || {};
-    };
-    local.valueOrEmptyString = function (val) {
-    /*
-     * this function will return <val> or ""
-     */
-        return val || "";
     };
     // require builtin
     if (!local.isBrowser) {
@@ -1278,11 +1287,6 @@ local.templateUiMain = '\
         download standalone app\n\
     </a><br>\n\
     {{/if x-swgg-downloadStandaloneApp}}\n\
-    {{#if x-swgg-onEventDomDb}}\n\
-    <button class="button" data-onevent="onEventDomDb" data-onevent-db="dbReset">reset database</button><br>\n\
-    <button class="button" data-onevent="onEventDomDb" data-onevent-db="dbExport">export database -&gt; file</button><br>\n\
-    <button class="button" data-onevent="onEventDomDb" data-onevent-db="dbImport">import database &lt;- file</button><br>\n\
-    {{/if x-swgg-onEventDomDb}}\n\
     <ul>\n\
         {{#if externalDocs.url}}\n\
         <li>\n\
@@ -2449,7 +2453,7 @@ local.apiUpdate = function (swaggerJson) {
             })
         );
         tmp = swaggerJson.definitions[schemaName];
-        local.valueOrEmptyList(tmp.allOf).forEach(function (element) {
+        local.coalesce(tmp.allOf, []).forEach(function (element) {
             local.objectSetDefault(
                 tmp,
                 local.jsonCopy(local.swaggerValidateDataSchema({
@@ -2594,7 +2598,7 @@ local.apiUpdate = function (swaggerJson) {
             that["x-swgg-notRequired"],
             that["x-swgg-required"]
         ].forEach(function (element, ii) {
-            local.valueOrEmptyList(element).forEach(function (name) {
+            local.coalesce(element, []).forEach(function (name) {
                 that._schemaPDict[name].required = Boolean(ii);
             });
         });
@@ -3137,7 +3141,7 @@ local.middlewareCrudBuiltin = function (req, res, next) {
                 crud.body[crud.idBackend] = crud.data[crud.idName];
                 crud.dbTable.crudUpdateOneById(crud.body, opt.gotoNext);
                 break;
-            // hack-istanbul - test err handling-behavior
+            // hack-coverage - test err handling-behavior
             case "crudErrorDelete":
             case "crudErrorGet":
             case "crudErrorHead":
@@ -3406,7 +3410,7 @@ local.middlewareUserLogin = function (req, res, next) {
             );
             user.jwtDecrypted = local.jwtAes256GcmDecrypt(user.jwtEncrypted);
             switch (crud.crudType[0]) {
-            // hack-istanbul - test err handling-behavior
+            // hack-coverage - test err handling-behavior
             case "crudErrorLogin":
                 opt.gotoNext(local.errDefault);
                 return;
@@ -3749,9 +3753,7 @@ local.normalizeSwaggerJson = function (swaggerJson, opt) {
                 });
             }
             // normalize parameter.required
-            local.valueOrEmptyList(
-                tmp.parameters
-            ).forEach(function (schemaP) {
+            local.coalesce(tmp.parameters, []).forEach(function (schemaP) {
                 if (schemaP.required === false) {
                     delete schemaP.required;
                 }
@@ -3802,8 +3804,9 @@ local.normalizeSwaggerJson = function (swaggerJson, opt) {
         Object.keys(swaggerJson.paths[path]).forEach(function (method) {
             tmp = swaggerJson.paths[path][method];
             opt.objectSetDescription(tmp);
-            local.valueOrEmptyList(
-                tmp.parameters
+            local.coalesce(
+                tmp.parameters,
+                []
             ).forEach(opt.objectSetDescription);
             Object.keys(tmp.responses || {}).forEach(function (key) {
                 opt.objectSetDescription(tmp.responses[key]);
@@ -4544,8 +4547,9 @@ local.swaggerValidate = function (swaggerJson) {
                 tmp.path[match0] = tmp.path[match0] || [];
                 tmp.path[match0][0] = true;
             });
-            local.valueOrEmptyList(
-                operation.parameters
+            local.coalesce(
+                operation.parameters,
+                []
             ).forEach(function (schemaP, ii) {
                 // dereference schemaP
                 String(schemaP["x-swgg-$ref"] || schemaP.$ref).replace((
@@ -4625,7 +4629,7 @@ local.swaggerValidate = function (swaggerJson) {
             // validate semanticFormData4
             test = (
                 !tmp.type.file
-                || local.valueOrEmptyList(operation.consumes).indexOf(
+                || local.coalesce(operation.consumes, []).indexOf(
                     "multipart/form-data"
                 ) >= 0
             );
@@ -4637,10 +4641,10 @@ local.swaggerValidate = function (swaggerJson) {
             // validate semanticFormData5
             test = (
                 !tmp.in.formData
-                || local.valueOrEmptyList(operation.consumes).indexOf(
+                || local.coalesce(operation.consumes, []).indexOf(
                     "application/x-www-form-urlencoded"
                 ) >= 0
-                || local.valueOrEmptyList(operation.consumes).indexOf(
+                || local.coalesce(operation.consumes, []).indexOf(
                     "multipart/form-data"
                 ) >= 0
             );
@@ -5129,7 +5133,7 @@ local.swaggerValidateDataSchema = function (opt) {
             schema
         });
         // 5.4.3. required
-        local.valueOrEmptyList(schema.required).forEach(function (key) {
+        local.coalesce(schema.required, []).forEach(function (key) {
             // validate semanticItemsRequiredForArrayObjects2
             test = !local.isNullOrUndefined(data[key]);
             local.throwSwaggerError(!test && {
@@ -5286,7 +5290,7 @@ local.swaggerValidateDataSchema = function (opt) {
     // 5.5.1. enum
     tmp = schema.enum || (
         !opt.modeSchema
-        && local.valueOrEmptyList(local.schemaPItems(schema) || {}).enum
+        && local.coalesce(local.schemaPItems(schema), {}).enum
     );
     test = !tmp || (
         Array.isArray(data)
@@ -5307,7 +5311,7 @@ local.swaggerValidateDataSchema = function (opt) {
     // 5.5.2. type
     local.nop();
     // 5.5.3. allOf
-    local.valueOrEmptyList(schema.allOf).forEach(function (element) {
+    local.coalesce(schema.allOf, []).forEach(function (element) {
         // recurse - schema.allOf
         local.swaggerValidateDataSchema({
             data,
@@ -5347,7 +5351,7 @@ local.swaggerValidateDataSchema = function (opt) {
         ? 1
         : 0
     );
-    local.valueOrEmptyList(schema.oneOf).some(function (element) {
+    local.coalesce(schema.oneOf, []).some(function (element) {
         local.tryCatchOnError(function () {
             // recurse - schema.oneOf
             local.swaggerValidateDataSchema({
@@ -5547,8 +5551,6 @@ local.uiEventListenerDict = local.objectAssignDefault(
     globalThis.domOnEventDelegateDict
 );
 
-local.uiEventListenerDict.onEventDomDb = local.db.onEventDomDb;
-
 local.uiEventListenerDict.onEventInputTextareaChange = function (evt) {
 /*
  * this function will show/hide the textarea's multiline placeholder
@@ -5675,7 +5677,7 @@ local.uiEventListenerDict.onEventInputValidateAndAjax = function (
     opt.api.ajax(opt, onError || local.nop);
     // init errorDict
     errorDict = {};
-    local.valueOrEmptyList(opt.err && opt.err.errList).forEach(function (err) {
+    local.coalesce(opt.err && opt.err.errList, []).forEach(function (err) {
         errorDict[err.opt.prefix[2]] = err;
     });
     // shake input on err
@@ -6273,7 +6275,7 @@ local.uiRenderSchemaP = function (schemaP) {
     // init enum
     schemaP.enum2 = (
         schemaP.enum
-        || local.valueOrEmptyObject(local.schemaPItems(schemaP)).enum
+        || local.coalesce(local.schemaPItems(schemaP), {}).enum
         || (local.schemaPType(schemaP) === "boolean" && [
             false, true
         ])

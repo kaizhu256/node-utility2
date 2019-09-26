@@ -217,10 +217,26 @@
                 // if message is a string, then leave as is
                 ? message
                 // else JSON.stringify message
-                : JSON.stringify(message, null, 4)
+                : JSON.stringify(message, undefined, 4)
             )
         );
         throw err;
+    };
+    local.coalesce = function (...argList) {
+    /*
+     * this function will coalesce null, undefined, or "" in <argList>
+     */
+        let arg;
+        let ii;
+        ii = 0;
+        while (ii < argList.length) {
+            arg = argList[ii];
+            if (arg !== null && arg !== undefined && arg !== "") {
+                break;
+            }
+            ii += 1;
+        }
+        return arg;
     };
     local.fsRmrfSync = function (dir) {
     /*
@@ -286,8 +302,7 @@
     };
     local.objectAssignDefault = function (target, source) {
     /*
-     * this function will if items from <target> are
-     * null, undefined, or empty-string,
+     * this function will if items from <target> are null, undefined, or "",
      * then overwrite them with items from <source>
      */
         target = target || {};
@@ -339,12 +354,6 @@
      * this function will return <val> or {}
      */
         return val || {};
-    };
-    local.valueOrEmptyString = function (val) {
-    /*
-     * this function will return <val> or ""
-     */
-        return val || "";
     };
     // require builtin
     if (!local.isBrowser) {
@@ -416,7 +425,6 @@ globalThis.utility2 = local;
 // init lib extra
 [
     "apidoc",
-    "db",
     "github_crud",
     "istanbul",
     "jslint",
@@ -653,10 +661,26 @@ local.assetsDict["/assets.utility2.header.js"] = '\
                 // if message is a string, then leave as is\n\
                 ? message\n\
                 // else JSON.stringify message\n\
-                : JSON.stringify(message, null, 4)\n\
+                : JSON.stringify(message, undefined, 4)\n\
             )\n\
         );\n\
         throw err;\n\
+    };\n\
+    local.coalesce = function (...argList) {\n\
+    /*\n\
+     * this function will coalesce null, undefined, or "" in <argList>\n\
+     */\n\
+        let arg;\n\
+        let ii;\n\
+        ii = 0;\n\
+        while (ii < argList.length) {\n\
+            arg = argList[ii];\n\
+            if (arg !== null && arg !== undefined && arg !== "") {\n\
+                break;\n\
+            }\n\
+            ii += 1;\n\
+        }\n\
+        return arg;\n\
     };\n\
     local.fsRmrfSync = function (dir) {\n\
     /*\n\
@@ -722,8 +746,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
     };\n\
     local.objectAssignDefault = function (target, source) {\n\
     /*\n\
-     * this function will if items from <target> are\n\
-     * null, undefined, or empty-string,\n\
+     * this function will if items from <target> are null, undefined, or "",\n\
      * then overwrite them with items from <source>\n\
      */\n\
         target = target || {};\n\
@@ -775,12 +798,6 @@ local.assetsDict["/assets.utility2.header.js"] = '\
      * this function will return <val> or {}\n\
      */\n\
         return val || {};\n\
-    };\n\
-    local.valueOrEmptyString = function (val) {\n\
-    /*\n\
-     * this function will return <val> or ""\n\
-     */\n\
-        return val || "";\n\
     };\n\
     // require builtin\n\
     if (!local.isBrowser) {\n\
@@ -840,19 +857,6 @@ local.assetsDict["/assets.utility2.template.html"] = '\
     box-sizing: border-box;\n\
 }\n\
 /* csslint ignore:end */\n\
-@keyframes uiAnimateShake {\n\
-0%,\n\
-50% {\n\
-    transform: translateX(10px);\n\
-}\n\
-100% {\n\
-    transform: translateX(0);\n\
-}\n\
-25%,\n\
-75% {\n\
-    transform: translateX(-10px);\n\
-}\n\
-}\n\
 @keyframes uiAnimateSpin {\n\
 0% {\n\
     transform: rotate(0deg);\n\
@@ -924,10 +928,6 @@ pre {\n\
     overflow: auto;\n\
     padding: 2px;\n\
 }\n\
-.uiAnimateShake {\n\
-    animation-duration: 500ms;\n\
-    animation-name: uiAnimateShake;\n\
-}\n\
 .uiAnimateSlide {\n\
     overflow-y: hidden;\n\
     transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;\n\
@@ -943,8 +943,6 @@ pre {\n\
 </head>\n\
 <body>\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
-<a class="zeroPixel" download="db.persistence.json" href="" id="dbExportA1"></a>\n\
-<input class="zeroPixel" data-onevent="onEventDomDb" data-onevent-db="dbImportInput" type="file">\n\
 <script>\n\
 /* jslint utility2:true */\n\
 // init domOnEventWindowOnloadTimeElapsed\n\
@@ -1348,7 +1346,7 @@ if (!local.isBrowser) {\n\
             return (\n\
                 typeof arg === "string"\n\
                 ? arg\n\
-                : JSON.stringify(arg, null, 4)\n\
+                : JSON.stringify(arg, undefined, 4)\n\
             );\n\
         }).join(" ").replace((\n\
             /\\u001b\\[\\d*m/g\n\
@@ -1359,7 +1357,6 @@ if (!local.isBrowser) {\n\
 });\n\
 local.objectAssignDefault(local, globalThis.domOnEventDelegateDict);\n\
 globalThis.domOnEventDelegateDict = local;\n\
-local.onEventDomDb = local.db && local.db.onEventDomDb;\n\
 if ((\n\
     /\\bmodeTest=1\\b/\n\
 ).test(location.search)) {\n\
@@ -2194,7 +2191,7 @@ local.FormData.prototype.read = function (onError) {
     let result;
     // handle null-case
     if (!this.entryList.length) {
-        onError(null, "");
+        onError();
         return;
     }
     // init boundary
@@ -2248,7 +2245,7 @@ local.FormData.prototype.read = function (onError) {
             err,
             // flatten result
             !err
-            && local.bufferConcat(Array.prototype.concat.apply([], result))
+            && local.bufferConcat(result.flat())
         );
     });
 };
@@ -2329,7 +2326,7 @@ local._http.createServer = function () {
  */
     return {
         listen: function (port, onError) {
-            onError(null, port);
+            onError(undefined, port);
         }
     };
 };
@@ -2439,13 +2436,76 @@ local._testCase_buildApidoc_default = function (opt, onError) {
 /*
  * this function will test buildApidoc's default handling-behavior
  */
+    let require2;
+    require2 = function (file) {
+    /*
+     * this function will require <file> in sandbox-env
+     */
+        let exports;
+        let mockDict;
+        let mockList;
+        mockList = [
+            [
+                globalThis, {
+                    setImmediate: local.nop,
+                    setInterval: local.nop,
+                    setTimeout: local.nop
+                }
+            ]
+        ];
+        [
+            [
+                local, "child_process"
+            ], [
+                local, "cluster"
+            ], [
+                local, "http"
+            ], [
+                local, "https"
+            ], [
+                local, "net"
+            ], [
+                local, "repl"
+            ], [
+                local.events, "prototype"
+            ], [
+                globalThis, "process"
+            ], [
+                local.stream, "prototype"
+            ], [
+                process, "stdin"
+            ]
+        ].forEach(function (elem, tmp) {
+            tmp = elem[0][elem[1]];
+            mockDict = {};
+            Object.keys(tmp).forEach(function (key) {
+                if (typeof tmp[key] === "function" && !(
+                    /^(?:fs\.Read|fs\.read|process\.binding|process\.dlopen)/
+                ).test(elem[1] + "." + key)) {
+                    mockDict[key] = function () {
+                        return;
+                    };
+                }
+            });
+            mockList.push([
+                tmp, mockDict
+            ]);
+        });
+        local.testMock(mockList, function (onError) {
+            local.tryCatchOnError(function () {
+                exports = require(file);
+            }, local.onErrorDefault);
+            onError();
+        }, local.onErrorThrow);
+        return exports;
+    };
     if (
         local.isBrowser
         || local.env.npm_config_mode_coverage
         || local.env.npm_config_mode_test_case
         !== "testCase_buildApidoc_default"
     ) {
-        onError(null, opt);
+        onError(undefined, opt);
         return;
     }
     // save apidoc.html
@@ -2453,7 +2513,7 @@ local._testCase_buildApidoc_default = function (opt, onError) {
         "tmp/build/apidoc.html",
         local.apidocCreate(local.objectAssignDefault(opt, {
             blacklistDict: local,
-            require: local.requireInSandbox
+            require: require2
         }))
     );
     console.error(
@@ -2467,7 +2527,7 @@ local._testCase_buildApp_default = function (opt, onError) {
  * this function will test buildApp's default handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, opt);
+        onError(undefined, opt);
         return;
     }
     globalThis.local.testCase_buildReadme_default(opt, local.onErrorThrow);
@@ -2481,7 +2541,7 @@ local._testCase_buildLib_default = function (opt, onError) {
  * this function will test buildLib's default handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, opt);
+        onError(undefined, opt);
         return;
     }
     return local.buildLib({}, onError);
@@ -2492,7 +2552,7 @@ local._testCase_buildReadme_default = function (opt, onError) {
  * this function will test buildReadme's default handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, opt);
+        onError(undefined, opt);
         return;
     }
     return local.buildReadme({}, onError);
@@ -2503,7 +2563,7 @@ local._testCase_buildTest_default = function (opt, onError) {
  * this function will test buildTest's default handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, opt);
+        onError(undefined, opt);
         return;
     }
     return local.buildTest({}, onError);
@@ -2515,7 +2575,7 @@ local._testCase_webpage_default = function (opt, onError) {
  */
     local.domStyleValidate();
     if (local.isBrowser) {
-        onError(null, opt);
+        onError(undefined, opt);
         return;
     }
     local.browserTest({
@@ -3021,7 +3081,7 @@ local.blobRead = function (blob, onError) {
         return;
     }
     if (!local.isBrowser) {
-        onError(null, local.bufferValidateAndCoerce(blob.buf));
+        onError(undefined, local.bufferValidateAndCoerce(blob.buf));
         return;
     }
     reader = new FileReader();
@@ -3037,7 +3097,7 @@ local.blobRead = function (blob, onError) {
             break;
         case "load":
             onError(
-                null,
+                undefined,
                 Object.prototype.toString.call(reader.result)
                 === "[object ArrayBuffer]"
                 // convert ArrayBuffer to Uint8Array
@@ -3539,7 +3599,7 @@ local.buildReadme = function (opt, onError) {
     );
     // init package.json
     opt.dataFrom.replace(opt.packageJsonRgx, function (match0, match1) {
-        // remove null-items from package.json
+        // remove null from package.json
         opt.packageJson = JSON.parse(match1.replace((
             /\u0020{4}".*?":\u0020null,?$/gm
         ), ""));
@@ -3581,7 +3641,7 @@ local.buildReadme = function (opt, onError) {
         // save package.json
         local.fs.writeFileSync(
             "package.json",
-            local.jsonStringifyOrdered(opt.packageJson, null, 4) + "\n"
+            local.jsonStringifyOrdered(opt.packageJson, undefined, 4) + "\n"
         );
         // re-render dataTo
         opt.dataTo = local.templateRenderMyApp(
@@ -3592,7 +3652,7 @@ local.buildReadme = function (opt, onError) {
             opt.packageJsonRgx,
             match0.replace(
                 match1,
-                local.jsonStringifyOrdered(opt.packageJson, null, 4)
+                local.jsonStringifyOrdered(opt.packageJson, undefined, 4)
             )
         );
     });
@@ -3815,7 +3875,7 @@ local.buildReadme = function (opt, onError) {
     if (opt.swaggerJson.swagger) {
         local.fs.writeFileSync(
             "assets.swgg.swagger.json",
-            local.jsonStringifyOrdered(opt.swaggerJson, null, 4) + "\n"
+            local.jsonStringifyOrdered(opt.swaggerJson, undefined, 4) + "\n"
         );
     }
     onError();
@@ -3991,16 +4051,14 @@ local.cliRun = function (opt) {
             try {
                 commandList[ii] = opt.rgxComment.exec(text);
                 commandList[ii] = {
-                    argList: local.valueOrEmptyString(
-                        commandList[ii][1]
-                    ).trim(),
+                    argList: local.coalesce(commandList[ii][1], "").trim(),
                     command: [
                         key
                     ],
                     description: commandList[ii][2]
                 };
             } catch (ignore) {
-                local.assertOrThrow(null, new Error(
+                local.assertOrThrow(undefined, new Error(
                     "cliRun - cannot parse comment in COMMAND "
                     + key
                     + ":\nnew RegExp("
@@ -4143,17 +4201,17 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
  * example usage:
     data = new Uint8Array([1,2,3]);
     key = '0123456789abcdef0123456789abcdef';
-    mode = null;
+    mode = undefined;
     local.cryptoAesXxxCbcRawEncrypt({
-        data: data,
-        key: key,
-        mode: mode
+        data,
+        key,
+        mode
     }, function (err, data) {
         console.assert(!err, err);
         local.cryptoAesXxxCbcRawDecrypt({
-            data: data,
-            key: key,
-            mode: mode
+            data,
+            key,
+            mode
         }, console.log);
     });
  */
@@ -4192,7 +4250,7 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
                 key,
                 iv
             );
-            onError(null, Buffer.concat([
+            onError(undefined, Buffer.concat([
                 cipher.update(data), cipher.final()
             ]));
         });
@@ -4207,7 +4265,7 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
             iv,
             name: "AES-CBC"
         }, key, data).then(function (data) {
-            onError(null, new Uint8Array(data));
+            onError(undefined, new Uint8Array(data));
         }).catch(onError);
     }).catch(onError);
 };
@@ -4219,17 +4277,17 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
  * example usage:
     data = new Uint8Array([1,2,3]);
     key = '0123456789abcdef0123456789abcdef';
-    mode = null;
+    mode = undefined;
     local.cryptoAesXxxCbcRawEncrypt({
-        data: data,
-        key: key,
-        mode: mode
+        data,
+        key,
+        mode
     }, function (err, data) {
         console.assert(!err, err);
         local.cryptoAesXxxCbcRawDecrypt({
-            data: data,
-            key: key,
-            mode: mode
+            data,
+            key,
+            mode
         }, console.log);
     });
  */
@@ -4267,7 +4325,7 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
                 iv = local.base64FromBuffer(iv);
                 iv += "\n";
             }
-            onError(null, iv);
+            onError(undefined, iv);
         });
         return;
     }
@@ -4288,7 +4346,7 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
                 iv = local.base64FromBuffer(iv);
                 iv += "\n";
             }
-            onError(null, iv);
+            onError(undefined, iv);
         }).catch(onError);
     }).catch(onError);
 };
@@ -4408,7 +4466,7 @@ local.domStyleValidate = function () {
     let rgx;
     let tmp;
     rgx = (
-        /^0\u0020(?:(body\u0020>\u0020)?(?:\.testReportDiv\u0020.+|\.x-istanbul\u0020.+|\.button|\.colorError|\.readonly|\.textarea|\.uiAnimateShake|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
+        /^0\u0020(?:(body\u0020>\u0020)?(?:\.testReportDiv\u0020.+|\.x-istanbul\u0020.+|\.button|\.colorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
     );
     tmp = [];
     local.querySelectorAll("style").map(function (elem, ii) {
@@ -4528,7 +4586,7 @@ local.eventEmitterCreate(local);
 local.fsReadFileOrEmptyStringSync = function (file, opt) {
 /*
  * this function will try to read file or return empty-string, or
- * if <opt> === "json", then try to JSON.parse file or return null
+ * if <opt> === "json", then try to JSON.parse file or return {}
  */
     try {
         return (
@@ -4570,21 +4628,21 @@ local.gotoNext = function (opt, onError) {
         } catch (errCaught) {
             // throw errCaught to break infinite recursion-loop
             if (opt.errCaught) {
-                local.assertOrThrow(null, opt.errCaught);
+                local.assertOrThrow(undefined, opt.errCaught);
             }
             opt.errCaught = errCaught;
             opt.gotoNext(errCaught, data, meta);
         }
     });
-    opt.gotoNextData = opt.gotoNext.bind(null, null);
+    opt.gotoNextData = opt.gotoNext.bind(undefined, undefined);
     return opt;
 };
 
-local.isNullOrUndefined = function (arg0) {
+local.isNullOrUndefined = function (val) {
 /*
- * this function will test if arg0 is null or undefined
+ * this function will test if val is null or undefined
  */
-    return arg0 === null || arg0 === undefined;
+    return val === null || val === undefined;
 };
 
 local.jslintAutofixLocalFunction = function (code, file) {
@@ -4604,7 +4662,6 @@ local.jslintAutofixLocalFunction = function (code, file) {
     case "lib." + process.env.npm_package_nameLib + ".js":
     case "lib." + process.env.npm_package_nameLib + ".sh":
     case "lib.apidoc.js":
-    case "lib.db.js":
     case "lib.github_crud.js":
     case "lib.istanbul.js":
     case "lib.jslint.js":
@@ -4651,7 +4708,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
         [
             "utility2", "swgg"
         ], [
-            "utility2", "apidoc", "db", "github_crud", "swgg"
+            "utility2", "apidoc", "github_crud", "swgg"
         ]
     ].forEach(function (dictList, ii) {
         tmp = (
@@ -4741,6 +4798,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
     dictProp = local.jsonCopy(dictProp);
     [
         "assertOrThrow",
+        "coalesce",
         "fsRmrfSync",
         "fsWriteFileWithMkdirpSync",
         "functionOrNop",
@@ -4750,8 +4808,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
         "querySelectorAll",
         "value",
         "valueOrEmptyList",
-        "valueOrEmptyObject",
-        "valueOrEmptyString"
+        "valueOrEmptyObject"
     ].forEach(function (key) {
         dictFnc[key] = true;
         dictProp[key] = true;
@@ -4829,7 +4886,7 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
             return;
         }
         circularSet.add(obj);
-        // if obj is an array, then recurse its items
+        // if obj is an array, then recurse items
         if (Array.isArray(obj)) {
             tmp = "[" + obj.map(function (obj) {
                 // recurse
@@ -5132,7 +5189,7 @@ local.middlewareFileServer = function (req, res, next) {
             return;
         }
         // respond with data
-        local.serverRespondHeadSet(req, res, null, {
+        local.serverRespondHeadSet(req, res, undefined, {
             "Content-Type": local.contentTypeDict[(
                 /\.[^.]*?$|$/m
             ).exec(file)[0]]
@@ -5242,14 +5299,14 @@ local.middlewareInit = function (req, res, next) {
     // init req.urlParsed
     req.urlParsed = local.urlParse(req.url);
     // init res-header content-type
-    local.serverRespondHeadSet(req, res, null, {
+    local.serverRespondHeadSet(req, res, undefined, {
         "Content-Type": local.contentTypeDict[(
             /\.[^.]*?$|$/m
         ).exec(req.urlParsed.pathname)[0]]
     });
     // set main-page content-type to text/html
     if (req.urlParsed.pathname === "/") {
-        local.serverRespondHeadSet(req, res, null, {
+        local.serverRespondHeadSet(req, res, undefined, {
             "Content-Type": "text/html; charset=utf-8"
         });
     }
@@ -5410,13 +5467,13 @@ local.objectSetDefault = function (dict, defaults, depth) {
             dict[key] = defaults2;
             return;
         }
-        // if dict2 and defaults2 are both non-null and non-array objects,
+        // if dict2 and defaults2 are both non-undefined and non-array objects,
         // then recurse with dict2 and defaults2
         if (
             depth > 1
-            // dict2 is a non-null and non-array object
+            // dict2 is a non-undefined and non-array object
             && typeof dict2 === "object" && dict2 && !Array.isArray(dict2)
-            // defaults2 is a non-null and non-array object
+            // defaults2 is a non-undefined and non-array object
             && typeof defaults2 === "object" && defaults2
             && !Array.isArray(defaults2)
         ) {
@@ -5442,13 +5499,13 @@ local.objectSetOverride = function (dict, overrides, depth, env) {
         if (overrides2 === undefined) {
             return;
         }
-        // if both dict2 and overrides2 are non-null and non-array objects,
+        // if both dict2 and overrides2 are non-undefined and non-array objects,
         // then recurse with dict2 and overrides2
         if (
             depth > 1
-            // dict2 is a non-null and non-array object
+            // dict2 is a non-undefined and non-array object
             && typeof dict2 === "object" && dict2 && !Array.isArray(dict2)
-            // overrides2 is a non-null and non-array object
+            // overrides2 is a non-undefined and non-array object
             && typeof overrides2 === "object" && overrides2
             && !Array.isArray(overrides2)
         ) {
@@ -5622,7 +5679,7 @@ local.onParallelList = function (opt, onEach, onError) {
         }
         // restart if opt.list has grown
         if (isListEnd && (onParallel.ii + 1 < opt.list.length)) {
-            isListEnd = null;
+            isListEnd = undefined;
             onEach2();
         }
     });
@@ -5677,7 +5734,7 @@ local.profileSync = function (fnc) {
 
 local.replStart = function () {
 /*
- * this function will start the repl-debugger
+ * this function will start repl-debugger
  */
     let that;
     if (globalThis.utility2_repl1) {
@@ -5688,30 +5745,15 @@ local.replStart = function () {
         useGlobal: true
     });
     globalThis.utility2_repl1 = that;
-    that.onError = function (err) {
-    /*
-     * this function will debug repl-err
-     */
-        globalThis.utility2_debugReplError = err;
-        console.error(err);
-    };
     // save eval-function
     that.evalDefault = that.eval;
     // hook custom-eval-function
     that.eval = function (script, context, file, onError) {
-        let onError2;
-        onError2 = function (err, data) {
-            // debug err
-            globalThis.utility2_debugReplError = (
-                err || globalThis.utility2_debugReplError
-            );
-            onError(err, data);
-        };
         script.replace((
             /^(\S+)\u0020(.*?)\n/
         ), function (ignore, match1, match2) {
             switch (match1) {
-            // syntax-sugar - run async shell-command
+            // syntax-sugar - run shell-command
             case "$":
                 switch (match2) {
                 // syntax-sugar - run git diff
@@ -5722,7 +5764,7 @@ local.replStart = function () {
                 case "git log":
                     match2 = "git log -n 4 | cat";
                     break;
-                // syntax-sugar - run git log
+                // syntax-sugar - run ll
                 case "ll":
                     match2 = "ls -Fal";
                     break;
@@ -5737,21 +5779,16 @@ local.replStart = function () {
                         + "/lib.utility2.sh;" + match2
                     );
                 }
-                // run async shell-command
+                // run shell-command
                 require("child_process").spawn(match2, {
                     shell: true,
                     stdio: [
                         "ignore", 1, 2
                     ]
-                // on shell exit, print return prompt
+                // print exitCode
                 }).on("exit", function (exitCode) {
-                    console.error("exit-code " + exitCode);
-                    that.evalDefault(
-                        "\n",
-                        context,
-                        file,
-                        onError2
-                    );
+                    console.error("exitCode " + exitCode);
+                    that.evalDefault("\n", context, file, onError);
                 });
                 script = "\n";
                 break;
@@ -5774,7 +5811,7 @@ local.replStart = function () {
                 break;
             // syntax-sugar - grep current dir
             case "grep":
-                // run async shell-command
+                // run shell-command
                 require("child_process").spawn((
                     "find . -type f | grep -v -E "
 /* jslint ignore:start */
@@ -5804,19 +5841,13 @@ vendor)s{0,1}(\\b|_)\
                     stdio: [
                         "ignore", 1, 2
                     ]
-                // on shell exit, print return prompt
                 }).on("exit", function (exitCode) {
-                    console.error("exit-code " + exitCode);
-                    that.evalDefault(
-                        "\n",
-                        context,
-                        file,
-                        onError2
-                    );
+                    console.error("exitCode " + exitCode);
+                    that.evalDefault("\n", context, file, onError);
                 });
                 script = "\n";
                 break;
-            // syntax-sugar - list object's keys, sorted by item-type
+            // syntax-sugar - list obj's keys, sorted by item-type
             // console.error(Object.keys(global).map(function(key){return(typeof global[key]==='object'&&global[key]&&global[key]===global[key]?'global':typeof global[key])+' '+key;}).sort().join('\n')) // jslint ignore:line
             case "keys":
                 script = (
@@ -5831,126 +5862,15 @@ vendor)s{0,1}(\\b|_)\
                     + "}).sort().join('\\n'))\n"
                 );
                 break;
-            // syntax-sugar - print stringified arg
+            // syntax-sugar - print String(val)
             case "print":
                 script = "console.error(String(" + match2 + "))\n";
                 break;
-            // syntax-sugar - read file
-            case "readFile":
-                try {
-                    console.error(JSON.stringify(
-                        require("fs").readFileSync(match2, "utf8")
-                    ));
-                } catch (errCaught) {
-                    console.error(errCaught);
-                }
-                script = "\n";
-                break;
             }
         });
-        // eval the script
-        that.evalDefault(script, context, file, onError2);
+        // eval script
+        that.evalDefault(script, context, file, onError);
     };
-    that.socket = {
-        end: local.nop,
-        on: local.nop,
-        write: local.nop
-    };
-    // init process.stdout
-    process.stdout._writeDefault = (
-        process.stdout._writeDefault
-        || process.stdout._write
-    );
-    process.stdout._write = function (buf, encoding, callback) {
-        process.stdout._writeDefault(buf, encoding, callback);
-        // hack-istanbul - ignore else-statement
-        local.nop(that.socket.writable && (function () {
-            that.socket.write(buf, encoding);
-        }()));
-    };
-    // start serverRepl1
-    globalThis.utility2_serverRepl1 = require("net").createServer(function (
-        socket
-    ) {
-        // init socket
-        that.socket = socket;
-        that.socket.on("data", that.write.bind(that));
-        that.socket.on("error", that.onError);
-        that.socket.setKeepAlive(true);
-    });
-    // hack-istanbul - ignore else-statement
-    local.nop(process.env.PORT_REPL && (function () {
-        console.error(
-            "repl-server listening on port " + process.env.PORT_REPL
-        );
-        globalThis.utility2_serverRepl1.listen(process.env.PORT_REPL);
-    }()));
-};
-
-local.requireInSandbox = function (file) {
-/*
- * this function will require <file> in sandbox-env
- */
-    let exports;
-    let mockDict;
-    let mockList;
-    let tmp;
-    mockList = [
-        [
-            globalThis, {
-                setImmediate: local.nop,
-                setInterval: local.nop,
-                setTimeout: local.nop
-            }
-        ]
-    ];
-    [
-        [
-            local, "child_process"
-        ], [
-            local, "cluster"
-        ], [
-            local, "http"
-        ], [
-            local, "https"
-        ], [
-            local, "net"
-        ], [
-            local, "repl"
-        ], [
-            local.events, "prototype"
-        ], [
-            globalThis, "process"
-        ], [
-            local.stream, "prototype"
-        ], [
-            process, "stdin"
-        ]
-    ].forEach(function (elem) {
-        tmp = elem[0][elem[1]];
-        mockDict = {};
-        Object.keys(tmp).forEach(function (key) {
-            if (typeof tmp[key] === "function" && !(
-                /^(?:fs\.Read|fs\.read|process\.binding|process\.dlopen)/
-            ).test(elem[1] + "." + key)) {
-                mockDict[key] = function () {
-                    return;
-                };
-                // hack-istanbul
-                mockDict[key]();
-            }
-        });
-        mockList.push([
-            tmp, mockDict
-        ]);
-    });
-    local.testMock(mockList, function (onError) {
-        local.tryCatchOnError(function () {
-            exports = require(file);
-        }, local.onErrorDefault);
-        onError();
-    }, local.onErrorThrow);
-    return exports;
 };
 
 local.requireReadme = function () {
@@ -6214,7 +6134,11 @@ instruction\n\
                     tmp.utility2.assetsDict[file] = local.assetsDict[file];
                 }
             });
-            code.splice(1, 0, key + "(" + JSON.stringify(tmp, null, 4) + ");");
+            code.splice(
+                1,
+                0,
+                key + "(" + JSON.stringify(tmp, undefined, 4) + ");"
+            );
             code = code.join("");
             break;
         default:
@@ -6308,7 +6232,7 @@ local.serverRespondCors = function (req, res) {
  * this function will enable cors for the req
  * http://en.wikipedia.org/wiki/Cross-origin_resource_sharing
  */
-    local.serverRespondHeadSet(req, res, null, local.jsonCopy({
+    local.serverRespondHeadSet(req, res, undefined, local.jsonCopy({
         "access-control-allow-headers":
         req.headers["access-control-request-headers"],
         "access-control-allow-methods":
@@ -6786,7 +6710,7 @@ local.templateRender = function (template, dict, opt, ii) {
                     val = JSON.stringify(val);
                     break;
                 case "jsonStringify4":
-                    val = JSON.stringify(val, null, 4);
+                    val = JSON.stringify(val, undefined, 4);
                     break;
                 case "markdownSafe":
                     val = val.replace((
@@ -6858,7 +6782,7 @@ local.templateRender = function (template, dict, opt, ii) {
                 "templateRender could not render expression "
                 + JSON.stringify(match0) + "\n"
             ) + errCaught.message;
-            local.assertOrThrow(null, errCaught);
+            local.assertOrThrow(undefined, errCaught);
         }
     });
 };
@@ -6916,7 +6840,7 @@ local.testCase_nop_default = function (opt, onError) {
  * this function will test nop's default handling-behavior
  */
     local.nop();
-    onError(null, opt);
+    onError(undefined, opt);
 };
 
 local.testMock = function (mockList, onTestCase, onError) {
@@ -7034,7 +6958,7 @@ local.testReportCreate = function (testReport) {
         "created test-report file "
         + process.cwd() + "/tmp/build/test-report.html\n"
     );
-    // if any test failed, then exit with non-zero exit-code
+    // if any test failed, then exit with non-zero exitCode
     console.error(
         "\n" + local.env.MODE_BUILD
         + " - " + testReport.testsFailed + " failed tests\n"
@@ -7043,7 +6967,7 @@ local.testReportCreate = function (testReport) {
     testReport.testPlatformList.forEach(function (testPlatform) {
         testPlatform.testCaseList.forEach(function (testCase) {
             if (testCase.status !== "passed") {
-                console.error(JSON.stringify(testCase, null, 4));
+                console.error(JSON.stringify(testCase, undefined, 4));
             }
         });
     });
@@ -7324,12 +7248,6 @@ local.testRunDefault = function (opt) {
     case 1:
         globalThis.utility2_modeTest += 1;
         // reset db
-        if (local.db && typeof local.db.dbReset === "function") {
-            local.db.dbReset(
-                globalThis.utility2_dbSeedList,
-                local.onErrorThrow
-            );
-        }
         globalThis.utility2_onReadyAfter(function () {
             local.testRunDefault(opt);
         });
@@ -7513,7 +7431,7 @@ local.testRunDefault = function (opt) {
         local.tryCatchOnError(function () {
             // start testCase timer
             local.timeElapsedStart(testCase);
-            testCase.onTestCase(null, onError);
+            testCase.onTestCase(undefined, onError);
         }, onError);
     }, function () {
     /*
@@ -7532,10 +7450,10 @@ local.testRunDefault = function (opt) {
         // finalize testReport
         local.testReportMerge(testReport);
         // create test-report.json
-        delete testReport.coverage;
+        testReport.coverage = null;
         local.fsWriteFileWithMkdirpSync(
             local.env.npm_config_dir_build + "/test-report.json",
-            JSON.stringify(testReport, null, 4)
+            JSON.stringify(testReport, undefined, 4)
         );
         // restore console.log
         console.error = consoleError;
@@ -7648,42 +7566,6 @@ local.tryCatchOnError = function (fnc, onError) {
         local._debugTryCatchError = errCaught;
         return onError(errCaught);
     }
-};
-
-local.uiAnimateShake = function (elem, onError) {
-/*
- * this function will shake dom-<elem>
- */
-    if (!elem || elem.classList.contains("uiAnimateShake")) {
-        local.setTimeoutOnError(onError);
-        return;
-    }
-    elem.classList.add("uiAnimateShake");
-    setTimeout(function () {
-        elem.classList.remove("uiAnimateShake");
-        local.setTimeoutOnError(onError);
-    }, 500);
-};
-
-local.uiAnimateShakeIfError = function (err, elem, onError) {
-/*
- * this function will shake dom-<elem> if <err> occurred
- */
-    let hasError;
-    if (!elem) {
-        local.setTimeoutOnError(onError);
-        return;
-    }
-    hasError = elem.classList.contains("hasError");
-    if (err && !hasError) {
-        elem.classList.add("hasError");
-        local.uiAnimateShake(elem, onError);
-        return;
-    }
-    if (!err && hasError) {
-        elem.classList.remove("hasError");
-    }
-    local.setTimeoutOnError(onError);
 };
 
 local.uiAnimateSlideAccordian = function (elem, elemList, onError) {
@@ -7829,7 +7711,7 @@ local.urlParse = function (url) {
         }
         // init query
         urlParsed.query = {};
-        local.valueOrEmptyString(urlParsed.search).slice(1).replace((
+        local.coalesce(urlParsed.search, "").slice(1).replace((
             /[^&]+/g
         ), function (item) {
             item = item.split("=");
@@ -7945,8 +7827,9 @@ local.env = (
     : process.env
 );
 local.objectSetDefault(local.env, {
-    npm_package_nameLib: local.valueOrEmptyString(
-        local.env.npm_package_name
+    npm_package_nameLib: local.coalesce(
+        local.env.npm_package_name,
+        ""
     ).replace((
         /\W/g
     ), "_")
@@ -7961,7 +7844,7 @@ local.errDefault = new Error("default-error");
 local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.value;
 // cbranch-no cstat-no fstat-no missing-if-branch
 local.istanbulCoverageReportCreate = (
-    local.istanbul.coverageReportCreate || local.valueOrEmptyString
+    local.istanbul.coverageReportCreate || local.value
 );
 local.istanbulInstrumentInPackage = (
     local.istanbul.instrumentInPackage || local.value
@@ -8160,7 +8043,6 @@ if (globalThis.utility2_rollup) {
     "/assets.utility2.html",
     "/assets.utility2.test.js",
     "lib.apidoc.js",
-    "lib.db.js",
     "lib.github_crud.js",
     "lib.istanbul.js",
     "lib.jslint.js",
@@ -8259,7 +8141,6 @@ local.assetsDict["/assets.utility2.rollup.js"] = [
     "header",
     "/assets.utility2.rollup.start.js",
     "lib.apidoc.js",
-    "lib.db.js",
     "lib.github_crud.js",
     "lib.istanbul.js",
     "lib.jslint.js",

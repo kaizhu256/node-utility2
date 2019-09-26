@@ -2704,7 +2704,7 @@ shRun () {(set -e
         "$@"
         return "$?"
     fi
-    # eval argv and auto-restart on non-zero exit-code, unless exited by SIGINT
+    # eval argv and auto-restart on non-zero exitCode, unless exited by SIGINT
     export npm_config_mode_auto_restart_child=1
     while true
     do
@@ -4343,17 +4343,17 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
  * example usage:
     data = new Uint8Array([1,2,3]);
     key = '"'"'0123456789abcdef0123456789abcdef'"'"';
-    mode = null;
+    mode = undefined;
     local.cryptoAesXxxCbcRawEncrypt({
-        data: data,
-        key: key,
-        mode: mode
+        data,
+        key,
+        mode
     }, function (err, data) {
         console.assert(!err, err);
         local.cryptoAesXxxCbcRawDecrypt({
-            data: data,
-            key: key,
-            mode: mode
+            data,
+            key,
+            mode
         }, console.log);
     });
  */
@@ -4392,7 +4392,7 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
                 key,
                 iv
             );
-            onError(null, Buffer.concat([
+            onError(undefined, Buffer.concat([
                 cipher.update(data), cipher.final()
             ]));
         });
@@ -4407,7 +4407,7 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
             iv,
             name: "AES-CBC"
         }, key, data).then(function (data) {
-            onError(null, new Uint8Array(data));
+            onError(undefined, new Uint8Array(data));
         }).catch(onError);
     }).catch(onError);
 };
@@ -4418,17 +4418,17 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
  * example usage:
     data = new Uint8Array([1,2,3]);
     key = '"'"'0123456789abcdef0123456789abcdef'"'"';
-    mode = null;
+    mode = undefined;
     local.cryptoAesXxxCbcRawEncrypt({
-        data: data,
-        key: key,
-        mode: mode
+        data,
+        key,
+        mode
     }, function (err, data) {
         console.assert(!err, err);
         local.cryptoAesXxxCbcRawDecrypt({
-            data: data,
-            key: key,
-            mode: mode
+            data,
+            key,
+            mode
         }, console.log);
     });
  */
@@ -4466,7 +4466,7 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
                 iv = local.base64FromBuffer(iv);
                 iv += "\n";
             }
-            onError(null, iv);
+            onError(undefined, iv);
         });
         return;
     }
@@ -4487,7 +4487,7 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
                 iv = local.base64FromBuffer(iv);
                 iv += "\n";
             }
-            onError(null, iv);
+            onError(undefined, iv);
         }).catch(onError);
     }).catch(onError);
 };
@@ -4495,7 +4495,7 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
 local.fsReadFileOrEmptyStringSync = function (file, opt) {
 /*
  * this function will try to read file or return empty-string, or
- * if <opt> === "json", then try to JSON.parse file or return null
+ * if <opt> === "json", then try to JSON.parse file or return {}
  */
     try {
         return (
@@ -4537,21 +4537,21 @@ local.gotoNext = function (opt, onError) {
         } catch (errCaught) {
             // throw errCaught to break infinite recursion-loop
             if (opt.errCaught) {
-                local.assertOrThrow(null, opt.errCaught);
+                local.assertOrThrow(undefined, opt.errCaught);
             }
             opt.errCaught = errCaught;
             opt.gotoNext(errCaught, data, meta);
         }
     });
-    opt.gotoNextData = opt.gotoNext.bind(null, null);
+    opt.gotoNextData = opt.gotoNext.bind(undefined, undefined);
     return opt;
 };
 
-local.isNullOrUndefined = function (arg0) {
+local.isNullOrUndefined = function (val) {
 /*
- * this function will test if arg0 is null or undefined
+ * this function will test if val is null or undefined
  */
-    return arg0 === null || arg0 === undefined;
+    return val === null || val === undefined;
 };
 
 local.jsonCopy = function (obj) {
@@ -4592,7 +4592,7 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
             return;
         }
         circularSet.add(obj);
-        // if obj is an array, then recurse its items
+        // if obj is an array, then recurse items
         if (Array.isArray(obj)) {
             tmp = "[" + obj.map(function (obj) {
                 // recurse
@@ -4685,13 +4685,13 @@ local.objectSetDefault = function (dict, defaults, depth) {
             dict[key] = defaults2;
             return;
         }
-        // if dict2 and defaults2 are both non-null and non-array objects,
+        // if dict2 and defaults2 are both non-undefined and non-array objects,
         // then recurse with dict2 and defaults2
         if (
             depth > 1
-            // dict2 is a non-null and non-array object
+            // dict2 is a non-undefined and non-array object
             && typeof dict2 === "object" && dict2 && !Array.isArray(dict2)
-            // defaults2 is a non-null and non-array object
+            // defaults2 is a non-undefined and non-array object
             && typeof defaults2 === "object" && defaults2
             && !Array.isArray(defaults2)
         ) {
@@ -4717,13 +4717,13 @@ local.objectSetOverride = function (dict, overrides, depth, env) {
         if (overrides2 === undefined) {
             return;
         }
-        // if both dict2 and overrides2 are non-null and non-array objects,
+        // if both dict2 and overrides2 are non-undefined and non-array objects,
         // then recurse with dict2 and overrides2
         if (
             depth > 1
-            // dict2 is a non-null and non-array object
+            // dict2 is a non-undefined and non-array object
             && typeof dict2 === "object" && dict2 && !Array.isArray(dict2)
-            // overrides2 is a non-null and non-array object
+            // overrides2 is a non-undefined and non-array object
             && typeof overrides2 === "object" && overrides2
             && !Array.isArray(overrides2)
         ) {
@@ -4874,7 +4874,7 @@ local.onParallelList = function (opt, onEach, onError) {
         }
         // restart if opt.list has grown
         if (isListEnd && (onParallel.ii + 1 < opt.list.length)) {
-            isListEnd = null;
+            isListEnd = undefined;
             onEach2();
         }
     });

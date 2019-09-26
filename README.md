@@ -56,6 +56,8 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### todo
+- fix example.js quickstart in alpha
+- jslint - prefer undefined over null
 - replace function local.objectSetOverride with Object.assign
 - jslint - fix off-by-one line-error
 - rename message to msg
@@ -65,12 +67,17 @@ this zero-dependency package will provide high-level functions to to build, test
 - replace uglifyjs-lite with terser-lite (v2.8.29)
 - jslint - sort nested switch-statements
 - add default testCase _testCase_cliRun_help
-- integrate db-lite and github-crud into a cloud-based db on github
 - add server stress-test using puppeteer
 - none
 
 #### changelog 2019.9.17
 - npm publish 2019.9.17
+- merge function local.valueOrEmptyXxx into local.coalesce
+- remove db-lite dependency
+- remove cheesy function local.uiAnimateShake
+- rename hack-istanbul to hack-coverage
+- merge function local.requireReadme into local._testCase_buildApidoc_default
+- remove unused PORT_REPL from function local.replStart
 - re-enable testCase_webpage_err
 - update function local.templateRender with arithmetic operators
 - update function local.testRunDefault's mock console.error
@@ -345,10 +352,26 @@ instruction
                 // if message is a string, then leave as is
                 ? message
                 // else JSON.stringify message
-                : JSON.stringify(message, null, 4)
+                : JSON.stringify(message, undefined, 4)
             )
         );
         throw err;
+    };
+    local.coalesce = function (...argList) {
+    /*
+     * this function will coalesce null, undefined, or "" in <argList>
+     */
+        let arg;
+        let ii;
+        ii = 0;
+        while (ii < argList.length) {
+            arg = argList[ii];
+            if (arg !== null && arg !== undefined && arg !== "") {
+                break;
+            }
+            ii += 1;
+        }
+        return arg;
     };
     local.fsRmrfSync = function (dir) {
     /*
@@ -414,8 +437,7 @@ instruction
     };
     local.objectAssignDefault = function (target, source) {
     /*
-     * this function will if items from <target> are
-     * null, undefined, or empty-string,
+     * this function will if items from <target> are null, undefined, or "",
      * then overwrite them with items from <source>
      */
         target = target || {};
@@ -467,12 +489,6 @@ instruction
      * this function will return <val> or {}
      */
         return val || {};
-    };
-    local.valueOrEmptyString = function (val) {
-    /*
-     * this function will return <val> or ""
-     */
-        return val || "";
     };
     // require builtin
     if (!local.isBrowser) {
@@ -543,7 +559,7 @@ local.testCase_ajax_200 = function (opt, onError) {
  * this function will test ajax's "200 ok" handling-behavior
  */
     if (!local.isBrowser) {
-        onError(null, opt);
+        onError(undefined, opt);
         return;
     }
     opt = {};
@@ -570,7 +586,7 @@ local.testCase_ajax_404 = function (opt, onError) {
  * this function will test ajax's "404 not found" handling-behavior
  */
     if (!local.isBrowser) {
-        onError(null, opt);
+        onError(undefined, opt);
         return;
     }
     opt = {};
@@ -594,7 +610,7 @@ local.testCase_webpage_default = function (opt, onError) {
  * this function will test webpage's default handling-behavior
  */
     if (local.isBrowser) {
-        onError(null, opt);
+        onError(undefined, opt);
         return;
     }
     opt = {
@@ -628,7 +644,7 @@ if (!local.isBrowser) {
             return (
                 typeof arg === "string"
                 ? arg
-                : JSON.stringify(arg, null, 4)
+                : JSON.stringify(arg, undefined, 4)
             );
         }).join(" ").replace((
             /\u001b\[\d*m/g
@@ -639,7 +655,6 @@ if (!local.isBrowser) {
 });
 local.objectAssignDefault(local, globalThis.domOnEventDelegateDict);
 globalThis.domOnEventDelegateDict = local;
-local.onEventDomDb = local.db && local.db.onEventDomDb;
 if ((
     /\bmodeTest=1\b/
 ).test(location.search)) {
@@ -691,19 +706,6 @@ local.assetsDict["/assets.index.template.html"] = '\
     box-sizing: border-box;\n\
 }\n\
 /* csslint ignore:end */\n\
-@keyframes uiAnimateShake {\n\
-0%,\n\
-50% {\n\
-    transform: translateX(10px);\n\
-}\n\
-100% {\n\
-    transform: translateX(0);\n\
-}\n\
-25%,\n\
-75% {\n\
-    transform: translateX(-10px);\n\
-}\n\
-}\n\
 @keyframes uiAnimateSpin {\n\
 0% {\n\
     transform: rotate(0deg);\n\
@@ -775,10 +777,6 @@ pre {\n\
     overflow: auto;\n\
     padding: 2px;\n\
 }\n\
-.uiAnimateShake {\n\
-    animation-duration: 500ms;\n\
-    animation-name: uiAnimateShake;\n\
-}\n\
 .uiAnimateSlide {\n\
     overflow-y: hidden;\n\
     transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;\n\
@@ -794,8 +792,6 @@ pre {\n\
 </head>\n\
 <body>\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
-<a class="zeroPixel" download="db.persistence.json" href="" id="dbExportA1"></a>\n\
-<input class="zeroPixel" data-onevent="onEventDomDb" data-onevent-db="dbImportInput" type="file">\n\
 <script>\n\
 /* jslint utility2:true */\n\
 // init domOnEventWindowOnloadTimeElapsed\n\
@@ -1227,7 +1223,6 @@ local.domOnEventInputChange({\n\
 utility2-comment -->\n\
 <script src="assets.utility2.lib.istanbul.js"></script>\n\
 <script src="assets.utility2.lib.jslint.js"></script>\n\
-<script src="assets.utility2.lib.db.js"></script>\n\
 <script src="assets.utility2.lib.marked.js"></script>\n\
 <script src="assets.utility2.lib.sjcl.js"></script>\n\
 <script src="assets.utility2.js"></script>\n\
@@ -1372,7 +1367,6 @@ local.http.createServer(function (req, res) {
     "bin": {
         "utility2": "lib.utility2.sh",
         "utility2-apidoc": "lib.apidoc.js",
-        "utility2-db": "lib.db.js",
         "utility2-github-crud": "lib.github_crud.js",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js"
@@ -1555,7 +1549,7 @@ RUN (set -e; \
 # this shell script will run the build for this package
 
 shBuildCiAfter () {(set -e
-    #// hack-istanbul - test comment handling-behavior
+    #// hack-coverage - test comment handling-behavior
     # shDeployCustom
     shDeployGithub
     shDeployHeroku
