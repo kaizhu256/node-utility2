@@ -71,6 +71,12 @@
      */
         return this.map(...argList).flat();
     };
+    String.prototype.trimEnd = (
+        String.prototype.trimEnd || String.prototype.trimRight
+    );
+    String.prototype.trimStart = (
+        String.prototype.trimStart || String.prototype.trimLeft
+    );
     (function () {
         try {
             globalThis.TextDecoder = (
@@ -294,6 +300,12 @@
      */
         return fnc || local.nop;
     };
+    local.identity = function (val) {
+    /*
+     * this function will return <val>
+     */
+        return val;
+    };
     local.nop = function () {
     /*
      * this function will do nothing
@@ -336,24 +348,6 @@
             && typeof document.querySelectorAll === "function"
             && Array.from(document.querySelectorAll(selectors))
         ) || [];
-    };
-    local.value = function (val) {
-    /*
-     * this function will return <val>
-     */
-        return val;
-    };
-    local.valueOrEmptyList = function (val) {
-    /*
-     * this function will return <val> or []
-     */
-        return val || [];
-    };
-    local.valueOrEmptyObject = function (val) {
-    /*
-     * this function will return <val> or {}
-     */
-        return val || {};
     };
     // require builtin
     if (!local.isBrowser) {
@@ -549,7 +543,7 @@ local.cliRun = function (opt) {
      * will start interactive-mode
      */
         globalThis.local = local;
-        local.value(local.replStart || require("repl").start)({
+        local.identity(local.replStart || require("repl").start)({
             useGlobal: true
         });
     };
@@ -1106,7 +1100,7 @@ local.apidocCreate = function (opt) {
             file = local.path.resolve(opt.dir, file);
             console.error("apidocCreate - readExample " + file);
             result = "";
-            result = local.value(
+            result = local.identity(
                 "\n\n\n\n\n\n\n\n"
                 // bug-workaround - truncate example to manageable size
                 + local.fs.readFileSync(file, "utf8").slice(0, 262144)

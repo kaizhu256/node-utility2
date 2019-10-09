@@ -7,7 +7,7 @@
 [core]
     autocrlf = false
     bare = false
-    # filemode = true
+    # filemode = false
     logallrefupdates = true
     repositoryformatversion = 0
 [diff]

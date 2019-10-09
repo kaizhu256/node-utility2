@@ -287,7 +287,7 @@ shBuildAppSync () {
     # hardlink .gitignore
     if [ -f "$npm_config_dir_utility2/.travis.yml" ]
     then
-        ln -f "$npm_config_dir_utility2/.gitignore" .
+        ln -f "$npm_config_dir_utility2/.gitignore" . || true
     fi
     # hardlink assets.utility2.rollup.js
     if [ -f "assets.utility2.rollup.js" ] &&
@@ -3286,7 +3286,6 @@ shUtility2DependentsSync () {(set -e
 shUtility2FncStat () {(set -e
 # this function will print histogram of utility2-fnc code-frequency
 # in current dir
-    #!! git grep -i "local\.\w\w*\|\<sh[A-Z]\w*\>"
     node -e '
 /* jslint utility2:true */
 (function () {
@@ -3564,8 +3563,7 @@ export UTILITY2_MACRO_JS='
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser
-        && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScript === "function"
     );
     // init function
     local.assertOrThrow = function (passed, message) {
@@ -3589,10 +3587,26 @@ export UTILITY2_MACRO_JS='
                 // if message is a string, then leave as is
                 ? message
                 // else JSON.stringify message
-                : JSON.stringify(message, null, 4)
+                : JSON.stringify(message, undefined, 4)
             )
         );
         throw err;
+    };
+    local.coalesce = function (...argList) {
+    /*
+     * this function will coalesce null, undefined, or "" in <argList>
+     */
+        let arg;
+        let ii;
+        ii = 0;
+        while (ii < argList.length) {
+            arg = argList[ii];
+            if (arg !== null && arg !== undefined && arg !== "") {
+                break;
+            }
+            ii += 1;
+        }
+        return arg;
     };
     local.fsRmrfSync = function (dir) {
     /*
@@ -3658,8 +3672,7 @@ export UTILITY2_MACRO_JS='
     };
     local.objectAssignDefault = function (target, source) {
     /*
-     * this function will if items from <target> are
-     * null, undefined, or empty-string,
+     * this function will if items from <target> are null, undefined, or "",
      * then overwrite them with items from <source>
      */
         target = target || {};
@@ -3674,29 +3687,31 @@ export UTILITY2_MACRO_JS='
         });
         return target;
     };
-    local.value = function (val) {
+    local.querySelector = function (selectors) {
+    /*
+     * this function will return first dom-elem that match <selectors>
+     */
+        return (
+            typeof document === "object" && document
+            && typeof document.querySelector === "function"
+            && document.querySelector(selectors)
+        ) || {};
+    };
+    local.querySelectorAll = function (selectors) {
+    /*
+     * this function will return dom-elem-list that match <selectors>
+     */
+        return (
+            typeof document === "object" && document
+            && typeof document.querySelectorAll === "function"
+            && Array.from(document.querySelectorAll(selectors))
+        ) || [];
+    };
+    local.identity = function (val) {
     /*
      * this function will return <val>
      */
         return val;
-    };
-    local.valueOrEmptyList = function (val) {
-    /*
-     * this function will return <val> or []
-     */
-        return val || [];
-    };
-    local.valueOrEmptyObject = function (val) {
-    /*
-     * this function will return <val> or {}
-     */
-        return val || {};
-    };
-    local.valueOrEmptyString = function (val) {
-    /*
-     * this function will return <val> or ""
-     */
-        return val || "";
     };
     // require builtin
     if (!local.isBrowser) {
@@ -3727,10 +3742,6 @@ export UTILITY2_MACRO_JS='
         local.util = require("util");
         local.vm = require("vm");
         local.zlib = require("zlib");
-        return;
-    }
-    if (local.isWebWorker) {
-        return;
     }
 }((typeof globalThis === "object" && globalThis) || (function () {
     return Function("return this")(); // jslint ignore:line
@@ -4006,11 +4017,11 @@ local.ajax = function (opt, onError) {
     );
     // init xhr - http.request
     if (!xhr) {
-        xhr = local.value(local2.urlParse || require("url").parse)(opt.url);
+        xhr = local.identity(local2.urlParse || require("url").parse)(opt.url);
         // init xhr
         xhrInit();
         // init xhr - http.request
-        xhr = local.value(
+        xhr = local.identity(
             opt.httpReq
             || (local.isBrowser && local2.http.request)
             || require(xhr.protocol.slice(0, -1)).request

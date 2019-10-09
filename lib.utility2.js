@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2019.9.17)
+ * lib.utility2.js (2019.10.8)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -71,6 +71,12 @@
      */
         return this.map(...argList).flat();
     };
+    String.prototype.trimEnd = (
+        String.prototype.trimEnd || String.prototype.trimRight
+    );
+    String.prototype.trimStart = (
+        String.prototype.trimStart || String.prototype.trimLeft
+    );
     (function () {
         try {
             globalThis.TextDecoder = (
@@ -294,6 +300,12 @@
      */
         return fnc || local.nop;
     };
+    local.identity = function (val) {
+    /*
+     * this function will return <val>
+     */
+        return val;
+    };
     local.nop = function () {
     /*
      * this function will do nothing
@@ -336,24 +348,6 @@
             && typeof document.querySelectorAll === "function"
             && Array.from(document.querySelectorAll(selectors))
         ) || [];
-    };
-    local.value = function (val) {
-    /*
-     * this function will return <val>
-     */
-        return val;
-    };
-    local.valueOrEmptyList = function (val) {
-    /*
-     * this function will return <val> or []
-     */
-        return val || [];
-    };
-    local.valueOrEmptyObject = function (val) {
-    /*
-     * this function will return <val> or {}
-     */
-        return val || {};
     };
     // require builtin
     if (!local.isBrowser) {
@@ -515,6 +509,12 @@ local.assetsDict["/assets.utility2.header.js"] = '\
      */\n\
         return this.map(...argList).flat();\n\
     };\n\
+    String.prototype.trimEnd = (\n\
+        String.prototype.trimEnd || String.prototype.trimRight\n\
+    );\n\
+    String.prototype.trimStart = (\n\
+        String.prototype.trimStart || String.prototype.trimLeft\n\
+    );\n\
     (function () {\n\
         try {\n\
             globalThis.TextDecoder = (\n\
@@ -738,6 +738,12 @@ local.assetsDict["/assets.utility2.header.js"] = '\
      */\n\
         return fnc || local.nop;\n\
     };\n\
+    local.identity = function (val) {\n\
+    /*\n\
+     * this function will return <val>\n\
+     */\n\
+        return val;\n\
+    };\n\
     local.nop = function () {\n\
     /*\n\
      * this function will do nothing\n\
@@ -780,24 +786,6 @@ local.assetsDict["/assets.utility2.header.js"] = '\
             && typeof document.querySelectorAll === "function"\n\
             && Array.from(document.querySelectorAll(selectors))\n\
         ) || [];\n\
-    };\n\
-    local.value = function (val) {\n\
-    /*\n\
-     * this function will return <val>\n\
-     */\n\
-        return val;\n\
-    };\n\
-    local.valueOrEmptyList = function (val) {\n\
-    /*\n\
-     * this function will return <val> or []\n\
-     */\n\
-        return val || [];\n\
-    };\n\
-    local.valueOrEmptyObject = function (val) {\n\
-    /*\n\
-     * this function will return <val> or {}\n\
-     */\n\
-        return val || {};\n\
     };\n\
     // require builtin\n\
     if (!local.isBrowser) {\n\
@@ -1748,9 +1736,8 @@ local.assetsDict["/assets.test.template.js"] = '\
 // run shared js\-env code - init-before\n\
 (function () {\n\
 // init local\n\
-local = globalThis.globalLocal.value(\n\
-    globalThis.utility2 || require("utility2")\n\
-).requireReadme();\n\
+local = globalThis.utility2 || require("utility2");\n\
+local = local.requireReadme();\n\
 globalThis.local = local;\n\
 // init test\n\
 local.testRunDefault(local);\n\
@@ -2038,7 +2025,7 @@ local.cliDict["utility2.githubCrudContentTouch"] = function () {
         message: process.argv[4],
         urlList: process.argv[3].split(
             /[,\s]/g
-        ).filter(local.value)
+        ).filter(local.identity)
     }, function (err) {
         process.exit(Boolean(err));
     });
@@ -2052,7 +2039,7 @@ local.cliDict["utility2.githubCrudRepoCreate"] = function () {
     local.github_crud.githubCrudRepoCreateList({
         urlList: process.argv[3].split(
             /[,\s]/g
-        ).filter(local.value)
+        ).filter(local.identity)
     }, function (err) {
         process.exit(Boolean(err));
     });
@@ -2066,7 +2053,7 @@ local.cliDict["utility2.githubCrudRepoDelete"] = function () {
     local.github_crud.githubCrudRepoDeleteList({
         urlList: process.argv[3].split(
             /[,\s]/g
-        ).filter(local.value)
+        ).filter(local.identity)
     }, function (err) {
         process.exit(Boolean(err));
     });
@@ -2103,9 +2090,10 @@ local.cliDict["utility2.testReportCreate"] = function () {
  *
  * will create test-report
  */
-    process.exit(local.testReportCreate(JSON.parse(local.fs.readFileSync(
-        local.env.npm_config_dir_build + "/test-report.json"
-    ))).testsFailed);
+    process.exit(local.testReportCreate(local.fsReadFileOrEmptyStringSync(
+        local.env.npm_config_dir_build + "/test-report.json",
+        "json"
+    )).testsFailed);
 };
 }());
 
@@ -2835,11 +2823,11 @@ local.ajax = function (opt, onError) {
     );
     // init xhr - http.request
     if (!xhr) {
-        xhr = local.value(local2.urlParse || require("url").parse)(opt.url);
+        xhr = local.identity(local2.urlParse || require("url").parse)(opt.url);
         // init xhr
         xhrInit();
         // init xhr - http.request
-        xhr = local.value(
+        xhr = local.identity(
             opt.httpReq
             || (local.isBrowser && local2.http.request)
             || require(xhr.protocol.slice(0, -1)).request
@@ -3763,7 +3751,7 @@ local.buildReadme = function (opt, onError) {
                 /\n####\u0020changelog\u0020[\S\s]*\n#\u0020quickstart\u0020example.js\n/
             ), (
                 opt.dataFrom.indexOf("\"assets.utility2.template.html\"") < 0
-                && local.value(
+                && local.identity(
                     /\n#\u0020quickstart\u0020[\S\s]*?\n#\u0020extra\u0020screenshots\n/
                 )
             )
@@ -4116,7 +4104,7 @@ local.cliRun = function (opt) {
      * will start interactive-mode
      */
         globalThis.local = local;
-        local.value(local.replStart || require("repl").start)({
+        local.identity(local.replStart || require("repl").start)({
             useGlobal: true
         });
     };
@@ -4685,7 +4673,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
         local.assetsDict["/assets.my_app.template.js"].replace((
             /my_app/g
         ), file.split(".")[1]),
-        file !== "README.md" && local.value(
+        file !== "README.md" && local.identity(
             /\n\/\*\u0020istanbul\u0020instrument\u0020in\u0020package\u0020[\S\s]*?\n\/\*\u0020validateLineSortedReset\u0020\*\/\n/
         )
     );
@@ -4802,13 +4790,11 @@ local.jslintAutofixLocalFunction = function (code, file) {
         "fsRmrfSync",
         "fsWriteFileWithMkdirpSync",
         "functionOrNop",
+        "identity",
         "nop",
         "objectAssignDefault",
         "querySelector",
-        "querySelectorAll",
-        "value",
-        "valueOrEmptyList",
-        "valueOrEmptyObject"
+        "querySelectorAll"
     ].forEach(function (key) {
         dictFnc[key] = true;
         dictProp[key] = true;
@@ -7765,7 +7751,7 @@ local.uuid4Create = function () {
         case 20:
             id += "-";
             // coerce to finite integer
-            id += local.value((Math.random() * 16) | 0).toString(16);
+            id += local.identity((Math.random() * 16) | 0).toString(16);
             break;
         case 12:
             id += "-";
@@ -7773,11 +7759,11 @@ local.uuid4Create = function () {
             break;
         case 16:
             id += "-";
-            id += local.value((Math.random() * 4) | 8).toString(16);
+            id += local.identity((Math.random() * 4) | 8).toString(16);
             break;
         default:
             // coerce to finite integer
-            id += local.value((Math.random() * 16) | 0).toString(16);
+            id += local.identity((Math.random() * 16) | 0).toString(16);
         }
         ii += 1;
     }
@@ -7841,17 +7827,17 @@ local.objectSetDefault(local.env, {
     npm_package_version: "0.0.1"
 });
 local.errDefault = new Error("default-error");
-local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.value;
+local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.identity;
 // cbranch-no cstat-no fstat-no missing-if-branch
 local.istanbulCoverageReportCreate = (
-    local.istanbul.coverageReportCreate || local.value
+    local.istanbul.coverageReportCreate || local.identity
 );
 local.istanbulInstrumentInPackage = (
-    local.istanbul.instrumentInPackage || local.value
+    local.istanbul.instrumentInPackage || local.identity
 );
-local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.value;
-local.jslintAndPrint = local.jslint.jslintAndPrint || local.value;
-local.puppeteerLaunch = local.puppeteer.puppeteerLaunch || local.value;
+local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.identity;
+local.jslintAndPrint = local.jslint.jslintAndPrint || local.identity;
+local.puppeteerLaunch = local.puppeteer.puppeteerLaunch || local.identity;
 local.regexpCharsetEncodeUri = (
     /\w!#\$%&'\(\)\*\+,\-\.\/:;=\?@~/
 );
@@ -8163,7 +8149,7 @@ local.assetsDict["/assets.utility2.rollup.js"] = [
         script = local.assetsDict["/assets.utility2.rollup.content.js"].split(
             "/* utility2.rollup.js content */"
         );
-        script.splice(1, 0, local.value(
+        script.splice(1, 0, local.identity(
             "local.assetsDict[\"" + key + "\"] = "
             + JSON.stringify(local.assetsDict[key])
         ).replace((

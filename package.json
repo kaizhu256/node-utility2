@@ -48,10 +48,10 @@
         "2019.01.21 github-crud",
         "2019.01.30 bootstrap-lite",
         "2019.08.16 apidoc-lite master",
-        "2019.09.06 jslint-lite",
         "2019.09.14 swgg",
         "2019.09.15 istanbul-lite master",
-        "2019.09.16 utility2"
+        "2019.10.08 jslint-lite",
+        "2019.10.08 utility2"
     ],
-    "version": "2019.9.17"
+    "version": "2019.10.8"
 }

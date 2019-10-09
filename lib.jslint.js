@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.jslint.js (2019.9.7)
+ * lib.jslint.js (2019.10.8)
  * https://github.com/kaizhu256/node-jslint-lite
  * this zero-dependency package will provide browser-compatible versions of jslint (v2019.8.3) and csslint (v1.0.5), with a working web-demo
  *
@@ -71,6 +71,12 @@
      */
         return this.map(...argList).flat();
     };
+    String.prototype.trimEnd = (
+        String.prototype.trimEnd || String.prototype.trimRight
+    );
+    String.prototype.trimStart = (
+        String.prototype.trimStart || String.prototype.trimLeft
+    );
     (function () {
         try {
             globalThis.TextDecoder = (
@@ -294,6 +300,12 @@
      */
         return fnc || local.nop;
     };
+    local.identity = function (val) {
+    /*
+     * this function will return <val>
+     */
+        return val;
+    };
     local.nop = function () {
     /*
      * this function will do nothing
@@ -336,24 +348,6 @@
             && typeof document.querySelectorAll === "function"
             && Array.from(document.querySelectorAll(selectors))
         ) || [];
-    };
-    local.value = function (val) {
-    /*
-     * this function will return <val>
-     */
-        return val;
-    };
-    local.valueOrEmptyList = function (val) {
-    /*
-     * this function will return <val> or []
-     */
-        return val || [];
-    };
-    local.valueOrEmptyObject = function (val) {
-    /*
-     * this function will return <val> or {}
-     */
-        return val || {};
     };
     // require builtin
     if (!local.isBrowser) {
@@ -549,7 +543,7 @@ local.cliRun = function (opt) {
      * will start interactive-mode
      */
         globalThis.local = local;
-        local.value(local.replStart || require("repl").start)({
+        local.identity(local.replStart || require("repl").start)({
             useGlobal: true
         });
     };

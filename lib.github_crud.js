@@ -71,6 +71,12 @@
      */
         return this.map(...argList).flat();
     };
+    String.prototype.trimEnd = (
+        String.prototype.trimEnd || String.prototype.trimRight
+    );
+    String.prototype.trimStart = (
+        String.prototype.trimStart || String.prototype.trimLeft
+    );
     (function () {
         try {
             globalThis.TextDecoder = (
@@ -294,6 +300,12 @@
      */
         return fnc || local.nop;
     };
+    local.identity = function (val) {
+    /*
+     * this function will return <val>
+     */
+        return val;
+    };
     local.nop = function () {
     /*
      * this function will do nothing
@@ -336,24 +348,6 @@
             && typeof document.querySelectorAll === "function"
             && Array.from(document.querySelectorAll(selectors))
         ) || [];
-    };
-    local.value = function (val) {
-    /*
-     * this function will return <val>
-     */
-        return val;
-    };
-    local.valueOrEmptyList = function (val) {
-    /*
-     * this function will return <val> or []
-     */
-        return val || [];
-    };
-    local.valueOrEmptyObject = function (val) {
-    /*
-     * this function will return <val> or {}
-     */
-        return val || {};
     };
     // require builtin
     if (!local.isBrowser) {
@@ -658,11 +652,11 @@ local.ajax = function (opt, onError) {
     );
     // init xhr - http.request
     if (!xhr) {
-        xhr = local.value(local2.urlParse || require("url").parse)(opt.url);
+        xhr = local.identity(local2.urlParse || require("url").parse)(opt.url);
         // init xhr
         xhrInit();
         // init xhr - http.request
-        xhr = local.value(
+        xhr = local.identity(
             opt.httpReq
             || (local.isBrowser && local2.http.request)
             || require(xhr.protocol.slice(0, -1)).request
@@ -904,7 +898,7 @@ local.cliRun = function (opt) {
      * will start interactive-mode
      */
         globalThis.local = local;
-        local.value(local.replStart || require("repl").start)({
+        local.identity(local.replStart || require("repl").start)({
             useGlobal: true
         });
     };
@@ -1600,7 +1594,7 @@ local.cliDict.repo_create = function () {
     local.github_crud.githubCrudRepoCreateList({
         urlList: process.argv[3].split(
             /[,\s]/g
-        ).filter(local.value)
+        ).filter(local.identity)
     }, function (err) {
         process.exit(Boolean(err));
     });
@@ -1614,7 +1608,7 @@ local.cliDict.repo_delete = function () {
     local.github_crud.githubCrudRepoDeleteList({
         urlList: process.argv[3].split(
             /[,\s]/g
-        ).filter(local.value)
+        ).filter(local.identity)
     }, function (err) {
         process.exit(Boolean(err));
     });
@@ -1629,7 +1623,7 @@ local.cliDict.touch = function () {
         message: process.argv[4],
         urlList: process.argv[3].split(
             /[,\s]/g
-        ).filter(local.value)
+        ).filter(local.identity)
     }, function (err) {
         process.exit(Boolean(err));
     });

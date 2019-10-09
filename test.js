@@ -61,6 +61,12 @@
      */
         return this.map(...argList).flat();
     };
+    String.prototype.trimEnd = (
+        String.prototype.trimEnd || String.prototype.trimRight
+    );
+    String.prototype.trimStart = (
+        String.prototype.trimStart || String.prototype.trimLeft
+    );
     (function () {
         try {
             globalThis.TextDecoder = (
@@ -284,6 +290,12 @@
      */
         return fnc || local.nop;
     };
+    local.identity = function (val) {
+    /*
+     * this function will return <val>
+     */
+        return val;
+    };
     local.nop = function () {
     /*
      * this function will do nothing
@@ -326,24 +338,6 @@
             && typeof document.querySelectorAll === "function"
             && Array.from(document.querySelectorAll(selectors))
         ) || [];
-    };
-    local.value = function (val) {
-    /*
-     * this function will return <val>
-     */
-        return val;
-    };
-    local.valueOrEmptyList = function (val) {
-    /*
-     * this function will return <val> or []
-     */
-        return val || [];
-    };
-    local.valueOrEmptyObject = function (val) {
-    /*
-     * this function will return <val> or {}
-     */
-        return val || {};
     };
     // require builtin
     if (!local.isBrowser) {
@@ -392,9 +386,8 @@
 // run shared js-env code - init-before
 (function () {
 // init local
-local = globalThis.globalLocal.value(
-    globalThis.utility2 || require("./lib.utility2.js")
-).requireReadme();
+local = globalThis.utility2 || require("./lib.utility2.js");
+local = local.requireReadme();
 globalThis.local = local;
 // init test
 local.testRunDefault(local);

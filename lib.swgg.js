@@ -71,6 +71,12 @@
      */
         return this.map(...argList).flat();
     };
+    String.prototype.trimEnd = (
+        String.prototype.trimEnd || String.prototype.trimRight
+    );
+    String.prototype.trimStart = (
+        String.prototype.trimStart || String.prototype.trimLeft
+    );
     (function () {
         try {
             globalThis.TextDecoder = (
@@ -294,6 +300,12 @@
      */
         return fnc || local.nop;
     };
+    local.identity = function (val) {
+    /*
+     * this function will return <val>
+     */
+        return val;
+    };
     local.nop = function () {
     /*
      * this function will do nothing
@@ -336,24 +348,6 @@
             && typeof document.querySelectorAll === "function"
             && Array.from(document.querySelectorAll(selectors))
         ) || [];
-    };
-    local.value = function (val) {
-    /*
-     * this function will return <val>
-     */
-        return val;
-    };
-    local.valueOrEmptyList = function (val) {
-    /*
-     * this function will return <val> or []
-     */
-        return val || [];
-    };
-    local.valueOrEmptyObject = function (val) {
-    /*
-     * this function will return <val> or {}
-     */
-        return val || {};
     };
     // require builtin
     if (!local.isBrowser) {
@@ -2247,7 +2241,7 @@ local.apiAjax = function (that, opt, onError) {
     // init url
     opt.url = "";
     opt.url += (
-        local.value(
+        local.identity(
             that["x-swgg-schemes"] || local.swaggerJson.schemes || []
         )[0] || local.urlParse("").protocol.slice(0, -1)
     );
@@ -2559,7 +2553,7 @@ local.apiUpdate = function (swaggerJson) {
             tmp = tmp || (
                 schemaP.in === "body"
                 && schemaP.schema.type === "string"
-                && local.value("text/plain")
+                && local.identity("text/plain")
             );
             return tmp;
         });
@@ -5001,7 +4995,7 @@ local.swaggerValidateDataSchema = function (opt) {
         errorType: "itemType",
         prefix: opt.prefix,
         schema,
-        typeof: local.value(typeof data)
+        typeof: local.identity(typeof data)
     });
     tmp = typeof data;
     if (tmp === "object" && Array.isArray(data)) {
@@ -6103,7 +6097,7 @@ local.uiEventListenerDict.onEventUiReload = function (opt, onError) {
             local._debugOnEventUiReload = err || local._debugOnEventUiReload;
             document.querySelector(
                 "#swggUiReloadErrorDiv1"
-            ).textContent = local.value(err || {
+            ).textContent = local.identity(err || {
                 message: ""
             }).message;
             local.setTimeoutOnError(onError, 0, err);

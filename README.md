@@ -56,7 +56,6 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### todo
-- fix example.js quickstart in alpha
 - jslint - prefer undefined over null
 - replace function local.objectSetOverride with Object.assign
 - jslint - fix off-by-one line-error
@@ -70,8 +69,9 @@ this zero-dependency package will provide high-level functions to to build, test
 - add server stress-test using puppeteer
 - none
 
-#### changelog 2019.9.17
-- npm publish 2019.9.17
+#### changelog 2019.10.8
+- npm publish 2019.10.8
+- polyfill String.trimEnd and String.trimStart for edge-compatibility
 - merge function local.valueOrEmptyXxx into local.coalesce
 - remove db-lite dependency
 - remove cheesy function local.uiAnimateShake
@@ -206,6 +206,12 @@ instruction
      */
         return this.map(...argList).flat();
     };
+    String.prototype.trimEnd = (
+        String.prototype.trimEnd || String.prototype.trimRight
+    );
+    String.prototype.trimStart = (
+        String.prototype.trimStart || String.prototype.trimLeft
+    );
     (function () {
         try {
             globalThis.TextDecoder = (
@@ -429,6 +435,12 @@ instruction
      */
         return fnc || local.nop;
     };
+    local.identity = function (val) {
+    /*
+     * this function will return <val>
+     */
+        return val;
+    };
     local.nop = function () {
     /*
      * this function will do nothing
@@ -471,24 +483,6 @@ instruction
             && typeof document.querySelectorAll === "function"
             && Array.from(document.querySelectorAll(selectors))
         ) || [];
-    };
-    local.value = function (val) {
-    /*
-     * this function will return <val>
-     */
-        return val;
-    };
-    local.valueOrEmptyList = function (val) {
-    /*
-     * this function will return <val> or []
-     */
-        return val || [];
-    };
-    local.valueOrEmptyObject = function (val) {
-    /*
-     * this function will return <val> or {}
-     */
-        return val || {};
     };
     // require builtin
     if (!local.isBrowser) {
@@ -1412,12 +1406,12 @@ local.http.createServer(function (req, res) {
         "2019.01.21 github-crud",
         "2019.01.30 bootstrap-lite",
         "2019.08.16 apidoc-lite master",
-        "2019.09.06 jslint-lite",
         "2019.09.14 swgg",
         "2019.09.15 istanbul-lite master",
-        "2019.09.16 utility2"
+        "2019.10.08 jslint-lite",
+        "2019.10.08 utility2"
     ],
-    "version": "2019.9.17"
+    "version": "2019.10.8"
 }
 ```
 
