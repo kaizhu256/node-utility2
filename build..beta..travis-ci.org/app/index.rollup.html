@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- "assets.utility2.template.html" -->
+<title>utility2 (2019.10.8)</title>
+<style>
+/* jslint utility2:true */
+/*csslint
+*/
+/* csslint ignore:start */
+*,
+*:after,
+*:before {
+    box-sizing: border-box;
+}
+/* csslint ignore:end */
+@keyframes uiAnimateSpin {
+0% {
+    transform: rotate(0deg);
+}
+100% {
+    transform: rotate(360deg);
+}
+}
+a {
+    overflow-wrap: break-word;
+}
+body {
+    background: #f7f7f7;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: small;
+    margin: 0 40px;
+}
+body > div,
+body > input,
+body > pre,
+body > .button,
+body > .textarea {
+    margin-bottom: 20px;
+    margin-top: 0;
+}
+body > input,
+body > .button {
+    width: 20rem;
+}
+body > .readonly {
+    background: #ddd;
+}
+body > .textarea {
+    height: 10rem;
+    resize: vertical;
+    width: 100%;
+}
+code,
+pre,
+.textarea {
+    font-family: Consolas, Menlo, monospace;
+    font-size: smaller;
+}
+pre {
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+}
+.button {
+    background: #ddd;
+    border: 1px solid #999;
+    color: #000;
+    cursor: pointer;
+    display: inline-block;
+    padding: 2px 5px;
+    text-align: center;
+    text-decoration: none;
+}
+.button:hover {
+    background: #bbb;
+}
+.colorError {
+    color: #d00;
+}
+.textarea {
+    background: #fff;
+    border: 1px solid #999;
+    border-radius: 0;
+    cursor: auto;
+    overflow: auto;
+    padding: 2px;
+}
+.uiAnimateSlide {
+    overflow-y: hidden;
+    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;
+}
+.zeroPixel {
+    border: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    width: 0;
+}
+</style>
+</head>
+<body>
+<div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>
+<script>
+/* jslint utility2:true */
+// init domOnEventWindowOnloadTimeElapsed
+(function () {
+/*
+ * this function will measure and print time-elapsed for window.onload
+ */
+    "use strict";
+    if (!(
+        typeof window === "object" && window && window.document
+        && typeof document.addEventListener === "function"
+    ) || window.domOnEventWindowOnloadTimeElapsed) {
+        return;
+    }
+    window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;
+    window.addEventListener("load", function () {
+        setTimeout(function () {
+            window.domOnEventWindowOnloadTimeElapsed = (
+                Date.now()
+                - window.domOnEventWindowOnloadTimeElapsed
+            );
+            console.error(
+                "domOnEventWindowOnloadTimeElapsed = "
+                + window.domOnEventWindowOnloadTimeElapsed
+            );
+        }, 100);
+    });
+}());
+
+
+
+// init domOnEventAjaxProgressUpdate
+(function () {
+/*
+ * this function will display incrementing ajax-progress-bar
+ */
+    "use strict";
+    let opt;
+    if (!(
+        typeof window === "object" && window && window.document
+        && typeof document.addEventListener === "function"
+    ) || window.domOnEventAjaxProgressUpdate) {
+        return;
+    }
+    window.domOnEventAjaxProgressUpdate = function (gotoState, onError) {
+        gotoState = (gotoState | 0) + 1;
+        switch (gotoState) {
+        // ajaxProgress - show
+        case 1:
+            // init timerInterval and timerTimeout
+            opt.timerInterval = (
+                opt.timerInterval || setInterval(opt, 2000, 1, onError)
+            );
+            opt.timerTimeout = (
+                opt.timerTimeout || setTimeout(opt, 30000, 2, onError)
+            );
+            // show ajaxProgress
+            if (opt.width !== -1) {
+                opt.style.background = opt.background;
+            }
+            setTimeout(opt, 50, gotoState, onError);
+            break;
+        // ajaxProgress - increment
+        case 2:
+            // show ajaxProgress
+            if (opt.width === -1) {
+                return;
+            }
+            opt.style.background = opt.background;
+            // reset ajaxProgress if it goes too high
+            if ((opt.style.width.slice(0, -1) | 0) > 95) {
+                opt.width = 0;
+            }
+            // this algorithm will indefinitely increment ajaxProgress
+            // with successively smaller increments without reaching 100%
+            opt.width += 1;
+            opt.style.width = Math.max(
+                100 - 75 * Math.exp(-0.125 * opt.width),
+                opt.style.width.slice(0, -1) | 0
+            ) + "%";
+            if (!opt.counter) {
+                setTimeout(opt, 0, gotoState, onError);
+            }
+            break;
+        // ajaxProgress - 100%
+        case 3:
+            opt.width = -1;
+            opt.style.width = "100%";
+            setTimeout(opt, 1000, gotoState, onError);
+            break;
+        // ajaxProgress - hide
+        case 4:
+            // cleanup timerInterval and timerTimeout
+            clearInterval(opt.timerInterval);
+            opt.timerInterval = null;
+            clearTimeout(opt.timerTimeout);
+            opt.timerTimeout = null;
+            // hide ajaxProgress
+            opt.style.background = "transparent";
+            if (onError) {
+                onError();
+            }
+            setTimeout(opt, 250, gotoState);
+            break;
+        // ajaxProgress - reset
+        default:
+            // reset ajaxProgress
+            opt.counter = 0;
+            opt.width = 0;
+            opt.style.width = "0%";
+        }
+    };
+    opt = window.domOnEventAjaxProgressUpdate;
+    opt.end = function (onError) {
+        opt.counter = 0;
+        window.domOnEventAjaxProgressUpdate(2, onError);
+    };
+    opt.elem = document.getElementById("domElementAjaxProgress1");
+    if (!opt.elem) {
+        opt.elem = document.createElement("div");
+        setTimeout(function () {
+            document.body.insertBefore(opt.elem, document.body.firstChild);
+        });
+    }
+    opt.elem.id = "domElementAjaxProgress1";
+    opt.style = opt.elem.style;
+    // init style
+    Object.entries({
+        background: "#d00",
+        height: "2px",
+        left: "0",
+        margin: "0",
+        padding: "0",
+        position: "fixed",
+        top: "0",
+        transition: "background 250ms, width 750ms",
+        width: "0%",
+        "z-index": "1"
+    }).forEach(function (entry) {
+        opt.style[entry[0]] = opt.style[entry[0]] || entry[1];
+    });
+    // init state
+    opt.background = opt.style.background;
+    opt.counter = 0;
+    opt.width = 0;
+}());
+
+
+
+// init domOnEventDelegateDict
+(function () {
+/*
+ * this function will handle delegated dom-evt
+ */
+    "use strict";
+    let debounce;
+    let timerTimeout;
+    debounce = function () {
+        return setTimeout(function () {
+            timerTimeout = undefined;
+        }, 30);
+    };
+    if (!(
+        typeof window === "object" && window && window.document
+        && typeof document.addEventListener === "function"
+    ) || window.domOnEventDelegateDict) {
+        return;
+    }
+    window.domOnEventDelegateDict = {};
+    window.domOnEventDelegateDict.domOnEventDelegate = function (evt) {
+        evt.targetOnEvent = evt.target.closest("[data-onevent]");
+        if (
+            !evt.targetOnEvent
+            || evt.targetOnEvent.dataset.onevent === "domOnEventNop"
+            || evt.target.closest(".disabled,.readonly")
+        ) {
+            return;
+        }
+        // filter evt-change
+        switch (evt.type !== "change" && evt.target.type) {
+        case "checkbox":
+        case "file":
+        case "select-one":
+        case "radio":
+            return;
+        }
+        // filter evt-keyup
+        switch (evt.type) {
+        case "keyup":
+            if (!timerTimeout && (
+                evt.target.tagName === "INPUT"
+                || evt.target.tagName === "TEXTAREA"
+            )) {
+                timerTimeout = debounce();
+                if (evt.target.dataset.valueOld !== evt.target.value) {
+                    evt.target.dataset.valueOld = evt.target.value;
+                    break;
+                }
+            }
+            return;
+        }
+        switch (evt.targetOnEvent.tagName) {
+        case "BUTTON":
+        case "FORM":
+            evt.preventDefault();
+            break;
+        }
+        evt.stopPropagation();
+        // handle domOnEventClickTarget
+        if (evt.targetOnEvent.dataset.onevent === "domOnEventClickTarget") {
+            document.querySelector(
+                evt.targetOnEvent.dataset.clickTarget
+            ).click();
+            return;
+        }
+        window.domOnEventDelegateDict[evt.targetOnEvent.dataset.onevent](evt);
+    };
+    // handle evt
+    [
+        "change",
+        "click",
+        "keyup",
+        "submit"
+    ].forEach(function (eventType) {
+        document.addEventListener(
+            eventType,
+            window.domOnEventDelegateDict.domOnEventDelegate
+        );
+    });
+}());
+
+
+
+// init domOnEventSelectAllWithinPre
+(function () {
+/*
+ * this function will limit select-all within <pre tabIndex="0"> elem
+ * https://stackoverflow.com/questions/985272/selecting-text-in-an-element-akin-to-highlighting-with-your-mouse
+ */
+    "use strict";
+    if (!(
+        typeof window === "object" && window && window.document
+        && typeof document.addEventListener === "function"
+    ) || window.domOnEventSelectAllWithinPre) {
+        return;
+    }
+    window.domOnEventSelectAllWithinPre = function (evt) {
+        let range;
+        let selection;
+        if (
+            evt && (evt.ctrlKey || evt.metaKey) && evt.key === "a"
+            && evt.target.closest("pre")
+        ) {
+            range = document.createRange();
+            range.selectNodeContents(evt.target.closest("pre"));
+            selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            evt.preventDefault();
+        }
+    };
+    // handle evt
+    document.addEventListener(
+        "keydown",
+        window.domOnEventSelectAllWithinPre
+    );
+}());
+</script>
+<h1>
+
+<a
+    
+    href="https://github.com/kaizhu256/node-utility2"
+    
+    target="_blank"
+>
+
+    utility2 (2019.10.8)
+
+</a>
+
+</h1>
+<h3>this zero-dependency package will provide high-level functions to to build, test, and deploy webapps</h3>
+
+<a class="button" download href="assets.app.js">download standalone app</a><br>
+<button class="button" data-onevent="testRunBrowser" id="buttonTestRun1">run browser-tests</button><br>
+<div class="uiAnimateSlide" id="htmlTestReport1" style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"></div>
+
+
+
+
+<!-- custom-html-start -->
+<label>edit or paste script below to cover and test</label>
+<textarea class="textarea" data-onevent="domOnEventInputChange" id="inputTextarea1">
+// remove comment below to disable jslint
+/*jslint browser, devel*/
+/*global window*/
+(function () {
+    "use strict";
+    var testCaseDict;
+    testCaseDict = {};
+    testCaseDict.modeTest = 1;
+
+    // comment this testCase to disable failed error demo
+    testCaseDict.testCase_failed_error_demo = function (opt, onError) {
+    /*
+     * this function will run a failed error demo
+     */
+        // hack-jslint
+        window.utility2.nop(opt);
+        onError(new Error("this is a failed error demo"));
+    };
+
+    testCaseDict.testCase_passed_ajax_demo = function (opt, onError) {
+    /*
+     * this function will demo a passed ajax test
+     */
+        var data;
+        opt = {url: "/"};
+        // test ajax-req for main-page "/"
+        window.utility2.ajax(opt, function (err, xhr) {
+            try {
+                // handle err
+                console.assert(!err, err);
+                // validate "200 ok" status
+                console.assert(xhr.statusCode === 200, xhr.statusCode);
+                // validate non-empty data
+                data = xhr.responseText;
+                console.assert(data && data.length > 0, data);
+                onError();
+            } catch (errCaught) {
+                onError(errCaught);
+            }
+        });
+    };
+
+    window.utility2.testRunDefault(testCaseDict);
+}());
+</textarea>
+<button class="button" data-onevent="domOnEventInputChange" id="buttonJslintAutofix1">jslint autofix</button><br>
+<pre class= "colorError" id="outputJslintPre1" tabindex="0"></pre>
+<label>instrumented-code</label>
+<textarea class="readonly textarea" id="outputTextarea1" readonly tabindex="0"></textarea>
+<label>stderr and stdout</label>
+<textarea class="onevent-reset-output readonly textarea" id="outputStdout1" readonly></textarea>
+<div id="htmlTestReport2"></div>
+<div id="htmlCoverageReport1"></div>
+<script>
+/* jslint utility2:true */
+window.addEventListener("load", function (local) {
+"use strict";
+local = window.utility2;
+local.querySelectorAll(
+    "#buttonTestRun1, #htmlTestReport1"
+).forEach(function (elem) {
+    elem.style.display = "none";
+});
+local.domOnEventInputChange = function (evt) {
+    switch (evt.type + "." + evt.target.id) {
+    case "click.buttonJslintAutofix1":
+    case "keyup.inputTextarea1":
+        // jslint #inputTextarea1
+        local.jslintAndPrint(local.querySelector(
+            "#inputTextarea1"
+        ).value, "inputTextarea1.js", {
+            autofix: evt.target.id === "buttonJslintAutofix1",
+            conditional: evt.target.id !== "buttonJslintAutofix1"
+        });
+        if (local.jslint.jslintResult.autofix) {
+            local.querySelector(
+                "#inputTextarea1"
+            ).value = local.jslint.jslintResult.code;
+        }
+        local.querySelector(
+            "#outputJslintPre1"
+        ).textContent = local.jslint.jslintResult.errMsg.replace((
+            /\u001b\[\d*m/g
+        ), "").trim();
+        // try to cleanup __coverage__
+        try {
+            delete globalThis.__coverage__["/inputTextarea1.js"];
+        } catch (ignore) {}
+        // try to cover and eval #inputTextarea1
+        try {
+            local.querySelector(
+                "#outputTextarea1"
+            ).value = local.istanbul.instrumentSync(
+                local.querySelector("#inputTextarea1").value,
+                "/inputTextarea1.js"
+            );
+            eval( // jslint ignore:line
+                local.querySelector("#outputTextarea1").value
+            );
+        } catch (errCaught) {
+            console.error(errCaught);
+        }
+        break;
+    }
+};
+// handle evt
+local.on("utility2.testRunEnd", function () {
+    local.querySelector(
+        "#htmlCoverageReport1"
+    ).innerHTML = local.istanbul.coverageReportCreate({
+        coverage: globalThis.__coverage__
+    });
+});
+local.on("utility2.testRunProgressUpdate", function (testReport) {
+    local.querySelector(
+        "#htmlTestReport2"
+    ).innerHTML = local.testReportMerge(testReport, {});
+});
+local.domOnEventInputChange({
+    target: {
+        id: "inputTextarea1"
+    },
+    type: "keyup"
+});
+});
+</script>
+<!-- custom-html-end -->
+
+
+
+
+
+<script src="assets.app.js"></script>
+
+
+<div style="text-align: center;">
+    [
+    this app was created with
+    <a
+        href="https://github.com/kaizhu256/node-utility2" target="_blank"
+    >utility2</a>
+    ]
+</div>
+</body>
+</html>

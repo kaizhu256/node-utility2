@@ -1,0 +1,162 @@
+<svg height="1358" width="720" xmlns="http://www.w3.org/2000/svg">
+<rect height="1358" fill="#555" width="720"></rect>
+<text fill="#7f7" font-family="Courier New" font-size="12" xml:space="preserve">
+<tspan x="10" y="26"></tspan>
+
+<tspan x="10" y="42"></tspan>
+
+<tspan x="10" y="58">(re)starting shNpmTest test.js</tspan>
+
+<tspan x="10" y="74"></tspan>
+
+<tspan x="10" y="90">[MODE_BUILD=buildApp] - 2019-08-14T15:15:09.310Z - npm-testing /home/travis/build/kaizhu256/node\</tspan>
+<tspan x="10" y="106">-utility2</tspan>
+
+<tspan x="10" y="122"></tspan>
+
+<tspan x="10" y="138"></tspan>
+
+<tspan x="10" y="154">buildApp - merged test-report from file /home/travis/build/kaizhu256/node-utility2/tmp/build/tes\</tspan>
+<tspan x="10" y="170">t-report.json</tspan>
+
+<tspan x="10" y="186">&gt; repl-server listening on port 60676</tspan>
+
+<tspan x="10" y="202">http-server listening on port 46825</tspan>
+
+<tspan x="10" y="218">db - dropping database ...</tspan>
+
+<tspan x="10" y="234"></tspan>
+
+<tspan x="10" y="250">buildApp - merged test-report from file /home/travis/build/kaizhu256/node-utility2/tmp/build/tes\</tspan>
+<tspan x="10" y="266">t-report.json</tspan>
+
+<tspan x="10" y="282">jslint - 516ms /home/travis/build/kaizhu256/node-utility2/README.md</tspan>
+
+<tspan x="10" y="298">jslint - 313ms /home/travis/build/kaizhu256/node-utility2/lib.apidoc.js</tspan>
+
+<tspan x="10" y="314">jslint - 762ms /home/travis/build/kaizhu256/node-utility2/lib.db.js</tspan>
+
+<tspan x="10" y="330">jslint - 208ms /home/travis/build/kaizhu256/node-utility2/lib.github_crud.js</tspan>
+
+<tspan x="10" y="346">jslint - 299ms /home/travis/build/kaizhu256/node-utility2/lib.istanbul.js</tspan>
+
+<tspan x="10" y="362">jslint - 19ms /home/travis/build/kaizhu256/node-utility2/lib.marked.js</tspan>
+
+<tspan x="10" y="378">jslint - 32ms /home/travis/build/kaizhu256/node-utility2/lib.sjcl.js</tspan>
+
+<tspan x="10" y="394">file modified - /home/travis/build/kaizhu256/node-utility2/README.md</tspan>
+
+<tspan x="10" y="410">file modified - /home/travis/build/kaizhu256/node-utility2/lib.utility2.js</tspan>
+
+<tspan x="10" y="426">file modified - /home/travis/build/kaizhu256/node-utility2/lib.utility2.js</tspan>
+
+<tspan x="10" y="442">file modified - /home/travis/build/kaizhu256/node-utility2/package.json</tspan>
+
+<tspan x="10" y="458">file modified - /home/travis/build/kaizhu256/node-utility2/test.js</tspan>
+
+<tspan x="10" y="474">jslint - 913ms /home/travis/build/kaizhu256/node-utility2/lib.swgg.js</tspan>
+
+<tspan x="10" y="490">testRunDefault - 50839 ms - testCase pending - testCase_buildApp_default ...</tspan>
+
+<tspan x="10" y="506">jslint - 1327ms /home/travis/build/kaizhu256/node-utility2/lib.utility2.js</tspan>
+
+<tspan x="10" y="522">jslint - 481ms /home/travis/build/kaizhu256/node-utility2/lib.utility2.sh</tspan>
+
+<tspan x="10" y="538">jslint - 13ms /home/travis/build/kaizhu256/node-utility2/npm_scripts.sh</tspan>
+
+<tspan x="10" y="554">jslint - 1ms /home/travis/build/kaizhu256/node-utility2/package.json</tspan>
+
+<tspan x="10" y="570">jslint - 489ms /home/travis/build/kaizhu256/node-utility2/test.js</tspan>
+
+<tspan x="10" y="586">local-function - unused (lib.jslint.js) local.jsonStringifyOrdered</tspan>
+
+<tspan x="10" y="602">http-server listening on port 51032</tspan>
+
+<tspan x="10" y="618">jslint - 1052ms /home/travis/build/kaizhu256/node-utility2/lib.jslint.js</tspan>
+
+<tspan x="10" y="634">jslint - 2ms /home/travis/build/kaizhu256/node-utility2/lib.terser.js</tspan>
+
+<tspan x="10" y="650">testRunDefault - 55496 ms - testCase pending - testCase_buildApp_default ...</tspan>
+
+<tspan x="10" y="666">testRunDefault - 57663 ms - [node test-case 1 of 1 passed] - testCase_buildApp_default</tspan>
+
+<tspan x="10" y="682"></tspan>
+
+<tspan x="10" y="698">buildApp - merged test-report from file /home/travis/build/kaizhu256/node-utility2/tmp/build/tes\</tspan>
+<tspan x="10" y="714">t-report.json</tspan>
+
+<tspan x="10" y="730"></tspan>
+
+<tspan x="10" y="746">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="762">| test-report - buildApidoc - node - linux v12.8.0 - 2019-08-14T15:14:22.470Z</tspan>
+
+<tspan x="10" y="778">|   57664 ms            0 failed        1 passed      |</tspan>
+
+<tspan x="10" y="794">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="810">| test-report - npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTM\</tspan>
+<tspan x="10" y="826">L, like Gecko) Chrome/61.0.3163.100 Electron/2.0.18 Safari/537.36 - 2019-08-14T15:14:11.693Z</tspan>
+
+<tspan x="10" y="842">|    3039 ms            0 failed       80 passed      |</tspan>
+
+<tspan x="10" y="858">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="874">| test-report - npmTest - node - linux v12.8.0 - 2019-08-14T15:13:42.031Z</tspan>
+
+<tspan x="10" y="890">|   37145 ms            0 failed       81 passed      |</tspan>
+
+<tspan x="10" y="906">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="922">| test-report - testExampleJs - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36\</tspan>
+<tspan x="10" y="938"> (KHTML, like Gecko) Chrome/61.0.3163.100 Electron/2.0.16 Safari/537.36 - 2019-08-14T15:13:08.63\</tspan>
+<tspan x="10" y="954">4Z</tspan>
+
+<tspan x="10" y="970">|    1007 ms            0 failed        4 passed      |</tspan>
+
+<tspan x="10" y="986">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1002">| test-report - testExampleJs - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36\</tspan>
+<tspan x="10" y="1018"> (KHTML, like Gecko) Chrome/61.0.3163.100 Electron/2.0.16 Safari/537.36 - 2019-08-14T15:13:08.63\</tspan>
+<tspan x="10" y="1034">4Z</tspan>
+
+<tspan x="10" y="1050">|    1007 ms            0 failed        4 passed      |</tspan>
+
+<tspan x="10" y="1066">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1082">| test-report - testExampleJs - node - linux v12.8.0 - 2019-08-14T15:13:07.594Z</tspan>
+
+<tspan x="10" y="1098">|    6753 ms            0 failed        4 passed      |</tspan>
+
+<tspan x="10" y="1114">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1130">| test-report - testExampleJs - node - linux v12.8.0 - 2019-08-14T15:13:07.594Z</tspan>
+
+<tspan x="10" y="1146">|    6753 ms            0 failed        4 passed      |</tspan>
+
+<tspan x="10" y="1162">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1178"></tspan>
+
+<tspan x="10" y="1194">created test-report file /home/travis/build/kaizhu256/node-utility2/tmp/build/test-report.html</tspan>
+
+<tspan x="10" y="1210"></tspan>
+
+<tspan x="10" y="1226"></tspan>
+
+<tspan x="10" y="1242">buildApp - 0 failed tests</tspan>
+
+<tspan x="10" y="1258"></tspan>
+
+<tspan x="10" y="1274"></tspan>
+
+<tspan x="10" y="1290">[MODE_BUILD=buildApp] - 2019-08-14T15:15:21.485Z - EXIT_CODE - 0</tspan>
+
+<tspan x="10" y="1306"></tspan>
+
+<tspan x="10" y="1322">process exited with code 0</tspan>
+
+<tspan x="10" y="1338">EXIT_CODE - 0</tspan>
+
+</text>
+</svg>

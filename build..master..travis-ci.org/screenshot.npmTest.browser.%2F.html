@@ -1,0 +1,2698 @@
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- "assets.utility2.template.html" -->
+<title>utility2 (2019.8.11)</title>
+<style>
+/* jslint utility2:true */
+/*csslint
+*/
+/* csslint ignore:start */
+*,
+*:after,
+*:before {
+    box-sizing: border-box;
+}
+/* csslint ignore:end */
+@keyframes uiAnimateShake {
+0%,
+50% {
+    transform: translateX(10px);
+}
+100% {
+    transform: translateX(0);
+}
+25%,
+75% {
+    transform: translateX(-10px);
+}
+}
+@keyframes uiAnimateSpin {
+0% {
+    transform: rotate(0deg);
+}
+100% {
+    transform: rotate(360deg);
+}
+}
+a {
+    overflow-wrap: break-word;
+}
+body {
+    background: #eef;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: small;
+    margin: 0 40px;
+}
+body > div,
+body > form > div,
+body > form > input,
+body > form > pre,
+body > form > .button,
+body > form > .textarea,
+body > input,
+body > pre,
+body > .button,
+body > .textarea {
+    margin-bottom: 20px;
+    margin-top: 0;
+}
+body > form > input,
+body > form > .button,
+body > input,
+body > .button {
+    width: 20rem;
+}
+body > form > .textarea,
+body > .textarea {
+    height: 10rem;
+    width: 100%;
+}
+body > .readonly {
+    background: #ddd;
+}
+code,
+pre,
+.textarea {
+    font-family: Consolas, Menlo, monospace;
+    font-size: smaller;
+}
+pre {
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+}
+.button {
+    background-color: #fff;
+    border: 1px solid;
+    border-bottom-color: rgb(186, 186, 186);
+    border-left-color: rgb(209, 209, 209);
+    border-radius: 4px;
+    border-right-color: rgb(209, 209, 209);
+    border-top-color: rgb(216, 216, 216);
+    color: #00d;
+    cursor: pointer;
+    display: inline-block;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: normal;
+    margin: 0;
+    padding: 2px 7px 3px 7px;
+    text-align: center;
+    text-decoration: underline;
+}
+.colorError {
+    color: #d00;
+}
+.textarea {
+    background: #fff;
+    border: 1px solid #999;
+    border-radius: 0;
+    cursor: auto;
+    overflow: auto;
+    padding: 2px;
+}
+.uiAnimateShake {
+    animation-duration: 500ms;
+    animation-name: uiAnimateShake;
+}
+.uiAnimateSlide {
+    overflow-y: hidden;
+    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;
+}
+.utility2FooterDiv {
+    text-align: center;
+}
+.zeroPixel {
+    border: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    width: 0;
+}
+</style>
+</head>
+<body>
+<div id="ajaxProgressDiv1" style="background: transparent; height: 2px; left: 0px; margin: 0px; padding: 0px; position: fixed; top: 0px; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>
+<div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>
+<a class="zeroPixel" download="db.persistence.json" href="" id="dbExportA1"></a>
+<input class="zeroPixel" data-onevent="onEventDomDb" data-onevent-db="dbImportInput" type="file">
+<script>
+/* jslint utility2:true */
+// init domOnEventWindowOnloadTimeElapsed
+(function () {
+/*
+ * this function will measure and print time-elapsed for window.onload
+ */
+    "use strict";
+    if (window.domOnEventWindowOnloadTimeElapsed) {
+        return;
+    }
+    window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;
+    window.addEventListener("load", function () {
+        setTimeout(function () {
+            window.domOnEventWindowOnloadTimeElapsed = (
+                Date.now()
+                - window.domOnEventWindowOnloadTimeElapsed
+            );
+            console.error(
+                "domOnEventWindowOnloadTimeElapsed = "
+                + window.domOnEventWindowOnloadTimeElapsed
+            );
+        }, 100);
+    });
+}());
+
+
+
+// init domOnEventDelegateDict
+(function () {
+/*
+ * this function will handle delegated dom-event
+ */
+    "use strict";
+    var timerTimeoutDict;
+    if (window.domOnEventDelegateDict) {
+        return;
+    }
+    window.domOnEventDelegateDict = {};
+    timerTimeoutDict = {};
+    window.domOnEventDelegateDict.domOnEventDelegate = function (evt) {
+        evt.targetOnEvent = evt.target.closest(
+            "[data-onevent]"
+        );
+        if (
+            !evt.targetOnEvent
+            || evt.targetOnEvent.dataset.onevent === "domOnEventNop"
+            || evt.target.closest(
+                ".disabled, .readonly"
+            )
+        ) {
+            return;
+        }
+        // rate-limit high-frequency-event
+        switch (evt.type) {
+        case "keydown":
+        case "keyup":
+            // filter non-input keyboard-event
+            if (!evt.target.closest(
+                "input, option, select, textarea"
+            )) {
+                return;
+            }
+            if (timerTimeoutDict[evt.type] !== true) {
+                timerTimeoutDict[evt.type] = timerTimeoutDict[
+                    evt.type
+                ] || setTimeout(function () {
+                    timerTimeoutDict[evt.type] = true;
+                    window.domOnEventDelegateDict.domOnEventDelegate(evt);
+                }, 50);
+                return;
+            }
+            timerTimeoutDict[evt.type] = null;
+            break;
+        }
+        switch (evt.targetOnEvent.tagName) {
+        case "BUTTON":
+        case "FORM":
+            evt.preventDefault();
+            break;
+        }
+        evt.stopPropagation();
+        window.domOnEventDelegateDict[evt.targetOnEvent.dataset.onevent](
+            evt
+        );
+    };
+    window.domOnEventDelegateDict.domOnEventResetOutput = function () {
+        Array.from(document.querySelectorAll(
+            ".onevent-reset-output"
+        )).forEach(function (elem) {
+            switch (elem.tagName) {
+            case "INPUT":
+            case "TEXTAREA":
+                elem.value = "";
+                break;
+            case "PRE":
+                elem.textContent = "";
+                break;
+            default:
+                elem.innerHTML = "";
+            }
+        });
+    };
+    // init event-handling
+    [
+        "change",
+        "click",
+        "keydown",
+        "submit"
+    ].forEach(function (eventType) {
+        document.addEventListener(
+            eventType,
+            window.domOnEventDelegateDict.domOnEventDelegate
+        );
+    });
+}());
+
+
+
+// init timerIntervalAjaxProgressUpdate
+(function () {
+/*
+ * this function will increment ajax-progress-bar
+ * until webpage has loaded
+ */
+    "use strict";
+    var ajaxProgressDiv1;
+    var ajaxProgressState;
+    var ajaxProgressUpdate;
+    if (
+        window.timerIntervalAjaxProgressUpdate
+        || !document.querySelector(
+            "#ajaxProgressDiv1"
+        )
+    ) {
+        return;
+    }
+    ajaxProgressDiv1 = document.querySelector(
+        "#ajaxProgressDiv1"
+    );
+    setTimeout(function () {
+        ajaxProgressDiv1.style.width = "25%";
+    });
+    ajaxProgressState = 0;
+    ajaxProgressUpdate = (
+        window.local
+        && window.local.ajaxProgressUpdate
+    ) || function () {
+        ajaxProgressDiv1.style.width = "100%";
+        setTimeout(function () {
+            ajaxProgressDiv1.style.background = "transparent";
+            setTimeout(function () {
+                ajaxProgressDiv1.style.width = "0%";
+            }, 500);
+        }, 1000);
+    };
+    window.timerIntervalAjaxProgressUpdate = setInterval(function () {
+        ajaxProgressState += 1;
+        ajaxProgressDiv1.style.width = Math.max(
+            100 - 75 * Math.exp(-0.125 * ajaxProgressState),
+            ajaxProgressDiv1.style.width.slice(0, -1) | 0
+        ) + "%";
+    }, 1000);
+    window.addEventListener("load", function () {
+        clearInterval(window.timerIntervalAjaxProgressUpdate);
+        ajaxProgressUpdate();
+    });
+}());
+
+
+
+// init domOnEventSelectAllWithinPre
+(function () {
+/*
+ * this function will limit select-all within <pre tabIndex="0"> elements
+ * https://stackoverflow.com/questions/985272/selecting-text-in-an-element-akin-to-highlighting-with-your-mouse
+ */
+    "use strict";
+    if (window.domOnEventSelectAllWithinPre) {
+        return;
+    }
+    window.domOnEventSelectAllWithinPre = function (evt) {
+        var range;
+        var selection;
+        if (
+            evt
+            && evt.key === "a"
+            && (evt.ctrlKey || evt.metaKey)
+            && evt.target.closest(
+                "pre"
+            )
+        ) {
+            range = document.createRange();
+            range.selectNodeContents(evt.target.closest(
+                "pre"
+            ));
+            selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            evt.preventDefault();
+        }
+    };
+    // init event-handling
+    document.addEventListener(
+        "keydown",
+        window.domOnEventSelectAllWithinPre
+    );
+}());
+</script>
+<h1>
+
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">
+
+        utility2 (2019.8.11)
+
+    </a>
+
+</h1>
+<h3>this zero-dependency package will provide a collection of high-level functions to to build, test, and deploy webapps</h3>
+
+<a class="button" download="" href="assets.app.js">download standalone app</a><br>
+<button class="button" data-onevent="testRunBrowser" id="testRunButton1">run internal test</button><br>
+
+
+
+
+<label>edit or paste script below to cover and test</label>
+<textarea class="textarea" data-onevent="testRunBrowser" id="inputEval1">// remove comment below to disable jslint
+/*jslint browser, devel*/
+/*global window*/
+(function () {
+    "use strict";
+    var testCaseDict;
+    testCaseDict = {};
+    testCaseDict.modeTest = 1;
+
+    // comment this testCase to disable failed error demo
+    testCaseDict.testCase_failed_error_demo = function (opt, onError) {
+    /*
+     * this function will run a failed error demo
+     */
+        // jslint-hack
+        window.utility2.nop(opt);
+        onError(new Error("this is a failed error demo"));
+    };
+
+    testCaseDict.testCase_passed_ajax_demo = function (opt, onError) {
+    /*
+     * this function will demo a passed ajax test
+     */
+        var data;
+        opt = {url: "/"};
+        // test ajax-req for main-page "/"
+        window.utility2.ajax(opt, function (err, xhr) {
+            try {
+                // validate no err occurred
+                console.assert(!err, err);
+                // validate "200 ok" status
+                console.assert(xhr.statusCode === 200, xhr.statusCode);
+                // validate non-empty data
+                data = xhr.responseText;
+                console.assert(data &amp;&amp; data.length &gt; 0, data);
+                onError();
+            } catch (errorCaught) {
+                onError(errorCaught);
+            }
+        });
+    };
+
+    window.utility2.testRunDefault(testCaseDict);
+}());
+</textarea>
+<button class="button" data-onevent="testRunBrowser" id="jslintAutofixButton1">jslint autofix</button><br>
+<pre class="colorError" id="outputJslintPre1" tabindex="0"></pre>
+<label>instrumented-code</label>
+<pre class="readonly textarea" id="outputCode1" tabindex="0">var __cov_aee9c4eacf3ee = (Function('return this'))();
+if (!__cov_aee9c4eacf3ee.__coverage__) { __cov_aee9c4eacf3ee.__coverage__ = {}; }
+__cov_aee9c4eacf3ee = __cov_aee9c4eacf3ee.__coverage__;
+if (!(__cov_aee9c4eacf3ee['/inputEval1.js'])) {
+   __cov_aee9c4eacf3ee['/inputEval1.js'] = {"path":"/inputEval1.js","s":{"1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"7":0,"8":0,"9":0,"10":0,"11":0,"12":0,"13":0,"14":0,"15":0,"16":0,"17":0,"18":0,"19":0},"b":{"1":[0,0]},"f":{"1":0,"2":0,"3":0,"4":0},"fnMap":{"1":{"name":"(anonymous_1)","line":4,"loc":{"start":{"line":4,"column":1},"end":{"line":4,"column":13}}},"2":{"name":"(anonymous_2)","line":11,"loc":{"start":{"line":11,"column":46},"end":{"line":11,"column":70}}},"3":{"name":"(anonymous_3)","line":20,"loc":{"start":{"line":20,"column":45},"end":{"line":20,"column":69}}},"4":{"name":"(anonymous_4)","line":27,"loc":{"start":{"line":27,"column":34},"end":{"line":27,"column":54}}}},"statementMap":{"1":{"start":{"line":4,"column":0},"end":{"line":44,"column":5}},"2":{"start":{"line":6,"column":4},"end":{"line":6,"column":21}},"3":{"start":{"line":7,"column":4},"end":{"line":7,"column":22}},"4":{"start":{"line":8,"column":4},"end":{"line":8,"column":30}},"5":{"start":{"line":11,"column":4},"end":{"line":18,"column":6}},"6":{"start":{"line":16,"column":8},"end":{"line":16,"column":33}},"7":{"start":{"line":17,"column":8},"end":{"line":17,"column":58}},"8":{"start":{"line":20,"column":4},"end":{"line":41,"column":6}},"9":{"start":{"line":24,"column":8},"end":{"line":24,"column":17}},"10":{"start":{"line":25,"column":8},"end":{"line":25,"column":25}},"11":{"start":{"line":27,"column":8},"end":{"line":40,"column":11}},"12":{"start":{"line":28,"column":12},"end":{"line":39,"column":13}},"13":{"start":{"line":30,"column":16},"end":{"line":30,"column":42}},"14":{"start":{"line":32,"column":16},"end":{"line":32,"column":71}},"15":{"start":{"line":34,"column":16},"end":{"line":34,"column":40}},"16":{"start":{"line":35,"column":16},"end":{"line":35,"column":62}},"17":{"start":{"line":36,"column":16},"end":{"line":36,"column":26}},"18":{"start":{"line":38,"column":16},"end":{"line":38,"column":37}},"19":{"start":{"line":43,"column":4},"end":{"line":43,"column":49}}},"branchMap":{"1":{"line":35,"type":"binary-expr","locations":[{"start":{"line":35,"column":31},"end":{"line":35,"column":35}},{"start":{"line":35,"column":39},"end":{"line":35,"column":54}}]}},"code":["// remove comment below to disable jslint","/*jslint browser, devel*/","/*global window*/","(function () {","    \"use strict\";","    var testCaseDict;","    testCaseDict = {};","    testCaseDict.modeTest = 1;","","    // comment this testCase to disable failed error demo","    testCaseDict.testCase_failed_error_demo = function (opt, onError) {","    /*","     * this function will run a failed error demo","     */","        // jslint-hack","        window.utility2.nop(opt);","        onError(new Error(\"this is a failed error demo\"));","    };","","    testCaseDict.testCase_passed_ajax_demo = function (opt, onError) {","    /*","     * this function will demo a passed ajax test","     */","        var data;","        opt = {url: \"/\"};","        // test ajax-req for main-page \"/\"","        window.utility2.ajax(opt, function (err, xhr) {","            try {","                // validate no err occurred","                console.assert(!err, err);","                // validate \"200 ok\" status","                console.assert(xhr.statusCode === 200, xhr.statusCode);","                // validate non-empty data","                data = xhr.responseText;","                console.assert(data &amp;&amp; data.length &gt; 0, data);","                onError();","            } catch (errorCaught) {","                onError(errorCaught);","            }","        });","    };","","    window.utility2.testRunDefault(testCaseDict);","}());",""]};
+}
+__cov_aee9c4eacf3ee = __cov_aee9c4eacf3ee['/inputEval1.js'];
+__cov_aee9c4eacf3ee.s['1']++;(function(){'use strict';__cov_aee9c4eacf3ee.f['1']++;__cov_aee9c4eacf3ee.s['2']++;var testCaseDict;__cov_aee9c4eacf3ee.s['3']++;testCaseDict={};__cov_aee9c4eacf3ee.s['4']++;testCaseDict.modeTest=1;__cov_aee9c4eacf3ee.s['5']++;testCaseDict.testCase_failed_error_demo=function(opt,onError){__cov_aee9c4eacf3ee.f['2']++;__cov_aee9c4eacf3ee.s['6']++;window.utility2.nop(opt);__cov_aee9c4eacf3ee.s['7']++;onError(new Error('this is a failed error demo'));};__cov_aee9c4eacf3ee.s['8']++;testCaseDict.testCase_passed_ajax_demo=function(opt,onError){__cov_aee9c4eacf3ee.f['3']++;__cov_aee9c4eacf3ee.s['9']++;var data;__cov_aee9c4eacf3ee.s['10']++;opt={url:'/'};__cov_aee9c4eacf3ee.s['11']++;window.utility2.ajax(opt,function(err,xhr){__cov_aee9c4eacf3ee.f['4']++;__cov_aee9c4eacf3ee.s['12']++;try{__cov_aee9c4eacf3ee.s['13']++;console.assert(!err,err);__cov_aee9c4eacf3ee.s['14']++;console.assert(xhr.statusCode===200,xhr.statusCode);__cov_aee9c4eacf3ee.s['15']++;data=xhr.responseText;__cov_aee9c4eacf3ee.s['16']++;console.assert((__cov_aee9c4eacf3ee.b['1'][0]++,data)&amp;&amp;(__cov_aee9c4eacf3ee.b['1'][1]++,data.length&gt;0),data);__cov_aee9c4eacf3ee.s['17']++;onError();}catch(errorCaught){__cov_aee9c4eacf3ee.s['18']++;onError(errorCaught);}});};__cov_aee9c4eacf3ee.s['19']++;window.utility2.testRunDefault(testCaseDict);}());
+</pre>
+<label>stderr and stdout</label>
+<pre class="onevent-reset-output readonly textarea" id="outputStdout1" tabindex="0">--------------------|-----------|-----------|-----------|-----------|
+File                |   % Stmts |% Branches |   % Funcs |   % Lines |
+--------------------|-----------|-----------|-----------|-----------|
+   All files        |     36.84 |         0 |        25 |     36.84 |
+      inputEval1.js |     36.84 |         0 |        25 |     36.84 |
+--------------------|-----------|-----------|-----------|-----------|
+All files           |     36.84 |         0 |        25 |     36.84 |
+--------------------|-----------|-----------|-----------|-----------|
+
+created coverage file /tmp/build/coverage.html/index.html
+testRunDefault - 71 ms - [browser test-case 1 of 80 passed] - testCase_FormData_err
+testRunDefault - 152 ms - [browser test-case 2 of 80 passed] - testCase_ajaxProgressUpdate_default
+testRunDefault - 170 ms - [browser test-case 3 of 80 passed] - testCase_ajax_cache
+testRunDefault - 224 ms - [browser test-case 4 of 80 passed] - testCase_assertXxx_default
+testRunDefault - 252 ms - [browser test-case 5 of 80 passed] - testCase_base64Xxx_default
+testRunDefault - 289 ms - [browser test-case 6 of 80 passed] - testCase_browserTest_electron
+testRunDefault - 296 ms - [browser test-case 7 of 80 passed] - testCase_browserTest_screenshot
+testRunDefault - 309 ms - [browser test-case 8 of 80 passed] - testCase_bufferIndexOfSubBuffer_default
+testRunDefault - 322 ms - [browser test-case 9 of 80 passed] - testCase_bufferValidateAndCoerce_err
+testRunDefault - 326 ms - [browser test-case 10 of 80 passed] - testCase_buildApidoc_default
+testRunDefault - 335 ms - [browser test-case 11 of 80 passed] - testCase_buildApp_default
+testRunDefault - 347 ms - [browser test-case 12 of 80 passed] - testCase_buildLib_default
+testRunDefault - 353 ms - [browser test-case 13 of 80 passed] - testCase_buildReadme_default
+testRunDefault - 404 ms - [browser test-case 14 of 80 passed] - testCase_buildXxx_default
+testRunDefault - 414 ms - [browser test-case 15 of 80 passed] - testCase_childProcessSpawnWithTimeout_default
+testRunDefault - 418 ms - [browser test-case 16 of 80 passed] - testCase_childProcessSpawnWithUtility2_err
+testRunDefault - 420 ms - [browser test-case 17 of 80 passed] - testCase_cliRun_default
+testRunDefault - 428 ms - [browser test-case 18 of 80 passed] - testCase_corsBackendHostInject_default
+testRunDefault - 432 ms - [browser test-case 19 of 80 passed] - testCase_corsForwardProxyHostIfNeeded_default
+testRunDefault - 440 ms - [browser test-case 20 of 80 passed] - testCase_cryptoAesXxxCbcRawXxx_default
+testRunDefault - 448 ms - [browser test-case 21 of 80 passed] - testCase_domFragmentRender_default
+testRunDefault - 452 ms - [browser test-case 22 of 80 passed] - testCase_exit_err
+testRunDefault - 461 ms - [browser test-case 23 of 80 passed] - testCase_fsWriteFileWithMkdirpSync_default
+testRunDefault - 465 ms - [browser test-case 24 of 80 passed] - testCase_isNullOrUndefined_default
+testRunDefault - 470 ms - [browser test-case 25 of 80 passed] - testCase_jsonCopy_default
+testRunDefault - 480 ms - [browser test-case 26 of 80 passed] - testCase_jsonStringifyOrdered_default
+testRunDefault - 546 ms - [browser test-case 27 of 80 passed] - testCase_jwtAes256GcmXxx_default
+testRunDefault - 574 ms - [browser test-case 28 of 80 passed] - testCase_jwtHs256Xxx_default
+testRunDefault - 579 ms - [browser test-case 29 of 80 passed] - testCase_libUtility2Js_standalone
+testRunDefault - 588 ms - [browser test-case 30 of 80 passed] - testCase_listGetElementRandom_default
+testRunDefault - 603 ms - [browser test-case 31 of 80 passed] - testCase_listShuffle_default
+testRunDefault - 611 ms - [browser test-case 32 of 80 passed] - testCase_localStorageSetItemOrClear_default
+testRunDefault - 616 ms - [browser test-case 33 of 80 passed] - testCase_middlewareForwardProxy_default
+testRunDefault - 654 ms - [browser test-case 34 of 80 passed] - testCase_middlewareJsonpStateInit_assetsList
+testRunDefault - 660 ms - [browser test-case 35 of 80 passed] - testCase_moduleDirname_default
+testRunDefault - 674 ms - [browser test-case 36 of 80 passed] - testCase_nop_default
+testRunDefault - 690 ms - [browser test-case 37 of 80 passed] - testCase_numberToRomanNumerals_default
+testRunDefault - 706 ms - [browser test-case 38 of 80 passed] - testCase_objectSetDefault_default
+testRunDefault - 722 ms - [browser test-case 39 of 80 passed] - testCase_objectSetOverride_default
+testRunDefault - 738 ms - [browser test-case 40 of 80 passed] - testCase_onErrorDefault_default
+testRunDefault - 752 ms - [browser test-case 41 of 80 passed] - testCase_onErrorThrow_err
+testRunDefault - 761 ms - [browser test-case 42 of 80 passed] - testCase_onErrorWithStack_toString
+testRunDefault - 784 ms - [browser test-case 43 of 80 passed] - testCase_onFileModifiedRestart_watchFile
+testRunDefault - 791 ms - [browser test-case 44 of 80 passed] - testCase_onNext_err
+testRunDefault - 801 ms - [browser test-case 45 of 80 passed] - testCase_replStart_default
+testRunDefault - 806 ms - [browser test-case 46 of 80 passed] - testCase_replStart_tcp
+testRunDefault - 837 ms - [browser test-case 47 of 80 passed] - testCase_requireReadme_start
+testRunDefault - 849 ms - [browser test-case 48 of 80 passed] - testCase_semverCompare_default
+testRunDefault - 857 ms - [browser test-case 49 of 80 passed] - testCase_serverRespondTimeoutDefault_timeout
+testRunDefault - 1143 ms - [browser test-case 50 of 80 passed] - testCase_sjclHashScryptXxx_default
+testRunDefault - 1156 ms - [browser test-case 51 of 80 passed] - testCase_sjclHashShaXxxCreate_default
+testRunDefault - 1172 ms - [browser test-case 52 of 80 passed] - testCase_sjclHmacShaXxx_default
+testRunDefault - 1184 ms - [browser test-case 53 of 80 passed] - testCase_stringHtmlSafe_default
+testRunDefault - 1203 ms - [browser test-case 54 of 80 passed] - testCase_stringQuotedToAscii_default
+testRunDefault - 1246 ms - [browser test-case 55 of 80 passed] - testCase_stringRegexpEscape_default
+testRunDefault - 1262 ms - [browser test-case 56 of 80 passed] - testCase_stringTruncate_default
+testRunDefault - 1276 ms - [browser test-case 57 of 80 passed] - testCase_stringUniqueKey_default
+testRunDefault - 1325 ms - [browser test-case 58 of 80 passed] - testCase_taskCreate_multipleCallback
+testRunDefault - 1428 ms - [browser test-case 59 of 80 passed] - testCase_templateRender_default
+testRunDefault - 1453 ms - [browser test-case 60 of 80 passed] - testCase_testReportCreate_default
+testRunDefault - 1473 ms - [browser test-case 61 of 80 passed] - testCase_throwError_default
+testRunDefault - 1496 ms - [browser test-case 62 of 80 passed] - testCase_uiAnimateXxx_default
+testRunDefault - 1513 ms - [browser test-case 63 of 80 passed] - testCase_urlJoin_default
+testRunDefault - 1538 ms - [browser test-case 64 of 80 passed] - testCase_urlParse_default
+testRunDefault - 1552 ms - [browser test-case 65 of 80 passed] - testCase_uuid4Create_default
+testRunDefault - 1559 ms - [browser test-case 66 of 80 passed] - testCase_webpage_default
+testRunDefault - 1584 ms - [browser test-case 67 of 80 passed] - testCase_webpage_err
+testRunDefault - 1648 ms - [browser test-case 68 of 80 passed] - testCase_ajax_200
+testRunDefault - 1665 ms - [browser test-case 69 of 80 passed] - testCase_ajax_404
+testRunDefault - 1688 ms - [browser test-case 70 of 80 passed] - testCase_blobRead_default
+testRunDefault - 1769 ms - [browser test-case 71 of 80 passed] - testCase_onParallel_default
+testRunDefault - 1806 ms - [browser test-case 72 of 80 passed] - testCase_profileXxx_default
+testRunDefault - 1820 ms - [browser test-case 73 of 80 passed] - testCase_setTimeoutOnError_default
+testRunDefault - 1970 ms - [browser test-case 74 of 80 passed] - testCase_taskCreate_upsert
+testRunDefault - 2009 ms - [browser test-case 75 of 80 passed] - testCase_FormData_nullCase
+testRunDefault - 2059 ms - [browser test-case 76 of 80 passed] - testCase_onTimeout_timeout
+testRunDefault - 2084 ms - [browser test-case 77 of 80 passed] - testCase_taskCreateCached_default
+testRunDefault - 2107 ms - [browser test-case 78 of 80 passed] - testCase_FormData_default
+testRunDefault - 2127 ms - [browser test-case 79 of 80 passed] - testCase_ajax_default
+testRunDefault - 2277 ms - [browser test-case 80 of 80 passed] - testCase_onParallelList_default
+--------------------|-----------|-----------|-----------|-----------|
+File                |   % Stmts |% Branches |   % Funcs |   % Lines |
+--------------------|-----------|-----------|-----------|-----------|
+   All files        |     36.84 |         0 |        25 |     36.84 |
+      inputEval1.js |     36.84 |         0 |        25 |     36.84 |
+--------------------|-----------|-----------|-----------|-----------|
+All files           |     36.84 |         0 |        25 |     36.84 |
+--------------------|-----------|-----------|-----------|-----------|
+
+created coverage file /tmp/build/coverage.html/index.html
+serverLog - {"time":"2019-08-14T15:14:16.605Z","type":"serverResponse","method":"GET","url":"http://127.0.0.1:63943/test.timeout","statusCode":200,"timeElapsed":2002,"requestContentLength":0,"resContentLength":0,"requestHeaderXForwardedFor":"","requestHeaderOrigin":"","requestHeaderReferer":""}
+serverLog - {"time":"2019-08-14T15:14:16.935Z","type":"serverResponse","method":"GET","url":"http://127.0.0.1:63943/test.timeout","statusCode":200,"timeElapsed":2001,"requestContentLength":0,"resContentLength":0,"requestHeaderXForwardedFor":"","requestHeaderOrigin":"","requestHeaderReferer":""}
+</pre>
+<div id="testReportDiv1">
+
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- "" -->
+<title>test-report</title>
+<style>
+/* jslint utility2:true */
+/*csslint
+*/
+/* csslint ignore:start */
+*,
+*:after,
+*:before {
+    box-sizing: border-box;
+}
+/* csslint ignore:end */
+@keyframes uiAnimateShake {
+0%,
+50% {
+    transform: translateX(10px);
+}
+100% {
+    transform: translateX(0);
+}
+25%,
+75% {
+    transform: translateX(-10px);
+}
+}
+@keyframes uiAnimateSpin {
+0% {
+    transform: rotate(0deg);
+}
+100% {
+    transform: rotate(360deg);
+}
+}
+a {
+    overflow-wrap: break-word;
+}
+body {
+    background: #eef;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: small;
+    margin: 0 40px;
+}
+body > div,
+body > form > div,
+body > form > input,
+body > form > pre,
+body > form > .button,
+body > form > .textarea,
+body > input,
+body > pre,
+body > .button,
+body > .textarea {
+    margin-bottom: 20px;
+    margin-top: 0;
+}
+body > form > input,
+body > form > .button,
+body > input,
+body > .button {
+    width: 20rem;
+}
+body > form > .textarea,
+body > .textarea {
+    height: 10rem;
+    width: 100%;
+}
+body > .readonly {
+    background: #ddd;
+}
+code,
+pre,
+.textarea {
+    font-family: Consolas, Menlo, monospace;
+    font-size: smaller;
+}
+pre {
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+}
+.button {
+    background-color: #fff;
+    border: 1px solid;
+    border-bottom-color: rgb(186, 186, 186);
+    border-left-color: rgb(209, 209, 209);
+    border-radius: 4px;
+    border-right-color: rgb(209, 209, 209);
+    border-top-color: rgb(216, 216, 216);
+    color: #00d;
+    cursor: pointer;
+    display: inline-block;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: normal;
+    margin: 0;
+    padding: 2px 7px 3px 7px;
+    text-align: center;
+    text-decoration: underline;
+}
+.colorError {
+    color: #d00;
+}
+.textarea {
+    background: #fff;
+    border: 1px solid #999;
+    border-radius: 0;
+    cursor: auto;
+    overflow: auto;
+    padding: 2px;
+}
+.uiAnimateShake {
+    animation-duration: 500ms;
+    animation-name: uiAnimateShake;
+}
+.uiAnimateSlide {
+    overflow-y: hidden;
+    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;
+}
+.utility2FooterDiv {
+    text-align: center;
+}
+.zeroPixel {
+    border: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    width: 0;
+}
+/* jslint utility2:true */
+/*csslint
+*/
+.testReportDiv img {
+    border: 1px solid black;
+    margin: 5px 0 5px 0;
+    max-height: 256px;
+    max-width: 512px;
+}
+.testReportDiv pre {
+    background: #fdd;
+    border-top: 1px solid black;
+    margin-bottom: 0;
+    padding: 10px;
+}
+.testReportDiv span {
+    display: inline-block;
+    width: 120px;
+}
+.testReportDiv table {
+    border-top: 1px solid black;
+    text-align: left;
+    width: 100%;
+}
+.testReportDiv table > tbody > tr:nth-child(odd) {
+    background: #bfb;
+}
+.testReportDiv .displayNone {
+    display: none;
+}
+.testReportDiv .footer {
+    text-align: center;
+}
+.testReportDiv .platform {
+    background: #fff;
+    border: 1px solid black;
+    margin-bottom: 20px;
+    padding: 0 10px 10px 10px;
+    text-align: left;
+}
+.testReportDiv .summary {
+    background: #bfb;
+}
+.testReportDiv .testFailed {
+    background: #f99;
+}
+.testReportDiv .testPending {
+    background: #99f;
+}
+</style>
+
+
+<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>
+<div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>
+<a class="zeroPixel" download="db.persistence.json" href="" id="dbExportA1"></a>
+<input class="zeroPixel" data-onevent="onEventDomDb" data-onevent-db="dbImportInput" type="file">
+<script>
+/* jslint utility2:true */
+// init domOnEventWindowOnloadTimeElapsed
+(function () {
+/*
+ * this function will measure and print time-elapsed for window.onload
+ */
+    "use strict";
+    if (window.domOnEventWindowOnloadTimeElapsed) {
+        return;
+    }
+    window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;
+    window.addEventListener("load", function () {
+        setTimeout(function () {
+            window.domOnEventWindowOnloadTimeElapsed = (
+                Date.now()
+                - window.domOnEventWindowOnloadTimeElapsed
+            );
+            console.error(
+                "domOnEventWindowOnloadTimeElapsed = "
+                + window.domOnEventWindowOnloadTimeElapsed
+            );
+        }, 100);
+    });
+}());
+
+
+
+// init domOnEventDelegateDict
+(function () {
+/*
+ * this function will handle delegated dom-event
+ */
+    "use strict";
+    var timerTimeoutDict;
+    if (window.domOnEventDelegateDict) {
+        return;
+    }
+    window.domOnEventDelegateDict = {};
+    timerTimeoutDict = {};
+    window.domOnEventDelegateDict.domOnEventDelegate = function (evt) {
+        evt.targetOnEvent = evt.target.closest(
+            "[data-onevent]"
+        );
+        if (
+            !evt.targetOnEvent
+            || evt.targetOnEvent.dataset.onevent === "domOnEventNop"
+            || evt.target.closest(
+                ".disabled, .readonly"
+            )
+        ) {
+            return;
+        }
+        // rate-limit high-frequency-event
+        switch (evt.type) {
+        case "keydown":
+        case "keyup":
+            // filter non-input keyboard-event
+            if (!evt.target.closest(
+                "input, option, select, textarea"
+            )) {
+                return;
+            }
+            if (timerTimeoutDict[evt.type] !== true) {
+                timerTimeoutDict[evt.type] = timerTimeoutDict[
+                    evt.type
+                ] || setTimeout(function () {
+                    timerTimeoutDict[evt.type] = true;
+                    window.domOnEventDelegateDict.domOnEventDelegate(evt);
+                }, 50);
+                return;
+            }
+            timerTimeoutDict[evt.type] = null;
+            break;
+        }
+        switch (evt.targetOnEvent.tagName) {
+        case "BUTTON":
+        case "FORM":
+            evt.preventDefault();
+            break;
+        }
+        evt.stopPropagation();
+        window.domOnEventDelegateDict[evt.targetOnEvent.dataset.onevent](
+            evt
+        );
+    };
+    window.domOnEventDelegateDict.domOnEventResetOutput = function () {
+        Array.from(document.querySelectorAll(
+            ".onevent-reset-output"
+        )).forEach(function (elem) {
+            switch (elem.tagName) {
+            case "INPUT":
+            case "TEXTAREA":
+                elem.value = "";
+                break;
+            case "PRE":
+                elem.textContent = "";
+                break;
+            default:
+                elem.innerHTML = "";
+            }
+        });
+    };
+    // init event-handling
+    [
+        "change",
+        "click",
+        "keydown",
+        "submit"
+    ].forEach(function (eventType) {
+        document.addEventListener(
+            eventType,
+            window.domOnEventDelegateDict.domOnEventDelegate
+        );
+    });
+}());
+
+
+
+// init timerIntervalAjaxProgressUpdate
+(function () {
+/*
+ * this function will increment ajax-progress-bar
+ * until webpage has loaded
+ */
+    "use strict";
+    var ajaxProgressDiv1;
+    var ajaxProgressState;
+    var ajaxProgressUpdate;
+    if (
+        window.timerIntervalAjaxProgressUpdate
+        || !document.querySelector(
+            "#ajaxProgressDiv1"
+        )
+    ) {
+        return;
+    }
+    ajaxProgressDiv1 = document.querySelector(
+        "#ajaxProgressDiv1"
+    );
+    setTimeout(function () {
+        ajaxProgressDiv1.style.width = "25%";
+    });
+    ajaxProgressState = 0;
+    ajaxProgressUpdate = (
+        window.local
+        && window.local.ajaxProgressUpdate
+    ) || function () {
+        ajaxProgressDiv1.style.width = "100%";
+        setTimeout(function () {
+            ajaxProgressDiv1.style.background = "transparent";
+            setTimeout(function () {
+                ajaxProgressDiv1.style.width = "0%";
+            }, 500);
+        }, 1000);
+    };
+    window.timerIntervalAjaxProgressUpdate = setInterval(function () {
+        ajaxProgressState += 1;
+        ajaxProgressDiv1.style.width = Math.max(
+            100 - 75 * Math.exp(-0.125 * ajaxProgressState),
+            ajaxProgressDiv1.style.width.slice(0, -1) | 0
+        ) + "%";
+    }, 1000);
+    window.addEventListener("load", function () {
+        clearInterval(window.timerIntervalAjaxProgressUpdate);
+        ajaxProgressUpdate();
+    });
+}());
+
+
+
+// init domOnEventSelectAllWithinPre
+(function () {
+/*
+ * this function will limit select-all within <pre tabIndex="0"> elements
+ * https://stackoverflow.com/questions/985272/selecting-text-in-an-element-akin-to-highlighting-with-your-mouse
+ */
+    "use strict";
+    if (window.domOnEventSelectAllWithinPre) {
+        return;
+    }
+    window.domOnEventSelectAllWithinPre = function (evt) {
+        var range;
+        var selection;
+        if (
+            evt
+            && evt.key === "a"
+            && (evt.ctrlKey || evt.metaKey)
+            && evt.target.closest(
+                "pre"
+            )
+        ) {
+            range = document.createRange();
+            range.selectNodeContents(evt.target.closest(
+                "pre"
+            ));
+            selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            evt.preventDefault();
+        }
+    };
+    // init event-handling
+    document.addEventListener(
+        "keydown",
+        window.domOnEventSelectAllWithinPre
+    );
+}());
+</script>
+<div class="testReportDiv">
+<h1>test-report for
+    <a href="https://github.com/kaizhu256/node-utility2">
+        utility2 (2019.8.11)
+    </a>
+</h1>
+<div class="platform summary">
+<h2>summary</h2>
+<h4>
+    <span>version</span>-
+        2019.8.11<br>
+    <span>test date</span>- 2019-08-14T15:14:14.856Z<br>
+    <span>commit info</span>-
+        
+        undefined<br>
+        
+</h4>
+<table>
+<thead>
+    <tr>
+        <th>total time-elapsed</th>
+        <th>total tests failed</th>
+        <th>total tests passed</th>
+        <th>total tests pending</th>
+    </tr>
+</thead>
+<tbody><tr>
+    <td>3043 ms</td>
+    <td class="testPassed">0</td>
+    <td>80</td>
+    <td>0</td>
+</tr></tbody>
+</table>
+</div>
+
+<div class="platform">
+<h4>
+    1. browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Electron/2.0.18 Safari/537.36 - 2019-08-14T15:14:11.693Z<br>
+    
+    
+    <span>onload-time</span>- 4754 ms<br>
+    
+    <span>time-elapsed</span>- 3043 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 80<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
+
+<tr>
+    <td>1</td>
+    <td>2066 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_FormData_default</td>
+</tr>
+
+<tr>
+    <td>2</td>
+    <td>5 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_FormData_err</td>
+</tr>
+
+<tr>
+    <td>3</td>
+    <td>1876 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_FormData_nullCase</td>
+</tr>
+
+<tr>
+    <td>4</td>
+    <td>18 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajaxProgressUpdate_default</td>
+</tr>
+
+<tr>
+    <td>5</td>
+    <td>1494 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_200</td>
+</tr>
+
+<tr>
+    <td>6</td>
+    <td>1505 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_404</td>
+</tr>
+
+<tr>
+    <td>7</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_cache</td>
+</tr>
+
+<tr>
+    <td>8</td>
+    <td>1949 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_default</td>
+</tr>
+
+<tr>
+    <td>9</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_assertXxx_default</td>
+</tr>
+
+<tr>
+    <td>10</td>
+    <td>17 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_base64Xxx_default</td>
+</tr>
+
+<tr>
+    <td>11</td>
+    <td>1433 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_blobRead_default</td>
+</tr>
+
+<tr>
+    <td>12</td>
+    <td>26 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_browserTest_electron</td>
+</tr>
+
+<tr>
+    <td>13</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_browserTest_screenshot</td>
+</tr>
+
+<tr>
+    <td>14</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_bufferIndexOfSubBuffer_default</td>
+</tr>
+
+<tr>
+    <td>15</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_bufferValidateAndCoerce_err</td>
+</tr>
+
+<tr>
+    <td>16</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApidoc_default</td>
+</tr>
+
+<tr>
+    <td>17</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApp_default</td>
+</tr>
+
+<tr>
+    <td>18</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildLib_default</td>
+</tr>
+
+<tr>
+    <td>19</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildReadme_default</td>
+</tr>
+
+<tr>
+    <td>20</td>
+    <td>46 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildXxx_default</td>
+</tr>
+
+<tr>
+    <td>21</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_childProcessSpawnWithTimeout_default</td>
+</tr>
+
+<tr>
+    <td>22</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_childProcessSpawnWithUtility2_err</td>
+</tr>
+
+<tr>
+    <td>23</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_cliRun_default</td>
+</tr>
+
+<tr>
+    <td>24</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_corsBackendHostInject_default</td>
+</tr>
+
+<tr>
+    <td>25</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
+</tr>
+
+<tr>
+    <td>26</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_cryptoAesXxxCbcRawXxx_default</td>
+</tr>
+
+<tr>
+    <td>27</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_domFragmentRender_default</td>
+</tr>
+
+<tr>
+    <td>28</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_exit_err</td>
+</tr>
+
+<tr>
+    <td>29</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_fsWriteFileWithMkdirpSync_default</td>
+</tr>
+
+<tr>
+    <td>30</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_isNullOrUndefined_default</td>
+</tr>
+
+<tr>
+    <td>31</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_jsonCopy_default</td>
+</tr>
+
+<tr>
+    <td>32</td>
+    <td>4 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_jsonStringifyOrdered_default</td>
+</tr>
+
+<tr>
+    <td>33</td>
+    <td>54 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_jwtAes256GcmXxx_default</td>
+</tr>
+
+<tr>
+    <td>34</td>
+    <td>16 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_jwtHs256Xxx_default</td>
+</tr>
+
+<tr>
+    <td>35</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_libUtility2Js_standalone</td>
+</tr>
+
+<tr>
+    <td>36</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_listGetElementRandom_default</td>
+</tr>
+
+<tr>
+    <td>37</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_listShuffle_default</td>
+</tr>
+
+<tr>
+    <td>38</td>
+    <td>4 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_localStorageSetItemOrClear_default</td>
+</tr>
+
+<tr>
+    <td>39</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_middlewareForwardProxy_default</td>
+</tr>
+
+<tr>
+    <td>40</td>
+    <td>25 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_middlewareJsonpStateInit_assetsList</td>
+</tr>
+
+<tr>
+    <td>41</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_moduleDirname_default</td>
+</tr>
+
+<tr>
+    <td>42</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_nop_default</td>
+</tr>
+
+<tr>
+    <td>43</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_numberToRomanNumerals_default</td>
+</tr>
+
+<tr>
+    <td>44</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_objectSetDefault_default</td>
+</tr>
+
+<tr>
+    <td>45</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_objectSetOverride_default</td>
+</tr>
+
+<tr>
+    <td>46</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onErrorDefault_default</td>
+</tr>
+
+<tr>
+    <td>47</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onErrorThrow_err</td>
+</tr>
+
+<tr>
+    <td>48</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onErrorWithStack_toString</td>
+</tr>
+
+<tr>
+    <td>49</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onFileModifiedRestart_watchFile</td>
+</tr>
+
+<tr>
+    <td>50</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onNext_err</td>
+</tr>
+
+<tr>
+    <td>51</td>
+    <td>1481 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onParallelList_default</td>
+</tr>
+
+<tr>
+    <td>52</td>
+    <td>971 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onParallel_default</td>
+</tr>
+
+<tr>
+    <td>53</td>
+    <td>1260 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onTimeout_timeout</td>
+</tr>
+
+<tr>
+    <td>54</td>
+    <td>1007 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_profileXxx_default</td>
+</tr>
+
+<tr>
+    <td>55</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_replStart_default</td>
+</tr>
+
+<tr>
+    <td>56</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_replStart_tcp</td>
+</tr>
+
+<tr>
+    <td>57</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_requireReadme_start</td>
+</tr>
+
+<tr>
+    <td>58</td>
+    <td>4 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_semverCompare_default</td>
+</tr>
+
+<tr>
+    <td>59</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_serverRespondTimeoutDefault_timeout</td>
+</tr>
+
+<tr>
+    <td>60</td>
+    <td>956 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_setTimeoutOnError_default</td>
+</tr>
+
+<tr>
+    <td>61</td>
+    <td>278 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_sjclHashScryptXxx_default</td>
+</tr>
+
+<tr>
+    <td>62</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_sjclHashShaXxxCreate_default</td>
+</tr>
+
+<tr>
+    <td>63</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_sjclHmacShaXxx_default</td>
+</tr>
+
+<tr>
+    <td>64</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringHtmlSafe_default</td>
+</tr>
+
+<tr>
+    <td>65</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringQuotedToAscii_default</td>
+</tr>
+
+<tr>
+    <td>66</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringRegexpEscape_default</td>
+</tr>
+
+<tr>
+    <td>67</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringTruncate_default</td>
+</tr>
+
+<tr>
+    <td>68</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringUniqueKey_default</td>
+</tr>
+
+<tr>
+    <td>69</td>
+    <td>777 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_taskCreateCached_default</td>
+</tr>
+
+<tr>
+    <td>70</td>
+    <td>15 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_taskCreate_multipleCallback</td>
+</tr>
+
+<tr>
+    <td>71</td>
+    <td>616 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_taskCreate_upsert</td>
+</tr>
+
+<tr>
+    <td>72</td>
+    <td>65 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_templateRender_default</td>
+</tr>
+
+<tr>
+    <td>73</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_testReportCreate_default</td>
+</tr>
+
+<tr>
+    <td>74</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_throwError_default</td>
+</tr>
+
+<tr>
+    <td>75</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_uiAnimateXxx_default</td>
+</tr>
+
+<tr>
+    <td>76</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_urlJoin_default</td>
+</tr>
+
+<tr>
+    <td>77</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_urlParse_default</td>
+</tr>
+
+<tr>
+    <td>78</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_uuid4Create_default</td>
+</tr>
+
+<tr>
+    <td>79</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_default</td>
+</tr>
+
+<tr>
+    <td>80</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_err</td>
+</tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabindex="0">
+</pre>
+</div>
+
+<div class="footer">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
+
+
+</div>
+<div id="coverageReportDiv1"><div class="coverageReportDiv">
+<h1>coverage-report</h1>
+<div style="background: #fff; border: 1px solid #000; margin 0; padding: 0;">
+
+
+<div lang="en" class="x-istanbul">
+
+    <title>Code coverage report for All files</title>
+    <meta charset="utf-8">
+<style>
+/* jslint utility2:true */
+/*csslint
+    box-model: false,
+    important: false,
+    qualified-headings: false,
+*/
+/* csslint ignore:start */
+*,
+*:after,
+*:before {
+    box-sizing: border-box;
+}
+/* csslint ignore:end */
+.x-istanbul {
+    font-family: Helvetica Neue, Helvetica,Arial;
+    font-size: 10pt;
+    margin: 0;
+    padding: 0;
+}
+.x-istanbul h1 {
+    font-size: large;
+}
+.x-istanbul pre {
+    font-family: Consolas, Menlo, Monaco, monospace;
+    font-size: 14px;
+    margin: 0;
+    padding: 0;
+    tab-size: 2;
+}
+.x-istanbul .cbranch-no {
+    background: yellow !important;
+    color: #111;
+}
+.x-istanbul .cbranch-skip {
+    background: #ddd !important;
+    color: #111;
+}
+.x-istanbul .com {
+    color: #999 !important;
+}
+.x-istanbul .cover-empty,
+.x-istanbul .cover-fill {
+    background: white;
+    border: 1px solid #444;
+    display: inline-block;
+    height: 12px;
+}
+.x-istanbul .cover-empty {
+    background: white;
+    border-left: none;
+}
+.x-istanbul .cover-fill {
+    background: #ccc;
+    border-right: 1px solid #444;
+}
+.x-istanbul .cover-full {
+    border-right: none !important;
+}
+.x-istanbul .coverage {
+    border-collapse: collapse;
+    margin: 0;
+    padding: 0
+}
+.x-istanbul .coverage td {
+    color: #111;
+    margin: 0;
+    padding: 0;
+    vertical-align: top;
+}
+.x-istanbul .coverage td .cline-any {
+    display: inline-block;
+    padding: 0 5px;
+    width: 60px;
+}
+.x-istanbul .coverage td .cline-neutral {
+    background: #eee;
+}
+.x-istanbul .coverage td .cline-no {
+    background: #fc8c84;
+}
+.x-istanbul .coverage td .cline-yes {
+    background: #b5d592;
+    color: #999;
+}
+.x-istanbul .coverage .line-count {
+    padding-right: 5px;
+    text-align: right;
+    width: 50px;
+}
+.x-istanbul .coverage .line-count a {
+    text-decoration: none;
+}
+.x-istanbul .coverage .line-coverage {
+    border-left: 1px solid #666;
+    border-right: 1px solid #666;
+    color: #777 !important;
+    text-align: right;
+}
+.x-istanbul .coverage-summary {
+    padding: 20px;
+}
+.x-istanbul .coverage-summary table {
+    border-collapse: collapse;
+    margin: auto;
+    table-layout: fixed;
+    text-align: left;
+    width: 100%
+}
+.x-istanbul .coverage-summary td {
+    border: 1px solid #666;
+    margin: 0;
+    padding: 5px;
+    white-space: nowrap;
+}
+.x-istanbul .coverage-summary th {
+    margin: 0;
+    padding: 0 0 2px 0;
+}
+.x-istanbul .cstat-no {
+    background: #fc8c84;
+    color: #111;
+}
+.x-istanbul .cstat-skip {
+    background: #ddd;
+    color: #111;
+}
+.x-istanbul .cstat-yes {
+    color: #111;
+}
+.x-istanbul .entity,
+.x-istanbul .metric {
+    font-weight: bold;
+}
+.x-istanbul .footer,
+.x-istanbul .header {
+    background: #eee;
+    padding: 20px;
+}
+.x-istanbul .footer {
+    border-top: 1px solid #666;
+}
+.x-istanbul .fstat-no {
+    background: #ffc520;
+    color: #111 !important;
+}
+.x-istanbul .fstat-skip {
+    background: #ddd;
+    color: #111 !important;
+}
+.x-istanbul .header {
+    border-bottom: 1px solid #666;
+    top: 0;
+    width: 100%;
+}
+.x-istanbul .high {
+    background: #b5d592 !important;
+}
+.x-istanbul .ignore-none {
+    color: #999;
+    font-weight: normal;
+}
+.x-istanbul .low {
+    background: #fc8c84 !important;
+}
+.x-istanbul .medium {
+    background: #ffe87c !important;
+}
+.x-istanbul .meta {
+    text-align: center;
+}
+.x-istanbul .metric {
+    background: white;
+    border: 1px solid #333;
+    display: inline-block;
+    padding: .3em;
+}
+.x-istanbul .missing-if-branch {
+    background: black;
+    color: yellow;
+    display: inline-block;
+    margin-right: 10px;
+    padding: 0 4px;
+    position: relative;
+}
+.x-istanbul .missing-if-branch .typ,
+.x-istanbul .skip-if-branch .typ {
+    color: inherit !important;
+}
+.x-istanbul .prettyprint {
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+.x-istanbul .skip-if-branch {
+    background: #ccc;
+    color: white;
+    display: none;
+    margin-right: 10px;
+    padding: 0 4px;
+    position: relative;
+}
+/* validateLineSortedReset */
+.x-istanbul a {
+    color: #00d;
+    text-decoration: underline;
+}
+.x-istanbul pre {
+    overflow: visible;
+    white-space: pre
+}
+.x-istanbul .file div {
+    margin-bottom: 2px;
+    overflow-wrap: break-word;
+    white-space: normal;
+    width: 100%;
+}
+.x-istanbul .tableHeader {
+    border-collapse: collapse;
+    margin: 0 auto 10px auto;
+    table-layout: fixed;
+    text-align: left;
+    width: 100%;
+}
+.x-istanbul .tableHeader td {
+    background: #fff;
+    border: 1px solid #666;
+    padding: 5px;
+}
+.x-istanbul .tableHeader th {
+    padding: 0 0 2px 0;
+}
+</style>
+
+<div class="x-istanbul">
+<script>
+// init domOnEventSelectAllWithinPre
+(function () {
+/*
+ * this function will limit select-all within <pre tabIndex="0"> elements
+ * https://stackoverflow.com/questions/985272/selecting-text-in-an-element-akin-to-highlighting-with-your-mouse
+ */
+    "use strict";
+    if (window.domOnEventSelectAllWithinPre) {
+        return;
+    }
+    window.domOnEventSelectAllWithinPre = function (evt) {
+        var range;
+        var selection;
+        if (
+            evt
+            && evt.key === "a"
+            && (evt.ctrlKey || evt.metaKey)
+            && evt.target.closest(
+                "pre"
+            )
+        ) {
+            range = document.createRange();
+            range.selectNodeContents(evt.target.closest(
+                "pre"
+            ));
+            selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            evt.preventDefault();
+        }
+    };
+    // init event-handling
+    document.addEventListener(
+        "keydown",
+        window.domOnEventSelectAllWithinPre
+    );
+}());
+</script>
+<div class="header low">
+    
+    <table class="tableHeader">
+    <thead>
+    <tr>
+        <th>Ignored</th>
+        <th>Statements</th>
+        <th>Branches</th>
+        <th>Functions</th>
+        <th>Lines</th>
+    </tr>
+    </thead>
+    <tbody>
+        <tr><td><span class="ignore-none">none</span></td>
+        <td>36.84%<br>(7 / 19)</td>
+        <td>0%<br>(0 / 2)</td>
+        <td>25%<br>(1 / 4)</td>
+        <td>36.84%<br>(7 / 19)</td>
+    </tr></tbody>
+    </table>
+    <div class="path"></div>
+</div>
+<div class="body">
+<div class="coverage-summary">
+<table>
+<thead>
+<tr>
+   <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>
+   <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>
+   <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>
+   <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>
+   <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>
+</tr>
+</thead>
+<tbody><tr>
+	<td class="file low" data-value=""><a href="index.html"><div></div><span class="cover-fill" style="width: 36px;"></span><span class="cover-empty" style="width:64px;"></span></a></td>
+	<td data-value="36.84" class="pct low">36.84%<br>(7 / 19)</td>
+	<td data-value="0" class="pct low">0%<br>(0 / 2)</td>
+	<td data-value="25" class="pct low">25%<br>(1 / 4)</td>
+	<td data-value="36.84" class="pct low">36.84%<br>(7 / 19)</td>
+	</tr>
+
+</tbody>
+</table>
+</div></div>
+<div class="footer">
+    <div class="meta">Generated by <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a> at Wed, 14 Aug 2019 15:14:18 GMT</div>
+</div>
+</div>
+</div>
+
+
+<div lang="en" class="x-istanbul">
+
+    <title>Code coverage report for All files</title>
+    <meta charset="utf-8">
+<style>
+/* jslint utility2:true */
+/*csslint
+    box-model: false,
+    important: false,
+    qualified-headings: false,
+*/
+/* csslint ignore:start */
+*,
+*:after,
+*:before {
+    box-sizing: border-box;
+}
+/* csslint ignore:end */
+.x-istanbul {
+    font-family: Helvetica Neue, Helvetica,Arial;
+    font-size: 10pt;
+    margin: 0;
+    padding: 0;
+}
+.x-istanbul h1 {
+    font-size: large;
+}
+.x-istanbul pre {
+    font-family: Consolas, Menlo, Monaco, monospace;
+    font-size: 14px;
+    margin: 0;
+    padding: 0;
+    tab-size: 2;
+}
+.x-istanbul .cbranch-no {
+    background: yellow !important;
+    color: #111;
+}
+.x-istanbul .cbranch-skip {
+    background: #ddd !important;
+    color: #111;
+}
+.x-istanbul .com {
+    color: #999 !important;
+}
+.x-istanbul .cover-empty,
+.x-istanbul .cover-fill {
+    background: white;
+    border: 1px solid #444;
+    display: inline-block;
+    height: 12px;
+}
+.x-istanbul .cover-empty {
+    background: white;
+    border-left: none;
+}
+.x-istanbul .cover-fill {
+    background: #ccc;
+    border-right: 1px solid #444;
+}
+.x-istanbul .cover-full {
+    border-right: none !important;
+}
+.x-istanbul .coverage {
+    border-collapse: collapse;
+    margin: 0;
+    padding: 0
+}
+.x-istanbul .coverage td {
+    color: #111;
+    margin: 0;
+    padding: 0;
+    vertical-align: top;
+}
+.x-istanbul .coverage td .cline-any {
+    display: inline-block;
+    padding: 0 5px;
+    width: 60px;
+}
+.x-istanbul .coverage td .cline-neutral {
+    background: #eee;
+}
+.x-istanbul .coverage td .cline-no {
+    background: #fc8c84;
+}
+.x-istanbul .coverage td .cline-yes {
+    background: #b5d592;
+    color: #999;
+}
+.x-istanbul .coverage .line-count {
+    padding-right: 5px;
+    text-align: right;
+    width: 50px;
+}
+.x-istanbul .coverage .line-count a {
+    text-decoration: none;
+}
+.x-istanbul .coverage .line-coverage {
+    border-left: 1px solid #666;
+    border-right: 1px solid #666;
+    color: #777 !important;
+    text-align: right;
+}
+.x-istanbul .coverage-summary {
+    padding: 20px;
+}
+.x-istanbul .coverage-summary table {
+    border-collapse: collapse;
+    margin: auto;
+    table-layout: fixed;
+    text-align: left;
+    width: 100%
+}
+.x-istanbul .coverage-summary td {
+    border: 1px solid #666;
+    margin: 0;
+    padding: 5px;
+    white-space: nowrap;
+}
+.x-istanbul .coverage-summary th {
+    margin: 0;
+    padding: 0 0 2px 0;
+}
+.x-istanbul .cstat-no {
+    background: #fc8c84;
+    color: #111;
+}
+.x-istanbul .cstat-skip {
+    background: #ddd;
+    color: #111;
+}
+.x-istanbul .cstat-yes {
+    color: #111;
+}
+.x-istanbul .entity,
+.x-istanbul .metric {
+    font-weight: bold;
+}
+.x-istanbul .footer,
+.x-istanbul .header {
+    background: #eee;
+    padding: 20px;
+}
+.x-istanbul .footer {
+    border-top: 1px solid #666;
+}
+.x-istanbul .fstat-no {
+    background: #ffc520;
+    color: #111 !important;
+}
+.x-istanbul .fstat-skip {
+    background: #ddd;
+    color: #111 !important;
+}
+.x-istanbul .header {
+    border-bottom: 1px solid #666;
+    top: 0;
+    width: 100%;
+}
+.x-istanbul .high {
+    background: #b5d592 !important;
+}
+.x-istanbul .ignore-none {
+    color: #999;
+    font-weight: normal;
+}
+.x-istanbul .low {
+    background: #fc8c84 !important;
+}
+.x-istanbul .medium {
+    background: #ffe87c !important;
+}
+.x-istanbul .meta {
+    text-align: center;
+}
+.x-istanbul .metric {
+    background: white;
+    border: 1px solid #333;
+    display: inline-block;
+    padding: .3em;
+}
+.x-istanbul .missing-if-branch {
+    background: black;
+    color: yellow;
+    display: inline-block;
+    margin-right: 10px;
+    padding: 0 4px;
+    position: relative;
+}
+.x-istanbul .missing-if-branch .typ,
+.x-istanbul .skip-if-branch .typ {
+    color: inherit !important;
+}
+.x-istanbul .prettyprint {
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+.x-istanbul .skip-if-branch {
+    background: #ccc;
+    color: white;
+    display: none;
+    margin-right: 10px;
+    padding: 0 4px;
+    position: relative;
+}
+/* validateLineSortedReset */
+.x-istanbul a {
+    color: #00d;
+    text-decoration: underline;
+}
+.x-istanbul pre {
+    overflow: visible;
+    white-space: pre
+}
+.x-istanbul .file div {
+    margin-bottom: 2px;
+    overflow-wrap: break-word;
+    white-space: normal;
+    width: 100%;
+}
+.x-istanbul .tableHeader {
+    border-collapse: collapse;
+    margin: 0 auto 10px auto;
+    table-layout: fixed;
+    text-align: left;
+    width: 100%;
+}
+.x-istanbul .tableHeader td {
+    background: #fff;
+    border: 1px solid #666;
+    padding: 5px;
+}
+.x-istanbul .tableHeader th {
+    padding: 0 0 2px 0;
+}
+</style>
+
+<div class="x-istanbul">
+<script>
+// init domOnEventSelectAllWithinPre
+(function () {
+/*
+ * this function will limit select-all within <pre tabIndex="0"> elements
+ * https://stackoverflow.com/questions/985272/selecting-text-in-an-element-akin-to-highlighting-with-your-mouse
+ */
+    "use strict";
+    if (window.domOnEventSelectAllWithinPre) {
+        return;
+    }
+    window.domOnEventSelectAllWithinPre = function (evt) {
+        var range;
+        var selection;
+        if (
+            evt
+            && evt.key === "a"
+            && (evt.ctrlKey || evt.metaKey)
+            && evt.target.closest(
+                "pre"
+            )
+        ) {
+            range = document.createRange();
+            range.selectNodeContents(evt.target.closest(
+                "pre"
+            ));
+            selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            evt.preventDefault();
+        }
+    };
+    // init event-handling
+    document.addEventListener(
+        "keydown",
+        window.domOnEventSelectAllWithinPre
+    );
+}());
+</script>
+<div class="header low">
+    
+    <table class="tableHeader">
+    <thead>
+    <tr>
+        <th>Ignored</th>
+        <th>Statements</th>
+        <th>Branches</th>
+        <th>Functions</th>
+        <th>Lines</th>
+    </tr>
+    </thead>
+    <tbody>
+        <tr><td><span class="ignore-none">none</span></td>
+        <td>36.84%<br>(7 / 19)</td>
+        <td>0%<br>(0 / 2)</td>
+        <td>25%<br>(1 / 4)</td>
+        <td>36.84%<br>(7 / 19)</td>
+    </tr></tbody>
+    </table>
+    <div class="path"><a href="index.html">All files</a> » </div>
+</div>
+<div class="body">
+<div class="coverage-summary">
+<table>
+<thead>
+<tr>
+   <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>
+   <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>
+   <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>
+   <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>
+   <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>
+</tr>
+</thead>
+<tbody><tr>
+	<td class="file low" data-value="inputEval1.js"><a href="inputEval1.js.html"><div>inputEval1.js</div><span class="cover-fill" style="width: 36px;"></span><span class="cover-empty" style="width:64px;"></span></a></td>
+	<td data-value="36.84" class="pct low">36.84%<br>(7 / 19)</td>
+	<td data-value="0" class="pct low">0%<br>(0 / 2)</td>
+	<td data-value="25" class="pct low">25%<br>(1 / 4)</td>
+	<td data-value="36.84" class="pct low">36.84%<br>(7 / 19)</td>
+	</tr>
+
+</tbody>
+</table>
+</div></div>
+<div class="footer">
+    <div class="meta">Generated by <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a> at Wed, 14 Aug 2019 15:14:18 GMT</div>
+</div>
+</div>
+</div>
+
+
+<div lang="en" class="x-istanbul">
+
+    <title>Code coverage report for inputEval1.js</title>
+    <meta charset="utf-8">
+<style>
+/* jslint utility2:true */
+/*csslint
+    box-model: false,
+    important: false,
+    qualified-headings: false,
+*/
+/* csslint ignore:start */
+*,
+*:after,
+*:before {
+    box-sizing: border-box;
+}
+/* csslint ignore:end */
+.x-istanbul {
+    font-family: Helvetica Neue, Helvetica,Arial;
+    font-size: 10pt;
+    margin: 0;
+    padding: 0;
+}
+.x-istanbul h1 {
+    font-size: large;
+}
+.x-istanbul pre {
+    font-family: Consolas, Menlo, Monaco, monospace;
+    font-size: 14px;
+    margin: 0;
+    padding: 0;
+    tab-size: 2;
+}
+.x-istanbul .cbranch-no {
+    background: yellow !important;
+    color: #111;
+}
+.x-istanbul .cbranch-skip {
+    background: #ddd !important;
+    color: #111;
+}
+.x-istanbul .com {
+    color: #999 !important;
+}
+.x-istanbul .cover-empty,
+.x-istanbul .cover-fill {
+    background: white;
+    border: 1px solid #444;
+    display: inline-block;
+    height: 12px;
+}
+.x-istanbul .cover-empty {
+    background: white;
+    border-left: none;
+}
+.x-istanbul .cover-fill {
+    background: #ccc;
+    border-right: 1px solid #444;
+}
+.x-istanbul .cover-full {
+    border-right: none !important;
+}
+.x-istanbul .coverage {
+    border-collapse: collapse;
+    margin: 0;
+    padding: 0
+}
+.x-istanbul .coverage td {
+    color: #111;
+    margin: 0;
+    padding: 0;
+    vertical-align: top;
+}
+.x-istanbul .coverage td .cline-any {
+    display: inline-block;
+    padding: 0 5px;
+    width: 60px;
+}
+.x-istanbul .coverage td .cline-neutral {
+    background: #eee;
+}
+.x-istanbul .coverage td .cline-no {
+    background: #fc8c84;
+}
+.x-istanbul .coverage td .cline-yes {
+    background: #b5d592;
+    color: #999;
+}
+.x-istanbul .coverage .line-count {
+    padding-right: 5px;
+    text-align: right;
+    width: 50px;
+}
+.x-istanbul .coverage .line-count a {
+    text-decoration: none;
+}
+.x-istanbul .coverage .line-coverage {
+    border-left: 1px solid #666;
+    border-right: 1px solid #666;
+    color: #777 !important;
+    text-align: right;
+}
+.x-istanbul .coverage-summary {
+    padding: 20px;
+}
+.x-istanbul .coverage-summary table {
+    border-collapse: collapse;
+    margin: auto;
+    table-layout: fixed;
+    text-align: left;
+    width: 100%
+}
+.x-istanbul .coverage-summary td {
+    border: 1px solid #666;
+    margin: 0;
+    padding: 5px;
+    white-space: nowrap;
+}
+.x-istanbul .coverage-summary th {
+    margin: 0;
+    padding: 0 0 2px 0;
+}
+.x-istanbul .cstat-no {
+    background: #fc8c84;
+    color: #111;
+}
+.x-istanbul .cstat-skip {
+    background: #ddd;
+    color: #111;
+}
+.x-istanbul .cstat-yes {
+    color: #111;
+}
+.x-istanbul .entity,
+.x-istanbul .metric {
+    font-weight: bold;
+}
+.x-istanbul .footer,
+.x-istanbul .header {
+    background: #eee;
+    padding: 20px;
+}
+.x-istanbul .footer {
+    border-top: 1px solid #666;
+}
+.x-istanbul .fstat-no {
+    background: #ffc520;
+    color: #111 !important;
+}
+.x-istanbul .fstat-skip {
+    background: #ddd;
+    color: #111 !important;
+}
+.x-istanbul .header {
+    border-bottom: 1px solid #666;
+    top: 0;
+    width: 100%;
+}
+.x-istanbul .high {
+    background: #b5d592 !important;
+}
+.x-istanbul .ignore-none {
+    color: #999;
+    font-weight: normal;
+}
+.x-istanbul .low {
+    background: #fc8c84 !important;
+}
+.x-istanbul .medium {
+    background: #ffe87c !important;
+}
+.x-istanbul .meta {
+    text-align: center;
+}
+.x-istanbul .metric {
+    background: white;
+    border: 1px solid #333;
+    display: inline-block;
+    padding: .3em;
+}
+.x-istanbul .missing-if-branch {
+    background: black;
+    color: yellow;
+    display: inline-block;
+    margin-right: 10px;
+    padding: 0 4px;
+    position: relative;
+}
+.x-istanbul .missing-if-branch .typ,
+.x-istanbul .skip-if-branch .typ {
+    color: inherit !important;
+}
+.x-istanbul .prettyprint {
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+.x-istanbul .skip-if-branch {
+    background: #ccc;
+    color: white;
+    display: none;
+    margin-right: 10px;
+    padding: 0 4px;
+    position: relative;
+}
+/* validateLineSortedReset */
+.x-istanbul a {
+    color: #00d;
+    text-decoration: underline;
+}
+.x-istanbul pre {
+    overflow: visible;
+    white-space: pre
+}
+.x-istanbul .file div {
+    margin-bottom: 2px;
+    overflow-wrap: break-word;
+    white-space: normal;
+    width: 100%;
+}
+.x-istanbul .tableHeader {
+    border-collapse: collapse;
+    margin: 0 auto 10px auto;
+    table-layout: fixed;
+    text-align: left;
+    width: 100%;
+}
+.x-istanbul .tableHeader td {
+    background: #fff;
+    border: 1px solid #666;
+    padding: 5px;
+}
+.x-istanbul .tableHeader th {
+    padding: 0 0 2px 0;
+}
+</style>
+
+<div class="x-istanbul">
+<script>
+// init domOnEventSelectAllWithinPre
+(function () {
+/*
+ * this function will limit select-all within <pre tabIndex="0"> elements
+ * https://stackoverflow.com/questions/985272/selecting-text-in-an-element-akin-to-highlighting-with-your-mouse
+ */
+    "use strict";
+    if (window.domOnEventSelectAllWithinPre) {
+        return;
+    }
+    window.domOnEventSelectAllWithinPre = function (evt) {
+        var range;
+        var selection;
+        if (
+            evt
+            && evt.key === "a"
+            && (evt.ctrlKey || evt.metaKey)
+            && evt.target.closest(
+                "pre"
+            )
+        ) {
+            range = document.createRange();
+            range.selectNodeContents(evt.target.closest(
+                "pre"
+            ));
+            selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            evt.preventDefault();
+        }
+    };
+    // init event-handling
+    document.addEventListener(
+        "keydown",
+        window.domOnEventSelectAllWithinPre
+    );
+}());
+</script>
+<div class="header low">
+    
+    <table class="tableHeader">
+    <thead>
+    <tr>
+        <th>Ignored</th>
+        <th>Statements</th>
+        <th>Branches</th>
+        <th>Functions</th>
+        <th>Lines</th>
+    </tr>
+    </thead>
+    <tbody>
+        <tr><td><span class="ignore-none">none</span></td>
+        <td>36.84%<br>(7 / 19)</td>
+        <td>0%<br>(0 / 2)</td>
+        <td>25%<br>(1 / 4)</td>
+        <td>36.84%<br>(7 / 19)</td>
+    </tr></tbody>
+    </table>
+    <div class="path"><a href="index.html">All files</a> » <a href="index.html">All files</a> » inputEval1.js</div>
+</div>
+<div class="body">
+<pre><table class="coverage">
+<tbody><tr><td class="line-count"><a href="#L1" id="L1">1</a>
+<a href="#L2" id="L2">2</a>
+<a href="#L3" id="L3">3</a>
+<a href="#L4" id="L4">4</a>
+<a href="#L5" id="L5">5</a>
+<a href="#L6" id="L6">6</a>
+<a href="#L7" id="L7">7</a>
+<a href="#L8" id="L8">8</a>
+<a href="#L9" id="L9">9</a>
+<a href="#L10" id="L10">10</a>
+<a href="#L11" id="L11">11</a>
+<a href="#L12" id="L12">12</a>
+<a href="#L13" id="L13">13</a>
+<a href="#L14" id="L14">14</a>
+<a href="#L15" id="L15">15</a>
+<a href="#L16" id="L16">16</a>
+<a href="#L17" id="L17">17</a>
+<a href="#L18" id="L18">18</a>
+<a href="#L19" id="L19">19</a>
+<a href="#L20" id="L20">20</a>
+<a href="#L21" id="L21">21</a>
+<a href="#L22" id="L22">22</a>
+<a href="#L23" id="L23">23</a>
+<a href="#L24" id="L24">24</a>
+<a href="#L25" id="L25">25</a>
+<a href="#L26" id="L26">26</a>
+<a href="#L27" id="L27">27</a>
+<a href="#L28" id="L28">28</a>
+<a href="#L29" id="L29">29</a>
+<a href="#L30" id="L30">30</a>
+<a href="#L31" id="L31">31</a>
+<a href="#L32" id="L32">32</a>
+<a href="#L33" id="L33">33</a>
+<a href="#L34" id="L34">34</a>
+<a href="#L35" id="L35">35</a>
+<a href="#L36" id="L36">36</a>
+<a href="#L37" id="L37">37</a>
+<a href="#L38" id="L38">38</a>
+<a href="#L39" id="L39">39</a>
+<a href="#L40" id="L40">40</a>
+<a href="#L41" id="L41">41</a>
+<a href="#L42" id="L42">42</a>
+<a href="#L43" id="L43">43</a>
+<a href="#L44" id="L44">44</a>
+<a href="#L45" id="L45">45</a>
+<a href="#L46" id="L46">46</a>
+</td><td class="line-coverage"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js" tabindex="0">// remove comment below to disable jslint
+/*jslint browser, devel*/
+/*global window*/
+(function () {
+    "use strict";
+    var testCaseDict;
+    testCaseDict = {};
+    testCaseDict.modeTest = 1;
+&nbsp;
+    // comment this testCase to disable failed error demo
+    testCaseDict.testCase_failed_error_demo = <span class="fstat-no" title="function not covered">function (opt, onError) {</span>
+    /*
+     * this function will run a failed error demo
+     */
+        // jslint-hack
+<span class="cstat-no" title="statement not covered">        window.utility2.nop(opt);</span>
+<span class="cstat-no" title="statement not covered">        onError(new Error("this is a failed error demo"));</span>
+    };
+&nbsp;
+    testCaseDict.testCase_passed_ajax_demo = <span class="fstat-no" title="function not covered">function (opt, onError) {</span>
+    /*
+     * this function will demo a passed ajax test
+     */
+<span class="cstat-no" title="statement not covered">        var data;</span>
+<span class="cstat-no" title="statement not covered">        opt = {url: "/"};</span>
+        // test ajax-req for main-page "/"
+<span class="cstat-no" title="statement not covered">        window.utility2.ajax(opt, <span class="fstat-no" title="function not covered">function (err, xhr) {</span></span>
+<span class="cstat-no" title="statement not covered">            try {</span>
+                // validate no err occurred
+<span class="cstat-no" title="statement not covered">                console.assert(!err, err);</span>
+                // validate "200 ok" status
+<span class="cstat-no" title="statement not covered">                console.assert(xhr.statusCode === 200, xhr.statusCode);</span>
+                // validate non-empty data
+<span class="cstat-no" title="statement not covered">                data = xhr.responseText;</span>
+<span class="cstat-no" title="statement not covered">                console.assert(data &amp;&amp; data.length &gt; 0, data);</span>
+<span class="cstat-no" title="statement not covered">                onError();</span>
+            } catch (errorCaught) {
+<span class="cstat-no" title="statement not covered">                onError(errorCaught);</span>
+            }
+        });
+    };
+&nbsp;
+    window.utility2.testRunDefault(testCaseDict);
+}());
+&nbsp;
+&nbsp;</pre></td></tr>
+</tbody></table></pre>
+</div>
+<div class="footer">
+    <div class="meta">Generated by <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a> at Wed, 14 Aug 2019 15:14:18 GMT</div>
+</div>
+</div>
+</div>
+
+
+</div>
+</div>
+</div>
+
+
+
+<script src="assets.utility2.lib.istanbul.js"></script>
+<script src="assets.utility2.lib.jslint.js"></script>
+<script src="assets.utility2.lib.db.js"></script>
+<script src="assets.utility2.lib.marked.js"></script>
+<script src="assets.utility2.lib.sjcl.js"></script>
+<script src="assets.utility2.js"></script>
+<script>window.utility2_onReadyBefore.counter += 1;</script>
+<script src="jsonp.utility2.stateInit?callback=window.utility2.stateInit"></script>
+<script src="assets.example.js"></script>
+<script src="assets.test.js"></script>
+<script>window.utility2_onReadyBefore();</script>
+
+
+
+<div class="utility2FooterDiv">
+    [ this app was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+
+
+</body></html>
