@@ -9,6 +9,7 @@
 # git config --global diff.algorithm histogram
 # git fetch origin alpha beta master --tags
 # git ls-remote --heads origin
+# npm_package_private=1 GITHUB_REPO=aa/node-aa-bb-pro shCryptoWithGithubOrg aa shCryptoTravisEncrypt
 # shCryptoWithGithubOrg aa shTravisRepoCreate aa/node-aa-bb
 # shCryptoWithGithubOrg aa shGithubApiRateLimitGet
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/node-aa-bb "touch" alpha
@@ -297,7 +298,8 @@ shBuildAppSync () {
         ]
     then
         ln -f \
-            "$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js" .
+            "$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js" \
+            . || true
     fi
 }
 
@@ -972,12 +974,6 @@ shCryptoTravisDecrypt () {(set -e
 # this function will use $CRYPTO_AES_KEY to decrypt $SH_ENCRYPTED to stdout
     shBuildInit
     export MODE_BUILD=cryptoTravisDecrypt
-    FILE="$HOME/.ssh/CRYPTO_AES_SH_DECRYPTED_$GITHUB_ORG"
-    if [ ! "$CRYPTO_AES_KEY" ] && [ -f "$FILE" ]
-    then
-        shBuildPrint ". $FILE"
-        . "$FILE"
-    fi
     if [ ! "$CRYPTO_AES_KEY" ]
     then
         eval "CRYPTO_AES_KEY=$(printf "\$CRYPTO_AES_KEY_$GITHUB_ORG")"
@@ -989,7 +985,7 @@ shCryptoTravisDecrypt () {(set -e
     fi
     # decrypt CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG
     URL="https://raw.githubusercontent.com\
-/kaizhu256/node-utility2/gh-pages/CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG"
+/kaizhu256/node-utility2/alpha/.CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG"
     shBuildPrint "decrypting $URL ..."
     printf "${1:-"$(curl -#Lf "$URL")"}" |
         shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
@@ -1000,12 +996,6 @@ shCryptoTravisEncrypt () {(set -e
 # and use $CRYPTO_AES_KEY to encrypt $FILE to stdout
     shBuildInit
     export MODE_BUILD=cryptoTravisEncrypt
-    FILE="${1:-$HOME/.ssh/CRYPTO_AES_SH_DECRYPTED_$GITHUB_ORG}"
-    if [ ! "$CRYPTO_AES_KEY" ] && [ -f "$FILE" ]
-    then
-        shBuildPrint ". $FILE"
-        . "$FILE"
-    fi
     if [ ! "$CRYPTO_AES_KEY" ]
     then
         shBuildPrint "no CRYPTO_AES_KEY"
@@ -1053,7 +1043,12 @@ shCryptoWithGithubOrg () {(set -e
 # this function will run "$@" with private $GITHUB_ORG-env
     export GITHUB_ORG="$1"
     shift
-    . "$HOME/.ssh/CRYPTO_AES_SH_DECRYPTED_$GITHUB_ORG"
+    . "$HOME/.ssh/.CRYPTO_AES_SH_DECRYPTED_$GITHUB_ORG"
+    if [ "$npm_package_private" ] && [ "$TRAVIS_ACCESS_TOKEN_PRO" ]
+    then
+        export TRAVIS_ACCESS_TOKEN="$TRAVIS_ACCESS_TOKEN_PRO"
+        export TRAVIS_DOMAIN=travis-ci.com
+    fi
     "$@"
 )}
 
@@ -1404,6 +1399,7 @@ require("fs").writeFileSync(process.argv[2], dataTo);
 shGitAddTee () {(set -e
 # this function will run "git add ." and "$@ 2>&1 | tee -a ..."
     git add .
+    mkdir -p tmp
     printf "\n\n\n\n$(shDateIso) - shGitAddTee\n\n" 2>&1 |
         tee -a tmp/shGitAddTee.diff
     "$@" 2>&1 | tee -a /tmp/shGitAddTee.diff
@@ -1682,7 +1678,7 @@ local.ajax({
 )}
 
 shGithubRepoDescriptionUpdate () {(set -e
-# this function will update the github-repo''s description
+# this function will update github-repo description
     shSleep 5
     GITHUB_REPO="$1"
     DESCRIPTION="$2"
@@ -2223,7 +2219,7 @@ shNpmTestPublished () {(set -e
     DIR=/tmp/npmTestPublished
     rm -rf "$DIR" && mkdir -p "$DIR" && cd "$DIR"
     # npm-install package
-    npm install "$npm_package_name" --prefix .
+    npm install "${npm_package_name_github:-$npm_package_name}" --prefix .
     cd "node_modules/$npm_package_name"
     # bug-workaround - Cannot read property 'target' of null #10686
     # https://github.com/npm/npm/issues/10686
@@ -2287,86 +2283,133 @@ shPasswordRandom () {(set -e
     openssl rand -base64 32
 )}
 
-shRawJsDiff () {(set -e
+shRawLibDiff () {(set -e
 # this function will diff-compare raw.xxx.js to lib.xxx.js
     diff -u "$(
         printf "$1" | sed -e "s/lib/raw/"
-    )" "$1" > /tmp/shDiffRaw.diff || true
-    vim -R /tmp/shDiffRaw.diff
+    )" "$1" > /tmp/shRawLibDiff.diff || true
+    vim -R /tmp/shRawLibDiff.diff
 )}
 
-shRawJsFetch () {(set -e
-# this function will fetch raw js-lib from $LIST
+shRawLibFetch () {(set -e
+# this function will fetch raw-lib from $LIST
     export DIR="tmp/raw.lib"
     export LIST="$1"
-    rm -fr "$DIR"
-    mkdir -p "$DIR"
+    rm -rf "$DIR" && mkdir -p "$DIR"
     node -e '
 /* jslint utility2:true */
 (function () {
 "use strict";
-let aa;
-let fetch;
-let repo0;
-let repoList;
-let requireDict;
-fetch = function (repo, ii, file, jj) {
-    ii = String(ii).padStart(2, "0");
-    jj = String(jj).padStart(2, "0");
-    require("https").request(repo.prefix.replace(
-        "https://github.com/",
-        "https://raw.githubusercontent.com/"
-    ).replace("/blob/", "/") + "/" + file, function (res) {
-        res.pipe(require("fs").createWriteStream(
-            `${process.env.DIR}/${ii}__${jj}__` + file.replace((
-                /\//g
-            ), "__")
-        ));
-    }).end();
+let normalizeWhitespace;
+let opt;
+let repoDict;
+normalizeWhitespace = function (aa) {
+    return aa.replace((
+        /\r\n|\r/g
+    ), "\n").replace((
+        /[\t\u0020]+$/gm
+    ), "").replace((
+        /\n{3,}/g
+    ), function (match0) {
+        if (match0.length === 3) {
+            return "\n\n";
+        }
+        return "\n\n\n\n";
+    });
 };
-repoList = JSON.parse(process.argv[1].replace((
+repoDict = {};
+opt = JSON.parse(process.argv[1].replace((
     /^\u0020*?\/\/.*?$/gm
 ), ""));
-repoList.forEach(function (repo, ii) {
-    repo.fileList.forEach(function (file, jj) {
-        fetch(repo, ii, file, jj);
+opt.urlList.forEach(function (url, repo) {
+    repo = url.split("/").slice(0, 7).join("/");
+    if (!repoDict.hasOwnProperty(repo)) {
+        repoDict[repo] = {
+            urlList: []
+        };
+        require("https").request(repo.replace(
+            "/blob/",
+            "/commits/"
+        ), function (res) {
+            repo.dateCommitted = "";
+            res.on("data", function (buf) {
+                repo.dateCommitted += buf.toString();
+            });
+            res.on("end", function () {
+                repo.dateCommitted = repo.dateCommitted.match(
+                    /\b\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\b/
+                )[0];
+            });
+        }).end();
+    }
+    repo = repoDict[repo];
+    repo.urlList.push(url);
+});
+Object.entries(repoDict).forEach(function ([
+    prefix, repo
+], ii) {
+    repo.prefix = prefix;
+    repo.urlList.forEach(function (url, jj) {
+        require("https").request(url.replace(
+            "https://github.com/",
+            "https://raw.githubusercontent.com/"
+        ).replace("/blob/", "/"), function (res) {
+            res.pipe(require("fs").createWriteStream(
+                process.env.DIR
+                + "/"
+                + String(ii).padStart(2, "0")
+                + "__"
+                + String(jj).padStart(2, "0")
+                + "__"
+                + url.split("/").slice(7).join("__")
+            ));
+        }).end();
     });
 });
-requireDict = {};
 process.on("exit", function () {
+    let aa;
+    let repoPrefix0;
+    let requireDict;
     aa = "";
+    requireDict = {};
     require("fs").readdirSync(process.env.DIR).sort().forEach(function (data) {
         let exports;
         let file;
         let prefix;
         let repo;
-        repo = repoList[Number(data.slice(0, 2))];
-        file = repo.fileList[Number(data.slice(4, 6))];
+        repo = Object.values(repoDict)[Number(data.slice(0, 2))];
+        file = repo.urlList[Number(data.slice(4, 6))];
         // init prefix
-        prefix = String(
-            "exports_"
-            + repo.prefix.split("/").slice(3, 5).join("_") + "_"
-            + require("path").dirname(file)
+        prefix = "exports_" + require("path").dirname(file).replace(
+            "https://github.com/",
+            ""
         ).replace((
+            /\/blob\/[^\/]*/
+        ), "/").replace((
             /\W/g
         ), "_").replace((
-            /_+?$/
-        ), "");
+            /(_)_+|_+$/g
+        ), "$1");
         exports = prefix + "_" + require("path").basename(file).replace((
             /\.js$/
         ), "").replace((
             /\W/g
         ), "_");
-        if (repo.prefix !== repo0) {
-            repo0 = repo.prefix;
+        if (repo.prefix !== repoPrefix0) {
+            repoPrefix0 = repo.prefix;
             aa += (
-                "\n\n\n\n/*\nrepo "
-                + repo.prefix.replace("/blob/", "/tree/")
-                + "\n*/\n"
+                "\n\n\n\n/*\n"
+                + "repo " + repo.prefix.replace("/blob/", "/tree/") + "\n"
+                + "committed " + repo.dateCommitted + "\n"
+                + "*/"
             );
         }
         // mangle module.exports
         data = require("fs").readFileSync(process.env.DIR + "/" + data, "utf8");
+        if (!opt.isCommonJs) {
+            aa += "\n\n\n\n/*\nfile " + file + "\n*/\n" + data.trim();
+            return;
+        }
         data = data.replace((
             /\bmodule\.exports\b|(^\u0020*?)exports\b/gm
         ), "$1" + exports);
@@ -2380,7 +2423,7 @@ process.on("exit", function () {
                 /\W/g
             ), "_");
         });
-        aa += "\n\n\n\n/*\n" + `file ${repo.prefix}/${file}` + "\n*/\n";
+        aa += "\n\n\n\n/*\nfile " + file + "\n*/\n";
         if ((
             /\bpackage\.json$/
         ).test(file)) {
@@ -2392,6 +2435,17 @@ process.on("exit", function () {
     aa = aa.replace((
         /^#!/gm
     ), "// $&");
+    // normalize whitespace
+    aa = normalizeWhitespace(aa);
+    // replaceList
+    opt.replaceList = opt.replaceList || [];
+    opt.replaceList.forEach(function (elem) {
+        aa = aa.replace(new RegExp(elem.source, elem.flags), elem.replace);
+    });
+    if (!opt.isCommonJs) {
+        console.log(aa.trim() + "\n\n\n\n/*\nfile none\n*/");
+        return;
+    }
     // comment ... = require(...)
     aa = aa.replace((
         /^\u0020*?[$A-Z_a-z].*?\brequire\(.*$/gm
@@ -2412,16 +2466,7 @@ process.on("exit", function () {
         ), "// ");
     });
     // normalize whitespace
-    aa = aa.replace((
-        /\u0020+$/gm
-    ), "").replace((
-        /\n{3,}/g
-    ), function (match0) {
-        if (match0.length === 3) {
-            return "\n\n";
-        }
-        return "\n\n\n\n";
-    });
+    aa = normalizeWhitespace(aa);
     // normalize requireDict - let exports_... = {}
     aa.replace((
         /\bexports_\w+/g
@@ -2513,7 +2558,7 @@ process.on("exit", function () {
             /\u0020{2,}/
         ), " ")] + key;
     }).join("\n"));
-    console.log("}());\n\n\n");
+    console.log("}());\n\n\n\n/*\nfile none\n*/");
 });
 }());
 ' "$LIST"
@@ -3236,14 +3281,15 @@ shUtility2DependentsSync () {(set -e
     CWD="${1:-$PWD}"
     cd "$HOME/Documents/utility2" && shBuildApp
     cd "$HOME/Documents"
-    ln -f "utility2/lib.utility2.sh" "$HOME"
+    ln -f "utility2/lib.utility2.sh" "$HOME" || true
     if [ -d "$HOME/bin" ]
     then
-        ln -f "utility2/lib.apidoc.js" "$HOME/bin/utility2-apidoc"
-        ln -f "utility2/lib.github_crud.js" "$HOME/bin/utility2-github_crud"
-        ln -f "utility2/lib.istanbul.js" "$HOME/bin/utility2-istanbul"
-        ln -f "utility2/lib.jslint.js" "$HOME/bin/utility2-jslint"
-        ln -f "utility2/lib.utility2.sh" "$HOME/bin/utility2"
+        ln -f "utility2/lib.apidoc.js" "$HOME/bin/utility2-apidoc" || true
+        ln -f "utility2/lib.github_crud.js" "$HOME/bin/utility2-github_crud" ||
+            true
+        ln -f "utility2/lib.istanbul.js" "$HOME/bin/utility2-istanbul" || true
+        ln -f "utility2/lib.jslint.js" "$HOME/bin/utility2-jslint" || true
+        ln -f "utility2/lib.utility2.sh" "$HOME/bin/utility2" || true
     fi
     for DIR in $UTILITY2_DEPENDENTS $(ls -d swgg-* 2>/dev/null)
     do
@@ -3258,7 +3304,7 @@ shUtility2DependentsSync () {(set -e
         LIB="$(printf "$DIR" | sed -e "s/-lite\$//" -e "s/-/_/g")"
         if [ -f "utility2/lib.$LIB.js" ]
         then
-            ln -f "utility2/lib.$LIB.js" "$DIR"
+            ln -f "utility2/lib.$LIB.js" "$DIR" || true
         fi
     done
     for DIR in $(ls -d * 2>/dev/null)
@@ -3380,6 +3426,7 @@ export UTILITY2_GIT_BASE_ID=9fe8c2255f4ac330c86af7f624d381d768304183
 export UTILITY2_DEPENDENTS="$(shUtility2Dependents)"
 export UTILITY2_MACRO_JS='
 /* istanbul instrument in package utility2 */
+// assets.utility2.header.js - start
 /* istanbul ignore next */
 /* jslint utility2:true */
 (function (globalThis) {
@@ -3441,6 +3488,12 @@ export UTILITY2_MACRO_JS='
      */
         return this.map(...argList).flat();
     };
+    String.prototype.trimEnd = (
+        String.prototype.trimEnd || String.prototype.trimRight
+    );
+    String.prototype.trimStart = (
+        String.prototype.trimStart || String.prototype.trimLeft
+    );
     (function () {
         try {
             globalThis.TextDecoder = (
@@ -3664,6 +3717,12 @@ export UTILITY2_MACRO_JS='
      */
         return fnc || local.nop;
     };
+    local.identity = function (val) {
+    /*
+     * this function will return <val>
+     */
+        return val;
+    };
     local.nop = function () {
     /*
      * this function will do nothing
@@ -3707,12 +3766,6 @@ export UTILITY2_MACRO_JS='
             && Array.from(document.querySelectorAll(selectors))
         ) || [];
     };
-    local.identity = function (val) {
-    /*
-     * this function will return <val>
-     */
-        return val;
-    };
     // require builtin
     if (!local.isBrowser) {
         local.assert = require("assert");
@@ -3746,6 +3799,7 @@ export UTILITY2_MACRO_JS='
 }((typeof globalThis === "object" && globalThis) || (function () {
     return Function("return this")(); // jslint ignore:line
 }())));
+// assets.utility2.header.js - end
 
 
 

@@ -657,14 +657,12 @@ local._istanbul_path = local.path || {
     }
 };
 
-local.coverageMerge = function (coverage1, coverage2) {
+local.coverageMerge = function (coverage1 = {}, coverage2 = {}) {
 /*
  * this function will inplace-merge coverage2 into coverage1
  */
     let dict1;
     let dict2;
-    coverage1 = coverage1 || {};
-    coverage2 = coverage2 || {};
     Object.keys(coverage2).forEach(function (file) {
         if (!coverage2[file]) {
             return;

@@ -56,6 +56,7 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### todo
+- test String.p.indexOf using -1, 0, 1
 - jslint - prefer undefined over null
 - replace function local.objectSetOverride with Object.assign
 - jslint - fix off-by-one line-error
@@ -69,24 +70,14 @@ this zero-dependency package will provide high-level functions to to build, test
 - add server stress-test using puppeteer
 - none
 
-#### changelog 2019.10.8
-- npm publish 2019.10.8
-- polyfill String.trimEnd and String.trimStart for edge-compatibility
-- merge function local.valueOrEmptyXxx into local.coalesce
-- remove db-lite dependency
-- remove cheesy function local.uiAnimateShake
-- rename hack-istanbul to hack-coverage
-- merge function local.requireReadme into local._testCase_buildApidoc_default
-- remove unused PORT_REPL from function local.replStart
-- re-enable testCase_webpage_err
-- update function local.templateRender with arithmetic operators
-- update function local.testRunDefault's mock console.error
-- jslint - update function jslintAndPrint's opt.lineOffset with opt.iiStart, opt.iiEnd
-- replace functions local.taskCreate, local.taskCreateCached with event-emitter
-- rename trimLeft to trimStart, and trimRight to trimEnd
-- add isomorphic function local.querySelector, local.querySelectorAll
-- merge function local.middlewareCacheControlLastModified into local.middlewareAssetsCached
-- remove little-used http-server-zlib-compression
+#### changelog 2019.10.9
+- npm publish 2019.10.9
+- update feature flag \$npm_package_private
+- add file .CRYPTO_AES_SH_ENCRYPTED_kaizhu256
+- rename shell-function shRawJsXxx to shRawLibXxx
+- jslint - add bigint support
+- remove asset assets.utility2.base.html
+- fix build-ci for bootstrap-lite, jslint-lite
 - none
 
 #### this package requires
@@ -665,7 +656,7 @@ if (local.isBrowser) {
 }
 // init exports
 module.exports = local;
-// init assets
+// init assetsDict
 local.assetsDict = local.assetsDict || {};
 [
     "assets.swgg.swagger.json",
@@ -1408,10 +1399,10 @@ local.http.createServer(function (req, res) {
         "2019.08.16 apidoc-lite master",
         "2019.09.14 swgg",
         "2019.09.15 istanbul-lite master",
-        "2019.10.08 jslint-lite",
+        "2019.10.09 jslint-lite",
         "2019.10.08 utility2"
     ],
-    "version": "2019.10.8"
+    "version": "2019.10.9"
 }
 ```
 

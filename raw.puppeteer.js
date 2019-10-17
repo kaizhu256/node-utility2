@@ -1,3 +1,61 @@
+/*
+shRawLibFetch '
+{
+    "isCommonJs": true,
+    "urlList": [
+        "https://github.com/websockets/ws/blob/6.2.1/package.json",
+        "https://github.com/websockets/ws/blob/6.2.1/lib/constants.js",
+        "https://github.com/websockets/ws/blob/6.2.1/lib/validation.js",
+        "https://github.com/websockets/ws/blob/6.2.1/lib/buffer-util.js",
+        "https://github.com/websockets/ws/blob/6.2.1/lib/event-target.js",
+        "https://github.com/websockets/ws/blob/6.2.1/lib/extension.js",
+        // "https://github.com/websockets/ws/blob/6.2.1/lib/permessage-deflate.js",
+        "https://github.com/websockets/ws/blob/6.2.1/lib/receiver.js",
+        "https://github.com/websockets/ws/blob/6.2.1/lib/sender.js",
+        "https://github.com/websockets/ws/blob/6.2.1/lib/websocket-server.js",
+        "https://github.com/websockets/ws/blob/6.2.1/lib/websocket.js",
+        "https://github.com/websockets/ws/blob/6.2.1/index.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/package.json",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/helper.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Accessibility.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Browser.js",
+        // "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/BrowserFetcher.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Connection.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Coverage.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/DOMWorld.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/DeviceDescriptors.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Dialog.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/EmulationManager.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Errors.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Events.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/ExecutionContext.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/FrameManager.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Input.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/JSHandle.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Launcher.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/LifecycleWatcher.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Multimap.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/NetworkManager.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Page.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/PipeTransport.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Puppeteer.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Target.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/TaskQueue.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/TimeoutSettings.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Tracing.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/USKeyboardLayout.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/WebSocketTransport.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Worker.js",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/api.js",
+        // "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/externs.d.ts",
+        "https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/index.js"
+    ]
+}
+' > tmp/aa.js
+*/
+
+
+
 (function () {
 "use strict";
 let EventEmitter = require('events');
@@ -70,6 +128,7 @@ let exports_websockets_ws_lib_websocket_server = {};
 let exports_websockets_ws_package_json = {};
 /*
 repo https://github.com/websockets/ws/tree/6.2.1
+committed 2019-03-27T08:34:10Z
 */
 
 
@@ -2918,6 +2977,7 @@ exports_websockets_ws_index = WebSocket;
 
 /*
 repo https://github.com/GoogleChrome/puppeteer/tree/v1.19.0
+committed 2019-07-23T05:02:45Z
 */
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2019.10.8)
+ * lib.utility2.js (2019.10.9)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -1361,7 +1361,7 @@ if (local.isBrowser) {\n\
 }\n\
 // init exports\n\
 module.exports = local;\n\
-// init assets\n\
+// init assetsDict\n\
 local.assetsDict = local.assetsDict || {};\n\
 [\n\
     "assets.swgg.swagger.json",\n\
@@ -1490,6 +1490,7 @@ local.my_app = local;\n\
 \n\
 \n\
 \n\
+/* validateLineSortedReset */\n\
 return;\n\
 }());\n\
 }());\n\
@@ -2572,16 +2573,12 @@ local._testCase_webpage_default = function (opt, onError) {
             + "/screenshot." + local.env.MODE_BUILD + ".browser.%2F.png"
         ),
         url: (
-            local.assetsDict["/"].indexOf(
-                "<script src=\"assets.test.js\"></script>"
-            ) >= 0
-            ? local.serverLocalHost
-            + "?modeTest=1&timeoutDefault=" + local.timeoutDefault
-            : local.serverLocalHost
-            + "/assets.utility2.base.html?modeTest=1&timeoutDefault=1"
-        ) + "&modeTestCase=" + local.modeTestCase.replace((
-            /_?testCase_webpage_default/
-        ), "")
+            local.serverLocalHost
+            + "/?modeTest=1&timeoutDefault=" + local.timeoutDefault
+            + "&modeTestCase=" + local.modeTestCase.replace((
+                /_?testCase_webpage_default/
+            ), "")
+        )
     }, onError);
 };
 
@@ -3140,15 +3137,13 @@ local.browserTest = function (opt, onError) {
             onParallel.counter += 1;
             isDone = 0;
             testId = Math.random().toString(16);
-            testName = new local.url.URL(opt.url).pathname;
-            testName = (
-                local.env.MODE_BUILD + ".browser."
-                + encodeURIComponent(testName.replace(
+            testName = local.env.MODE_BUILD + ".browser." + encodeURIComponent(
+                new local.url.URL(opt.url).pathname.replace(
                     "/build.."
                     + local.env.CI_BRANCH
                     + ".." + local.env.CI_HOST,
                     "/build"
-                ))
+                )
             );
             fileScreenshot = (
                 local.env.npm_config_dir_build + "/screenshot."
@@ -3200,9 +3195,6 @@ local.browserTest = function (opt, onError) {
                     onParallel();
                 });
             }, 100);
-            page.evaluate(function (testId) {
-                window.utility2_testId = testId;
-            }, testId);
             page.on("metrics", function (metric) {
                 if (isDone >= 1 || metric.title !== testId) {
                     return;
@@ -3210,10 +3202,20 @@ local.browserTest = function (opt, onError) {
                 isDone = 1;
                 opt.gotoNext();
             });
+            page.evaluate(function (testId) {
+                window.utility2_testId = testId;
+                if (!window.utility2_modeTest) {
+                    console.timeStamp(window.utility2_testId);
+                }
+            }, testId);
             break;
         case 5:
             page.evaluate(function () {
-                return JSON.stringify(window.utility2_testReport);
+                return JSON.stringify(window.utility2_testReport || {
+                    testPlatformList: [
+                        {}
+                    ]
+                });
             }).then(opt.gotoNextData);
             break;
         case 6:
@@ -3438,9 +3440,6 @@ local.buildApp = function (opt, onError) {
                 file: "/assets.utility2.html",
                 url: "/assets.utility2.html"
             }, {
-                file: "/assets.utility2.base.html",
-                url: "/assets.utility2.base.html"
-            }, {
                 file: "/assets.utility2.rollup.js",
                 url: "/assets.utility2.rollup.js"
             }, {
@@ -3529,14 +3528,14 @@ local.buildLib = function (opt, onError) {
         (
             /\n\u0020\*\n(?:[\S\s]*?\n)?\u0020\*\/\n/
         ),
-        // customize body after /* validateLineSortedReset */
+        // customize code after /* validateLineSortedReset */
         (
             /\n\/\*\u0020validateLineSortedReset\u0020\*\/\n[\S\s]*?$/
         )
     ].forEach(function (rgx) {
         opt.dataTo = local.stringMerge(opt.dataTo, opt.dataFrom, rgx);
     });
-    // customize local for assets.utility2.rollup.js
+    // customize assets.utility2.rollup.js
     if (
         local.fs.existsSync("./assets.utility2.rollup.js")
         && local.env.npm_package_nameLib !== "swgg"
@@ -3685,13 +3684,13 @@ local.buildReadme = function (opt, onError) {
     if (local.env.npm_package_private) {
         opt.dataTo = opt.dataTo.replace((
             /\n\[!\[NPM\]\(https:\/\/nodei.co\/npm\/.*?\n/
-        ), "\n");
+        ), "");
         opt.dataTo = opt.dataTo.replace("$ npm install ", (
-            "$ git clone "
+            "$ git clone \\\n"
             + local.env.npm_package_repository_url.replace(
                 "git+https://github.com/",
                 "git@github.com:"
-            ) + " --single-branch -b beta node_modules/"
+            ) + " \\\n--single-branch -b beta node_modules/"
         ));
     }
     // customize version
@@ -3744,7 +3743,7 @@ local.buildReadme = function (opt, onError) {
         ), "\n");
     }
     // customize shDeployCustom
-    if (opt.dataFrom.indexOf("    shDeployCustom\n") >= 0) {
+    if (opt.dataFrom.indexOf("    shDeployCustom\n") !== -1) {
         [
             // customize example.sh
             (
@@ -5322,8 +5321,6 @@ local.middlewareJsonpStateInit = function (req, res, next) {
                 "/assets.swgg.swagger.json":
                 local.assetsDict["/assets.swgg.swagger.json"],
                 "/assets.test.js": local.assetsDict["/assets.test.js"],
-                "/assets.utility2.base.html":
-                local.assetsDict["/assets.utility2.base.rollup.html"],
                 "/index.rollup.html": local.assetsDict["/index.rollup.html"]
             },
             env: {
@@ -5926,7 +5923,7 @@ local.requireReadme = function () {
         });
     }
     if (globalThis.utility2_rollup || local.env.npm_config_mode_start) {
-        // init assets
+        // init assets index.html
         local.assetsDict["/index.html"] = (
             local.fsReadFileOrEmptyStringSync("index.html")
             || local.assetsDict["/index.rollup.html"] || ""
@@ -5975,26 +5972,32 @@ local.requireReadme = function () {
     tmp = process.cwd() + "/example.js";
     // jslint code
     local.jslintAndPrint(code, tmp);
-    // cover code
+    // instrument code
     code = local.istanbulInstrumentInPackage(code, tmp);
     // init module.exports
     module = new local.Module(tmp);
     require.cache[tmp] = module;
-    // load code into module
     module._compile(code, tmp);
     // init exports
     module.exports.utility2 = local;
     module.exports[local.env.npm_package_nameLib] = (
         globalThis.utility2_moduleExports
     );
-    // init assets
+    // init assets lib.xxx.js
     tmp = process.cwd() + "/" + local.env.npm_package_main;
-    local.assetsDict["/assets." + local.env.npm_package_nameLib + ".js"] = (
-        local.fs.readFileSync(tmp, "utf8").replace((
+    [
+        "css", "js"
+    ].forEach(function (extname) {
+        local.assetsDict[
+            "/assets." + local.env.npm_package_nameLib + "." + extname
+        ] = local.fsReadFileOrEmptyStringSync(tmp.replace((
+            /\.[^.]*?$/
+        ), "." + extname), "utf8").replace((
             /^#!\//
-        ), "// ")
-    );
+        ), "// ");
+    });
     Object.assign(local.assetsDict, module.exports.assetsDict);
+    // instrument assets lib.xxx.js
     local.assetsDict["/assets." + local.env.npm_package_nameLib + ".js"] = (
         local.istanbulInstrumentInPackage(
             local.assetsDict[
@@ -6011,34 +6014,37 @@ local.requireReadme = function () {
     );
     // init assets index.html
     [
-        "", ".rollup"
-    ].forEach(function (isRollup) {
         [
-            "index", "utility2"
-        ].forEach(function (file) {
-            tmp = "assets." + file + ".template.html";
-            local.assetsDict["/" + tmp] = (
-                local.fsReadFileOrEmptyStringSync(tmp, "utf8")
-                || local.assetsDict["/" + tmp]
-            );
-            file = (
-                file.replace("utility2", "assets.utility2.base") + isRollup
-                + ".html"
-            );
-            local.assetsDict["/" + file] = local.fsReadFileOrEmptyStringSync(
-                file,
-                "utf8"
-            ) || local.templateRender(
-                // uncomment utility2-comment
-                local.assetsDict["/" + tmp].replace((
-                    /<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g
-                ), "$1"),
-                {
-                    env: local.env,
-                    isRollup
+            "index", ""
+        ],
+        [
+            "index", ".rollup"
+        ]
+    ].forEach(function ([
+        file, isRollup
+    ]) {
+        tmp = "assets." + file + ".template.html";
+        local.assetsDict["/" + tmp] = (
+            local.fsReadFileOrEmptyStringSync(tmp, "utf8")
+            || local.assetsDict["/" + tmp]
+        );
+        file = file + isRollup + ".html";
+        local.assetsDict["/" + file] = local.fsReadFileOrEmptyStringSync(
+            file,
+            "utf8"
+        ) || local.templateRender(
+            // uncomment utility2-comment
+            local.assetsDict["/" + tmp].replace((
+                /<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g
+            ), "$1"),
+            {
+                env: local.env,
+                isRollup,
+                packageJson: {
+                    nameLib: local.env.npm_package_nameLib
                 }
-            );
-        });
+            }
+        );
     });
     local.assetsDict["/"] = local.assetsDict["/index.html"];
     // init assets.app.js
@@ -7436,7 +7442,7 @@ local.testRunDefault = function (opt) {
         // finalize testReport
         local.testReportMerge(testReport);
         // create test-report.json
-        testReport.coverage = null;
+        delete testReport.coverage;
         local.fsWriteFileWithMkdirpSync(
             local.env.npm_config_dir_build + "/test-report.json",
             JSON.stringify(testReport, undefined, 4)

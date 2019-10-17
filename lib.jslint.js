@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.jslint.js (2019.10.8)
+ * lib.jslint.js (2019.10.10)
  * https://github.com/kaizhu256/node-jslint-lite
  * this zero-dependency package will provide browser-compatible versions of jslint (v2019.8.3) and csslint (v1.0.5), with a working web-demo
  *
@@ -11756,19 +11756,19 @@ const rx_directive_part = (
 );
 // token (sorry it is so long)
 const rx_token = (
-    /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0|[1-9][0-9]*))(.*)$/
+    /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0n?|[1-9][0-9]*n?))(.*)$/
 );
 const rx_digits = (
     /^([0-9]+)(.*)$/
 );
 const rx_hexs = (
-    /^([0-9a-fA-F]+)(.*)$/
+    /^([0-9a-fA-F]+n?)(.*)$/
 );
 const rx_octals = (
-    /^([0-7]+)(.*)$/
+    /^([0-7]+n?)(.*)$/
 );
 const rx_bits = (
-    /^([01]+)(.*)$/
+    /^([01]+n?)(.*)$/
 );
 // mega
 const rx_mega = (
@@ -16899,6 +16899,7 @@ local.jslintAndPrint = function (code = "", file = "undefined", opt = {}) {
             // print err to stderr
             console.error(opt.errMsg);
         }
+        opt.code = code;
         return code;
     }
     // recurse
