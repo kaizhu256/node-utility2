@@ -4085,6 +4085,33 @@ local.serverRespondJsonapi = function (req, res, err, data, meta) {
     })(err, data, meta);
 };
 
+local.stringTruncate = function (str, maxLength) {
+/*
+ * this function will truncate <str> to given maxLength
+ */
+    return (
+        str.length > maxLength
+        ? str.slice(0, maxLength - 3).trimEnd() + "..."
+        : str
+    );
+};
+
+local.stringUniqueKey = function (str) {
+/*
+ * this function will return a random-string unique in given <str>
+ */
+    let key;
+    // seed the key with the least frequent letters in the english-language
+    // https://en.wikipedia.org/wiki/Letter_frequency
+    key = "zqxj";
+    do {
+        key += Number(
+            (1 + Math.random()) * 0x10000000000000
+        ).toString(36).slice(1);
+    } while (str.indexOf(key) >= 0);
+    return key;
+};
+
 local.swaggerJsonFromAjax = function (swaggerJson, opt) {
 /*
  * this function will update swaggerJson

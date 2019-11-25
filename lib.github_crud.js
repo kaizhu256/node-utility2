@@ -548,7 +548,7 @@ local.ajax = function (opt, onError) {
                     timeElapsed: xhr.timeElapsed,
                     // extra
                     resContentLength: xhr.resContentLength
-                }));
+                }) + "\n");
             }
             // init responseType
             // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType

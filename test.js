@@ -1500,66 +1500,66 @@ local.testCase_jsonStringifyOrdered_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
-local.testCase_jwtAes256GcmXxx_default = function (opt, onError) {
-/*
- * this function will test jwtAes256GcmXxx's default handling-behavior
- */
-    opt = {};
-    opt.key = local.jwtAes256KeyCreate();
-    // use canonical example at https://jwt.io/
-    opt.data = JSON.parse(local.jsonStringifyOrdered(local.normalizeJwt({
-        sub: "1234567890",
-        name: "John Doe",
-        admin: true
-    })));
-    // encrypt token
-    opt.token = local.jwtAes256GcmEncrypt(opt.data, opt.key);
-    // validate encrypted-token
-    local.assertJsonEqual(
-        local.jwtAes256GcmDecrypt(opt.token, opt.key),
-        opt.data
-    );
-    // test decryption-failed handling-behavior
-    local.assertJsonEqual(local.jwtAes256GcmDecrypt(opt.token, null), {});
-    onError(undefined, opt);
-};
+//!! local.testCase_jwtAes256GcmXxx_default = function (opt, onError) {
+//!! /*
+ //!! * this function will test jwtAes256GcmXxx's default handling-behavior
+ //!! */
+    //!! opt = {};
+    //!! opt.key = local.jwtAes256KeyCreate();
+    //!! // use canonical example at https://jwt.io/
+    //!! opt.data = JSON.parse(local.jsonStringifyOrdered(local.normalizeJwt({
+        //!! sub: "1234567890",
+        //!! name: "John Doe",
+        //!! admin: true
+    //!! })));
+    //!! // encrypt token
+    //!! opt.token = local.jwtAes256GcmEncrypt(opt.data, opt.key);
+    //!! // validate encrypted-token
+    //!! local.assertJsonEqual(
+        //!! local.jwtAes256GcmDecrypt(opt.token, opt.key),
+        //!! opt.data
+    //!! );
+    //!! // test decryption-failed handling-behavior
+    //!! local.assertJsonEqual(local.jwtAes256GcmDecrypt(opt.token, null), {});
+    //!! onError(undefined, opt);
+//!! };
 
-local.testCase_jwtHs256Xxx_default = function (opt, onError) {
-/*
- * this function will test jwtHs256Xxx's default handling-behavior
- */
-    opt = {};
-    opt.key = local.normalizeJwtBase64Url(local.base64FromBuffer("secret"));
-    // use canonical example at https://jwt.io/
-    opt.data = {
-        sub: "1234567890",
-        name: "John Doe",
-        admin: true
-    };
-    opt.token = local.jwtHs256Encode(opt.data, opt.key);
-    // validate encoded-token
-    local.assertJsonEqual(
-        opt.token,
-        (
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-            + ".eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZ"
-            + "SI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9"
-            + ".TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
-        )
-    );
-    // validate decoded-data
-    local.assertJsonEqual(
-        local.jwtHs256Decode(opt.token, opt.key),
-        {
-            admin: true,
-            name: "John Doe",
-            sub: "1234567890"
-        }
-    );
-    // test decoding-failed handling-behavior
-    local.assertJsonEqual(local.jwtHs256Decode(opt.token, "undefined"), {});
-    onError(undefined, opt);
-};
+//!! local.testCase_jwtHs256Xxx_default = function (opt, onError) {
+//!! /*
+ //!! * this function will test jwtHs256Xxx's default handling-behavior
+ //!! */
+    //!! opt = {};
+    //!! opt.key = local.normalizeJwtBase64Url(local.base64FromBuffer("secret"));
+    //!! // use canonical example at https://jwt.io/
+    //!! opt.data = {
+        //!! sub: "1234567890",
+        //!! name: "John Doe",
+        //!! admin: true
+    //!! };
+    //!! opt.token = local.jwtHs256Encode(opt.data, opt.key);
+    //!! // validate encoded-token
+    //!! local.assertJsonEqual(
+        //!! opt.token,
+        //!! (
+            //!! "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+            //!! + ".eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZ"
+            //!! + "SI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9"
+            //!! + ".TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+        //!! )
+    //!! );
+    //!! // validate decoded-data
+    //!! local.assertJsonEqual(
+        //!! local.jwtHs256Decode(opt.token, opt.key),
+        //!! {
+            //!! admin: true,
+            //!! name: "John Doe",
+            //!! sub: "1234567890"
+        //!! }
+    //!! );
+    //!! // test decoding-failed handling-behavior
+    //!! local.assertJsonEqual(local.jwtHs256Decode(opt.token, "undefined"), {});
+    //!! onError(undefined, opt);
+//!! };
 
 local.testCase_libUtility2Js_standalone = function (opt, onError) {
 /*
@@ -2719,24 +2719,6 @@ local.testCase_stringRegexpEscape_default = function (opt, onError) {
             + "\u007f"
         )
     );
-    onError(undefined, opt);
-};
-
-local.testCase_stringTruncate_default = function (opt, onError) {
-/*
- * this function will test stringTruncate's default handling-behavior
- */
-    local.assertJsonEqual(local.stringTruncate("aa"), "aa");
-    local.assertJsonEqual(local.stringTruncate("aa", 1), "...");
-    local.assertJsonEqual(local.stringTruncate("aa", 2), "aa");
-    onError(undefined, opt);
-};
-
-local.testCase_stringUniqueKey_default = function (opt, onError) {
-/*
- * this function will test stringUniqueKey's default handling-behavior
- */
-    local.assertOrThrow(("zqxj").indexOf(local.stringUniqueKey("zqxj") < 0));
     onError(undefined, opt);
 };
 

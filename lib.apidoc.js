@@ -649,12 +649,12 @@ local.objectSetDefault = function (dict, defaults, depth) {
     return dict;
 };
 
-local.stringHtmlSafe = function (text) {
+local.stringHtmlSafe = function (str) {
 /*
- * this function will make the text html-safe
+ * this function will make <str> html-safe
  * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
  */
-    return text.replace((
+    return str.replace((
         /&/g
     ), "&amp;").replace((
         /"/g

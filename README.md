@@ -56,6 +56,7 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### todo
+- rename text to str
 - test String.p.indexOf using -1, 0, 1
 - jslint - prefer undefined over null
 - replace function local.objectSetOverride with Object.assign
@@ -70,8 +71,13 @@ this zero-dependency package will provide high-level functions to to build, test
 - add server stress-test using puppeteer
 - none
 
-#### changelog 2019.10.9
-- npm publish 2019.10.9
+#### changelog 2019.11.24
+- npm publish 2019.11.24
+- jslint - autofix json with jslintStringifyOrdered
+- jslint - revert to using jslint (instead of JSON.parse) to lint json
+- add function base64urlFromBuffer
+- update function base64ToBuffer with base64url support
+- update function shRawLibFetch for https://github.com/panva/jose
 - update feature flag \$npm_package_private
 - add file .CRYPTO_AES_SH_ENCRYPTED_kaizhu256
 - rename shell-function shRawJsXxx to shRawLibXxx
@@ -640,11 +646,6 @@ if (!local.isBrowser) {
 });
 local.objectAssignDefault(local, globalThis.domOnEventDelegateDict);
 globalThis.domOnEventDelegateDict = local;
-if ((
-    /\bmodeTest=1\b/
-).test(location.search)) {
-    local.testRunBrowser();
-}
 }());
 
 
@@ -1400,9 +1401,9 @@ local.http.createServer(function (req, res) {
         "2019.09.14 swgg",
         "2019.09.15 istanbul-lite master",
         "2019.10.09 jslint-lite",
-        "2019.10.08 utility2"
+        "2019.11.24 utility2"
     ],
-    "version": "2019.10.9"
+    "version": "2019.11.24"
 }
 ```
 

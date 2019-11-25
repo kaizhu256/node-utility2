@@ -13,6 +13,7 @@
 # shCryptoWithGithubOrg aa shTravisRepoCreate aa/node-aa-bb
 # shCryptoWithGithubOrg aa shGithubApiRateLimitGet
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/node-aa-bb "touch" alpha
+# DOCKER_V_GAME=1 DOCKER_V_HOME=1 DOCKER_PORT=4065 shDockerRestart work kaizhu256/node-utility2
 # shGitAddTee npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
 # shGitAddTee shUtility2DependentsSync
 # utility2 shReadmeTest example.js
@@ -1333,17 +1334,19 @@ shDockerStart () {(set -e
     shift
     IMAGE="$1"
     shift
+    if [ "$DOCKER_V_GAME" ] && [ -d /g ]
+    then
+        DOCKER_OPTIONS="$DOCKER_OPTIONS -v g:/:/mnt"
+    fi
+    if [ "$DOCKER_V_HOME" ]
+    then
+        DOCKER_OPTIONS="$DOCKER_OPTIONS -v $HOME:/root"
+    fi
     if [ "$DOCKER_PORT" ]
     then
         DOCKER_OPTIONS="$DOCKER_OPTIONS -p $LOCALHOST:$DOCKER_PORT:$DOCKER_PORT"
     fi
-    DOCKER_ROOT="${DOCKER_HOME:-$HOME}"
-    if [ ! "$DOCKER_SANDBOX" ]
-    then
-        DOCKER_OPTIONS="$DOCKER_OPTIONS -v $DOCKER_ROOT:/root"
-    fi
-    docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
-        $DOCKER_OPTIONS \
+    docker run --name "$NAME" -dt -e debian_chroot="$NAME" $DOCKER_OPTIONS \
         "$IMAGE" "$@"
 )}
 
@@ -2415,7 +2418,7 @@ process.on("exit", function () {
         ), "$1" + exports);
         // inline require(...)
         data = data.replace((
-            /\brequire\(.\.\/(\w.*?).\)/gm
+            /\brequire\(.\.[.\/]*?\/(\w.*?).\)/gm
         ), function (ignore, match1) {
             return prefix + "_" + match1.replace((
                 /\.js$/
@@ -2423,13 +2426,13 @@ process.on("exit", function () {
                 /\W/g
             ), "_");
         });
-        aa += "\n\n\n\n/*\nfile " + file + "\n*/\n";
+        aa += "\n\n\n\n/*\nfile " + file + "\n*/\n(function () {\n";
         if ((
             /\bpackage\.json$/
         ).test(file)) {
             aa += exports + " = ";
         }
-        aa += data.trim();
+        aa += data.trim() + "\n}());";
     });
     // comment #!
     aa = aa.replace((
@@ -3967,7 +3970,7 @@ local.ajax = function (opt, onError) {
                     timeElapsed: xhr.timeElapsed,
                     // extra
                     resContentLength: xhr.resContentLength
-                }));
+                }) + "\n");
             }
             // init responseType
             // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType
@@ -4212,12 +4215,11 @@ local.assertJsonNotEqual = function (aa, bb, message) {
 
 local.base64FromBuffer = function (buf) {
 /*
- * this function will convert Uint8Array <buf> to base64
- * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
+ * this function will convert Uint8Array <buf> to base64 str
  */
     let ii;
     let mod3;
-    let text;
+    let str;
     let uint24;
     let uint6ToB64;
     // convert utf8 to Uint8Array
@@ -4225,7 +4227,7 @@ local.base64FromBuffer = function (buf) {
         buf = new TextEncoder().encode(buf);
     }
     buf = buf || [];
-    text = "";
+    str = "";
     uint24 = 0;
     uint6ToB64 = function (uint6) {
         return (
@@ -4245,7 +4247,7 @@ local.base64FromBuffer = function (buf) {
         mod3 = ii % 3;
         uint24 |= buf[ii] << (16 >>> mod3 & 24);
         if (mod3 === 2 || buf.length - ii === 1) {
-            text += String.fromCharCode(
+            str += String.fromCharCode(
                 uint6ToB64(uint24 >>> 18 & 63),
                 uint6ToB64(uint24 >>> 12 & 63),
                 uint6ToB64(uint24 >>> 6 & 63),
@@ -4255,14 +4257,14 @@ local.base64FromBuffer = function (buf) {
         }
         ii += 1;
     }
-    return text.replace((
+    return str.replace((
         /A(?=A$|$)/gm
-    ), "=");
+    ), "");
 };
 
-local.base64ToBuffer = function (b64, mode) {
+local.base64ToBuffer = function (str) {
 /*
- * this function will convert <b64> to Uint8Array
+ * this function will convert base64 <str> to Uint8Array
  * https://gist.github.com/wang-bin/7332335
  */
     let buf;
@@ -4272,16 +4274,22 @@ local.base64ToBuffer = function (b64, mode) {
     let jj;
     let map64;
     let mod4;
-    b64 = b64 || "";
-    buf = new Uint8Array(b64.length); // 3/4
+    str = str || "";
+    buf = new Uint8Array(str.length); // 3/4
     byte = 0;
     jj = 0;
-    map64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    map64 = (
+        !(str.indexOf("-") === -1 && str.indexOf("_") === -1)
+        // base64url
+        ? "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+        // base64
+        : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    );
     mod4 = 0;
     ii = 0;
-    while (ii < b64.length) {
-        chr = map64.indexOf(b64[ii]);
-        if (chr >= 0) {
+    while (ii < str.length) {
+        chr = map64.indexOf(str[ii]);
+        if (chr !== -1) {
             mod4 %= 4;
             if (mod4 === 0) {
                 byte = chr;
@@ -4295,15 +4303,14 @@ local.base64ToBuffer = function (b64, mode) {
         ii += 1;
     }
     // optimization - create resized-view of buf
-    buf = buf.subarray(0, jj);
-    return local.bufferValidateAndCoerce(buf, mode);
+    return buf.subarray(0, jj);
 };
 
-local.base64ToUtf8 = function (b64) {
+local.base64ToUtf8 = function (str) {
 /*
- * this function will convert <b64> to utf8
+ * this function will convert base64 <str> to utf8 str
  */
-    return local.base64ToBuffer(b64, "string");
+    return local.bufferValidateAndCoerce(local.base64ToBuffer(str), "string");
 };
 
 local.bufferValidateAndCoerce = function (buf, mode) {
@@ -5014,12 +5021,12 @@ local.semverCompare = function (aa, bb) {
     }
 };
 
-local.stringHtmlSafe = function (text) {
+local.stringHtmlSafe = function (str) {
 /*
- * this function will make the text html-safe
+ * this function will make <str> html-safe
  * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
  */
-    return text.replace((
+    return str.replace((
         /&/g
     ), "&amp;").replace((
         /"/g

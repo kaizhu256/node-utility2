@@ -576,6 +576,70 @@ local.cliRun = function (opt) {
     local.cliDict._default();
 };
 
+local.jsonStringifyOrdered = function (obj, replacer, space) {
+/*
+ * this function will JSON.stringify <obj>,
+ * with object-keys sorted and circular-references removed
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Syntax
+ */
+    let circularSet;
+    let stringify;
+    let tmp;
+    stringify = function (obj) {
+    /*
+     * this function will recursively JSON.stringify obj,
+     * with object-keys sorted and circular-references removed
+     */
+        // if obj is not an object or function, then JSON.stringify as normal
+        if (!(
+            obj
+            && typeof obj === "object"
+            && typeof obj.toJSON !== "function"
+        )) {
+            return JSON.stringify(obj);
+        }
+        // ignore circular-reference
+        if (circularSet.has(obj)) {
+            return;
+        }
+        circularSet.add(obj);
+        // if obj is an array, then recurse items
+        if (Array.isArray(obj)) {
+            tmp = "[" + obj.map(function (obj) {
+                // recurse
+                tmp = stringify(obj);
+                return (
+                    typeof tmp === "string"
+                    ? tmp
+                    : "null"
+                );
+            }).join(",") + "]";
+            circularSet.delete(obj);
+            return tmp;
+        }
+        // if obj is not an array,
+        // then recurse its items with object-keys sorted
+        tmp = "{" + Object.keys(obj).sort().map(function (key) {
+            // recurse
+            tmp = stringify(obj[key]);
+            if (typeof tmp === "string") {
+                return JSON.stringify(key) + ":" + tmp;
+            }
+        }).filter(function (obj) {
+            return typeof obj === "string";
+        }).join(",") + "}";
+        circularSet.delete(obj);
+        return tmp;
+    };
+    circularSet = new Set();
+    return JSON.stringify((
+        (typeof obj === "object" && obj)
+        // recurse
+        ? JSON.parse(stringify(obj))
+        : obj
+    ), replacer, space);
+};
+
 local.onErrorWithStack = function (onError) {
 /*
  * this function will wrap <onError> with wrapper preserving current-stack
@@ -16686,6 +16750,9 @@ local.jslintAndPrint = function (code = "", file = "undefined", opt = {}) {
             ".js": (
                 /^\/\*jslint\b|(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$)/m
             ),
+            ".json": (
+                /^\s*?(?:\[|\{)/
+            ),
             ".md": (
                 /(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$)/m
             ),
@@ -16698,38 +16765,14 @@ local.jslintAndPrint = function (code = "", file = "undefined", opt = {}) {
             ).exec(file)[0]
         });
         // jslint - .json
-        if (
-            code && (opt.fileType === ".js" || opt.fileType === ".json")
-            && !opt.fileType0
-        ) {
-            try {
-                tmp = JSON.parse(code);
-                opt.fileType = ".json";
-                if (opt.autofix) {
-                    code = JSON.stringify(tmp, null, 4) + "\n";
-                    opt.code0 = code;
-                }
-                opt.gotoState = Infinity;
-                break;
-            } catch (errCaught) {
-                if (opt.fileType === ".json") {
-                    opt.errList.push({
-                        column: 0,
-                        evidence: code.slice(0, 100),
-                        line: 0,
-                        message: errCaught.message
-                    });
-                    opt.gotoState = Infinity;
-                    break;
-                }
-            }
+        if (opt.fileType === ".js" && opt[".json"].test(code)) {
+            opt.fileType = ".json";
         }
         try {
             opt.conditionalPassed = opt[opt.fileType].exec(code);
         } catch (ignore) {}
         opt.utility2 = (
-            opt.conditionalPassed
-            && opt.conditionalPassed[1]
+            opt.conditionalPassed && opt.conditionalPassed[1]
         ) || opt.autofix;
         if (
             opt.conditional
@@ -17029,6 +17072,7 @@ local.jslintAutofix = function (code, file, opt) {
         });
         break;
     case ".js":
+    case ".json":
         // autofix-js - demux code to [code, ignoreList]
         ignoreList = [];
         code = code.replace((
@@ -17310,6 +17354,11 @@ local.jslintAutofix = function (code, file, opt) {
             if (ii >= 10 || opt.stop || code0 === code) {
                 break;
             }
+        }
+        // autofix-json - jsonStringifyOrdered
+        if (opt.fileType === ".json") {
+            code = local.jsonStringifyOrdered(JSON.parse(code), null, 4);
+            break;
         }
         // autofix-js - remux - code, dataList.</_/> to code
         code = code.replace((
