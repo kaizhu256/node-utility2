@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2019.11.24)
+ * lib.utility2.js (2020.1.20)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -423,8 +423,7 @@ globalThis.utility2 = local;
     "istanbul",
     "jslint",
     "marked",
-    "puppeteer",
-    "sjcl"
+    "puppeteer"
 ].forEach(function (key) {
     try {
         local[key] = (
@@ -1011,7 +1010,7 @@ pre {\n\
                 100 - 75 * Math.exp(-0.125 * opt.width),\n\
                 opt.style.width.slice(0, -1) | 0\n\
             ) + "%";\n\
-            if (!opt.counter) {\n\
+            if (!opt.cnt) {\n\
                 setTimeout(opt, 0, gotoState, onError);\n\
             }\n\
             break;\n\
@@ -1038,14 +1037,14 @@ pre {\n\
         // ajaxProgress - reset\n\
         default:\n\
             // reset ajaxProgress\n\
-            opt.counter = 0;\n\
+            opt.cnt = 0;\n\
             opt.width = 0;\n\
             opt.style.width = "0%";\n\
         }\n\
     };\n\
     opt = window.domOnEventAjaxProgressUpdate;\n\
     opt.end = function (onError) {\n\
-        opt.counter = 0;\n\
+        opt.cnt = 0;\n\
         window.domOnEventAjaxProgressUpdate(2, onError);\n\
     };\n\
     opt.elem = document.getElementById("domElementAjaxProgress1");\n\
@@ -1074,7 +1073,7 @@ pre {\n\
     });\n\
     // init state\n\
     opt.background = opt.style.background;\n\
-    opt.counter = 0;\n\
+    opt.cnt = 0;\n\
     opt.width = 0;\n\
 }());\n\
 \n\
@@ -1234,7 +1233,7 @@ utility2-comment -->\n\
 <script src="assets.app.js"></script>\n\
 {{#unless isRollup}}\n\
 <script src="assets.utility2.rollup.js"></script>\n\
-<script>window.utility2_onReadyBefore.counter += 1;</script>\n\
+<script>window.utility2_onReadyBefore.cnt += 1;</script>\n\
 <script src="jsonp.utility2.stateInit?callback=window.utility2.stateInit"></script>\n\
 utility2-comment -->\n\
 <script src="assets.{{packageJson.nameLib}}.js"></script>\n\
@@ -2194,12 +2193,12 @@ local.FormData.prototype.read = function (onError) {
                     + option2.elem.name + "\"\r\n\r\n"
                 ), value, "\r\n"
             ];
-            onParallel.counter += 1;
+            onParallel.cnt += 1;
             onParallel();
             return;
         }
         // read from blob in parallel
-        onParallel.counter += 1;
+        onParallel.cnt += 1;
         local.blobRead(value, function (err, data) {
             result[option2.ii] = !err && [
                 (
@@ -2650,9 +2649,9 @@ local.ajax = function (opt, onError) {
                 return;
             }
             isDone = true;
-            // decrement counter
-            ajaxProgressUpdate.counter = Math.max(
-                ajaxProgressUpdate.counter - 1,
+            // decrement cnt
+            ajaxProgressUpdate.cnt = Math.max(
+                ajaxProgressUpdate.cnt - 1,
                 0
             );
             ajaxProgressUpdate();
@@ -2880,9 +2879,9 @@ local.ajax = function (opt, onError) {
         streamCleanup(xhr.reqStream);
         streamCleanup(xhr.resStream);
     }, timeout);
-    // increment counter
-    ajaxProgressUpdate.counter |= 0;
-    ajaxProgressUpdate.counter += 1;
+    // increment cnt
+    ajaxProgressUpdate.cnt |= 0;
+    ajaxProgressUpdate.cnt += 1;
     // handle evt
     xhr.addEventListener("abort", xhr.onEvent);
     xhr.addEventListener("error", xhr.onEvent);
@@ -3020,7 +3019,7 @@ local.base64ToBuffer = function (str) {
     byte = 0;
     jj = 0;
     map64 = (
-        !(str.indexOf("-") === -1 && str.indexOf("_") === -1)
+        !(str.indexOf("-") < 0 && str.indexOf("_") < 0)
         // base64url
         ? "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
         // base64
@@ -3144,7 +3143,7 @@ local.browserTest = function (opt, onError) {
         // node - init
         case 1:
             onParallel = local.onParallel(opt.gotoNext);
-            onParallel.counter += 1;
+            onParallel.cnt += 1;
             isDone = 0;
             testId = Math.random().toString(16);
             testName = local.env.MODE_BUILD + ".browser." + encodeURIComponent(
@@ -3192,7 +3191,7 @@ local.browserTest = function (opt, onError) {
             page.goto(opt.url).then(opt.gotoNextData);
             break;
         case 4:
-            onParallel.counter += 1;
+            onParallel.cnt += 1;
             setTimeout(function () {
                 page.screenshot({
                     path: fileScreenshot
@@ -3239,7 +3238,7 @@ local.browserTest = function (opt, onError) {
             // merge browser-test-report
             local.testReportMerge(globalThis.utility2_testReport, data);
             // save test-report.json
-            onParallel.counter += 1;
+            onParallel.cnt += 1;
             local.fs.writeFile(
                 local.env.npm_config_dir_build + "/test-report.json",
                 JSON.stringify(globalThis.utility2_testReport),
@@ -3468,7 +3467,7 @@ local.buildApp = function (opt, onError) {
         ].concat(opt.assetsList)
     }, function (option2, onParallel) {
         option2 = option2.elem;
-        onParallel.counter += 1;
+        onParallel.cnt += 1;
         local.ajax(option2, function (err, xhr) {
             // handle err
             local.assertOrThrow(!err, err);
@@ -3753,7 +3752,7 @@ local.buildReadme = function (opt, onError) {
         ), "\n");
     }
     // customize shDeployCustom
-    if (opt.dataFrom.indexOf("    shDeployCustom\n") !== -1) {
+    if (opt.dataFrom.indexOf("    shDeployCustom\n") >= 0) {
         [
             // customize example.sh
             (
@@ -4664,7 +4663,6 @@ local.jslintAutofixLocalFunction = function (code, file) {
     case "lib.jslint.js":
     case "lib.marked.js":
     case "lib.puppeteer.js":
-    case "lib.sjcl.js":
     case "lib.swgg.js":
     case "npm_scripts.sh":
     case "test.js":
@@ -4916,134 +4914,6 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
         ? JSON.parse(stringify(obj))
         : obj
     ), replacer, space);
-};
-
-local.jwtAes256GcmDecrypt = function (token, key) {
-/*
- * this function will use json-web-encryption to
- * aes-256-gcm-decrypt <token> with given base64url-encoded <key>
- * https://tools.ietf.org/html/rfc7516
- */
-    return local.tryCatchOnError(function () {
-        token = token.replace((
-            /-/g
-        ), "+").replace((
-            /_/g
-        ), "/").split(".");
-        token = local.sjcl.decrypt(
-            local.sjcl.codec.base64url.toBits(local.jwtAes256KeyInit(key)),
-            JSON.stringify({
-                adata: token[4],
-                ct: token[3],
-                iv: token[2],
-                ks: 256,
-                mode: "gcm"
-            })
-        );
-        return local.jwtHs256Decode(token, key);
-    }, local.nop) || {};
-};
-
-local.jwtAes256GcmEncrypt = function (data, key) {
-/*
- * this function will use json-web-encryption to
- * aes-256-gcm-encrypt <data> with given base64url-encoded <key>
- * https://tools.ietf.org/html/rfc7516
- */
-    let adata;
-    adata = local.jwtAes256KeyCreate();
-    data = local.jwtHs256Encode(data, key);
-    data = JSON.parse(local.sjcl.encrypt(
-        local.sjcl.codec.base64url.toBits(local.jwtAes256KeyInit(key)),
-        data,
-        {
-            adata: local.sjcl.codec.base64url.toBits(adata),
-            ks: 256,
-            mode: "gcm"
-        }
-    ));
-    return local.normalizeJwtBase64Url(
-        "eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4R0NNIn0.."
-        + data.iv + "." + data.ct + "." + adata
-    );
-};
-
-local.jwtAes256KeyCreate = function () {
-/*
- * this function will create a random, aes-256-base64url-jwt-key
- */
-    return local.normalizeJwtBase64Url(
-        local.base64FromBuffer(local.bufferRandomBytes(32))
-    );
-};
-
-local.jwtAes256KeyInit = function (key) {
-/*
- * this function will init aes-256-base64url-jwt-<key>
- * https://jwt.io/
- */
-    // init npm_config_jwtAes256Key
-    local.env.npm_config_jwtAes256Key = (
-        local.env.npm_config_jwtAes256Key
-        || "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-    );
-    return key || local.env.npm_config_jwtAes256Key;
-};
-
-local.jwtHs256Decode = function (token, key) {
-/*
- * this function will decode json-web-token with given base64-encoded <key>
- * https://jwt.io/
- */
-    let Hmac;
-    let timeNow;
-    Hmac = local.sjcl.misc.hmac;
-    timeNow = Date.now() / 1000;
-    // try to decode token
-    return local.tryCatchOnError(function () {
-        token = token.split(".");
-        // validate header
-        local.assertOrThrow(
-            token[0] === "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
-            token
-        );
-        // validate signature
-        local.assertOrThrow(local.sjcl.codec.base64url.fromBits(
-            new Hmac(local.sjcl.codec.base64url.toBits(
-                local.jwtAes256KeyInit(key)
-            )).encrypt(token[0] + "." + token[1])
-        ) === token[2]);
-        // return decoded data
-        token = JSON.parse(
-            new TextEncoder().encode(local.base64ToBuffer(token[1]))
-        );
-        // https://tools.ietf.org/html/rfc7519#section-4.1
-        // validate jwt-registered-headers
-        local.assertOrThrow(!token.exp || token.exp >= timeNow);
-        local.assertOrThrow(!token.nbf || token.nbf <= timeNow);
-        return token;
-    }, local.nop) || {};
-};
-
-local.jwtHs256Encode = function (data, key) {
-/*
- * this function will encode <data> into a json-web-token
- * with given base64-encoded <key>
- * https://jwt.io/
- */
-    let Hmac;
-    Hmac = local.sjcl.misc.hmac;
-    data = (
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
-        + local.normalizeJwtBase64Url(
-            local.base64FromBuffer(JSON.stringify(data))
-        )
-    );
-    return data + "." + local.sjcl.codec.base64url.fromBits(
-        new Hmac(local.sjcl.codec.base64url.toBits(
-            local.jwtAes256KeyInit(key)
-        )).encrypt(data)
-    );
 };
 
 local.listGetElementRandom = function (list) {
@@ -5593,7 +5463,7 @@ local.onParallel = function (onError, onEach, onRetry) {
 /*
  * this function will create a function that will
  * 1. run async tasks in parallel
- * 2. if counter === 0 or err occurred, then call onError(err)
+ * 2. if cnt === 0 or err occurred, then call onError(err)
  */
     let onParallel;
     onError = local.onErrorWithStack(onError);
@@ -5603,32 +5473,32 @@ local.onParallel = function (onError, onEach, onRetry) {
         if (onRetry(err, data)) {
             return;
         }
-        // decrement counter
-        onParallel.counter -= 1;
-        // validate counter
-        if (!(onParallel.counter >= 0 || err || onParallel.err)) {
+        // decrement cnt
+        onParallel.cnt -= 1;
+        // validate cnt
+        if (!(onParallel.cnt >= 0 || err || onParallel.err)) {
             err = new Error(
-                "invalid onParallel.counter = " + onParallel.counter
+                "invalid onParallel.cnt = " + onParallel.cnt
             );
         // ensure onError is run only once
-        } else if (onParallel.counter < 0) {
+        } else if (onParallel.cnt < 0) {
             return;
         }
         // handle err
         if (err) {
             onParallel.err = err;
-            // ensure counter <= 0
-            onParallel.counter = -Math.abs(onParallel.counter);
+            // ensure cnt <= 0
+            onParallel.cnt = -Math.abs(onParallel.cnt);
         }
         // call onError when isDone
-        if (onParallel.counter <= 0) {
+        if (onParallel.cnt <= 0) {
             onError(err, data);
             return;
         }
         onEach();
     };
-    // init counter
-    onParallel.counter = 0;
+    // init cnt
+    onParallel.cnt = 0;
     // return callback
     return onParallel;
 };
@@ -5650,7 +5520,7 @@ local.onParallelList = function (opt, onEach, onError) {
                 isListEnd = true;
                 return;
             }
-            if (!(onParallel.counter < opt.rateLimit + 1)) {
+            if (!(onParallel.cnt < opt.rateLimit + 1)) {
                 return;
             }
             onParallel.ii += 1;
@@ -5667,7 +5537,7 @@ local.onParallelList = function (opt, onEach, onError) {
             local.onErrorDefault(err);
             data.retry += 1;
             setTimeout(function () {
-                onParallel.counter -= 1;
+                onParallel.cnt -= 1;
                 onEach(data, onParallel);
             }, 1000);
             return true;
@@ -5682,7 +5552,7 @@ local.onParallelList = function (opt, onEach, onError) {
     opt.rateLimit = Number(opt.rateLimit) || 6;
     opt.rateLimit = Math.max(opt.rateLimit, 1);
     opt.retryLimit = Number(opt.retryLimit) || 2;
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     onEach2();
     onParallel();
 };
@@ -5811,7 +5681,7 @@ local.replStart = function () {
                     "find . -type f | grep -v -E "
 /* jslint ignore:start */
 + '"\
-/\\.|~\$|(\\b|_)(\\.\\d|\
+/\\.|~\$|/(obj|release)/|(\\b|_)(\\.\\d|\
 archive|artifact|\
 bower_component|build|\
 coverage|\
@@ -6378,88 +6248,6 @@ local.setTimeoutOnError = function (onError, timeout, err, data) {
         }, timeout);
     }
     return data;
-};
-
-local.sjclHashScryptCreate = function (password, opt) {
-/*
- * this function will create a scrypt-hash of the password
- * with given <opt> (default = $s0$10801)
- * e.g.
- * $s0$e0801$epIxT/h6HbbwHaehFnh/bw==$7H0vs
- * XlY8UxxyW/BWx/9GuY7jEvGjT71GFd6O4SZND0=
- * https://github.com/wg/scrypt
- */
-    // init opt
-    opt = String(opt || "$s0$10801").split("$");
-    // init salt
-    if (!opt[3]) {
-        opt[3] = local.sjcl.codec.base64.fromBits(
-            local.sjcl.random.randomWords(4, 0)
-        );
-    }
-    // init hash
-    opt[4] = local.sjcl.codec.base64.fromBits(
-        local.sjcl.misc.scrypt(
-            password || "",
-            local.sjcl.codec.base64.toBits(opt[3]),
-            Math.pow(2, parseInt(opt[2].slice(0, 1), 16)),
-            parseInt(opt[2].slice(1, 2), 16),
-            parseInt(opt[2].slice(3, 4), 16)
-        )
-    );
-    return opt.slice(0, 5).join("$");
-};
-
-local.sjclHashScryptValidate = function (password, hash) {
-/*
- * this function will validate the password against the scrypt-hash
- * https://github.com/wg/scrypt
- */
-    return local.sjclHashScryptCreate(password, hash) === hash;
-};
-
-local.sjclHashSha1Create = function (data) {
-/*
- * this function will create a base64-encoded sha1 hash of the string data
- */
-    return local.sjcl.codec.base64.fromBits(local.sjcl.hash.sha1.hash(data));
-};
-
-local.sjclHashSha256Create = function (data) {
-/*
- * this function will create a base64-encoded sha256 hash of the string data
- */
-    return local.sjcl.codec.base64.fromBits(local.sjcl.hash.sha256.hash(data));
-};
-
-local.sjclHmacSha1Create = function (key, data) {
-/*
- * this function will create a base64-encoded sha1 hmac
- * from the string key and string data
- */
-    let Hmac;
-    Hmac = local.sjcl.misc.hmac;
-    return local.sjcl.codec.base64.fromBits(
-        (new Hmac(
-            local.sjcl.codec.utf8String.toBits(key),
-            local.sjcl.hash.sha1
-        )).mac(local.sjcl.codec.utf8String.toBits(data))
-    );
-};
-
-local.sjclHmacSha256Create = function (key, data) {
-/*
- * this function will create a base64-encoded sha256 hmac
- * from the string key and string data
- */
-    let Hmac;
-    Hmac = local.sjcl.misc.hmac;
-    return local.sjcl.codec.base64.fromBits(
-        (new Hmac(
-            local.sjcl.codec.utf8String.toBits(key),
-            local.sjcl.hash.sha256
-        )).mac(local.sjcl.codec.utf8String.toBits(data))
-    );
 };
 
 local.stateInit = function (opt) {
@@ -7233,7 +7021,7 @@ local.testRunDefault = function (opt) {
     default:
         // test-ignore
         if (
-            globalThis.utility2_onReadyBefore.counter
+            globalThis.utility2_onReadyBefore.cnt
             || !globalThis.utility2_modeTest
             || globalThis.utility2_modeTest > 2
         ) {
@@ -7403,7 +7191,7 @@ local.testRunDefault = function (opt) {
             testCase.name
         );
         // increment number of tests remaining
-        onParallel.counter += 1;
+        onParallel.cnt += 1;
         // try to run testCase
         local.tryCatchOnError(function () {
             // start testCase timer
@@ -7469,7 +7257,7 @@ local.testRunServer = function (opt) {
     if (local.env.npm_config_mode_library || globalThis.utility2_serverHttp1) {
         return;
     }
-    globalThis.utility2_onReadyBefore.counter += 1;
+    globalThis.utility2_onReadyBefore.cnt += 1;
     local.serverLocalReqHandler = function (req, res) {
         let that;
         that = {};
@@ -7489,7 +7277,7 @@ local.testRunServer = function (opt) {
     );
     // 2. start server on local.env.PORT
     console.error("http-server listening on port " + local.env.PORT);
-    globalThis.utility2_onReadyBefore.counter += 1;
+    globalThis.utility2_onReadyBefore.cnt += 1;
     globalThis.utility2_serverHttp1.listen(
         local.env.PORT,
         globalThis.utility2_onReadyBefore
@@ -7908,9 +7696,9 @@ local.timeoutDefault = Number(local.timeoutDefault) || 30000;
 globalThis.utility2_onReadyAfter = (
     globalThis.utility2_onReadyAfter || function (onError) {
     /*
-     * this function will call onError when utility2_onReadyBefore.counter === 0
+     * this function will call onError when utility2_onReadyBefore.cnt === 0
      */
-        globalThis.utility2_onReadyBefore.counter += 1;
+        globalThis.utility2_onReadyBefore.cnt += 1;
         local.once("utility2_onReadyAfter", onError);
         setTimeout(globalThis.utility2_onReadyBefore);
         return onError;
@@ -7919,7 +7707,7 @@ globalThis.utility2_onReadyAfter = (
 globalThis.utility2_onReadyBefore = (
     globalThis.utility2_onReadyBefore || local.onParallel(function (err) {
     /*
-     * this function will keep track of utility2_onReadyBefore.counter
+     * this function will keep track of utility2_onReadyBefore.cnt
      */
         local.emit("utility2_onReadyAfter", err);
     })
@@ -8025,7 +7813,6 @@ if (globalThis.utility2_rollup) {
     "lib.jslint.js",
     "lib.marked.js",
     "lib.puppeteer.js",
-    "lib.sjcl.js",
     "lib.swgg.js",
     "lib.utility2.js",
     "test.js"
@@ -8123,7 +7910,6 @@ local.assetsDict["/assets.utility2.rollup.js"] = [
     "lib.jslint.js",
     "lib.marked.js",
     "lib.puppeteer.js",
-    "lib.sjcl.js",
     "lib.utility2.js",
     "lib.swgg.js",
     "/assets.utility2.example.js",

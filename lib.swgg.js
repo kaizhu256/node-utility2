@@ -3147,7 +3147,7 @@ local.middlewareCrudBuiltin = function (req, res, next) {
                 break;
             case "crudGetManyByQuery":
                 onParallel = local.onParallel(opt.gotoNext);
-                onParallel.counter += 1;
+                onParallel.cnt += 1;
                 crud.dbTable.crudGetManyByQuery({
                     fieldList: crud.queryFields,
                     limit: crud.queryLimit,
@@ -3158,7 +3158,7 @@ local.middlewareCrudBuiltin = function (req, res, next) {
                     crud.queryData = data;
                     onParallel(err);
                 });
-                onParallel.counter += 1;
+                onParallel.cnt += 1;
                 crud.dbTable.crudCountAll(function (err, data) {
                     crud.paginationCountTotal = data;
                     onParallel(err);

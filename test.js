@@ -532,10 +532,10 @@ local.testCase_ajax_default = function (opt, onError) {
  */
     let onParallel;
     onParallel = local.onParallel(onError);
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
 
     // test ajax's abort handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.onParallelList({
         list: [
             "",
@@ -545,7 +545,7 @@ local.testCase_ajax_default = function (opt, onError) {
         ]
     }, function (responseType, onParallel) {
         responseType = responseType.elem;
-        onParallel.counter += 1;
+        onParallel.cnt += 1;
         local.ajax({
             data: (
                 responseType === "arraybuffer"
@@ -597,7 +597,7 @@ local.testCase_ajax_default = function (opt, onError) {
     }, onParallel);
 
     // test ajax's data handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     opt = local.ajax({
         url: "/test.timeout"
     }, function (err, xhr) {
@@ -615,7 +615,7 @@ local.testCase_ajax_default = function (opt, onError) {
     opt.abort();
 
     // test ajax's echo handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.ajax({
         _aa: "aa",
         aa: "aa",
@@ -649,7 +649,7 @@ local.testCase_ajax_default = function (opt, onError) {
     });
 
     // test ajax's err handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.onParallelList({
         list: [
             {
@@ -673,7 +673,7 @@ local.testCase_ajax_default = function (opt, onError) {
             }
         ]
     }, function (option2, onParallel) {
-        onParallel.counter += 1;
+        onParallel.cnt += 1;
         local.ajax(option2.elem, function (err) {
             // handle err
             local.assertOrThrow(err, err);
@@ -682,7 +682,7 @@ local.testCase_ajax_default = function (opt, onError) {
     }, onParallel);
 
     // test ajax's file handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.ajax({
         url: "LICENSE"
     }, function (err, xhr) {
@@ -698,7 +698,7 @@ local.testCase_ajax_default = function (opt, onError) {
     });
 
     // test ajax's standalone handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.testMock([
         [
             local, {
@@ -710,7 +710,7 @@ local.testCase_ajax_default = function (opt, onError) {
             "", "arraybuffer"
         ].forEach(function (responseType) {
             // test default handling-behavior
-            onParallel.counter += 1;
+            onParallel.cnt += 1;
             local.ajax({
                 responseType,
                 url: (
@@ -726,7 +726,7 @@ local.testCase_ajax_default = function (opt, onError) {
                 onParallel();
             });
             // test err handling-behavior
-            onParallel.counter += 1;
+            onParallel.cnt += 1;
             local.ajax({
                 responseType,
                 undefined,
@@ -750,7 +750,7 @@ local.testCase_ajax_default = function (opt, onError) {
     onParallel();
 
     // test ajax's timeout handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     setTimeout(function () {
         local.ajax({
             timeout: 1,
@@ -857,9 +857,9 @@ local.testCase_blobRead_default = function (opt, onError) {
  */
     let onParallel;
     onParallel = local.onParallel(onError);
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     // test data handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.blobRead(new local.Blob([
         "",
         "aa",
@@ -881,7 +881,7 @@ local.testCase_blobRead_default = function (opt, onError) {
         return;
     }
     // test err handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.testMock([
         [
             FileReader.prototype, {
@@ -1019,9 +1019,6 @@ local.testCase_buildApp_default = function (opt, onError) {
             }, {
                 file: "/assets.utility2.lib.marked.js",
                 url: "/assets.utility2.lib.marked.js"
-            }, {
-                file: "/assets.utility2.lib.sjcl.js",
-                url: "/assets.utility2.lib.sjcl.js"
             }, {
                 file: "/assets.utility2.rollup.js",
                 url: "/assets.utility2.rollup.js"
@@ -1168,9 +1165,9 @@ local.testCase_childProcessSpawnWithTimeout_default = function (
     }
     opt = {};
     onParallel = local.onParallel(onError);
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     // test default handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.childProcessSpawnWithTimeout("ls").on(
         "error",
         onParallel
@@ -1182,7 +1179,7 @@ local.testCase_childProcessSpawnWithTimeout_default = function (
         onParallel(null, opt);
     });
     // test timeout handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.testMock([
         [
             local, {
@@ -1500,67 +1497,6 @@ local.testCase_jsonStringifyOrdered_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
-//!! local.testCase_jwtAes256GcmXxx_default = function (opt, onError) {
-//!! /*
- //!! * this function will test jwtAes256GcmXxx's default handling-behavior
- //!! */
-    //!! opt = {};
-    //!! opt.key = local.jwtAes256KeyCreate();
-    //!! // use canonical example at https://jwt.io/
-    //!! opt.data = JSON.parse(local.jsonStringifyOrdered(local.normalizeJwt({
-        //!! sub: "1234567890",
-        //!! name: "John Doe",
-        //!! admin: true
-    //!! })));
-    //!! // encrypt token
-    //!! opt.token = local.jwtAes256GcmEncrypt(opt.data, opt.key);
-    //!! // validate encrypted-token
-    //!! local.assertJsonEqual(
-        //!! local.jwtAes256GcmDecrypt(opt.token, opt.key),
-        //!! opt.data
-    //!! );
-    //!! // test decryption-failed handling-behavior
-    //!! local.assertJsonEqual(local.jwtAes256GcmDecrypt(opt.token, null), {});
-    //!! onError(undefined, opt);
-//!! };
-
-//!! local.testCase_jwtHs256Xxx_default = function (opt, onError) {
-//!! /*
- //!! * this function will test jwtHs256Xxx's default handling-behavior
- //!! */
-    //!! opt = {};
-    //!! opt.key = local.normalizeJwtBase64Url(local.base64FromBuffer("secret"));
-    //!! // use canonical example at https://jwt.io/
-    //!! opt.data = {
-        //!! sub: "1234567890",
-        //!! name: "John Doe",
-        //!! admin: true
-    //!! };
-    //!! opt.token = local.jwtHs256Encode(opt.data, opt.key);
-    //!! // validate encoded-token
-    //!! local.assertJsonEqual(
-        //!! opt.token,
-        //!! (
-            //!! "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-            //!! + ".eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZ"
-            //!! + "SI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9"
-            //!! + ".TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
-        //!! )
-    //!! );
-    //!! // validate decoded-data
-    //!! local.assertJsonEqual(
-        //!! local.jwtHs256Decode(opt.token, opt.key),
-        //!! {
-            //!! admin: true,
-            //!! name: "John Doe",
-            //!! sub: "1234567890"
-        //!! }
-    //!! );
-    //!! // test decoding-failed handling-behavior
-    //!! local.assertJsonEqual(local.jwtHs256Decode(opt.token, "undefined"), {});
-    //!! onError(undefined, opt);
-//!! };
-
 local.testCase_libUtility2Js_standalone = function (opt, onError) {
 /*
  * this function will test lib.utility2.js's standalone handling-behavior
@@ -1673,9 +1609,9 @@ local.testCase_middlewareForwardProxy_default = function (opt, onError) {
         return;
     }
     onParallel = local.onParallel(onError);
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     // test preflight-cors handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.ajax({
         headers: {
             "access-control-request-headers": (
@@ -1686,7 +1622,7 @@ local.testCase_middlewareForwardProxy_default = function (opt, onError) {
         url: ""
     }, onParallel);
     // test forward-proxy-http handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.ajax({
         headers: {
             "forward-proxy-url": "/assets.hello.txt"
@@ -1700,7 +1636,7 @@ local.testCase_middlewareForwardProxy_default = function (opt, onError) {
         onParallel(null, opt, xhr);
     });
     // test err handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.ajax({
         headers: {
             "forward-proxy-url": "https://undefined:0"
@@ -2181,13 +2117,13 @@ local.testCase_onFileModifiedRestart_watchFile = function (opt, onError) {
         return;
     }
     onParallel = local.onParallel(onError);
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.fs.stat(__filename, function (err, stat) {
         // test default watchFile handling-behavior
-        onParallel.counter += 1;
+        onParallel.cnt += 1;
         local.fs.utimes(__filename, stat.atime, new Date(), onParallel);
         // test nop watchFile handling-behavior
-        onParallel.counter += 1;
+        onParallel.cnt += 1;
         setTimeout(function () {
             local.fs.utimes(__filename, stat.atime, stat.mtime, onParallel);
         }, 1000);
@@ -2233,7 +2169,7 @@ local.testCase_onParallelList_default = function (opt, onError) {
             // test retryLimit handling-behavior
             opt.retryLimit = 1;
             local.onParallelList(opt, function (option2, onParallel) {
-                onParallel.counter += 1;
+                onParallel.cnt += 1;
                 // test err handling-behavior
                 onParallel(local.errDefault, option2);
                 // test multiple-callback handling-behavior
@@ -2257,9 +2193,9 @@ local.testCase_onParallelList_default = function (opt, onError) {
                 ],
                 rateLimit: opt.rateLimit
             }, function (option2, onParallel) {
-                onParallel.counter += 1;
+                onParallel.cnt += 1;
                 opt.rateMax = Math.max(
-                    onParallel.counter - 1,
+                    onParallel.cnt - 1,
                     opt.rateMax
                 );
                 // test async handling-behavior
@@ -2291,8 +2227,8 @@ local.testCase_onParallelList_default = function (opt, onError) {
                 rateLimit: opt.rateLimit
             }, function (option2, onParallel) {
                 // test sync handling-behavior
-                onParallel.counter += 1;
-                opt.rateMax = Math.max(onParallel.counter, opt.rateMax);
+                onParallel.cnt += 1;
+                opt.rateMax = Math.max(onParallel.cnt, opt.rateMax);
                 opt.data[option2.ii] = option2.elem;
                 onParallel(null, opt);
             }, opt.gotoNext);
@@ -2321,15 +2257,15 @@ local.testCase_onParallel_default = function (opt, onError) {
     let onParallelError;
     // test onEach handling-behavior
     onParallel = local.onParallel(onError, function () {
-        // validate counter
-        local.assertOrThrow(onParallel.counter >= 0, onParallel);
+        // validate cnt
+        local.assertOrThrow(onParallel.cnt >= 0, onParallel);
     });
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     // test multiple-task handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     setTimeout(function () {
         onParallelError = local.onParallel(onParallel);
-        onParallelError.counter += 1;
+        onParallelError.cnt += 1;
         onParallelError();
         // test multiple-callback-error handling-behavior
         onParallelError();
@@ -2616,63 +2552,6 @@ local.testCase_setTimeoutOnError_default = function (opt, onError) {
         local.setTimeoutOnError(onError, 0, null, {}, opt),
         {}
     );
-};
-
-local.testCase_sjclHashScryptXxx_default = function (opt, onError) {
-/*
- * this function will test sjclHashScryptXxx's default handling-behavior
- */
-    // test sjclHashScryptCreate's null-case handling-behavior
-    local.assertJsonEqual(
-        local.sjclHashScryptCreate().slice(0, 10),
-        "$s0$10801$"
-    );
-    // https://github.com/wg/scrypt
-    // test sjclHashScryptValidate's fail handling-behavior
-    local.assertJsonEqual(local.sjclHashScryptValidate(
-        "password",
-        (
-            "$s0$80801$epIxT/h6HbbwHaehFnh/bw=="
-            + "$l/guDhz2Q0v/D93gq0K0qtSX6FWP8pH5maAJkbIcRaEA"
-        )
-    ), false);
-    // https://github.com/wg/scrypt
-    // test sjclHashScryptValidate's pass handling-behavior
-    local.assertJsonEqual(local.sjclHashScryptValidate("password", (
-        "$s0$80801$epIxT/h6HbbwHaehFnh/bw=="
-        + "$l/guDhz2Q0v/D93gq0K0qtSX6FWP8pH5maAJkbIcRaE="
-    )), true);
-    onError(undefined, opt);
-};
-
-local.testCase_sjclHashShaXxxCreate_default = function (opt, onError) {
-/*
- * this function will test sjclHashShaXxxCreate's default handling-behavior
- */
-    local.assertJsonEqual(
-        local.sjclHashSha1Create("aa"),
-        "4MkDWJjdUvxlxBRUzsnE0mEb+zc="
-    );
-    local.assertJsonEqual(
-        local.sjclHashSha256Create("aa"),
-        "lhtt0+3jy47LqsvWjeBAzXjrLtWIkTDM60xJJo6k1QY="
-    );
-    onError(undefined, opt);
-};
-
-local.testCase_sjclHmacShaXxx_default = function (opt, onError) {
-/*
- * this function will test sjclHmacShaXxx's default handling-behavior
- */
-    local.assertJsonEqual(
-        local.sjclHmacSha1Create("aa", "bb"),
-        "15pOinCz63A+qZoxnv+mJB6UF1k="
-    );
-    local.assertJsonEqual(
-        local.sjclHmacSha256Create("aa", "bb"),
-        "94Xv3VdPHA+ohKyjkM1pb0W5ZVAuMVcmIAAI2AqNRCQ="
-    );
-    onError(undefined, opt);
 };
 
 local.testCase_stringHtmlSafe_default = function (opt, onError) {
@@ -3216,7 +3095,7 @@ if (module !== require.main || globalThis.utility2_rollup) {
 local.assetsDict["/assets.script_only.html"] = (
     "<h1>script_only_test</h1>\n"
     + "<script src=\"assets.utility2.js\"></script>\n"
-    + "<script>window.utility2_onReadyBefore.counter += 1;</script>\n"
+    + "<script>window.utility2_onReadyBefore.cnt += 1;</script>\n"
     + "<script src=\"assets.example.js\"></script>\n"
     + "<script src=\"assets.test.js\"></script>\n"
     + "<script>window.utility2_onReadyBefore();</script>\n"

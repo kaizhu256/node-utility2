@@ -56,34 +56,25 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### todo
+- rearrange todo <-> changelog
 - rename text to str
-- test String.p.indexOf using -1, 0, 1
 - jslint - prefer undefined over null
 - replace function local.objectSetOverride with Object.assign
 - jslint - fix off-by-one line-error
 - rename message to msg
 - remove excessive "the" from comments
-- rename counter to cnt
 - replace db-lite with sql.js
-- replace uglifyjs-lite with terser-lite (v2.8.29)
 - jslint - sort nested switch-statements
 - add default testCase _testCase_cliRun_help
 - add server stress-test using puppeteer
 - none
 
-#### changelog 2019.11.24
-- npm publish 2019.11.24
-- jslint - autofix json with jslintStringifyOrdered
-- jslint - revert to using jslint (instead of JSON.parse) to lint json
-- add function base64urlFromBuffer
-- update function base64ToBuffer with base64url support
-- update function shRawLibFetch for https://github.com/panva/jose
-- update feature flag \$npm_package_private
-- add file .CRYPTO_AES_SH_ENCRYPTED_kaizhu256
-- rename shell-function shRawJsXxx to shRawLibXxx
-- jslint - add bigint support
-- remove asset assets.utility2.base.html
-- fix build-ci for bootstrap-lite, jslint-lite
+#### changelog 2020.1.20
+- npm publish 2019.1.20
+- rename counter to cnt
+- test String.p.indexOf using only 0
+- replace uglifyjs-lite with terser-lite (v2.8.29)
+- remove sjcl-dependency in favor of subtle-crypto
 - none
 
 #### this package requires
@@ -858,7 +849,7 @@ pre {\n\
                 100 - 75 * Math.exp(-0.125 * opt.width),\n\
                 opt.style.width.slice(0, -1) | 0\n\
             ) + "%";\n\
-            if (!opt.counter) {\n\
+            if (!opt.cnt) {\n\
                 setTimeout(opt, 0, gotoState, onError);\n\
             }\n\
             break;\n\
@@ -885,14 +876,14 @@ pre {\n\
         // ajaxProgress - reset\n\
         default:\n\
             // reset ajaxProgress\n\
-            opt.counter = 0;\n\
+            opt.cnt = 0;\n\
             opt.width = 0;\n\
             opt.style.width = "0%";\n\
         }\n\
     };\n\
     opt = window.domOnEventAjaxProgressUpdate;\n\
     opt.end = function (onError) {\n\
-        opt.counter = 0;\n\
+        opt.cnt = 0;\n\
         window.domOnEventAjaxProgressUpdate(2, onError);\n\
     };\n\
     opt.elem = document.getElementById("domElementAjaxProgress1");\n\
@@ -921,7 +912,7 @@ pre {\n\
     });\n\
     // init state\n\
     opt.background = opt.style.background;\n\
-    opt.counter = 0;\n\
+    opt.cnt = 0;\n\
     opt.width = 0;\n\
 }());\n\
 \n\
@@ -1210,9 +1201,8 @@ utility2-comment -->\n\
 <script src="assets.utility2.lib.istanbul.js"></script>\n\
 <script src="assets.utility2.lib.jslint.js"></script>\n\
 <script src="assets.utility2.lib.marked.js"></script>\n\
-<script src="assets.utility2.lib.sjcl.js"></script>\n\
 <script src="assets.utility2.js"></script>\n\
-<script>window.utility2_onReadyBefore.counter += 1;</script>\n\
+<script>window.utility2_onReadyBefore.cnt += 1;</script>\n\
 <script src="jsonp.utility2.stateInit?callback=window.utility2.stateInit"></script>\n\
 <script src="assets.example.js"></script>\n\
 <script src="assets.test.js"></script>\n\
@@ -1401,9 +1391,9 @@ local.http.createServer(function (req, res) {
         "2019.09.14 swgg",
         "2019.09.15 istanbul-lite master",
         "2019.10.09 jslint-lite",
-        "2019.11.24 utility2"
+        "2020.01.20 utility2"
     ],
-    "version": "2019.11.24"
+    "version": "2020.1.20"
 }
 ```
 

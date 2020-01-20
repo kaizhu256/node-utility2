@@ -672,7 +672,7 @@ local.onParallel = function (onError, onEach, onRetry) {
 /*
  * this function will create a function that will
  * 1. run async tasks in parallel
- * 2. if counter === 0 or err occurred, then call onError(err)
+ * 2. if cnt === 0 or err occurred, then call onError(err)
  */
     let onParallel;
     onError = local.onErrorWithStack(onError);
@@ -682,32 +682,32 @@ local.onParallel = function (onError, onEach, onRetry) {
         if (onRetry(err, data)) {
             return;
         }
-        // decrement counter
-        onParallel.counter -= 1;
-        // validate counter
-        if (!(onParallel.counter >= 0 || err || onParallel.err)) {
+        // decrement cnt
+        onParallel.cnt -= 1;
+        // validate cnt
+        if (!(onParallel.cnt >= 0 || err || onParallel.err)) {
             err = new Error(
-                "invalid onParallel.counter = " + onParallel.counter
+                "invalid onParallel.cnt = " + onParallel.cnt
             );
         // ensure onError is run only once
-        } else if (onParallel.counter < 0) {
+        } else if (onParallel.cnt < 0) {
             return;
         }
         // handle err
         if (err) {
             onParallel.err = err;
-            // ensure counter <= 0
-            onParallel.counter = -Math.abs(onParallel.counter);
+            // ensure cnt <= 0
+            onParallel.cnt = -Math.abs(onParallel.cnt);
         }
         // call onError when isDone
-        if (onParallel.counter <= 0) {
+        if (onParallel.cnt <= 0) {
             onError(err, data);
             return;
         }
         onEach();
     };
-    // init counter
-    onParallel.counter = 0;
+    // init cnt
+    onParallel.cnt = 0;
     // return callback
     return onParallel;
 };
@@ -16972,7 +16972,7 @@ local.jslintAndPrintDir = function (dir, opt, onError) {
             ).test(file)) {
                 return;
             }
-            onParallel.counter += 1;
+            onParallel.cnt += 1;
             // jslint file
             local.fs.readFile(file, "utf8", function (err, data) {
                 // handle err

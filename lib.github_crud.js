@@ -487,9 +487,9 @@ local.ajax = function (opt, onError) {
                 return;
             }
             isDone = true;
-            // decrement counter
-            ajaxProgressUpdate.counter = Math.max(
-                ajaxProgressUpdate.counter - 1,
+            // decrement cnt
+            ajaxProgressUpdate.cnt = Math.max(
+                ajaxProgressUpdate.cnt - 1,
                 0
             );
             ajaxProgressUpdate();
@@ -717,9 +717,9 @@ local.ajax = function (opt, onError) {
         streamCleanup(xhr.reqStream);
         streamCleanup(xhr.resStream);
     }, timeout);
-    // increment counter
-    ajaxProgressUpdate.counter |= 0;
-    ajaxProgressUpdate.counter += 1;
+    // increment cnt
+    ajaxProgressUpdate.cnt |= 0;
+    ajaxProgressUpdate.cnt += 1;
     // handle evt
     xhr.addEventListener("abort", xhr.onEvent);
     xhr.addEventListener("error", xhr.onEvent);
@@ -1008,7 +1008,7 @@ local.onParallel = function (onError, onEach, onRetry) {
 /*
  * this function will create a function that will
  * 1. run async tasks in parallel
- * 2. if counter === 0 or err occurred, then call onError(err)
+ * 2. if cnt === 0 or err occurred, then call onError(err)
  */
     let onParallel;
     onError = local.onErrorWithStack(onError);
@@ -1018,32 +1018,32 @@ local.onParallel = function (onError, onEach, onRetry) {
         if (onRetry(err, data)) {
             return;
         }
-        // decrement counter
-        onParallel.counter -= 1;
-        // validate counter
-        if (!(onParallel.counter >= 0 || err || onParallel.err)) {
+        // decrement cnt
+        onParallel.cnt -= 1;
+        // validate cnt
+        if (!(onParallel.cnt >= 0 || err || onParallel.err)) {
             err = new Error(
-                "invalid onParallel.counter = " + onParallel.counter
+                "invalid onParallel.cnt = " + onParallel.cnt
             );
         // ensure onError is run only once
-        } else if (onParallel.counter < 0) {
+        } else if (onParallel.cnt < 0) {
             return;
         }
         // handle err
         if (err) {
             onParallel.err = err;
-            // ensure counter <= 0
-            onParallel.counter = -Math.abs(onParallel.counter);
+            // ensure cnt <= 0
+            onParallel.cnt = -Math.abs(onParallel.cnt);
         }
         // call onError when isDone
-        if (onParallel.counter <= 0) {
+        if (onParallel.cnt <= 0) {
             onError(err, data);
             return;
         }
         onEach();
     };
-    // init counter
-    onParallel.counter = 0;
+    // init cnt
+    onParallel.cnt = 0;
     // return callback
     return onParallel;
 };
@@ -1065,7 +1065,7 @@ local.onParallelList = function (opt, onEach, onError) {
                 isListEnd = true;
                 return;
             }
-            if (!(onParallel.counter < opt.rateLimit + 1)) {
+            if (!(onParallel.cnt < opt.rateLimit + 1)) {
                 return;
             }
             onParallel.ii += 1;
@@ -1082,7 +1082,7 @@ local.onParallelList = function (opt, onEach, onError) {
             local.onErrorDefault(err);
             data.retry += 1;
             setTimeout(function () {
-                onParallel.counter -= 1;
+                onParallel.cnt -= 1;
                 onEach(data, onParallel);
             }, 1000);
             return true;
@@ -1097,7 +1097,7 @@ local.onParallelList = function (opt, onEach, onError) {
     opt.rateLimit = Number(opt.rateLimit) || 6;
     opt.rateLimit = Math.max(opt.rateLimit, 1);
     opt.retryLimit = Number(opt.retryLimit) || 2;
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     onEach2();
     onParallel();
 };
@@ -1271,7 +1271,7 @@ local.githubCrudContentDelete = function (opt, onError) {
             local.onParallelList({
                 list: data
             }, function (option2, onParallel) {
-                onParallel.counter += 1;
+                onParallel.cnt += 1;
                 // recurse
                 local.githubCrudContentDelete({
                     httpReq: opt.httpReq,
@@ -1456,7 +1456,7 @@ local.githubCrudContentTouchList = function (opt, onError) {
     local.onParallelList({
         list: opt.urlList
     }, function (option2, onParallel) {
-        onParallel.counter += 1;
+        onParallel.cnt += 1;
         local.githubCrudContentTouch({
             httpReq: opt.httpReq,
             message: opt.message,
@@ -1495,7 +1495,7 @@ local.githubCrudRepoCreateList = function (opt, onError) {
     local.onParallelList({
         list: opt.urlList
     }, function (option2, onParallel) {
-        onParallel.counter += 1;
+        onParallel.cnt += 1;
         local.githubCrudRepoCreate({
             httpReq: opt.httpReq,
             url: option2.elem
@@ -1523,7 +1523,7 @@ local.githubCrudRepoDeleteList = function (opt, onError) {
     local.onParallelList({
         list: opt.urlList
     }, function (option2, onParallel) {
-        onParallel.counter += 1;
+        onParallel.cnt += 1;
         local.githubCrudRepoDelete({
             httpReq: opt.httpReq,
             url: option2.elem
