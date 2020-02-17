@@ -31,9 +31,8 @@
          * and return <argList>[0]
          */
             consoleError("\n\n" + debugName);
-            consoleError.apply(console, argList);
+            consoleError(...argList);
             consoleError("\n");
-            // return arg0 for inspection
             return argList[0];
         };
     }

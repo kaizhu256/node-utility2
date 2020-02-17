@@ -1,20 +1,11 @@
 /*
-file https://github.com/CSSLint/csslint/blob/v1.0.5/dist/csslint.js
-shGithubDateCommitted https://github.com/CSSLint/csslint/commits/v1.0.5 # 2016-12-06T08:50:07Z
-curl https://raw.githubusercontent.com/CSSLint/csslint/v1.0.5/dist/csslint.js > tmp/aa.js
-node -e '
-"use strict";
-var aa;
-aa = require("fs").readFileSync("tmp/aa.js", "utf8");
-aa = aa.replace((
-    /\t/g
-), " ");
-require("fs").writeFileSync("tmp/aa.js", aa);
-'
+file https://github.com/CSSLint/csslint/blob/e8aeeda06c928636e21428e09b1af93f66621209/dist/csslint.js
+shGithubDateCommitted https://github.com/CSSLint/csslint/commits/e8aeeda06c928636e21428e09b1af93f66621209 # 2018-02-25T11:28:16Z
+curl https://raw.githubusercontent.com/CSSLint/csslint/e8aeeda06c928636e21428e09b1af93f66621209/dist/csslint.js > tmp/aa.js
 */
 /*!
-CSSLint v1.0.4
-Copyright (c) 2016 Nicole Sullivan and Nicholas C. Zakas. All rights reserved.
+CSSLint v1.0.5
+Copyright (c) 2017 Nicole Sullivan and Nicholas C. Zakas. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the 'Software'), to deal
@@ -7346,6 +7337,10 @@ return require('parserlib');
 var clone = (function() {
 'use strict';
 
+function _instanceof(obj, type) {
+  return type != null && obj instanceof type;
+}
+
 var nativeMap;
 try {
   nativeMap = Map;
@@ -7425,11 +7420,11 @@ function clone(parent, circular, depth, prototype, includeNonEnumerable) {
       return parent;
     }
 
-    if (parent instanceof nativeMap) {
+    if (_instanceof(parent, nativeMap)) {
       child = new nativeMap();
-    } else if (parent instanceof nativeSet) {
+    } else if (_instanceof(parent, nativeSet)) {
       child = new nativeSet();
-    } else if (parent instanceof nativePromise) {
+    } else if (_instanceof(parent, nativePromise)) {
       child = new nativePromise(function (resolve, reject) {
         parent.then(function(value) {
           resolve(_clone(value, depth - 1));
@@ -7448,7 +7443,7 @@ function clone(parent, circular, depth, prototype, includeNonEnumerable) {
       child = new Buffer(parent.length);
       parent.copy(child);
       return child;
-    } else if (parent instanceof Error) {
+    } else if (_instanceof(parent, Error)) {
       child = Object.create(parent);
     } else {
       if (typeof prototype == 'undefined') {
@@ -7471,28 +7466,18 @@ function clone(parent, circular, depth, prototype, includeNonEnumerable) {
       allChildren.push(child);
     }
 
-    if (parent instanceof nativeMap) {
-      var keyIterator = parent.keys();
-      while(true) {
-        var next = keyIterator.next();
-        if (next.done) {
-          break;
-        }
-        var keyChild = _clone(next.value, depth - 1);
-        var valueChild = _clone(parent.get(next.value), depth - 1);
+    if (_instanceof(parent, nativeMap)) {
+      parent.forEach(function(value, key) {
+        var keyChild = _clone(key, depth - 1);
+        var valueChild = _clone(value, depth - 1);
         child.set(keyChild, valueChild);
-      }
+      });
     }
-    if (parent instanceof nativeSet) {
-      var iterator = parent.keys();
-      while(true) {
-        var next = iterator.next();
-        if (next.done) {
-          break;
-        }
-        var entryChild = _clone(next.value, depth - 1);
+    if (_instanceof(parent, nativeSet)) {
+      parent.forEach(function(value) {
+        var entryChild = _clone(value, depth - 1);
         child.add(entryChild);
-      }
+      });
     }
 
     for (var i in parent) {
@@ -7619,7 +7604,7 @@ var CSSLint = (function() {
         embeddedRuleset = /\/\*\s*csslint([^\*]*)\*\//,
         api             = new parserlib.util.EventTarget();
 
-    api.version = "1.0.4";
+    api.version = "1.0.5";
 
     //-------------------------------------------------------------------------
     // Rule Management
@@ -7740,7 +7725,7 @@ var CSSLint = (function() {
      * @method format
      */
     api.format = function(results, filename, formatId, options) {
-        var formatter = this.getFormatter(formatId),
+        var formatter = api.getFormatter(formatId),
             result = null;
 
         if (formatter) {
@@ -7833,7 +7818,7 @@ var CSSLint = (function() {
         }
 
         if (!ruleset) {
-            ruleset = this.getRuleset();
+            ruleset = api.getRuleset();
         }
 
         if (embeddedRuleset.test(text)) {
@@ -8466,13 +8451,13 @@ CSSLint.addRule({
             "border-start-color"         : "webkit moz",
             "border-start-style"         : "webkit moz",
             "border-start-width"         : "webkit moz",
-            "box-align"                  : "webkit moz ms",
-            "box-direction"              : "webkit moz ms",
-            "box-flex"                   : "webkit moz ms",
-            "box-lines"                  : "webkit ms",
-            "box-ordinal-group"          : "webkit moz ms",
-            "box-orient"                 : "webkit moz ms",
-            "box-pack"                   : "webkit moz ms",
+            "box-align"                  : "webkit moz",
+            "box-direction"              : "webkit moz",
+            "box-flex"                   : "webkit moz",
+            "box-lines"                  : "webkit",
+            "box-ordinal-group"          : "webkit moz",
+            "box-orient"                 : "webkit moz",
+            "box-pack"                   : "webkit moz",
             "box-sizing"                 : "",
             "box-shadow"                 : "",
             "column-count"               : "webkit moz ms",
@@ -8482,6 +8467,12 @@ CSSLint.addRule({
             "column-rule-style"          : "webkit moz ms",
             "column-rule-width"          : "webkit moz ms",
             "column-width"               : "webkit moz ms",
+            "flex"                       : "webkit ms",
+            "flex-basis"                 : "webkit",
+            "flex-direction"             : "webkit ms",
+            "flex-flow"                  : "webkit",
+            "flex-grow"                  : "webkit",
+            "flex-shrink"                : "webkit",
             "hyphens"                    : "epub moz",
             "line-break"                 : "webkit ms",
             "margin-end"                 : "webkit moz",
@@ -9527,6 +9518,45 @@ CSSLint.addRule({
         });
     }
 
+});
+
+CSSLint.addRule({
+  id: "performant-transitions",
+  name: "Allow only performant transisitons",
+  desc: "Only allow transitions that trigger compositing for performant, 60fps transformations.",
+  url: "",
+  browsers: "All",
+
+  init: function(parser, reporter){
+    "use strict";
+    var rule = this;
+
+    var transitionProperties = ["transition-property", "transition", "-webkit-transition", "-o-transition"];
+    var allowedTransitions = [/-webkit-transform/g, /-ms-transform/g, /transform/g, /opacity/g];
+
+    parser.addListener("property", function(event) {
+      var propertyName    = event.property.toString().toLowerCase(),
+          propertyValue           = event.value.toString(),
+          line            = event.line,
+          col             = event.col;
+
+      var values = propertyValue.split(",");
+      if (transitionProperties.indexOf(propertyName) !== -1) {
+        var reportValues = values.filter(function(value) {
+          var didMatch = [];
+          for (var i = 0; i < allowedTransitions.length; i++) {
+            if(value.match(allowedTransitions[i])) {
+              didMatch.push(i);
+            }
+          }
+          return didMatch.length === 0;
+        });
+        if(reportValues.length > 0) {
+            reporter.report("Unexpected transition property '"+reportValues.join(",").trim()+"'", line, col, rule);
+        }
+      }
+    });
+  }
 });
 
 /*
@@ -10875,9 +10905,9 @@ return CSSLint;
 
 
 /*
-file https://github.com/douglascrockford/JSLint/blob/efefb7d4e22359b6fb1977d33712bcc2fda95f14/jslint.js
-shGithubDateCommitted https://github.com/douglascrockford/JSLint/commits/efefb7d4e22359b6fb1977d33712bcc2fda95f14 # 2019-08-03T17:24:13Z
-curl https://raw.githubusercontent.com/douglascrockford/JSLint/efefb7d4e22359b6fb1977d33712bcc2fda95f14/jslint.js > tmp/aa.js
+file https://github.com/douglascrockford/JSLint/blob/95c4e8a2cfd424d15e90745dbadadf3251533183/jslint.js
+shGithubDateCommitted https://github.com/douglascrockford/JSLint/commits/95c4e8a2cfd424d15e90745dbadadf3251533183 # 2020-01-17T22:36:41Z
+curl https://raw.githubusercontent.com/douglascrockford/JSLint/95c4e8a2cfd424d15e90745dbadadf3251533183/jslint.js > tmp/aa.js
 node -e '
 "use strict";
 var aa;
@@ -10911,6 +10941,33 @@ require("fs").writeFileSync("tmp/aa.js", aa);
 +// hack-jslint - property
 +/*\property
 
+-    single: true,
++    // hack-jslint - nomen
++    nomen: true,
++    single: true,
+
+-const rx_token = /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"'"'"~`]|\?\.?|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0|[1-9][0-9]*))(.*)$/;
+-const rx_digits = /^([0-9]+)(.*)$/;
+-const rx_hexs = /^([0-9a-fA-F]+)(.*)$/;
+-const rx_octals = /^([0-7]+)(.*)$/;
+-const rx_bits = /^([01]+)(.*)$/;
++// hack-jslint - bigint
++const rx_token = (
++    /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"'"'"~`]|\?\.?|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0n?|[1-9][0-9]*n?))(.*)$/
++);
++const rx_digits = (
++    /^([0-9]+)(.*)$/
++);
++const rx_hexs = (
++    /^([0-9a-fA-F]+n?)(.*)$/
++);
++const rx_octals = (
++    /^([0-7]+n?)(.*)$/
++);
++const rx_bits = (
++    /^([01]+n?)(.*)$/
++);
+
 -    warnings.push(warning);
 -    return warning;
 +    // hack-jslint - warn_at_extra
@@ -10920,6 +10977,10 @@ require("fs").writeFileSync("tmp/aa.js", aa);
 +        if (source_line !== undefined) {
 +            // hack-jslint - next_line_extra
 +            source_line = next_line_extra(source_line, line);
+
+-            if (name.identifier && rx_bad_property.test(id)) {
++            // hack-jslint - nomen
++            if (!option.nomen && name.identifier && rx_bad_property.test(id)) {
 
 -    if (cadet.id === "(comment)") {
 +    // hack-jslint - advance token async/await to next_token by context
@@ -10969,7 +11030,7 @@ require("fs").writeFileSync("tmp/aa.js", aa);
 let next_line_extra = null;
 let warn_at_extra = null;
 // jslint.js
-// 2019-08-03
+// 2020-01-17
 // Copyright (c) 2015 Douglas Crockford  (www.JSLint.com)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -11121,8 +11182,9 @@ const allowed_option = {
 
     bitwise: true,
     browser: [
-        "caches", "clearInterval", "clearTimeout", "document", "DOMException",
-        "Element", "Event", "event", "FileReader", "FormData", "history",
+        "caches", "CharacterData", "clearInterval", "clearTimeout", "document",
+        "DocumentType", "DOMException", "Element", "Event", "event", "fetch",
+        "FileReader", "FontFace", "FormData", "history", "IntersectionObserver",
         "localStorage", "location", "MutationObserver", "name", "navigator",
         "screen", "sessionStorage", "setInterval", "setTimeout", "Storage",
         "TextDecoder", "TextEncoder", "URL", "window", "Worker",
@@ -11147,6 +11209,8 @@ const allowed_option = {
         "setImmediate", "setInterval", "setTimeout", "TextDecoder",
         "TextEncoder", "URL", "URLSearchParams", "__dirname", "__filename"
     ],
+    // hack-jslint - nomen
+    nomen: true,
     single: true,
     this: true,
     white: true
@@ -11377,20 +11441,21 @@ const rx_directive_part = (
     /^([a-zA-Z$_][a-zA-Z0-9$_]*)(?::\s*(true|false))?,?\s*(.*)$/
 );
 // token (sorry it is so long)
+// hack-jslint - bigint
 const rx_token = (
-    /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0|[1-9][0-9]*))(.*)$/
+    /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0n?|[1-9][0-9]*n?))(.*)$/
 );
 const rx_digits = (
     /^([0-9]+)(.*)$/
 );
 const rx_hexs = (
-    /^([0-9a-fA-F]+)(.*)$/
+    /^([0-9a-fA-F]+n?)(.*)$/
 );
 const rx_octals = (
-    /^([0-7]+)(.*)$/
+    /^([0-7]+n?)(.*)$/
 );
 const rx_bits = (
-    /^([01]+)(.*)$/
+    /^([01]+n?)(.*)$/
 );
 // mega
 const rx_mega = (
@@ -12060,7 +12125,7 @@ function tokenize(source) {
                     return true;
                 }
                 if (char === "\\") {
-                    escape("BbDdSsWw^${}[]():=!.-|*+?");
+                    escape("BbDdSsWw^${}[]():=!.|*+?");
                     return true;
                 }
                 if (
@@ -12592,7 +12657,8 @@ function survey(name) {
                 warn("unregistered_property_a", name);
             }
         } else {
-            if (name.identifier && rx_bad_property.test(id)) {
+            // hack-jslint - nomen
+            if (!option.nomen && name.identifier && rx_bad_property.test(id)) {
                 warn("bad_property_a", name);
             }
         }
@@ -14129,7 +14195,7 @@ prefix("{", function () {
                     let the_colon = next_token;
                     advance(":");
                     value = expression(0);
-                    if (value.id === name.id) {
+                    if (value.id === name.id && value.id !== "function") {
                         warn("unexpected_a", the_colon, ": " + name.id);
                     }
                 }
@@ -16006,7 +16072,7 @@ const jslint0 = Object.freeze(function (
     }
     return {
         directives,
-        edition: "2019-08-03",
+        edition: "2020-01-17",
         exports,
         froms,
         functions,

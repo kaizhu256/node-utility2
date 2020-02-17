@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2020.1.20)
+ * lib.utility2.js (2020.2.17)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -31,9 +31,8 @@
          * and return <argList>[0]
          */
             consoleError("\n\n" + debugName);
-            consoleError.apply(console, argList);
+            consoleError(...argList);
             consoleError("\n");
-            // return arg0 for inspection
             return argList[0];
         };
     }
@@ -468,9 +467,8 @@ local.assetsDict["/assets.utility2.header.js"] = '\
          * and return <argList>[0]\n\
          */\n\
             consoleError("\\n\\n" + debugName);\n\
-            consoleError.apply(console, argList);\n\
+            consoleError(...argList);\n\
             consoleError("\\n");\n\
-            // return arg0 for inspection\n\
             return argList[0];\n\
         };\n\
     }\n\
@@ -843,6 +841,10 @@ local.assetsDict["/assets.utility2.template.html"] = '\
 *:before {\n\
     box-sizing: border-box;\n\
 }\n\
+.uiAnimateSlide {\n\
+    overflow-y: hidden;\n\
+    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;\n\
+}\n\
 /* csslint ignore:end */\n\
 @keyframes uiAnimateSpin {\n\
 0% {\n\
@@ -914,10 +916,6 @@ pre {\n\
     cursor: auto;\n\
     overflow: auto;\n\
     padding: 2px;\n\
-}\n\
-.uiAnimateSlide {\n\
-    overflow-y: hidden;\n\
-    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;\n\
 }\n\
 .zeroPixel {\n\
     border: 0;\n\
@@ -1546,12 +1544,12 @@ the greatest app in the world!\n\
 \n\
 [![swaggerdoc](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployGithub.browser.%252Fnode-my-app-lite%252Fbuild%252Fapp%252Fassets.swgg.html.png)](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/app/assets.swgg.html)\n\
 \n\
-#### todo\n\
-- none\n\
-\n\
 #### changelog 0.0.1\n\
 - npm publish 0.0.1\n\
 - update build\n\
+- none\n\
+\n\
+#### todo\n\
 - none\n\
 \n\
 #### this package requires\n\
@@ -2183,14 +2181,14 @@ local.FormData.prototype.read = function (onError) {
     result = [];
     local.onParallelList({
         list: this.entryList
-    }, function (option2, onParallel) {
+    }, function (opt2, onParallel) {
         let value;
-        value = option2.elem.value;
+        value = opt2.elem.value;
         if (!(value && value.constructor === local.Blob)) {
-            result[option2.ii] = [
+            result[opt2.ii] = [
                 (
                     boundary + "\r\nContent-Disposition: form-data; name=\""
-                    + option2.elem.name + "\"\r\n\r\n"
+                    + opt2.elem.name + "\"\r\n\r\n"
                 ), value, "\r\n"
             ];
             onParallel.cnt += 1;
@@ -2200,10 +2198,10 @@ local.FormData.prototype.read = function (onError) {
         // read from blob in parallel
         onParallel.cnt += 1;
         local.blobRead(value, function (err, data) {
-            result[option2.ii] = !err && [
+            result[opt2.ii] = !err && [
                 (
                     boundary + "\r\nContent-Disposition: form-data; name=\""
-                    + option2.elem.name + "\"" + (
+                    + opt2.elem.name + "\"" + (
                         (value && value.name)
                         // read param filename
                         ? "; filename=\"" + value.name + "\""
@@ -3416,6 +3414,9 @@ local.buildApp = function (opt, onError) {
                 file: "/LICENSE",
                 url: "/LICENSE"
             }, {
+                file: "/assets." + local.env.npm_package_nameLib + ".css",
+                url: "/assets." + local.env.npm_package_nameLib + ".css"
+            }, {
                 file: "/assets." + local.env.npm_package_nameLib + ".html",
                 url: "/index.html"
             }, {
@@ -3465,14 +3466,14 @@ local.buildApp = function (opt, onError) {
                 )
             }
         ].concat(opt.assetsList)
-    }, function (option2, onParallel) {
-        option2 = option2.elem;
+    }, function (opt2, onParallel) {
+        opt2 = opt2.elem;
         onParallel.cnt += 1;
-        local.ajax(option2, function (err, xhr) {
+        local.ajax(opt2, function (err, xhr) {
             // handle err
             local.assertOrThrow(!err, err);
             // jslint file
-            local.jslintAndPrint(xhr.responseText, option2.file, {
+            local.jslintAndPrint(xhr.responseText, opt2.file, {
                 conditional: true,
                 coverage: local.env.npm_config_mode_coverage
             });
@@ -3482,7 +3483,7 @@ local.buildApp = function (opt, onError) {
                 local.jslint.jslintResult.errMsg
             );
             local.fsWriteFileWithMkdirpSync(
-                "tmp/build/app" + option2.file,
+                "tmp/build/app" + opt2.file,
                 xhr.response
             );
             onParallel();
@@ -3666,13 +3667,13 @@ local.buildReadme = function (opt, onError) {
         (
             /\n#\u0020live\u0020web\u0020demo\n[\S\s]*?\n\n\n\n/
         ),
-        // customize to-do
+        // customize changelog
         (
-            /\n####\u0020todo\n[\S\s]*?\n\n\n\n/
+            /\n####\u0020changelog\u0020[\S\s]*?\n\n\n\n/
         ),
-        // customize example.js - shared js-env code - init-before
+        // customize example.js - shared js\u002denv code - init-before
         (
-            /\nglobalThis\.local\u0020=\u0020local;\n[^`]*?\n\/\/\u0020run\u0020browser\u0020js\-env\u0020code\u0020-\u0020init-test\n/
+            /\nglobalThis\.local\u0020=\u0020local;\n[^`]*?\n\/\/\u0020run\u0020browser\u0020js\u002denv\u0020code\u0020-\u0020init-test\n/
         ),
         // customize example.js - html-body
         (
@@ -3756,7 +3757,7 @@ local.buildReadme = function (opt, onError) {
         [
             // customize example.sh
             (
-                /\n####\u0020changelog\u0020[\S\s]*\n#\u0020quickstart\u0020example.js\n/
+                /\n####\u0020changelog\u0020[\S\s]*?\n#\u0020quickstart\u0020example.js\n/
             ), (
                 opt.dataFrom.indexOf("\"assets.utility2.template.html\"") < 0
                 && local.identity(
@@ -3893,9 +3894,9 @@ local.buildTest = function (opt, onError) {
     });
     // search-and-replace - customize dataTo
     [
-        // customize shared js\-env code - function
+        // customize shared js\u002denv code - function
         (
-            /\n\}\(\)\);\n\n\n\n\/\/\u0020run\u0020shared\u0020js\-env\u0020code\u0020-\u0020function\n[\S\s]*?$/
+            /\n\}\(\)\);\n\n\n\n\/\/\u0020run\u0020shared\u0020js\u002denv\u0020code\u0020-\u0020function\n[\S\s]*?$/
         )
     ].forEach(function (rgx) {
         opt.dataTo = local.stringMerge(opt.dataTo, opt.dataFrom, rgx);
@@ -4451,6 +4452,9 @@ local.domSelectOptionValue = function (elem) {
 /*
  * this function will return <elem>.options[<elem>.selectedIndex].value
  */
+    if (typeof elem === "string") {
+        elem = document.querySelector(elem);
+    }
     elem = elem && elem.options[elem.selectedIndex];
     return (elem && elem.value) || "";
 };
@@ -5043,11 +5047,17 @@ local.middlewareFileServer = function (req, res, next) {
         next();
         return;
     }
-    // security - disable parent directory lookup
-    file = local.path.resolve("/", req.urlParsed.pathname).slice(1);
-    // replace trailing '/' with '/index.html'
+    // security - disable parent-directory lookup
+    file = local.path.resolve(
+        "/",
+        // preserve trailing "/"
+        req.urlParsed.pathname + "\u0000"
+    ).slice(0, -1).replace((
+        /^\/|^\w+?:\\+/m
+    ), "");
+    // replace trailing "/" with "/index.html"
     file = file.replace((
-        /\/$/
+        /[\/\\]$/
     ), "/index.html");
     local.fs.readFile(file, function (err, data) {
         // default to next
@@ -5935,6 +5945,7 @@ local.requireReadme = function () {
         "/assets.utility2.rollup.js",
         "/assets.utility2.rollup.start.js",
         "local.stateInit",
+        "/assets.my_app.css",
         "/assets.my_app.js",
         "/assets.example.js",
         "/assets.test.js",
@@ -5966,6 +5977,22 @@ instruction\n\
     /utility2_rollup/g
 ), "utility2_app");
 /* jslint ignore:end */
+        case "/assets.my_app.css":
+            // handle large string-replace
+            tmp = "/assets." + local.env.npm_package_nameLib + ".css";
+            code = local.assetsDict["/assets.utility2.rollup.content.js"].split(
+                "/* utility2.rollup.js content */"
+            );
+            code.splice(
+                1,
+                0,
+                "local.assetsDict[\"" + tmp + "\"] = "
+                + JSON.stringify(local.assetsDict[tmp]).replace((
+                    /\n/g
+                ), "\\n\\\n")
+            );
+            code = code.join("");
+            break;
         case "/assets.my_app.js":
             // handle large string-replace
             tmp = "/assets." + local.env.npm_package_nameLib + ".js";
@@ -6563,9 +6590,7 @@ local.templateRenderMyApp = function (template, opt) {
         ), "_"),
         repository: {
             url: (
-                "https://github.com/kaizhu256/node-"
-                + opt.packageJson.name
-                + ".git"
+                "https://github.com/kaizhu256/node-" + opt.packageJson.name
             )
         }
     }, 2);
@@ -7493,6 +7518,7 @@ local.urlParse = function (url) {
             } else {
                 urlParsed.query[item[0]] = item[1];
             }
+            return "";
         });
         urlParsed.basename = urlParsed.pathname.replace((
             /^.*\//
@@ -7570,6 +7596,7 @@ local.contentTypeDict = {
     ".js": "application/javascript; charset=utf-8",
     ".json": "application/json; charset=utf-8",
     ".pdf": "application/pdf",
+    ".wasm": "application/wasm",
     ".xml": "application/xml; charset=utf-8",
     // image
     ".bmp": "image/bmp",
@@ -7618,10 +7645,10 @@ local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.identity;
 local.jslintAndPrint = local.jslint.jslintAndPrint || local.identity;
 local.puppeteerLaunch = local.puppeteer.puppeteerLaunch || local.identity;
 local.regexpCharsetEncodeUri = (
-    /\w!#\$%&'\(\)\*\+,\-\.\/:;=\?@~/
+    /\w!#\$%&'\(\)\*\+,-\.\/:;=\?@~/
 );
 local.regexpCharsetEncodeUriComponent = (
-    /\w!%'\(\)\*\-\.~/
+    /\w!%'\(\)\*-\.~/
 );
 // https://github.com/chjj/marked/blob/v0.3.7/lib/marked.js#L499
 local.regexpMatchUrl = (

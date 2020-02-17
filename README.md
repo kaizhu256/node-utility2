@@ -55,8 +55,22 @@ this zero-dependency package will provide high-level functions to to build, test
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### todo
+#### changelog 2020.2.17
+- npm publish 2020.2.17
+- remove npm-package elasticsearch-lite in docker-image
+- upgrade docker-image to node v12
+- rename var option2 to opt2
+- add wasm mimetype
+- update jslint to v2020.1.17
+- update csslint to v2018.2.25
+- add runme-feature in test.js
 - rearrange todo <-> changelog
+- update function middlewareFileServer to serve files in win32 env
+- none
+
+#### todo
+- update shell-function shRawLibFetch to apply diff
+- add function httpFetch which uses fetch-api and promises
 - rename text to str
 - jslint - prefer undefined over null
 - replace function local.objectSetOverride with Object.assign
@@ -67,14 +81,6 @@ this zero-dependency package will provide high-level functions to to build, test
 - jslint - sort nested switch-statements
 - add default testCase _testCase_cliRun_help
 - add server stress-test using puppeteer
-- none
-
-#### changelog 2020.1.20
-- npm publish 2019.1.20
-- rename counter to cnt
-- test String.p.indexOf using only 0
-- replace uglifyjs-lite with terser-lite (v2.8.29)
-- remove sjcl-dependency in favor of subtle-crypto
 - none
 
 #### this package requires
@@ -154,9 +160,8 @@ instruction
          * and return <argList>[0]
          */
             consoleError("\n\n" + debugName);
-            consoleError.apply(console, argList);
+            consoleError(...argList);
             consoleError("\n");
-            // return arg0 for inspection
             return argList[0];
         };
     }
@@ -682,6 +687,10 @@ local.assetsDict["/assets.index.template.html"] = '\
 *:before {\n\
     box-sizing: border-box;\n\
 }\n\
+.uiAnimateSlide {\n\
+    overflow-y: hidden;\n\
+    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;\n\
+}\n\
 /* csslint ignore:end */\n\
 @keyframes uiAnimateSpin {\n\
 0% {\n\
@@ -753,10 +762,6 @@ pre {\n\
     cursor: auto;\n\
     overflow: auto;\n\
     padding: 2px;\n\
-}\n\
-.uiAnimateSlide {\n\
-    overflow-y: hidden;\n\
-    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;\n\
 }\n\
 .zeroPixel {\n\
     border: 0;\n\
@@ -1390,10 +1395,10 @@ local.http.createServer(function (req, res) {
         "2019.08.16 apidoc-lite master",
         "2019.09.14 swgg",
         "2019.09.15 istanbul-lite master",
-        "2019.10.09 jslint-lite",
-        "2020.01.20 utility2"
+        "2020.01.27 jslint-lite",
+        "2020.02.17 utility2"
     ],
-    "version": "2020.1.20"
+    "version": "2020.2.17"
 }
 ```
 
@@ -1439,7 +1444,7 @@ RUN (set -e; \
         gnupg; \
     (busybox --list | xargs -n1 /bin/sh -c \
         'ln -s /bin/busybox /bin/$0 2>/dev/null' || true); \
-    curl -Ls https://deb.nodesource.com/setup_10.x | /bin/bash -; \
+    curl -Ls https://deb.nodesource.com/setup_12.x | /bin/bash -; \
     apt-get install -y nodejs; \
     (cd /usr/lib && npm install sqlite3@4); \
 )
@@ -1466,6 +1471,7 @@ RUN (set -e; \
         ssh \
         vim \
         wget \
+        whois \
         xvfb; \
 )
 ```
@@ -1482,20 +1488,6 @@ RUN (set -e; \
     npm install kaizhu256/node-utility2#alpha; \
     cp -a node_modules /; \
     cd node_modules/utility2; \
-    npm install; \
-    npm test; \
-)
-# install elasticsearch-lite
-RUN (set -e; \
-    export DEBIAN_FRONTEND=noninteractive; \
-    mkdir -p /usr/share/man/man1; \
-    apt-get update; \
-    apt-get install --no-install-recommends -y \
-        default-jre; \
-    rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
-    npm install kaizhu256/node-elasticsearch-lite#alpha; \
-    cp -a node_modules /; \
-    cd node_modules/elasticsearch-lite; \
     npm install; \
     npm test; \
 )

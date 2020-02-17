@@ -15,7 +15,7 @@
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/node-aa-bb "touch" alpha
 # DOCKER_V_GAME=1 DOCKER_V_HOME=1 DOCKER_PORT=4065 shDockerRestart work kaizhu256/node-utility2
 # shGitAddTee npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
-# shGitAddTee shUtility2DependentsSync
+# shSource && shGitAddTee shUtility2DependentsSync
 # utility2 shReadmeTest example.js
 
 shBaseInit () {
@@ -2289,7 +2289,7 @@ shPasswordRandom () {(set -e
 shRawLibDiff () {(set -e
 # this function will diff-compare raw.xxx.js to lib.xxx.js
     diff -u "$(
-        printf "$1" | sed -e "s/lib/raw/"
+        printf "$1" | sed -e "s/[^\\.]*\\./raw./"
     )" "$1" > /tmp/shRawLibDiff.diff || true
     vim -R /tmp/shRawLibDiff.diff
 )}
@@ -3451,9 +3451,8 @@ export UTILITY2_MACRO_JS='
          * and return <argList>[0]
          */
             consoleError("\n\n" + debugName);
-            consoleError.apply(console, argList);
+            consoleError(...argList);
             consoleError("\n");
-            // return arg0 for inspection
             return argList[0];
         };
     }
@@ -5069,9 +5068,7 @@ local.templateRenderMyApp = function (template, opt) {
         ), "_"),
         repository: {
             url: (
-                "https://github.com/kaizhu256/node-"
-                + opt.packageJson.name
-                + ".git"
+                "https://github.com/kaizhu256/node-" + opt.packageJson.name
             )
         }
     }, 2);

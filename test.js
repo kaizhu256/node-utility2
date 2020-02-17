@@ -21,9 +21,8 @@
          * and return <argList>[0]
          */
             consoleError("\n\n" + debugName);
-            consoleError.apply(console, argList);
+            consoleError(...argList);
             consoleError("\n");
-            // return arg0 for inspection
             return argList[0];
         };
     }
@@ -672,9 +671,9 @@ local.testCase_ajax_default = function (opt, onError) {
                 //!! url: "https://undefined:0"
             }
         ]
-    }, function (option2, onParallel) {
+    }, function (opt2, onParallel) {
         onParallel.cnt += 1;
-        local.ajax(option2.elem, function (err) {
+        local.ajax(opt2.elem, function (err) {
             // handle err
             local.assertOrThrow(err, err);
             onParallel(null, opt);
@@ -2168,10 +2167,10 @@ local.testCase_onParallelList_default = function (opt, onError) {
             ];
             // test retryLimit handling-behavior
             opt.retryLimit = 1;
-            local.onParallelList(opt, function (option2, onParallel) {
+            local.onParallelList(opt, function (opt2, onParallel) {
                 onParallel.cnt += 1;
                 // test err handling-behavior
-                onParallel(local.errDefault, option2);
+                onParallel(local.errDefault, opt2);
                 // test multiple-callback handling-behavior
                 setTimeout(onParallel, 5000);
             }, function (err) {
@@ -2192,7 +2191,7 @@ local.testCase_onParallelList_default = function (opt, onError) {
                     1, 2, 3, 4
                 ],
                 rateLimit: opt.rateLimit
-            }, function (option2, onParallel) {
+            }, function (opt2, onParallel) {
                 onParallel.cnt += 1;
                 opt.rateMax = Math.max(
                     onParallel.cnt - 1,
@@ -2201,13 +2200,13 @@ local.testCase_onParallelList_default = function (opt, onError) {
                 // test async handling-behavior
                 setTimeout(function () {
                     // test list-growth handling-behavior
-                    if (option2.ii === 3) {
-                        option2.list.push(5);
+                    if (opt2.ii === 3) {
+                        opt2.list.push(5);
                     }
-                    opt.data[option2.ii] = option2.elem;
+                    opt.data[opt2.ii] = opt2.elem;
                     // test retry handling-behavior
-                    local.assertOrThrow(option2.retry < 1);
-                    onParallel(null, option2);
+                    local.assertOrThrow(opt2.retry < 1);
+                    onParallel(null, opt2);
                 });
             }, opt.gotoNext, opt.rateLimit);
             break;
@@ -2225,11 +2224,11 @@ local.testCase_onParallelList_default = function (opt, onError) {
                     1, 2, 3, 4, 5
                 ],
                 rateLimit: opt.rateLimit
-            }, function (option2, onParallel) {
+            }, function (opt2, onParallel) {
                 // test sync handling-behavior
                 onParallel.cnt += 1;
                 opt.rateMax = Math.max(onParallel.cnt, opt.rateMax);
-                opt.data[option2.ii] = option2.elem;
+                opt.data[opt2.ii] = opt2.elem;
                 onParallel(null, opt);
             }, opt.gotoNext);
             break;
@@ -3111,6 +3110,10 @@ if (process.argv[2]) {
     process.argv.splice(1, 1);
     process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
     local.Module.runMain();
+}
+// runme
+if (local.env.npm_config_runme) {
+    require(local.path.resolve(local.env.npm_config_runme));
 }
 }());
 }());
