@@ -14,8 +14,6 @@
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
-    let ArrayPrototypeFlat;
-    let TextXxcoder;
     let consoleError;
     let debugName;
     let local;
@@ -36,156 +34,12 @@
             return argList[0];
         };
     }
-    // polyfill
-    ArrayPrototypeFlat = function (depth) {
-    /*
-     * this function will polyfill Array.prototype.flat
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        depth = (
-            globalThis.isNaN(depth)
-            ? 1
-            : Number(depth)
-        );
-        if (!depth) {
-            return Array.prototype.slice.call(this);
-        }
-        return Array.prototype.reduce.call(this, function (acc, cur) {
-            if (Array.isArray(cur)) {
-                // recurse
-                acc.push.apply(acc, ArrayPrototypeFlat.call(cur, depth - 1));
-            } else {
-                acc.push(cur);
-            }
-            return acc;
-        }, []);
-    };
-    Array.prototype.flat = Array.prototype.flat || ArrayPrototypeFlat;
-    Array.prototype.flatMap = Array.prototype.flatMap || function flatMap(
-        ...argList
-    ) {
-    /*
-     * this function will polyfill Array.prototype.flatMap
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        return this.map(...argList).flat();
-    };
     String.prototype.trimEnd = (
         String.prototype.trimEnd || String.prototype.trimRight
     );
     String.prototype.trimStart = (
         String.prototype.trimStart || String.prototype.trimLeft
     );
-    (function () {
-        try {
-            globalThis.TextDecoder = (
-                globalThis.TextDecoder || require("util").TextDecoder
-            );
-            globalThis.TextEncoder = (
-                globalThis.TextEncoder || require("util").TextEncoder
-            );
-        } catch (ignore) {}
-    }());
-    TextXxcoder = function () {
-    /*
-     * this function will polyfill TextDecoder/TextEncoder
-     * https://gist.github.com/Yaffle/5458286
-     */
-        return;
-    };
-    TextXxcoder.prototype.decode = function (octets) {
-    /*
-     * this function will polyfill TextDecoder.prototype.decode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bytesNeeded;
-        let codePoint;
-        let ii;
-        let kk;
-        let octet;
-        let string;
-        string = "";
-        ii = 0;
-        while (ii < octets.length) {
-            octet = octets[ii];
-            bytesNeeded = 0;
-            codePoint = 0;
-            if (octet <= 0x7F) {
-                bytesNeeded = 0;
-                codePoint = octet & 0xFF;
-            } else if (octet <= 0xDF) {
-                bytesNeeded = 1;
-                codePoint = octet & 0x1F;
-            } else if (octet <= 0xEF) {
-                bytesNeeded = 2;
-                codePoint = octet & 0x0F;
-            } else if (octet <= 0xF4) {
-                bytesNeeded = 3;
-                codePoint = octet & 0x07;
-            }
-            if (octets.length - ii - bytesNeeded > 0) {
-                kk = 0;
-                while (kk < bytesNeeded) {
-                    octet = octets[ii + kk + 1];
-                    codePoint = (codePoint << 6) | (octet & 0x3F);
-                    kk += 1;
-                }
-            } else {
-                codePoint = 0xFFFD;
-                bytesNeeded = octets.length - ii;
-            }
-            string += String.fromCodePoint(codePoint);
-            ii += bytesNeeded + 1;
-        }
-        return string;
-    };
-    TextXxcoder.prototype.encode = function (string) {
-    /*
-     * this function will polyfill TextEncoder.prototype.encode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bits;
-        let cc;
-        let codePoint;
-        let ii;
-        let length;
-        let octets;
-        octets = [];
-        length = string.length;
-        ii = 0;
-        while (ii < length) {
-            codePoint = string.codePointAt(ii);
-            cc = 0;
-            bits = 0;
-            if (codePoint <= 0x0000007F) {
-                cc = 0;
-                bits = 0x00;
-            } else if (codePoint <= 0x000007FF) {
-                cc = 6;
-                bits = 0xC0;
-            } else if (codePoint <= 0x0000FFFF) {
-                cc = 12;
-                bits = 0xE0;
-            } else if (codePoint <= 0x001FFFFF) {
-                cc = 18;
-                bits = 0xF0;
-            }
-            octets.push(bits | (codePoint >> cc));
-            cc -= 6;
-            while (cc >= 0) {
-                octets.push(0x80 | ((codePoint >> cc) & 0x3F));
-                cc -= 6;
-            }
-            ii += (
-                codePoint >= 0x10000
-                ? 2
-                : 1
-            );
-        }
-        return octets;
-    };
-    globalThis.TextDecoder = globalThis.TextDecoder || TextXxcoder;
-    globalThis.TextEncoder = globalThis.TextEncoder || TextXxcoder;
     // init local
     local = {};
     local.local = local;
@@ -378,9 +232,7 @@
         local.vm = require("vm");
         local.zlib = require("zlib");
     }
-}((typeof globalThis === "object" && globalThis) || (function () {
-    return Function("return this")(); // jslint ignore:line
-}())));
+}((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
 
 
@@ -632,40 +484,40 @@ let readline = require('readline');
 // let removeFolder = require('rimraf');
 let tls = require('tls');
 let url = require('url');
-let exports_GoogleChrome_puppeteer_index = {};
-let exports_GoogleChrome_puppeteer_lib_Accessibility = {};
-let exports_GoogleChrome_puppeteer_lib_Browser = {};
-let exports_GoogleChrome_puppeteer_lib_BrowserFetcher = {};
-let exports_GoogleChrome_puppeteer_lib_Connection = {};
-let exports_GoogleChrome_puppeteer_lib_Coverage = {};
-let exports_GoogleChrome_puppeteer_lib_DOMWorld = {};
-let exports_GoogleChrome_puppeteer_lib_DeviceDescriptors = {};
-let exports_GoogleChrome_puppeteer_lib_Dialog = {};
-let exports_GoogleChrome_puppeteer_lib_EmulationManager = {};
-let exports_GoogleChrome_puppeteer_lib_Errors = {};
-let exports_GoogleChrome_puppeteer_lib_Events = {};
-let exports_GoogleChrome_puppeteer_lib_ExecutionContext = {};
-let exports_GoogleChrome_puppeteer_lib_FrameManager = {};
-let exports_GoogleChrome_puppeteer_lib_Input = {};
-let exports_GoogleChrome_puppeteer_lib_JSHandle = {};
-let exports_GoogleChrome_puppeteer_lib_Launcher = {};
-let exports_GoogleChrome_puppeteer_lib_LifecycleWatcher = {};
-let exports_GoogleChrome_puppeteer_lib_Multimap = {};
-let exports_GoogleChrome_puppeteer_lib_NetworkManager = {};
-let exports_GoogleChrome_puppeteer_lib_Page = {};
-let exports_GoogleChrome_puppeteer_lib_PipeTransport = {};
-let exports_GoogleChrome_puppeteer_lib_Puppeteer = {};
-let exports_GoogleChrome_puppeteer_lib_Target = {};
-let exports_GoogleChrome_puppeteer_lib_TaskQueue = {};
-let exports_GoogleChrome_puppeteer_lib_TimeoutSettings = {};
-let exports_GoogleChrome_puppeteer_lib_Tracing = {};
-let exports_GoogleChrome_puppeteer_lib_USKeyboardLayout = {};
-let exports_GoogleChrome_puppeteer_lib_WebSocketTransport = {};
-let exports_GoogleChrome_puppeteer_lib_Worker = {};
-let exports_GoogleChrome_puppeteer_lib_api = {};
-let exports_GoogleChrome_puppeteer_lib_helper = {};
-let exports_GoogleChrome_puppeteer_node6_lib_Puppeteer = {};
-let exports_GoogleChrome_puppeteer_package_json = {};
+let exports_puppeteer_puppeteer_index = {};
+let exports_puppeteer_puppeteer_lib_Accessibility = {};
+let exports_puppeteer_puppeteer_lib_Browser = {};
+let exports_puppeteer_puppeteer_lib_BrowserFetcher = {};
+let exports_puppeteer_puppeteer_lib_Connection = {};
+let exports_puppeteer_puppeteer_lib_Coverage = {};
+let exports_puppeteer_puppeteer_lib_DOMWorld = {};
+let exports_puppeteer_puppeteer_lib_DeviceDescriptors = {};
+let exports_puppeteer_puppeteer_lib_Dialog = {};
+let exports_puppeteer_puppeteer_lib_EmulationManager = {};
+let exports_puppeteer_puppeteer_lib_Errors = {};
+let exports_puppeteer_puppeteer_lib_Events = {};
+let exports_puppeteer_puppeteer_lib_ExecutionContext = {};
+let exports_puppeteer_puppeteer_lib_FrameManager = {};
+let exports_puppeteer_puppeteer_lib_Input = {};
+let exports_puppeteer_puppeteer_lib_JSHandle = {};
+let exports_puppeteer_puppeteer_lib_Launcher = {};
+let exports_puppeteer_puppeteer_lib_LifecycleWatcher = {};
+let exports_puppeteer_puppeteer_lib_Multimap = {};
+let exports_puppeteer_puppeteer_lib_NetworkManager = {};
+let exports_puppeteer_puppeteer_lib_Page = {};
+let exports_puppeteer_puppeteer_lib_PipeTransport = {};
+let exports_puppeteer_puppeteer_lib_Puppeteer = {};
+let exports_puppeteer_puppeteer_lib_Target = {};
+let exports_puppeteer_puppeteer_lib_TaskQueue = {};
+let exports_puppeteer_puppeteer_lib_TimeoutSettings = {};
+let exports_puppeteer_puppeteer_lib_Tracing = {};
+let exports_puppeteer_puppeteer_lib_USKeyboardLayout = {};
+let exports_puppeteer_puppeteer_lib_WebSocketTransport = {};
+let exports_puppeteer_puppeteer_lib_Worker = {};
+let exports_puppeteer_puppeteer_lib_api = {};
+let exports_puppeteer_puppeteer_lib_helper = {};
+let exports_puppeteer_puppeteer_node6_lib_Puppeteer = {};
+let exports_puppeteer_puppeteer_package_json = {};
 let exports_websockets_ws_index = {};
 let exports_websockets_ws_lib_buffer_util = {};
 let exports_websockets_ws_lib_constants = {};
@@ -3527,15 +3379,15 @@ exports_websockets_ws_index = WebSocket;
 
 
 /*
-repo https://github.com/GoogleChrome/puppeteer/tree/v1.19.0
+repo https://github.com/puppeteer/puppeteer/tree/v1.19.0
 */
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/package.json
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/package.json
 */
-exports_GoogleChrome_puppeteer_package_json = {
+exports_puppeteer_puppeteer_package_json = {
   "name": "puppeteer",
   "version": "1.19.0",
   "description": "A high-level API to control headless Chrome over the DevTools Protocol",
@@ -3612,7 +3464,7 @@ exports_GoogleChrome_puppeteer_package_json = {
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/helper.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/helper.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -3629,7 +3481,7 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/helper.js
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// const {TimeoutError} = exports_GoogleChrome_puppeteer_lib_Errors;
+// const {TimeoutError} = exports_puppeteer_puppeteer_lib_Errors;
 // const debugError = require('debug')(`puppeteer:error`);
 // const fs = require('fs');
 
@@ -3886,17 +3738,17 @@ function assert(value, message) {
     throw new Error(message);
 }
 
-exports_GoogleChrome_puppeteer_lib_helper = {
+exports_puppeteer_puppeteer_lib_helper = {
   helper: Helper,
   assert,
   debugError
 };
-let helper = exports_GoogleChrome_puppeteer_lib_helper.helper;
+let helper = exports_puppeteer_puppeteer_lib_helper.helper;
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Accessibility.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Accessibility.js
 */
 /**
  * Copyright 2018 Google Inc. All rights reserved.
@@ -4318,12 +4170,12 @@ class AXNode {
   }
 }
 
-exports_GoogleChrome_puppeteer_lib_Accessibility = {Accessibility};
+exports_puppeteer_puppeteer_lib_Accessibility = {Accessibility};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Browser.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Browser.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -4341,11 +4193,11 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Browser.js
  * limitations under the License.
  */
 
-// const { helper, assert } = exports_GoogleChrome_puppeteer_lib_helper;
-// const {Target} = exports_GoogleChrome_puppeteer_lib_Target;
+// const { helper, assert } = exports_puppeteer_puppeteer_lib_helper;
+// const {Target} = exports_puppeteer_puppeteer_lib_Target;
 // const EventEmitter = require('events');
-// const {TaskQueue} = exports_GoogleChrome_puppeteer_lib_TaskQueue;
-// const {Events} = exports_GoogleChrome_puppeteer_lib_Events;
+// const {TaskQueue} = exports_puppeteer_puppeteer_lib_TaskQueue;
+// const {Events} = exports_puppeteer_puppeteer_lib_Events;
 
 class Browser extends EventEmitter {
   /**
@@ -4707,12 +4559,12 @@ class BrowserContext extends EventEmitter {
   }
 }
 
-exports_GoogleChrome_puppeteer_lib_Browser = {Browser, BrowserContext};
+exports_puppeteer_puppeteer_lib_Browser = {Browser, BrowserContext};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Connection.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -4729,8 +4581,8 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Connection.js
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// const {assert} = exports_GoogleChrome_puppeteer_lib_helper;
-// const {Events} = exports_GoogleChrome_puppeteer_lib_Events;
+// const {assert} = exports_puppeteer_puppeteer_lib_helper;
+// const {Events} = exports_puppeteer_puppeteer_lib_Events;
 // const debugProtocol = require('debug')('puppeteer:protocol');
 // const EventEmitter = require('events');
 
@@ -4955,12 +4807,12 @@ function rewriteError(error, message) {
   return error;
 }
 
-exports_GoogleChrome_puppeteer_lib_Connection = {Connection, CDPSession};
+exports_puppeteer_puppeteer_lib_Connection = {Connection, CDPSession};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Coverage.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Coverage.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -4978,9 +4830,9 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Coverage.js
  * limitations under the License.
  */
 
-// const {helper, debugError, assert} = exports_GoogleChrome_puppeteer_lib_helper;
+// const {helper, debugError, assert} = exports_puppeteer_puppeteer_lib_helper;
 
-// const {EVALUATION_SCRIPT_URL} = exports_GoogleChrome_puppeteer_lib_ExecutionContext;
+// const {EVALUATION_SCRIPT_URL} = exports_puppeteer_puppeteer_lib_ExecutionContext;
 
 /**
  * @typedef {Object} CoverageEntry
@@ -5027,7 +4879,7 @@ class Coverage {
   }
 }
 
-exports_GoogleChrome_puppeteer_lib_Coverage = {Coverage};
+exports_puppeteer_puppeteer_lib_Coverage = {Coverage};
 
 class JSCoverage {
   /**
@@ -5278,7 +5130,7 @@ function convertToDisjointRanges(nestedRanges) {
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/DOMWorld.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/DOMWorld.js
 */
 /**
  * Copyright 2019 Google Inc. All rights reserved.
@@ -5297,9 +5149,9 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/DOMWorld.js
  */
 
 // const fs = require('fs');
-// const {helper, assert} = exports_GoogleChrome_puppeteer_lib_helper;
-// const {LifecycleWatcher} = exports_GoogleChrome_puppeteer_lib_LifecycleWatcher;
-// const {TimeoutError} = exports_GoogleChrome_puppeteer_lib_Errors;
+// const {helper, assert} = exports_puppeteer_puppeteer_lib_helper;
+// const {LifecycleWatcher} = exports_puppeteer_puppeteer_lib_LifecycleWatcher;
+// const {TimeoutError} = exports_puppeteer_puppeteer_lib_Errors;
 const readFileAsync = helper.promisify(fs.readFile);
 
 /**
@@ -5998,12 +5850,12 @@ async function waitForPredicatePageFunction(predicateBody, polling, timeout, ...
   }
 }
 
-exports_GoogleChrome_puppeteer_lib_DOMWorld = {DOMWorld};
+exports_puppeteer_puppeteer_lib_DOMWorld = {DOMWorld};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/DeviceDescriptors.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/DeviceDescriptors.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -6021,7 +5873,7 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/DeviceDescriptor
  * limitations under the License.
  */
 
-exports_GoogleChrome_puppeteer_lib_DeviceDescriptors = [
+exports_puppeteer_puppeteer_lib_DeviceDescriptors = [
   {
     'name': 'Blackberry PlayBook',
     'userAgent': 'Mozilla/5.0 (PlayBook; U; RIM Tablet OS 2.1.0; en-US) AppleWebKit/536.2+ (KHTML like Gecko) Version/7.2.1.0 Safari/536.2+',
@@ -6851,13 +6703,13 @@ exports_GoogleChrome_puppeteer_lib_DeviceDescriptors = [
     }
   }
 ];
-for (const device of exports_GoogleChrome_puppeteer_lib_DeviceDescriptors)
-  exports_GoogleChrome_puppeteer_lib_DeviceDescriptors[device.name] = device;
+for (const device of exports_puppeteer_puppeteer_lib_DeviceDescriptors)
+  exports_puppeteer_puppeteer_lib_DeviceDescriptors[device.name] = device;
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Dialog.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Dialog.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -6875,7 +6727,7 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Dialog.js
  * limitations under the License.
  */
 
-// const {assert} = exports_GoogleChrome_puppeteer_lib_helper;
+// const {assert} = exports_puppeteer_puppeteer_lib_helper;
 
 class Dialog {
   /**
@@ -6941,12 +6793,12 @@ Dialog.Type = {
   Prompt: 'prompt'
 };
 
-exports_GoogleChrome_puppeteer_lib_Dialog = {Dialog};
+exports_puppeteer_puppeteer_lib_Dialog = {Dialog};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/EmulationManager.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/EmulationManager.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -7001,12 +6853,12 @@ class EmulationManager {
   }
 }
 
-exports_GoogleChrome_puppeteer_lib_EmulationManager = {EmulationManager};
+exports_puppeteer_puppeteer_lib_EmulationManager = {EmulationManager};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Errors.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Errors.js
 */
 /**
  * Copyright 2018 Google Inc. All rights reserved.
@@ -7034,14 +6886,14 @@ class CustomError extends Error {
 
 class TimeoutError extends CustomError {}
 
-exports_GoogleChrome_puppeteer_lib_Errors = {
+exports_puppeteer_puppeteer_lib_Errors = {
   TimeoutError,
 };
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Events.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Events.js
 */
 /**
  * Copyright 2019 Google Inc. All rights reserved.
@@ -7122,12 +6974,12 @@ const Events = {
   },
 };
 
-exports_GoogleChrome_puppeteer_lib_Events = { Events };
+exports_puppeteer_puppeteer_lib_Events = { Events };
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/ExecutionContext.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/ExecutionContext.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -7145,8 +6997,8 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/ExecutionContext
  * limitations under the License.
  */
 
-// const {helper, assert} = exports_GoogleChrome_puppeteer_lib_helper;
-// const {createJSHandle, JSHandle} = exports_GoogleChrome_puppeteer_lib_JSHandle;
+// const {helper, assert} = exports_puppeteer_puppeteer_lib_helper;
+// const {createJSHandle, JSHandle} = exports_puppeteer_puppeteer_lib_JSHandle;
 
 const EVALUATION_SCRIPT_URL = '__puppeteer_evaluation_script__';
 const SOURCE_URL_REGEX = /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m;
@@ -7333,12 +7185,12 @@ class ExecutionContext {
   }
 }
 
-exports_GoogleChrome_puppeteer_lib_ExecutionContext = {ExecutionContext, EVALUATION_SCRIPT_URL};
+exports_puppeteer_puppeteer_lib_ExecutionContext = {ExecutionContext, EVALUATION_SCRIPT_URL};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/FrameManager.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/FrameManager.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -7357,12 +7209,12 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/FrameManager.js
  */
 
 // const EventEmitter = require('events');
-// const {helper, assert, debugError} = exports_GoogleChrome_puppeteer_lib_helper;
-// const {Events} = exports_GoogleChrome_puppeteer_lib_Events;
-// const {ExecutionContext, EVALUATION_SCRIPT_URL} = exports_GoogleChrome_puppeteer_lib_ExecutionContext;
-// const {LifecycleWatcher} = exports_GoogleChrome_puppeteer_lib_LifecycleWatcher;
-// const {DOMWorld} = exports_GoogleChrome_puppeteer_lib_DOMWorld;
-// const {NetworkManager} = exports_GoogleChrome_puppeteer_lib_NetworkManager;
+// const {helper, assert, debugError} = exports_puppeteer_puppeteer_lib_helper;
+// const {Events} = exports_puppeteer_puppeteer_lib_Events;
+// const {ExecutionContext, EVALUATION_SCRIPT_URL} = exports_puppeteer_puppeteer_lib_ExecutionContext;
+// const {LifecycleWatcher} = exports_puppeteer_puppeteer_lib_LifecycleWatcher;
+// const {DOMWorld} = exports_puppeteer_puppeteer_lib_DOMWorld;
+// const {NetworkManager} = exports_puppeteer_puppeteer_lib_NetworkManager;
 
 const UTILITY_WORLD_NAME = '__puppeteer_utility_world__';
 
@@ -8057,12 +7909,12 @@ function assertNoLegacyNavigationOptions(options) {
   assert(options.waitUntil !== 'networkidle', 'ERROR: "networkidle" option is no longer supported. Use "networkidle2" instead');
 }
 
-exports_GoogleChrome_puppeteer_lib_FrameManager = {FrameManager, Frame};
+exports_puppeteer_puppeteer_lib_FrameManager = {FrameManager, Frame};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Input.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Input.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -8080,8 +7932,8 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Input.js
  * limitations under the License.
  */
 
-// const {assert} = exports_GoogleChrome_puppeteer_lib_helper;
-// const keyDefinitions = exports_GoogleChrome_puppeteer_lib_USKeyboardLayout;
+// const {assert} = exports_puppeteer_puppeteer_lib_helper;
+// const keyDefinitions = exports_puppeteer_puppeteer_lib_USKeyboardLayout;
 
 /**
  * @typedef {Object} KeyDescription
@@ -8376,12 +8228,12 @@ class Touchscreen {
   }
 }
 
-exports_GoogleChrome_puppeteer_lib_Input = { Keyboard, Mouse, Touchscreen};
+exports_puppeteer_puppeteer_lib_Input = { Keyboard, Mouse, Touchscreen};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/JSHandle.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/JSHandle.js
 */
 /**
  * Copyright 2019 Google Inc. All rights reserved.
@@ -8399,7 +8251,7 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/JSHandle.js
  * limitations under the License.
  */
 
-// const {helper, assert, debugError} = exports_GoogleChrome_puppeteer_lib_helper;
+// const {helper, assert, debugError} = exports_puppeteer_puppeteer_lib_helper;
 // const path = require('path');
 
 function createJSHandle(context, remoteObject) {
@@ -8907,12 +8759,12 @@ function computeQuadArea(quad) {
  * @property {number} height
  */
 
-exports_GoogleChrome_puppeteer_lib_JSHandle = {createJSHandle, JSHandle, ElementHandle};
+exports_puppeteer_puppeteer_lib_JSHandle = {createJSHandle, JSHandle, ElementHandle};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Launcher.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Launcher.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -8936,15 +8788,15 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Launcher.js
 // const URL = require('url');
 // const removeFolder = require('rimraf');
 // const childProcess = require('child_process');
-// const BrowserFetcher = exports_GoogleChrome_puppeteer_lib_BrowserFetcher;
-// const {Connection} = exports_GoogleChrome_puppeteer_lib_Connection;
-// const {Browser} = exports_GoogleChrome_puppeteer_lib_Browser;
+// const BrowserFetcher = exports_puppeteer_puppeteer_lib_BrowserFetcher;
+// const {Connection} = exports_puppeteer_puppeteer_lib_Connection;
+// const {Browser} = exports_puppeteer_puppeteer_lib_Browser;
 // const readline = require('readline');
 // const fs = require('fs');
-// const {helper, assert, debugError} = exports_GoogleChrome_puppeteer_lib_helper;
-// const {TimeoutError} = exports_GoogleChrome_puppeteer_lib_Errors;
-// const WebSocketTransport = exports_GoogleChrome_puppeteer_lib_WebSocketTransport;
-// const PipeTransport = exports_GoogleChrome_puppeteer_lib_PipeTransport;
+// const {helper, assert, debugError} = exports_puppeteer_puppeteer_lib_helper;
+// const {TimeoutError} = exports_puppeteer_puppeteer_lib_Errors;
+// const WebSocketTransport = exports_puppeteer_puppeteer_lib_WebSocketTransport;
+// const PipeTransport = exports_puppeteer_puppeteer_lib_PipeTransport;
 
 const mkdtempAsync = helper.promisify(fs.mkdtemp);
 const removeFolderAsync = helper.promisify(removeFolder);
@@ -8962,7 +8814,7 @@ const DEFAULT_ARGS = [
   '--disable-default-apps',
   '--disable-dev-shm-usage',
   '--disable-extensions',
-  // TODO: Support OOOPIF. @see https://github.com/GoogleChrome/puppeteer/issues/2548
+  // TODO: Support OOOPIF. @see https://github.com/puppeteer/puppeteer/issues/2548
   // BlinkGenPropertyTrees disabled due to crbug.com/937609
   '--disable-features=site-per-process,TranslateUI,BlinkGenPropertyTrees',
   '--disable-hang-monitor',
@@ -9265,7 +9117,7 @@ function waitForWSEndpoint(chromeProcess, timeout, preferredRevision) {
         'Failed to launch chrome!' + (error ? ' ' + error.message : ''),
         stderr,
         '',
-        'TROUBLESHOOTING: https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md',
+        'TROUBLESHOOTING: https://github.com/puppeteer/puppeteer/blob/master/docs/troubleshooting.md',
         '',
       ].join('\n')));
     }
@@ -9356,12 +9208,12 @@ function getWSEndpoint(browserURL) {
  * @property {number=} slowMo
  */
 
-exports_GoogleChrome_puppeteer_lib_Launcher = Launcher;
+exports_puppeteer_puppeteer_lib_Launcher = Launcher;
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/LifecycleWatcher.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/LifecycleWatcher.js
 */
 /**
  * Copyright 2019 Google Inc. All rights reserved.
@@ -9379,9 +9231,9 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/LifecycleWatcher
  * limitations under the License.
  */
 
-// const {helper, assert} = exports_GoogleChrome_puppeteer_lib_helper;
-// const {Events} = exports_GoogleChrome_puppeteer_lib_Events;
-// const {TimeoutError} = exports_GoogleChrome_puppeteer_lib_Errors;
+// const {helper, assert} = exports_puppeteer_puppeteer_lib_helper;
+// const {Events} = exports_puppeteer_puppeteer_lib_Events;
+// const {TimeoutError} = exports_puppeteer_puppeteer_lib_Errors;
 
 class LifecycleWatcher {
   /**
@@ -9560,12 +9412,12 @@ const puppeteerToProtocolLifecycle = {
   'networkidle2': 'networkAlmostIdle',
 };
 
-exports_GoogleChrome_puppeteer_lib_LifecycleWatcher = {LifecycleWatcher};
+exports_puppeteer_puppeteer_lib_LifecycleWatcher = {LifecycleWatcher};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Multimap.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Multimap.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -9702,12 +9554,12 @@ class Multimap {
   }
 }
 
-exports_GoogleChrome_puppeteer_lib_Multimap = Multimap;
+exports_puppeteer_puppeteer_lib_Multimap = Multimap;
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/NetworkManager.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/NetworkManager.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -9725,8 +9577,8 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/NetworkManager.j
  * limitations under the License.
  */
 // const EventEmitter = require('events');
-// const {helper, assert, debugError} = exports_GoogleChrome_puppeteer_lib_helper;
-// const {Events} = exports_GoogleChrome_puppeteer_lib_Events;
+// const {helper, assert, debugError} = exports_puppeteer_puppeteer_lib_helper;
+// const {Events} = exports_puppeteer_puppeteer_lib_Events;
 
 class NetworkManager extends EventEmitter {
   /**
@@ -10505,12 +10357,12 @@ const STATUS_TEXTS = {
   '511': 'Network Authentication Required',
 };
 
-exports_GoogleChrome_puppeteer_lib_NetworkManager = {Request, Response, NetworkManager, SecurityDetails};
+exports_puppeteer_puppeteer_lib_NetworkManager = {Request, Response, NetworkManager, SecurityDetails};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Page.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Page.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -10532,19 +10384,19 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Page.js
 // const path = require('path');
 // const EventEmitter = require('events');
 // const mime = require('mime');
-// const {Events} = exports_GoogleChrome_puppeteer_lib_Events;
-// const {Connection} = exports_GoogleChrome_puppeteer_lib_Connection;
-// const {Dialog} = exports_GoogleChrome_puppeteer_lib_Dialog;
-// const {EmulationManager} = exports_GoogleChrome_puppeteer_lib_EmulationManager;
-// const {FrameManager} = exports_GoogleChrome_puppeteer_lib_FrameManager;
-// const {Keyboard, Mouse, Touchscreen} = exports_GoogleChrome_puppeteer_lib_Input;
-// const Tracing = exports_GoogleChrome_puppeteer_lib_Tracing;
-// const {helper, debugError, assert} = exports_GoogleChrome_puppeteer_lib_helper;
-// const {Coverage} = exports_GoogleChrome_puppeteer_lib_Coverage;
-// const {Worker} = exports_GoogleChrome_puppeteer_lib_Worker;
-// const {createJSHandle} = exports_GoogleChrome_puppeteer_lib_JSHandle;
-// const {Accessibility} = exports_GoogleChrome_puppeteer_lib_Accessibility;
-// const {TimeoutSettings} = exports_GoogleChrome_puppeteer_lib_TimeoutSettings;
+// const {Events} = exports_puppeteer_puppeteer_lib_Events;
+// const {Connection} = exports_puppeteer_puppeteer_lib_Connection;
+// const {Dialog} = exports_puppeteer_puppeteer_lib_Dialog;
+// const {EmulationManager} = exports_puppeteer_puppeteer_lib_EmulationManager;
+// const {FrameManager} = exports_puppeteer_puppeteer_lib_FrameManager;
+// const {Keyboard, Mouse, Touchscreen} = exports_puppeteer_puppeteer_lib_Input;
+// const Tracing = exports_puppeteer_puppeteer_lib_Tracing;
+// const {helper, debugError, assert} = exports_puppeteer_puppeteer_lib_helper;
+// const {Coverage} = exports_puppeteer_puppeteer_lib_Coverage;
+// const {Worker} = exports_puppeteer_puppeteer_lib_Worker;
+// const {createJSHandle} = exports_puppeteer_puppeteer_lib_JSHandle;
+// const {Accessibility} = exports_puppeteer_puppeteer_lib_Accessibility;
+// const {TimeoutSettings} = exports_puppeteer_puppeteer_lib_TimeoutSettings;
 const writeFileAsync = helper.promisify(fs.writeFile);
 
 class Page extends EventEmitter {
@@ -11056,7 +10908,7 @@ class Page extends EventEmitter {
       //   to the 'console'
       //   page event.
       //
-      // @see https://github.com/GoogleChrome/puppeteer/issues/3865
+      // @see https://github.com/puppeteer/puppeteer/issues/3865
       return;
     }
     const context = this._frameManager.executionContextById(event.executionContextId);
@@ -11860,12 +11712,12 @@ class FileChooser {
   }
 }
 
-exports_GoogleChrome_puppeteer_lib_Page = {Page, ConsoleMessage, FileChooser};
+exports_puppeteer_puppeteer_lib_Page = {Page, ConsoleMessage, FileChooser};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/PipeTransport.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/PipeTransport.js
 */
 /**
  * Copyright 2018 Google Inc. All rights reserved.
@@ -11882,7 +11734,7 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/PipeTransport.js
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// const {helper, debugError} = exports_GoogleChrome_puppeteer_lib_helper;
+// const {helper, debugError} = exports_puppeteer_puppeteer_lib_helper;
 
 /**
  * @implements {!Puppeteer.ConnectionTransport}
@@ -11946,12 +11798,12 @@ class PipeTransport {
   }
 }
 
-exports_GoogleChrome_puppeteer_lib_PipeTransport = PipeTransport;
+exports_puppeteer_puppeteer_lib_PipeTransport = PipeTransport;
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Puppeteer.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Puppeteer.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -11968,12 +11820,12 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Puppeteer.js
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// const Launcher = exports_GoogleChrome_puppeteer_lib_Launcher;
-// const BrowserFetcher = exports_GoogleChrome_puppeteer_lib_BrowserFetcher;
-const Errors = exports_GoogleChrome_puppeteer_lib_Errors;
-const DeviceDescriptors = exports_GoogleChrome_puppeteer_lib_DeviceDescriptors;
+// const Launcher = exports_puppeteer_puppeteer_lib_Launcher;
+// const BrowserFetcher = exports_puppeteer_puppeteer_lib_BrowserFetcher;
+const Errors = exports_puppeteer_puppeteer_lib_Errors;
+const DeviceDescriptors = exports_puppeteer_puppeteer_lib_DeviceDescriptors;
 
-exports_GoogleChrome_puppeteer_lib_Puppeteer = class {
+exports_puppeteer_puppeteer_lib_Puppeteer = class {
   /**
    * @param {string} projectRoot
    * @param {string} preferredRevision
@@ -12041,7 +11893,7 @@ exports_GoogleChrome_puppeteer_lib_Puppeteer = class {
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Target.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Target.js
 */
 /**
  * Copyright 2019 Google Inc. All rights reserved.
@@ -12059,10 +11911,10 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Target.js
  * limitations under the License.
  */
 
-// const {Events} = exports_GoogleChrome_puppeteer_lib_Events;
-// const {Page} = exports_GoogleChrome_puppeteer_lib_Page;
-// const {Worker} = exports_GoogleChrome_puppeteer_lib_Worker;
-// const {Connection} = exports_GoogleChrome_puppeteer_lib_Connection;
+// const {Events} = exports_puppeteer_puppeteer_lib_Events;
+// const {Page} = exports_puppeteer_puppeteer_lib_Page;
+// const {Worker} = exports_puppeteer_puppeteer_lib_Worker;
+// const {Connection} = exports_puppeteer_puppeteer_lib_Connection;
 
 class Target {
   /**
@@ -12198,12 +12050,12 @@ class Target {
   }
 }
 
-exports_GoogleChrome_puppeteer_lib_Target = {Target};
+exports_puppeteer_puppeteer_lib_Target = {Target};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/TaskQueue.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/TaskQueue.js
 */
 class TaskQueue {
   constructor() {
@@ -12221,12 +12073,12 @@ class TaskQueue {
   }
 }
 
-exports_GoogleChrome_puppeteer_lib_TaskQueue = {TaskQueue};
+exports_puppeteer_puppeteer_lib_TaskQueue = {TaskQueue};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/TimeoutSettings.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/TimeoutSettings.js
 */
 /**
  * Copyright 2019 Google Inc. All rights reserved.
@@ -12284,12 +12136,12 @@ class TimeoutSettings {
   }
 }
 
-exports_GoogleChrome_puppeteer_lib_TimeoutSettings = {TimeoutSettings};
+exports_puppeteer_puppeteer_lib_TimeoutSettings = {TimeoutSettings};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Tracing.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Tracing.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -12306,7 +12158,7 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Tracing.js
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// const {helper, assert} = exports_GoogleChrome_puppeteer_lib_helper;
+// const {helper, assert} = exports_puppeteer_puppeteer_lib_helper;
 
 class Tracing {
   /**
@@ -12362,12 +12214,12 @@ class Tracing {
   }
 }
 
-exports_GoogleChrome_puppeteer_lib_Tracing = Tracing;
+exports_puppeteer_puppeteer_lib_Tracing = Tracing;
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/USKeyboardLayout.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/USKeyboardLayout.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -12400,7 +12252,7 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/USKeyboardLayout
 /**
  * @type {Object<string, KeyDefinition>}
  */
-exports_GoogleChrome_puppeteer_lib_USKeyboardLayout = {
+exports_puppeteer_puppeteer_lib_USKeyboardLayout = {
   '0': {'keyCode': 48, 'key': '0', 'code': 'Digit0'},
   '1': {'keyCode': 49, 'key': '1', 'code': 'Digit1'},
   '2': {'keyCode': 50, 'key': '2', 'code': 'Digit2'},
@@ -12661,7 +12513,7 @@ exports_GoogleChrome_puppeteer_lib_USKeyboardLayout = {
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/WebSocketTransport.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/WebSocketTransport.js
 */
 /**
  * Copyright 2018 Google Inc. All rights reserved.
@@ -12730,12 +12582,12 @@ class WebSocketTransport {
   }
 }
 
-exports_GoogleChrome_puppeteer_lib_WebSocketTransport = WebSocketTransport;
+exports_puppeteer_puppeteer_lib_WebSocketTransport = WebSocketTransport;
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Worker.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Worker.js
 */
 /**
  * Copyright 2018 Google Inc. All rights reserved.
@@ -12753,9 +12605,9 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/Worker.js
  * limitations under the License.
  */
 // const EventEmitter = require('events');
-// const {debugError} = exports_GoogleChrome_puppeteer_lib_helper;
-// const {ExecutionContext} = exports_GoogleChrome_puppeteer_lib_ExecutionContext;
-// const {JSHandle} = exports_GoogleChrome_puppeteer_lib_JSHandle;
+// const {debugError} = exports_puppeteer_puppeteer_lib_helper;
+// const {ExecutionContext} = exports_puppeteer_puppeteer_lib_ExecutionContext;
+// const {JSHandle} = exports_puppeteer_puppeteer_lib_JSHandle;
 
 class Worker extends EventEmitter {
   /**
@@ -12816,12 +12668,12 @@ class Worker extends EventEmitter {
   }
 }
 
-exports_GoogleChrome_puppeteer_lib_Worker = {Worker};
+exports_puppeteer_puppeteer_lib_Worker = {Worker};
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/api.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/api.js
 */
 /**
  * Copyright 2019 Google Inc. All rights reserved.
@@ -12839,38 +12691,38 @@ file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/lib/api.js
  * limitations under the License.
  */
 
-exports_GoogleChrome_puppeteer_lib_api = {
-  Accessibility: exports_GoogleChrome_puppeteer_lib_Accessibility.Accessibility,
-  Browser: exports_GoogleChrome_puppeteer_lib_Browser.Browser,
-  BrowserContext: exports_GoogleChrome_puppeteer_lib_Browser.BrowserContext,
-  BrowserFetcher: exports_GoogleChrome_puppeteer_lib_BrowserFetcher,
-  CDPSession: exports_GoogleChrome_puppeteer_lib_Connection.CDPSession,
-  ConsoleMessage: exports_GoogleChrome_puppeteer_lib_Page.ConsoleMessage,
-  Coverage: exports_GoogleChrome_puppeteer_lib_Coverage.Coverage,
-  Dialog: exports_GoogleChrome_puppeteer_lib_Dialog.Dialog,
-  ElementHandle: exports_GoogleChrome_puppeteer_lib_JSHandle.ElementHandle,
-  ExecutionContext: exports_GoogleChrome_puppeteer_lib_ExecutionContext.ExecutionContext,
-  FileChooser: exports_GoogleChrome_puppeteer_lib_Page.FileChooser,
-  Frame: exports_GoogleChrome_puppeteer_lib_FrameManager.Frame,
-  JSHandle: exports_GoogleChrome_puppeteer_lib_JSHandle.JSHandle,
-  Keyboard: exports_GoogleChrome_puppeteer_lib_Input.Keyboard,
-  Mouse: exports_GoogleChrome_puppeteer_lib_Input.Mouse,
-  Page: exports_GoogleChrome_puppeteer_lib_Page.Page,
-  Puppeteer: exports_GoogleChrome_puppeteer_lib_Puppeteer,
-  Request: exports_GoogleChrome_puppeteer_lib_NetworkManager.Request,
-  Response: exports_GoogleChrome_puppeteer_lib_NetworkManager.Response,
-  SecurityDetails: exports_GoogleChrome_puppeteer_lib_NetworkManager.SecurityDetails,
-  Target: exports_GoogleChrome_puppeteer_lib_Target.Target,
-  TimeoutError: exports_GoogleChrome_puppeteer_lib_Errors.TimeoutError,
-  Touchscreen: exports_GoogleChrome_puppeteer_lib_Input.Touchscreen,
-  Tracing: exports_GoogleChrome_puppeteer_lib_Tracing,
-  Worker: exports_GoogleChrome_puppeteer_lib_Worker.Worker,
+exports_puppeteer_puppeteer_lib_api = {
+  Accessibility: exports_puppeteer_puppeteer_lib_Accessibility.Accessibility,
+  Browser: exports_puppeteer_puppeteer_lib_Browser.Browser,
+  BrowserContext: exports_puppeteer_puppeteer_lib_Browser.BrowserContext,
+  BrowserFetcher: exports_puppeteer_puppeteer_lib_BrowserFetcher,
+  CDPSession: exports_puppeteer_puppeteer_lib_Connection.CDPSession,
+  ConsoleMessage: exports_puppeteer_puppeteer_lib_Page.ConsoleMessage,
+  Coverage: exports_puppeteer_puppeteer_lib_Coverage.Coverage,
+  Dialog: exports_puppeteer_puppeteer_lib_Dialog.Dialog,
+  ElementHandle: exports_puppeteer_puppeteer_lib_JSHandle.ElementHandle,
+  ExecutionContext: exports_puppeteer_puppeteer_lib_ExecutionContext.ExecutionContext,
+  FileChooser: exports_puppeteer_puppeteer_lib_Page.FileChooser,
+  Frame: exports_puppeteer_puppeteer_lib_FrameManager.Frame,
+  JSHandle: exports_puppeteer_puppeteer_lib_JSHandle.JSHandle,
+  Keyboard: exports_puppeteer_puppeteer_lib_Input.Keyboard,
+  Mouse: exports_puppeteer_puppeteer_lib_Input.Mouse,
+  Page: exports_puppeteer_puppeteer_lib_Page.Page,
+  Puppeteer: exports_puppeteer_puppeteer_lib_Puppeteer,
+  Request: exports_puppeteer_puppeteer_lib_NetworkManager.Request,
+  Response: exports_puppeteer_puppeteer_lib_NetworkManager.Response,
+  SecurityDetails: exports_puppeteer_puppeteer_lib_NetworkManager.SecurityDetails,
+  Target: exports_puppeteer_puppeteer_lib_Target.Target,
+  TimeoutError: exports_puppeteer_puppeteer_lib_Errors.TimeoutError,
+  Touchscreen: exports_puppeteer_puppeteer_lib_Input.Touchscreen,
+  Tracing: exports_puppeteer_puppeteer_lib_Tracing,
+  Worker: exports_puppeteer_puppeteer_lib_Worker.Worker,
 };
 
 
 
 /*
-file https://github.com/GoogleChrome/puppeteer/blob/v1.19.0/index.js
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/index.js
 */
 /**
  * Copyright 2017 Google Inc. All rights reserved.
@@ -12896,8 +12748,8 @@ try {
 }
 
 if (asyncawait) {
-//   const {helper} = exports_GoogleChrome_puppeteer_lib_helper;
-  const api = exports_GoogleChrome_puppeteer_lib_api;
+//   const {helper} = exports_puppeteer_puppeteer_lib_helper;
+  const api = exports_puppeteer_puppeteer_lib_api;
   for (const className in api) {
     // Puppeteer-web excludes certain classes from bundle, e.g. BrowserFetcher.
     if (typeof api[className] === 'function')
@@ -12906,49 +12758,49 @@ if (asyncawait) {
 }
 
 // If node does not support async await, use the compiled version.
-const Puppeteer = asyncawait ? exports_GoogleChrome_puppeteer_lib_Puppeteer : exports_GoogleChrome_puppeteer_node6_lib_Puppeteer;
-const packageJson = exports_GoogleChrome_puppeteer_package_json;
+const Puppeteer = asyncawait ? exports_puppeteer_puppeteer_lib_Puppeteer : exports_puppeteer_puppeteer_node6_lib_Puppeteer;
+const packageJson = exports_puppeteer_puppeteer_package_json;
 const preferredRevision = packageJson.puppeteer.chromium_revision;
 const isPuppeteerCore = packageJson.name === 'puppeteer-core';
 
-exports_GoogleChrome_puppeteer_index = new Puppeteer(__dirname, preferredRevision, isPuppeteerCore);
-// let Accessibility   = exports_GoogleChrome_puppeteer_lib_Accessibility.Accessibility;
-// let Browser         = exports_GoogleChrome_puppeteer_lib_Browser.Browser;
-let BrowserFetcher  = exports_GoogleChrome_puppeteer_lib_BrowserFetcher;
-// let Connection      = exports_GoogleChrome_puppeteer_lib_Connection.Connection;
-// let Coverage        = exports_GoogleChrome_puppeteer_lib_Coverage.Coverage;
-// let DOMWorld        = exports_GoogleChrome_puppeteer_lib_DOMWorld.DOMWorld;
-// let DeviceDescriptors = exports_GoogleChrome_puppeteer_lib_DeviceDescriptors;
-// let Dialog          = exports_GoogleChrome_puppeteer_lib_Dialog.Dialog;
-// let EmulationManager = exports_GoogleChrome_puppeteer_lib_EmulationManager.EmulationManager;
-// let TimeoutError    = exports_GoogleChrome_puppeteer_lib_Errors.TimeoutError;
-// let Errors          = exports_GoogleChrome_puppeteer_lib_Errors;
-// let Events          = exports_GoogleChrome_puppeteer_lib_Events.Events;
-// let EVALUATION_SCRIPT_URL = exports_GoogleChrome_puppeteer_lib_ExecutionContext.EVALUATION_SCRIPT_URL;
-// let ExecutionContext = exports_GoogleChrome_puppeteer_lib_ExecutionContext.ExecutionContext;
-// let FrameManager    = exports_GoogleChrome_puppeteer_lib_FrameManager.FrameManager;
-// let Keyboard        = exports_GoogleChrome_puppeteer_lib_Input.Keyboard;
-// let Mouse           = exports_GoogleChrome_puppeteer_lib_Input.Mouse;
-// let Touchscreen     = exports_GoogleChrome_puppeteer_lib_Input.Touchscreen;
-// let JSHandle        = exports_GoogleChrome_puppeteer_lib_JSHandle.JSHandle;
-// let createJSHandle  = exports_GoogleChrome_puppeteer_lib_JSHandle.createJSHandle;
-// let Launcher        = exports_GoogleChrome_puppeteer_lib_Launcher;
-// let LifecycleWatcher = exports_GoogleChrome_puppeteer_lib_LifecycleWatcher.LifecycleWatcher;
-// let NetworkManager  = exports_GoogleChrome_puppeteer_lib_NetworkManager.NetworkManager;
-// let Page            = exports_GoogleChrome_puppeteer_lib_Page.Page;
-// let PipeTransport   = exports_GoogleChrome_puppeteer_lib_PipeTransport;
-// let Target          = exports_GoogleChrome_puppeteer_lib_Target.Target;
-// let TaskQueue       = exports_GoogleChrome_puppeteer_lib_TaskQueue.TaskQueue;
-// let TimeoutSettings = exports_GoogleChrome_puppeteer_lib_TimeoutSettings.TimeoutSettings;
-// let Tracing         = exports_GoogleChrome_puppeteer_lib_Tracing;
-let keyDefinitions  = exports_GoogleChrome_puppeteer_lib_USKeyboardLayout;
-// let WebSocketTransport = exports_GoogleChrome_puppeteer_lib_WebSocketTransport;
-// let Worker          = exports_GoogleChrome_puppeteer_lib_Worker.Worker;
-let api             = exports_GoogleChrome_puppeteer_lib_api;
-// let assert          = exports_GoogleChrome_puppeteer_lib_helper.assert;
-// let debugError      = exports_GoogleChrome_puppeteer_lib_helper.debugError;
-// let helper          = exports_GoogleChrome_puppeteer_lib_helper.helper;
-// let packageJson     = exports_GoogleChrome_puppeteer_package_json;
+exports_puppeteer_puppeteer_index = new Puppeteer(__dirname, preferredRevision, isPuppeteerCore);
+// let Accessibility   = exports_puppeteer_puppeteer_lib_Accessibility.Accessibility;
+// let Browser         = exports_puppeteer_puppeteer_lib_Browser.Browser;
+let BrowserFetcher  = exports_puppeteer_puppeteer_lib_BrowserFetcher;
+// let Connection      = exports_puppeteer_puppeteer_lib_Connection.Connection;
+// let Coverage        = exports_puppeteer_puppeteer_lib_Coverage.Coverage;
+// let DOMWorld        = exports_puppeteer_puppeteer_lib_DOMWorld.DOMWorld;
+// let DeviceDescriptors = exports_puppeteer_puppeteer_lib_DeviceDescriptors;
+// let Dialog          = exports_puppeteer_puppeteer_lib_Dialog.Dialog;
+// let EmulationManager = exports_puppeteer_puppeteer_lib_EmulationManager.EmulationManager;
+// let TimeoutError    = exports_puppeteer_puppeteer_lib_Errors.TimeoutError;
+// let Errors          = exports_puppeteer_puppeteer_lib_Errors;
+// let Events          = exports_puppeteer_puppeteer_lib_Events.Events;
+// let EVALUATION_SCRIPT_URL = exports_puppeteer_puppeteer_lib_ExecutionContext.EVALUATION_SCRIPT_URL;
+// let ExecutionContext = exports_puppeteer_puppeteer_lib_ExecutionContext.ExecutionContext;
+// let FrameManager    = exports_puppeteer_puppeteer_lib_FrameManager.FrameManager;
+// let Keyboard        = exports_puppeteer_puppeteer_lib_Input.Keyboard;
+// let Mouse           = exports_puppeteer_puppeteer_lib_Input.Mouse;
+// let Touchscreen     = exports_puppeteer_puppeteer_lib_Input.Touchscreen;
+// let JSHandle        = exports_puppeteer_puppeteer_lib_JSHandle.JSHandle;
+// let createJSHandle  = exports_puppeteer_puppeteer_lib_JSHandle.createJSHandle;
+// let Launcher        = exports_puppeteer_puppeteer_lib_Launcher;
+// let LifecycleWatcher = exports_puppeteer_puppeteer_lib_LifecycleWatcher.LifecycleWatcher;
+// let NetworkManager  = exports_puppeteer_puppeteer_lib_NetworkManager.NetworkManager;
+// let Page            = exports_puppeteer_puppeteer_lib_Page.Page;
+// let PipeTransport   = exports_puppeteer_puppeteer_lib_PipeTransport;
+// let Target          = exports_puppeteer_puppeteer_lib_Target.Target;
+// let TaskQueue       = exports_puppeteer_puppeteer_lib_TaskQueue.TaskQueue;
+// let TimeoutSettings = exports_puppeteer_puppeteer_lib_TimeoutSettings.TimeoutSettings;
+// let Tracing         = exports_puppeteer_puppeteer_lib_Tracing;
+let keyDefinitions  = exports_puppeteer_puppeteer_lib_USKeyboardLayout;
+// let WebSocketTransport = exports_puppeteer_puppeteer_lib_WebSocketTransport;
+// let Worker          = exports_puppeteer_puppeteer_lib_Worker.Worker;
+let api             = exports_puppeteer_puppeteer_lib_api;
+// let assert          = exports_puppeteer_puppeteer_lib_helper.assert;
+// let debugError      = exports_puppeteer_puppeteer_lib_helper.debugError;
+// let helper          = exports_puppeteer_puppeteer_lib_helper.helper;
+// let packageJson     = exports_puppeteer_puppeteer_package_json;
 let applyMask       = exports_websockets_ws_lib_buffer_util.mask;
 // let concat          = exports_websockets_ws_lib_buffer_util.concat;
 // let mask            = exports_websockets_ws_lib_buffer_util.mask;
@@ -12969,8 +12821,8 @@ let PerMessageDeflate = exports_websockets_ws_lib_permessage_deflate;
 let isValidStatusCode = exports_websockets_ws_lib_validation.isValidStatusCode;
 let isValidUTF8     = exports_websockets_ws_lib_validation.isValidUTF8;
 // let WebSocket       = exports_websockets_ws_lib_websocket;
-local._puppeteer = exports_GoogleChrome_puppeteer_index;
-local.puppeteerApi = exports_GoogleChrome_puppeteer_lib_api;
+local._puppeteer = exports_puppeteer_puppeteer_index;
+local.puppeteerApi = exports_puppeteer_puppeteer_lib_api;
 local.puppeteerLaunch = local._puppeteer.launch.bind(local._puppeteer);
 local.nop(local.puppeteerLaunch);
 

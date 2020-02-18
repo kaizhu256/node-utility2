@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.jslint.js (2020.1.27)
+ * lib.jslint.js (2020.2.17)
  * https://github.com/kaizhu256/node-jslint-lite
  * this zero-dependency package will provide browser-compatible versions of jslint (v2020.1.17) and csslint (v2018.2.25), with a working web-demo
  *
@@ -14,8 +14,6 @@
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
-    let ArrayPrototypeFlat;
-    let TextXxcoder;
     let consoleError;
     let debugName;
     let local;
@@ -36,156 +34,12 @@
             return argList[0];
         };
     }
-    // polyfill
-    ArrayPrototypeFlat = function (depth) {
-    /*
-     * this function will polyfill Array.prototype.flat
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        depth = (
-            globalThis.isNaN(depth)
-            ? 1
-            : Number(depth)
-        );
-        if (!depth) {
-            return Array.prototype.slice.call(this);
-        }
-        return Array.prototype.reduce.call(this, function (acc, cur) {
-            if (Array.isArray(cur)) {
-                // recurse
-                acc.push.apply(acc, ArrayPrototypeFlat.call(cur, depth - 1));
-            } else {
-                acc.push(cur);
-            }
-            return acc;
-        }, []);
-    };
-    Array.prototype.flat = Array.prototype.flat || ArrayPrototypeFlat;
-    Array.prototype.flatMap = Array.prototype.flatMap || function flatMap(
-        ...argList
-    ) {
-    /*
-     * this function will polyfill Array.prototype.flatMap
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        return this.map(...argList).flat();
-    };
     String.prototype.trimEnd = (
         String.prototype.trimEnd || String.prototype.trimRight
     );
     String.prototype.trimStart = (
         String.prototype.trimStart || String.prototype.trimLeft
     );
-    (function () {
-        try {
-            globalThis.TextDecoder = (
-                globalThis.TextDecoder || require("util").TextDecoder
-            );
-            globalThis.TextEncoder = (
-                globalThis.TextEncoder || require("util").TextEncoder
-            );
-        } catch (ignore) {}
-    }());
-    TextXxcoder = function () {
-    /*
-     * this function will polyfill TextDecoder/TextEncoder
-     * https://gist.github.com/Yaffle/5458286
-     */
-        return;
-    };
-    TextXxcoder.prototype.decode = function (octets) {
-    /*
-     * this function will polyfill TextDecoder.prototype.decode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bytesNeeded;
-        let codePoint;
-        let ii;
-        let kk;
-        let octet;
-        let string;
-        string = "";
-        ii = 0;
-        while (ii < octets.length) {
-            octet = octets[ii];
-            bytesNeeded = 0;
-            codePoint = 0;
-            if (octet <= 0x7F) {
-                bytesNeeded = 0;
-                codePoint = octet & 0xFF;
-            } else if (octet <= 0xDF) {
-                bytesNeeded = 1;
-                codePoint = octet & 0x1F;
-            } else if (octet <= 0xEF) {
-                bytesNeeded = 2;
-                codePoint = octet & 0x0F;
-            } else if (octet <= 0xF4) {
-                bytesNeeded = 3;
-                codePoint = octet & 0x07;
-            }
-            if (octets.length - ii - bytesNeeded > 0) {
-                kk = 0;
-                while (kk < bytesNeeded) {
-                    octet = octets[ii + kk + 1];
-                    codePoint = (codePoint << 6) | (octet & 0x3F);
-                    kk += 1;
-                }
-            } else {
-                codePoint = 0xFFFD;
-                bytesNeeded = octets.length - ii;
-            }
-            string += String.fromCodePoint(codePoint);
-            ii += bytesNeeded + 1;
-        }
-        return string;
-    };
-    TextXxcoder.prototype.encode = function (string) {
-    /*
-     * this function will polyfill TextEncoder.prototype.encode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bits;
-        let cc;
-        let codePoint;
-        let ii;
-        let length;
-        let octets;
-        octets = [];
-        length = string.length;
-        ii = 0;
-        while (ii < length) {
-            codePoint = string.codePointAt(ii);
-            cc = 0;
-            bits = 0;
-            if (codePoint <= 0x0000007F) {
-                cc = 0;
-                bits = 0x00;
-            } else if (codePoint <= 0x000007FF) {
-                cc = 6;
-                bits = 0xC0;
-            } else if (codePoint <= 0x0000FFFF) {
-                cc = 12;
-                bits = 0xE0;
-            } else if (codePoint <= 0x001FFFFF) {
-                cc = 18;
-                bits = 0xF0;
-            }
-            octets.push(bits | (codePoint >> cc));
-            cc -= 6;
-            while (cc >= 0) {
-                octets.push(0x80 | ((codePoint >> cc) & 0x3F));
-                cc -= 6;
-            }
-            ii += (
-                codePoint >= 0x10000
-                ? 2
-                : 1
-            );
-        }
-        return octets;
-    };
-    globalThis.TextDecoder = globalThis.TextDecoder || TextXxcoder;
-    globalThis.TextEncoder = globalThis.TextEncoder || TextXxcoder;
     // init local
     local = {};
     local.local = local;
@@ -378,9 +232,7 @@
         local.vm = require("vm");
         local.zlib = require("zlib");
     }
-}((typeof globalThis === "object" && globalThis) || (function () {
-    return Function("return this")(); // jslint ignore:line
-}())));
+}((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
 
 
@@ -717,10 +569,17 @@ local.onParallel = function (onError, onEach, onRetry) {
 /* istanbul ignore next */
 // run shared js-env code - function
 (function () {
+/* jslint ignore:start */
+/*
+repo https://github.com/CSSLint/csslint/tree/e8aeeda06c928636e21428e09b1af93f66621209
+committed 2018-02-25T11:28:16Z
+*/
+
+
+
 /*
 file https://github.com/CSSLint/csslint/blob/e8aeeda06c928636e21428e09b1af93f66621209/dist/csslint.js
 */
-/* jslint ignore:start */
 /*!
 CSSLint v1.0.5
 Copyright (c) 2017 Nicole Sullivan and Nicholas C. Zakas. All rights reserved.
@@ -11436,17 +11295,31 @@ local.CSSLint = CSSLint;
 
 
 
-// hack-jslint - var
+let jslint0;
 let jslint_extra;
 let jslint_result;
 let line_ignore;
 let lines_extra;
+let next_line_extra;
+let warn_at_extra;
+var allowed_option; // jslint ignore:line
+var declared_globals; // jslint ignore:line
+var early_stop; // jslint ignore:line
+var lines; // jslint ignore:line
+var option; // jslint ignore:line
+jslint0 = undefined;
+local.nop(next_line_extra, warn_at_extra);
+/* jslint ignore:start */
+/*
+repo https://github.com/douglascrockford/JSLint/tree/95c4e8a2cfd424d15e90745dbadadf3251533183
+committed 2020-01-17T22:36:41Z
+*/
+
+
+
 /*
 file https://github.com/douglascrockford/JSLint/blob/95c4e8a2cfd424d15e90745dbadadf3251533183/jslint.js
 */
-/* jslint utility2:true */
-let next_line_extra = null;
-let warn_at_extra = null;
 // jslint.js
 // 2020-01-17
 // Copyright (c) 2015 Douglas Crockford  (www.JSLint.com)
@@ -11591,7 +11464,8 @@ function populate(array, object = empty(), value = true) {
     return object;
 }
 
-const allowed_option = {
+// hack-jslint - var
+var allowed_option = {
 
 // These are the options that are recognized in the option object or that may
 // appear in a /*jslint*/ directive. Most options will have a boolean value,
@@ -11654,10 +11528,10 @@ const opener = {
 
 // The open and close pairs.
 
-    "(": ")", // paren
-    "[": "]", // bracket
-    "{": "}", // brace
-    "${": "}" // mega
+    "(": ")",       // paren
+    "[": "]",       // bracket
+    "{": "}",       // brace
+    "${": "}"       // mega
 };
 
 // The relational operators.
@@ -11810,54 +11684,28 @@ const bundle = {
 // Regular expression literals:
 
 // supplant {variables}
-const rx_supplant = (
-    /\{([^{}]*)\}/g
-);
+const rx_supplant = /\{([^{}]*)\}/g;
 // carriage return, carriage return linefeed, or linefeed
-const rx_crlf = (
-    /\n|\r\n?/
-);
+const rx_crlf = /\n|\r\n?/;
 // unsafe characters that are silently deleted by one or more browsers
-const rx_unsafe = (
-    /[\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/
-);
+const rx_unsafe = /[\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/;
 // identifier
-const rx_identifier = (
-    /^([a-zA-Z_$][a-zA-Z0-9_$]*)$/
-);
-const rx_module = (
-    /^[a-zA-Z0-9_$:.@\-\/]+$/
-);
-const rx_bad_property = (
-    /^_|\$|Sync\$|_$/
-);
+const rx_identifier = /^([a-zA-Z_$][a-zA-Z0-9_$]*)$/;
+const rx_module = /^[a-zA-Z0-9_$:.@\-\/]+$/;
+const rx_bad_property = /^_|\$|Sync\$|_$/;
 // star slash
-const rx_star_slash = (
-    /\*\//
-);
+const rx_star_slash = /\*\//;
 // slash star
-const rx_slash_star = (
-    /\/\*/
-);
+const rx_slash_star = /\/\*/;
 // slash star or ending slash
-const rx_slash_star_or_slash = (
-    /\/\*|\/$/
-);
+const rx_slash_star_or_slash = /\/\*|\/$/;
 // uncompleted work comment
-const rx_todo = (
-    /\b(?:todo|TO\s?DO|HACK)\b/
-);
+const rx_todo = /\b(?:todo|TO\s?DO|HACK)\b/;
 // tab
-const rx_tab = (
-    /\t/g
-);
+const rx_tab = /\t/g;
 // directive
-const rx_directive = (
-    /^(jslint|property|global)\s+(.*)$/
-);
-const rx_directive_part = (
-    /^([a-zA-Z$_][a-zA-Z0-9$_]*)(?::\s*(true|false))?,?\s*(.*)$/
-);
+const rx_directive = /^(jslint|property|global)\s+(.*)$/;
+const rx_directive_part = /^([a-zA-Z$_][a-zA-Z0-9$_]*)(?::\s*(true|false))?,?\s*(.*)$/;
 // token (sorry it is so long)
 // hack-jslint - bigint
 const rx_token = (
@@ -11876,17 +11724,11 @@ const rx_bits = (
     /^([01]+n?)(.*)$/
 );
 // mega
-const rx_mega = (
-    /[`\\]|\$\{/
-);
+const rx_mega = /[`\\]|\$\{/;
 // JSON number
-const rx_JSON_number = (
-    /^-?\d+(?:\.\d*)?(?:e[\-+]?\d+)?$/i
-);
+const rx_JSON_number = /^-?\d+(?:\.\d*)?(?:e[\-+]?\d+)?$/i;
 // initial cap
-const rx_cap = (
-    /^[A-Z]/
-);
+const rx_cap = /^[A-Z]/;
 
 function is_letter(string) {
     return (
@@ -11906,36 +11748,40 @@ function supplant(string, object) {
     });
 }
 
-let anon; // The guessed name for anonymous functions.
-let block_stack; // The stack of blocks.
-let blockage; // The current block.
-let declared_globals; // The object containing the global declarations.
-let directive_mode; // true if directives are still allowed.
-let directives; // The directive comments.
-let early_stop; // true if JSLint cannot finish.
-let exports; // The exported names and values.
-let froms; // The array collecting all import-from strings.
-let fudge; // true if the natural numbers start with 1.
-let functionage; // The current function.
-let functions; // The array containing all of the functions.
-let global; // The global object; the outermost context.
-let json_mode; // true if parsing JSON.
-let lines; // The array containing source lines.
-let mega_mode; // true if currently parsing a megastring literal.
-let module_mode; // true if import or export was used.
-let next_token; // The next token to be examined in the parse.
-let option; // The options parameter.
-let property; // The object containing the tallied property names.
-let shebang; // true if a #! was seen on the first line.
-let stack; // The stack of functions.
-let syntax; // The object containing the parser.
-let tenure; // The predefined property registry.
-let token; // The current token being examined in the parse.
-let token_nr; // The number of the next token.
-let tokens; // The array of tokens.
-let tree; // The abstract parse tree.
-let var_mode; // "var" if using var; "let" if using let.
-let warnings; // The array collecting all generated warnings.
+let anon;               // The guessed name for anonymous functions.
+let blockage;           // The current block.
+let block_stack;        // The stack of blocks.
+// hack-jslint - var
+var declared_globals;   // The object containing the global declarations.
+let directives;         // The directive comments.
+let directive_mode;     // true if directives are still allowed.
+// hack-jslint - var
+var early_stop;         // true if JSLint cannot finish.
+let exports;            // The exported names and values.
+let froms;              // The array collecting all import-from strings.
+let fudge;              // true if the natural numbers start with 1.
+let functionage;        // The current function.
+let functions;          // The array containing all of the functions.
+let global;             // The global object; the outermost context.
+let json_mode;          // true if parsing JSON.
+// hack-jslint - var
+var lines;              // The array containing source lines.
+let mega_mode;          // true if currently parsing a megastring literal.
+let module_mode;        // true if import or export was used.
+let next_token;         // The next token to be examined in the parse.
+// hack-jslint - var
+var option;             // The options parameter.
+let property;           // The object containing the tallied property names.
+let shebang;            // true if a #! was seen on the first line.
+let stack;              // The stack of functions.
+let syntax;             // The object containing the parser.
+let token;              // The current token being examined in the parse.
+let token_nr;           // The number of the next token.
+let tokens;             // The array of tokens.
+let tenure;             // The predefined property registry.
+let tree;               // The abstract parse tree.
+let var_mode;           // "var" if using var; "let" if using let.
+let warnings;           // The array collecting all generated warnings.
 
 // Error reportage functions:
 
@@ -11978,8 +11824,7 @@ function warn_at(code, line, column, a, b, c, d) {
 // Report an error at some line and column of the program. The warning object
 // resembles an exception.
 
-    const warning = {
-        // ~~
+    const warning = {         // ~~
         name: "JSLintError",
         column,
         line,
@@ -12070,20 +11915,20 @@ function tokenize(source) {
     );
     tokens = [];
 
-    let char; // a popular character
-    let column = 0; // the column number of the next character
-    let first; // the first token
-    let from; // the starting column number of the token
-    let line = -1; // the line number of the next character
-    let nr = 0; // the next token number
-    let previous = global; // the previous token including comments
-    let prior = global; // the previous token excluding comments
-    let mega_from; // the starting column of megastring
-    let mega_line; // the starting line of megastring
-    let regexp_seen; // regular expression literal seen on this line
-    let snippet; // a piece of string
-    let source_line = ""; // the remaining line source string
-    let whole_line = ""; // the whole line source string
+    let char;                   // a popular character
+    let column = 0;             // the column number of the next character
+    let first;                  // the first token
+    let from;                   // the starting column number of the token
+    let line = -1;              // the line number of the next character
+    let nr = 0;                 // the next token number
+    let previous = global;      // the previous token including comments
+    let prior = global;         // the previous token excluding comments
+    let mega_from;              // the starting column of megastring
+    let mega_line;              // the starting line of megastring
+    let regexp_seen;            // regular expression literal seen on this line
+    let snippet;                // a piece of string
+    let source_line = "";       // the remaining line source string
+    let whole_line = "";        // the whole line source string
 
     if (lines[0].startsWith("#!")) {
         line = 0;
@@ -13720,9 +13565,7 @@ function assignment(id) {
             the_token.names = left;
             the_token.expression = right;
         } else {
-            the_token.expression = [
-                left, right
-            ];
+            the_token.expression = [left, right];
         }
         if (
             right.arity === "assignment"
@@ -13770,9 +13613,7 @@ function infix(id, bp, f) {
         if (f !== undefined) {
             return f(left);
         }
-        the_token.expression = [
-            left, expression(bp)
-        ];
+        the_token.expression = [left, expression(bp)];
         return the_token;
     };
     return the_symbol;
@@ -13786,9 +13627,7 @@ function infixr(id, bp) {
     the_symbol.led = function (left) {
         const the_token = token;
         the_token.arity = "binary";
-        the_token.expression = [
-            left, expression(bp - 1)
-        ];
+        the_token.expression = [left, expression(bp - 1)];
         return the_token;
     };
     return the_symbol;
@@ -13863,9 +13702,7 @@ function ternary(id1, id2) {
         advance(id2);
         token.arity = "ternary";
         the_token.arity = "ternary";
-        the_token.expression = [
-            left, second, expression(10)
-        ];
+        the_token.expression = [left, second, expression(10)];
         if (next_token.id !== ")") {
             warn("use_open", the_token);
         }
@@ -13998,9 +13835,7 @@ infix("(", 160, function (left) {
     if (functionage.arity === "statement" && left.identifier) {
         functionage.name.calls[left.id] = left;
     }
-    the_paren.expression = [
-        left
-    ];
+    the_paren.expression = [left];
     if (next_token.id !== ")") {
         (function next() {
             let ellipsis;
@@ -14117,9 +13952,7 @@ infix("[", 170, function (left) {
         }
     }
     left_check(left, the_token);
-    the_token.expression = [
-        left, the_subscript
-    ];
+    the_token.expression = [left, the_subscript];
     advance("]");
     return the_token;
 });
@@ -14150,9 +13983,7 @@ function do_tick() {
 infix("`", 160, function (left) {
     const the_tick = do_tick();
     left_check(left, the_tick);
-    the_tick.expression = [
-        left
-    ].concat(the_tick.expression);
+    the_tick.expression = [left].concat(the_tick.expression);
     return the_tick;
 });
 
@@ -14217,9 +14048,7 @@ prefix("void", function () {
 function parameter_list() {
     const list = [];
     let optional;
-    const signature = [
-        "("
-    ];
+    const signature = ["("];
     if (next_token.id !== ")" && next_token.id !== "(end)") {
         (function parameter() {
             let ellipsis = false;
@@ -14360,9 +14189,7 @@ function parameter_list() {
     }
     advance(")");
     signature.push(")");
-    return [
-        list, signature.join("")
-    ];
+    return [list, signature.join("")];
 }
 
 function do_function(the_function) {
@@ -14435,9 +14262,7 @@ function do_function(the_function) {
     advance("(");
     token.free = false;
     token.arity = "function";
-    [
-        functionage.parameters, functionage.signature
-    ] = parameter_list();
+    [functionage.parameters, functionage.signature] = parameter_list();
     functionage.parameters.forEach(function enroll_parameter(name) {
         if (name.identifier) {
             enroll(name, "parameter", false);
@@ -14541,12 +14366,8 @@ prefix("(", function () {
             }
             return stop("expected_identifier_a", the_value);
         }
-        the_paren.expression = [
-            the_value
-        ];
-        return fart([
-            the_paren.expression, "(" + the_value.id + ")"
-        ]);
+        the_paren.expression = [the_value];
+        return fart([the_paren.expression, "(" + the_value.id + ")"]);
     }
     return the_value;
 });
@@ -15785,8 +15606,8 @@ postaction("binary", "||", function (thing) {
 postaction("binary", "=>", postaction_function);
 postaction("binary", "(", function (thing) {
     let left = thing.expression[0];
-    let arg;
     let the_new;
+    let arg;
     if (left.id === "new") {
         the_new = left;
         left = left.expression;
@@ -16378,7 +16199,7 @@ function whitage() {
 // The jslint function itself.
 
 // hack-jslint - jslint0
-const jslint0 = Object.freeze(function (
+jslint0 = Object.freeze(function (
     source = "",
     option_object = empty(),
     global_array = []
@@ -16515,6 +16336,7 @@ const jslint0 = Object.freeze(function (
         })
     };
 });
+/* jslint ignore:end */
 
 
 
@@ -16531,7 +16353,9 @@ jslint_extra = function (source, opt, global_array) {
     lines = (
         Array.isArray(source)
         ? source
-        : source.split(rx_crlf)
+        : source.split(
+            /\n|\r\n?/
+        )
     );
     lines_extra = lines.map(function () {
         return {};

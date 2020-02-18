@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2020.2.17)
+ * lib.utility2.js (2020.2.18)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -14,8 +14,6 @@
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
-    let ArrayPrototypeFlat;
-    let TextXxcoder;
     let consoleError;
     let debugName;
     let local;
@@ -36,156 +34,12 @@
             return argList[0];
         };
     }
-    // polyfill
-    ArrayPrototypeFlat = function (depth) {
-    /*
-     * this function will polyfill Array.prototype.flat
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        depth = (
-            globalThis.isNaN(depth)
-            ? 1
-            : Number(depth)
-        );
-        if (!depth) {
-            return Array.prototype.slice.call(this);
-        }
-        return Array.prototype.reduce.call(this, function (acc, cur) {
-            if (Array.isArray(cur)) {
-                // recurse
-                acc.push.apply(acc, ArrayPrototypeFlat.call(cur, depth - 1));
-            } else {
-                acc.push(cur);
-            }
-            return acc;
-        }, []);
-    };
-    Array.prototype.flat = Array.prototype.flat || ArrayPrototypeFlat;
-    Array.prototype.flatMap = Array.prototype.flatMap || function flatMap(
-        ...argList
-    ) {
-    /*
-     * this function will polyfill Array.prototype.flatMap
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        return this.map(...argList).flat();
-    };
     String.prototype.trimEnd = (
         String.prototype.trimEnd || String.prototype.trimRight
     );
     String.prototype.trimStart = (
         String.prototype.trimStart || String.prototype.trimLeft
     );
-    (function () {
-        try {
-            globalThis.TextDecoder = (
-                globalThis.TextDecoder || require("util").TextDecoder
-            );
-            globalThis.TextEncoder = (
-                globalThis.TextEncoder || require("util").TextEncoder
-            );
-        } catch (ignore) {}
-    }());
-    TextXxcoder = function () {
-    /*
-     * this function will polyfill TextDecoder/TextEncoder
-     * https://gist.github.com/Yaffle/5458286
-     */
-        return;
-    };
-    TextXxcoder.prototype.decode = function (octets) {
-    /*
-     * this function will polyfill TextDecoder.prototype.decode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bytesNeeded;
-        let codePoint;
-        let ii;
-        let kk;
-        let octet;
-        let string;
-        string = "";
-        ii = 0;
-        while (ii < octets.length) {
-            octet = octets[ii];
-            bytesNeeded = 0;
-            codePoint = 0;
-            if (octet <= 0x7F) {
-                bytesNeeded = 0;
-                codePoint = octet & 0xFF;
-            } else if (octet <= 0xDF) {
-                bytesNeeded = 1;
-                codePoint = octet & 0x1F;
-            } else if (octet <= 0xEF) {
-                bytesNeeded = 2;
-                codePoint = octet & 0x0F;
-            } else if (octet <= 0xF4) {
-                bytesNeeded = 3;
-                codePoint = octet & 0x07;
-            }
-            if (octets.length - ii - bytesNeeded > 0) {
-                kk = 0;
-                while (kk < bytesNeeded) {
-                    octet = octets[ii + kk + 1];
-                    codePoint = (codePoint << 6) | (octet & 0x3F);
-                    kk += 1;
-                }
-            } else {
-                codePoint = 0xFFFD;
-                bytesNeeded = octets.length - ii;
-            }
-            string += String.fromCodePoint(codePoint);
-            ii += bytesNeeded + 1;
-        }
-        return string;
-    };
-    TextXxcoder.prototype.encode = function (string) {
-    /*
-     * this function will polyfill TextEncoder.prototype.encode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bits;
-        let cc;
-        let codePoint;
-        let ii;
-        let length;
-        let octets;
-        octets = [];
-        length = string.length;
-        ii = 0;
-        while (ii < length) {
-            codePoint = string.codePointAt(ii);
-            cc = 0;
-            bits = 0;
-            if (codePoint <= 0x0000007F) {
-                cc = 0;
-                bits = 0x00;
-            } else if (codePoint <= 0x000007FF) {
-                cc = 6;
-                bits = 0xC0;
-            } else if (codePoint <= 0x0000FFFF) {
-                cc = 12;
-                bits = 0xE0;
-            } else if (codePoint <= 0x001FFFFF) {
-                cc = 18;
-                bits = 0xF0;
-            }
-            octets.push(bits | (codePoint >> cc));
-            cc -= 6;
-            while (cc >= 0) {
-                octets.push(0x80 | ((codePoint >> cc) & 0x3F));
-                cc -= 6;
-            }
-            ii += (
-                codePoint >= 0x10000
-                ? 2
-                : 1
-            );
-        }
-        return octets;
-    };
-    globalThis.TextDecoder = globalThis.TextDecoder || TextXxcoder;
-    globalThis.TextEncoder = globalThis.TextEncoder || TextXxcoder;
     // init local
     local = {};
     local.local = local;
@@ -378,9 +232,7 @@
         local.vm = require("vm");
         local.zlib = require("zlib");
     }
-}((typeof globalThis === "object" && globalThis) || (function () {
-    return Function("return this")(); // jslint ignore:line
-}())));
+}((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
 
 
@@ -450,8 +302,6 @@ local.assetsDict["/assets.utility2.header.js"] = '\
 /* jslint utility2:true */\n\
 (function (globalThis) {\n\
     "use strict";\n\
-    let ArrayPrototypeFlat;\n\
-    let TextXxcoder;\n\
     let consoleError;\n\
     let debugName;\n\
     let local;\n\
@@ -472,156 +322,12 @@ local.assetsDict["/assets.utility2.header.js"] = '\
             return argList[0];\n\
         };\n\
     }\n\
-    // polyfill\n\
-    ArrayPrototypeFlat = function (depth) {\n\
-    /*\n\
-     * this function will polyfill Array.prototype.flat\n\
-     * https://github.com/jonathantneal/array-flat-polyfill\n\
-     */\n\
-        depth = (\n\
-            globalThis.isNaN(depth)\n\
-            ? 1\n\
-            : Number(depth)\n\
-        );\n\
-        if (!depth) {\n\
-            return Array.prototype.slice.call(this);\n\
-        }\n\
-        return Array.prototype.reduce.call(this, function (acc, cur) {\n\
-            if (Array.isArray(cur)) {\n\
-                // recurse\n\
-                acc.push.apply(acc, ArrayPrototypeFlat.call(cur, depth - 1));\n\
-            } else {\n\
-                acc.push(cur);\n\
-            }\n\
-            return acc;\n\
-        }, []);\n\
-    };\n\
-    Array.prototype.flat = Array.prototype.flat || ArrayPrototypeFlat;\n\
-    Array.prototype.flatMap = Array.prototype.flatMap || function flatMap(\n\
-        ...argList\n\
-    ) {\n\
-    /*\n\
-     * this function will polyfill Array.prototype.flatMap\n\
-     * https://github.com/jonathantneal/array-flat-polyfill\n\
-     */\n\
-        return this.map(...argList).flat();\n\
-    };\n\
     String.prototype.trimEnd = (\n\
         String.prototype.trimEnd || String.prototype.trimRight\n\
     );\n\
     String.prototype.trimStart = (\n\
         String.prototype.trimStart || String.prototype.trimLeft\n\
     );\n\
-    (function () {\n\
-        try {\n\
-            globalThis.TextDecoder = (\n\
-                globalThis.TextDecoder || require("util").TextDecoder\n\
-            );\n\
-            globalThis.TextEncoder = (\n\
-                globalThis.TextEncoder || require("util").TextEncoder\n\
-            );\n\
-        } catch (ignore) {}\n\
-    }());\n\
-    TextXxcoder = function () {\n\
-    /*\n\
-     * this function will polyfill TextDecoder/TextEncoder\n\
-     * https://gist.github.com/Yaffle/5458286\n\
-     */\n\
-        return;\n\
-    };\n\
-    TextXxcoder.prototype.decode = function (octets) {\n\
-    /*\n\
-     * this function will polyfill TextDecoder.prototype.decode\n\
-     * https://gist.github.com/Yaffle/5458286\n\
-     */\n\
-        let bytesNeeded;\n\
-        let codePoint;\n\
-        let ii;\n\
-        let kk;\n\
-        let octet;\n\
-        let string;\n\
-        string = "";\n\
-        ii = 0;\n\
-        while (ii < octets.length) {\n\
-            octet = octets[ii];\n\
-            bytesNeeded = 0;\n\
-            codePoint = 0;\n\
-            if (octet <= 0x7F) {\n\
-                bytesNeeded = 0;\n\
-                codePoint = octet & 0xFF;\n\
-            } else if (octet <= 0xDF) {\n\
-                bytesNeeded = 1;\n\
-                codePoint = octet & 0x1F;\n\
-            } else if (octet <= 0xEF) {\n\
-                bytesNeeded = 2;\n\
-                codePoint = octet & 0x0F;\n\
-            } else if (octet <= 0xF4) {\n\
-                bytesNeeded = 3;\n\
-                codePoint = octet & 0x07;\n\
-            }\n\
-            if (octets.length - ii - bytesNeeded > 0) {\n\
-                kk = 0;\n\
-                while (kk < bytesNeeded) {\n\
-                    octet = octets[ii + kk + 1];\n\
-                    codePoint = (codePoint << 6) | (octet & 0x3F);\n\
-                    kk += 1;\n\
-                }\n\
-            } else {\n\
-                codePoint = 0xFFFD;\n\
-                bytesNeeded = octets.length - ii;\n\
-            }\n\
-            string += String.fromCodePoint(codePoint);\n\
-            ii += bytesNeeded + 1;\n\
-        }\n\
-        return string;\n\
-    };\n\
-    TextXxcoder.prototype.encode = function (string) {\n\
-    /*\n\
-     * this function will polyfill TextEncoder.prototype.encode\n\
-     * https://gist.github.com/Yaffle/5458286\n\
-     */\n\
-        let bits;\n\
-        let cc;\n\
-        let codePoint;\n\
-        let ii;\n\
-        let length;\n\
-        let octets;\n\
-        octets = [];\n\
-        length = string.length;\n\
-        ii = 0;\n\
-        while (ii < length) {\n\
-            codePoint = string.codePointAt(ii);\n\
-            cc = 0;\n\
-            bits = 0;\n\
-            if (codePoint <= 0x0000007F) {\n\
-                cc = 0;\n\
-                bits = 0x00;\n\
-            } else if (codePoint <= 0x000007FF) {\n\
-                cc = 6;\n\
-                bits = 0xC0;\n\
-            } else if (codePoint <= 0x0000FFFF) {\n\
-                cc = 12;\n\
-                bits = 0xE0;\n\
-            } else if (codePoint <= 0x001FFFFF) {\n\
-                cc = 18;\n\
-                bits = 0xF0;\n\
-            }\n\
-            octets.push(bits | (codePoint >> cc));\n\
-            cc -= 6;\n\
-            while (cc >= 0) {\n\
-                octets.push(0x80 | ((codePoint >> cc) & 0x3F));\n\
-                cc -= 6;\n\
-            }\n\
-            ii += (\n\
-                codePoint >= 0x10000\n\
-                ? 2\n\
-                : 1\n\
-            );\n\
-        }\n\
-        return octets;\n\
-    };\n\
-    globalThis.TextDecoder = globalThis.TextDecoder || TextXxcoder;\n\
-    globalThis.TextEncoder = globalThis.TextEncoder || TextXxcoder;\n\
     // init local\n\
     local = {};\n\
     local.local = local;\n\
@@ -814,9 +520,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         local.vm = require("vm");\n\
         local.zlib = require("zlib");\n\
     }\n\
-}((typeof globalThis === "object" && globalThis) || (function () {\n\
-    return Function("return this")(); // jslint ignore:line\n\
-}())));\n\
+}((typeof globalThis === "object" && globalThis) || window));\n\
 // assets.utility2.header.js - end\n\
 '
 
@@ -1644,7 +1348,7 @@ PORT=8081 node ./assets.app.js\n\
         "utility2": "kaizhu256/node-utility2#alpha"\n\
     },\n\
     "engines": {\n\
-        "node": ">=10.0"\n\
+        "node": ">=12.0"\n\
     },\n\
     "homepage": "https://github.com/kaizhu256/node-my-app-lite",\n\
     "keywords": [],\n\
@@ -3528,8 +3232,7 @@ local.buildLib = function (opt, onError) {
             "utf8"
         ),
         dataTo: local.templateRenderMyApp(
-            local.assetsDict["/assets.my_app.template.js"],
-            opt
+            local.assetsDict["/assets.my_app.template.js"]
         )
     });
     // search-and-replace - customize dataTo
@@ -3591,8 +3294,7 @@ local.buildReadme = function (opt, onError) {
     });
     // render dataTo
     opt.dataTo = local.templateRenderMyApp(
-        local.assetsDict["/assets.readme.template.md"],
-        opt
+        local.assetsDict["/assets.readme.template.md"]
     );
     // init package.json
     opt.dataFrom.replace(opt.packageJsonRgx, function (match0, match1) {
@@ -3619,7 +3321,7 @@ local.buildReadme = function (opt, onError) {
             opt.packageJson,
             JSON.parse(local.templateRenderMyApp(opt.packageJsonRgx.exec(
                 local.assetsDict["/assets.readme.template.md"]
-            )[1], opt)),
+            )[1])),
             2
         );
         // avoid npm-installing that
@@ -3642,8 +3344,7 @@ local.buildReadme = function (opt, onError) {
         );
         // re-render dataTo
         opt.dataTo = local.templateRenderMyApp(
-            local.assetsDict["/assets.readme.template.md"],
-            opt
+            local.assetsDict["/assets.readme.template.md"]
         );
         opt.dataTo = opt.dataTo.replace(
             opt.packageJsonRgx,
@@ -3827,7 +3528,7 @@ local.buildReadme = function (opt, onError) {
         // customize screenshot
         opt.dataTo = opt.dataTo.replace(elem[1], "");
     });
-    opt.dataTo = local.templateRenderMyApp(opt.dataTo, opt);
+    opt.dataTo = local.templateRenderMyApp(opt.dataTo);
     // customize toc
     opt.toc = "\n# table of contents\n";
     opt.dataTo.replace((
@@ -3888,8 +3589,7 @@ local.buildTest = function (opt, onError) {
         customize: local.nop,
         dataFrom: local.fsReadFileOrEmptyStringSync("test.js", "utf8"),
         dataTo: local.templateRenderMyApp(
-            local.assetsDict["/assets.test.template.js"],
-            opt
+            local.assetsDict["/assets.test.template.js"]
         )
     });
     // search-and-replace - customize dataTo
@@ -4637,6 +4337,167 @@ local.gotoNext = function (opt, onError) {
     opt.gotoNextData = opt.gotoNext.bind(undefined, undefined);
     return opt;
 };
+
+local.httpFetch = function (url, opt) {
+/*
+ * this function will fetch <url> with given <opt>
+ * https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch
+ * https://developer.mozilla.org/en-US/docs/Web/API/Response
+ */
+    let buf;
+    let debug;
+    let errStack;
+    let isBrowser;
+    let isDebugged;
+    let isDone;
+    let promise;
+    let reject2;
+    let reject;
+    let resolve2;
+    let resolve;
+    let timeStart;
+    let timeout;
+    let timerTimeout;
+    // init function
+    debug = function () {
+        if (isDebugged) {
+            return;
+        }
+        isDebugged = true;
+        console.error("serverLog - " + JSON.stringify({
+            time: new Date(timeStart).toISOString(),
+            type: "httpFetchResponse",
+            method: opt.method,
+            url,
+            status: opt.status,
+            timeElapsed: Date.now() - timeStart,
+            // extra
+            responseContentLength: buf.byteLength
+        }) + "\n");
+    };
+    reject2 = function (err) {
+        if (isDone) {
+            return;
+        }
+        isDone = true;
+        // cleanup timerTimeout
+        clearTimeout(timerTimeout);
+        debug();
+        // append <errStack>
+        if (errStack) {
+            err.stack += "\n" + errStack.replace((
+                /.*?\n/
+            ), "");
+        }
+        Object.assign(err, opt);
+        reject(err);
+    };
+    resolve2 = async function (response) {
+        if (isDone) {
+            return;
+        }
+        isDone = true;
+        // cleanup timerTimeout
+        clearTimeout(timerTimeout);
+        if (isBrowser) {
+            Array.from(response.headers).forEach(function ([
+                key, val
+            ]) {
+                opt.responseHeaders[key] = val;
+            });
+            opt.status = response.status;
+            opt.ok = response.ok;
+            buf = new Uint8Array(
+                await response.arrayBuffer()
+            );
+        } else {
+            // init responseproperties specified in
+            // https://fetch.spec.whatwg.org/#response-class
+            opt.responseHeaders = response.headers;
+            opt.status = response.statusCode;
+            opt.ok = 200 <= opt.status && opt.status <= 299;
+        }
+        switch (opt.responseType) {
+        case "json":
+            opt.data = JSON.parse(new TextDecoder().decode(buf));
+            break;
+        case "raw":
+            opt.data = buf;
+            break;
+        default:
+            opt.data = new TextDecoder().decode(buf);
+        }
+        if (opt.modeDebug) {
+            debug();
+        }
+        if (!opt.ok) {
+            reject2(new Error("httpFetch - status " + opt.status));
+            return;
+        }
+        resolve(opt);
+    };
+    // init var
+    opt = opt || {};
+    buf = new Uint8Array(0);
+    isBrowser = typeof globalThis.fetch === "function";
+    opt.method = opt.method || "GET";
+    opt.responseHeaders = {};
+    opt.status = 400;
+    timeStart = Date.now();
+    // init timerTimeout
+    timeout = opt.timeout || 30000;
+    timerTimeout = setTimeout(function () {
+        reject2(new Error("httpFetch - timeout " + timeout + "ms"));
+    }, timeout);
+    // init promise
+    promise = new Promise(function (aa, bb) {
+        reject = bb;
+        resolve = aa;
+        // browser - fetch
+        if (isBrowser) {
+            globalThis.fetch(url, opt).then(resolve2).catch(reject2);
+            return;
+        }
+        // node - request
+        errStack = new Error().stack;
+        require(
+            url.indexOf("https:") === 0
+            ? "https"
+            : "http"
+        ).request(url, opt, function (response) {
+            let bufList;
+            // handle err
+            response.on("error", reject2);
+            // handle stream
+            if (opt.responseType === "stream") {
+                resolve2(response);
+                return;
+            }
+            // read <buf>
+            bufList = [];
+            response.on("data", function (chunk) {
+                bufList.push(chunk);
+            });
+            response.on("end", function () {
+                buf = Buffer.concat(bufList);
+                resolve2(response);
+            });
+        }).on("error", reject2).end(opt.body);
+    });
+    return promise;
+};
+
+//!! // test
+//!! (async function () {
+    //!! let opt;
+    //!! opt = await local.httpFetch("http://example.com", {
+        //!! modeDebug: true,
+        //!! responseType: "stream",
+        //!! timeout: 5000
+    //!! });
+    //!! debugInline(opt.responseHeaders);
+    //!! debugInline(opt.data);
+//!! }());
 
 local.isNullOrUndefined = function (val) {
 /*
@@ -5839,8 +5700,7 @@ local.requireReadme = function () {
     globalThis.utility2_moduleExports.globalThis = globalThis;
     // read code from README.md
     code = local.templateRenderMyApp(
-        local.assetsDict["/assets.example.template.js"],
-        {}
+        local.assetsDict["/assets.example.template.js"]
     );
     local.tryCatchOnError(function () {
         tmp = (
@@ -6325,6 +6185,22 @@ local.stringHtmlSafe = function (str) {
     ), "&$1");
 };
 
+local.stringLineCount = function (str, start, end) {
+/*
+ * this function will count the number of "\n" in <str>
+ * from <start> to <end>
+ */
+    let count;
+    count = 0;
+    while (true) {
+        start = str.indexOf("\n", start) + 1;
+        if (start === 0 || start >= end) {
+            return count;
+        }
+        count += 1;
+    }
+};
+
 local.stringMerge = function (str1, str2, rgx) {
 /*
  * this function will merge <str2> into <str1>,
@@ -6579,48 +6455,54 @@ local.templateRender = function (template, dict, opt, ii) {
     });
 };
 
-local.templateRenderMyApp = function (template, opt) {
+local.templateRenderMyApp = function (template) {
 /*
- * this function will render my-app-lite template with given <opt>.packageJson
+ * this function will render my-app-lite template
  */
-    opt.packageJson = local.fsReadFileOrEmptyStringSync("package.json", "json");
-    local.objectSetDefault(opt.packageJson, {
-        nameLib: opt.packageJson.name.replace((
+    let githubRepo;
+    let packageJson;
+    try {
+        packageJson = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
+    } catch (ignore) {
+        packageJson = {};
+    }
+    local.objectSetDefault(packageJson, {
+        nameLib: packageJson.name.replace((
             /\W/g
         ), "_"),
         repository: {
             url: (
-                "https://github.com/kaizhu256/node-" + opt.packageJson.name
+                "https://github.com/kaizhu256/node-" + packageJson.name
             )
         }
     }, 2);
-    opt.githubRepo = opt.packageJson.repository.url.replace((
+    githubRepo = packageJson.repository.url.replace((
         /\.git$/
     ), "").split("/").slice(-2);
     template = template.replace((
         /kaizhu256(\.github\.io\/|%252F|\/)/g
-    ), opt.githubRepo[0] + ("$1"));
+    ), githubRepo[0] + ("$1"));
     template = template.replace((
         /node-my-app-lite/g
-    ), opt.githubRepo[1]);
+    ), githubRepo[1]);
     template = template.replace((
         /\bh1-my-app\b/g
     ), (
-        opt.packageJson.nameHeroku
-        || ("h1-" + opt.packageJson.nameLib.replace((
+        packageJson.nameHeroku
+        || ("h1-" + packageJson.nameLib.replace((
             /_/g
         ), "-"))
     ));
     template = template.replace((
         /my-app-lite/g
-    ), opt.packageJson.name);
+    ), packageJson.name);
     template = template.replace((
         /my_app/g
-    ), opt.packageJson.nameLib);
+    ), packageJson.nameLib);
     template = template.replace((
         /\{\{packageJson\.(\S+)\}\}/g
     ), function (ignore, match1) {
-        return opt.packageJson[match1];
+        return packageJson[match1];
     });
     return template;
 };
