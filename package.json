@@ -12,6 +12,7 @@
     "engines": {
         "node": ">=10.0"
     },
+    "fileCount": 28,
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
         "continuous-integration",

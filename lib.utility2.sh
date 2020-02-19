@@ -2343,10 +2343,16 @@ https = require("https");
 path = require("path");
 repoDict = {};
 opt = (
-    /^\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?\n)\*\/\n/
+    /^\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?)\n\*\/\n/
 ).exec(fs.readFileSync(process.argv[1], "utf8"));
-header = opt[0] + "\n\n\n";
-replaceDiff = opt[2] + "\n";
+replaceDiff = opt[2].split("\n\n").filter(function (elem) {
+    return elem.trim();
+}).map(function (elem) {
+    return elem.trim() + "\n";
+}).sort().join("\n");
+header = (
+    "/*\nshRawLibFetch\n" + opt[1].trim() + "\n" + replaceDiff + "*/\n\n\n\n"
+);
 opt = JSON.parse(opt[1].replace((
     /^\u0020*?\/\/.*?$/gm
 ), ""));
@@ -3323,6 +3329,7 @@ jslint-lite
 sqljs-lite
 swgg
 utility2
+wasm-sqlite
 "
 )}
 
@@ -3522,7 +3529,7 @@ export UTILITY2_MACRO_JS='
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
     local.assertOrThrow = function (passed, message) {

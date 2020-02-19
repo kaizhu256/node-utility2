@@ -57,6 +57,7 @@ this zero-dependency package will provide high-level functions to to build, test
 
 #### changelog 2020.2.18
 - npm publish 2020.2.18
+- add files lib.sqljs_lite.js, raw.sqljs_lite.js
 - add function promisify
 - update function httpFetch with abort-handling
 - update function shRawLibFetch to inline-fetch resources to raw.xxx.js
@@ -181,7 +182,7 @@ instruction
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
     local.assertOrThrow = function (passed, message) {
@@ -1209,6 +1210,7 @@ local.http.createServer(function (req, res) {
     "engines": {
         "node": ">=10.0"
     },
+    "fileCount": 28,
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
         "continuous-integration",

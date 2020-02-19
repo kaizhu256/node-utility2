@@ -18,50 +18,35 @@ shRawLibFetch
         "https://github.com/douglascrockford/JSLint/blob/95c4e8a2cfd424d15e90745dbadadf3251533183/jslint.js"
     ]
 }
--/*property
-+// hack-jslint - property
-+/*\property
+-                        margin += 4;
++                        // hack-jslint - conditional-margin
++                        if (
++                            !option.utility2
++                            || lines[right.line].startsWith(" ")
++                        ) {
++                            margin += 4;
++                        }
 
--    single: true,
-+    // hack-jslint - nomen
-+    nomen: true,
-+    single: true,
+-            if (name.identifier && rx_bad_property.test(id)) {
++            // hack-jslint - nomen
++            if (!option.nomen && name.identifier && rx_bad_property.test(id)) {
 
--const rx_token = /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0|[1-9][0-9]*))(.*)$/;
--const rx_digits = /^([0-9]+)(.*)$/;
--const rx_hexs = /^([0-9a-fA-F]+)(.*)$/;
--const rx_octals = /^([0-7]+)(.*)$/;
--const rx_bits = /^([01]+)(.*)$/;
-+// hack-jslint - bigint
-+const rx_token = /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0n?|[1-9][0-9]*n?))(.*)$/;
-+const rx_digits = /^([0-9]+)(.*)$/;
-+const rx_hexs = /^([0-9a-fA-F]+n?)(.*)$/;
-+const rx_octals = /^([0-7]+n?)(.*)$/;
-+const rx_bits = /^([01]+n?)(.*)$/;
+-            if (warnings.length === 0) {
++            // hack-jslint - !early_stop
++            if (!early_stop) {
 
--    warnings.push(warning);
--    return warning;
-+    // hack-jslint - warn_at_extra
-+    return warn_at_extra(warning, warnings);
-
--    throw warn_at(code, line, column, a, b, c, d);
-+    // hack-jslint - early_stop = true
-+    early_stop = true;
-+    throw warn_at(code, line, column, a, b, c, d);
-
--    throw warn(code, the_token, a, b, c, d);
-+    // hack-jslint - early_stop = true
-+    early_stop = true;
-+    throw warn(code, the_token, a, b, c, d);
+-        early_stop = true;
++        // hack-jslint - early_stop = false
++        early_stop = false;
 
 -        if (source_line !== undefined) {
 +        if (source_line !== undefined) {
 +            // hack-jslint - next_line_extra
 +            source_line = next_line_extra(source_line, line);
 
--            if (name.identifier && rx_bad_property.test(id)) {
-+            // hack-jslint - nomen
-+            if (!option.nomen && name.identifier && rx_bad_property.test(id)) {
+-        warn("unexpected_a", right);
++        // hack-jslint - unexpected_a
++        warn("unexpected_a", right, null, null, left, right);
 
 -    if (cadet.id === "(comment)") {
 +    // hack-jslint - advance token async/await to next_token by context
@@ -75,35 +60,50 @@ shRawLibFetch
 +    }
 +    if (cadet.id === "(comment)") {
 
--        warn("unexpected_a", right);
-+        // hack-jslint - unexpected_a
-+        warn("unexpected_a", right, null, null, left, right);
+-    single: true,
++    // hack-jslint - nomen
++    nomen: true,
++    single: true,
 
--                        margin += 4;
-+                        // hack-jslint - conditional-margin
-+                        if (
-+                            !option.utility2
-+                            || lines[right.line].startsWith(" ")
-+                        ) {
-+                            margin += 4;
-+                        }
+-    throw warn(code, the_token, a, b, c, d);
++    // hack-jslint - early_stop = true
++    early_stop = true;
++    throw warn(code, the_token, a, b, c, d);
 
--export default Object.freeze(function jslint(
-+// hack-jslint - jslint0
-+jslint0 = Object.freeze(function (
+-    throw warn_at(code, line, column, a, b, c, d);
++    // hack-jslint - early_stop = true
++    early_stop = true;
++    throw warn_at(code, line, column, a, b, c, d);
 
--        early_stop = true;
-+        // hack-jslint - early_stop = false
-+        early_stop = false;
-
--            if (warnings.length === 0) {
-+            // hack-jslint - !early_stop
-+            if (!early_stop) {
+-    warnings.push(warning);
+-    return warning;
++    // hack-jslint - warn_at_extra
++    return warn_at_extra(warning, warnings);
 
 -    } catch (e) {
 +    } catch (e) {
 +        // hack-jslint - e.early_stop = true
 +        e.early_stop = true;
+
+-/*property
++// hack-jslint - property
++/*\property
+
+-const rx_token = /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0|[1-9][0-9]*))(.*)$/;
+-const rx_digits = /^([0-9]+)(.*)$/;
+-const rx_hexs = /^([0-9a-fA-F]+)(.*)$/;
+-const rx_octals = /^([0-7]+)(.*)$/;
+-const rx_bits = /^([01]+)(.*)$/;
++// hack-jslint - bigint
++const rx_token = /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0n?|[1-9][0-9]*n?))(.*)$/;
++const rx_digits = /^([0-9]+)(.*)$/;
++const rx_hexs = /^([0-9a-fA-F]+n?)(.*)$/;
++const rx_octals = /^([0-7]+n?)(.*)$/;
++const rx_bits = /^([01]+n?)(.*)$/;
+
+-export default Object.freeze(function jslint(
++// hack-jslint - jslint0
++jslint0 = Object.freeze(function (
 */
 
 

@@ -52,7 +52,7 @@
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
     local.assertOrThrow = function (passed, message) {
@@ -275,6 +275,7 @@ globalThis.utility2 = local;
     "jslint",
     "marked",
     "puppeteer"
+    //!! "sqljs"
 ].forEach(function (key) {
     try {
         local[key] = (
@@ -340,7 +341,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
     );\n\
     // init isWebWorker\n\
     local.isWebWorker = (\n\
-        local.isBrowser && typeof globalThis.importScript === "function"\n\
+        local.isBrowser && typeof globalThis.importScripts === "function"\n\
     );\n\
     // init function\n\
     local.assertOrThrow = function (passed, message) {\n\
@@ -1350,6 +1351,7 @@ PORT=8081 node ./assets.app.js\n\
     "engines": {\n\
         "node": ">=12.0"\n\
     },\n\
+    "fileCount": 0,\n\
     "homepage": "https://github.com/kaizhu256/node-my-app-lite",\n\
     "keywords": [],\n\
     "license": "MIT",\n\
@@ -4577,6 +4579,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
     case "lib.jslint.js":
     case "lib.marked.js":
     case "lib.puppeteer.js":
+    //!! case "lib.sqljs.js":
     case "lib.swgg.js":
     case "npm_scripts.sh":
     case "test.js":
@@ -7613,6 +7616,9 @@ local.regexpValidatePhone = (
 local.regexpValidateUuid = (
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 );
+//!! local.sqljsExec = local.sqljs.sqljsExec || local.identity;
+//!! local.sqljsTableExport = local.sqljs.sqljsTableExport || local.identity;
+//!! local.sqljsTableImport = local.sqljs.sqljsTableImport || local.identity;
 local.stringCharsetAscii = (
     "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007"
     + "\b\t\n\u000b\f\r\u000e\u000f"
@@ -7788,6 +7794,7 @@ if (globalThis.utility2_rollup) {
     "lib.jslint.js",
     "lib.marked.js",
     "lib.puppeteer.js",
+    //!! "lib.sqljs.js",
     "lib.swgg.js",
     "lib.utility2.js",
     "test.js"
@@ -7885,6 +7892,7 @@ local.assetsDict["/assets.utility2.rollup.js"] = [
     "lib.jslint.js",
     "lib.marked.js",
     "lib.puppeteer.js",
+    //!! "lib.sqljs.js",
     "lib.utility2.js",
     "lib.swgg.js",
     "/assets.utility2.example.js",

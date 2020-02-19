@@ -46,7 +46,7 @@
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
     local.assertOrThrow = function (passed, message) {
