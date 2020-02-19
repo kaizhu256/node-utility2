@@ -1250,6 +1250,7 @@ local.http.createServer(function (req, res) {
         "2019.09.14 swgg",
         "2019.09.15 istanbul-lite master",
         "2020.01.27 jslint-lite",
+        "2020.02.12 sqljs-lite",
         "2020.02.17 utility2"
     ],
     "version": "2020.2.18"
