@@ -7,9 +7,12 @@
 # useful sh one-liners
 # http://sed.sourceforge.net/sed1line.txt
 # export NODE_TLS_REJECT_UNAUTHORIZED=0 # use with caution
+# git branch -d -r origin/aa
 # git config --global diff.algorithm histogram
 # git fetch origin alpha beta master --tags
+# git ls-files --stage | sort
 # git ls-remote --heads origin
+# git update-index --chmod=+x aa.js
 # npm_package_private=1 GITHUB_REPO=aa/node-aa-bb-pro shCryptoWithGithubOrg aa shCryptoTravisEncrypt
 # shCryptoWithGithubOrg aa shTravisRepoCreate aa/node-aa-bb
 # shCryptoWithGithubOrg aa shGithubApiRateLimitGet
