@@ -3170,28 +3170,28 @@ local.buildApp = function (opt, onError) {
                 )
             }
         ].concat(opt.assetsList)
-    }, function (opt2, onParallel) {
+    }, async function (opt2, onParallel) {
+        let xhr;
         opt2 = opt2.elem;
         onParallel.cnt += 1;
-        local.ajax(opt2, function (err, xhr) {
-            // handle err
-            local.assertOrThrow(!err, err);
-            // jslint file
-            local.jslintAndPrint(xhr.responseText, opt2.file, {
-                conditional: true,
-                coverage: local.env.npm_config_mode_coverage
-            });
-            // handle err
-            local.assertOrThrow(
-                !local.jslint.jslintResult.errMsg,
-                local.jslint.jslintResult.errMsg
-            );
-            local.fsWriteFileWithMkdirpSync(
-                "tmp/build/app" + opt2.file,
-                xhr.response
-            );
-            onParallel();
+        xhr = await local.httpFetch(local.serverLocalHost + opt2.url, {
+            responseType: "raw"
         });
+        // jslint file
+        local.jslintAndPrint(xhr.data.toString(), opt2.file, {
+            conditional: true,
+            coverage: local.env.npm_config_mode_coverage
+        });
+        // handle err
+        local.assertOrThrow(
+            !local.jslint.jslintResult.errMsg,
+            local.jslint.jslintResult.errMsg
+        );
+        local.fsWriteFileWithMkdirpSync(
+            "tmp/build/app" + opt2.file,
+            xhr.data
+        );
+        onParallel();
     }, function (err) {
         // handle err
         local.assertOrThrow(!err, err);
@@ -4345,20 +4345,39 @@ local.httpFetch = function (url, opt) {
  * https://developer.mozilla.org/en-US/docs/Web/API/Response
  */
     let buf;
+    let cleanup;
+    let controller;
     let debug;
     let errStack;
+    let httpFetchProgressUpdate;
     let isBrowser;
     let isDebugged;
     let isDone;
-    let promise;
+    let nop;
     let reject2;
     let reject;
+    let request;
     let resolve2;
     let resolve;
+    let response;
     let timeStart;
     let timeout;
     let timerTimeout;
     // init function
+    cleanup = function () {
+        if (isDone) {
+            return true;
+        }
+        isDone = true;
+        // cleanup <timerTimeout>
+        clearTimeout(timerTimeout);
+        // decrement <httpFetchProgressUpdate>.cnt
+        httpFetchProgressUpdate.cnt = Math.max(
+            httpFetchProgressUpdate.cnt - 1,
+            0
+        );
+        httpFetchProgressUpdate();
+    };
     debug = function () {
         if (isDebugged) {
             return;
@@ -4375,96 +4394,118 @@ local.httpFetch = function (url, opt) {
             responseContentLength: buf.byteLength
         }) + "\n");
     };
+    nop = function () {
+        return;
+    };
     reject2 = function (err) {
-        if (isDone) {
+        if (cleanup()) {
             return;
         }
-        isDone = true;
-        // cleanup timerTimeout
-        clearTimeout(timerTimeout);
         debug();
         // append <errStack>
         if (errStack) {
-            err.stack += "\n" + errStack.replace((
-                /.*?\n/
-            ), "");
+            err.stack += "\n" + errStack;
         }
         Object.assign(err, opt);
         reject(err);
     };
     resolve2 = async function (response) {
-        if (isDone) {
+        try {
+            if (isBrowser) {
+                Array.from(response.headers).forEach(function ([
+                    key, val
+                ]) {
+                    opt.responseHeaders[key.toLowerCase()] = val;
+                });
+                opt.status = response.status;
+                opt.ok = response.ok;
+                buf = new Uint8Array(
+                    await response.arrayBuffer()
+                );
+            } else {
+                // init responseproperties specified in
+                // https://fetch.spec.whatwg.org/#response-class
+                opt.responseHeaders = response.headers;
+                opt.status = response.statusCode;
+                opt.ok = 200 <= opt.status && opt.status <= 299;
+            }
+            switch (opt.responseType) {
+            case "json":
+                opt.data = JSON.parse(new TextDecoder().decode(buf));
+                break;
+            case "raw":
+                opt.data = buf;
+                break;
+            default:
+                opt.data = new TextDecoder().decode(buf);
+            }
+            if (opt.modeDebug) {
+                debug();
+            }
+            if (!opt.ok) {
+                reject2(new Error("httpFetch - status " + opt.status));
+                return;
+            }
+        } catch (err) {
+            reject2(err);
             return;
         }
-        isDone = true;
-        // cleanup timerTimeout
-        clearTimeout(timerTimeout);
-        if (isBrowser) {
-            Array.from(response.headers).forEach(function ([
-                key, val
-            ]) {
-                opt.responseHeaders[key] = val;
-            });
-            opt.status = response.status;
-            opt.ok = response.ok;
-            buf = new Uint8Array(
-                await response.arrayBuffer()
-            );
-        } else {
-            // init responseproperties specified in
-            // https://fetch.spec.whatwg.org/#response-class
-            opt.responseHeaders = response.headers;
-            opt.status = response.statusCode;
-            opt.ok = 200 <= opt.status && opt.status <= 299;
-        }
-        switch (opt.responseType) {
-        case "json":
-            opt.data = JSON.parse(new TextDecoder().decode(buf));
-            break;
-        case "raw":
-            opt.data = buf;
-            break;
-        default:
-            opt.data = new TextDecoder().decode(buf);
-        }
-        if (opt.modeDebug) {
-            debug();
-        }
-        if (!opt.ok) {
-            reject2(new Error("httpFetch - status " + opt.status));
-            return;
-        }
+        cleanup();
         resolve(opt);
     };
-    // init var
-    opt = opt || {};
-    buf = new Uint8Array(0);
-    isBrowser = typeof globalThis.fetch === "function";
+    // init httpFetchProgressUpdate
+    httpFetchProgressUpdate = globalThis.httpFetchProgressUpdate || nop;
+    httpFetchProgressUpdate.cnt |= 0;
+    httpFetchProgressUpdate.cnt += 1;
+    httpFetchProgressUpdate();
+    // init opt
+    opt = Object.assign({}, opt);
+    opt.abort = function (err) {
+        controller.abort();
+        request.destroy();
+        response.destroy();
+        reject2(err || new Error("httpFetch - abort"));
+    };
     opt.method = opt.method || "GET";
     opt.responseHeaders = {};
     opt.status = 400;
+    // init var
+    buf = new Uint8Array(0);
+    controller = {
+        abort: nop,
+        destroy: nop
+    };
+    isBrowser = (
+        typeof globalThis.AbortController === "function"
+        && typeof globalThis.fetch === "function"
+    );
+    request = controller;
+    response = controller;
     timeStart = Date.now();
-    // init timerTimeout
     timeout = opt.timeout || 30000;
+    // init timerTimeout
     timerTimeout = setTimeout(function () {
-        reject2(new Error("httpFetch - timeout " + timeout + "ms"));
+        opt.abort(new Error("httpFetch - timeout " + timeout + " ms"));
     }, timeout);
     // init promise
-    promise = new Promise(function (aa, bb) {
+    return Object.assign(new Promise(function (aa, bb) {
         reject = bb;
         resolve = aa;
         // browser - fetch
         if (isBrowser) {
+            controller = new globalThis.AbortController();
+            opt.signal = controller.signal;
             globalThis.fetch(url, opt).then(resolve2).catch(reject2);
             return;
         }
         // node - request
         errStack = new Error().stack;
-        require(
+        request = require(
             url.indexOf("https:") === 0
             ? "https"
             : "http"
-        ).request(url, opt, function (response) {
+        ).request(url, opt, function (aa) {
+            response = aa;
             let bufList;
             // handle err
             response.on("error", reject2);
@@ -4482,21 +4523,29 @@ local.httpFetch = function (url, opt) {
                 buf = Buffer.concat(bufList);
                 resolve2(response);
             });
-        }).on("error", reject2).end(opt.body);
+        });
+        request.on("error", reject2);
+        request.end(opt.body);
+    }), {
+        abort: opt.abort
     });
-    return promise;
 };
 
 //!! // test
 //!! (async function () {
     //!! let opt;
-    //!! opt = await local.httpFetch("http://example.com", {
+    //!! let url;
+    //!! url = (
+        //!! globalThis.window
+        //!! ? "/"
+        //!! : "http://example2394872.com"
+    //!! );
+    //!! opt = await local.httpFetch(url, {
         //!! modeDebug: true,
-        //!! responseType: "stream",
+        //!! responseType: "json2",
         //!! timeout: 5000
     //!! });
-    //!! debugInline(opt.responseHeaders);
-    //!! debugInline(opt.data);
+    //!! debugInline(opt);
 //!! }());
 
 local.isNullOrUndefined = function (val) {
@@ -5466,6 +5515,23 @@ local.profileSync = function (fnc) {
     fnc();
     // return difference in milliseconds between Date.now() and timeStart
     return Date.now() - timeStart;
+};
+
+local.promisify = function (fnc) {
+/*
+ * this function will promisify <fnc>
+ */
+    return function (...argList) {
+        return new Promise(function (resolve, reject) {
+            fnc(...argList, function (err, ...argList) {
+                if (err) {
+                    reject(err, ...argList);
+                    return;
+                }
+                resolve(...argList);
+            });
+        });
+    };
 };
 
 local.replStart = function () {

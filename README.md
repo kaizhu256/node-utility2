@@ -57,6 +57,8 @@ this zero-dependency package will provide high-level functions to to build, test
 
 #### changelog 2020.2.18
 - npm publish 2020.2.18
+- add function promisify
+- update function httpFetch with abort-handling
 - update function shRawLibFetch to inline-fetch resources to raw.xxx.js
 - add function httpFetch using fetch-api and promises
 - remove polyfills Array.p.flat, Array.p.flatMap, TextDecoder, TextEncoder

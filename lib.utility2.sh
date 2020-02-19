@@ -2303,16 +2303,14 @@ shRawLibFetch () {(set -e
 /* jslint utility2:true */
 (function () {
 "use strict";
-let fileWrite;
 let fs;
+let header;
+let https;
 let normalizeWhitespace;
 let opt;
+let path;
 let replaceDiff;
 let repoDict;
-fileWrite = function (str) {
-    process.stdout.write(str);
-    process.stdout.write("\n");
-};
 normalizeWhitespace = function (str) {
 /*
  * this function will normalize whitespace
@@ -2341,11 +2339,13 @@ normalizeWhitespace = function (str) {
     return str;
 };
 fs = require("fs");
+https = require("https");
+path = require("path");
 repoDict = {};
 opt = (
-    /^\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?\n)\*\/\n\n\n/
+    /^\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?\n)\*\/\n/
 ).exec(fs.readFileSync(process.argv[1], "utf8"));
-fileWrite(opt[0]);
+header = opt[0] + "\n\n\n";
 replaceDiff = opt[2] + "\n";
 opt = JSON.parse(opt[1].replace((
     /^\u0020*?\/\/.*?$/gm
@@ -2356,7 +2356,7 @@ opt.urlList.forEach(function (url, repo) {
         repoDict[repo] = {
             urlList: []
         };
-        require("https").request(repo.replace(
+        https.request(repo.replace(
             "/blob/",
             "/commits/"
         ), function (res) {
@@ -2379,7 +2379,7 @@ Object.entries(repoDict).forEach(function ([
 ], ii) {
     repo.prefix = prefix;
     repo.urlList.forEach(function (url, jj) {
-        require("https").request(url.replace(
+        https.request(url.replace(
             "https://github.com/",
             "https://raw.githubusercontent.com/"
         ).replace("/blob/", "/"), function (res) {
@@ -2409,7 +2409,7 @@ process.on("exit", function () {
         repo = Object.values(repoDict)[Number(data.slice(0, 2))];
         file = repo.urlList[Number(data.slice(4, 6))];
         // init prefix
-        prefix = "exports_" + require("path").dirname(file).replace(
+        prefix = "exports_" + path.dirname(file).replace(
             "https://github.com/",
             ""
         ).replace((
@@ -2419,7 +2419,7 @@ process.on("exit", function () {
         ), "_").replace((
             /(_)_+|_+$/g
         ), "$1");
-        exports = prefix + "_" + require("path").basename(file).replace((
+        exports = prefix + "_" + path.basename(file).replace((
             /\.js$/
         ), "").replace((
             /\W/g
@@ -2475,19 +2475,27 @@ process.on("exit", function () {
     });
     // replace diff
     replaceDiff.replace((
-        /^(-[\S\s]*?\n)(\+[\S\s]*?\n)\n/gm
+        /((?:^-.*?\n)+?)((?:^\+.*?\n)+)/gm
     ), function (ignore, match1, match2) {
-        result = result.replace(
-            match1.replace((
-                /^-/gm
-            ), ""),
-            match2.replace((
-                /^\+/gm
-            ), "")
-        );
+        match1 = match1.replace((
+            /^-/gm
+        ), "");
+        match2 = match2.replace((
+            /^\+/gm
+        ), "");
+        if (result.indexOf(match1) < 0) {
+            throw new Error(
+                "shRawLibFetch - cannot find-and-replace snippet "
+                + JSON.stringify(match1)
+            );
+        }
+        result = result.replace(match1, match2);
     });
     if (!opt.rollupCommonJs) {
-        fileWrite(result.trim() + "\n\n\n\n/*\nfile none\n*/");
+        fs.writeFileSync(
+            process.argv[1],
+            header + result.trim() + "\n\n\n\n/*\nfile none\n*/\n"
+        );
         return;
     }
     // comment ... = require(...)
@@ -2565,8 +2573,8 @@ process.on("exit", function () {
             });
         }
     });
-    fileWrite("(function () {\n\"use strict\";");
-    fileWrite(Object.keys(requireDict).map(function (key) {
+    header += "(function () {\n\"use strict\";\n";
+    Object.keys(requireDict).map(function (key) {
         return (
             key.indexOf(" = exports_") >= 0
             ? ""
@@ -2576,12 +2584,12 @@ process.on("exit", function () {
         );
     }).filter(function (elem) {
         return elem;
-    }).sort().map(function (key) {
+    }).sort().forEach(function (key) {
         key = key.split("\u0000")[1];
-        return requireDict[key] + key;
-    }).join("\n"));
-    fileWrite(result.trim());
-    fileWrite(Object.keys(requireDict).map(function (key) {
+        header += requireDict[key] + key + "\n";
+    });
+    result = header + result.trim() + "\n";
+    Object.keys(requireDict).map(function (key) {
         return (
             key.indexOf(" = exports_") >= 0
             ? key.replace((
@@ -2596,13 +2604,14 @@ process.on("exit", function () {
         );
     }).filter(function (elem) {
         return elem;
-    }).sort().map(function (key) {
+    }).sort().forEach(function (key) {
         key = key.split("\u0000")[1];
-        return requireDict[key.replace((
+        result += requireDict[key.replace((
             /\u0020{2,}/
-        ), " ")] + key;
-    }).join("\n"));
-    fileWrite("}());\n\n\n\n/*\nfile none\n*/");
+        ), " ")] + key + "\n";
+    });
+    result += "}());\n\n\n\n/*\nfile none\n*/\n";
+    fs.writeFileSync(process.argv[1], result);
 });
 }());
 ' "$@"
