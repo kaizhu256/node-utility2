@@ -53,11 +53,10 @@
     /*
      * this function will throw err.<message> if <passed> is falsy
      */
-        let err;
         if (passed) {
             return;
         }
-        err = (
+        throw (
             (
                 message
                 && typeof message.message === "string"
@@ -73,7 +72,6 @@
                 : JSON.stringify(message, undefined, 4)
             )
         );
-        throw err;
     };
     local.coalesce = function (...argList) {
     /*

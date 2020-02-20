@@ -59,11 +59,10 @@
     /*
      * this function will throw err.<message> if <passed> is falsy
      */
-        let err;
         if (passed) {
             return;
         }
-        err = (
+        throw (
             (
                 message
                 && typeof message.message === "string"
@@ -79,7 +78,6 @@
                 : JSON.stringify(message, undefined, 4)
             )
         );
-        throw err;
     };
     local.coalesce = function (...argList) {
     /*
@@ -348,11 +346,10 @@ local.assetsDict["/assets.utility2.header.js"] = '\
     /*\n\
      * this function will throw err.<message> if <passed> is falsy\n\
      */\n\
-        let err;\n\
         if (passed) {\n\
             return;\n\
         }\n\
-        err = (\n\
+        throw (\n\
             (\n\
                 message\n\
                 && typeof message.message === "string"\n\
@@ -368,7 +365,6 @@ local.assetsDict["/assets.utility2.header.js"] = '\
                 : JSON.stringify(message, undefined, 4)\n\
             )\n\
         );\n\
-        throw err;\n\
     };\n\
     local.coalesce = function (...argList) {\n\
     /*\n\
@@ -4461,7 +4457,7 @@ local.httpFetch = function (url, opt) {
     httpFetchProgressUpdate.cnt += 1;
     httpFetchProgressUpdate();
     // init opt
-    opt = Object.assign({}, opt);
+    opt = opt || {};
     opt.abort = function (err) {
         controller.abort();
         request.destroy();
