@@ -6236,17 +6236,17 @@ local.stringHtmlSafe = function (str) {
  * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
  */
     return str.replace((
-        /&/g
+        /&/gu
     ), "&amp;").replace((
-        /"/g
+        /"/gu
     ), "&quot;").replace((
-        /'/g
+        /'/gu
     ), "&apos;").replace((
-        /</g
+        /</gu
     ), "&lt;").replace((
-        />/g
+        />/gu
     ), "&gt;").replace((
-        /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
+        /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
     ), "&$1");
 };
 
@@ -6487,17 +6487,17 @@ local.templateRender = function (template, dict, opt, ii) {
             // default to htmlSafe
             if (!notHtmlSafe) {
                 val = val.replace((
-                    /&/g
+                    /&/gu
                 ), "&amp;").replace((
-                    /"/g
+                    /"/gu
                 ), "&quot;").replace((
-                    /'/g
+                    /'/gu
                 ), "&apos;").replace((
-                    /</g
+                    /</gu
                 ), "&lt;").replace((
-                    />/g
+                    />/gu
                 ), "&gt;").replace((
-                    /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
+                    /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
                 ), "&$1");
             }
             markdownToHtml = (
@@ -6506,7 +6506,7 @@ local.templateRender = function (template, dict, opt, ii) {
             );
             if (markdownToHtml) {
                 val = markdownToHtml(val).replace((
-                    /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
+                    /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
                 ), "&$1");
             }
             return val;

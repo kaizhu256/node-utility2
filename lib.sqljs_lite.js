@@ -8091,7 +8091,7 @@ local.sqljsExec = function (msg) {
     });
 };
 
-local.sqljsTableExport = async function (opt) {
+local.sqljsTableExport = async function (opt, format) {
 /*
  * this function will export table from sql-statement <opt>.sql
  * as either list-of-object or csv
@@ -8103,11 +8103,13 @@ local.sqljsTableExport = async function (opt) {
  */
     let csv;
     let data;
+    // init <opt>
     if (typeof opt === "string") {
         opt = {
             sql: opt
         };
     }
+    format = opt.format || format
     data = (
         await local.sqljsExec(opt)
     ).results[0] || {
@@ -8117,7 +8119,7 @@ local.sqljsTableExport = async function (opt) {
         values: []
     };
     // export - list-of-object
-    if (opt.format !== "csv") {
+    if (format !== "csv") {
         return data.values.map(function (list) {
             let dict;
             dict = {};
@@ -8381,7 +8383,7 @@ local.sqljsTableImport = async function (opt) {
             return true;
         }
     };
-    sqlProgress = opt.sqlProgress || function (opt2) {
+    sqlProgress = function (opt2) {
     /*
      * this function will give progress-updates
      * when inserting large data (e.g. 100mb) into sqlite3
@@ -8396,7 +8398,7 @@ local.sqljsTableImport = async function (opt) {
         // + "\n" + opt2.sqlSnippet + "..."
         );
     };
-    sqlSanitize = opt.sqlSanitize || function (sqlCommand) {
+    sqlSanitize = function (sqlCommand) {
     /*
      * this function will sanitize <sqlCommand>
      * of invalid/uncommon unicode-characters before executing in sqlite3
@@ -8430,9 +8432,15 @@ local.sqljsTableImport = async function (opt) {
             /'/g
         ), "''") + "'";
     };
-    // init
-    byteLength = 0;
+    // init <opt>
+    columns = opt.columns;
     csv = opt.csv;
+    tableName = sqlStringify(opt.tableName || "_tableimport1");
+    values = opt.values;
+    sqlProgress = opt.sqlProgress || sqlProgress;
+    sqlSanitize = opt.sqlSanitize || sqlSanitize;
+    // init var
+    byteLength = 0;
     rgx = (
         /(.*?)(""|"|,|\r\n|\n)/g
     );
@@ -8440,11 +8448,8 @@ local.sqljsTableImport = async function (opt) {
     rowLength = 0;
     rowid = 0;
     sqlCommand = "";
-    tableName = sqlStringify(opt.tableName || "_imported1");
     timeStart = Date.now();
     val = "";
-    values = opt.values;
-    columns = opt.columns;
     // insert <columns>
     if (Array.isArray(columns)) {
         row = Array.from(columns);
