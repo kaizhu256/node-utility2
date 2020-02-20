@@ -2470,7 +2470,7 @@ local.ajax = function (opt, onError) {
     /*
      * this function will init xhr
      */
-        // init opt
+        // init <opt>
         Object.keys(opt).forEach(function (key) {
             if (key[0] !== "_") {
                 xhr[key] = opt[key];
@@ -4456,7 +4456,7 @@ local.httpFetch = function (url, opt) {
     httpFetchProgressUpdate.cnt |= 0;
     httpFetchProgressUpdate.cnt += 1;
     httpFetchProgressUpdate();
-    // init opt
+    // init <opt>
     opt = opt || {};
     opt.abort = function (err) {
         controller.abort();
@@ -5033,7 +5033,7 @@ local.middlewareForwardProxy = function (req, res, next) {
         local.streamCleanup(opt.clientReq);
         next(err);
     };
-    // init opt
+    // init <opt>
     opt = local.urlParse(req.headers["forward-proxy-url"]);
     opt.method = req.method;
     opt.url = req.headers["forward-proxy-url"];

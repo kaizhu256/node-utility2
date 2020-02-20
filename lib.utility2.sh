@@ -4796,7 +4796,7 @@ local.ajax = function (opt, onError) {
     /*
      * this function will init xhr
      */
-        // init opt
+        // init <opt>
         Object.keys(opt).forEach(function (key) {
             if (key[0] !== "_") {
                 xhr[key] = opt[key];
