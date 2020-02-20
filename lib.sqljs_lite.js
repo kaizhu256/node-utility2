@@ -2,7 +2,7 @@
 /*
  * lib.sqljs_lite.js (2020.2.12)
  * https://github.com/kaizhu256/node-sqljs-lite
- * the greatest app in the world!
+ * this zero-dependency package will import/export 100mb spreadsheets to/from wasm-sqlite inside browser
  *
  */
 
@@ -2768,7 +2768,7 @@ function isDataURI(filename) {
 
 
 // hack-sqljs-lite - wasmBinaryFile
-var wasmBinaryFile = 'assets.sqljs_lite.wasm';
+var wasmBinaryFile = 'assets.sqljs_lite-v2020.2.12.wasm';
 if (!isDataURI(wasmBinaryFile)) {
   wasmBinaryFile = locateFile(wasmBinaryFile);
 }
@@ -8056,7 +8056,7 @@ let worker;
 
 local.sqljsExec = function (msg) {
 /*
- * this function will post <msg> to worker and return a promise
+ * this function will post <msg>.sql to sqljs-worker to exec in sqlite3
  */
     let callback;
     let err;
@@ -8093,14 +8093,18 @@ local.sqljsExec = function (msg) {
 
 local.sqljsTableExport = async function (opt) {
 /*
- * this function will export table <opt>.sql "SELECT ... FROM ..."
- * from sqlite3
+ * this function will export table from sql-statement <opt>.sql
+ * as either list-of-object or csv
+ * example use:
+    await local.sqljsTableExport({
+        format: "csv",
+        sql: "SELECT * FROM mytable1"
+    });
  */
     let csv;
     let data;
     if (typeof opt === "string") {
         opt = {
-            exportType: "dict",
             sql: opt
         };
     }
@@ -8112,11 +8116,8 @@ local.sqljsTableExport = async function (opt) {
         ],
         values: []
     };
-    switch (opt.exportType) {
-    case "csv":
-        break;
-    // export - list of dict
-    case "dict":
+    // export - list-of-object
+    if (opt.format !== "csv") {
         return data.values.map(function (list) {
             let dict;
             dict = {};
@@ -8125,10 +8126,8 @@ local.sqljsTableExport = async function (opt) {
             });
             return dict;
         });
-    // export - list of list
-    default:
-        return data;
     }
+// export - csv
 /*
 https://tools.ietf.org/html/rfc4180#section-2
 2.  Definition of the CSV Format
@@ -8441,7 +8440,7 @@ local.sqljsTableImport = async function (opt) {
     rowLength = 0;
     rowid = 0;
     sqlCommand = "";
-    tableName = sqlStringify(opt.tableName || "tmp1");
+    tableName = sqlStringify(opt.tableName || "_imported1");
     timeStart = Date.now();
     val = "";
     values = opt.values;
@@ -8451,7 +8450,7 @@ local.sqljsTableImport = async function (opt) {
         row = Array.from(columns);
         sqlInsert();
     }
-    // import - list of list
+    // import - list-of-list
     if (values && Array.isArray(values[0])) {
         values.forEach(function (elem) {
             // insert <row>
@@ -8460,7 +8459,7 @@ local.sqljsTableImport = async function (opt) {
         });
         return await sqlEnd();
     }
-    // import - list of dict
+    // import - list-of-object
     if (values) {
         values.forEach(function (elem, ii) {
             // insert <columns>
@@ -8614,7 +8613,7 @@ if (local.isBrowser) {
     callbackDict = {};
     // init worker
     worker = new Worker(
-        "assets.sqljs_lite.js"
+        "assets.sqljs_lite-v2020.2.12.js"
     );
     // init sqljs_worker evt-handling
     worker.addEventListener("message", function (msg) {

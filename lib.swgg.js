@@ -2469,7 +2469,7 @@ local.apiUpdate = function (swaggerJson) {
             + "/*\n"
             + " * this function will run the api-call "
             + JSON.stringify(that._methodPath) + "\n"
-            + " * example usage:" + String(
+            + " * example use:" + String(
                 "\n"
                 + "swgg.apiDict["
                 + JSON.stringify(key.join("."))

@@ -68,7 +68,7 @@ shBaseInit () {
 shBaseInstall () {
 # this function will install .bashrc, .screenrc, .vimrc, and lib.utility2.sh in $HOME,
 # and is intended for aws-ec2 setup
-# example usage:
+# example use:
 # curl -o "$HOME/lib.utility2.sh" https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh && . "$HOME/lib.utility2.sh" && shBaseInstall
     for FILE in .screenrc .vimrc lib.utility2.sh
     do
@@ -359,7 +359,7 @@ shBuildCi () {(set -e
 '
             shBuildApp
             ;;
-        # example usage:
+        # example use:
         # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc "[git squashPop HEAD~1] [npm publishAfterCommitAfterBuild]"
         "[git squashPop "*)
             shGitSquashPop \
@@ -371,7 +371,7 @@ shBuildCi () {(set -e
                 "https://github.com/$GITHUB_REPO" -f HEAD:alpha
             return
             ;;
-        # example usage:
+        # example use:
         # shCryptoWithGithubOrg npmdoc shGithubRepoTouch "npmdoc/node-npmdoc-mysql npmdoc/node-npmdoc-mysql" "[npm publishAfterCommitAfterBuild]"
         "[npm publishAfterCommitAfterBuild]"*)
             if [ ! "$GITHUB_TOKEN" ]
@@ -438,7 +438,7 @@ shBuildCi () {(set -e
         "[\$ "*)
             eval "$(printf "$CI_COMMIT_MESSAGE_META" | sed -e "s/^..//")"
             ;;
-        # example usage:
+        # example use:
         # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-sandbox2 "[debug travis@proxy.com root]" task
         "[debug "*)
             if [ ! "$SSH_KEY" ]
@@ -462,7 +462,7 @@ shBuildCi () {(set -e
                 shSleep 60
             done
             ;;
-        # example usage:
+        # example use:
         # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc "[git push origin beta:master]" task
         "[git push origin "*)
             git fetch --depth=50 origin "$(
@@ -917,7 +917,7 @@ shChromeSocks5 () {(set -e
 
 shCryptoAesXxxCbcRawDecrypt () {(set -e
 # this function will inplace aes-xxx-cbc decrypt stdin with given hex-key $1
-# example usage:
+# example use:
 # printf 'hello world\n' | shCryptoAesXxxCbcRawEncrypt 0123456789abcdef0123456789abcdef | shCryptoAesXxxCbcRawDecrypt 0123456789abcdef0123456789abcdef
     node -e "$UTILITY2_MACRO_JS"'
 /* jslint utility2:true */
@@ -949,7 +949,7 @@ process.stdin.on("end", function () {
 
 shCryptoAesXxxCbcRawEncrypt () {(set -e
 # this function will inplace aes-xxx-cbc encrypt stdin with given hex-key $1
-# example usage:
+# example use:
 # printf 'hello world\n' | shCryptoAesXxxCbcRawEncrypt 0123456789abcdef0123456789abcdef | shCryptoAesXxxCbcRawDecrypt 0123456789abcdef0123456789abcdef
     node -e "$UTILITY2_MACRO_JS"'
 /* jslint utility2:true */
@@ -1497,7 +1497,7 @@ shGitInitBase () {(set -e
 
 shGitLsTree () {(set -e
 # this function will list all files committed in HEAD
-# example usage:
+# example use:
 # shGitLsTree | sort -nrk2 -nrk3 # sort by date
 # shGitLsTree | sort -nrk5 # sort by size
     printf "$(git ls-tree --name-only -r HEAD | head -n 4096)" | awk '{
@@ -1594,7 +1594,7 @@ shGithubApiRateLimitGet () {(set -e
 
 shGithubDateCommitted () {(set -e
 # this function will fetch the commit-date for the github-commit-url $1
-# example usage:
+# example use:
 # shGithubDateCommitted https://github.com/kaizhu256/node-utility2/commits/master
     printf "shGithubDateCommitted $1 # "
     curl -Lfs "$1" | grep -m 1 -o -E \
@@ -1909,7 +1909,7 @@ shMacAddressSpoof () {(set -e
 
 shMediaHlsEncrypt () {(set -e
 # this function encrypt the hls-media with given hls.m3u8 file
-# example usage:
+# example use:
 # CRYPTO_AES_KEY_MEDIA=0123456789abcdef0123456789abcdef shMediaHlsEncrypt
     node -e "$UTILITY2_MACRO_JS"'
 /* jslint utility2:true */
@@ -1959,7 +1959,7 @@ local.cryptoAesXxxCbcRawEncrypt({
 
 shMediaHlsFromMp4 () {(set -e
 # this function convert the media $1 to hls
-# example usage:
+# example use:
 # shMediaHlsFromMp4 a00.mp4
     ffmpeg \
         -i "$1" \
@@ -1986,7 +1986,7 @@ console.log(local.moduleDirname(process.argv[1], module.paths));
 
 shNpmDeprecateAlias () {(set -e
 # this function will deprecate the npm-package $NAME with given $MESSAGE
-# example usage:
+# example use:
 # shNpmDeprecateAlias deprecated-package
     shEnvSanitize
     NAME="$1"
@@ -2936,7 +2936,7 @@ shSource () {
 shSsh5022F () {(set -e
 # this function will ssh the reverse-tunnel-client
 # to the middleman $USER_HOST:5022
-# example usage:
+# example use:
 # shSsh5022F travis@proxy.com -D 5080
     USER_HOST="$1"
     shift
@@ -2949,7 +2949,7 @@ shSsh5022F () {(set -e
 shSsh5022R () {(set -e
 # this function will ssh-reverse-tunnel the local-machine $USER@127.0.0.1
 # to the middleman $USER_HOST:5022
-# example usage:
+# example use:
 # shSsh5022R travis@proxy.com root
 # pkill -f "ssh $USER_REMOTE@$HOST"
     USER_HOST="$1"
@@ -3892,7 +3892,7 @@ local.bufferValidateAndCoerce = function (buf, mode) {
 local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
 /*
  * this function will aes-xxx-cbc decrypt with given <opt>
- * example usage:
+ * example use:
     data = new Uint8Array([1,2,3]);
     key = '"'"'0123456789abcdef0123456789abcdef'"'"';
     mode = undefined;
@@ -3967,7 +3967,7 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
 local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
 /*
  * this function will aes-xxx-cbc encrypt with given <opt>
- * example usage:
+ * example use:
     data = new Uint8Array([1,2,3]);
     key = '"'"'0123456789abcdef0123456789abcdef'"'"';
     mode = undefined;
@@ -4446,7 +4446,7 @@ local.semverCompare = function (aa, bb) {
  *  0 if aa = bb
  *  1 if aa > bb
  * https://semver.org/#spec-item-11
- * example usage:
+ * example use:
     semverCompare("2.2.2", "10.2.2"); // -1
     semverCompare("1.2.3", "1.2.3");  //  0
     semverCompare("10.2.2", "2.2.2"); //  1
@@ -4607,7 +4607,7 @@ local.ajax = function (opt, onError) {
  * this function will send an ajax-req
  * with given <opt>.url and callback <onError>
  * with err and timeout handling
- * example usage:
+ * example use:
     local.ajax({
         data: "hello world",
         header: {"x-header-hello": "world"},

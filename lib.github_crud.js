@@ -268,7 +268,7 @@ local.ajax = function (opt, onError) {
  * this function will send an ajax-req
  * with given <opt>.url and callback <onError>
  * with err and timeout handling
- * example usage:
+ * example use:
     local.ajax({
         data: "hello world",
         header: {"x-header-hello": "world"},

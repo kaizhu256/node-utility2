@@ -2281,7 +2281,7 @@ local.ajax = function (opt, onError) {
  * this function will send an ajax-req
  * with given <opt>.url and callback <onError>
  * with err and timeout handling
- * example usage:
+ * example use:
     local.ajax({
         data: "hello world",
         header: {"x-header-hello": "world"},
@@ -3623,7 +3623,7 @@ local.childProcessSpawnWithTimeout = function (command, args, opt) {
 /*
  * this function will run like child_process.spawn,
  * but with auto-timeout after timeout milliseconds
- * example usage:
+ * example use:
     let child = local.childProcessSpawnWithTimeout(
         "/bin/sh",
         ["-c", "echo hello world"],
@@ -3893,7 +3893,7 @@ local.corsForwardProxyHostIfNeeded = function (xhr) {
 local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
 /*
  * this function will aes-xxx-cbc decrypt with given <opt>
- * example usage:
+ * example use:
     data = new Uint8Array([1,2,3]);
     key = '0123456789abcdef0123456789abcdef';
     mode = undefined;
@@ -3969,7 +3969,7 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
 local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
 /*
  * this function will aes-xxx-cbc encrypt with given <opt>
- * example usage:
+ * example use:
     data = new Uint8Array([1,2,3]);
     key = '0123456789abcdef0123456789abcdef';
     mode = undefined;
@@ -5998,7 +5998,7 @@ local.semverCompare = function (aa, bb) {
  *  0 if aa = bb
  *  1 if aa > bb
  * https://semver.org/#spec-item-11
- * example usage:
+ * example use:
     semverCompare("2.2.2", "10.2.2"); // -1
     semverCompare("1.2.3", "1.2.3");  //  0
     semverCompare("10.2.2", "2.2.2"); //  1

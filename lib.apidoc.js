@@ -611,7 +611,7 @@ local.templateApidocHtml = '\
     </h2>\n\
     <ul>\n\
     <li>description and source-code<pre class="apidocCodePre">{{source truncate 4096}}</pre></li>\n\
-    <li>example usage<pre class="apidocCodePre">{{example}}</pre></li>\n\
+    <li>example use<pre class="apidocCodePre">{{example}}</pre></li>\n\
     </ul>\n\
     {{/if source}}\n\
     {{/each elemList}}\n\
