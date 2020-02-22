@@ -290,8 +290,8 @@ local.cliRun = function (opt) {
         let commandList;
         let file;
         let packageJson;
-        let text;
-        let textDict;
+        let str;
+        let strDict;
         commandList = [
             {
                 argList: "<arg2>  ...",
@@ -316,23 +316,23 @@ local.cliRun = function (opt) {
         opt.rgxComment = opt.rgxComment || (
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
-        textDict = {};
+        strDict = {};
         Object.keys(local.cliDict).sort().forEach(function (key, ii) {
             if (key[0] === "_" && key !== "_default") {
                 return;
             }
-            text = String(local.cliDict[key]);
+            str = String(local.cliDict[key]);
             if (key === "_default") {
                 key = "";
             }
-            textDict[text] = textDict[text] || (ii + 2);
-            ii = textDict[text];
+            strDict[str] = strDict[str] || (ii + 2);
+            ii = strDict[str];
             if (commandList[ii]) {
                 commandList[ii].command.push(key);
                 return;
             }
             try {
-                commandList[ii] = opt.rgxComment.exec(text);
+                commandList[ii] = opt.rgxComment.exec(str);
                 commandList[ii] = {
                     argList: local.coalesce(commandList[ii][1], "").trim(),
                     command: [
@@ -346,7 +346,7 @@ local.cliRun = function (opt) {
                     + key
                     + ":\nnew RegExp("
                     + JSON.stringify(opt.rgxComment.source)
-                    + ").exec(" + JSON.stringify(text).replace((
+                    + ").exec(" + JSON.stringify(str).replace((
                         /\\\\/g
                     ), "\u0000").replace((
                         /\\n/g
@@ -356,9 +356,9 @@ local.cliRun = function (opt) {
                 ));
             }
         });
-        text = "";
-        text += packageJson.name + " (" + packageJson.version + ")\n\n";
-        text += commandList.filter(function (elem) {
+        str = "";
+        str += packageJson.name + " (" + packageJson.version + ")\n\n";
+        str += commandList.filter(function (elem) {
             return elem;
         }).map(function (elem, ii) {
             elem.command = elem.command.filter(function (elem) {
@@ -385,7 +385,7 @@ local.cliRun = function (opt) {
                 + elem.argList.join("  ")
             );
         }).join("\n\n");
-        console.log(text);
+        console.log(str);
     };
     local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
     local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
