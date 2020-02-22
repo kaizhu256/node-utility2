@@ -65,7 +65,7 @@
         throw (
             (
                 msg
-                && typeof msg.msg === "string"
+                && typeof msg.message === "string"
                 && typeof msg.stack === "string"
             )
             // if msg is err, then leave as is
@@ -352,7 +352,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         throw (\n\
             (\n\
                 msg\n\
-                && typeof msg.msg === "string"\n\
+                && typeof msg.message === "string"\n\
                 && typeof msg.stack === "string"\n\
             )\n\
             // if msg is err, then leave as is\n\

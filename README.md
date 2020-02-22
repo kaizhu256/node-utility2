@@ -195,7 +195,7 @@ instruction
         throw (
             (
                 msg
-                && typeof msg.msg === "string"
+                && typeof msg.message === "string"
                 && typeof msg.stack === "string"
             )
             // if msg is err, then leave as is
