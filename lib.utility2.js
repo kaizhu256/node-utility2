@@ -1388,7 +1388,7 @@ PORT=8081 node ./assets.app.js\n\
 ```shell\n\
 # build_ci.sh\n\
 \n\
-# this shell script will run the build for this package\n\
+# this shell script will run build-ci for this package\n\
 \n\
 shBuildCiAfter () {(set -e\n\
     # shDeployCustom\n\
@@ -3684,7 +3684,7 @@ local.childProcessSpawnWithUtility2 = function (script, onError) {
 
 local.cliRun = function (opt) {
 /*
- * this function will run the cli with given <opt>
+ * this function will run cli with given <opt>
  */
     local.cliDict._eval = local.cliDict._eval || function () {
     /*
@@ -5176,7 +5176,7 @@ local.moduleDirname = function (module, pathList) {
 
 local.normalizeJwt = function (data) {
 /*
- * this function will normalize the jwt-data with registered-headers
+ * this function will normalize jwt-data with registered-headers
  * https://tools.ietf.org/html/rfc7519#section-4.1
  */
     let timeNow;
@@ -5357,7 +5357,7 @@ local.onErrorWithStack = function (onError) {
 
 local.onFileModifiedRestart = function (file) {
 /*
- * this function will watch the file, and if modified, then restart the process
+ * this function will watch <file>, and if modified, then restart process
  */
     if (
         local.env.npm_config_mode_auto_restart
@@ -5706,7 +5706,7 @@ local.requireReadme = function () {
     });
     local.fs.readdirSync(process.cwd()).forEach(function (file) {
         file = process.cwd() + "/" + file;
-        // if the file is modified, then restart the process
+        // if <file> is modified, then restart process
         local.onFileModifiedRestart(file);
         switch (local.path.basename(file)) {
         // swagger-validate assets.swgg.swagger.json
@@ -5893,9 +5893,9 @@ assets.app.js\n\
 \n\
 instruction\n\
     1. save this script as assets.app.js\n\
-    2. run the shell-command:\n\
+    2. run shell-command:\n\
         $ PORT=8081 node assets.app.js\n\
-    3. open a browser to http://127.0.0.1:8081 and play with the web-demo\n\
+    3. open a browser to http://127.0.0.1:8081 and play with web-demo\n\
     4. edit this script to suit your needs\n\
 */\n\
 ' + local.assetsDict["/assets.utility2.rollup.start.js"].replace((
@@ -6055,7 +6055,7 @@ local.semverCompare = function (aa, bb) {
 
 local.serverRespondCors = function (req, res) {
 /*
- * this function will enable cors for the req
+ * this function will enable cors for <req>
  * http://en.wikipedia.org/wiki/Cross-origin_resource_sharing
  */
     local.serverRespondHeadSet(req, res, undefined, local.jsonCopy({
@@ -6116,7 +6116,7 @@ local.serverRespondEcho = function (req, res) {
 
 local.serverRespondHeadSet = function (ignore, res, statusCode, headers) {
 /*
- * this function will set the <res> object's <statusCode> and <headers>
+ * this function will set <res> object's <statusCode> and <headers>
  */
     if (res.headersSent) {
         return;

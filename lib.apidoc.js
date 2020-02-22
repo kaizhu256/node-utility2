@@ -265,7 +265,7 @@ local.apidoc = local;
 /* validateLineSortedReset */
 local.cliRun = function (opt) {
 /*
- * this function will run the cli with given <opt>
+ * this function will run cli with given <opt>
  */
     local.cliDict._eval = local.cliDict._eval || function () {
     /*
