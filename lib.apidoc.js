@@ -971,13 +971,13 @@ local.apidocCreate = function (opt) {
         }, console.error);
         return result;
     };
-    trimStart = function (text) {
+    trimStart = function (str) {
     /*
-     * this function will normalize whitespace before <text>
+     * this function will normalize whitespace before <str>
      */
         let whitespace;
         whitespace = "";
-        text.trim().replace((
+        str.trim().replace((
             /^\u0020*/gm
         ), function (match0) {
             if (!whitespace || match0.length < whitespace.length) {
@@ -985,16 +985,16 @@ local.apidocCreate = function (opt) {
             }
             return "";
         });
-        text = text.replace(new RegExp("^" + whitespace, "gm"), "");
+        str = str.replace(new RegExp("^" + whitespace, "gm"), "");
         // enforce 128 character column limit
-        text = text.replace((
+        str = str.replace((
             /^.{128}[^\\\n]+/gm
         ), function (match0) {
             return match0.replace((
                 /(.{128}(?:\b|\w+))/g
             ), "$1\n").trimEnd();
         });
-        return text;
+        return str;
     };
     // init opt
     opt.dir = local.moduleDirname(
@@ -1107,8 +1107,8 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
     // handle case where module is a function
     if (typeof moduleMain === "function") {
         (function () {
-            let text;
-            text = toString(moduleMain);
+            let str;
+            str = toString(moduleMain);
             tmp = function () {
                 return;
             };
@@ -1118,7 +1118,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 toString: {
                     get: function () {
                         return function () {
-                            return text;
+                            return str;
                         };
                     }
                 }
