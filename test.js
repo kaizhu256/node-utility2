@@ -296,7 +296,7 @@ local.testCase_FormData_err = function (opt, onError) {
         [
             local.FormData.prototype, {
                 read: function (onError) {
-                    onError(local.errDefault);
+                    onError(local.errorDefault);
                 }
             }
         ]
@@ -640,7 +640,7 @@ local.testCase_assertXxx_default = function (opt, onError) {
     });
     // test assertion failed with errObj
     local.tryCatchOnError(function () {
-        local.assertOrThrow(null, local.errDefault);
+        local.assertOrThrow(null, local.errorDefault);
     }, function (err) {
         // handle err
         local.assertOrThrow(err, err);
@@ -1435,7 +1435,7 @@ local.testCase_localStorageSetItemOrClear_default = function (
             localStorage, {
                 clear: null,
                 setItem: function () {
-                    throw local.errDefault;
+                    throw local.errorDefault;
                 }
             }
         ]
@@ -1925,7 +1925,7 @@ local.testCase_onErrorDefault_default = function (opt, onError) {
         // validate opt
         local.assertOrThrow(!opt, opt);
         // test err handling-behavior
-        local.onErrorDefault(local.errDefault);
+        local.onErrorDefault(local.errorDefault);
         // validate opt
         local.assertOrThrow(opt, opt);
         onError(undefined, opt);
@@ -1937,7 +1937,7 @@ local.testCase_onErrorThrow_err = function (opt, onError) {
  * this function will test onErrorThrow's err handling-behavior
  */
     local.tryCatchOnError(function () {
-        local.onErrorThrow(local.errDefault);
+        local.onErrorThrow(local.errorDefault);
     }, function (err) {
         // handle err
         local.assertOrThrow(err, err);
@@ -1988,7 +1988,7 @@ local.testCase_onNext_err = function (opt, onError) {
     opt = {};
     opt.modeDebug = true;
     local.gotoNext(opt, function () {
-        throw local.errDefault;
+        throw local.errorDefault;
     });
     opt.gotoState = 0;
     local.tryCatchOnError(function () {
@@ -2020,7 +2020,7 @@ local.testCase_onParallelList_default = function (opt, onError) {
             local.onParallelList(opt, function (opt2, onParallel) {
                 onParallel.cnt += 1;
                 // test err handling-behavior
-                onParallel(local.errDefault, opt2);
+                onParallel(local.errorDefault, opt2);
                 // test multiple-callback handling-behavior
                 setTimeout(onParallel, 5000);
             }, function (err) {
@@ -2121,7 +2121,7 @@ local.testCase_onParallel_default = function (opt, onError) {
         // handle err
         local.assertOrThrow(onParallelError.err, onParallelError.err);
         // test err handling-behavior
-        onParallelError(local.errDefault);
+        onParallelError(local.errorDefault);
         // handle err
         local.assertOrThrow(onParallelError.err, onParallelError.err);
         // test ignore-after-error handling-behavior
@@ -2772,7 +2772,7 @@ local.testCase_webpage_err = function (opt, onError) {
     globalThis.utility2_testReport.testsPending = 0;
     setTimeout(function () {
         // test err from callback handling-behavior
-        onError(local.errDefault, opt);
+        onError(local.errorDefault, opt);
         // test err from multiple-callback handling-behavior
         onError(undefined, opt);
     }, 2000);
@@ -2834,9 +2834,9 @@ local.middlewareList.push(function (req, res, next) {
     case "/test.err-500":
         // test multiple-callback serverRespondHeadSet handling-behavior
         local.serverRespondHeadSet(req, res, null, {});
-        next(local.errDefault);
+        next(local.errorDefault);
         // test multiple-callback-error handling-behavior
-        next(local.errDefault);
+        next(local.errorDefault);
         // test onErrorDefault handling-behavior
         local.testMock([
             [

@@ -4192,18 +4192,6 @@ local.domStyleValidate = function () {
     });
 };
 
-local.errorMessagePrepend = function (err, message) {
-/*
- * this function will prepend message to <err>.message and <err>.stack
- */
-    if (err === local.errDefault) {
-        return;
-    }
-    err.message = message + err.message;
-    err.stack = message + err.stack;
-    return err;
-};
-
 local.eventEmitterCreate = function (that = {}) {
 /*
  * this function will create a simple, node-like event-emitter with <that>,
@@ -5341,7 +5329,7 @@ local.onErrorWithStack = function (onError) {
         if (
             err
             && typeof err.stack === "string"
-            && err !== local.errDefault
+            && err !== local.errorDefault
             && String(err.stack).indexOf(stack.split("\n")[2]) < 0
         ) {
             err.stack += "\n" + stack;
@@ -6083,10 +6071,9 @@ local.serverRespondDefault = function (req, res, statusCode, err) {
     );
     if (err) {
         // debug statusCode / method / url
-        local.errorMessagePrepend(
-            err,
-            res.statusCode + " " + req.method + " " + req.url
-            + "\n"
+        err.message = (
+            res.statusCode + " " + req.method + " " + req.url + "\n"
+            + err.message
         );
         // print err.stack to stderr
         local.onErrorDefault(err);
@@ -7579,7 +7566,7 @@ local.objectSetDefault(local.env, {
     npm_package_nameLib: "my_app",
     npm_package_version: "0.0.1"
 });
-local.errDefault = new Error("default-error");
+local.errorDefault = new Error("default-error");
 local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.identity;
 // cbranch-no cstat-no fstat-no missing-if-branch
 local.istanbulCoverageReportCreate = (

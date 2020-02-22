@@ -2992,7 +2992,7 @@ local.middlewareCrudBuiltin = function (req, res, next) {
             case "crudErrorPatch":
             case "crudErrorPost":
             case "crudErrorPut":
-                opt.gotoNext(local.errDefault);
+                opt.gotoNext(local.errorDefault);
                 break;
             case "crudGetManyByQuery":
                 onParallel = local.onParallel(opt.gotoNext);
@@ -3255,7 +3255,7 @@ local.middlewareUserLogin = function (req, res, next) {
             switch (crud.crudType[0]) {
             // hack-coverage - test err handling-behavior
             case "crudErrorLogin":
-                opt.gotoNext(local.errDefault);
+                opt.gotoNext(local.errorDefault);
                 return;
             case "userLoginByPassword":
                 user.password = req.urlParsed.query.password;
@@ -3920,9 +3920,9 @@ local.serverRespondJsonapi = function (req, res, err, data, meta) {
         });
         if (err) {
             // debug statusCode / method / url
-            local.errorMessagePrepend(
-                err,
+            err.message = (
                 res.statusCode + " " + req.method + " " + req.url + "\n"
+                + err.message
             );
             // print err.stack to stderr
             local.onErrorDefault(err);

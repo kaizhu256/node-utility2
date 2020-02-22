@@ -503,7 +503,7 @@ local.onErrorWithStack = function (onError) {
         if (
             err
             && typeof err.stack === "string"
-            && err !== local.errDefault
+            && err !== local.errorDefault
             && String(err.stack).indexOf(stack.split("\n")[2]) < 0
         ) {
             err.stack += "\n" + stack;
