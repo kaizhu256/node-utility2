@@ -4114,10 +4114,10 @@ local.swaggerJsonFromAjax = function (swaggerJson, opt) {
     return swaggerJson;
 };
 
-local.swaggerJsonFromCurl = function (swaggerJson, text) {
+local.swaggerJsonFromCurl = function (swaggerJson, str) {
 /*
  * this function will update swaggerJson
- * with definitions and paths created from given curl-command-text
+ * with definitions and paths created from given curl-command-str
  */
     let arg;
     let argList;
@@ -4126,17 +4126,17 @@ local.swaggerJsonFromCurl = function (swaggerJson, text) {
     let quote;
     arg = "";
     argList = [];
-    doubleBackslash = local.stringUniqueKey(text);
+    doubleBackslash = local.stringUniqueKey(str);
     // parse doubleBackslash
-    text = text.replace((
+    str = str.replace((
         /\\\\/g
     ), doubleBackslash);
     // parse line-continuation
-    text = text.replace((
+    str = str.replace((
         /\\\n/g
     ), "");
     // parse quotes
-    text.replace((
+    str.replace((
         /(\s*?)(\S+)/g
     ), function (match0, line, word) {
         line = match0;
@@ -5453,14 +5453,14 @@ local.uiEventListenerDict.onEventInputValidateAndAjax = function (
     let errorDict;
     let jsonParse;
     let tmp;
-    jsonParse = function (text) {
+    jsonParse = function (str) {
     /*
-     * this function will try to JSON.parse(text)
+     * this function will try to JSON.parse(str)
      */
         return local.tryCatchOnError(function () {
-            return JSON.parse(text);
+            return JSON.parse(str);
         }, function () {
-            return text;
+            return str;
         });
     };
     // hack-jslint
@@ -6224,7 +6224,7 @@ local.uiRenderSchemaP = function (schemaP) {
     // init input - number
     } else if (schemaP.type === "integer" || schemaP.type === "number") {
         schemaP.isInputNumber = true;
-    // init input - text
+    // init input - str
     } else {
         schemaP.isInputText = true;
     }
