@@ -57,6 +57,7 @@ this zero-dependency package will provide high-level functions to to build, test
 
 #### changelog 2020.2.18
 - npm publish 2020.2.18
+- rename text to str
 - update shell-function shRawLibFetch to apply diff
 - add files lib.sqljs_lite.js, raw.sqljs_lite.js
 - add function promisify
@@ -72,7 +73,6 @@ this zero-dependency package will provide high-level functions to to build, test
 #### todo
 - jslint - add nullish-coalescing support
 - jslint - add optional-chaining support
-- rename text to str
 - jslint - prefer undefined over null
 - replace function local.objectSetOverride with Object.assign
 - jslint - fix off-by-one line-error
