@@ -8091,6 +8091,26 @@ local.sqljsExec = function (msg) {
     });
 };
 
+local.sqljsStringify = function (val) {
+/*
+ * this function will stringify <val> before inserting into sqlite3-statement
+ */
+    val = (
+        typeof val === "string"
+        ? val
+        : (val === null || val === undefined)
+        ? ""
+        : String(
+            typeof val === "boolean"
+            ? val | 0
+            : val
+        )
+    );
+    return "'" + val.replace((
+        /'/gu
+    ), "''") + "'";
+};
+
 local.sqljsTableExport = async function (opt, format) {
 /*
  * this function will export table from sql-statement <opt>.sql
@@ -8109,7 +8129,7 @@ local.sqljsTableExport = async function (opt, format) {
             sql: opt
         };
     }
-    format = opt.format || format
+    format = opt.format || format;
     data = (
         await local.sqljsExec(opt)
     ).results[0] || {
@@ -8205,7 +8225,7 @@ another double quote.  For example:
 "aaa","b""bb","ccc"
 */
                 val = val.replace((
-                    /"/g
+                    /"/gu
                 ), "\"\"");
 /*
 6.  Fields containing line breaks (CRLF), double quotes, and commas
@@ -8262,31 +8282,61 @@ local.sqljsTableImport = async function (opt) {
     let rowLength;
     let rowid;
     let sqlCommand;
+    let sqlCreate;
     let sqlEnd;
     let sqlExec;
     let sqlInsert;
     let sqlProgress;
     let sqlSanitize;
-    let sqlStringify;
     let tableName;
     let timeStart;
     let val;
     let values;
+    sqlCreate = function () {
+    /*
+     * this function will create table with given <columns>
+     */
+        let tmp;
+        // init <columns>
+        columns = (
+            columns === "create"
+            ? row.map(function (ignore, ii) {
+                return "c" + (ii + 1);
+            })
+            : columns || row
+        );
+        if (columns === row) {
+            row = [];
+        }
+        // ensure unique column-names
+        tmp = {};
+        columns = columns.map(function (val) {
+            while (tmp.hasOwnProperty(val)) {
+                val += "_";
+            }
+            tmp[val] = true;
+            return val;
+        });
+        // init <rowLength>
+        rowLength = columns.length;
+        // create table <tableName>
+        local.sqljsExec({
+            sql: sqlSanitize(
+                "DROP TABLE IF EXISTS " + tableName + ";\n"
+                + "CREATE TEMP TABLE " + tableName + " ("
+                + columns.map(local.sqljsStringify).join(" TEXT,") + " TEXT"
+                + ");"
+            )
+        });
+    };
     sqlEnd = async function () {
     /*
      * this function will insert remaining rows into sqlite3
      * and count inserted rows
      */
         // insert remaining rows
+        sqlInsert();
         sqlExec();
-        // handle null-case
-        if (!rowid) {
-            row = [
-                "column_1"
-            ];
-            sqlInsert();
-            sqlExec();
-        }
         // count inserted rows
         return (
             await local.sqljsExec({
@@ -8326,57 +8376,27 @@ local.sqljsTableImport = async function (opt) {
      * this function will insert <row> into sqlite3
      */
         let ii;
-        let tmp;
-        // insert <columns>
-        if (!rowid && columns === "create") {
-            columns = row;
-            tmp = Array.from(row);
-            ii = 0;
-            while (ii < row.length) {
-                row[ii] = "column_" + (ii + 1);
-                ii += 1;
-            }
-            sqlInsert();
-            row = tmp;
-        }
-        // sql-stringify <row>
-        ii = 0;
-        while (ii < row.length) {
-            row[ii] = sqlStringify(row[ii]);
-            ii += 1;
-        }
         // create table <tableName>
         if (!rowid) {
-            rowLength = row.length;
-            local.sqljsExec({
-                sql: sqlSanitize(
-                    "DROP TABLE IF EXISTS " + tableName + ";\n"
-                    + "CREATE TEMP TABLE " + tableName + " ("
-                    + row.join(" TEXT,") + " TEXT"
-                    + ");"
-                )
-            });
-            // reset <row>
-            row = [];
-            rowid += 1;
+            sqlCreate();
+        }
+        if (!row.length) {
             return;
         }
-        if (row.length) {
-            // enforce <rowLength>
-            sqlCommand += "(";
-            ii = 0;
-            while (ii < rowLength) {
-                if (ii) {
-                    sqlCommand += ",";
-                }
-                sqlCommand += row[ii] || "''";
-                ii += 1;
+        rowid += 1;
+        // enforce <rowLength>
+        ii = 0;
+        sqlCommand += "(";
+        while (ii < rowLength) {
+            if (ii) {
+                sqlCommand += ",";
             }
-            sqlCommand += "),\n";
-            // reset <row>
-            row = [];
-            rowid += 1;
+            sqlCommand += local.sqljsStringify(row[ii]);
+            ii += 1;
         }
+        sqlCommand += "),\n";
+        // reset <row>
+        row = [];
         // execute <sqlCommand>
         if (sqlCommand.length && sqlCommand.length >= 0x100000) {
             sqlExec();
@@ -8413,36 +8433,16 @@ local.sqljsTableImport = async function (opt) {
             /[^\t\r\n\u0020-\u007e\u00a0-\u9fff]/gu
         ), "\ufffd");
     };
-    sqlStringify = function (val) {
-    /*
-     * this function will stringify <val> before inserting into sqlite3
-     */
-        val = (
-            typeof val === "string"
-            ? val
-            : (val === null || val === undefined)
-            ? ""
-            : String(
-                typeof val === "boolean"
-                ? val | 0
-                : val
-            )
-        );
-        return "'" + val.replace((
-            /'/g
-        ), "''") + "'";
-    };
     // init <opt>
     columns = opt.columns;
     csv = opt.csv;
-    tableName = sqlStringify(opt.tableName || "_tableimport1");
+    tableName = local.sqljsStringify(opt.tableName || "_tableimport1");
     values = opt.values;
     sqlProgress = opt.sqlProgress || sqlProgress;
-    sqlSanitize = opt.sqlSanitize || sqlSanitize;
     // init var
     byteLength = 0;
     rgx = (
-        /(.*?)(""|"|,|\r\n|\n)/g
+        /(.*?)(""|"|,|\r\n|\n)/gu
     );
     row = [];
     rowLength = 0;
@@ -8450,11 +8450,6 @@ local.sqljsTableImport = async function (opt) {
     sqlCommand = "";
     timeStart = Date.now();
     val = "";
-    // insert <columns>
-    if (Array.isArray(columns)) {
-        row = Array.from(columns);
-        sqlInsert();
-    }
     // import - list-of-list
     if (values && Array.isArray(values[0])) {
         values.forEach(function (elem) {
@@ -8467,12 +8462,8 @@ local.sqljsTableImport = async function (opt) {
     // import - list-of-object
     if (values) {
         values.forEach(function (elem, ii) {
-            // insert <columns>
-            if (ii === 0 && !Array.isArray(columns)) {
+            if (ii === 0) {
                 columns = Object.keys(elem);
-                row = Array.from(columns);
-                sqlInsert();
-                return;
             }
             // insert <row>
             row = columns.map(function (key) {
