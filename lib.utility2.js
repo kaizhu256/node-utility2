@@ -55,27 +55,27 @@
         local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
-    local.assertOrThrow = function (passed, message) {
+    local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw err.<message> if <passed> is falsy
+     * this function will throw err.<msg> if <passed> is falsy
      */
         if (passed) {
             return;
         }
         throw (
             (
-                message
-                && typeof message.message === "string"
-                && typeof message.stack === "string"
+                msg
+                && typeof msg.msg === "string"
+                && typeof msg.stack === "string"
             )
-            // if message is errObj, then leave as is
-            ? message
+            // if msg is err, then leave as is
+            ? msg
             : new Error(
-                typeof message === "string"
-                // if message is a string, then leave as is
-                ? message
-                // else JSON.stringify message
-                : JSON.stringify(message, undefined, 4)
+                typeof msg === "string"
+                // if msg is a string, then leave as is
+                ? msg
+                // else JSON.stringify msg
+                : JSON.stringify(msg, undefined, 4)
             )
         );
     };
@@ -342,27 +342,27 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         local.isBrowser && typeof globalThis.importScripts === "function"\n\
     );\n\
     // init function\n\
-    local.assertOrThrow = function (passed, message) {\n\
+    local.assertOrThrow = function (passed, msg) {\n\
     /*\n\
-     * this function will throw err.<message> if <passed> is falsy\n\
+     * this function will throw err.<msg> if <passed> is falsy\n\
      */\n\
         if (passed) {\n\
             return;\n\
         }\n\
         throw (\n\
             (\n\
-                message\n\
-                && typeof message.message === "string"\n\
-                && typeof message.stack === "string"\n\
+                msg\n\
+                && typeof msg.msg === "string"\n\
+                && typeof msg.stack === "string"\n\
             )\n\
-            // if message is errObj, then leave as is\n\
-            ? message\n\
+            // if msg is err, then leave as is\n\
+            ? msg\n\
             : new Error(\n\
-                typeof message === "string"\n\
-                // if message is a string, then leave as is\n\
-                ? message\n\
-                // else JSON.stringify message\n\
-                : JSON.stringify(message, undefined, 4)\n\
+                typeof msg === "string"\n\
+                // if msg is a string, then leave as is\n\
+                ? msg\n\
+                // else JSON.stringify msg\n\
+                : JSON.stringify(msg, undefined, 4)\n\
             )\n\
         );\n\
     };\n\
