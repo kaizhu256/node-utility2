@@ -57,6 +57,7 @@ this zero-dependency package will provide high-level functions to to build, test
 
 #### changelog 2020.2.18
 - npm publish 2020.2.18
+- update shell-function shRawLibFetch to apply diff
 - add files lib.sqljs_lite.js, raw.sqljs_lite.js
 - add function promisify
 - update function httpFetch with abort-handling
@@ -71,7 +72,6 @@ this zero-dependency package will provide high-level functions to to build, test
 #### todo
 - jslint - add nullish-coalescing support
 - jslint - add optional-chaining support
-- update shell-function shRawLibFetch to apply diff
 - rename text to str
 - jslint - prefer undefined over null
 - replace function local.objectSetOverride with Object.assign
@@ -476,7 +476,7 @@ if (!local.isBrowser) {
     }
     fnc = console[key];
     console[key] = function (...argList) {
-        fnc.apply(console, argList);
+        fnc(...argList);
         // append text to #outputStdout1
         elem.textContent += argList.map(function (arg) {
             return (

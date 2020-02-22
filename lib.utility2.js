@@ -1026,7 +1026,7 @@ if (!local.isBrowser) {\n\
     }\n\
     fnc = console[key];\n\
     console[key] = function (...argList) {\n\
-        fnc.apply(console, argList);\n\
+        fnc(...argList);\n\
         // append text to #outputStdout1\n\
         elem.textContent += argList.map(function (arg) {\n\
             return (\n\
