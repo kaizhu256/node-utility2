@@ -80,7 +80,7 @@ this zero-dependency package will provide high-level functions to to build, test
 - replace function local.objectSetOverride with Object.assign
 - jslint - fix off-by-one line-error
 - remove excessive "the" from comments
-- replace db-lite with sql.js
+- replace db-lite with sql_lite.js
 - jslint - sort nested switch-statements
 - add default testCase _testCase_cliRun_help
 - add server stress-test using puppeteer
