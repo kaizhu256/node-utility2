@@ -2482,6 +2482,7 @@ process.on("exit", function () {
             elem.replace
         );
     });
+    result = result.trim() + "\n";
     // replace diff
     replaceDiff.replace((
         /((?:^-.*?\n)+?)((?:^\+.*?\n)+)/gm
