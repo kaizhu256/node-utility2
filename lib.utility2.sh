@@ -2358,7 +2358,7 @@ footer = (
     /\n\/\*\nfile\u0020none\n\*\/\n([\S\s]+)/
 ).exec(opt.input);
 footer = String(
-    footer && footer[1].trim()
+    (footer && footer[1].trim())
     ? "\n\n\n" + footer[1].trim() + "\n"
     : ""
 );
