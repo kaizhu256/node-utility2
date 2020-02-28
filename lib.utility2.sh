@@ -2306,6 +2306,7 @@ shRawLibFetch () {(set -e
 /* jslint utility2:true */
 (function () {
 "use strict";
+let footer;
 let fs;
 let header;
 let https;
@@ -2353,6 +2354,14 @@ replaceDiff = opt[2].split("\n\n").filter(function (elem) {
 }).map(function (elem) {
     return elem.trim() + "\n";
 }).sort().join("\n");
+footer = (
+    /\n\/\*\nfile\u0020none\n\*\/\n([\S\s]+)/
+).exec(opt.input);
+footer = String(
+    footer
+    ? footer[1]
+    : ""
+).trim() + "\n";
 header = (
     "/*\nshRawLibFetch\n" + opt[1].trim() + "\n" + replaceDiff + "*/\n\n\n\n"
 );
@@ -2504,7 +2513,7 @@ process.on("exit", function () {
     if (!opt.rollupCommonJs) {
         fs.writeFileSync(
             process.argv[1],
-            header + result.trim() + "\n\n\n\n/*\nfile none\n*/\n"
+            header + result.trim() + "\n\n\n\n/*\nfile none\n*/" + footer
         );
         return;
     }
