@@ -2359,7 +2359,7 @@ footer = (
 ).exec(opt.input);
 footer = String(
     footer && footer[1].trim()
-    ? footer[1].trim() + "\n"
+    ? "\n\n\n" + footer[1].trim() + "\n"
     : ""
 );
 header = (

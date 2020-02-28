@@ -57,6 +57,7 @@ this zero-dependency package will provide high-level functions to to build, test
 
 #### changelog 2020.2.18
 - npm publish 2020.2.18
+- update shell-function shRawLibFetch to accept footer after file-none
 - un-rename errDefault to errorDefault
 - remove function errorMessagePrepend
 - rename message to msg
