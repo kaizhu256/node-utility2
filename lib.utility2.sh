@@ -2347,7 +2347,7 @@ https = require("https");
 path = require("path");
 repoDict = {};
 opt = (
-    /^\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?)\n\*\/\n/
+    /^\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?)\n\*\/\n/m
 ).exec(fs.readFileSync(process.argv[1], "utf8"));
 replaceDiff = opt[2].split("\n\n").filter(function (elem) {
     return elem.trim();
@@ -2363,7 +2363,8 @@ footer = String(
     : ""
 );
 header = (
-    "/*\nshRawLibFetch\n" + opt[1].trim() + "\n" + replaceDiff + "*/\n\n\n\n"
+    opt.input.slice(0, opt.index)
+    + "/*\nshRawLibFetch\n" + opt[1].trim() + "\n" + replaceDiff + "*/\n\n\n\n"
 );
 opt = JSON.parse(opt[1].replace((
     /^\u0020*?\/\/.*?$/gm
