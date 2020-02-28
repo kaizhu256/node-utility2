@@ -2368,6 +2368,8 @@ header = (
 );
 opt = JSON.parse(opt[1].replace((
     /^\u0020*?\/\/.*?$/gm
+), "").replace((
+    /\u0020\/\/\u0020jslint\u0020ignore:line$/gm
 ), ""));
 opt.urlList.forEach(function (url, repo) {
     repo = url.split("/").slice(0, 7).join("/");
