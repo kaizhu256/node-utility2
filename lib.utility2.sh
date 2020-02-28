@@ -2358,10 +2358,10 @@ footer = (
     /\n\/\*\nfile\u0020none\n\*\/\n([\S\s]+)/
 ).exec(opt.input);
 footer = String(
-    footer
-    ? footer[1]
+    footer && footer[1].trim()
+    ? footer[1].trim() + "\n"
     : ""
-).trim() + "\n";
+);
 header = (
     "/*\nshRawLibFetch\n" + opt[1].trim() + "\n" + replaceDiff + "*/\n\n\n\n"
 );
@@ -2513,7 +2513,7 @@ process.on("exit", function () {
     if (!opt.rollupCommonJs) {
         fs.writeFileSync(
             process.argv[1],
-            header + result.trim() + "\n\n\n\n/*\nfile none\n*/" + footer
+            header + result.trim() + "\n\n\n\n/*\nfile none\n*/\n" + footer
         );
         return;
     }
