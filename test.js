@@ -4,8 +4,6 @@
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
-    let ArrayPrototypeFlat;
-    let TextXxcoder;
     let consoleError;
     let debugName;
     let local;
@@ -26,156 +24,12 @@
             return argList[0];
         };
     }
-    // polyfill
-    ArrayPrototypeFlat = function (depth) {
-    /*
-     * this function will polyfill Array.prototype.flat
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        depth = (
-            globalThis.isNaN(depth)
-            ? 1
-            : Number(depth)
-        );
-        if (!depth) {
-            return Array.prototype.slice.call(this);
-        }
-        return Array.prototype.reduce.call(this, function (acc, cur) {
-            if (Array.isArray(cur)) {
-                // recurse
-                acc.push.apply(acc, ArrayPrototypeFlat.call(cur, depth - 1));
-            } else {
-                acc.push(cur);
-            }
-            return acc;
-        }, []);
-    };
-    Array.prototype.flat = Array.prototype.flat || ArrayPrototypeFlat;
-    Array.prototype.flatMap = Array.prototype.flatMap || function flatMap(
-        ...argList
-    ) {
-    /*
-     * this function will polyfill Array.prototype.flatMap
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        return this.map(...argList).flat();
-    };
     String.prototype.trimEnd = (
         String.prototype.trimEnd || String.prototype.trimRight
     );
     String.prototype.trimStart = (
         String.prototype.trimStart || String.prototype.trimLeft
     );
-    (function () {
-        try {
-            globalThis.TextDecoder = (
-                globalThis.TextDecoder || require("util").TextDecoder
-            );
-            globalThis.TextEncoder = (
-                globalThis.TextEncoder || require("util").TextEncoder
-            );
-        } catch (ignore) {}
-    }());
-    TextXxcoder = function () {
-    /*
-     * this function will polyfill TextDecoder/TextEncoder
-     * https://gist.github.com/Yaffle/5458286
-     */
-        return;
-    };
-    TextXxcoder.prototype.decode = function (octets) {
-    /*
-     * this function will polyfill TextDecoder.prototype.decode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bytesNeeded;
-        let codePoint;
-        let ii;
-        let kk;
-        let octet;
-        let string;
-        string = "";
-        ii = 0;
-        while (ii < octets.length) {
-            octet = octets[ii];
-            bytesNeeded = 0;
-            codePoint = 0;
-            if (octet <= 0x7F) {
-                bytesNeeded = 0;
-                codePoint = octet & 0xFF;
-            } else if (octet <= 0xDF) {
-                bytesNeeded = 1;
-                codePoint = octet & 0x1F;
-            } else if (octet <= 0xEF) {
-                bytesNeeded = 2;
-                codePoint = octet & 0x0F;
-            } else if (octet <= 0xF4) {
-                bytesNeeded = 3;
-                codePoint = octet & 0x07;
-            }
-            if (octets.length - ii - bytesNeeded > 0) {
-                kk = 0;
-                while (kk < bytesNeeded) {
-                    octet = octets[ii + kk + 1];
-                    codePoint = (codePoint << 6) | (octet & 0x3F);
-                    kk += 1;
-                }
-            } else {
-                codePoint = 0xFFFD;
-                bytesNeeded = octets.length - ii;
-            }
-            string += String.fromCodePoint(codePoint);
-            ii += bytesNeeded + 1;
-        }
-        return string;
-    };
-    TextXxcoder.prototype.encode = function (string) {
-    /*
-     * this function will polyfill TextEncoder.prototype.encode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bits;
-        let cc;
-        let codePoint;
-        let ii;
-        let length;
-        let octets;
-        octets = [];
-        length = string.length;
-        ii = 0;
-        while (ii < length) {
-            codePoint = string.codePointAt(ii);
-            cc = 0;
-            bits = 0;
-            if (codePoint <= 0x0000007F) {
-                cc = 0;
-                bits = 0x00;
-            } else if (codePoint <= 0x000007FF) {
-                cc = 6;
-                bits = 0xC0;
-            } else if (codePoint <= 0x0000FFFF) {
-                cc = 12;
-                bits = 0xE0;
-            } else if (codePoint <= 0x001FFFFF) {
-                cc = 18;
-                bits = 0xF0;
-            }
-            octets.push(bits | (codePoint >> cc));
-            cc -= 6;
-            while (cc >= 0) {
-                octets.push(0x80 | ((codePoint >> cc) & 0x3F));
-                cc -= 6;
-            }
-            ii += (
-                codePoint >= 0x10000
-                ? 2
-                : 1
-            );
-        }
-        return octets;
-    };
-    globalThis.TextDecoder = globalThis.TextDecoder || TextXxcoder;
-    globalThis.TextEncoder = globalThis.TextEncoder || TextXxcoder;
     // init local
     local = {};
     local.local = local;
@@ -188,34 +42,32 @@
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
-    local.assertOrThrow = function (passed, message) {
+    local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw err.<message> if <passed> is falsy
+     * this function will throw err.<msg> if <passed> is falsy
      */
-        let err;
         if (passed) {
             return;
         }
-        err = (
+        throw (
             (
-                message
-                && typeof message.message === "string"
-                && typeof message.stack === "string"
+                msg
+                && typeof msg.message === "string"
+                && typeof msg.stack === "string"
             )
-            // if message is errObj, then leave as is
-            ? message
+            // if msg is err, then leave as is
+            ? msg
             : new Error(
-                typeof message === "string"
-                // if message is a string, then leave as is
-                ? message
-                // else JSON.stringify message
-                : JSON.stringify(message, undefined, 4)
+                typeof msg === "string"
+                // if msg is a string, then leave as is
+                ? msg
+                // else JSON.stringify msg
+                : JSON.stringify(msg, undefined, 4)
             )
         );
-        throw err;
     };
     local.coalesce = function (...argList) {
     /*
@@ -238,6 +90,7 @@
      * this function will sync "rm -rf" <dir>
      */
         let child_process;
+        // do nothing if module does not exist
         try {
             child_process = require("child_process");
         } catch (ignore) {
@@ -256,6 +109,7 @@
      * this function will sync write <data> to <file> with "mkdir -p"
      */
         let fs;
+        // do nothing if module does not exist
         try {
             fs = require("fs");
         } catch (ignore) {
@@ -368,9 +222,7 @@
         local.vm = require("vm");
         local.zlib = require("zlib");
     }
-}((typeof globalThis === "object" && globalThis) || (function () {
-    return Function("return this")(); // jslint ignore:line
-}())));
+}((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
 
 
@@ -446,7 +298,7 @@ local.testCase_FormData_err = function (opt, onError) {
         [
             local.FormData.prototype, {
                 read: function (onError) {
-                    onError(local.errDefault);
+                    onError(local.errorDefault);
                 }
             }
         ]
@@ -790,7 +642,7 @@ local.testCase_assertXxx_default = function (opt, onError) {
     });
     // test assertion failed with errObj
     local.tryCatchOnError(function () {
-        local.assertOrThrow(null, local.errDefault);
+        local.assertOrThrow(null, local.errorDefault);
     }, function (err) {
         // handle err
         local.assertOrThrow(err, err);
@@ -1585,7 +1437,7 @@ local.testCase_localStorageSetItemOrClear_default = function (
             localStorage, {
                 clear: null,
                 setItem: function () {
-                    throw local.errDefault;
+                    throw local.errorDefault;
                 }
             }
         ]
@@ -2075,7 +1927,7 @@ local.testCase_onErrorDefault_default = function (opt, onError) {
         // validate opt
         local.assertOrThrow(!opt, opt);
         // test err handling-behavior
-        local.onErrorDefault(local.errDefault);
+        local.onErrorDefault(local.errorDefault);
         // validate opt
         local.assertOrThrow(opt, opt);
         onError(undefined, opt);
@@ -2087,7 +1939,7 @@ local.testCase_onErrorThrow_err = function (opt, onError) {
  * this function will test onErrorThrow's err handling-behavior
  */
     local.tryCatchOnError(function () {
-        local.onErrorThrow(local.errDefault);
+        local.onErrorThrow(local.errorDefault);
     }, function (err) {
         // handle err
         local.assertOrThrow(err, err);
@@ -2138,7 +1990,7 @@ local.testCase_onNext_err = function (opt, onError) {
     opt = {};
     opt.modeDebug = true;
     local.gotoNext(opt, function () {
-        throw local.errDefault;
+        throw local.errorDefault;
     });
     opt.gotoState = 0;
     local.tryCatchOnError(function () {
@@ -2170,7 +2022,7 @@ local.testCase_onParallelList_default = function (opt, onError) {
             local.onParallelList(opt, function (opt2, onParallel) {
                 onParallel.cnt += 1;
                 // test err handling-behavior
-                onParallel(local.errDefault, opt2);
+                onParallel(local.errorDefault, opt2);
                 // test multiple-callback handling-behavior
                 setTimeout(onParallel, 5000);
             }, function (err) {
@@ -2271,7 +2123,7 @@ local.testCase_onParallel_default = function (opt, onError) {
         // handle err
         local.assertOrThrow(onParallelError.err, onParallelError.err);
         // test err handling-behavior
-        onParallelError(local.errDefault);
+        onParallelError(local.errorDefault);
         // handle err
         local.assertOrThrow(onParallelError.err, onParallelError.err);
         // test ignore-after-error handling-behavior
@@ -2922,7 +2774,7 @@ local.testCase_webpage_err = function (opt, onError) {
     globalThis.utility2_testReport.testsPending = 0;
     setTimeout(function () {
         // test err from callback handling-behavior
-        onError(local.errDefault, opt);
+        onError(local.errorDefault, opt);
         // test err from multiple-callback handling-behavior
         onError(undefined, opt);
     }, 2000);
@@ -2984,9 +2836,9 @@ local.middlewareList.push(function (req, res, next) {
     case "/test.err-500":
         // test multiple-callback serverRespondHeadSet handling-behavior
         local.serverRespondHeadSet(req, res, null, {});
-        next(local.errDefault);
+        next(local.errorDefault);
         // test multiple-callback-error handling-behavior
-        next(local.errDefault);
+        next(local.errorDefault);
         // test onErrorDefault handling-behavior
         local.testMock([
             [

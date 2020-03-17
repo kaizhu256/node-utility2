@@ -10,8 +10,9 @@
     "description": "this zero-dependency package will provide high-level functions to to build, test, and deploy webapps",
     "devDependencies": {},
     "engines": {
-        "node": ">=10.0"
+        "node": ">=12.0"
     },
+    "fileCount": 25,
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
         "continuous-integration",
@@ -46,12 +47,13 @@
     },
     "utility2Dependents": [
         "2019.01.21 github-crud",
-        "2019.01.30 bootstrap-lite",
-        "2019.08.16 apidoc-lite master",
         "2019.09.14 swgg",
         "2019.09.15 istanbul-lite master",
-        "2020.01.27 jslint-lite",
+        "2020.01.20 bootstrap-lite",
+        "2020.02.12 sqljs-lite",
+        "2020.03.16 apidoc-lite",
+        "2020.03.16 jslint-lite",
         "2020.02.17 utility2"
     ],
-    "version": "2020.2.17"
+    "version": "2020.3.17"
 }

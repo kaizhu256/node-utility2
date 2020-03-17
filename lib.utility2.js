@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2020.2.17)
+ * lib.utility2.js (2020.3.17)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -14,8 +14,6 @@
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
-    let ArrayPrototypeFlat;
-    let TextXxcoder;
     let consoleError;
     let debugName;
     let local;
@@ -36,156 +34,12 @@
             return argList[0];
         };
     }
-    // polyfill
-    ArrayPrototypeFlat = function (depth) {
-    /*
-     * this function will polyfill Array.prototype.flat
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        depth = (
-            globalThis.isNaN(depth)
-            ? 1
-            : Number(depth)
-        );
-        if (!depth) {
-            return Array.prototype.slice.call(this);
-        }
-        return Array.prototype.reduce.call(this, function (acc, cur) {
-            if (Array.isArray(cur)) {
-                // recurse
-                acc.push.apply(acc, ArrayPrototypeFlat.call(cur, depth - 1));
-            } else {
-                acc.push(cur);
-            }
-            return acc;
-        }, []);
-    };
-    Array.prototype.flat = Array.prototype.flat || ArrayPrototypeFlat;
-    Array.prototype.flatMap = Array.prototype.flatMap || function flatMap(
-        ...argList
-    ) {
-    /*
-     * this function will polyfill Array.prototype.flatMap
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        return this.map(...argList).flat();
-    };
     String.prototype.trimEnd = (
         String.prototype.trimEnd || String.prototype.trimRight
     );
     String.prototype.trimStart = (
         String.prototype.trimStart || String.prototype.trimLeft
     );
-    (function () {
-        try {
-            globalThis.TextDecoder = (
-                globalThis.TextDecoder || require("util").TextDecoder
-            );
-            globalThis.TextEncoder = (
-                globalThis.TextEncoder || require("util").TextEncoder
-            );
-        } catch (ignore) {}
-    }());
-    TextXxcoder = function () {
-    /*
-     * this function will polyfill TextDecoder/TextEncoder
-     * https://gist.github.com/Yaffle/5458286
-     */
-        return;
-    };
-    TextXxcoder.prototype.decode = function (octets) {
-    /*
-     * this function will polyfill TextDecoder.prototype.decode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bytesNeeded;
-        let codePoint;
-        let ii;
-        let kk;
-        let octet;
-        let string;
-        string = "";
-        ii = 0;
-        while (ii < octets.length) {
-            octet = octets[ii];
-            bytesNeeded = 0;
-            codePoint = 0;
-            if (octet <= 0x7F) {
-                bytesNeeded = 0;
-                codePoint = octet & 0xFF;
-            } else if (octet <= 0xDF) {
-                bytesNeeded = 1;
-                codePoint = octet & 0x1F;
-            } else if (octet <= 0xEF) {
-                bytesNeeded = 2;
-                codePoint = octet & 0x0F;
-            } else if (octet <= 0xF4) {
-                bytesNeeded = 3;
-                codePoint = octet & 0x07;
-            }
-            if (octets.length - ii - bytesNeeded > 0) {
-                kk = 0;
-                while (kk < bytesNeeded) {
-                    octet = octets[ii + kk + 1];
-                    codePoint = (codePoint << 6) | (octet & 0x3F);
-                    kk += 1;
-                }
-            } else {
-                codePoint = 0xFFFD;
-                bytesNeeded = octets.length - ii;
-            }
-            string += String.fromCodePoint(codePoint);
-            ii += bytesNeeded + 1;
-        }
-        return string;
-    };
-    TextXxcoder.prototype.encode = function (string) {
-    /*
-     * this function will polyfill TextEncoder.prototype.encode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bits;
-        let cc;
-        let codePoint;
-        let ii;
-        let length;
-        let octets;
-        octets = [];
-        length = string.length;
-        ii = 0;
-        while (ii < length) {
-            codePoint = string.codePointAt(ii);
-            cc = 0;
-            bits = 0;
-            if (codePoint <= 0x0000007F) {
-                cc = 0;
-                bits = 0x00;
-            } else if (codePoint <= 0x000007FF) {
-                cc = 6;
-                bits = 0xC0;
-            } else if (codePoint <= 0x0000FFFF) {
-                cc = 12;
-                bits = 0xE0;
-            } else if (codePoint <= 0x001FFFFF) {
-                cc = 18;
-                bits = 0xF0;
-            }
-            octets.push(bits | (codePoint >> cc));
-            cc -= 6;
-            while (cc >= 0) {
-                octets.push(0x80 | ((codePoint >> cc) & 0x3F));
-                cc -= 6;
-            }
-            ii += (
-                codePoint >= 0x10000
-                ? 2
-                : 1
-            );
-        }
-        return octets;
-    };
-    globalThis.TextDecoder = globalThis.TextDecoder || TextXxcoder;
-    globalThis.TextEncoder = globalThis.TextEncoder || TextXxcoder;
     // init local
     local = {};
     local.local = local;
@@ -198,34 +52,32 @@
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
-    local.assertOrThrow = function (passed, message) {
+    local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw err.<message> if <passed> is falsy
+     * this function will throw err.<msg> if <passed> is falsy
      */
-        let err;
         if (passed) {
             return;
         }
-        err = (
+        throw (
             (
-                message
-                && typeof message.message === "string"
-                && typeof message.stack === "string"
+                msg
+                && typeof msg.message === "string"
+                && typeof msg.stack === "string"
             )
-            // if message is errObj, then leave as is
-            ? message
+            // if msg is err, then leave as is
+            ? msg
             : new Error(
-                typeof message === "string"
-                // if message is a string, then leave as is
-                ? message
-                // else JSON.stringify message
-                : JSON.stringify(message, undefined, 4)
+                typeof msg === "string"
+                // if msg is a string, then leave as is
+                ? msg
+                // else JSON.stringify msg
+                : JSON.stringify(msg, undefined, 4)
             )
         );
-        throw err;
     };
     local.coalesce = function (...argList) {
     /*
@@ -248,6 +100,7 @@
      * this function will sync "rm -rf" <dir>
      */
         let child_process;
+        // do nothing if module does not exist
         try {
             child_process = require("child_process");
         } catch (ignore) {
@@ -266,6 +119,7 @@
      * this function will sync write <data> to <file> with "mkdir -p"
      */
         let fs;
+        // do nothing if module does not exist
         try {
             fs = require("fs");
         } catch (ignore) {
@@ -378,9 +232,7 @@
         local.vm = require("vm");
         local.zlib = require("zlib");
     }
-}((typeof globalThis === "object" && globalThis) || (function () {
-    return Function("return this")(); // jslint ignore:line
-}())));
+}((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
 
 
@@ -450,8 +302,6 @@ local.assetsDict["/assets.utility2.header.js"] = '\
 /* jslint utility2:true */\n\
 (function (globalThis) {\n\
     "use strict";\n\
-    let ArrayPrototypeFlat;\n\
-    let TextXxcoder;\n\
     let consoleError;\n\
     let debugName;\n\
     let local;\n\
@@ -472,156 +322,12 @@ local.assetsDict["/assets.utility2.header.js"] = '\
             return argList[0];\n\
         };\n\
     }\n\
-    // polyfill\n\
-    ArrayPrototypeFlat = function (depth) {\n\
-    /*\n\
-     * this function will polyfill Array.prototype.flat\n\
-     * https://github.com/jonathantneal/array-flat-polyfill\n\
-     */\n\
-        depth = (\n\
-            globalThis.isNaN(depth)\n\
-            ? 1\n\
-            : Number(depth)\n\
-        );\n\
-        if (!depth) {\n\
-            return Array.prototype.slice.call(this);\n\
-        }\n\
-        return Array.prototype.reduce.call(this, function (acc, cur) {\n\
-            if (Array.isArray(cur)) {\n\
-                // recurse\n\
-                acc.push.apply(acc, ArrayPrototypeFlat.call(cur, depth - 1));\n\
-            } else {\n\
-                acc.push(cur);\n\
-            }\n\
-            return acc;\n\
-        }, []);\n\
-    };\n\
-    Array.prototype.flat = Array.prototype.flat || ArrayPrototypeFlat;\n\
-    Array.prototype.flatMap = Array.prototype.flatMap || function flatMap(\n\
-        ...argList\n\
-    ) {\n\
-    /*\n\
-     * this function will polyfill Array.prototype.flatMap\n\
-     * https://github.com/jonathantneal/array-flat-polyfill\n\
-     */\n\
-        return this.map(...argList).flat();\n\
-    };\n\
     String.prototype.trimEnd = (\n\
         String.prototype.trimEnd || String.prototype.trimRight\n\
     );\n\
     String.prototype.trimStart = (\n\
         String.prototype.trimStart || String.prototype.trimLeft\n\
     );\n\
-    (function () {\n\
-        try {\n\
-            globalThis.TextDecoder = (\n\
-                globalThis.TextDecoder || require("util").TextDecoder\n\
-            );\n\
-            globalThis.TextEncoder = (\n\
-                globalThis.TextEncoder || require("util").TextEncoder\n\
-            );\n\
-        } catch (ignore) {}\n\
-    }());\n\
-    TextXxcoder = function () {\n\
-    /*\n\
-     * this function will polyfill TextDecoder/TextEncoder\n\
-     * https://gist.github.com/Yaffle/5458286\n\
-     */\n\
-        return;\n\
-    };\n\
-    TextXxcoder.prototype.decode = function (octets) {\n\
-    /*\n\
-     * this function will polyfill TextDecoder.prototype.decode\n\
-     * https://gist.github.com/Yaffle/5458286\n\
-     */\n\
-        let bytesNeeded;\n\
-        let codePoint;\n\
-        let ii;\n\
-        let kk;\n\
-        let octet;\n\
-        let string;\n\
-        string = "";\n\
-        ii = 0;\n\
-        while (ii < octets.length) {\n\
-            octet = octets[ii];\n\
-            bytesNeeded = 0;\n\
-            codePoint = 0;\n\
-            if (octet <= 0x7F) {\n\
-                bytesNeeded = 0;\n\
-                codePoint = octet & 0xFF;\n\
-            } else if (octet <= 0xDF) {\n\
-                bytesNeeded = 1;\n\
-                codePoint = octet & 0x1F;\n\
-            } else if (octet <= 0xEF) {\n\
-                bytesNeeded = 2;\n\
-                codePoint = octet & 0x0F;\n\
-            } else if (octet <= 0xF4) {\n\
-                bytesNeeded = 3;\n\
-                codePoint = octet & 0x07;\n\
-            }\n\
-            if (octets.length - ii - bytesNeeded > 0) {\n\
-                kk = 0;\n\
-                while (kk < bytesNeeded) {\n\
-                    octet = octets[ii + kk + 1];\n\
-                    codePoint = (codePoint << 6) | (octet & 0x3F);\n\
-                    kk += 1;\n\
-                }\n\
-            } else {\n\
-                codePoint = 0xFFFD;\n\
-                bytesNeeded = octets.length - ii;\n\
-            }\n\
-            string += String.fromCodePoint(codePoint);\n\
-            ii += bytesNeeded + 1;\n\
-        }\n\
-        return string;\n\
-    };\n\
-    TextXxcoder.prototype.encode = function (string) {\n\
-    /*\n\
-     * this function will polyfill TextEncoder.prototype.encode\n\
-     * https://gist.github.com/Yaffle/5458286\n\
-     */\n\
-        let bits;\n\
-        let cc;\n\
-        let codePoint;\n\
-        let ii;\n\
-        let length;\n\
-        let octets;\n\
-        octets = [];\n\
-        length = string.length;\n\
-        ii = 0;\n\
-        while (ii < length) {\n\
-            codePoint = string.codePointAt(ii);\n\
-            cc = 0;\n\
-            bits = 0;\n\
-            if (codePoint <= 0x0000007F) {\n\
-                cc = 0;\n\
-                bits = 0x00;\n\
-            } else if (codePoint <= 0x000007FF) {\n\
-                cc = 6;\n\
-                bits = 0xC0;\n\
-            } else if (codePoint <= 0x0000FFFF) {\n\
-                cc = 12;\n\
-                bits = 0xE0;\n\
-            } else if (codePoint <= 0x001FFFFF) {\n\
-                cc = 18;\n\
-                bits = 0xF0;\n\
-            }\n\
-            octets.push(bits | (codePoint >> cc));\n\
-            cc -= 6;\n\
-            while (cc >= 0) {\n\
-                octets.push(0x80 | ((codePoint >> cc) & 0x3F));\n\
-                cc -= 6;\n\
-            }\n\
-            ii += (\n\
-                codePoint >= 0x10000\n\
-                ? 2\n\
-                : 1\n\
-            );\n\
-        }\n\
-        return octets;\n\
-    };\n\
-    globalThis.TextDecoder = globalThis.TextDecoder || TextXxcoder;\n\
-    globalThis.TextEncoder = globalThis.TextEncoder || TextXxcoder;\n\
     // init local\n\
     local = {};\n\
     local.local = local;\n\
@@ -634,34 +340,32 @@ local.assetsDict["/assets.utility2.header.js"] = '\
     );\n\
     // init isWebWorker\n\
     local.isWebWorker = (\n\
-        local.isBrowser && typeof globalThis.importScript === "function"\n\
+        local.isBrowser && typeof globalThis.importScripts === "function"\n\
     );\n\
     // init function\n\
-    local.assertOrThrow = function (passed, message) {\n\
+    local.assertOrThrow = function (passed, msg) {\n\
     /*\n\
-     * this function will throw err.<message> if <passed> is falsy\n\
+     * this function will throw err.<msg> if <passed> is falsy\n\
      */\n\
-        let err;\n\
         if (passed) {\n\
             return;\n\
         }\n\
-        err = (\n\
+        throw (\n\
             (\n\
-                message\n\
-                && typeof message.message === "string"\n\
-                && typeof message.stack === "string"\n\
+                msg\n\
+                && typeof msg.message === "string"\n\
+                && typeof msg.stack === "string"\n\
             )\n\
-            // if message is errObj, then leave as is\n\
-            ? message\n\
+            // if msg is err, then leave as is\n\
+            ? msg\n\
             : new Error(\n\
-                typeof message === "string"\n\
-                // if message is a string, then leave as is\n\
-                ? message\n\
-                // else JSON.stringify message\n\
-                : JSON.stringify(message, undefined, 4)\n\
+                typeof msg === "string"\n\
+                // if msg is a string, then leave as is\n\
+                ? msg\n\
+                // else JSON.stringify msg\n\
+                : JSON.stringify(msg, undefined, 4)\n\
             )\n\
         );\n\
-        throw err;\n\
     };\n\
     local.coalesce = function (...argList) {\n\
     /*\n\
@@ -684,6 +388,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
      * this function will sync "rm -rf" <dir>\n\
      */\n\
         let child_process;\n\
+        // do nothing if module does not exist\n\
         try {\n\
             child_process = require("child_process");\n\
         } catch (ignore) {\n\
@@ -702,6 +407,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
      * this function will sync write <data> to <file> with "mkdir -p"\n\
      */\n\
         let fs;\n\
+        // do nothing if module does not exist\n\
         try {\n\
             fs = require("fs");\n\
         } catch (ignore) {\n\
@@ -814,9 +520,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         local.vm = require("vm");\n\
         local.zlib = require("zlib");\n\
     }\n\
-}((typeof globalThis === "object" && globalThis) || (function () {\n\
-    return Function("return this")(); // jslint ignore:line\n\
-}())));\n\
+}((typeof globalThis === "object" && globalThis) || window));\n\
 // assets.utility2.header.js - end\n\
 '
 
@@ -966,10 +670,23 @@ pre {\n\
  */\n\
     "use strict";\n\
     let opt;\n\
-    if (!(\n\
-        typeof window === "object" && window && window.document\n\
-        && typeof document.addEventListener === "function"\n\
-    ) || window.domOnEventAjaxProgressUpdate) {\n\
+    let styleBar0;\n\
+    let styleBar;\n\
+    let styleModal0;\n\
+    let styleModal;\n\
+    let timeStart;\n\
+    let timerInterval;\n\
+    let timerTimeout;\n\
+    let tmp;\n\
+    let width;\n\
+    try {\n\
+        if (\n\
+            window.domOnEventAjaxProgressUpdate\n\
+            || !document.getElementById("domElementAjaxProgressBar1").style\n\
+        ) {\n\
+            return;\n\
+        }\n\
+    } catch (ignore) {\n\
         return;\n\
     }\n\
     window.domOnEventAjaxProgressUpdate = function (gotoState, onError) {\n\
@@ -977,56 +694,68 @@ pre {\n\
         switch (gotoState) {\n\
         // ajaxProgress - show\n\
         case 1:\n\
-            // init timerInterval and timerTimeout\n\
-            opt.timerInterval = (\n\
-                opt.timerInterval || setInterval(opt, 2000, 1, onError)\n\
-            );\n\
-            opt.timerTimeout = (\n\
-                opt.timerTimeout || setTimeout(opt, 30000, 2, onError)\n\
-            );\n\
-            // show ajaxProgress\n\
-            if (opt.width !== -1) {\n\
-                opt.style.background = opt.background;\n\
+            // init <timerInterval> and <timerTimeout>\n\
+            if (!timerTimeout) {\n\
+                timeStart = Date.now();\n\
+                timerInterval = setInterval(opt, 2000, 1, onError);\n\
+                timerTimeout = setTimeout(opt, opt.timeout, 2, onError);\n\
+            }\n\
+            // show ajaxProgressBar\n\
+            if (width !== -1) {\n\
+                styleBar.background = styleBar0.background;\n\
             }\n\
             setTimeout(opt, 50, gotoState, onError);\n\
             break;\n\
         // ajaxProgress - increment\n\
         case 2:\n\
-            // show ajaxProgress\n\
-            if (opt.width === -1) {\n\
-                return;\n\
+            // show ajaxProgressBar\n\
+            if (width === -1) {\n\
+                break;\n\
             }\n\
-            opt.style.background = opt.background;\n\
-            // reset ajaxProgress if it goes too high\n\
-            if ((opt.style.width.slice(0, -1) | 0) > 95) {\n\
-                opt.width = 0;\n\
+            styleBar.background = styleBar0.background;\n\
+            // reset ajaxProgress if it reaches end\n\
+            if ((styleBar.width.slice(0, -1) | 0) > 95) {\n\
+                width = 0;\n\
             }\n\
             // this algorithm will indefinitely increment ajaxProgress\n\
             // with successively smaller increments without reaching 100%\n\
-            opt.width += 1;\n\
-            opt.style.width = Math.max(\n\
-                100 - 75 * Math.exp(-0.125 * opt.width),\n\
-                opt.style.width.slice(0, -1) | 0\n\
+            width += 1;\n\
+            styleBar.width = Math.max(\n\
+                100 - 75 * Math.exp(-0.125 * width),\n\
+                styleBar.width.slice(0, -1) | 0\n\
             ) + "%";\n\
+            // show ajaxProgressModal\n\
+            styleModal.height = "100%";\n\
+            styleModal.opacity = styleModal0.opacity;\n\
             if (!opt.cnt) {\n\
                 setTimeout(opt, 0, gotoState, onError);\n\
             }\n\
             break;\n\
         // ajaxProgress - 100%\n\
         case 3:\n\
-            opt.width = -1;\n\
-            opt.style.width = "100%";\n\
+            width = -1;\n\
+            styleBar.width = "100%";\n\
             setTimeout(opt, 1000, gotoState, onError);\n\
             break;\n\
         // ajaxProgress - hide\n\
         case 4:\n\
-            // cleanup timerInterval and timerTimeout\n\
-            clearInterval(opt.timerInterval);\n\
-            opt.timerInterval = null;\n\
-            clearTimeout(opt.timerTimeout);\n\
-            opt.timerTimeout = null;\n\
-            // hide ajaxProgress\n\
-            opt.style.background = "transparent";\n\
+            // debug timeElapsed\n\
+            tmp = Date.now();\n\
+            console.error(\n\
+                "domOnEventAjaxProgressUpdate - timeElapsed - "\n\
+                + (tmp - timeStart)\n\
+                + " ms"\n\
+            );\n\
+            // cleanup <timerInterval> and <timerTimeout>\n\
+            timeStart = tmp;\n\
+            clearInterval(timerInterval);\n\
+            timerInterval = null;\n\
+            clearTimeout(timerTimeout);\n\
+            timerTimeout = null;\n\
+            // hide ajaxProgressBar\n\
+            styleBar.background = "transparent";\n\
+            // hide ajaxProgressModal\n\
+            styleModal.opacity = "0";\n\
             if (onError) {\n\
                 onError();\n\
             }\n\
@@ -1034,10 +763,10 @@ pre {\n\
             break;\n\
         // ajaxProgress - reset\n\
         default:\n\
-            // reset ajaxProgress\n\
             opt.cnt = 0;\n\
-            opt.width = 0;\n\
-            opt.style.width = "0%";\n\
+            width = 0;\n\
+            styleBar.width = "0%";\n\
+            styleModal.height = "0";\n\
         }\n\
     };\n\
     opt = window.domOnEventAjaxProgressUpdate;\n\
@@ -1045,16 +774,9 @@ pre {\n\
         opt.cnt = 0;\n\
         window.domOnEventAjaxProgressUpdate(2, onError);\n\
     };\n\
-    opt.elem = document.getElementById("domElementAjaxProgress1");\n\
-    if (!opt.elem) {\n\
-        opt.elem = document.createElement("div");\n\
-        setTimeout(function () {\n\
-            document.body.insertBefore(opt.elem, document.body.firstChild);\n\
-        });\n\
-    }\n\
-    opt.elem.id = "domElementAjaxProgress1";\n\
-    opt.style = opt.elem.style;\n\
-    // init style\n\
+    // init <styleBar>\n\
+    styleBar = document.getElementById("domElementAjaxProgressBar1").style;\n\
+    styleBar0 = Object.assign({}, styleBar);\n\
     Object.entries({\n\
         background: "#d00",\n\
         height: "2px",\n\
@@ -1067,12 +789,31 @@ pre {\n\
         width: "0%",\n\
         "z-index": "1"\n\
     }).forEach(function (entry) {\n\
-        opt.style[entry[0]] = opt.style[entry[0]] || entry[1];\n\
+        styleBar[entry[0]] = styleBar[entry[0]] || entry[1];\n\
+    });\n\
+    // init <styleModal>\n\
+    styleModal = document.getElementById("domElementAjaxProgressModal1") || {};\n\
+    styleModal = styleModal.style || {};\n\
+    styleModal0 = Object.assign({}, styleModal);\n\
+    Object.entries({\n\
+        height: "0",\n\
+        left: "0",\n\
+        margin: "0",\n\
+        padding: "0",\n\
+        position: "fixed",\n\
+        top: "0",\n\
+        transition: "opacity 125ms",\n\
+        width: "100%",\n\
+        "z-index": "1"\n\
+    }).forEach(function (entry) {\n\
+        styleModal[entry[0]] = styleModal[entry[0]] || entry[1];\n\
     });\n\
     // init state\n\
-    opt.background = opt.style.background;\n\
+    width = 0;\n\
     opt.cnt = 0;\n\
-    opt.width = 0;\n\
+    opt.timeout = 30000;\n\
+    // init ajaxProgress\n\
+    window.domOnEventAjaxProgressUpdate();\n\
 }());\n\
 \n\
 \n\
@@ -1325,7 +1066,7 @@ if (!local.isBrowser) {\n\
     }\n\
     fnc = console[key];\n\
     console[key] = function (...argList) {\n\
-        fnc.apply(console, argList);\n\
+        fnc(...argList);\n\
         // append text to #outputStdout1\n\
         elem.textContent += argList.map(function (arg) {\n\
             return (\n\
@@ -1644,8 +1385,9 @@ PORT=8081 node ./assets.app.js\n\
         "utility2": "kaizhu256/node-utility2#alpha"\n\
     },\n\
     "engines": {\n\
-        "node": ">=10.0"\n\
+        "node": ">=12.0"\n\
     },\n\
+    "fileCount": 0,\n\
     "homepage": "https://github.com/kaizhu256/node-my-app-lite",\n\
     "keywords": [],\n\
     "license": "MIT",\n\
@@ -1686,7 +1428,7 @@ PORT=8081 node ./assets.app.js\n\
 ```shell\n\
 # build_ci.sh\n\
 \n\
-# this shell script will run the build for this package\n\
+# this shell script will run build-ci for this package\n\
 \n\
 shBuildCiAfter () {(set -e\n\
     # shDeployCustom\n\
@@ -2579,7 +2321,7 @@ local.ajax = function (opt, onError) {
  * this function will send an ajax-req
  * with given <opt>.url and callback <onError>
  * with err and timeout handling
- * example usage:
+ * example use:
     local.ajax({
         data: "hello world",
         header: {"x-header-hello": "world"},
@@ -2768,7 +2510,7 @@ local.ajax = function (opt, onError) {
     /*
      * this function will init xhr
      */
-        // init opt
+        // init <opt>
         Object.keys(opt).forEach(function (key) {
             if (key[0] !== "_") {
                 xhr[key] = opt[key];
@@ -3466,28 +3208,28 @@ local.buildApp = function (opt, onError) {
                 )
             }
         ].concat(opt.assetsList)
-    }, function (opt2, onParallel) {
+    }, async function (opt2, onParallel) {
+        let xhr;
         opt2 = opt2.elem;
         onParallel.cnt += 1;
-        local.ajax(opt2, function (err, xhr) {
-            // handle err
-            local.assertOrThrow(!err, err);
-            // jslint file
-            local.jslintAndPrint(xhr.responseText, opt2.file, {
-                conditional: true,
-                coverage: local.env.npm_config_mode_coverage
-            });
-            // handle err
-            local.assertOrThrow(
-                !local.jslint.jslintResult.errMsg,
-                local.jslint.jslintResult.errMsg
-            );
-            local.fsWriteFileWithMkdirpSync(
-                "tmp/build/app" + opt2.file,
-                xhr.response
-            );
-            onParallel();
+        xhr = await local.httpFetch(local.serverLocalHost + opt2.url, {
+            responseType: "raw"
         });
+        // jslint file
+        local.jslintAndPrint(xhr.data.toString(), opt2.file, {
+            conditional: true,
+            coverage: local.env.npm_config_mode_coverage
+        });
+        // handle err
+        local.assertOrThrow(
+            !local.jslint.jslintResult.errMsg,
+            local.jslint.jslintResult.errMsg
+        );
+        local.fsWriteFileWithMkdirpSync(
+            "tmp/build/app" + opt2.file,
+            xhr.data
+        );
+        onParallel();
     }, function (err) {
         // handle err
         local.assertOrThrow(!err, err);
@@ -3528,8 +3270,7 @@ local.buildLib = function (opt, onError) {
             "utf8"
         ),
         dataTo: local.templateRenderMyApp(
-            local.assetsDict["/assets.my_app.template.js"],
-            opt
+            local.assetsDict["/assets.my_app.template.js"]
         )
     });
     // search-and-replace - customize dataTo
@@ -3591,8 +3332,7 @@ local.buildReadme = function (opt, onError) {
     });
     // render dataTo
     opt.dataTo = local.templateRenderMyApp(
-        local.assetsDict["/assets.readme.template.md"],
-        opt
+        local.assetsDict["/assets.readme.template.md"]
     );
     // init package.json
     opt.dataFrom.replace(opt.packageJsonRgx, function (match0, match1) {
@@ -3619,7 +3359,7 @@ local.buildReadme = function (opt, onError) {
             opt.packageJson,
             JSON.parse(local.templateRenderMyApp(opt.packageJsonRgx.exec(
                 local.assetsDict["/assets.readme.template.md"]
-            )[1], opt)),
+            )[1])),
             2
         );
         // avoid npm-installing that
@@ -3642,8 +3382,7 @@ local.buildReadme = function (opt, onError) {
         );
         // re-render dataTo
         opt.dataTo = local.templateRenderMyApp(
-            local.assetsDict["/assets.readme.template.md"],
-            opt
+            local.assetsDict["/assets.readme.template.md"]
         );
         opt.dataTo = opt.dataTo.replace(
             opt.packageJsonRgx,
@@ -3827,7 +3566,7 @@ local.buildReadme = function (opt, onError) {
         // customize screenshot
         opt.dataTo = opt.dataTo.replace(elem[1], "");
     });
-    opt.dataTo = local.templateRenderMyApp(opt.dataTo, opt);
+    opt.dataTo = local.templateRenderMyApp(opt.dataTo);
     // customize toc
     opt.toc = "\n# table of contents\n";
     opt.dataTo.replace((
@@ -3888,8 +3627,7 @@ local.buildTest = function (opt, onError) {
         customize: local.nop,
         dataFrom: local.fsReadFileOrEmptyStringSync("test.js", "utf8"),
         dataTo: local.templateRenderMyApp(
-            local.assetsDict["/assets.test.template.js"],
-            opt
+            local.assetsDict["/assets.test.template.js"]
         )
     });
     // search-and-replace - customize dataTo
@@ -3925,7 +3663,7 @@ local.childProcessSpawnWithTimeout = function (command, args, opt) {
 /*
  * this function will run like child_process.spawn,
  * but with auto-timeout after timeout milliseconds
- * example usage:
+ * example use:
     let child = local.childProcessSpawnWithTimeout(
         "/bin/sh",
         ["-c", "echo hello world"],
@@ -3986,7 +3724,7 @@ local.childProcessSpawnWithUtility2 = function (script, onError) {
 
 local.cliRun = function (opt) {
 /*
- * this function will run the cli with given <opt>
+ * this function will run cli with given <opt>
  */
     local.cliDict._eval = local.cliDict._eval || function () {
     /*
@@ -4004,8 +3742,8 @@ local.cliRun = function (opt) {
         let commandList;
         let file;
         let packageJson;
-        let text;
-        let textDict;
+        let str;
+        let strDict;
         commandList = [
             {
                 argList: "<arg2>  ...",
@@ -4030,23 +3768,23 @@ local.cliRun = function (opt) {
         opt.rgxComment = opt.rgxComment || (
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
-        textDict = {};
+        strDict = {};
         Object.keys(local.cliDict).sort().forEach(function (key, ii) {
             if (key[0] === "_" && key !== "_default") {
                 return;
             }
-            text = String(local.cliDict[key]);
+            str = String(local.cliDict[key]);
             if (key === "_default") {
                 key = "";
             }
-            textDict[text] = textDict[text] || (ii + 2);
-            ii = textDict[text];
+            strDict[str] = strDict[str] || (ii + 2);
+            ii = strDict[str];
             if (commandList[ii]) {
                 commandList[ii].command.push(key);
                 return;
             }
             try {
-                commandList[ii] = opt.rgxComment.exec(text);
+                commandList[ii] = opt.rgxComment.exec(str);
                 commandList[ii] = {
                     argList: local.coalesce(commandList[ii][1], "").trim(),
                     command: [
@@ -4060,7 +3798,7 @@ local.cliRun = function (opt) {
                     + key
                     + ":\nnew RegExp("
                     + JSON.stringify(opt.rgxComment.source)
-                    + ").exec(" + JSON.stringify(text).replace((
+                    + ").exec(" + JSON.stringify(str).replace((
                         /\\\\/g
                     ), "\u0000").replace((
                         /\\n/g
@@ -4070,9 +3808,9 @@ local.cliRun = function (opt) {
                 ));
             }
         });
-        text = "";
-        text += packageJson.name + " (" + packageJson.version + ")\n\n";
-        text += commandList.filter(function (elem) {
+        str = "";
+        str += packageJson.name + " (" + packageJson.version + ")\n\n";
+        str += commandList.filter(function (elem) {
             return elem;
         }).map(function (elem, ii) {
             elem.command = elem.command.filter(function (elem) {
@@ -4099,7 +3837,7 @@ local.cliRun = function (opt) {
                 + elem.argList.join("  ")
             );
         }).join("\n\n");
-        console.log(text);
+        console.log(str);
     };
     local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
     local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
@@ -4195,7 +3933,7 @@ local.corsForwardProxyHostIfNeeded = function (xhr) {
 local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
 /*
  * this function will aes-xxx-cbc decrypt with given <opt>
- * example usage:
+ * example use:
     data = new Uint8Array([1,2,3]);
     key = '0123456789abcdef0123456789abcdef';
     mode = undefined;
@@ -4271,7 +4009,7 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
 local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
 /*
  * this function will aes-xxx-cbc encrypt with given <opt>
- * example usage:
+ * example use:
     data = new Uint8Array([1,2,3]);
     key = '0123456789abcdef0123456789abcdef';
     mode = undefined;
@@ -4494,18 +4232,6 @@ local.domStyleValidate = function () {
     });
 };
 
-local.errorMessagePrepend = function (err, message) {
-/*
- * this function will prepend message to <err>.message and <err>.stack
- */
-    if (err === local.errDefault) {
-        return;
-    }
-    err.message = message + err.message;
-    err.stack = message + err.stack;
-    return err;
-};
-
 local.eventEmitterCreate = function (that = {}) {
 /*
  * this function will create a simple, node-like event-emitter with <that>,
@@ -4637,6 +4363,216 @@ local.gotoNext = function (opt, onError) {
     opt.gotoNextData = opt.gotoNext.bind(undefined, undefined);
     return opt;
 };
+
+local.httpFetch = function (url, opt) {
+/*
+ * this function will fetch <url> with given <opt>
+ * https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch
+ * https://developer.mozilla.org/en-US/docs/Web/API/Response
+ */
+    let buf;
+    let cleanup;
+    let controller;
+    let debug;
+    let errStack;
+    let httpFetchProgressUpdate;
+    let isBrowser;
+    let isDebugged;
+    let isDone;
+    let nop;
+    let reject2;
+    let reject;
+    let request;
+    let resolve2;
+    let resolve;
+    let response;
+    let timeStart;
+    let timeout;
+    let timerTimeout;
+    // init function
+    cleanup = function () {
+        if (isDone) {
+            return true;
+        }
+        isDone = true;
+        // cleanup <timerTimeout>
+        clearTimeout(timerTimeout);
+        // decrement <httpFetchProgressUpdate>.cnt
+        httpFetchProgressUpdate.cnt = Math.max(
+            httpFetchProgressUpdate.cnt - 1,
+            0
+        );
+        httpFetchProgressUpdate();
+    };
+    debug = function () {
+        if (isDebugged) {
+            return;
+        }
+        isDebugged = true;
+        console.error("serverLog - " + JSON.stringify({
+            time: new Date(timeStart).toISOString(),
+            type: "httpFetchResponse",
+            method: opt.method,
+            url,
+            status: opt.status,
+            timeElapsed: Date.now() - timeStart,
+            // extra
+            responseContentLength: buf.byteLength
+        }) + "\n");
+    };
+    nop = function () {
+        return;
+    };
+    reject2 = function (err) {
+        if (cleanup()) {
+            return;
+        }
+        debug();
+        // append <errStack>
+        if (errStack) {
+            err.stack += "\n" + errStack;
+        }
+        Object.assign(err, opt);
+        reject(err);
+    };
+    resolve2 = async function (response) {
+        try {
+            if (isBrowser) {
+                Array.from(response.headers).forEach(function ([
+                    key, val
+                ]) {
+                    opt.responseHeaders[key.toLowerCase()] = val;
+                });
+                opt.status = response.status;
+                opt.ok = response.ok;
+                buf = new Uint8Array(
+                    await response.arrayBuffer()
+                );
+            } else {
+                // init responseproperties specified in
+                // https://fetch.spec.whatwg.org/#response-class
+                opt.responseHeaders = response.headers;
+                opt.status = response.statusCode;
+                opt.ok = 200 <= opt.status && opt.status <= 299;
+            }
+            switch (opt.responseType) {
+            case "json":
+                opt.data = JSON.parse(new TextDecoder().decode(buf));
+                break;
+            case "raw":
+                opt.data = buf;
+                break;
+            default:
+                opt.data = new TextDecoder().decode(buf);
+            }
+            if (opt.modeDebug) {
+                debug();
+            }
+            if (!opt.ok) {
+                reject2(new Error("httpFetch - status " + opt.status));
+                return;
+            }
+        } catch (err) {
+            reject2(err);
+            return;
+        }
+        cleanup();
+        resolve(opt);
+    };
+    // init httpFetchProgressUpdate
+    httpFetchProgressUpdate = globalThis.httpFetchProgressUpdate || nop;
+    httpFetchProgressUpdate.cnt |= 0;
+    httpFetchProgressUpdate.cnt += 1;
+    httpFetchProgressUpdate();
+    // init <opt>
+    opt = opt || {};
+    opt.abort = function (err) {
+        controller.abort();
+        request.destroy();
+        response.destroy();
+        reject2(err || new Error("httpFetch - abort"));
+    };
+    opt.method = opt.method || "GET";
+    opt.responseHeaders = {};
+    opt.status = 400;
+    // init var
+    buf = new Uint8Array(0);
+    controller = {
+        abort: nop,
+        destroy: nop
+    };
+    isBrowser = (
+        typeof globalThis.AbortController === "function"
+        && typeof globalThis.fetch === "function"
+    );
+    request = controller;
+    response = controller;
+    timeStart = Date.now();
+    timeout = opt.timeout || 30000;
+    // init timerTimeout
+    timerTimeout = setTimeout(function () {
+        opt.abort(new Error("httpFetch - timeout " + timeout + " ms"));
+    }, timeout);
+    // init promise
+    return Object.assign(new Promise(function (aa, bb) {
+        reject = bb;
+        resolve = aa;
+        // browser - fetch
+        if (isBrowser) {
+            controller = new globalThis.AbortController();
+            opt.signal = controller.signal;
+            globalThis.fetch(url, opt).then(resolve2).catch(reject2);
+            return;
+        }
+        // node - request
+        errStack = new Error().stack;
+        request = require(
+            url.indexOf("https:") === 0
+            ? "https"
+            : "http"
+        ).request(url, opt, function (aa) {
+            response = aa;
+            let bufList;
+            // handle err
+            response.on("error", reject2);
+            // handle stream
+            if (opt.responseType === "stream") {
+                resolve2(response);
+                return;
+            }
+            // read <buf>
+            bufList = [];
+            response.on("data", function (chunk) {
+                bufList.push(chunk);
+            });
+            response.on("end", function () {
+                buf = Buffer.concat(bufList);
+                resolve2(response);
+            });
+        });
+        request.on("error", reject2);
+        request.end(opt.body);
+    }), {
+        abort: opt.abort
+    });
+};
+
+//!! // test
+//!! (async function () {
+    //!! let opt;
+    //!! let url;
+    //!! url = (
+        //!! globalThis.window
+        //!! ? "/"
+        //!! : "http://example2394872.com"
+    //!! );
+    //!! opt = await local.httpFetch(url, {
+        //!! modeDebug: true,
+        //!! responseType: "json2",
+        //!! timeout: 5000
+    //!! });
+    //!! debugInline(opt);
+//!! }());
 
 local.isNullOrUndefined = function (val) {
 /*
@@ -5124,7 +5060,7 @@ local.middlewareForwardProxy = function (req, res, next) {
         local.streamCleanup(opt.clientReq);
         next(err);
     };
-    // init opt
+    // init <opt>
     opt = local.urlParse(req.headers["forward-proxy-url"]);
     opt.method = req.method;
     opt.url = req.headers["forward-proxy-url"];
@@ -5267,7 +5203,7 @@ local.moduleDirname = function (module, pathList) {
 
 local.normalizeJwt = function (data) {
 /*
- * this function will normalize the jwt-data with registered-headers
+ * this function will normalize jwt-data with registered-headers
  * https://tools.ietf.org/html/rfc7519#section-4.1
  */
     let timeNow;
@@ -5432,7 +5368,7 @@ local.onErrorWithStack = function (onError) {
         if (
             err
             && typeof err.stack === "string"
-            && err !== local.errDefault
+            && err !== local.errorDefault
             && String(err.stack).indexOf(stack.split("\n")[2]) < 0
         ) {
             err.stack += "\n" + stack;
@@ -5448,7 +5384,7 @@ local.onErrorWithStack = function (onError) {
 
 local.onFileModifiedRestart = function (file) {
 /*
- * this function will watch the file, and if modified, then restart the process
+ * this function will watch <file>, and if modified, then restart process
  */
     if (
         local.env.npm_config_mode_auto_restart
@@ -5605,6 +5541,23 @@ local.profileSync = function (fnc) {
     fnc();
     // return difference in milliseconds between Date.now() and timeStart
     return Date.now() - timeStart;
+};
+
+local.promisify = function (fnc) {
+/*
+ * this function will promisify <fnc>
+ */
+    return function (...argList) {
+        return new Promise(function (resolve, reject) {
+            fnc(...argList, function (err, ...argList) {
+                if (err) {
+                    reject(err, ...argList);
+                    return;
+                }
+                resolve(...argList);
+            });
+        });
+    };
 };
 
 local.replStart = function () {
@@ -5780,7 +5733,7 @@ local.requireReadme = function () {
     });
     local.fs.readdirSync(process.cwd()).forEach(function (file) {
         file = process.cwd() + "/" + file;
-        // if the file is modified, then restart the process
+        // if <file> is modified, then restart process
         local.onFileModifiedRestart(file);
         switch (local.path.basename(file)) {
         // swagger-validate assets.swgg.swagger.json
@@ -5839,8 +5792,7 @@ local.requireReadme = function () {
     globalThis.utility2_moduleExports.globalThis = globalThis;
     // read code from README.md
     code = local.templateRenderMyApp(
-        local.assetsDict["/assets.example.template.js"],
-        {}
+        local.assetsDict["/assets.example.template.js"]
     );
     local.tryCatchOnError(function () {
         tmp = (
@@ -5968,9 +5920,9 @@ assets.app.js\n\
 \n\
 instruction\n\
     1. save this script as assets.app.js\n\
-    2. run the shell-command:\n\
+    2. run shell-command:\n\
         $ PORT=8081 node assets.app.js\n\
-    3. open a browser to http://127.0.0.1:8081 and play with the web-demo\n\
+    3. open a browser to http://127.0.0.1:8081 and play with web-demo\n\
     4. edit this script to suit your needs\n\
 */\n\
 ' + local.assetsDict["/assets.utility2.rollup.start.js"].replace((
@@ -6073,7 +6025,7 @@ local.semverCompare = function (aa, bb) {
  *  0 if aa = bb
  *  1 if aa > bb
  * https://semver.org/#spec-item-11
- * example usage:
+ * example use:
     semverCompare("2.2.2", "10.2.2"); // -1
     semverCompare("1.2.3", "1.2.3");  //  0
     semverCompare("10.2.2", "2.2.2"); //  1
@@ -6130,7 +6082,7 @@ local.semverCompare = function (aa, bb) {
 
 local.serverRespondCors = function (req, res) {
 /*
- * this function will enable cors for the req
+ * this function will enable cors for <req>
  * http://en.wikipedia.org/wiki/Cross-origin_resource_sharing
  */
     local.serverRespondHeadSet(req, res, undefined, local.jsonCopy({
@@ -6158,10 +6110,9 @@ local.serverRespondDefault = function (req, res, statusCode, err) {
     );
     if (err) {
         // debug statusCode / method / url
-        local.errorMessagePrepend(
-            err,
-            res.statusCode + " " + req.method + " " + req.url
-            + "\n"
+        err.message = (
+            res.statusCode + " " + req.method + " " + req.url + "\n"
+            + err.message
         );
         // print err.stack to stderr
         local.onErrorDefault(err);
@@ -6191,7 +6142,7 @@ local.serverRespondEcho = function (req, res) {
 
 local.serverRespondHeadSet = function (ignore, res, statusCode, headers) {
 /*
- * this function will set the <res> object's <statusCode> and <headers>
+ * this function will set <res> object's <statusCode> and <headers>
  */
     if (res.headersSent) {
         return;
@@ -6311,18 +6262,34 @@ local.stringHtmlSafe = function (str) {
  * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
  */
     return str.replace((
-        /&/g
+        /&/gu
     ), "&amp;").replace((
-        /"/g
+        /"/gu
     ), "&quot;").replace((
-        /'/g
+        /'/gu
     ), "&apos;").replace((
-        /</g
+        /</gu
     ), "&lt;").replace((
-        />/g
+        />/gu
     ), "&gt;").replace((
-        /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
+        /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
     ), "&$1");
+};
+
+local.stringLineCount = function (str, start, end) {
+/*
+ * this function will count the number of "\n" in <str>
+ * from <start> to <end>
+ */
+    let count;
+    count = 0;
+    while (true) {
+        start = str.indexOf("\n", start) + 1;
+        if (start === 0 || start >= end) {
+            return count;
+        }
+        count += 1;
+    }
 };
 
 local.stringMerge = function (str1, str2, rgx) {
@@ -6546,17 +6513,17 @@ local.templateRender = function (template, dict, opt, ii) {
             // default to htmlSafe
             if (!notHtmlSafe) {
                 val = val.replace((
-                    /&/g
+                    /&/gu
                 ), "&amp;").replace((
-                    /"/g
+                    /"/gu
                 ), "&quot;").replace((
-                    /'/g
+                    /'/gu
                 ), "&apos;").replace((
-                    /</g
+                    /</gu
                 ), "&lt;").replace((
-                    />/g
+                    />/gu
                 ), "&gt;").replace((
-                    /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
+                    /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
                 ), "&$1");
             }
             markdownToHtml = (
@@ -6565,7 +6532,7 @@ local.templateRender = function (template, dict, opt, ii) {
             );
             if (markdownToHtml) {
                 val = markdownToHtml(val).replace((
-                    /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
+                    /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
                 ), "&$1");
             }
             return val;
@@ -6579,48 +6546,54 @@ local.templateRender = function (template, dict, opt, ii) {
     });
 };
 
-local.templateRenderMyApp = function (template, opt) {
+local.templateRenderMyApp = function (template) {
 /*
- * this function will render my-app-lite template with given <opt>.packageJson
+ * this function will render my-app-lite template
  */
-    opt.packageJson = local.fsReadFileOrEmptyStringSync("package.json", "json");
-    local.objectSetDefault(opt.packageJson, {
-        nameLib: opt.packageJson.name.replace((
+    let githubRepo;
+    let packageJson;
+    try {
+        packageJson = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
+    } catch (ignore) {
+        packageJson = {};
+    }
+    local.objectSetDefault(packageJson, {
+        nameLib: packageJson.name.replace((
             /\W/g
         ), "_"),
         repository: {
             url: (
-                "https://github.com/kaizhu256/node-" + opt.packageJson.name
+                "https://github.com/kaizhu256/node-" + packageJson.name
             )
         }
     }, 2);
-    opt.githubRepo = opt.packageJson.repository.url.replace((
+    githubRepo = packageJson.repository.url.replace((
         /\.git$/
     ), "").split("/").slice(-2);
     template = template.replace((
         /kaizhu256(\.github\.io\/|%252F|\/)/g
-    ), opt.githubRepo[0] + ("$1"));
+    ), githubRepo[0] + ("$1"));
     template = template.replace((
         /node-my-app-lite/g
-    ), opt.githubRepo[1]);
+    ), githubRepo[1]);
     template = template.replace((
         /\bh1-my-app\b/g
     ), (
-        opt.packageJson.nameHeroku
-        || ("h1-" + opt.packageJson.nameLib.replace((
+        packageJson.nameHeroku
+        || ("h1-" + packageJson.nameLib.replace((
             /_/g
         ), "-"))
     ));
     template = template.replace((
         /my-app-lite/g
-    ), opt.packageJson.name);
+    ), packageJson.name);
     template = template.replace((
         /my_app/g
-    ), opt.packageJson.nameLib);
+    ), packageJson.nameLib);
     template = template.replace((
         /\{\{packageJson\.(\S+)\}\}/g
     ), function (ignore, match1) {
-        return opt.packageJson[match1];
+        return packageJson[match1];
     });
     return template;
 };
@@ -7632,7 +7605,7 @@ local.objectSetDefault(local.env, {
     npm_package_nameLib: "my_app",
     npm_package_version: "0.0.1"
 });
-local.errDefault = new Error("default-error");
+local.errorDefault = new Error("default-error");
 local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.identity;
 // cbranch-no cstat-no fstat-no missing-if-branch
 local.istanbulCoverageReportCreate = (

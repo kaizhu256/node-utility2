@@ -6,9 +6,13 @@
 
 # useful sh one-liners
 # http://sed.sourceforge.net/sed1line.txt
+# export NODE_TLS_REJECT_UNAUTHORIZED=0 # use with caution
+# git branch -d -r origin/aa
 # git config --global diff.algorithm histogram
 # git fetch origin alpha beta master --tags
+# git ls-files --stage | sort
 # git ls-remote --heads origin
+# git update-index --chmod=+x aa.js
 # npm_package_private=1 GITHUB_REPO=aa/node-aa-bb-pro shCryptoWithGithubOrg aa shCryptoTravisEncrypt
 # shCryptoWithGithubOrg aa shTravisRepoCreate aa/node-aa-bb
 # shCryptoWithGithubOrg aa shGithubApiRateLimitGet
@@ -64,7 +68,7 @@ shBaseInit () {
 shBaseInstall () {
 # this function will install .bashrc, .screenrc, .vimrc, and lib.utility2.sh in $HOME,
 # and is intended for aws-ec2 setup
-# example usage:
+# example use:
 # curl -o "$HOME/lib.utility2.sh" https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh && . "$HOME/lib.utility2.sh" && shBaseInstall
     for FILE in .screenrc .vimrc lib.utility2.sh
     do
@@ -355,7 +359,7 @@ shBuildCi () {(set -e
 '
             shBuildApp
             ;;
-        # example usage:
+        # example use:
         # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc "[git squashPop HEAD~1] [npm publishAfterCommitAfterBuild]"
         "[git squashPop "*)
             shGitSquashPop \
@@ -367,7 +371,7 @@ shBuildCi () {(set -e
                 "https://github.com/$GITHUB_REPO" -f HEAD:alpha
             return
             ;;
-        # example usage:
+        # example use:
         # shCryptoWithGithubOrg npmdoc shGithubRepoTouch "npmdoc/node-npmdoc-mysql npmdoc/node-npmdoc-mysql" "[npm publishAfterCommitAfterBuild]"
         "[npm publishAfterCommitAfterBuild]"*)
             if [ ! "$GITHUB_TOKEN" ]
@@ -434,7 +438,7 @@ shBuildCi () {(set -e
         "[\$ "*)
             eval "$(printf "$CI_COMMIT_MESSAGE_META" | sed -e "s/^..//")"
             ;;
-        # example usage:
+        # example use:
         # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-sandbox2 "[debug travis@proxy.com root]" task
         "[debug "*)
             if [ ! "$SSH_KEY" ]
@@ -458,7 +462,7 @@ shBuildCi () {(set -e
                 shSleep 60
             done
             ;;
-        # example usage:
+        # example use:
         # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc "[git push origin beta:master]" task
         "[git push origin "*)
             git fetch --depth=50 origin "$(
@@ -913,7 +917,7 @@ shChromeSocks5 () {(set -e
 
 shCryptoAesXxxCbcRawDecrypt () {(set -e
 # this function will inplace aes-xxx-cbc decrypt stdin with given hex-key $1
-# example usage:
+# example use:
 # printf 'hello world\n' | shCryptoAesXxxCbcRawEncrypt 0123456789abcdef0123456789abcdef | shCryptoAesXxxCbcRawDecrypt 0123456789abcdef0123456789abcdef
     node -e "$UTILITY2_MACRO_JS"'
 /* jslint utility2:true */
@@ -945,7 +949,7 @@ process.stdin.on("end", function () {
 
 shCryptoAesXxxCbcRawEncrypt () {(set -e
 # this function will inplace aes-xxx-cbc encrypt stdin with given hex-key $1
-# example usage:
+# example use:
 # printf 'hello world\n' | shCryptoAesXxxCbcRawEncrypt 0123456789abcdef0123456789abcdef | shCryptoAesXxxCbcRawDecrypt 0123456789abcdef0123456789abcdef
     node -e "$UTILITY2_MACRO_JS"'
 /* jslint utility2:true */
@@ -1493,7 +1497,7 @@ shGitInitBase () {(set -e
 
 shGitLsTree () {(set -e
 # this function will list all files committed in HEAD
-# example usage:
+# example use:
 # shGitLsTree | sort -nrk2 -nrk3 # sort by date
 # shGitLsTree | sort -nrk5 # sort by size
     printf "$(git ls-tree --name-only -r HEAD | head -n 4096)" | awk '{
@@ -1590,7 +1594,7 @@ shGithubApiRateLimitGet () {(set -e
 
 shGithubDateCommitted () {(set -e
 # this function will fetch the commit-date for the github-commit-url $1
-# example usage:
+# example use:
 # shGithubDateCommitted https://github.com/kaizhu256/node-utility2/commits/master
     printf "shGithubDateCommitted $1 # "
     curl -Lfs "$1" | grep -m 1 -o -E \
@@ -1632,7 +1636,7 @@ shGithubRepoCreate () {(set -e
 https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig |
         sed -e "s|kaizhu256/node-utility2|$GITHUB_REPO|" > .git/config
     # create github-repo
-    node -e "$UTILITY2_MACRO_JS"'
+    node -e "$UTILITY2_MACRO_JS""$UTILITY2_MACRO_AJAX_JS"'
 /* jslint utility2:true */
 (function (local) {
 "use strict";
@@ -1905,7 +1909,7 @@ shMacAddressSpoof () {(set -e
 
 shMediaHlsEncrypt () {(set -e
 # this function encrypt the hls-media with given hls.m3u8 file
-# example usage:
+# example use:
 # CRYPTO_AES_KEY_MEDIA=0123456789abcdef0123456789abcdef shMediaHlsEncrypt
     node -e "$UTILITY2_MACRO_JS"'
 /* jslint utility2:true */
@@ -1955,7 +1959,7 @@ local.cryptoAesXxxCbcRawEncrypt({
 
 shMediaHlsFromMp4 () {(set -e
 # this function convert the media $1 to hls
-# example usage:
+# example use:
 # shMediaHlsFromMp4 a00.mp4
     ffmpeg \
         -i "$1" \
@@ -1982,7 +1986,7 @@ console.log(local.moduleDirname(process.argv[1], module.paths));
 
 shNpmDeprecateAlias () {(set -e
 # this function will deprecate the npm-package $NAME with given $MESSAGE
-# example usage:
+# example use:
 # shNpmDeprecateAlias deprecated-package
     shEnvSanitize
     NAME="$1"
@@ -2295,23 +2299,40 @@ shRawLibDiff () {(set -e
 )}
 
 shRawLibFetch () {(set -e
-# this function will fetch raw-lib from $LIST
+# this function will fetch raw-lib from $1
     export DIR="tmp/raw.lib"
-    export LIST="$1"
     rm -rf "$DIR" && mkdir -p "$DIR"
     node -e '
 /* jslint utility2:true */
 (function () {
 "use strict";
+let footer;
+let fs;
+let header;
+let https;
 let normalizeWhitespace;
 let opt;
+let path;
+let replaceDiff;
 let repoDict;
-normalizeWhitespace = function (aa) {
-    return aa.replace((
+normalizeWhitespace = function (str) {
+/*
+ * this function will normalize whitespace
+ */
+    // normalize newline
+    str = str.replace((
         /\r\n|\r/g
-    ), "\n").replace((
+    ), "\n");
+    // remove trailing-whitespace
+    str = str.replace((
         /[\t\u0020]+$/gm
-    ), "").replace((
+    ), "");
+    // remove leading-newline before ket
+    str = str.replace((
+        /\n+(\n\u0020*?\})/g
+    ), "$1");
+    // normalize newline between code-section
+    str = str.replace((
         /\n{3,}/g
     ), function (match0) {
         if (match0.length === 3) {
@@ -2319,10 +2340,36 @@ normalizeWhitespace = function (aa) {
         }
         return "\n\n\n\n";
     });
+    return str;
 };
+fs = require("fs");
+https = require("https");
+path = require("path");
 repoDict = {};
-opt = JSON.parse(process.argv[1].replace((
+opt = (
+    /^\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?)\n\*\/\n/m
+).exec(fs.readFileSync(process.argv[1], "utf8"));
+replaceDiff = opt[2].split("\n\n").filter(function (elem) {
+    return elem.trim();
+}).map(function (elem) {
+    return elem.trim() + "\n";
+}).sort().join("\n");
+footer = (
+    /\n\/\*\nfile\u0020none\n\*\/\n([\S\s]+)/
+).exec(opt.input);
+footer = String(
+    (footer && footer[1].trim())
+    ? "\n\n\n" + footer[1].trim() + "\n"
+    : ""
+);
+header = (
+    opt.input.slice(0, opt.index)
+    + "/*\nshRawLibFetch\n" + opt[1].trim() + "\n" + replaceDiff + "*/\n\n\n\n"
+);
+opt = JSON.parse(opt[1].replace((
     /^\u0020*?\/\/.*?$/gm
+), "").replace((
+    /\u0020\/\/\u0020jslint\u0020ignore:line$/gm
 ), ""));
 opt.urlList.forEach(function (url, repo) {
     repo = url.split("/").slice(0, 7).join("/");
@@ -2330,7 +2377,7 @@ opt.urlList.forEach(function (url, repo) {
         repoDict[repo] = {
             urlList: []
         };
-        require("https").request(repo.replace(
+        https.request(repo.replace(
             "/blob/",
             "/commits/"
         ), function (res) {
@@ -2353,11 +2400,11 @@ Object.entries(repoDict).forEach(function ([
 ], ii) {
     repo.prefix = prefix;
     repo.urlList.forEach(function (url, jj) {
-        require("https").request(url.replace(
+        https.request(url.replace(
             "https://github.com/",
             "https://raw.githubusercontent.com/"
         ).replace("/blob/", "/"), function (res) {
-            res.pipe(require("fs").createWriteStream(
+            res.pipe(fs.createWriteStream(
                 process.env.DIR
                 + "/"
                 + String(ii).padStart(2, "0")
@@ -2370,12 +2417,12 @@ Object.entries(repoDict).forEach(function ([
     });
 });
 process.on("exit", function () {
-    let aa;
     let repoPrefix0;
     let requireDict;
-    aa = "";
+    let result;
+    result = "";
     requireDict = {};
-    require("fs").readdirSync(process.env.DIR).sort().forEach(function (data) {
+    fs.readdirSync(process.env.DIR).sort().forEach(function (data) {
         let exports;
         let file;
         let prefix;
@@ -2383,7 +2430,7 @@ process.on("exit", function () {
         repo = Object.values(repoDict)[Number(data.slice(0, 2))];
         file = repo.urlList[Number(data.slice(4, 6))];
         // init prefix
-        prefix = "exports_" + require("path").dirname(file).replace(
+        prefix = "exports_" + path.dirname(file).replace(
             "https://github.com/",
             ""
         ).replace((
@@ -2393,14 +2440,14 @@ process.on("exit", function () {
         ), "_").replace((
             /(_)_+|_+$/g
         ), "$1");
-        exports = prefix + "_" + require("path").basename(file).replace((
+        exports = prefix + "_" + path.basename(file).replace((
             /\.js$/
         ), "").replace((
             /\W/g
         ), "_");
         if (repo.prefix !== repoPrefix0) {
             repoPrefix0 = repo.prefix;
-            aa += (
+            result += (
                 "\n\n\n\n/*\n"
                 + "repo " + repo.prefix.replace("/blob/", "/tree/") + "\n"
                 + "committed " + repo.dateCommitted + "\n"
@@ -2408,9 +2455,9 @@ process.on("exit", function () {
             );
         }
         // mangle module.exports
-        data = require("fs").readFileSync(process.env.DIR + "/" + data, "utf8");
-        if (!opt.isCommonJs) {
-            aa += "\n\n\n\n/*\nfile " + file + "\n*/\n" + data.trim();
+        data = fs.readFileSync(process.env.DIR + "/" + data, "utf8");
+        if (!opt.rollupCommonJs) {
+            result += "\n\n\n\n/*\nfile " + file + "\n*/\n" + data.trim();
             return;
         }
         data = data.replace((
@@ -2426,31 +2473,55 @@ process.on("exit", function () {
                 /\W/g
             ), "_");
         });
-        aa += "\n\n\n\n/*\nfile " + file + "\n*/\n(function () {\n";
+        result += "\n\n\n\n/*\nfile " + file + "\n*/\n";
         if ((
             /\bpackage\.json$/
         ).test(file)) {
-            aa += exports + " = ";
+            result += exports + " = ";
         }
-        aa += data.trim() + "\n}());";
+        result += data.trim();
     });
     // comment #!
-    aa = aa.replace((
+    result = result.replace((
         /^#!/gm
     ), "// $&");
     // normalize whitespace
-    aa = normalizeWhitespace(aa);
+    result = normalizeWhitespace(result);
     // replaceList
-    opt.replaceList = opt.replaceList || [];
-    opt.replaceList.forEach(function (elem) {
-        aa = aa.replace(new RegExp(elem.source, elem.flags), elem.replace);
+    Array.from(opt.replaceList || []).forEach(function (elem) {
+        result = result.replace(
+            new RegExp(elem.source, elem.flags),
+            elem.replace
+        );
     });
-    if (!opt.isCommonJs) {
-        console.log(aa.trim() + "\n\n\n\n/*\nfile none\n*/");
+    result = result.trim() + "\n";
+    // replace diff
+    replaceDiff.replace((
+        /((?:^-.*?\n)+?)((?:^\+.*?\n)+)/gm
+    ), function (ignore, match1, match2) {
+        match1 = match1.replace((
+            /^-/gm
+        ), "");
+        match2 = match2.replace((
+            /^\+/gm
+        ), "");
+        if (result.indexOf(match1) < 0) {
+            throw new Error(
+                "shRawLibFetch - cannot find-and-replace snippet "
+                + JSON.stringify(match1)
+            );
+        }
+        result = result.replace(match1, match2);
+    });
+    if (!opt.rollupCommonJs) {
+        fs.writeFileSync(
+            process.argv[1],
+            header + result.trim() + "\n\n\n\n/*\nfile none\n*/\n" + footer
+        );
         return;
     }
     // comment ... = require(...)
-    aa = aa.replace((
+    result = result.replace((
         /^\u0020*?[$A-Z_a-z].*?\brequire\(.*$/gm
     ), function (match0) {
         requireDict[match0.replace((
@@ -2458,7 +2529,7 @@ process.on("exit", function () {
         ), "let").trim()] = "";
         return "// " + match0;
     });
-    aa = aa.replace((
+    result = result.replace((
         /^\u0020*?(?:const|let|var)\u0020(?:\w+?|\{[^}]+?\})\u0020=\u0020exports_.*$/gm
     ), function (match0) {
         requireDict[match0.replace((
@@ -2469,9 +2540,9 @@ process.on("exit", function () {
         ), "// ");
     });
     // normalize whitespace
-    aa = normalizeWhitespace(aa);
+    result = normalizeWhitespace(result);
     // normalize requireDict - let exports_... = {}
-    aa.replace((
+    result.replace((
         /\bexports_\w+/g
     ), function (match0) {
         requireDict["let " + match0 + " = {};"] = "";
@@ -2504,7 +2575,7 @@ process.on("exit", function () {
         requireDict[key].push(val);
     });
     // normalize requireDict - comment duplicate in code
-    aa.replace((
+    result.replace((
         /^\u0020*?(?:class|const|function|let|var)\u0020(\w+?)\b/gm
     ), function (ignore, match1) {
         Array.from(requireDict[match1] || []).forEach(function (key) {
@@ -2524,8 +2595,8 @@ process.on("exit", function () {
             });
         }
     });
-    console.log("(function () {\n\"use strict\";");
-    console.log(Object.keys(requireDict).map(function (key) {
+    header += "(function () {\n\"use strict\";\n";
+    Object.keys(requireDict).map(function (key) {
         return (
             key.indexOf(" = exports_") >= 0
             ? ""
@@ -2535,12 +2606,12 @@ process.on("exit", function () {
         );
     }).filter(function (elem) {
         return elem;
-    }).sort().map(function (key) {
+    }).sort().forEach(function (key) {
         key = key.split("\u0000")[1];
-        return requireDict[key] + key;
-    }).join("\n"));
-    console.log(aa.trim());
-    console.log(Object.keys(requireDict).map(function (key) {
+        header += requireDict[key] + key + "\n";
+    });
+    result = header + result.trim() + "\n";
+    Object.keys(requireDict).map(function (key) {
         return (
             key.indexOf(" = exports_") >= 0
             ? key.replace((
@@ -2555,16 +2626,17 @@ process.on("exit", function () {
         );
     }).filter(function (elem) {
         return elem;
-    }).sort().map(function (key) {
+    }).sort().forEach(function (key) {
         key = key.split("\u0000")[1];
-        return requireDict[key.replace((
+        result += requireDict[key.replace((
             /\u0020{2,}/
-        ), " ")] + key;
-    }).join("\n"));
-    console.log("}());\n\n\n\n/*\nfile none\n*/");
+        ), " ")] + key + "\n";
+    });
+    result += "}());\n\n\n\n/*\nfile none\n*/\n";
+    fs.writeFileSync(process.argv[1], result);
 });
 }());
-' "$LIST"
+' "$@"
 )}
 
 shReadmeLinkValidate () {(set -e
@@ -2877,7 +2949,7 @@ shSource () {
 shSsh5022F () {(set -e
 # this function will ssh the reverse-tunnel-client
 # to the middleman $USER_HOST:5022
-# example usage:
+# example use:
 # shSsh5022F travis@proxy.com -D 5080
     USER_HOST="$1"
     shift
@@ -2890,7 +2962,7 @@ shSsh5022F () {(set -e
 shSsh5022R () {(set -e
 # this function will ssh-reverse-tunnel the local-machine $USER@127.0.0.1
 # to the middleman $USER_HOST:5022
-# example usage:
+# example use:
 # shSsh5022R travis@proxy.com root
 # pkill -f "ssh $USER_REMOTE@$HOST"
     USER_HOST="$1"
@@ -2952,7 +3024,7 @@ shTravisRepoCreate () {(set -e
             break
         fi
     done
-    node -e "$UTILITY2_MACRO_JS"'
+    node -e "$UTILITY2_MACRO_JS""$UTILITY2_MACRO_AJAX_JS"'
 /* jslint utility2:true */
 (function (local) {
 "use strict";
@@ -3273,6 +3345,7 @@ jslint-lite
 sqljs-lite
 swgg
 utility2
+wasm-sqlite
 "
 )}
 
@@ -3434,8 +3507,6 @@ export UTILITY2_MACRO_JS='
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
-    let ArrayPrototypeFlat;
-    let TextXxcoder;
     let consoleError;
     let debugName;
     let local;
@@ -3456,156 +3527,12 @@ export UTILITY2_MACRO_JS='
             return argList[0];
         };
     }
-    // polyfill
-    ArrayPrototypeFlat = function (depth) {
-    /*
-     * this function will polyfill Array.prototype.flat
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        depth = (
-            globalThis.isNaN(depth)
-            ? 1
-            : Number(depth)
-        );
-        if (!depth) {
-            return Array.prototype.slice.call(this);
-        }
-        return Array.prototype.reduce.call(this, function (acc, cur) {
-            if (Array.isArray(cur)) {
-                // recurse
-                acc.push.apply(acc, ArrayPrototypeFlat.call(cur, depth - 1));
-            } else {
-                acc.push(cur);
-            }
-            return acc;
-        }, []);
-    };
-    Array.prototype.flat = Array.prototype.flat || ArrayPrototypeFlat;
-    Array.prototype.flatMap = Array.prototype.flatMap || function flatMap(
-        ...argList
-    ) {
-    /*
-     * this function will polyfill Array.prototype.flatMap
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        return this.map(...argList).flat();
-    };
     String.prototype.trimEnd = (
         String.prototype.trimEnd || String.prototype.trimRight
     );
     String.prototype.trimStart = (
         String.prototype.trimStart || String.prototype.trimLeft
     );
-    (function () {
-        try {
-            globalThis.TextDecoder = (
-                globalThis.TextDecoder || require("util").TextDecoder
-            );
-            globalThis.TextEncoder = (
-                globalThis.TextEncoder || require("util").TextEncoder
-            );
-        } catch (ignore) {}
-    }());
-    TextXxcoder = function () {
-    /*
-     * this function will polyfill TextDecoder/TextEncoder
-     * https://gist.github.com/Yaffle/5458286
-     */
-        return;
-    };
-    TextXxcoder.prototype.decode = function (octets) {
-    /*
-     * this function will polyfill TextDecoder.prototype.decode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bytesNeeded;
-        let codePoint;
-        let ii;
-        let kk;
-        let octet;
-        let string;
-        string = "";
-        ii = 0;
-        while (ii < octets.length) {
-            octet = octets[ii];
-            bytesNeeded = 0;
-            codePoint = 0;
-            if (octet <= 0x7F) {
-                bytesNeeded = 0;
-                codePoint = octet & 0xFF;
-            } else if (octet <= 0xDF) {
-                bytesNeeded = 1;
-                codePoint = octet & 0x1F;
-            } else if (octet <= 0xEF) {
-                bytesNeeded = 2;
-                codePoint = octet & 0x0F;
-            } else if (octet <= 0xF4) {
-                bytesNeeded = 3;
-                codePoint = octet & 0x07;
-            }
-            if (octets.length - ii - bytesNeeded > 0) {
-                kk = 0;
-                while (kk < bytesNeeded) {
-                    octet = octets[ii + kk + 1];
-                    codePoint = (codePoint << 6) | (octet & 0x3F);
-                    kk += 1;
-                }
-            } else {
-                codePoint = 0xFFFD;
-                bytesNeeded = octets.length - ii;
-            }
-            string += String.fromCodePoint(codePoint);
-            ii += bytesNeeded + 1;
-        }
-        return string;
-    };
-    TextXxcoder.prototype.encode = function (string) {
-    /*
-     * this function will polyfill TextEncoder.prototype.encode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bits;
-        let cc;
-        let codePoint;
-        let ii;
-        let length;
-        let octets;
-        octets = [];
-        length = string.length;
-        ii = 0;
-        while (ii < length) {
-            codePoint = string.codePointAt(ii);
-            cc = 0;
-            bits = 0;
-            if (codePoint <= 0x0000007F) {
-                cc = 0;
-                bits = 0x00;
-            } else if (codePoint <= 0x000007FF) {
-                cc = 6;
-                bits = 0xC0;
-            } else if (codePoint <= 0x0000FFFF) {
-                cc = 12;
-                bits = 0xE0;
-            } else if (codePoint <= 0x001FFFFF) {
-                cc = 18;
-                bits = 0xF0;
-            }
-            octets.push(bits | (codePoint >> cc));
-            cc -= 6;
-            while (cc >= 0) {
-                octets.push(0x80 | ((codePoint >> cc) & 0x3F));
-                cc -= 6;
-            }
-            ii += (
-                codePoint >= 0x10000
-                ? 2
-                : 1
-            );
-        }
-        return octets;
-    };
-    globalThis.TextDecoder = globalThis.TextDecoder || TextXxcoder;
-    globalThis.TextEncoder = globalThis.TextEncoder || TextXxcoder;
     // init local
     local = {};
     local.local = local;
@@ -3618,34 +3545,32 @@ export UTILITY2_MACRO_JS='
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
-    local.assertOrThrow = function (passed, message) {
+    local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw err.<message> if <passed> is falsy
+     * this function will throw err.<msg> if <passed> is falsy
      */
-        let err;
         if (passed) {
             return;
         }
-        err = (
+        throw (
             (
-                message
-                && typeof message.message === "string"
-                && typeof message.stack === "string"
+                msg
+                && typeof msg.message === "string"
+                && typeof msg.stack === "string"
             )
-            // if message is errObj, then leave as is
-            ? message
+            // if msg is err, then leave as is
+            ? msg
             : new Error(
-                typeof message === "string"
-                // if message is a string, then leave as is
-                ? message
-                // else JSON.stringify message
-                : JSON.stringify(message, undefined, 4)
+                typeof msg === "string"
+                // if msg is a string, then leave as is
+                ? msg
+                // else JSON.stringify msg
+                : JSON.stringify(msg, undefined, 4)
             )
         );
-        throw err;
     };
     local.coalesce = function (...argList) {
     /*
@@ -3668,6 +3593,7 @@ export UTILITY2_MACRO_JS='
      * this function will sync "rm -rf" <dir>
      */
         let child_process;
+        // do nothing if module does not exist
         try {
             child_process = require("child_process");
         } catch (ignore) {
@@ -3686,6 +3612,7 @@ export UTILITY2_MACRO_JS='
      * this function will sync write <data> to <file> with "mkdir -p"
      */
         let fs;
+        // do nothing if module does not exist
         try {
             fs = require("fs");
         } catch (ignore) {
@@ -3798,9 +3725,7 @@ export UTILITY2_MACRO_JS='
         local.vm = require("vm");
         local.zlib = require("zlib");
     }
-}((typeof globalThis === "object" && globalThis) || (function () {
-    return Function("return this")(); // jslint ignore:line
-}())));
+}((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
 
 
@@ -3835,361 +3760,6 @@ local.utility2 = local;
 /* validateLineSortedReset */
 globalThis.local = local;
 
-local.ajax = function (opt, onError) {
-/*
- * this function will send an ajax-req
- * with given <opt>.url and callback <onError>
- * with err and timeout handling
- * example usage:
-    local.ajax({
-        data: "hello world",
-        header: {"x-header-hello": "world"},
-        method: "POST",
-        url: "/index.html"
-    }, function (err, xhr) {
-        console.log(xhr.statusCode);
-        console.log(xhr.responseText);
-    });
- */
-    let ajaxProgressUpdate;
-    let bufferValidateAndCoerce;
-    let isDone;
-    let local2;
-    let onError2;
-    let onEvent;
-    let stack;
-    let streamCleanup;
-    let timeout;
-    let tmp;
-    let xhr;
-    let xhrInit;
-    // init local2
-    local2 = opt.local2 || local.utility2 || {};
-    // init function
-    ajaxProgressUpdate = local2.ajaxProgressUpdate || function () {
-        return;
-    };
-    bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (
-        buf,
-        mode
-    ) {
-    /*
-     * this function will validate and coerce/convert
-     * <buf> to Buffer/Uint8Array, or String if <mode> = "string"
-     */
-        // coerce ArrayBuffer to Buffer
-        if (Object.prototype.toString.call(buf) === "[object ArrayBuffer]") {
-            buf = new Uint8Array(buf);
-        }
-        // convert Buffer to utf8
-        if (mode === "string" && typeof buf !== "string") {
-            buf = String(buf);
-        }
-        return buf;
-    };
-    onEvent = function (evt) {
-    /*
-     * this function will handle events
-     */
-        if (Object.prototype.toString.call(evt) === "[object Error]") {
-            xhr.err = xhr.err || evt;
-            xhr.onEvent({
-                type: "error"
-            });
-            return;
-        }
-        // init statusCode
-        xhr.statusCode = (xhr.statusCode || xhr.status) | 0;
-        switch (evt.type) {
-        case "abort":
-        case "error":
-        case "load":
-            if (isDone) {
-                return;
-            }
-            isDone = true;
-            // decrement cnt
-            ajaxProgressUpdate.cnt = Math.max(
-                ajaxProgressUpdate.cnt - 1,
-                0
-            );
-            ajaxProgressUpdate();
-            // handle abort or err event
-            switch (!xhr.err && evt.type) {
-            case "abort":
-            case "error":
-                xhr.err = new Error("ajax - event " + evt.type);
-                break;
-            case "load":
-                if (xhr.statusCode >= 400) {
-                    xhr.err = new Error(
-                        "ajax - statusCode " + xhr.statusCode
-                    );
-                }
-                break;
-            }
-            // debug statusCode / method / url
-            if (xhr.err) {
-                xhr.statusCode = xhr.statusCode || 500;
-                xhr.err.statusCode = xhr.statusCode;
-                tmp = (
-                    (
-                        local.isBrowser
-                        ? "browser"
-                        : "node"
-                    )
-                    + " - " + xhr.statusCode + " " + xhr.method + " " + xhr.url
-                    + "\n"
-                );
-                xhr.err.message = tmp + xhr.err.message;
-                xhr.err.stack = tmp + xhr.err.stack;
-            }
-            // update resHeaders
-            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders
-            if (xhr.getAllResponseHeaders) {
-                xhr.getAllResponseHeaders().replace((
-                    /(.*?):\u0020*(.*?)\r\n/g
-                ), function (ignore, key, val) {
-                    xhr.resHeaders[key.toLowerCase()] = val;
-                });
-            }
-            // debug ajaxResponse
-            xhr.resContentLength = (
-                xhr.response
-                && (xhr.response.byteLength || xhr.response.length)
-            ) | 0;
-            xhr.timeElapsed = Date.now() - xhr.timeStart;
-            if (xhr.modeDebug) {
-                console.error("serverLog - " + JSON.stringify({
-                    time: new Date(xhr.timeStart).toISOString(),
-                    type: "ajaxResponse",
-                    method: xhr.method,
-                    url: xhr.url,
-                    statusCode: xhr.statusCode,
-                    timeElapsed: xhr.timeElapsed,
-                    // extra
-                    resContentLength: xhr.resContentLength
-                }) + "\n");
-            }
-            // init responseType
-            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType
-            switch (xhr.response && xhr.responseType) {
-            // init responseText
-            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseText
-            case "":
-            case "text":
-                if (typeof xhr.responseText === "string") {
-                    break;
-                }
-                xhr.responseText = bufferValidateAndCoerce(
-                    xhr.response,
-                    "string"
-                );
-                break;
-            case "arraybuffer":
-                xhr.responseBuffer = bufferValidateAndCoerce(xhr.response);
-                break;
-            }
-            // cleanup timerTimeout
-            clearTimeout(xhr.timerTimeout);
-            // cleanup reqStream and resStream
-            streamCleanup(xhr.reqStream);
-            streamCleanup(xhr.resStream);
-            onError2(xhr.err, xhr);
-            break;
-        }
-    };
-    // init onError2
-    stack = new Error().stack;
-    onError2 = function (err, xhr) {
-        if (err && typeof err.stack === "string") {
-            err.stack += "\n" + stack;
-        }
-        onError(err, xhr);
-    };
-    streamCleanup = function (stream) {
-    /*
-     * this function will try to end or destroy <stream>
-     */
-        let err;
-        // try to end stream
-        try {
-            stream.end();
-        } catch (errCaught) {
-            err = errCaught;
-        }
-        // if err, then try to destroy stream
-        if (err) {
-            try {
-                stream.destroy();
-            } catch (ignore) {}
-        }
-    };
-    xhrInit = function () {
-    /*
-     * this function will init xhr
-     */
-        // init opt
-        Object.keys(opt).forEach(function (key) {
-            if (key[0] !== "_") {
-                xhr[key] = opt[key];
-            }
-        });
-        // init timeout
-        timeout = xhr.timeout || local2.timeoutDefault || 30000;
-        // init default
-        local.objectAssignDefault(xhr, {
-            corsForwardProxyHost: local2.corsForwardProxyHost,
-            headers: {},
-            location: (local.isBrowser && location) || {},
-            method: "GET",
-            responseType: ""
-        });
-        // init headers
-        Object.keys(xhr.headers).forEach(function (key) {
-            xhr.headers[key.toLowerCase()] = xhr.headers[key];
-        });
-        // coerce Uint8Array to Buffer
-        if (
-            !local.isBrowser
-            && !Buffer.isBuffer(xhr.data)
-            && Object.prototype.toString.call(xhr.data)
-            === "[object Uint8Array]"
-        ) {
-            Object.setPrototypeOf(xhr.data, Buffer.prototype);
-        }
-        // init misc
-        local2._debugXhr = xhr;
-        xhr.onEvent = onEvent;
-        xhr.resHeaders = {};
-        xhr.timeStart = xhr.timeStart || Date.now();
-    };
-    // init xhr - XMLHttpRequest
-    xhr = (
-        local.isBrowser
-        && !opt.httpReq
-        && !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(opt.url))
-        && new XMLHttpRequest()
-    );
-    // init xhr - http.request
-    if (!xhr) {
-        xhr = local.identity(local2.urlParse || require("url").parse)(opt.url);
-        // init xhr
-        xhrInit();
-        // init xhr - http.request
-        xhr = local.identity(
-            opt.httpReq
-            || (local.isBrowser && local2.http.request)
-            || require(xhr.protocol.slice(0, -1)).request
-        )(xhr, function (resStream) {
-        /*
-         * this function will read <resStream>
-         */
-            let bufList;
-            bufList = [];
-            xhr.resHeaders = resStream.headers || xhr.resHeaders;
-            xhr.resStream = resStream;
-            xhr.statusCode = resStream.statusCode;
-            resStream.dataLength = 0;
-            resStream.on("data", function (buf) {
-                bufList.push(buf);
-            });
-            resStream.on("end", function () {
-                xhr.response = (
-                    local.isBrowser
-                    ? bufList[0]
-                    : Buffer.concat(bufList)
-                );
-                resStream.dataLength = (
-                    xhr.response.byteLength || xhr.response.length
-                );
-                xhr.onEvent({
-                    type: "load"
-                });
-            });
-            resStream.on("error", xhr.onEvent);
-        });
-        xhr.abort = function () {
-        /*
-         * this function will abort xhr-req
-         * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/abort
-         */
-            xhr.onEvent({
-                type: "abort"
-            });
-        };
-        xhr.addEventListener = local.nop;
-        xhr.open = local.nop;
-        xhr.reqStream = xhr;
-        xhr.send = xhr.end;
-        xhr.setRequestHeader = local.nop;
-        xhr.on("error", onEvent);
-    }
-    // init xhr
-    xhrInit();
-    // init timerTimeout
-    xhr.timerTimeout = setTimeout(function () {
-        xhr.err = xhr.err || new Error(
-            "onTimeout - "
-            + timeout + " ms - " + "ajax " + xhr.method + " " + xhr.url
-        );
-        xhr.abort();
-        // cleanup reqStream and resStream
-        streamCleanup(xhr.reqStream);
-        streamCleanup(xhr.resStream);
-    }, timeout);
-    // increment cnt
-    ajaxProgressUpdate.cnt |= 0;
-    ajaxProgressUpdate.cnt += 1;
-    // handle evt
-    xhr.addEventListener("abort", xhr.onEvent);
-    xhr.addEventListener("error", xhr.onEvent);
-    xhr.addEventListener("load", xhr.onEvent);
-    xhr.addEventListener("loadstart", ajaxProgressUpdate);
-    xhr.addEventListener("progress", ajaxProgressUpdate);
-    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
-    if (xhr.upload && xhr.upload.addEventListener) {
-        xhr.upload.addEventListener("progress", ajaxProgressUpdate);
-    }
-    // open url - corsForwardProxyHost
-    if (local.functionOrNop(local2.corsForwardProxyHostIfNeeded)(xhr)) {
-        xhr.open(xhr.method, local2.corsForwardProxyHostIfNeeded(xhr));
-        xhr.setRequestHeader(
-            "forward-proxy-headers",
-            JSON.stringify(xhr.headers)
-        );
-        xhr.setRequestHeader("forward-proxy-url", xhr.url);
-    // open url - default
-    } else {
-        xhr.open(xhr.method, xhr.url);
-    }
-    // send headers
-    Object.keys(xhr.headers).forEach(function (key) {
-        xhr.setRequestHeader(key, xhr.headers[key]);
-    });
-    // send data
-    switch ((xhr.data && xhr.data.constructor) || true) {
-    // Blob
-    // https://developer.mozilla.org/en-US/docs/Web/API/Blob
-    case local2.Blob:
-    // FormData
-    // https://developer.mozilla.org/en-US/docs/Web/API/FormData
-    case local2.FormData:
-        local2.blobRead(xhr.data, function (err, data) {
-            if (err) {
-                xhr.onEvent(err);
-                return;
-            }
-            // send data
-            xhr.send(data);
-        });
-        break;
-    default:
-        xhr.send(xhr.data);
-    }
-    return xhr;
-};
-
 local.assertJsonEqual = function (aa, bb, message) {
 /*
  * this function will assert jsonStringifyOrdered(<aa>) === JSON.stringify(<bb>)
@@ -4199,17 +3769,6 @@ local.assertJsonEqual = function (aa, bb, message) {
     local.assertOrThrow(aa === bb, message || [
         aa, bb
     ]);
-};
-
-local.assertJsonNotEqual = function (aa, bb, message) {
-/*
- * this function will assert jsonStringifyOrdered(<aa>) !== JSON.stringify(<bb>)
- */
-    aa = local.jsonStringifyOrdered(aa);
-    bb = JSON.stringify(bb);
-    local.assertOrThrow(aa !== bb, [
-        aa
-    ], message || aa);
 };
 
 local.base64FromBuffer = function (buf) {
@@ -4345,73 +3904,10 @@ local.bufferValidateAndCoerce = function (buf, mode) {
     return buf;
 };
 
-local.childProcessSpawnWithTimeout = function (command, args, opt) {
-/*
- * this function will run like child_process.spawn,
- * but with auto-timeout after timeout milliseconds
- * example usage:
-    let child = local.childProcessSpawnWithTimeout(
-        "/bin/sh",
-        ["-c", "echo hello world"],
-        {stdio: ["ignore", 1, 2], timeout: 5000}
-    );
-    child.on("error", console.error);
-    child.on("exit", function (exitCode) {
-        console.error("exitCode " + exitCode);
-    });
- */
-    let child;
-    let child_process;
-    let timerTimeout;
-    child_process = require("child_process");
-    // spawn child
-    child = child_process.spawn(command, args, opt).on("exit", function () {
-        // cleanup timerTimeout
-        try {
-            process.kill(timerTimeout.pid);
-        } catch (ignore) {}
-    });
-    // init timerTimeout
-    timerTimeout = child_process.spawn(
-        // convert timeout to integer seconds with 2 second delay
-        "sleep "
-        + Math.floor(
-            0.001 * (Number(opt && opt.timeout) || local.timeoutDefault)
-            + 2
-        )
-        + "; kill -9 " + child.pid + " 2>/dev/null",
-        {
-            shell: true,
-            stdio: "ignore"
-        }
-    );
-    return child;
-};
-
-local.childProcessSpawnWithUtility2 = function (script, onError) {
-/*
- * this function will run child_process.spawn, with lib.utility2.sh sourced
- */
-    require("child_process").spawn(
-        ". " + (process.env.npm_config_dir_utility2 || __dirname)
-        + "/lib.utility2.sh; " + script,
-        {
-            shell: true,
-            stdio: [
-                "ignore", 1, 2
-            ]
-        }
-    ).on("exit", function (exitCode) {
-        onError(exitCode && Object.assign(new Error(), {
-            exitCode
-        }));
-    });
-};
-
 local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
 /*
  * this function will aes-xxx-cbc decrypt with given <opt>
- * example usage:
+ * example use:
     data = new Uint8Array([1,2,3]);
     key = '"'"'0123456789abcdef0123456789abcdef'"'"';
     mode = undefined;
@@ -4486,7 +3982,7 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
 local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
 /*
  * this function will aes-xxx-cbc encrypt with given <opt>
- * example usage:
+ * example use:
     data = new Uint8Array([1,2,3]);
     key = '"'"'0123456789abcdef0123456789abcdef'"'"';
     mode = undefined;
@@ -4846,7 +4342,7 @@ local.onErrorWithStack = function (onError) {
         if (
             err
             && typeof err.stack === "string"
-            && err !== local.errDefault
+            && err !== local.errorDefault
             && String(err.stack).indexOf(stack.split("\n")[2]) < 0
         ) {
             err.stack += "\n" + stack;
@@ -4965,7 +4461,7 @@ local.semverCompare = function (aa, bb) {
  *  0 if aa = bb
  *  1 if aa > bb
  * https://semver.org/#spec-item-11
- * example usage:
+ * example use:
     semverCompare("2.2.2", "10.2.2"); // -1
     semverCompare("1.2.3", "1.2.3");  //  0
     semverCompare("10.2.2", "2.2.2"); //  1
@@ -5026,17 +4522,17 @@ local.stringHtmlSafe = function (str) {
  * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
  */
     return str.replace((
-        /&/g
+        /&/gu
     ), "&amp;").replace((
-        /"/g
+        /"/gu
     ), "&quot;").replace((
-        /'"'"'/g
+        /'"'"'/gu
     ), "&apos;").replace((
-        /</g
+        /</gu
     ), "&lt;").replace((
-        />/g
+        />/gu
     ), "&gt;").replace((
-        /&amp;(amp;|apos;|gt;|lt;|quot;)/ig
+        /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
     ), "&$1");
 };
 
@@ -5057,48 +4553,54 @@ local.stringMerge = function (str1, str2, rgx) {
     return str1;
 };
 
-local.templateRenderMyApp = function (template, opt) {
+local.templateRenderMyApp = function (template) {
 /*
- * this function will render my-app-lite template with given <opt>.packageJson
+ * this function will render my-app-lite template
  */
-    opt.packageJson = local.fsReadFileOrEmptyStringSync("package.json", "json");
-    local.objectSetDefault(opt.packageJson, {
-        nameLib: opt.packageJson.name.replace((
+    let githubRepo;
+    let packageJson;
+    try {
+        packageJson = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
+    } catch (ignore) {
+        packageJson = {};
+    }
+    local.objectSetDefault(packageJson, {
+        nameLib: packageJson.name.replace((
             /\W/g
         ), "_"),
         repository: {
             url: (
-                "https://github.com/kaizhu256/node-" + opt.packageJson.name
+                "https://github.com/kaizhu256/node-" + packageJson.name
             )
         }
     }, 2);
-    opt.githubRepo = opt.packageJson.repository.url.replace((
+    githubRepo = packageJson.repository.url.replace((
         /\.git$/
     ), "").split("/").slice(-2);
     template = template.replace((
         /kaizhu256(\.github\.io\/|%252F|\/)/g
-    ), opt.githubRepo[0] + ("$1"));
+    ), githubRepo[0] + ("$1"));
     template = template.replace((
         /node-my-app-lite/g
-    ), opt.githubRepo[1]);
+    ), githubRepo[1]);
     template = template.replace((
         /\bh1-my-app\b/g
     ), (
-        opt.packageJson.nameHeroku
-        || ("h1-" + opt.packageJson.nameLib.replace((
+        packageJson.nameHeroku
+        || ("h1-" + packageJson.nameLib.replace((
             /_/g
         ), "-"))
     ));
     template = template.replace((
         /my-app-lite/g
-    ), opt.packageJson.name);
+    ), packageJson.name);
     template = template.replace((
         /my_app/g
-    ), opt.packageJson.nameLib);
+    ), packageJson.nameLib);
     template = template.replace((
         /\{\{packageJson\.(\S+)\}\}/g
     ), function (ignore, match1) {
-        return opt.packageJson[match1];
+        return packageJson[match1];
     });
     return template;
 };
@@ -5111,6 +4613,365 @@ local.throwError = function () {
 };
 }());
 }());
+'
+export UTILITY2_MACRO_AJAX_JS='
+(function (local) {
+"use strict";
+local.ajax = function (opt, onError) {
+/*
+ * this function will send an ajax-req
+ * with given <opt>.url and callback <onError>
+ * with err and timeout handling
+ * example use:
+    local.ajax({
+        data: "hello world",
+        header: {"x-header-hello": "world"},
+        method: "POST",
+        url: "/index.html"
+    }, function (err, xhr) {
+        console.log(xhr.statusCode);
+        console.log(xhr.responseText);
+    });
+ */
+    let ajaxProgressUpdate;
+    let bufferValidateAndCoerce;
+    let isDone;
+    let local2;
+    let onError2;
+    let onEvent;
+    let stack;
+    let streamCleanup;
+    let timeout;
+    let tmp;
+    let xhr;
+    let xhrInit;
+    // init local2
+    local2 = opt.local2 || local.utility2 || {};
+    // init function
+    ajaxProgressUpdate = local2.ajaxProgressUpdate || function () {
+        return;
+    };
+    bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (
+        buf,
+        mode
+    ) {
+    /*
+     * this function will validate and coerce/convert
+     * <buf> to Buffer/Uint8Array, or String if <mode> = "string"
+     */
+        // coerce ArrayBuffer to Buffer
+        if (Object.prototype.toString.call(buf) === "[object ArrayBuffer]") {
+            buf = new Uint8Array(buf);
+        }
+        // convert Buffer to utf8
+        if (mode === "string" && typeof buf !== "string") {
+            buf = String(buf);
+        }
+        return buf;
+    };
+    onEvent = function (evt) {
+    /*
+     * this function will handle events
+     */
+        if (Object.prototype.toString.call(evt) === "[object Error]") {
+            xhr.err = xhr.err || evt;
+            xhr.onEvent({
+                type: "error"
+            });
+            return;
+        }
+        // init statusCode
+        xhr.statusCode = (xhr.statusCode || xhr.status) | 0;
+        switch (evt.type) {
+        case "abort":
+        case "error":
+        case "load":
+            if (isDone) {
+                return;
+            }
+            isDone = true;
+            // decrement cnt
+            ajaxProgressUpdate.cnt = Math.max(
+                ajaxProgressUpdate.cnt - 1,
+                0
+            );
+            ajaxProgressUpdate();
+            // handle abort or err event
+            switch (!xhr.err && evt.type) {
+            case "abort":
+            case "error":
+                xhr.err = new Error("ajax - event " + evt.type);
+                break;
+            case "load":
+                if (xhr.statusCode >= 400) {
+                    xhr.err = new Error(
+                        "ajax - statusCode " + xhr.statusCode
+                    );
+                }
+                break;
+            }
+            // debug statusCode / method / url
+            if (xhr.err) {
+                xhr.statusCode = xhr.statusCode || 500;
+                xhr.err.statusCode = xhr.statusCode;
+                tmp = (
+                    (
+                        local.isBrowser
+                        ? "browser"
+                        : "node"
+                    )
+                    + " - " + xhr.statusCode + " " + xhr.method + " " + xhr.url
+                    + "\n"
+                );
+                xhr.err.message = tmp + xhr.err.message;
+                xhr.err.stack = tmp + xhr.err.stack;
+            }
+            // update resHeaders
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders
+            if (xhr.getAllResponseHeaders) {
+                xhr.getAllResponseHeaders().replace((
+                    /(.*?):\u0020*(.*?)\r\n/g
+                ), function (ignore, key, val) {
+                    xhr.resHeaders[key.toLowerCase()] = val;
+                });
+            }
+            // debug ajaxResponse
+            xhr.resContentLength = (
+                xhr.response
+                && (xhr.response.byteLength || xhr.response.length)
+            ) | 0;
+            xhr.timeElapsed = Date.now() - xhr.timeStart;
+            if (xhr.modeDebug) {
+                console.error("serverLog - " + JSON.stringify({
+                    time: new Date(xhr.timeStart).toISOString(),
+                    type: "ajaxResponse",
+                    method: xhr.method,
+                    url: xhr.url,
+                    statusCode: xhr.statusCode,
+                    timeElapsed: xhr.timeElapsed,
+                    // extra
+                    resContentLength: xhr.resContentLength
+                }) + "\n");
+            }
+            // init responseType
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType
+            switch (xhr.response && xhr.responseType) {
+            // init responseText
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseText
+            case "":
+            case "text":
+                if (typeof xhr.responseText === "string") {
+                    break;
+                }
+                xhr.responseText = bufferValidateAndCoerce(
+                    xhr.response,
+                    "string"
+                );
+                break;
+            case "arraybuffer":
+                xhr.responseBuffer = bufferValidateAndCoerce(xhr.response);
+                break;
+            }
+            // cleanup timerTimeout
+            clearTimeout(xhr.timerTimeout);
+            // cleanup reqStream and resStream
+            streamCleanup(xhr.reqStream);
+            streamCleanup(xhr.resStream);
+            onError2(xhr.err, xhr);
+            break;
+        }
+    };
+    // init onError2
+    stack = new Error().stack;
+    onError2 = function (err, xhr) {
+        if (err && typeof err.stack === "string") {
+            err.stack += "\n" + stack;
+        }
+        onError(err, xhr);
+    };
+    streamCleanup = function (stream) {
+    /*
+     * this function will try to end or destroy <stream>
+     */
+        let err;
+        // try to end stream
+        try {
+            stream.end();
+        } catch (errCaught) {
+            err = errCaught;
+        }
+        // if err, then try to destroy stream
+        if (err) {
+            try {
+                stream.destroy();
+            } catch (ignore) {}
+        }
+    };
+    xhrInit = function () {
+    /*
+     * this function will init xhr
+     */
+        // init <opt>
+        Object.keys(opt).forEach(function (key) {
+            if (key[0] !== "_") {
+                xhr[key] = opt[key];
+            }
+        });
+        // init timeout
+        timeout = xhr.timeout || local2.timeoutDefault || 30000;
+        // init default
+        local.objectAssignDefault(xhr, {
+            corsForwardProxyHost: local2.corsForwardProxyHost,
+            headers: {},
+            location: (local.isBrowser && location) || {},
+            method: "GET",
+            responseType: ""
+        });
+        // init headers
+        Object.keys(xhr.headers).forEach(function (key) {
+            xhr.headers[key.toLowerCase()] = xhr.headers[key];
+        });
+        // coerce Uint8Array to Buffer
+        if (
+            !local.isBrowser
+            && !Buffer.isBuffer(xhr.data)
+            && Object.prototype.toString.call(xhr.data)
+            === "[object Uint8Array]"
+        ) {
+            Object.setPrototypeOf(xhr.data, Buffer.prototype);
+        }
+        // init misc
+        local2._debugXhr = xhr;
+        xhr.onEvent = onEvent;
+        xhr.resHeaders = {};
+        xhr.timeStart = xhr.timeStart || Date.now();
+    };
+    // init xhr - XMLHttpRequest
+    xhr = (
+        local.isBrowser
+        && !opt.httpReq
+        && !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(opt.url))
+        && new XMLHttpRequest()
+    );
+    // init xhr - http.request
+    if (!xhr) {
+        xhr = local.identity(local2.urlParse || require("url").parse)(opt.url);
+        // init xhr
+        xhrInit();
+        // init xhr - http.request
+        xhr = local.identity(
+            opt.httpReq
+            || (local.isBrowser && local2.http.request)
+            || require(xhr.protocol.slice(0, -1)).request
+        )(xhr, function (resStream) {
+        /*
+         * this function will read <resStream>
+         */
+            let bufList;
+            bufList = [];
+            xhr.resHeaders = resStream.headers || xhr.resHeaders;
+            xhr.resStream = resStream;
+            xhr.statusCode = resStream.statusCode;
+            resStream.dataLength = 0;
+            resStream.on("data", function (buf) {
+                bufList.push(buf);
+            });
+            resStream.on("end", function () {
+                xhr.response = (
+                    local.isBrowser
+                    ? bufList[0]
+                    : Buffer.concat(bufList)
+                );
+                resStream.dataLength = (
+                    xhr.response.byteLength || xhr.response.length
+                );
+                xhr.onEvent({
+                    type: "load"
+                });
+            });
+            resStream.on("error", xhr.onEvent);
+        });
+        xhr.abort = function () {
+        /*
+         * this function will abort xhr-req
+         * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/abort
+         */
+            xhr.onEvent({
+                type: "abort"
+            });
+        };
+        xhr.addEventListener = local.nop;
+        xhr.open = local.nop;
+        xhr.reqStream = xhr;
+        xhr.send = xhr.end;
+        xhr.setRequestHeader = local.nop;
+        xhr.on("error", onEvent);
+    }
+    // init xhr
+    xhrInit();
+    // init timerTimeout
+    xhr.timerTimeout = setTimeout(function () {
+        xhr.err = xhr.err || new Error(
+            "onTimeout - "
+            + timeout + " ms - " + "ajax " + xhr.method + " " + xhr.url
+        );
+        xhr.abort();
+        // cleanup reqStream and resStream
+        streamCleanup(xhr.reqStream);
+        streamCleanup(xhr.resStream);
+    }, timeout);
+    // increment cnt
+    ajaxProgressUpdate.cnt |= 0;
+    ajaxProgressUpdate.cnt += 1;
+    // handle evt
+    xhr.addEventListener("abort", xhr.onEvent);
+    xhr.addEventListener("error", xhr.onEvent);
+    xhr.addEventListener("load", xhr.onEvent);
+    xhr.addEventListener("loadstart", ajaxProgressUpdate);
+    xhr.addEventListener("progress", ajaxProgressUpdate);
+    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
+    if (xhr.upload && xhr.upload.addEventListener) {
+        xhr.upload.addEventListener("progress", ajaxProgressUpdate);
+    }
+    // open url - corsForwardProxyHost
+    if (local.functionOrNop(local2.corsForwardProxyHostIfNeeded)(xhr)) {
+        xhr.open(xhr.method, local2.corsForwardProxyHostIfNeeded(xhr));
+        xhr.setRequestHeader(
+            "forward-proxy-headers",
+            JSON.stringify(xhr.headers)
+        );
+        xhr.setRequestHeader("forward-proxy-url", xhr.url);
+    // open url - default
+    } else {
+        xhr.open(xhr.method, xhr.url);
+    }
+    // send headers
+    Object.keys(xhr.headers).forEach(function (key) {
+        xhr.setRequestHeader(key, xhr.headers[key]);
+    });
+    // send data
+    switch ((xhr.data && xhr.data.constructor) || true) {
+    // Blob
+    // https://developer.mozilla.org/en-US/docs/Web/API/Blob
+    case local2.Blob:
+    // FormData
+    // https://developer.mozilla.org/en-US/docs/Web/API/FormData
+    case local2.FormData:
+        local2.blobRead(xhr.data, function (err, data) {
+            if (err) {
+                xhr.onEvent(err);
+                return;
+            }
+            // send data
+            xhr.send(data);
+        });
+        break;
+    default:
+        xhr.send(xhr.data);
+    }
+    return xhr;
+};
+}(globalThis.globalLocal));
 '
 (set -e
     if [ ! "$1" ]
