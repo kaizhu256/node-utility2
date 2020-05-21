@@ -12202,7 +12202,7 @@ var path = require('path'),
  * @param {Number} [opts.maxcols] the max column width of the report. By default, the width of the report is adjusted based on the length of the paths
  *              to be reported.
  */
-local.reportTextCreate = (opts, collector) {
+local.reportTextCreate = function(opts, collector) {
     var that;
     that = {};
     opts = opts || {};
@@ -12354,7 +12354,6 @@ function walk(node, nameWidth, array, level, watermarks) {
         array.push(line);
     }
 }
-
 }());
 
 
