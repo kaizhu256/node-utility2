@@ -617,7 +617,7 @@ local.coverageReportCreate = function (opt) {
     // 1. print coverage in text-format to stdout
     new local.TextReport(opt).writeReport(local.collector);
     // 2. write coverage in html-format to filesystem
-    new local.HtmlReport(opt).writeReport(local.collector);
+    new local.HtmlReport(opt).writeReport(opt, local.collector);
     opt.writer.writeFile("", local.nop);
     // write coverage.json
     local.fsWriteFileWithMkdirpSync(
@@ -11983,17 +11983,12 @@ function HtmlReport(opts) {
     this.opts.watermarks = this.opts.watermarks || defaults.watermarks();
 }
 
-HtmlReport.TYPE = 'html';
-
 HtmlReport.prototype = {
-    writeReport: function (collector) {
+    writeReport: function (opts, collector) {
         var ancestorHref;
         var fillTemplate;
         var linkMapper;
-        var opts;
-        var that;
         var writeFiles;
-        that = this;
         ancestorHref = function (node, num) {
             var href = '',
                 separated,
@@ -12064,7 +12059,6 @@ HtmlReport.prototype = {
                 return ancestorHref(node, i) + name;
             }
         };
-        opts = that.opts;
         writeFiles = function (writer, node, dir, collector) {
             var indexFile = path.resolve(dir, 'index.html'),
                 childFile;
@@ -12221,8 +12215,6 @@ function TextReport(opts) {
     this.summary = opts.summary;
     this.watermarks = opts.watermarks || defaults.watermarks();
 }
-
-TextReport.TYPE = 'text';
 
 function padding(num, ch) {
     var str = '',
