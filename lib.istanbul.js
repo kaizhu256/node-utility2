@@ -11092,7 +11092,6 @@ local["./common/defaults"] = module.exports; }());
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/index.js
 */
 local["./index"] = {
-    call: local.nop,
     mix: function (klass, prototype) {
         klass.prototype = prototype;
     }
@@ -11988,7 +11987,6 @@ function getReportClass(stats, watermark) {
  * @param {String} [opts.dir] the directory in which to generate reports. Defaults to `./html-report`
  */
 function HtmlReport(opts) {
-    Report.call(this);
     this.opts = opts || {};
     this.opts.dir = this.opts.dir || path.resolve(process.cwd(), 'html-report');
     this.opts.sourceStore = this.opts.sourceStore || Store.create('fslookup');
@@ -12037,40 +12035,6 @@ Report.mix(HtmlReport, {
             css: linkMapper.asset(node, 'prettify.css')
         };
     },
-    writeDetailPage: function (writer, node, fileCoverage) {
-        var opts = this.opts,
-            sourceStore = opts.sourceStore,
-            templateData = opts.templateData,
-            sourceText = fileCoverage.code && Array.isArray(fileCoverage.code) ?
-                fileCoverage.code.join('\n') + '\n' : sourceStore.get(fileCoverage.path),
-            code = sourceText.split(/(?:\r?\n)|\r/),
-            count = 0,
-            structured = code.map(function (str) { count += 1; return { line: count, covered: null, text: new InsertionText(str, true) }; }),
-            context;
-
-        structured.unshift({ line: 0, covered: null, text: new InsertionText("") });
-
-        this.fillTemplate(node, templateData);
-        writer.write(headerTemplate(templateData));
-        writer.write('<pre><table class="coverage">\n');
-
-        annotateLines(fileCoverage, structured);
-        //note: order is important, since statements typically result in spanning the whole line and doing branches late
-        //causes mismatched tags
-        annotateBranches(fileCoverage, structured);
-        annotateFunctions(fileCoverage, structured);
-        annotateStatements(fileCoverage, structured);
-
-        structured.shift();
-        context = {
-            structured: structured,
-            maxLines: structured.length,
-            fileCoverage: fileCoverage
-        };
-        writer.write(detailTemplate(context));
-        writer.write('</table></pre>\n');
-        writer.write(footerTemplate(templateData));
-    },
 
     writeIndexPage: function (writer, node) {
         var linkMapper = this.opts.linkMapper,
@@ -12103,27 +12067,6 @@ Report.mix(HtmlReport, {
         });
         writer.write(summaryTableFooter);
         writer.write(footerTemplate(templateData));
-    },
-
-    writeFiles: function (writer, node, dir, collector) {
-        var that = this,
-            indexFile = path.resolve(dir, 'index.html'),
-            childFile;
-        if (this.opts.verbose) { console.error('Writing ' + indexFile); }
-        writer.writeFile(indexFile, function (contentWriter) {
-            that.writeIndexPage(contentWriter, node);
-        });
-        node.children.forEach(function (child) {
-            if (child.kind === 'dir') {
-                that.writeFiles(writer, child, path.resolve(dir, child.relativeName), collector);
-            } else {
-                childFile = path.resolve(dir, child.relativeName + '.html');
-                if (that.opts.verbose) { console.error('Writing ' + childFile); }
-                writer.writeFile(childFile, function (contentWriter) {
-                    that.writeDetailPage(contentWriter, child, collector.fileCoverageFor(child.fullPath()));
-                });
-            }
-        });
     },
 
     standardLinkMapper: function () {
@@ -12174,8 +12117,64 @@ Report.mix(HtmlReport, {
     },
 
     writeReport: function (collector, sync) {
-        var opts = this.opts,
-            dir = opts.dir,
+        var opts;
+        var that;
+        var writeFiles;
+        that = this;
+        opts = that.opts;
+        writeFiles = function (writer, node, dir, collector) {
+            var indexFile = path.resolve(dir, 'index.html'),
+                childFile;
+            if (opts.verbose) { console.error('Writing ' + indexFile); }
+            writer.writeFile(indexFile, function () {
+                that.writeIndexPage(writer, node);
+            });
+            node.children.forEach(function (child) {
+                if (child.kind === 'dir') {
+                    // recurse
+                    writeFiles(writer, child, path.resolve(dir, child.relativeName), collector);
+                    return;
+                }
+                childFile = path.resolve(dir, child.relativeName + '.html');
+                if (opts.verbose) { console.error('Writing ' + childFile); }
+                writer.writeFile(childFile, function () {
+                    var fileCoverage = collector.fileCoverageFor(child.fullPath());
+                    var sourceStore = opts.sourceStore,
+                        templateData = opts.templateData,
+                        sourceText = fileCoverage.code && Array.isArray(fileCoverage.code) ?
+                            fileCoverage.code.join('\n') + '\n' : sourceStore.get(fileCoverage.path),
+                        code = sourceText.split(/(?:\r?\n)|\r/),
+                        count = 0,
+                        structured = code.map(function (str) { count += 1; return { line: count, covered: null, text: new InsertionText(str, true) }; }),
+                        context;
+
+                    structured.unshift({ line: 0, covered: null, text: new InsertionText("") });
+
+                    that.fillTemplate(child, templateData);
+                    writer.write(headerTemplate(templateData));
+                    writer.write('<pre><table class="coverage">\n');
+
+                    annotateLines(fileCoverage, structured);
+                    //note: order is important, since statements typically result in spanning the whole line and doing branches late
+                    //causes mismatched tags
+                    annotateBranches(fileCoverage, structured);
+                    annotateFunctions(fileCoverage, structured);
+                    annotateStatements(fileCoverage, structured);
+
+                    structured.shift();
+                    context = {
+                        structured: structured,
+                        maxLines: structured.length,
+                        fileCoverage: fileCoverage
+                    };
+                    writer.write(detailTemplate(context));
+                    writer.write('</table></pre>\n');
+                    writer.write(footerTemplate(templateData));
+                });
+            });
+        };
+
+        var dir = opts.dir,
             summarizer = new TreeSummarizer(),
             writer = opts.writer || new FileWriter(sync),
             tree;
@@ -12197,7 +12196,7 @@ Report.mix(HtmlReport, {
             }
         });
         //console.log(JSON.stringify(tree.root, undefined, 4));
-        this.writeFiles(writer, tree.root, dir, collector);
+        writeFiles(writer, tree.root, dir, collector);
     }
 });
 
@@ -12246,7 +12245,6 @@ var path = require('path'),
  *              to be reported.
  */
 function TextReport(opts) {
-    Report.call(this);
     opts = opts || {};
     this.dir = opts.dir || process.cwd();
     this.file = opts.file;
@@ -12379,6 +12377,8 @@ function walk(node, nameWidth, array, level, watermarks) {
 
 Report.mix(TextReport, {
     writeReport: function (collector /*, sync */) {
+        var that;
+        that = this;
         var summarizer = new TreeSummarizer(),
             tree,
             root,
@@ -12394,17 +12394,17 @@ Report.mix(TextReport, {
         tree = summarizer.getTreeSummary();
         root = tree.root;
         nameWidth = findNameWidth(root);
-        if (this.maxCols > 0) {
-            maxRemaining = this.maxCols - statsWidth - 2;
+        if (that.maxCols > 0) {
+            maxRemaining = that.maxCols - statsWidth - 2;
             if (nameWidth > maxRemaining) {
                 nameWidth = maxRemaining;
             }
         }
-        walk(root, nameWidth, strings, 0, this.watermarks);
+        walk(root, nameWidth, strings, 0, that.watermarks);
         text = strings.join('\n') + '\n';
-        if (this.file) {
-            mkdirp.sync(this.dir);
-            fs.writeFileSync(path.join(this.dir, this.file), text, 'utf8');
+        if (that.file) {
+            mkdirp.sync(that.dir);
+            fs.writeFileSync(path.join(that.dir, that.file), text, 'utf8');
         } else {
             console.log(text);
         }
