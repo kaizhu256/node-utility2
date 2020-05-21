@@ -55,23 +55,12 @@ this zero-dependency package will provide high-level functions to to build, test
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.3.17
-- npm publish 2020.3.17
-- add modal-support to function window.domOnEventAjaxProgressUpdate
-- update shell-function shRawLibFetch to accept footer after file-none
-- un-rename errDefault to errorDefault
-- remove function errorMessagePrepend
-- rename message to msg
-- rename text to str
-- update shell-function shRawLibFetch to apply diff
-- add function promisify
-- update function httpFetch with abort-handling
-- update function shRawLibFetch to inline-fetch resources to raw.xxx.js
-- add function httpFetch using fetch-api and promises
-- remove polyfills Array.p.flat, Array.p.flatMap, TextDecoder, TextEncoder
-- add workaround for nodejs v12 bug - https://github.com/libuv/libuv/issues/2587
-- add function stringLineCount
-- simplify globalThis polyfill
+#### changelog 2020.5.20
+- npm publish 2020.5.20
+- jslint - prefer undefined over null in file lib.jslint.js
+- jslint - validate sort nested switch-statements
+- update to jslint v2020.03.28
+- update shell-function shRawLibFetch with check validating all replacement-expressions were used
 - none
 
 #### todo
@@ -82,7 +71,6 @@ this zero-dependency package will provide high-level functions to to build, test
 - jslint - fix off-by-one line-error
 - remove excessive "the" from comments
 - replace db-lite with sql_lite.js
-- jslint - sort nested switch-statements
 - add default testCase _testCase_cliRun_help
 - add server stress-test using puppeteer
 - none
@@ -1293,7 +1281,7 @@ local.http.createServer(function (req, res) {
         "2020.03.16 jslint-lite",
         "2020.02.17 utility2"
     ],
-    "version": "2020.3.17"
+    "version": "2020.5.20"
 }
 ```
 
@@ -1380,6 +1368,7 @@ MAINTAINER kai zhu <kaizhu256@gmail.com>
 # install utility2
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
+    npm install -g eslint puppeteer \
     rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
     npm install kaizhu256/node-utility2#alpha; \
     cp -a node_modules /; \

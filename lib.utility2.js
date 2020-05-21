@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2020.3.17)
+ * lib.utility2.js (2020.5.20)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -4806,7 +4806,8 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
      * this function will recursively JSON.stringify obj,
      * with object-keys sorted and circular-references removed
      */
-        // if obj is not an object or function, then JSON.stringify as normal
+        // if obj is not an object or function,
+        // then JSON.stringify as normal
         if (!(
             obj
             && typeof obj === "object"

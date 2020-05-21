@@ -2969,23 +2969,6 @@ local.middlewareCrudBuiltin = function (req, res, next) {
                     opt.gotoNext
                 );
                 break;
-            case "crudSetManyById":
-                crud.dbTable.crudSetManyById(crud.body, opt.gotoNext);
-                break;
-            case "crudSetOneById":
-                // replace idName with idBackend in body
-                delete crud.body.id;
-                delete crud.body[crud.idName];
-                crud.body[crud.idBackend] = crud.data[crud.idName];
-                crud.dbTable.crudSetOneById(crud.body, opt.gotoNext);
-                break;
-            case "crudUpdateOneById":
-                // replace idName with idBackend in body
-                delete crud.body.id;
-                delete crud.body[crud.idName];
-                crud.body[crud.idBackend] = crud.data[crud.idName];
-                crud.dbTable.crudUpdateOneById(crud.body, opt.gotoNext);
-                break;
             // hack-coverage - test err handling-behavior
             case "crudErrorDelete":
             case "crudErrorGet":
@@ -3040,6 +3023,23 @@ local.middlewareCrudBuiltin = function (req, res, next) {
                 break;
             case "crudRemoveOneById":
                 crud.dbTable.crudRemoveOneById(crud.queryById, opt.gotoNext);
+                break;
+            case "crudSetManyById":
+                crud.dbTable.crudSetManyById(crud.body, opt.gotoNext);
+                break;
+            case "crudSetOneById":
+                // replace idName with idBackend in body
+                delete crud.body.id;
+                delete crud.body[crud.idName];
+                crud.body[crud.idBackend] = crud.data[crud.idName];
+                crud.dbTable.crudSetOneById(crud.body, opt.gotoNext);
+                break;
+            case "crudUpdateOneById":
+                // replace idName with idBackend in body
+                delete crud.body.id;
+                delete crud.body[crud.idName];
+                crud.body[crud.idBackend] = crud.data[crud.idName];
+                crud.dbTable.crudUpdateOneById(crud.body, opt.gotoNext);
                 break;
             case "fileGetOneById":
                 local.dbTableFile = local.db.dbTableCreateOne({
@@ -3107,14 +3107,14 @@ local.middlewareCrudBuiltin = function (req, res, next) {
             break;
         case 2:
             switch (crud.crudType[0]) {
-            case "crudSetOneById":
-            case "crudUpdateOneById":
-                opt.gotoNext(null, data);
-                break;
             case "crudGetManyByQuery":
                 opt.gotoNext(null, crud.queryData, {
                     paginationCountTotal: crud.paginationCountTotal
                 });
+                break;
+            case "crudSetOneById":
+            case "crudUpdateOneById":
+                opt.gotoNext(null, data);
                 break;
             case "fileUploadManyByForm":
                 opt.gotoNext(null, data.map(function (element) {

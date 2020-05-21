@@ -1820,6 +1820,11 @@ require("http").createServer(function (req, res) {
             res.end();
             return;
         }
+        switch (require("path").extname(file)) {
+        case ".wasm":
+            res.setHeader("content-type", "application/wasm");
+            break;
+        }
         res.end(data);
     });
 }).listen(process.env.PORT);
@@ -2419,6 +2424,7 @@ Object.entries(repoDict).forEach(function ([
 process.on("exit", function () {
     let repoPrefix0;
     let requireDict;
+    let result0;
     let result;
     result = "";
     requireDict = {};
@@ -2489,10 +2495,17 @@ process.on("exit", function () {
     result = normalizeWhitespace(result);
     // replaceList
     Array.from(opt.replaceList || []).forEach(function (elem) {
+        result0 = result;
         result = result.replace(
             new RegExp(elem.source, elem.flags),
             elem.replace
         );
+        if (result0 === result) {
+            throw new Error(
+                "shRawLibFetch - cannot find-and-replace snippet "
+                + JSON.stringify(elem.source)
+            );
+        }
     });
     result = result.trim() + "\n";
     // replace diff
@@ -4146,7 +4159,8 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
      * this function will recursively JSON.stringify obj,
      * with object-keys sorted and circular-references removed
      */
-        // if obj is not an object or function, then JSON.stringify as normal
+        // if obj is not an object or function,
+        // then JSON.stringify as normal
         if (!(
             obj
             && typeof obj === "object"
