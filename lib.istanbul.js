@@ -11669,7 +11669,6 @@ var handlebars = require('handlebars'),
     SEP = path.sep || '/',
     fs = require('fs'),
     util = require('util'),
-    FileWriter = require('../util/file-writer'),
     Store = require('../store'),
     InsertionText = require('../util/insertion-text'),
     TreeSummarizer = require('../util/tree-summarizer'),
@@ -11987,7 +11986,7 @@ function HtmlReport(opts) {
 HtmlReport.TYPE = 'html';
 
 HtmlReport.prototype = {
-    writeReport: function (collector, sync) {
+    writeReport: function (collector) {
         var ancestorHref;
         var fillTemplate;
         var linkMapper;
@@ -12148,7 +12147,7 @@ HtmlReport.prototype = {
 
         var dir = opts.dir,
             summarizer = new TreeSummarizer(),
-            writer = opts.writer || new FileWriter(sync),
+            writer = opts.writer,
             tree;
 
         collector.files().forEach(function (key) {
