@@ -12036,39 +12036,6 @@ Report.mix(HtmlReport, {
         };
     },
 
-    writeIndexPage: function (writer, node) {
-        var linkMapper = this.opts.linkMapper,
-            templateData = this.opts.templateData,
-            children = Array.prototype.slice.apply(node.children),
-            watermarks = this.opts.watermarks;
-
-        children.sort(function (a, b) {
-            return a.name < b.name ? -1 : 1;
-        });
-
-        this.fillTemplate(node, templateData);
-        writer.write(headerTemplate(templateData));
-        writer.write(summaryTableHeader);
-        children.forEach(function (child) {
-            var metrics = child.metrics,
-                reportClasses = {
-                    statements: getReportClass(metrics.statements, watermarks.statements),
-                    lines: getReportClass(metrics.lines, watermarks.lines),
-                    functions: getReportClass(metrics.functions, watermarks.functions),
-                    branches: getReportClass(metrics.branches, watermarks.branches)
-                },
-                data = {
-                    metrics: metrics,
-                    reportClasses: reportClasses,
-                    file: child.displayShortName(),
-                    output: linkMapper.fromParent(child)
-                };
-            writer.write(summaryLineTemplate(data) + '\n');
-        });
-        writer.write(summaryTableFooter);
-        writer.write(footerTemplate(templateData));
-    },
-
     standardLinkMapper: function () {
         return {
             fromParent: function (node) {
@@ -12127,7 +12094,36 @@ Report.mix(HtmlReport, {
                 childFile;
             if (opts.verbose) { console.error('Writing ' + indexFile); }
             writer.writeFile(indexFile, function () {
-                that.writeIndexPage(writer, node);
+                var linkMapper = opts.linkMapper,
+                    templateData = opts.templateData,
+                    children = Array.prototype.slice.apply(node.children),
+                    watermarks = opts.watermarks;
+
+                children.sort(function (a, b) {
+                    return a.name < b.name ? -1 : 1;
+                });
+
+                that.fillTemplate(node, templateData);
+                writer.write(headerTemplate(templateData));
+                writer.write(summaryTableHeader);
+                children.forEach(function (child) {
+                    var metrics = child.metrics,
+                        reportClasses = {
+                            statements: getReportClass(metrics.statements, watermarks.statements),
+                            lines: getReportClass(metrics.lines, watermarks.lines),
+                            functions: getReportClass(metrics.functions, watermarks.functions),
+                            branches: getReportClass(metrics.branches, watermarks.branches)
+                        },
+                        data = {
+                            metrics: metrics,
+                            reportClasses: reportClasses,
+                            file: child.displayShortName(),
+                            output: linkMapper.fromParent(child)
+                        };
+                    writer.write(summaryLineTemplate(data) + '\n');
+                });
+                writer.write(summaryTableFooter);
+                writer.write(footerTemplate(templateData));
             });
             node.children.forEach(function (child) {
                 if (child.kind === 'dir') {
