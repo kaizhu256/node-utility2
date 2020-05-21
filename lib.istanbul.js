@@ -12355,13 +12355,7 @@ function walk(node, nameWidth, array, level, watermarks) {
     }
 }
 
-TextReport.prototype = {
-    writeReport: function (collector /*, sync */) {
-    }
-};
-
-module.exports = TextReport;
-local.TextReport = module.exports; }());
+}());
 
 
 
