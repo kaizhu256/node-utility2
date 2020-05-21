@@ -3593,14 +3593,12 @@ local.buildReadme = function (opt, onError) {
     opt.swaggerJson = local.swgg.normalizeSwaggerJson(
         local.fsReadFileOrEmptyStringSync("assets.swgg.swagger.json", "json")
     );
-    local.objectSetOverride(opt.swaggerJson, {
-        info: {
-            title: opt.packageJson.name,
-            version: opt.packageJson.version,
-            "x-swgg-description": opt.packageJson.description,
-            "x-swgg-homepage": opt.packageJson.homepage
-        }
-    }, 2);
+    opt.swaggerJson.info = Object.assign(opt.swaggerJson.info || {}, {
+        title: opt.packageJson.name,
+        version: opt.packageJson.version,
+        "x-swgg-description": opt.packageJson.description,
+        "x-swgg-homepage": opt.packageJson.homepage
+    });
     opt.dataTo.replace((
         /\bhttps:\/\/.*?\/assets\.app\.js/
     ), function (match0) {
@@ -5254,6 +5252,45 @@ local.numberToRomanNumerals = function (num) {
     return new Array(Number(digits.join("") + 1)).join("M") + roman;
 };
 
+local.objectAssignRecurse = function (dict, overrides, depth, env) {
+/*
+ * this function will recursively set overrides for items in dict
+ */
+    dict = dict || {};
+    env = env || (typeof process === "object" && process.env) || {};
+    overrides = overrides || {};
+    Object.keys(overrides).forEach(function (key) {
+        let dict2;
+        let overrides2;
+        dict2 = dict[key];
+        overrides2 = overrides[key];
+        if (overrides2 === undefined) {
+            return;
+        }
+        // if both dict2 and overrides2 are non-undefined and non-array objects,
+        // then recurse with dict2 and overrides2
+        if (
+            depth > 1
+            // dict2 is a non-undefined and non-array object
+            && typeof dict2 === "object" && dict2 && !Array.isArray(dict2)
+            // overrides2 is a non-undefined and non-array object
+            && typeof overrides2 === "object" && overrides2
+            && !Array.isArray(overrides2)
+        ) {
+            local.objectAssignRecurse(dict2, overrides2, depth - 1, env);
+            return;
+        }
+        // else set dict[key] with overrides[key]
+        dict[key] = (
+            dict === env
+            // if dict is env, then overrides falsy-value with empty-string
+            ? overrides2 || ""
+            : overrides2
+        );
+    });
+    return dict;
+};
+
 local.objectSetDefault = function (dict, defaults, depth) {
 /*
  * this function will recursively set defaults for undefined-items in dict
@@ -5292,45 +5329,6 @@ local.objectSetDefault = function (dict, defaults, depth) {
             // recurse
             local.objectSetDefault(dict2, defaults2, depth - 1);
         }
-    });
-    return dict;
-};
-
-local.objectSetOverride = function (dict, overrides, depth, env) {
-/*
- * this function will recursively set overrides for items in dict
- */
-    dict = dict || {};
-    env = env || (typeof process === "object" && process.env) || {};
-    overrides = overrides || {};
-    Object.keys(overrides).forEach(function (key) {
-        let dict2;
-        let overrides2;
-        dict2 = dict[key];
-        overrides2 = overrides[key];
-        if (overrides2 === undefined) {
-            return;
-        }
-        // if both dict2 and overrides2 are non-undefined and non-array objects,
-        // then recurse with dict2 and overrides2
-        if (
-            depth > 1
-            // dict2 is a non-undefined and non-array object
-            && typeof dict2 === "object" && dict2 && !Array.isArray(dict2)
-            // overrides2 is a non-undefined and non-array object
-            && typeof overrides2 === "object" && overrides2
-            && !Array.isArray(overrides2)
-        ) {
-            local.objectSetOverride(dict2, overrides2, depth - 1, env);
-            return;
-        }
-        // else set dict[key] with overrides[key]
-        dict[key] = (
-            dict === env
-            // if dict is env, then overrides falsy-value with empty-string
-            ? overrides2 || ""
-            : overrides2
-        );
     });
     return dict;
 };
@@ -6233,7 +6231,7 @@ local.stateInit = function (opt) {
 /*
  * this function will init state <opt>
  */
-    local.objectSetOverride(local, opt, 10);
+    local.objectAssignRecurse(local, opt, 10);
     // init swgg
     local.swgg.apiUpdate(local.swgg.swaggerJson);
 };
@@ -6911,7 +6909,7 @@ local.testReportMerge = function (testReport1, testReport2) {
     testCaseNumber = 0;
     return local.templateRender(
         local.assetsDict["/assets.testReport.template.html"],
-        local.objectSetOverride(testReport, {
+        Object.assign(testReport, {
             env: local.env,
             // map testPlatformList
             testPlatformList: testReport.testPlatformList.filter(function (
@@ -6938,14 +6936,14 @@ local.testReportMerge = function (testReport1, testReport2) {
                                 )
                             });
                         }
-                        return local.objectSetOverride(testCase, {
+                        return Object.assign(testCase, {
                             testCaseNumber,
                             testReportTestStatusClass: (
                                 "test"
                                 + testCase.status[0].toUpperCase()
                                 + testCase.status.slice(1)
                             )
-                        }, 8);
+                        });
                     }),
                     preClass: (
                         errorStackList.length
@@ -6960,7 +6958,7 @@ local.testReportMerge = function (testReport1, testReport2) {
                 ? "testFailed"
                 : "testPassed"
             )
-        }, 8)
+        })
     );
 };
 

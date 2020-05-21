@@ -1910,7 +1910,7 @@ window.swgg.uiEventListenerDict.onEventUiReload({\n\
 local.assetsDict[
     "/assets.swgg.swagger.schema.json"
 ] = local.jsonStringifyOrdered(
-    local.objectSetOverride(
+    local.objectAssignRecurse(
         JSON.parse(local.assetsDict["/assets.swgg.json-schema.json"].replace((
             /"\$ref":".*?#/g
         ), "\"$ref\":\"http://json-schema.org/draft-04/schema#")),
@@ -2078,7 +2078,7 @@ local.apiAjax = function (that, opt, onError) {
     // init data
     opt.data = opt.inBody || opt.inForm;
     // init headers
-    local.objectSetOverride(opt.headers, opt.inHeader);
+    local.objectAssignRecurse(opt.headers, opt.inHeader);
     // init headers - Content-Type
     opt.headers["Content-Type"] = that._consumes0;
     // init headers - Authorization
@@ -2268,7 +2268,7 @@ local.apiUpdate = function (swaggerJson) {
         local.swaggerJson.tags, swaggerJson.tags
     ].forEach(function (tagList) {
         tagList.forEach(function (tag) {
-            tmp[tag.name] = local.objectSetOverride(tmp[tag.name], tag);
+            tmp[tag.name] = local.objectAssignRecurse(tmp[tag.name], tag);
         });
     });
     local.swaggerJson["x-swgg-tagNameList"] = Object.keys(tmp).sort();
@@ -2276,7 +2276,7 @@ local.apiUpdate = function (swaggerJson) {
         return tmp[key];
     });
     // merge swaggerJson into local.swaggerJson
-    swaggerJson = local.objectSetOverride(local.swaggerJson, swaggerJson, 10);
+    swaggerJson = local.objectAssignRecurse(local.swaggerJson, swaggerJson, 10);
     // restore tags
     local.swaggerJson.tags = tmp;
     // init swaggerJsonBasePath
@@ -2323,7 +2323,7 @@ local.apiUpdate = function (swaggerJson) {
             that._method = method.toUpperCase();
             that._path = path;
             tmp = "operationId." + that.operationId;
-            local.apiDict[tmp] = local.objectSetOverride(
+            local.apiDict[tmp] = local.objectAssignRecurse(
                 local.apiDict[tmp],
                 that
             );
@@ -2331,7 +2331,7 @@ local.apiUpdate = function (swaggerJson) {
     });
     // init apiDict from x-swgg-apiDict
     Object.keys(swaggerJson["x-swgg-apiDict"] || {}).forEach(function (key) {
-        local.apiDict[key] = local.objectSetOverride(
+        local.apiDict[key] = local.objectAssignRecurse(
             local.apiDict[key],
             local.jsonCopy(swaggerJson["x-swgg-apiDict"][key])
         );
@@ -2509,7 +2509,7 @@ local.apiUpdate = function (swaggerJson) {
         pathDict = {};
         pathDict[that._path] = {};
         pathDict[that._path][that._method.toLowerCase()] = tmp;
-        local.objectSetOverride(swaggerJson, {
+        local.objectAssignRecurse(swaggerJson, {
             paths: pathDict
         }, 3);
     });
@@ -2770,7 +2770,7 @@ local.dbRowRandomCreate = function (opt) {
             })
         });
     });
-    dbRow = local.jsonCopy(local.objectSetOverride(dbRow, opt.override(opt)));
+    dbRow = local.jsonCopy(local.objectAssignRecurse(dbRow, opt.override(opt)));
     // try to validate data
     local.tryCatchOnError(function () {
         local.swaggerValidateDataSchema({
@@ -3068,7 +3068,7 @@ local.middlewareCrudBuiltin = function (req, res, next) {
                     tmp.id = tmp.id || Number(
                         (1 + Math.random()) * 0x10000000000000
                     ).toString(36).slice(1);
-                    local.objectSetOverride(tmp, {
+                    local.objectAssignRecurse(tmp, {
                         fileBlob: local.base64FromBuffer(
                             req.swgg.bodyParsed[key]
                         ),
@@ -3666,7 +3666,7 @@ local.normalizeSwaggerJson = function (swaggerJson, opt) {
         return swaggerJson;
     }
     // override swaggerJson with x-swgg-tags0-override
-    local.objectSetOverride(
+    local.objectAssignRecurse(
         swaggerJson,
         (
             swaggerJson["x-swgg-tags0-override"]

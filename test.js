@@ -1650,6 +1650,137 @@ local.testCase_numberToRomanNumerals_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
+local.testCase_objectAssignRecurse_default = function (opt, onError) {
+/*
+ * this function will test objectAssignRecurse's default handling-behavior
+ */
+    // test null-case handling-behavior
+    local.objectAssignRecurse();
+    local.objectAssignRecurse({});
+    // test falsy handling-behavior
+    [
+        "", 0, false, null, undefined
+    ].forEach(function (aa) {
+        [
+            "", 0, false, null, undefined
+        ].forEach(function (bb) {
+            local.assertJsonEqual(
+                local.objectAssignRecurse({
+                    data: aa
+                }, {
+                    data: bb
+                }).data,
+                bb === undefined
+                ? aa
+                : bb
+            );
+        });
+    });
+    // test non-recursive handling-behavior
+    local.assertJsonEqual(local.objectAssignRecurse({
+        aa: 1,
+        bb: {
+            cc: 1
+        },
+        cc: {
+            dd: 1
+        },
+        dd: [
+            1, 1
+        ],
+        ee: [
+            1, 1
+        ]
+    }, {
+        aa: 2,
+        bb: {
+            dd: 2
+        },
+        cc: {
+            ee: 2
+        },
+        dd: [
+            2, 2
+        ],
+        ee: {
+            ff: 2
+        }
+    // test default-depth handling-behavior
+    }, null), {
+        aa: 2,
+        bb: {
+            dd: 2
+        },
+        cc: {
+            ee: 2
+        },
+        dd: [
+            2, 2
+        ],
+        ee: {
+            ff: 2
+        }
+    });
+    // test recursive handling-behavior
+    local.assertJsonEqual(local.objectAssignRecurse({
+        aa: 1,
+        bb: {
+            cc: 1
+        },
+        cc: {
+            dd: 1
+        },
+        dd: [
+            1, 1
+        ],
+        ee: [
+            1, 1
+        ]
+    }, {
+        aa: 2,
+        bb: {
+            dd: 2
+        },
+        cc: {
+            ee: 2
+        },
+        dd: [
+            2, 2
+        ],
+        ee: {
+            ff: 2
+        }
+    // test depth handling-behavior
+    }, 2), {
+        aa: 2,
+        bb: {
+            cc: 1,
+            dd: 2
+        },
+        cc: {
+            dd: 1,
+            ee: 2
+        },
+        dd: [
+            2, 2
+        ],
+        ee: {
+            ff: 2
+        }
+    });
+    // test env with empty-string handling-behavior
+    local.assertJsonEqual(local.objectAssignRecurse(
+        local.env,
+        {
+            "emptyString": null
+        },
+        // test default-depth handling-behavior
+        null,
+        local.env
+    ).emptyString, "");
+    onError(undefined, opt);
+};
+
 local.testCase_objectSetDefault_default = function (opt, onError) {
 /*
  * this function will test objectSetDefault's default handling-behavior
@@ -1771,137 +1902,6 @@ local.testCase_objectSetDefault_default = function (opt, onError) {
             1, 1
         ]
     });
-    onError(undefined, opt);
-};
-
-local.testCase_objectSetOverride_default = function (opt, onError) {
-/*
- * this function will test objectSetOverride's default handling-behavior
- */
-    // test null-case handling-behavior
-    local.objectSetOverride();
-    local.objectSetOverride({});
-    // test falsy handling-behavior
-    [
-        "", 0, false, null, undefined
-    ].forEach(function (aa) {
-        [
-            "", 0, false, null, undefined
-        ].forEach(function (bb) {
-            local.assertJsonEqual(
-                local.objectSetOverride({
-                    data: aa
-                }, {
-                    data: bb
-                }).data,
-                bb === undefined
-                ? aa
-                : bb
-            );
-        });
-    });
-    // test non-recursive handling-behavior
-    local.assertJsonEqual(local.objectSetOverride({
-        aa: 1,
-        bb: {
-            cc: 1
-        },
-        cc: {
-            dd: 1
-        },
-        dd: [
-            1, 1
-        ],
-        ee: [
-            1, 1
-        ]
-    }, {
-        aa: 2,
-        bb: {
-            dd: 2
-        },
-        cc: {
-            ee: 2
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    // test default-depth handling-behavior
-    }, null), {
-        aa: 2,
-        bb: {
-            dd: 2
-        },
-        cc: {
-            ee: 2
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    });
-    // test recursive handling-behavior
-    local.assertJsonEqual(local.objectSetOverride({
-        aa: 1,
-        bb: {
-            cc: 1
-        },
-        cc: {
-            dd: 1
-        },
-        dd: [
-            1, 1
-        ],
-        ee: [
-            1, 1
-        ]
-    }, {
-        aa: 2,
-        bb: {
-            dd: 2
-        },
-        cc: {
-            ee: 2
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    // test depth handling-behavior
-    }, 2), {
-        aa: 2,
-        bb: {
-            cc: 1,
-            dd: 2
-        },
-        cc: {
-            dd: 1,
-            ee: 2
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    });
-    // test env with empty-string handling-behavior
-    local.assertJsonEqual(local.objectSetOverride(
-        local.env,
-        {
-            "emptyString": null
-        },
-        // test default-depth handling-behavior
-        null,
-        local.env
-    ).emptyString, "");
     onError(undefined, opt);
 };
 

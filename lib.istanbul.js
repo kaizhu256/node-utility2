@@ -558,10 +558,12 @@ local.coverageReportCreate = function (opt) {
  * 2. write coverage in html-format to filesystem
  * 3. return coverage in html-format as single document
  */
+    let coverageReportHtml;
+    let writerData;
+    let writerFile;
     if (!(opt && opt.coverage)) {
         return "";
     }
-    opt = {};
     opt.dir = process.cwd() + "/tmp/build/coverage.html";
     // merge previous coverage
     if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
@@ -584,61 +586,74 @@ local.coverageReportCreate = function (opt) {
         } catch (ignore) {}
     }
     // init writer
-    local.coverageReportHtml = "";
-    local.coverageReportHtml += (
+    coverageReportHtml = "";
+    coverageReportHtml += (
         "<div class=\"coverageReportDiv\">\n"
         + "<h1>coverage-report</h1>\n"
         + "<div style=\""
         + "background: #fff; border: 1px solid #999; margin 0; padding: 0;"
         + "\">\n"
     );
-    local.writerData = "";
     opt.sourceStore = {};
-    opt.writer = local.writer;
+    // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
+    writerData = "";
+    writerFile = "";
+    opt.writer = {};
+    opt.writer.write = function (data) {
+        writerData += data;
+    };
+    opt.writer.writeFile = function (file, onError) {
+        coverageReportHtml += writerData + "\n\n";
+        if (writerFile) {
+            local.fsWriteFileWithMkdirpSync(
+                writerFile,
+                writerData
+            );
+        }
+        writerData = "";
+        writerFile = file;
+        onError(opt.writer);
+    };
     // 1. print coverage in text-format to stdout
     new local.TextReport(opt).writeReport(local.collector);
     // 2. write coverage in html-format to filesystem
     new local.HtmlReport(opt).writeReport(local.collector);
-    local.writer.writeFile("", local.nop);
-    if (!local.isBrowser) {
-        // write coverage.json
-        local.fsWriteFileWithMkdirpSync(
-            opt.dir + "/coverage.json",
-            JSON.stringify(opt.coverage)
-        );
-        // write coverage.code-dict.json
-        local.fsWriteFileWithMkdirpSync(
-            opt.dir + "/coverage.code-dict.json",
-            JSON.stringify(globalThis.__coverageCodeDict__)
-        );
-        // write coverage.badge.svg
-        opt.pct = local.coverageReportSummary.root.metrics.lines.pct;
-        local.fsWriteFileWithMkdirpSync(
-            local._istanbul_path.dirname(opt.dir) + "/coverage.badge.svg",
-            // edit coverage badge percent
-            // edit coverage badge color
-            local.templateCoverageBadgeSvg.replace((
-                /100.0/g
-            ), opt.pct).replace((
-                /0d0/g
-            ), (
-                Math.round((100 - opt.pct) * 2.21).toString(16).padStart(2, "0")
-                + Math.round(opt.pct * 2.21).toString(16).padStart(2, "0")
-                + "00"
-            ))
-        );
-    }
+    opt.writer.writeFile("", local.nop);
+    // write coverage.json
+    local.fsWriteFileWithMkdirpSync(
+        opt.dir + "/coverage.json",
+        JSON.stringify(opt.coverage)
+    );
+    // write coverage.code-dict.json
+    local.fsWriteFileWithMkdirpSync(
+        opt.dir + "/coverage.code-dict.json",
+        JSON.stringify(globalThis.__coverageCodeDict__)
+    );
+    // write coverage.badge.svg
+    opt.pct = local.coverageReportSummary.root.metrics.lines.pct;
+    local.fsWriteFileWithMkdirpSync(
+        local._istanbul_path.dirname(opt.dir) + "/coverage.badge.svg",
+        // edit coverage badge percent
+        // edit coverage badge color
+        local.templateCoverageBadgeSvg.replace((
+            /100.0/g
+        ), opt.pct).replace((
+            /0d0/g
+        ), (
+            Math.round((100 - opt.pct) * 2.21).toString(16).padStart(2, "0")
+            + Math.round(opt.pct * 2.21).toString(16).padStart(2, "0")
+            + "00"
+        ))
+    );
     console.log("created coverage file " + opt.dir + "/index.html");
     // 3. return coverage in html-format as a single document
-    local.coverageReportHtml += "</div>\n</div>\n";
+    coverageReportHtml += "</div>\n</div>\n";
     // write coverage.rollup.html
-    if (!local.isBrowser) {
-        local.fsWriteFileWithMkdirpSync(
-            opt.dir + "/coverage.rollup.html",
-            local.coverageReportHtml
-        );
-    }
-    return local.coverageReportHtml;
+    local.fsWriteFileWithMkdirpSync(
+        opt.dir + "/coverage.rollup.html",
+        coverageReportHtml
+    );
+    return coverageReportHtml;
 };
 
 local.instrumentInPackage = function (code, file) {
@@ -11411,26 +11426,6 @@ local["head.txt"] = '\
 <div class="body">\n\
 ';
 /* jslint ignore:end */
-
-
-
-/*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
-*/
-local.writer = {
-    write: function (data) {
-        local.writerData += data;
-    },
-    writeFile: function (file, onError) {
-        local.coverageReportHtml += local.writerData + "\n\n";
-        if (!local.isBrowser && local.writerFile) {
-            local.fsWriteFileWithMkdirpSync(local.writerFile, local.writerData);
-        }
-        local.writerData = "";
-        local.writerFile = file;
-        onError(local.writer);
-    }
-};
 
 
 
