@@ -617,7 +617,7 @@ local.coverageReportCreate = function (opt) {
     // 1. print coverage in text-format to stdout
     new local.TextReport(opt).writeReport(local.collector);
     // 2. write coverage in html-format to filesystem
-    reportHtmlCreate(opt, local.collector);
+    local.reportHtmlCreate(opt, local.collector);
     opt.writer.writeFile("", local.nop);
     // write coverage.json
     local.fsWriteFileWithMkdirpSync(
@@ -11973,7 +11973,7 @@ function getReportClass(stats, watermark) {
  * @param {Object} opts optional
  * @param {String} [opts.dir] the directory in which to generate reports. Defaults to `./html-report`
  */
-function reportHtmlCreate(opts, collector) {
+local.reportHtmlCreate = function(opts, collector) {
     opts = opts || {};
     opts.dir = opts.dir || path.resolve(process.cwd(), 'html-report');
     opts.sourceStore = opts.sourceStore || Store.create('fslookup');
