@@ -12175,7 +12175,6 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
  */
 
 var defaults = require('./common/defaults'),
-    TreeSummarizer = require('../util/tree-summarizer'),
     utils = require('../object-utils'),
     PCT_COLS = 10,
     TAB_SIZE = 3,
@@ -12207,6 +12206,7 @@ local.reportTextCreate = function(opts, collector) {
     that.file = opts.file;
     that.summary = opts.summary;
     that.watermarks = opts.watermarks || defaults.watermarks();
+    var TreeSummarizer = require('../util/tree-summarizer');
     var summarizer = new TreeSummarizer(),
         tree,
         root,
