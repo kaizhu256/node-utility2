@@ -11978,7 +11978,6 @@ function HtmlReport(opts) {
     this.opts = opts || {};
     this.opts.dir = this.opts.dir || path.resolve(process.cwd(), 'html-report');
     this.opts.sourceStore = this.opts.sourceStore || Store.create('fslookup');
-    this.opts.linkMapper = this.opts.linkMapper || this.standardLinkMapper();
     this.opts.writer = this.opts.writer || null;
     // hack-coverage - new Date() bugfix
     this.opts.templateData = { datetime: new Date().toGMTString() };
@@ -12044,7 +12043,7 @@ HtmlReport.prototype = {
         that = this;
         fillTemplate = function (node, templateData) {
             var html;
-            var linkMapper = opts.linkMapper;
+            var linkMapper = that.standardLinkMapper;
             templateData.entity = node.name || 'All files';
             templateData.metrics = node.metrics;
             templateData.reportClass = getReportClass(node.metrics.statements, opts.watermarks.statements);
