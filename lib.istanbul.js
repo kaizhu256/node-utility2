@@ -12058,7 +12058,6 @@ Report.mix(HtmlReport, {
         fillTemplate = function (node, templateData) {
             var html;
             var linkMapper = opts.linkMapper;
-
             templateData.entity = node.name || 'All files';
             templateData.metrics = node.metrics;
             templateData.reportClass = getReportClass(node.metrics.statements, opts.watermarks.statements);
@@ -12066,12 +12065,10 @@ Report.mix(HtmlReport, {
                 nodePath = [],
                 linkPath = [],
                 i;
-
             while (parent) {
                 nodePath.push(parent);
                 parent = parent.parent;
             }
-
             for (i = 0; i < nodePath.length; i += 1) {
                 linkPath.push('<a href="' + linkMapper.ancestor(node, i + 1) + '">' +
                     (nodePath[i].relativeName || 'All files') + '</a>');
@@ -12242,7 +12239,6 @@ function TextReport(opts) {
     this.dir = opts.dir || process.cwd();
     this.file = opts.file;
     this.summary = opts.summary;
-    this.maxCols = opts.maxCols || 0;
     this.watermarks = opts.watermarks || defaults.watermarks();
 }
 
@@ -12387,12 +12383,6 @@ Report.mix(TextReport, {
         tree = summarizer.getTreeSummary();
         root = tree.root;
         nameWidth = findNameWidth(root);
-        if (that.maxCols > 0) {
-            maxRemaining = that.maxCols - statsWidth - 2;
-            if (nameWidth > maxRemaining) {
-                nameWidth = maxRemaining;
-            }
-        }
         walk(root, nameWidth, strings, 0, that.watermarks);
         text = strings.join('\n') + '\n';
         if (that.file) {
