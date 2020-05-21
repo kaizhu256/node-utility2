@@ -615,7 +615,7 @@ local.coverageReportCreate = function (opt) {
         onError(opt.writer);
     };
     // 1. print coverage in text-format to stdout
-    new local.TextReport(opt).writeReport(local.collector);
+    local.reportTextCreate(opt, local.collector);
     // 2. write coverage in html-format to filesystem
     local.reportHtmlCreate(opt, local.collector);
     opt.writer.writeFile("", local.nop);
@@ -12202,13 +12202,38 @@ var path = require('path'),
  * @param {Number} [opts.maxcols] the max column width of the report. By default, the width of the report is adjusted based on the length of the paths
  *              to be reported.
  */
-function TextReport(opts) {
+local.reportTextCreate = (opts, collector) {
+    var that;
+    that = {};
     opts = opts || {};
-    this.dir = opts.dir || process.cwd();
-    this.file = opts.file;
-    this.summary = opts.summary;
-    this.watermarks = opts.watermarks || defaults.watermarks();
-}
+    that.dir = opts.dir || process.cwd();
+    that.file = opts.file;
+    that.summary = opts.summary;
+    that.watermarks = opts.watermarks || defaults.watermarks();
+    var summarizer = new TreeSummarizer(),
+        tree,
+        root,
+        nameWidth,
+        statsWidth = 4 * ( PCT_COLS + 2),
+        maxRemaining,
+        strings = [],
+        text;
+
+    collector.files().forEach(function (key) {
+        summarizer.addFileCoverageSummary(key, utils.summarizeFileCoverage(collector.fileCoverageFor(key)));
+    });
+    tree = summarizer.getTreeSummary();
+    root = tree.root;
+    nameWidth = findNameWidth(root);
+    walk(root, nameWidth, strings, 0, that.watermarks);
+    text = strings.join('\n') + '\n';
+    if (that.file) {
+        mkdirp.sync(that.dir);
+        fs.writeFileSync(path.join(that.dir, that.file), text, 'utf8');
+    } else {
+        console.log(text);
+    }
+};
 
 function padding(num, ch) {
     var str = '',
@@ -12332,31 +12357,6 @@ function walk(node, nameWidth, array, level, watermarks) {
 
 TextReport.prototype = {
     writeReport: function (collector /*, sync */) {
-        var that;
-        that = this;
-        var summarizer = new TreeSummarizer(),
-            tree,
-            root,
-            nameWidth,
-            statsWidth = 4 * ( PCT_COLS + 2),
-            maxRemaining,
-            strings = [],
-            text;
-
-        collector.files().forEach(function (key) {
-            summarizer.addFileCoverageSummary(key, utils.summarizeFileCoverage(collector.fileCoverageFor(key)));
-        });
-        tree = summarizer.getTreeSummary();
-        root = tree.root;
-        nameWidth = findNameWidth(root);
-        walk(root, nameWidth, strings, 0, that.watermarks);
-        text = strings.join('\n') + '\n';
-        if (that.file) {
-            mkdirp.sync(that.dir);
-            fs.writeFileSync(path.join(that.dir, that.file), text, 'utf8');
-        } else {
-            console.log(text);
-        }
     }
 };
 
