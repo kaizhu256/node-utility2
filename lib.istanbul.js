@@ -617,7 +617,7 @@ local.coverageReportCreate = function (opt) {
     // 1. print coverage in text-format to stdout
     new local.TextReport(opt).writeReport(local.collector);
     // 2. write coverage in html-format to filesystem
-    new local.HtmlReport(opt).writeReport(opt, local.collector);
+    reportHtmlCreate(opt, local.collector);
     opt.writer.writeFile("", local.nop);
     // write coverage.json
     local.fsWriteFileWithMkdirpSync(
@@ -11973,200 +11973,194 @@ function getReportClass(stats, watermark) {
  * @param {Object} opts optional
  * @param {String} [opts.dir] the directory in which to generate reports. Defaults to `./html-report`
  */
-function HtmlReport(opts) {
-    this.opts = opts || {};
-    this.opts.dir = this.opts.dir || path.resolve(process.cwd(), 'html-report');
-    this.opts.sourceStore = this.opts.sourceStore || Store.create('fslookup');
-    this.opts.writer = this.opts.writer || null;
+function reportHtmlCreate(opts, collector) {
+    opts = opts || {};
+    opts.dir = opts.dir || path.resolve(process.cwd(), 'html-report');
+    opts.sourceStore = opts.sourceStore || Store.create('fslookup');
+    opts.writer = opts.writer || null;
     // hack-coverage - new Date() bugfix
-    this.opts.templateData = { datetime: new Date().toGMTString() };
-    this.opts.watermarks = this.opts.watermarks || defaults.watermarks();
-}
+    opts.templateData = { datetime: new Date().toGMTString() };
+    opts.watermarks = opts.watermarks || defaults.watermarks();
 
-HtmlReport.prototype = {
-    writeReport: function (opts, collector) {
-        var ancestorHref;
-        var fillTemplate;
-        var linkMapper;
-        var writeFiles;
-        ancestorHref = function (node, num) {
-            var href = '',
-                separated,
-                levels,
-                i,
-                j;
-            for (i = 0; i < num; i += 1) {
-                separated = node.relativeName.split(SEP);
-                levels = separated.length - 1;
-                for (j = 0; j < levels; j += 1) {
-                    href += '../';
-                }
-                node = node.parent;
+    var ancestorHref;
+    var fillTemplate;
+    var linkMapper;
+    var writeFiles;
+    ancestorHref = function (node, num) {
+        var href = '',
+            separated,
+            levels,
+            i,
+            j;
+        for (i = 0; i < num; i += 1) {
+            separated = node.relativeName.split(SEP);
+            levels = separated.length - 1;
+            for (j = 0; j < levels; j += 1) {
+                href += '../';
             }
-            return href;
+            node = node.parent;
+        }
+        return href;
+    };
+    fillTemplate = function (node, templateData) {
+        var html;
+        templateData.entity = node.name || 'All files';
+        templateData.metrics = node.metrics;
+        templateData.reportClass = getReportClass(node.metrics.statements, opts.watermarks.statements);
+        var parent = node.parent,
+            nodePath = [],
+            linkPath = [],
+            i;
+        while (parent) {
+            nodePath.push(parent);
+            parent = parent.parent;
+        }
+        for (i = 0; i < nodePath.length; i += 1) {
+            linkPath.push('<a href="' + linkMapper.ancestor(node, i + 1) + '">' +
+                (nodePath[i].relativeName || 'All files') + '</a>');
+        }
+        linkPath.reverse();
+        html = linkPath.length > 0 ? linkPath.join(' &#187; ') + ' &#187; ' +
+            node.displayShortName() : '';
+        templateData.pathHtml = pathTemplate({ html });
+        templateData.prettify = {
+            js: linkMapper.asset(node, 'prettify.js'),
+            css: linkMapper.asset(node, 'prettify.css')
         };
-        fillTemplate = function (node, templateData) {
-            var html;
-            templateData.entity = node.name || 'All files';
-            templateData.metrics = node.metrics;
-            templateData.reportClass = getReportClass(node.metrics.statements, opts.watermarks.statements);
-            var parent = node.parent,
-                nodePath = [],
-                linkPath = [],
-                i;
-            while (parent) {
-                nodePath.push(parent);
-                parent = parent.parent;
-            }
-            for (i = 0; i < nodePath.length; i += 1) {
-                linkPath.push('<a href="' + linkMapper.ancestor(node, i + 1) + '">' +
-                    (nodePath[i].relativeName || 'All files') + '</a>');
-            }
-            linkPath.reverse();
-            html = linkPath.length > 0 ? linkPath.join(' &#187; ') + ' &#187; ' +
-                node.displayShortName() : '';
-            templateData.pathHtml = pathTemplate({ html });
-            templateData.prettify = {
-                js: linkMapper.asset(node, 'prettify.js'),
-                css: linkMapper.asset(node, 'prettify.css')
-            };
-        };
-        linkMapper = {
-            fromParent: function (node) {
-                var i = 0,
-                    relativeName = node.relativeName,
-                    ch;
-                if (SEP !== '/') {
-                    relativeName = '';
-                    for (i = 0; i < node.relativeName.length; i += 1) {
-                        ch = node.relativeName.charAt(i);
-                        if (ch === SEP) {
-                            relativeName += '/';
-                        } else {
-                            relativeName += ch;
-                        }
+    };
+    linkMapper = {
+        fromParent: function (node) {
+            var i = 0,
+                relativeName = node.relativeName,
+                ch;
+            if (SEP !== '/') {
+                relativeName = '';
+                for (i = 0; i < node.relativeName.length; i += 1) {
+                    ch = node.relativeName.charAt(i);
+                    if (ch === SEP) {
+                        relativeName += '/';
+                    } else {
+                        relativeName += ch;
                     }
                 }
-                return node.kind === 'dir' ? relativeName + 'index.html' : relativeName + '.html';
-            },
-            ancestor: function (node, num) {
-                return ancestorHref(node, num) + 'index.html';
-            },
-            asset: function (node, name) {
-                var i = 0,
-                    parent = node.parent;
-                while (parent) { i += 1; parent = parent.parent; }
-                return ancestorHref(node, i) + name;
             }
-        };
-        writeFiles = function (writer, node, dir, collector) {
-            var indexFile = path.resolve(dir, 'index.html'),
-                childFile;
-            if (opts.verbose) { console.error('Writing ' + indexFile); }
-            writer.writeFile(indexFile, function () {
-                var templateData = opts.templateData,
-                    children = Array.prototype.slice.apply(node.children),
-                    watermarks = opts.watermarks;
+            return node.kind === 'dir' ? relativeName + 'index.html' : relativeName + '.html';
+        },
+        ancestor: function (node, num) {
+            return ancestorHref(node, num) + 'index.html';
+        },
+        asset: function (node, name) {
+            var i = 0,
+                parent = node.parent;
+            while (parent) { i += 1; parent = parent.parent; }
+            return ancestorHref(node, i) + name;
+        }
+    };
+    writeFiles = function (writer, node, dir, collector) {
+        var indexFile = path.resolve(dir, 'index.html'),
+            childFile;
+        if (opts.verbose) { console.error('Writing ' + indexFile); }
+        writer.writeFile(indexFile, function () {
+            var templateData = opts.templateData,
+                children = Array.prototype.slice.apply(node.children),
+                watermarks = opts.watermarks;
 
-                children.sort(function (a, b) {
-                    return a.name < b.name ? -1 : 1;
-                });
+            children.sort(function (a, b) {
+                return a.name < b.name ? -1 : 1;
+            });
 
-                fillTemplate(node, templateData);
+            fillTemplate(node, templateData);
+            writer.write(headerTemplate(templateData));
+            writer.write(summaryTableHeader);
+            children.forEach(function (child) {
+                var metrics = child.metrics,
+                    reportClasses = {
+                        statements: getReportClass(metrics.statements, watermarks.statements),
+                        lines: getReportClass(metrics.lines, watermarks.lines),
+                        functions: getReportClass(metrics.functions, watermarks.functions),
+                        branches: getReportClass(metrics.branches, watermarks.branches)
+                    },
+                    data = {
+                        metrics: metrics,
+                        reportClasses: reportClasses,
+                        file: child.displayShortName(),
+                        output: linkMapper.fromParent(child)
+                    };
+                writer.write(summaryLineTemplate(data) + '\n');
+            });
+            writer.write(summaryTableFooter);
+            writer.write(footerTemplate(templateData));
+        });
+        node.children.forEach(function (child) {
+            if (child.kind === 'dir') {
+                // recurse
+                writeFiles(writer, child, path.resolve(dir, child.relativeName), collector);
+                return;
+            }
+            childFile = path.resolve(dir, child.relativeName + '.html');
+            if (opts.verbose) { console.error('Writing ' + childFile); }
+            writer.writeFile(childFile, function () {
+                var fileCoverage = collector.fileCoverageFor(child.fullPath());
+                var sourceStore = opts.sourceStore,
+                    templateData = opts.templateData,
+                    sourceText = fileCoverage.code && Array.isArray(fileCoverage.code) ?
+                        fileCoverage.code.join('\n') + '\n' : sourceStore.get(fileCoverage.path),
+                    code = sourceText.split(/(?:\r?\n)|\r/),
+                    count = 0,
+                    structured = code.map(function (str) { count += 1; return { line: count, covered: null, text: new InsertionText(str, true) }; }),
+                    context;
+
+                structured.unshift({ line: 0, covered: null, text: new InsertionText("") });
+
+                fillTemplate(child, templateData);
                 writer.write(headerTemplate(templateData));
-                writer.write(summaryTableHeader);
-                children.forEach(function (child) {
-                    var metrics = child.metrics,
-                        reportClasses = {
-                            statements: getReportClass(metrics.statements, watermarks.statements),
-                            lines: getReportClass(metrics.lines, watermarks.lines),
-                            functions: getReportClass(metrics.functions, watermarks.functions),
-                            branches: getReportClass(metrics.branches, watermarks.branches)
-                        },
-                        data = {
-                            metrics: metrics,
-                            reportClasses: reportClasses,
-                            file: child.displayShortName(),
-                            output: linkMapper.fromParent(child)
-                        };
-                    writer.write(summaryLineTemplate(data) + '\n');
-                });
-                writer.write(summaryTableFooter);
+                writer.write('<pre><table class="coverage">\n');
+
+                annotateLines(fileCoverage, structured);
+                //note: order is important, since statements typically result in spanning the whole line and doing branches late
+                //causes mismatched tags
+                annotateBranches(fileCoverage, structured);
+                annotateFunctions(fileCoverage, structured);
+                annotateStatements(fileCoverage, structured);
+
+                structured.shift();
+                context = {
+                    structured: structured,
+                    maxLines: structured.length,
+                    fileCoverage: fileCoverage
+                };
+                writer.write(detailTemplate(context));
+                writer.write('</table></pre>\n');
                 writer.write(footerTemplate(templateData));
             });
-            node.children.forEach(function (child) {
-                if (child.kind === 'dir') {
-                    // recurse
-                    writeFiles(writer, child, path.resolve(dir, child.relativeName), collector);
-                    return;
-                }
-                childFile = path.resolve(dir, child.relativeName + '.html');
-                if (opts.verbose) { console.error('Writing ' + childFile); }
-                writer.writeFile(childFile, function () {
-                    var fileCoverage = collector.fileCoverageFor(child.fullPath());
-                    var sourceStore = opts.sourceStore,
-                        templateData = opts.templateData,
-                        sourceText = fileCoverage.code && Array.isArray(fileCoverage.code) ?
-                            fileCoverage.code.join('\n') + '\n' : sourceStore.get(fileCoverage.path),
-                        code = sourceText.split(/(?:\r?\n)|\r/),
-                        count = 0,
-                        structured = code.map(function (str) { count += 1; return { line: count, covered: null, text: new InsertionText(str, true) }; }),
-                        context;
-
-                    structured.unshift({ line: 0, covered: null, text: new InsertionText("") });
-
-                    fillTemplate(child, templateData);
-                    writer.write(headerTemplate(templateData));
-                    writer.write('<pre><table class="coverage">\n');
-
-                    annotateLines(fileCoverage, structured);
-                    //note: order is important, since statements typically result in spanning the whole line and doing branches late
-                    //causes mismatched tags
-                    annotateBranches(fileCoverage, structured);
-                    annotateFunctions(fileCoverage, structured);
-                    annotateStatements(fileCoverage, structured);
-
-                    structured.shift();
-                    context = {
-                        structured: structured,
-                        maxLines: structured.length,
-                        fileCoverage: fileCoverage
-                    };
-                    writer.write(detailTemplate(context));
-                    writer.write('</table></pre>\n');
-                    writer.write(footerTemplate(templateData));
-                });
-            });
-        };
-
-        var dir = opts.dir,
-            summarizer = new TreeSummarizer(),
-            writer = opts.writer,
-            tree;
-
-        collector.files().forEach(function (key) {
-            summarizer.addFileCoverageSummary(key, utils.summarizeFileCoverage(collector.fileCoverageFor(key)));
         });
-        tree = summarizer.getTreeSummary();
-        fs.readdirSync(path.resolve(__dirname, '..', 'vendor')).forEach(function (f) {
-            var resolvedSource = path.resolve(__dirname, '..', 'vendor', f),
-                resolvedDestination = path.resolve(dir, f),
-                stat = fs.statSync(resolvedSource);
+    };
 
-            if (stat.isFile()) {
-                if (opts.verbose) {
-                    console.log('Write asset: ' + resolvedDestination);
-                }
-                writer.copyFile(resolvedSource, resolvedDestination);
+    var dir = opts.dir,
+        summarizer = new TreeSummarizer(),
+        writer = opts.writer,
+        tree;
+
+    collector.files().forEach(function (key) {
+        summarizer.addFileCoverageSummary(key, utils.summarizeFileCoverage(collector.fileCoverageFor(key)));
+    });
+    tree = summarizer.getTreeSummary();
+    fs.readdirSync(path.resolve(__dirname, '..', 'vendor')).forEach(function (f) {
+        var resolvedSource = path.resolve(__dirname, '..', 'vendor', f),
+            resolvedDestination = path.resolve(dir, f),
+            stat = fs.statSync(resolvedSource);
+
+        if (stat.isFile()) {
+            if (opts.verbose) {
+                console.log('Write asset: ' + resolvedDestination);
             }
-        });
-        //console.log(JSON.stringify(tree.root, undefined, 4));
-        writeFiles(writer, tree.root, dir, collector);
-    }
+            writer.copyFile(resolvedSource, resolvedDestination);
+        }
+    });
+    //console.log(JSON.stringify(tree.root, undefined, 4));
+    writeFiles(writer, tree.root, dir, collector);
 };
-
-module.exports = HtmlReport;
-local.HtmlReport = module.exports; }());
+}());
 
 
 
