@@ -11089,17 +11089,6 @@ local["./common/defaults"] = module.exports; }());
 
 
 /*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/index.js
-*/
-local["./index"] = {
-    mix: function (klass, prototype) {
-        klass.prototype = prototype;
-    }
-};
-
-
-
-/*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/foot.txt
 */
 /* jslint ignore:start */
@@ -11681,7 +11670,6 @@ var handlebars = require('handlebars'),
     fs = require('fs'),
     util = require('util'),
     FileWriter = require('../util/file-writer'),
-    Report = require('./index'),
     Store = require('../store'),
     InsertionText = require('../util/insertion-text'),
     TreeSummarizer = require('../util/tree-summarizer'),
@@ -11998,9 +11986,8 @@ function HtmlReport(opts) {
 }
 
 HtmlReport.TYPE = 'html';
-util.inherits(HtmlReport, Report);
 
-Report.mix(HtmlReport, {
+HtmlReport.prototype = {
 
     standardLinkMapper: function () {
         return {
@@ -12188,7 +12175,7 @@ Report.mix(HtmlReport, {
         //console.log(JSON.stringify(tree.root, undefined, 4));
         writeFiles(writer, tree.root, dir, collector);
     }
-});
+};
 
 module.exports = HtmlReport;
 local.HtmlReport = module.exports; }());
@@ -12209,7 +12196,6 @@ var path = require('path'),
     mkdirp = require('mkdirp'),
     fs = require('fs'),
     defaults = require('./common/defaults'),
-    Report = require('./index'),
     TreeSummarizer = require('../util/tree-summarizer'),
     utils = require('../object-utils'),
     PCT_COLS = 10,
@@ -12364,7 +12350,7 @@ function walk(node, nameWidth, array, level, watermarks) {
     }
 }
 
-Report.mix(TextReport, {
+TextReport.prototype = {
     writeReport: function (collector /*, sync */) {
         var that;
         that = this;
@@ -12392,7 +12378,7 @@ Report.mix(TextReport, {
             console.log(text);
         }
     }
-});
+};
 
 module.exports = TextReport;
 local.TextReport = module.exports; }());
