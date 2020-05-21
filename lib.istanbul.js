@@ -12002,40 +12002,6 @@ util.inherits(HtmlReport, Report);
 
 Report.mix(HtmlReport, {
 
-    getPathHtml: function (node, linkMapper) {
-        var parent = node.parent,
-            nodePath = [],
-            linkPath = [],
-            i;
-
-        while (parent) {
-            nodePath.push(parent);
-            parent = parent.parent;
-        }
-
-        for (i = 0; i < nodePath.length; i += 1) {
-            linkPath.push('<a href="' + linkMapper.ancestor(node, i + 1) + '">' +
-                (nodePath[i].relativeName || 'All files') + '</a>');
-        }
-        linkPath.reverse();
-        return linkPath.length > 0 ? linkPath.join(' &#187; ') + ' &#187; ' +
-            node.displayShortName() : '';
-    },
-
-    fillTemplate: function (node, templateData) {
-        var opts = this.opts,
-            linkMapper = opts.linkMapper;
-
-        templateData.entity = node.name || 'All files';
-        templateData.metrics = node.metrics;
-        templateData.reportClass = getReportClass(node.metrics.statements, opts.watermarks.statements);
-        templateData.pathHtml = pathTemplate({ html: this.getPathHtml(node, linkMapper) });
-        templateData.prettify = {
-            js: linkMapper.asset(node, 'prettify.js'),
-            css: linkMapper.asset(node, 'prettify.css')
-        };
-    },
-
     standardLinkMapper: function () {
         return {
             fromParent: function (node) {
@@ -12084,10 +12050,41 @@ Report.mix(HtmlReport, {
     },
 
     writeReport: function (collector, sync) {
+        var fillTemplate;
         var opts;
         var that;
         var writeFiles;
         that = this;
+        fillTemplate = function (node, templateData) {
+            var html;
+            var linkMapper = opts.linkMapper;
+
+            templateData.entity = node.name || 'All files';
+            templateData.metrics = node.metrics;
+            templateData.reportClass = getReportClass(node.metrics.statements, opts.watermarks.statements);
+            var parent = node.parent,
+                nodePath = [],
+                linkPath = [],
+                i;
+
+            while (parent) {
+                nodePath.push(parent);
+                parent = parent.parent;
+            }
+
+            for (i = 0; i < nodePath.length; i += 1) {
+                linkPath.push('<a href="' + linkMapper.ancestor(node, i + 1) + '">' +
+                    (nodePath[i].relativeName || 'All files') + '</a>');
+            }
+            linkPath.reverse();
+            html = linkPath.length > 0 ? linkPath.join(' &#187; ') + ' &#187; ' +
+                node.displayShortName() : '';
+            templateData.pathHtml = pathTemplate({ html });
+            templateData.prettify = {
+                js: linkMapper.asset(node, 'prettify.js'),
+                css: linkMapper.asset(node, 'prettify.css')
+            };
+        };
         opts = that.opts;
         writeFiles = function (writer, node, dir, collector) {
             var indexFile = path.resolve(dir, 'index.html'),
@@ -12103,7 +12100,7 @@ Report.mix(HtmlReport, {
                     return a.name < b.name ? -1 : 1;
                 });
 
-                that.fillTemplate(node, templateData);
+                fillTemplate(node, templateData);
                 writer.write(headerTemplate(templateData));
                 writer.write(summaryTableHeader);
                 children.forEach(function (child) {
@@ -12146,7 +12143,7 @@ Report.mix(HtmlReport, {
 
                     structured.unshift({ line: 0, covered: null, text: new InsertionText("") });
 
-                    that.fillTemplate(child, templateData);
+                    fillTemplate(child, templateData);
                     writer.write(headerTemplate(templateData));
                     writer.write('<pre><table class="coverage">\n');
 
