@@ -11988,8 +11988,40 @@ HtmlReport.TYPE = 'html';
 
 HtmlReport.prototype = {
 
-    standardLinkMapper: function () {
-        return {
+    writeReport: function (collector, sync) {
+        var fillTemplate;
+        var linkMapper;
+        var opts;
+        var that;
+        var writeFiles;
+        that = this;
+        fillTemplate = function (node, templateData) {
+            var html;
+            templateData.entity = node.name || 'All files';
+            templateData.metrics = node.metrics;
+            templateData.reportClass = getReportClass(node.metrics.statements, opts.watermarks.statements);
+            var parent = node.parent,
+                nodePath = [],
+                linkPath = [],
+                i;
+            while (parent) {
+                nodePath.push(parent);
+                parent = parent.parent;
+            }
+            for (i = 0; i < nodePath.length; i += 1) {
+                linkPath.push('<a href="' + linkMapper.ancestor(node, i + 1) + '">' +
+                    (nodePath[i].relativeName || 'All files') + '</a>');
+            }
+            linkPath.reverse();
+            html = linkPath.length > 0 ? linkPath.join(' &#187; ') + ' &#187; ' +
+                node.displayShortName() : '';
+            templateData.pathHtml = pathTemplate({ html });
+            templateData.prettify = {
+                js: linkMapper.asset(node, 'prettify.js'),
+                css: linkMapper.asset(node, 'prettify.css')
+            };
+        };
+        linkMapper = {
             fromParent: function (node) {
                 var i = 0,
                     relativeName = node.relativeName,
@@ -12024,51 +12056,15 @@ HtmlReport.prototype = {
                 return href;
             },
             ancestor: function (node, num) {
-                return this.ancestorHref(node, num) + 'index.html';
+                return that.ancestorHref(node, num) + 'index.html';
             },
             asset: function (node, name) {
                 var i = 0,
                     parent = node.parent;
                 while (parent) { i += 1; parent = parent.parent; }
-                return this.ancestorHref(node, i) + name;
+                return that.ancestorHref(node, i) + name;
             }
         };
-    },
-
-    writeReport: function (collector, sync) {
-        var fillTemplate;
-        var linkMapper;
-        var opts;
-        var that;
-        var writeFiles;
-        that = this;
-        fillTemplate = function (node, templateData) {
-            var html;
-            templateData.entity = node.name || 'All files';
-            templateData.metrics = node.metrics;
-            templateData.reportClass = getReportClass(node.metrics.statements, opts.watermarks.statements);
-            var parent = node.parent,
-                nodePath = [],
-                linkPath = [],
-                i;
-            while (parent) {
-                nodePath.push(parent);
-                parent = parent.parent;
-            }
-            for (i = 0; i < nodePath.length; i += 1) {
-                linkPath.push('<a href="' + linkMapper.ancestor(node, i + 1) + '">' +
-                    (nodePath[i].relativeName || 'All files') + '</a>');
-            }
-            linkPath.reverse();
-            html = linkPath.length > 0 ? linkPath.join(' &#187; ') + ' &#187; ' +
-                node.displayShortName() : '';
-            templateData.pathHtml = pathTemplate({ html });
-            templateData.prettify = {
-                js: linkMapper.asset(node, 'prettify.js'),
-                css: linkMapper.asset(node, 'prettify.css')
-            };
-        };
-        linkMapper = that.standardLinkMapper;
         opts = that.opts;
         writeFiles = function (writer, node, dir, collector) {
             var indexFile = path.resolve(dir, 'index.html'),
