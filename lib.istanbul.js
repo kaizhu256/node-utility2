@@ -12174,10 +12174,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
  Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
  */
 
-var path = require('path'),
-    mkdirp = require('mkdirp'),
-    fs = require('fs'),
-    defaults = require('./common/defaults'),
+var defaults = require('./common/defaults'),
     TreeSummarizer = require('../util/tree-summarizer'),
     utils = require('../object-utils'),
     PCT_COLS = 10,
@@ -12227,12 +12224,7 @@ local.reportTextCreate = function(opts, collector) {
     nameWidth = findNameWidth(root);
     walk(root, nameWidth, strings, 0, that.watermarks);
     text = strings.join('\n') + '\n';
-    if (that.file) {
-        mkdirp.sync(that.dir);
-        fs.writeFileSync(path.join(that.dir, that.file), text, 'utf8');
-    } else {
-        console.log(text);
-    }
+    console.log(text);
 };
 
 function padding(num, ch) {
