@@ -11987,14 +11987,30 @@ function HtmlReport(opts) {
 HtmlReport.TYPE = 'html';
 
 HtmlReport.prototype = {
-
     writeReport: function (collector, sync) {
+        var ancestorHref;
         var fillTemplate;
         var linkMapper;
         var opts;
         var that;
         var writeFiles;
         that = this;
+        ancestorHref = function (node, num) {
+            var href = '',
+                separated,
+                levels,
+                i,
+                j;
+            for (i = 0; i < num; i += 1) {
+                separated = node.relativeName.split(SEP);
+                levels = separated.length - 1;
+                for (j = 0; j < levels; j += 1) {
+                    href += '../';
+                }
+                node = node.parent;
+            }
+            return href;
+        };
         fillTemplate = function (node, templateData) {
             var html;
             templateData.entity = node.name || 'All files';
@@ -12039,30 +12055,14 @@ HtmlReport.prototype = {
                 }
                 return node.kind === 'dir' ? relativeName + 'index.html' : relativeName + '.html';
             },
-            ancestorHref: function (node, num) {
-                var href = '',
-                    separated,
-                    levels,
-                    i,
-                    j;
-                for (i = 0; i < num; i += 1) {
-                    separated = node.relativeName.split(SEP);
-                    levels = separated.length - 1;
-                    for (j = 0; j < levels; j += 1) {
-                        href += '../';
-                    }
-                    node = node.parent;
-                }
-                return href;
-            },
             ancestor: function (node, num) {
-                return that.ancestorHref(node, num) + 'index.html';
+                return ancestorHref(node, num) + 'index.html';
             },
             asset: function (node, name) {
                 var i = 0,
                     parent = node.parent;
                 while (parent) { i += 1; parent = parent.parent; }
-                return that.ancestorHref(node, i) + name;
+                return ancestorHref(node, i) + name;
             }
         };
         opts = that.opts;
