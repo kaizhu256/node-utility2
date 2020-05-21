@@ -12037,13 +12037,13 @@ HtmlReport.prototype = {
 
     writeReport: function (collector, sync) {
         var fillTemplate;
+        var linkMapper;
         var opts;
         var that;
         var writeFiles;
         that = this;
         fillTemplate = function (node, templateData) {
             var html;
-            var linkMapper = that.standardLinkMapper;
             templateData.entity = node.name || 'All files';
             templateData.metrics = node.metrics;
             templateData.reportClass = getReportClass(node.metrics.statements, opts.watermarks.statements);
@@ -12068,14 +12068,14 @@ HtmlReport.prototype = {
                 css: linkMapper.asset(node, 'prettify.css')
             };
         };
+        linkMapper = that.standardLinkMapper;
         opts = that.opts;
         writeFiles = function (writer, node, dir, collector) {
             var indexFile = path.resolve(dir, 'index.html'),
                 childFile;
             if (opts.verbose) { console.error('Writing ' + indexFile); }
             writer.writeFile(indexFile, function () {
-                var linkMapper = opts.linkMapper,
-                    templateData = opts.templateData,
+                var templateData = opts.templateData,
                     children = Array.prototype.slice.apply(node.children),
                     watermarks = opts.watermarks;
 
