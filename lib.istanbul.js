@@ -9153,9 +9153,7 @@ local.handlebars.registerHelper = function (key, helper) {
  * this function will register the helper-function
  */
     local.handlebars[key] = function (aa, bb) {
-        try {
-            return helper(aa, bb);
-        } catch (ignore) {}
+        return helper(aa, bb);
     };
 };
 
