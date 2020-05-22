@@ -11428,20 +11428,13 @@ function reportHtmlCreate(opts) {
         });
     }
     function annotateBranches(fileCoverage, structuredText) {
-        let branchMeta;
-        let branchStats;
-        branchStats = fileCoverage.b;
-        branchMeta = fileCoverage.branchMap;
-        Object.keys(branchStats).forEach(function (branchName) {
-            let branchArray;
-            let metaArray;
-            let sumCount;
-            branchArray = branchStats[branchName];
-            sumCount = branchArray.reduce(function (p, n) {
+        Object.entries(fileCoverage.b).forEach(function ([
+            branchName,
+            branchArray
+        ]) {
+            if (branchArray.reduce(function (p, n) {
                 return p + n;
-            }, 0);
-            metaArray = branchMeta[branchName].locations;
-            if (sumCount <= 0) {
+            }, 0) <= 0) {
                 return;
             }
             // only highlight if partial branches are missing
@@ -11454,7 +11447,7 @@ function reportHtmlCreate(opts) {
                 let startCol;
                 let startLine;
                 let text;
-                meta = metaArray[ii];
+                meta = fileCoverage.branchMap[branchName].locations[ii];
                 startCol = meta.start.column;
                 endCol = meta.end.column + 1;
                 startLine = meta.start.line;
@@ -11476,7 +11469,7 @@ function reportHtmlCreate(opts) {
                     ].text.originalLength();
                 }
                 text = structuredText[startLine].text;
-                if (branchMeta[branchName].type === "if") {
+                if (fileCoverage.branchMap[branchName].type === "if") {
                     // and "if" is a special case since the else branch
                     // might not be visible, being non-existent
                     text.insertAt(startCol, "\u0001span class=\"" + (
