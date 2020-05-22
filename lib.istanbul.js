@@ -10848,9 +10848,6 @@ InsertionText.prototype = {
         this.insertAt(endPos, endText, false, consumeBlanks);
         return this;
     },
-    wrapLine: function (startText, endText) {
-        this.wrap(0, startText, this.originalLength(), endText);
-    },
     toString: function () {
         return this.text;
     }
@@ -10906,23 +10903,6 @@ Node.prototype = {
     addChild: function (child) {
         this.children.push(child);
         child.parent = this;
-    },
-    toJSON: function () {
-        return {
-            name: this.name,
-            relativeName: this.relativeName,
-            fullName: this.fullName,
-            kind: this.kind,
-            metrics: this.metrics,
-            parent: (
-                this.parent === null
-                ? null
-                : this.parent.name
-            ),
-            children: this.children.map(function (node) {
-                return node.toJSON();
-            })
-        };
     }
 };
 function TreeSummary(summaryMap, commonPrefix) {
@@ -10930,9 +10910,6 @@ function TreeSummary(summaryMap, commonPrefix) {
     this.convertToTree(summaryMap, commonPrefix);
 }
 TreeSummary.prototype = {
-    getNode: function (shortName) {
-        return this.map[shortName];
-    },
     convertToTree: function (summaryMap, arrayPrefix) {
         let nodes = [];
         let rootPath = arrayPrefix.join(path.sep) + path.sep;
@@ -11053,12 +11030,6 @@ TreeSummary.prototype = {
         node.children.forEach(function (child) {
             that.indexAndSortTree(child, map);
         });
-    },
-    toJSON: function () {
-        return {
-            prefix: this.prefix,
-            root: this.root.toJSON()
-        };
     }
 };
 // init function
@@ -11076,18 +11047,16 @@ function fill(str, width, right, tabs, clazz) {
     leader = " ".repeat(leadingSpaces);
     fmtStr = "";
     strlen = str.length;
-    if (remaining > 0) {
-        if (remaining >= strlen) {
-            fillStr = " ".repeat(remaining - strlen);
-            fmtStr = (
-                right
-                ? fillStr + str
-                : str + fillStr
-            );
-        } else {
-            fmtStr = str.substring(strlen - remaining);
-            fmtStr = "... " + fmtStr.substring(4);
-        }
+    if (remaining <= 0) {
+        fmtStr = str.substring(strlen - remaining);
+        fmtStr = "... " + fmtStr.substring(4);
+    } else if (remaining >= strlen) {
+        fillStr = " ".repeat(remaining - strlen);
+        fmtStr = (
+            right
+            ? fillStr + str
+            : str + fillStr
+        );
     }
     // colorize
     switch (process.stdout && process.stdout.isTTY && clazz) {
