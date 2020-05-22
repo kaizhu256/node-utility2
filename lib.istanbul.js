@@ -10551,18 +10551,17 @@ function addDerivedInfoForFile(fileCoverage) {
  */
     let statementMap = fileCoverage.statementMap;
     let statements = fileCoverage.s;
-    let lineMap;
-
     if (!fileCoverage.l) {
-        fileCoverage.l = lineMap = {};
+        fileCoverage.l = {};
         Object.keys(statements).forEach(function (st) {
             let line = statementMap[st].start.line;
             let count = statements[st];
-            let prevVal = lineMap[line];
+            let prevVal = fileCoverage.l[line];
             if (count === 0 && statementMap[st].skip) {
-                count = 1; }
-            if (typeof prevVal === "undefined" || prevVal < count) {
-                lineMap[line] = count;
+                count = 1;
+            }
+            if (prevVal === undefined || prevVal < count) {
+                fileCoverage.l[line] = count;
             }
         });
     }
@@ -10576,15 +10575,20 @@ function percent(covered, total) {
         return 100.00;
     }
 }
-
 function computeSimpleTotals(fileCoverage, property, mapProperty) {
     let stats = fileCoverage[property];
-        let map = mapProperty ? fileCoverage[mapProperty] : null;
-        let ret = {
-            total: 0, covered: 0, skipped: 0 };
-
+    let map = (
+        mapProperty
+        ? fileCoverage[mapProperty]
+        : null
+    );
+    let ret = {
+        total: 0,
+        covered: 0,
+        skipped: 0
+    };
     Object.keys(stats).forEach(function (key) {
-        let covered = !!stats[key];
+        let covered = Boolean(stats[key]);
         let skipped = map && map[key].skip;
         ret.total += 1;
         if (covered || skipped) {
@@ -10597,13 +10601,14 @@ function computeSimpleTotals(fileCoverage, property, mapProperty) {
     ret.pct = percent(ret.covered, ret.total);
     return ret;
 }
-
 function computeBranchTotals(fileCoverage) {
     let stats = fileCoverage.b;
-        let branchMap = fileCoverage.branchMap;
-        let ret = {
-            total: 0, covered: 0, skipped: 0 };
-
+    let branchMap = fileCoverage.branchMap;
+    let ret = {
+        total: 0,
+        covered: 0,
+        skipped: 0
+    };
     Object.keys(stats).forEach(function (key) {
         let branches = stats[key];
         let map = branchMap[key];
@@ -10710,44 +10715,26 @@ function mergeSummaryObjects(args) {
             pct: "Unknown"
         }
     };
-        let keys = [
-            "lines", "statements", "branches", "functions"];
-        let increment = function (obj) {
-            if (obj) {
-                keys.forEach(function (key) {
-                    ret[key].total += obj[key].total;
-                    ret[key].covered += obj[key].covered;
-                    ret[key].skipped += obj[key].skipped;
-                });
-            }
-        };
+    let keys = [
+        "lines", "statements", "branches", "functions"
+    ];
+    let increment = function (obj) {
+        if (obj) {
+            keys.forEach(function (key) {
+                ret[key].total += obj[key].total;
+                ret[key].covered += obj[key].covered;
+                ret[key].skipped += obj[key].skipped;
+            });
+        }
+    };
     args.forEach(function (arg) {
         increment(arg);
     });
     keys.forEach(function (key) {
         ret[key].pct = percent(ret[key].covered, ret[key].total);
     });
-
     return ret;
 }
-function summarizeCoverage(coverage) {
-/**
- * returns the coverage summary for a single coverage object. This is
- * wrapper over `summarizeFileCoverage` and `mergeSummaryObjects` for
- * the common case of a single coverage object
- * @method summarizeCoverage
- * @static
- * @param {Object} coverage  the coverage object
- * @return {Object} summary coverage metrics across all files
- * in the coverage object
- */
-    let fileSummary = [];
-    Object.keys(coverage).forEach(function (key) {
-        fileSummary.push(summarizeFileCoverage(coverage[key]));
-    });
-    return mergeSummaryObjects(fileSummary);
-}
-
 // init InsertionText
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 function InsertionText(text, consumeBlanks) {
@@ -10758,9 +10745,7 @@ function InsertionText(text, consumeBlanks) {
     this.startPos = this.findFirstNonBlank();
     this.endPos = this.findLastNonBlank();
 }
-
 InsertionText.prototype = {
-
     findFirstNonBlank: function () {
         let pos = -1;
         let text = this.text;
@@ -10798,7 +10783,6 @@ InsertionText.prototype = {
     originalLength: function () {
         return this.origLength;
     },
-
     insertAt: function (col, str, insertBefore, consumeBlanks) {
         consumeBlanks = (
             consumeBlanks === undefined
@@ -10815,7 +10799,6 @@ InsertionText.prototype = {
             ? 0
             : col
         );
-
         if (consumeBlanks) {
             if (col <= this.startPos) {
                 col = 0;
@@ -10824,7 +10807,6 @@ InsertionText.prototype = {
                 col = this.origLength;
             }
         }
-
         let len = str.length;
         let offset = this.findOffset(col, len, insertBefore);
         let realPos = col + offset;
@@ -10832,13 +10814,11 @@ InsertionText.prototype = {
         this.text = text.substring(0, realPos) + str + text.substring(realPos);
         return this;
     },
-
     findOffset: function (pos, len, insertBefore) {
         let offsets = this.offsets;
         let offsetObj;
         let cumulativeOffset = 0;
         let ii;
-
         ii = 0;
         while (ii < offsets.length) {
             offsetObj = offsets[ii];
@@ -10863,22 +10843,18 @@ InsertionText.prototype = {
         }
         return cumulativeOffset;
     },
-
     wrap: function (startPos, startText, endPos, endText, consumeBlanks) {
         this.insertAt(startPos, startText, true, consumeBlanks);
         this.insertAt(endPos, endText, false, consumeBlanks);
         return this;
     },
-
     wrapLine: function (startText, endText) {
         this.wrap(0, startText, this.originalLength(), endText);
     },
-
     toString: function () {
         return this.text;
     }
 };
-
 // init TreeSummary
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
@@ -10901,24 +10877,20 @@ function commonArrayPrefix(first, second) {
     }
     return ret;
 }
-
 function findCommonArrayPrefix(args) {
     if (args.length === 0) {
         return [];
     }
-
     let separated = args.map(function (arg) {
         return arg.split(path.sep);
     });
     let ret = separated.pop();
-
     if (separated.length === 0) {
         return ret.slice(0, ret.length - 1);
     } else {
         return separated.reduce(commonArrayPrefix, ret);
     }
 }
-
 function Node(fullName, kind, metrics) {
     this.name = fullName;
     this.fullName = fullName;
@@ -10927,7 +10899,6 @@ function Node(fullName, kind, metrics) {
     this.parent = null;
     this.children = [];
 }
-
 Node.prototype = {
     fullPath: function () {
         return this.fullName;
@@ -10954,12 +10925,10 @@ Node.prototype = {
         };
     }
 };
-
 function TreeSummary(summaryMap, commonPrefix) {
     this.prefix = commonPrefix;
     this.convertToTree(summaryMap, commonPrefix);
 }
-
 TreeSummary.prototype = {
     getNode: function (shortName) {
         return this.map[shortName];
@@ -10972,7 +10941,6 @@ TreeSummary.prototype = {
         let tmpChildren;
         let seen = {};
         let filesUnderRoot = false;
-
         seen[rootPath] = root;
         Object.keys(summaryMap).forEach(function (key) {
             let metrics = summaryMap[key];
@@ -10997,7 +10965,6 @@ TreeSummary.prototype = {
                 filesUnderRoot = true;
             }
         });
-
         if (filesUnderRoot && arrayPrefix.length > 0) {
             arrayPrefix.pop(); //start at one level above
             tmp = root;
@@ -11019,7 +10986,6 @@ TreeSummary.prototype = {
         this.map = {};
         this.indexAndSortTree(root, this.map);
     },
-
     fixupNodes: function (node, prefix, parent) {
         let that = this;
         if (node.name.indexOf(prefix) === 0) {
@@ -11166,7 +11132,6 @@ function handlebarsCompile(template) {
             );
         });
     };
-
     return function (dict) {
         let result;
         result = template;
