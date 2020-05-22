@@ -11481,7 +11481,6 @@ function reportHtmlCreate(opts) {
     let lt;
     let summarizer;
     let summaryLineTemplate;
-    let summaryTableFooter;
     let summaryTableHeader;
     let templateFor;
     let tree;
@@ -11596,11 +11595,6 @@ function reportHtmlCreate(opts) {
         ),
         "</tr>\n"
     ].join("\n\t"));
-    summaryTableFooter = [
-        "</tbody>",
-        "</table>",
-        "</div>"
-    ].join("\n");
     lt = "\u0001";
     gt = "\u0002";
     handlebars.registerHelper("show_line_execution_counts", function (
@@ -12033,7 +12027,7 @@ function reportHtmlCreate(opts) {
                 };
                 writer.write(summaryLineTemplate(data) + "\n");
             });
-            writer.write(summaryTableFooter);
+            writer.write("</tbody>\n</table>\n</div>");
             writer.write(footerTemplate(templateData));
         });
         node.children.forEach(function (child) {
