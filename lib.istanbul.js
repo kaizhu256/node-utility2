@@ -11377,7 +11377,6 @@ let PCT_COLS;
 let Store;
 let TAB_SIZE;
 let TreeSummarizer;
-let collector;
 let handlebars;
 let path;
 let reportTextCreate;
@@ -11392,23 +11391,6 @@ utils = require("../object-utils");
 // init variable
 PCT_COLS = 10;
 TAB_SIZE = 2;
-collector = {
-    fileCoverageFor: function (file) {
-        return globalThis.__coverage__[file];
-    },
-    files: function () {
-        return Object.keys(globalThis.__coverage__).filter(function (key) {
-            if (
-                globalThis.__coverage__[key]
-                && globalThis.__coverageCodeDict__[key]
-            ) {
-                // reset derived info
-                globalThis.__coverage__[key].l = null;
-                return true;
-            }
-        });
-    }
-};
 // init function
 function fill(str, width, right, tabs, clazz) {
     let fillStr;
@@ -12032,7 +12014,7 @@ function reportHtmlCreate(opts) {
             return ancestorHref(node, ii) + name;
         }
     };
-    writeFiles = function (writer, node, dir, collector) {
+    writeFiles = function (writer, node, dir) {
         let childFile;
         let indexFile;
         indexFile = path.resolve(dir, "index.html");
@@ -12082,8 +12064,7 @@ function reportHtmlCreate(opts) {
                 writeFiles(
                     writer,
                     child,
-                    path.resolve(dir, child.relativeName),
-                    collector
+                    path.resolve(dir, child.relativeName)
                 );
                 return;
             }
@@ -12100,7 +12081,7 @@ function reportHtmlCreate(opts) {
                 let sourceText;
                 let structured;
                 let templateData;
-                fileCoverage = collector.fileCoverageFor(child.fullPath());
+                fileCoverage = globalThis.__coverage__[child.fullPath()];
                 sourceStore = opts.sourceStore;
                 templateData = opts.templateData;
                 sourceText = (
@@ -12150,15 +12131,22 @@ function reportHtmlCreate(opts) {
     dir = opts.dir;
     summarizer = new TreeSummarizer();
     writer = opts.writer;
-    collector.files().forEach(function (key) {
-        summarizer.addFileCoverageSummary(
-            key,
-            utils.summarizeFileCoverage(collector.fileCoverageFor(key))
-        );
+    Object.keys(globalThis.__coverage__).forEach(function (key) {
+        if (
+            globalThis.__coverage__[key]
+            && globalThis.__coverageCodeDict__[key]
+        ) {
+            // reset derived info
+            globalThis.__coverage__[key].l = null;
+            summarizer.addFileCoverageSummary(
+                key,
+                utils.summarizeFileCoverage(globalThis.__coverage__[key])
+            );
+        }
     });
     tree = summarizer.getTreeSummary();
     //console.log(JSON.stringify(tree.root, undefined, 4));
-    writeFiles(writer, tree.root, dir, collector);
+    writeFiles(writer, tree.root, dir);
 }
 
 
@@ -12300,11 +12288,18 @@ reportTextCreate = function (opts) {
     that.summary = opts.summary;
     summarizer = new TreeSummarizer();
     strings = [];
-    collector.files().forEach(function (key) {
-        summarizer.addFileCoverageSummary(
-            key,
-            utils.summarizeFileCoverage(collector.fileCoverageFor(key))
-        );
+    Object.keys(globalThis.__coverage__).forEach(function (key) {
+        if (
+            globalThis.__coverage__[key]
+            && globalThis.__coverageCodeDict__[key]
+        ) {
+            // reset derived info
+            globalThis.__coverage__[key].l = null;
+            summarizer.addFileCoverageSummary(
+                key,
+                utils.summarizeFileCoverage(globalThis.__coverage__[key])
+            );
+        }
     });
     tree = summarizer.getTreeSummary();
     root = tree.root;
