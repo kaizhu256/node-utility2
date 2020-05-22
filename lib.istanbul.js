@@ -11481,7 +11481,6 @@ function reportHtmlCreate(opts) {
     let lt;
     let summarizer;
     let summaryLineTemplate;
-    let summaryTableHeader;
     let templateFor;
     let tree;
     let writeFiles;
@@ -11532,69 +11531,25 @@ function reportHtmlCreate(opts) {
         ),
         "</tr>\n"
     ].join(""));
-    summaryTableHeader = [
-        "<div class=\"coverage-summary\">",
-        "<table>",
-        "<thead>",
-        "<tr>",
-        (
-            // hack-coverage - compact summary
-            "   <th data-col=\"file\" data-fmt=\"html\" data-html=\"true\" "
-            + "class=\"file\">File</th>"
-        ),
-        (
-            "   <th data-col=\"statements\" data-type=\"number\" "
-            + "data-fmt=\"pct\" class=\"pct\">Statements</th>"
-        ),
-        (
-            "   <th data-col=\"branches\" data-type=\"number\" "
-            + "data-fmt=\"pct\" class=\"pct\">Branches</th>"
-        ),
-        (
-            "   <th data-col=\"functions\" data-type=\"number\" "
-            + "data-fmt=\"pct\" class=\"pct\">Functions</th>"
-        ),
-        (
-            "   <th data-col=\"lines\" data-type=\"number\" "
-            + "data-fmt=\"pct\" class=\"pct\">Lines</th>"
-        ),
-        "</tr>",
-        "</thead>",
-        "<tbody>"
-    ].join("\n");
-    summaryLineTemplate = handlebars.compile([
-        "<tr>",
-        (
-            // hack-coverage - compact summary
-            "<td class=\"file {{reportClasses.statements}}\" data-value=\""
-            + "{{file}}\"><a href=\"{{output}}\"><div>{{file}}</div>"
-            + "{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a>"
-            + "</td>"
-        ),
-        (
-            "<td data-value=\"{{metrics.statements.pct}}\" class=\"pct "
-            + "{{reportClasses.statements}}\">{{metrics.statements.pct}}%<br>("
-            + "{{metrics.statements.covered}} / {{metrics.statements.total}})"
-            + "</td>"
-        ),
-        (
-            "<td data-value=\"{{metrics.branches.pct}}\" class=\"pct "
-            + "{{reportClasses.branches}}\">{{metrics.branches.pct}}%<br>("
-            + "{{metrics.branches.covered}} / {{metrics.branches.total}})</td>"
-        ),
-        (
-            "<td data-value=\"{{metrics.functions.pct}}\" class=\"pct "
-            + "{{reportClasses.functions}}\">{{metrics.functions.pct}}%<br>("
-            + "{{metrics.functions.covered}} / {{metrics.functions.total}})"
-            + "</td>"
-        ),
-        (
-            "<td data-value=\"{{metrics.lines.pct}}\" class=\"pct "
-            + "{{reportClasses.lines}}\">{{metrics.lines.pct}}%<br>("
-            + "{{metrics.lines.covered}} / {{metrics.lines.total}})</td>"
-        ),
-        "</tr>\n"
-    ].join("\n\t"));
+    summaryLineTemplate = handlebars.compile(`
+<tr>
+<td class="file {{reportClasses.statements}}"
+    data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>
+    {{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>
+<td class="pct {{reportClasses.statements}}"
+    data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
+    ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>
+<td class="pct {{reportClasses.branches}}"
+    data-value="{{metrics.branches.pct}}">{{metrics.branches.pct}}%<br>
+    ({{metrics.branches.covered}} / {{metrics.branches.total}})</td>
+<td class="pct {{reportClasses.functions}}"
+    data-value="{{metrics.functions.pct}}">{{metrics.functions.pct}}%<br>
+    ({{metrics.functions.covered}} / {{metrics.functions.total}})</td>
+<td class="pct {{reportClasses.lines}}"
+    data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>
+    ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
+</tr>
+    `);
     lt = "\u0001";
     gt = "\u0002";
     handlebars.registerHelper("show_line_execution_counts", function (
@@ -12007,7 +11962,28 @@ function reportHtmlCreate(opts) {
             });
             fillTemplate(node, templateData);
             writer.write(headerTemplate(templateData));
-            writer.write(summaryTableHeader);
+            writer.write(`
+<div class="coverage-summary">
+<table>
+<thead>
+<tr>
+    <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>
+    <th data-col="statements" data-type="number" data-fmt="pct" class="pct">
+    Statements
+    </th>
+    <th data-col="branches" data-type="number" data-fmt="pct" class="pct">
+    Branches
+    </th>
+    <th data-col="functions" data-type="number" data-fmt="pct" class="pct">
+    Functions
+    </th>
+    <th data-col="lines" data-type="number" data-fmt="pct" class="pct">
+    Lines
+    </th>
+</tr>
+</thead>
+<tbody>
+            `);
             children.forEach(function (child) {
                 let data;
                 let metrics;
