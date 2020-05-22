@@ -9129,11 +9129,17 @@ local.handlebars.compile = function (template) {
         result = result.replace(
             "{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}",
             function () {
-                return local.handlebars.show_picture({
-                    fn: function () {
-                        return dict.metrics.statements.pct;
-                    }
-                });
+                let num;
+                num = Number(dict.metrics.statements.pct);
+                if (!Number.isFinite(num)) {
+                    return "";
+                }
+                num = Math.floor(num);
+                return (
+                    "<span class=\"cover-fill cover-full\" style=\"width:" + num
+                    + "px;\"></span><span class=\"cover-empty\" style=\"width:"
+                    + (100 - num) + "px;\"></span>"
+                );
             }
         );
         result = local.handlebars.replace(result, dict, "");
@@ -11569,20 +11575,6 @@ function reportHtmlCreate(opts) {
     ].join("\n");
     lt = "\u0001";
     gt = "\u0002";
-    handlebars.registerHelper("show_picture", function (opts) {
-        let num;
-        num = Number(opts.fn(this));
-        if (Number.isFinite(num)) {
-            num = Math.floor(num);
-            return (
-                "<span class=\"cover-fill cover-full\" style=\"width: " + num
-                + "px;\"></span><span class=\"cover-empty\" style=\"width:"
-                + (100 - num) + "px;\"></span>"
-            );
-        } else {
-            return "";
-        }
-    });
     handlebars.registerHelper("show_ignores", function (metrics) {
         let result;
         if (
