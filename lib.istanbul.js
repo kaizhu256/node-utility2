@@ -11316,9 +11316,6 @@ function reportHtmlCreate(opts) {
     function annotateLines(fileCoverage, structuredText) {
         let lineStats;
         lineStats = fileCoverage.l;
-        if (!lineStats) {
-            return;
-        }
         Object.keys(lineStats).forEach(function (lineNumber) {
             let count;
             count = lineStats[lineNumber];
@@ -11388,9 +11385,6 @@ function reportHtmlCreate(opts) {
         let fnStats;
         fnStats = fileCoverage.f;
         fnMeta = fileCoverage.fnMap;
-        if (!fnStats) {
-            return;
-        }
         Object.keys(fnStats).forEach(function (fName) {
             let count;
             let meta;
@@ -11438,80 +11432,74 @@ function reportHtmlCreate(opts) {
         let branchStats;
         branchStats = fileCoverage.b;
         branchMeta = fileCoverage.branchMap;
-        if (!branchStats) {
-            return;
-        }
         Object.keys(branchStats).forEach(function (branchName) {
             let branchArray;
-            branchArray = branchStats[branchName];
+            let metaArray;
             let sumCount;
+            branchArray = branchStats[branchName];
             sumCount = branchArray.reduce(function (p, n) {
                 return p + n;
             }, 0);
-            let metaArray;
             metaArray = branchMeta[branchName].locations;
-            let closeSpan;
-            let count;
-            let endCol;
-            let endLine;
-            let ii;
-            let meta;
-            let openSpan;
-            let startCol;
-            let startLine;
-            let text;
-            if (sumCount > 0) {
-                //only highlight if partial branches are missing
-                ii = 0;
-                while (ii < branchArray.length) {
-                    count = branchArray[ii];
-                    meta = metaArray[ii];
-                    startCol = meta.start.column;
-                    endCol = meta.end.column + 1;
-                    startLine = meta.start.line;
-                    endLine = meta.end.line;
-                    openSpan = "\u0001span class=\"branch-" + ii + " " + (
-                        meta.skip
-                        ? "cbranch-skip"
-                        : "cbranch-no"
-                    ) + "\" title=\"branch not covered\" \u0002";
-                    closeSpan = "\u0001/span\u0002";
-                    if (count === 0) {
-                        //skip branches taken
-                        if (endLine !== startLine) {
-                            endLine = startLine;
-                            endCol = structuredText[
-                                startLine
-                            ].text.originalLength();
-                        }
-                        text = structuredText[startLine].text;
-                        if (branchMeta[branchName].type === "if") {
-                            // and "if" is a special case since the else branch
-                            // might not be visible, being non-existent
-                            text.insertAt(startCol, "\u0001span class=\"" + (
-                                meta.skip
-                                ? "skip-if-branch"
-                                : "missing-if-branch"
-                            ) + "\" title=\"" + ((
-                                ii === 0
-                                ? "if"
-                                : "else"
-                            ) + "\" path not taken\u0002") + (
-                                ii === 0
-                                ? "I"
-                                : "E"
-                            ) + "\u0001/span\u0002", true, false);
-                        } else {
-                            text.wrap(startCol, openSpan, (
-                                startLine === endLine
-                                ? endCol
-                                : text.originalLength()
-                            ), closeSpan);
-                        }
-                    }
-                    ii += 1;
-                }
+            if (sumCount <= 0) {
+                return;
             }
+            // only highlight if partial branches are missing
+            branchArray.forEach(function (count, ii) {
+                let closeSpan;
+                let endCol;
+                let endLine;
+                let meta;
+                let openSpan;
+                let startCol;
+                let startLine;
+                let text;
+                meta = metaArray[ii];
+                startCol = meta.start.column;
+                endCol = meta.end.column + 1;
+                startLine = meta.start.line;
+                endLine = meta.end.line;
+                openSpan = "\u0001span class=\"branch-" + ii + " " + (
+                    meta.skip
+                    ? "cbranch-skip"
+                    : "cbranch-no"
+                ) + "\" title=\"branch not covered\" \u0002";
+                closeSpan = "\u0001/span\u0002";
+                if (count !== 0) {
+                    return;
+                }
+                //skip branches taken
+                if (endLine !== startLine) {
+                    endLine = startLine;
+                    endCol = structuredText[
+                        startLine
+                    ].text.originalLength();
+                }
+                text = structuredText[startLine].text;
+                if (branchMeta[branchName].type === "if") {
+                    // and "if" is a special case since the else branch
+                    // might not be visible, being non-existent
+                    text.insertAt(startCol, "\u0001span class=\"" + (
+                        meta.skip
+                        ? "skip-if-branch"
+                        : "missing-if-branch"
+                    ) + "\" title=\"" + ((
+                        ii === 0
+                        ? "if"
+                        : "else"
+                    ) + "\" path not taken\u0002") + (
+                        ii === 0
+                        ? "I"
+                        : "E"
+                    ) + "\u0001/span\u0002", true, false);
+                } else {
+                    text.wrap(startCol, openSpan, (
+                        startLine === endLine
+                        ? endCol
+                        : text.originalLength()
+                    ), closeSpan);
+                }
+            });
         });
     }
     function getReportClass(stats) {
