@@ -10826,9 +10826,9 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/common/defau
  */
 module.exports = {
     classFor: function (type, metrics) {
-        var mark = watermarks[type],
-            value = metrics[type].pct;
-        return value >= mark[1] ? 'high' : value >= mark[0] ? 'medium' : 'low';
+        let value;
+        value = metrics[type].pct;
+        return value >= 80 ? 'high' : value >= 50 ? 'medium' : 'low';
     },
 
     colorize: function (str, clazz) {
@@ -11434,7 +11434,6 @@ let handlebars;
 let path;
 let reportTextCreate;
 let utils;
-let watermarks;
 // require module
 InsertionText = require("../util/insertion-text");
 Store = require("../store");
@@ -11446,20 +11445,6 @@ utils = require("../object-utils");
 // init var
 PCT_COLS = 10;
 TAB_SIZE = 2;
-watermarks = {
-    statements: [
-        50, 80
-    ],
-    lines: [
-        50, 80
-    ],
-    functions: [
-        50, 80
-    ],
-    branches: [
-        50, 80
-    ]
-};
 function reportHtmlCreate(opts, collector) {
     let ancestorHref;
     let detailTemplate;
@@ -11917,16 +11902,16 @@ function reportHtmlCreate(opts, collector) {
             }
         });
     }
-    function getReportClass(stats, watermark) {
+    function getReportClass(stats) {
         let coveragePct;
-        coveragePct = stats.pct;
         let identity;
+        coveragePct = stats.pct;
         identity = 1;
         if (coveragePct * identity === coveragePct) {
             return (
-                coveragePct >= watermark[1]
+                coveragePct >= 80
                 ? "high"
-                : coveragePct >= watermark[0]
+                : coveragePct >= 50
                 ? "medium"
                 : "low"
             );
@@ -11971,10 +11956,7 @@ function reportHtmlCreate(opts, collector) {
         let parent;
         templateData.entity = node.name || "All files";
         templateData.metrics = node.metrics;
-        templateData.reportClass = getReportClass(
-            node.metrics.statements,
-            watermarks.statements
-        );
+        templateData.reportClass = getReportClass(node.metrics.statements);
         parent = node.parent;
         nodePath = [];
         linkPath = [];
@@ -12071,19 +12053,10 @@ function reportHtmlCreate(opts, collector) {
                 let reportClasses;
                 metrics = child.metrics;
                 reportClasses = {
-                    statements: getReportClass(
-                        metrics.statements,
-                        watermarks.statements
-                    ),
-                    lines: getReportClass(metrics.lines, watermarks.lines),
-                    functions: getReportClass(
-                        metrics.functions,
-                        watermarks.functions
-                    ),
-                    branches: getReportClass(
-                        metrics.branches,
-                        watermarks.branches
-                    )
+                    statements: getReportClass(metrics.statements),
+                    lines: getReportClass(metrics.lines),
+                    functions: getReportClass(metrics.functions),
+                    branches: getReportClass(metrics.branches)
                 };
                 data = {
                     metrics,
@@ -12355,7 +12328,7 @@ reportTextCreate = function (opts, collector) {
     tree = summarizer.getTreeSummary();
     root = tree.root;
     nameWidth = findNameWidth(root);
-    walk(root, nameWidth, strings, 0, that.watermarks);
+    walk(root, nameWidth, strings, 0);
     text = strings.join("\n") + "\n";
     console.log(text);
 };
