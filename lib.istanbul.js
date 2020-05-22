@@ -11290,15 +11290,24 @@ TreeSummary.prototype = {
         if (node.name.charAt(0) === path.sep) {
             node.name = node.name.substring(1);
         }
-        if (parent) {
-            if (parent.name !== '__root__/') {
-                node.relativeName = node.name.substring(parent.name.length);
-            } else {
-                node.relativeName = node.name;
-            }
-        } else {
-            node.relativeName = node.name.substring(prefix.length);
-        }
+        node.relativeName = (
+            parent
+            ? (
+                parent.name !== "__root__/"
+                ? node.relativeName = node.name.substring(parent.name.length)
+                : node.relativeName = node.name
+            )
+            : node.name.substring(prefix.length)
+        ) || "All files";
+        //!! if (parent) {
+            //!! if (parent.name !== '__root__/') {
+                //!! node.relativeName = node.name.substring(parent.name.length);
+            //!! } else {
+                //!! node.relativeName = node.name;
+            //!! }
+        //!! } else {
+            //!! node.relativeName = node.name.substring(prefix.length);
+        //!! }
         node.children.forEach(function (child) {
             that.fixupNodes(child, prefix, node);
         });
@@ -11929,7 +11938,8 @@ function reportHtmlCreate(opts, collector) {
         while (ii < nodePath.length) {
             linkPath.push(
                 "<a href=\"" + linkMapper.ancestor(node, ii + 1) + "\">"
-                + (nodePath[ii].relativeName || "All files") + "</a>"
+                + nodePath[ii].relativeName
+                + "</a>"
             );
             ii += 1;
         }
@@ -12187,9 +12197,6 @@ reportTextCreate = function (opts, collector) {
     function formatPct(pct, clazz) {
         return fill(pct, PCT_COLS, true, 0, clazz);
     }
-    function nodeName(node) {
-        return node.relativeName || "All files";
-    }
     function tableHeader(maxNameCols) {
         let elements;
         elements = [];
@@ -12217,7 +12224,7 @@ reportTextCreate = function (opts, collector) {
                 : "low"
             );
         };
-        name = nodeName(node);
+        name = node.relativeName;
         statements = node.metrics.statements.pct;
         branches = node.metrics.branches.pct;
         functions = node.metrics.functions.pct;
@@ -12251,7 +12258,7 @@ reportTextCreate = function (opts, collector) {
         let idealWidth;
         last = last || 0;
         level = level || 0;
-        idealWidth = TAB_SIZE * level + nodeName(node).length;
+        idealWidth = TAB_SIZE * level + node.relativeName.length;
         if (idealWidth > last) {
             last = idealWidth;
         }
