@@ -11474,17 +11474,11 @@ let defaults;
 let path;
 let reportHtmlCreate;
 let reportTextCreate;
-let require2;
 let utils;
-require2 = function (key) {
-    try {
-        return local["_istanbul_" + key] || local[key] || require(key);
-    } catch (ignore) {}
-};
-TreeSummarizer = require2("../util/tree-summarizer");
-defaults = require2("./common/defaults");
-path = require2("path");
-utils = require2("../object-utils");
+TreeSummarizer = require("../util/tree-summarizer");
+defaults = require("./common/defaults");
+path = require("path");
+utils = require("../object-utils");
 PCT_COLS = 10;
 SEP = path.sep || "/";
 TAB_SIZE = 2;
@@ -11507,10 +11501,10 @@ reportHtmlCreate = function (opts, collector) {
     let summaryTableHeader;
     let templateFor;
     let writeFiles;
-    handlebars = require2("handlebars");
-    fs = require2("fs");
-    Store = require2("../store");
-    InsertionText = require2("../util/insertion-text");
+    handlebars = require("handlebars");
+    fs = require("fs");
+    Store = require("../store");
+    InsertionText = require("../util/insertion-text");
     templateFor = function (name) {
         return handlebars.compile(fs.readFileSync(
             path.resolve("templates", name + ".txt"),
