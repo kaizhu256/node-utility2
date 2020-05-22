@@ -10811,26 +10811,6 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
     }
 }(typeof module !== 'undefined' && typeof module.exports !== 'undefined' && typeof exports !== 'undefined'));
 local["../object-utils"] = window.coverageUtils; }());
-
-
-
-/*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/common/defaults.js
-*/
-/* istanbul ignore next */
-(function () { let module; module = {};
-/*
- Copyright (c) 2013, Yahoo! Inc.  All rights reserved.
- Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
- */
-module.exports = {
-    classFor: function (type, metrics) {
-        let value;
-        value = metrics[type].pct;
-        return value >= 80 ? 'high' : value >= 50 ? 'medium' : 'low';
-    }
-};
-local["./common/defaults"] = module.exports; }());
 /* jslint ignore:end */
 
 
@@ -11415,7 +11395,6 @@ let PCT_COLS;
 let Store;
 let TAB_SIZE;
 let TreeSummarizer;
-let defaults;
 let handlebars;
 let path;
 let reportTextCreate;
@@ -11424,7 +11403,6 @@ let utils;
 InsertionText = require("../util/insertion-text");
 Store = require("../store");
 TreeSummarizer = require("../util/tree-summarizer");
-defaults = require("./common/defaults");
 handlebars = require("handlebars");
 path = require("path");
 utils = require("../object-utils");
@@ -12213,7 +12191,7 @@ reportTextCreate = function (opts, collector) {
         return fill(pct, PCT_COLS, true, 0, clazz);
     }
     function nodeName(node) {
-        return node.displayShortName() || "All files";
+        return (node.displayShortName() || "All files");
     }
     function tableHeader(maxNameCols) {
         let elements;
@@ -12227,11 +12205,21 @@ reportTextCreate = function (opts, collector) {
     }
     function tableRow(node, maxNameCols, level) {
         let branches;
+        let classFor;
         let elements;
         let functions;
         let lines;
         let name;
         let statements;
+        classFor = function (val) {
+            return (
+                val >= 80
+                ? "high"
+                : val >= 50
+                ? "medium"
+                : "low"
+            );
+        };
         name = nodeName(node);
         statements = node.metrics.statements.pct;
         branches = node.metrics.branches.pct;
@@ -12242,23 +12230,23 @@ reportTextCreate = function (opts, collector) {
             name,
             maxNameCols,
             level,
-            defaults.classFor("statements", node.metrics)
+            classFor(node.metrics.statements.pct)
         ));
         elements.push(formatPct(
             statements,
-            defaults.classFor("statements", node.metrics)
+            classFor(node.metrics.statements.pct)
         ));
         elements.push(formatPct(
             branches,
-            defaults.classFor("branches", node.metrics)
+            classFor(node.metrics.branches.pct)
         ));
         elements.push(formatPct(
             functions,
-            defaults.classFor("functions", node.metrics)
+            classFor(node.metrics.functions.pct)
         ));
         elements.push(formatPct(
             lines,
-            defaults.classFor("lines", node.metrics)
+            classFor(node.metrics.lines.pct)
         ));
         return elements.join(" |") + " |";
     }
