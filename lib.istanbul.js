@@ -11199,9 +11199,6 @@ function Node(fullName, kind, metrics) {
 }
 
 Node.prototype = {
-    displayShortName: function () {
-        return this.relativeName;
-    },
     fullPath: function () {
         return this.fullName;
     },
@@ -11939,7 +11936,7 @@ function reportHtmlCreate(opts, collector) {
         linkPath.reverse();
         html = (
             linkPath.length > 0
-            ? linkPath.join(" &#187; ") + " &#187; " + node.displayShortName()
+            ? linkPath.join(" &#187; ") + " &#187; " + node.relativeName
             : ""
         );
         templateData.pathHtml = pathTemplate({
@@ -12025,7 +12022,7 @@ function reportHtmlCreate(opts, collector) {
                 data = {
                     metrics,
                     reportClasses,
-                    file: child.displayShortName(),
+                    file: child.relativeName,
                     output: linkMapper.fromParent(child)
                 };
                 writer.write(summaryLineTemplate(data) + "\n");
@@ -12191,7 +12188,7 @@ reportTextCreate = function (opts, collector) {
         return fill(pct, PCT_COLS, true, 0, clazz);
     }
     function nodeName(node) {
-        return (node.displayShortName() || "All files");
+        return node.relativeName || "All files";
     }
     function tableHeader(maxNameCols) {
         let elements;
