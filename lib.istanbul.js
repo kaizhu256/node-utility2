@@ -11213,7 +11213,7 @@ function findCommonArrayPrefix(args) {
         return [];
     }
 
-    var separated = args.map(function (arg) { return arg.split(SEP); }),
+    var separated = args.map(function (arg) { return arg.split(path.sep); }),
         ret = separated.pop();
 
     if (separated.length === 0) {
@@ -11267,7 +11267,7 @@ TreeSummary.prototype = {
     },
     convertToTree: function (summaryMap, arrayPrefix) {
         var nodes = [],
-            rootPath = arrayPrefix.join(SEP) + SEP,
+            rootPath = arrayPrefix.join(path.sep) + path.sep,
             root = new Node(rootPath, 'dir'),
             tmp,
             tmpChildren,
@@ -11283,9 +11283,9 @@ TreeSummary.prototype = {
             node = new Node(key, 'file', metrics);
             seen[key] = node;
             nodes.push(node);
-            parentPath = path.dirname(key) + SEP;
-            if (parentPath === SEP + SEP) {
-                parentPath = SEP + '__root__' + SEP;
+            parentPath = path.dirname(key) + path.sep;
+            if (parentPath === path.sep + path.sep) {
+                parentPath = path.sep + '__root__' + path.sep;
             }
             parent = seen[parentPath];
             if (!parent) {
@@ -11302,7 +11302,7 @@ TreeSummary.prototype = {
             tmp = root;
             tmpChildren = tmp.children;
             tmp.children = [];
-            root = new Node(arrayPrefix.join(SEP) + SEP, 'dir');
+            root = new Node(arrayPrefix.join(path.sep) + path.sep, 'dir');
             root.addChild(tmp);
             tmpChildren.forEach(function (child) {
                 if (child.kind === 'dir') {
@@ -11312,7 +11312,7 @@ TreeSummary.prototype = {
                 }
             });
         }
-        this.fixupNodes(root, arrayPrefix.join(SEP) + SEP);
+        this.fixupNodes(root, arrayPrefix.join(path.sep) + path.sep);
         this.calculateMetrics(root);
         this.root = root;
         this.map = {};
@@ -11324,7 +11324,7 @@ TreeSummary.prototype = {
         if (node.name.indexOf(prefix) === 0) {
             node.name = node.name.substring(prefix.length);
         }
-        if (node.name.charAt(0) === SEP) {
+        if (node.name.charAt(0) === path.sep) {
             node.name = node.name.substring(1);
         }
         if (parent) {
