@@ -10920,6 +10920,7 @@ function handlebarsCompile(template) {
     };
 }
 function reportHtmlCreate(opt) {
+    let coverageReportWrite;
     let detailTemplate;
     let fillTemplate;
     let linkMapper;
@@ -10927,7 +10928,6 @@ function reportHtmlCreate(opt) {
     let templateData;
     let templateFoot;
     let templateHead;
-    let writeFiles;
     // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
     templateHead = (
         `<!doctype html>
@@ -11548,7 +11548,7 @@ function reportHtmlCreate(opt) {
             return ancestorHref(node, num) + "index.html";
         }
     };
-    writeFiles = function (node, dir) {
+    coverageReportWrite = function (node, dir) {
         let childFile;
         let indexFile;
         indexFile = path.resolve(dir, "index.html");
@@ -11602,7 +11602,7 @@ function reportHtmlCreate(opt) {
         node.children.forEach(function (child) {
             if (child.kind === "dir") {
                 // recurse
-                writeFiles(
+                coverageReportWrite(
                     child,
                     path.resolve(dir, child.relativeName)
                 );
@@ -11657,7 +11657,7 @@ function reportHtmlCreate(opt) {
             });
         });
     };
-    writeFiles(coverageReportSummary.root, dir);
+    coverageReportWrite(coverageReportSummary.root, dir);
 }
 
 
