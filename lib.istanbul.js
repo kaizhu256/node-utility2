@@ -11965,15 +11965,15 @@ local.reportHtmlCreate = function(opts, collector) {
         var coveragePct = stats.pct,
             identity  = 1;
         if (coveragePct * identity === coveragePct) {
-            return coveragePct >= watermark[1] ? 'high' : coveragePct >= watermark[0] ? 'medium' : 'low';
+            return coveragePct >= watermark[1] ? "high" : coveragePct >= watermark[0] ? "medium" : "low";
         } else {
-            return '';
+            return "";
         }
     }
 
     opts = opts || {};
-    opts.dir = opts.dir || path.resolve(process.cwd(), 'html-report');
-    opts.sourceStore = opts.sourceStore || Store.create('fslookup');
+    opts.dir = opts.dir || path.resolve(process.cwd(), "html-report");
+    opts.sourceStore = opts.sourceStore || Store.create("fslookup");
     opts.writer = opts.writer || null;
     // hack-coverage - new Date() bugfix
     opts.templateData = { datetime: new Date().toGMTString() };
@@ -11984,7 +11984,7 @@ local.reportHtmlCreate = function(opts, collector) {
     var linkMapper;
     var writeFiles;
     ancestorHref = function (node, num) {
-        var href = '',
+        var href = "",
             separated,
             levels,
             i,
@@ -11993,7 +11993,7 @@ local.reportHtmlCreate = function(opts, collector) {
             separated = node.relativeName.split(SEP);
             levels = separated.length - 1;
             for (j = 0; j < levels; j += 1) {
-                href += '../';
+                href += "../";
             }
             node = node.parent;
         }
@@ -12001,7 +12001,7 @@ local.reportHtmlCreate = function(opts, collector) {
     };
     fillTemplate = function (node, templateData) {
         var html;
-        templateData.entity = node.name || 'All files';
+        templateData.entity = node.name || "All files";
         templateData.metrics = node.metrics;
         templateData.reportClass = getReportClass(node.metrics.statements, opts.watermarks.statements);
         var parent = node.parent,
@@ -12013,16 +12013,16 @@ local.reportHtmlCreate = function(opts, collector) {
             parent = parent.parent;
         }
         for (i = 0; i < nodePath.length; i += 1) {
-            linkPath.push('<a href="' + linkMapper.ancestor(node, i + 1) + '">' +
-                (nodePath[i].relativeName || 'All files') + '</a>');
+            linkPath.push("<a href=\"" + linkMapper.ancestor(node, i + 1) + "\">" +
+                (nodePath[i].relativeName || "All files") + "</a>");
         }
         linkPath.reverse();
-        html = linkPath.length > 0 ? linkPath.join(' &#187; ') + ' &#187; ' +
-            node.displayShortName() : '';
+        html = linkPath.length > 0 ? linkPath.join(" &#187; ") + " &#187; " +
+            node.displayShortName() : "";
         templateData.pathHtml = pathTemplate({ html });
         templateData.prettify = {
-            js: linkMapper.asset(node, 'prettify.js'),
-            css: linkMapper.asset(node, 'prettify.css')
+            js: linkMapper.asset(node, "prettify.js"),
+            css: linkMapper.asset(node, "prettify.css")
         };
     };
     linkMapper = {
@@ -12030,21 +12030,21 @@ local.reportHtmlCreate = function(opts, collector) {
             var i = 0,
                 relativeName = node.relativeName,
                 ch;
-            if (SEP !== '/') {
-                relativeName = '';
+            if (SEP !== "/") {
+                relativeName = "";
                 for (i = 0; i < node.relativeName.length; i += 1) {
                     ch = node.relativeName.charAt(i);
                     if (ch === SEP) {
-                        relativeName += '/';
+                        relativeName += "/";
                     } else {
                         relativeName += ch;
                     }
                 }
             }
-            return node.kind === 'dir' ? relativeName + 'index.html' : relativeName + '.html';
+            return node.kind === "dir" ? relativeName + "index.html" : relativeName + ".html";
         },
         ancestor: function (node, num) {
-            return ancestorHref(node, num) + 'index.html';
+            return ancestorHref(node, num) + "index.html";
         },
         asset: function (node, name) {
             var i = 0,
@@ -12054,9 +12054,9 @@ local.reportHtmlCreate = function(opts, collector) {
         }
     };
     writeFiles = function (writer, node, dir, collector) {
-        var indexFile = path.resolve(dir, 'index.html'),
+        var indexFile = path.resolve(dir, "index.html"),
             childFile;
-        if (opts.verbose) { console.error('Writing ' + indexFile); }
+        if (opts.verbose) { console.error("Writing " + indexFile); }
         writer.writeFile(indexFile, function () {
             var templateData = opts.templateData,
                 children = Array.prototype.slice.apply(node.children),
@@ -12083,25 +12083,25 @@ local.reportHtmlCreate = function(opts, collector) {
                         file: child.displayShortName(),
                         output: linkMapper.fromParent(child)
                     };
-                writer.write(summaryLineTemplate(data) + '\n');
+                writer.write(summaryLineTemplate(data) + "\n");
             });
             writer.write(summaryTableFooter);
             writer.write(footerTemplate(templateData));
         });
         node.children.forEach(function (child) {
-            if (child.kind === 'dir') {
+            if (child.kind === "dir") {
                 // recurse
                 writeFiles(writer, child, path.resolve(dir, child.relativeName), collector);
                 return;
             }
-            childFile = path.resolve(dir, child.relativeName + '.html');
-            if (opts.verbose) { console.error('Writing ' + childFile); }
+            childFile = path.resolve(dir, child.relativeName + ".html");
+            if (opts.verbose) { console.error("Writing " + childFile); }
             writer.writeFile(childFile, function () {
                 var fileCoverage = collector.fileCoverageFor(child.fullPath());
                 var sourceStore = opts.sourceStore,
                     templateData = opts.templateData,
                     sourceText = fileCoverage.code && Array.isArray(fileCoverage.code) ?
-                        fileCoverage.code.join('\n') + '\n' : sourceStore.get(fileCoverage.path),
+                        fileCoverage.code.join("\n") + "\n" : sourceStore.get(fileCoverage.path),
                     code = sourceText.split(/(?:\r?\n)|\r/),
                     count = 0,
                     structured = code.map(function (str) { count += 1; return { line: count, covered: null, text: new InsertionText(str, true) }; }),
