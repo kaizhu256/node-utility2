@@ -11314,11 +11314,10 @@ function reportHtmlCreate(opts) {
 </tr>
     `);
     function annotateLines(fileCoverage, structuredText) {
-        let lineStats;
-        lineStats = fileCoverage.l;
-        Object.keys(lineStats).forEach(function (lineNumber) {
-            let count;
-            count = lineStats[lineNumber];
+        Object.entries(fileCoverage.l).forEach(function ([
+            lineNumber,
+            count
+        ]) {
             structuredText[lineNumber].covered = (
                 count > 0
                 ? "yes"
@@ -11333,51 +11332,39 @@ function reportHtmlCreate(opts) {
     }
     function annotateStatements(fileCoverage, structuredText) {
         let statementMeta;
-        let statementStats;
-        statementStats = fileCoverage.s;
         statementMeta = fileCoverage.statementMap;
-        Object.keys(statementStats).forEach(function (stName) {
-            let closeSpan;
-            let count;
+        Object.entries(fileCoverage.s).forEach(function ([
+            stName,
+            count
+        ]) {
             let endCol;
             let endLine;
             let meta;
-            let openSpan;
             let startCol;
             let startLine;
             let text;
-            let type;
-            count = statementStats[stName];
+            if (count !== 0) {
+                return;
+            }
             meta = statementMeta[stName];
-            type = (
-                count > 0
-                ? "yes"
-                : "no"
-            );
             startCol = meta.start.column;
             endCol = meta.end.column + 1;
             startLine = meta.start.line;
             endLine = meta.end.line;
-            openSpan = (
-                "\u0001span class=\"" + (
-                    meta.skip
-                    ? "cstat-skip"
-                    : "cstat-no"
-                ) + "\" title=\"statement not covered\" \u0002"
-            );
-            closeSpan = "\u0001/span\u0002";
-            if (type === "no") {
-                if (endLine !== startLine) {
-                    endLine = startLine;
-                    endCol = structuredText[startLine].text.originalLength();
-                }
-                text = structuredText[startLine].text;
-                text.wrap(startCol, openSpan, (
-                    startLine === endLine
-                    ? endCol
-                    : text.originalLength()
-                ), closeSpan);
+            if (endLine !== startLine) {
+                endLine = startLine;
+                endCol = structuredText[startLine].text.originalLength();
             }
+            text = structuredText[startLine].text;
+            text.wrap(startCol, ("\u0001span class=\"" + (
+                meta.skip
+                ? "cstat-skip"
+                : "cstat-no"
+            ) + "\" title=\"statement not covered\" \u0002"), (
+                startLine === endLine
+                ? endCol
+                : text.originalLength()
+            ), "\u0001/span\u0002");
         });
     }
     function annotateFunctions(fileCoverage, structuredText) {
