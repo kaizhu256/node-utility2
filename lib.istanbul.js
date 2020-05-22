@@ -11381,50 +11381,36 @@ function reportHtmlCreate(opts) {
         });
     }
     function annotateFunctions(fileCoverage, structuredText) {
-        let fnMeta;
-        let fnStats;
-        fnStats = fileCoverage.f;
-        fnMeta = fileCoverage.fnMap;
-        Object.keys(fnStats).forEach(function (fName) {
-            let count;
-            let meta;
-            count = fnStats[fName];
-            meta = fnMeta[fName];
-            let type;
-            type = (
-                count > 0
-                ? "yes"
-                : "no"
-            );
-            let startCol;
-            startCol = meta.loc.start.column;
+        Object.entries(fileCoverage.f).forEach(function ([
+            fName,
+            count
+        ]) {
             let endCol;
-            endCol = meta.loc.end.column + 1;
-            let startLine;
-            startLine = meta.loc.start.line;
             let endLine;
+            let meta;
+            let startLine;
+            let text;
+            if (count !== 0) {
+                return;
+            }
+            meta = fileCoverage.fnMap[fName];
+            endCol = meta.loc.end.column + 1;
             endLine = meta.loc.end.line;
-            let openSpan;
-            openSpan = "\u0001span class=\"" + (
+            startLine = meta.loc.start.line;
+            if (endLine !== startLine) {
+                endLine = startLine;
+                endCol = structuredText[startLine].text.originalLength();
+            }
+            text = structuredText[startLine].text;
+            text.wrap(meta.loc.start.column, ("\u0001span class=\"" + (
                 meta.skip
                 ? "fstat-skip"
                 : "fstat-no"
-            ) + "\" title=\"function not covered\" \u0002";
-            let closeSpan;
-            closeSpan = "\u0001/span\u0002";
-            let text;
-            if (type === "no") {
-                if (endLine !== startLine) {
-                    endLine = startLine;
-                    endCol = structuredText[startLine].text.originalLength();
-                }
-                text = structuredText[startLine].text;
-                text.wrap(startCol, openSpan, (
-                    startLine === endLine
-                    ? endCol
-                    : text.originalLength()
-                ), closeSpan);
-            }
+            ) + "\" title=\"function not covered\" \u0002"), (
+                startLine === endLine
+                ? endCol
+                : text.originalLength()
+            ), "\u0001/span\u0002");
         });
     }
     function annotateBranches(fileCoverage, structuredText) {
@@ -11442,6 +11428,7 @@ function reportHtmlCreate(opts) {
                 let endCol;
                 let endLine;
                 let meta;
+                let startLine;
                 let text;
                 if (count !== 0) {
                     return;
@@ -11449,14 +11436,13 @@ function reportHtmlCreate(opts) {
                 meta = fileCoverage.branchMap[branchName].locations[ii];
                 endCol = meta.end.column + 1;
                 endLine = meta.end.line;
+                startLine = meta.start.line;
                 //skip branches taken
-                if (endLine !== meta.start.line) {
-                    endLine = meta.start.line;
-                    endCol = structuredText[
-                        meta.start.line
-                    ].text.originalLength();
+                if (endLine !== startLine) {
+                    endLine = startLine;
+                    endCol = structuredText[startLine].text.originalLength();
                 }
-                text = structuredText[meta.start.line].text;
+                text = structuredText[startLine].text;
                 if (fileCoverage.branchMap[branchName].type === "if") {
                     // and "if" is a special case since the else branch
                     // might not be visible, being non-existent
@@ -11473,19 +11459,19 @@ function reportHtmlCreate(opts) {
                         ? "I"
                         : "E"
                     ) + "\u0001/span\u0002", true, false);
-                } else {
-                    text.wrap(meta.start.column, (
-                        "\u0001span class=\"branch-" + ii + " " + (
-                            meta.skip
-                            ? "cbranch-skip"
-                            : "cbranch-no"
-                        ) + "\" title=\"branch not covered\" \u0002"
-                    ), (
-                        meta.start.line === endLine
-                        ? endCol
-                        : text.originalLength()
-                    ), "\u0001/span\u0002");
+                    return;
                 }
+                text.wrap(meta.start.column, (
+                    "\u0001span class=\"branch-" + ii + " " + (
+                        meta.skip
+                        ? "cbranch-skip"
+                        : "cbranch-no"
+                    ) + "\" title=\"branch not covered\" \u0002"
+                ), (
+                    startLine === endLine
+                    ? endCol
+                    : text.originalLength()
+                ), "\u0001/span\u0002");
             });
         });
     }
