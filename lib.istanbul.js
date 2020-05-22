@@ -11374,16 +11374,16 @@ function handlebarsCompile(template) {
             "{{#show_line_execution_counts fileCoverage}}"
             + "{{maxLines}}{{/show_line_execution_counts}}"
         ), function () {
-            let array;
             let covered;
             let ii;
             let lineNumber;
             let lines;
+            let list;
             let maxLines;
             let value;
             lines = dict.fileCoverage.l;
             maxLines = Number(dict.maxLines);
-            array = [];
+            list = [];
             value = "";
             ii = 0;
             while (ii < maxLines) {
@@ -11398,33 +11398,33 @@ function handlebarsCompile(template) {
                         covered = "no";
                     }
                 }
-                array.push(
+                list.push(
                     "<span class=\"cline-any cline-" + covered + "\">"
                     + value + "</span>"
                 );
                 ii += 1;
             }
-            return array.join("\n");
+            return list.join("\n");
         });
         result = result.replace(
             "{{#show_lines}}{{maxLines}}{{/show_lines}}",
             function () {
-                let array;
                 let ii;
+                let list;
                 let maxLines;
                 maxLines = Number(dict.maxLines);
-                array = "";
+                list = "";
                 ii = 1;
                 while (ii <= maxLines) {
                     // hack-coverage - hashtag lineno
-                    array += (
+                    list += (
                         "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
                         + ii
                         + "</a>\n"
                     );
                     ii += 1;
                 }
-                return array;
+                return list;
             }
         );
         result = result.replace(
