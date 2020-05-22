@@ -11825,11 +11825,11 @@ local.reportHtmlCreate = function(opts, collector) {
         context.forEach(function (item) {
             array.push(customEscape(item.text) || "&nbsp;");
         });
-        return array.join('\n');
+        return array.join("\n");
     });
 
     function title(str) {
-        return ' title="' + str + '" ';
+        return " title=\"" + str + "\" ";
     }
 
     function annotateLines(fileCoverage, structuredText) {
@@ -11837,11 +11837,11 @@ local.reportHtmlCreate = function(opts, collector) {
         if (!lineStats) { return; }
         Object.keys(lineStats).forEach(function (lineNumber) {
             var count = lineStats[lineNumber];
-            structuredText[lineNumber].covered = count > 0 ? 'yes' : 'no';
+            structuredText[lineNumber].covered = count > 0 ? "yes" : "no";
         });
         structuredText.forEach(function (item) {
             if (item.covered === null) {
-                item.covered = 'neutral';
+                item.covered = "neutral";
             }
         });
     }
@@ -11852,16 +11852,16 @@ local.reportHtmlCreate = function(opts, collector) {
         Object.keys(statementStats).forEach(function (stName) {
             var count = statementStats[stName],
                 meta = statementMeta[stName],
-                type = count > 0 ? 'yes' : 'no',
+                type = count > 0 ? "yes" : "no",
                 startCol = meta.start.column,
                 endCol = meta.end.column + 1,
                 startLine = meta.start.line,
                 endLine = meta.end.line,
-                openSpan = lt + 'span class="' + (meta.skip ? 'cstat-skip' : 'cstat-no') + '"' + title('statement not covered') + gt,
-                closeSpan = lt + '/span' + gt,
+                openSpan = lt + "span class=\"" + (meta.skip ? "cstat-skip" : "cstat-no") + "\"" + title("statement not covered") + gt,
+                closeSpan = lt + "/span" + gt,
                 text;
 
-            if (type === 'no') {
+            if (type === "no") {
                 if (endLine !== startLine) {
                     endLine = startLine;
                     endCol = structuredText[startLine].text.originalLength();
@@ -11883,16 +11883,16 @@ local.reportHtmlCreate = function(opts, collector) {
         Object.keys(fnStats).forEach(function (fName) {
             var count = fnStats[fName],
                 meta = fnMeta[fName],
-                type = count > 0 ? 'yes' : 'no',
+                type = count > 0 ? "yes" : "no",
                 startCol = meta.loc.start.column,
                 endCol = meta.loc.end.column + 1,
                 startLine = meta.loc.start.line,
                 endLine = meta.loc.end.line,
-                openSpan = lt + 'span class="' + (meta.skip ? 'fstat-skip' : 'fstat-no') + '"' + title('function not covered') + gt,
-                closeSpan = lt + '/span' + gt,
+                openSpan = lt + "span class=\"" + (meta.skip ? "fstat-skip" : "fstat-no") + "\"" + title("function not covered") + gt,
+                closeSpan = lt + "/span" + gt,
                 text;
 
-            if (type === 'no') {
+            if (type === "no") {
                 if (endLine !== startLine) {
                     endLine = startLine;
                     endCol = structuredText[startLine].text.originalLength();
@@ -11931,13 +11931,13 @@ local.reportHtmlCreate = function(opts, collector) {
                 for (i = 0; i < branchArray.length; i += 1) {
                     count = branchArray[i];
                     meta = metaArray[i];
-                    type = count > 0 ? 'yes' : 'no';
+                    type = count > 0 ? "yes" : "no";
                     startCol = meta.start.column;
                     endCol = meta.end.column + 1;
                     startLine = meta.start.line;
                     endLine = meta.end.line;
-                    openSpan = lt + 'span class="branch-' + i + ' ' + (meta.skip ? 'cbranch-skip' : 'cbranch-no') + '"' + title('branch not covered') + gt;
-                    closeSpan = lt + '/span' + gt;
+                    openSpan = lt + "span class=\"branch-" + i + " " + (meta.skip ? "cbranch-skip" : "cbranch-no") + "\"" + title("branch not covered") + gt;
+                    closeSpan = lt + "/span" + gt;
 
                     if (count === 0) { //skip branches taken
                         if (endLine !== startLine) {
@@ -11945,10 +11945,10 @@ local.reportHtmlCreate = function(opts, collector) {
                             endCol = structuredText[startLine].text.originalLength();
                         }
                         text = structuredText[startLine].text;
-                        if (branchMeta[branchName].type === 'if') { // and 'if' is a special case since the else branch might not be visible, being non-existent
-                            text.insertAt(startCol, lt + 'span class="' + (meta.skip ? 'skip-if-branch' : 'missing-if-branch') + '"' +
-                                title((i === 0 ? 'if' : 'else') + ' path not taken') + gt +
-                                (i === 0 ? 'I' : 'E')  + lt + '/span' + gt, true, false);
+                        if (branchMeta[branchName].type === "if") { // and "if" is a special case since the else branch might not be visible, being non-existent
+                            text.insertAt(startCol, lt + "span class=\"" + (meta.skip ? "skip-if-branch" : "missing-if-branch") + "\"" +
+                                title((i === 0 ? "if" : "else") + " path not taken") + gt +
+                                (i === 0 ? "I" : "E")  + lt + "/span" + gt, true, false);
                         } else {
                             text.wrap(startCol,
                                 openSpan,
