@@ -11611,9 +11611,6 @@ function reportHtmlCreate(opts) {
         });
         return array.join("\n");
     });
-    function title(str) {
-        return " title=\"" + str + "\" ";
-    }
     function annotateLines(fileCoverage, structuredText) {
         let lineStats;
         lineStats = fileCoverage.l;
@@ -11667,7 +11664,7 @@ function reportHtmlCreate(opts) {
                     meta.skip
                     ? "cstat-skip"
                     : "cstat-no"
-                ) + "\"" + title("statement not covered") + "\u0002"
+                ) + "\" title=\"statement not covered\" \u0002"
             );
             closeSpan = "\u0001/span\u0002";
             if (type === "no") {
@@ -11716,7 +11713,7 @@ function reportHtmlCreate(opts) {
                 meta.skip
                 ? "fstat-skip"
                 : "fstat-no"
-            ) + "\"" + title("function not covered") + "\u0002";
+            ) + "\" title=\"function not covered\" \u0002";
             let closeSpan;
             closeSpan = "\u0001/span\u0002";
             let text;
@@ -11775,7 +11772,7 @@ function reportHtmlCreate(opts) {
                         meta.skip
                         ? "cbranch-skip"
                         : "cbranch-no"
-                    ) + "\"" + title("branch not covered") + "\u0002";
+                    ) + "\" title=\"branch not covered\" \u0002";
                     closeSpan = "\u0001/span\u0002";
                     if (count === 0) {
                         //skip branches taken
@@ -11793,11 +11790,11 @@ function reportHtmlCreate(opts) {
                                 meta.skip
                                 ? "skip-if-branch"
                                 : "missing-if-branch"
-                            ) + "\"" + title((
+                            ) + "\" title=\"" + ((
                                 ii === 0
                                 ? "if"
                                 : "else"
-                            ) + " path not taken\u0002") + (
+                            ) + "\" path not taken\u0002") + (
                                 ii === 0
                                 ? "I"
                                 : "E"
