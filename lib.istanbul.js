@@ -9100,7 +9100,28 @@ local.handlebars.compile = function (template) {
         result = result.replace(
             "{{#show_ignores metrics}}{{/show_ignores}}",
             function () {
-                return local.handlebars.show_ignores(dict.metrics);
+                let list;
+                if (
+                    dict.metrics.statements.skipped === 0
+                    && dict.metrics.functions.skipped === 0
+                    && dict.metrics.branches.skipped === 0
+                ) {
+                    return "<span class=\"ignore-none\">none</span>";
+                }
+                list = [];
+                // hack-coverage - compact summary
+                if (dict.metrics.statements.skipped > 0) {
+                    list.push(
+                        "statements: " + dict.metrics.statements.skipped
+                    );
+                }
+                if (dict.metrics.branches.skipped > 0) {
+                    list.push("branches: " + dict.metrics.branches.skipped);
+                }
+                if (dict.metrics.functions.skipped > 0) {
+                    list.push("functions: " + dict.metrics.functions.skipped);
+                }
+                return list.join("<br>");
             }
         );
         result = result.replace((
@@ -11575,28 +11596,6 @@ function reportHtmlCreate(opts) {
     ].join("\n");
     lt = "\u0001";
     gt = "\u0002";
-    handlebars.registerHelper("show_ignores", function (metrics) {
-        let result;
-        if (
-            metrics.statements.skipped === 0
-            && metrics.functions.skipped === 0
-            && metrics.branches.skipped === 0
-        ) {
-            return "<span class=\"ignore-none\">none</span>";
-        }
-        result = [];
-        // hack-coverage - compact summary
-        if (metrics.statements.skipped > 0) {
-            result.push("statements: " + metrics.statements.skipped);
-        }
-        if (metrics.branches.skipped > 0) {
-            result.push("branches: " + metrics.branches.skipped);
-        }
-        if (metrics.functions.skipped > 0) {
-            result.push("functions: " + metrics.functions.skipped);
-        }
-        return result.join("<br>");
-    });
     // hack-coverage - hashtag lineno
     handlebars.registerHelper("show_lines", function (opts) {
         let array;
