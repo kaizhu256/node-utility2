@@ -461,39 +461,6 @@ require = function (key) {
     } catch (ignore) {}
 };
 local["./package.json"] = {};
-// mock module fs
-local._istanbul_fs = {};
-local._istanbul_fs.readFileSync = function (file) {
-    // return head.txt or foot.txt
-    file = local[file.slice(-8)];
-    if (local.isBrowser) {
-        file = file.replace("<!doctype html>\n", "").replace((
-            /(<\/?)(?:body|html)/g
-        ), "$1div");
-    }
-    if (!local.isBrowser && process.env.npm_package_homepage) {
-        file = file.replace(
-            "{{env.npm_package_homepage}}",
-            process.env.npm_package_homepage
-        ).replace(
-            "{{env.npm_package_name}}",
-            process.env.npm_package_name
-        ).replace(
-            "{{env.npm_package_version}}",
-            process.env.npm_package_version
-        );
-    } else {
-        file = file.replace((
-            /<h1\u0020[\S\s]*<\/h1>/
-        ), "");
-    }
-    return file;
-};
-
-local._istanbul_fs.readdirSync = function () {
-    return [];
-};
-
 // mock module path
 local._istanbul_path = local.path || {
     dirname: function (file) {
@@ -503,7 +470,8 @@ local._istanbul_path = local.path || {
     },
     resolve: function (aa, bb, cc, dd) {
         return dd || cc || bb || aa;
-    }
+    },
+    sep: "/"
 };
 
 
@@ -11233,7 +11201,6 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarize
  */
 
 var path = require('path'),
-    SEP = path.sep || '/',
     utils = require('../object-utils');
 
 function commonArrayPrefix(first, second) {
@@ -11468,32 +11435,28 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
 let InsertionText;
 let PCT_COLS;
-let SEP;
 let Store;
 let TAB_SIZE;
 let TreeSummarizer;
 let defaults;
-let fs;
 let handlebars;
 let path;
-let reportHtmlCreate;
 let reportTextCreate;
 let utils;
 // require module
+InsertionText = require("../util/insertion-text");
+Store = require("../store");
 TreeSummarizer = require("../util/tree-summarizer");
 defaults = require("./common/defaults");
+handlebars = require("handlebars");
 path = require("path");
 utils = require("../object-utils");
-handlebars = require("handlebars");
-fs = require("fs");
-Store = require("../store");
-InsertionText = require("../util/insertion-text");
 PCT_COLS = 10;
-SEP = path.sep || "/";
 TAB_SIZE = 2;
-reportHtmlCreate = function (opts, collector) {
+function reportHtmlCreate(opts, collector) {
     let ancestorHref;
     let detailTemplate;
+    let dir;
     let fillTemplate;
     let footerTemplate;
     let gt;
@@ -11501,16 +11464,39 @@ reportHtmlCreate = function (opts, collector) {
     let linkMapper;
     let lt;
     let pathTemplate;
+    let summarizer;
     let summaryLineTemplate;
     let summaryTableFooter;
     let summaryTableHeader;
     let templateFor;
+    let tree;
     let writeFiles;
-    templateFor = function (name) {
-        return handlebars.compile(fs.readFileSync(
-            path.resolve("templates", name + ".txt"),
-            "utf8"
-        ));
+    let writer;
+    templateFor = function (file) {
+        // return head.txt or foot.txt
+        file = local[file + ".txt"];
+        if (local.isBrowser) {
+            file = file.replace("<!doctype html>\n", "").replace((
+                /(<\/?)(?:body|html)/g
+            ), "$1div");
+        }
+        if (!local.isBrowser && process.env.npm_package_homepage) {
+            file = file.replace(
+                "{{env.npm_package_homepage}}",
+                process.env.npm_package_homepage
+            ).replace(
+                "{{env.npm_package_name}}",
+                process.env.npm_package_name
+            ).replace(
+                "{{env.npm_package_version}}",
+                process.env.npm_package_version
+            );
+        } else {
+            file = file.replace((
+                /<h1\u0020[\S\s]*<\/h1>/
+            ), "");
+        }
+        return handlebars.compile(file);
     };
     headerTemplate = templateFor("head");
     footerTemplate = templateFor("foot");
@@ -11959,7 +11945,7 @@ reportHtmlCreate = function (opts, collector) {
         href = "";
         ii = 0;
         while (ii < num) {
-            separated = node.relativeName.split(SEP);
+            separated = node.relativeName.split(path.sep);
             levels = separated.length - 1;
             jj = 0;
             while (jj < levels) {
@@ -12014,21 +12000,19 @@ reportHtmlCreate = function (opts, collector) {
     };
     linkMapper = {
         fromParent: function (node) {
-            let ch;
             let ii;
             let relativeName;
             ii = 0;
             relativeName = node.relativeName;
-            if (SEP !== "/") {
+            if (path.sep !== "/") {
                 relativeName = "";
                 ii = 0;
                 while (ii < node.relativeName.length) {
-                    ch = node.relativeName.charAt(ii);
-                    if (ch === SEP) {
-                        relativeName += "/";
-                    } else {
-                        relativeName += ch;
-                    }
+                    relativeName += (
+                        node.relativeName.charAt(ii) === path.sep
+                        ? "/"
+                        : node.relativeName.charAt(ii)
+                    );
                     ii += 1;
                 }
             }
@@ -12179,10 +12163,6 @@ reportHtmlCreate = function (opts, collector) {
             });
         });
     };
-    let dir;
-    let summarizer;
-    let tree;
-    let writer;
     dir = opts.dir;
     summarizer = new TreeSummarizer();
     writer = opts.writer;
@@ -12193,25 +12173,9 @@ reportHtmlCreate = function (opts, collector) {
         );
     });
     tree = summarizer.getTreeSummary();
-    fs.readdirSync(
-        path.resolve("..", "vendor")
-    ).forEach(function (f) {
-        let resolvedDestination;
-        let resolvedSource;
-        let stat;
-        resolvedSource = path.resolve("..", "vendor", f);
-        resolvedDestination = path.resolve(dir, f);
-        stat = fs.statSync(resolvedSource);
-        if (stat.isFile()) {
-            if (opts.verbose) {
-                console.log("Write asset: " + resolvedDestination);
-            }
-            writer.copyFile(resolvedSource, resolvedDestination);
-        }
-    });
     //console.log(JSON.stringify(tree.root, undefined, 4));
     writeFiles(writer, tree.root, dir, collector);
-};
+}
 
 
 
