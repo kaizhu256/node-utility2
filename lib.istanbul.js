@@ -9140,11 +9140,22 @@ local.handlebars.compile = function (template) {
         result = result.replace(
             "{{#show_lines}}{{maxLines}}{{/show_lines}}",
             function () {
-                return local.handlebars.show_lines({
-                    fn: function () {
-                        return dict.maxLines;
-                    }
-                });
+                let array;
+                let ii;
+                let maxLines;
+                maxLines = Number(dict.maxLines);
+                array = "";
+                ii = 1;
+                while (ii <= maxLines) {
+                    // hack-coverage - hashtag lineno
+                    array += (
+                        "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
+                        + ii
+                        + "</a>\n"
+                    );
+                    ii += 1;
+                }
+                return array;
             }
         );
         result = result.replace(
@@ -11468,7 +11479,6 @@ function reportHtmlCreate(opts) {
     let headerTemplate;
     let linkMapper;
     let lt;
-    let pathTemplate;
     let summarizer;
     let summaryLineTemplate;
     let summaryTableFooter;
@@ -11505,9 +11515,6 @@ function reportHtmlCreate(opts) {
     };
     headerTemplate = templateFor("head");
     footerTemplate = templateFor("foot");
-    pathTemplate = handlebars.compile(
-        "<div class=\"path\">{{{html}}}</div>"
-    );
     detailTemplate = handlebars.compile([
         "<tr>",
         (
@@ -11596,22 +11603,6 @@ function reportHtmlCreate(opts) {
     ].join("\n");
     lt = "\u0001";
     gt = "\u0002";
-    // hack-coverage - hashtag lineno
-    handlebars.registerHelper("show_lines", function (opts) {
-        let array;
-        let ii;
-        let maxLines;
-        maxLines = Number(opts.fn(this));
-        array = "";
-        ii = 1;
-        while (ii <= maxLines) {
-            array += (
-                "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">" + ii + "</a>\n"
-            );
-            ii += 1;
-        }
-        return array;
-    });
     handlebars.registerHelper("show_line_execution_counts", function (
         context,
         opts
@@ -11956,9 +11947,7 @@ function reportHtmlCreate(opts) {
             ? linkPath.join(" &#187; ") + " &#187; " + node.relativeName
             : ""
         );
-        templateData.pathHtml = pathTemplate({
-            html
-        });
+        templateData.pathHtml = "<div class=\"path\">" + html + "</div>";
         templateData.prettify = {
             js: linkMapper.asset(node, "prettify.js"),
             css: linkMapper.asset(node, "prettify.css")
