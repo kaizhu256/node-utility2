@@ -11497,6 +11497,17 @@ function reportHtmlCreate(opts) {
         }
         return href;
     };
+    function linkMapperAsset(node, name) {
+        let ii;
+        let parent;
+        ii = 0;
+        parent = node.parent;
+        while (parent) {
+            ii += 1;
+            parent = parent.parent;
+        }
+        return ancestorHref(node, ii) + name;
+    }
     fillTemplate = function (node) {
         let ii;
         let linkPath;
@@ -11523,8 +11534,8 @@ function reportHtmlCreate(opts) {
             : ""
         ) + "</div>";
         templateData.prettify = {
-            js: linkMapper.asset(node, "prettify.js"),
-            css: linkMapper.asset(node, "prettify.css")
+            js: linkMapperAsset(node, "prettify.js"),
+            css: linkMapperAsset(node, "prettify.css")
         };
     };
     linkMapper = {
@@ -11553,17 +11564,6 @@ function reportHtmlCreate(opts) {
         },
         ancestor: function (node, num) {
             return ancestorHref(node, num) + "index.html";
-        },
-        asset: function (node, name) {
-            let ii;
-            let parent;
-            ii = 0;
-            parent = node.parent;
-            while (parent) {
-                ii += 1;
-                parent = parent.parent;
-            }
-            return ancestorHref(node, ii) + name;
         }
     };
     writeFiles = function (writer, node, dir) {
