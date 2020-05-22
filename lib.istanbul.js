@@ -11466,32 +11466,37 @@ local.templateCoverageBadgeSvg =
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
+let InsertionText;
 let PCT_COLS;
 let SEP;
+let Store;
 let TAB_SIZE;
 let TreeSummarizer;
 let defaults;
+let fs;
+let handlebars;
 let path;
 let reportHtmlCreate;
 let reportTextCreate;
 let utils;
+// require module
 TreeSummarizer = require("../util/tree-summarizer");
 defaults = require("./common/defaults");
 path = require("path");
 utils = require("../object-utils");
+handlebars = require("handlebars");
+fs = require("fs");
+Store = require("../store");
+InsertionText = require("../util/insertion-text");
 PCT_COLS = 10;
 SEP = path.sep || "/";
 TAB_SIZE = 2;
 reportHtmlCreate = function (opts, collector) {
-    let InsertionText;
-    let Store;
     let ancestorHref;
     let detailTemplate;
     let fillTemplate;
     let footerTemplate;
-    let fs;
     let gt;
-    let handlebars;
     let headerTemplate;
     let linkMapper;
     let lt;
@@ -11501,10 +11506,6 @@ reportHtmlCreate = function (opts, collector) {
     let summaryTableHeader;
     let templateFor;
     let writeFiles;
-    handlebars = require("handlebars");
-    fs = require("fs");
-    Store = require("../store");
-    InsertionText = require("../util/insertion-text");
     templateFor = function (name) {
         return handlebars.compile(fs.readFileSync(
             path.resolve("templates", name + ".txt"),
