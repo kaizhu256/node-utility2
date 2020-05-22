@@ -11498,7 +11498,6 @@ function reportHtmlCreate(opts) {
         return href;
     };
     fillTemplate = function (node) {
-        let html;
         let ii;
         let linkPath;
         let parent;
@@ -11518,12 +11517,11 @@ function reportHtmlCreate(opts) {
             ii += 1;
         }
         linkPath.reverse();
-        html = (
+        templateData.pathHtml = "<div class=\"path\">" + (
             linkPath.length > 0
             ? linkPath.join(" &#187; ") + " &#187; " + node.relativeName
             : ""
-        );
-        templateData.pathHtml = "<div class=\"path\">" + html + "</div>";
+        ) + "</div>";
         templateData.prettify = {
             js: linkMapper.asset(node, "prettify.js"),
             css: linkMapper.asset(node, "prettify.css")
