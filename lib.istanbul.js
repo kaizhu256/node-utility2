@@ -12232,10 +12232,7 @@ reportHtmlCreate = function (opts, collector) {
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
 reportTextCreate = function (opts, collector) {
-    let COL_DELIM;
-    let DELIM;
     let PCT_COLS;
-    let TAB_SIZE;
     let TreeSummarizer;
     let defaults;
     let nameWidth;
@@ -12250,9 +12247,6 @@ reportTextCreate = function (opts, collector) {
     defaults = require2("./common/defaults");
     utils = require2("../object-utils");
     PCT_COLS = 10;
-    TAB_SIZE = 3;
-    DELIM = " |";
-    COL_DELIM = "-|";
     function padding(num, ch) {
         let ii;
         let str;
@@ -12274,7 +12268,7 @@ reportTextCreate = function (opts, collector) {
         let strlen;
         tabs = tabs || 0;
         str = String(str);
-        leadingSpaces = tabs * TAB_SIZE;
+        leadingSpaces = tabs * 4;
         remaining = width - leadingSpaces;
         leader = padding(leadingSpaces);
         fmtStr = "";
@@ -12349,13 +12343,13 @@ reportTextCreate = function (opts, collector) {
             lines,
             defaults.classFor("lines", node.metrics, watermarks)
         ));
-        return elements.join(DELIM) + DELIM;
+        return elements.join("-|") + "-|";
     }
     function findNameWidth(node, level, last) {
         let idealWidth;
         last = last || 0;
         level = level || 0;
-        idealWidth = TAB_SIZE * level + nodeName(node).length;
+        idealWidth = 4 * level + nodeName(node).length;
         if (idealWidth > last) {
             last = idealWidth;
         }
@@ -12377,7 +12371,7 @@ reportTextCreate = function (opts, collector) {
         elements.push(pct);
         elements.push(pct);
         elements.push(pct);
-        return elements.join(COL_DELIM) + COL_DELIM;
+        return elements.join("-|") + "-|";
     }
     function walk(node, nameWidth, array, level, watermarks) {
         let line;
