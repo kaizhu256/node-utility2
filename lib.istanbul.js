@@ -439,17 +439,15 @@ local.cliRun = function (opt) {
 
 // run shared js-env code - function
 (function () {
-let __dirname;
 let process;
 let require;
 // hack-jslint
-local.nop(__dirname, require);
+local.nop(require);
 globalThis.__coverageCodeDict__ = local.coalesce(
     globalThis.__coverageCodeDict__,
     {}
 );
 // mock builtins
-__dirname = "";
 process = local.process || {
     cwd: function () {
         return "";
@@ -11732,7 +11730,7 @@ local.reportHtmlCreate = function (opts, collector) {
     utils = require2("../object-utils");
     templateFor = function (name) {
         return handlebars.compile(fs.readFileSync(
-            path.resolve(__dirname, "templates", name + ".txt"),
+            path.resolve("", "templates", name + ".txt"),
             "utf8"
         ));
     };
@@ -12455,12 +12453,12 @@ local.reportHtmlCreate = function (opts, collector) {
     });
     tree = summarizer.getTreeSummary();
     fs.readdirSync(
-        path.resolve(__dirname, "..", "vendor")
+        path.resolve("", "..", "vendor")
     ).forEach(function (f) {
         let resolvedDestination;
         let resolvedSource;
         let stat;
-        resolvedSource = path.resolve(__dirname, "..", "vendor", f);
+        resolvedSource = path.resolve("", "..", "vendor", f);
         resolvedDestination = path.resolve(dir, f);
         stat = fs.statSync(resolvedSource);
 
