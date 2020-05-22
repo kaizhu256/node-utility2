@@ -11412,9 +11412,63 @@ TreeSummarizer = require("../util/tree-summarizer");
 handlebars = require("handlebars");
 path = require("path");
 utils = require("../object-utils");
-// init var
+// init variable
 PCT_COLS = 10;
 TAB_SIZE = 2;
+// init function
+function padding(num, ch) {
+    let ii;
+    let str;
+    str = "";
+    ch = ch || " ";
+    ii = 0;
+    while (ii < num) {
+        str += ch;
+        ii += 1;
+    }
+    return str;
+}
+function fill(str, width, right, tabs, clazz) {
+    let fillStr;
+    let fmtStr;
+    let leader;
+    let leadingSpaces;
+    let remaining;
+    let strlen;
+    tabs = tabs || 0;
+    str = String(str);
+    leadingSpaces = tabs * TAB_SIZE;
+    remaining = width - leadingSpaces;
+    leader = " ".repeat(leadingSpaces);
+    fmtStr = "";
+    strlen = str.length;
+    if (remaining > 0) {
+        if (remaining >= strlen) {
+            fillStr = " ".repeat(remaining - strlen);
+            fmtStr = (
+                right
+                ? fillStr + str
+                : str + fillStr
+            );
+        } else {
+            fmtStr = str.substring(strlen - remaining);
+            fmtStr = "... " + fmtStr.substring(4);
+        }
+    }
+    // colorize
+    switch (process.stdout && process.stdout.isTTY && clazz) {
+    case "high":
+        fmtStr = "\u001b[92m" + fmtStr + "\u001b[0m";
+        break;
+    case "low":
+        fmtStr = "\u001b[91m" + fmtStr + "\u001b[0m";
+        break;
+    case "medium":
+        fmtStr = "\u001b[93m" + fmtStr + "\u001b[0m";
+        break;
+    }
+    return leader + fmtStr;
+}
 function reportHtmlCreate(opts, collector) {
     let ancestorHref;
     let detailTemplate;
@@ -12138,73 +12192,17 @@ reportTextCreate = function (opts, collector) {
     let text;
     let that;
     let tree;
-    function padding(num, ch) {
-        let ii;
-        let str;
-        str = "";
-        ch = ch || " ";
-        ii = 0;
-        while (ii < num) {
-            str += ch;
-            ii += 1;
-        }
-        return str;
-    }
-    function fill(str, width, right, tabs, clazz) {
-        let fillStr;
-        let fmtStr;
-        let leader;
-        let leadingSpaces;
-        let remaining;
-        let strlen;
-        tabs = tabs || 0;
-        str = String(str);
-        leadingSpaces = tabs * TAB_SIZE;
-        remaining = width - leadingSpaces;
-        leader = padding(leadingSpaces);
-        fmtStr = "";
-        strlen = str.length;
-        if (remaining > 0) {
-            if (remaining >= strlen) {
-                fillStr = padding(remaining - strlen);
-                fmtStr = (
-                    right
-                    ? fillStr + str
-                    : str + fillStr
-                );
-            } else {
-                fmtStr = str.substring(strlen - remaining);
-                fmtStr = "... " + fmtStr.substring(4);
-            }
-        }
-        // colorize
-        switch (process.stdout && process.stdout.isTTY && clazz) {
-        case "high":
-            fmtStr = "\u001b[92m" + fmtStr + "\u001b[0m";
-            break;
-        case "low":
-            fmtStr = "\u001b[91m" + fmtStr + "\u001b[0m";
-            break;
-        case "medium":
-            fmtStr = "\u001b[93m" + fmtStr + "\u001b[0m";
-            break;
-        }
-        return leader + fmtStr;
-    }
     function formatName(name, maxCols, level, clazz) {
         return fill(name, maxCols, false, level, clazz);
-    }
-    function formatPct(pct, clazz) {
-        return fill(pct, PCT_COLS, true, 0, clazz);
     }
     function tableHeader(maxNameCols) {
         let elements;
         elements = [];
         elements.push(formatName("File", maxNameCols, 0));
-        elements.push(formatPct("% Stmts"));
-        elements.push(formatPct("% Branches"));
-        elements.push(formatPct("% Funcs"));
-        elements.push(formatPct("% Lines"));
+        elements.push(fill("% Stmts", PCT_COLS, true, 0));
+        elements.push(fill("% Branches", PCT_COLS, true, 0));
+        elements.push(fill("% Funcs", PCT_COLS, true, 0));
+        elements.push(fill("% Lines", PCT_COLS, true, 0));
         return elements.join(" |") + " |";
     }
     function tableRow(node, maxNameCols, level) {
@@ -12236,20 +12234,32 @@ reportTextCreate = function (opts, collector) {
             level,
             classFor(node.metrics.statements.pct)
         ));
-        elements.push(formatPct(
+        elements.push(fill(
             statements,
+            PCT_COLS,
+            true,
+            0,
             classFor(node.metrics.statements.pct)
         ));
-        elements.push(formatPct(
+        elements.push(fill(
             branches,
+            PCT_COLS,
+            true,
+            0,
             classFor(node.metrics.branches.pct)
         ));
-        elements.push(formatPct(
+        elements.push(fill(
             functions,
+            PCT_COLS,
+            true,
+            0,
             classFor(node.metrics.functions.pct)
         ));
-        elements.push(formatPct(
+        elements.push(fill(
             lines,
+            PCT_COLS,
+            true,
+            0,
             classFor(node.metrics.lines.pct)
         ));
         return elements.join(" |") + " |";
