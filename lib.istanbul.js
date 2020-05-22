@@ -11696,28 +11696,52 @@ require2 = function (key) {
     } catch (ignore) {}
 };
 local.reportHtmlCreate = function (opts, collector) {
-    /*jshint maxlen: 300 */
-    let handlebars = require2("handlebars");
-    let defaults = require2("./common/defaults");
-    let path = require2("path");
-    let SEP = path.sep || "/";
-    let fs = require2("fs");
-    let Store = require2("../store");
-    let InsertionText = require2("../util/insertion-text");
-    let TreeSummarizer = require2("../util/tree-summarizer");
-    let utils = require2("../object-utils");
-    let templateFor = function (name) {
+    let InsertionText;
+    let RE_AMP;
+    let RE_GT;
+    let RE_LT;
+    let RE_gt;
+    let RE_lt;
+    let SEP;
+    let Store;
+    let TreeSummarizer;
+    let defaults;
+    let detailTemplate;
+    let footerTemplate;
+    let fs;
+    let gt;
+    let handlebars;
+    let headerTemplate;
+    let lt;
+    let path;
+    let pathTemplate;
+    let summaryLineTemplate;
+    let summaryTableFooter;
+    let summaryTableHeader;
+    let templateFor;
+    let utils;
+
+    handlebars = require2("handlebars");
+    defaults = require2("./common/defaults");
+    path = require2("path");
+    SEP = path.sep || "/";
+    fs = require2("fs");
+    Store = require2("../store");
+    InsertionText = require2("../util/insertion-text");
+    TreeSummarizer = require2("../util/tree-summarizer");
+    utils = require2("../object-utils");
+    templateFor = function (name) {
         return handlebars.compile(fs.readFileSync(
             path.resolve(__dirname, "templates", name + ".txt"),
             "utf8"
         ));
     };
-    let headerTemplate = templateFor("head");
-    let footerTemplate = templateFor("foot");
-    let pathTemplate = handlebars.compile(
+    headerTemplate = templateFor("head");
+    footerTemplate = templateFor("foot");
+    pathTemplate = handlebars.compile(
         "<div class=\"path\">{{{html}}}</div>"
     );
-    let detailTemplate = handlebars.compile([
+    detailTemplate = handlebars.compile([
         "<tr>",
         (
             "<td class=\"line-count\">{{#show_lines}}{{maxLines}}"
@@ -11735,7 +11759,7 @@ local.reportHtmlCreate = function (opts, collector) {
         ),
         "</tr>\n"
     ].join(""));
-    let summaryTableHeader = [
+    summaryTableHeader = [
         "<div class=\"coverage-summary\">",
         "<table>",
         "<thead>",
@@ -11765,7 +11789,7 @@ local.reportHtmlCreate = function (opts, collector) {
         "</thead>",
         "<tbody>"
     ].join("\n");
-    let summaryLineTemplate = handlebars.compile([
+    summaryLineTemplate = handlebars.compile([
         "<tr>",
         (
             // hack-coverage - compact summary
@@ -11798,26 +11822,26 @@ local.reportHtmlCreate = function (opts, collector) {
         ),
         "</tr>\n"
     ].join("\n\t"));
-    let summaryTableFooter = [
+    summaryTableFooter = [
         "</tbody>",
         "</table>",
         "</div>"
     ].join("\n");
-    let lt = "\u0001";
-    let gt = "\u0002";
-    let RE_LT = (
+    lt = "\u0001";
+    gt = "\u0002";
+    RE_LT = (
         /</g
     );
-    let RE_GT = (
+    RE_GT = (
         />/g
     );
-    let RE_AMP = (
+    RE_AMP = (
         /&/g
     );
-    let RE_lt = (
+    RE_lt = (
         /\u0001/g
     );
-    let RE_gt = (
+    RE_gt = (
         /\u0002/g
     );
 
