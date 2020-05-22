@@ -11695,24 +11695,24 @@ function reportHtmlCreate(opts) {
         });
     };
     dir = opts.dir;
-    summaryMap = {};
+    //!! summaryMap = {};
+    //!! Object.keys(globalThis.__coverage__).forEach(function (key) {
+        //!! if (
+            //!! globalThis.__coverage__[key]
+            //!! && globalThis.__coverageCodeDict__[key]
+        //!! ) {
+            //!! // reset derived info
+            //!! delete globalThis.__coverage__[key].l;
+            //!! summaryMap[key] = summarizeFileCoverage(
+                //!! globalThis.__coverage__[key]
+            //!! );
+        //!! }
+    //!! });
+    //!! coverageReportSummary = new TreeSummary(
+        //!! summaryMap,
+        //!! findCommonArrayPrefix(Object.keys(summaryMap))
+    //!! );
     writer = opts.writer;
-    Object.keys(globalThis.__coverage__).forEach(function (key) {
-        if (
-            globalThis.__coverage__[key]
-            && globalThis.__coverageCodeDict__[key]
-        ) {
-            // reset derived info
-            delete globalThis.__coverage__[key].l;
-            summaryMap[key] = summarizeFileCoverage(
-                globalThis.__coverage__[key]
-            );
-        }
-    });
-    coverageReportSummary = new TreeSummary(
-        summaryMap,
-        findCommonArrayPrefix(Object.keys(summaryMap))
-    );
     writeFiles(writer, coverageReportSummary.root, dir);
 }
 
