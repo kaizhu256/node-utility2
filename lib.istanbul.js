@@ -11799,31 +11799,31 @@ local.reportHtmlCreate = function(opts, collector) {
             covered = "neutral";
             if (lines.hasOwnProperty(lineNumber)) {
                 if (lines[lineNumber] > 0) {
-                    covered = 'yes';
+                    covered = "yes";
                     value = lines[lineNumber];
                 } else {
-                    covered = 'no';
+                    covered = "no";
                 }
             }
-            array.push('<span class="cline-any cline-' + covered + '">' + value + '</span>');
+            array.push("<span class=\"cline-any cline-" + covered + "\">" + value + "</span>");
         }
-        return array.join('\n');
+        return array.join("\n");
     });
 
     function customEscape(text) {
         text = text.toString();
-        return text.replace(RE_AMP, '&amp;')
-            .replace(RE_LT, '&lt;')
-            .replace(RE_GT, '&gt;')
-            .replace(RE_lt, '<')
-            .replace(RE_gt, '>');
+        return text.replace(RE_AMP, "&amp;")
+            .replace(RE_LT, "&lt;")
+            .replace(RE_GT, "&gt;")
+            .replace(RE_lt, "<")
+            .replace(RE_gt, ">");
     }
 
-    handlebars.registerHelper('show_code', function (context /*, opts */) {
+    handlebars.registerHelper("show_code", function (context /*, opts */) {
         var array = [];
 
         context.forEach(function (item) {
-            array.push(customEscape(item.text) || '&nbsp;');
+            array.push(customEscape(item.text) || "&nbsp;");
         });
         return array.join('\n');
     });
