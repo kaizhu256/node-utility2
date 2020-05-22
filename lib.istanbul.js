@@ -467,8 +467,8 @@ local._istanbul_path = local.path || {
             /\/[\w\-.]+?$/
         ), "");
     },
-    resolve: function (aa, bb, cc, dd) {
-        return dd || cc || bb || aa;
+    resolve: function (...argList) {
+        return argList[argList.length - 1];
     },
     sep: "/"
 };
