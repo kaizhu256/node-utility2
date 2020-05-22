@@ -11581,6 +11581,8 @@ function reportHtmlCreate(opt) {
             + handlebarsCompile(templateFoot)(templateData)
         );
         node.children.forEach(function (child) {
+            let coverageChild;
+            let structured;
             if (child.kind === "dir") {
                 // recurse
                 coverageReportWrite(
@@ -11595,8 +11597,6 @@ function reportHtmlCreate(opt) {
             }
             writerData = "";
             writerFile = path.resolve(dir, child.relativeName + ".html");
-            let coverageChild;
-            let structured;
             coverageChild = globalThis.__coverage__[child.fullPath()];
             structured = String(coverageChild.code.join("\n") + "\n").split(
                 /(?:\r?\n)|\r/
@@ -11631,10 +11631,10 @@ function reportHtmlCreate(opt) {
 <pre class="prettyprint lang-js" tabIndex="0">{{#show_code}}</pre>
 </td>
 </tr></table></pre>`)({
-                structured,
-                maxLines: structured.length,
-                coverageChild
-            })
+                    structured,
+                    maxLines: structured.length,
+                    coverageChild
+                })
                 + handlebarsCompile(templateFoot)(templateData)
             );
         });
