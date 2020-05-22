@@ -11340,14 +11340,12 @@ function reportHtmlCreate(opts) {
             let endCol;
             let endLine;
             let meta;
-            let startCol;
             let startLine;
             let text;
             if (count !== 0) {
                 return;
             }
             meta = statementMeta[stName];
-            startCol = meta.start.column;
             endCol = meta.end.column + 1;
             startLine = meta.start.line;
             endLine = meta.end.line;
@@ -11356,7 +11354,7 @@ function reportHtmlCreate(opts) {
                 endCol = structuredText[startLine].text.originalLength();
             }
             text = structuredText[startLine].text;
-            text.wrap(startCol, ("\u0001span class=\"" + (
+            text.wrap(meta.start.column, ("\u0001span class=\"" + (
                 meta.skip
                 ? "cstat-skip"
                 : "cstat-no"
