@@ -11654,310 +11654,7 @@ module.exports = TreeSummarizer;
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
-/* istanbul ignore next */
 /* jslint ignore:start */
-(function () { let module; module = {};
-/*
- Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
- Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
- */
-
-/*jshint maxlen: 300 */
-var handlebars = require('handlebars'),
-    defaults = require('./common/defaults'),
-    path = require('path'),
-    SEP = path.sep || '/',
-    fs = require('fs'),
-    util = require('util'),
-    Store = require('../store'),
-    InsertionText = require('../util/insertion-text'),
-    TreeSummarizer = require('../util/tree-summarizer'),
-    utils = require('../object-utils'),
-    templateFor = function (name) { return handlebars.compile(fs.readFileSync(path.resolve(__dirname, 'templates', name + '.txt'), 'utf8')); },
-    headerTemplate = templateFor('head'),
-    footerTemplate = templateFor('foot'),
-    pathTemplate = handlebars.compile('<div class="path">{{{html}}}</div>'),
-    detailTemplate = handlebars.compile([
-        '<tr>',
-        '<td class="line-count">{{#show_lines}}{{maxLines}}{{/show_lines}}</td>',
-        '<td class="line-coverage">{{#show_line_execution_counts fileCoverage}}{{maxLines}}{{/show_line_execution_counts}}</td>',
-        // hack-coverage - domOnEventSelectAllWithinPre
-        '<td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code structured}}{{/show_code}}</pre></td>',
-        '</tr>\n'
-    ].join('')),
-    summaryTableHeader = [
-        '<div class="coverage-summary">',
-        '<table>',
-        '<thead>',
-        '<tr>',
-        // hack-coverage - compact summary
-        '   <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>',
-        '   <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>',
-        '   <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>',
-        '   <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>',
-        '   <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>',
-        '</tr>',
-        '</thead>',
-        '<tbody>'
-    ].join('\n'),
-    summaryLineTemplate = handlebars.compile([
-        '<tr>',
-        // hack-coverage - compact summary
-        '<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>',
-        '<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>',
-        '<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>',
-        '<td data-value="{{metrics.functions.pct}}" class="pct {{reportClasses.functions}}">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>',
-        '<td data-value="{{metrics.lines.pct}}" class="pct {{reportClasses.lines}}">{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>',
-        '</tr>\n'
-    ].join('\n\t')),
-    summaryTableFooter = [
-        '</tbody>',
-        '</table>',
-        '</div>'
-    ].join('\n'),
-    lt = '\u0001',
-    gt = '\u0002',
-    RE_LT = /</g,
-    RE_GT = />/g,
-    RE_AMP = /&/g,
-    RE_lt = /\u0001/g,
-    RE_gt = /\u0002/g;
-
-handlebars.registerHelper('show_picture', function (opts) {
-    var num = Number(opts.fn(this)),
-        rest,
-        cls = '';
-    if (isFinite(num)) {
-        if (num === 100) {
-            cls = ' cover-full';
-        }
-        num = Math.floor(num);
-        rest = 100 - num;
-        return '<span class="cover-fill' + cls + '" style="width: ' + num + 'px;"></span>' +
-            '<span class="cover-empty" style="width:' + rest + 'px;"></span>';
-    } else {
-        return '';
-    }
-});
-
-handlebars.registerHelper('show_ignores', function (metrics) {
-    var statements = metrics.statements.skipped,
-        functions = metrics.functions.skipped,
-        branches = metrics.branches.skipped,
-        result;
-
-    if (statements === 0 && functions === 0 && branches === 0) {
-        return '<span class="ignore-none">none</span>';
-    }
-
-    result = [];
-    // hack-coverage - compact summary
-    if (statements >0) { result.push('statements: ' + statements); }
-    if (branches >0) { result.push('branches: ' + branches); }
-    if (functions >0) { result.push('functions: ' + functions); }
-
-    return result.join('<br>');
-});
-
-// hack-coverage - hashtag lineno
-handlebars.registerHelper('show_lines', function (opts) {
-    var maxLines = Number(opts.fn(this)),
-        i,
-        array = "";
-
-    for (i = 1; i <= maxLines; i += 1) {
-        array += '<a href="#L' + i + '" id="L' + i + '">' + i + '</a>\n';
-    }
-    return array;
-});
-
-handlebars.registerHelper('show_line_execution_counts', function (context, opts) {
-    var lines = context.l,
-        maxLines = Number(opts.fn(this)),
-        i,
-        lineNumber,
-        array = [],
-        covered,
-        value = '';
-
-    for (i = 0; i < maxLines; i += 1) {
-        lineNumber = i + 1;
-        value = '&nbsp;';
-        covered = 'neutral';
-        if (lines.hasOwnProperty(lineNumber)) {
-            if (lines[lineNumber] > 0) {
-                covered = 'yes';
-                value = lines[lineNumber];
-            } else {
-                covered = 'no';
-            }
-        }
-        array.push('<span class="cline-any cline-' + covered + '">' + value + '</span>');
-    }
-    return array.join('\n');
-});
-
-function customEscape(text) {
-    text = text.toString();
-    return text.replace(RE_AMP, '&amp;')
-        .replace(RE_LT, '&lt;')
-        .replace(RE_GT, '&gt;')
-        .replace(RE_lt, '<')
-        .replace(RE_gt, '>');
-}
-
-handlebars.registerHelper('show_code', function (context /*, opts */) {
-    var array = [];
-
-    context.forEach(function (item) {
-        array.push(customEscape(item.text) || '&nbsp;');
-    });
-    return array.join('\n');
-});
-
-function title(str) {
-    return ' title="' + str + '" ';
-}
-
-function annotateLines(fileCoverage, structuredText) {
-    var lineStats = fileCoverage.l;
-    if (!lineStats) { return; }
-    Object.keys(lineStats).forEach(function (lineNumber) {
-        var count = lineStats[lineNumber];
-        structuredText[lineNumber].covered = count > 0 ? 'yes' : 'no';
-    });
-    structuredText.forEach(function (item) {
-        if (item.covered === null) {
-            item.covered = 'neutral';
-        }
-    });
-}
-
-function annotateStatements(fileCoverage, structuredText) {
-    var statementStats = fileCoverage.s,
-        statementMeta = fileCoverage.statementMap;
-    Object.keys(statementStats).forEach(function (stName) {
-        var count = statementStats[stName],
-            meta = statementMeta[stName],
-            type = count > 0 ? 'yes' : 'no',
-            startCol = meta.start.column,
-            endCol = meta.end.column + 1,
-            startLine = meta.start.line,
-            endLine = meta.end.line,
-            openSpan = lt + 'span class="' + (meta.skip ? 'cstat-skip' : 'cstat-no') + '"' + title('statement not covered') + gt,
-            closeSpan = lt + '/span' + gt,
-            text;
-
-        if (type === 'no') {
-            if (endLine !== startLine) {
-                endLine = startLine;
-                endCol = structuredText[startLine].text.originalLength();
-            }
-            text = structuredText[startLine].text;
-            text.wrap(startCol,
-                openSpan,
-                startLine === endLine ? endCol : text.originalLength(),
-                closeSpan);
-        }
-    });
-}
-
-function annotateFunctions(fileCoverage, structuredText) {
-
-    var fnStats = fileCoverage.f,
-        fnMeta = fileCoverage.fnMap;
-    if (!fnStats) { return; }
-    Object.keys(fnStats).forEach(function (fName) {
-        var count = fnStats[fName],
-            meta = fnMeta[fName],
-            type = count > 0 ? 'yes' : 'no',
-            startCol = meta.loc.start.column,
-            endCol = meta.loc.end.column + 1,
-            startLine = meta.loc.start.line,
-            endLine = meta.loc.end.line,
-            openSpan = lt + 'span class="' + (meta.skip ? 'fstat-skip' : 'fstat-no') + '"' + title('function not covered') + gt,
-            closeSpan = lt + '/span' + gt,
-            text;
-
-        if (type === 'no') {
-            if (endLine !== startLine) {
-                endLine = startLine;
-                endCol = structuredText[startLine].text.originalLength();
-            }
-            text = structuredText[startLine].text;
-            text.wrap(startCol,
-                openSpan,
-                startLine === endLine ? endCol : text.originalLength(),
-                closeSpan);
-        }
-    });
-}
-
-function annotateBranches(fileCoverage, structuredText) {
-    var branchStats = fileCoverage.b,
-        branchMeta = fileCoverage.branchMap;
-    if (!branchStats) { return; }
-
-    Object.keys(branchStats).forEach(function (branchName) {
-        var branchArray = branchStats[branchName],
-            sumCount = branchArray.reduce(function (p, n) { return p + n; }, 0),
-            metaArray = branchMeta[branchName].locations,
-            i,
-            count,
-            meta,
-            type,
-            startCol,
-            endCol,
-            startLine,
-            endLine,
-            openSpan,
-            closeSpan,
-            text;
-
-        if (sumCount > 0) { //only highlight if partial branches are missing
-            for (i = 0; i < branchArray.length; i += 1) {
-                count = branchArray[i];
-                meta = metaArray[i];
-                type = count > 0 ? 'yes' : 'no';
-                startCol = meta.start.column;
-                endCol = meta.end.column + 1;
-                startLine = meta.start.line;
-                endLine = meta.end.line;
-                openSpan = lt + 'span class="branch-' + i + ' ' + (meta.skip ? 'cbranch-skip' : 'cbranch-no') + '"' + title('branch not covered') + gt;
-                closeSpan = lt + '/span' + gt;
-
-                if (count === 0) { //skip branches taken
-                    if (endLine !== startLine) {
-                        endLine = startLine;
-                        endCol = structuredText[startLine].text.originalLength();
-                    }
-                    text = structuredText[startLine].text;
-                    if (branchMeta[branchName].type === 'if') { // and 'if' is a special case since the else branch might not be visible, being non-existent
-                        text.insertAt(startCol, lt + 'span class="' + (meta.skip ? 'skip-if-branch' : 'missing-if-branch') + '"' +
-                            title((i === 0 ? 'if' : 'else') + ' path not taken') + gt +
-                            (i === 0 ? 'I' : 'E')  + lt + '/span' + gt, true, false);
-                    } else {
-                        text.wrap(startCol,
-                            openSpan,
-                            startLine === endLine ? endCol : text.originalLength(),
-                            closeSpan);
-                    }
-                }
-            }
-        }
-    });
-}
-
-function getReportClass(stats, watermark) {
-    var coveragePct = stats.pct,
-        identity  = 1;
-    if (coveragePct * identity === coveragePct) {
-        return coveragePct >= watermark[1] ? 'high' : coveragePct >= watermark[0] ? 'medium' : 'low';
-    } else {
-        return '';
-    }
-}
-
 /**
  * a `Report` implementation that produces HTML coverage reports.
  *
@@ -11974,6 +11671,307 @@ function getReportClass(stats, watermark) {
  * @param {String} [opts.dir] the directory in which to generate reports. Defaults to `./html-report`
  */
 local.reportHtmlCreate = function(opts, collector) {
+    /*
+     Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
+     Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
+     */
+
+    /*jshint maxlen: 300 */
+    var handlebars = require('handlebars'),
+        defaults = require('./common/defaults'),
+        path = require('path'),
+        SEP = path.sep || '/',
+        fs = require('fs'),
+        util = require('util'),
+        Store = require('../store'),
+        InsertionText = require('../util/insertion-text'),
+        TreeSummarizer = require('../util/tree-summarizer'),
+        utils = require('../object-utils'),
+        templateFor = function (name) { return handlebars.compile(fs.readFileSync(path.resolve(__dirname, 'templates', name + '.txt'), 'utf8')); },
+        headerTemplate = templateFor('head'),
+        footerTemplate = templateFor('foot'),
+        pathTemplate = handlebars.compile('<div class="path">{{{html}}}</div>'),
+        detailTemplate = handlebars.compile([
+            '<tr>',
+            '<td class="line-count">{{#show_lines}}{{maxLines}}{{/show_lines}}</td>',
+            '<td class="line-coverage">{{#show_line_execution_counts fileCoverage}}{{maxLines}}{{/show_line_execution_counts}}</td>',
+            // hack-coverage - domOnEventSelectAllWithinPre
+            '<td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code structured}}{{/show_code}}</pre></td>',
+            '</tr>\n'
+        ].join('')),
+        summaryTableHeader = [
+            '<div class="coverage-summary">',
+            '<table>',
+            '<thead>',
+            '<tr>',
+            // hack-coverage - compact summary
+            '   <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>',
+            '   <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>',
+            '   <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>',
+            '   <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>',
+            '   <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>',
+            '</tr>',
+            '</thead>',
+            '<tbody>'
+        ].join('\n'),
+        summaryLineTemplate = handlebars.compile([
+            '<tr>',
+            // hack-coverage - compact summary
+            '<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>',
+            '<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>',
+            '<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>',
+            '<td data-value="{{metrics.functions.pct}}" class="pct {{reportClasses.functions}}">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>',
+            '<td data-value="{{metrics.lines.pct}}" class="pct {{reportClasses.lines}}">{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>',
+            '</tr>\n'
+        ].join('\n\t')),
+        summaryTableFooter = [
+            '</tbody>',
+            '</table>',
+            '</div>'
+        ].join('\n'),
+        lt = '\u0001',
+        gt = '\u0002',
+        RE_LT = /</g,
+        RE_GT = />/g,
+        RE_AMP = /&/g,
+        RE_lt = /\u0001/g,
+        RE_gt = /\u0002/g;
+
+    handlebars.registerHelper('show_picture', function (opts) {
+        var num = Number(opts.fn(this)),
+            rest,
+            cls = '';
+        if (isFinite(num)) {
+            if (num === 100) {
+                cls = ' cover-full';
+            }
+            num = Math.floor(num);
+            rest = 100 - num;
+            return '<span class="cover-fill' + cls + '" style="width: ' + num + 'px;"></span>' +
+                '<span class="cover-empty" style="width:' + rest + 'px;"></span>';
+        } else {
+            return '';
+        }
+    });
+
+    handlebars.registerHelper('show_ignores', function (metrics) {
+        var statements = metrics.statements.skipped,
+            functions = metrics.functions.skipped,
+            branches = metrics.branches.skipped,
+            result;
+
+        if (statements === 0 && functions === 0 && branches === 0) {
+            return '<span class="ignore-none">none</span>';
+        }
+
+        result = [];
+        // hack-coverage - compact summary
+        if (statements >0) { result.push('statements: ' + statements); }
+        if (branches >0) { result.push('branches: ' + branches); }
+        if (functions >0) { result.push('functions: ' + functions); }
+
+        return result.join('<br>');
+    });
+
+    // hack-coverage - hashtag lineno
+    handlebars.registerHelper('show_lines', function (opts) {
+        var maxLines = Number(opts.fn(this)),
+            i,
+            array = "";
+
+        for (i = 1; i <= maxLines; i += 1) {
+            array += '<a href="#L' + i + '" id="L' + i + '">' + i + '</a>\n';
+        }
+        return array;
+    });
+
+    handlebars.registerHelper('show_line_execution_counts', function (context, opts) {
+        var lines = context.l,
+            maxLines = Number(opts.fn(this)),
+            i,
+            lineNumber,
+            array = [],
+            covered,
+            value = '';
+
+        for (i = 0; i < maxLines; i += 1) {
+            lineNumber = i + 1;
+            value = '&nbsp;';
+            covered = 'neutral';
+            if (lines.hasOwnProperty(lineNumber)) {
+                if (lines[lineNumber] > 0) {
+                    covered = 'yes';
+                    value = lines[lineNumber];
+                } else {
+                    covered = 'no';
+                }
+            }
+            array.push('<span class="cline-any cline-' + covered + '">' + value + '</span>');
+        }
+        return array.join('\n');
+    });
+
+    function customEscape(text) {
+        text = text.toString();
+        return text.replace(RE_AMP, '&amp;')
+            .replace(RE_LT, '&lt;')
+            .replace(RE_GT, '&gt;')
+            .replace(RE_lt, '<')
+            .replace(RE_gt, '>');
+    }
+
+    handlebars.registerHelper('show_code', function (context /*, opts */) {
+        var array = [];
+
+        context.forEach(function (item) {
+            array.push(customEscape(item.text) || '&nbsp;');
+        });
+        return array.join('\n');
+    });
+
+    function title(str) {
+        return ' title="' + str + '" ';
+    }
+
+    function annotateLines(fileCoverage, structuredText) {
+        var lineStats = fileCoverage.l;
+        if (!lineStats) { return; }
+        Object.keys(lineStats).forEach(function (lineNumber) {
+            var count = lineStats[lineNumber];
+            structuredText[lineNumber].covered = count > 0 ? 'yes' : 'no';
+        });
+        structuredText.forEach(function (item) {
+            if (item.covered === null) {
+                item.covered = 'neutral';
+            }
+        });
+    }
+
+    function annotateStatements(fileCoverage, structuredText) {
+        var statementStats = fileCoverage.s,
+            statementMeta = fileCoverage.statementMap;
+        Object.keys(statementStats).forEach(function (stName) {
+            var count = statementStats[stName],
+                meta = statementMeta[stName],
+                type = count > 0 ? 'yes' : 'no',
+                startCol = meta.start.column,
+                endCol = meta.end.column + 1,
+                startLine = meta.start.line,
+                endLine = meta.end.line,
+                openSpan = lt + 'span class="' + (meta.skip ? 'cstat-skip' : 'cstat-no') + '"' + title('statement not covered') + gt,
+                closeSpan = lt + '/span' + gt,
+                text;
+
+            if (type === 'no') {
+                if (endLine !== startLine) {
+                    endLine = startLine;
+                    endCol = structuredText[startLine].text.originalLength();
+                }
+                text = structuredText[startLine].text;
+                text.wrap(startCol,
+                    openSpan,
+                    startLine === endLine ? endCol : text.originalLength(),
+                    closeSpan);
+            }
+        });
+    }
+
+    function annotateFunctions(fileCoverage, structuredText) {
+
+        var fnStats = fileCoverage.f,
+            fnMeta = fileCoverage.fnMap;
+        if (!fnStats) { return; }
+        Object.keys(fnStats).forEach(function (fName) {
+            var count = fnStats[fName],
+                meta = fnMeta[fName],
+                type = count > 0 ? 'yes' : 'no',
+                startCol = meta.loc.start.column,
+                endCol = meta.loc.end.column + 1,
+                startLine = meta.loc.start.line,
+                endLine = meta.loc.end.line,
+                openSpan = lt + 'span class="' + (meta.skip ? 'fstat-skip' : 'fstat-no') + '"' + title('function not covered') + gt,
+                closeSpan = lt + '/span' + gt,
+                text;
+
+            if (type === 'no') {
+                if (endLine !== startLine) {
+                    endLine = startLine;
+                    endCol = structuredText[startLine].text.originalLength();
+                }
+                text = structuredText[startLine].text;
+                text.wrap(startCol,
+                    openSpan,
+                    startLine === endLine ? endCol : text.originalLength(),
+                    closeSpan);
+            }
+        });
+    }
+
+    function annotateBranches(fileCoverage, structuredText) {
+        var branchStats = fileCoverage.b,
+            branchMeta = fileCoverage.branchMap;
+        if (!branchStats) { return; }
+
+        Object.keys(branchStats).forEach(function (branchName) {
+            var branchArray = branchStats[branchName],
+                sumCount = branchArray.reduce(function (p, n) { return p + n; }, 0),
+                metaArray = branchMeta[branchName].locations,
+                i,
+                count,
+                meta,
+                type,
+                startCol,
+                endCol,
+                startLine,
+                endLine,
+                openSpan,
+                closeSpan,
+                text;
+
+            if (sumCount > 0) { //only highlight if partial branches are missing
+                for (i = 0; i < branchArray.length; i += 1) {
+                    count = branchArray[i];
+                    meta = metaArray[i];
+                    type = count > 0 ? 'yes' : 'no';
+                    startCol = meta.start.column;
+                    endCol = meta.end.column + 1;
+                    startLine = meta.start.line;
+                    endLine = meta.end.line;
+                    openSpan = lt + 'span class="branch-' + i + ' ' + (meta.skip ? 'cbranch-skip' : 'cbranch-no') + '"' + title('branch not covered') + gt;
+                    closeSpan = lt + '/span' + gt;
+
+                    if (count === 0) { //skip branches taken
+                        if (endLine !== startLine) {
+                            endLine = startLine;
+                            endCol = structuredText[startLine].text.originalLength();
+                        }
+                        text = structuredText[startLine].text;
+                        if (branchMeta[branchName].type === 'if') { // and 'if' is a special case since the else branch might not be visible, being non-existent
+                            text.insertAt(startCol, lt + 'span class="' + (meta.skip ? 'skip-if-branch' : 'missing-if-branch') + '"' +
+                                title((i === 0 ? 'if' : 'else') + ' path not taken') + gt +
+                                (i === 0 ? 'I' : 'E')  + lt + '/span' + gt, true, false);
+                        } else {
+                            text.wrap(startCol,
+                                openSpan,
+                                startLine === endLine ? endCol : text.originalLength(),
+                                closeSpan);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function getReportClass(stats, watermark) {
+        var coveragePct = stats.pct,
+            identity  = 1;
+        if (coveragePct * identity === coveragePct) {
+            return coveragePct >= watermark[1] ? 'high' : coveragePct >= watermark[0] ? 'medium' : 'low';
+        } else {
+            return '';
+        }
+    }
+
     opts = opts || {};
     opts.dir = opts.dir || path.resolve(process.cwd(), 'html-report');
     opts.sourceStore = opts.sourceStore || Store.create('fslookup');
@@ -12160,37 +12158,12 @@ local.reportHtmlCreate = function(opts, collector) {
     //console.log(JSON.stringify(tree.root, undefined, 4));
     writeFiles(writer, tree.root, dir, collector);
 };
-}());
 
 
 
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
-/* istanbul ignore next */
-(function () { var module; module = {};
-/*
- Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
- Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
- */
-
-/**
- * a `Report` implementation that produces text output in a detailed table.
- *
- * Usage
- * -----
- *
- *      var report = require('istanbul').Report.create('text');
- *
- * @class TextReport
- * @extends Report
- * @constructor
- * @param {Object} opts optional
- * @param {String} [opts.dir] the directory in which to the text coverage report will be written, when writing to a file
- * @param {String} [opts.file] the filename for the report. When omitted, the report is written to console
- * @param {Number} [opts.maxcols] the max column width of the report. By default, the width of the report is adjusted based on the length of the paths
- *              to be reported.
- */
 local.reportTextCreate = function(opts, collector) {
     var defaults = require('./common/defaults'),
         utils = require('../object-utils'),
@@ -12346,7 +12319,6 @@ local.reportTextCreate = function(opts, collector) {
     text = strings.join('\n') + '\n';
     console.log(text);
 };
-}());
 
 
 
