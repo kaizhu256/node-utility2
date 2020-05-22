@@ -11077,8 +11077,8 @@ function handlebarsCompile(template) {
  * this function will return a function
  * that will render <template> with given <dict>
  */
-    let handlebarsReplace;
-    handlebarsReplace = function (template, dict, withPrefix) {
+    let replace;
+    replace = function (template, dict, withPrefix) {
     /*
      * this function will render <template> with given <dict>
      */
@@ -11114,7 +11114,7 @@ function handlebarsCompile(template) {
         result = result.replace((
             /\{\{#with\u0020(.+?)\}\}([\S\s]+?)\{\{\/with\}\}/g
         ), function (ignore, match1, match2) {
-            return handlebarsReplace(match2, dict, match1 + ".");
+            return replace(match2, dict, match1 + ".");
         });
         // render helper
         result = result.replace(
@@ -11213,7 +11213,7 @@ function handlebarsCompile(template) {
                 );
             }
         );
-        result = handlebarsReplace(result, dict, "");
+        result = replace(result, dict, "");
         // show code last
         result = result.replace(
             "{{#show_code structured}}{{/show_code}}",
