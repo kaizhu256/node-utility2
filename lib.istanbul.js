@@ -11237,7 +11237,6 @@ function handlebarsCompile(template) {
     };
 }
 function reportHtmlCreate(opts) {
-    let ancestorHref;
     let detailTemplate;
     let dir;
     let fillTemplate;
@@ -11476,19 +11475,17 @@ function reportHtmlCreate(opts) {
     templateData = {
         datetime: new Date().toGMTString()
     };
-    ancestorHref = function (node, num) {
+    function ancestorHref(node, num) {
         let href;
         let ii;
         let jj;
-        let levels;
         let separated;
         href = "";
         ii = 0;
         while (ii < num) {
             separated = node.relativeName.split(path.sep);
-            levels = separated.length - 1;
             jj = 0;
-            while (jj < levels) {
+            while (jj < separated.length - 1) {
                 href += "../";
                 jj += 1;
             }
@@ -11496,7 +11493,7 @@ function reportHtmlCreate(opts) {
             ii += 1;
         }
         return href;
-    };
+    }
     function linkMapperAsset(node, name) {
         let ii;
         let parent;
