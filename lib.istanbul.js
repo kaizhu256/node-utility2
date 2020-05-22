@@ -11799,37 +11799,37 @@ local.reportHtmlCreate = function(opts, collector) {
             covered = "neutral";
             if (lines.hasOwnProperty(lineNumber)) {
                 if (lines[lineNumber] > 0) {
-                    covered = "yes";
+                    covered = 'yes';
                     value = lines[lineNumber];
                 } else {
-                    covered = "no";
+                    covered = 'no';
                 }
             }
-            array.push("<span class=\"cline-any cline-" + covered + "\">" + value + "</span>");
+            array.push('<span class="cline-any cline-' + covered + '">' + value + '</span>');
         }
-        return array.join("\n");
+        return array.join('\n');
     });
 
     function customEscape(text) {
         text = text.toString();
-        return text.replace(RE_AMP, "&amp;")
-            .replace(RE_LT, "&lt;")
-            .replace(RE_GT, "&gt;")
-            .replace(RE_lt, "<")
-            .replace(RE_gt, ">");
+        return text.replace(RE_AMP, '&amp;')
+            .replace(RE_LT, '&lt;')
+            .replace(RE_GT, '&gt;')
+            .replace(RE_lt, '<')
+            .replace(RE_gt, '>');
     }
 
-    handlebars.registerHelper("show_code", function (context /*, opts */) {
+    handlebars.registerHelper('show_code', function (context /*, opts */) {
         var array = [];
 
         context.forEach(function (item) {
-            array.push(customEscape(item.text) || "&nbsp;");
+            array.push(customEscape(item.text) || '&nbsp;');
         });
-        return array.join("\n");
+        return array.join('\n');
     });
 
     function title(str) {
-        return " title=\"" + str + "\" ";
+        return ' title="' + str + '" ';
     }
 
     function annotateLines(fileCoverage, structuredText) {
@@ -11837,11 +11837,11 @@ local.reportHtmlCreate = function(opts, collector) {
         if (!lineStats) { return; }
         Object.keys(lineStats).forEach(function (lineNumber) {
             var count = lineStats[lineNumber];
-            structuredText[lineNumber].covered = count > 0 ? "yes" : "no";
+            structuredText[lineNumber].covered = count > 0 ? 'yes' : 'no';
         });
         structuredText.forEach(function (item) {
             if (item.covered === null) {
-                item.covered = "neutral";
+                item.covered = 'neutral';
             }
         });
     }
@@ -11852,16 +11852,16 @@ local.reportHtmlCreate = function(opts, collector) {
         Object.keys(statementStats).forEach(function (stName) {
             var count = statementStats[stName],
                 meta = statementMeta[stName],
-                type = count > 0 ? "yes" : "no",
+                type = count > 0 ? 'yes' : 'no',
                 startCol = meta.start.column,
                 endCol = meta.end.column + 1,
                 startLine = meta.start.line,
                 endLine = meta.end.line,
-                openSpan = lt + "span class=\"" + (meta.skip ? "cstat-skip" : "cstat-no") + "\"" + title("statement not covered") + gt,
-                closeSpan = lt + "/span" + gt,
+                openSpan = lt + 'span class="' + (meta.skip ? 'cstat-skip' : 'cstat-no') + '"' + title('statement not covered') + gt,
+                closeSpan = lt + '/span' + gt,
                 text;
 
-            if (type === "no") {
+            if (type === 'no') {
                 if (endLine !== startLine) {
                     endLine = startLine;
                     endCol = structuredText[startLine].text.originalLength();
@@ -11883,16 +11883,16 @@ local.reportHtmlCreate = function(opts, collector) {
         Object.keys(fnStats).forEach(function (fName) {
             var count = fnStats[fName],
                 meta = fnMeta[fName],
-                type = count > 0 ? "yes" : "no",
+                type = count > 0 ? 'yes' : 'no',
                 startCol = meta.loc.start.column,
                 endCol = meta.loc.end.column + 1,
                 startLine = meta.loc.start.line,
                 endLine = meta.loc.end.line,
-                openSpan = lt + "span class=\"" + (meta.skip ? "fstat-skip" : "fstat-no") + "\"" + title("function not covered") + gt,
-                closeSpan = lt + "/span" + gt,
+                openSpan = lt + 'span class="' + (meta.skip ? 'fstat-skip' : 'fstat-no') + '"' + title('function not covered') + gt,
+                closeSpan = lt + '/span' + gt,
                 text;
 
-            if (type === "no") {
+            if (type === 'no') {
                 if (endLine !== startLine) {
                     endLine = startLine;
                     endCol = structuredText[startLine].text.originalLength();
@@ -11931,13 +11931,13 @@ local.reportHtmlCreate = function(opts, collector) {
                 for (i = 0; i < branchArray.length; i += 1) {
                     count = branchArray[i];
                     meta = metaArray[i];
-                    type = count > 0 ? "yes" : "no";
+                    type = count > 0 ? 'yes' : 'no';
                     startCol = meta.start.column;
                     endCol = meta.end.column + 1;
                     startLine = meta.start.line;
                     endLine = meta.end.line;
-                    openSpan = lt + "span class=\"branch-" + i + " " + (meta.skip ? "cbranch-skip" : "cbranch-no") + "\"" + title("branch not covered") + gt;
-                    closeSpan = lt + "/span" + gt;
+                    openSpan = lt + 'span class="branch-' + i + ' ' + (meta.skip ? 'cbranch-skip' : 'cbranch-no') + '"' + title('branch not covered') + gt;
+                    closeSpan = lt + '/span' + gt;
 
                     if (count === 0) { //skip branches taken
                         if (endLine !== startLine) {
@@ -11945,10 +11945,10 @@ local.reportHtmlCreate = function(opts, collector) {
                             endCol = structuredText[startLine].text.originalLength();
                         }
                         text = structuredText[startLine].text;
-                        if (branchMeta[branchName].type === "if") { // and "if" is a special case since the else branch might not be visible, being non-existent
-                            text.insertAt(startCol, lt + "span class=\"" + (meta.skip ? "skip-if-branch" : "missing-if-branch") + "\"" +
-                                title((i === 0 ? "if" : "else") + " path not taken") + gt +
-                                (i === 0 ? "I" : "E")  + lt + "/span" + gt, true, false);
+                        if (branchMeta[branchName].type === 'if') { // and 'if' is a special case since the else branch might not be visible, being non-existent
+                            text.insertAt(startCol, lt + 'span class="' + (meta.skip ? 'skip-if-branch' : 'missing-if-branch') + '"' +
+                                title((i === 0 ? 'if' : 'else') + ' path not taken') + gt +
+                                (i === 0 ? 'I' : 'E')  + lt + '/span' + gt, true, false);
                         } else {
                             text.wrap(startCol,
                                 openSpan,
@@ -11965,15 +11965,15 @@ local.reportHtmlCreate = function(opts, collector) {
         var coveragePct = stats.pct,
             identity  = 1;
         if (coveragePct * identity === coveragePct) {
-            return coveragePct >= watermark[1] ? "high" : coveragePct >= watermark[0] ? "medium" : "low";
+            return coveragePct >= watermark[1] ? 'high' : coveragePct >= watermark[0] ? 'medium' : 'low';
         } else {
-            return "";
+            return '';
         }
     }
 
     opts = opts || {};
-    opts.dir = opts.dir || path.resolve(process.cwd(), "html-report");
-    opts.sourceStore = opts.sourceStore || Store.create("fslookup");
+    opts.dir = opts.dir || path.resolve(process.cwd(), 'html-report');
+    opts.sourceStore = opts.sourceStore || Store.create('fslookup');
     opts.writer = opts.writer || null;
     // hack-coverage - new Date() bugfix
     opts.templateData = { datetime: new Date().toGMTString() };
@@ -11984,7 +11984,7 @@ local.reportHtmlCreate = function(opts, collector) {
     var linkMapper;
     var writeFiles;
     ancestorHref = function (node, num) {
-        var href = "",
+        var href = '',
             separated,
             levels,
             i,
@@ -11993,7 +11993,7 @@ local.reportHtmlCreate = function(opts, collector) {
             separated = node.relativeName.split(SEP);
             levels = separated.length - 1;
             for (j = 0; j < levels; j += 1) {
-                href += "../";
+                href += '../';
             }
             node = node.parent;
         }
@@ -12001,7 +12001,7 @@ local.reportHtmlCreate = function(opts, collector) {
     };
     fillTemplate = function (node, templateData) {
         var html;
-        templateData.entity = node.name || "All files";
+        templateData.entity = node.name || 'All files';
         templateData.metrics = node.metrics;
         templateData.reportClass = getReportClass(node.metrics.statements, opts.watermarks.statements);
         var parent = node.parent,
@@ -12013,16 +12013,16 @@ local.reportHtmlCreate = function(opts, collector) {
             parent = parent.parent;
         }
         for (i = 0; i < nodePath.length; i += 1) {
-            linkPath.push("<a href=\"" + linkMapper.ancestor(node, i + 1) + "\">" +
-                (nodePath[i].relativeName || "All files") + "</a>");
+            linkPath.push('<a href="' + linkMapper.ancestor(node, i + 1) + '">' +
+                (nodePath[i].relativeName || 'All files') + '</a>');
         }
         linkPath.reverse();
-        html = linkPath.length > 0 ? linkPath.join(" &#187; ") + " &#187; " +
-            node.displayShortName() : "";
+        html = linkPath.length > 0 ? linkPath.join(' &#187; ') + ' &#187; ' +
+            node.displayShortName() : '';
         templateData.pathHtml = pathTemplate({ html });
         templateData.prettify = {
-            js: linkMapper.asset(node, "prettify.js"),
-            css: linkMapper.asset(node, "prettify.css")
+            js: linkMapper.asset(node, 'prettify.js'),
+            css: linkMapper.asset(node, 'prettify.css')
         };
     };
     linkMapper = {
@@ -12030,21 +12030,21 @@ local.reportHtmlCreate = function(opts, collector) {
             var i = 0,
                 relativeName = node.relativeName,
                 ch;
-            if (SEP !== "/") {
-                relativeName = "";
+            if (SEP !== '/') {
+                relativeName = '';
                 for (i = 0; i < node.relativeName.length; i += 1) {
                     ch = node.relativeName.charAt(i);
                     if (ch === SEP) {
-                        relativeName += "/";
+                        relativeName += '/';
                     } else {
                         relativeName += ch;
                     }
                 }
             }
-            return node.kind === "dir" ? relativeName + "index.html" : relativeName + ".html";
+            return node.kind === 'dir' ? relativeName + 'index.html' : relativeName + '.html';
         },
         ancestor: function (node, num) {
-            return ancestorHref(node, num) + "index.html";
+            return ancestorHref(node, num) + 'index.html';
         },
         asset: function (node, name) {
             var i = 0,
@@ -12054,9 +12054,9 @@ local.reportHtmlCreate = function(opts, collector) {
         }
     };
     writeFiles = function (writer, node, dir, collector) {
-        var indexFile = path.resolve(dir, "index.html"),
+        var indexFile = path.resolve(dir, 'index.html'),
             childFile;
-        if (opts.verbose) { console.error("Writing " + indexFile); }
+        if (opts.verbose) { console.error('Writing ' + indexFile); }
         writer.writeFile(indexFile, function () {
             var templateData = opts.templateData,
                 children = Array.prototype.slice.apply(node.children),
@@ -12083,35 +12083,35 @@ local.reportHtmlCreate = function(opts, collector) {
                         file: child.displayShortName(),
                         output: linkMapper.fromParent(child)
                     };
-                writer.write(summaryLineTemplate(data) + "\n");
+                writer.write(summaryLineTemplate(data) + '\n');
             });
             writer.write(summaryTableFooter);
             writer.write(footerTemplate(templateData));
         });
         node.children.forEach(function (child) {
-            if (child.kind === "dir") {
+            if (child.kind === 'dir') {
                 // recurse
                 writeFiles(writer, child, path.resolve(dir, child.relativeName), collector);
                 return;
             }
-            childFile = path.resolve(dir, child.relativeName + ".html");
-            if (opts.verbose) { console.error("Writing " + childFile); }
+            childFile = path.resolve(dir, child.relativeName + '.html');
+            if (opts.verbose) { console.error('Writing ' + childFile); }
             writer.writeFile(childFile, function () {
                 var fileCoverage = collector.fileCoverageFor(child.fullPath());
                 var sourceStore = opts.sourceStore,
                     templateData = opts.templateData,
                     sourceText = fileCoverage.code && Array.isArray(fileCoverage.code) ?
-                        fileCoverage.code.join("\n") + "\n" : sourceStore.get(fileCoverage.path),
+                        fileCoverage.code.join('\n') + '\n' : sourceStore.get(fileCoverage.path),
                     code = sourceText.split(/(?:\r?\n)|\r/),
                     count = 0,
                     structured = code.map(function (str) { count += 1; return { line: count, covered: null, text: new InsertionText(str, true) }; }),
                     context;
 
-                structured.unshift({ line: 0, covered: null, text: new InsertionText(\"\") });
+                structured.unshift({ line: 0, covered: null, text: new InsertionText("") });
 
                 fillTemplate(child, templateData);
                 writer.write(headerTemplate(templateData));
-                writer.write("<pre><table class=\"coverage\">\n");
+                writer.write('<pre><table class="coverage">\n');
 
                 annotateLines(fileCoverage, structured);
                 //note: order is important, since statements typically result in spanning the whole line and doing branches late
@@ -12127,7 +12127,7 @@ local.reportHtmlCreate = function(opts, collector) {
                     fileCoverage: fileCoverage
                 };
                 writer.write(detailTemplate(context));
-                writer.write("</table></pre>\n");
+                writer.write('</table></pre>\n');
                 writer.write(footerTemplate(templateData));
             });
         });
@@ -12142,14 +12142,14 @@ local.reportHtmlCreate = function(opts, collector) {
         summarizer.addFileCoverageSummary(key, utils.summarizeFileCoverage(collector.fileCoverageFor(key)));
     });
     tree = summarizer.getTreeSummary();
-    fs.readdirSync(path.resolve(__dirname, "..", "vendor")).forEach(function (f) {
-        var resolvedSource = path.resolve(__dirname, "..", "vendor", f),
+    fs.readdirSync(path.resolve(__dirname, '..', 'vendor')).forEach(function (f) {
+        var resolvedSource = path.resolve(__dirname, '..', 'vendor', f),
             resolvedDestination = path.resolve(dir, f),
             stat = fs.statSync(resolvedSource);
 
         if (stat.isFile()) {
             if (opts.verbose) {
-                console.log("Write asset: " + resolvedDestination);
+                console.log('Write asset: ' + resolvedDestination);
             }
             writer.copyFile(resolvedSource, resolvedDestination);
         }
@@ -12164,17 +12164,17 @@ local.reportHtmlCreate = function(opts, collector) {
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
 local.reportTextCreate = function(opts, collector) {
-    var defaults = require("./common/defaults"),
-        utils = require("../object-utils"),
+    var defaults = require('./common/defaults'),
+        utils = require('../object-utils'),
         PCT_COLS = 10,
         TAB_SIZE = 3,
-        DELIM = " |",
-        COL_DELIM = "-|";
+        DELIM = ' |',
+        COL_DELIM = '-|';
 
     function padding(num, ch) {
-        var str = "",
+        var str = '',
             i;
-        ch = ch || " ";
+        ch = ch || ' ';
         for (i = 0; i < num; i += 1) {
             str += ch;
         }
@@ -12188,7 +12188,7 @@ local.reportTextCreate = function(opts, collector) {
         var leadingSpaces = tabs * TAB_SIZE,
             remaining = width - leadingSpaces,
             leader = padding(leadingSpaces),
-            fmtStr = "",
+            fmtStr = '',
             fillStr,
             strlen = str.length;
 
@@ -12198,7 +12198,7 @@ local.reportTextCreate = function(opts, collector) {
                 fmtStr = right ? fillStr + str : str + fillStr;
             } else {
                 fmtStr = str.substring(strlen - remaining);
-                fmtStr = "... " + fmtStr.substring(4);
+                fmtStr = '... ' + fmtStr.substring(4);
             }
         }
 
@@ -12215,17 +12215,17 @@ local.reportTextCreate = function(opts, collector) {
     }
 
     function nodeName(node) {
-        return node.displayShortName() || "All files";
+        return node.displayShortName() || 'All files';
     }
 
     function tableHeader(maxNameCols) {
         var elements = [];
-        elements.push(formatName("File", maxNameCols, 0));
-        elements.push(formatPct("% Stmts"));
-        elements.push(formatPct("% Branches"));
-        elements.push(formatPct("% Funcs"));
-        elements.push(formatPct("% Lines"));
-        return elements.join(" |") + " |";
+        elements.push(formatName('File', maxNameCols, 0));
+        elements.push(formatPct('% Stmts'));
+        elements.push(formatPct('% Branches'));
+        elements.push(formatPct('% Funcs'));
+        elements.push(formatPct('% Lines'));
+        return elements.join(' |') + ' |';
     }
 
     function tableRow(node, maxNameCols, level, watermarks) {
@@ -12236,11 +12236,11 @@ local.reportTextCreate = function(opts, collector) {
             lines = node.metrics.lines.pct,
             elements = [];
 
-        elements.push(formatName(name, maxNameCols, level, defaults.classFor("statements", node.metrics, watermarks)));
-        elements.push(formatPct(statements, defaults.classFor("statements", node.metrics, watermarks)));
-        elements.push(formatPct(branches, defaults.classFor("branches", node.metrics, watermarks)));
-        elements.push(formatPct(functions, defaults.classFor("functions", node.metrics, watermarks)));
-        elements.push(formatPct(lines, defaults.classFor("lines", node.metrics, watermarks)));
+        elements.push(formatName(name, maxNameCols, level, defaults.classFor('statements', node.metrics, watermarks)));
+        elements.push(formatPct(statements, defaults.classFor('statements', node.metrics, watermarks)));
+        elements.push(formatPct(branches, defaults.classFor('branches', node.metrics, watermarks)));
+        elements.push(formatPct(functions, defaults.classFor('functions', node.metrics, watermarks)));
+        elements.push(formatPct(lines, defaults.classFor('lines', node.metrics, watermarks)));
 
         return elements.join(DELIM) + DELIM;
     }
@@ -12259,8 +12259,8 @@ local.reportTextCreate = function(opts, collector) {
     }
 
     function makeLine(nameWidth) {
-        var name = padding(nameWidth, "-"),
-            pct = padding(PCT_COLS, "-"),
+        var name = padding(nameWidth, '-'),
+            pct = padding(PCT_COLS, '-'),
             elements = [];
 
         elements.push(name);
@@ -12298,7 +12298,7 @@ local.reportTextCreate = function(opts, collector) {
     that.file = opts.file;
     that.summary = opts.summary;
     that.watermarks = opts.watermarks || defaults.watermarks();
-    var TreeSummarizer = require("../util/tree-summarizer");
+    var TreeSummarizer = require('../util/tree-summarizer');
     var summarizer = new TreeSummarizer(),
         tree,
         root,
@@ -12315,7 +12315,7 @@ local.reportTextCreate = function(opts, collector) {
     root = tree.root;
     nameWidth = findNameWidth(root);
     walk(root, nameWidth, strings, 0, that.watermarks);
-    text = strings.join("\n") + "\n";
+    text = strings.join('\n') + '\n';
     console.log(text);
 };
 
