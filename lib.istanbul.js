@@ -11469,15 +11469,11 @@ local.templateCoverageBadgeSvg =
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
 let PCT_COLS;
-let RE_AMP;
-let RE_GT;
-let RE_LT;
-let RE_gt;
-let RE_lt;
 let SEP;
 let TAB_SIZE;
 let TreeSummarizer;
 let defaults;
+let path;
 let reportHtmlCreate;
 let reportTextCreate;
 let require2;
@@ -11487,26 +11483,13 @@ require2 = function (key) {
         return local["_istanbul_" + key] || local[key] || require(key);
     } catch (ignore) {}
 };
-PCT_COLS = 10;
-RE_LT = (
-    /</g
-);
-RE_GT = (
-    />/g
-);
-RE_AMP = (
-    /&/g
-);
-RE_lt = (
-    /\u0001/g
-);
-RE_gt = (
-    /\u0002/g
-);
-TAB_SIZE = 2;
 TreeSummarizer = require2("../util/tree-summarizer");
 defaults = require2("./common/defaults");
+path = require2("path");
 utils = require2("../object-utils");
+PCT_COLS = 10;
+SEP = path.sep || "/";
+TAB_SIZE = 2;
 reportHtmlCreate = function (opts, collector) {
     let InsertionText;
     let Store;
@@ -11520,7 +11503,6 @@ reportHtmlCreate = function (opts, collector) {
     let headerTemplate;
     let linkMapper;
     let lt;
-    let path;
     let pathTemplate;
     let summaryLineTemplate;
     let summaryTableFooter;
@@ -11528,8 +11510,6 @@ reportHtmlCreate = function (opts, collector) {
     let templateFor;
     let writeFiles;
     handlebars = require2("handlebars");
-    path = require2("path");
-    SEP = path.sep || "/";
     fs = require2("fs");
     Store = require2("../store");
     InsertionText = require2("../util/insertion-text");
@@ -11722,11 +11702,21 @@ reportHtmlCreate = function (opts, collector) {
     });
     function customEscape(text) {
         text = text.toString();
-        text = text.replace(RE_AMP, "&amp;");
-        text = text.replace(RE_LT, "&lt;");
-        text = text.replace(RE_GT, "&gt;");
-        text = text.replace(RE_lt, "<");
-        text = text.replace(RE_gt, ">");
+        text = text.replace((
+            /&/g
+        ), "&amp;");
+        text = text.replace((
+            /</g
+        ), "&lt;");
+        text = text.replace((
+            />/g
+        ), "&gt;");
+        text = text.replace((
+            /\u0001/g
+        ), "<");
+        text = text.replace((
+            /\u0002/g
+        ), ">");
         return text;
     }
     handlebars.registerHelper("show_code", function (context /*, opts */) {
