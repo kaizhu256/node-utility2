@@ -11477,7 +11477,6 @@ function reportHtmlCreate(opts) {
     let linkMapper;
     let summaryLineTemplate;
     let templateFor;
-    let tree;
     let writeFiles;
     let writer;
     templateFor = function (file) {
@@ -12018,13 +12017,11 @@ function reportHtmlCreate(opts) {
             );
         }
     });
-    tree = new TreeSummary(
+    coverageReportSummary = new TreeSummary(
         summaryMap,
         findCommonArrayPrefix(Object.keys(summaryMap))
     );
-    coverageReportSummary = tree;
-    //console.log(JSON.stringify(tree.root, undefined, 4));
-    writeFiles(writer, tree.root, dir);
+    writeFiles(writer, coverageReportSummary.root, dir);
 }
 
 
@@ -12034,11 +12031,9 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
 reportTextCreate = function (opts) {
     let nameWidth;
-    let root;
     let strings;
     let text;
     let that;
-    let tree;
     function formatName(name, maxCols, level, clazz) {
         return fill(name, maxCols, false, level, clazz);
     }
@@ -12177,14 +12172,12 @@ reportTextCreate = function (opts) {
             );
         }
     });
-    tree = new TreeSummary(
+    coverageReportSummary = new TreeSummary(
         summaryMap,
         findCommonArrayPrefix(Object.keys(summaryMap))
     );
-    coverageReportSummary = tree;
-    root = tree.root;
-    nameWidth = findNameWidth(root);
-    walk(root, nameWidth, strings, 0);
+    nameWidth = findNameWidth(coverageReportSummary.root);
+    walk(coverageReportSummary.root, nameWidth, strings, 0);
     text = strings.join("\n") + "\n";
     console.log(text);
 };
