@@ -11236,7 +11236,7 @@ function handlebarsCompile(template) {
         return result;
     };
 }
-function reportHtmlCreate(opts) {
+function reportHtmlCreate(opt) {
     let detailTemplate;
     let dir;
     let fillTemplate;
@@ -11467,9 +11467,9 @@ function reportHtmlCreate(opts) {
             : "low"
         );
     }
-    opts = opts || {};
-    opts.sourceStore = opts.sourceStore || Store.create("fslookup");
-    opts.writer = opts.writer || null;
+    opt = opt || {};
+    opt.sourceStore = opt.sourceStore || Store.create("fslookup");
+    opt.writer = opt.writer || null;
     // hack-coverage - new Date() bugfix
     templateData = {
         datetime: new Date().toGMTString()
@@ -11566,7 +11566,7 @@ function reportHtmlCreate(opts) {
         let childFile;
         let indexFile;
         indexFile = path.resolve(dir, "index.html");
-        if (opts.verbose) {
+        if (opt.verbose) {
             console.error("Writing " + indexFile);
         }
         writer.writeFile(indexFile, function () {
@@ -11636,7 +11636,7 @@ function reportHtmlCreate(opts) {
                 return;
             }
             childFile = path.resolve(dir, child.relativeName + ".html");
-            if (opts.verbose) {
+            if (opt.verbose) {
                 console.error("Writing " + childFile);
             }
             writer.writeFile(childFile, function () {
@@ -11648,7 +11648,7 @@ function reportHtmlCreate(opts) {
                 let sourceText;
                 let structured;
                 fileCoverage = globalThis.__coverage__[child.fullPath()];
-                sourceStore = opts.sourceStore;
+                sourceStore = opt.sourceStore;
                 sourceText = (
                     (fileCoverage.code && Array.isArray(fileCoverage.code))
                     ? fileCoverage.code.join("\n") + "\n"
@@ -11693,7 +11693,7 @@ function reportHtmlCreate(opts) {
             });
         });
     };
-    dir = opts.dir;
+    dir = opt.dir;
     //!! summaryMap = {};
     //!! Object.keys(globalThis.__coverage__).forEach(function (key) {
         //!! if (
@@ -11711,7 +11711,7 @@ function reportHtmlCreate(opts) {
         //!! summaryMap,
         //!! findCommonArrayPrefix(Object.keys(summaryMap))
     //!! );
-    writer = opts.writer;
+    writer = opt.writer;
     writeFiles(writer, coverageReportSummary.root, dir);
 }
 
@@ -11720,7 +11720,7 @@ function reportHtmlCreate(opts) {
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
-reportTextCreate = function (opts) {
+reportTextCreate = function (opt) {
     let nameWidth;
     let strings;
     let text;
@@ -11843,10 +11843,10 @@ reportTextCreate = function (opts) {
         }
     }
     that = {};
-    opts = opts || {};
-    that.dir = opts.dir || "";
-    that.file = opts.file;
-    that.summary = opts.summary;
+    opt = opt || {};
+    that.dir = opt.dir || "";
+    that.file = opt.file;
+    that.summary = opt.summary;
     summaryMap = {};
     strings = [];
     Object.keys(globalThis.__coverage__).forEach(function (key) {
