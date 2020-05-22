@@ -12040,7 +12040,6 @@ local.reportHtmlCreate = function (opts, collector) {
             let startCol;
             let startLine;
             let text;
-            let type;
 
             if (sumCount > 0) {
                 //only highlight if partial branches are missing
@@ -12048,11 +12047,6 @@ local.reportHtmlCreate = function (opts, collector) {
                 while (i < branchArray.length) {
                     count = branchArray[i];
                     meta = metaArray[i];
-                    type = (
-                        count > 0
-                        ? "yes"
-                        : "no"
-                    );
                     startCol = meta.start.column;
                     endCol = meta.end.column + 1;
                     startLine = meta.start.line;
@@ -12543,8 +12537,6 @@ local.reportTextCreate = function (opts, collector) {
     let nameWidth;
     let root;
     let tree;
-    let statsWidth = 4 * (PCT_COLS + 2);
-    let maxRemaining;
     let strings = [];
     let text;
 
