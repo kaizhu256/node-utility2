@@ -11846,19 +11846,14 @@ local.reportHtmlCreate = function (opts, collector) {
     );
 
     handlebars.registerHelper("show_picture", function (opts) {
-        let num = Number(opts.fn(this));
-        let rest;
-        let cls = "";
+        let num;
+        num = Number(opts.fn(this));
         if (Number.isFinite(num)) {
-            if (num === 100) {
-                cls = " cover-full";
-            }
             num = Math.floor(num);
-            rest = 100 - num;
             return (
-                "<span class=\"cover-fill" + cls + "\" style=\"width: " + num
+                "<span class=\"cover-fill cover-full\" style=\"width: " + num
                 + "px;\"></span><span class=\"cover-empty\" style=\"width:"
-                + rest + "px;\"></span>"
+                + (100 - num) + "px;\"></span>"
             );
         } else {
             return "";
@@ -11866,41 +11861,41 @@ local.reportHtmlCreate = function (opts, collector) {
     });
 
     handlebars.registerHelper("show_ignores", function (metrics) {
-        let statements = metrics.statements.skipped;
-        let functions = metrics.functions.skipped;
-        let branches = metrics.branches.skipped;
         let result;
-
-        if (statements === 0 && functions === 0 && branches === 0) {
+        if (
+            metrics.statements.skipped === 0
+            && metrics.functions.skipped === 0
+            && metrics.branches.skipped === 0
+        ) {
             return "<span class=\"ignore-none\">none</span>";
         }
-
         result = [];
         // hack-coverage - compact summary
-        if (statements > 0) {
-            result.push("statements: " + statements);
+        if (metrics.statements.skipped > 0) {
+            result.push("statements: " + metrics.statements.skipped);
         }
-        if (branches > 0) {
-            result.push("branches: " + branches);
+        if (metrics.branches.skipped > 0) {
+            result.push("branches: " + metrics.branches.skipped);
         }
-        if (functions > 0) {
-            result.push("functions: " + functions);
+        if (metrics.functions.skipped > 0) {
+            result.push("functions: " + metrics.functions.skipped);
         }
-
         return result.join("<br>");
     });
 
     // hack-coverage - hashtag lineno
     handlebars.registerHelper("show_lines", function (opts) {
-        let maxLines = Number(opts.fn(this));
-        let i;
-        let array = "";
-        i = 1;
-        while (i <= maxLines) {
+        let array;
+        let ii;
+        let maxLines;
+        maxLines = Number(opts.fn(this));
+        array = "";
+        ii = 1;
+        while (ii <= maxLines) {
             array += (
-                "<a href=\"#L" + i + "\" id=\"L" + i + "\">" + i + "</a>\n"
+                "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">" + ii + "</a>\n"
             );
-            i += 1;
+            ii += 1;
         }
         return array;
     });
@@ -11909,17 +11904,20 @@ local.reportHtmlCreate = function (opts, collector) {
         context,
         opts
     ) {
-        let lines = context.l;
-        let maxLines = Number(opts.fn(this));
-        let i;
-        let lineNumber;
-        let array = [];
+        let array;
         let covered;
-        let value = "";
-
-        i = 0;
-        while (i < maxLines) {
-            lineNumber = i + 1;
+        let ii;
+        let lineNumber;
+        let lines;
+        let maxLines;
+        let value;
+        lines = context.l;
+        maxLines = Number(opts.fn(this));
+        array = [];
+        value = "";
+        ii = 0;
+        while (ii < maxLines) {
+            lineNumber = ii + 1;
             value = "&nbsp;";
             covered = "neutral";
             if (lines.hasOwnProperty(lineNumber)) {
@@ -11934,7 +11932,7 @@ local.reportHtmlCreate = function (opts, collector) {
                 "<span class=\"cline-any cline-" + covered + "\">"
                 + value + "</span>"
             );
-            i += 1;
+            ii += 1;
         }
         return array.join("\n");
     });
@@ -12081,7 +12079,7 @@ local.reportHtmlCreate = function (opts, collector) {
             let count;
             let endCol;
             let endLine;
-            let i;
+            let ii;
             let meta;
             let openSpan;
             let startCol;
@@ -12090,15 +12088,15 @@ local.reportHtmlCreate = function (opts, collector) {
 
             if (sumCount > 0) {
                 //only highlight if partial branches are missing
-                i = 0;
-                while (i < branchArray.length) {
-                    count = branchArray[i];
-                    meta = metaArray[i];
+                ii = 0;
+                while (ii < branchArray.length) {
+                    count = branchArray[ii];
+                    meta = metaArray[ii];
                     startCol = meta.start.column;
                     endCol = meta.end.column + 1;
                     startLine = meta.start.line;
                     endLine = meta.end.line;
-                    openSpan = lt + "span class=\"branch-" + i + " " + (
+                    openSpan = lt + "span class=\"branch-" + ii + " " + (
                         meta.skip
                         ? "cbranch-skip"
                         : "cbranch-no"
@@ -12122,11 +12120,11 @@ local.reportHtmlCreate = function (opts, collector) {
                                 ? "skip-if-branch"
                                 : "missing-if-branch"
                             ) + "\"" + title((
-                                i === 0
+                                ii === 0
                                 ? "if"
                                 : "else"
                             ) + " path not taken") + gt + (
-                                i === 0
+                                ii === 0
                                 ? "I"
                                 : "E"
                             ) + lt + "/span" + gt, true, false);
@@ -12138,7 +12136,7 @@ local.reportHtmlCreate = function (opts, collector) {
                             ), closeSpan);
                         }
                     }
-                    i += 1;
+                    ii += 1;
                 }
             }
         });
@@ -12176,21 +12174,21 @@ local.reportHtmlCreate = function (opts, collector) {
     let writeFiles;
     ancestorHref = function (node, num) {
         let href = "";
-        let i;
-        let j;
+        let ii;
+        let jj;
         let levels;
         let separated;
-        i = 0;
-        while (i < num) {
+        ii = 0;
+        while (ii < num) {
             separated = node.relativeName.split(SEP);
             levels = separated.length - 1;
-            j = 0;
-            while (j < levels) {
+            jj = 0;
+            while (jj < levels) {
                 href += "../";
-                j += 1;
+                jj += 1;
             }
             node = node.parent;
-            i += 1;
+            ii += 1;
         }
         return href;
     };
@@ -12205,18 +12203,18 @@ local.reportHtmlCreate = function (opts, collector) {
         let parent = node.parent;
         let nodePath = [];
         let linkPath = [];
-        let i;
+        let ii;
         while (parent) {
             nodePath.push(parent);
             parent = parent.parent;
         }
-        i = 0;
-        while (i < nodePath.length) {
+        ii = 0;
+        while (ii < nodePath.length) {
             linkPath.push(
-                "<a href=\"" + linkMapper.ancestor(node, i + 1) + "\">"
-                + (nodePath[i].relativeName || "All files") + "</a>"
+                "<a href=\"" + linkMapper.ancestor(node, ii + 1) + "\">"
+                + (nodePath[ii].relativeName || "All files") + "</a>"
             );
-            i += 1;
+            ii += 1;
         }
         linkPath.reverse();
         html = (
@@ -12234,20 +12232,20 @@ local.reportHtmlCreate = function (opts, collector) {
     };
     linkMapper = {
         fromParent: function (node) {
-            let i = 0;
+            let ii = 0;
             let relativeName = node.relativeName;
             let ch;
             if (SEP !== "/") {
                 relativeName = "";
-                i = 0;
-                while (i < node.relativeName.length) {
-                    ch = node.relativeName.charAt(i);
+                ii = 0;
+                while (ii < node.relativeName.length) {
+                    ch = node.relativeName.charAt(ii);
                     if (ch === SEP) {
                         relativeName += "/";
                     } else {
                         relativeName += ch;
                     }
-                    i += 1;
+                    ii += 1;
                 }
             }
             return (
@@ -12260,13 +12258,13 @@ local.reportHtmlCreate = function (opts, collector) {
             return ancestorHref(node, num) + "index.html";
         },
         asset: function (node, name) {
-            let i = 0;
+            let ii = 0;
             let parent = node.parent;
             while (parent) {
-                i += 1;
+                ii += 1;
                 parent = parent.parent;
             }
-            return ancestorHref(node, i) + name;
+            return ancestorHref(node, ii) + name;
         }
     };
     writeFiles = function (writer, node, dir, collector) {
@@ -12431,12 +12429,12 @@ local.reportTextCreate = function (opts, collector) {
 
     function padding(num, ch) {
         let str = "";
-        let i;
+        let ii;
         ch = ch || " ";
-        i = 0;
-        while (i < num) {
+        ii = 0;
+        while (ii < num) {
             str += ch;
-            i += 1;
+            ii += 1;
         }
         return str;
     }
