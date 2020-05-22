@@ -11042,9 +11042,9 @@ TAB_SIZE = 2;
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
 */
 function commonArrayPrefix(first, second) {
-    var len = first.length < second.length ? first.length : second.length,
-        i,
-        ret = [];
+    let len = first.length < second.length ? first.length : second.length;
+    let i;
+    let ret = [];
     for (i = 0; i < len; i += 1) {
         if (first[i] === second[i]) {
             ret.push(first[i]);
@@ -11060,8 +11060,8 @@ function findCommonArrayPrefix(args) {
         return [];
     }
 
-    var separated = args.map(function (arg) { return arg.split(path.sep); }),
-        ret = separated.pop();
+    let separated = args.map(function (arg) { return arg.split(path.sep); });
+    let ret = separated.pop();
 
     if (separated.length === 0) {
         return ret.slice(0, ret.length - 1);
@@ -11110,20 +11110,20 @@ TreeSummary.prototype = {
         return this.map[shortName];
     },
     convertToTree: function (summaryMap, arrayPrefix) {
-        var nodes = [],
-            rootPath = arrayPrefix.join(path.sep) + path.sep,
-            root = new Node(rootPath, 'dir'),
-            tmp,
-            tmpChildren,
-            seen = {},
-            filesUnderRoot = false;
+        let nodes = [];
+        let rootPath = arrayPrefix.join(path.sep) + path.sep;
+        let root = new Node(rootPath, 'dir');
+        let tmp;
+        let tmpChildren;
+        let seen = {};
+        let filesUnderRoot = false;
 
         seen[rootPath] = root;
         Object.keys(summaryMap).forEach(function (key) {
-            var metrics = summaryMap[key],
-                node,
-                parentPath,
-                parent;
+            let metrics = summaryMap[key];
+            let node;
+            let parentPath;
+            let parent;
             node = new Node(key, 'file', metrics);
             seen[key] = node;
             nodes.push(node);
@@ -11164,7 +11164,7 @@ TreeSummary.prototype = {
     },
 
     fixupNodes: function (node, prefix, parent) {
-        var that = this;
+        let that = this;
         if (node.name.indexOf(prefix) === 0) {
             node.name = node.name.substring(prefix.length);
         }
@@ -11185,8 +11185,8 @@ TreeSummary.prototype = {
         });
     },
     calculateMetrics: function (entry) {
-        var that = this,
-            fileChildren;
+        let that = this;
+        let fileChildren;
         if (entry.kind !== 'dir') {return; }
         entry.children.forEach(function (child) {
             that.calculateMetrics(child);
@@ -11208,7 +11208,7 @@ TreeSummary.prototype = {
         }
     },
     indexAndSortTree: function (node, map) {
-        var that = this;
+        let that = this;
         map[node.name] = node;
         node.children.sort(function (a, b) {
             a = a.relativeName;
