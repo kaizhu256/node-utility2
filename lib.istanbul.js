@@ -12188,7 +12188,7 @@ local.reportHtmlCreate = function (opts, collector) {
     }
 
     opts = opts || {};
-    opts.dir = opts.dir || path.resolve(process.cwd(), "html-report");
+    opts.dir = opts.dir || path.resolve("", "html-report");
     opts.sourceStore = opts.sourceStore || Store.create("fslookup");
     opts.writer = opts.writer || null;
     // hack-coverage - new Date() bugfix
@@ -12652,7 +12652,7 @@ local.reportTextCreate = function (opts, collector) {
     let that;
     that = {};
     opts = opts || {};
-    that.dir = opts.dir || process.cwd();
+    that.dir = opts.dir || "";
     that.file = opts.file;
     that.summary = opts.summary;
     that.watermarks = opts.watermarks || defaults.watermarks();
