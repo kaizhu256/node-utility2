@@ -11469,6 +11469,12 @@ local.templateCoverageBadgeSvg =
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
 let PCT_COLS;
+let RE_AMP;
+let RE_GT;
+let RE_LT;
+let RE_gt;
+let RE_lt;
+let SEP;
 let TAB_SIZE;
 let TreeSummarizer;
 let defaults;
@@ -11482,18 +11488,27 @@ require2 = function (key) {
     } catch (ignore) {}
 };
 PCT_COLS = 10;
+RE_LT = (
+    /</g
+);
+RE_GT = (
+    />/g
+);
+RE_AMP = (
+    /&/g
+);
+RE_lt = (
+    /\u0001/g
+);
+RE_gt = (
+    /\u0002/g
+);
 TAB_SIZE = 2;
 TreeSummarizer = require2("../util/tree-summarizer");
 defaults = require2("./common/defaults");
 utils = require2("../object-utils");
 reportHtmlCreate = function (opts, collector) {
     let InsertionText;
-    let RE_AMP;
-    let RE_GT;
-    let RE_LT;
-    let RE_gt;
-    let RE_lt;
-    let SEP;
     let Store;
     let ancestorHref;
     let detailTemplate;
@@ -11617,21 +11632,6 @@ reportHtmlCreate = function (opts, collector) {
     ].join("\n");
     lt = "\u0001";
     gt = "\u0002";
-    RE_LT = (
-        /</g
-    );
-    RE_GT = (
-        />/g
-    );
-    RE_AMP = (
-        /&/g
-    );
-    RE_lt = (
-        /\u0001/g
-    );
-    RE_gt = (
-        /\u0002/g
-    );
     handlebars.registerHelper("show_picture", function (opts) {
         let num;
         num = Number(opts.fn(this));
