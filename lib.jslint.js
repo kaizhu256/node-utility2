@@ -16386,8 +16386,9 @@ local.jslint_export = Object.freeze(function (
     } catch (e) {
         // hack-jslint - early_stop
         early_stop = true;
-        e.column = -1;
-        e.line = -1;
+        e.early_stop = true;
+        e.column = e.column || -1;
+        e.line = e.line || -1;
         if (e.name !== "JSLintError") {
             warnings.push(e);
         }
@@ -16514,8 +16515,15 @@ local.jslint_export = Object.freeze(function (
         stop: early_stop,
         tokens,
         tree,
+        // hack-jslint - sort by early_stop
         warnings: warnings.sort(function (a, b) {
-            return a.line - b.line || a.column - b.column;
+            return (
+                a.early_stop
+                ? -1
+                : b.early_stop
+                ? 1
+                : a.line - b.line || a.column - b.column
+            );
         }),
         // hack-jslint - autofix
         source_autofixed: source
@@ -16668,7 +16676,7 @@ local.jslintAndPrint = function (code = "", file = "undefined", opt = {}) {
                 err.evidence = err.source;
                 err.line = err.line + 1;
                 // debug early_stop
-                if (err.line <= 0) {
+                if (err.early_stop) {
                     err.message = (
                         "[JSLint was unable to finish] - "
                         + err.message

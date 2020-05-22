@@ -11676,84 +11676,84 @@ local.reportHtmlCreate = function(opts, collector) {
      */
 
     /*jshint maxlen: 300 */
-    var handlebars = require('handlebars'),
-        defaults = require('./common/defaults'),
-        path = require('path'),
-        SEP = path.sep || '/',
-        fs = require('fs'),
-        util = require('util'),
-        Store = require('../store'),
-        InsertionText = require('../util/insertion-text'),
-        TreeSummarizer = require('../util/tree-summarizer'),
-        utils = require('../object-utils'),
-        templateFor = function (name) { return handlebars.compile(fs.readFileSync(path.resolve(__dirname, 'templates', name + '.txt'), 'utf8')); },
-        headerTemplate = templateFor('head'),
-        footerTemplate = templateFor('foot'),
-        pathTemplate = handlebars.compile('<div class="path">{{{html}}}</div>'),
-        detailTemplate = handlebars.compile([
-            '<tr>',
-            '<td class="line-count">{{#show_lines}}{{maxLines}}{{/show_lines}}</td>',
-            '<td class="line-coverage">{{#show_line_execution_counts fileCoverage}}{{maxLines}}{{/show_line_execution_counts}}</td>',
+    var handlebars = require("handlebars");
+    let defaults = require("./common/defaults");
+    let path = require("path");
+    let SEP = path.sep || "/";
+    let fs = require("fs");
+    let util = require("util");
+    let Store = require("../store");
+    let InsertionText = require("../util/insertion-text");
+    let TreeSummarizer = require("../util/tree-summarizer");
+    let utils = require("../object-utils");
+    let templateFor = function (name) { return handlebars.compile(fs.readFileSync(path.resolve(__dirname, "templates", name + ".txt"), "utf8")); };
+    let headerTemplate = templateFor("head");
+    let footerTemplate = templateFor("foot");
+    let pathTemplate = handlebars.compile("<div class=\"path\">{{{html}}}</div>");
+    let detailTemplate = handlebars.compile([
+            "<tr>",
+            "<td class=\"line-count\">{{#show_lines}}{{maxLines}}{{/show_lines}}</td>",
+            "<td class=\"line-coverage\">{{#show_line_execution_counts fileCoverage}}{{maxLines}}{{/show_line_execution_counts}}</td>",
             // hack-coverage - domOnEventSelectAllWithinPre
-            '<td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code structured}}{{/show_code}}</pre></td>',
-            '</tr>\n'
-        ].join('')),
-        summaryTableHeader = [
-            '<div class="coverage-summary">',
-            '<table>',
-            '<thead>',
-            '<tr>',
+            "<td class=\"text\"><pre class=\"prettyprint lang-js\" tabIndex=\"0\">{{#show_code structured}}{{/show_code}}</pre></td>",
+            "</tr>\n"
+        ].join(""));
+    let summaryTableHeader = [
+            "<div class=\"coverage-summary\">",
+            "<table>",
+            "<thead>",
+            "<tr>",
             // hack-coverage - compact summary
-            '   <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>',
-            '   <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>',
-            '   <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>',
-            '   <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>',
-            '   <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>',
-            '</tr>',
-            '</thead>',
-            '<tbody>'
-        ].join('\n'),
-        summaryLineTemplate = handlebars.compile([
-            '<tr>',
+            "   <th data-col=\"file\" data-fmt=\"html\" data-html=\"true\" class=\"file\">File</th>",
+            "   <th data-col=\"statements\" data-type=\"number\" data-fmt=\"pct\" class=\"pct\">Statements</th>",
+            "   <th data-col=\"branches\" data-type=\"number\" data-fmt=\"pct\" class=\"pct\">Branches</th>",
+            "   <th data-col=\"functions\" data-type=\"number\" data-fmt=\"pct\" class=\"pct\">Functions</th>",
+            "   <th data-col=\"lines\" data-type=\"number\" data-fmt=\"pct\" class=\"pct\">Lines</th>",
+            "</tr>",
+            "</thead>",
+            "<tbody>"
+        ].join("\n");
+    let summaryLineTemplate = handlebars.compile([
+            "<tr>",
             // hack-coverage - compact summary
-            '<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>',
-            '<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>',
-            '<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>',
-            '<td data-value="{{metrics.functions.pct}}" class="pct {{reportClasses.functions}}">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>',
-            '<td data-value="{{metrics.lines.pct}}" class="pct {{reportClasses.lines}}">{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>',
-            '</tr>\n'
-        ].join('\n\t')),
-        summaryTableFooter = [
-            '</tbody>',
-            '</table>',
-            '</div>'
-        ].join('\n'),
-        lt = '\u0001',
-        gt = '\u0002',
-        RE_LT = /</g,
-        RE_GT = />/g,
-        RE_AMP = /&/g,
-        RE_lt = /\u0001/g,
-        RE_gt = /\u0002/g;
+            "<td class=\"file {{reportClasses.statements}}\" data-value=\"{{file}}\"><a href=\"{{output}}\"><div>{{file}}</div>{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>",
+            "<td data-value=\"{{metrics.statements.pct}}\" class=\"pct {{reportClasses.statements}}\">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>",
+            "<td data-value=\"{{metrics.branches.pct}}\" class=\"pct {{reportClasses.branches}}\">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>",
+            "<td data-value=\"{{metrics.functions.pct}}\" class=\"pct {{reportClasses.functions}}\">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>",
+            "<td data-value=\"{{metrics.lines.pct}}\" class=\"pct {{reportClasses.lines}}\">{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>",
+            "</tr>\n"
+        ].join("\n\t"));
+    let summaryTableFooter = [
+            "</tbody>",
+            "</table>",
+            "</div>"
+        ].join("\n");
+    let lt = "\u0001";
+    let gt = "\u0002";
+    let RE_LT = /</g;
+    let RE_GT = />/g;
+    let RE_AMP = /&/g;
+    let RE_lt = /\u0001/g;
+    let RE_gt = /\u0002/g;
 
-    handlebars.registerHelper('show_picture', function (opts) {
+    handlebars.registerHelper("show_picture", function (opts) {
         var num = Number(opts.fn(this)),
             rest,
-            cls = '';
+            cls = "";
         if (isFinite(num)) {
             if (num === 100) {
-                cls = ' cover-full';
+                cls = " cover-full";
             }
             num = Math.floor(num);
             rest = 100 - num;
-            return '<span class="cover-fill' + cls + '" style="width: ' + num + 'px;"></span>' +
-                '<span class="cover-empty" style="width:' + rest + 'px;"></span>';
+            return "<span class=\"cover-fill" + cls + "\" style=\"width: " + num + "px;\"></span>" +
+                "<span class=\"cover-empty\" style=\"width:" + rest + "px;\"></span>";
         } else {
-            return '';
+            return "";
         }
     });
 
-    handlebars.registerHelper('show_ignores', function (metrics) {
+    handlebars.registerHelper("show_ignores", function (metrics) {
         var statements = metrics.statements.skipped,
             functions = metrics.functions.skipped,
             branches = metrics.branches.skipped,
@@ -11779,7 +11779,7 @@ local.reportHtmlCreate = function(opts, collector) {
             array = "";
 
         for (i = 1; i <= maxLines; i += 1) {
-            array += '<a href="#L' + i + '" id="L' + i + '">' + i + '</a>\n';
+            array += "<a href=\"#L" + i + "\" id=\"L" + i + "\">" + i + "</a>\n";
         }
         return array;
     });
