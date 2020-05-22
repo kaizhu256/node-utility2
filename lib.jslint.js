@@ -15029,12 +15029,18 @@ stmt("switch", function () {
     while (ii < the_cases.length) {
         aa = bb;
         bb = the_cases[ii].expression[0];
-        bb = (
-            bb.id === "(number)"
-            ? Number(bb.value)
-            : lines[bb.line]
-        );
-        if (ii > 0 && !(aa < bb)) {
+        if (!(
+            ii === 0
+            || (
+                aa.id === "(number)" && bb.id === "(number)"
+                && Number(aa.value) < Number(bb.value)
+            )
+            || lines[aa.line] < lines[bb.line]
+        )) {
+            debugInline([aa, bb]);
+            debugInline(the_cases.map(function (elem) {
+                return elem.expression[0];
+            }));
             warn_at(
                 "Unsorted case-statements.",
                 the_cases[ii].expression[0].line,
