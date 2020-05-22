@@ -10523,7 +10523,6 @@ local.templateCoverageBadgeSvg =
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
 let PCT_COLS;
-let Store;
 let TAB_SIZE;
 let coverageReportSummary;
 let path;
@@ -10531,7 +10530,6 @@ let reportTextCreate;
 let summaryMap;
 let writer;
 // require module
-Store = require("../store");
 path = require("path");
 // init variable
 PCT_COLS = 10;
@@ -11468,7 +11466,6 @@ function reportHtmlCreate(opt) {
         );
     }
     opt = opt || {};
-    opt.sourceStore = opt.sourceStore || Store.create("fslookup");
     // hack-coverage - new Date() bugfix
     templateData = {
         datetime: new Date().toGMTString()
@@ -11643,16 +11640,10 @@ function reportHtmlCreate(opt) {
                 let context;
                 let count;
                 let fileCoverage;
-                let sourceStore;
                 let sourceText;
                 let structured;
                 fileCoverage = globalThis.__coverage__[child.fullPath()];
-                sourceStore = opt.sourceStore;
-                sourceText = (
-                    (fileCoverage.code && Array.isArray(fileCoverage.code))
-                    ? fileCoverage.code.join("\n") + "\n"
-                    : sourceStore.get(fileCoverage.path)
-                );
+                sourceText = fileCoverage.code.join("\n") + "\n";
                 code = sourceText.split(
                     /(?:\r?\n)|\r/
                 );
@@ -11963,7 +11954,6 @@ local.coverageReportCreate = function (opt) {
         + "background: #fff; border: 1px solid #999; margin 0; padding: 0;"
         + "\">\n"
     );
-    opt.sourceStore = {};
     // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
     writerData = "";
     writerFile = "";
