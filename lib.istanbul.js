@@ -10441,7 +10441,9 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
         },
 
         splice: function (statements, node, walker) {
-            var targetNode = walker.isLabeled() ? walker.parent().node : node;
+            var targetNode = (
+                walker.isLabeled() ? walker.parent().node : node
+            );
             targetNode.prepend = targetNode.prepend || [];
             pushAll(targetNode.prepend, statements);
         },
@@ -11920,7 +11922,11 @@ local.reportHtmlCreate = function (opts, collector) {
         }
         Object.keys(lineStats).forEach(function (lineNumber) {
             let count = lineStats[lineNumber];
-            structuredText[lineNumber].covered = (count > 0 ? "yes" : "no");
+            structuredText[lineNumber].covered = (
+                count > 0
+                ? "yes"
+                : "no"
+            );
         });
         structuredText.forEach(function (item) {
             if (item.covered === null) {
@@ -11935,15 +11941,21 @@ local.reportHtmlCreate = function (opts, collector) {
         Object.keys(statementStats).forEach(function (stName) {
             let count = statementStats[stName];
             let meta = statementMeta[stName];
-            let type = (count > 0 ? "yes" : "no");
+            let type = (
+                count > 0
+                ? "yes"
+                : "no"
+            );
             let startCol = meta.start.column;
             let endCol = meta.end.column + 1;
             let startLine = meta.start.line;
             let endLine = meta.end.line;
             let openSpan = (
-                lt + "span class=\"" + (meta.skip
-                ? "cstat-skip"
-                : "cstat-no") + "\"" + title("statement not covered") + gt
+                lt + "span class=\"" + (
+                    meta.skip
+                    ? "cstat-skip"
+                    : "cstat-no"
+                ) + "\"" + title("statement not covered") + gt
             );
             let closeSpan = lt + "/span" + gt;
             let text;
@@ -11973,16 +11985,20 @@ local.reportHtmlCreate = function (opts, collector) {
         Object.keys(fnStats).forEach(function (fName) {
             let count = fnStats[fName];
             let meta = fnMeta[fName];
-            let type = (count > 0
-? "yes"
-: "no");
+            let type = (
+                count > 0
+                ? "yes"
+                : "no"
+            );
             let startCol = meta.loc.start.column;
             let endCol = meta.loc.end.column + 1;
             let startLine = meta.loc.start.line;
             let endLine = meta.loc.end.line;
-            let openSpan = lt + "span class=\"" + (meta.skip
-? "fstat-skip"
-: "fstat-no") + "\"" + title("function not covered") + gt;
+            let openSpan = lt + "span class=\"" + (
+                meta.skip
+                ? "fstat-skip"
+                : "fstat-no"
+            ) + "\"" + title("function not covered") + gt;
             let closeSpan = lt + "/span" + gt;
             let text;
 
@@ -12032,9 +12048,11 @@ local.reportHtmlCreate = function (opts, collector) {
                 while (i < branchArray.length) {
                     count = branchArray[i];
                     meta = metaArray[i];
-                    type = (count > 0
-? "yes"
-: "no");
+                    type = (
+                        count > 0
+                        ? "yes"
+                        : "no"
+                    );
                     startCol = meta.start.column;
                     endCol = meta.end.column + 1;
                     startLine = meta.start.line;
@@ -12062,11 +12080,15 @@ local.reportHtmlCreate = function (opts, collector) {
                                 meta.skip
                                 ? "skip-if-branch"
                                 : "missing-if-branch"
-                            ) + "\"" + title((i === 0
+                            ) + "\"" + title((
+                                i === 0
                                 ? "if"
-                                : "else") + " path not taken") + gt + (i === 0
+                                : "else"
+                            ) + " path not taken") + gt + (
+                                i === 0
                                 ? "I"
-                                : "E") + lt + "/span" + gt, true, false);
+                                : "E"
+                            ) + lt + "/span" + gt, true, false);
                         } else {
                             text.wrap(startCol, openSpan, (
                                 startLine === endLine
@@ -12218,7 +12240,11 @@ local.reportHtmlCreate = function (opts, collector) {
             let watermarks = opts.watermarks;
 
             children.sort(function (a, b) {
-                return (a.name < b.name ? -1 : 1);
+                return (
+                    a.name < b.name
+                    ? -1
+                    : 1
+                );
             });
 
             fillTemplate(node, templateData);
@@ -12388,7 +12414,11 @@ local.reportTextCreate = function (opts, collector) {
         if (remaining > 0) {
             if (remaining >= strlen) {
                 fillStr = padding(remaining - strlen);
-                fmtStr = (right ? fillStr + str : str + fillStr);
+                fmtStr = (
+                    right
+                    ? fillStr + str
+                    : str + fillStr
+                );
             } else {
                 fmtStr = str.substring(strlen - remaining);
                 fmtStr = "... " + fmtStr.substring(4);
