@@ -12111,7 +12111,7 @@ local.reportHtmlCreate = function(opts, collector) {
 
                 fillTemplate(child, templateData);
                 writer.write(headerTemplate(templateData));
-                writer.write('<pre><table class="coverage">\n');
+                writer.write("<pre><table class=\"coverage\">\n");
 
                 annotateLines(fileCoverage, structured);
                 //note: order is important, since statements typically result in spanning the whole line and doing branches late
@@ -12127,7 +12127,7 @@ local.reportHtmlCreate = function(opts, collector) {
                     fileCoverage: fileCoverage
                 };
                 writer.write(detailTemplate(context));
-                writer.write('</table></pre>\n');
+                writer.write("</table></pre>\n");
                 writer.write(footerTemplate(templateData));
             });
         });
@@ -12142,14 +12142,14 @@ local.reportHtmlCreate = function(opts, collector) {
         summarizer.addFileCoverageSummary(key, utils.summarizeFileCoverage(collector.fileCoverageFor(key)));
     });
     tree = summarizer.getTreeSummary();
-    fs.readdirSync(path.resolve(__dirname, '..', 'vendor')).forEach(function (f) {
-        var resolvedSource = path.resolve(__dirname, '..', 'vendor', f),
+    fs.readdirSync(path.resolve(__dirname, "..", "vendor")).forEach(function (f) {
+        var resolvedSource = path.resolve(__dirname, "..", "vendor", f),
             resolvedDestination = path.resolve(dir, f),
             stat = fs.statSync(resolvedSource);
 
         if (stat.isFile()) {
             if (opts.verbose) {
-                console.log('Write asset: ' + resolvedDestination);
+                console.log("Write asset: " + resolvedDestination);
             }
             writer.copyFile(resolvedSource, resolvedDestination);
         }
@@ -12164,17 +12164,17 @@ local.reportHtmlCreate = function(opts, collector) {
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
 local.reportTextCreate = function(opts, collector) {
-    var defaults = require('./common/defaults'),
-        utils = require('../object-utils'),
+    var defaults = require("./common/defaults"),
+        utils = require("../object-utils"),
         PCT_COLS = 10,
         TAB_SIZE = 3,
-        DELIM = ' |',
-        COL_DELIM = '-|';
+        DELIM = " |",
+        COL_DELIM = "-|";
 
     function padding(num, ch) {
-        var str = '',
+        var str = "",
             i;
-        ch = ch || ' ';
+        ch = ch || " ";
         for (i = 0; i < num; i += 1) {
             str += ch;
         }
@@ -12188,7 +12188,7 @@ local.reportTextCreate = function(opts, collector) {
         var leadingSpaces = tabs * TAB_SIZE,
             remaining = width - leadingSpaces,
             leader = padding(leadingSpaces),
-            fmtStr = '',
+            fmtStr = "",
             fillStr,
             strlen = str.length;
 
@@ -12198,7 +12198,7 @@ local.reportTextCreate = function(opts, collector) {
                 fmtStr = right ? fillStr + str : str + fillStr;
             } else {
                 fmtStr = str.substring(strlen - remaining);
-                fmtStr = '... ' + fmtStr.substring(4);
+                fmtStr = "... " + fmtStr.substring(4);
             }
         }
 
@@ -12215,17 +12215,17 @@ local.reportTextCreate = function(opts, collector) {
     }
 
     function nodeName(node) {
-        return node.displayShortName() || 'All files';
+        return node.displayShortName() || "All files";
     }
 
     function tableHeader(maxNameCols) {
         var elements = [];
-        elements.push(formatName('File', maxNameCols, 0));
-        elements.push(formatPct('% Stmts'));
-        elements.push(formatPct('% Branches'));
-        elements.push(formatPct('% Funcs'));
-        elements.push(formatPct('% Lines'));
-        return elements.join(' |') + ' |';
+        elements.push(formatName("File", maxNameCols, 0));
+        elements.push(formatPct("% Stmts"));
+        elements.push(formatPct("% Branches"));
+        elements.push(formatPct("% Funcs"));
+        elements.push(formatPct("% Lines"));
+        return elements.join(" |") + " |";
     }
 
     function tableRow(node, maxNameCols, level, watermarks) {
@@ -12236,11 +12236,11 @@ local.reportTextCreate = function(opts, collector) {
             lines = node.metrics.lines.pct,
             elements = [];
 
-        elements.push(formatName(name, maxNameCols, level, defaults.classFor('statements', node.metrics, watermarks)));
-        elements.push(formatPct(statements, defaults.classFor('statements', node.metrics, watermarks)));
-        elements.push(formatPct(branches, defaults.classFor('branches', node.metrics, watermarks)));
-        elements.push(formatPct(functions, defaults.classFor('functions', node.metrics, watermarks)));
-        elements.push(formatPct(lines, defaults.classFor('lines', node.metrics, watermarks)));
+        elements.push(formatName(name, maxNameCols, level, defaults.classFor("statements", node.metrics, watermarks)));
+        elements.push(formatPct(statements, defaults.classFor("statements", node.metrics, watermarks)));
+        elements.push(formatPct(branches, defaults.classFor("branches", node.metrics, watermarks)));
+        elements.push(formatPct(functions, defaults.classFor("functions", node.metrics, watermarks)));
+        elements.push(formatPct(lines, defaults.classFor("lines", node.metrics, watermarks)));
 
         return elements.join(DELIM) + DELIM;
     }
@@ -12259,8 +12259,8 @@ local.reportTextCreate = function(opts, collector) {
     }
 
     function makeLine(nameWidth) {
-        var name = padding(nameWidth, '-'),
-            pct = padding(PCT_COLS, '-'),
+        var name = padding(nameWidth, "-"),
+            pct = padding(PCT_COLS, "-"),
             elements = [];
 
         elements.push(name);
@@ -12298,7 +12298,7 @@ local.reportTextCreate = function(opts, collector) {
     that.file = opts.file;
     that.summary = opts.summary;
     that.watermarks = opts.watermarks || defaults.watermarks();
-    var TreeSummarizer = require('../util/tree-summarizer');
+    var TreeSummarizer = require("../util/tree-summarizer");
     var summarizer = new TreeSummarizer(),
         tree,
         root,
@@ -12315,7 +12315,7 @@ local.reportTextCreate = function(opts, collector) {
     root = tree.root;
     nameWidth = findNameWidth(root);
     walk(root, nameWidth, strings, 0, that.watermarks);
-    text = strings.join('\n') + '\n';
+    text = strings.join("\n") + "\n";
     console.log(text);
 };
 
