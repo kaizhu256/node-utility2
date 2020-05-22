@@ -9179,7 +9179,19 @@ local.handlebars.compile = function (template) {
         result = result.replace(
             "{{#show_code structured}}{{/show_code}}",
             function () {
-                return local.handlebars.show_code(dict.structured);
+                return dict.structured.map(function (item) {
+                    return item.text.toString().replace((
+                        /&/g
+                    ), "&amp;").replace((
+                        /</g
+                    ), "&lt;").replace((
+                        />/g
+                    ), "&gt;").replace((
+                        /\u0001/g
+                    ), "<").replace((
+                        /\u0002/g
+                    ), ">") || "&nbsp;";
+                }).join("\n");
             }
         );
         return result;
@@ -11582,33 +11594,6 @@ function reportHtmlCreate(opts) {
             );
             ii += 1;
         }
-        return array.join("\n");
-    });
-    function customEscape(text) {
-        text = text.toString();
-        text = text.replace((
-            /&/g
-        ), "&amp;");
-        text = text.replace((
-            /</g
-        ), "&lt;");
-        text = text.replace((
-            />/g
-        ), "&gt;");
-        text = text.replace((
-            /\u0001/g
-        ), "<");
-        text = text.replace((
-            /\u0002/g
-        ), ">");
-        return text;
-    }
-    handlebars.registerHelper("show_code", function (context /*, opts */) {
-        let array;
-        array = [];
-        context.forEach(function (item) {
-            array.push(customEscape(item.text) || "&nbsp;");
-        });
         return array.join("\n");
     });
     function annotateLines(fileCoverage, structuredText) {
