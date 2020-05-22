@@ -11749,19 +11749,42 @@ local.reportHtmlCreate = function(opts, collector) {
     ].join("\n");
     let summaryLineTemplate = handlebars.compile([
         "<tr>",
-        // hack-coverage - compact summary
-        "<td class=\"file {{reportClasses.statements}}\" data-value=\"{{file}}\"><a href=\"{{output}}\"><div>{{file}}</div>{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>",
-        "<td data-value=\"{{metrics.statements.pct}}\" class=\"pct {{reportClasses.statements}}\">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>",
-        "<td data-value=\"{{metrics.branches.pct}}\" class=\"pct {{reportClasses.branches}}\">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>",
-        "<td data-value=\"{{metrics.functions.pct}}\" class=\"pct {{reportClasses.functions}}\">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>",
-        "<td data-value=\"{{metrics.lines.pct}}\" class=\"pct {{reportClasses.lines}}\">{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>",
+        (
+            // hack-coverage - compact summary
+            "<td class=\"file {{reportClasses.statements}}\" data-value=\""
+            + "{{file}}\"><a href=\"{{output}}\"><div>{{file}}</div>"
+            + "{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a>"
+            + "</td>"
+        ),
+        (
+            "<td data-value=\"{{metrics.statements.pct}}\" class=\"pct "
+            + "{{reportClasses.statements}}\">{{metrics.statements.pct}}%<br>("
+            + "{{metrics.statements.covered}} / {{metrics.statements.total}})"
+            + "</td>"
+        ),
+        (
+            "<td data-value=\"{{metrics.branches.pct}}\" class=\"pct "
+            + "{{reportClasses.branches}}\">{{metrics.branches.pct}}%<br>("
+            + "{{metrics.branches.covered}} / {{metrics.branches.total}})</td>"
+        ),
+        (
+            "<td data-value=\"{{metrics.functions.pct}}\" class=\"pct "
+            + "{{reportClasses.functions}}\">{{metrics.functions.pct}}%<br>("
+            + "{{metrics.functions.covered}} / {{metrics.functions.total}})"
+            + "</td>"
+        ),
+        (
+            "<td data-value=\"{{metrics.lines.pct}}\" class=\"pct "
+            + "{{reportClasses.lines}}\">{{metrics.lines.pct}}%<br>("
+            + "{{metrics.lines.covered}} / {{metrics.lines.total}})</td>"
+        ),
         "</tr>\n"
     ].join("\n\t"));
     let summaryTableFooter = [
-    "</tbody>",
-    "</table>",
-    "</div>"
-        ].join("\n");
+        "</tbody>",
+        "</table>",
+        "</div>"
+    ].join("\n");
     let lt = "\u0001";
     let gt = "\u0002";
     let RE_LT = (
@@ -11784,14 +11807,17 @@ local.reportHtmlCreate = function(opts, collector) {
         let num = Number(opts.fn(this));
         let rest;
         let cls = "";
-        if (isFinite(num)) {
+        if (Number.isFinite(num)) {
             if (num === 100) {
                 cls = " cover-full";
             }
             num = Math.floor(num);
             rest = 100 - num;
-            return "<span class=\"cover-fill" + cls + "\" style=\"width: " + num + "px;\"></span>"
-+ "<span class=\"cover-empty\" style=\"width:" + rest + "px;\"></span>";
+            return (
+                "<span class=\"cover-fill" + cls + "\" style=\"width: " + num
+                + "px;\"></span><span class=\"cover-empty\" style=\"width:"
+                + rest + "px;\"></span>"
+            );
         } else {
             return "";
         }
@@ -11824,14 +11850,20 @@ local.reportHtmlCreate = function(opts, collector) {
         let maxLines = Number(opts.fn(this));
         let i;
         let array = "";
-
-        for (i = 1; i <= maxLines; i += 1) {
-            array += "<a href=\"#L" + i + "\" id=\"L" + i + "\">" + i + "</a>\n";
+        i = 1;
+        while (i <= maxLines) {
+            array += (
+                "<a href=\"#L" + i + "\" id=\"L" + i + "\">" + i + "</a>\n"
+            );
+            i += 1;
         }
         return array;
     });
 
-    handlebars.registerHelper("show_line_execution_counts", function (context, opts) {
+    handlebars.registerHelper("show_line_execution_counts", function (
+        context,
+        opts
+    ) {
         let lines = context.l;
         let maxLines = Number(opts.fn(this));
         let i;
@@ -11840,7 +11872,8 @@ local.reportHtmlCreate = function(opts, collector) {
         let covered;
         let value = "";
 
-        for (i = 0; i < maxLines; i += 1) {
+        i = 0;
+        while (i < maxLines) {
             lineNumber = i + 1;
             value = "&nbsp;";
             covered = "neutral";
@@ -11852,7 +11885,11 @@ local.reportHtmlCreate = function(opts, collector) {
                     covered = "no";
                 }
             }
-            array.push("<span class=\"cline-any cline-" + covered + "\">" + value + "</span>");
+            array.push(
+                "<span class=\"cline-any cline-" + covered + "\">"
+                + value + "</span>"
+            );
+            i += 1;
         }
         return array.join("\n");
     });
@@ -11905,7 +11942,11 @@ local.reportHtmlCreate = function(opts, collector) {
             let endCol = meta.end.column + 1;
             let startLine = meta.start.line;
             let endLine = meta.end.line;
-            let openSpan = lt + "span class=\"" + (meta.skip ? "cstat-skip" : "cstat-no") + "\"" + title("statement not covered") + gt;
+            let openSpan = (
+                lt + "span class=\"" + (meta.skip
+                ? "cstat-skip"
+                : "cstat-no") + "\"" + title("statement not covered") + gt
+            );
             let closeSpan = lt + "/span" + gt;
             let text;
 
@@ -11917,7 +11958,9 @@ local.reportHtmlCreate = function(opts, collector) {
                 text = structuredText[startLine].text;
                 text.wrap(startCol,
                     openSpan,
-                    startLine === endLine ? endCol : text.originalLength(),
+                    startLine === endLine
+? endCol
+: text.originalLength(),
                     closeSpan);
             }
         });
@@ -11932,12 +11975,16 @@ local.reportHtmlCreate = function(opts, collector) {
         Object.keys(fnStats).forEach(function (fName) {
             let count = fnStats[fName];
             let meta = fnMeta[fName];
-            let type = count > 0 ? "yes" : "no";
+            let type = count > 0
+? "yes"
+: "no";
             let startCol = meta.loc.start.column;
             let endCol = meta.loc.end.column + 1;
             let startLine = meta.loc.start.line;
             let endLine = meta.loc.end.line;
-            let openSpan = lt + "span class=\"" + (meta.skip ? "fstat-skip" : "fstat-no") + "\"" + title("function not covered") + gt;
+            let openSpan = lt + "span class=\"" + (meta.skip
+? "fstat-skip"
+: "fstat-no") + "\"" + title("function not covered") + gt;
             let closeSpan = lt + "/span" + gt;
             let text;
 
@@ -11949,7 +11996,9 @@ local.reportHtmlCreate = function(opts, collector) {
                 text = structuredText[startLine].text;
                 text.wrap(startCol,
                     openSpan,
-                    startLine === endLine ? endCol : text.originalLength(),
+                    startLine === endLine
+? endCol
+: text.originalLength(),
                     closeSpan);
             }
         });
@@ -11980,15 +12029,20 @@ local.reportHtmlCreate = function(opts, collector) {
 
             if (sumCount > 0) {
                 //only highlight if partial branches are missing
-                for (i = 0; i < branchArray.length; i += 1) {
+                i = 0;
+                while (i < branchArray.length) {
                     count = branchArray[i];
                     meta = metaArray[i];
-                    type = count > 0 ? "yes" : "no";
+                    type = count > 0
+? "yes"
+: "no";
                     startCol = meta.start.column;
                     endCol = meta.end.column + 1;
                     startLine = meta.start.line;
                     endLine = meta.end.line;
-                    openSpan = lt + "span class=\"branch-" + i + " " + (meta.skip ? "cbranch-skip" : "cbranch-no") + "\"" + title("branch not covered") + gt;
+                    openSpan = lt + "span class=\"branch-" + i + " " + (meta.skip
+? "cbranch-skip"
+: "cbranch-no") + "\"" + title("branch not covered") + gt;
                     closeSpan = lt + "/span" + gt;
 
                     if (count === 0) {
@@ -12000,16 +12054,25 @@ local.reportHtmlCreate = function(opts, collector) {
                         text = structuredText[startLine].text;
                         if (branchMeta[branchName].type === "if") {
                             // and "if" is a special case since the else branch might not be visible, being non-existent
-                            text.insertAt(startCol, lt + "span class=\"" + (meta.skip ? "skip-if-branch" : "missing-if-branch") + "\""
-+ title((i === 0 ? "if" : "else") + " path not taken") + gt
-+ (i === 0 ? "I" : "E") + lt + "/span" + gt, true, false);
+                            text.insertAt(startCol, lt + "span class=\"" + (meta.skip
+? "skip-if-branch"
+: "missing-if-branch") + "\""
++ title((i === 0
+? "if"
+: "else") + " path not taken") + gt
++ (i === 0
+? "I"
+: "E") + lt + "/span" + gt, true, false);
                         } else {
                             text.wrap(startCol,
                                 openSpan,
-                                startLine === endLine ? endCol : text.originalLength(),
+                                startLine === endLine
+? endCol
+: text.originalLength(),
                                 closeSpan);
                         }
                     }
+                    i += 1;
                 }
             }
         });
@@ -12048,13 +12111,17 @@ local.reportHtmlCreate = function(opts, collector) {
         let j;
         let levels;
         let separated;
-        for (i = 0; i < num; i += 1) {
+        i = 0;
+        while(i < num) {
             separated = node.relativeName.split(SEP);
             levels = separated.length - 1;
-            for (j = 0; j < levels; j += 1) {
+            j = 0;
+            while(j < levels) {
                 href += "../";
+                j += 1;
             }
             node = node.parent;
+            i += 1;
         }
         return href;
     };
@@ -12074,11 +12141,13 @@ local.reportHtmlCreate = function(opts, collector) {
             nodePath.push(parent);
             parent = parent.parent;
         }
-        for (i = 0; i < nodePath.length; i += 1) {
+        i = 0;
+        while(i < nodePath.length) {
             linkPath.push(
                 "<a href=\"" + linkMapper.ancestor(node, i + 1) + "\">"
                 + (nodePath[i].relativeName || "All files") + "</a>"
             );
+            i += 1;
         }
         linkPath.reverse();
         html = (
@@ -12100,13 +12169,15 @@ local.reportHtmlCreate = function(opts, collector) {
             let ch;
             if (SEP !== "/") {
                 relativeName = "";
-                for (i = 0; i < node.relativeName.length; i += 1) {
+                i = 0;
+                while(i < node.relativeName.length) {
                     ch = node.relativeName.charAt(i);
                     if (ch === SEP) {
                         relativeName += "/";
                     } else {
                         relativeName += ch;
                     }
+                    i += 1;
                 }
             }
             return (
@@ -12275,8 +12346,10 @@ local.reportTextCreate = function(opts, collector) {
         let str = "";
         let i;
         ch = ch || " ";
-        for (i = 0; i < num; i += 1) {
+        i = 0;
+        while(i < num) {
             str += ch;
+            i += 1;
         }
         return str;
     }
