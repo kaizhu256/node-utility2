@@ -11468,14 +11468,24 @@ local.templateCoverageBadgeSvg =
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
+let PCT_COLS;
+let TAB_SIZE;
+let TreeSummarizer;
+let defaults;
 let reportHtmlCreate;
 let reportTextCreate;
 let require2;
+let utils;
 require2 = function (key) {
     try {
         return local["_istanbul_" + key] || local[key] || require(key);
     } catch (ignore) {}
 };
+PCT_COLS = 10;
+TAB_SIZE = 2;
+TreeSummarizer = require2("../util/tree-summarizer");
+defaults = require2("./common/defaults");
+utils = require2("../object-utils");
 reportHtmlCreate = function (opts, collector) {
     let InsertionText;
     let RE_AMP;
@@ -11485,9 +11495,7 @@ reportHtmlCreate = function (opts, collector) {
     let RE_lt;
     let SEP;
     let Store;
-    let TreeSummarizer;
     let ancestorHref;
-    let defaults;
     let detailTemplate;
     let fillTemplate;
     let footerTemplate;
@@ -11503,17 +11511,13 @@ reportHtmlCreate = function (opts, collector) {
     let summaryTableFooter;
     let summaryTableHeader;
     let templateFor;
-    let utils;
     let writeFiles;
     handlebars = require2("handlebars");
-    defaults = require2("./common/defaults");
     path = require2("path");
     SEP = path.sep || "/";
     fs = require2("fs");
     Store = require2("../store");
     InsertionText = require2("../util/insertion-text");
-    TreeSummarizer = require2("../util/tree-summarizer");
-    utils = require2("../object-utils");
     templateFor = function (name) {
         return handlebars.compile(fs.readFileSync(
             path.resolve("templates", name + ".txt"),
@@ -12232,9 +12236,6 @@ reportHtmlCreate = function (opts, collector) {
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
 reportTextCreate = function (opts, collector) {
-    let PCT_COLS;
-    let TreeSummarizer;
-    let defaults;
     let nameWidth;
     let root;
     let strings;
@@ -12242,11 +12243,6 @@ reportTextCreate = function (opts, collector) {
     let text;
     let that;
     let tree;
-    let utils;
-    TreeSummarizer = require2("../util/tree-summarizer");
-    defaults = require2("./common/defaults");
-    utils = require2("../object-utils");
-    PCT_COLS = 10;
     function padding(num, ch) {
         let ii;
         let str;
@@ -12268,7 +12264,7 @@ reportTextCreate = function (opts, collector) {
         let strlen;
         tabs = tabs || 0;
         str = String(str);
-        leadingSpaces = tabs * 4;
+        leadingSpaces = tabs * TAB_SIZE;
         remaining = width - leadingSpaces;
         leader = padding(leadingSpaces);
         fmtStr = "";
@@ -12343,13 +12339,13 @@ reportTextCreate = function (opts, collector) {
             lines,
             defaults.classFor("lines", node.metrics, watermarks)
         ));
-        return elements.join("-|") + "-|";
+        return elements.join(" |") + " |";
     }
     function findNameWidth(node, level, last) {
         let idealWidth;
         last = last || 0;
         level = level || 0;
-        idealWidth = 4 * level + nodeName(node).length;
+        idealWidth = TAB_SIZE * level + nodeName(node).length;
         if (idealWidth > last) {
             last = idealWidth;
         }
