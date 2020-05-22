@@ -11672,17 +11672,23 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
  * @param {String} [opts.dir] the directory in which to generate reports.
  * Defaults to `./html-report`
  */
+let require2;
+require2 = function (key) {
+    try {
+        return local["_istanbul_" + key] || local[key] || local.require(key);
+    } catch (ignore) {}
+};
 local.reportHtmlCreate = function (opts, collector) {
     /*jshint maxlen: 300 */
-    let handlebars = require("handlebars");
-    let defaults = require("./common/defaults");
-    let path = require("path");
+    let handlebars = require2("handlebars");
+    let defaults = require2("./common/defaults");
+    let path = require2("path");
     let SEP = path.sep || "/";
-    let fs = require("fs");
-    let Store = require("../store");
-    let InsertionText = require("../util/insertion-text");
-    let TreeSummarizer = require("../util/tree-summarizer");
-    let utils = require("../object-utils");
+    let fs = require2("fs");
+    let Store = require2("../store");
+    let InsertionText = require2("../util/insertion-text");
+    let TreeSummarizer = require2("../util/tree-summarizer");
+    let utils = require2("../object-utils");
     let templateFor = function (name) {
         return handlebars.compile(fs.readFileSync(
             path.resolve(__dirname, "templates", name + ".txt"),
@@ -12375,8 +12381,8 @@ local.reportHtmlCreate = function (opts, collector) {
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
 local.reportTextCreate = function (opts, collector) {
-    let defaults = require("./common/defaults");
-    let utils = require("../object-utils");
+    let defaults = require2("./common/defaults");
+    let utils = require2("../object-utils");
     let PCT_COLS = 10;
     let TAB_SIZE = 3;
     let DELIM = " |";
@@ -12532,7 +12538,7 @@ local.reportTextCreate = function (opts, collector) {
     that.file = opts.file;
     that.summary = opts.summary;
     that.watermarks = opts.watermarks || defaults.watermarks();
-    let TreeSummarizer = require("../util/tree-summarizer");
+    let TreeSummarizer = require2("../util/tree-summarizer");
     let summarizer = new TreeSummarizer();
     let nameWidth;
     let root;
