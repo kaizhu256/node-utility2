@@ -11468,7 +11468,6 @@ function reportHtmlCreate(opts) {
         );
     }
     opts = opts || {};
-    opts.dir = opts.dir || path.resolve("html-report");
     opts.sourceStore = opts.sourceStore || Store.create("fslookup");
     opts.writer = opts.writer || null;
     // hack-coverage - new Date() bugfix
