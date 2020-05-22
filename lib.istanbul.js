@@ -12236,8 +12236,17 @@ reportTextCreate = function (opts, collector) {
     let DELIM;
     let PCT_COLS;
     let TAB_SIZE;
+    let TreeSummarizer;
     let defaults;
+    let nameWidth;
+    let root;
+    let strings;
+    let summarizer;
+    let text;
+    let that;
+    let tree;
     let utils;
+    TreeSummarizer = require2("../util/tree-summarizer");
     defaults = require2("./common/defaults");
     utils = require2("../object-utils");
     PCT_COLS = 10;
@@ -12389,21 +12398,12 @@ reportTextCreate = function (opts, collector) {
             array.push(line);
         }
     }
-    let TreeSummarizer;
-    let nameWidth;
-    let root;
-    let strings;
-    let summarizer;
-    let text;
-    let that;
-    let tree;
     that = {};
     opts = opts || {};
     that.dir = opts.dir || "";
     that.file = opts.file;
     that.summary = opts.summary;
     that.watermarks = opts.watermarks || defaults.watermarks();
-    TreeSummarizer = require2("../util/tree-summarizer");
     summarizer = new TreeSummarizer();
     strings = [];
     collector.files().forEach(function (key) {
