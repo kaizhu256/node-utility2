@@ -9128,14 +9128,37 @@ local.handlebars.compile = function (template) {
             "{{#show_line_execution_counts fileCoverage}}"
             + "{{maxLines}}{{/show_line_execution_counts}}"
         ), function () {
-            return local.handlebars.show_line_execution_counts(
-                dict.fileCoverage,
-                {
-                    fn: function () {
-                        return dict.maxLines;
+            let array;
+            let covered;
+            let ii;
+            let lineNumber;
+            let lines;
+            let maxLines;
+            let value;
+            lines = dict.fileCoverage.l;
+            maxLines = Number(dict.maxLines);
+            array = [];
+            value = "";
+            ii = 0;
+            while (ii < maxLines) {
+                lineNumber = ii + 1;
+                value = "&nbsp;";
+                covered = "neutral";
+                if (lines.hasOwnProperty(lineNumber)) {
+                    if (lines[lineNumber] > 0) {
+                        covered = "yes";
+                        value = lines[lineNumber];
+                    } else {
+                        covered = "no";
                     }
                 }
-            );
+                array.push(
+                    "<span class=\"cline-any cline-" + covered + "\">"
+                    + value + "</span>"
+                );
+                ii += 1;
+            }
+            return array.join("\n");
         });
         result = result.replace(
             "{{#show_lines}}{{maxLines}}{{/show_lines}}",
@@ -9195,15 +9218,6 @@ local.handlebars.compile = function (template) {
             }
         );
         return result;
-    };
-};
-
-local.handlebars.registerHelper = function (key, helper) {
-/*
- * this function will register the helper-function
- */
-    local.handlebars[key] = function (aa, bb) {
-        return helper(aa, bb);
     };
 };
 
@@ -11560,42 +11574,6 @@ function reportHtmlCreate(opts) {
     ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
 </tr>
     `);
-    handlebars.registerHelper("show_line_execution_counts", function (
-        context,
-        opts
-    ) {
-        let array;
-        let covered;
-        let ii;
-        let lineNumber;
-        let lines;
-        let maxLines;
-        let value;
-        lines = context.l;
-        maxLines = Number(opts.fn(this));
-        array = [];
-        value = "";
-        ii = 0;
-        while (ii < maxLines) {
-            lineNumber = ii + 1;
-            value = "&nbsp;";
-            covered = "neutral";
-            if (lines.hasOwnProperty(lineNumber)) {
-                if (lines[lineNumber] > 0) {
-                    covered = "yes";
-                    value = lines[lineNumber];
-                } else {
-                    covered = "no";
-                }
-            }
-            array.push(
-                "<span class=\"cline-any cline-" + covered + "\">"
-                + value + "</span>"
-            );
-            ii += 1;
-        }
-        return array.join("\n");
-    });
     function annotateLines(fileCoverage, structuredText) {
         let lineStats;
         lineStats = fileCoverage.l;
