@@ -9072,180 +9072,6 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
 
 
 /*
-file https://github.com/components/handlebars.js/blob/v1.2.1/handlebars.js
-*/
-/* validateLineSortedReset */
-local.handlebars = {};
-local.handlebars.compile = function (template) {
-/*
- * this function will return a function
- * that will render <template> with given <dict>
- */
-    return function (dict) {
-        let result;
-        result = template;
-        // render triple-curly-brace
-        result = result.replace((
-            /\{\{\{/g
-        ), "{{").replace((
-            /\}\}\}/g
-        ), "}}");
-        // render with-statement
-        result = result.replace((
-            /\{\{#with\u0020(.+?)\}\}([\S\s]+?)\{\{\/with\}\}/g
-        ), function (ignore, match1, match2) {
-            return local.handlebars.replace(match2, dict, match1 + ".");
-        });
-        // render helper
-        result = result.replace(
-            "{{#show_ignores metrics}}{{/show_ignores}}",
-            function () {
-                let list;
-                if (
-                    dict.metrics.statements.skipped === 0
-                    && dict.metrics.functions.skipped === 0
-                    && dict.metrics.branches.skipped === 0
-                ) {
-                    return "<span class=\"ignore-none\">none</span>";
-                }
-                list = [];
-                // hack-coverage - compact summary
-                if (dict.metrics.statements.skipped > 0) {
-                    list.push(
-                        "statements: " + dict.metrics.statements.skipped
-                    );
-                }
-                if (dict.metrics.branches.skipped > 0) {
-                    list.push("branches: " + dict.metrics.branches.skipped);
-                }
-                if (dict.metrics.functions.skipped > 0) {
-                    list.push("functions: " + dict.metrics.functions.skipped);
-                }
-                return list.join("<br>");
-            }
-        );
-        result = result.replace((
-            "{{#show_line_execution_counts fileCoverage}}"
-            + "{{maxLines}}{{/show_line_execution_counts}}"
-        ), function () {
-            let array;
-            let covered;
-            let ii;
-            let lineNumber;
-            let lines;
-            let maxLines;
-            let value;
-            lines = dict.fileCoverage.l;
-            maxLines = Number(dict.maxLines);
-            array = [];
-            value = "";
-            ii = 0;
-            while (ii < maxLines) {
-                lineNumber = ii + 1;
-                value = "&nbsp;";
-                covered = "neutral";
-                if (lines.hasOwnProperty(lineNumber)) {
-                    if (lines[lineNumber] > 0) {
-                        covered = "yes";
-                        value = lines[lineNumber];
-                    } else {
-                        covered = "no";
-                    }
-                }
-                array.push(
-                    "<span class=\"cline-any cline-" + covered + "\">"
-                    + value + "</span>"
-                );
-                ii += 1;
-            }
-            return array.join("\n");
-        });
-        result = result.replace(
-            "{{#show_lines}}{{maxLines}}{{/show_lines}}",
-            function () {
-                let array;
-                let ii;
-                let maxLines;
-                maxLines = Number(dict.maxLines);
-                array = "";
-                ii = 1;
-                while (ii <= maxLines) {
-                    // hack-coverage - hashtag lineno
-                    array += (
-                        "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
-                        + ii
-                        + "</a>\n"
-                    );
-                    ii += 1;
-                }
-                return array;
-            }
-        );
-        result = result.replace(
-            "{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}",
-            function () {
-                let num;
-                num = Number(dict.metrics.statements.pct);
-                if (!Number.isFinite(num)) {
-                    return "";
-                }
-                num = Math.floor(num);
-                return (
-                    "<span class=\"cover-fill cover-full\" style=\"width:" + num
-                    + "px;\"></span><span class=\"cover-empty\" style=\"width:"
-                    + (100 - num) + "px;\"></span>"
-                );
-            }
-        );
-        result = local.handlebars.replace(result, dict, "");
-        // show code last
-        result = result.replace(
-            "{{#show_code structured}}{{/show_code}}",
-            function () {
-                return dict.structured.map(function (item) {
-                    return item.text.toString().replace((
-                        /&/g
-                    ), "&amp;").replace((
-                        /</g
-                    ), "&lt;").replace((
-                        />/g
-                    ), "&gt;").replace((
-                        /\u0001/g
-                    ), "<").replace((
-                        /\u0002/g
-                    ), ">") || "&nbsp;";
-                }).join("\n");
-            }
-        );
-        return result;
-    };
-};
-
-local.handlebars.replace = function (template, dict, withPrefix) {
-/*
- * this function will render <template> with given <dict>
- */
-    let value;
-    // search for keys in the template
-    return template.replace((
-        /\{\{.+?\}\}/g
-    ), function (match0) {
-        value = dict;
-        // iteratively lookup nested values in the dict
-        String(
-            withPrefix + match0.slice(2, -2)
-        ).split(".").forEach(function (key) {
-            value = value && value[key];
-        });
-        return (
-            value === undefined
-            ? match0
-            : String(value)
-        );
-    });
-};
-
-/*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 */
 /* istanbul ignore next */
@@ -11439,7 +11265,6 @@ let PCT_COLS;
 let Store;
 let TAB_SIZE;
 let TreeSummarizer;
-let handlebars;
 let path;
 let reportTextCreate;
 let utils;
@@ -11447,7 +11272,6 @@ let utils;
 InsertionText = require("../util/insertion-text");
 Store = require("../store");
 TreeSummarizer = require("../util/tree-summarizer");
-handlebars = require("handlebars");
 path = require("path");
 utils = require("../object-utils");
 // init variable
@@ -11495,6 +11319,175 @@ function fill(str, width, right, tabs, clazz) {
     }
     return leader + fmtStr;
 }
+function handlebarsCompile(template) {
+/*
+ * this function will return a function
+ * that will render <template> with given <dict>
+ */
+    let handlebarsReplace;
+    handlebarsReplace = function (template, dict, withPrefix) {
+    /*
+     * this function will render <template> with given <dict>
+     */
+        let value;
+        // search for keys in the template
+        return template.replace((
+            /\{\{.+?\}\}/g
+        ), function (match0) {
+            value = dict;
+            // iteratively lookup nested values in the dict
+            String(
+                withPrefix + match0.slice(2, -2)
+            ).split(".").forEach(function (key) {
+                value = value && value[key];
+            });
+            return (
+                value === undefined
+                ? match0
+                : String(value)
+            );
+        });
+    };
+
+    return function (dict) {
+        let result;
+        result = template;
+        // render triple-curly-brace
+        result = result.replace((
+            /\{\{\{/g
+        ), "{{").replace((
+            /\}\}\}/g
+        ), "}}");
+        // render with-statement
+        result = result.replace((
+            /\{\{#with\u0020(.+?)\}\}([\S\s]+?)\{\{\/with\}\}/g
+        ), function (ignore, match1, match2) {
+            return handlebarsReplace(match2, dict, match1 + ".");
+        });
+        // render helper
+        result = result.replace(
+            "{{#show_ignores metrics}}{{/show_ignores}}",
+            function () {
+                let list;
+                if (
+                    dict.metrics.statements.skipped === 0
+                    && dict.metrics.functions.skipped === 0
+                    && dict.metrics.branches.skipped === 0
+                ) {
+                    return "<span class=\"ignore-none\">none</span>";
+                }
+                list = [];
+                // hack-coverage - compact summary
+                if (dict.metrics.statements.skipped > 0) {
+                    list.push(
+                        "statements: " + dict.metrics.statements.skipped
+                    );
+                }
+                if (dict.metrics.branches.skipped > 0) {
+                    list.push("branches: " + dict.metrics.branches.skipped);
+                }
+                if (dict.metrics.functions.skipped > 0) {
+                    list.push("functions: " + dict.metrics.functions.skipped);
+                }
+                return list.join("<br>");
+            }
+        );
+        result = result.replace((
+            "{{#show_line_execution_counts fileCoverage}}"
+            + "{{maxLines}}{{/show_line_execution_counts}}"
+        ), function () {
+            let array;
+            let covered;
+            let ii;
+            let lineNumber;
+            let lines;
+            let maxLines;
+            let value;
+            lines = dict.fileCoverage.l;
+            maxLines = Number(dict.maxLines);
+            array = [];
+            value = "";
+            ii = 0;
+            while (ii < maxLines) {
+                lineNumber = ii + 1;
+                value = "&nbsp;";
+                covered = "neutral";
+                if (lines.hasOwnProperty(lineNumber)) {
+                    if (lines[lineNumber] > 0) {
+                        covered = "yes";
+                        value = lines[lineNumber];
+                    } else {
+                        covered = "no";
+                    }
+                }
+                array.push(
+                    "<span class=\"cline-any cline-" + covered + "\">"
+                    + value + "</span>"
+                );
+                ii += 1;
+            }
+            return array.join("\n");
+        });
+        result = result.replace(
+            "{{#show_lines}}{{maxLines}}{{/show_lines}}",
+            function () {
+                let array;
+                let ii;
+                let maxLines;
+                maxLines = Number(dict.maxLines);
+                array = "";
+                ii = 1;
+                while (ii <= maxLines) {
+                    // hack-coverage - hashtag lineno
+                    array += (
+                        "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
+                        + ii
+                        + "</a>\n"
+                    );
+                    ii += 1;
+                }
+                return array;
+            }
+        );
+        result = result.replace(
+            "{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}",
+            function () {
+                let num;
+                num = Number(dict.metrics.statements.pct);
+                if (!Number.isFinite(num)) {
+                    return "";
+                }
+                num = Math.floor(num);
+                return (
+                    "<span class=\"cover-fill cover-full\" style=\"width:" + num
+                    + "px;\"></span><span class=\"cover-empty\" style=\"width:"
+                    + (100 - num) + "px;\"></span>"
+                );
+            }
+        );
+        result = handlebarsReplace(result, dict, "");
+        // show code last
+        result = result.replace(
+            "{{#show_code structured}}{{/show_code}}",
+            function () {
+                return dict.structured.map(function (item) {
+                    return item.text.toString().replace((
+                        /&/g
+                    ), "&amp;").replace((
+                        /</g
+                    ), "&lt;").replace((
+                        />/g
+                    ), "&gt;").replace((
+                        /\u0001/g
+                    ), "<").replace((
+                        /\u0002/g
+                    ), ">") || "&nbsp;";
+                }).join("\n");
+            }
+        );
+        return result;
+    };
+}
 function reportHtmlCreate(opts) {
     let ancestorHref;
     let detailTemplate;
@@ -11533,11 +11526,11 @@ function reportHtmlCreate(opts) {
                 /<h1\u0020[\S\s]*<\/h1>/
             ), "");
         }
-        return handlebars.compile(file);
+        return handlebarsCompile(file);
     };
     headerTemplate = templateFor("head");
     footerTemplate = templateFor("foot");
-    detailTemplate = handlebars.compile([
+    detailTemplate = handlebarsCompile([
         "<tr>",
         (
             "<td class=\"line-count\">{{#show_lines}}{{maxLines}}"
@@ -11555,7 +11548,7 @@ function reportHtmlCreate(opts) {
         ),
         "</tr>\n"
     ].join(""));
-    summaryLineTemplate = handlebars.compile(`
+    summaryLineTemplate = handlebarsCompile(`
 <tr>
 <td class="file {{reportClasses.statements}}"
     data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>
