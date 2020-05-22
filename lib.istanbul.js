@@ -506,204 +506,6 @@ local._istanbul_path = local.path || {
     }
 };
 
-local.coverageMerge = function (coverage1 = {}, coverage2 = {}) {
-/*
- * this function will inplace-merge coverage2 into coverage1
- */
-    let dict1;
-    let dict2;
-    Object.keys(coverage2).forEach(function (file) {
-        if (!coverage2[file]) {
-            return;
-        }
-        // if file is undefined in coverage1, then add it
-        if (!coverage1[file]) {
-            coverage1[file] = coverage2[file];
-            return;
-        }
-        // merge file from coverage2 into coverage1
-        [
-            "b", "f", "s"
-        ].forEach(function (key) {
-            dict1 = coverage1[file][key];
-            dict2 = coverage2[file][key];
-            switch (key) {
-            // increment coverage for branch lines
-            case "b":
-                Object.keys(dict2).forEach(function (key) {
-                    dict2[key].forEach(function (count, ii) {
-                        dict1[key][ii] += count;
-                    });
-                });
-                break;
-            // increment coverage for function and statement lines
-            case "f":
-            case "s":
-                Object.keys(dict2).forEach(function (key) {
-                    dict1[key] += dict2[key];
-                });
-                break;
-            }
-        });
-    });
-    return coverage1;
-};
-
-local.coverageReportCreate = function (opt) {
-/*
- * this function will
- * 1. print coverage in text-format to stdout
- * 2. write coverage in html-format to filesystem
- * 3. return coverage in html-format as single document
- */
-    let coverageReportHtml;
-    let writerData;
-    let writerFile;
-    if (!(opt && opt.coverage)) {
-        return "";
-    }
-    opt.dir = process.cwd() + "/tmp/build/coverage.html";
-    // merge previous coverage
-    if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
-        console.log("merging file " + opt.dir + "/coverage.json to coverage");
-        try {
-            local.coverageMerge(opt.coverage, JSON.parse(
-                local.fs.readFileSync(opt.dir + "/coverage.json", "utf8")
-            ));
-        } catch (ignore) {}
-        try {
-            Object.keys(JSON.parse(local.fs.readFileSync(
-                opt.dir + "/coverage.code-dict.json",
-                "utf8"
-            ))).forEach(function (key) {
-                globalThis.__coverageCodeDict__[key] = (
-                    globalThis.__coverageCodeDict__[key]
-                    || true
-                );
-            });
-        } catch (ignore) {}
-    }
-    // init writer
-    coverageReportHtml = "";
-    coverageReportHtml += (
-        "<div class=\"coverageReportDiv\">\n"
-        + "<h1>coverage-report</h1>\n"
-        + "<div style=\""
-        + "background: #fff; border: 1px solid #999; margin 0; padding: 0;"
-        + "\">\n"
-    );
-    opt.sourceStore = {};
-    // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
-    writerData = "";
-    writerFile = "";
-    opt.writer = {};
-    opt.writer.write = function (data) {
-        writerData += data;
-    };
-    opt.writer.writeFile = function (file, onError) {
-        coverageReportHtml += writerData + "\n\n";
-        if (writerFile) {
-            local.fsWriteFileWithMkdirpSync(
-                writerFile,
-                writerData
-            );
-        }
-        writerData = "";
-        writerFile = file;
-        onError(opt.writer);
-    };
-    // 1. print coverage in text-format to stdout
-    local.reportTextCreate(opt, local.collector);
-    // 2. write coverage in html-format to filesystem
-    local.reportHtmlCreate(opt, local.collector);
-    opt.writer.writeFile("", local.nop);
-    // write coverage.json
-    local.fsWriteFileWithMkdirpSync(
-        opt.dir + "/coverage.json",
-        JSON.stringify(opt.coverage)
-    );
-    // write coverage.code-dict.json
-    local.fsWriteFileWithMkdirpSync(
-        opt.dir + "/coverage.code-dict.json",
-        JSON.stringify(globalThis.__coverageCodeDict__)
-    );
-    // write coverage.badge.svg
-    opt.pct = local.coverageReportSummary.root.metrics.lines.pct;
-    local.fsWriteFileWithMkdirpSync(
-        local._istanbul_path.dirname(opt.dir) + "/coverage.badge.svg",
-        // edit coverage badge percent
-        // edit coverage badge color
-        local.templateCoverageBadgeSvg.replace((
-            /100.0/g
-        ), opt.pct).replace((
-            /0d0/g
-        ), (
-            Math.round((100 - opt.pct) * 2.21).toString(16).padStart(2, "0")
-            + Math.round(opt.pct * 2.21).toString(16).padStart(2, "0")
-            + "00"
-        ))
-    );
-    console.log("created coverage file " + opt.dir + "/index.html");
-    // 3. return coverage in html-format as a single document
-    coverageReportHtml += "</div>\n</div>\n";
-    // write coverage.rollup.html
-    local.fsWriteFileWithMkdirpSync(
-        opt.dir + "/coverage.rollup.html",
-        coverageReportHtml
-    );
-    return coverageReportHtml;
-};
-
-local.instrumentInPackage = function (code, file) {
-/*
- * this function will instrument the code
- * only if the macro /\* istanbul instrument in package $npm_package_nameLib *\/
- * exists in the code
- */
-    return (
-        (
-            process.env.npm_config_mode_coverage
-            && code.indexOf("/* istanbul ignore all */\n") < 0 && (
-                process.env.npm_config_mode_coverage === "all"
-                || process.env.npm_config_mode_coverage === "node_modules"
-                || code.indexOf(
-                    "/* istanbul instrument in package "
-                    + process.env.npm_package_nameLib + " */\n"
-                ) >= 0
-                || code.indexOf(
-                    "/* istanbul instrument in package "
-                    + process.env.npm_config_mode_coverage + " */\n"
-                ) >= 0
-            )
-        )
-        ? local.instrumentSync(code, file)
-        : code
-    );
-};
-
-local.instrumentSync = function (code, file) {
-/*
- * this function will
- * 1. normalize the file
- * 2. save code to __coverageCodeDict__[file] for future html-report
- * 3. return instrumented code
- */
-    // 1. normalize the file
-    file = local._istanbul_path.resolve("/", file);
-    // 2. save code to __coverageCodeDict__[file] for future html-report
-    globalThis.__coverageCodeDict__[file] = true;
-    // 3. return instrumented code
-    return new local.Instrumenter({
-        embedSource: true,
-        esModules: true,
-        noAutoWrap: true
-    }).instrumentSync(code, file).trimStart();
-};
-
-local.util = {
-inherits: local.nop
-};
-
 
 
 /*
@@ -11662,32 +11464,16 @@ local.templateCoverageBadgeSvg =
 
 
 
-/*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
-*/
-/**
- * a `Report` implementation that produces HTML coverage reports.
- *
- * Usage
- * -----
- *
- *      let report = require('istanbul').Report.create('html');
- *
- *
- * @class HtmlReport
- * @extends Report
- * @constructor
- * @param {Object} opts optional
- * @param {String} [opts.dir] the directory in which to generate reports.
- * Defaults to `./html-report`
- */
+(function () {
+let reportHtmlCreate;
+let reportTextCreate;
 let require2;
 require2 = function (key) {
     try {
         return local["_istanbul_" + key] || local[key] || require(key);
     } catch (ignore) {}
 };
-local.reportHtmlCreate = function (opts, collector) {
+reportHtmlCreate = function (opts, collector) {
     let InsertionText;
     let RE_AMP;
     let RE_GT;
@@ -11716,7 +11502,6 @@ local.reportHtmlCreate = function (opts, collector) {
     let templateFor;
     let utils;
     let writeFiles;
-
     handlebars = require2("handlebars");
     defaults = require2("./common/defaults");
     path = require2("path");
@@ -11840,7 +11625,6 @@ local.reportHtmlCreate = function (opts, collector) {
     RE_gt = (
         /\u0002/g
     );
-
     handlebars.registerHelper("show_picture", function (opts) {
         let num;
         num = Number(opts.fn(this));
@@ -11855,7 +11639,6 @@ local.reportHtmlCreate = function (opts, collector) {
             return "";
         }
     });
-
     handlebars.registerHelper("show_ignores", function (metrics) {
         let result;
         if (
@@ -11878,7 +11661,6 @@ local.reportHtmlCreate = function (opts, collector) {
         }
         return result.join("<br>");
     });
-
     // hack-coverage - hashtag lineno
     handlebars.registerHelper("show_lines", function (opts) {
         let array;
@@ -11895,7 +11677,6 @@ local.reportHtmlCreate = function (opts, collector) {
         }
         return array;
     });
-
     handlebars.registerHelper("show_line_execution_counts", function (
         context,
         opts
@@ -11932,7 +11713,6 @@ local.reportHtmlCreate = function (opts, collector) {
         }
         return array.join("\n");
     });
-
     function customEscape(text) {
         text = text.toString();
         text = text.replace(RE_AMP, "&amp;");
@@ -11942,21 +11722,17 @@ local.reportHtmlCreate = function (opts, collector) {
         text = text.replace(RE_gt, ">");
         return text;
     }
-
     handlebars.registerHelper("show_code", function (context /*, opts */) {
         let array;
         array = [];
-
         context.forEach(function (item) {
             array.push(customEscape(item.text) || "&nbsp;");
         });
         return array.join("\n");
     });
-
     function title(str) {
         return " title=\"" + str + "\" ";
     }
-
     function annotateLines(fileCoverage, structuredText) {
         let lineStats;
         lineStats = fileCoverage.l;
@@ -11978,7 +11754,6 @@ local.reportHtmlCreate = function (opts, collector) {
             }
         });
     }
-
     function annotateStatements(fileCoverage, structuredText) {
         let statementMeta;
         let statementStats;
@@ -12014,7 +11789,6 @@ local.reportHtmlCreate = function (opts, collector) {
                 ) + "\"" + title("statement not covered") + gt
             );
             closeSpan = lt + "/span" + gt;
-
             if (type === "no") {
                 if (endLine !== startLine) {
                     endLine = startLine;
@@ -12029,7 +11803,6 @@ local.reportHtmlCreate = function (opts, collector) {
             }
         });
     }
-
     function annotateFunctions(fileCoverage, structuredText) {
         let fnMeta;
         let fnStats;
@@ -12066,7 +11839,6 @@ local.reportHtmlCreate = function (opts, collector) {
             let closeSpan;
             closeSpan = lt + "/span" + gt;
             let text;
-
             if (type === "no") {
                 if (endLine !== startLine) {
                     endLine = startLine;
@@ -12081,7 +11853,6 @@ local.reportHtmlCreate = function (opts, collector) {
             }
         });
     }
-
     function annotateBranches(fileCoverage, structuredText) {
         let branchMeta;
         let branchStats;
@@ -12090,7 +11861,6 @@ local.reportHtmlCreate = function (opts, collector) {
         if (!branchStats) {
             return;
         }
-
         Object.keys(branchStats).forEach(function (branchName) {
             let branchArray;
             branchArray = branchStats[branchName];
@@ -12110,7 +11880,6 @@ local.reportHtmlCreate = function (opts, collector) {
             let startCol;
             let startLine;
             let text;
-
             if (sumCount > 0) {
                 //only highlight if partial branches are missing
                 ii = 0;
@@ -12127,7 +11896,6 @@ local.reportHtmlCreate = function (opts, collector) {
                         : "cbranch-no"
                     ) + "\"" + title("branch not covered") + gt;
                     closeSpan = lt + "/span" + gt;
-
                     if (count === 0) {
                         //skip branches taken
                         if (endLine !== startLine) {
@@ -12166,7 +11934,6 @@ local.reportHtmlCreate = function (opts, collector) {
             }
         });
     }
-
     function getReportClass(stats, watermark) {
         let coveragePct;
         coveragePct = stats.pct;
@@ -12184,7 +11951,6 @@ local.reportHtmlCreate = function (opts, collector) {
             return "";
         }
     }
-
     opts = opts || {};
     opts.dir = opts.dir || path.resolve("html-report");
     opts.sourceStore = opts.sourceStore || Store.create("fslookup");
@@ -12311,7 +12077,6 @@ local.reportHtmlCreate = function (opts, collector) {
             templateData = opts.templateData;
             children = Array.prototype.slice.apply(node.children);
             watermarks = opts.watermarks;
-
             children.sort(function (a, b) {
                 return (
                     a.name < b.name
@@ -12319,7 +12084,6 @@ local.reportHtmlCreate = function (opts, collector) {
                     : 1
                 );
             });
-
             fillTemplate(node, templateData);
             writer.write(headerTemplate(templateData));
             writer.write(summaryTableHeader);
@@ -12398,17 +12162,14 @@ local.reportHtmlCreate = function (opts, collector) {
                         text: new InsertionText(str, true)
                     };
                 });
-
                 structured.unshift({
                     line: 0,
                     covered: null,
                     text: new InsertionText("")
                 });
-
                 fillTemplate(child, templateData);
                 writer.write(headerTemplate(templateData));
                 writer.write("<pre><table class=\"coverage\">\n");
-
                 annotateLines(fileCoverage, structured);
                 //note: order is important, since statements typically result
                 //in spanning the whole line and doing branches late
@@ -12416,7 +12177,6 @@ local.reportHtmlCreate = function (opts, collector) {
                 annotateBranches(fileCoverage, structured);
                 annotateFunctions(fileCoverage, structured);
                 annotateStatements(fileCoverage, structured);
-
                 structured.shift();
                 context = {
                     structured,
@@ -12429,7 +12189,6 @@ local.reportHtmlCreate = function (opts, collector) {
             });
         });
     };
-
     let dir;
     let summarizer;
     let tree;
@@ -12437,7 +12196,6 @@ local.reportHtmlCreate = function (opts, collector) {
     dir = opts.dir;
     summarizer = new TreeSummarizer();
     writer = opts.writer;
-
     collector.files().forEach(function (key) {
         summarizer.addFileCoverageSummary(
             key,
@@ -12454,7 +12212,6 @@ local.reportHtmlCreate = function (opts, collector) {
         resolvedSource = path.resolve("..", "vendor", f);
         resolvedDestination = path.resolve(dir, f);
         stat = fs.statSync(resolvedSource);
-
         if (stat.isFile()) {
             if (opts.verbose) {
                 console.log("Write asset: " + resolvedDestination);
@@ -12466,10 +12223,12 @@ local.reportHtmlCreate = function (opts, collector) {
     writeFiles(writer, tree.root, dir, collector);
 };
 
+
+
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
-local.reportTextCreate = function (opts, collector) {
+reportTextCreate = function (opts, collector) {
     let COL_DELIM;
     let DELIM;
     let PCT_COLS;
@@ -12482,7 +12241,6 @@ local.reportTextCreate = function (opts, collector) {
     TAB_SIZE = 3;
     DELIM = " |";
     COL_DELIM = "-|";
-
     function padding(num, ch) {
         let ii;
         let str;
@@ -12495,7 +12253,6 @@ local.reportTextCreate = function (opts, collector) {
         }
         return str;
     }
-
     function fill(str, width, right, tabs, clazz) {
         let fillStr;
         let fmtStr;
@@ -12510,7 +12267,6 @@ local.reportTextCreate = function (opts, collector) {
         leader = padding(leadingSpaces);
         fmtStr = "";
         strlen = str.length;
-
         if (remaining > 0) {
             if (remaining >= strlen) {
                 fillStr = padding(remaining - strlen);
@@ -12524,23 +12280,18 @@ local.reportTextCreate = function (opts, collector) {
                 fmtStr = "... " + fmtStr.substring(4);
             }
         }
-
         fmtStr = defaults.colorize(fmtStr, clazz);
         return leader + fmtStr;
     }
-
     function formatName(name, maxCols, level, clazz) {
         return fill(name, maxCols, false, level, clazz);
     }
-
     function formatPct(pct, clazz) {
         return fill(pct, PCT_COLS, true, 0, clazz);
     }
-
     function nodeName(node) {
         return node.displayShortName() || "All files";
     }
-
     function tableHeader(maxNameCols) {
         let elements;
         elements = [];
@@ -12551,7 +12302,6 @@ local.reportTextCreate = function (opts, collector) {
         elements.push(formatPct("% Lines"));
         return elements.join(" |") + " |";
     }
-
     function tableRow(node, maxNameCols, level, watermarks) {
         let branches;
         let elements;
@@ -12565,7 +12315,6 @@ local.reportTextCreate = function (opts, collector) {
         functions = node.metrics.functions.pct;
         lines = node.metrics.lines.pct;
         elements = [];
-
         elements.push(formatName(
             name,
             maxNameCols,
@@ -12588,10 +12337,8 @@ local.reportTextCreate = function (opts, collector) {
             lines,
             defaults.classFor("lines", node.metrics, watermarks)
         ));
-
         return elements.join(DELIM) + DELIM;
     }
-
     function findNameWidth(node, level, last) {
         let idealWidth;
         last = last || 0;
@@ -12605,7 +12352,6 @@ local.reportTextCreate = function (opts, collector) {
         });
         return last;
     }
-
     function makeLine(nameWidth) {
         let elements;
         let name;
@@ -12613,7 +12359,6 @@ local.reportTextCreate = function (opts, collector) {
         name = padding(nameWidth, "-");
         pct = padding(PCT_COLS, "-");
         elements = [];
-
         elements.push(name);
         elements.push(pct);
         elements.push(pct);
@@ -12621,7 +12366,6 @@ local.reportTextCreate = function (opts, collector) {
         elements.push(pct);
         return elements.join(COL_DELIM) + COL_DELIM;
     }
-
     function walk(node, nameWidth, array, level, watermarks) {
         let line;
         if (level === 0) {
@@ -12641,7 +12385,6 @@ local.reportTextCreate = function (opts, collector) {
             array.push(line);
         }
     }
-
     let TreeSummarizer;
     let nameWidth;
     let root;
@@ -12659,7 +12402,6 @@ local.reportTextCreate = function (opts, collector) {
     TreeSummarizer = require2("../util/tree-summarizer");
     summarizer = new TreeSummarizer();
     strings = [];
-
     collector.files().forEach(function (key) {
         summarizer.addFileCoverageSummary(
             key,
@@ -12674,9 +12416,208 @@ local.reportTextCreate = function (opts, collector) {
     console.log(text);
 };
 
+
+
 /*
 file none
 */
+
+
+
+local.coverageMerge = function (coverage1 = {}, coverage2 = {}) {
+/*
+ * this function will inplace-merge coverage2 into coverage1
+ */
+    let dict1;
+    let dict2;
+    Object.keys(coverage2).forEach(function (file) {
+        if (!coverage2[file]) {
+            return;
+        }
+        // if file is undefined in coverage1, then add it
+        if (!coverage1[file]) {
+            coverage1[file] = coverage2[file];
+            return;
+        }
+        // merge file from coverage2 into coverage1
+        [
+            "b", "f", "s"
+        ].forEach(function (key) {
+            dict1 = coverage1[file][key];
+            dict2 = coverage2[file][key];
+            switch (key) {
+            // increment coverage for branch lines
+            case "b":
+                Object.keys(dict2).forEach(function (key) {
+                    dict2[key].forEach(function (count, ii) {
+                        dict1[key][ii] += count;
+                    });
+                });
+                break;
+            // increment coverage for function and statement lines
+            case "f":
+            case "s":
+                Object.keys(dict2).forEach(function (key) {
+                    dict1[key] += dict2[key];
+                });
+                break;
+            }
+        });
+    });
+    return coverage1;
+};
+
+local.coverageReportCreate = function (opt) {
+/*
+ * this function will
+ * 1. print coverage in text-format to stdout
+ * 2. write coverage in html-format to filesystem
+ * 3. return coverage in html-format as single document
+ */
+    let coverageReportHtml;
+    let writerData;
+    let writerFile;
+    if (!(opt && opt.coverage)) {
+        return "";
+    }
+    opt.dir = process.cwd() + "/tmp/build/coverage.html";
+    // merge previous coverage
+    if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
+        console.log("merging file " + opt.dir + "/coverage.json to coverage");
+        try {
+            local.coverageMerge(opt.coverage, JSON.parse(
+                local.fs.readFileSync(opt.dir + "/coverage.json", "utf8")
+            ));
+        } catch (ignore) {}
+        try {
+            Object.keys(JSON.parse(local.fs.readFileSync(
+                opt.dir + "/coverage.code-dict.json",
+                "utf8"
+            ))).forEach(function (key) {
+                globalThis.__coverageCodeDict__[key] = (
+                    globalThis.__coverageCodeDict__[key]
+                    || true
+                );
+            });
+        } catch (ignore) {}
+    }
+    // init writer
+    coverageReportHtml = "";
+    coverageReportHtml += (
+        "<div class=\"coverageReportDiv\">\n"
+        + "<h1>coverage-report</h1>\n"
+        + "<div style=\""
+        + "background: #fff; border: 1px solid #999; margin 0; padding: 0;"
+        + "\">\n"
+    );
+    opt.sourceStore = {};
+    // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
+    writerData = "";
+    writerFile = "";
+    opt.writer = {};
+    opt.writer.write = function (data) {
+        writerData += data;
+    };
+    opt.writer.writeFile = function (file, onError) {
+        coverageReportHtml += writerData + "\n\n";
+        if (writerFile) {
+            local.fsWriteFileWithMkdirpSync(
+                writerFile,
+                writerData
+            );
+        }
+        writerData = "";
+        writerFile = file;
+        onError(opt.writer);
+    };
+    // 1. print coverage in text-format to stdout
+    reportTextCreate(opt, local.collector);
+    // 2. write coverage in html-format to filesystem
+    reportHtmlCreate(opt, local.collector);
+    opt.writer.writeFile("", local.nop);
+    // write coverage.json
+    local.fsWriteFileWithMkdirpSync(
+        opt.dir + "/coverage.json",
+        JSON.stringify(opt.coverage)
+    );
+    // write coverage.code-dict.json
+    local.fsWriteFileWithMkdirpSync(
+        opt.dir + "/coverage.code-dict.json",
+        JSON.stringify(globalThis.__coverageCodeDict__)
+    );
+    // write coverage.badge.svg
+    opt.pct = local.coverageReportSummary.root.metrics.lines.pct;
+    local.fsWriteFileWithMkdirpSync(
+        local._istanbul_path.dirname(opt.dir) + "/coverage.badge.svg",
+        // edit coverage badge percent
+        // edit coverage badge color
+        local.templateCoverageBadgeSvg.replace((
+            /100.0/g
+        ), opt.pct).replace((
+            /0d0/g
+        ), (
+            Math.round((100 - opt.pct) * 2.21).toString(16).padStart(2, "0")
+            + Math.round(opt.pct * 2.21).toString(16).padStart(2, "0")
+            + "00"
+        ))
+    );
+    console.log("created coverage file " + opt.dir + "/index.html");
+    // 3. return coverage in html-format as a single document
+    coverageReportHtml += "</div>\n</div>\n";
+    // write coverage.rollup.html
+    local.fsWriteFileWithMkdirpSync(
+        opt.dir + "/coverage.rollup.html",
+        coverageReportHtml
+    );
+    return coverageReportHtml;
+};
+
+local.instrumentInPackage = function (code, file) {
+/*
+ * this function will instrument the code
+ * only if the macro /\* istanbul instrument in package $npm_package_nameLib *\/
+ * exists in the code
+ */
+    return (
+        (
+            process.env.npm_config_mode_coverage
+            && code.indexOf("/* istanbul ignore all */\n") < 0 && (
+                process.env.npm_config_mode_coverage === "all"
+                || process.env.npm_config_mode_coverage === "node_modules"
+                || code.indexOf(
+                    "/* istanbul instrument in package "
+                    + process.env.npm_package_nameLib + " */\n"
+                ) >= 0
+                || code.indexOf(
+                    "/* istanbul instrument in package "
+                    + process.env.npm_config_mode_coverage + " */\n"
+                ) >= 0
+            )
+        )
+        ? local.instrumentSync(code, file)
+        : code
+    );
+};
+
+local.instrumentSync = function (code, file) {
+/*
+ * this function will
+ * 1. normalize the file
+ * 2. save code to __coverageCodeDict__[file] for future html-report
+ * 3. return instrumented code
+ */
+    // 1. normalize the file
+    file = local._istanbul_path.resolve("/", file);
+    // 2. save code to __coverageCodeDict__[file] for future html-report
+    globalThis.__coverageCodeDict__[file] = true;
+    // 3. return instrumented code
+    return new local.Instrumenter({
+        embedSource: true,
+        esModules: true,
+        noAutoWrap: true
+    }).instrumentSync(code, file).trimStart();
+};
+}());
 
 
 
