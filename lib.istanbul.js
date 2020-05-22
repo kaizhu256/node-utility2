@@ -11651,7 +11651,6 @@ module.exports = TreeSummarizer;
 
 
 
-/* jslint ignore:start */
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
@@ -11690,43 +11689,74 @@ local.reportHtmlCreate = function(opts, collector) {
     let TreeSummarizer = require("../util/tree-summarizer");
     let utils = require("../object-utils");
     let templateFor = function (name) {
-        return handlebars.compile(fs.readFileSync(path.resolve(__dirname, "templates", name + ".txt"), "utf8")); };
+        return handlebars.compile(fs.readFileSync(
+            path.resolve(__dirname, "templates", name + ".txt"),
+            "utf8"
+        ));
+    };
     let headerTemplate = templateFor("head");
     let footerTemplate = templateFor("foot");
-    let pathTemplate = handlebars.compile("<div class=\"path\">{{{html}}}</div>");
+    let pathTemplate = handlebars.compile(
+        "<div class=\"path\">{{{html}}}</div>"
+    );
     let detailTemplate = handlebars.compile([
-    "<tr>",
-    "<td class=\"line-count\">{{#show_lines}}{{maxLines}}{{/show_lines}}</td>",
-    "<td class=\"line-coverage\">{{#show_line_execution_counts fileCoverage}}{{maxLines}}{{/show_line_execution_counts}}</td>",
-    // hack-coverage - domOnEventSelectAllWithinPre
-    "<td class=\"text\"><pre class=\"prettyprint lang-js\" tabIndex=\"0\">{{#show_code structured}}{{/show_code}}</pre></td>",
-    "</tr>\n"
-        ].join(""));
+        "<tr>",
+        (
+            "<td class=\"line-count\">{{#show_lines}}{{maxLines}}"
+            + "{{/show_lines}}</td>"
+        ),
+        (
+            "<td class=\"line-coverage\">{{#show_line_execution_counts "
+            + "fileCoverage}}{{maxLines}}{{/show_line_execution_counts}}</td>"
+        ),
+        (
+            // hack-coverage - domOnEventSelectAllWithinPre
+            "<td class=\"text\"><pre class=\"prettyprint lang-js\" "
+            + "tabIndex=\"0\">{{#show_code structured}}{{/show_code}}</pre>"
+            + "</td>"
+        ),
+        "</tr>\n"
+    ].join(""));
     let summaryTableHeader = [
-    "<div class=\"coverage-summary\">",
-    "<table>",
-    "<thead>",
-    "<tr>",
-    // hack-coverage - compact summary
-    "   <th data-col=\"file\" data-fmt=\"html\" data-html=\"true\" class=\"file\">File</th>",
-    "   <th data-col=\"statements\" data-type=\"number\" data-fmt=\"pct\" class=\"pct\">Statements</th>",
-    "   <th data-col=\"branches\" data-type=\"number\" data-fmt=\"pct\" class=\"pct\">Branches</th>",
-    "   <th data-col=\"functions\" data-type=\"number\" data-fmt=\"pct\" class=\"pct\">Functions</th>",
-    "   <th data-col=\"lines\" data-type=\"number\" data-fmt=\"pct\" class=\"pct\">Lines</th>",
-    "</tr>",
-    "</thead>",
-    "<tbody>"
-        ].join("\n");
+        "<div class=\"coverage-summary\">",
+        "<table>",
+        "<thead>",
+        "<tr>",
+        (
+            // hack-coverage - compact summary
+            "   <th data-col=\"file\" data-fmt=\"html\" data-html=\"true\" "
+            + "class=\"file\">File</th>"
+        ),
+        (
+            "   <th data-col=\"statements\" data-type=\"number\" "
+            + "data-fmt=\"pct\" class=\"pct\">Statements</th>"
+        ),
+        (
+            "   <th data-col=\"branches\" data-type=\"number\" "
+            + "data-fmt=\"pct\" class=\"pct\">Branches</th>"
+        ),
+        (
+            "   <th data-col=\"functions\" data-type=\"number\" "
+            + "data-fmt=\"pct\" class=\"pct\">Functions</th>"
+        ),
+        (
+            "   <th data-col=\"lines\" data-type=\"number\" "
+            + "data-fmt=\"pct\" class=\"pct\">Lines</th>"
+        ),
+        "</tr>",
+        "</thead>",
+        "<tbody>"
+    ].join("\n");
     let summaryLineTemplate = handlebars.compile([
-    "<tr>",
-    // hack-coverage - compact summary
-    "<td class=\"file {{reportClasses.statements}}\" data-value=\"{{file}}\"><a href=\"{{output}}\"><div>{{file}}</div>{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>",
-    "<td data-value=\"{{metrics.statements.pct}}\" class=\"pct {{reportClasses.statements}}\">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>",
-    "<td data-value=\"{{metrics.branches.pct}}\" class=\"pct {{reportClasses.branches}}\">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>",
-    "<td data-value=\"{{metrics.functions.pct}}\" class=\"pct {{reportClasses.functions}}\">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>",
-    "<td data-value=\"{{metrics.lines.pct}}\" class=\"pct {{reportClasses.lines}}\">{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>",
-    "</tr>\n"
-        ].join("\n\t"));
+        "<tr>",
+        // hack-coverage - compact summary
+        "<td class=\"file {{reportClasses.statements}}\" data-value=\"{{file}}\"><a href=\"{{output}}\"><div>{{file}}</div>{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>",
+        "<td data-value=\"{{metrics.statements.pct}}\" class=\"pct {{reportClasses.statements}}\">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>",
+        "<td data-value=\"{{metrics.branches.pct}}\" class=\"pct {{reportClasses.branches}}\">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>",
+        "<td data-value=\"{{metrics.functions.pct}}\" class=\"pct {{reportClasses.functions}}\">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>",
+        "<td data-value=\"{{metrics.lines.pct}}\" class=\"pct {{reportClasses.lines}}\">{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>",
+        "</tr>\n"
+    ].join("\n\t"));
     let summaryTableFooter = [
     "</tbody>",
     "</table>",
@@ -11989,7 +12019,11 @@ local.reportHtmlCreate = function(opts, collector) {
         let coveragePct = stats.pct;
         let identity = 1;
         if (coveragePct * identity === coveragePct) {
-            return coveragePct >= watermark[1] ? "high" : coveragePct >= watermark[0] ? "medium" : "low";
+            return (
+                coveragePct >= watermark[1]
+                ? "high"
+                : coveragePct >= watermark[0] ? "medium" : "low"
+            );
         } else {
             return "";
         }
@@ -12028,7 +12062,10 @@ local.reportHtmlCreate = function(opts, collector) {
         let html;
         templateData.entity = node.name || "All files";
         templateData.metrics = node.metrics;
-        templateData.reportClass = getReportClass(node.metrics.statements, opts.watermarks.statements);
+        templateData.reportClass = getReportClass(
+            node.metrics.statements,
+            opts.watermarks.statements
+        );
         let parent = node.parent;
         let nodePath = [];
         let linkPath = [];
@@ -12038,12 +12075,17 @@ local.reportHtmlCreate = function(opts, collector) {
             parent = parent.parent;
         }
         for (i = 0; i < nodePath.length; i += 1) {
-            linkPath.push("<a href=\"" + linkMapper.ancestor(node, i + 1) + "\">"
-+ (nodePath[i].relativeName || "All files") + "</a>");
+            linkPath.push(
+                "<a href=\"" + linkMapper.ancestor(node, i + 1) + "\">"
+                + (nodePath[i].relativeName || "All files") + "</a>"
+            );
         }
         linkPath.reverse();
-        html = linkPath.length > 0 ? linkPath.join(" &#187; ") + " &#187; "
-+ node.displayShortName() : "";
+        html = (
+            linkPath.length > 0
+            ? linkPath.join(" &#187; ") + " &#187; " + node.displayShortName()
+            : ""
+        );
         templateData.pathHtml = pathTemplate({
             html });
         templateData.prettify = {
@@ -12067,7 +12109,11 @@ local.reportHtmlCreate = function(opts, collector) {
                     }
                 }
             }
-            return node.kind === "dir" ? relativeName + "index.html" : relativeName + ".html";
+            return (
+                node.kind === "dir"
+                ? relativeName + "index.html"
+                : relativeName + ".html"
+            );
         },
         ancestor: function (node, num) {
             return ancestorHref(node, num) + "index.html";
@@ -12100,9 +12146,15 @@ local.reportHtmlCreate = function(opts, collector) {
             children.forEach(function (child) {
                 let metrics = child.metrics;
                 let reportClasses = {
-                statements: getReportClass(metrics.statements, watermarks.statements),
+                statements: getReportClass(
+                    metrics.statements,
+                    watermarks.statements
+                ),
                 lines: getReportClass(metrics.lines, watermarks.lines),
-                functions: getReportClass(metrics.functions, watermarks.functions),
+                functions: getReportClass(
+                    metrics.functions,
+                    watermarks.functions
+                ),
                 branches: getReportClass(metrics.branches, watermarks.branches)
                     };
                 let data = {
@@ -12119,7 +12171,12 @@ local.reportHtmlCreate = function(opts, collector) {
         node.children.forEach(function (child) {
             if (child.kind === "dir") {
                 // recurse
-                writeFiles(writer, child, path.resolve(dir, child.relativeName), collector);
+                writeFiles(
+                    writer,
+                    child,
+                    path.resolve(dir, child.relativeName),
+                    collector
+                );
                 return;
             }
             childFile = path.resolve(dir, child.relativeName + ".html");
@@ -12129,8 +12186,11 @@ local.reportHtmlCreate = function(opts, collector) {
                 let fileCoverage = collector.fileCoverageFor(child.fullPath());
                 let sourceStore = opts.sourceStore;
                 let templateData = opts.templateData;
-                let sourceText = fileCoverage.code && Array.isArray(fileCoverage.code)
-? fileCoverage.code.join("\n") + "\n" : sourceStore.get(fileCoverage.path);
+                let sourceText = (
+                    fileCoverage.code && Array.isArray(fileCoverage.code)
+                    ? fileCoverage.code.join("\n") + "\n"
+                    : sourceStore.get(fileCoverage.path)
+                );
                 let code = sourceText.split(
     /(?:\r?\n)|\r/
 );
@@ -12148,7 +12208,8 @@ local.reportHtmlCreate = function(opts, collector) {
     writer.write("<pre><table class=\"coverage\">\n");
 
     annotateLines(fileCoverage, structured);
-    //note: order is important, since statements typically result in spanning the whole line and doing branches late
+    //note: order is important, since statements typically result
+    //in spanning the whole line and doing branches late
     //causes mismatched tags
     annotateBranches(fileCoverage, structured);
     annotateFunctions(fileCoverage, structured);
@@ -12173,10 +12234,15 @@ local.reportHtmlCreate = function(opts, collector) {
     let tree;
 
     collector.files().forEach(function (key) {
-        summarizer.addFileCoverageSummary(key, utils.summarizeFileCoverage(collector.fileCoverageFor(key)));
+        summarizer.addFileCoverageSummary(
+            key,
+            utils.summarizeFileCoverage(collector.fileCoverageFor(key))
+        );
     });
     tree = summarizer.getTreeSummary();
-    fs.readdirSync(path.resolve(__dirname, "..", "vendor")).forEach(function (f) {
+    fs.readdirSync(
+        path.resolve(__dirname, "..", "vendor")
+    ).forEach(function (f) {
         let resolvedSource = path.resolve(__dirname, "..", "vendor", f);
         let resolvedDestination = path.resolve(dir, f);
         let stat = fs.statSync(resolvedSource);
@@ -12270,11 +12336,28 @@ local.reportTextCreate = function(opts, collector) {
         let lines = node.metrics.lines.pct;
         let elements = [];
 
-        elements.push(formatName(name, maxNameCols, level, defaults.classFor("statements", node.metrics, watermarks)));
-        elements.push(formatPct(statements, defaults.classFor("statements", node.metrics, watermarks)));
-        elements.push(formatPct(branches, defaults.classFor("branches", node.metrics, watermarks)));
-        elements.push(formatPct(functions, defaults.classFor("functions", node.metrics, watermarks)));
-        elements.push(formatPct(lines, defaults.classFor("lines", node.metrics, watermarks)));
+        elements.push(formatName(
+            name,
+            maxNameCols,
+            level,
+            defaults.classFor("statements", node.metrics, watermarks)
+        ));
+        elements.push(formatPct(
+            statements,
+            defaults.classFor("statements", node.metrics, watermarks)
+        ));
+        elements.push(formatPct(
+            branches,
+            defaults.classFor("branches", node.metrics, watermarks)
+        ));
+        elements.push(formatPct(
+            functions,
+            defaults.classFor("functions", node.metrics, watermarks)
+        ));
+        elements.push(formatPct(
+            lines,
+            defaults.classFor("lines", node.metrics, watermarks)
+        ));
 
         return elements.join(DELIM) + DELIM;
     }
@@ -12343,7 +12426,10 @@ local.reportTextCreate = function(opts, collector) {
     let text;
 
     collector.files().forEach(function (key) {
-        summarizer.addFileCoverageSummary(key, utils.summarizeFileCoverage(collector.fileCoverageFor(key)));
+        summarizer.addFileCoverageSummary(
+            key,
+            utils.summarizeFileCoverage(collector.fileCoverageFor(key))
+        );
     });
     tree = summarizer.getTreeSummary();
     root = tree.root;
@@ -12355,6 +12441,7 @@ local.reportTextCreate = function(opts, collector) {
 
 
 
+/* jslint ignore:start */
 /*
 file https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
 */
