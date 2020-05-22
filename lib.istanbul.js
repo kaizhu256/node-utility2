@@ -10911,13 +10911,12 @@ function handlebarsCompile(template) {
     };
 }
 function reportHtmlCreate(opt) {
-    let detailTemplate;
+    let coverageReportWrite;
     let fillTemplate;
     let linkMapper;
     let templateData;
     let templateFoot;
     let templateHead;
-    let writeFiles;
     // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
     templateHead = (
         `<!doctype html>
@@ -11264,14 +11263,6 @@ function reportHtmlCreate(opt) {
     target="_blank">utility2</a> at {{datetime}}</div></div>
 </body></html>`
     );
-    detailTemplate = handlebarsCompile(`
-<pre><table class="coverage"><tr>
-<td class="line-count">{{#show_lines}}</td>
-<td class="line-coverage">{{#show_line_execution_counts}}</td>
-<td class="text">
-<pre class="prettyprint lang-js" tabIndex="0">{{#show_code}}</pre>
-</td>
-</tr></table></pre>`);
     function annotateLines(fileCoverage, structuredText) {
         Object.entries(fileCoverage.l).forEach(function ([
             lineNumber,
@@ -11519,7 +11510,7 @@ function reportHtmlCreate(opt) {
             return ancestorHref(node, num) + "index.html";
         }
     };
-    writeFiles = function (node, dir) {
+    coverageReportWrite = function (node, dir) {
         coverageReportHtml += writerData + "\n\n";
         if (writerFile) {
             local.fsWriteFileWithMkdirpSync(writerFile, writerData);
@@ -11590,9 +11581,14 @@ function reportHtmlCreate(opt) {
             "</tbody>\n</table>\n</div>\n" + templateFoot(templateData)
         );
         node.children.forEach(function (child) {
+            let fileCoverage;
+            let structured;
             if (child.kind === "dir") {
                 // recurse
-                writeFiles(child, path.resolve(dir, child.relativeName));
+                coverageReportWrite(
+                    child,
+                    path.resolve(dir, child.relativeName)
+                );
                 return;
             }
             coverageReportHtml += writerData + "\n\n";
@@ -11601,9 +11597,6 @@ function reportHtmlCreate(opt) {
             }
             writerData = "";
             writerFile = path.resolve(dir, child.relativeName + ".html");
-            let context;
-            let fileCoverage;
-            let structured;
             fileCoverage = globalThis.__coverage__[child.fullPath()];
             structured = String(fileCoverage.code.join("\n") + "\n").split(
                 /(?:\r?\n)|\r/
@@ -11628,19 +11621,24 @@ function reportHtmlCreate(opt) {
             annotateFunctions(fileCoverage, structured);
             annotateStatements(fileCoverage, structured);
             structured.shift();
-            context = {
-                structured,
-                maxLines: structured.length,
-                fileCoverage
-            };
             writerData += (
                 templateHead(templateData)
-                + detailTemplate(context)
-                + templateFoot(templateData)
+                + handlebarsCompile(`
+<pre><table class="coverage"><tr>
+<td class="line-count">{{#show_lines}}</td>
+<td class="line-coverage">{{#show_line_execution_counts}}</td>
+<td class="text">
+<pre class="prettyprint lang-js" tabIndex="0">{{#show_code}}</pre>
+</td>
+</tr></table></pre>`)({
+                    structured,
+                    maxLines: structured.length,
+                    fileCoverage
+                }) + templateFoot(templateData)
             );
         });
     };
-    writeFiles(coverageReportSummary.root, dir);
+    coverageReportWrite(coverageReportSummary.root, dir);
 }
 
 
