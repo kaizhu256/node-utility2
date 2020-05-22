@@ -12034,13 +12034,10 @@ reportTextCreate = function (opts) {
     let strings;
     let text;
     let that;
-    function formatName(name, maxCols, level, clazz) {
-        return fill(name, maxCols, false, level, clazz);
-    }
     function tableHeader(maxNameCols) {
         let elements;
         elements = [];
-        elements.push(formatName("File", maxNameCols, 0));
+        elements.push(fill("File", maxNameCols, false, 0));
         elements.push(fill("% Stmts", PCT_COLS, true, 0));
         elements.push(fill("% Branches", PCT_COLS, true, 0));
         elements.push(fill("% Funcs", PCT_COLS, true, 0));
@@ -12070,9 +12067,10 @@ reportTextCreate = function (opts) {
         functions = node.metrics.functions.pct;
         lines = node.metrics.lines.pct;
         elements = [];
-        elements.push(formatName(
+        elements.push(fill(
             name,
             maxNameCols,
+            false,
             level,
             classFor(node.metrics.statements.pct)
         ));
