@@ -10201,7 +10201,6 @@ let coverageReportHtml;
 let coverageReportSummary;
 let dir;
 let path;
-let reportTextCreate;
 let summaryMap;
 let writerData;
 let writerFile;
@@ -11515,10 +11514,9 @@ function reportHtmlCreate(opt) {
         if (writerFile) {
             local.fsWriteFileWithMkdirpSync(writerFile, writerData);
         }
-        writerData = "";
         writerFile = path.resolve(dir, "index.html");
         fillTemplate(node);
-        writerData += templateHead(templateData) + (
+        writerData = templateHead(templateData) + (
             `<div class="coverage-summary">
 <table>
 <thead>
@@ -11595,7 +11593,6 @@ function reportHtmlCreate(opt) {
             if (writerFile) {
                 local.fsWriteFileWithMkdirpSync(writerFile, writerData);
             }
-            writerData = "";
             writerFile = path.resolve(dir, child.relativeName + ".html");
             fileCoverage = globalThis.__coverage__[child.fullPath()];
             structured = String(fileCoverage.code.join("\n") + "\n").split(
@@ -11621,15 +11618,15 @@ function reportHtmlCreate(opt) {
             annotateFunctions(fileCoverage, structured);
             annotateStatements(fileCoverage, structured);
             structured.shift();
-            writerData += (
+            writerData = (
                 templateHead(templateData)
-                + handlebarsCompile(`
-<pre><table class="coverage"><tr>
+                + handlebarsCompile(`<pre><table class="coverage"><tr>
 <td class="line-count">{{#show_lines}}</td>
 <td class="line-coverage">{{#show_line_execution_counts}}</td>
-<td class="text">
-<pre class="prettyprint lang-js" tabIndex="0">{{#show_code}}</pre>
-</td>
+<td class="text"><pre
+    class="prettyprint lang-js"
+    tabIndex="0"
+>{{#show_code}}</pre></td>
 </tr></table></pre>`)({
                     structured,
                     maxLines: structured.length,
@@ -11646,11 +11643,10 @@ function reportHtmlCreate(opt) {
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
-reportTextCreate = function (opt) {
+function reportTextCreate(opt) {
     let nameWidth;
     let strings;
     let text;
-    let that;
     function tableHeader(maxNameCols) {
         let elements;
         elements = [];
@@ -11768,10 +11764,7 @@ reportTextCreate = function (opt) {
             array.push(line);
         }
     }
-    that = {};
     opt = opt || {};
-    that.file = opt.file;
-    that.summary = opt.summary;
     summaryMap = {};
     strings = [];
     Object.keys(globalThis.__coverage__).forEach(function (key) {
@@ -11794,7 +11787,7 @@ reportTextCreate = function (opt) {
     walk(coverageReportSummary.root, nameWidth, strings, 0);
     text = strings.join("\n") + "\n";
     console.log(text);
-};
+}
 
 
 
