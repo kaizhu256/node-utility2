@@ -11660,7 +11660,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
  * Usage
  * -----
  *
- *      var report = require('istanbul').Report.create('html');
+ *      let report = require('istanbul').Report.create('html');
  *
  *
  * @class HtmlReport
@@ -11676,7 +11676,7 @@ local.reportHtmlCreate = function(opts, collector) {
      */
 
     /*jshint maxlen: 300 */
-    var handlebars = require("handlebars");
+    let handlebars = require("handlebars");
     let defaults = require("./common/defaults");
     let path = require("path");
     let SEP = path.sep || "/";
@@ -11765,7 +11765,7 @@ local.reportHtmlCreate = function(opts, collector) {
     });
 
     handlebars.registerHelper("show_ignores", function (metrics) {
-        var statements = metrics.statements.skipped;
+        let statements = metrics.statements.skipped;
         let functions = metrics.functions.skipped;
         let branches = metrics.branches.skipped;
         let result;
@@ -11788,7 +11788,7 @@ local.reportHtmlCreate = function(opts, collector) {
 
     // hack-coverage - hashtag lineno
     handlebars.registerHelper("show_lines", function (opts) {
-        var maxLines = Number(opts.fn(this));
+        let maxLines = Number(opts.fn(this));
         let i;
         let array = "";
 
@@ -11799,7 +11799,7 @@ local.reportHtmlCreate = function(opts, collector) {
     });
 
     handlebars.registerHelper("show_line_execution_counts", function (context, opts) {
-        var lines = context.l;
+        let lines = context.l;
         let maxLines = Number(opts.fn(this));
         let i;
         let lineNumber;
@@ -11834,7 +11834,7 @@ local.reportHtmlCreate = function(opts, collector) {
     }
 
     handlebars.registerHelper("show_code", function (context /*, opts */) {
-        var array = [];
+        let array = [];
 
         context.forEach(function (item) {
             array.push(customEscape(item.text) || "&nbsp;");
@@ -11847,11 +11847,11 @@ local.reportHtmlCreate = function(opts, collector) {
     }
 
     function annotateLines(fileCoverage, structuredText) {
-        var lineStats = fileCoverage.l;
+        let lineStats = fileCoverage.l;
         if (!lineStats) {
             return; }
         Object.keys(lineStats).forEach(function (lineNumber) {
-            var count = lineStats[lineNumber];
+            let count = lineStats[lineNumber];
             structuredText[lineNumber].covered = count > 0 ? "yes" : "no";
         });
         structuredText.forEach(function (item) {
@@ -11862,10 +11862,10 @@ local.reportHtmlCreate = function(opts, collector) {
     }
 
     function annotateStatements(fileCoverage, structuredText) {
-        var statementStats = fileCoverage.s;
+        let statementStats = fileCoverage.s;
         let statementMeta = fileCoverage.statementMap;
         Object.keys(statementStats).forEach(function (stName) {
-            var count = statementStats[stName];
+            let count = statementStats[stName];
             let meta = statementMeta[stName];
             let type = count > 0 ? "yes" : "no";
             let startCol = meta.start.column;
@@ -11892,12 +11892,12 @@ local.reportHtmlCreate = function(opts, collector) {
 
     function annotateFunctions(fileCoverage, structuredText) {
 
-        var fnStats = fileCoverage.f;
+        let fnStats = fileCoverage.f;
         let fnMeta = fileCoverage.fnMap;
         if (!fnStats) {
             return; }
         Object.keys(fnStats).forEach(function (fName) {
-            var count = fnStats[fName];
+            let count = fnStats[fName];
             let meta = fnMeta[fName];
             let type = count > 0 ? "yes" : "no";
             let startCol = meta.loc.start.column;
@@ -11923,13 +11923,13 @@ local.reportHtmlCreate = function(opts, collector) {
     }
 
     function annotateBranches(fileCoverage, structuredText) {
-        var branchStats = fileCoverage.b;
+        let branchStats = fileCoverage.b;
         let branchMeta = fileCoverage.branchMap;
         if (!branchStats) {
             return; }
 
         Object.keys(branchStats).forEach(function (branchName) {
-            var branchArray = branchStats[branchName];
+            let branchArray = branchStats[branchName];
             let sumCount = branchArray.reduce(function (p, n) {
                 return p + n; }, 0);
             let metaArray = branchMeta[branchName].locations;
@@ -11983,7 +11983,7 @@ local.reportHtmlCreate = function(opts, collector) {
     }
 
     function getReportClass(stats, watermark) {
-        var coveragePct = stats.pct;
+        let coveragePct = stats.pct;
         let identity = 1;
         if (coveragePct * identity === coveragePct) {
             return coveragePct >= watermark[1] ? "high" : coveragePct >= watermark[0] ? "medium" : "low";
@@ -12001,12 +12001,12 @@ local.reportHtmlCreate = function(opts, collector) {
         datetime: new Date().toGMTString() };
     opts.watermarks = opts.watermarks || defaults.watermarks();
 
-    var ancestorHref;
-    var fillTemplate;
-    var linkMapper;
-    var writeFiles;
+    let ancestorHref;
+    let fillTemplate;
+    let linkMapper;
+    let writeFiles;
     ancestorHref = function (node, num) {
-        var href = "";
+        let href = "";
         let i;
         let j;
         let levels;
@@ -12022,11 +12022,11 @@ local.reportHtmlCreate = function(opts, collector) {
         return href;
     };
     fillTemplate = function (node, templateData) {
-        var html;
+        let html;
         templateData.entity = node.name || "All files";
         templateData.metrics = node.metrics;
         templateData.reportClass = getReportClass(node.metrics.statements, opts.watermarks.statements);
-        var parent = node.parent;
+        let parent = node.parent;
         let nodePath = [];
         let linkPath = [];
         let i;
@@ -12050,7 +12050,7 @@ local.reportHtmlCreate = function(opts, collector) {
     };
     linkMapper = {
         fromParent: function (node) {
-            var i = 0;
+            let i = 0;
             let relativeName = node.relativeName;
             let ch;
             if (SEP !== "/") {
@@ -12070,7 +12070,7 @@ local.reportHtmlCreate = function(opts, collector) {
             return ancestorHref(node, num) + "index.html";
         },
         asset: function (node, name) {
-            var i = 0;
+            let i = 0;
             let parent = node.parent;
             while (parent) {
                 i += 1; parent = parent.parent; }
@@ -12078,12 +12078,12 @@ local.reportHtmlCreate = function(opts, collector) {
         }
     };
     writeFiles = function (writer, node, dir, collector) {
-        var indexFile = path.resolve(dir, "index.html");
+        let indexFile = path.resolve(dir, "index.html");
         let childFile;
         if (opts.verbose) {
             console.error("Writing " + indexFile); }
         writer.writeFile(indexFile, function () {
-            var templateData = opts.templateData;
+            let templateData = opts.templateData;
             let children = Array.prototype.slice.apply(node.children);
             let watermarks = opts.watermarks;
 
@@ -12095,7 +12095,7 @@ local.reportHtmlCreate = function(opts, collector) {
             writer.write(headerTemplate(templateData));
             writer.write(summaryTableHeader);
             children.forEach(function (child) {
-                var metrics = child.metrics;
+                let metrics = child.metrics;
                 let reportClasses = {
                 statements: getReportClass(metrics.statements, watermarks.statements),
                 lines: getReportClass(metrics.lines, watermarks.lines),
@@ -12123,8 +12123,8 @@ local.reportHtmlCreate = function(opts, collector) {
             if (opts.verbose) {
                 console.error("Writing " + childFile); }
             writer.writeFile(childFile, function () {
-                var fileCoverage = collector.fileCoverageFor(child.fullPath());
-                var sourceStore = opts.sourceStore;
+                let fileCoverage = collector.fileCoverageFor(child.fullPath());
+                let sourceStore = opts.sourceStore;
                 let templateData = opts.templateData;
                 let sourceText = fileCoverage.code && Array.isArray(fileCoverage.code)
 ? fileCoverage.code.join("\n") + "\n" : sourceStore.get(fileCoverage.path);
@@ -12164,7 +12164,7 @@ local.reportHtmlCreate = function(opts, collector) {
         });
     };
 
-    var dir = opts.dir;
+    let dir = opts.dir;
     let summarizer = new TreeSummarizer();
     let writer = opts.writer;
     let tree;
@@ -12174,7 +12174,7 @@ local.reportHtmlCreate = function(opts, collector) {
     });
     tree = summarizer.getTreeSummary();
     fs.readdirSync(path.resolve(__dirname, "..", "vendor")).forEach(function (f) {
-        var resolvedSource = path.resolve(__dirname, "..", "vendor", f);
+        let resolvedSource = path.resolve(__dirname, "..", "vendor", f);
         let resolvedDestination = path.resolve(dir, f);
         let stat = fs.statSync(resolvedSource);
 
@@ -12195,7 +12195,7 @@ local.reportHtmlCreate = function(opts, collector) {
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
 local.reportTextCreate = function(opts, collector) {
-    var defaults = require("./common/defaults");
+    let defaults = require("./common/defaults");
     let utils = require("../object-utils");
     let PCT_COLS = 10;
     let TAB_SIZE = 3;
@@ -12203,7 +12203,7 @@ local.reportTextCreate = function(opts, collector) {
     let COL_DELIM = "-|";
 
     function padding(num, ch) {
-        var str = "";
+        let str = "";
         let i;
         ch = ch || " ";
         for (i = 0; i < num; i += 1) {
@@ -12216,7 +12216,7 @@ local.reportTextCreate = function(opts, collector) {
         tabs = tabs || 0;
         str = String(str);
 
-        var leadingSpaces = tabs * TAB_SIZE;
+        let leadingSpaces = tabs * TAB_SIZE;
         let remaining = width - leadingSpaces;
         let leader = padding(leadingSpaces);
         let fmtStr = "";
@@ -12250,7 +12250,7 @@ local.reportTextCreate = function(opts, collector) {
     }
 
     function tableHeader(maxNameCols) {
-        var elements = [];
+        let elements = [];
         elements.push(formatName("File", maxNameCols, 0));
         elements.push(formatPct("% Stmts"));
         elements.push(formatPct("% Branches"));
@@ -12260,7 +12260,7 @@ local.reportTextCreate = function(opts, collector) {
     }
 
     function tableRow(node, maxNameCols, level, watermarks) {
-        var name = nodeName(node);
+        let name = nodeName(node);
         let statements = node.metrics.statements.pct;
         let branches = node.metrics.branches.pct;
         let functions = node.metrics.functions.pct;
@@ -12279,7 +12279,7 @@ local.reportTextCreate = function(opts, collector) {
     function findNameWidth(node, level, last) {
         last = last || 0;
         level = level || 0;
-        var idealWidth = TAB_SIZE * level + nodeName(node).length;
+        let idealWidth = TAB_SIZE * level + nodeName(node).length;
         if (idealWidth > last) {
             last = idealWidth;
         }
@@ -12290,7 +12290,7 @@ local.reportTextCreate = function(opts, collector) {
     }
 
     function makeLine(nameWidth) {
-        var name = padding(nameWidth, "-");
+        let name = padding(nameWidth, "-");
         let pct = padding(PCT_COLS, "-");
         let elements = [];
 
@@ -12303,7 +12303,7 @@ local.reportTextCreate = function(opts, collector) {
     }
 
     function walk(node, nameWidth, array, level, watermarks) {
-        var line;
+        let line;
         if (level === 0) {
             line = makeLine(nameWidth);
             array.push(line);
@@ -12322,15 +12322,15 @@ local.reportTextCreate = function(opts, collector) {
         }
     }
 
-    var that;
+    let that;
     that = {};
     opts = opts || {};
     that.dir = opts.dir || process.cwd();
     that.file = opts.file;
     that.summary = opts.summary;
     that.watermarks = opts.watermarks || defaults.watermarks();
-    var TreeSummarizer = require("../util/tree-summarizer");
-    var summarizer = new TreeSummarizer();
+    let TreeSummarizer = require("../util/tree-summarizer");
+    let summarizer = new TreeSummarizer();
     let nameWidth;
     let root;
     let tree;
