@@ -11437,42 +11437,30 @@ function reportHtmlCreate(opts) {
             }, 0) <= 0) {
                 return;
             }
-            // only highlight if partial branches are missing
+            //only highlight if partial branches are missing
             branchArray.forEach(function (count, ii) {
-                let closeSpan;
                 let endCol;
                 let endLine;
                 let meta;
-                let openSpan;
-                let startCol;
-                let startLine;
                 let text;
-                meta = fileCoverage.branchMap[branchName].locations[ii];
-                startCol = meta.start.column;
-                endCol = meta.end.column + 1;
-                startLine = meta.start.line;
-                endLine = meta.end.line;
-                openSpan = "\u0001span class=\"branch-" + ii + " " + (
-                    meta.skip
-                    ? "cbranch-skip"
-                    : "cbranch-no"
-                ) + "\" title=\"branch not covered\" \u0002";
-                closeSpan = "\u0001/span\u0002";
                 if (count !== 0) {
                     return;
                 }
+                meta = fileCoverage.branchMap[branchName].locations[ii];
+                endCol = meta.end.column + 1;
+                endLine = meta.end.line;
                 //skip branches taken
-                if (endLine !== startLine) {
-                    endLine = startLine;
+                if (endLine !== meta.start.line) {
+                    endLine = meta.start.line;
                     endCol = structuredText[
-                        startLine
+                        meta.start.line
                     ].text.originalLength();
                 }
-                text = structuredText[startLine].text;
+                text = structuredText[meta.start.line].text;
                 if (fileCoverage.branchMap[branchName].type === "if") {
                     // and "if" is a special case since the else branch
                     // might not be visible, being non-existent
-                    text.insertAt(startCol, "\u0001span class=\"" + (
+                    text.insertAt(meta.start.column, "\u0001span class=\"" + (
                         meta.skip
                         ? "skip-if-branch"
                         : "missing-if-branch"
@@ -11486,11 +11474,17 @@ function reportHtmlCreate(opts) {
                         : "E"
                     ) + "\u0001/span\u0002", true, false);
                 } else {
-                    text.wrap(startCol, openSpan, (
-                        startLine === endLine
+                    text.wrap(meta.start.column, (
+                        "\u0001span class=\"branch-" + ii + " " + (
+                            meta.skip
+                            ? "cbranch-skip"
+                            : "cbranch-no"
+                        ) + "\" title=\"branch not covered\" \u0002"
+                    ), (
+                        meta.start.line === endLine
                         ? endCol
                         : text.originalLength()
-                    ), closeSpan);
+                    ), "\u0001/span\u0002");
                 }
             });
         });
