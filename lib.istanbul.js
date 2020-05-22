@@ -9067,11 +9067,9 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 }());
-/* jslint ignore:end */
 
 
 
-/* jslint ignore:start */
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 */
@@ -10228,6 +10226,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
  * @static
  */
 (function (isNode) {
+    function addDerivedInfoForFile(fileCoverage) {
     /**
      * adds line coverage information to a file coverage object, reverse-engineering
      * it from statement coverage. The object passed in is updated in place.
@@ -10239,7 +10238,6 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
      * @static
      * @param {Object} fileCoverage the coverage object for a single file
      */
-    function addDerivedInfoForFile(fileCoverage) {
         var statementMap = fileCoverage.statementMap,
             statements = fileCoverage.s,
             lineMap;
@@ -10257,6 +10255,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
             });
         }
     }
+    function addDerivedInfo(coverage) {
     /**
      * adds line coverage information to all file coverage objects.
      *
@@ -10264,20 +10263,8 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
      * @static
      * @param {Object} coverage the coverage object
      */
-    function addDerivedInfo(coverage) {
         Object.keys(coverage).forEach(function (k) {
             addDerivedInfoForFile(coverage[k]);
-        });
-    }
-    /**
-     * removes line coverage information from all file coverage objects
-     * @method removeDerivedInfo
-     * @static
-     * @param {Object} coverage the coverage object
-     */
-    function removeDerivedInfo(coverage) {
-        Object.keys(coverage).forEach(function (k) {
-            delete coverage[k].l;
         });
     }
 
@@ -10337,6 +10324,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
         ret.pct = percent(ret.covered, ret.total);
         return ret;
     }
+    function blankSummary() {
     /**
      * returns a blank summary metrics object. A metrics object has the following
      * format.
@@ -10360,7 +10348,6 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
      * @static
      * @return {Object} a blank metrics object
      */
-    function blankSummary() {
         return {
             lines: {
                 total: 0,
@@ -10388,6 +10375,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
             }
         };
     }
+    function summarizeFileCoverage(fileCoverage) {
     /**
      * returns the summary metrics given the coverage object for a single file. See `blankSummary()`
      * to understand the format of the returned object.
@@ -10397,7 +10385,6 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
      * @param {Object} fileCoverage the coverage object for a single file.
      * @return {Object} the summary metrics for the file
      */
-    function summarizeFileCoverage(fileCoverage) {
         var ret = blankSummary();
         addDerivedInfoForFile(fileCoverage);
         ret.lines = computeSimpleTotals(fileCoverage, 'l');
@@ -10406,6 +10393,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
         ret.branches = computeBranchTotals(fileCoverage);
         return ret;
     }
+    function mergeFileCoverage(first, second) {
     /**
      * merges two instances of file coverage objects *for the same file*
      * such that the execution counts are correct.
@@ -10417,7 +10405,6 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
      * @return {Object} an object that is a result of merging the two. Note that
      *      the input objects are not changed in any way.
      */
-    function mergeFileCoverage(first, second) {
         var ret = JSON.parse(JSON.stringify(first)),
             i;
 
@@ -10439,6 +10426,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
 
         return ret;
     }
+    function mergeSummaryObjects() {
     /**
      * merges multiple summary metrics objects by summing up the `totals` and
      * `covered` fields and recomputing the percentages. This function is generic
@@ -10449,7 +10437,6 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
      * @param {Object} summary... multiple summary metrics objects
      * @return {Object} the merged summary metrics
      */
-    function mergeSummaryObjects() {
         var ret = blankSummary(),
             args = Array.prototype.slice.call(arguments),
             keys = ['lines', 'statements', 'branches', 'functions'],
@@ -10471,6 +10458,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
 
         return ret;
     }
+    function summarizeCoverage(coverage) {
     /**
      * returns the coverage summary for a single coverage object. This is
      * wrapper over `summarizeFileCoverage` and `mergeSummaryObjects` for
@@ -10480,7 +10468,6 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
      * @param {Object} coverage  the coverage object
      * @return {Object} summary coverage metrics across all files in the coverage object
      */
-    function summarizeCoverage(coverage) {
         var fileSummary = [];
         Object.keys(coverage).forEach(function (key) {
             fileSummary.push(summarizeFileCoverage(coverage[key]));
@@ -10488,6 +10475,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
         return mergeSummaryObjects.apply(null, fileSummary);
     }
 
+    function toYUICoverage(coverage) {
     /**
      * makes the coverage object generated by this library yuitest_coverage compatible.
      * Note that this transformation is lossy since the returned object will not have
@@ -10498,7 +10486,6 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
      * @param {Object} coverage The `istanbul` coverage object
      * @return {Object} a coverage object in `yuitest_coverage` format.
      */
-    function toYUICoverage(coverage) {
         var ret = {};
 
         addDerivedInfo(coverage);
@@ -10540,7 +10527,6 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
     var exportables = {
         addDerivedInfo: addDerivedInfo,
         addDerivedInfoForFile: addDerivedInfoForFile,
-        removeDerivedInfo: removeDerivedInfo,
         blankSummary: blankSummary,
         summarizeFileCoverage: summarizeFileCoverage,
         summarizeCoverage: summarizeCoverage,
@@ -10557,14 +10543,12 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
     }
 }(typeof module !== 'undefined' && typeof module.exports !== 'undefined' && typeof exports !== 'undefined'));
 local["../object-utils"] = window.coverageUtils; }());
-/* jslint ignore:end */
 
 
 
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/foot.txt
 */
-/* jslint ignore:start */
 local._istanbul_foot = '\
 </div>\n\
 <div class="footer">\n\
@@ -10886,11 +10870,9 @@ local._istanbul_head = '\
 </div>\n\
 <div class="body">\n\
 ';
-/* jslint ignore:end */
 
 
 
-/* jslint ignore:start */
 /*
 file https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
 */
@@ -12022,7 +12004,7 @@ function reportHtmlCreate(opts) {
             && globalThis.__coverageCodeDict__[key]
         ) {
             // reset derived info
-            globalThis.__coverage__[key].l = null;
+            delete globalThis.__coverage__[key].l;
             summaryMap[key] = utils.summarizeFileCoverage(
                 globalThis.__coverage__[key]
             );
@@ -12175,7 +12157,7 @@ reportTextCreate = function (opts) {
             && globalThis.__coverageCodeDict__[key]
         ) {
             // reset derived info
-            globalThis.__coverage__[key].l = null;
+            delete globalThis.__coverage__[key].l;
             summaryMap[key] = utils.summarizeFileCoverage(
                 globalThis.__coverage__[key]
             );
