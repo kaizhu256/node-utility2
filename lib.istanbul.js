@@ -11475,10 +11475,8 @@ function reportHtmlCreate(opts) {
     let dir;
     let fillTemplate;
     let footerTemplate;
-    let gt;
     let headerTemplate;
     let linkMapper;
-    let lt;
     let summarizer;
     let summaryLineTemplate;
     let templateFor;
@@ -11550,8 +11548,6 @@ function reportHtmlCreate(opts) {
     ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
 </tr>
     `);
-    lt = "\u0001";
-    gt = "\u0002";
     handlebars.registerHelper("show_line_execution_counts", function (
         context,
         opts
@@ -11667,13 +11663,13 @@ function reportHtmlCreate(opts) {
             startLine = meta.start.line;
             endLine = meta.end.line;
             openSpan = (
-                lt + "span class=\"" + (
+                "\u0001span class=\"" + (
                     meta.skip
                     ? "cstat-skip"
                     : "cstat-no"
-                ) + "\"" + title("statement not covered") + gt
+                ) + "\"" + title("statement not covered") + "\u0002"
             );
-            closeSpan = lt + "/span" + gt;
+            closeSpan = "\u0001/span\u0002";
             if (type === "no") {
                 if (endLine !== startLine) {
                     endLine = startLine;
@@ -11716,13 +11712,13 @@ function reportHtmlCreate(opts) {
             let endLine;
             endLine = meta.loc.end.line;
             let openSpan;
-            openSpan = lt + "span class=\"" + (
+            openSpan = "\u0001span class=\"" + (
                 meta.skip
                 ? "fstat-skip"
                 : "fstat-no"
-            ) + "\"" + title("function not covered") + gt;
+            ) + "\"" + title("function not covered") + "\u0002";
             let closeSpan;
-            closeSpan = lt + "/span" + gt;
+            closeSpan = "\u0001/span\u0002";
             let text;
             if (type === "no") {
                 if (endLine !== startLine) {
@@ -11775,12 +11771,12 @@ function reportHtmlCreate(opts) {
                     endCol = meta.end.column + 1;
                     startLine = meta.start.line;
                     endLine = meta.end.line;
-                    openSpan = lt + "span class=\"branch-" + ii + " " + (
+                    openSpan = "\u0001span class=\"branch-" + ii + " " + (
                         meta.skip
                         ? "cbranch-skip"
                         : "cbranch-no"
-                    ) + "\"" + title("branch not covered") + gt;
-                    closeSpan = lt + "/span" + gt;
+                    ) + "\"" + title("branch not covered") + "\u0002";
+                    closeSpan = "\u0001/span\u0002";
                     if (count === 0) {
                         //skip branches taken
                         if (endLine !== startLine) {
@@ -11793,7 +11789,7 @@ function reportHtmlCreate(opts) {
                         if (branchMeta[branchName].type === "if") {
                             // and "if" is a special case since the else branch
                             // might not be visible, being non-existent
-                            text.insertAt(startCol, lt + "span class=\"" + (
+                            text.insertAt(startCol, "\u0001span class=\"" + (
                                 meta.skip
                                 ? "skip-if-branch"
                                 : "missing-if-branch"
@@ -11801,11 +11797,11 @@ function reportHtmlCreate(opts) {
                                 ii === 0
                                 ? "if"
                                 : "else"
-                            ) + " path not taken") + gt + (
+                            ) + " path not taken\u0002") + (
                                 ii === 0
                                 ? "I"
                                 : "E"
-                            ) + lt + "/span" + gt, true, false);
+                            ) + "\u0001/span\u0002", true, false);
                         } else {
                             text.wrap(startCol, openSpan, (
                                 startLine === endLine
