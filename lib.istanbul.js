@@ -10529,6 +10529,7 @@ let coverageReportSummary;
 let path;
 let reportTextCreate;
 let summaryMap;
+let writer;
 // require module
 Store = require("../store");
 path = require("path");
@@ -11247,7 +11248,6 @@ function reportHtmlCreate(opt) {
     let templateData;
     let templateFor;
     let writeFiles;
-    let writer;
     templateFor = function (file) {
         // return head.txt or foot.txt
         file = require(file);
@@ -11469,7 +11469,6 @@ function reportHtmlCreate(opt) {
     }
     opt = opt || {};
     opt.sourceStore = opt.sourceStore || Store.create("fslookup");
-    opt.writer = opt.writer || null;
     // hack-coverage - new Date() bugfix
     templateData = {
         datetime: new Date().toGMTString()
@@ -11711,7 +11710,6 @@ function reportHtmlCreate(opt) {
         //!! summaryMap,
         //!! findCommonArrayPrefix(Object.keys(summaryMap))
     //!! );
-    writer = opt.writer;
     writeFiles(writer, coverageReportSummary.root, dir);
 }
 
@@ -11969,11 +11967,11 @@ local.coverageReportCreate = function (opt) {
     // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
     writerData = "";
     writerFile = "";
-    opt.writer = {};
-    opt.writer.write = function (data) {
+    writer = {};
+    writer.write = function (data) {
         writerData += data;
     };
-    opt.writer.writeFile = function (file, onError) {
+    writer.writeFile = function (file, onError) {
         coverageReportHtml += writerData + "\n\n";
         if (writerFile) {
             local.fsWriteFileWithMkdirpSync(
@@ -11983,13 +11981,13 @@ local.coverageReportCreate = function (opt) {
         }
         writerData = "";
         writerFile = file;
-        onError(opt.writer);
+        onError(writer);
     };
     // 1. print coverage in text-format to stdout
     reportTextCreate(opt);
     // 2. write coverage in html-format to filesystem
     reportHtmlCreate(opt);
-    opt.writer.writeFile("", local.nop);
+    writer.writeFile("", local.nop);
     // write coverage.json
     local.fsWriteFileWithMkdirpSync(
         opt.dir + "/coverage.json",
