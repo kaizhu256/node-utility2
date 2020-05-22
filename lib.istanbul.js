@@ -11331,8 +11331,6 @@ function reportHtmlCreate(opts) {
         });
     }
     function annotateStatements(fileCoverage, structuredText) {
-        let statementMeta;
-        statementMeta = fileCoverage.statementMap;
         Object.entries(fileCoverage.s).forEach(function ([
             stName,
             count
@@ -11345,7 +11343,7 @@ function reportHtmlCreate(opts) {
             if (count !== 0) {
                 return;
             }
-            meta = statementMeta[stName];
+            meta = fileCoverage.statementMap[stName];
             endCol = meta.end.column + 1;
             startLine = meta.start.line;
             endLine = meta.end.line;
@@ -11460,22 +11458,14 @@ function reportHtmlCreate(opts) {
             });
         });
     }
-    function getReportClass(stats) {
-        let coveragePct;
-        let identity;
-        coveragePct = stats.pct;
-        identity = 1;
-        if (coveragePct * identity === coveragePct) {
-            return (
-                coveragePct >= 80
-                ? "high"
-                : coveragePct >= 50
-                ? "medium"
-                : "low"
-            );
-        } else {
-            return "";
-        }
+    function getReportClass(pct) {
+        return (
+            pct >= 80
+            ? "high"
+            : pct >= 50
+            ? "medium"
+            : "low"
+        );
     }
     opts = opts || {};
     opts.dir = opts.dir || path.resolve("html-report");
@@ -11514,7 +11504,7 @@ function reportHtmlCreate(opts) {
         let parent;
         templateData.entity = node.name || "All files";
         templateData.metrics = node.metrics;
-        templateData.reportClass = getReportClass(node.metrics.statements);
+        templateData.reportClass = getReportClass(node.metrics.statements.pct);
         parent = node.parent;
         nodePath = [];
         linkPath = [];
@@ -11631,10 +11621,10 @@ function reportHtmlCreate(opts) {
                 let reportClasses;
                 metrics = child.metrics;
                 reportClasses = {
-                    statements: getReportClass(metrics.statements),
-                    lines: getReportClass(metrics.lines),
-                    functions: getReportClass(metrics.functions),
-                    branches: getReportClass(metrics.branches)
+                    statements: getReportClass(metrics.statements.pct),
+                    lines: getReportClass(metrics.lines.pct),
+                    functions: getReportClass(metrics.functions.pct),
+                    branches: getReportClass(metrics.branches.pct)
                 };
                 data = {
                     metrics,
