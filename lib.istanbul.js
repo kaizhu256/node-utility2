@@ -452,8 +452,7 @@ process = local.process || {
     cwd: function () {
         return "";
     },
-    env: {},
-    stdout: {}
+    env: {}
 };
 require = function (key) {
     try {
@@ -10829,19 +10828,6 @@ module.exports = {
         let value;
         value = metrics[type].pct;
         return value >= 80 ? 'high' : value >= 50 ? 'medium' : 'low';
-    },
-
-    colorize: function (str, clazz) {
-        /* istanbul ignore if: untestable in batch mode */
-        if (process.stdout.isTTY) {
-            switch (clazz) {
-                // hack-coverage - Octal escape sequences are not allowed in strict mode.
-                case 'low' : str = '\0x1b[91m' + str + '\0x1b[0m'; break;
-                case 'medium': str = '\0x1b[93m' + str + '\0x1b[0m'; break;
-                case 'high': str = '\0x1b[92m' + str + '\0x1b[0m'; break;
-            }
-        }
-        return str;
     }
 };
 local["./common/defaults"] = module.exports; }());
@@ -12206,7 +12192,18 @@ reportTextCreate = function (opts, collector) {
                 fmtStr = "... " + fmtStr.substring(4);
             }
         }
-        fmtStr = defaults.colorize(fmtStr, clazz);
+        // colorize
+        switch (process.stdout && process.stdout.isTTY && clazz) {
+        case "high":
+            fmtStr = "\u001b[92m" + fmtStr + "\u001b[0m";
+            break;
+        case "low":
+            fmtStr = "\u001b[91m" + fmtStr + "\u001b[0m";
+            break;
+        case "medium":
+            fmtStr = "\u001b[93m" + fmtStr + "\u001b[0m";
+            break;
+        }
         return leader + fmtStr;
     }
     function formatName(name, maxCols, level, clazz) {
