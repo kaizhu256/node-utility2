@@ -11654,7 +11654,6 @@ module.exports = TreeSummarizer;
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
-/* jslint ignore:start */
 /**
  * a `Report` implementation that produces HTML coverage reports.
  *
@@ -12322,6 +12321,7 @@ local.reportTextCreate = function(opts, collector) {
 
 
 
+/* jslint ignore:start */
 /*
 file https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
 */
