@@ -9184,30 +9184,6 @@ local.handlebars.replace = function (template, dict, withPrefix) {
 };
 
 /*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/collector.js
-*/
-/* validateLineSortedReset */
-local.collector = {
-    fileCoverageFor: function (file) {
-        return globalThis.__coverage__[file];
-    },
-    files: function () {
-        return Object.keys(globalThis.__coverage__).filter(function (key) {
-            if (
-                globalThis.__coverage__[key]
-                && globalThis.__coverageCodeDict__[key]
-            ) {
-                // reset derived info
-                globalThis.__coverage__[key].l = null;
-                return true;
-            }
-        });
-    }
-};
-
-
-
-/*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 */
 /* istanbul ignore next */
@@ -11401,6 +11377,7 @@ let PCT_COLS;
 let Store;
 let TAB_SIZE;
 let TreeSummarizer;
+let collector;
 let handlebars;
 let path;
 let reportTextCreate;
@@ -11415,6 +11392,23 @@ utils = require("../object-utils");
 // init variable
 PCT_COLS = 10;
 TAB_SIZE = 2;
+collector = {
+    fileCoverageFor: function (file) {
+        return globalThis.__coverage__[file];
+    },
+    files: function () {
+        return Object.keys(globalThis.__coverage__).filter(function (key) {
+            if (
+                globalThis.__coverage__[key]
+                && globalThis.__coverageCodeDict__[key]
+            ) {
+                // reset derived info
+                globalThis.__coverage__[key].l = null;
+                return true;
+            }
+        });
+    }
+};
 // init function
 function fill(str, width, right, tabs, clazz) {
     let fillStr;
@@ -11457,7 +11451,7 @@ function fill(str, width, right, tabs, clazz) {
     }
     return leader + fmtStr;
 }
-function reportHtmlCreate(opts, collector) {
+function reportHtmlCreate(opts) {
     let ancestorHref;
     let detailTemplate;
     let dir;
@@ -12172,7 +12166,7 @@ function reportHtmlCreate(opts, collector) {
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
-reportTextCreate = function (opts, collector) {
+reportTextCreate = function (opts) {
     let nameWidth;
     let root;
     let strings;
@@ -12435,9 +12429,9 @@ local.coverageReportCreate = function (opt) {
         onError(opt.writer);
     };
     // 1. print coverage in text-format to stdout
-    reportTextCreate(opt, local.collector);
+    reportTextCreate(opt);
     // 2. write coverage in html-format to filesystem
-    reportHtmlCreate(opt, local.collector);
+    reportHtmlCreate(opt);
     opt.writer.writeFile("", local.nop);
     // write coverage.json
     local.fsWriteFileWithMkdirpSync(
