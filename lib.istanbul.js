@@ -10354,40 +10354,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
         ret.branches = computeBranchTotals(fileCoverage);
         return ret;
     }
-    function mergeFileCoverage(first, second) {
-    /**
-     * merges two instances of file coverage objects *for the same file*
-     * such that the execution counts are correct.
-     *
-     * @method mergeFileCoverage
-     * @static
-     * @param {Object} first the first file coverage object for a given file
-     * @param {Object} second the second file coverage object for the same file
-     * @return {Object} an object that is a result of merging the two. Note that
-     *      the input objects are not changed in any way.
-     */
-        var ret = JSON.parse(JSON.stringify(first)),
-            i;
-
-        delete ret.l; //remove derived info
-
-        Object.keys(second.s).forEach(function (k) {
-            ret.s[k] += second.s[k];
-        });
-        Object.keys(second.f).forEach(function (k) {
-            ret.f[k] += second.f[k];
-        });
-        Object.keys(second.b).forEach(function (k) {
-            var retArray = ret.b[k],
-                secondArray = second.b[k];
-            for (i = 0; i < retArray.length; i += 1) {
-                retArray[i] += secondArray[i];
-            }
-        });
-
-        return ret;
-    }
-    function mergeSummaryObjects() {
+    function mergeSummaryObjects(args) {
     /**
      * merges multiple summary metrics objects by summing up the `totals` and
      * `covered` fields and recomputing the percentages. This function is generic
@@ -10424,7 +10391,6 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
                 pct: 'Unknown'
             }
         },
-            args = Array.prototype.slice.call(arguments),
             keys = ['lines', 'statements', 'branches', 'functions'],
             increment = function (obj) {
                 if (obj) {
@@ -10458,14 +10424,12 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
         Object.keys(coverage).forEach(function (key) {
             fileSummary.push(summarizeFileCoverage(coverage[key]));
         });
-        return mergeSummaryObjects.apply(null, fileSummary);
+        return mergeSummaryObjects(fileSummary);
     }
 
     var exportables = {
-        addDerivedInfoForFile: addDerivedInfoForFile,
         summarizeFileCoverage: summarizeFileCoverage,
         summarizeCoverage: summarizeCoverage,
-        mergeFileCoverage: mergeFileCoverage,
         mergeSummaryObjects: mergeSummaryObjects
     };
 
@@ -11136,8 +11100,7 @@ TreeSummary.prototype = {
         entry.children.forEach(function (child) {
             that.calculateMetrics(child);
         });
-        entry.metrics = utils.mergeSummaryObjects.apply(
-            null,
+        entry.metrics = utils.mergeSummaryObjects(
             entry.children.map(function (child) {
                 return child.metrics;
             })
@@ -11148,8 +11111,7 @@ TreeSummary.prototype = {
             return nn.kind !== "dir";
         });
         if (fileChildren.length > 0) {
-            entry.packageMetrics = utils.mergeSummaryObjects.apply(
-                null,
+            entry.packageMetrics = utils.mergeSummaryObjects(
                 fileChildren.map(function (child) {
                     return child.metrics;
                 })
