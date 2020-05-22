@@ -11008,22 +11008,39 @@ local["head.txt"] = '\
 
 
 
+/* jslint ignore:start */
+/*
+file https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
+*/
+local.templateCoverageBadgeSvg =
+'<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
+/* jslint ignore:end */
+
+
+
+/*
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
+*/
+let InsertionText;
+let PCT_COLS;
+let Store;
+let TAB_SIZE;
+let path;
+let reportTextCreate;
+let summaryMap;
+let utils;
+// require module
+InsertionText = require("../util/insertion-text");
+Store = require("../store");
+path = require("path");
+utils = require("../object-utils");
+// init variable
+PCT_COLS = 10;
+TAB_SIZE = 2;
+// init TreeSummary
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
 */
-/* istanbul ignore next */
-(function () {
-    let module;
-    module = {};
-/* jslint ignore:start */
-/*
- Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
- Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
- */
-
-var path = require('path'),
-    utils = require('../object-utils');
-
 function commonArrayPrefix(first, second) {
     var len = first.length < second.length ? first.length : second.length,
         i,
@@ -11163,15 +11180,6 @@ TreeSummary.prototype = {
             )
             : node.name.substring(prefix.length)
         ) || "All files";
-        //!! if (parent) {
-            //!! if (parent.name !== '__root__/') {
-                //!! node.relativeName = node.name.substring(parent.name.length);
-            //!! } else {
-                //!! node.relativeName = node.name;
-            //!! }
-        //!! } else {
-            //!! node.relativeName = node.name.substring(prefix.length);
-        //!! }
         node.children.forEach(function (child) {
             that.fixupNodes(child, prefix, node);
         });
@@ -11218,65 +11226,6 @@ TreeSummary.prototype = {
         };
     }
 };
-
-function TreeSummarizer() {
-    this.summaryMap = {};
-}
-
-TreeSummarizer.prototype = {
-    addFileCoverageSummary: function (filePath, metrics) {
-        this.summaryMap[filePath] = metrics;
-    },
-    getTreeSummary: function () {
-        var commonArrayPrefix = findCommonArrayPrefix(Object.keys(this.summaryMap));
-        return new TreeSummary(this.summaryMap, commonArrayPrefix);
-    }
-};
-
-module.exports = TreeSummarizer;
-/* jslint ignore:end */
-    local["../util/tree-summarizer"] = module.exports;
-    module.exports.prototype._getTreeSummary = (
-        module.exports.prototype.getTreeSummary
-    );
-    module.exports.prototype.getTreeSummary = function () {
-        local.coverageReportSummary = this._getTreeSummary();
-        return local.coverageReportSummary;
-    };
-}());
-
-
-
-/* jslint ignore:start */
-/*
-file https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
-*/
-local.templateCoverageBadgeSvg =
-'<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
-/* jslint ignore:end */
-
-
-
-/*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
-*/
-let InsertionText;
-let PCT_COLS;
-let Store;
-let TAB_SIZE;
-let TreeSummarizer;
-let path;
-let reportTextCreate;
-let utils;
-// require module
-InsertionText = require("../util/insertion-text");
-Store = require("../store");
-TreeSummarizer = require("../util/tree-summarizer");
-path = require("path");
-utils = require("../object-utils");
-// init variable
-PCT_COLS = 10;
-TAB_SIZE = 2;
 // init function
 function fill(str, width, right, tabs, clazz) {
     let fillStr;
@@ -11496,7 +11445,6 @@ function reportHtmlCreate(opts) {
     let footerTemplate;
     let headerTemplate;
     let linkMapper;
-    let summarizer;
     let summaryLineTemplate;
     let templateFor;
     let tree;
@@ -12026,7 +11974,7 @@ function reportHtmlCreate(opts) {
         });
     };
     dir = opts.dir;
-    summarizer = new TreeSummarizer();
+    summaryMap = {};
     writer = opts.writer;
     Object.keys(globalThis.__coverage__).forEach(function (key) {
         if (
@@ -12035,13 +11983,15 @@ function reportHtmlCreate(opts) {
         ) {
             // reset derived info
             globalThis.__coverage__[key].l = null;
-            summarizer.addFileCoverageSummary(
-                key,
-                utils.summarizeFileCoverage(globalThis.__coverage__[key])
+            summaryMap[key] = utils.summarizeFileCoverage(
+                globalThis.__coverage__[key]
             );
         }
     });
-    tree = summarizer.getTreeSummary();
+    tree = new TreeSummary(
+        summaryMap,
+        findCommonArrayPrefix(Object.keys(summaryMap))
+    );
     //console.log(JSON.stringify(tree.root, undefined, 4));
     writeFiles(writer, tree.root, dir);
 }
@@ -12055,7 +12005,6 @@ reportTextCreate = function (opts) {
     let nameWidth;
     let root;
     let strings;
-    let summarizer;
     let text;
     let that;
     let tree;
@@ -12183,7 +12132,7 @@ reportTextCreate = function (opts) {
     that.dir = opts.dir || "";
     that.file = opts.file;
     that.summary = opts.summary;
-    summarizer = new TreeSummarizer();
+    summaryMap = {};
     strings = [];
     Object.keys(globalThis.__coverage__).forEach(function (key) {
         if (
@@ -12192,13 +12141,15 @@ reportTextCreate = function (opts) {
         ) {
             // reset derived info
             globalThis.__coverage__[key].l = null;
-            summarizer.addFileCoverageSummary(
-                key,
-                utils.summarizeFileCoverage(globalThis.__coverage__[key])
+            summaryMap[key] = utils.summarizeFileCoverage(
+                globalThis.__coverage__[key]
             );
         }
     });
-    tree = summarizer.getTreeSummary();
+    tree = new TreeSummary(
+        summaryMap,
+        findCommonArrayPrefix(Object.keys(summaryMap))
+    );
     root = tree.root;
     nameWidth = findNameWidth(root);
     walk(root, nameWidth, strings, 0);
