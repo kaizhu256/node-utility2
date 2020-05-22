@@ -11042,15 +11042,20 @@ TAB_SIZE = 2;
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
 */
 function commonArrayPrefix(first, second) {
-    let len = first.length < second.length ? first.length : second.length;
-    let i;
+    let len = (
+        first.length < second.length
+        ? first.length
+        : second.length
+    );
+    let ii;
     let ret = [];
-    for (i = 0; i < len; i += 1) {
-        if (first[i] === second[i]) {
-            ret.push(first[i]);
-        } else {
+    ii = 0;
+    while (ii < len) {
+        if (first[ii] !== second[ii]) {
             break;
         }
+        ret.push(first[ii]);
+        ii += 1;
     }
     return ret;
 }
@@ -11060,7 +11065,9 @@ function findCommonArrayPrefix(args) {
         return [];
     }
 
-    let separated = args.map(function (arg) { return arg.split(path.sep); });
+    let separated = args.map(function (arg) {
+        return arg.split(path.sep);
+    });
     let ret = separated.pop();
 
     if (separated.length === 0) {
@@ -11094,8 +11101,14 @@ Node.prototype = {
             fullName: this.fullName,
             kind: this.kind,
             metrics: this.metrics,
-            parent: this.parent === null ? null : this.parent.name,
-            children: this.children.map(function (node) { return node.toJSON(); })
+            parent: (
+                this.parent === null
+                ? null
+                : this.parent.name
+            ),
+            children: this.children.map(function (node) {
+                return node.toJSON();
+            })
         };
     }
 };
@@ -11112,7 +11125,7 @@ TreeSummary.prototype = {
     convertToTree: function (summaryMap, arrayPrefix) {
         let nodes = [];
         let rootPath = arrayPrefix.join(path.sep) + path.sep;
-        let root = new Node(rootPath, 'dir');
+        let root = new Node(rootPath, "dir");
         let tmp;
         let tmpChildren;
         let seen = {};
@@ -11122,23 +11135,25 @@ TreeSummary.prototype = {
         Object.keys(summaryMap).forEach(function (key) {
             let metrics = summaryMap[key];
             let node;
-            let parentPath;
             let parent;
-            node = new Node(key, 'file', metrics);
+            let parentPath;
+            node = new Node(key, "file", metrics);
             seen[key] = node;
             nodes.push(node);
             parentPath = path.dirname(key) + path.sep;
             if (parentPath === path.sep + path.sep) {
-                parentPath = path.sep + '__root__' + path.sep;
+                parentPath = path.sep + "__root__" + path.sep;
             }
             parent = seen[parentPath];
             if (!parent) {
-                parent = new Node(parentPath, 'dir');
+                parent = new Node(parentPath, "dir");
                 root.addChild(parent);
                 seen[parentPath] = parent;
             }
             parent.addChild(node);
-            if (parent === root) { filesUnderRoot = true; }
+            if (parent === root) {
+                filesUnderRoot = true;
+            }
         });
 
         if (filesUnderRoot && arrayPrefix.length > 0) {
@@ -11146,10 +11161,10 @@ TreeSummary.prototype = {
             tmp = root;
             tmpChildren = tmp.children;
             tmp.children = [];
-            root = new Node(arrayPrefix.join(path.sep) + path.sep, 'dir');
+            root = new Node(arrayPrefix.join(path.sep) + path.sep, "dir");
             root.addChild(tmp);
             tmpChildren.forEach(function (child) {
-                if (child.kind === 'dir') {
+                if (child.kind === "dir") {
                     root.addChild(child);
                 } else {
                     tmp.addChild(child);
@@ -11175,8 +11190,8 @@ TreeSummary.prototype = {
             parent
             ? (
                 parent.name !== "__root__/"
-                ? node.relativeName = node.name.substring(parent.name.length)
-                : node.relativeName = node.name
+                ? node.name.substring(parent.name.length)
+                : node.name
             )
             : node.name.substring(prefix.length)
         ) || "All files";
@@ -11187,21 +11202,29 @@ TreeSummary.prototype = {
     calculateMetrics: function (entry) {
         let that = this;
         let fileChildren;
-        if (entry.kind !== 'dir') {return; }
+        if (entry.kind !== "dir") {
+            return;
+        }
         entry.children.forEach(function (child) {
             that.calculateMetrics(child);
         });
         entry.metrics = utils.mergeSummaryObjects.apply(
             null,
-            entry.children.map(function (child) { return child.metrics; })
+            entry.children.map(function (child) {
+                return child.metrics;
+            })
         );
         // calclulate "java-style" package metrics where there is no hierarchy
         // across packages
-        fileChildren = entry.children.filter(function (n) { return n.kind !== 'dir'; });
+        fileChildren = entry.children.filter(function (n) {
+            return n.kind !== "dir";
+        });
         if (fileChildren.length > 0) {
             entry.packageMetrics = utils.mergeSummaryObjects.apply(
                 null,
-                fileChildren.map(function (child) { return child.metrics; })
+                fileChildren.map(function (child) {
+                    return child.metrics;
+                })
             );
         } else {
             entry.packageMetrics = null;
@@ -11210,10 +11233,16 @@ TreeSummary.prototype = {
     indexAndSortTree: function (node, map) {
         let that = this;
         map[node.name] = node;
-        node.children.sort(function (a, b) {
-            a = a.relativeName;
-            b = b.relativeName;
-            return a < b ? -1 : a > b ? 1 : 0;
+        node.children.sort(function (aa, bb) {
+            aa = aa.relativeName;
+            bb = bb.relativeName;
+            return (
+                aa < bb
+                ? -1
+                : aa > bb
+                ? 1
+                : 0
+            );
         });
         node.children.forEach(function (child) {
             that.indexAndSortTree(child, map);
