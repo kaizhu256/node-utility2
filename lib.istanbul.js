@@ -11651,6 +11651,7 @@ module.exports = TreeSummarizer;
 
 
 
+/* jslint ignore:start */
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
@@ -11667,12 +11668,14 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
  * @extends Report
  * @constructor
  * @param {Object} opts optional
- * @param {String} [opts.dir] the directory in which to generate reports. Defaults to `./html-report`
+ * @param {String} [opts.dir] the directory in which to generate reports.
+ * Defaults to `./html-report`
  */
 local.reportHtmlCreate = function(opts, collector) {
     /*
      Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
-     Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
+     Copyrights licensed under the New BSD License.
+     See the accompanying LICENSE file for terms.
      */
 
     /*jshint maxlen: 300 */
@@ -12352,7 +12355,6 @@ local.reportTextCreate = function(opts, collector) {
 
 
 
-/* jslint ignore:start */
 /*
 file https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
 */
