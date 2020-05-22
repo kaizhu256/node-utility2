@@ -11724,7 +11724,7 @@ local.reportHtmlCreate = function (opts, collector) {
     utils = require2("../object-utils");
     templateFor = function (name) {
         return handlebars.compile(fs.readFileSync(
-            path.resolve("", "templates", name + ".txt"),
+            path.resolve("templates", name + ".txt"),
             "utf8"
         ));
     };
@@ -12182,7 +12182,7 @@ local.reportHtmlCreate = function (opts, collector) {
     }
 
     opts = opts || {};
-    opts.dir = opts.dir || path.resolve("", "html-report");
+    opts.dir = opts.dir || path.resolve("html-report");
     opts.sourceStore = opts.sourceStore || Store.create("fslookup");
     opts.writer = opts.writer || null;
     // hack-coverage - new Date() bugfix
@@ -12447,12 +12447,12 @@ local.reportHtmlCreate = function (opts, collector) {
     });
     tree = summarizer.getTreeSummary();
     fs.readdirSync(
-        path.resolve("", "..", "vendor")
+        path.resolve("..", "vendor")
     ).forEach(function (f) {
         let resolvedDestination;
         let resolvedSource;
         let stat;
-        resolvedSource = path.resolve("", "..", "vendor", f);
+        resolvedSource = path.resolve("..", "vendor", f);
         resolvedDestination = path.resolve(dir, f);
         stat = fs.statSync(resolvedSource);
 
