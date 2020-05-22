@@ -11205,11 +11205,7 @@ function handlebarsCompile(template) {
             "{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}",
             function () {
                 let num;
-                num = Number(dict.metrics.statements.pct);
-                if (!Number.isFinite(num)) {
-                    return "";
-                }
-                num = Math.floor(num);
+                num = Number(dict.metrics.statements.pct) | 0;
                 return (
                     "<span class=\"cover-fill cover-full\" style=\"width:" + num
                     + "px;\"></span><span class=\"cover-empty\" style=\"width:"
