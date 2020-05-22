@@ -11677,7 +11677,6 @@ local.reportHtmlCreate = function (opts, collector) {
     let path = require("path");
     let SEP = path.sep || "/";
     let fs = require("fs");
-    let util = require("util");
     let Store = require("../store");
     let InsertionText = require("../util/insertion-text");
     let TreeSummarizer = require("../util/tree-summarizer");
@@ -11893,7 +11892,12 @@ local.reportHtmlCreate = function (opts, collector) {
 
     function customEscape(text) {
         text = text.toString();
-        return text.replace(RE_AMP, "&amp;").replace(RE_LT, "&lt;").replace(RE_GT, "&gt;").replace(RE_lt, "<").replace(RE_gt, ">");
+        text = text.replace(RE_AMP, "&amp;");
+        text = text.replace(RE_LT, "&lt;");
+        text = text.replace(RE_GT, "&gt;");
+        text = text.replace(RE_lt, "<");
+        text = text.replace(RE_gt, ">");
+        return text;
     }
 
     handlebars.registerHelper("show_code", function (context /*, opts */) {
@@ -11953,7 +11957,7 @@ local.reportHtmlCreate = function (opts, collector) {
                 text.wrap(startCol, openSpan, (
                     startLine === endLine
                     ? endCol
-: text.originalLength()
+                    : text.originalLength()
                 ), closeSpan);
             }
         });
@@ -11991,7 +11995,7 @@ local.reportHtmlCreate = function (opts, collector) {
                 text.wrap(startCol, openSpan, (
                     startLine === endLine
                     ? endCol
-: text.originalLength()
+                    : text.originalLength()
                 ), closeSpan);
             }
         });
@@ -12067,12 +12071,13 @@ local.reportHtmlCreate = function (opts, collector) {
                             text.wrap(startCol, openSpan, (
                                 startLine === endLine
                                 ? endCol
-     : text.originalLength()), closeSpan);
-     }
-     }
-     i += 1;
-     }
-     }
+                                : text.originalLength()
+                            ), closeSpan);
+                        }
+                    }
+                    i += 1;
+                }
+            }
         });
     }
 
@@ -12083,7 +12088,8 @@ local.reportHtmlCreate = function (opts, collector) {
             return (
                 coveragePct >= watermark[1]
                 ? "high"
-                : coveragePct >= watermark[0] ? "medium"
+                : coveragePct >= watermark[0]
+                ? "medium"
                 : "low"
             );
         } else {
@@ -12194,7 +12200,8 @@ local.reportHtmlCreate = function (opts, collector) {
             let i = 0;
             let parent = node.parent;
             while (parent) {
-                i += 1; parent = parent.parent;
+                i += 1;
+                parent = parent.parent;
             }
             return ancestorHref(node, i) + name;
         }
@@ -12229,7 +12236,10 @@ local.reportHtmlCreate = function (opts, collector) {
                         metrics.functions,
                         watermarks.functions
                     ),
-                    branches: getReportClass(metrics.branches, watermarks.branches)
+                    branches: getReportClass(
+                        metrics.branches,
+                        watermarks.branches
+                    )
                 };
                 let data = {
                     metrics,
@@ -12271,37 +12281,43 @@ local.reportHtmlCreate = function (opts, collector) {
                 );
                 let count = 0;
                 let structured = code.map(function (str) {
-        count += 1; return {
-        line: count, covered: null, text: new InsertionText(str, true) };
-        });
-        let context;
+                    count += 1;
+                    return {
+                        line: count,
+                        covered: null,
+                        text: new InsertionText(str, true)
+                    };
+                });
+                let context;
 
-        structured.unshift({
-    line: 0, covered: null, text: new InsertionText("")
-    });
+                structured.unshift({
+                    line: 0,
+                    covered: null,
+                    text: new InsertionText("")
+                });
 
-    fillTemplate(child, templateData);
-    writer.write(headerTemplate(templateData));
-    writer.write("<pre><table class=\"coverage\">\n");
+                fillTemplate(child, templateData);
+                writer.write(headerTemplate(templateData));
+                writer.write("<pre><table class=\"coverage\">\n");
 
-    annotateLines(fileCoverage, structured);
-    //note: order is important, since statements typically result
-    //in spanning the whole line and doing branches late
-    //causes mismatched tags
-    annotateBranches(fileCoverage, structured);
-    annotateFunctions(fileCoverage, structured);
-    annotateStatements(fileCoverage, structured);
+                annotateLines(fileCoverage, structured);
+                //note: order is important, since statements typically result
+                //in spanning the whole line and doing branches late
+                //causes mismatched tags
+                annotateBranches(fileCoverage, structured);
+                annotateFunctions(fileCoverage, structured);
+                annotateStatements(fileCoverage, structured);
 
-    structured.shift();
-    context = {
-    structured,
-    maxLines: structured.length,
-    fileCoverage
-    };
-    writer.write(detailTemplate(context));
-    writer.write("</table></pre>\n");
-    writer.write(footerTemplate(templateData));
-    });
+                structured.shift();
+                context = {
+                    structured,
+                    maxLines: structured.length,
+                    fileCoverage
+                };
+                writer.write(detailTemplate(context));
+                writer.write("</table></pre>\n");
+                writer.write(footerTemplate(templateData));
+            });
         });
     };
 
