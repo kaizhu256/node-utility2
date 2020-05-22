@@ -10939,12 +10939,12 @@ InsertionText.prototype = {
         ii = 0;
         while (ii < len) {
             if (!text.charAt(ii).match(
-    /[\u0020\f\n\r\t\v\u00A0\u2028\u2029]/
-)) {
-    pos = ii;
-    break;
-    }
-    ii += 1;
+                /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
+            )) {
+                pos = ii;
+                break;
+            }
+            ii += 1;
         }
         return pos;
     },
@@ -10956,12 +10956,12 @@ InsertionText.prototype = {
         ii = len - 1;
         while (ii >= 0) {
             if (!text.charAt(ii).match(
-    /[\u0020\f\n\r\t\v\u00A0\u2028\u2029]/
-)) {
-    pos = ii;
-    break;
-    }
-    ii -= 1;
+                /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
+            )) {
+                pos = ii;
+                break;
+            }
+            ii -= 1;
         }
         return pos;
     },
@@ -10970,9 +10970,21 @@ InsertionText.prototype = {
     },
 
     insertAt: function (col, str, insertBefore, consumeBlanks) {
-        consumeBlanks = typeof consumeBlanks === "undefined" ? this.consumeBlanks : consumeBlanks;
-        col = col > this.originalLength() ? this.originalLength() : col;
-        col = col < 0 ? 0 : col;
+        consumeBlanks = (
+            consumeBlanks === undefined
+            ? this.consumeBlanks
+            : consumeBlanks
+        );
+        col = (
+            col > this.originalLength()
+            ? this.originalLength()
+            : col
+        );
+        col = (
+            col < 0
+            ? 0
+            : col
+        );
 
         if (consumeBlanks) {
             if (col <= this.startPos) {
@@ -11000,7 +11012,10 @@ InsertionText.prototype = {
         ii = 0;
         while (ii < offsets.length) {
             offsetObj = offsets[ii];
-            if (offsetObj.pos < pos || (offsetObj.pos === pos && !insertBefore)) {
+            if (
+                offsetObj.pos < pos
+                || (offsetObj.pos === pos && !insertBefore)
+            ) {
                 cumulativeOffset += offsetObj.len;
             }
             if (offsetObj.pos >= pos) {
@@ -11012,7 +11027,9 @@ InsertionText.prototype = {
             offsetObj.len += len;
         } else {
             offsets.splice(ii, 0, {
-                pos: pos, len: len });
+                pos,
+                len
+            });
         }
         return cumulativeOffset;
     },
