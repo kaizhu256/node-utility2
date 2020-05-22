@@ -11245,6 +11245,7 @@ function reportHtmlCreate(opts) {
     let headerTemplate;
     let linkMapper;
     let summaryLineTemplate;
+    let templateData;
     let templateFor;
     let writeFiles;
     let writer;
@@ -11472,7 +11473,7 @@ function reportHtmlCreate(opts) {
     opts.sourceStore = opts.sourceStore || Store.create("fslookup");
     opts.writer = opts.writer || null;
     // hack-coverage - new Date() bugfix
-    opts.templateData = {
+    templateData = {
         datetime: new Date().toGMTString()
     };
     ancestorHref = function (node, num) {
@@ -11496,9 +11497,8 @@ function reportHtmlCreate(opts) {
         }
         return href;
     };
-    fillTemplate = function (node, templateData) {
+    fillTemplate = function (node) {
         let html;
-        let ii;
         let linkPath;
         let nodePath;
         let parent;
@@ -11512,16 +11512,13 @@ function reportHtmlCreate(opts) {
             nodePath.push(parent);
             parent = parent.parent;
         }
-        ii = 0;
-        while (ii < nodePath.length) {
-            linkPath.push(
+        linkPath = nodePath.map(function (elem, ii) {
+            return (
                 "<a href=\"" + linkMapper.ancestor(node, ii + 1) + "\">"
-                + nodePath[ii].relativeName
+                + elem.relativeName
                 + "</a>"
             );
-            ii += 1;
-        }
-        linkPath.reverse();
+        }).reverse();
         html = (
             linkPath.length > 0
             ? linkPath.join(" &#187; ") + " &#187; " + node.relativeName
@@ -11581,8 +11578,6 @@ function reportHtmlCreate(opts) {
         }
         writer.writeFile(indexFile, function () {
             let children;
-            let templateData;
-            templateData = opts.templateData;
             children = Array.prototype.slice.apply(node.children);
             children.sort(function (a, b) {
                 return (
@@ -11591,7 +11586,7 @@ function reportHtmlCreate(opts) {
                     : 1
                 );
             });
-            fillTemplate(node, templateData);
+            fillTemplate(node);
             writer.write(headerTemplate(templateData));
             writer.write(`
 <div class="coverage-summary">
@@ -11659,10 +11654,8 @@ function reportHtmlCreate(opts) {
                 let sourceStore;
                 let sourceText;
                 let structured;
-                let templateData;
                 fileCoverage = globalThis.__coverage__[child.fullPath()];
                 sourceStore = opts.sourceStore;
-                templateData = opts.templateData;
                 sourceText = (
                     (fileCoverage.code && Array.isArray(fileCoverage.code))
                     ? fileCoverage.code.join("\n") + "\n"
@@ -11685,7 +11678,7 @@ function reportHtmlCreate(opts) {
                     covered: null,
                     text: new InsertionText("")
                 });
-                fillTemplate(child, templateData);
+                fillTemplate(child);
                 writer.write(headerTemplate(templateData));
                 writer.write("<pre><table class=\"coverage\">\n");
                 annotateLines(fileCoverage, structured);
