@@ -12560,16 +12560,16 @@ local.reportTextCreate = function (opts, collector) {
     }
 
     function tableRow(node, maxNameCols, level, watermarks) {
+        let branches;
+        let elements;
+        let functions;
+        let lines;
         let name;
         let statements;
         name = nodeName(node);
         statements = node.metrics.statements.pct;
-        let branches;
-        let functions;
         branches = node.metrics.branches.pct;
         functions = node.metrics.functions.pct;
-        let elements;
-        let lines;
         lines = node.metrics.lines.pct;
         elements = [];
 
@@ -12600,9 +12600,9 @@ local.reportTextCreate = function (opts, collector) {
     }
 
     function findNameWidth(node, level, last) {
+        let idealWidth;
         last = last || 0;
         level = level || 0;
-        let idealWidth;
         idealWidth = TAB_SIZE * level + nodeName(node).length;
         if (idealWidth > last) {
             last = idealWidth;
@@ -12614,11 +12614,11 @@ local.reportTextCreate = function (opts, collector) {
     }
 
     function makeLine(nameWidth) {
+        let elements;
         let name;
         let pct;
         name = padding(nameWidth, "-");
         pct = padding(PCT_COLS, "-");
-        let elements;
         elements = [];
 
         elements.push(name);
@@ -12649,22 +12649,22 @@ local.reportTextCreate = function (opts, collector) {
         }
     }
 
+    let TreeSummarizer;
+    let nameWidth;
+    let root;
+    let strings;
+    let summarizer;
+    let text;
     let that;
+    let tree;
     that = {};
     opts = opts || {};
     that.dir = opts.dir || "";
     that.file = opts.file;
     that.summary = opts.summary;
     that.watermarks = opts.watermarks || defaults.watermarks();
-    let TreeSummarizer;
-    let summarizer;
     TreeSummarizer = require2("../util/tree-summarizer");
     summarizer = new TreeSummarizer();
-    let nameWidth;
-    let root;
-    let strings;
-    let text;
-    let tree;
     strings = [];
 
     collector.files().forEach(function (key) {
