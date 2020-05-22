@@ -11499,26 +11499,25 @@ function reportHtmlCreate(opts) {
     };
     fillTemplate = function (node) {
         let html;
+        let ii;
         let linkPath;
-        let nodePath;
         let parent;
         templateData.entity = node.name || "All files";
         templateData.metrics = node.metrics;
         templateData.reportClass = getReportClass(node.metrics.statements.pct);
         parent = node.parent;
-        nodePath = [];
         linkPath = [];
+        ii = 0;
         while (parent) {
-            nodePath.push(parent);
-            parent = parent.parent;
-        }
-        linkPath = nodePath.map(function (elem, ii) {
-            return (
+            linkPath.push(
                 "<a href=\"" + linkMapper.ancestor(node, ii + 1) + "\">"
-                + elem.relativeName
+                + parent.relativeName
                 + "</a>"
             );
-        }).reverse();
+            parent = parent.parent;
+            ii += 1;
+        }
+        linkPath.reverse();
         html = (
             linkPath.length > 0
             ? linkPath.join(" &#187; ") + " &#187; " + node.relativeName
