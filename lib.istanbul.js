@@ -10825,16 +10825,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/common/defau
  Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
  */
 module.exports = {
-    watermarks: function () {
-        return {
-            statements: [ 50, 80 ],
-            lines: [ 50, 80 ],
-            functions: [ 50, 80],
-            branches: [ 50, 80 ]
-        };
-    },
-
-    classFor: function (type, metrics, watermarks) {
+    classFor: function (type, metrics) {
         var mark = watermarks[type],
             value = metrics[type].pct;
         return value >= mark[1] ? 'high' : value >= mark[0] ? 'medium' : 'low';
@@ -11443,6 +11434,7 @@ let handlebars;
 let path;
 let reportTextCreate;
 let utils;
+let watermarks;
 // require module
 InsertionText = require("../util/insertion-text");
 Store = require("../store");
@@ -11451,8 +11443,23 @@ defaults = require("./common/defaults");
 handlebars = require("handlebars");
 path = require("path");
 utils = require("../object-utils");
+// init var
 PCT_COLS = 10;
 TAB_SIZE = 2;
+watermarks = {
+    statements: [
+        50, 80
+    ],
+    lines: [
+        50, 80
+    ],
+    functions: [
+        50, 80
+    ],
+    branches: [
+        50, 80
+    ]
+};
 function reportHtmlCreate(opts, collector) {
     let ancestorHref;
     let detailTemplate;
@@ -11935,7 +11942,6 @@ function reportHtmlCreate(opts, collector) {
     opts.templateData = {
         datetime: new Date().toGMTString()
     };
-    opts.watermarks = opts.watermarks || defaults.watermarks();
     ancestorHref = function (node, num) {
         let href;
         let ii;
@@ -11967,7 +11973,7 @@ function reportHtmlCreate(opts, collector) {
         templateData.metrics = node.metrics;
         templateData.reportClass = getReportClass(
             node.metrics.statements,
-            opts.watermarks.statements
+            watermarks.statements
         );
         parent = node.parent;
         nodePath = [];
@@ -12047,10 +12053,8 @@ function reportHtmlCreate(opts, collector) {
         writer.writeFile(indexFile, function () {
             let children;
             let templateData;
-            let watermarks;
             templateData = opts.templateData;
             children = Array.prototype.slice.apply(node.children);
-            watermarks = opts.watermarks;
             children.sort(function (a, b) {
                 return (
                     a.name < b.name
@@ -12251,7 +12255,7 @@ reportTextCreate = function (opts, collector) {
         elements.push(formatPct("% Lines"));
         return elements.join(" |") + " |";
     }
-    function tableRow(node, maxNameCols, level, watermarks) {
+    function tableRow(node, maxNameCols, level) {
         let branches;
         let elements;
         let functions;
@@ -12268,23 +12272,23 @@ reportTextCreate = function (opts, collector) {
             name,
             maxNameCols,
             level,
-            defaults.classFor("statements", node.metrics, watermarks)
+            defaults.classFor("statements", node.metrics)
         ));
         elements.push(formatPct(
             statements,
-            defaults.classFor("statements", node.metrics, watermarks)
+            defaults.classFor("statements", node.metrics)
         ));
         elements.push(formatPct(
             branches,
-            defaults.classFor("branches", node.metrics, watermarks)
+            defaults.classFor("branches", node.metrics)
         ));
         elements.push(formatPct(
             functions,
-            defaults.classFor("functions", node.metrics, watermarks)
+            defaults.classFor("functions", node.metrics)
         ));
         elements.push(formatPct(
             lines,
-            defaults.classFor("lines", node.metrics, watermarks)
+            defaults.classFor("lines", node.metrics)
         ));
         return elements.join(" |") + " |";
     }
@@ -12316,7 +12320,7 @@ reportTextCreate = function (opts, collector) {
         elements.push(pct);
         return elements.join("-|") + "-|";
     }
-    function walk(node, nameWidth, array, level, watermarks) {
+    function walk(node, nameWidth, array, level) {
         let line;
         if (level === 0) {
             line = makeLine(nameWidth);
@@ -12324,14 +12328,14 @@ reportTextCreate = function (opts, collector) {
             array.push(tableHeader(nameWidth));
             array.push(line);
         } else {
-            array.push(tableRow(node, nameWidth, level, watermarks));
+            array.push(tableRow(node, nameWidth, level));
         }
         node.children.forEach(function (child) {
-            walk(child, nameWidth, array, level + 1, watermarks);
+            walk(child, nameWidth, array, level + 1);
         });
         if (level === 0) {
             array.push(line);
-            array.push(tableRow(node, nameWidth, level, watermarks));
+            array.push(tableRow(node, nameWidth, level));
             array.push(line);
         }
     }
@@ -12340,7 +12344,6 @@ reportTextCreate = function (opts, collector) {
     that.dir = opts.dir || "";
     that.file = opts.file;
     that.summary = opts.summary;
-    that.watermarks = opts.watermarks || defaults.watermarks();
     summarizer = new TreeSummarizer();
     strings = [];
     collector.files().forEach(function (key) {
