@@ -11465,6 +11465,9 @@ local.templateCoverageBadgeSvg =
 
 
 (function () {
+/*
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
+*/
 let reportHtmlCreate;
 let reportTextCreate;
 let require2;
@@ -12348,6 +12351,7 @@ reportTextCreate = function (opts, collector) {
             last = idealWidth;
         }
         node.children.forEach(function (child) {
+            // recurse
             last = findNameWidth(child, level + 1, last);
         });
         return last;
