@@ -11697,13 +11697,16 @@ local.reportHtmlCreate = function (opts, collector) {
     let SEP;
     let Store;
     let TreeSummarizer;
+    let ancestorHref;
     let defaults;
     let detailTemplate;
+    let fillTemplate;
     let footerTemplate;
     let fs;
     let gt;
     let handlebars;
     let headerTemplate;
+    let linkMapper;
     let lt;
     let path;
     let pathTemplate;
@@ -11712,6 +11715,7 @@ local.reportHtmlCreate = function (opts, collector) {
     let summaryTableHeader;
     let templateFor;
     let utils;
+    let writeFiles;
 
     handlebars = require2("handlebars");
     defaults = require2("./common/defaults");
@@ -12079,9 +12083,9 @@ local.reportHtmlCreate = function (opts, collector) {
     }
 
     function annotateBranches(fileCoverage, structuredText) {
+        let branchMeta;
         let branchStats;
         branchStats = fileCoverage.b;
-        let branchMeta;
         branchMeta = fileCoverage.branchMap;
         if (!branchStats) {
             return;
@@ -12190,11 +12194,6 @@ local.reportHtmlCreate = function (opts, collector) {
         datetime: new Date().toGMTString()
     };
     opts.watermarks = opts.watermarks || defaults.watermarks();
-
-    let ancestorHref;
-    let fillTemplate;
-    let linkMapper;
-    let writeFiles;
     ancestorHref = function (node, num) {
         let href;
         let ii;
