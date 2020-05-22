@@ -11686,78 +11686,89 @@ local.reportHtmlCreate = function(opts, collector) {
     let InsertionText = require("../util/insertion-text");
     let TreeSummarizer = require("../util/tree-summarizer");
     let utils = require("../object-utils");
-    let templateFor = function (name) { return handlebars.compile(fs.readFileSync(path.resolve(__dirname, "templates", name + ".txt"), "utf8")); };
+    let templateFor = function (name) {
+        return handlebars.compile(fs.readFileSync(path.resolve(__dirname, "templates", name + ".txt"), "utf8")); };
     let headerTemplate = templateFor("head");
     let footerTemplate = templateFor("foot");
     let pathTemplate = handlebars.compile("<div class=\"path\">{{{html}}}</div>");
     let detailTemplate = handlebars.compile([
-            "<tr>",
-            "<td class=\"line-count\">{{#show_lines}}{{maxLines}}{{/show_lines}}</td>",
-            "<td class=\"line-coverage\">{{#show_line_execution_counts fileCoverage}}{{maxLines}}{{/show_line_execution_counts}}</td>",
-            // hack-coverage - domOnEventSelectAllWithinPre
-            "<td class=\"text\"><pre class=\"prettyprint lang-js\" tabIndex=\"0\">{{#show_code structured}}{{/show_code}}</pre></td>",
-            "</tr>\n"
+    "<tr>",
+    "<td class=\"line-count\">{{#show_lines}}{{maxLines}}{{/show_lines}}</td>",
+    "<td class=\"line-coverage\">{{#show_line_execution_counts fileCoverage}}{{maxLines}}{{/show_line_execution_counts}}</td>",
+    // hack-coverage - domOnEventSelectAllWithinPre
+    "<td class=\"text\"><pre class=\"prettyprint lang-js\" tabIndex=\"0\">{{#show_code structured}}{{/show_code}}</pre></td>",
+    "</tr>\n"
         ].join(""));
     let summaryTableHeader = [
-            "<div class=\"coverage-summary\">",
-            "<table>",
-            "<thead>",
-            "<tr>",
-            // hack-coverage - compact summary
-            "   <th data-col=\"file\" data-fmt=\"html\" data-html=\"true\" class=\"file\">File</th>",
-            "   <th data-col=\"statements\" data-type=\"number\" data-fmt=\"pct\" class=\"pct\">Statements</th>",
-            "   <th data-col=\"branches\" data-type=\"number\" data-fmt=\"pct\" class=\"pct\">Branches</th>",
-            "   <th data-col=\"functions\" data-type=\"number\" data-fmt=\"pct\" class=\"pct\">Functions</th>",
-            "   <th data-col=\"lines\" data-type=\"number\" data-fmt=\"pct\" class=\"pct\">Lines</th>",
-            "</tr>",
-            "</thead>",
-            "<tbody>"
+    "<div class=\"coverage-summary\">",
+    "<table>",
+    "<thead>",
+    "<tr>",
+    // hack-coverage - compact summary
+    "   <th data-col=\"file\" data-fmt=\"html\" data-html=\"true\" class=\"file\">File</th>",
+    "   <th data-col=\"statements\" data-type=\"number\" data-fmt=\"pct\" class=\"pct\">Statements</th>",
+    "   <th data-col=\"branches\" data-type=\"number\" data-fmt=\"pct\" class=\"pct\">Branches</th>",
+    "   <th data-col=\"functions\" data-type=\"number\" data-fmt=\"pct\" class=\"pct\">Functions</th>",
+    "   <th data-col=\"lines\" data-type=\"number\" data-fmt=\"pct\" class=\"pct\">Lines</th>",
+    "</tr>",
+    "</thead>",
+    "<tbody>"
         ].join("\n");
     let summaryLineTemplate = handlebars.compile([
-            "<tr>",
-            // hack-coverage - compact summary
-            "<td class=\"file {{reportClasses.statements}}\" data-value=\"{{file}}\"><a href=\"{{output}}\"><div>{{file}}</div>{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>",
-            "<td data-value=\"{{metrics.statements.pct}}\" class=\"pct {{reportClasses.statements}}\">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>",
-            "<td data-value=\"{{metrics.branches.pct}}\" class=\"pct {{reportClasses.branches}}\">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>",
-            "<td data-value=\"{{metrics.functions.pct}}\" class=\"pct {{reportClasses.functions}}\">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>",
-            "<td data-value=\"{{metrics.lines.pct}}\" class=\"pct {{reportClasses.lines}}\">{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>",
-            "</tr>\n"
+    "<tr>",
+    // hack-coverage - compact summary
+    "<td class=\"file {{reportClasses.statements}}\" data-value=\"{{file}}\"><a href=\"{{output}}\"><div>{{file}}</div>{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>",
+    "<td data-value=\"{{metrics.statements.pct}}\" class=\"pct {{reportClasses.statements}}\">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>",
+    "<td data-value=\"{{metrics.branches.pct}}\" class=\"pct {{reportClasses.branches}}\">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>",
+    "<td data-value=\"{{metrics.functions.pct}}\" class=\"pct {{reportClasses.functions}}\">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>",
+    "<td data-value=\"{{metrics.lines.pct}}\" class=\"pct {{reportClasses.lines}}\">{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>",
+    "</tr>\n"
         ].join("\n\t"));
     let summaryTableFooter = [
-            "</tbody>",
-            "</table>",
-            "</div>"
+    "</tbody>",
+    "</table>",
+    "</div>"
         ].join("\n");
     let lt = "\u0001";
     let gt = "\u0002";
-    let RE_LT = /</g;
-    let RE_GT = />/g;
-    let RE_AMP = /&/g;
-    let RE_lt = /\u0001/g;
-    let RE_gt = /\u0002/g;
+    let RE_LT = (
+    /</g
+);
+    let RE_GT = (
+    />/g
+);
+    let RE_AMP = (
+    /&/g
+);
+    let RE_lt = (
+    /\u0001/g
+);
+    let RE_gt = (
+    /\u0002/g
+);
 
     handlebars.registerHelper("show_picture", function (opts) {
-        var num = Number(opts.fn(this)),
-            rest,
-            cls = "";
+        let num = Number(opts.fn(this));
+        let rest;
+        let cls = "";
         if (isFinite(num)) {
             if (num === 100) {
                 cls = " cover-full";
             }
             num = Math.floor(num);
             rest = 100 - num;
-            return "<span class=\"cover-fill" + cls + "\" style=\"width: " + num + "px;\"></span>" +
-                "<span class=\"cover-empty\" style=\"width:" + rest + "px;\"></span>";
+            return "<span class=\"cover-fill" + cls + "\" style=\"width: " + num + "px;\"></span>"
++ "<span class=\"cover-empty\" style=\"width:" + rest + "px;\"></span>";
         } else {
             return "";
         }
     });
 
     handlebars.registerHelper("show_ignores", function (metrics) {
-        var statements = metrics.statements.skipped,
-            functions = metrics.functions.skipped,
-            branches = metrics.branches.skipped,
-            result;
+        var statements = metrics.statements.skipped;
+        let functions = metrics.functions.skipped;
+        let branches = metrics.branches.skipped;
+        let result;
 
         if (statements === 0 && functions === 0 && branches === 0) {
             return "<span class=\"ignore-none\">none</span>";
@@ -11765,18 +11776,21 @@ local.reportHtmlCreate = function(opts, collector) {
 
         result = [];
         // hack-coverage - compact summary
-        if (statements >0) { result.push("statements: " + statements); }
-        if (branches >0) { result.push("branches: " + branches); }
-        if (functions >0) { result.push("functions: " + functions); }
+        if (statements >0) {
+            result.push("statements: " + statements); }
+        if (branches >0) {
+            result.push("branches: " + branches); }
+        if (functions >0) {
+            result.push("functions: " + functions); }
 
         return result.join("<br>");
     });
 
     // hack-coverage - hashtag lineno
     handlebars.registerHelper("show_lines", function (opts) {
-        var maxLines = Number(opts.fn(this)),
-            i,
-            array = "";
+        var maxLines = Number(opts.fn(this));
+        let i;
+        let array = "";
 
         for (i = 1; i <= maxLines; i += 1) {
             array += "<a href=\"#L" + i + "\" id=\"L" + i + "\">" + i + "</a>\n";
@@ -11785,13 +11799,13 @@ local.reportHtmlCreate = function(opts, collector) {
     });
 
     handlebars.registerHelper("show_line_execution_counts", function (context, opts) {
-        var lines = context.l,
-            maxLines = Number(opts.fn(this)),
-            i,
-            lineNumber,
-            array = [],
-            covered,
-            value = "";
+        var lines = context.l;
+        let maxLines = Number(opts.fn(this));
+        let i;
+        let lineNumber;
+        let array = [];
+        let covered;
+        let value = "";
 
         for (i = 0; i < maxLines; i += 1) {
             lineNumber = i + 1;
@@ -11834,7 +11848,8 @@ local.reportHtmlCreate = function(opts, collector) {
 
     function annotateLines(fileCoverage, structuredText) {
         var lineStats = fileCoverage.l;
-        if (!lineStats) { return; }
+        if (!lineStats) {
+            return; }
         Object.keys(lineStats).forEach(function (lineNumber) {
             var count = lineStats[lineNumber];
             structuredText[lineNumber].covered = count > 0 ? "yes" : "no";
@@ -11847,19 +11862,19 @@ local.reportHtmlCreate = function(opts, collector) {
     }
 
     function annotateStatements(fileCoverage, structuredText) {
-        var statementStats = fileCoverage.s,
-            statementMeta = fileCoverage.statementMap;
+        var statementStats = fileCoverage.s;
+        let statementMeta = fileCoverage.statementMap;
         Object.keys(statementStats).forEach(function (stName) {
-            var count = statementStats[stName],
-                meta = statementMeta[stName],
-                type = count > 0 ? "yes" : "no",
-                startCol = meta.start.column,
-                endCol = meta.end.column + 1,
-                startLine = meta.start.line,
-                endLine = meta.end.line,
-                openSpan = lt + "span class=\"" + (meta.skip ? "cstat-skip" : "cstat-no") + "\"" + title("statement not covered") + gt,
-                closeSpan = lt + "/span" + gt,
-                text;
+            var count = statementStats[stName];
+            let meta = statementMeta[stName];
+            let type = count > 0 ? "yes" : "no";
+            let startCol = meta.start.column;
+            let endCol = meta.end.column + 1;
+            let startLine = meta.start.line;
+            let endLine = meta.end.line;
+            let openSpan = lt + "span class=\"" + (meta.skip ? "cstat-skip" : "cstat-no") + "\"" + title("statement not covered") + gt;
+            let closeSpan = lt + "/span" + gt;
+            let text;
 
             if (type === "no") {
                 if (endLine !== startLine) {
@@ -11877,20 +11892,21 @@ local.reportHtmlCreate = function(opts, collector) {
 
     function annotateFunctions(fileCoverage, structuredText) {
 
-        var fnStats = fileCoverage.f,
-            fnMeta = fileCoverage.fnMap;
-        if (!fnStats) { return; }
+        var fnStats = fileCoverage.f;
+        let fnMeta = fileCoverage.fnMap;
+        if (!fnStats) {
+            return; }
         Object.keys(fnStats).forEach(function (fName) {
-            var count = fnStats[fName],
-                meta = fnMeta[fName],
-                type = count > 0 ? "yes" : "no",
-                startCol = meta.loc.start.column,
-                endCol = meta.loc.end.column + 1,
-                startLine = meta.loc.start.line,
-                endLine = meta.loc.end.line,
-                openSpan = lt + "span class=\"" + (meta.skip ? "fstat-skip" : "fstat-no") + "\"" + title("function not covered") + gt,
-                closeSpan = lt + "/span" + gt,
-                text;
+            var count = fnStats[fName];
+            let meta = fnMeta[fName];
+            let type = count > 0 ? "yes" : "no";
+            let startCol = meta.loc.start.column;
+            let endCol = meta.loc.end.column + 1;
+            let startLine = meta.loc.start.line;
+            let endLine = meta.loc.end.line;
+            let openSpan = lt + "span class=\"" + (meta.skip ? "fstat-skip" : "fstat-no") + "\"" + title("function not covered") + gt;
+            let closeSpan = lt + "/span" + gt;
+            let text;
 
             if (type === "no") {
                 if (endLine !== startLine) {
@@ -11907,27 +11923,30 @@ local.reportHtmlCreate = function(opts, collector) {
     }
 
     function annotateBranches(fileCoverage, structuredText) {
-        var branchStats = fileCoverage.b,
-            branchMeta = fileCoverage.branchMap;
-        if (!branchStats) { return; }
+        var branchStats = fileCoverage.b;
+        let branchMeta = fileCoverage.branchMap;
+        if (!branchStats) {
+            return; }
 
         Object.keys(branchStats).forEach(function (branchName) {
-            var branchArray = branchStats[branchName],
-                sumCount = branchArray.reduce(function (p, n) { return p + n; }, 0),
-                metaArray = branchMeta[branchName].locations,
-                i,
-                count,
-                meta,
-                type,
-                startCol,
-                endCol,
-                startLine,
-                endLine,
-                openSpan,
-                closeSpan,
-                text;
+            var branchArray = branchStats[branchName];
+            let sumCount = branchArray.reduce(function (p, n) {
+                return p + n; }, 0);
+            let metaArray = branchMeta[branchName].locations;
+            let closeSpan;
+            let count;
+            let endCol;
+            let endLine;
+            let i;
+            let meta;
+            let openSpan;
+            let startCol;
+            let startLine;
+            let text;
+            let type;
 
-            if (sumCount > 0) { //only highlight if partial branches are missing
+            if (sumCount > 0) {
+                //only highlight if partial branches are missing
                 for (i = 0; i < branchArray.length; i += 1) {
                     count = branchArray[i];
                     meta = metaArray[i];
@@ -11939,16 +11958,18 @@ local.reportHtmlCreate = function(opts, collector) {
                     openSpan = lt + "span class=\"branch-" + i + " " + (meta.skip ? "cbranch-skip" : "cbranch-no") + "\"" + title("branch not covered") + gt;
                     closeSpan = lt + "/span" + gt;
 
-                    if (count === 0) { //skip branches taken
+                    if (count === 0) {
+                        //skip branches taken
                         if (endLine !== startLine) {
                             endLine = startLine;
                             endCol = structuredText[startLine].text.originalLength();
                         }
                         text = structuredText[startLine].text;
-                        if (branchMeta[branchName].type === "if") { // and "if" is a special case since the else branch might not be visible, being non-existent
-                            text.insertAt(startCol, lt + "span class=\"" + (meta.skip ? "skip-if-branch" : "missing-if-branch") + "\"" +
-                                title((i === 0 ? "if" : "else") + " path not taken") + gt +
-                                (i === 0 ? "I" : "E")  + lt + "/span" + gt, true, false);
+                        if (branchMeta[branchName].type === "if") {
+                            // and "if" is a special case since the else branch might not be visible, being non-existent
+                            text.insertAt(startCol, lt + "span class=\"" + (meta.skip ? "skip-if-branch" : "missing-if-branch") + "\""
++ title((i === 0 ? "if" : "else") + " path not taken") + gt
++ (i === 0 ? "I" : "E") + lt + "/span" + gt, true, false);
                         } else {
                             text.wrap(startCol,
                                 openSpan,
@@ -11962,8 +11983,8 @@ local.reportHtmlCreate = function(opts, collector) {
     }
 
     function getReportClass(stats, watermark) {
-        var coveragePct = stats.pct,
-            identity  = 1;
+        var coveragePct = stats.pct;
+        let identity = 1;
         if (coveragePct * identity === coveragePct) {
             return coveragePct >= watermark[1] ? "high" : coveragePct >= watermark[0] ? "medium" : "low";
         } else {
@@ -11976,7 +11997,8 @@ local.reportHtmlCreate = function(opts, collector) {
     opts.sourceStore = opts.sourceStore || Store.create("fslookup");
     opts.writer = opts.writer || null;
     // hack-coverage - new Date() bugfix
-    opts.templateData = { datetime: new Date().toGMTString() };
+    opts.templateData = {
+        datetime: new Date().toGMTString() };
     opts.watermarks = opts.watermarks || defaults.watermarks();
 
     var ancestorHref;
@@ -11984,11 +12006,11 @@ local.reportHtmlCreate = function(opts, collector) {
     var linkMapper;
     var writeFiles;
     ancestorHref = function (node, num) {
-        var href = "",
-            separated,
-            levels,
-            i,
-            j;
+        var href = "";
+        let i;
+        let j;
+        let levels;
+        let separated;
         for (i = 0; i < num; i += 1) {
             separated = node.relativeName.split(SEP);
             levels = separated.length - 1;
@@ -12004,22 +12026,23 @@ local.reportHtmlCreate = function(opts, collector) {
         templateData.entity = node.name || "All files";
         templateData.metrics = node.metrics;
         templateData.reportClass = getReportClass(node.metrics.statements, opts.watermarks.statements);
-        var parent = node.parent,
-            nodePath = [],
-            linkPath = [],
-            i;
+        var parent = node.parent;
+        let nodePath = [];
+        let linkPath = [];
+        let i;
         while (parent) {
             nodePath.push(parent);
             parent = parent.parent;
         }
         for (i = 0; i < nodePath.length; i += 1) {
-            linkPath.push("<a href=\"" + linkMapper.ancestor(node, i + 1) + "\">" +
-                (nodePath[i].relativeName || "All files") + "</a>");
+            linkPath.push("<a href=\"" + linkMapper.ancestor(node, i + 1) + "\">"
++ (nodePath[i].relativeName || "All files") + "</a>");
         }
         linkPath.reverse();
-        html = linkPath.length > 0 ? linkPath.join(" &#187; ") + " &#187; " +
-            node.displayShortName() : "";
-        templateData.pathHtml = pathTemplate({ html });
+        html = linkPath.length > 0 ? linkPath.join(" &#187; ") + " &#187; "
++ node.displayShortName() : "";
+        templateData.pathHtml = pathTemplate({
+            html });
         templateData.prettify = {
             js: linkMapper.asset(node, "prettify.js"),
             css: linkMapper.asset(node, "prettify.css")
@@ -12027,9 +12050,9 @@ local.reportHtmlCreate = function(opts, collector) {
     };
     linkMapper = {
         fromParent: function (node) {
-            var i = 0,
-                relativeName = node.relativeName,
-                ch;
+            var i = 0;
+            let relativeName = node.relativeName;
+            let ch;
             if (SEP !== "/") {
                 relativeName = "";
                 for (i = 0; i < node.relativeName.length; i += 1) {
@@ -12047,20 +12070,22 @@ local.reportHtmlCreate = function(opts, collector) {
             return ancestorHref(node, num) + "index.html";
         },
         asset: function (node, name) {
-            var i = 0,
-                parent = node.parent;
-            while (parent) { i += 1; parent = parent.parent; }
+            var i = 0;
+            let parent = node.parent;
+            while (parent) {
+                i += 1; parent = parent.parent; }
             return ancestorHref(node, i) + name;
         }
     };
     writeFiles = function (writer, node, dir, collector) {
-        var indexFile = path.resolve(dir, "index.html"),
-            childFile;
-        if (opts.verbose) { console.error("Writing " + indexFile); }
+        var indexFile = path.resolve(dir, "index.html");
+        let childFile;
+        if (opts.verbose) {
+            console.error("Writing " + indexFile); }
         writer.writeFile(indexFile, function () {
-            var templateData = opts.templateData,
-                children = Array.prototype.slice.apply(node.children),
-                watermarks = opts.watermarks;
+            var templateData = opts.templateData;
+            let children = Array.prototype.slice.apply(node.children);
+            let watermarks = opts.watermarks;
 
             children.sort(function (a, b) {
                 return a.name < b.name ? -1 : 1;
@@ -12070,18 +12095,18 @@ local.reportHtmlCreate = function(opts, collector) {
             writer.write(headerTemplate(templateData));
             writer.write(summaryTableHeader);
             children.forEach(function (child) {
-                var metrics = child.metrics,
-                    reportClasses = {
-                        statements: getReportClass(metrics.statements, watermarks.statements),
-                        lines: getReportClass(metrics.lines, watermarks.lines),
-                        functions: getReportClass(metrics.functions, watermarks.functions),
-                        branches: getReportClass(metrics.branches, watermarks.branches)
-                    },
-                    data = {
-                        metrics: metrics,
-                        reportClasses: reportClasses,
-                        file: child.displayShortName(),
-                        output: linkMapper.fromParent(child)
+                var metrics = child.metrics;
+                let reportClasses = {
+                statements: getReportClass(metrics.statements, watermarks.statements),
+                lines: getReportClass(metrics.lines, watermarks.lines),
+                functions: getReportClass(metrics.functions, watermarks.functions),
+                branches: getReportClass(metrics.branches, watermarks.branches)
+                    };
+                let data = {
+                metrics: metrics,
+                reportClasses: reportClasses,
+                file: child.displayShortName(),
+                output: linkMapper.fromParent(child)
                     };
                 writer.write(summaryLineTemplate(data) + "\n");
             });
@@ -12095,57 +12120,63 @@ local.reportHtmlCreate = function(opts, collector) {
                 return;
             }
             childFile = path.resolve(dir, child.relativeName + ".html");
-            if (opts.verbose) { console.error("Writing " + childFile); }
+            if (opts.verbose) {
+                console.error("Writing " + childFile); }
             writer.writeFile(childFile, function () {
                 var fileCoverage = collector.fileCoverageFor(child.fullPath());
-                var sourceStore = opts.sourceStore,
-                    templateData = opts.templateData,
-                    sourceText = fileCoverage.code && Array.isArray(fileCoverage.code) ?
-                        fileCoverage.code.join("\n") + "\n" : sourceStore.get(fileCoverage.path),
-                    code = sourceText.split(/(?:\r?\n)|\r/),
-                    count = 0,
-                    structured = code.map(function (str) { count += 1; return { line: count, covered: null, text: new InsertionText(str, true) }; }),
-                    context;
+                var sourceStore = opts.sourceStore;
+                let templateData = opts.templateData;
+                let sourceText = fileCoverage.code && Array.isArray(fileCoverage.code)
+? fileCoverage.code.join("\n") + "\n" : sourceStore.get(fileCoverage.path);
+                let code = sourceText.split(
+    /(?:\r?\n)|\r/
+);
+    let count = 0;
+    let structured = code.map(function (str) {
+    count += 1; return {
+        line: count, covered: null, text: new InsertionText(str, true) }; });
+    let context;
 
-                structured.unshift({ line: 0, covered: null, text: new InsertionText("") });
+    structured.unshift({
+    line: 0, covered: null, text: new InsertionText("") });
 
-                fillTemplate(child, templateData);
-                writer.write(headerTemplate(templateData));
-                writer.write("<pre><table class=\"coverage\">\n");
+    fillTemplate(child, templateData);
+    writer.write(headerTemplate(templateData));
+    writer.write("<pre><table class=\"coverage\">\n");
 
-                annotateLines(fileCoverage, structured);
-                //note: order is important, since statements typically result in spanning the whole line and doing branches late
-                //causes mismatched tags
-                annotateBranches(fileCoverage, structured);
-                annotateFunctions(fileCoverage, structured);
-                annotateStatements(fileCoverage, structured);
+    annotateLines(fileCoverage, structured);
+    //note: order is important, since statements typically result in spanning the whole line and doing branches late
+    //causes mismatched tags
+    annotateBranches(fileCoverage, structured);
+    annotateFunctions(fileCoverage, structured);
+    annotateStatements(fileCoverage, structured);
 
-                structured.shift();
-                context = {
-                    structured: structured,
-                    maxLines: structured.length,
-                    fileCoverage: fileCoverage
-                };
-                writer.write(detailTemplate(context));
-                writer.write("</table></pre>\n");
-                writer.write(footerTemplate(templateData));
-            });
+    structured.shift();
+    context = {
+    structured: structured,
+    maxLines: structured.length,
+    fileCoverage: fileCoverage
+    };
+    writer.write(detailTemplate(context));
+    writer.write("</table></pre>\n");
+    writer.write(footerTemplate(templateData));
+    });
         });
     };
 
-    var dir = opts.dir,
-        summarizer = new TreeSummarizer(),
-        writer = opts.writer,
-        tree;
+    var dir = opts.dir;
+    let summarizer = new TreeSummarizer();
+    let writer = opts.writer;
+    let tree;
 
     collector.files().forEach(function (key) {
         summarizer.addFileCoverageSummary(key, utils.summarizeFileCoverage(collector.fileCoverageFor(key)));
     });
     tree = summarizer.getTreeSummary();
     fs.readdirSync(path.resolve(__dirname, "..", "vendor")).forEach(function (f) {
-        var resolvedSource = path.resolve(__dirname, "..", "vendor", f),
-            resolvedDestination = path.resolve(dir, f),
-            stat = fs.statSync(resolvedSource);
+        var resolvedSource = path.resolve(__dirname, "..", "vendor", f);
+        let resolvedDestination = path.resolve(dir, f);
+        let stat = fs.statSync(resolvedSource);
 
         if (stat.isFile()) {
             if (opts.verbose) {
@@ -12164,16 +12195,16 @@ local.reportHtmlCreate = function(opts, collector) {
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
 local.reportTextCreate = function(opts, collector) {
-    var defaults = require("./common/defaults"),
-        utils = require("../object-utils"),
-        PCT_COLS = 10,
-        TAB_SIZE = 3,
-        DELIM = " |",
-        COL_DELIM = "-|";
+    var defaults = require("./common/defaults");
+    let utils = require("../object-utils");
+    let PCT_COLS = 10;
+    let TAB_SIZE = 3;
+    let DELIM = " |";
+    let COL_DELIM = "-|";
 
     function padding(num, ch) {
-        var str = "",
-            i;
+        var str = "";
+        let i;
         ch = ch || " ";
         for (i = 0; i < num; i += 1) {
             str += ch;
@@ -12185,12 +12216,12 @@ local.reportTextCreate = function(opts, collector) {
         tabs = tabs || 0;
         str = String(str);
 
-        var leadingSpaces = tabs * TAB_SIZE,
-            remaining = width - leadingSpaces,
-            leader = padding(leadingSpaces),
-            fmtStr = "",
-            fillStr,
-            strlen = str.length;
+        var leadingSpaces = tabs * TAB_SIZE;
+        let remaining = width - leadingSpaces;
+        let leader = padding(leadingSpaces);
+        let fmtStr = "";
+        let fillStr;
+        let strlen = str.length;
 
         if (remaining > 0) {
             if (remaining >= strlen) {
@@ -12229,12 +12260,12 @@ local.reportTextCreate = function(opts, collector) {
     }
 
     function tableRow(node, maxNameCols, level, watermarks) {
-        var name = nodeName(node),
-            statements = node.metrics.statements.pct,
-            branches = node.metrics.branches.pct,
-            functions = node.metrics.functions.pct,
-            lines = node.metrics.lines.pct,
-            elements = [];
+        var name = nodeName(node);
+        let statements = node.metrics.statements.pct;
+        let branches = node.metrics.branches.pct;
+        let functions = node.metrics.functions.pct;
+        let lines = node.metrics.lines.pct;
+        let elements = [];
 
         elements.push(formatName(name, maxNameCols, level, defaults.classFor("statements", node.metrics, watermarks)));
         elements.push(formatPct(statements, defaults.classFor("statements", node.metrics, watermarks)));
@@ -12259,9 +12290,9 @@ local.reportTextCreate = function(opts, collector) {
     }
 
     function makeLine(nameWidth) {
-        var name = padding(nameWidth, "-"),
-            pct = padding(PCT_COLS, "-"),
-            elements = [];
+        var name = padding(nameWidth, "-");
+        let pct = padding(PCT_COLS, "-");
+        let elements = [];
 
         elements.push(name);
         elements.push(pct);
@@ -12299,14 +12330,14 @@ local.reportTextCreate = function(opts, collector) {
     that.summary = opts.summary;
     that.watermarks = opts.watermarks || defaults.watermarks();
     var TreeSummarizer = require("../util/tree-summarizer");
-    var summarizer = new TreeSummarizer(),
-        tree,
-        root,
-        nameWidth,
-        statsWidth = 4 * ( PCT_COLS + 2),
-        maxRemaining,
-        strings = [],
-        text;
+    var summarizer = new TreeSummarizer();
+    let nameWidth;
+    let root;
+    let tree;
+    let statsWidth = 4 * ( PCT_COLS + 2);
+    let maxRemaining;
+    let strings = [];
+    let text;
 
     collector.files().forEach(function (key) {
         summarizer.addFileCoverageSummary(key, utils.summarizeFileCoverage(collector.fileCoverageFor(key)));
