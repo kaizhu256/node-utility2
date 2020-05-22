@@ -9071,125 +9071,7 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
 
 
 
-/*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
-*/
-/* istanbul ignore next */
 /* jslint ignore:start */
-(function () { let module; module = {};
-/*
- Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
- Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
- */
-
-function InsertionText(text, consumeBlanks) {
-    this.text = text;
-    this.origLength = text.length;
-    this.offsets = [];
-    this.consumeBlanks = consumeBlanks;
-    this.startPos = this.findFirstNonBlank();
-    this.endPos = this.findLastNonBlank();
-}
-
-var WHITE_RE = /[ \f\n\r\t\v\u00A0\u2028\u2029]/;
-
-InsertionText.prototype = {
-
-    findFirstNonBlank: function () {
-        var pos = -1,
-            text = this.text,
-            len = text.length,
-            i;
-        for (i = 0; i < len; i += 1) {
-            if (!text.charAt(i).match(WHITE_RE)) {
-                pos = i;
-                break;
-            }
-        }
-        return pos;
-    },
-    findLastNonBlank: function () {
-        var text = this.text,
-            len = text.length,
-            pos = text.length + 1,
-            i;
-        for (i = len - 1; i >= 0; i -= 1) {
-            if (!text.charAt(i).match(WHITE_RE)) {
-                pos = i;
-                break;
-            }
-        }
-        return pos;
-    },
-    originalLength: function () {
-        return this.origLength;
-    },
-
-    insertAt: function (col, str, insertBefore, consumeBlanks) {
-        consumeBlanks = typeof consumeBlanks === 'undefined' ? this.consumeBlanks : consumeBlanks;
-        col = col > this.originalLength() ? this.originalLength() : col;
-        col = col < 0 ? 0 : col;
-
-        if (consumeBlanks) {
-            if (col <= this.startPos) {
-                col = 0;
-            }
-            if (col > this.endPos) {
-                col = this.origLength;
-            }
-        }
-
-        var len = str.length,
-            offset = this.findOffset(col, len, insertBefore),
-            realPos = col + offset,
-            text = this.text;
-        this.text = text.substring(0, realPos) + str + text.substring(realPos);
-        return this;
-    },
-
-    findOffset: function (pos, len, insertBefore) {
-        var offsets = this.offsets,
-            offsetObj,
-            cumulativeOffset = 0,
-            i;
-
-        for (i = 0; i < offsets.length; i += 1) {
-            offsetObj = offsets[i];
-            if (offsetObj.pos < pos || (offsetObj.pos === pos && !insertBefore)) {
-                cumulativeOffset += offsetObj.len;
-            }
-            if (offsetObj.pos >= pos) {
-                break;
-            }
-        }
-        if (offsetObj && offsetObj.pos === pos) {
-            offsetObj.len += len;
-        } else {
-            offsets.splice(i, 0, { pos: pos, len: len });
-        }
-        return cumulativeOffset;
-    },
-
-    wrap: function (startPos, startText, endPos, endText, consumeBlanks) {
-        this.insertAt(startPos, startText, true, consumeBlanks);
-        this.insertAt(endPos, endText, false, consumeBlanks);
-        return this;
-    },
-
-    wrapLine: function (startText, endText) {
-        this.wrap(0, startText, this.originalLength(), endText);
-    },
-
-    toString: function () {
-        return this.text;
-    }
-};
-
-module.exports = InsertionText;
-local["../util/insertion-text"] = module.exports; }());
-
-
-
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 */
@@ -11021,7 +10903,6 @@ local.templateCoverageBadgeSvg =
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
-let InsertionText;
 let PCT_COLS;
 let Store;
 let TAB_SIZE;
@@ -11031,13 +10912,126 @@ let reportTextCreate;
 let summaryMap;
 let utils;
 // require module
-InsertionText = require("../util/insertion-text");
 Store = require("../store");
 path = require("path");
 utils = require("../object-utils");
 // init variable
 PCT_COLS = 10;
 TAB_SIZE = 2;
+// init InsertionText
+// https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
+function InsertionText(text, consumeBlanks) {
+    this.text = text;
+    this.origLength = text.length;
+    this.offsets = [];
+    this.consumeBlanks = consumeBlanks;
+    this.startPos = this.findFirstNonBlank();
+    this.endPos = this.findLastNonBlank();
+}
+
+InsertionText.prototype = {
+
+    findFirstNonBlank: function () {
+        let pos = -1;
+        let text = this.text;
+        let len = text.length;
+        let ii;
+        ii = 0;
+        while (ii < len) {
+            if (!text.charAt(ii).match(
+    /[\u0020\f\n\r\t\v\u00A0\u2028\u2029]/
+)) {
+    pos = ii;
+    break;
+    }
+    ii += 1;
+        }
+        return pos;
+    },
+    findLastNonBlank: function () {
+        let text = this.text;
+        let len = text.length;
+        let pos = text.length + 1;
+        let ii;
+        ii = len - 1;
+        while (ii >= 0) {
+            if (!text.charAt(ii).match(
+    /[\u0020\f\n\r\t\v\u00A0\u2028\u2029]/
+)) {
+    pos = ii;
+    break;
+    }
+    ii -= 1;
+        }
+        return pos;
+    },
+    originalLength: function () {
+        return this.origLength;
+    },
+
+    insertAt: function (col, str, insertBefore, consumeBlanks) {
+        consumeBlanks = typeof consumeBlanks === "undefined" ? this.consumeBlanks : consumeBlanks;
+        col = col > this.originalLength() ? this.originalLength() : col;
+        col = col < 0 ? 0 : col;
+
+        if (consumeBlanks) {
+            if (col <= this.startPos) {
+                col = 0;
+            }
+            if (col > this.endPos) {
+                col = this.origLength;
+            }
+        }
+
+        let len = str.length;
+        let offset = this.findOffset(col, len, insertBefore);
+        let realPos = col + offset;
+        let text = this.text;
+        this.text = text.substring(0, realPos) + str + text.substring(realPos);
+        return this;
+    },
+
+    findOffset: function (pos, len, insertBefore) {
+        let offsets = this.offsets;
+        let offsetObj;
+        let cumulativeOffset = 0;
+        let ii;
+
+        ii = 0;
+        while (ii < offsets.length) {
+            offsetObj = offsets[ii];
+            if (offsetObj.pos < pos || (offsetObj.pos === pos && !insertBefore)) {
+                cumulativeOffset += offsetObj.len;
+            }
+            if (offsetObj.pos >= pos) {
+                break;
+            }
+            ii += 1;
+        }
+        if (offsetObj && offsetObj.pos === pos) {
+            offsetObj.len += len;
+        } else {
+            offsets.splice(ii, 0, {
+                pos: pos, len: len });
+        }
+        return cumulativeOffset;
+    },
+
+    wrap: function (startPos, startText, endPos, endText, consumeBlanks) {
+        this.insertAt(startPos, startText, true, consumeBlanks);
+        this.insertAt(endPos, endText, false, consumeBlanks);
+        return this;
+    },
+
+    wrapLine: function (startText, endText) {
+        this.wrap(0, startText, this.originalLength(), endText);
+    },
+
+    toString: function () {
+        return this.text;
+    }
+};
+
 // init TreeSummary
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
@@ -11217,8 +11211,8 @@ TreeSummary.prototype = {
         );
         // calclulate "java-style" package metrics where there is no hierarchy
         // across packages
-        fileChildren = entry.children.filter(function (n) {
-            return n.kind !== "dir";
+        fileChildren = entry.children.filter(function (nn) {
+            return nn.kind !== "dir";
         });
         if (fileChildren.length > 0) {
             entry.packageMetrics = utils.mergeSummaryObjects.apply(
