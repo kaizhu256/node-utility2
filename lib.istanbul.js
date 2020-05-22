@@ -10586,7 +10586,6 @@ function TreeSummary(summaryMap, commonPrefix) {
 }
 TreeSummary.prototype = {
     convertToTree: function (summaryMap, arrayPrefix) {
-        let nodes = [];
         let rootPath = arrayPrefix.join(path.sep) + path.sep;
         let root = new Node(rootPath, "dir");
         let tmp;
@@ -10594,14 +10593,15 @@ TreeSummary.prototype = {
         let seen = {};
         let filesUnderRoot = false;
         seen[rootPath] = root;
-        Object.keys(summaryMap).forEach(function (key) {
-            let metrics = summaryMap[key];
+        Object.entries(summaryMap).forEach(function ([
+            key,
+            metrics
+        ]) {
             let node;
             let parent;
             let parentPath;
             node = new Node(key, "file", metrics);
             seen[key] = node;
-            nodes.push(node);
             parentPath = path.dirname(key) + path.sep;
             if (parentPath === path.sep + path.sep) {
                 parentPath = path.sep + "__root__" + path.sep;
