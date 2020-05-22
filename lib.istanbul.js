@@ -11416,18 +11416,6 @@ utils = require("../object-utils");
 PCT_COLS = 10;
 TAB_SIZE = 2;
 // init function
-function padding(num, ch) {
-    let ii;
-    let str;
-    str = "";
-    ch = ch || " ";
-    ii = 0;
-    while (ii < num) {
-        str += ch;
-        ii += 1;
-    }
-    return str;
-}
 function fill(str, width, right, tabs, clazz) {
     let fillStr;
     let fmtStr;
@@ -12282,8 +12270,8 @@ reportTextCreate = function (opts, collector) {
         let elements;
         let name;
         let pct;
-        name = padding(nameWidth, "-");
-        pct = padding(PCT_COLS, "-");
+        name = "-".repeat(nameWidth);
+        pct = "-".repeat(PCT_COLS);
         elements = [];
         elements.push(name);
         elements.push(pct);
