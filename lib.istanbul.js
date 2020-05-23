@@ -10909,7 +10909,160 @@ function handlebarsCompile(template) {
         return result;
     };
 }
-function reportHtmlCreate(opt) {
+
+
+
+/*
+file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
+*/
+function reportTextCreate(opt) {
+    let strings;
+    function tableHeader(maxNameCols) {
+        let elements;
+        elements = [];
+        elements.push(fill("File", maxNameCols, false, 0));
+        elements.push(fill("% Stmts", PCT_COLS, true, 0));
+        elements.push(fill("% Branches", PCT_COLS, true, 0));
+        elements.push(fill("% Funcs", PCT_COLS, true, 0));
+        elements.push(fill("% Lines", PCT_COLS, true, 0));
+        return elements.join(" |") + " |";
+    }
+    function tableRow(node, maxNameCols, level) {
+        let branches;
+        let classFor;
+        let elements;
+        let functions;
+        let lines;
+        let name;
+        let statements;
+        classFor = function (val) {
+            return (
+                val >= 80
+                ? "high"
+                : val >= 50
+                ? "medium"
+                : "low"
+            );
+        };
+        name = node.relativeName;
+        statements = node.metrics.statements.pct;
+        branches = node.metrics.branches.pct;
+        functions = node.metrics.functions.pct;
+        lines = node.metrics.lines.pct;
+        elements = [];
+        elements.push(fill(
+            name,
+            maxNameCols,
+            false,
+            level,
+            classFor(node.metrics.statements.pct)
+        ));
+        elements.push(fill(
+            statements,
+            PCT_COLS,
+            true,
+            0,
+            classFor(node.metrics.statements.pct)
+        ));
+        elements.push(fill(
+            branches,
+            PCT_COLS,
+            true,
+            0,
+            classFor(node.metrics.branches.pct)
+        ));
+        elements.push(fill(
+            functions,
+            PCT_COLS,
+            true,
+            0,
+            classFor(node.metrics.functions.pct)
+        ));
+        elements.push(fill(
+            lines,
+            PCT_COLS,
+            true,
+            0,
+            classFor(node.metrics.lines.pct)
+        ));
+        return elements.join(" |") + " |";
+    }
+    function findNameWidth(node, level, last) {
+        let idealWidth;
+        last = last || 0;
+        level = level || 0;
+        idealWidth = TAB_SIZE * level + node.relativeName.length;
+        if (idealWidth > last) {
+            last = idealWidth;
+        }
+        node.children.forEach(function (child) {
+            // recurse
+            last = findNameWidth(child, level + 1, last);
+        });
+        return last;
+    }
+    function makeLine(nameWidth) {
+        let elements;
+        let name;
+        let pct;
+        name = "-".repeat(nameWidth);
+        pct = "-".repeat(PCT_COLS);
+        elements = [];
+        elements.push(name);
+        elements.push(pct);
+        elements.push(pct);
+        elements.push(pct);
+        elements.push(pct);
+        return elements.join("-|") + "-|";
+    }
+    function walk(node, nameWidth, array, level) {
+        let line;
+        if (level === 0) {
+            line = makeLine(nameWidth);
+            array.push(line);
+            array.push(tableHeader(nameWidth));
+            array.push(line);
+        } else {
+            array.push(tableRow(node, nameWidth, level));
+        }
+        node.children.forEach(function (child) {
+            walk(child, nameWidth, array, level + 1);
+        });
+        if (level === 0) {
+            array.push(line);
+            array.push(tableRow(node, nameWidth, level));
+            array.push(line);
+        }
+    }
+    opt = opt || {};
+    summaryMap = {};
+    strings = [];
+    Object.keys(globalThis.__coverage__).forEach(function (key) {
+        if (
+            globalThis.__coverage__[key]
+            && globalThis.__coverageCodeDict__[key]
+        ) {
+            // reset derived info
+            delete globalThis.__coverage__[key].l;
+            summaryMap[key] = summarizeFileCoverage(
+                globalThis.__coverage__[key]
+            );
+        }
+    });
+    coverageReportSummary = new TreeSummary(
+        summaryMap,
+        findCommonArrayPrefix(Object.keys(summaryMap))
+    );
+    walk(
+        coverageReportSummary.root,
+        findNameWidth(coverageReportSummary.root),
+        strings,
+        0
+    );
+    console.log(strings.join("\n") + "\n");
+
+
+
     let coverageReportWrite;
     let fillTemplate;
     let linkMapper;
@@ -11641,157 +11794,6 @@ function reportHtmlCreate(opt) {
 
 
 /*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
-*/
-function reportTextCreate(opt) {
-    let nameWidth;
-    let strings;
-    let text;
-    function tableHeader(maxNameCols) {
-        let elements;
-        elements = [];
-        elements.push(fill("File", maxNameCols, false, 0));
-        elements.push(fill("% Stmts", PCT_COLS, true, 0));
-        elements.push(fill("% Branches", PCT_COLS, true, 0));
-        elements.push(fill("% Funcs", PCT_COLS, true, 0));
-        elements.push(fill("% Lines", PCT_COLS, true, 0));
-        return elements.join(" |") + " |";
-    }
-    function tableRow(node, maxNameCols, level) {
-        let branches;
-        let classFor;
-        let elements;
-        let functions;
-        let lines;
-        let name;
-        let statements;
-        classFor = function (val) {
-            return (
-                val >= 80
-                ? "high"
-                : val >= 50
-                ? "medium"
-                : "low"
-            );
-        };
-        name = node.relativeName;
-        statements = node.metrics.statements.pct;
-        branches = node.metrics.branches.pct;
-        functions = node.metrics.functions.pct;
-        lines = node.metrics.lines.pct;
-        elements = [];
-        elements.push(fill(
-            name,
-            maxNameCols,
-            false,
-            level,
-            classFor(node.metrics.statements.pct)
-        ));
-        elements.push(fill(
-            statements,
-            PCT_COLS,
-            true,
-            0,
-            classFor(node.metrics.statements.pct)
-        ));
-        elements.push(fill(
-            branches,
-            PCT_COLS,
-            true,
-            0,
-            classFor(node.metrics.branches.pct)
-        ));
-        elements.push(fill(
-            functions,
-            PCT_COLS,
-            true,
-            0,
-            classFor(node.metrics.functions.pct)
-        ));
-        elements.push(fill(
-            lines,
-            PCT_COLS,
-            true,
-            0,
-            classFor(node.metrics.lines.pct)
-        ));
-        return elements.join(" |") + " |";
-    }
-    function findNameWidth(node, level, last) {
-        let idealWidth;
-        last = last || 0;
-        level = level || 0;
-        idealWidth = TAB_SIZE * level + node.relativeName.length;
-        if (idealWidth > last) {
-            last = idealWidth;
-        }
-        node.children.forEach(function (child) {
-            // recurse
-            last = findNameWidth(child, level + 1, last);
-        });
-        return last;
-    }
-    function makeLine(nameWidth) {
-        let elements;
-        let name;
-        let pct;
-        name = "-".repeat(nameWidth);
-        pct = "-".repeat(PCT_COLS);
-        elements = [];
-        elements.push(name);
-        elements.push(pct);
-        elements.push(pct);
-        elements.push(pct);
-        elements.push(pct);
-        return elements.join("-|") + "-|";
-    }
-    function walk(node, nameWidth, array, level) {
-        let line;
-        if (level === 0) {
-            line = makeLine(nameWidth);
-            array.push(line);
-            array.push(tableHeader(nameWidth));
-            array.push(line);
-        } else {
-            array.push(tableRow(node, nameWidth, level));
-        }
-        node.children.forEach(function (child) {
-            walk(child, nameWidth, array, level + 1);
-        });
-        if (level === 0) {
-            array.push(line);
-            array.push(tableRow(node, nameWidth, level));
-            array.push(line);
-        }
-    }
-    opt = opt || {};
-    summaryMap = {};
-    strings = [];
-    Object.keys(globalThis.__coverage__).forEach(function (key) {
-        if (
-            globalThis.__coverage__[key]
-            && globalThis.__coverageCodeDict__[key]
-        ) {
-            // reset derived info
-            delete globalThis.__coverage__[key].l;
-            summaryMap[key] = summarizeFileCoverage(
-                globalThis.__coverage__[key]
-            );
-        }
-    });
-    coverageReportSummary = new TreeSummary(
-        summaryMap,
-        findCommonArrayPrefix(Object.keys(summaryMap))
-    );
-    nameWidth = findNameWidth(coverageReportSummary.root);
-    walk(coverageReportSummary.root, nameWidth, strings, 0);
-    text = strings.join("\n") + "\n";
-    console.log(text);
-}
-
-
-
-/*
 file none
 */
 
@@ -11886,7 +11888,6 @@ local.coverageReportCreate = function (opt) {
     // 1. print coverage in text-format to stdout
     reportTextCreate(opt);
     // 2. write coverage in html-format to filesystem
-    reportHtmlCreate(opt);
     local.fsWriteFileWithMkdirpSync(writerFile, writerData);
     // write coverage.json
     local.fsWriteFileWithMkdirpSync(
