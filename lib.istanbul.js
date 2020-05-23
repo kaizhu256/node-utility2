@@ -10723,38 +10723,6 @@ InsertionText.prototype = {
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
 */
-function commonArrayPrefix(first, second) {
-    let len = (
-        first.length < second.length
-        ? first.length
-        : second.length
-    );
-    let ii;
-    let ret = [];
-    ii = 0;
-    while (ii < len) {
-        if (first[ii] !== second[ii]) {
-            break;
-        }
-        ret.push(first[ii]);
-        ii += 1;
-    }
-    return ret;
-}
-function findCommonArrayPrefix(args) {
-    if (args.length === 0) {
-        return [];
-    }
-    let separated = args.map(function (arg) {
-        return arg.split(path.sep);
-    });
-    let ret = separated.pop();
-    if (separated.length === 0) {
-        return ret.slice(0, ret.length - 1);
-    } else {
-        return separated.reduce(commonArrayPrefix, ret);
-    }
-}
 function Node(fullName, kind, metrics) {
     this.name = fullName;
     this.fullName = fullName;
@@ -11113,6 +11081,7 @@ function reportTextCreate(opt) {
     let findNameWidth;
     let nameWidth;
     let strings;
+    let tmp;
     let walk;
     findNameWidth = function (node, level, last) {
         let idealWidth;
@@ -11177,18 +11146,17 @@ function reportTextCreate(opt) {
         strings.push(tableRow);
         strings.push(line);
     };
-    opt = opt || {};
     summaryMap = {};
     strings = [];
     Object.entries(globalThis.__coverage__).forEach(function ([
-        key,
+        file,
         fileCoverage
     ]) {
         let elem;
         let summary;
-        if (fileCoverage && globalThis.__coverageCodeDict__[key]) {
+        if (fileCoverage && globalThis.__coverageCodeDict__[file]) {
             // reset derived info
-            delete globalThis.__coverage__[key].l;
+            delete globalThis.__coverage__[file].l;
             // summarizeFileCoverage
             summary = {
                 lines: {
@@ -11290,11 +11258,21 @@ function reportTextCreate(opt) {
             });
             elem.pct = percent(elem.covered, elem.total);
             summary.branches = elem;
-            summaryMap[key] = summary;
+            summaryMap[file] = summary;
+            // findCommonArrayPrefix
+            tmp = file.split(path.sep);
+            if (!dirPrefix) {
+                dirPrefix = tmp.slice(0, -1);
+                return;
+            }
+            dirPrefix.some(function (elem, ii) {
+                if (elem !== tmp[ii]) {
+                    dirPrefix = dirPrefix.slice(0, ii);
+                    return true;
+                }
+            });
         }
     });
-    // findCommonArrayPrefix
-    dirPrefix = findCommonArrayPrefix(Object.keys(summaryMap));
     coverageReportSummary = new TreeSummary(summaryMap, dirPrefix);
     nameWidth = findNameWidth(coverageReportSummary.root);
     walk(coverageReportSummary.root, 0);
