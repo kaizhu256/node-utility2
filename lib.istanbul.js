@@ -11112,23 +11112,23 @@ nodeNormalize = function (node, filePrefix, parent) {
         nodeNormalize(child, filePrefix, node);
     });
 };
-nodeParentUrlCreate = function (node, depth) {
+nodeParentUrlCreate = function (node, ii) {
 /*
- * this function will return parent-url of node with given <depth>
+ * this function will return parent-url of node with given <ii>
  */
-    let ii;
     let jj;
+    let kk;
     let parentUrl;
     parentUrl = "";
-    ii = 0;
-    while (ii < depth) {
-        jj = 0;
-        while (jj < node.relativeName.split(path.sep).length - 1) {
+    jj = 0;
+    while (jj < ii) {
+        kk = 0;
+        while (kk < node.relativeName.split(path.sep).length - 1) {
             parentUrl += "../";
-            jj += 1;
+            kk += 1;
         }
         node = node.parent;
-        ii += 1;
+        jj += 1;
     }
     return parentUrl;
 };
@@ -11231,20 +11231,20 @@ templateRender = function (template, dict, node) {
 /*
  * this function will render <template> with given <dict> and <node>
  */
+    let ii;
     let parent;
     let parentUrlList;
-    let zz;
     // render <node>
     parent = node.parent;
     parentUrlList = [];
-    zz = 0;
+    ii = 1;
     while (parent) {
         parentUrlList.unshift(
-            "<a href=\"" + nodeParentUrlCreate(node, zz + 1)
+            "<a href=\"" + nodeParentUrlCreate(node, ii)
             + "index.html\">" + parent.relativeName + "</a>"
         );
         parent = parent.parent;
-        zz += 1;
+        ii += 1;
     }
     Object.assign(dict, {
         coverageLevel: coverageLevelGet(node.metrics.statements.pct),
@@ -11306,7 +11306,6 @@ templateRender = function (template, dict, node) {
     ), function () {
         let array;
         let covered;
-        let ii;
         let lineNumber;
         let lines;
         let maxLines;
@@ -11341,7 +11340,6 @@ templateRender = function (template, dict, node) {
         "{{#show_lines}}",
         function () {
             let array;
-            let ii;
             let maxLines;
             maxLines = Number(dict.maxLines);
             array = "";
