@@ -10527,8 +10527,12 @@ file none
 
 let TAB_SIZE;
 let numberPercent;
+let path;
 let stringFill;
 let templateRender;
+let urlParent;
+// require module
+path = require("path");
 // init InsertionText
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 function InsertionText(text, consumeBlanks) {
@@ -10885,6 +10889,23 @@ templateRender = function (template, dict) {
     );
     return template;
 };
+urlParent = function (node, num) {
+    let href;
+    let ii;
+    let jj;
+    href = "";
+    ii = 0;
+    while (ii < num) {
+        jj = 0;
+        while (jj < node.relativeName.split(path.sep).length - 1) {
+            href += "../";
+            jj += 1;
+        }
+        node = node.parent;
+        ii += 1;
+    }
+    return href;
+};
 // init variable
 TAB_SIZE = 2;
 
@@ -10958,7 +10979,6 @@ local.coverageReportCreate = function (opt) {
     let linkMapperAsset;
     let mergeSummaryObjects;
     let nameWidth;
-    let path;
     let root;
     let seen;
     let summaryList;
@@ -10969,34 +10989,14 @@ local.coverageReportCreate = function (opt) {
     let templateHead;
     let tmp;
     let tmpChildren;
-    let urlParent;
     let walk;
     let writerData;
     let writerFile;
     if (!(opt && opt.coverage)) {
         return "";
     }
-    // require module
-    path = require("path");
     dir = process.cwd() + "/tmp/build/coverage.html";
     // init function
-    urlParent = function (node, num) {
-        let href;
-        let ii;
-        let jj;
-        href = "";
-        ii = 0;
-        while (ii < num) {
-            jj = 0;
-            while (jj < node.relativeName.split(path.sep).length - 1) {
-                href += "../";
-                jj += 1;
-            }
-            node = node.parent;
-            ii += 1;
-        }
-        return href;
-    };
     addChild = function (node, child) {
         node.children.push(child);
         child.parent = node;
