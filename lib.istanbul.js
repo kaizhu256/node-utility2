@@ -10534,75 +10534,14 @@ let writerData;
 let writerFile;
 // require module
 path = require("path");
-// init toplevel variable
+// init variable
 TAB_SIZE = 2;
-// https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
-// init utils
 numberFormatPercent = new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 2,
     minimumFractionDigits: 2,
     style: "percent"
 });
 numberFormatPercent = numberFormatPercent.format.bind(numberFormatPercent);
-function mergeSummaryObjects(args) {
-/**
- * merges multiple summary metrics objects by summing up the `totals` and
- * `covered` fields and recomputing the percentages. This function is generic
- * and can accept any number of arguments.
- *
- * @method mergeSummaryObjects
- * @static
- * @param {Object} summary... multiple summary metrics objects
- * @return {Object} the merged summary metrics
- */
-    let summary = {
-        lines: {
-            total: 0,
-            covered: 0,
-            skipped: 0,
-            pct: "Unknown"
-        },
-        statements: {
-            total: 0,
-            covered: 0,
-            skipped: 0,
-            pct: "Unknown"
-        },
-        functions: {
-            total: 0,
-            covered: 0,
-            skipped: 0,
-            pct: "Unknown"
-        },
-        branches: {
-            total: 0,
-            covered: 0,
-            skipped: 0,
-            pct: "Unknown"
-        }
-    };
-    let keys = [
-        "lines", "statements", "branches", "functions"
-    ];
-    let increment = function (obj) {
-        if (obj) {
-            keys.forEach(function (key) {
-                summary[key].total += obj[key].total;
-                summary[key].covered += obj[key].covered;
-                summary[key].skipped += obj[key].skipped;
-            });
-        }
-    };
-    args.forEach(function (arg) {
-        increment(arg);
-    });
-    keys.forEach(function (key) {
-        summary[key].pct = numberFormatPercent(
-            summary[key].covered / summary[key].total
-        );
-    });
-    return summary;
-}
 // init InsertionText
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 function InsertionText(text, consumeBlanks) {
@@ -10736,10 +10675,6 @@ InsertionText.prototype = {
         return that.text;
     }
 };
-// init TreeSummary
-/*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
-*/
 // init function
 function fill(str, width, right, tabs, clazz) {
     let fillStr;
@@ -10943,6 +10878,65 @@ function handlebarsCompile(template) {
         return result;
     };
 }
+function mergeSummaryObjects(args) {
+/**
+ * merges multiple summary metrics objects by summing up the `totals` and
+ * `covered` fields and recomputing the percentages. This function is generic
+ * and can accept any number of arguments.
+ *
+ * @method mergeSummaryObjects
+ * @static
+ * @param {Object} summary... multiple summary metrics objects
+ * @return {Object} the merged summary metrics
+ */
+    let summary = {
+        lines: {
+            total: 0,
+            covered: 0,
+            skipped: 0,
+            pct: "Unknown"
+        },
+        statements: {
+            total: 0,
+            covered: 0,
+            skipped: 0,
+            pct: "Unknown"
+        },
+        functions: {
+            total: 0,
+            covered: 0,
+            skipped: 0,
+            pct: "Unknown"
+        },
+        branches: {
+            total: 0,
+            covered: 0,
+            skipped: 0,
+            pct: "Unknown"
+        }
+    };
+    let keys = [
+        "lines", "statements", "branches", "functions"
+    ];
+    let increment = function (obj) {
+        if (obj) {
+            keys.forEach(function (key) {
+                summary[key].total += obj[key].total;
+                summary[key].covered += obj[key].covered;
+                summary[key].skipped += obj[key].skipped;
+            });
+        }
+    };
+    args.forEach(function (arg) {
+        increment(arg);
+    });
+    keys.forEach(function (key) {
+        summary[key].pct = numberFormatPercent(
+            summary[key].covered / summary[key].total
+        );
+    });
+    return summary;
+}
 
 
 
@@ -10959,7 +10953,7 @@ function reportTextCreate(opt) {
         let idealWidth;
         last = last || 0;
         level = level || 0;
-        idealWidth = TAB_SIZE * level + node.relativeName.length;
+        idealWidth = level * TAB_SIZE + node.relativeName.length;
         if (idealWidth > last) {
             last = idealWidth;
         }
