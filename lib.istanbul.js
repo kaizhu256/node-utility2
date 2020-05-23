@@ -11038,11 +11038,11 @@ local.coverageReportCreate = function (opt) {
     let seen;
     let summaryList;
     let summaryMap;
+    let summaryTreeWalk;
     let templateFoot;
     let templateHead;
     let tmp;
     let tmpChildren;
-    let walk;
     let writerData;
     let writerFile;
     if (!(opt && opt.coverage)) {
@@ -11493,7 +11493,7 @@ local.coverageReportCreate = function (opt) {
             indexAndSortTree(child, map);
         });
     };
-    walk = function (node, level) {
+    summaryTreeWalk = function (node, level) {
         let line;
         let tableRow;
         tableRow = [
@@ -11520,7 +11520,7 @@ local.coverageReportCreate = function (opt) {
         if (level !== 0) {
             summaryList.push(tableRow);
             node.children.forEach(function (child) {
-                walk(child, level + 1);
+                summaryTreeWalk(child, level + 1);
             });
             return;
         }
@@ -11536,7 +11536,7 @@ local.coverageReportCreate = function (opt) {
         summaryList.push(line);
         node.children.forEach(function (child) {
             // recurse
-            walk(child, level + 1);
+            summaryTreeWalk(child, level + 1);
         });
         summaryList.push(line);
         summaryList.push(tableRow);
@@ -11752,7 +11752,7 @@ local.coverageReportCreate = function (opt) {
     calculateMetrics(root);
     indexAndSortTree(root, {});
     nameWidth = findNameWidth(root);
-    walk(root, 0);
+    summaryTreeWalk(root, 0);
     // 2. print coverage in text-format to stdout
     console.log(summaryList.join("\n") + "\n");
     // create HtmlReport
