@@ -11253,8 +11253,6 @@ function handlebarsCompile(template) {
 function tableRow(node, nameWidth, level) {
     let classFor;
     let elements;
-    let lines;
-    let name;
     classFor = function (val) {
         return (
             val >= 80
@@ -11264,11 +11262,9 @@ function tableRow(node, nameWidth, level) {
             : "low"
         );
     };
-    name = node.relativeName;
-    lines = node.metrics.lines.pct;
     elements = [];
     elements.push(fill(
-        name,
+        node.relativeName,
         nameWidth,
         false,
         level,
@@ -11296,7 +11292,7 @@ function tableRow(node, nameWidth, level) {
         classFor(node.metrics.functions.pct)
     ));
     elements.push(fill(
-        lines,
+        node.metrics.lines.pct,
         PCT_COLS,
         true,
         0,
