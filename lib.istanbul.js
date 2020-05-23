@@ -11314,34 +11314,32 @@ templateRender = function (template, dict, node) {
     // render #show_paths
     template = template.replace("{{#show_paths}}", function () {
         let parent;
-        let paths;
         parent = node.parent;
         if (!parent) {
             return "";
         }
-        paths = node.relativeName;
+        val = node.relativeName;
         ii = 1;
         while (parent) {
-            paths = (
+            val = (
                 "index.html\">" + parent.relativeName + "</a>" + " &#187; "
-                + paths
+                + val
             );
-            val = "";
             jj = 0;
             while (jj < ii) {
                 kk = 0;
                 while (kk < node.relativeName.split(path.sep).length - 1) {
-                    val += "../";
+                    val = "../" + val;
                     kk += 1;
                 }
                 node = node.parent;
                 jj += 1;
             }
-            paths = "<a href=\"" + val + paths;
+            val = "<a href=\"" + val;
             parent = parent.parent;
             ii += 1;
         }
-        return paths;
+        return val;
     });
     // render #show_percent_bar
     template = template.replace("{{#show_percent_bar}}", function () {
