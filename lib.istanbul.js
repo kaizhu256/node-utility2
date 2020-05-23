@@ -11240,7 +11240,9 @@ templateRender = function (template, dict, node) {
         ii += 1;
     }
     Object.assign(dict, {
-        coverageLevel: coverageLevelGet(node.metrics.statements.pct),
+        coverageLevel: (
+            node.metrics && coverageLevelGet(node.metrics.statements.pct)
+        ),
         entity: node.name || "All files",
         metrics: node.metrics,
         parentUrl: "<div class=\"path\">" + (
@@ -11265,7 +11267,7 @@ templateRender = function (template, dict, node) {
             : String(val)
         );
     });
-    // render helper show_ignores
+    // render #show_ignores
     template = template.replace(
         "{{#show_ignores}}",
         function () {
@@ -11293,7 +11295,7 @@ templateRender = function (template, dict, node) {
             return array.join("<br>");
         }
     );
-    // render helper show_line_execution_counts
+    // render #show_line_execution_counts
     template = template.replace((
         "{{#show_line_execution_counts}}"
     ), function () {
@@ -11328,7 +11330,7 @@ templateRender = function (template, dict, node) {
         }
         return array.join("\n");
     });
-    // render helper show_lines
+    // render #show_lines
     template = template.replace(
         "{{#show_lines}}",
         function () {
@@ -11349,7 +11351,7 @@ templateRender = function (template, dict, node) {
             return array;
         }
     );
-    // render helper show_picture
+    // render #show_picture
     template = template.replace(
         "{{#show_picture}}",
         function () {
@@ -11362,7 +11364,7 @@ templateRender = function (template, dict, node) {
             );
         }
     );
-    // render helper show_code last
+    // render #show_code last
     template = template.replace(
         "{{#show_code}}",
         function () {
