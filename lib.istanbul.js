@@ -10529,6 +10529,7 @@ let TAB_SIZE;
 let numberFormatPercent;
 let stringFill;
 let templateCompile;
+let templateRender;
 // init variable
 TAB_SIZE = 2;
 // init InsertionText
@@ -10885,6 +10886,169 @@ templateCompile = function (template) {
         return result;
     };
 };
+templateRender = function (template, dict) {
+/*
+ * this function will render <template> with given <dict>
+ */
+    let replace;
+    replace = function (template, dict, withPrefix) {
+    /*
+     * this function will search-and-replace
+     * <template> with given <dict> and <withPrefix>
+     */
+        let val;
+        // search for keys in template
+        return template.replace((
+            /\{\{.+?\}\}/g
+        ), function (match0) {
+            val = dict;
+            // iteratively lookup nested values in dict
+            String(
+                withPrefix + match0.slice(2, -2)
+            ).split(".").forEach(function (key) {
+                val = val && val[key];
+            });
+            return (
+                val === undefined
+                ? match0
+                : String(val)
+            );
+        });
+    };
+    // render triple-curly-brace
+    template = template.replace((
+        /\{\{\{/g
+    ), "{{").replace((
+        /\}\}\}/g
+    ), "}}");
+    // render with-statement
+    template = template.replace((
+        /\{\{#with\u0020(.+?)\}\}([\S\s]+?)\{\{\/with\}\}/g
+    ), function (ignore, match1, match2) {
+        return replace(match2, dict, match1 + ".");
+    });
+    // render helper show_ignores
+    template = template.replace(
+        "{{#show_ignores}}",
+        function () {
+            let array;
+            if (
+                dict.metrics.statements.skipped === 0
+                && dict.metrics.functions.skipped === 0
+                && dict.metrics.branches.skipped === 0
+            ) {
+                return "<span class=\"ignore-none\">none</span>";
+            }
+            array = [];
+            // hack-coverage - compact summary
+            if (dict.metrics.statements.skipped > 0) {
+                array.push(
+                    "statements: " + dict.metrics.statements.skipped
+                );
+            }
+            if (dict.metrics.branches.skipped > 0) {
+                array.push("branches: " + dict.metrics.branches.skipped);
+            }
+            if (dict.metrics.functions.skipped > 0) {
+                array.push("functions: " + dict.metrics.functions.skipped);
+            }
+            return array.join("<br>");
+        }
+    );
+    // render helper show_line_execution_counts
+    template = template.replace((
+        "{{#show_line_execution_counts}}"
+    ), function () {
+        let array;
+        let covered;
+        let ii;
+        let lineNumber;
+        let lines;
+        let maxLines;
+        let value;
+        lines = dict.fileCoverage.l;
+        maxLines = Number(dict.maxLines);
+        array = [];
+        value = "";
+        ii = 0;
+        while (ii < maxLines) {
+            lineNumber = ii + 1;
+            value = "&nbsp;";
+            covered = "neutral";
+            if (lines.hasOwnProperty(lineNumber)) {
+                if (lines[lineNumber] > 0) {
+                    covered = "yes";
+                    value = lines[lineNumber];
+                } else {
+                    covered = "no";
+                }
+            }
+            array.push(
+                "<span class=\"cline-any cline-" + covered + "\">"
+                + value + "</span>"
+            );
+            ii += 1;
+        }
+        return array.join("\n");
+    });
+    // render helper show_lines
+    template = template.replace(
+        "{{#show_lines}}",
+        function () {
+            let array;
+            let ii;
+            let maxLines;
+            maxLines = Number(dict.maxLines);
+            array = "";
+            ii = 1;
+            while (ii <= maxLines) {
+                // hack-coverage - hashtag lineno
+                array += (
+                    "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
+                    + ii
+                    + "</a>\n"
+                );
+                ii += 1;
+            }
+            return array;
+        }
+    );
+    // render helper show_picture
+    template = template.replace(
+        "{{#show_picture}}",
+        function () {
+            let num;
+            num = Number(dict.metrics.statements.pct) | 0;
+            return (
+                "<span class=\"cover-fill cover-full\" style=\"width:" + num
+                + "px;\"></span><span class=\"cover-empty\" style=\"width:"
+                + (100 - num) + "px;\"></span>"
+            );
+        }
+    );
+    template = replace(template, dict, "");
+    // render helper show_code last
+    template = template.replace(
+        "{{#show_code}}",
+        function () {
+            return dict.structured.map(function (item) {
+                return item.text.toString().replace((
+                    /&/g
+                ), "&amp;").replace((
+                    /</g
+                ), "&lt;").replace((
+                    />/g
+                ), "&gt;").replace((
+                    /\u0001/g
+                ), "<").replace((
+                    /\u0002/g
+                ), ">") || "&nbsp;";
+            }).join("\n");
+        }
+    );
+    return template;
+};
+local.nop(templateRender);
 
 
 
