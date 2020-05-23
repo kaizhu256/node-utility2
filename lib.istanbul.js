@@ -10496,7 +10496,7 @@ local.templateCoverageHead = '\
     </tr>\n\
     </thead>\n\
     <tbody>\n\
-        <td>{{#show_ignores metrics}}{{/show_ignores}}</td>\n\
+        <td>{{#show_ignores}}</td>\n\
         <td>{{#with metrics.statements}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>\n\
         <td>{{#with metrics.branches}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>\n\
         <td>{{#with metrics.functions}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>\n\
@@ -10522,7 +10522,6 @@ local.templateCoverageBadgeSvg =
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
-let PCT_COLS;
 let TAB_SIZE;
 let coverageReportHtml;
 let coverageReportSummary;
@@ -10534,7 +10533,6 @@ let writerFile;
 // require module
 path = require("path");
 // init variable
-PCT_COLS = 10;
 TAB_SIZE = 2;
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
 // init utils
@@ -11250,56 +11248,6 @@ function handlebarsCompile(template) {
         return result;
     };
 }
-function tableRow(node, nameWidth, level) {
-    let classFor;
-    let elements;
-    classFor = function (val) {
-        return (
-            val >= 80
-            ? "high"
-            : val >= 50
-            ? "medium"
-            : "low"
-        );
-    };
-    elements = [];
-    elements.push(fill(
-        node.relativeName,
-        nameWidth,
-        false,
-        level,
-        classFor(node.metrics.statements.pct)
-    ));
-    elements.push(fill(
-        node.metrics.statements.pct,
-        PCT_COLS,
-        true,
-        0,
-        classFor(node.metrics.statements.pct)
-    ));
-    elements.push(fill(
-        node.metrics.branches.pct,
-        PCT_COLS,
-        true,
-        0,
-        classFor(node.metrics.branches.pct)
-    ));
-    elements.push(fill(
-        node.metrics.functions.pct,
-        PCT_COLS,
-        true,
-        0,
-        classFor(node.metrics.functions.pct)
-    ));
-    elements.push(fill(
-        node.metrics.lines.pct,
-        PCT_COLS,
-        true,
-        0,
-        classFor(node.metrics.lines.pct)
-    ));
-    return elements.join(" |") + " |";
-}
 
 
 
@@ -11310,8 +11258,30 @@ function reportTextCreate(opt) {
     let strings;
     function walk(node, nameWidth, array, level) {
         let line;
+        let tableRow;
+        tableRow = [
+            node.metrics.statements.pct,
+            node.metrics.statements.pct,
+            node.metrics.branches.pct,
+            node.metrics.functions.pct,
+            node.metrics.lines.pct
+        ].map(function (pct, ii) {
+            let val;
+            val = (
+                val >= 80
+                ? "high"
+                : val >= 50
+                ? "medium"
+                : "low"
+            );
+            return (
+                ii === 0
+                ? fill(node.relativeName, nameWidth, false, level, val)
+                : fill(pct, 10, true, 0, val)
+            );
+        }).join(" |") + " |";
         if (level !== 0) {
-            array.push(tableRow(node, nameWidth, level));
+            array.push(tableRow);
             node.children.forEach(function (child) {
                 walk(child, nameWidth, array, level + 1);
             });
@@ -11332,7 +11302,7 @@ function reportTextCreate(opt) {
             walk(child, nameWidth, array, level + 1);
         });
         array.push(line);
-        array.push(tableRow(node, nameWidth, level));
+        array.push(tableRow);
         array.push(line);
     }
     opt = opt || {};
