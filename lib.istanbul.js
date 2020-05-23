@@ -10526,7 +10526,7 @@ file none
 
 
 let TAB_SIZE;
-let numberFormatPercent;
+let numberPercent;
 let stringFill;
 let templateCompile;
 let templateRender;
@@ -10678,11 +10678,15 @@ InsertionText.prototype = {
     }
 };
 // init function
-numberFormatPercent = new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2
-});
-numberFormatPercent = numberFormatPercent.format.bind(numberFormatPercent);
+numberPercent = function (covered, total) {
+    let tmp;
+    if (total > 0) {
+        tmp = 1000 * 100 * covered / total + 5;
+        return Math.floor(tmp / 10) / 100;
+    } else {
+        return 100.00;
+    }
+};
 stringFill = function (str, width, right, tabs, clazz) {
     let fillStr;
     let fmtStr;
@@ -11559,8 +11563,9 @@ local.coverageReportCreate = function (opt) {
             increment(arg);
         });
         keys.forEach(function (key) {
-            summary[key].pct = numberFormatPercent(
-                summary[key].covered / summary[key].total
+            summary[key].pct = numberPercent(
+                summary[key].covered,
+                summary[key].total
             );
         });
         return summary;
@@ -11747,7 +11752,7 @@ local.coverageReportCreate = function (opt) {
                     elem.covered += Boolean(covered || skipped);
                     elem.skipped += Boolean(!covered && skipped);
                 });
-                elem.pct = numberFormatPercent(elem.covered / elem.total);
+                elem.pct = numberPercent(elem.covered, elem.total);
                 summary[key] = elem;
             });
             // computeBranchTotals
@@ -11770,7 +11775,7 @@ local.coverageReportCreate = function (opt) {
                 });
                 elem.total += branches.length;
             });
-            elem.pct = numberFormatPercent(elem.covered / elem.total);
+            elem.pct = numberPercent(elem.covered, elem.total);
             summary.branches = elem;
             summaryMap[file] = summary;
             // findCommonArrayPrefix
