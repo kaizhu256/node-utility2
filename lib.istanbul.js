@@ -11111,23 +11111,23 @@ nodeNormalize = function (node, filePrefix, parent) {
         nodeNormalize(child, filePrefix, node);
     });
 };
-nodeParentUrlCreate = function (node, depth) {
+nodeParentUrlCreate = function (node, ii) {
 /*
- * this function will return parent-url of node with given <depth>
+ * this function will return parent-url of node with given <ii>
  */
     let href;
-    let ii;
     let jj;
+    let kk;
     href = "";
-    ii = 0;
-    while (ii < depth) {
-        jj = 0;
-        while (jj < node.relativeName.split(path.sep).length - 1) {
+    jj = 0;
+    while (jj < ii) {
+        kk = 0;
+        while (kk < node.relativeName.split(path.sep).length - 1) {
             href += "../";
-            jj += 1;
+            kk += 1;
         }
         node = node.parent;
-        ii += 1;
+        jj += 1;
     }
     return href;
 };
