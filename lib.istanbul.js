@@ -11333,6 +11333,7 @@ templateRender = function (template, dict, node) {
     });
     // render #show_paths
     template = template.replace("{{#show_paths}}", function () {
+        let href;
         let parent;
         let paths;
         parent = node.parent;
@@ -11340,12 +11341,13 @@ templateRender = function (template, dict, node) {
             return "";
         }
         paths = node.relativeName;
-        ii = 0;
+        ii = 1;
         while (parent) {
+            href = nodeParentUrlCreate(node, ii);
             paths = (
-                "<a href=\"" + nodeParentUrlCreate(node, ii + 1)
-                + "index.html\">" + parent.relativeName + "</a>"
-            ) + " &#187; " + paths;
+                "<a href=\"" + href + "index.html\">"
+                + parent.relativeName + "</a>" + " &#187; " + paths
+            );
             parent = parent.parent;
             ii += 1;
         }
