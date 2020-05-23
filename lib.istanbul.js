@@ -10764,6 +10764,7 @@ Node.prototype = {
     }
 };
 function TreeSummary() {
+    let calculateMetrics;
     let filesUnderRoot;
     let fixupNodes;
     let root;
@@ -10773,6 +10774,34 @@ function TreeSummary() {
     let tmp;
     let tmpChildren;
     that = this;
+    calculateMetrics = function (entry) {
+        let fileChildren;
+        if (entry.kind !== "dir") {
+            return;
+        }
+        entry.children.forEach(function (child) {
+            calculateMetrics(child);
+        });
+        entry.metrics = mergeSummaryObjects(
+            entry.children.map(function (child) {
+                return child.metrics;
+            })
+        );
+        // calclulate "java-style" package metrics where there is no hierarchy
+        // across packages
+        fileChildren = entry.children.filter(function (nn) {
+            return nn.kind !== "dir";
+        });
+        if (fileChildren.length > 0) {
+            entry.packageMetrics = mergeSummaryObjects(
+                fileChildren.map(function (child) {
+                    return child.metrics;
+                })
+            );
+        } else {
+            entry.packageMetrics = null;
+        }
+    };
     fixupNodes = function (node, filePrefix, parent) {
         // fix name
         if (node.name.indexOf(filePrefix) === 0) {
@@ -10842,42 +10871,12 @@ function TreeSummary() {
         });
     }
     fixupNodes(root, filePrefix.join(path.sep) + path.sep);
-    that.calculateMetrics(root);
+    calculateMetrics(root);
     that.root = root;
     that.map = {};
     that.indexAndSortTree(root, that.map);
 }
 TreeSummary.prototype = {
-    calculateMetrics: function (entry) {
-        let that;
-        that = this;
-        let fileChildren;
-        if (entry.kind !== "dir") {
-            return;
-        }
-        entry.children.forEach(function (child) {
-            that.calculateMetrics(child);
-        });
-        entry.metrics = mergeSummaryObjects(
-            entry.children.map(function (child) {
-                return child.metrics;
-            })
-        );
-        // calclulate "java-style" package metrics where there is no hierarchy
-        // across packages
-        fileChildren = entry.children.filter(function (nn) {
-            return nn.kind !== "dir";
-        });
-        if (fileChildren.length > 0) {
-            entry.packageMetrics = mergeSummaryObjects(
-                fileChildren.map(function (child) {
-                    return child.metrics;
-                })
-            );
-        } else {
-            entry.packageMetrics = null;
-        }
-    },
     indexAndSortTree: function (node, map) {
         let that;
         that = this;
