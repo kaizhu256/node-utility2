@@ -10632,12 +10632,14 @@ InsertionText.prototype = {
         return that;
     },
     findOffset: function (pos, len, insertBefore) {
+        let cumulativeOffset;
+        let ii;
+        let offsetObj;
+        let offsets;
         let that;
         that = this;
-        let offsets = that.offsets;
-        let offsetObj;
-        let cumulativeOffset = 0;
-        let ii;
+        offsets = that.offsets;
+        cumulativeOffset = 0;
         ii = 0;
         while (ii < offsets.length) {
             offsetObj = offsets[ii];
@@ -10878,68 +10880,6 @@ function handlebarsCompile(template) {
         return result;
     };
 }
-function mergeSummaryObjects(args) {
-/**
- * merges multiple summary metrics objects by summing up the `totals` and
- * `covered` fields and recomputing the percentages. This function is generic
- * and can accept any number of arguments.
- *
- * @method mergeSummaryObjects
- * @static
- * @param {Object} summary... multiple summary metrics objects
- * @return {Object} the merged summary metrics
- */
-    let increment;
-    let keys;
-    let summary;
-    summary = {
-        lines: {
-            total: 0,
-            covered: 0,
-            skipped: 0,
-            pct: "Unknown"
-        },
-        statements: {
-            total: 0,
-            covered: 0,
-            skipped: 0,
-            pct: "Unknown"
-        },
-        functions: {
-            total: 0,
-            covered: 0,
-            skipped: 0,
-            pct: "Unknown"
-        },
-        branches: {
-            total: 0,
-            covered: 0,
-            skipped: 0,
-            pct: "Unknown"
-        }
-    };
-    keys = [
-        "lines", "statements", "branches", "functions"
-    ];
-    increment = function (obj) {
-        if (obj) {
-            keys.forEach(function (key) {
-                summary[key].total += obj[key].total;
-                summary[key].covered += obj[key].covered;
-                summary[key].skipped += obj[key].skipped;
-            });
-        }
-    };
-    args.forEach(function (arg) {
-        increment(arg);
-    });
-    keys.forEach(function (key) {
-        summary[key].pct = numberFormatPercent(
-            summary[key].covered / summary[key].total
-        );
-    });
-    return summary;
-}
 
 
 
@@ -11012,6 +10952,7 @@ local.coverageReportCreate = function (opt) {
     let fixupNodes;
     let indexAndSortTree;
     let linkMapper;
+    let mergeSummaryObjects;
     let nameWidth;
     let path;
     let root;
@@ -11032,6 +10973,69 @@ local.coverageReportCreate = function (opt) {
     // require module
     path = require("path");
     dir = process.cwd() + "/tmp/build/coverage.html";
+    // init function
+    mergeSummaryObjects = function (args) {
+    /**
+     * merges multiple summary metrics objects by summing up the `totals` and
+     * `covered` fields and recomputing the percentages.
+     * This function is generic and can accept any number of arguments.
+     *
+     * @method mergeSummaryObjects
+     * @static
+     * @param {Object} summary... multiple summary metrics objects
+     * @return {Object} the merged summary metrics
+     */
+        let increment;
+        let keys;
+        let summary;
+        summary = {
+            lines: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            },
+            statements: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            },
+            functions: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            },
+            branches: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            }
+        };
+        keys = [
+            "lines", "statements", "branches", "functions"
+        ];
+        increment = function (obj) {
+            if (obj) {
+                keys.forEach(function (key) {
+                    summary[key].total += obj[key].total;
+                    summary[key].covered += obj[key].covered;
+                    summary[key].skipped += obj[key].skipped;
+                });
+            }
+        };
+        args.forEach(function (arg) {
+            increment(arg);
+        });
+        keys.forEach(function (key) {
+            summary[key].pct = numberFormatPercent(
+                summary[key].covered / summary[key].total
+            );
+        });
+        return summary;
+    };
     // merge previous coverage
     if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
         console.log("merging file " + dir + "/coverage.json to coverage");
@@ -11418,24 +11422,7 @@ local.coverageReportCreate = function (opt) {
     }
     templateHead = handlebarsCompile(templateHead);
     templateFoot = handlebarsCompile(local.templateCoverageFoot);
-    function annotateLines(fileCoverage, structuredText) {
-        Object.entries(fileCoverage.l).forEach(function ([
-            lineNumber,
-            count
-        ]) {
-            structuredText[lineNumber].covered = (
-                count > 0
-                ? "yes"
-                : "no"
-            );
-        });
-        structuredText.forEach(function (item) {
-            if (item.covered === null) {
-                item.covered = "neutral";
-            }
-        });
-    }
-    function annotateStatements(fileCoverage, structuredText) {
+    function annotateStatements(fileCoverage, structured) {
         Object.entries(fileCoverage.s).forEach(function ([
             stName,
             count
@@ -11454,9 +11441,9 @@ local.coverageReportCreate = function (opt) {
             endLine = meta.end.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = structuredText[startLine].text.originalLength();
+                endCol = structured[startLine].text.originalLength();
             }
-            text = structuredText[startLine].text;
+            text = structured[startLine].text;
             text.wrap(meta.start.column, ("\u0001span class=\"" + (
                 meta.skip
                 ? "cstat-skip"
@@ -11468,7 +11455,7 @@ local.coverageReportCreate = function (opt) {
             ), "\u0001/span\u0002");
         });
     }
-    function annotateFunctions(fileCoverage, structuredText) {
+    function annotateFunctions(fileCoverage, structured) {
         Object.entries(fileCoverage.f).forEach(function ([
             fName,
             count
@@ -11487,9 +11474,9 @@ local.coverageReportCreate = function (opt) {
             startLine = meta.loc.start.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = structuredText[startLine].text.originalLength();
+                endCol = structured[startLine].text.originalLength();
             }
-            text = structuredText[startLine].text;
+            text = structured[startLine].text;
             text.wrap(meta.loc.start.column, ("\u0001span class=\"" + (
                 meta.skip
                 ? "fstat-skip"
@@ -11499,68 +11486,6 @@ local.coverageReportCreate = function (opt) {
                 ? endCol
                 : text.originalLength()
             ), "\u0001/span\u0002");
-        });
-    }
-    function annotateBranches(fileCoverage, structuredText) {
-        Object.entries(fileCoverage.b).forEach(function ([
-            branchName,
-            branchArray
-        ]) {
-            if (branchArray.reduce(function (p, n) {
-                return p + n;
-            }, 0) <= 0) {
-                return;
-            }
-            //only highlight if partial branches are missing
-            branchArray.forEach(function (count, ii) {
-                let endCol;
-                let endLine;
-                let meta;
-                let startLine;
-                let text;
-                if (count !== 0) {
-                    return;
-                }
-                meta = fileCoverage.branchMap[branchName].locations[ii];
-                endCol = meta.end.column + 1;
-                endLine = meta.end.line;
-                startLine = meta.start.line;
-                //skip branches taken
-                if (endLine !== startLine) {
-                    endLine = startLine;
-                    endCol = structuredText[startLine].text.originalLength();
-                }
-                text = structuredText[startLine].text;
-                if (fileCoverage.branchMap[branchName].type === "if") {
-                    // and "if" is a special case since the else branch
-                    // might not be visible, being non-existent
-                    text.insertAt(meta.start.column, "\u0001span class=\"" + (
-                        meta.skip
-                        ? "skip-if-branch"
-                        : "missing-if-branch"
-                    ) + "\" title=\"" + ((
-                        ii === 0
-                        ? "if"
-                        : "else"
-                    ) + "\" path not taken\u0002") + (
-                        ii === 0
-                        ? "I"
-                        : "E"
-                    ) + "\u0001/span\u0002", true, false);
-                    return;
-                }
-                text.wrap(meta.start.column, (
-                    "\u0001span class=\"branch-" + ii + " " + (
-                        meta.skip
-                        ? "cbranch-skip"
-                        : "cbranch-no"
-                    ) + "\" title=\"branch not covered\" \u0002"
-                ), (
-                    startLine === endLine
-                    ? endCol
-                    : text.originalLength()
-                ), "\u0001/span\u0002");
-            });
         });
     }
     function getReportClass(pct) {
@@ -11766,11 +11691,91 @@ local.coverageReportCreate = function (opt) {
                 text: new InsertionText("")
             });
             fillTemplate(child);
-            annotateLines(fileCoverage, structured);
+            // annotateLines(fileCoverage, structured);
+            Object.entries(fileCoverage.l).forEach(function ([
+                lineNumber,
+                count
+            ]) {
+                structured[lineNumber].covered = (
+                    count > 0
+                    ? "yes"
+                    : "no"
+                );
+            });
+            structured.forEach(function (item) {
+                if (item.covered === null) {
+                    item.covered = "neutral";
+                }
+            });
             //note: order is important, since statements typically result
             //in spanning the whole line and doing branches late
             //causes mismatched tags
-            annotateBranches(fileCoverage, structured);
+            // annotateBranches(fileCoverage, structured);
+            Object.entries(fileCoverage.b).forEach(function ([
+                branchName,
+                branchArray
+            ]) {
+                if (branchArray.reduce(function (p, n) {
+                    return p + n;
+                }, 0) <= 0) {
+                    return;
+                }
+                //only highlight if partial branches are missing
+                branchArray.forEach(function (count, ii) {
+                    let endCol;
+                    let endLine;
+                    let meta;
+                    let startLine;
+                    let text;
+                    if (count !== 0) {
+                        return;
+                    }
+                    meta = fileCoverage.branchMap[branchName].locations[ii];
+                    endCol = meta.end.column + 1;
+                    endLine = meta.end.line;
+                    startLine = meta.start.line;
+                    //skip branches taken
+                    if (endLine !== startLine) {
+                        endLine = startLine;
+                        endCol = structured[startLine].text.originalLength();
+                    }
+                    text = structured[startLine].text;
+                    if (fileCoverage.branchMap[branchName].type === "if") {
+                        // and "if" is a special case since the else branch
+                        // might not be visible, being non-existent
+                        text.insertAt(
+                            meta.start.column,
+                            "\u0001span class=\"" + (
+                                meta.skip
+                                ? "skip-if-branch"
+                                : "missing-if-branch"
+                            ) + "\" title=\"" + ((
+                                ii === 0
+                                ? "if"
+                                : "else"
+                            ) + "\" path not taken\u0002") + (
+                                ii === 0
+                                ? "I"
+                                : "E"
+                            ) + "\u0001/span\u0002",
+                            true,
+                            false
+                        );
+                        return;
+                    }
+                    text.wrap(meta.start.column, (
+                        "\u0001span class=\"branch-" + ii + " " + (
+                            meta.skip
+                            ? "cbranch-skip"
+                            : "cbranch-no"
+                        ) + "\" title=\"branch not covered\" \u0002"
+                    ), (
+                        startLine === endLine
+                        ? endCol
+                        : text.originalLength()
+                    ), "\u0001/span\u0002");
+                });
+            });
             annotateFunctions(fileCoverage, structured);
             annotateStatements(fileCoverage, structured);
             structured.shift();
