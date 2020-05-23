@@ -10532,7 +10532,6 @@ let htmlAll;
 let htmlData;
 let htmlFile;
 let htmlWrite;
-let linkMapper;
 let nameWidth;
 let nodeChildAdd;
 let nodeCreate;
@@ -10754,10 +10753,32 @@ htmlWrite = function (node, dir) {
             : 1
         );
     }).map(function (child) {
+        let ii;
+        let relativeName;
+        let url;
+        ii = 0;
+        relativeName = child.relativeName;
+        if (path.sep !== "/") {
+            relativeName = "";
+            ii = 0;
+            while (ii < child.relativeName.length) {
+                relativeName += (
+                    child.relativeName[ii] === path.sep
+                    ? "/"
+                    : child.relativeName[ii]
+                );
+                ii += 1;
+            }
+        }
+        url = (
+            child.kind === "dir"
+            ? relativeName + "index.html"
+            : relativeName + ".html"
+        );
         return templateRender((
             `<tr>
 <td class="file {{coverageLevels.statements}}"
-    data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>
+    data-value="{{file}}"><a href="{{url}}"><div>{{file}}</div>
     {{#show_picture}}</a></td>
 <td class="pct {{coverageLevels.statements}}"
     data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
@@ -10783,7 +10804,7 @@ htmlWrite = function (node, dir) {
                 branches: coverageLevelGet(child.metrics.branches.pct)
             },
             file: child.relativeName,
-            output: linkMapper.fromParent(child)
+            url
         }) + "\n";
     }).join("") + (
         "</tbody>\n</table>\n</div>\n" + templateFoot
@@ -10936,7 +10957,7 @@ htmlWrite = function (node, dir) {
                 : text.originalLength()
             ), "\u0001/span\u0002");
         });
-        //!! annotateStatements(fileCoverage, structured);
+        // annotateStatements(fileCoverage, structured);
         Object.entries(fileCoverage.s).forEach(function ([
             stName,
             count
@@ -11412,31 +11433,6 @@ local.coverageReportCreate = function (opt) {
             );
         } else {
             entry.packageMetrics = null;
-        }
-    };
-    linkMapper = {
-        fromParent: function (node) {
-            let ii;
-            let relativeName;
-            ii = 0;
-            relativeName = node.relativeName;
-            if (path.sep !== "/") {
-                relativeName = "";
-                ii = 0;
-                while (ii < node.relativeName.length) {
-                    relativeName += (
-                        node.relativeName[ii] === path.sep
-                        ? "/"
-                        : node.relativeName[ii]
-                    );
-                    ii += 1;
-                }
-            }
-            return (
-                node.kind === "dir"
-                ? relativeName + "index.html"
-                : relativeName + ".html"
-            );
         }
     };
     mergeSummaryObjects = function (args) {
