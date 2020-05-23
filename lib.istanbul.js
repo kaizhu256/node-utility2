@@ -10528,9 +10528,10 @@ file none
 let TAB_SIZE;
 let coverageLevel;
 let coveragePercent;
-let nodeParentUrl;
 let path;
 let stringPad;
+let summaryNodeCreate;
+let summaryNodeParentUrl;
 let templateRender;
 // require module
 path = require("path");
@@ -10702,7 +10703,17 @@ coveragePercent = function (covered, total) {
         : 100
     );
 };
-nodeParentUrl = function (node, depth) {
+summaryNodeCreate = function (fullName, kind, metrics) {
+    return {
+        children: [],
+        fullName,
+        kind,
+        metrics: metrics || null,
+        name: fullName,
+        parent: null
+    };
+};
+summaryNodeParentUrl = function (node, depth) {
 /*
  * this function will return <node>'s parent-url with given <depth>
  */
@@ -10987,7 +10998,6 @@ local.coverageReportCreate = function (opt) {
     let calculateMetrics;
     let coverageReportHtml;
     let coverageReportWrite;
-    let createNode;
     let dir;
     let filePrefix;
     let filesUnderRoot;
@@ -11048,16 +11058,6 @@ local.coverageReportCreate = function (opt) {
             entry.packageMetrics = null;
         }
     };
-    createNode = function (fullName, kind, metrics) {
-        return {
-            children: [],
-            fullName,
-            kind,
-            metrics: metrics || null,
-            name: fullName,
-            parent: null
-        };
-    };
     linkMapperAsset = function (node, name) {
         let ii;
         let parent;
@@ -11067,7 +11067,7 @@ local.coverageReportCreate = function (opt) {
             ii += 1;
             parent = parent.parent;
         }
-        return nodeParentUrl(node, ii) + name;
+        return summaryNodeParentUrl(node, ii) + name;
     };
     templateFill = function (node) {
         let ii;
@@ -11081,9 +11081,8 @@ local.coverageReportCreate = function (opt) {
         ii = 0;
         while (parent) {
             linkPath.push(
-                "<a href=\"" + nodeParentUrl(node, ii + 1) + "index.html\">"
-                + parent.relativeName
-                + "</a>"
+                "<a href=\"" + summaryNodeParentUrl(node, ii + 1)
+                + "index.html\">" + parent.relativeName + "</a>"
             );
             parent = parent.parent;
             ii += 1;
@@ -11724,7 +11723,7 @@ local.coverageReportCreate = function (opt) {
     // coverageReportSummary = new TreeSummary();
     // convertToTree
     tmp = filePrefix.join(path.sep) + path.sep;
-    root = createNode(tmp, "dir");
+    root = summaryNodeCreate(tmp, "dir");
     seen = {};
     seen[tmp] = root;
     filesUnderRoot = false;
@@ -11735,7 +11734,7 @@ local.coverageReportCreate = function (opt) {
         let node;
         let parent;
         let parentPath;
-        node = createNode(key, "file", metrics);
+        node = summaryNodeCreate(key, "file", metrics);
         seen[key] = node;
         parentPath = path.dirname(key) + path.sep;
         if (parentPath === path.sep + path.sep) {
@@ -11743,7 +11742,7 @@ local.coverageReportCreate = function (opt) {
         }
         parent = seen[parentPath];
         if (!parent) {
-            parent = createNode(parentPath, "dir");
+            parent = summaryNodeCreate(parentPath, "dir");
             addChild(root, parent);
             seen[parentPath] = parent;
         }
@@ -11757,7 +11756,7 @@ local.coverageReportCreate = function (opt) {
         tmp = root;
         tmpChildren = tmp.children;
         tmp.children = [];
-        root = createNode(filePrefix.join(path.sep) + path.sep, "dir");
+        root = summaryNodeCreate(filePrefix.join(path.sep) + path.sep, "dir");
         addChild(root, tmp);
         tmpChildren.forEach(function (child) {
             if (child.kind === "dir") {
