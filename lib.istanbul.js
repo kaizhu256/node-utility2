@@ -10532,6 +10532,7 @@ let htmlAll;
 let htmlData;
 let htmlFile;
 let htmlWrite;
+let linkMapper;
 let nodeChildAdd;
 let nodeCreate;
 let nodeParentUrlCreate;
@@ -10711,6 +10712,278 @@ coveragePercentGet = function (covered, total) {
         ? Math.floor((1000 * 100 * covered / total + 5) / 10) / 100
         : 100
     );
+};
+htmlWrite = function (node, dir) {
+/*
+ * this function will recursively write <htmlData>
+ * from <node> to <dir>/<htmlFile>
+ */
+    htmlAll += htmlData + "\n\n";
+    if (htmlFile) {
+        local.fsWriteFileWithMkdirpSync(htmlFile, htmlData);
+    }
+    htmlFile = path.resolve(dir, "index.html");
+    htmlData = templateRender(templateHead, templateDictCreate(node)) + (
+        `<div class="coverage-summary">
+<table>
+<thead>
+<tr>
+    <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>
+    <th data-col="statements" data-type="number" data-fmt="pct" class="pct">
+    Statements
+    </th>
+    <th data-col="branches" data-type="number" data-fmt="pct" class="pct">
+    Branches
+    </th>
+    <th data-col="functions" data-type="number" data-fmt="pct" class="pct">
+    Functions
+    </th>
+    <th data-col="lines" data-type="number" data-fmt="pct" class="pct">
+    Lines
+    </th>
+</tr>
+</thead>
+<tbody>`
+    ) + Array.from(node.children).sort(function (a, b) {
+        return (
+            a.name < b.name
+            ? -1
+            : 1
+        );
+    }).map(function (child) {
+        return templateRender((
+            `<tr>
+<td class="file {{coverageLevels.statements}}"
+    data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>
+    {{#show_picture}}</a></td>
+<td class="pct {{coverageLevels.statements}}"
+    data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
+    ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>
+<td class="pct {{coverageLevels.branches}}"
+    data-value="{{metrics.branches.pct}}">{{metrics.branches.pct}}%<br>
+    ({{metrics.branches.covered}} / {{metrics.branches.total}})</td>
+<td class="pct {{coverageLevels.functions}}"
+    data-value="{{metrics.functions.pct}}">{{metrics.functions.pct}}%<br>
+    ({{metrics.functions.covered}} / {{metrics.functions.total}})</td>
+<td class="pct {{coverageLevels.lines}}"
+    data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>
+    ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
+</tr>`
+        ), {
+            metrics: child.metrics,
+            coverageLevels: {
+                statements: coverageLevelGet(
+                    child.metrics.statements.pct
+                ),
+                lines: coverageLevelGet(child.metrics.lines.pct),
+                functions: coverageLevelGet(child.metrics.functions.pct),
+                branches: coverageLevelGet(child.metrics.branches.pct)
+            },
+            file: child.relativeName,
+            output: linkMapper.fromParent(child)
+        }) + "\n";
+    }).join("") + (
+        "</tbody>\n</table>\n</div>\n" + templateFoot
+    );
+    node.children.forEach(function (child) {
+        let fileCoverage;
+        let structured;
+        if (child.kind === "dir") {
+            // recurse
+            htmlWrite(
+                child,
+                path.resolve(dir, child.relativeName)
+            );
+            return;
+        }
+        htmlAll += htmlData + "\n\n";
+        if (htmlFile) {
+            local.fsWriteFileWithMkdirpSync(htmlFile, htmlData);
+        }
+        htmlFile = path.resolve(dir, child.relativeName + ".html");
+        fileCoverage = globalThis.__coverage__[child.fullName];
+        structured = String(fileCoverage.code.join("\n") + "\n").split(
+            /(?:\r?\n)|\r/
+        ).map(function (str, ii) {
+            return {
+                line: ii + 1,
+                covered: null,
+                text: new InsertionText(str, true)
+            };
+        });
+        structured.unshift({
+            line: 0,
+            covered: null,
+            text: new InsertionText("")
+        });
+        // annotateLines(fileCoverage, structured);
+        Object.entries(fileCoverage.l).forEach(function ([
+            lineNumber,
+            count
+        ]) {
+            structured[lineNumber].covered = (
+                count > 0
+                ? "yes"
+                : "no"
+            );
+        });
+        structured.forEach(function (item) {
+            if (item.covered === null) {
+                item.covered = "neutral";
+            }
+        });
+        //note: order is important, since statements typically result
+        //in spanning the whole line and doing branches late
+        //causes mismatched tags
+        // annotateBranches(fileCoverage, structured);
+        Object.entries(fileCoverage.b).forEach(function ([
+            branchName,
+            branchArray
+        ]) {
+            if (branchArray.reduce(function (p, n) {
+                return p + n;
+            }, 0) <= 0) {
+                return;
+            }
+            //only highlight if partial branches are missing
+            branchArray.forEach(function (count, ii) {
+                let endCol;
+                let endLine;
+                let meta;
+                let startLine;
+                let text;
+                if (count !== 0) {
+                    return;
+                }
+                meta = fileCoverage.branchMap[branchName].locations[ii];
+                endCol = meta.end.column + 1;
+                endLine = meta.end.line;
+                startLine = meta.start.line;
+                //skip branches taken
+                if (endLine !== startLine) {
+                    endLine = startLine;
+                    endCol = structured[startLine].text.originalLength();
+                }
+                text = structured[startLine].text;
+                if (fileCoverage.branchMap[branchName].type === "if") {
+                    // and "if" is a special case since the else branch
+                    // might not be visible, being non-existent
+                    text.insertAt(
+                        meta.start.column,
+                        "\u0001span class=\"" + (
+                            meta.skip
+                            ? "skip-if-branch"
+                            : "missing-if-branch"
+                        ) + "\" title=\"" + ((
+                            ii === 0
+                            ? "if"
+                            : "else"
+                        ) + "\" path not taken\u0002") + (
+                            ii === 0
+                            ? "I"
+                            : "E"
+                        ) + "\u0001/span\u0002",
+                        true,
+                        false
+                    );
+                    return;
+                }
+                text.wrap(meta.start.column, (
+                    "\u0001span class=\"branch-" + ii + " " + (
+                        meta.skip
+                        ? "cbranch-skip"
+                        : "cbranch-no"
+                    ) + "\" title=\"branch not covered\" \u0002"
+                ), (
+                    startLine === endLine
+                    ? endCol
+                    : text.originalLength()
+                ), "\u0001/span\u0002");
+            });
+        });
+        // annotateFunctions(fileCoverage, structured);
+        Object.entries(fileCoverage.f).forEach(function ([
+            fName,
+            count
+        ]) {
+            let endCol;
+            let endLine;
+            let meta;
+            let startLine;
+            let text;
+            if (count !== 0) {
+                return;
+            }
+            meta = fileCoverage.fnMap[fName];
+            endCol = meta.loc.end.column + 1;
+            endLine = meta.loc.end.line;
+            startLine = meta.loc.start.line;
+            if (endLine !== startLine) {
+                endLine = startLine;
+                endCol = structured[startLine].text.originalLength();
+            }
+            text = structured[startLine].text;
+            text.wrap(meta.loc.start.column, ("\u0001span class=\"" + (
+                meta.skip
+                ? "fstat-skip"
+                : "fstat-no"
+            ) + "\" title=\"function not covered\" \u0002"), (
+                startLine === endLine
+                ? endCol
+                : text.originalLength()
+            ), "\u0001/span\u0002");
+        });
+        //!! annotateStatements(fileCoverage, structured);
+        Object.entries(fileCoverage.s).forEach(function ([
+            stName,
+            count
+        ]) {
+            let endCol;
+            let endLine;
+            let meta;
+            let startLine;
+            let text;
+            if (count !== 0) {
+                return;
+            }
+            meta = fileCoverage.statementMap[stName];
+            endCol = meta.end.column + 1;
+            startLine = meta.start.line;
+            endLine = meta.end.line;
+            if (endLine !== startLine) {
+                endLine = startLine;
+                endCol = structured[startLine].text.originalLength();
+            }
+            text = structured[startLine].text;
+            text.wrap(meta.start.column, ("\u0001span class=\"" + (
+                meta.skip
+                ? "cstat-skip"
+                : "cstat-no"
+            ) + "\" title=\"statement not covered\" \u0002"), (
+                startLine === endLine
+                ? endCol
+                : text.originalLength()
+            ), "\u0001/span\u0002");
+        });
+        structured.shift();
+        htmlData = (
+            templateRender(templateHead, templateDictCreate(child))
+            + templateRender((
+                `<pre><table class="coverage"><tr>
+<td class="line-count">{{#show_lines}}</td>
+<td class="line-coverage">{{#show_line_execution_counts}}</td>
+<td class="text"><pre
+    class="prettyprint lang-js"
+    tabIndex="0"
+>{{#show_code}}</pre></td>
+</tr></table></pre>`
+            ), {
+                structured,
+                maxLines: structured.length,
+                fileCoverage
+            }) + templateFoot
+        );
+    });
 };
 stringPad = function (str, width, right, tabs, coverageLevel) {
 /*
@@ -10980,7 +11253,6 @@ local.coverageReportCreate = function (opt) {
     let findNameWidth;
     let fixupNodes;
     let indexAndSortTree;
-    let linkMapper;
     let mergeSummaryObjects;
     let nameWidth;
     let root;
@@ -10993,278 +11265,6 @@ local.coverageReportCreate = function (opt) {
         return "";
     }
     // init function
-    htmlWrite = function (node, dir) {
-    /*
-     * this function will recursively write <htmlData>
-     * from <node> to <dir>/<htmlFile>
-     */
-        htmlAll += htmlData + "\n\n";
-        if (htmlFile) {
-            local.fsWriteFileWithMkdirpSync(htmlFile, htmlData);
-        }
-        htmlFile = path.resolve(dir, "index.html");
-        htmlData = templateRender(templateHead, templateDictCreate(node)) + (
-            `<div class="coverage-summary">
-<table>
-<thead>
-<tr>
-    <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>
-    <th data-col="statements" data-type="number" data-fmt="pct" class="pct">
-    Statements
-    </th>
-    <th data-col="branches" data-type="number" data-fmt="pct" class="pct">
-    Branches
-    </th>
-    <th data-col="functions" data-type="number" data-fmt="pct" class="pct">
-    Functions
-    </th>
-    <th data-col="lines" data-type="number" data-fmt="pct" class="pct">
-    Lines
-    </th>
-</tr>
-</thead>
-<tbody>`
-        ) + Array.from(node.children).sort(function (a, b) {
-            return (
-                a.name < b.name
-                ? -1
-                : 1
-            );
-        }).map(function (child) {
-            return templateRender((
-                `<tr>
-<td class="file {{coverageLevels.statements}}"
-    data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>
-    {{#show_picture}}</a></td>
-<td class="pct {{coverageLevels.statements}}"
-    data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
-    ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>
-<td class="pct {{coverageLevels.branches}}"
-    data-value="{{metrics.branches.pct}}">{{metrics.branches.pct}}%<br>
-    ({{metrics.branches.covered}} / {{metrics.branches.total}})</td>
-<td class="pct {{coverageLevels.functions}}"
-    data-value="{{metrics.functions.pct}}">{{metrics.functions.pct}}%<br>
-    ({{metrics.functions.covered}} / {{metrics.functions.total}})</td>
-<td class="pct {{coverageLevels.lines}}"
-    data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>
-    ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
-</tr>`
-            ), {
-                metrics: child.metrics,
-                coverageLevels: {
-                    statements: coverageLevelGet(
-                        child.metrics.statements.pct
-                    ),
-                    lines: coverageLevelGet(child.metrics.lines.pct),
-                    functions: coverageLevelGet(child.metrics.functions.pct),
-                    branches: coverageLevelGet(child.metrics.branches.pct)
-                },
-                file: child.relativeName,
-                output: linkMapper.fromParent(child)
-            }) + "\n";
-        }).join("") + (
-            "</tbody>\n</table>\n</div>\n" + templateFoot
-        );
-        node.children.forEach(function (child) {
-            let fileCoverage;
-            let structured;
-            if (child.kind === "dir") {
-                // recurse
-                htmlWrite(
-                    child,
-                    path.resolve(dir, child.relativeName)
-                );
-                return;
-            }
-            htmlAll += htmlData + "\n\n";
-            if (htmlFile) {
-                local.fsWriteFileWithMkdirpSync(htmlFile, htmlData);
-            }
-            htmlFile = path.resolve(dir, child.relativeName + ".html");
-            fileCoverage = globalThis.__coverage__[child.fullName];
-            structured = String(fileCoverage.code.join("\n") + "\n").split(
-                /(?:\r?\n)|\r/
-            ).map(function (str, ii) {
-                return {
-                    line: ii + 1,
-                    covered: null,
-                    text: new InsertionText(str, true)
-                };
-            });
-            structured.unshift({
-                line: 0,
-                covered: null,
-                text: new InsertionText("")
-            });
-            // annotateLines(fileCoverage, structured);
-            Object.entries(fileCoverage.l).forEach(function ([
-                lineNumber,
-                count
-            ]) {
-                structured[lineNumber].covered = (
-                    count > 0
-                    ? "yes"
-                    : "no"
-                );
-            });
-            structured.forEach(function (item) {
-                if (item.covered === null) {
-                    item.covered = "neutral";
-                }
-            });
-            //note: order is important, since statements typically result
-            //in spanning the whole line and doing branches late
-            //causes mismatched tags
-            // annotateBranches(fileCoverage, structured);
-            Object.entries(fileCoverage.b).forEach(function ([
-                branchName,
-                branchArray
-            ]) {
-                if (branchArray.reduce(function (p, n) {
-                    return p + n;
-                }, 0) <= 0) {
-                    return;
-                }
-                //only highlight if partial branches are missing
-                branchArray.forEach(function (count, ii) {
-                    let endCol;
-                    let endLine;
-                    let meta;
-                    let startLine;
-                    let text;
-                    if (count !== 0) {
-                        return;
-                    }
-                    meta = fileCoverage.branchMap[branchName].locations[ii];
-                    endCol = meta.end.column + 1;
-                    endLine = meta.end.line;
-                    startLine = meta.start.line;
-                    //skip branches taken
-                    if (endLine !== startLine) {
-                        endLine = startLine;
-                        endCol = structured[startLine].text.originalLength();
-                    }
-                    text = structured[startLine].text;
-                    if (fileCoverage.branchMap[branchName].type === "if") {
-                        // and "if" is a special case since the else branch
-                        // might not be visible, being non-existent
-                        text.insertAt(
-                            meta.start.column,
-                            "\u0001span class=\"" + (
-                                meta.skip
-                                ? "skip-if-branch"
-                                : "missing-if-branch"
-                            ) + "\" title=\"" + ((
-                                ii === 0
-                                ? "if"
-                                : "else"
-                            ) + "\" path not taken\u0002") + (
-                                ii === 0
-                                ? "I"
-                                : "E"
-                            ) + "\u0001/span\u0002",
-                            true,
-                            false
-                        );
-                        return;
-                    }
-                    text.wrap(meta.start.column, (
-                        "\u0001span class=\"branch-" + ii + " " + (
-                            meta.skip
-                            ? "cbranch-skip"
-                            : "cbranch-no"
-                        ) + "\" title=\"branch not covered\" \u0002"
-                    ), (
-                        startLine === endLine
-                        ? endCol
-                        : text.originalLength()
-                    ), "\u0001/span\u0002");
-                });
-            });
-            // annotateFunctions(fileCoverage, structured);
-            Object.entries(fileCoverage.f).forEach(function ([
-                fName,
-                count
-            ]) {
-                let endCol;
-                let endLine;
-                let meta;
-                let startLine;
-                let text;
-                if (count !== 0) {
-                    return;
-                }
-                meta = fileCoverage.fnMap[fName];
-                endCol = meta.loc.end.column + 1;
-                endLine = meta.loc.end.line;
-                startLine = meta.loc.start.line;
-                if (endLine !== startLine) {
-                    endLine = startLine;
-                    endCol = structured[startLine].text.originalLength();
-                }
-                text = structured[startLine].text;
-                text.wrap(meta.loc.start.column, ("\u0001span class=\"" + (
-                    meta.skip
-                    ? "fstat-skip"
-                    : "fstat-no"
-                ) + "\" title=\"function not covered\" \u0002"), (
-                    startLine === endLine
-                    ? endCol
-                    : text.originalLength()
-                ), "\u0001/span\u0002");
-            });
-            //!! annotateStatements(fileCoverage, structured);
-            Object.entries(fileCoverage.s).forEach(function ([
-                stName,
-                count
-            ]) {
-                let endCol;
-                let endLine;
-                let meta;
-                let startLine;
-                let text;
-                if (count !== 0) {
-                    return;
-                }
-                meta = fileCoverage.statementMap[stName];
-                endCol = meta.end.column + 1;
-                startLine = meta.start.line;
-                endLine = meta.end.line;
-                if (endLine !== startLine) {
-                    endLine = startLine;
-                    endCol = structured[startLine].text.originalLength();
-                }
-                text = structured[startLine].text;
-                text.wrap(meta.start.column, ("\u0001span class=\"" + (
-                    meta.skip
-                    ? "cstat-skip"
-                    : "cstat-no"
-                ) + "\" title=\"statement not covered\" \u0002"), (
-                    startLine === endLine
-                    ? endCol
-                    : text.originalLength()
-                ), "\u0001/span\u0002");
-            });
-            structured.shift();
-            htmlData = (
-                templateRender(templateHead, templateDictCreate(child))
-                + templateRender((
-                    `<pre><table class="coverage"><tr>
-<td class="line-count">{{#show_lines}}</td>
-<td class="line-coverage">{{#show_line_execution_counts}}</td>
-<td class="text"><pre
-    class="prettyprint lang-js"
-    tabIndex="0"
->{{#show_code}}</pre></td>
-</tr></table></pre>`
-                ), {
-                    structured,
-                    maxLines: structured.length,
-                    fileCoverage
-                }) + templateFoot
-            );
-        });
-    };
     nodeChildAdd = function (node, child) {
     /*
      * this function will add <child> to <node>
