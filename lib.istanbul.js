@@ -11212,7 +11212,6 @@ templateRender = function (template, dict, node) {
     let ii;
     let jj;
     let kk;
-    let maxLines;
     let metrics;
     let parent;
     let val;
@@ -11258,10 +11257,9 @@ templateRender = function (template, dict, node) {
     });
     // render #show_lines
     template = template.replace("{{#show_lines}}", function () {
-        maxLines = Number(dict.maxLines);
         val = "";
         ii = 1;
-        while (ii <= maxLines) {
+        while (ii <= dict.maxLines) {
             // hack-coverage - hashtag lineno
             val += (
                 "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
@@ -11312,20 +11310,22 @@ templateRender = function (template, dict, node) {
     });
     // render #show_code last
     template = template.replace("{{#show_code}}", function () {
-        return dict.structured.map(function (item) {
-            // sanitize html
-            return item.text.toString().replace((
-                /&/g
-            ), "&amp;").replace((
-                /</g
-            ), "&lt;").replace((
-                />/g
-            ), "&gt;").replace((
-                /\u0001/g
-            ), "<").replace((
-                /\u0002/g
-            ), ">") || "&nbsp;";
+        val = dict.structured.map(function (item) {
+            return item.text.toString() || "&nbsp;";
         }).join("\n");
+        // sanitize html
+        val = val.replace((
+            /&/g
+        ), "&amp;").replace((
+            /</g
+        ), "&lt;").replace((
+            />/g
+        ), "&gt;").replace((
+            /\u0001/g
+        ), "<").replace((
+            /\u0002/g
+        ), ">");
+        return val;
     });
     return template;
 };
