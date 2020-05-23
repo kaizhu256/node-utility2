@@ -10750,13 +10750,6 @@ function Node(fullName, kind, metrics) {
     that.parent = null;
     that.children = [];
 }
-Node.prototype = {
-    fullPath: function () {
-        let that;
-        that = this;
-        return that.fullName;
-    }
-};
 function TreeSummary() {
     let addChild;
     let calculateMetrics;
@@ -11673,7 +11666,7 @@ function reportTextCreate(opt) {
                 local.fsWriteFileWithMkdirpSync(writerFile, writerData);
             }
             writerFile = path.resolve(dir, child.relativeName + ".html");
-            fileCoverage = globalThis.__coverage__[child.fullPath()];
+            fileCoverage = globalThis.__coverage__[child.fullName];
             structured = String(fileCoverage.code.join("\n") + "\n").split(
                 /(?:\r?\n)|\r/
             ).map(function (str, ii) {
