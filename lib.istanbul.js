@@ -10532,7 +10532,6 @@ let htmlAll;
 let htmlData;
 let htmlFile;
 let htmlWrite;
-let mergeSummaryObjects;
 let nameWidth;
 let nodeChildAdd;
 let nodeCreate;
@@ -11040,11 +11039,52 @@ nodeMetricsCalculate = function (node) {
     }
     // recurse
     node.children.forEach(nodeMetricsCalculate);
-    node.metrics = mergeSummaryObjects(
-        node.children.map(function (child) {
-            return child.metrics;
-        })
-    );
+    node.metrics = {
+        lines: {
+            total: 0,
+            covered: 0,
+            skipped: 0,
+            pct: "Unknown"
+        },
+        statements: {
+            total: 0,
+            covered: 0,
+            skipped: 0,
+            pct: "Unknown"
+        },
+        functions: {
+            total: 0,
+            covered: 0,
+            skipped: 0,
+            pct: "Unknown"
+        },
+        branches: {
+            total: 0,
+            covered: 0,
+            skipped: 0,
+            pct: "Unknown"
+        }
+    };
+    node.children.forEach(function (child) {
+        if (!child && child.metrics) {
+            return;
+        }
+        [
+            "lines", "statements", "branches", "functions"
+        ].forEach(function (key) {
+            node.metrics[key].total += child.metrics[key].total;
+            node.metrics[key].covered += child.metrics[key].covered;
+            node.metrics[key].skipped += child.metrics[key].skipped;
+        });
+    });
+    [
+        "lines", "statements", "branches", "functions"
+    ].forEach(function (key) {
+        node.metrics[key].pct = coveragePercentGet(
+            node.metrics[key].covered,
+            node.metrics[key].total
+        );
+    });
 };
 nodeParentUrlCreate = function (node, depth) {
 /*
@@ -11423,65 +11463,6 @@ local.coverageReportCreate = function (opt) {
         return "";
     }
     // init function
-    mergeSummaryObjects = function (args) {
-    /**
-     * merges multiple summary metrics objects by summing up the `totals` and
-     * `covered` fields and recomputing the percentages.
-     * This function is generic and can accept any number of arguments.
-     *
-     * @method mergeSummaryObjects
-     * @static
-     * @param {Object} summary... multiple summary metrics objects
-     * @return {Object} the merged summary metrics
-     */
-        let summary;
-        summary = {
-            lines: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            },
-            statements: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            },
-            functions: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            },
-            branches: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            }
-        };
-        args.forEach(function (obj) {
-            if (obj) {
-                [
-                    "lines", "statements", "branches", "functions"
-                ].forEach(function (key) {
-                    summary[key].total += obj[key].total;
-                    summary[key].covered += obj[key].covered;
-                    summary[key].skipped += obj[key].skipped;
-                });
-            }
-        });
-        [
-            "lines", "statements", "branches", "functions"
-        ].forEach(function (key) {
-            summary[key].pct = coveragePercentGet(
-                summary[key].covered,
-                summary[key].total
-            );
-        });
-        return summary;
-    };
     findNameWidth = function (node, level, last) {
         let idealWidth;
         last = last || 0;
