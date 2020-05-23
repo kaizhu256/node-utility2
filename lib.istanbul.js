@@ -10545,30 +10545,6 @@ function percent(covered, total) {
         return 100.00;
     }
 }
-function computeSimpleTotals(fileCoverage, property, mapProperty) {
-    let map = fileCoverage[mapProperty];
-    let elem = {
-        total: 0,
-        covered: 0,
-        skipped: 0
-    };
-    Object.entries(fileCoverage[property]).forEach(function ([
-        key,
-        covered
-    ]) {
-        let skipped;
-        skipped = map && map[key].skip;
-        elem.total += 1;
-        if (covered || skipped) {
-            elem.covered += 1;
-        }
-        if (!covered && skipped) {
-            elem.skipped += 1;
-        }
-    });
-    elem.pct = percent(elem.covered, elem.total);
-    return elem;
-}
 function computeBranchTotals(fileCoverage) {
     let stats = fileCoverage.b;
     let branchMap = fileCoverage.branchMap;
@@ -10659,10 +10635,45 @@ function summarizeFileCoverage(fileCoverage) {
             }
         });
     }
-    summary.lines = computeSimpleTotals(fileCoverage, "l");
-    summary.functions = computeSimpleTotals(fileCoverage, "f", "fnMap");
-    summary.statements = computeSimpleTotals(fileCoverage, "s", "statementMap");
-    summary.branches = computeBranchTotals(fileCoverage);
+    [
+        [
+            "lines", "l"
+        ],
+        [
+            "functions", "f", "fnMap"
+        ],
+        [
+            "statements", "", "fnMap"
+        ],
+        [
+            "branches"
+        ]
+    ].forEach(function ([
+        key, property, mapProperty
+    ]) {
+        let map = fileCoverage[mapProperty];
+        let elem = {
+            total: 0,
+            covered: 0,
+            skipped: 0
+        };
+        Object.entries(fileCoverage[property]).forEach(function ([
+            key,
+            covered
+        ]) {
+            let skipped;
+            skipped = map && map[key].skip;
+            elem.total += 1;
+            if (covered || skipped) {
+                elem.covered += 1;
+            }
+            if (!covered && skipped) {
+                elem.skipped += 1;
+            }
+        });
+        elem.pct = percent(elem.covered, elem.total);
+        summary[key] = elem;
+    });
     return summary;
 }
 function mergeSummaryObjects(args) {
