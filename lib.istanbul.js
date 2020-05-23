@@ -11109,6 +11109,7 @@ function handlebarsCompile(template) {
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
 function reportTextCreate(opt) {
+    let dirPrefix;
     let findNameWidth;
     let nameWidth;
     let strings;
@@ -11292,10 +11293,9 @@ function reportTextCreate(opt) {
             summaryMap[key] = summary;
         }
     });
-    coverageReportSummary = new TreeSummary(
-        summaryMap,
-        findCommonArrayPrefix(Object.keys(summaryMap))
-    );
+    // findCommonArrayPrefix
+    dirPrefix = findCommonArrayPrefix(Object.keys(summaryMap));
+    coverageReportSummary = new TreeSummary(summaryMap, dirPrefix);
     nameWidth = findNameWidth(coverageReportSummary.root);
     walk(coverageReportSummary.root, 0);
     console.log(strings.join("\n") + "\n");
