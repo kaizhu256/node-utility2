@@ -10552,7 +10552,7 @@ function computeSimpleTotals(fileCoverage, property, mapProperty) {
         ? fileCoverage[mapProperty]
         : null
     );
-    let ret = {
+    let elem = {
         total: 0,
         covered: 0,
         skipped: 0
@@ -10560,16 +10560,16 @@ function computeSimpleTotals(fileCoverage, property, mapProperty) {
     Object.keys(stats).forEach(function (key) {
         let covered = Boolean(stats[key]);
         let skipped = map && map[key].skip;
-        ret.total += 1;
+        elem.total += 1;
         if (covered || skipped) {
-            ret.covered += 1;
+            elem.covered += 1;
         }
         if (!covered && skipped) {
-            ret.skipped += 1;
+            elem.skipped += 1;
         }
     });
-    ret.pct = percent(ret.covered, ret.total);
-    return ret;
+    elem.pct = percent(elem.covered, elem.total);
+    return elem;
 }
 function computeBranchTotals(fileCoverage) {
     let stats = fileCoverage.b;
@@ -10615,7 +10615,7 @@ function summarizeFileCoverage(fileCoverage) {
  * @param {Object} fileCoverage the coverage object for a single file.
  * @return {Object} the summary metrics for the file
  */
-    let ret = {
+    let summary = {
         lines: {
             total: 0,
             covered: 0,
@@ -10641,17 +10641,7 @@ function summarizeFileCoverage(fileCoverage) {
             pct: "Unknown"
         }
     };
-/**
- * adds line coverage information to a file coverage object, reverse-engineering
- * it from statement coverage. The object passed in is updated in place.
- *
- * Note that if line coverage information is already present in the object,
- * it is not recomputed.
- *
- * @method addDerivedInfoForFile
- * @static
- * @param {Object} fileCoverage the coverage object for a single file
- */
+    // count number of times each line was run
     let statementMap = fileCoverage.statementMap;
     let statements = fileCoverage.s;
     if (!fileCoverage.l) {
@@ -10668,11 +10658,11 @@ function summarizeFileCoverage(fileCoverage) {
             }
         });
     }
-    ret.lines = computeSimpleTotals(fileCoverage, "l");
-    ret.functions = computeSimpleTotals(fileCoverage, "f", "fnMap");
-    ret.statements = computeSimpleTotals(fileCoverage, "s", "statementMap");
-    ret.branches = computeBranchTotals(fileCoverage);
-    return ret;
+    summary.lines = computeSimpleTotals(fileCoverage, "l");
+    summary.functions = computeSimpleTotals(fileCoverage, "f", "fnMap");
+    summary.statements = computeSimpleTotals(fileCoverage, "s", "statementMap");
+    summary.branches = computeBranchTotals(fileCoverage);
+    return summary;
 }
 function mergeSummaryObjects(args) {
 /**
@@ -10685,7 +10675,7 @@ function mergeSummaryObjects(args) {
  * @param {Object} summary... multiple summary metrics objects
  * @return {Object} the merged summary metrics
  */
-    let ret = {
+    let summary = {
         lines: {
             total: 0,
             covered: 0,
@@ -10717,9 +10707,9 @@ function mergeSummaryObjects(args) {
     let increment = function (obj) {
         if (obj) {
             keys.forEach(function (key) {
-                ret[key].total += obj[key].total;
-                ret[key].covered += obj[key].covered;
-                ret[key].skipped += obj[key].skipped;
+                summary[key].total += obj[key].total;
+                summary[key].covered += obj[key].covered;
+                summary[key].skipped += obj[key].skipped;
             });
         }
     };
@@ -10727,9 +10717,9 @@ function mergeSummaryObjects(args) {
         increment(arg);
     });
     keys.forEach(function (key) {
-        ret[key].pct = percent(ret[key].covered, ret[key].total);
+        summary[key].pct = percent(summary[key].covered, summary[key].total);
     });
-    return ret;
+    return summary;
 }
 // init InsertionText
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
