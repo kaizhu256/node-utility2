@@ -11278,37 +11278,32 @@ templateRender = function (template, dict) {
         );
     });
     // render helper show_ignores
-    template = template.replace(
-        "{{#show_ignores}}",
-        function () {
-            let array;
-            if (
-                dict.metrics.statements.skipped === 0
-                && dict.metrics.functions.skipped === 0
-                && dict.metrics.branches.skipped === 0
-            ) {
-                return "<span class=\"ignore-none\">none</span>";
-            }
-            array = [];
-            // hack-coverage - compact summary
-            if (dict.metrics.statements.skipped > 0) {
-                array.push(
-                    "statements: " + dict.metrics.statements.skipped
-                );
-            }
-            if (dict.metrics.branches.skipped > 0) {
-                array.push("branches: " + dict.metrics.branches.skipped);
-            }
-            if (dict.metrics.functions.skipped > 0) {
-                array.push("functions: " + dict.metrics.functions.skipped);
-            }
-            return array.join("<br>");
+    template = template.replace("{{#show_ignores}}", function () {
+        let array;
+        if (
+            dict.metrics.statements.skipped === 0
+            && dict.metrics.functions.skipped === 0
+            && dict.metrics.branches.skipped === 0
+        ) {
+            return "<span class=\"ignore-none\">none</span>";
         }
-    );
+        array = [];
+        // hack-coverage - compact summary
+        if (dict.metrics.statements.skipped > 0) {
+            array.push(
+                "statements: " + dict.metrics.statements.skipped
+            );
+        }
+        if (dict.metrics.branches.skipped > 0) {
+            array.push("branches: " + dict.metrics.branches.skipped);
+        }
+        if (dict.metrics.functions.skipped > 0) {
+            array.push("functions: " + dict.metrics.functions.skipped);
+        }
+        return array.join("<br>");
+    });
     // render helper show_line_execution_counts
-    template = template.replace((
-        "{{#show_line_execution_counts}}"
-    ), function () {
+    template = template.replace("{{#show_line_execution_counts}}", function () {
         let array;
         let covered;
         let ii;
@@ -11342,59 +11337,50 @@ templateRender = function (template, dict) {
         return array.join("\n");
     });
     // render helper show_lines
-    template = template.replace(
-        "{{#show_lines}}",
-        function () {
-            let array;
-            let ii;
-            let maxLines;
-            maxLines = Number(dict.maxLines);
-            array = "";
-            ii = 1;
-            while (ii <= maxLines) {
-                // hack-coverage - hashtag lineno
-                array += (
-                    "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
-                    + ii
-                    + "</a>\n"
-                );
-                ii += 1;
-            }
-            return array;
-        }
-    );
-    // render helper show_picture
-    template = template.replace(
-        "{{#show_picture}}",
-        function () {
-            let num;
-            num = Number(dict.metrics.statements.pct) | 0;
-            return (
-                "<span class=\"cover-fill cover-full\" style=\"width:" + num
-                + "px;\"></span><span class=\"cover-empty\" style=\"width:"
-                + (100 - num) + "px;\"></span>"
+    template = template.replace("{{#show_lines}}", function () {
+        let array;
+        let ii;
+        let maxLines;
+        maxLines = Number(dict.maxLines);
+        array = "";
+        ii = 1;
+        while (ii <= maxLines) {
+            // hack-coverage - hashtag lineno
+            array += (
+                "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
+                + ii
+                + "</a>\n"
             );
+            ii += 1;
         }
-    );
+        return array;
+    });
+    // render helper show_picture
+    template = template.replace("{{#show_picture}}", function () {
+        let num;
+        num = Number(dict.metrics.statements.pct) | 0;
+        return (
+            "<span class=\"cover-fill cover-full\" style=\"width:" + num
+            + "px;\"></span><span class=\"cover-empty\" style=\"width:"
+            + (100 - num) + "px;\"></span>"
+        );
+    });
     // render helper show_code last
-    template = template.replace(
-        "{{#show_code}}",
-        function () {
-            return dict.structured.map(function (item) {
-                return item.text.toString().replace((
-                    /&/g
-                ), "&amp;").replace((
-                    /</g
-                ), "&lt;").replace((
-                    />/g
-                ), "&gt;").replace((
-                    /\u0001/g
-                ), "<").replace((
-                    /\u0002/g
-                ), ">") || "&nbsp;";
-            }).join("\n");
-        }
-    );
+    template = template.replace("{{#show_code}}", function () {
+        return dict.structured.map(function (item) {
+            return item.text.toString().replace((
+                /&/g
+            ), "&amp;").replace((
+                /</g
+            ), "&lt;").replace((
+                />/g
+            ), "&gt;").replace((
+                /\u0001/g
+            ), "<").replace((
+                /\u0002/g
+            ), ">") || "&nbsp;";
+        }).join("\n");
+    });
     return template;
 };
 // init variable
