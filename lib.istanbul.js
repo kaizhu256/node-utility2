@@ -10533,12 +10533,15 @@ let htmlData;
 let htmlFile;
 let htmlWrite;
 let linkMapper;
+let nameWidth;
 let nodeChildAdd;
 let nodeCreate;
 let nodeParentUrlCreate;
 let nodeWalk;
 let path;
 let stringPad;
+let summaryList;
+let summaryMap;
 let templateDictCreate;
 let templateFoot;
 let templateHead;
@@ -10985,6 +10988,98 @@ htmlWrite = function (node, dir) {
         );
     });
 };
+nodeChildAdd = function (node, child) {
+/*
+ * this function will add <child> to <node>
+ */
+    node.children.push(child);
+    child.parent = node;
+};
+nodeCreate = function (fullName, kind, metrics) {
+/*
+ * this function will create new node
+ */
+    return {
+        children: [],
+        fullName,
+        kind,
+        metrics: metrics || null,
+        name: fullName,
+        parent: null
+    };
+};
+nodeParentUrlCreate = function (node, depth) {
+/*
+ * this function will return parent-url of node with given <depth>
+ */
+    let href;
+    let ii;
+    let jj;
+    href = "";
+    ii = 0;
+    while (ii < depth) {
+        jj = 0;
+        while (jj < node.relativeName.split(path.sep).length - 1) {
+            href += "../";
+            jj += 1;
+        }
+        node = node.parent;
+        ii += 1;
+    }
+    return href;
+};
+nodeWalk = function (node, level) {
+/*
+ * this function will recursively walk and summarize each <node>
+ */
+    let line;
+    let tableRow;
+    tableRow = [
+        node.metrics.statements.pct,
+        node.metrics.statements.pct,
+        node.metrics.branches.pct,
+        node.metrics.functions.pct,
+        node.metrics.lines.pct
+    ].map(function (pct, ii) {
+        let val;
+        val = (
+            val >= 80
+            ? "high"
+            : val >= 50
+            ? "medium"
+            : "low"
+        );
+        return (
+            ii === 0
+            ? stringPad(node.relativeName, nameWidth, false, level, val)
+            : stringPad(pct, 10, true, 0, val)
+        );
+    }).join(" |") + " |";
+    if (level !== 0) {
+        summaryList.push(tableRow);
+        node.children.forEach(function (child) {
+            nodeWalk(child, level + 1);
+        });
+        return;
+    }
+    line = (
+        "-".repeat(nameWidth)
+        + "-|-----------|-----------|-----------|-----------|"
+    );
+    summaryList.push(line);
+    summaryList.push(
+        stringPad("File", nameWidth, false, 0)
+        + " |   % Stmts |% Branches |   % Funcs |   % Lines |"
+    );
+    summaryList.push(line);
+    node.children.forEach(function (child) {
+        // recurse
+        nodeWalk(child, level + 1);
+    });
+    summaryList.push(line);
+    summaryList.push(tableRow);
+    summaryList.push(line);
+};
 stringPad = function (str, width, right, tabs, coverageLevel) {
 /*
  * this function will pad <str> to given <width>
@@ -11026,6 +11121,35 @@ stringPad = function (str, width, right, tabs, coverageLevel) {
         break;
     }
     return leader + fmtStr;
+};
+templateDictCreate = function (node) {
+/*
+ * this function will create template-dict with given <node>
+ */
+    let ii;
+    let linkPath;
+    let parent;
+    parent = node.parent;
+    linkPath = [];
+    ii = 0;
+    while (parent) {
+        linkPath.unshift(
+            "<a href=\"" + nodeParentUrlCreate(node, ii + 1)
+            + "index.html\">" + parent.relativeName + "</a>"
+        );
+        parent = parent.parent;
+        ii += 1;
+    }
+    return {
+        entity: node.name || "All files",
+        metrics: node.metrics,
+        coverageLevel: coverageLevelGet(node.metrics.statements.pct),
+        pathHtml: "<div class=\"path\">" + (
+            linkPath.length > 0
+            ? linkPath.join(" &#187; ") + " &#187; " + node.relativeName
+            : ""
+        ) + "</div>"
+    };
 };
 templateRender = function (template, dict) {
 /*
@@ -11254,138 +11378,14 @@ local.coverageReportCreate = function (opt) {
     let fixupNodes;
     let indexAndSortTree;
     let mergeSummaryObjects;
-    let nameWidth;
     let root;
     let seen;
-    let summaryList;
-    let summaryMap;
     let tmp;
     let tmpChildren;
     if (!(opt && opt.coverage)) {
         return "";
     }
     // init function
-    nodeChildAdd = function (node, child) {
-    /*
-     * this function will add <child> to <node>
-     */
-        node.children.push(child);
-        child.parent = node;
-    };
-    nodeCreate = function (fullName, kind, metrics) {
-    /*
-     * this function will create new node
-     */
-        return {
-            children: [],
-            fullName,
-            kind,
-            metrics: metrics || null,
-            name: fullName,
-            parent: null
-        };
-    };
-    nodeParentUrlCreate = function (node, depth) {
-    /*
-     * this function will return parent-url of node with given <depth>
-     */
-        let href;
-        let ii;
-        let jj;
-        href = "";
-        ii = 0;
-        while (ii < depth) {
-            jj = 0;
-            while (jj < node.relativeName.split(path.sep).length - 1) {
-                href += "../";
-                jj += 1;
-            }
-            node = node.parent;
-            ii += 1;
-        }
-        return href;
-    };
-    nodeWalk = function (node, level) {
-    /*
-     * this function will recursively walk and summarize each <node>
-     */
-        let line;
-        let tableRow;
-        tableRow = [
-            node.metrics.statements.pct,
-            node.metrics.statements.pct,
-            node.metrics.branches.pct,
-            node.metrics.functions.pct,
-            node.metrics.lines.pct
-        ].map(function (pct, ii) {
-            let val;
-            val = (
-                val >= 80
-                ? "high"
-                : val >= 50
-                ? "medium"
-                : "low"
-            );
-            return (
-                ii === 0
-                ? stringPad(node.relativeName, nameWidth, false, level, val)
-                : stringPad(pct, 10, true, 0, val)
-            );
-        }).join(" |") + " |";
-        if (level !== 0) {
-            summaryList.push(tableRow);
-            node.children.forEach(function (child) {
-                nodeWalk(child, level + 1);
-            });
-            return;
-        }
-        line = (
-            "-".repeat(nameWidth)
-            + "-|-----------|-----------|-----------|-----------|"
-        );
-        summaryList.push(line);
-        summaryList.push(
-            stringPad("File", nameWidth, false, 0)
-            + " |   % Stmts |% Branches |   % Funcs |   % Lines |"
-        );
-        summaryList.push(line);
-        node.children.forEach(function (child) {
-            // recurse
-            nodeWalk(child, level + 1);
-        });
-        summaryList.push(line);
-        summaryList.push(tableRow);
-        summaryList.push(line);
-    };
-    templateDictCreate = function (node) {
-    /*
-     * this function will create template-dict with given <node>
-     */
-        let ii;
-        let linkPath;
-        let parent;
-        parent = node.parent;
-        linkPath = [];
-        ii = 0;
-        while (parent) {
-            linkPath.unshift(
-                "<a href=\"" + nodeParentUrlCreate(node, ii + 1)
-                + "index.html\">" + parent.relativeName + "</a>"
-            );
-            parent = parent.parent;
-            ii += 1;
-        }
-        return {
-            entity: node.name || "All files",
-            metrics: node.metrics,
-            coverageLevel: coverageLevelGet(node.metrics.statements.pct),
-            pathHtml: "<div class=\"path\">" + (
-                linkPath.length > 0
-                ? linkPath.join(" &#187; ") + " &#187; " + node.relativeName
-                : ""
-            ) + "</div>"
-        };
-    };
     calculateMetrics = function (entry) {
         let fileChildren;
         if (entry.kind !== "dir") {
