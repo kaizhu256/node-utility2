@@ -11255,8 +11255,9 @@ function handlebarsCompile(template) {
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
 function reportTextCreate(opt) {
+    let nameWidth;
     let strings;
-    function walk(node, nameWidth, array, level) {
+    function walk(node, array, level) {
         let line;
         let tableRow;
         tableRow = [
@@ -11283,7 +11284,7 @@ function reportTextCreate(opt) {
         if (level !== 0) {
             array.push(tableRow);
             node.children.forEach(function (child) {
-                walk(child, nameWidth, array, level + 1);
+                walk(child, array, level + 1);
             });
             return;
         }
@@ -11299,7 +11300,7 @@ function reportTextCreate(opt) {
         array.push(line);
         node.children.forEach(function (child) {
             // recurse
-            walk(child, nameWidth, array, level + 1);
+            walk(child, array, level + 1);
         });
         array.push(line);
         array.push(tableRow);
@@ -11324,9 +11325,9 @@ function reportTextCreate(opt) {
         summaryMap,
         findCommonArrayPrefix(Object.keys(summaryMap))
     );
+    nameWidth = findNameWidth(coverageReportSummary.root);
     walk(
         coverageReportSummary.root,
-        findNameWidth(coverageReportSummary.root),
         strings,
         0
     );
