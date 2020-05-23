@@ -10537,7 +10537,6 @@ let nodeChildAdd;
 let nodeCreate;
 let nodeMetricsCalculate;
 let nodeNormalize;
-let nodeParentUrlCreate;
 let nodeWalk;
 let path;
 let stringPad;
@@ -11111,26 +11110,6 @@ nodeNormalize = function (node, filePrefix, parent) {
         nodeNormalize(child, filePrefix, node);
     });
 };
-nodeParentUrlCreate = function (node, ii) {
-/*
- * this function will return parent-url of node with given <ii>
- */
-    let href;
-    let jj;
-    let kk;
-    href = "";
-    jj = 0;
-    while (jj < ii) {
-        kk = 0;
-        while (kk < node.relativeName.split(path.sep).length - 1) {
-            href += "../";
-            kk += 1;
-        }
-        node = node.parent;
-        jj += 1;
-    }
-    return href;
-};
 nodeWalk = function (node, level) {
 /*
  * this function will recursively walk and summarize each <node>
@@ -11334,6 +11313,8 @@ templateRender = function (template, dict, node) {
     // render #show_paths
     template = template.replace("{{#show_paths}}", function () {
         let href;
+        let jj;
+        let kk;
         let parent;
         let paths;
         parent = node.parent;
@@ -11343,7 +11324,17 @@ templateRender = function (template, dict, node) {
         paths = node.relativeName;
         ii = 1;
         while (parent) {
-            href = nodeParentUrlCreate(node, ii);
+            href = "";
+            jj = 0;
+            while (jj < ii) {
+                kk = 0;
+                while (kk < node.relativeName.split(path.sep).length - 1) {
+                    href += "../";
+                    kk += 1;
+                }
+                node = node.parent;
+                jj += 1;
+            }
             paths = (
                 "<a href=\"" + href + "index.html\">"
                 + parent.relativeName + "</a>" + " &#187; " + paths
