@@ -10526,13 +10526,14 @@ let TAB_SIZE;
 let coverageReportHtml;
 let coverageReportSummary;
 let dir;
+let filePrefix;
 let path;
 let summaryMap;
 let writerData;
 let writerFile;
 // require module
 path = require("path");
-// init variable
+// init toplevel variable
 TAB_SIZE = 2;
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
 // init utils
@@ -10740,13 +10741,12 @@ Node.prototype = {
         child.parent = this;
     }
 };
-function TreeSummary(summaryMap, commonPrefix) {
-    this.prefix = commonPrefix;
-    this.convertToTree(summaryMap, commonPrefix);
+function TreeSummary(summaryMap) {
+    this.convertToTree(summaryMap);
 }
 TreeSummary.prototype = {
-    convertToTree: function (summaryMap, arrayPrefix) {
-        let rootPath = arrayPrefix.join(path.sep) + path.sep;
+    convertToTree: function (summaryMap) {
+        let rootPath = filePrefix.join(path.sep) + path.sep;
         let root = new Node(rootPath, "dir");
         let tmp;
         let tmpChildren;
@@ -10777,12 +10777,12 @@ TreeSummary.prototype = {
                 filesUnderRoot = true;
             }
         });
-        if (filesUnderRoot && arrayPrefix.length > 0) {
-            arrayPrefix.pop(); //start at one level above
+        if (filesUnderRoot && filePrefix.length > 0) {
+            filePrefix.pop(); //start at one level above
             tmp = root;
             tmpChildren = tmp.children;
             tmp.children = [];
-            root = new Node(arrayPrefix.join(path.sep) + path.sep, "dir");
+            root = new Node(filePrefix.join(path.sep) + path.sep, "dir");
             root.addChild(tmp);
             tmpChildren.forEach(function (child) {
                 if (child.kind === "dir") {
@@ -10792,16 +10792,16 @@ TreeSummary.prototype = {
                 }
             });
         }
-        this.fixupNodes(root, arrayPrefix.join(path.sep) + path.sep);
+        this.fixupNodes(root, filePrefix.join(path.sep) + path.sep);
         this.calculateMetrics(root);
         this.root = root;
         this.map = {};
         this.indexAndSortTree(root, this.map);
     },
-    fixupNodes: function (node, prefix, parent) {
+    fixupNodes: function (node, filePrefix, parent) {
         let that = this;
-        if (node.name.indexOf(prefix) === 0) {
-            node.name = node.name.substring(prefix.length);
+        if (node.name.indexOf(filePrefix) === 0) {
+            node.name = node.name.substring(filePrefix.length);
         }
         if (node.name.charAt(0) === path.sep) {
             node.name = node.name.substring(1);
@@ -10813,10 +10813,10 @@ TreeSummary.prototype = {
                 ? node.name.substring(parent.name.length)
                 : node.name
             )
-            : node.name.substring(prefix.length)
+            : node.name.substring(filePrefix.length)
         ) || "All files";
         node.children.forEach(function (child) {
-            that.fixupNodes(child, prefix, node);
+            that.fixupNodes(child, filePrefix, node);
         });
     },
     calculateMetrics: function (entry) {
@@ -11077,7 +11077,6 @@ function handlebarsCompile(template) {
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
 function reportTextCreate(opt) {
-    let dirPrefix;
     let findNameWidth;
     let nameWidth;
     let strings;
@@ -11261,19 +11260,19 @@ function reportTextCreate(opt) {
             summaryMap[file] = summary;
             // findCommonArrayPrefix
             tmp = file.split(path.sep);
-            if (!dirPrefix) {
-                dirPrefix = tmp.slice(0, -1);
+            if (!filePrefix) {
+                filePrefix = tmp.slice(0, -1);
                 return;
             }
-            dirPrefix.some(function (elem, ii) {
+            filePrefix.some(function (elem, ii) {
                 if (elem !== tmp[ii]) {
-                    dirPrefix = dirPrefix.slice(0, ii);
+                    filePrefix = filePrefix.slice(0, ii);
                     return true;
                 }
             });
         }
     });
-    coverageReportSummary = new TreeSummary(summaryMap, dirPrefix);
+    coverageReportSummary = new TreeSummary(summaryMap);
     nameWidth = findNameWidth(coverageReportSummary.root);
     walk(coverageReportSummary.root, 0);
     console.log(strings.join("\n") + "\n");
