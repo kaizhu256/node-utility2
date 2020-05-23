@@ -11062,7 +11062,7 @@ local.coverageReportCreate = function (opt) {
         ii = 0;
         while (parent) {
             linkPath.push(
-                "<a href=\"" + linkMapper.ancestor(node, ii + 1) + "\">"
+                "<a href=\"" + urlParent(node, ii + 1) + "index.html\">"
                 + parent.relativeName
                 + "</a>"
             );
@@ -11103,9 +11103,6 @@ local.coverageReportCreate = function (opt) {
                 ? relativeName + "index.html"
                 : relativeName + ".html"
             );
-        },
-        ancestor: function (node, num) {
-            return urlParent(node, num) + "index.html";
         }
     };
     coverageReportWrite = function (node, dir) {
