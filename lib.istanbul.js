@@ -10480,7 +10480,7 @@ local.templateCoverageHead = '\
     );\n\
 }());\n\
 </script>\n\
-<div class="header {{reportClass}}">\n\
+<div class="header {{coverageLevel}}">\n\
     <h1 style="font-weight: bold;">\n\
         <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} ({{env.npm_package_version}})</a>\n\
     </h1>\n\
@@ -10526,10 +10526,11 @@ file none
 
 
 let TAB_SIZE;
+let coverageLevel;
+let coveragePercent;
 let nodeParentUrl;
-let numberPercent;
 let path;
-let stringFill;
+let stringPad;
 let templateRender;
 // require module
 path = require("path");
@@ -10679,6 +10680,28 @@ InsertionText.prototype = {
     }
 };
 // init function
+coverageLevel = function (pct) {
+/*
+ * this function will calculate coverage-level from <pct>
+ */
+    return (
+        pct >= 80
+        ? "high"
+        : pct >= 50
+        ? "medium"
+        : "low"
+    );
+};
+coveragePercent = function (covered, total) {
+/*
+ * this function will calculate coverage-percent from <covered> and <total>
+ */
+    return (
+        total > 0
+        ? Math.floor((1000 * 100 * covered / total + 5) / 10) / 100
+        : 100
+    );
+};
 nodeParentUrl = function (node, depth) {
 /*
  * this function will return <node>'s parent-url with given <depth>
@@ -10699,16 +10722,10 @@ nodeParentUrl = function (node, depth) {
     }
     return href;
 };
-numberPercent = function (covered, total) {
-    let tmp;
-    if (total > 0) {
-        tmp = 1000 * 100 * covered / total + 5;
-        return Math.floor(tmp / 10) / 100;
-    } else {
-        return 100.00;
-    }
-};
-stringFill = function (str, width, right, tabs, clazz) {
+stringPad = function (str, width, right, tabs, coverageLevel) {
+/*
+ * this function will pad <str> to given <width>
+ */
     let fillStr;
     let fmtStr;
     let leader;
@@ -10734,7 +10751,7 @@ stringFill = function (str, width, right, tabs, clazz) {
         );
     }
     // colorize
-    switch (process.stdout && process.stdout.isTTY && clazz) {
+    switch (process.stdout && process.stdout.isTTY && coverageLevel) {
     case "high":
         fmtStr = "\u001b[92m" + fmtStr + "\u001b[0m";
         break;
@@ -10976,7 +10993,6 @@ local.coverageReportCreate = function (opt) {
     let filesUnderRoot;
     let findNameWidth;
     let fixupNodes;
-    let getReportClass;
     let indexAndSortTree;
     let linkMapper;
     let linkMapperAsset;
@@ -11059,7 +11075,7 @@ local.coverageReportCreate = function (opt) {
         let parent;
         templateDict.entity = node.name || "All files";
         templateDict.metrics = node.metrics;
-        templateDict.reportClass = getReportClass(node.metrics.statements.pct);
+        templateDict.coverageLevel = coverageLevel(node.metrics.statements.pct);
         parent = node.parent;
         linkPath = [];
         ii = 0;
@@ -11145,31 +11161,31 @@ local.coverageReportCreate = function (opt) {
         }).map(function (child) {
             return templateRender((
                 `<tr>
-<td class="file {{reportClasses.statements}}"
+<td class="file {{coverageLevels.statements}}"
     data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>
     {{#show_picture}}</a></td>
-<td class="pct {{reportClasses.statements}}"
+<td class="pct {{coverageLevels.statements}}"
     data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
     ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>
-<td class="pct {{reportClasses.branches}}"
+<td class="pct {{coverageLevels.branches}}"
     data-value="{{metrics.branches.pct}}">{{metrics.branches.pct}}%<br>
     ({{metrics.branches.covered}} / {{metrics.branches.total}})</td>
-<td class="pct {{reportClasses.functions}}"
+<td class="pct {{coverageLevels.functions}}"
     data-value="{{metrics.functions.pct}}">{{metrics.functions.pct}}%<br>
     ({{metrics.functions.covered}} / {{metrics.functions.total}})</td>
-<td class="pct {{reportClasses.lines}}"
+<td class="pct {{coverageLevels.lines}}"
     data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>
     ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
 </tr>`
             ), {
                 metrics: child.metrics,
-                reportClasses: {
-                    statements: getReportClass(
+                coverageLevels: {
+                    statements: coverageLevel(
                         child.metrics.statements.pct
                     ),
-                    lines: getReportClass(child.metrics.lines.pct),
-                    functions: getReportClass(child.metrics.functions.pct),
-                    branches: getReportClass(child.metrics.branches.pct)
+                    lines: coverageLevel(child.metrics.lines.pct),
+                    functions: coverageLevel(child.metrics.functions.pct),
+                    branches: coverageLevel(child.metrics.branches.pct)
                 },
                 file: child.relativeName,
                 output: linkMapper.fromParent(child)
@@ -11378,15 +11394,6 @@ local.coverageReportCreate = function (opt) {
             );
         });
     };
-    getReportClass = function (pct) {
-        return (
-            pct >= 80
-            ? "high"
-            : pct >= 50
-            ? "medium"
-            : "low"
-        );
-    };
     mergeSummaryObjects = function (args) {
     /**
      * merges multiple summary metrics objects by summing up the `totals` and
@@ -11443,7 +11450,7 @@ local.coverageReportCreate = function (opt) {
             increment(arg);
         });
         keys.forEach(function (key) {
-            summary[key].pct = numberPercent(
+            summary[key].pct = coveragePercent(
                 summary[key].covered,
                 summary[key].total
             );
@@ -11525,8 +11532,8 @@ local.coverageReportCreate = function (opt) {
             );
             return (
                 ii === 0
-                ? stringFill(node.relativeName, nameWidth, false, level, val)
-                : stringFill(pct, 10, true, 0, val)
+                ? stringPad(node.relativeName, nameWidth, false, level, val)
+                : stringPad(pct, 10, true, 0, val)
             );
         }).join(" |") + " |";
         if (level !== 0) {
@@ -11542,7 +11549,7 @@ local.coverageReportCreate = function (opt) {
         );
         summaryList.push(line);
         summaryList.push(
-            stringFill("File", nameWidth, false, 0)
+            stringPad("File", nameWidth, false, 0)
             + " |   % Stmts |% Branches |   % Funcs |   % Lines |"
         );
         summaryList.push(line);
@@ -11674,7 +11681,7 @@ local.coverageReportCreate = function (opt) {
                     elem.covered += Boolean(covered || skipped);
                     elem.skipped += Boolean(!covered && skipped);
                 });
-                elem.pct = numberPercent(elem.covered, elem.total);
+                elem.pct = coveragePercent(elem.covered, elem.total);
                 summary[key] = elem;
             });
             // computeBranchTotals
@@ -11697,7 +11704,7 @@ local.coverageReportCreate = function (opt) {
                 });
                 elem.total += branches.length;
             });
-            elem.pct = numberPercent(elem.covered, elem.total);
+            elem.pct = coveragePercent(elem.covered, elem.total);
             summary.branches = elem;
             summaryMap[file] = summary;
             // findCommonArrayPrefix
