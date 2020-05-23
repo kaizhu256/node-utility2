@@ -11309,7 +11309,7 @@ templateRender = function (template, dict, node) {
     // render #show_code last
     template = template.replace("{{#show_code}}", function () {
         val = dict.structured.map(function (item) {
-            return item.text.toString() || "&nbsp;";
+            return item.text.toString();
         }).join("\n");
         // sanitize html
         val = val.replace((
