@@ -11250,14 +11250,11 @@ function handlebarsCompile(template) {
         return result;
     };
 }
-function tableRow(node, maxNameCols, level) {
-    let branches;
+function tableRow(node, nameWidth, level) {
     let classFor;
     let elements;
-    let functions;
     let lines;
     let name;
-    let statements;
     classFor = function (val) {
         return (
             val >= 80
@@ -11268,34 +11265,31 @@ function tableRow(node, maxNameCols, level) {
         );
     };
     name = node.relativeName;
-    statements = node.metrics.statements.pct;
-    branches = node.metrics.branches.pct;
-    functions = node.metrics.functions.pct;
     lines = node.metrics.lines.pct;
     elements = [];
     elements.push(fill(
         name,
-        maxNameCols,
+        nameWidth,
         false,
         level,
         classFor(node.metrics.statements.pct)
     ));
     elements.push(fill(
-        statements,
+        node.metrics.statements.pct,
         PCT_COLS,
         true,
         0,
         classFor(node.metrics.statements.pct)
     ));
     elements.push(fill(
-        branches,
+        node.metrics.branches.pct,
         PCT_COLS,
         true,
         0,
         classFor(node.metrics.branches.pct)
     ));
     elements.push(fill(
-        functions,
+        node.metrics.functions.pct,
         PCT_COLS,
         true,
         0,
