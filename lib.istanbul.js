@@ -11038,7 +11038,6 @@ local.coverageReportCreate = function (opt) {
     let seen;
     let summaryList;
     let summaryMap;
-    let templateDict;
     let templateFoot;
     let templateHead;
     let tmp;
@@ -11114,8 +11113,7 @@ local.coverageReportCreate = function (opt) {
             local.fsWriteFileWithMkdirpSync(writerFile, writerData);
         }
         writerFile = path.resolve(dir, "index.html");
-        templateDict = templateDictCreate(node);
-        writerData = templateRender(templateHead, templateDict) + (
+        writerData = templateRender(templateHead, templateDictCreate(node)) + (
             `<div class="coverage-summary">
 <table>
 <thead>
@@ -11358,9 +11356,8 @@ local.coverageReportCreate = function (opt) {
                 ), "\u0001/span\u0002");
             });
             structured.shift();
-            templateDict = templateDictCreate(child);
             writerData = (
-                templateRender(templateHead, templateDict)
+                templateRender(templateHead, templateDictCreate(child))
                 + templateRender((
                     `<pre><table class="coverage"><tr>
 <td class="line-count">{{#show_lines}}</td>
