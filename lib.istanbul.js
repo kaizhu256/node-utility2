@@ -10532,6 +10532,7 @@ let path;
 let stringPad;
 let summaryNodeCreate;
 let summaryNodeParentUrl;
+let templateDictCreate;
 let templateRender;
 // require module
 path = require("path");
@@ -10775,6 +10776,32 @@ stringPad = function (str, width, right, tabs, coverageLevel) {
     }
     return leader + fmtStr;
 };
+templateDictCreate = function (node) {
+    let ii;
+    let linkPath;
+    let parent;
+    parent = node.parent;
+    linkPath = [];
+    ii = 0;
+    while (parent) {
+        linkPath.unshift(
+            "<a href=\"" + summaryNodeParentUrl(node, ii + 1)
+            + "index.html\">" + parent.relativeName + "</a>"
+        );
+        parent = parent.parent;
+        ii += 1;
+    }
+    return {
+        entity: node.name || "All files",
+        metrics: node.metrics,
+        coverageLevel: coverageLevel(node.metrics.statements.pct),
+        pathHtml: "<div class=\"path\">" + (
+            linkPath.length > 0
+            ? linkPath.join(" &#187; ") + " &#187; " + node.relativeName
+            : ""
+        ) + "</div>"
+    };
+};
 templateRender = function (template, dict) {
 /*
  * this function will render <template> with given <dict>
@@ -11012,7 +11039,6 @@ local.coverageReportCreate = function (opt) {
     let summaryList;
     let summaryMap;
     let templateDict;
-    let templateDictCreate;
     let templateFoot;
     let templateHead;
     let tmp;
@@ -11057,31 +11083,6 @@ local.coverageReportCreate = function (opt) {
             entry.packageMetrics = null;
         }
     };
-    templateDictCreate = function (node) {
-        let ii;
-        let linkPath;
-        let parent;
-        templateDict.entity = node.name || "All files";
-        templateDict.metrics = node.metrics;
-        templateDict.coverageLevel = coverageLevel(node.metrics.statements.pct);
-        parent = node.parent;
-        linkPath = [];
-        ii = 0;
-        while (parent) {
-            linkPath.push(
-                "<a href=\"" + summaryNodeParentUrl(node, ii + 1)
-                + "index.html\">" + parent.relativeName + "</a>"
-            );
-            parent = parent.parent;
-            ii += 1;
-        }
-        linkPath.reverse();
-        templateDict.pathHtml = "<div class=\"path\">" + (
-            linkPath.length > 0
-            ? linkPath.join(" &#187; ") + " &#187; " + node.relativeName
-            : ""
-        ) + "</div>";
-    };
     linkMapper = {
         fromParent: function (node) {
             let ii;
@@ -11113,7 +11114,7 @@ local.coverageReportCreate = function (opt) {
             local.fsWriteFileWithMkdirpSync(writerFile, writerData);
         }
         writerFile = path.resolve(dir, "index.html");
-        templateDictCreate(node);
+        templateDict = templateDictCreate(node);
         writerData = templateRender(templateHead, templateDict) + (
             `<div class="coverage-summary">
 <table>
@@ -11207,7 +11208,6 @@ local.coverageReportCreate = function (opt) {
                 covered: null,
                 text: new InsertionText("")
             });
-            templateDictCreate(child);
             // annotateLines(fileCoverage, structured);
             Object.entries(fileCoverage.l).forEach(function ([
                 lineNumber,
@@ -11358,6 +11358,7 @@ local.coverageReportCreate = function (opt) {
                 ), "\u0001/span\u0002");
             });
             structured.shift();
+            templateDict = templateDictCreate(child);
             writerData = (
                 templateRender(templateHead, templateDict)
                 + templateRender((
@@ -11788,10 +11789,6 @@ local.coverageReportCreate = function (opt) {
             /<h1\u0020[\S\s]*<\/h1>/
         ), "");
     }
-    // hack-coverage - new Date() bugfix
-    templateDict = {
-        datetime: new Date().toGMTString()
-    };
     coverageReportWrite(root, dir);
     // 3. write coverage in html-format to filesystem
     local.fsWriteFileWithMkdirpSync(writerFile, writerData);
