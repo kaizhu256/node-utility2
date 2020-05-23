@@ -11241,27 +11241,21 @@ templateRender = function (template, dict, node) {
     });
     // render #show_line_execution_counts
     template = template.replace("{{#show_line_execution_counts}}", function () {
-        let covered;
         let lines;
         lines = dict.fileCoverage.l;
         maxLines = Number(dict.maxLines);
         val = "";
         ii = 1;
         while (ii <= maxLines) {
-            covered = "neutral";
-            tmp = "&nbsp;";
+            tmp = "cline-neutral\">&nbsp;";
             if (lines.hasOwnProperty(ii)) {
                 if (lines[ii] > 0) {
-                    covered = "yes";
-                    tmp = lines[ii];
+                    tmp = "cline-yes\">" + lines[ii];
                 } else {
-                    covered = "no";
+                    tmp = "cline-no\">&nbsp;";
                 }
             }
-            val += (
-                "<span class=\"cline-any cline-" + covered + "\">"
-                + tmp + "</span>\n"
-            );
+            val += "<span class=\"cline-any " + tmp + "</span>\n";
             ii += 1;
         }
         return val;
