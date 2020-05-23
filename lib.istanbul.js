@@ -10536,35 +10536,6 @@ path = require("path");
 TAB_SIZE = 2;
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
 // init utils
-function addDerivedInfoForFile(fileCoverage) {
-/**
- * adds line coverage information to a file coverage object, reverse-engineering
- * it from statement coverage. The object passed in is updated in place.
- *
- * Note that if line coverage information is already present in the object,
- * it is not recomputed.
- *
- * @method addDerivedInfoForFile
- * @static
- * @param {Object} fileCoverage the coverage object for a single file
- */
-    let statementMap = fileCoverage.statementMap;
-    let statements = fileCoverage.s;
-    if (!fileCoverage.l) {
-        fileCoverage.l = {};
-        Object.keys(statements).forEach(function (st) {
-            let line = statementMap[st].start.line;
-            let count = statements[st];
-            let prevVal = fileCoverage.l[line];
-            if (count === 0 && statementMap[st].skip) {
-                count = 1;
-            }
-            if (prevVal === undefined || prevVal < count) {
-                fileCoverage.l[line] = count;
-            }
-        });
-    }
-}
 function percent(covered, total) {
     let tmp;
     if (total > 0) {
@@ -10670,7 +10641,33 @@ function summarizeFileCoverage(fileCoverage) {
             pct: "Unknown"
         }
     };
-    addDerivedInfoForFile(fileCoverage);
+/**
+ * adds line coverage information to a file coverage object, reverse-engineering
+ * it from statement coverage. The object passed in is updated in place.
+ *
+ * Note that if line coverage information is already present in the object,
+ * it is not recomputed.
+ *
+ * @method addDerivedInfoForFile
+ * @static
+ * @param {Object} fileCoverage the coverage object for a single file
+ */
+    let statementMap = fileCoverage.statementMap;
+    let statements = fileCoverage.s;
+    if (!fileCoverage.l) {
+        fileCoverage.l = {};
+        Object.keys(statements).forEach(function (st) {
+            let line = statementMap[st].start.line;
+            let count = statements[st];
+            let prevVal = fileCoverage.l[line];
+            if (count === 0 && statementMap[st].skip) {
+                count = 1;
+            }
+            if (prevVal === undefined || prevVal < count) {
+                fileCoverage.l[line] = count;
+            }
+        });
+    }
     ret.lines = computeSimpleTotals(fileCoverage, "l");
     ret.functions = computeSimpleTotals(fileCoverage, "f", "fnMap");
     ret.statements = computeSimpleTotals(fileCoverage, "s", "statementMap");
