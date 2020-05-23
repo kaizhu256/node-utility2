@@ -10530,9 +10530,6 @@ let coverageLevel;
 let coveragePercent;
 let path;
 let stringPad;
-let summaryNodeCreate;
-let summaryNodeParentUrl;
-let templateDictCreate;
 let templateRender;
 // require module
 path = require("path");
@@ -10745,62 +10742,6 @@ stringPad = function (str, width, right, tabs, coverageLevel) {
         break;
     }
     return leader + fmtStr;
-};
-summaryNodeCreate = function (fullName, kind, metrics) {
-    return {
-        children: [],
-        fullName,
-        kind,
-        metrics: metrics || null,
-        name: fullName,
-        parent: null
-    };
-};
-summaryNodeParentUrl = function (node, depth) {
-/*
- * this function will return <node>'s parent-url with given <depth>
- */
-    let href;
-    let ii;
-    let jj;
-    href = "";
-    ii = 0;
-    while (ii < depth) {
-        jj = 0;
-        while (jj < node.relativeName.split(path.sep).length - 1) {
-            href += "../";
-            jj += 1;
-        }
-        node = node.parent;
-        ii += 1;
-    }
-    return href;
-};
-templateDictCreate = function (node) {
-    let ii;
-    let linkPath;
-    let parent;
-    parent = node.parent;
-    linkPath = [];
-    ii = 0;
-    while (parent) {
-        linkPath.unshift(
-            "<a href=\"" + summaryNodeParentUrl(node, ii + 1)
-            + "index.html\">" + parent.relativeName + "</a>"
-        );
-        parent = parent.parent;
-        ii += 1;
-    }
-    return {
-        entity: node.name || "All files",
-        metrics: node.metrics,
-        coverageLevel: coverageLevel(node.metrics.statements.pct),
-        pathHtml: "<div class=\"path\">" + (
-            linkPath.length > 0
-            ? linkPath.join(" &#187; ") + " &#187; " + node.relativeName
-            : ""
-        ) + "</div>"
-    };
 };
 templateRender = function (template, dict) {
 /*
@@ -11028,17 +10969,20 @@ local.coverageReportCreate = function (opt) {
     let findNameWidth;
     let fixupNodes;
     let htmlAll;
+    let htmlWrite;
     let indexAndSortTree;
     let linkMapper;
     let mergeSummaryObjects;
     let nameWidth;
+    let nodeChildAdd;
+    let nodeCreate;
+    let nodeParentUrlCreate;
+    let nodeWalk;
     let root;
     let seen;
     let summaryList;
     let summaryMap;
-    let summaryNodeAddChild;
-    let summaryNodeWrite;
-    let summaryTreeWalk;
+    let templateDictCreate;
     let templateFoot;
     let templateHead;
     let tmp;
@@ -11049,12 +10993,68 @@ local.coverageReportCreate = function (opt) {
         return "";
     }
     // init function
-    summaryNodeAddChild = function (node, child) {
+    nodeChildAdd = function (node, child) {
     /*
      * this function will add <child> to <node>
      */
         node.children.push(child);
         child.parent = node;
+    };
+    nodeCreate = function (fullName, kind, metrics) {
+        return {
+            children: [],
+            fullName,
+            kind,
+            metrics: metrics || null,
+            name: fullName,
+            parent: null
+        };
+    };
+    nodeParentUrlCreate = function (node, depth) {
+    /*
+     * this function will return <node>'s parent-url with given <depth>
+     */
+        let href;
+        let ii;
+        let jj;
+        href = "";
+        ii = 0;
+        while (ii < depth) {
+            jj = 0;
+            while (jj < node.relativeName.split(path.sep).length - 1) {
+                href += "../";
+                jj += 1;
+            }
+            node = node.parent;
+            ii += 1;
+        }
+        return href;
+    };
+    templateDictCreate = function (node) {
+        let ii;
+        let linkPath;
+        let parent;
+        parent = node.parent;
+        linkPath = [];
+        ii = 0;
+        while (parent) {
+            linkPath.unshift(
+                "<a href=\"" + nodeParentUrlCreate(node, ii + 1)
+                + "index.html\">" + parent.relativeName + "</a>"
+            );
+            parent = parent.parent;
+            ii += 1;
+        }
+        return {
+            entity: node.name || "All files",
+            metrics: node.metrics,
+            coverageLevel: coverageLevel(node.metrics.statements.pct),
+            pathHtml: "<div class=\"path\">" + (
+                linkPath.length > 0
+                ? linkPath.join(" &#187; ") + " &#187; " + node.relativeName
+                : ""
+            ) + "</div>"
+        };
     };
     calculateMetrics = function (entry) {
         let fileChildren;
@@ -11109,7 +11109,10 @@ local.coverageReportCreate = function (opt) {
             );
         }
     };
-    summaryNodeWrite = function (node, dir) {
+    htmlWrite = function (node, dir) {
+    /*
+     * this function will recursively write html-data from <node> to <dir>
+     */
         htmlAll += writerData + "\n\n";
         if (writerFile) {
             local.fsWriteFileWithMkdirpSync(writerFile, writerData);
@@ -11182,7 +11185,7 @@ local.coverageReportCreate = function (opt) {
             let structured;
             if (child.kind === "dir") {
                 // recurse
-                summaryNodeWrite(
+                htmlWrite(
                     child,
                     path.resolve(dir, child.relativeName)
                 );
@@ -11495,7 +11498,7 @@ local.coverageReportCreate = function (opt) {
             indexAndSortTree(child, map);
         });
     };
-    summaryTreeWalk = function (node, level) {
+    nodeWalk = function (node, level) {
         let line;
         let tableRow;
         tableRow = [
@@ -11522,7 +11525,7 @@ local.coverageReportCreate = function (opt) {
         if (level !== 0) {
             summaryList.push(tableRow);
             node.children.forEach(function (child) {
-                summaryTreeWalk(child, level + 1);
+                nodeWalk(child, level + 1);
             });
             return;
         }
@@ -11538,7 +11541,7 @@ local.coverageReportCreate = function (opt) {
         summaryList.push(line);
         node.children.forEach(function (child) {
             // recurse
-            summaryTreeWalk(child, level + 1);
+            nodeWalk(child, level + 1);
         });
         summaryList.push(line);
         summaryList.push(tableRow);
@@ -11709,7 +11712,7 @@ local.coverageReportCreate = function (opt) {
     // coverageReportSummary = new TreeSummary();
     // convertToTree
     tmp = filePrefix.join(path.sep) + path.sep;
-    root = summaryNodeCreate(tmp, "dir");
+    root = nodeCreate(tmp, "dir");
     seen = {};
     seen[tmp] = root;
     filesUnderRoot = false;
@@ -11720,7 +11723,7 @@ local.coverageReportCreate = function (opt) {
         let node;
         let parent;
         let parentPath;
-        node = summaryNodeCreate(key, "file", metrics);
+        node = nodeCreate(key, "file", metrics);
         seen[key] = node;
         parentPath = path.dirname(key) + path.sep;
         if (parentPath === path.sep + path.sep) {
@@ -11728,27 +11731,28 @@ local.coverageReportCreate = function (opt) {
         }
         parent = seen[parentPath];
         if (!parent) {
-            parent = summaryNodeCreate(parentPath, "dir");
-            summaryNodeAddChild(root, parent);
+            parent = nodeCreate(parentPath, "dir");
+            nodeChildAdd(root, parent);
             seen[parentPath] = parent;
         }
-        summaryNodeAddChild(parent, node);
+        nodeChildAdd(parent, node);
         if (parent === root) {
             filesUnderRoot = true;
         }
     });
     if (filesUnderRoot && filePrefix.length > 0) {
-        filePrefix.pop(); //start at one level above
+        //start at one level above
+        filePrefix.pop();
         tmp = root;
         tmpChildren = tmp.children;
         tmp.children = [];
-        root = summaryNodeCreate(filePrefix.join(path.sep) + path.sep, "dir");
-        summaryNodeAddChild(root, tmp);
+        root = nodeCreate(filePrefix.join(path.sep) + path.sep, "dir");
+        nodeChildAdd(root, tmp);
         tmpChildren.forEach(function (child) {
             if (child.kind === "dir") {
-                summaryNodeAddChild(root, child);
+                nodeChildAdd(root, child);
             } else {
-                summaryNodeAddChild(tmp, child);
+                nodeChildAdd(tmp, child);
             }
         });
     }
@@ -11756,7 +11760,7 @@ local.coverageReportCreate = function (opt) {
     calculateMetrics(root);
     indexAndSortTree(root, {});
     nameWidth = findNameWidth(root);
-    summaryTreeWalk(root, 0);
+    nodeWalk(root, 0);
     // 2. print coverage in text-format to stdout
     console.log(summaryList.join("\n") + "\n");
     // create HtmlReport
@@ -11790,7 +11794,7 @@ local.coverageReportCreate = function (opt) {
             /<h1\u0020[\S\s]*<\/h1>/
         ), "");
     }
-    summaryNodeWrite(root, dir);
+    htmlWrite(root, dir);
     // 3. write coverage in html-format to filesystem
     local.fsWriteFileWithMkdirpSync(writerFile, writerData);
     // write coverage.json
