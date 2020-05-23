@@ -10543,7 +10543,6 @@ let path;
 let stringPad;
 let summaryList;
 let summaryMap;
-let templateDictCreate;
 let templateFoot;
 let templateHead;
 let templateRender;
@@ -10727,7 +10726,7 @@ htmlWrite = function (node, dir) {
         local.fsWriteFileWithMkdirpSync(htmlFile, htmlData);
     }
     htmlFile = path.resolve(dir, "index.html");
-    htmlData = templateRender(templateHead, templateDictCreate(node)) + (
+    htmlData = templateRender(templateHead, {}, node) + (
         `<div class="coverage-summary">
 <table>
 <thead>
@@ -10993,7 +10992,7 @@ htmlWrite = function (node, dir) {
         });
         structured.shift();
         htmlData = (
-            templateRender(templateHead, templateDictCreate(child))
+            templateRender(templateHead, {}, child)
             + templateRender((
                 `<pre><table class="coverage"><tr>
 <td class="line-count">{{#show_lines}}</td>
@@ -11228,13 +11227,17 @@ stringPad = function (str, width, right, tabs, coverageLevel) {
     }
     return leader + fmtStr;
 };
-templateDictCreate = function (node) {
+templateRender = function (template, dict, node) {
 /*
- * this function will create template-dict with given <node>
+ * this function will render <template> with given <dict> and <node>
  */
     let ii;
+    let metrics;
     let parent;
     let parentUrlList;
+    // render <node>
+    node = node || {};
+    metrics = node.metrics;
     parent = node.parent;
     parentUrlList = [];
     ii = 0;
@@ -11246,22 +11249,16 @@ templateDictCreate = function (node) {
         parent = parent.parent;
         ii += 1;
     }
-    return {
-        coverageLevel: coverageLevelGet(node.metrics.statements.pct),
+    Object.assign(dict, {
+        coverageLevel: metrics && coverageLevelGet(metrics.statements.pct),
         entity: node.name || "All files",
-        metrics: node.metrics,
         pathHtml: "<div class=\"path\">" + (
             parentUrlList.length > 0
             ? parentUrlList.join(" &#187; ") + " &#187; " + node.relativeName
             : ""
         ) + "</div>"
-    };
-};
-templateRender = function (template, dict) {
-/*
- * this function will render <template> with given <dict>
- */
-    // search for keys in template
+    });
+    // render <dict>
     template = template.replace((
         /\{\{[^#].+?\}\}/g
     ), function (match0) {
@@ -11281,24 +11278,24 @@ templateRender = function (template, dict) {
     template = template.replace("{{#show_ignores}}", function () {
         let array;
         if (
-            dict.metrics.statements.skipped === 0
-            && dict.metrics.functions.skipped === 0
-            && dict.metrics.branches.skipped === 0
+            metrics.statements.skipped === 0
+            && metrics.functions.skipped === 0
+            && metrics.branches.skipped === 0
         ) {
             return "<span class=\"ignore-none\">none</span>";
         }
         array = [];
         // hack-coverage - compact summary
-        if (dict.metrics.statements.skipped > 0) {
+        if (metrics.statements.skipped > 0) {
             array.push(
-                "statements: " + dict.metrics.statements.skipped
+                "statements: " + metrics.statements.skipped
             );
         }
-        if (dict.metrics.branches.skipped > 0) {
-            array.push("branches: " + dict.metrics.branches.skipped);
+        if (metrics.branches.skipped > 0) {
+            array.push("branches: " + metrics.branches.skipped);
         }
-        if (dict.metrics.functions.skipped > 0) {
-            array.push("functions: " + dict.metrics.functions.skipped);
+        if (metrics.functions.skipped > 0) {
+            array.push("functions: " + metrics.functions.skipped);
         }
         return array.join("<br>");
     });
@@ -11306,7 +11303,6 @@ templateRender = function (template, dict) {
     template = template.replace("{{#show_line_execution_counts}}", function () {
         let array;
         let covered;
-        let ii;
         let lineNumber;
         let lines;
         let maxLines;
@@ -11339,7 +11335,6 @@ templateRender = function (template, dict) {
     // render #show_lines
     template = template.replace("{{#show_lines}}", function () {
         let array;
-        let ii;
         let maxLines;
         maxLines = Number(dict.maxLines);
         array = "";
@@ -11358,7 +11353,7 @@ templateRender = function (template, dict) {
     // render #show_percent_bar
     template = template.replace("{{#show_percent_bar}}", function () {
         let num;
-        num = Number(dict.metrics.statements.pct) | 0;
+        num = Number(metrics.statements.pct) | 0;
         return (
             "<span class=\"cover-fill cover-full\" style=\"width:" + num
             + "px;\"></span><span class=\"cover-empty\" style=\"width:"
