@@ -11210,6 +11210,8 @@ templateRender = function (template, dict, node) {
  * this function will render <template> with given <dict> and <node>
  */
     let ii;
+    let jj;
+    let kk;
     let metrics;
     let val;
     // render <node>
@@ -11311,9 +11313,6 @@ templateRender = function (template, dict, node) {
     });
     // render #show_paths
     template = template.replace("{{#show_paths}}", function () {
-        let href;
-        let jj;
-        let kk;
         let parent;
         let paths;
         parent = node.parent;
@@ -11323,19 +11322,19 @@ templateRender = function (template, dict, node) {
         paths = node.relativeName;
         ii = 1;
         while (parent) {
-            href = "";
+            val = "";
             jj = 0;
             while (jj < ii) {
                 kk = 0;
                 while (kk < node.relativeName.split(path.sep).length - 1) {
-                    href += "../";
+                    val += "../";
                     kk += 1;
                 }
                 node = node.parent;
                 jj += 1;
             }
             paths = (
-                "<a href=\"" + href + "index.html\">"
+                "<a href=\"" + val + "index.html\">"
                 + parent.relativeName + "</a>" + " &#187; " + paths
             );
             parent = parent.parent;
