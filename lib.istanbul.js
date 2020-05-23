@@ -10546,30 +10546,28 @@ function percent(covered, total) {
     }
 }
 function computeSimpleTotals(fileCoverage, property, mapProperty) {
-    let stats = fileCoverage[property];
-    let map = (
-        mapProperty
-        ? fileCoverage[mapProperty]
-        : null
-    );
-    let ret = {
+    let map = fileCoverage[mapProperty];
+    let elem = {
         total: 0,
         covered: 0,
         skipped: 0
     };
-    Object.keys(stats).forEach(function (key) {
-        let covered = Boolean(stats[key]);
-        let skipped = map && map[key].skip;
-        ret.total += 1;
+    Object.entries(fileCoverage[property]).forEach(function ([
+        key,
+        covered
+    ]) {
+        let skipped;
+        skipped = map && map[key].skip;
+        elem.total += 1;
         if (covered || skipped) {
-            ret.covered += 1;
+            elem.covered += 1;
         }
         if (!covered && skipped) {
-            ret.skipped += 1;
+            elem.skipped += 1;
         }
     });
-    ret.pct = percent(ret.covered, ret.total);
-    return ret;
+    elem.pct = percent(elem.covered, elem.total);
+    return elem;
 }
 function computeBranchTotals(fileCoverage) {
     let stats = fileCoverage.b;
