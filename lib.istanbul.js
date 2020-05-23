@@ -10503,7 +10503,7 @@ local.templateCoverageHead = '\
         <td>{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>\n\
     </tbody>\n\
     </table>\n\
-    {{pathHtml}}\n\
+    {{parentUrl}}\n\
 </div>\n\
 <div class="body">\n\
 ';
@@ -10543,7 +10543,6 @@ let path;
 let stringPad;
 let summaryList;
 let summaryMap;
-let templateDictCreate;
 let templateFoot;
 let templateHead;
 let templateRender;
@@ -10727,7 +10726,7 @@ htmlWrite = function (node, dir) {
         local.fsWriteFileWithMkdirpSync(htmlFile, htmlData);
     }
     htmlFile = path.resolve(dir, "index.html");
-    htmlData = templateRender(templateHead, templateDictCreate(node)) + (
+    htmlData = templateRender(templateHead, {}, node) + (
         `<div class="coverage-summary">
 <table>
 <thead>
@@ -10807,7 +10806,7 @@ htmlWrite = function (node, dir) {
             },
             file: child.relativeName,
             url
-        }) + "\n";
+        }, {}) + "\n";
     }).join("") + (
         "</tbody>\n</table>\n</div>\n" + templateFoot
     );
@@ -10993,7 +10992,7 @@ htmlWrite = function (node, dir) {
         });
         structured.shift();
         htmlData = (
-            templateRender(templateHead, templateDictCreate(child))
+            templateRender(templateHead, {}, child)
             + templateRender((
                 `<pre><table class="coverage"><tr>
 <td class="line-count">{{#show_lines}}</td>
@@ -11007,7 +11006,7 @@ htmlWrite = function (node, dir) {
                 structured,
                 maxLines: structured.length,
                 fileCoverage
-            }) + templateFoot
+            }, {}) + templateFoot
         );
     });
 };
@@ -11228,13 +11227,14 @@ stringPad = function (str, width, right, tabs, coverageLevel) {
     }
     return leader + fmtStr;
 };
-templateDictCreate = function (node) {
+templateRender = function (template, dict, node) {
 /*
- * this function will create template-dict with given <node>
+ * this function will render <template> with given <dict> and <node>
  */
     let ii;
     let parent;
     let parentUrlList;
+    // render <node>
     parent = node.parent;
     parentUrlList = [];
     ii = 0;
@@ -11246,22 +11246,17 @@ templateDictCreate = function (node) {
         parent = parent.parent;
         ii += 1;
     }
-    return {
+    Object.assign(dict, {
         coverageLevel: coverageLevelGet(node.metrics.statements.pct),
         entity: node.name || "All files",
         metrics: node.metrics,
-        pathHtml: "<div class=\"path\">" + (
+        parentUrl: "<div class=\"path\">" + (
             parentUrlList.length > 0
             ? parentUrlList.join(" &#187; ") + " &#187; " + node.relativeName
             : ""
         ) + "</div>"
-    };
-};
-templateRender = function (template, dict) {
-/*
- * this function will render <template> with given <dict>
- */
-    // search for keys in template
+    });
+    // render <dict>
     template = template.replace((
         /\{\{[^#].+?\}\}/g
     ), function (match0) {
@@ -11311,7 +11306,6 @@ templateRender = function (template, dict) {
     ), function () {
         let array;
         let covered;
-        let ii;
         let lineNumber;
         let lines;
         let maxLines;
@@ -11346,7 +11340,6 @@ templateRender = function (template, dict) {
         "{{#show_lines}}",
         function () {
             let array;
-            let ii;
             let maxLines;
             maxLines = Number(dict.maxLines);
             array = "";
@@ -11719,7 +11712,7 @@ local.coverageReportCreate = function (opt) {
     // init templateFoot
     templateFoot = templateRender(local.templateCoverageFoot, {
         datetime: new Date().toGMTString()
-    });
+    }, {});
     // init templateHead
     templateHead = local.templateCoverageHead;
     if (local.isBrowser) {
