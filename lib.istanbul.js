@@ -10638,26 +10638,18 @@ function summarizeFileCoverage(fileCoverage) {
         covered: 0,
         skipped: 0
     };
-    Object.keys(fileCoverage.b).forEach(function (key) {
-        let branches = fileCoverage.b[key];
-        let map = fileCoverage.branchMap[key];
-        let covered;
-        let ii;
-        let skipped;
-        ii = 0;
-        while (ii < branches.length) {
-            covered = branches[ii] > 0;
-            skipped = (
-                map.locations && map.locations[ii] && map.locations[ii].skip
-            );
-            if (covered || skipped) {
-                ret.covered += 1;
-            }
-            if (!covered && skipped) {
-                ret.skipped += 1;
-            }
-            ii += 1;
-        }
+    Object.entries(fileCoverage.b).forEach(function ([
+        key,
+        branches
+    ]) {
+        let map;
+        map = fileCoverage.branchMap[key].locations;
+        branches.forEach(function (covered, ii) {
+            let skipped;
+            skipped = map && map[ii] && map[ii].skip;
+            ret.covered += Boolean(covered || skipped);
+            ret.skipped += Boolean(!covered && skipped);
+        });
         ret.total += branches.length;
     });
     ret.pct = percent(ret.covered, ret.total);
