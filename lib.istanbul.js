@@ -11213,7 +11213,7 @@ templateRender = function (template, dict, node) {
     let jj;
     let kk;
     let metrics;
-    let parent;
+    let tmp;
     let val;
     // render <node>
     metrics = node.metrics;
@@ -11242,14 +11242,13 @@ templateRender = function (template, dict, node) {
         val = "";
         ii = 1;
         while (ii <= dict.maxLines) {
+            tmp = dict.lines[ii];
             val += "<span class=\"cline-any " + (
-                dict.lines.hasOwnProperty(ii)
-                ? (
-                    dict.lines[ii]
-                    ? "cline-no\">&nbsp;"
-                    : "cline-yes\">" + dict.lines[ii]
-                )
-                : "cline-neutral\">&nbsp;"
+                tmp === undefined
+                ? "cline-neutral\">&nbsp;"
+                : tmp > 0
+                ? "cline-yes\">" + dict.lines[ii]
+                : "cline-no\">&nbsp;"
             ) + "</span>\n";
             ii += 1;
         }
@@ -11272,15 +11271,15 @@ templateRender = function (template, dict, node) {
     });
     // render #show_paths
     template = template.replace("{{#show_paths}}", function () {
-        parent = node.parent;
-        if (!parent) {
+        tmp = node.parent;
+        if (!tmp) {
             return "";
         }
         val = node.relativeName;
         ii = 1;
-        while (parent) {
+        while (tmp) {
             val = (
-                "index.html\">" + parent.relativeName + "</a>" + " &#187; "
+                "index.html\">" + tmp.relativeName + "</a>" + " &#187; "
                 + val
             );
             jj = 0;
@@ -11294,7 +11293,7 @@ templateRender = function (template, dict, node) {
                 jj += 1;
             }
             val = "<a href=\"" + val;
-            parent = parent.parent;
+            tmp = tmp.parent;
             ii += 1;
         }
         return val;
