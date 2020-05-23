@@ -11005,7 +11005,7 @@ htmlWrite = function (node, dir) {
                 structured,
                 maxLines: structured.length,
                 fileCoverage
-            }) + templateFoot
+            }, {}) + templateFoot
         );
     });
 };
@@ -11235,7 +11235,6 @@ templateRender = function (template, dict, node) {
     let parent;
     let parentUrlList;
     // render <node>
-    node = node || {};
     metrics = node.metrics;
     parent = node.parent;
     parentUrlList = [];
@@ -11699,7 +11698,7 @@ local.coverageReportCreate = function (opt) {
     // init templateFoot
     templateFoot = templateRender(local.templateCoverageFoot, {
         datetime: new Date().toGMTString()
-    });
+    }, {});
     // init templateHead
     templateHead = local.templateCoverageHead;
     if (local.isBrowser) {
