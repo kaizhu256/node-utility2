@@ -10536,6 +10536,7 @@ let nameWidth;
 let nodeChildAdd;
 let nodeCreate;
 let nodeMetricsCalculate;
+let nodeNormalize;
 let nodeParentUrlCreate;
 let nodeWalk;
 let path;
@@ -11030,6 +11031,32 @@ nodeCreate = function (fullName, kind, metrics) {
         parent: null
     };
 };
+nodeNormalize = function (node, filePrefix, parent) {
+/*
+ * this function will recursively normalize <node>.name and <node>.relativeName
+ */
+    // fix name
+    if (node.name.indexOf(filePrefix) === 0) {
+        node.name = node.name.slice(filePrefix.length);
+    }
+    if (node.name[0] === path.sep) {
+        node.name = node.name.slice(1);
+    }
+    // init relativeName
+    node.relativeName = (
+        parent
+        ? (
+            parent.name !== "__root__/"
+            ? node.name.slice(parent.name.length)
+            : node.name
+        )
+        : node.name.slice(filePrefix.length)
+    ) || "All files";
+    node.children.forEach(function (child) {
+        // recurse
+        nodeNormalize(child, filePrefix, node);
+    });
+};
 nodeMetricsCalculate = function (node) {
 /*
  * this function will recursively calculate <node>.metrics
@@ -11453,7 +11480,6 @@ local.coverageReportCreate = function (opt) {
     let filePrefix;
     let filesUnderRoot;
     let findNameWidth;
-    let fixupNodes;
     let indexAndSortTree;
     let root;
     let seen;
@@ -11476,29 +11502,6 @@ local.coverageReportCreate = function (opt) {
             last = findNameWidth(child, level + 1, last);
         });
         return last;
-    };
-    fixupNodes = function (node, filePrefix, parent) {
-        // fix name
-        if (node.name.indexOf(filePrefix) === 0) {
-            node.name = node.name.slice(filePrefix.length);
-        }
-        if (node.name[0] === path.sep) {
-            node.name = node.name.slice(1);
-        }
-        // init relativeName
-        node.relativeName = (
-            parent
-            ? (
-                parent.name !== "__root__/"
-                ? node.name.slice(parent.name.length)
-                : node.name
-            )
-            : node.name.slice(filePrefix.length)
-        ) || "All files";
-        node.children.forEach(function (child) {
-            // recurse
-            fixupNodes(child, filePrefix, node);
-        });
     };
     indexAndSortTree = function (node, map) {
         map[node.name] = node;
@@ -11727,7 +11730,7 @@ local.coverageReportCreate = function (opt) {
             }
         });
     }
-    fixupNodes(root, filePrefix.join(path.sep) + path.sep);
+    nodeNormalize(root, filePrefix.join(path.sep) + path.sep);
     nodeMetricsCalculate(root);
     indexAndSortTree(root, {});
     nameWidth = findNameWidth(root);
