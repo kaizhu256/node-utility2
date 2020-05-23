@@ -10615,7 +10615,7 @@ function summarizeFileCoverage(fileCoverage) {
  * @param {Object} fileCoverage the coverage object for a single file.
  * @return {Object} the summary metrics for the file
  */
-    let ret = {
+    let summary = {
         lines: {
             total: 0,
             covered: 0,
@@ -10661,11 +10661,11 @@ function summarizeFileCoverage(fileCoverage) {
             }
         });
     }
-    ret.lines = computeSimpleTotals(fileCoverage, "l");
-    ret.functions = computeSimpleTotals(fileCoverage, "f", "fnMap");
-    ret.statements = computeSimpleTotals(fileCoverage, "s", "statementMap");
-    ret.branches = computeBranchTotals(fileCoverage);
-    return ret;
+    summary.lines = computeSimpleTotals(fileCoverage, "l");
+    summary.functions = computeSimpleTotals(fileCoverage, "f", "fnMap");
+    summary.statements = computeSimpleTotals(fileCoverage, "s", "statementMap");
+    summary.branches = computeBranchTotals(fileCoverage);
+    return summary;
 }
 function mergeSummaryObjects(args) {
 /**
@@ -10678,7 +10678,7 @@ function mergeSummaryObjects(args) {
  * @param {Object} summary... multiple summary metrics objects
  * @return {Object} the merged summary metrics
  */
-    let ret = {
+    let summary = {
         lines: {
             total: 0,
             covered: 0,
@@ -10710,9 +10710,9 @@ function mergeSummaryObjects(args) {
     let increment = function (obj) {
         if (obj) {
             keys.forEach(function (key) {
-                ret[key].total += obj[key].total;
-                ret[key].covered += obj[key].covered;
-                ret[key].skipped += obj[key].skipped;
+                summary[key].total += obj[key].total;
+                summary[key].covered += obj[key].covered;
+                summary[key].skipped += obj[key].skipped;
             });
         }
     };
@@ -10720,9 +10720,9 @@ function mergeSummaryObjects(args) {
         increment(arg);
     });
     keys.forEach(function (key) {
-        ret[key].pct = percent(ret[key].covered, ret[key].total);
+        summary[key].pct = percent(summary[key].covered, summary[key].total);
     });
-    return ret;
+    return summary;
 }
 // init InsertionText
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
