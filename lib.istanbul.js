@@ -11217,6 +11217,7 @@ templateRender = function (template, dict, node) {
     let parentUrl;
     let parentUrlList;
     // render <node>
+    node = node || {};
     metrics = node.metrics;
     parent = node.parent;
     parentUrlList = [];
