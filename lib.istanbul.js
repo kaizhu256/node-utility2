@@ -10528,8 +10528,19 @@ file none
 let TAB_SIZE;
 let coverageLevelGet;
 let coveragePercentGet;
+let htmlAll;
+let htmlData;
+let htmlFile;
+let htmlWrite;
+let nodeChildAdd;
+let nodeCreate;
+let nodeParentUrlCreate;
+let nodeWalk;
 let path;
 let stringPad;
+let templateDictCreate;
+let templateFoot;
+let templateHead;
 let templateRender;
 // require module
 path = require("path");
@@ -10968,25 +10979,14 @@ local.coverageReportCreate = function (opt) {
     let filesUnderRoot;
     let findNameWidth;
     let fixupNodes;
-    let htmlAll;
-    let htmlData;
-    let htmlFile;
-    let htmlWrite;
     let indexAndSortTree;
     let linkMapper;
     let mergeSummaryObjects;
     let nameWidth;
-    let nodeChildAdd;
-    let nodeCreate;
-    let nodeParentUrlCreate;
-    let nodeWalk;
     let root;
     let seen;
     let summaryList;
     let summaryMap;
-    let templateDictCreate;
-    let templateFoot;
-    let templateHead;
     let tmp;
     let tmpChildren;
     if (!(opt && opt.coverage)) {
