@@ -11434,8 +11434,6 @@ local.coverageReportCreate = function (opt) {
      * @param {Object} summary... multiple summary metrics objects
      * @return {Object} the merged summary metrics
      */
-        let increment;
-        let keys;
         let summary;
         summary = {
             lines: {
@@ -11463,22 +11461,20 @@ local.coverageReportCreate = function (opt) {
                 pct: "Unknown"
             }
         };
-        keys = [
-            "lines", "statements", "branches", "functions"
-        ];
-        increment = function (obj) {
+        args.forEach(function (obj) {
             if (obj) {
-                keys.forEach(function (key) {
+                [
+                    "lines", "statements", "branches", "functions"
+                ].forEach(function (key) {
                     summary[key].total += obj[key].total;
                     summary[key].covered += obj[key].covered;
                     summary[key].skipped += obj[key].skipped;
                 });
             }
-        };
-        args.forEach(function (arg) {
-            increment(arg);
         });
-        keys.forEach(function (key) {
+        [
+            "lines", "statements", "branches", "functions"
+        ].forEach(function (key) {
             summary[key].pct = coveragePercentGet(
                 summary[key].covered,
                 summary[key].total
