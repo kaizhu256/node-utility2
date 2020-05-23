@@ -10503,7 +10503,7 @@ local.templateCoverageHead = '\
         <td>{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>\n\
     </tbody>\n\
     </table>\n\
-    {{#parentUrl}}\n\
+    {{pathHtml}}\n\
 </div>\n\
 <div class="body">\n\
 ';
@@ -10537,11 +10537,13 @@ let nodeChildAdd;
 let nodeCreate;
 let nodeMetricsCalculate;
 let nodeNormalize;
+let nodeParentUrlCreate;
 let nodeWalk;
 let path;
 let stringPad;
 let summaryList;
 let summaryMap;
+let templateDictCreate;
 let templateFoot;
 let templateHead;
 let templateRender;
@@ -10725,7 +10727,7 @@ htmlWrite = function (node, dir) {
         local.fsWriteFileWithMkdirpSync(htmlFile, htmlData);
     }
     htmlFile = path.resolve(dir, "index.html");
-    htmlData = templateRender(templateHead, {}, node) + (
+    htmlData = templateRender(templateHead, templateDictCreate(node)) + (
         `<div class="coverage-summary">
 <table>
 <thead>
@@ -10779,7 +10781,7 @@ htmlWrite = function (node, dir) {
             `<tr>
 <td class="file {{coverageLevels.statements}}"
     data-value="{{file}}"><a href="{{url}}"><div>{{file}}</div>
-    {{#show_percent_bar}}</a></td>
+    {{#show_picture}}</a></td>
 <td class="pct {{coverageLevels.statements}}"
     data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
     ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>
@@ -10794,6 +10796,7 @@ htmlWrite = function (node, dir) {
     ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
 </tr>`
         ), {
+            metrics: child.metrics,
             coverageLevels: {
                 statements: coverageLevelGet(
                     child.metrics.statements.pct
@@ -10804,7 +10807,7 @@ htmlWrite = function (node, dir) {
             },
             file: child.relativeName,
             url
-        }, child) + "\n";
+        }) + "\n";
     }).join("") + (
         "</tbody>\n</table>\n</div>\n" + templateFoot
     );
@@ -10990,7 +10993,7 @@ htmlWrite = function (node, dir) {
         });
         structured.shift();
         htmlData = (
-            templateRender(templateHead, {}, child)
+            templateRender(templateHead, templateDictCreate(child))
             + templateRender((
                 `<pre><table class="coverage"><tr>
 <td class="line-count">{{#show_lines}}</td>
@@ -11004,7 +11007,7 @@ htmlWrite = function (node, dir) {
                 structured,
                 maxLines: structured.length,
                 fileCoverage
-            }, {}) + templateFoot
+            }) + templateFoot
         );
     });
 };
@@ -11110,6 +11113,26 @@ nodeNormalize = function (node, filePrefix, parent) {
         nodeNormalize(child, filePrefix, node);
     });
 };
+nodeParentUrlCreate = function (node, depth) {
+/*
+ * this function will return parent-url of node with given <depth>
+ */
+    let href;
+    let ii;
+    let jj;
+    href = "";
+    ii = 0;
+    while (ii < depth) {
+        jj = 0;
+        while (jj < node.relativeName.split(path.sep).length - 1) {
+            href += "../";
+            jj += 1;
+        }
+        node = node.parent;
+        ii += 1;
+    }
+    return href;
+};
 nodeWalk = function (node, level) {
 /*
  * this function will recursively walk and summarize each <node>
@@ -11205,54 +11228,40 @@ stringPad = function (str, width, right, tabs, coverageLevel) {
     }
     return leader + fmtStr;
 };
-templateRender = function (template, dict, node) {
+templateDictCreate = function (node) {
 /*
- * this function will render <template> with given <dict> and <node>
+ * this function will create template-dict with given <node>
  */
     let ii;
-    let jj;
-    let kk;
-    let metrics;
     let parent;
-    let parentUrl;
     let parentUrlList;
-    // render <node>
-    node = node || {};
-    metrics = node.metrics;
     parent = node.parent;
     parentUrlList = [];
-    ii = 1;
+    ii = 0;
     while (parent) {
-        jj = 0;
-        parentUrl = "";
-        while (jj < ii) {
-            kk = 0;
-            while (kk < node.relativeName.split(path.sep).length - 1) {
-                parentUrl += "../";
-                kk += 1;
-            }
-            node = node.parent;
-            jj += 1;
-        }
         parentUrlList.unshift(
-            "<a href=\"" + parentUrl
+            "<a href=\"" + nodeParentUrlCreate(node, ii + 1)
             + "index.html\">" + parent.relativeName + "</a>"
         );
         parent = parent.parent;
         ii += 1;
     }
-    Object.assign(dict, {
-        coverageLevel: (
-            metrics && coverageLevelGet(metrics.statements.pct)
-        ),
+    return {
+        coverageLevel: coverageLevelGet(node.metrics.statements.pct),
         entity: node.name || "All files",
-        parentUrl: "<div class=\"path\">" + (
+        metrics: node.metrics,
+        pathHtml: "<div class=\"path\">" + (
             parentUrlList.length > 0
             ? parentUrlList.join(" &#187; ") + " &#187; " + node.relativeName
             : ""
         ) + "</div>"
-    });
-    // render <dict>
+    };
+};
+templateRender = function (template, dict) {
+/*
+ * this function will render <template> with given <dict>
+ */
+    // search for keys in template
     template = template.replace((
         /\{\{[^#].+?\}\}/g
     ), function (match0) {
@@ -11268,35 +11277,41 @@ templateRender = function (template, dict, node) {
             : String(val)
         );
     });
-    // render #show_ignores
-    template = template.replace("{{#show_ignores}}", function () {
-        let array;
-        if (
-            metrics.statements.skipped === 0
-            && metrics.functions.skipped === 0
-            && metrics.branches.skipped === 0
-        ) {
-            return "<span class=\"ignore-none\">none</span>";
+    // render helper show_ignores
+    template = template.replace(
+        "{{#show_ignores}}",
+        function () {
+            let array;
+            if (
+                dict.metrics.statements.skipped === 0
+                && dict.metrics.functions.skipped === 0
+                && dict.metrics.branches.skipped === 0
+            ) {
+                return "<span class=\"ignore-none\">none</span>";
+            }
+            array = [];
+            // hack-coverage - compact summary
+            if (dict.metrics.statements.skipped > 0) {
+                array.push(
+                    "statements: " + dict.metrics.statements.skipped
+                );
+            }
+            if (dict.metrics.branches.skipped > 0) {
+                array.push("branches: " + dict.metrics.branches.skipped);
+            }
+            if (dict.metrics.functions.skipped > 0) {
+                array.push("functions: " + dict.metrics.functions.skipped);
+            }
+            return array.join("<br>");
         }
-        array = [];
-        // hack-coverage - compact summary
-        if (metrics.statements.skipped > 0) {
-            array.push(
-                "statements: " + metrics.statements.skipped
-            );
-        }
-        if (metrics.branches.skipped > 0) {
-            array.push("branches: " + metrics.branches.skipped);
-        }
-        if (metrics.functions.skipped > 0) {
-            array.push("functions: " + metrics.functions.skipped);
-        }
-        return array.join("<br>");
-    });
-    // render #show_line_execution_counts
-    template = template.replace("{{#show_line_execution_counts}}", function () {
+    );
+    // render helper show_line_execution_counts
+    template = template.replace((
+        "{{#show_line_execution_counts}}"
+    ), function () {
         let array;
         let covered;
+        let ii;
         let lineNumber;
         let lines;
         let maxLines;
@@ -11326,75 +11341,60 @@ templateRender = function (template, dict, node) {
         }
         return array.join("\n");
     });
-    // render #show_lines
-    template = template.replace("{{#show_lines}}", function () {
-        let array;
-        let maxLines;
-        maxLines = Number(dict.maxLines);
-        array = "";
-        ii = 1;
-        while (ii <= maxLines) {
-            // hack-coverage - hashtag lineno
-            array += (
-                "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
-                + ii
-                + "</a>\n"
+    // render helper show_lines
+    template = template.replace(
+        "{{#show_lines}}",
+        function () {
+            let array;
+            let ii;
+            let maxLines;
+            maxLines = Number(dict.maxLines);
+            array = "";
+            ii = 1;
+            while (ii <= maxLines) {
+                // hack-coverage - hashtag lineno
+                array += (
+                    "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
+                    + ii
+                    + "</a>\n"
+                );
+                ii += 1;
+            }
+            return array;
+        }
+    );
+    // render helper show_picture
+    template = template.replace(
+        "{{#show_picture}}",
+        function () {
+            let num;
+            num = Number(dict.metrics.statements.pct) | 0;
+            return (
+                "<span class=\"cover-fill cover-full\" style=\"width:" + num
+                + "px;\"></span><span class=\"cover-empty\" style=\"width:"
+                + (100 - num) + "px;\"></span>"
             );
-            ii += 1;
         }
-        return array;
-    });
-    // render #show_path
-    template = template.replace("{{#show_path}}", function () {
-        let array;
-        if (
-            metrics.statements.skipped === 0
-            && metrics.functions.skipped === 0
-            && metrics.branches.skipped === 0
-        ) {
-            return "<span class=\"ignore-none\">none</span>";
+    );
+    // render helper show_code last
+    template = template.replace(
+        "{{#show_code}}",
+        function () {
+            return dict.structured.map(function (item) {
+                return item.text.toString().replace((
+                    /&/g
+                ), "&amp;").replace((
+                    /</g
+                ), "&lt;").replace((
+                    />/g
+                ), "&gt;").replace((
+                    /\u0001/g
+                ), "<").replace((
+                    /\u0002/g
+                ), ">") || "&nbsp;";
+            }).join("\n");
         }
-        array = [];
-        // hack-coverage - compact summary
-        if (metrics.statements.skipped > 0) {
-            array.push(
-                "statements: " + metrics.statements.skipped
-            );
-        }
-        if (metrics.branches.skipped > 0) {
-            array.push("branches: " + metrics.branches.skipped);
-        }
-        if (metrics.functions.skipped > 0) {
-            array.push("functions: " + metrics.functions.skipped);
-        }
-        return array.join("<br>");
-    });
-    // render #show_percent_bar
-    template = template.replace("{{#show_percent_bar}}", function () {
-        let num;
-        num = Number(metrics.statements.pct) | 0;
-        return (
-            "<span class=\"cover-fill cover-full\" style=\"width:" + num
-            + "px;\"></span><span class=\"cover-empty\" style=\"width:"
-            + (100 - num) + "px;\"></span>"
-        );
-    });
-    // render #show_code last
-    template = template.replace("{{#show_code}}", function () {
-        return dict.structured.map(function (item) {
-            return item.text.toString().replace((
-                /&/g
-            ), "&amp;").replace((
-                /</g
-            ), "&lt;").replace((
-                />/g
-            ), "&gt;").replace((
-                /\u0001/g
-            ), "<").replace((
-                /\u0002/g
-            ), ">") || "&nbsp;";
-        }).join("\n");
-    });
+    );
     return template;
 };
 // init variable
@@ -11719,7 +11719,7 @@ local.coverageReportCreate = function (opt) {
     // init templateFoot
     templateFoot = templateRender(local.templateCoverageFoot, {
         datetime: new Date().toGMTString()
-    }, {});
+    });
     // init templateHead
     templateHead = local.templateCoverageHead;
     if (local.isBrowser) {
