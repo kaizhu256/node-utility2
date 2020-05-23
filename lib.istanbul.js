@@ -10781,7 +10781,7 @@ htmlWrite = function (node, dir) {
             `<tr>
 <td class="file {{coverageLevels.statements}}"
     data-value="{{file}}"><a href="{{url}}"><div>{{file}}</div>
-    {{#show_picture}}</a></td>
+    {{#show_percent_bar}}</a></td>
 <td class="pct {{coverageLevels.statements}}"
     data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
     ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>
@@ -11277,7 +11277,7 @@ templateRender = function (template, dict) {
             : String(val)
         );
     });
-    // render helper show_ignores
+    // render #show_ignores
     template = template.replace("{{#show_ignores}}", function () {
         let array;
         if (
@@ -11302,7 +11302,7 @@ templateRender = function (template, dict) {
         }
         return array.join("<br>");
     });
-    // render helper show_line_execution_counts
+    // render #show_line_execution_counts
     template = template.replace("{{#show_line_execution_counts}}", function () {
         let array;
         let covered;
@@ -11336,7 +11336,7 @@ templateRender = function (template, dict) {
         }
         return array.join("\n");
     });
-    // render helper show_lines
+    // render #show_lines
     template = template.replace("{{#show_lines}}", function () {
         let array;
         let ii;
@@ -11355,8 +11355,8 @@ templateRender = function (template, dict) {
         }
         return array;
     });
-    // render helper show_picture
-    template = template.replace("{{#show_picture}}", function () {
+    // render #show_percent_bar
+    template = template.replace("{{#show_percent_bar}}", function () {
         let num;
         num = Number(dict.metrics.statements.pct) | 0;
         return (
@@ -11365,7 +11365,7 @@ templateRender = function (template, dict) {
             + (100 - num) + "px;\"></span>"
         );
     });
-    // render helper show_code last
+    // render #show_code last
     template = template.replace("{{#show_code}}", function () {
         return dict.structured.map(function (item) {
             return item.text.toString().replace((
