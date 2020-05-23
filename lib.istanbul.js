@@ -10524,9 +10524,6 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
 let TAB_SIZE;
 let numberFormatPercent;
-let path;
-// require module
-path = require("path");
 // init variable
 TAB_SIZE = 2;
 numberFormatPercent = new Intl.NumberFormat("en-US", {
@@ -10549,12 +10546,15 @@ function InsertionText(text, consumeBlanks) {
 }
 InsertionText.prototype = {
     findFirstNonBlank: function () {
+        let ii;
+        let len;
+        let pos;
+        let text;
         let that;
         that = this;
-        let pos = -1;
-        let text = that.text;
-        let len = text.length;
-        let ii;
+        pos = -1;
+        text = that.text;
+        len = text.length;
         ii = 0;
         while (ii < len) {
             if (!text[ii].match(
@@ -10568,12 +10568,15 @@ InsertionText.prototype = {
         return pos;
     },
     findLastNonBlank: function () {
+        let ii;
+        let len;
+        let pos;
+        let text;
         let that;
         that = this;
-        let text = that.text;
-        let len = text.length;
-        let pos = text.length + 1;
-        let ii;
+        text = that.text;
+        len = text.length;
+        pos = text.length + 1;
         ii = len - 1;
         while (ii >= 0) {
             if (!text[ii].match(
@@ -10592,6 +10595,10 @@ InsertionText.prototype = {
         return that.origLength;
     },
     insertAt: function (col, str, insertBefore, consumeBlanks) {
+        let len;
+        let offset;
+        let realPos;
+        let text;
         let that;
         that = this;
         consumeBlanks = (
@@ -10617,10 +10624,10 @@ InsertionText.prototype = {
                 col = that.origLength;
             }
         }
-        let len = str.length;
-        let offset = that.findOffset(col, len, insertBefore);
-        let realPos = col + offset;
-        let text = that.text;
+        len = str.length;
+        offset = that.findOffset(col, len, insertBefore);
+        realPos = col + offset;
+        text = that.text;
         that.text = text.slice(0, realPos) + str + text.slice(realPos);
         return that;
     },
@@ -10882,7 +10889,10 @@ function mergeSummaryObjects(args) {
  * @param {Object} summary... multiple summary metrics objects
  * @return {Object} the merged summary metrics
  */
-    let summary = {
+    let increment;
+    let keys;
+    let summary;
+    summary = {
         lines: {
             total: 0,
             covered: 0,
@@ -10908,10 +10918,10 @@ function mergeSummaryObjects(args) {
             pct: "Unknown"
         }
     };
-    let keys = [
+    keys = [
         "lines", "statements", "branches", "functions"
     ];
-    let increment = function (obj) {
+    increment = function (obj) {
         if (obj) {
             keys.forEach(function (key) {
                 summary[key].total += obj[key].total;
@@ -10989,16 +10999,38 @@ local.coverageReportCreate = function (opt) {
  * 2. write coverage in html-format to filesystem
  * 3. return coverage in html-format as single document
  */
+    let addChild;
+    let calculateMetrics;
     let coverageReportHtml;
+    let coverageReportWrite;
+    let createNode;
     let dir;
     let filePrefix;
+    let filesUnderRoot;
+    let fillTemplate;
+    let findNameWidth;
+    let fixupNodes;
+    let indexAndSortTree;
+    let linkMapper;
+    let nameWidth;
+    let path;
     let root;
+    let seen;
+    let strings;
     let summaryMap;
+    let templateData;
+    let templateFoot;
+    let templateHead;
+    let tmp;
+    let tmpChildren;
+    let walk;
     let writerData;
     let writerFile;
     if (!(opt && opt.coverage)) {
         return "";
     }
+    // require module
+    path = require("path");
     dir = process.cwd() + "/tmp/build/coverage.html";
     // merge previous coverage
     if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
@@ -11032,11 +11064,6 @@ local.coverageReportCreate = function (opt) {
     writerData = "";
     writerFile = "";
     // create TextReport
-    let findNameWidth;
-    let nameWidth;
-    let strings;
-    let tmp;
-    let walk;
     findNameWidth = function (node, level, last) {
         let idealWidth;
         last = last || 0;
@@ -11228,14 +11255,6 @@ local.coverageReportCreate = function (opt) {
         }
     });
     // coverageReportSummary = new TreeSummary();
-    let addChild;
-    let calculateMetrics;
-    let createNode;
-    let filesUnderRoot;
-    let fixupNodes;
-    let indexAndSortTree;
-    let seen;
-    let tmpChildren;
     addChild = function (node, child) {
         node.children.push(child);
         child.parent = node;
@@ -11372,12 +11391,6 @@ local.coverageReportCreate = function (opt) {
     // 1. print coverage in text-format to stdout
     console.log(strings.join("\n") + "\n");
     // create HtmlReport
-    let coverageReportWrite;
-    let fillTemplate;
-    let linkMapper;
-    let templateData;
-    let templateFoot;
-    let templateHead;
     templateHead = local.templateCoverageHead;
     if (local.isBrowser) {
         templateHead = templateHead.replace(
