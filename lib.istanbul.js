@@ -11211,6 +11211,7 @@ templateRender = function (template, dict, node) {
  */
     let ii;
     let metrics;
+    let val;
     // render <node>
     metrics = node.metrics;
     Object.assign(dict, {
@@ -11222,7 +11223,6 @@ templateRender = function (template, dict, node) {
     template = template.replace((
         /\{\{[^#].+?\}\}/g
     ), function (match0) {
-        let val;
         val = dict;
         // iteratively lookup nested values in dict
         String(match0.slice(2, -2)).split(".").forEach(function (key) {
@@ -11266,27 +11266,26 @@ templateRender = function (template, dict, node) {
         let lineNumber;
         let lines;
         let maxLines;
-        let value;
         lines = dict.fileCoverage.l;
         maxLines = Number(dict.maxLines);
         array = [];
-        value = "";
+        val = "";
         ii = 0;
         while (ii < maxLines) {
-            lineNumber = ii + 1;
-            value = "&nbsp;";
             covered = "neutral";
+            lineNumber = ii + 1;
+            val = "&nbsp;";
             if (lines.hasOwnProperty(lineNumber)) {
                 if (lines[lineNumber] > 0) {
                     covered = "yes";
-                    value = lines[lineNumber];
+                    val = lines[lineNumber];
                 } else {
                     covered = "no";
                 }
             }
             array.push(
                 "<span class=\"cline-any cline-" + covered + "\">"
-                + value + "</span>"
+                + val + "</span>"
             );
             ii += 1;
         }
@@ -11346,12 +11345,11 @@ templateRender = function (template, dict, node) {
     });
     // render #show_percent_bar
     template = template.replace("{{#show_percent_bar}}", function () {
-        let num;
-        num = Number(metrics.statements.pct) | 0;
+        val = Number(metrics.statements.pct) | 0;
         return (
-            "<span class=\"cover-fill cover-full\" style=\"width:" + num
+            "<span class=\"cover-fill cover-full\" style=\"width:" + val
             + "px;\"></span><span class=\"cover-empty\" style=\"width:"
-            + (100 - num) + "px;\"></span>"
+            + (100 - val) + "px;\"></span>"
         );
     });
     // render #show_code last
