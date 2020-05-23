@@ -11021,15 +11021,13 @@ local.coverageReportCreate = function (opt) {
  * 3. write coverage in html-format to filesystem
  * 4. return coverage in html-format as single document
  */
-    let addChild;
     let calculateMetrics;
-    let coverageReportHtml;
-    let coverageReportWrite;
     let dir;
     let filePrefix;
     let filesUnderRoot;
     let findNameWidth;
     let fixupNodes;
+    let htmlAll;
     let indexAndSortTree;
     let linkMapper;
     let mergeSummaryObjects;
@@ -11038,6 +11036,8 @@ local.coverageReportCreate = function (opt) {
     let seen;
     let summaryList;
     let summaryMap;
+    let summaryNodeAddChild;
+    let summaryNodeWrite;
     let summaryTreeWalk;
     let templateFoot;
     let templateHead;
@@ -11048,9 +11048,11 @@ local.coverageReportCreate = function (opt) {
     if (!(opt && opt.coverage)) {
         return "";
     }
-    dir = process.cwd() + "/tmp/build/coverage.html";
     // init function
-    addChild = function (node, child) {
+    summaryNodeAddChild = function (node, child) {
+    /*
+     * this function will add <child> to <node>
+     */
         node.children.push(child);
         child.parent = node;
     };
@@ -11107,8 +11109,8 @@ local.coverageReportCreate = function (opt) {
             );
         }
     };
-    coverageReportWrite = function (node, dir) {
-        coverageReportHtml += writerData + "\n\n";
+    summaryNodeWrite = function (node, dir) {
+        htmlAll += writerData + "\n\n";
         if (writerFile) {
             local.fsWriteFileWithMkdirpSync(writerFile, writerData);
         }
@@ -11180,13 +11182,13 @@ local.coverageReportCreate = function (opt) {
             let structured;
             if (child.kind === "dir") {
                 // recurse
-                coverageReportWrite(
+                summaryNodeWrite(
                     child,
                     path.resolve(dir, child.relativeName)
                 );
                 return;
             }
-            coverageReportHtml += writerData + "\n\n";
+            htmlAll += writerData + "\n\n";
             if (writerFile) {
                 local.fsWriteFileWithMkdirpSync(writerFile, writerData);
             }
@@ -11542,6 +11544,8 @@ local.coverageReportCreate = function (opt) {
         summaryList.push(tableRow);
         summaryList.push(line);
     };
+    // init dir
+    dir = process.cwd() + "/tmp/build/coverage.html";
     // merge previous coverage
     if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
         console.log("merging file " + dir + "/coverage.json to coverage");
@@ -11563,7 +11567,7 @@ local.coverageReportCreate = function (opt) {
         } catch (ignore) {}
     }
     // init writer
-    coverageReportHtml = (
+    htmlAll = (
         "<div class=\"coverageReportDiv\">\n"
         + "<h1>coverage-report</h1>\n"
         + "<div style=\""
@@ -11725,10 +11729,10 @@ local.coverageReportCreate = function (opt) {
         parent = seen[parentPath];
         if (!parent) {
             parent = summaryNodeCreate(parentPath, "dir");
-            addChild(root, parent);
+            summaryNodeAddChild(root, parent);
             seen[parentPath] = parent;
         }
-        addChild(parent, node);
+        summaryNodeAddChild(parent, node);
         if (parent === root) {
             filesUnderRoot = true;
         }
@@ -11739,12 +11743,12 @@ local.coverageReportCreate = function (opt) {
         tmpChildren = tmp.children;
         tmp.children = [];
         root = summaryNodeCreate(filePrefix.join(path.sep) + path.sep, "dir");
-        addChild(root, tmp);
+        summaryNodeAddChild(root, tmp);
         tmpChildren.forEach(function (child) {
             if (child.kind === "dir") {
-                addChild(root, child);
+                summaryNodeAddChild(root, child);
             } else {
-                addChild(tmp, child);
+                summaryNodeAddChild(tmp, child);
             }
         });
     }
@@ -11786,7 +11790,7 @@ local.coverageReportCreate = function (opt) {
             /<h1\u0020[\S\s]*<\/h1>/
         ), "");
     }
-    coverageReportWrite(root, dir);
+    summaryNodeWrite(root, dir);
     // 3. write coverage in html-format to filesystem
     local.fsWriteFileWithMkdirpSync(writerFile, writerData);
     // write coverage.json
@@ -11817,13 +11821,13 @@ local.coverageReportCreate = function (opt) {
     );
     console.log("created coverage file " + dir + "/index.html");
     // 4. return coverage in html-format as single document
-    coverageReportHtml += "</div>\n</div>\n";
+    htmlAll += "</div>\n</div>\n";
     // write coverage.rollup.html
     local.fsWriteFileWithMkdirpSync(
         dir + "/coverage.rollup.html",
-        coverageReportHtml
+        htmlAll
     );
-    return coverageReportHtml;
+    return htmlAll;
 };
 
 local.instrumentInPackage = function (code, file) {
