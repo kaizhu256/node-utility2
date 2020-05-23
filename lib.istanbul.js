@@ -11073,6 +11073,20 @@ function fill(str, width, right, tabs, clazz) {
     }
     return leader + fmtStr;
 }
+function findNameWidth(node, level, last) {
+    let idealWidth;
+    last = last || 0;
+    level = level || 0;
+    idealWidth = TAB_SIZE * level + node.relativeName.length;
+    if (idealWidth > last) {
+        last = idealWidth;
+    }
+    node.children.forEach(function (child) {
+        // recurse
+        last = findNameWidth(child, level + 1, last);
+    });
+    return last;
+}
 function handlebarsCompile(template) {
 /*
  * this function will return a function
@@ -11121,7 +11135,7 @@ function handlebarsCompile(template) {
         result = result.replace(
             "{{#show_ignores}}",
             function () {
-                let list;
+                let array;
                 if (
                     dict.metrics.statements.skipped === 0
                     && dict.metrics.functions.skipped === 0
@@ -11129,35 +11143,35 @@ function handlebarsCompile(template) {
                 ) {
                     return "<span class=\"ignore-none\">none</span>";
                 }
-                list = [];
+                array = [];
                 // hack-coverage - compact summary
                 if (dict.metrics.statements.skipped > 0) {
-                    list.push(
+                    array.push(
                         "statements: " + dict.metrics.statements.skipped
                     );
                 }
                 if (dict.metrics.branches.skipped > 0) {
-                    list.push("branches: " + dict.metrics.branches.skipped);
+                    array.push("branches: " + dict.metrics.branches.skipped);
                 }
                 if (dict.metrics.functions.skipped > 0) {
-                    list.push("functions: " + dict.metrics.functions.skipped);
+                    array.push("functions: " + dict.metrics.functions.skipped);
                 }
-                return list.join("<br>");
+                return array.join("<br>");
             }
         );
         result = result.replace((
             "{{#show_line_execution_counts}}"
         ), function () {
+            let array;
             let covered;
             let ii;
             let lineNumber;
             let lines;
-            let list;
             let maxLines;
             let value;
             lines = dict.fileCoverage.l;
             maxLines = Number(dict.maxLines);
-            list = [];
+            array = [];
             value = "";
             ii = 0;
             while (ii < maxLines) {
@@ -11172,33 +11186,33 @@ function handlebarsCompile(template) {
                         covered = "no";
                     }
                 }
-                list.push(
+                array.push(
                     "<span class=\"cline-any cline-" + covered + "\">"
                     + value + "</span>"
                 );
                 ii += 1;
             }
-            return list.join("\n");
+            return array.join("\n");
         });
         result = result.replace(
             "{{#show_lines}}",
             function () {
+                let array;
                 let ii;
-                let list;
                 let maxLines;
                 maxLines = Number(dict.maxLines);
-                list = "";
+                array = "";
                 ii = 1;
                 while (ii <= maxLines) {
                     // hack-coverage - hashtag lineno
-                    list += (
+                    array += (
                         "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
                         + ii
                         + "</a>\n"
                     );
                     ii += 1;
                 }
-                return list;
+                return array;
             }
         );
         result = result.replace(
@@ -11236,6 +11250,66 @@ function handlebarsCompile(template) {
         return result;
     };
 }
+function tableRow(node, maxNameCols, level) {
+    let branches;
+    let classFor;
+    let elements;
+    let functions;
+    let lines;
+    let name;
+    let statements;
+    classFor = function (val) {
+        return (
+            val >= 80
+            ? "high"
+            : val >= 50
+            ? "medium"
+            : "low"
+        );
+    };
+    name = node.relativeName;
+    statements = node.metrics.statements.pct;
+    branches = node.metrics.branches.pct;
+    functions = node.metrics.functions.pct;
+    lines = node.metrics.lines.pct;
+    elements = [];
+    elements.push(fill(
+        name,
+        maxNameCols,
+        false,
+        level,
+        classFor(node.metrics.statements.pct)
+    ));
+    elements.push(fill(
+        statements,
+        PCT_COLS,
+        true,
+        0,
+        classFor(node.metrics.statements.pct)
+    ));
+    elements.push(fill(
+        branches,
+        PCT_COLS,
+        true,
+        0,
+        classFor(node.metrics.branches.pct)
+    ));
+    elements.push(fill(
+        functions,
+        PCT_COLS,
+        true,
+        0,
+        classFor(node.metrics.functions.pct)
+    ));
+    elements.push(fill(
+        lines,
+        PCT_COLS,
+        true,
+        0,
+        classFor(node.metrics.lines.pct)
+    ));
+    return elements.join(" |") + " |";
+}
 
 
 
@@ -11244,122 +11318,32 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
 function reportTextCreate(opt) {
     let strings;
-    function tableHeader(maxNameCols) {
-        let elements;
-        elements = [];
-        elements.push(fill("File", maxNameCols, false, 0));
-        elements.push(fill("% Stmts", PCT_COLS, true, 0));
-        elements.push(fill("% Branches", PCT_COLS, true, 0));
-        elements.push(fill("% Funcs", PCT_COLS, true, 0));
-        elements.push(fill("% Lines", PCT_COLS, true, 0));
-        return elements.join(" |") + " |";
-    }
-    function tableRow(node, maxNameCols, level) {
-        let branches;
-        let classFor;
-        let elements;
-        let functions;
-        let lines;
-        let name;
-        let statements;
-        classFor = function (val) {
-            return (
-                val >= 80
-                ? "high"
-                : val >= 50
-                ? "medium"
-                : "low"
-            );
-        };
-        name = node.relativeName;
-        statements = node.metrics.statements.pct;
-        branches = node.metrics.branches.pct;
-        functions = node.metrics.functions.pct;
-        lines = node.metrics.lines.pct;
-        elements = [];
-        elements.push(fill(
-            name,
-            maxNameCols,
-            false,
-            level,
-            classFor(node.metrics.statements.pct)
-        ));
-        elements.push(fill(
-            statements,
-            PCT_COLS,
-            true,
-            0,
-            classFor(node.metrics.statements.pct)
-        ));
-        elements.push(fill(
-            branches,
-            PCT_COLS,
-            true,
-            0,
-            classFor(node.metrics.branches.pct)
-        ));
-        elements.push(fill(
-            functions,
-            PCT_COLS,
-            true,
-            0,
-            classFor(node.metrics.functions.pct)
-        ));
-        elements.push(fill(
-            lines,
-            PCT_COLS,
-            true,
-            0,
-            classFor(node.metrics.lines.pct)
-        ));
-        return elements.join(" |") + " |";
-    }
-    function findNameWidth(node, level, last) {
-        let idealWidth;
-        last = last || 0;
-        level = level || 0;
-        idealWidth = TAB_SIZE * level + node.relativeName.length;
-        if (idealWidth > last) {
-            last = idealWidth;
-        }
-        node.children.forEach(function (child) {
-            // recurse
-            last = findNameWidth(child, level + 1, last);
-        });
-        return last;
-    }
-    function makeLine(nameWidth) {
-        let elements;
-        let name;
-        let pct;
-        name = "-".repeat(nameWidth);
-        pct = "-".repeat(PCT_COLS);
-        elements = [];
-        elements.push(name);
-        elements.push(pct);
-        elements.push(pct);
-        elements.push(pct);
-        elements.push(pct);
-        return elements.join("-|") + "-|";
-    }
     function walk(node, nameWidth, array, level) {
         let line;
-        if (level === 0) {
-            line = makeLine(nameWidth);
-            array.push(line);
-            array.push(tableHeader(nameWidth));
-            array.push(line);
-        } else {
+        if (level !== 0) {
             array.push(tableRow(node, nameWidth, level));
+            node.children.forEach(function (child) {
+                walk(child, nameWidth, array, level + 1);
+            });
+            return;
         }
+        line = (
+            "-".repeat(nameWidth)
+            + "-|-----------|-----------|-----------|-----------|"
+        );
+        array.push(line);
+        array.push(
+            fill("File", nameWidth, false, 0)
+            + " |   % Stmts |% Branches |   % Funcs |   % Lines |"
+        );
+        array.push(line);
         node.children.forEach(function (child) {
+            // recurse
             walk(child, nameWidth, array, level + 1);
         });
-        if (level === 0) {
-            array.push(line);
-            array.push(tableRow(node, nameWidth, level));
-            array.push(line);
-        }
+        array.push(line);
+        array.push(tableRow(node, nameWidth, level));
+        array.push(line);
     }
     opt = opt || {};
     summaryMap = {};
@@ -11396,7 +11380,6 @@ function reportTextCreate(opt) {
     let templateData;
     let templateFoot;
     let templateHead;
-    // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
     templateHead = local.templateCoverageHead;
     if (local.isBrowser) {
         templateHead = templateHead.replace(
@@ -11423,7 +11406,6 @@ function reportTextCreate(opt) {
         ), "");
     }
     templateHead = handlebarsCompile(templateHead);
-    // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/foot.txt
     templateFoot = handlebarsCompile(local.templateCoverageFoot);
     function annotateLines(fileCoverage, structuredText) {
         Object.entries(fileCoverage.l).forEach(function ([
