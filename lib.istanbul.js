@@ -10652,15 +10652,15 @@ function summarizeFileCoverage(fileCoverage) {
  * @static
  * @param {Object} fileCoverage the coverage object for a single file
  */
-    let statementMap = fileCoverage.statementMap;
-    let statements = fileCoverage.s;
     if (!fileCoverage.l) {
         fileCoverage.l = {};
-        Object.keys(statements).forEach(function (st) {
-            let line = statementMap[st].start.line;
-            let count = statements[st];
+        Object.entries(fileCoverage.s).forEach(function ([
+            st,
+            count
+        ]) {
+            let line = fileCoverage.statementMap[st].start.line;
             let prevVal = fileCoverage.l[line];
-            if (count === 0 && statementMap[st].skip) {
+            if (count === 0 && fileCoverage.statementMap[st].skip) {
                 count = 1;
             }
             if (prevVal === undefined || prevVal < count) {
