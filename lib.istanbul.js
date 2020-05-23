@@ -11001,9 +11001,9 @@ htmlWrite = function (node, dir) {
 >{{#show_code}}</pre></td>
 </tr></table></pre>`
             ), {
-                structured,
+                lines: fileCoverage.l,
                 maxLines: structured.length,
-                fileCoverage
+                structured
             }, {}) + templateFoot
         );
     });
@@ -11212,7 +11212,6 @@ templateRender = function (template, dict, node) {
     let ii;
     let jj;
     let kk;
-    let lines;
     let maxLines;
     let metrics;
     let parent;
@@ -11241,17 +11240,15 @@ templateRender = function (template, dict, node) {
     });
     // render #show_line_execution_counts
     template = template.replace("{{#show_line_execution_counts}}", function () {
-        lines = dict.fileCoverage.l;
-        maxLines = Number(dict.maxLines);
         val = "";
         ii = 1;
-        while (ii <= maxLines) {
+        while (ii <= dict.maxLines) {
             val += "<span class=\"cline-any " + (
-                lines.hasOwnProperty(ii)
+                dict.lines.hasOwnProperty(ii)
                 ? (
-                    lines[ii]
+                    dict.lines[ii]
                     ? "cline-no\">&nbsp;"
-                    : "cline-yes\">" + lines[ii]
+                    : "cline-yes\">" + dict.lines[ii]
                 )
                 : "cline-neutral\">&nbsp;"
             ) + "</span>\n";
