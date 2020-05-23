@@ -10609,8 +10609,8 @@ InsertionText.prototype = {
         return that.origLength;
     },
     insertAt: function (col, str, insertBefore, consumeBlanks) {
+        let cumulativeOffset;
         let len;
-        let offset;
         let realPos;
         let text;
         let that;
@@ -10639,44 +10639,40 @@ InsertionText.prototype = {
             }
         }
         len = str.length;
-        offset = that.findOffset(col, len, insertBefore);
-        realPos = col + offset;
-        text = that.text;
-        that.text = text.slice(0, realPos) + str + text.slice(realPos);
-        return that;
-    },
-    findOffset: function (pos, len, insertBefore) {
-        let cumulativeOffset;
+
+        //!! cumulativeOffset = that.findOffset(col, len, insertBefore);
         let ii;
         let offsetObj;
         let offsets;
-        let that;
-        that = this;
         offsets = that.offsets;
         cumulativeOffset = 0;
         ii = 0;
         while (ii < offsets.length) {
             offsetObj = offsets[ii];
             if (
-                offsetObj.pos < pos
-                || (offsetObj.pos === pos && !insertBefore)
+                offsetObj.pos < col
+                || (offsetObj.pos === col && !insertBefore)
             ) {
                 cumulativeOffset += offsetObj.len;
             }
-            if (offsetObj.pos >= pos) {
+            if (offsetObj.pos >= col) {
                 break;
             }
             ii += 1;
         }
-        if (offsetObj && offsetObj.pos === pos) {
+        if (offsetObj && offsetObj.pos === col) {
             offsetObj.len += len;
         } else {
             offsets.splice(ii, 0, {
-                pos,
+                col,
                 len
             });
         }
-        return cumulativeOffset;
+
+        realPos = col + cumulativeOffset;
+        text = that.text;
+        that.text = text.slice(0, realPos) + str + text.slice(realPos);
+        return that;
     },
     wrap: function (startPos, startText, endPos, endText, consumeBlanks) {
         let that;
