@@ -10666,12 +10666,8 @@ function summarizeFileCoverage(fileCoverage) {
             let skipped;
             skipped = map && map[key].skip;
             elem.total += 1;
-            if (covered || skipped) {
-                elem.covered += 1;
-            }
-            if (!covered && skipped) {
-                elem.skipped += 1;
-            }
+            elem.covered += Boolean(covered || skipped);
+            elem.skipped += Boolean(!covered && skipped);
         });
         elem.pct = percent(elem.covered, elem.total);
         summary[key] = elem;
