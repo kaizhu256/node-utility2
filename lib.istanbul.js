@@ -10680,8 +10680,7 @@ InsertionText.prototype = {
 // init function
 numberFormatPercent = new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 2,
-    minimumFractionDigits: 2,
-    style: "percent"
+    minimumFractionDigits: 2
 });
 numberFormatPercent = numberFormatPercent.format.bind(numberFormatPercent);
 stringFill = function (str, width, right, tabs, clazz) {
