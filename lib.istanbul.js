@@ -11422,72 +11422,6 @@ local.coverageReportCreate = function (opt) {
     }
     templateHead = handlebarsCompile(templateHead);
     templateFoot = handlebarsCompile(local.templateCoverageFoot);
-    function annotateStatements(fileCoverage, structured) {
-        Object.entries(fileCoverage.s).forEach(function ([
-            stName,
-            count
-        ]) {
-            let endCol;
-            let endLine;
-            let meta;
-            let startLine;
-            let text;
-            if (count !== 0) {
-                return;
-            }
-            meta = fileCoverage.statementMap[stName];
-            endCol = meta.end.column + 1;
-            startLine = meta.start.line;
-            endLine = meta.end.line;
-            if (endLine !== startLine) {
-                endLine = startLine;
-                endCol = structured[startLine].text.originalLength();
-            }
-            text = structured[startLine].text;
-            text.wrap(meta.start.column, ("\u0001span class=\"" + (
-                meta.skip
-                ? "cstat-skip"
-                : "cstat-no"
-            ) + "\" title=\"statement not covered\" \u0002"), (
-                startLine === endLine
-                ? endCol
-                : text.originalLength()
-            ), "\u0001/span\u0002");
-        });
-    }
-    function annotateFunctions(fileCoverage, structured) {
-        Object.entries(fileCoverage.f).forEach(function ([
-            fName,
-            count
-        ]) {
-            let endCol;
-            let endLine;
-            let meta;
-            let startLine;
-            let text;
-            if (count !== 0) {
-                return;
-            }
-            meta = fileCoverage.fnMap[fName];
-            endCol = meta.loc.end.column + 1;
-            endLine = meta.loc.end.line;
-            startLine = meta.loc.start.line;
-            if (endLine !== startLine) {
-                endLine = startLine;
-                endCol = structured[startLine].text.originalLength();
-            }
-            text = structured[startLine].text;
-            text.wrap(meta.loc.start.column, ("\u0001span class=\"" + (
-                meta.skip
-                ? "fstat-skip"
-                : "fstat-no"
-            ) + "\" title=\"function not covered\" \u0002"), (
-                startLine === endLine
-                ? endCol
-                : text.originalLength()
-            ), "\u0001/span\u0002");
-        });
-    }
     function getReportClass(pct) {
         return (
             pct >= 80
@@ -11776,8 +11710,70 @@ local.coverageReportCreate = function (opt) {
                     ), "\u0001/span\u0002");
                 });
             });
-            annotateFunctions(fileCoverage, structured);
-            annotateStatements(fileCoverage, structured);
+            // annotateFunctions(fileCoverage, structured);
+            Object.entries(fileCoverage.f).forEach(function ([
+                fName,
+                count
+            ]) {
+                let endCol;
+                let endLine;
+                let meta;
+                let startLine;
+                let text;
+                if (count !== 0) {
+                    return;
+                }
+                meta = fileCoverage.fnMap[fName];
+                endCol = meta.loc.end.column + 1;
+                endLine = meta.loc.end.line;
+                startLine = meta.loc.start.line;
+                if (endLine !== startLine) {
+                    endLine = startLine;
+                    endCol = structured[startLine].text.originalLength();
+                }
+                text = structured[startLine].text;
+                text.wrap(meta.loc.start.column, ("\u0001span class=\"" + (
+                    meta.skip
+                    ? "fstat-skip"
+                    : "fstat-no"
+                ) + "\" title=\"function not covered\" \u0002"), (
+                    startLine === endLine
+                    ? endCol
+                    : text.originalLength()
+                ), "\u0001/span\u0002");
+            });
+            //!! annotateStatements(fileCoverage, structured);
+            Object.entries(fileCoverage.s).forEach(function ([
+                stName,
+                count
+            ]) {
+                let endCol;
+                let endLine;
+                let meta;
+                let startLine;
+                let text;
+                if (count !== 0) {
+                    return;
+                }
+                meta = fileCoverage.statementMap[stName];
+                endCol = meta.end.column + 1;
+                startLine = meta.start.line;
+                endLine = meta.end.line;
+                if (endLine !== startLine) {
+                    endLine = startLine;
+                    endCol = structured[startLine].text.originalLength();
+                }
+                text = structured[startLine].text;
+                text.wrap(meta.start.column, ("\u0001span class=\"" + (
+                    meta.skip
+                    ? "cstat-skip"
+                    : "cstat-no"
+                ) + "\" title=\"statement not covered\" \u0002"), (
+                    startLine === endLine
+                    ? endCol
+                    : text.originalLength()
+                ), "\u0001/span\u0002");
+            });
             structured.shift();
             writerData = (
                 templateHead(templateData)
