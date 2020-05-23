@@ -11249,6 +11249,7 @@ templateRender = function (template, dict, node) {
     }
     Object.assign(dict, {
         coverageLevel: metrics && coverageLevelGet(metrics.statements.pct),
+        metrics,
         entity: node.name || "All files"
     });
     // render <dict>
