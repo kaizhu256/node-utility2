@@ -10520,18 +10520,17 @@ local.templateCoverageBadgeSvg =
 
 
 /*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
+file none
 */
+
+
+
 let TAB_SIZE;
 let numberFormatPercent;
+let stringFill;
+let templateCompile;
 // init variable
 TAB_SIZE = 2;
-numberFormatPercent = new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2,
-    style: "percent"
-});
-numberFormatPercent = numberFormatPercent.format.bind(numberFormatPercent);
 // init InsertionText
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 function InsertionText(text, consumeBlanks) {
@@ -10678,7 +10677,13 @@ InsertionText.prototype = {
     }
 };
 // init function
-function stringFill(str, width, right, tabs, clazz) {
+numberFormatPercent = new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+    style: "percent"
+});
+numberFormatPercent = numberFormatPercent.format.bind(numberFormatPercent);
+stringFill = function (str, width, right, tabs, clazz) {
     let fillStr;
     let fmtStr;
     let leader;
@@ -10716,8 +10721,8 @@ function stringFill(str, width, right, tabs, clazz) {
         break;
     }
     return leader + fmtStr;
-}
-function handlebarsCompile(template) {
+};
+templateCompile = function (template) {
 /*
  * this function will return a function
  * that will render <template> with given <dict>
@@ -10879,13 +10884,7 @@ function handlebarsCompile(template) {
         );
         return result;
     };
-}
-
-
-
-/*
-file none
-*/
+};
 
 
 
@@ -10948,7 +10947,6 @@ local.coverageReportCreate = function (opt) {
     let dir;
     let filePrefix;
     let filesUnderRoot;
-    let fillTemplate;
     let findNameWidth;
     let fixupNodes;
     let getReportClass;
@@ -10963,6 +10961,7 @@ local.coverageReportCreate = function (opt) {
     let strings;
     let summaryMap;
     let templateData;
+    let templateFill;
     let templateFoot;
     let templateHead;
     let tmp;
@@ -11007,7 +11006,7 @@ local.coverageReportCreate = function (opt) {
         }
         return ancestorHref(node, ii) + name;
     };
-    fillTemplate = function (node) {
+    templateFill = function (node) {
         let ii;
         let linkPath;
         let parent;
@@ -11071,7 +11070,7 @@ local.coverageReportCreate = function (opt) {
             local.fsWriteFileWithMkdirpSync(writerFile, writerData);
         }
         writerFile = path.resolve(dir, "index.html");
-        fillTemplate(node);
+        templateFill(node);
         writerData = templateHead(templateData) + (
             `<div class="coverage-summary">
 <table>
@@ -11100,7 +11099,7 @@ local.coverageReportCreate = function (opt) {
                 : 1
             );
         }).map(function (child) {
-            return handlebarsCompile(
+            return templateCompile(
                 `<tr>
 <td class="file {{reportClasses.statements}}"
     data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>
@@ -11165,7 +11164,7 @@ local.coverageReportCreate = function (opt) {
                 covered: null,
                 text: new InsertionText("")
             });
-            fillTemplate(child);
+            templateFill(child);
             // annotateLines(fileCoverage, structured);
             Object.entries(fileCoverage.l).forEach(function ([
                 lineNumber,
@@ -11318,7 +11317,7 @@ local.coverageReportCreate = function (opt) {
             structured.shift();
             writerData = (
                 templateHead(templateData)
-                + handlebarsCompile(`<pre><table class="coverage"><tr>
+                + templateCompile(`<pre><table class="coverage"><tr>
 <td class="line-count">{{#show_lines}}</td>
 <td class="line-coverage">{{#show_line_execution_counts}}</td>
 <td class="text"><pre
@@ -11788,8 +11787,8 @@ local.coverageReportCreate = function (opt) {
             /<h1\u0020[\S\s]*<\/h1>/
         ), "");
     }
-    templateHead = handlebarsCompile(templateHead);
-    templateFoot = handlebarsCompile(local.templateCoverageFoot);
+    templateHead = templateCompile(templateHead);
+    templateFoot = templateCompile(local.templateCoverageFoot);
     opt = opt || {};
     // hack-coverage - new Date() bugfix
     templateData = {
