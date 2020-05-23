@@ -11264,7 +11264,7 @@ local.coverageReportCreate = function (opt) {
                 : 1
             );
         }).map(function (child) {
-            return templateCompile(
+            return templateRender((
                 `<tr>
 <td class="file {{reportClasses.statements}}"
     data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>
@@ -11282,7 +11282,7 @@ local.coverageReportCreate = function (opt) {
     data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>
     ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
 </tr>`
-            )({
+            ), {
                 metrics: child.metrics,
                 reportClasses: {
                     statements: getReportClass(
