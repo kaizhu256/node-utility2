@@ -11326,11 +11326,7 @@ function reportTextCreate(opt) {
         findCommonArrayPrefix(Object.keys(summaryMap))
     );
     nameWidth = findNameWidth(coverageReportSummary.root);
-    walk(
-        coverageReportSummary.root,
-        strings,
-        0
-    );
+    walk(coverageReportSummary.root, 0);
     console.log(strings.join("\n") + "\n");
 
 
