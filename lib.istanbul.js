@@ -10556,7 +10556,9 @@ function summarizeFileCoverage(fileCoverage) {
  * @param {Object} fileCoverage the coverage object for a single file.
  * @return {Object} the summary metrics for the file
  */
-    let summary = {
+    let elem;
+    let summary;
+    summary = {
         lines: {
             total: 0,
             covered: 0,
@@ -10611,7 +10613,6 @@ function summarizeFileCoverage(fileCoverage) {
     ].forEach(function ([
         key, property, mapProperty
     ]) {
-        let elem;
         let map;
         elem = {
             total: 0,
@@ -10633,7 +10634,7 @@ function summarizeFileCoverage(fileCoverage) {
         summary[key] = elem;
     });
     // computeBranchTotals
-    let ret = {
+    elem = {
         total: 0,
         covered: 0,
         skipped: 0
@@ -10647,13 +10648,13 @@ function summarizeFileCoverage(fileCoverage) {
         branches.forEach(function (covered, ii) {
             let skipped;
             skipped = map && map[ii] && map[ii].skip;
-            ret.covered += Boolean(covered || skipped);
-            ret.skipped += Boolean(!covered && skipped);
+            elem.covered += Boolean(covered || skipped);
+            elem.skipped += Boolean(!covered && skipped);
         });
-        ret.total += branches.length;
+        elem.total += branches.length;
     });
-    ret.pct = percent(ret.covered, ret.total);
-    summary.branches = ret;
+    elem.pct = percent(elem.covered, elem.total);
+    summary.branches = elem;
     return summary;
 }
 function mergeSummaryObjects(args) {
