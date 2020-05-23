@@ -10755,15 +10755,10 @@ Node.prototype = {
         let that;
         that = this;
         return that.fullName;
-    },
-    addChild: function (child) {
-        let that;
-        that = this;
-        that.children.push(child);
-        child.parent = that;
     }
 };
 function TreeSummary() {
+    let addChild;
     let calculateMetrics;
     let filesUnderRoot;
     let fixupNodes;
@@ -10774,6 +10769,10 @@ function TreeSummary() {
     let tmp;
     let tmpChildren;
     that = this;
+    addChild = function (node, child) {
+        node.children.push(child);
+        child.parent = node;
+    };
     calculateMetrics = function (entry) {
         let fileChildren;
         if (entry.kind !== "dir") {
@@ -10847,10 +10846,10 @@ function TreeSummary() {
         parent = seen[parentPath];
         if (!parent) {
             parent = new Node(parentPath, "dir");
-            root.addChild(parent);
+            addChild(root, parent);
             seen[parentPath] = parent;
         }
-        parent.addChild(node);
+        addChild(parent, node);
         if (parent === root) {
             filesUnderRoot = true;
         }
@@ -10861,12 +10860,12 @@ function TreeSummary() {
         tmpChildren = tmp.children;
         tmp.children = [];
         root = new Node(filePrefix.join(path.sep) + path.sep, "dir");
-        root.addChild(tmp);
+        addChild(root, tmp);
         tmpChildren.forEach(function (child) {
             if (child.kind === "dir") {
-                root.addChild(child);
+                addChild(root, child);
             } else {
-                tmp.addChild(child);
+                addChild(tmp, child);
             }
         });
     }
