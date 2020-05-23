@@ -10743,9 +10743,10 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarize
 function TreeSummary() {
     let addChild;
     let calculateMetrics;
+    let createNode;
     let filesUnderRoot;
     let fixupNodes;
-    let nodeCreate;
+    let indexAndSortTree;
     let root;
     let seen;
     let that;
@@ -10784,6 +10785,16 @@ function TreeSummary() {
             entry.packageMetrics = null;
         }
     };
+    createNode = function (fullName, kind, metrics) {
+        return {
+            children: [],
+            fullName,
+            kind,
+            metrics: metrics || null,
+            name: fullName,
+            parent: null
+        };
+    };
     fixupNodes = function (node, filePrefix, parent) {
         // fix name
         if (node.name.indexOf(filePrefix) === 0) {
@@ -10807,71 +10818,7 @@ function TreeSummary() {
             fixupNodes(child, filePrefix, node);
         });
     };
-    nodeCreate = function (fullName, kind, metrics) {
-        return {
-            children: [],
-            fullName,
-            kind,
-            metrics: metrics || null,
-            name: fullName,
-            parent: null
-        };
-    };
-    // convertToTree
-    tmp = filePrefix.join(path.sep) + path.sep;
-    root = nodeCreate(tmp, "dir");
-    seen = {};
-    seen[tmp] = root;
-    filesUnderRoot = false;
-    Object.entries(summaryMap).forEach(function ([
-        key,
-        metrics
-    ]) {
-        let node;
-        let parent;
-        let parentPath;
-        node = nodeCreate(key, "file", metrics);
-        seen[key] = node;
-        parentPath = path.dirname(key) + path.sep;
-        if (parentPath === path.sep + path.sep) {
-            parentPath = path.sep + "__root__" + path.sep;
-        }
-        parent = seen[parentPath];
-        if (!parent) {
-            parent = nodeCreate(parentPath, "dir");
-            addChild(root, parent);
-            seen[parentPath] = parent;
-        }
-        addChild(parent, node);
-        if (parent === root) {
-            filesUnderRoot = true;
-        }
-    });
-    if (filesUnderRoot && filePrefix.length > 0) {
-        filePrefix.pop(); //start at one level above
-        tmp = root;
-        tmpChildren = tmp.children;
-        tmp.children = [];
-        root = nodeCreate(filePrefix.join(path.sep) + path.sep, "dir");
-        addChild(root, tmp);
-        tmpChildren.forEach(function (child) {
-            if (child.kind === "dir") {
-                addChild(root, child);
-            } else {
-                addChild(tmp, child);
-            }
-        });
-    }
-    fixupNodes(root, filePrefix.join(path.sep) + path.sep);
-    calculateMetrics(root);
-    that.root = root;
-    that.map = {};
-    that.indexAndSortTree(root, that.map);
-}
-TreeSummary.prototype = {
-    indexAndSortTree: function (node, map) {
-        let that;
-        that = this;
+    indexAndSortTree = function (node, map) {
         map[node.name] = node;
         node.children.sort(function (aa, bb) {
             aa = aa.relativeName;
@@ -10885,10 +10832,60 @@ TreeSummary.prototype = {
             );
         });
         node.children.forEach(function (child) {
-            that.indexAndSortTree(child, map);
+            // recurse
+            indexAndSortTree(child, map);
+        });
+    };
+    // convertToTree
+    tmp = filePrefix.join(path.sep) + path.sep;
+    root = createNode(tmp, "dir");
+    seen = {};
+    seen[tmp] = root;
+    filesUnderRoot = false;
+    Object.entries(summaryMap).forEach(function ([
+        key,
+        metrics
+    ]) {
+        let node;
+        let parent;
+        let parentPath;
+        node = createNode(key, "file", metrics);
+        seen[key] = node;
+        parentPath = path.dirname(key) + path.sep;
+        if (parentPath === path.sep + path.sep) {
+            parentPath = path.sep + "__root__" + path.sep;
+        }
+        parent = seen[parentPath];
+        if (!parent) {
+            parent = createNode(parentPath, "dir");
+            addChild(root, parent);
+            seen[parentPath] = parent;
+        }
+        addChild(parent, node);
+        if (parent === root) {
+            filesUnderRoot = true;
+        }
+    });
+    if (filesUnderRoot && filePrefix.length > 0) {
+        filePrefix.pop(); //start at one level above
+        tmp = root;
+        tmpChildren = tmp.children;
+        tmp.children = [];
+        root = createNode(filePrefix.join(path.sep) + path.sep, "dir");
+        addChild(root, tmp);
+        tmpChildren.forEach(function (child) {
+            if (child.kind === "dir") {
+                addChild(root, child);
+            } else {
+                addChild(tmp, child);
+            }
         });
     }
-};
+    fixupNodes(root, filePrefix.join(path.sep) + path.sep);
+    calculateMetrics(root);
+    that.root = root;
+    indexAndSortTree(root, {});
+}
 // init function
 function fill(str, width, right, tabs, clazz) {
     let fillStr;
