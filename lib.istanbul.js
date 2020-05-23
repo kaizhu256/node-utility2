@@ -11233,7 +11233,10 @@ local.coverageReportCreate = function (opt) {
         }
         writerFile = path.resolve(dir, "index.html");
         templateFill(node);
-        writerData = templateHead(templateData) + (
+        writerData = templateRender(
+            local.templateCoverageHead,
+            templateData
+        ) + (
             `<div class="coverage-summary">
 <table>
 <thead>
@@ -11479,7 +11482,7 @@ local.coverageReportCreate = function (opt) {
             });
             structured.shift();
             writerData = (
-                templateHead(templateData)
+                templateRender(local.templateCoverageHead, templateData)
                 + templateCompile(`<pre><table class="coverage"><tr>
 <td class="line-count">{{#show_lines}}</td>
 <td class="line-coverage">{{#show_line_execution_counts}}</td>
