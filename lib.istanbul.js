@@ -10503,7 +10503,7 @@ local.templateCoverageHead = '\
         <td>{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>\n\
     </tbody>\n\
     </table>\n\
-    <div class="path">{{#show_path}}</div>\n\
+    <div class="path">{{#show_paths}}</div>\n\
 </div>\n\
 <div class="body">\n\
 ';
@@ -11232,21 +11232,8 @@ templateRender = function (template, dict, node) {
  */
     let ii;
     let metrics;
-    let parent;
-    let parentUrlList;
     // render <node>
     metrics = node.metrics;
-    parent = node.parent;
-    parentUrlList = [];
-    ii = 0;
-    while (parent) {
-        parentUrlList.unshift(
-            "<a href=\"" + nodeParentUrlCreate(node, ii + 1)
-            + "index.html\">" + parent.relativeName + "</a>"
-        );
-        parent = parent.parent;
-        ii += 1;
-    }
     Object.assign(dict, {
         coverageLevel: metrics && coverageLevelGet(metrics.statements.pct),
         metrics,
@@ -11344,13 +11331,25 @@ templateRender = function (template, dict, node) {
         }
         return array;
     });
-    // render #show_path
-    template = template.replace("{{#show_path}}", function () {
-        return (
-            parentUrlList.length > 0
-            ? parentUrlList.join(" &#187; ") + " &#187; " + node.relativeName
-            : ""
-        );
+    // render #show_paths
+    template = template.replace("{{#show_paths}}", function () {
+        let parent;
+        let parentUrlList;
+        parent = node.parent;
+        if (!parent) {
+            return "";
+        }
+        parentUrlList = [];
+        ii = 0;
+        while (parent) {
+            parentUrlList.unshift(
+                "<a href=\"" + nodeParentUrlCreate(node, ii + 1)
+                + "index.html\">" + parent.relativeName + "</a>"
+            );
+            parent = parent.parent;
+            ii += 1;
+        }
+        return parentUrlList.join(" &#187; ") + " &#187; " + node.relativeName;
     });
     // render #show_percent_bar
     template = template.replace("{{#show_percent_bar}}", function () {
