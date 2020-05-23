@@ -10532,9 +10532,11 @@ let htmlAll;
 let htmlData;
 let htmlFile;
 let htmlWrite;
+let mergeSummaryObjects;
 let nameWidth;
 let nodeChildAdd;
 let nodeCreate;
+let nodeMetricsCalculate;
 let nodeParentUrlCreate;
 let nodeWalk;
 let path;
@@ -11029,6 +11031,21 @@ nodeCreate = function (fullName, kind, metrics) {
         parent: null
     };
 };
+nodeMetricsCalculate = function (node) {
+/*
+ * this function will recursively calculate <node>.metrics
+ */
+    if (node.kind !== "dir") {
+        return;
+    }
+    // recurse
+    node.children.forEach(nodeMetricsCalculate);
+    node.metrics = mergeSummaryObjects(
+        node.children.map(function (child) {
+            return child.metrics;
+        })
+    );
+};
 nodeParentUrlCreate = function (node, depth) {
 /*
  * this function will return parent-url of node with given <depth>
@@ -11079,6 +11096,7 @@ nodeWalk = function (node, level) {
     if (level !== 0) {
         summaryList.push(tableRow);
         node.children.forEach(function (child) {
+            // recurse
             nodeWalk(child, level + 1);
         });
         return;
@@ -11391,14 +11409,12 @@ local.coverageReportCreate = function (opt) {
  * 3. write coverage in html-format to filesystem
  * 4. return coverage in html-format as single document
  */
-    let calculateMetrics;
     let dir;
     let filePrefix;
     let filesUnderRoot;
     let findNameWidth;
     let fixupNodes;
     let indexAndSortTree;
-    let mergeSummaryObjects;
     let root;
     let seen;
     let tmp;
@@ -11407,34 +11423,6 @@ local.coverageReportCreate = function (opt) {
         return "";
     }
     // init function
-    calculateMetrics = function (entry) {
-        let fileChildren;
-        if (entry.kind !== "dir") {
-            return;
-        }
-        entry.children.forEach(function (child) {
-            calculateMetrics(child);
-        });
-        entry.metrics = mergeSummaryObjects(
-            entry.children.map(function (child) {
-                return child.metrics;
-            })
-        );
-        // calclulate "java-style" package metrics where there is no hierarchy
-        // across packages
-        fileChildren = entry.children.filter(function (nn) {
-            return nn.kind !== "dir";
-        });
-        if (fileChildren.length > 0) {
-            entry.packageMetrics = mergeSummaryObjects(
-                fileChildren.map(function (child) {
-                    return child.metrics;
-                })
-            );
-        } else {
-            entry.packageMetrics = null;
-        }
-    };
     mergeSummaryObjects = function (args) {
     /**
      * merges multiple summary metrics objects by summing up the `totals` and
@@ -11763,7 +11751,7 @@ local.coverageReportCreate = function (opt) {
         });
     }
     fixupNodes(root, filePrefix.join(path.sep) + path.sep);
-    calculateMetrics(root);
+    nodeMetricsCalculate(root);
     indexAndSortTree(root, {});
     nameWidth = findNameWidth(root);
     nodeWalk(root, 0);
