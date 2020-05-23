@@ -10606,17 +10606,21 @@ function mergeSummaryObjects(args) {
 // init InsertionText
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 function InsertionText(text, consumeBlanks) {
-    this.text = text;
-    this.origLength = text.length;
-    this.offsets = [];
-    this.consumeBlanks = consumeBlanks;
-    this.startPos = this.findFirstNonBlank();
-    this.endPos = this.findLastNonBlank();
+    let that;
+    that = this;
+    that.text = text;
+    that.origLength = text.length;
+    that.offsets = [];
+    that.consumeBlanks = consumeBlanks;
+    that.startPos = that.findFirstNonBlank();
+    that.endPos = that.findLastNonBlank();
 }
 InsertionText.prototype = {
     findFirstNonBlank: function () {
+        let that;
+        that = this;
         let pos = -1;
-        let text = this.text;
+        let text = that.text;
         let len = text.length;
         let ii;
         ii = 0;
@@ -10632,7 +10636,9 @@ InsertionText.prototype = {
         return pos;
     },
     findLastNonBlank: function () {
-        let text = this.text;
+        let that;
+        that = this;
+        let text = that.text;
         let len = text.length;
         let pos = text.length + 1;
         let ii;
@@ -10649,17 +10655,21 @@ InsertionText.prototype = {
         return pos;
     },
     originalLength: function () {
-        return this.origLength;
+        let that;
+        that = this;
+        return that.origLength;
     },
     insertAt: function (col, str, insertBefore, consumeBlanks) {
+        let that;
+        that = this;
         consumeBlanks = (
             consumeBlanks === undefined
-            ? this.consumeBlanks
+            ? that.consumeBlanks
             : consumeBlanks
         );
         col = (
-            col > this.originalLength()
-            ? this.originalLength()
+            col > that.originalLength()
+            ? that.originalLength()
             : col
         );
         col = (
@@ -10668,22 +10678,24 @@ InsertionText.prototype = {
             : col
         );
         if (consumeBlanks) {
-            if (col <= this.startPos) {
+            if (col <= that.startPos) {
                 col = 0;
             }
-            if (col > this.endPos) {
-                col = this.origLength;
+            if (col > that.endPos) {
+                col = that.origLength;
             }
         }
         let len = str.length;
-        let offset = this.findOffset(col, len, insertBefore);
+        let offset = that.findOffset(col, len, insertBefore);
         let realPos = col + offset;
-        let text = this.text;
-        this.text = text.substring(0, realPos) + str + text.substring(realPos);
-        return this;
+        let text = that.text;
+        that.text = text.substring(0, realPos) + str + text.substring(realPos);
+        return that;
     },
     findOffset: function (pos, len, insertBefore) {
-        let offsets = this.offsets;
+        let that;
+        that = this;
+        let offsets = that.offsets;
         let offsetObj;
         let cumulativeOffset = 0;
         let ii;
@@ -10712,12 +10724,16 @@ InsertionText.prototype = {
         return cumulativeOffset;
     },
     wrap: function (startPos, startText, endPos, endText, consumeBlanks) {
-        this.insertAt(startPos, startText, true, consumeBlanks);
-        this.insertAt(endPos, endText, false, consumeBlanks);
-        return this;
+        let that;
+        that = this;
+        that.insertAt(startPos, startText, true, consumeBlanks);
+        that.insertAt(endPos, endText, false, consumeBlanks);
+        return that;
     },
     toString: function () {
-        return this.text;
+        let that;
+        that = this;
+        return that.text;
     }
 };
 // init TreeSummary
@@ -10725,81 +10741,88 @@ InsertionText.prototype = {
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
 */
 function Node(fullName, kind, metrics) {
-    this.name = fullName;
-    this.fullName = fullName;
-    this.kind = kind;
-    this.metrics = metrics || null;
-    this.parent = null;
-    this.children = [];
+    let that;
+    that = this;
+    that.name = fullName;
+    that.fullName = fullName;
+    that.kind = kind;
+    that.metrics = metrics || null;
+    that.parent = null;
+    that.children = [];
 }
 Node.prototype = {
     fullPath: function () {
-        return this.fullName;
+        let that;
+        that = this;
+        return that.fullName;
     },
     addChild: function (child) {
-        this.children.push(child);
-        child.parent = this;
+        let that;
+        that = this;
+        that.children.push(child);
+        child.parent = that;
     }
 };
-function TreeSummary(summaryMap) {
-    this.convertToTree(summaryMap);
-}
-TreeSummary.prototype = {
-    convertToTree: function (summaryMap) {
-        let rootPath = filePrefix.join(path.sep) + path.sep;
-        let root = new Node(rootPath, "dir");
-        let tmp;
-        let tmpChildren;
-        let seen = {};
-        let filesUnderRoot = false;
-        seen[rootPath] = root;
-        Object.entries(summaryMap).forEach(function ([
-            key,
-            metrics
-        ]) {
-            let node;
-            let parent;
-            let parentPath;
-            node = new Node(key, "file", metrics);
-            seen[key] = node;
-            parentPath = path.dirname(key) + path.sep;
-            if (parentPath === path.sep + path.sep) {
-                parentPath = path.sep + "__root__" + path.sep;
-            }
-            parent = seen[parentPath];
-            if (!parent) {
-                parent = new Node(parentPath, "dir");
-                root.addChild(parent);
-                seen[parentPath] = parent;
-            }
-            parent.addChild(node);
-            if (parent === root) {
-                filesUnderRoot = true;
+function TreeSummary() {
+    let that;
+    that = this;
+    // convertToTree
+    let rootPath = filePrefix.join(path.sep) + path.sep;
+    let root = new Node(rootPath, "dir");
+    let tmp;
+    let tmpChildren;
+    let seen = {};
+    let filesUnderRoot = false;
+    seen[rootPath] = root;
+    Object.entries(summaryMap).forEach(function ([
+        key,
+        metrics
+    ]) {
+        let node;
+        let parent;
+        let parentPath;
+        node = new Node(key, "file", metrics);
+        seen[key] = node;
+        parentPath = path.dirname(key) + path.sep;
+        if (parentPath === path.sep + path.sep) {
+            parentPath = path.sep + "__root__" + path.sep;
+        }
+        parent = seen[parentPath];
+        if (!parent) {
+            parent = new Node(parentPath, "dir");
+            root.addChild(parent);
+            seen[parentPath] = parent;
+        }
+        parent.addChild(node);
+        if (parent === root) {
+            filesUnderRoot = true;
+        }
+    });
+    if (filesUnderRoot && filePrefix.length > 0) {
+        filePrefix.pop(); //start at one level above
+        tmp = root;
+        tmpChildren = tmp.children;
+        tmp.children = [];
+        root = new Node(filePrefix.join(path.sep) + path.sep, "dir");
+        root.addChild(tmp);
+        tmpChildren.forEach(function (child) {
+            if (child.kind === "dir") {
+                root.addChild(child);
+            } else {
+                tmp.addChild(child);
             }
         });
-        if (filesUnderRoot && filePrefix.length > 0) {
-            filePrefix.pop(); //start at one level above
-            tmp = root;
-            tmpChildren = tmp.children;
-            tmp.children = [];
-            root = new Node(filePrefix.join(path.sep) + path.sep, "dir");
-            root.addChild(tmp);
-            tmpChildren.forEach(function (child) {
-                if (child.kind === "dir") {
-                    root.addChild(child);
-                } else {
-                    tmp.addChild(child);
-                }
-            });
-        }
-        this.fixupNodes(root, filePrefix.join(path.sep) + path.sep);
-        this.calculateMetrics(root);
-        this.root = root;
-        this.map = {};
-        this.indexAndSortTree(root, this.map);
-    },
+    }
+    that.fixupNodes(root, filePrefix.join(path.sep) + path.sep);
+    that.calculateMetrics(root);
+    that.root = root;
+    that.map = {};
+    that.indexAndSortTree(root, that.map);
+}
+TreeSummary.prototype = {
     fixupNodes: function (node, filePrefix, parent) {
-        let that = this;
+        let that;
+        that = this;
         if (node.name.indexOf(filePrefix) === 0) {
             node.name = node.name.substring(filePrefix.length);
         }
@@ -10820,7 +10843,8 @@ TreeSummary.prototype = {
         });
     },
     calculateMetrics: function (entry) {
-        let that = this;
+        let that;
+        that = this;
         let fileChildren;
         if (entry.kind !== "dir") {
             return;
@@ -10849,7 +10873,8 @@ TreeSummary.prototype = {
         }
     },
     indexAndSortTree: function (node, map) {
-        let that = this;
+        let that;
+        that = this;
         map[node.name] = node;
         node.children.sort(function (aa, bb) {
             aa = aa.relativeName;
@@ -11272,7 +11297,7 @@ function reportTextCreate(opt) {
             });
         }
     });
-    coverageReportSummary = new TreeSummary(summaryMap);
+    coverageReportSummary = new TreeSummary();
     nameWidth = findNameWidth(coverageReportSummary.root);
     walk(coverageReportSummary.root, 0);
     console.log(strings.join("\n") + "\n");
