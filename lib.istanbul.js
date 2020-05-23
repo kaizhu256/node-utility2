@@ -11246,7 +11246,7 @@ templateRender = function (template, dict, node) {
         let maxLines;
         lines = dict.fileCoverage.l;
         maxLines = Number(dict.maxLines);
-        array = [];
+        array = "";
         val = "";
         ii = 0;
         while (ii < maxLines) {
@@ -11261,13 +11261,13 @@ templateRender = function (template, dict, node) {
                     covered = "no";
                 }
             }
-            array.push(
+            array += (
                 "<span class=\"cline-any cline-" + covered + "\">"
-                + val + "</span>"
+                + val + "</span>\n"
             );
             ii += 1;
         }
-        return array.join("\n");
+        return array;
     });
     // render #show_lines
     template = template.replace("{{#show_lines}}", function () {
