@@ -10943,7 +10943,6 @@ local.coverageReportCreate = function (opt) {
  * 4. return coverage in html-format as single document
  */
     let addChild;
-    let ancestorHref;
     let calculateMetrics;
     let coverageReportHtml;
     let coverageReportWrite;
@@ -10970,6 +10969,7 @@ local.coverageReportCreate = function (opt) {
     let templateHead;
     let tmp;
     let tmpChildren;
+    let urlParent;
     let walk;
     let writerData;
     let writerFile;
@@ -10980,17 +10980,15 @@ local.coverageReportCreate = function (opt) {
     path = require("path");
     dir = process.cwd() + "/tmp/build/coverage.html";
     // init function
-    ancestorHref = function (node, num) {
+    urlParent = function (node, num) {
         let href;
         let ii;
         let jj;
-        let separated;
         href = "";
         ii = 0;
         while (ii < num) {
-            separated = node.relativeName.split(path.sep);
             jj = 0;
-            while (jj < separated.length - 1) {
+            while (jj < node.relativeName.split(path.sep).length - 1) {
                 href += "../";
                 jj += 1;
             }
@@ -11050,7 +11048,7 @@ local.coverageReportCreate = function (opt) {
             ii += 1;
             parent = parent.parent;
         }
-        return ancestorHref(node, ii) + name;
+        return urlParent(node, ii) + name;
     };
     templateFill = function (node) {
         let ii;
@@ -11107,7 +11105,7 @@ local.coverageReportCreate = function (opt) {
             );
         },
         ancestor: function (node, num) {
-            return ancestorHref(node, num) + "index.html";
+            return urlParent(node, num) + "index.html";
         }
     };
     coverageReportWrite = function (node, dir) {
