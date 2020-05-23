@@ -10958,7 +10958,7 @@ local.coverageReportCreate = function (opt) {
     let path;
     let root;
     let seen;
-    let strings;
+    let summaryList;
     let summaryMap;
     let templateData;
     let templateFill;
@@ -11474,7 +11474,7 @@ local.coverageReportCreate = function (opt) {
             );
         }).join(" |") + " |";
         if (level !== 0) {
-            strings.push(tableRow);
+            summaryList.push(tableRow);
             node.children.forEach(function (child) {
                 walk(child, level + 1);
             });
@@ -11484,22 +11484,22 @@ local.coverageReportCreate = function (opt) {
             "-".repeat(nameWidth)
             + "-|-----------|-----------|-----------|-----------|"
         );
-        strings.push(line);
-        strings.push(
+        summaryList.push(line);
+        summaryList.push(
             stringFill("File", nameWidth, false, 0)
             + " |   % Stmts |% Branches |   % Funcs |   % Lines |"
         );
-        strings.push(line);
+        summaryList.push(line);
         node.children.forEach(function (child) {
             // recurse
             walk(child, level + 1);
         });
-        strings.push(line);
-        strings.push(tableRow);
-        strings.push(line);
+        summaryList.push(line);
+        summaryList.push(tableRow);
+        summaryList.push(line);
     };
+    summaryList = [];
     summaryMap = {};
-    strings = [];
     Object.entries(globalThis.__coverage__).forEach(function ([
         file,
         fileCoverage
@@ -11760,7 +11760,7 @@ local.coverageReportCreate = function (opt) {
     nameWidth = findNameWidth(root);
     walk(root, 0);
     // 1. print coverage in text-format to stdout
-    console.log(strings.join("\n") + "\n");
+    console.log(summaryList.join("\n") + "\n");
     // create HtmlReport
     templateHead = local.templateCoverageHead;
     if (local.isBrowser) {
