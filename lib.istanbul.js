@@ -10641,29 +10641,22 @@ function summarizeFileCoverage(fileCoverage) {
             pct: "Unknown"
         }
     };
-/**
- * adds line coverage information to a file coverage object, reverse-engineering
- * it from statement coverage. The object passed in is updated in place.
- *
- * Note that if line coverage information is already present in the object,
- * it is not recomputed.
- *
- * @method addDerivedInfoForFile
- * @static
- * @param {Object} fileCoverage the coverage object for a single file
- */
+    // count number of times each line was run
     if (!fileCoverage.l) {
         fileCoverage.l = {};
         Object.entries(fileCoverage.s).forEach(function ([
             st,
             count
         ]) {
-            let line = fileCoverage.statementMap[st].start.line;
-            let prevVal = fileCoverage.l[line];
+            let line;
             if (count === 0 && fileCoverage.statementMap[st].skip) {
                 count = 1;
             }
-            if (prevVal === undefined || prevVal < count) {
+            line = fileCoverage.statementMap[st].start.line;
+            if (
+                fileCoverage.l.hasOwnProperty(line)
+                && fileCoverage.l[line] < count
+            ) {
                 fileCoverage.l[line] = count;
             }
         });
