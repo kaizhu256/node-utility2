@@ -10779,7 +10779,7 @@ htmlWrite = function (node, dir) {
             `<tr>
 <td class="file {{coverageLevels.statements}}"
     data-value="{{file}}"><a href="{{url}}"><div>{{file}}</div>
-    {{#show_picture}}</a></td>
+    {{#show_percent_bar}}</a></td>
 <td class="pct {{coverageLevels.statements}}"
     data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
     ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>
@@ -11243,7 +11243,6 @@ templateRender = function (template, dict, node) {
             node.metrics && coverageLevelGet(node.metrics.statements.pct)
         ),
         entity: node.name || "All files",
-        metrics: node.metrics,
         parentUrl: "<div class=\"path\">" + (
             parentUrlList.length > 0
             ? parentUrlList.join(" &#187; ") + " &#187; " + node.relativeName
@@ -11272,52 +11271,24 @@ templateRender = function (template, dict, node) {
         function () {
             let array;
             if (
-                dict.metrics.statements.skipped === 0
-                && dict.metrics.functions.skipped === 0
-                && dict.metrics.branches.skipped === 0
+                node.metrics.statements.skipped === 0
+                && node.metrics.functions.skipped === 0
+                && node.metrics.branches.skipped === 0
             ) {
                 return "<span class=\"ignore-none\">none</span>";
             }
             array = [];
             // hack-coverage - compact summary
-            if (dict.metrics.statements.skipped > 0) {
+            if (node.metrics.statements.skipped > 0) {
                 array.push(
-                    "statements: " + dict.metrics.statements.skipped
+                    "statements: " + node.metrics.statements.skipped
                 );
             }
-            if (dict.metrics.branches.skipped > 0) {
-                array.push("branches: " + dict.metrics.branches.skipped);
+            if (node.metrics.branches.skipped > 0) {
+                array.push("branches: " + node.metrics.branches.skipped);
             }
-            if (dict.metrics.functions.skipped > 0) {
-                array.push("functions: " + dict.metrics.functions.skipped);
-            }
-            return array.join("<br>");
-        }
-    );
-    // render #show_parent
-    template = template.replace(
-        "{{#show_parent}}",
-        function () {
-            let array;
-            if (
-                dict.metrics.statements.skipped === 0
-                && dict.metrics.functions.skipped === 0
-                && dict.metrics.branches.skipped === 0
-            ) {
-                return "<span class=\"ignore-none\">none</span>";
-            }
-            array = [];
-            // hack-coverage - compact summary
-            if (dict.metrics.statements.skipped > 0) {
-                array.push(
-                    "statements: " + dict.metrics.statements.skipped
-                );
-            }
-            if (dict.metrics.branches.skipped > 0) {
-                array.push("branches: " + dict.metrics.branches.skipped);
-            }
-            if (dict.metrics.functions.skipped > 0) {
-                array.push("functions: " + dict.metrics.functions.skipped);
+            if (node.metrics.functions.skipped > 0) {
+                array.push("functions: " + node.metrics.functions.skipped);
             }
             return array.join("<br>");
         }
@@ -11326,24 +11297,24 @@ templateRender = function (template, dict, node) {
     template = template.replace("{{#show_ignores}}", function () {
         let array;
         if (
-            dict.metrics.statements.skipped === 0
-            && dict.metrics.functions.skipped === 0
-            && dict.metrics.branches.skipped === 0
+            node.metrics.statements.skipped === 0
+            && node.metrics.functions.skipped === 0
+            && node.metrics.branches.skipped === 0
         ) {
             return "<span class=\"ignore-none\">none</span>";
         }
         array = [];
         // hack-coverage - compact summary
-        if (dict.metrics.statements.skipped > 0) {
+        if (node.metrics.statements.skipped > 0) {
             array.push(
-                "statements: " + dict.metrics.statements.skipped
+                "statements: " + node.metrics.statements.skipped
             );
         }
-        if (dict.metrics.branches.skipped > 0) {
-            array.push("branches: " + dict.metrics.branches.skipped);
+        if (node.metrics.branches.skipped > 0) {
+            array.push("branches: " + node.metrics.branches.skipped);
         }
-        if (dict.metrics.functions.skipped > 0) {
-            array.push("functions: " + dict.metrics.functions.skipped);
+        if (node.metrics.functions.skipped > 0) {
+            array.push("functions: " + node.metrics.functions.skipped);
         }
         return array.join("<br>");
     });
@@ -11398,10 +11369,38 @@ templateRender = function (template, dict, node) {
         }
         return array;
     });
-    // render #show_picture
-    template = template.replace("{{#show_picture}}", function () {
+    // render #show_path
+    template = template.replace(
+        "{{#show_path}}",
+        function () {
+            let array;
+            if (
+                node.metrics.statements.skipped === 0
+                && node.metrics.functions.skipped === 0
+                && node.metrics.branches.skipped === 0
+            ) {
+                return "<span class=\"ignore-none\">none</span>";
+            }
+            array = [];
+            // hack-coverage - compact summary
+            if (node.metrics.statements.skipped > 0) {
+                array.push(
+                    "statements: " + node.metrics.statements.skipped
+                );
+            }
+            if (node.metrics.branches.skipped > 0) {
+                array.push("branches: " + node.metrics.branches.skipped);
+            }
+            if (node.metrics.functions.skipped > 0) {
+                array.push("functions: " + node.metrics.functions.skipped);
+            }
+            return array.join("<br>");
+        }
+    );
+    // render #show_percent_bar
+    template = template.replace("{{#show_percent_bar}}", function () {
         let num;
-        num = Number(dict.metrics.statements.pct) | 0;
+        num = Number(node.metrics.statements.pct) | 0;
         return (
             "<span class=\"cover-fill cover-full\" style=\"width:" + num
             + "px;\"></span><span class=\"cover-empty\" style=\"width:"
