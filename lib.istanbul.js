@@ -10524,10 +10524,10 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
 let TAB_SIZE;
 let coverageReportHtml;
-let coverageReportSummary;
 let dir;
 let filePrefix;
 let path;
+let root;
 let summaryMap;
 let writerData;
 let writerFile;
@@ -10740,152 +10740,6 @@ InsertionText.prototype = {
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
 */
-function TreeSummary() {
-    let addChild;
-    let calculateMetrics;
-    let createNode;
-    let filesUnderRoot;
-    let fixupNodes;
-    let indexAndSortTree;
-    let root;
-    let seen;
-    let that;
-    let tmp;
-    let tmpChildren;
-    that = this;
-    addChild = function (node, child) {
-        node.children.push(child);
-        child.parent = node;
-    };
-    calculateMetrics = function (entry) {
-        let fileChildren;
-        if (entry.kind !== "dir") {
-            return;
-        }
-        entry.children.forEach(function (child) {
-            calculateMetrics(child);
-        });
-        entry.metrics = mergeSummaryObjects(
-            entry.children.map(function (child) {
-                return child.metrics;
-            })
-        );
-        // calclulate "java-style" package metrics where there is no hierarchy
-        // across packages
-        fileChildren = entry.children.filter(function (nn) {
-            return nn.kind !== "dir";
-        });
-        if (fileChildren.length > 0) {
-            entry.packageMetrics = mergeSummaryObjects(
-                fileChildren.map(function (child) {
-                    return child.metrics;
-                })
-            );
-        } else {
-            entry.packageMetrics = null;
-        }
-    };
-    createNode = function (fullName, kind, metrics) {
-        return {
-            children: [],
-            fullName,
-            kind,
-            metrics: metrics || null,
-            name: fullName,
-            parent: null
-        };
-    };
-    fixupNodes = function (node, filePrefix, parent) {
-        // fix name
-        if (node.name.indexOf(filePrefix) === 0) {
-            node.name = node.name.slice(filePrefix.length);
-        }
-        if (node.name[0] === path.sep) {
-            node.name = node.name.slice(1);
-        }
-        // init relativeName
-        node.relativeName = (
-            parent
-            ? (
-                parent.name !== "__root__/"
-                ? node.name.slice(parent.name.length)
-                : node.name
-            )
-            : node.name.slice(filePrefix.length)
-        ) || "All files";
-        node.children.forEach(function (child) {
-            // recurse
-            fixupNodes(child, filePrefix, node);
-        });
-    };
-    indexAndSortTree = function (node, map) {
-        map[node.name] = node;
-        node.children.sort(function (aa, bb) {
-            aa = aa.relativeName;
-            bb = bb.relativeName;
-            return (
-                aa < bb
-                ? -1
-                : aa > bb
-                ? 1
-                : 0
-            );
-        });
-        node.children.forEach(function (child) {
-            // recurse
-            indexAndSortTree(child, map);
-        });
-    };
-    // convertToTree
-    tmp = filePrefix.join(path.sep) + path.sep;
-    root = createNode(tmp, "dir");
-    seen = {};
-    seen[tmp] = root;
-    filesUnderRoot = false;
-    Object.entries(summaryMap).forEach(function ([
-        key,
-        metrics
-    ]) {
-        let node;
-        let parent;
-        let parentPath;
-        node = createNode(key, "file", metrics);
-        seen[key] = node;
-        parentPath = path.dirname(key) + path.sep;
-        if (parentPath === path.sep + path.sep) {
-            parentPath = path.sep + "__root__" + path.sep;
-        }
-        parent = seen[parentPath];
-        if (!parent) {
-            parent = createNode(parentPath, "dir");
-            addChild(root, parent);
-            seen[parentPath] = parent;
-        }
-        addChild(parent, node);
-        if (parent === root) {
-            filesUnderRoot = true;
-        }
-    });
-    if (filesUnderRoot && filePrefix.length > 0) {
-        filePrefix.pop(); //start at one level above
-        tmp = root;
-        tmpChildren = tmp.children;
-        tmp.children = [];
-        root = createNode(filePrefix.join(path.sep) + path.sep, "dir");
-        addChild(root, tmp);
-        tmpChildren.forEach(function (child) {
-            if (child.kind === "dir") {
-                addChild(root, child);
-            } else {
-                addChild(tmp, child);
-            }
-        });
-    }
-    fixupNodes(root, filePrefix.join(path.sep) + path.sep);
-    calculateMetrics(root);
-    that.root = root;
-    indexAndSortTree(root, {});
-}
 // init function
 function fill(str, width, right, tabs, clazz) {
     let fillStr;
@@ -11291,9 +11145,148 @@ function reportTextCreate(opt) {
             });
         }
     });
-    coverageReportSummary = new TreeSummary();
-    nameWidth = findNameWidth(coverageReportSummary.root);
-    walk(coverageReportSummary.root, 0);
+    // coverageReportSummary = new TreeSummary();
+    let addChild;
+    let calculateMetrics;
+    let createNode;
+    let filesUnderRoot;
+    let fixupNodes;
+    let indexAndSortTree;
+    let seen;
+    let tmpChildren;
+    addChild = function (node, child) {
+        node.children.push(child);
+        child.parent = node;
+    };
+    calculateMetrics = function (entry) {
+        let fileChildren;
+        if (entry.kind !== "dir") {
+            return;
+        }
+        entry.children.forEach(function (child) {
+            calculateMetrics(child);
+        });
+        entry.metrics = mergeSummaryObjects(
+            entry.children.map(function (child) {
+                return child.metrics;
+            })
+        );
+        // calclulate "java-style" package metrics where there is no hierarchy
+        // across packages
+        fileChildren = entry.children.filter(function (nn) {
+            return nn.kind !== "dir";
+        });
+        if (fileChildren.length > 0) {
+            entry.packageMetrics = mergeSummaryObjects(
+                fileChildren.map(function (child) {
+                    return child.metrics;
+                })
+            );
+        } else {
+            entry.packageMetrics = null;
+        }
+    };
+    createNode = function (fullName, kind, metrics) {
+        return {
+            children: [],
+            fullName,
+            kind,
+            metrics: metrics || null,
+            name: fullName,
+            parent: null
+        };
+    };
+    fixupNodes = function (node, filePrefix, parent) {
+        // fix name
+        if (node.name.indexOf(filePrefix) === 0) {
+            node.name = node.name.slice(filePrefix.length);
+        }
+        if (node.name[0] === path.sep) {
+            node.name = node.name.slice(1);
+        }
+        // init relativeName
+        node.relativeName = (
+            parent
+            ? (
+                parent.name !== "__root__/"
+                ? node.name.slice(parent.name.length)
+                : node.name
+            )
+            : node.name.slice(filePrefix.length)
+        ) || "All files";
+        node.children.forEach(function (child) {
+            // recurse
+            fixupNodes(child, filePrefix, node);
+        });
+    };
+    indexAndSortTree = function (node, map) {
+        map[node.name] = node;
+        node.children.sort(function (aa, bb) {
+            aa = aa.relativeName;
+            bb = bb.relativeName;
+            return (
+                aa < bb
+                ? -1
+                : aa > bb
+                ? 1
+                : 0
+            );
+        });
+        node.children.forEach(function (child) {
+            // recurse
+            indexAndSortTree(child, map);
+        });
+    };
+    // convertToTree
+    tmp = filePrefix.join(path.sep) + path.sep;
+    root = createNode(tmp, "dir");
+    seen = {};
+    seen[tmp] = root;
+    filesUnderRoot = false;
+    Object.entries(summaryMap).forEach(function ([
+        key,
+        metrics
+    ]) {
+        let node;
+        let parent;
+        let parentPath;
+        node = createNode(key, "file", metrics);
+        seen[key] = node;
+        parentPath = path.dirname(key) + path.sep;
+        if (parentPath === path.sep + path.sep) {
+            parentPath = path.sep + "__root__" + path.sep;
+        }
+        parent = seen[parentPath];
+        if (!parent) {
+            parent = createNode(parentPath, "dir");
+            addChild(root, parent);
+            seen[parentPath] = parent;
+        }
+        addChild(parent, node);
+        if (parent === root) {
+            filesUnderRoot = true;
+        }
+    });
+    if (filesUnderRoot && filePrefix.length > 0) {
+        filePrefix.pop(); //start at one level above
+        tmp = root;
+        tmpChildren = tmp.children;
+        tmp.children = [];
+        root = createNode(filePrefix.join(path.sep) + path.sep, "dir");
+        addChild(root, tmp);
+        tmpChildren.forEach(function (child) {
+            if (child.kind === "dir") {
+                addChild(root, child);
+            } else {
+                addChild(tmp, child);
+            }
+        });
+    }
+    fixupNodes(root, filePrefix.join(path.sep) + path.sep);
+    calculateMetrics(root);
+    indexAndSortTree(root, {});
+    nameWidth = findNameWidth(root);
+    walk(root, 0);
     console.log(strings.join("\n") + "\n");
 
 
@@ -11704,7 +11697,7 @@ function reportTextCreate(opt) {
             );
         });
     };
-    coverageReportWrite(coverageReportSummary.root, dir);
+    coverageReportWrite(root, dir);
 }
 
 
@@ -11816,7 +11809,7 @@ local.coverageReportCreate = function (opt) {
         JSON.stringify(globalThis.__coverageCodeDict__)
     );
     // write coverage.badge.svg
-    opt.pct = coverageReportSummary.root.metrics.lines.pct;
+    opt.pct = root.metrics.lines.pct;
     local.fsWriteFileWithMkdirpSync(
         local._istanbul_path.dirname(dir) + "/coverage.badge.svg",
         // edit coverage badge percent
