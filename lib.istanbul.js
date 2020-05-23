@@ -10764,15 +10764,43 @@ Node.prototype = {
     }
 };
 function TreeSummary() {
+    let filesUnderRoot;
+    let fixupNodes;
+    let root;
+    let rootPath;
+    let seen;
     let that;
-    that = this;
-    // convertToTree
-    let rootPath = filePrefix.join(path.sep) + path.sep;
-    let root = new Node(rootPath, "dir");
     let tmp;
     let tmpChildren;
-    let seen = {};
-    let filesUnderRoot = false;
+    that = this;
+    fixupNodes = function (node, filePrefix, parent) {
+        // fix name
+        if (node.name.indexOf(filePrefix) === 0) {
+            node.name = node.name.substring(filePrefix.length);
+        }
+        if (node.name.charAt(0) === path.sep) {
+            node.name = node.name.substring(1);
+        }
+        // init relativeName
+        node.relativeName = (
+            parent
+            ? (
+                parent.name !== "__root__/"
+                ? node.name.substring(parent.name.length)
+                : node.name
+            )
+            : node.name.substring(filePrefix.length)
+        ) || "All files";
+        node.children.forEach(function (child) {
+            // recurse
+            fixupNodes(child, filePrefix, node);
+        });
+    };
+    // convertToTree
+    rootPath = filePrefix.join(path.sep) + path.sep;
+    root = new Node(rootPath, "dir");
+    seen = {};
+    filesUnderRoot = false;
     seen[rootPath] = root;
     Object.entries(summaryMap).forEach(function ([
         key,
@@ -10813,35 +10841,13 @@ function TreeSummary() {
             }
         });
     }
-    that.fixupNodes(root, filePrefix.join(path.sep) + path.sep);
+    fixupNodes(root, filePrefix.join(path.sep) + path.sep);
     that.calculateMetrics(root);
     that.root = root;
     that.map = {};
     that.indexAndSortTree(root, that.map);
 }
 TreeSummary.prototype = {
-    fixupNodes: function (node, filePrefix, parent) {
-        let that;
-        that = this;
-        if (node.name.indexOf(filePrefix) === 0) {
-            node.name = node.name.substring(filePrefix.length);
-        }
-        if (node.name.charAt(0) === path.sep) {
-            node.name = node.name.substring(1);
-        }
-        node.relativeName = (
-            parent
-            ? (
-                parent.name !== "__root__/"
-                ? node.name.substring(parent.name.length)
-                : node.name
-            )
-            : node.name.substring(filePrefix.length)
-        ) || "All files";
-        node.children.forEach(function (child) {
-            that.fixupNodes(child, filePrefix, node);
-        });
-    },
     calculateMetrics: function (entry) {
         let that;
         that = this;
