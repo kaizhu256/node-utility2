@@ -10747,7 +10747,6 @@ function TreeSummary() {
     let fixupNodes;
     let nodeCreate;
     let root;
-    let rootPath;
     let seen;
     let that;
     let tmp;
@@ -10819,11 +10818,11 @@ function TreeSummary() {
         };
     };
     // convertToTree
-    rootPath = filePrefix.join(path.sep) + path.sep;
-    root = nodeCreate(rootPath, "dir");
+    tmp = filePrefix.join(path.sep) + path.sep;
+    root = nodeCreate(tmp, "dir");
     seen = {};
+    seen[tmp] = root;
     filesUnderRoot = false;
-    seen[rootPath] = root;
     Object.entries(summaryMap).forEach(function ([
         key,
         metrics
