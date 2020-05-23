@@ -10526,6 +10526,7 @@ let TAB_SIZE;
 let coverageReportHtml;
 let dir;
 let filePrefix;
+let numberFormatPercent;
 let path;
 let root;
 let summaryMap;
@@ -10537,15 +10538,12 @@ path = require("path");
 TAB_SIZE = 2;
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
 // init utils
-function percent(covered, total) {
-    let tmp;
-    if (total > 0) {
-        tmp = 1000 * 100 * covered / total + 5;
-        return Math.floor(tmp / 10) / 100;
-    } else {
-        return 100.00;
-    }
-}
+numberFormatPercent = new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+    style: "percent"
+});
+numberFormatPercent = numberFormatPercent.format.bind(numberFormatPercent);
 function mergeSummaryObjects(args) {
 /**
  * merges multiple summary metrics objects by summing up the `totals` and
@@ -10599,7 +10597,9 @@ function mergeSummaryObjects(args) {
         increment(arg);
     });
     keys.forEach(function (key) {
-        summary[key].pct = percent(summary[key].covered, summary[key].total);
+        summary[key].pct = numberFormatPercent(
+            summary[key].covered / summary[key].total
+        );
     });
     return summary;
 }
@@ -11105,7 +11105,7 @@ function reportTextCreate(opt) {
                     elem.covered += Boolean(covered || skipped);
                     elem.skipped += Boolean(!covered && skipped);
                 });
-                elem.pct = percent(elem.covered, elem.total);
+                elem.pct = numberFormatPercent(elem.covered / elem.total);
                 summary[key] = elem;
             });
             // computeBranchTotals
@@ -11128,7 +11128,7 @@ function reportTextCreate(opt) {
                 });
                 elem.total += branches.length;
             });
-            elem.pct = percent(elem.covered, elem.total);
+            elem.pct = numberFormatPercent(elem.covered / elem.total);
             summary.branches = elem;
             summaryMap[file] = summary;
             // findCommonArrayPrefix
