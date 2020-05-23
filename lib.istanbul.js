@@ -10794,7 +10794,6 @@ htmlWrite = function (node, dir) {
     ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
 </tr>`
         ), {
-            metrics: child.metrics,
             coverageLevels: {
                 statements: coverageLevelGet(
                     child.metrics.statements.pct
@@ -10805,7 +10804,7 @@ htmlWrite = function (node, dir) {
             },
             file: child.relativeName,
             url
-        }, {}) + "\n";
+        }, child) + "\n";
     }).join("") + (
         "</tbody>\n</table>\n</div>\n" + templateFoot
     );
