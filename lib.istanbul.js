@@ -10704,36 +10704,6 @@ coveragePercent = function (covered, total) {
         : 100
     );
 };
-summaryNodeCreate = function (fullName, kind, metrics) {
-    return {
-        children: [],
-        fullName,
-        kind,
-        metrics: metrics || null,
-        name: fullName,
-        parent: null
-    };
-};
-summaryNodeParentUrl = function (node, depth) {
-/*
- * this function will return <node>'s parent-url with given <depth>
- */
-    let href;
-    let ii;
-    let jj;
-    href = "";
-    ii = 0;
-    while (ii < depth) {
-        jj = 0;
-        while (jj < node.relativeName.split(path.sep).length - 1) {
-            href += "../";
-            jj += 1;
-        }
-        node = node.parent;
-        ii += 1;
-    }
-    return href;
-};
 stringPad = function (str, width, right, tabs, coverageLevel) {
 /*
  * this function will pad <str> to given <width>
@@ -10775,6 +10745,36 @@ stringPad = function (str, width, right, tabs, coverageLevel) {
         break;
     }
     return leader + fmtStr;
+};
+summaryNodeCreate = function (fullName, kind, metrics) {
+    return {
+        children: [],
+        fullName,
+        kind,
+        metrics: metrics || null,
+        name: fullName,
+        parent: null
+    };
+};
+summaryNodeParentUrl = function (node, depth) {
+/*
+ * this function will return <node>'s parent-url with given <depth>
+ */
+    let href;
+    let ii;
+    let jj;
+    href = "";
+    ii = 0;
+    while (ii < depth) {
+        jj = 0;
+        while (jj < node.relativeName.split(path.sep).length - 1) {
+            href += "../";
+            jj += 1;
+        }
+        node = node.parent;
+        ii += 1;
+    }
+    return href;
 };
 templateDictCreate = function (node) {
     let ii;
