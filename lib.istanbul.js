@@ -11322,6 +11322,10 @@ templateRender = function (template, dict, node) {
         paths = node.relativeName;
         ii = 1;
         while (parent) {
+            paths = (
+                "index.html\">" + parent.relativeName + "</a>" + " &#187; "
+                + paths
+            );
             val = "";
             jj = 0;
             while (jj < ii) {
@@ -11333,10 +11337,7 @@ templateRender = function (template, dict, node) {
                 node = node.parent;
                 jj += 1;
             }
-            paths = (
-                "<a href=\"" + val + "index.html\">"
-                + parent.relativeName + "</a>" + " &#187; " + paths
-            );
+            paths = "<a href=\"" + val + paths;
             parent = parent.parent;
             ii += 1;
         }
