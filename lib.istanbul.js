@@ -10496,7 +10496,7 @@ local.templateCoverageHead = '\
     </tr>\n\
     </thead>\n\
     <tbody>\n\
-        <td>statements: {{metrics.statements.skipped}}<br>branches: {{metrics.branches.skipped}}<br>functions: {{metrics.functions.skipped}}<br>lines: {{metrics.lines.skipped}}</td>\n\
+        <td>Statements: {{metrics.statements.skipped}}<br>Branches: {{metrics.branches.skipped}}<br>Functions: {{metrics.functions.skipped}}</td>\n\
         <td>{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>\n\
         <td>{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>\n\
         <td>{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>\n\
