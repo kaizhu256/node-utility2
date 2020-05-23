@@ -10200,8 +10200,7 @@ local.templateCoverageFoot = '\
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
 */
-local.templateCoverageHead =
-`<!doctype html>
+local.templateCoverageHead = `<!doctype html>
 <html lang="en" class="x-istanbul">
 <head>
     <title>Code coverage report for {{entity}}</title>
@@ -10497,13 +10496,13 @@ local.templateCoverageHead =
     </thead>
     <tbody>
         <td>{{#show_ignores}}</td>
-        <td>{{#with metrics.statements}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>
-        <td>{{#with metrics.branches}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>
-        <td>{{#with metrics.functions}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>
-        <td>{{#with metrics.lines}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>
+        <td>{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>
+        <td>{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>
+        <td>{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>
+        <td>{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
     </tbody>
     </table>
-    {{{pathHtml}}}
+    {{pathHtml}}
 </div>
 <div class="body">`;
 
@@ -11260,44 +11259,22 @@ templateRender = function (template, dict) {
 /*
  * this function will render <template> with given <dict>
  */
-    let templateReplace;
-    templateReplace = function (template, dict, withPrefix) {
-    /*
-     * this function will search-and-replace
-     * <template> with given <dict> and <withPrefix>
-     */
+    // search for keys in template
+    template = template.replace((
+        /\{\{[^#].+?\}\}/g
+    ), function (match0) {
         let val;
-        // search for keys in template
-        return template.replace((
-            /\{\{[^#].+?\}\}/g
-        ), function (match0) {
-            val = dict;
-            // iteratively lookup nested values in dict
-            String(
-                withPrefix + match0.slice(2, -2)
-            ).split(".").forEach(function (key) {
-                val = val && val[key];
-            });
-            return (
-                val === undefined
-                ? match0
-                : String(val)
-            );
+        val = dict;
+        // iteratively lookup nested values in dict
+        String(match0.slice(2, -2)).split(".").forEach(function (key) {
+            val = val && val[key];
         });
-    };
-    // render triple-curly-brace
-    template = template.replace((
-        /\{\{\{/g
-    ), "{{").replace((
-        /\}\}\}/g
-    ), "}}");
-    // render with-statement
-    template = template.replace((
-        /\{\{#with\u0020(.+?)\}\}([\S\s]+?)\{\{\/with\}\}/g
-    ), function (ignore, withPrefix, match2) {
-        return templateReplace(match2, dict, withPrefix + ".");
+        return (
+            val === undefined
+            ? match0
+            : String(val)
+        );
     });
-    template = templateReplace(template, dict, "");
     // render helper show_ignores
     template = template.replace(
         "{{#show_ignores}}",
