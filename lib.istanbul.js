@@ -10503,7 +10503,7 @@ local.templateCoverageHead = '\
         <td>{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>\n\
     </tbody>\n\
     </table>\n\
-    <div class="path">{{#show_paths}}</div>\n\
+    <div class="path">{{#show_path}}</div>\n\
 </div>\n\
 <div class="body">\n\
 ';
@@ -10992,8 +10992,8 @@ htmlWrite = function (node, dir) {
             templateRender(templateHead, {}, child)
             + templateRender((
                 `<pre><table class="coverage"><tr>
-<td class="line-count">{{#show_lines}}</td>
-<td class="line-coverage">{{#show_line_execution_counts}}</td>
+<td class="line-count">{{#show_lineno}}</td>
+<td class="line-coverage">{{#show_line_execution_count}}</td>
 <td class="text"><pre
     class="prettyprint lang-js"
     tabIndex="0"
@@ -11236,8 +11236,8 @@ templateRender = function (template, dict, node) {
             : String(val)
         );
     });
-    // render #show_line_execution_counts
-    template = template.replace("{{#show_line_execution_counts}}", function () {
+    // render #show_line_execution_count
+    template = template.replace("{{#show_line_execution_count}}", function () {
         val = "";
         ii = 1;
         while (ii <= dict.maxLines) {
@@ -11253,8 +11253,8 @@ templateRender = function (template, dict, node) {
         }
         return val;
     });
-    // render #show_lines
-    template = template.replace("{{#show_lines}}", function () {
+    // render #show_lineno
+    template = template.replace("{{#show_lineno}}", function () {
         val = "";
         ii = 1;
         while (ii <= dict.maxLines) {
@@ -11268,8 +11268,8 @@ templateRender = function (template, dict, node) {
         }
         return val;
     });
-    // render #show_paths
-    template = template.replace("{{#show_paths}}", function () {
+    // render #show_path
+    template = template.replace("{{#show_path}}", function () {
         tmp = node.parent;
         if (!tmp) {
             return "";
