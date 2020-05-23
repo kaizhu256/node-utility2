@@ -10529,8 +10529,6 @@ let TAB_SIZE;
 let numberPercent;
 let stringFill;
 let templateRender;
-// init variable
-TAB_SIZE = 2;
 // init InsertionText
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 function InsertionText(text, consumeBlanks) {
@@ -10887,9 +10885,12 @@ templateRender = function (template, dict) {
     );
     return template;
 };
+// init variable
+TAB_SIZE = 2;
 
 
 
+// init local
 local.coverageMerge = function (coverage1 = {}, coverage2 = {}) {
 /*
  * this function will inplace-merge coverage2 into coverage1
@@ -10936,9 +10937,10 @@ local.coverageMerge = function (coverage1 = {}, coverage2 = {}) {
 local.coverageReportCreate = function (opt) {
 /*
  * this function will
- * 1. print coverage in text-format to stdout
- * 2. write coverage in html-format to filesystem
- * 3. return coverage in html-format as single document
+ * 1. summarize coverage
+ * 2. print coverage in text-format to stdout
+ * 3. write coverage in html-format to filesystem
+ * 4. return coverage in html-format as single document
  */
     let addChild;
     let ancestorHref;
@@ -10962,8 +10964,9 @@ local.coverageReportCreate = function (opt) {
     let seen;
     let summaryList;
     let summaryMap;
-    let templateData;
+    let templateDict;
     let templateFill;
+    let templateFoot;
     let templateHead;
     let tmp;
     let tmpChildren;
@@ -10996,6 +10999,48 @@ local.coverageReportCreate = function (opt) {
         }
         return href;
     };
+    addChild = function (node, child) {
+        node.children.push(child);
+        child.parent = node;
+    };
+    calculateMetrics = function (entry) {
+        let fileChildren;
+        if (entry.kind !== "dir") {
+            return;
+        }
+        entry.children.forEach(function (child) {
+            calculateMetrics(child);
+        });
+        entry.metrics = mergeSummaryObjects(
+            entry.children.map(function (child) {
+                return child.metrics;
+            })
+        );
+        // calclulate "java-style" package metrics where there is no hierarchy
+        // across packages
+        fileChildren = entry.children.filter(function (nn) {
+            return nn.kind !== "dir";
+        });
+        if (fileChildren.length > 0) {
+            entry.packageMetrics = mergeSummaryObjects(
+                fileChildren.map(function (child) {
+                    return child.metrics;
+                })
+            );
+        } else {
+            entry.packageMetrics = null;
+        }
+    };
+    createNode = function (fullName, kind, metrics) {
+        return {
+            children: [],
+            fullName,
+            kind,
+            metrics: metrics || null,
+            name: fullName,
+            parent: null
+        };
+    };
     linkMapperAsset = function (node, name) {
         let ii;
         let parent;
@@ -11011,9 +11056,9 @@ local.coverageReportCreate = function (opt) {
         let ii;
         let linkPath;
         let parent;
-        templateData.entity = node.name || "All files";
-        templateData.metrics = node.metrics;
-        templateData.reportClass = getReportClass(node.metrics.statements.pct);
+        templateDict.entity = node.name || "All files";
+        templateDict.metrics = node.metrics;
+        templateDict.reportClass = getReportClass(node.metrics.statements.pct);
         parent = node.parent;
         linkPath = [];
         ii = 0;
@@ -11027,12 +11072,12 @@ local.coverageReportCreate = function (opt) {
             ii += 1;
         }
         linkPath.reverse();
-        templateData.pathHtml = "<div class=\"path\">" + (
+        templateDict.pathHtml = "<div class=\"path\">" + (
             linkPath.length > 0
             ? linkPath.join(" &#187; ") + " &#187; " + node.relativeName
             : ""
         ) + "</div>";
-        templateData.prettify = {
+        templateDict.prettify = {
             js: linkMapperAsset(node, "prettify.js"),
             css: linkMapperAsset(node, "prettify.css")
         };
@@ -11072,7 +11117,7 @@ local.coverageReportCreate = function (opt) {
         }
         writerFile = path.resolve(dir, "index.html");
         templateFill(node);
-        writerData = templateRender(templateHead, templateData) + (
+        writerData = templateRender(templateHead, templateDict) + (
             `<div class="coverage-summary">
 <table>
 <thead>
@@ -11132,8 +11177,7 @@ local.coverageReportCreate = function (opt) {
                 output: linkMapper.fromParent(child)
             }) + "\n";
         }).join("") + (
-            "</tbody>\n</table>\n</div>\n"
-            + templateRender(local.templateCoverageFoot, templateData)
+            "</tbody>\n</table>\n</div>\n" + templateFoot
         );
         node.children.forEach(function (child) {
             let fileCoverage;
@@ -11318,7 +11362,7 @@ local.coverageReportCreate = function (opt) {
             });
             structured.shift();
             writerData = (
-                templateRender(templateHead, templateData)
+                templateRender(templateHead, templateDict)
                 + templateRender((
                     `<pre><table class="coverage"><tr>
 <td class="line-count">{{#show_lines}}</td>
@@ -11332,7 +11376,7 @@ local.coverageReportCreate = function (opt) {
                     structured,
                     maxLines: structured.length,
                     fileCoverage
-                }) + templateRender(local.templateCoverageFoot, templateData)
+                }) + templateFoot
             );
         });
     };
@@ -11408,38 +11452,6 @@ local.coverageReportCreate = function (opt) {
         });
         return summary;
     };
-    // merge previous coverage
-    if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
-        console.log("merging file " + dir + "/coverage.json to coverage");
-        try {
-            local.coverageMerge(opt.coverage, JSON.parse(
-                local.fs.readFileSync(dir + "/coverage.json", "utf8")
-            ));
-        } catch (ignore) {}
-        try {
-            Object.keys(JSON.parse(local.fs.readFileSync(
-                dir + "/coverage.code-dict.json",
-                "utf8"
-            ))).forEach(function (key) {
-                globalThis.__coverageCodeDict__[key] = (
-                    globalThis.__coverageCodeDict__[key]
-                    || true
-                );
-            });
-        } catch (ignore) {}
-    }
-    // init writer
-    coverageReportHtml = (
-        "<div class=\"coverageReportDiv\">\n"
-        + "<h1>coverage-report</h1>\n"
-        + "<div style=\""
-        + "background: #fff; border: 1px solid #999; margin 0; padding: 0;"
-        + "\">\n"
-    );
-    // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
-    writerData = "";
-    writerFile = "";
-    // create TextReport
     findNameWidth = function (node, level, last) {
         let idealWidth;
         last = last || 0;
@@ -11453,6 +11465,47 @@ local.coverageReportCreate = function (opt) {
             last = findNameWidth(child, level + 1, last);
         });
         return last;
+    };
+    fixupNodes = function (node, filePrefix, parent) {
+        // fix name
+        if (node.name.indexOf(filePrefix) === 0) {
+            node.name = node.name.slice(filePrefix.length);
+        }
+        if (node.name[0] === path.sep) {
+            node.name = node.name.slice(1);
+        }
+        // init relativeName
+        node.relativeName = (
+            parent
+            ? (
+                parent.name !== "__root__/"
+                ? node.name.slice(parent.name.length)
+                : node.name
+            )
+            : node.name.slice(filePrefix.length)
+        ) || "All files";
+        node.children.forEach(function (child) {
+            // recurse
+            fixupNodes(child, filePrefix, node);
+        });
+    };
+    indexAndSortTree = function (node, map) {
+        map[node.name] = node;
+        node.children.sort(function (aa, bb) {
+            aa = aa.relativeName;
+            bb = bb.relativeName;
+            return (
+                aa < bb
+                ? -1
+                : aa > bb
+                ? 1
+                : 0
+            );
+        });
+        node.children.forEach(function (child) {
+            // recurse
+            indexAndSortTree(child, map);
+        });
     };
     walk = function (node, level) {
         let line;
@@ -11503,6 +11556,39 @@ local.coverageReportCreate = function (opt) {
         summaryList.push(tableRow);
         summaryList.push(line);
     };
+    // merge previous coverage
+    if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
+        console.log("merging file " + dir + "/coverage.json to coverage");
+        try {
+            local.coverageMerge(opt.coverage, JSON.parse(
+                local.fs.readFileSync(dir + "/coverage.json", "utf8")
+            ));
+        } catch (ignore) {}
+        try {
+            Object.keys(JSON.parse(local.fs.readFileSync(
+                dir + "/coverage.code-dict.json",
+                "utf8"
+            ))).forEach(function (key) {
+                globalThis.__coverageCodeDict__[key] = (
+                    globalThis.__coverageCodeDict__[key]
+                    || true
+                );
+            });
+        } catch (ignore) {}
+    }
+    // init writer
+    coverageReportHtml = (
+        "<div class=\"coverageReportDiv\">\n"
+        + "<h1>coverage-report</h1>\n"
+        + "<div style=\""
+        + "background: #fff; border: 1px solid #999; margin 0; padding: 0;"
+        + "\">\n"
+    );
+    // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
+    writerData = "";
+    writerFile = "";
+    // create TextReport
+    // 1. summarize coverage
     summaryList = [];
     summaryMap = {};
     Object.entries(globalThis.__coverage__).forEach(function ([
@@ -11631,89 +11717,6 @@ local.coverageReportCreate = function (opt) {
         }
     });
     // coverageReportSummary = new TreeSummary();
-    addChild = function (node, child) {
-        node.children.push(child);
-        child.parent = node;
-    };
-    calculateMetrics = function (entry) {
-        let fileChildren;
-        if (entry.kind !== "dir") {
-            return;
-        }
-        entry.children.forEach(function (child) {
-            calculateMetrics(child);
-        });
-        entry.metrics = mergeSummaryObjects(
-            entry.children.map(function (child) {
-                return child.metrics;
-            })
-        );
-        // calclulate "java-style" package metrics where there is no hierarchy
-        // across packages
-        fileChildren = entry.children.filter(function (nn) {
-            return nn.kind !== "dir";
-        });
-        if (fileChildren.length > 0) {
-            entry.packageMetrics = mergeSummaryObjects(
-                fileChildren.map(function (child) {
-                    return child.metrics;
-                })
-            );
-        } else {
-            entry.packageMetrics = null;
-        }
-    };
-    createNode = function (fullName, kind, metrics) {
-        return {
-            children: [],
-            fullName,
-            kind,
-            metrics: metrics || null,
-            name: fullName,
-            parent: null
-        };
-    };
-    fixupNodes = function (node, filePrefix, parent) {
-        // fix name
-        if (node.name.indexOf(filePrefix) === 0) {
-            node.name = node.name.slice(filePrefix.length);
-        }
-        if (node.name[0] === path.sep) {
-            node.name = node.name.slice(1);
-        }
-        // init relativeName
-        node.relativeName = (
-            parent
-            ? (
-                parent.name !== "__root__/"
-                ? node.name.slice(parent.name.length)
-                : node.name
-            )
-            : node.name.slice(filePrefix.length)
-        ) || "All files";
-        node.children.forEach(function (child) {
-            // recurse
-            fixupNodes(child, filePrefix, node);
-        });
-    };
-    indexAndSortTree = function (node, map) {
-        map[node.name] = node;
-        node.children.sort(function (aa, bb) {
-            aa = aa.relativeName;
-            bb = bb.relativeName;
-            return (
-                aa < bb
-                ? -1
-                : aa > bb
-                ? 1
-                : 0
-            );
-        });
-        node.children.forEach(function (child) {
-            // recurse
-            indexAndSortTree(child, map);
-        });
-    };
     // convertToTree
     tmp = filePrefix.join(path.sep) + path.sep;
     root = createNode(tmp, "dir");
@@ -11764,9 +11767,14 @@ local.coverageReportCreate = function (opt) {
     indexAndSortTree(root, {});
     nameWidth = findNameWidth(root);
     walk(root, 0);
-    // 1. print coverage in text-format to stdout
+    // 2. print coverage in text-format to stdout
     console.log(summaryList.join("\n") + "\n");
     // create HtmlReport
+    // init templateFoot
+    templateFoot = templateRender(local.templateCoverageFoot, {
+        datetime: new Date().toGMTString()
+    });
+    // init templateHead
     templateHead = local.templateCoverageHead;
     if (local.isBrowser) {
         templateHead = templateHead.replace(
@@ -11792,13 +11800,12 @@ local.coverageReportCreate = function (opt) {
             /<h1\u0020[\S\s]*<\/h1>/
         ), "");
     }
-    opt = opt || {};
     // hack-coverage - new Date() bugfix
-    templateData = {
+    templateDict = {
         datetime: new Date().toGMTString()
     };
     coverageReportWrite(root, dir);
-    // 2. write coverage in html-format to filesystem
+    // 3. write coverage in html-format to filesystem
     local.fsWriteFileWithMkdirpSync(writerFile, writerData);
     // write coverage.json
     local.fsWriteFileWithMkdirpSync(
@@ -11811,23 +11818,23 @@ local.coverageReportCreate = function (opt) {
         JSON.stringify(globalThis.__coverageCodeDict__)
     );
     // write coverage.badge.svg
-    opt.pct = root.metrics.lines.pct;
+    tmp = root.metrics.lines.pct;
     local.fsWriteFileWithMkdirpSync(
         local._istanbul_path.dirname(dir) + "/coverage.badge.svg",
         // edit coverage badge percent
         // edit coverage badge color
         local.templateCoverageBadgeSvg.replace((
             /100.0/g
-        ), opt.pct).replace((
+        ), tmp).replace((
             /0d0/g
         ), (
-            Math.round((100 - opt.pct) * 2.21).toString(16).padStart(2, "0")
-            + Math.round(opt.pct * 2.21).toString(16).padStart(2, "0")
+            Math.round((100 - tmp) * 2.21).toString(16).padStart(2, "0")
+            + Math.round(tmp * 2.21).toString(16).padStart(2, "0")
             + "00"
         ))
     );
     console.log("created coverage file " + dir + "/index.html");
-    // 3. return coverage in html-format as a single document
+    // 4. return coverage in html-format as single document
     coverageReportHtml += "</div>\n</div>\n";
     // write coverage.rollup.html
     local.fsWriteFileWithMkdirpSync(
