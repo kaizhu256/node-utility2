@@ -10740,21 +10740,12 @@ InsertionText.prototype = {
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
 */
-function Node(fullName, kind, metrics) {
-    let that;
-    that = this;
-    that.name = fullName;
-    that.fullName = fullName;
-    that.kind = kind;
-    that.metrics = metrics || null;
-    that.parent = null;
-    that.children = [];
-}
 function TreeSummary() {
     let addChild;
     let calculateMetrics;
     let filesUnderRoot;
     let fixupNodes;
+    let nodeCreate;
     let root;
     let rootPath;
     let seen;
@@ -10817,9 +10808,19 @@ function TreeSummary() {
             fixupNodes(child, filePrefix, node);
         });
     };
+    nodeCreate = function (fullName, kind, metrics) {
+        return {
+            children: [],
+            fullName,
+            kind,
+            metrics: metrics || null,
+            name: fullName,
+            parent: null
+        };
+    };
     // convertToTree
     rootPath = filePrefix.join(path.sep) + path.sep;
-    root = new Node(rootPath, "dir");
+    root = nodeCreate(rootPath, "dir");
     seen = {};
     filesUnderRoot = false;
     seen[rootPath] = root;
@@ -10830,7 +10831,7 @@ function TreeSummary() {
         let node;
         let parent;
         let parentPath;
-        node = new Node(key, "file", metrics);
+        node = nodeCreate(key, "file", metrics);
         seen[key] = node;
         parentPath = path.dirname(key) + path.sep;
         if (parentPath === path.sep + path.sep) {
@@ -10838,7 +10839,7 @@ function TreeSummary() {
         }
         parent = seen[parentPath];
         if (!parent) {
-            parent = new Node(parentPath, "dir");
+            parent = nodeCreate(parentPath, "dir");
             addChild(root, parent);
             seen[parentPath] = parent;
         }
@@ -10852,7 +10853,7 @@ function TreeSummary() {
         tmp = root;
         tmpChildren = tmp.children;
         tmp.children = [];
-        root = new Node(filePrefix.join(path.sep) + path.sep, "dir");
+        root = nodeCreate(filePrefix.join(path.sep) + path.sep, "dir");
         addChild(root, tmp);
         tmpChildren.forEach(function (child) {
             if (child.kind === "dir") {
