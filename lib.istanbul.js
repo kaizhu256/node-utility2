@@ -10525,7 +10525,6 @@ file none
 
 
 
-let TAB_SIZE;
 let coverageLevelGet;
 let coveragePercentGet;
 let htmlAll;
@@ -11175,7 +11174,7 @@ stringPad = function (str, width, right, tabs, coverageLevel) {
     let strlen;
     tabs = tabs || 0;
     str = String(str);
-    leadingSpaces = tabs * TAB_SIZE;
+    leadingSpaces = tabs * 2;
     remaining = width - leadingSpaces;
     leader = " ".repeat(leadingSpaces);
     fmtStr = "";
@@ -11328,8 +11327,6 @@ templateRender = function (template, dict, node) {
     });
     return template;
 };
-// init variable
-TAB_SIZE = 2;
 
 
 
@@ -11402,7 +11399,7 @@ local.coverageReportCreate = function (opt) {
         let idealWidth;
         last = last || 0;
         level = level || 0;
-        idealWidth = level * TAB_SIZE + node.relativeName.length;
+        idealWidth = level * 2 + node.relativeName.length;
         if (idealWidth > last) {
             last = idealWidth;
         }
