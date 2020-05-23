@@ -10689,7 +10689,7 @@ InsertionText.prototype = {
         let offset = that.findOffset(col, len, insertBefore);
         let realPos = col + offset;
         let text = that.text;
-        that.text = text.substring(0, realPos) + str + text.substring(realPos);
+        that.text = text.slice(0, realPos) + str + text.slice(realPos);
         return that;
     },
     findOffset: function (pos, len, insertBefore) {
@@ -10776,20 +10776,20 @@ function TreeSummary() {
     fixupNodes = function (node, filePrefix, parent) {
         // fix name
         if (node.name.indexOf(filePrefix) === 0) {
-            node.name = node.name.substring(filePrefix.length);
+            node.name = node.name.slice(filePrefix.length);
         }
         if (node.name.charAt(0) === path.sep) {
-            node.name = node.name.substring(1);
+            node.name = node.name.slice(1);
         }
         // init relativeName
         node.relativeName = (
             parent
             ? (
                 parent.name !== "__root__/"
-                ? node.name.substring(parent.name.length)
+                ? node.name.slice(parent.name.length)
                 : node.name
             )
-            : node.name.substring(filePrefix.length)
+            : node.name.slice(filePrefix.length)
         ) || "All files";
         node.children.forEach(function (child) {
             // recurse
@@ -10914,8 +10914,8 @@ function fill(str, width, right, tabs, clazz) {
     fmtStr = "";
     strlen = str.length;
     if (remaining <= 0) {
-        fmtStr = str.substring(strlen - remaining);
-        fmtStr = "... " + fmtStr.substring(4);
+        fmtStr = str.slice(strlen - remaining);
+        fmtStr = "... " + fmtStr.slice(4);
     } else if (remaining >= strlen) {
         fillStr = " ".repeat(remaining - strlen);
         fmtStr = (
