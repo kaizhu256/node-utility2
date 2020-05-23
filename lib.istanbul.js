@@ -10496,7 +10496,7 @@ local.templateCoverageHead = '\
     </tr>\n\
     </thead>\n\
     <tbody>\n\
-        <td>{{#show_ignores}}</td>\n\
+        <td>statements: {{metrics.statements.skipped}}<br>branches: {{metrics.branches.skipped}}<br>functions: {{metrics.functions.skipped}}<br>lines: {{metrics.lines.skipped}}</td>\n\
         <td>{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>\n\
         <td>{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>\n\
         <td>{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>\n\
@@ -11213,6 +11213,7 @@ templateRender = function (template, dict, node) {
     let jj;
     let kk;
     let metrics;
+    let parent;
     let val;
     // render <node>
     metrics = node.metrics;
@@ -11235,31 +11236,6 @@ templateRender = function (template, dict, node) {
             ? match0
             : String(val)
         );
-    });
-    // render #show_ignores
-    template = template.replace("{{#show_ignores}}", function () {
-        let array;
-        if (
-            metrics.statements.skipped === 0
-            && metrics.functions.skipped === 0
-            && metrics.branches.skipped === 0
-        ) {
-            return "<span class=\"ignore-none\">none</span>";
-        }
-        array = [];
-        // hack-coverage - compact summary
-        if (metrics.statements.skipped > 0) {
-            array.push(
-                "statements: " + metrics.statements.skipped
-            );
-        }
-        if (metrics.branches.skipped > 0) {
-            array.push("branches: " + metrics.branches.skipped);
-        }
-        if (metrics.functions.skipped > 0) {
-            array.push("functions: " + metrics.functions.skipped);
-        }
-        return array.join("<br>");
     });
     // render #show_line_execution_counts
     template = template.replace("{{#show_line_execution_counts}}", function () {
@@ -11295,25 +11271,23 @@ templateRender = function (template, dict, node) {
     });
     // render #show_lines
     template = template.replace("{{#show_lines}}", function () {
-        let array;
         let maxLines;
         maxLines = Number(dict.maxLines);
-        array = "";
+        val = "";
         ii = 1;
         while (ii <= maxLines) {
             // hack-coverage - hashtag lineno
-            array += (
+            val += (
                 "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
                 + ii
                 + "</a>\n"
             );
             ii += 1;
         }
-        return array;
+        return val;
     });
     // render #show_paths
     template = template.replace("{{#show_paths}}", function () {
-        let parent;
         parent = node.parent;
         if (!parent) {
             return "";
@@ -11353,6 +11327,7 @@ templateRender = function (template, dict, node) {
     // render #show_code last
     template = template.replace("{{#show_code}}", function () {
         return dict.structured.map(function (item) {
+            // sanitize html
             return item.text.toString().replace((
                 /&/g
             ), "&amp;").replace((
