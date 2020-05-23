@@ -10523,7 +10523,6 @@ local.templateCoverageBadgeSvg =
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
 let TAB_SIZE;
-let coverageReportHtml;
 let dir;
 let filePrefix;
 let numberFormatPercent;
@@ -10941,9 +10940,98 @@ function mergeSummaryObjects(args) {
 
 
 /*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
+file none
 */
-function reportTextCreate(opt) {
+
+
+
+local.coverageMerge = function (coverage1 = {}, coverage2 = {}) {
+/*
+ * this function will inplace-merge coverage2 into coverage1
+ */
+    let dict1;
+    let dict2;
+    Object.keys(coverage2).forEach(function (file) {
+        if (!coverage2[file]) {
+            return;
+        }
+        // if file is undefined in coverage1, then add it
+        if (!coverage1[file]) {
+            coverage1[file] = coverage2[file];
+            return;
+        }
+        // merge file from coverage2 into coverage1
+        [
+            "b", "f", "s"
+        ].forEach(function (key) {
+            dict1 = coverage1[file][key];
+            dict2 = coverage2[file][key];
+            switch (key) {
+            // increment coverage for branch lines
+            case "b":
+                Object.keys(dict2).forEach(function (key) {
+                    dict2[key].forEach(function (count, ii) {
+                        dict1[key][ii] += count;
+                    });
+                });
+                break;
+            // increment coverage for function and statement lines
+            case "f":
+            case "s":
+                Object.keys(dict2).forEach(function (key) {
+                    dict1[key] += dict2[key];
+                });
+                break;
+            }
+        });
+    });
+    return coverage1;
+};
+
+local.coverageReportCreate = function (opt) {
+/*
+ * this function will
+ * 1. print coverage in text-format to stdout
+ * 2. write coverage in html-format to filesystem
+ * 3. return coverage in html-format as single document
+ */
+    let coverageReportHtml;
+    if (!(opt && opt.coverage)) {
+        return "";
+    }
+    dir = process.cwd() + "/tmp/build/coverage.html";
+    // merge previous coverage
+    if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
+        console.log("merging file " + dir + "/coverage.json to coverage");
+        try {
+            local.coverageMerge(opt.coverage, JSON.parse(
+                local.fs.readFileSync(dir + "/coverage.json", "utf8")
+            ));
+        } catch (ignore) {}
+        try {
+            Object.keys(JSON.parse(local.fs.readFileSync(
+                dir + "/coverage.code-dict.json",
+                "utf8"
+            ))).forEach(function (key) {
+                globalThis.__coverageCodeDict__[key] = (
+                    globalThis.__coverageCodeDict__[key]
+                    || true
+                );
+            });
+        } catch (ignore) {}
+    }
+    // init writer
+    coverageReportHtml = (
+        "<div class=\"coverageReportDiv\">\n"
+        + "<h1>coverage-report</h1>\n"
+        + "<div style=\""
+        + "background: #fff; border: 1px solid #999; margin 0; padding: 0;"
+        + "\">\n"
+    );
+    // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
+    writerData = "";
+    writerFile = "";
+    // create TextReport
     let findNameWidth;
     let nameWidth;
     let strings;
@@ -11281,10 +11369,9 @@ function reportTextCreate(opt) {
     indexAndSortTree(root, {});
     nameWidth = findNameWidth(root);
     walk(root, 0);
+    // 1. print coverage in text-format to stdout
     console.log(strings.join("\n") + "\n");
-
-
-
+    // create HtmlReport
     let coverageReportWrite;
     let fillTemplate;
     let linkMapper;
@@ -11692,104 +11779,6 @@ function reportTextCreate(opt) {
         });
     };
     coverageReportWrite(root, dir);
-}
-
-
-
-/*
-file none
-*/
-
-
-
-local.coverageMerge = function (coverage1 = {}, coverage2 = {}) {
-/*
- * this function will inplace-merge coverage2 into coverage1
- */
-    let dict1;
-    let dict2;
-    Object.keys(coverage2).forEach(function (file) {
-        if (!coverage2[file]) {
-            return;
-        }
-        // if file is undefined in coverage1, then add it
-        if (!coverage1[file]) {
-            coverage1[file] = coverage2[file];
-            return;
-        }
-        // merge file from coverage2 into coverage1
-        [
-            "b", "f", "s"
-        ].forEach(function (key) {
-            dict1 = coverage1[file][key];
-            dict2 = coverage2[file][key];
-            switch (key) {
-            // increment coverage for branch lines
-            case "b":
-                Object.keys(dict2).forEach(function (key) {
-                    dict2[key].forEach(function (count, ii) {
-                        dict1[key][ii] += count;
-                    });
-                });
-                break;
-            // increment coverage for function and statement lines
-            case "f":
-            case "s":
-                Object.keys(dict2).forEach(function (key) {
-                    dict1[key] += dict2[key];
-                });
-                break;
-            }
-        });
-    });
-    return coverage1;
-};
-
-local.coverageReportCreate = function (opt) {
-/*
- * this function will
- * 1. print coverage in text-format to stdout
- * 2. write coverage in html-format to filesystem
- * 3. return coverage in html-format as single document
- */
-    if (!(opt && opt.coverage)) {
-        return "";
-    }
-    dir = process.cwd() + "/tmp/build/coverage.html";
-    // merge previous coverage
-    if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
-        console.log("merging file " + dir + "/coverage.json to coverage");
-        try {
-            local.coverageMerge(opt.coverage, JSON.parse(
-                local.fs.readFileSync(dir + "/coverage.json", "utf8")
-            ));
-        } catch (ignore) {}
-        try {
-            Object.keys(JSON.parse(local.fs.readFileSync(
-                dir + "/coverage.code-dict.json",
-                "utf8"
-            ))).forEach(function (key) {
-                globalThis.__coverageCodeDict__[key] = (
-                    globalThis.__coverageCodeDict__[key]
-                    || true
-                );
-            });
-        } catch (ignore) {}
-    }
-    // init writer
-    coverageReportHtml = "";
-    coverageReportHtml += (
-        "<div class=\"coverageReportDiv\">\n"
-        + "<h1>coverage-report</h1>\n"
-        + "<div style=\""
-        + "background: #fff; border: 1px solid #999; margin 0; padding: 0;"
-        + "\">\n"
-    );
-    // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
-    writerData = "";
-    writerFile = "";
-    // 1. print coverage in text-format to stdout
-    reportTextCreate(opt);
     // 2. write coverage in html-format to filesystem
     local.fsWriteFileWithMkdirpSync(writerFile, writerData);
     // write coverage.json
