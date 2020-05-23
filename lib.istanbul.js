@@ -10545,32 +10545,6 @@ function percent(covered, total) {
         return 100.00;
     }
 }
-function computeSimpleTotals(fileCoverage, property, mapProperty) {
-    let stats = fileCoverage[property];
-    let map = (
-        mapProperty
-        ? fileCoverage[mapProperty]
-        : null
-    );
-    let elem = {
-        total: 0,
-        covered: 0,
-        skipped: 0
-    };
-    Object.keys(stats).forEach(function (key) {
-        let covered = Boolean(stats[key]);
-        let skipped = map && map[key].skip;
-        elem.total += 1;
-        if (covered || skipped) {
-            elem.covered += 1;
-        }
-        if (!covered && skipped) {
-            elem.skipped += 1;
-        }
-    });
-    elem.pct = percent(elem.covered, elem.total);
-    return elem;
-}
 function computeBranchTotals(fileCoverage) {
     let stats = fileCoverage.b;
     let branchMap = fileCoverage.branchMap;
@@ -10658,9 +10632,50 @@ function summarizeFileCoverage(fileCoverage) {
             }
         });
     }
-    summary.lines = computeSimpleTotals(fileCoverage, "l");
-    summary.functions = computeSimpleTotals(fileCoverage, "f", "fnMap");
-    summary.statements = computeSimpleTotals(fileCoverage, "s", "statementMap");
+    //!! summary.lines = computeSimpleTotals(fileCoverage, "l");
+    //!! summary.functions = computeSimpleTotals(fileCoverage, "f", "fnMap");
+    //!! summary.statements = computeSimpleTotals(fileCoverage, "s", "statementMap");
+    [
+        [
+            "lines", "l"
+        ],
+        [
+            "functions", "f", "fnMap"
+        ],
+        [
+            "statements", "s", "statementMap"
+        //!! ],
+        //!! [
+            //!! "branches"
+        ]
+    ].forEach(function ([
+        key, property, mapProperty
+    ]) {
+        let elem;
+        let map;
+        elem = {
+            total: 0,
+            covered: 0,
+            skipped: 0
+        };
+        map = fileCoverage[mapProperty];
+        Object.entries(fileCoverage[property]).forEach(function ([
+            key,
+            covered
+        ]) {
+            let skipped;
+            skipped = map && map[key].skip;
+            elem.total += 1;
+            if (covered || skipped) {
+                elem.covered += 1;
+            }
+            if (!covered && skipped) {
+                elem.skipped += 1;
+            }
+        });
+        elem.pct = percent(elem.covered, elem.total);
+        summary[key] = elem;
+    });
     summary.branches = computeBranchTotals(fileCoverage);
     return summary;
 }
