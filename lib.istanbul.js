@@ -10537,7 +10537,6 @@ let nodeChildAdd;
 let nodeCreate;
 let nodeMetricsCalculate;
 let nodeNormalize;
-let nodeParentUrlCreate;
 let nodeWalk;
 let path;
 let stringPad;
@@ -11112,26 +11111,6 @@ nodeNormalize = function (node, filePrefix, parent) {
         nodeNormalize(child, filePrefix, node);
     });
 };
-nodeParentUrlCreate = function (node, ii) {
-/*
- * this function will return parent-url of node with given <ii>
- */
-    let jj;
-    let kk;
-    let parentUrl;
-    parentUrl = "";
-    jj = 0;
-    while (jj < ii) {
-        kk = 0;
-        while (kk < node.relativeName.split(path.sep).length - 1) {
-            parentUrl += "../";
-            kk += 1;
-        }
-        node = node.parent;
-        jj += 1;
-    }
-    return parentUrl;
-};
 nodeWalk = function (node, level) {
 /*
  * this function will recursively walk and summarize each <node>
@@ -11232,15 +11211,29 @@ templateRender = function (template, dict, node) {
  * this function will render <template> with given <dict> and <node>
  */
     let ii;
+    let jj;
+    let kk;
     let parent;
+    let parentUrl;
     let parentUrlList;
     // render <node>
     parent = node.parent;
     parentUrlList = [];
     ii = 1;
     while (parent) {
+        jj = 0;
+        parentUrl = "";
+        while (jj < ii) {
+            kk = 0;
+            while (kk < node.relativeName.split(path.sep).length - 1) {
+                parentUrl += "../";
+                kk += 1;
+            }
+            node = node.parent;
+            jj += 1;
+        }
         parentUrlList.unshift(
-            "<a href=\"" + nodeParentUrlCreate(node, ii)
+            "<a href=\"" + parentUrl
             + "index.html\">" + parent.relativeName + "</a>"
         );
         parent = parent.parent;
