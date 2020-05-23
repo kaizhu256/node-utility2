@@ -10545,39 +10545,6 @@ function percent(covered, total) {
         return 100.00;
     }
 }
-function computeBranchTotals(fileCoverage) {
-    let stats = fileCoverage.b;
-    let branchMap = fileCoverage.branchMap;
-    let ret = {
-        total: 0,
-        covered: 0,
-        skipped: 0
-    };
-    Object.keys(stats).forEach(function (key) {
-        let branches = stats[key];
-        let map = branchMap[key];
-        let covered;
-        let ii;
-        let skipped;
-        ii = 0;
-        while (ii < branches.length) {
-            covered = branches[ii] > 0;
-            skipped = (
-                map.locations && map.locations[ii] && map.locations[ii].skip
-            );
-            if (covered || skipped) {
-                ret.covered += 1;
-            }
-            if (!covered && skipped) {
-                ret.skipped += 1;
-            }
-            ii += 1;
-        }
-        ret.total += branches.length;
-    });
-    ret.pct = percent(ret.covered, ret.total);
-    return ret;
-}
 function summarizeFileCoverage(fileCoverage) {
 /**
  * returns the summary metrics given the coverage object for a single file.
@@ -10615,7 +10582,7 @@ function summarizeFileCoverage(fileCoverage) {
             pct: "Unknown"
         }
     };
-    // count number of times each line was run
+    // addDerivedInfoForFile
     if (!fileCoverage.l) {
         fileCoverage.l = {};
         Object.entries(fileCoverage.s).forEach(function ([
@@ -10630,6 +10597,7 @@ function summarizeFileCoverage(fileCoverage) {
             fileCoverage.l[line] = Math.max(fileCoverage.l[line] | 0, count);
         });
     }
+    // computeSimpleTotals
     [
         [
             "lines", "l"
@@ -10639,9 +10607,6 @@ function summarizeFileCoverage(fileCoverage) {
         ],
         [
             "statements", "s", "statementMap"
-        //!! ],
-        //!! [
-            //!! "branches"
         ]
     ].forEach(function ([
         key, property, mapProperty
@@ -10667,7 +10632,36 @@ function summarizeFileCoverage(fileCoverage) {
         elem.pct = percent(elem.covered, elem.total);
         summary[key] = elem;
     });
-    summary.branches = computeBranchTotals(fileCoverage);
+    // computeBranchTotals
+    let ret = {
+        total: 0,
+        covered: 0,
+        skipped: 0
+    };
+    Object.keys(fileCoverage.b).forEach(function (key) {
+        let branches = fileCoverage.b[key];
+        let map = fileCoverage.branchMap[key];
+        let covered;
+        let ii;
+        let skipped;
+        ii = 0;
+        while (ii < branches.length) {
+            covered = branches[ii] > 0;
+            skipped = (
+                map.locations && map.locations[ii] && map.locations[ii].skip
+            );
+            if (covered || skipped) {
+                ret.covered += 1;
+            }
+            if (!covered && skipped) {
+                ret.skipped += 1;
+            }
+            ii += 1;
+        }
+        ret.total += branches.length;
+    });
+    ret.pct = percent(ret.covered, ret.total);
+    summary.branches = ret;
     return summary;
 }
 function mergeSummaryObjects(args) {
