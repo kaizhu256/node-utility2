@@ -10525,9 +10525,6 @@ file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 let TAB_SIZE;
 let numberFormatPercent;
 let path;
-let summaryMap;
-let writerData;
-let writerFile;
 // require module
 path = require("path");
 // init variable
@@ -10996,6 +10993,9 @@ local.coverageReportCreate = function (opt) {
     let dir;
     let filePrefix;
     let root;
+    let summaryMap;
+    let writerData;
+    let writerFile;
     if (!(opt && opt.coverage)) {
         return "";
     }
