@@ -11005,7 +11005,6 @@ local.coverageReportCreate = function (opt) {
     let fixupNodes;
     let indexAndSortTree;
     let linkMapper;
-    let linkMapperAsset;
     let mergeSummaryObjects;
     let nameWidth;
     let root;
@@ -11013,7 +11012,7 @@ local.coverageReportCreate = function (opt) {
     let summaryList;
     let summaryMap;
     let templateDict;
-    let templateFill;
+    let templateDictCreate;
     let templateFoot;
     let templateHead;
     let tmp;
@@ -11058,18 +11057,7 @@ local.coverageReportCreate = function (opt) {
             entry.packageMetrics = null;
         }
     };
-    linkMapperAsset = function (node, name) {
-        let ii;
-        let parent;
-        ii = 0;
-        parent = node.parent;
-        while (parent) {
-            ii += 1;
-            parent = parent.parent;
-        }
-        return summaryNodeParentUrl(node, ii) + name;
-    };
-    templateFill = function (node) {
+    templateDictCreate = function (node) {
         let ii;
         let linkPath;
         let parent;
@@ -11093,10 +11081,6 @@ local.coverageReportCreate = function (opt) {
             ? linkPath.join(" &#187; ") + " &#187; " + node.relativeName
             : ""
         ) + "</div>";
-        templateDict.prettify = {
-            js: linkMapperAsset(node, "prettify.js"),
-            css: linkMapperAsset(node, "prettify.css")
-        };
     };
     linkMapper = {
         fromParent: function (node) {
@@ -11129,7 +11113,7 @@ local.coverageReportCreate = function (opt) {
             local.fsWriteFileWithMkdirpSync(writerFile, writerData);
         }
         writerFile = path.resolve(dir, "index.html");
-        templateFill(node);
+        templateDictCreate(node);
         writerData = templateRender(templateHead, templateDict) + (
             `<div class="coverage-summary">
 <table>
@@ -11223,7 +11207,7 @@ local.coverageReportCreate = function (opt) {
                 covered: null,
                 text: new InsertionText("")
             });
-            templateFill(child);
+            templateDictCreate(child);
             // annotateLines(fileCoverage, structured);
             Object.entries(fileCoverage.l).forEach(function ([
                 lineNumber,
