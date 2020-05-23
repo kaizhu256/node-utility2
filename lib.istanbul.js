@@ -10503,7 +10503,7 @@ local.templateCoverageHead = '\
         <td>{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>\n\
     </tbody>\n\
     </table>\n\
-    {{parentUrl}}\n\
+    {{#parentUrl}}\n\
 </div>\n\
 <div class="body">\n\
 ';
@@ -11116,21 +11116,21 @@ nodeParentUrlCreate = function (node, depth) {
 /*
  * this function will return parent-url of node with given <depth>
  */
-    let href;
     let ii;
     let jj;
-    href = "";
+    let parentUrl;
+    parentUrl = "";
     ii = 0;
     while (ii < depth) {
         jj = 0;
         while (jj < node.relativeName.split(path.sep).length - 1) {
-            href += "../";
+            parentUrl += "../";
             jj += 1;
         }
         node = node.parent;
         ii += 1;
     }
-    return href;
+    return parentUrl;
 };
 nodeWalk = function (node, level) {
 /*
@@ -11231,20 +11231,20 @@ templateRender = function (template, dict, node) {
 /*
  * this function will render <template> with given <dict> and <node>
  */
-    let ii;
     let parent;
     let parentUrlList;
+    let zz;
     // render <node>
     parent = node.parent;
     parentUrlList = [];
-    ii = 0;
+    zz = 0;
     while (parent) {
         parentUrlList.unshift(
-            "<a href=\"" + nodeParentUrlCreate(node, ii + 1)
+            "<a href=\"" + nodeParentUrlCreate(node, zz + 1)
             + "index.html\">" + parent.relativeName + "</a>"
         );
         parent = parent.parent;
-        ii += 1;
+        zz += 1;
     }
     Object.assign(dict, {
         coverageLevel: coverageLevelGet(node.metrics.statements.pct),
@@ -11306,6 +11306,7 @@ templateRender = function (template, dict, node) {
     ), function () {
         let array;
         let covered;
+        let ii;
         let lineNumber;
         let lines;
         let maxLines;
@@ -11340,6 +11341,7 @@ templateRender = function (template, dict, node) {
         "{{#show_lines}}",
         function () {
             let array;
+            let ii;
             let maxLines;
             maxLines = Number(dict.maxLines);
             array = "";
