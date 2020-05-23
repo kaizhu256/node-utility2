@@ -11233,10 +11233,7 @@ local.coverageReportCreate = function (opt) {
         }
         writerFile = path.resolve(dir, "index.html");
         templateFill(node);
-        writerData = templateRender(
-            local.templateCoverageHead,
-            templateData
-        ) + (
+        writerData = templateRender(templateHead, templateData) + (
             `<div class="coverage-summary">
 <table>
 <thead>
@@ -11482,7 +11479,7 @@ local.coverageReportCreate = function (opt) {
             });
             structured.shift();
             writerData = (
-                templateRender(local.templateCoverageHead, templateData)
+                templateRender(templateHead, templateData)
                 + templateCompile(`<pre><table class="coverage"><tr>
 <td class="line-count">{{#show_lines}}</td>
 <td class="line-coverage">{{#show_line_execution_counts}}</td>
@@ -11953,7 +11950,6 @@ local.coverageReportCreate = function (opt) {
             /<h1\u0020[\S\s]*<\/h1>/
         ), "");
     }
-    templateHead = templateCompile(templateHead);
     opt = opt || {};
     // hack-coverage - new Date() bugfix
     templateData = {
