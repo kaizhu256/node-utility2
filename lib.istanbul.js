@@ -11212,8 +11212,10 @@ templateRender = function (template, dict, node) {
     let ii;
     let jj;
     let kk;
+    let maxLines;
     let metrics;
     let parent;
+    let tmp;
     let val;
     // render <node>
     metrics = node.metrics;
@@ -11239,39 +11241,33 @@ templateRender = function (template, dict, node) {
     });
     // render #show_line_execution_counts
     template = template.replace("{{#show_line_execution_counts}}", function () {
-        let array;
         let covered;
-        let lineNumber;
         let lines;
-        let maxLines;
         lines = dict.fileCoverage.l;
         maxLines = Number(dict.maxLines);
-        array = "";
         val = "";
-        ii = 0;
-        while (ii < maxLines) {
+        ii = 1;
+        while (ii <= maxLines) {
             covered = "neutral";
-            lineNumber = ii + 1;
-            val = "&nbsp;";
-            if (lines.hasOwnProperty(lineNumber)) {
-                if (lines[lineNumber] > 0) {
+            tmp = "&nbsp;";
+            if (lines.hasOwnProperty(ii)) {
+                if (lines[ii] > 0) {
                     covered = "yes";
-                    val = lines[lineNumber];
+                    tmp = lines[ii];
                 } else {
                     covered = "no";
                 }
             }
-            array += (
+            val += (
                 "<span class=\"cline-any cline-" + covered + "\">"
-                + val + "</span>\n"
+                + tmp + "</span>\n"
             );
             ii += 1;
         }
-        return array;
+        return val;
     });
     // render #show_lines
     template = template.replace("{{#show_lines}}", function () {
-        let maxLines;
         maxLines = Number(dict.maxLines);
         val = "";
         ii = 1;
