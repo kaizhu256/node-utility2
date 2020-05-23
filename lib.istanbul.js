@@ -10526,8 +10526,8 @@ file none
 
 
 let TAB_SIZE;
-let coverageLevel;
-let coveragePercent;
+let coverageLevelGet;
+let coveragePercentGet;
 let path;
 let stringPad;
 let templateRender;
@@ -10679,9 +10679,9 @@ InsertionText.prototype = {
     }
 };
 // init function
-coverageLevel = function (pct) {
+coverageLevelGet = function (pct) {
 /*
- * this function will calculate coverage-level from <pct>
+ * this function will calculate <coverageLevel> from <pct>
  */
     return (
         pct >= 80
@@ -10691,9 +10691,9 @@ coverageLevel = function (pct) {
         : "low"
     );
 };
-coveragePercent = function (covered, total) {
+coveragePercentGet = function (covered, total) {
 /*
- * this function will calculate coverage-percent from <covered> and <total>
+ * this function will calculate <pct> from <covered> and <total>
  */
     return (
         total > 0
@@ -11052,12 +11052,12 @@ local.coverageReportCreate = function (opt) {
             ), {
                 metrics: child.metrics,
                 coverageLevels: {
-                    statements: coverageLevel(
+                    statements: coverageLevelGet(
                         child.metrics.statements.pct
                     ),
-                    lines: coverageLevel(child.metrics.lines.pct),
-                    functions: coverageLevel(child.metrics.functions.pct),
-                    branches: coverageLevel(child.metrics.branches.pct)
+                    lines: coverageLevelGet(child.metrics.lines.pct),
+                    functions: coverageLevelGet(child.metrics.functions.pct),
+                    branches: coverageLevelGet(child.metrics.branches.pct)
                 },
                 file: child.relativeName,
                 output: linkMapper.fromParent(child)
@@ -11378,7 +11378,7 @@ local.coverageReportCreate = function (opt) {
         return {
             entity: node.name || "All files",
             metrics: node.metrics,
-            coverageLevel: coverageLevel(node.metrics.statements.pct),
+            coverageLevel: coverageLevelGet(node.metrics.statements.pct),
             pathHtml: "<div class=\"path\">" + (
                 linkPath.length > 0
                 ? linkPath.join(" &#187; ") + " &#187; " + node.relativeName
@@ -11495,7 +11495,7 @@ local.coverageReportCreate = function (opt) {
             increment(arg);
         });
         keys.forEach(function (key) {
-            summary[key].pct = coveragePercent(
+            summary[key].pct = coveragePercentGet(
                 summary[key].covered,
                 summary[key].total
             );
@@ -11679,7 +11679,7 @@ local.coverageReportCreate = function (opt) {
                     elem.covered += Boolean(covered || skipped);
                     elem.skipped += Boolean(!covered && skipped);
                 });
-                elem.pct = coveragePercent(elem.covered, elem.total);
+                elem.pct = coveragePercentGet(elem.covered, elem.total);
                 summary[key] = elem;
             });
             // computeBranchTotals
@@ -11702,7 +11702,7 @@ local.coverageReportCreate = function (opt) {
                 });
                 elem.total += branches.length;
             });
-            elem.pct = coveragePercent(elem.covered, elem.total);
+            elem.pct = coveragePercentGet(elem.covered, elem.total);
             summary.branches = elem;
             summaryMap[file] = summary;
             // findCommonArrayPrefix
