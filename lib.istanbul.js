@@ -11334,22 +11334,22 @@ templateRender = function (template, dict, node) {
     // render #show_paths
     template = template.replace("{{#show_paths}}", function () {
         let parent;
-        let parentUrlList;
+        let paths;
         parent = node.parent;
         if (!parent) {
             return "";
         }
-        parentUrlList = [];
+        paths = node.relativeName;
         ii = 0;
         while (parent) {
-            parentUrlList.unshift(
+            paths = (
                 "<a href=\"" + nodeParentUrlCreate(node, ii + 1)
                 + "index.html\">" + parent.relativeName + "</a>"
-            );
+            ) + " &#187; " + paths;
             parent = parent.parent;
             ii += 1;
         }
-        return parentUrlList.join(" &#187; ") + " &#187; " + node.relativeName;
+        return paths;
     });
     // render #show_percent_bar
     template = template.replace("{{#show_percent_bar}}", function () {
