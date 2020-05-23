@@ -844,7 +844,7 @@ file https://registry.npmjs.org/acorn/-/acorn-6.3.0.tgz
     // cause Acorn to call that function with object in the same
     // format as tokens returned from `tokenizer().getToken()`. Note
     // that you are not allowed to call the parser from the
-    // callbackâ€”that will corrupt its internal state.
+    // callback—that will corrupt its internal state.
     onToken: null,
     // A function can be passed as `onComment` option, which will
     // cause Acorn to call that function with `(block, text, start,
@@ -855,7 +855,7 @@ file https://registry.npmjs.org/acorn/-/acorn-6.3.0.tgz
     // When the `locations` option is on, two more parameters are
     // passed, the full `{line, column}` locations of the start and
     // end of the comments. Note that you are not allowed to call the
-    // parser from the callbackâ€”that will corrupt its internal state.
+    // parser from the callback—that will corrupt its internal state.
     onComment: null,
     // Nodes have their start and end characters offsets recorded in
     // `start` and `end` properties (directly on the node, rather than
@@ -2275,7 +2275,7 @@ file https://registry.npmjs.org/acorn/-/acorn-6.3.0.tgz
     return this.finishNode(node, "AssignmentPattern")
   };
 
-  // Verify that a node is an lval â€” something that can be assigned
+  // Verify that a node is an lval — something that can be assigned
   // to.
   // bindingType can be either:
   // 'var' indicating that the lval creates a 'var' binding
@@ -2347,8 +2347,8 @@ file https://registry.npmjs.org/acorn/-/acorn-6.3.0.tgz
   var pp$3 = Parser.prototype;
 
   // Check if property name clashes with already added.
-  // Object/class getters and setters are not allowed to clash â€”
-  // either with each other or with an init property â€” and in
+  // Object/class getters and setters are not allowed to clash —
+  // either with each other or with an init property — and in
   // strict mode, init properties are also not allowed to be repeated.
 
   pp$3.checkPropClash = function(prop, propHash, refDestructuringErrors) {
@@ -2642,7 +2642,7 @@ file https://registry.npmjs.org/acorn/-/acorn-6.3.0.tgz
     return base
   };
 
-  // Parse an atomic expression â€” either a single token that is an
+  // Parse an atomic expression — either a single token that is an
   // expression, an expression started by a keyword like `function` or
   // `new`, or an expression wrapped in punctuation like `()`, `[]`,
   // or `{}`.
@@ -2850,7 +2850,7 @@ file https://registry.npmjs.org/acorn/-/acorn-6.3.0.tgz
   };
 
   // New's precedence is slightly tricky. It must allow its argument to
-  // be a `[]` or dot subscript expression, but not a call â€” at least,
+  // be a `[]` or dot subscript expression, but not a call — at least,
   // not without wrapping it in parentheses. Thus, it uses the noCalls
   // argument to parseSubscripts to prevent it from consuming the
   // argument list.
@@ -10545,6 +10545,32 @@ function percent(covered, total) {
         return 100.00;
     }
 }
+function computeSimpleTotals(fileCoverage, property, mapProperty) {
+    let stats = fileCoverage[property];
+    let map = (
+        mapProperty
+        ? fileCoverage[mapProperty]
+        : null
+    );
+    let ret = {
+        total: 0,
+        covered: 0,
+        skipped: 0
+    };
+    Object.keys(stats).forEach(function (key) {
+        let covered = Boolean(stats[key]);
+        let skipped = map && map[key].skip;
+        ret.total += 1;
+        if (covered || skipped) {
+            ret.covered += 1;
+        }
+        if (!covered && skipped) {
+            ret.skipped += 1;
+        }
+    });
+    ret.pct = percent(ret.covered, ret.total);
+    return ret;
+}
 function computeBranchTotals(fileCoverage) {
     let stats = fileCoverage.b;
     let branchMap = fileCoverage.branchMap;
@@ -10589,7 +10615,7 @@ function summarizeFileCoverage(fileCoverage) {
  * @param {Object} fileCoverage the coverage object for a single file.
  * @return {Object} the summary metrics for the file
  */
-    let summary = {
+    let ret = {
         lines: {
             total: 0,
             covered: 0,
@@ -10615,66 +10641,38 @@ function summarizeFileCoverage(fileCoverage) {
             pct: "Unknown"
         }
     };
-    // count number of times each line was run
+/**
+ * adds line coverage information to a file coverage object, reverse-engineering
+ * it from statement coverage. The object passed in is updated in place.
+ *
+ * Note that if line coverage information is already present in the object,
+ * it is not recomputed.
+ *
+ * @method addDerivedInfoForFile
+ * @static
+ * @param {Object} fileCoverage the coverage object for a single file
+ */
+    let statementMap = fileCoverage.statementMap;
+    let statements = fileCoverage.s;
     if (!fileCoverage.l) {
         fileCoverage.l = {};
-        Object.entries(fileCoverage.s).forEach(function ([
-            st,
-            count
-        ]) {
-            let line;
-            if (count === 0 && fileCoverage.statementMap[st].skip) {
+        Object.keys(statements).forEach(function (st) {
+            let line = statementMap[st].start.line;
+            let count = statements[st];
+            let prevVal = fileCoverage.l[line];
+            if (count === 0 && statementMap[st].skip) {
                 count = 1;
             }
-            line = fileCoverage.statementMap[st].start.line;
-            if (
-                fileCoverage.l.hasOwnProperty(line)
-                && fileCoverage.l[line] < count
-            ) {
+            if (prevVal === undefined || prevVal < count) {
                 fileCoverage.l[line] = count;
             }
         });
     }
-    [
-        [
-            "lines", "l"
-        ],
-        [
-            "functions", "f", "fnMap"
-        ],
-        [
-            "statements", "", "fnMap"
-        ],
-        [
-            "branches"
-        ]
-    ].forEach(function ([
-        key, property, mapProperty
-    ]) {
-        let map = fileCoverage[mapProperty];
-        let elem = {
-            total: 0,
-            covered: 0,
-            skipped: 0
-        };
-        Object.entries(fileCoverage[property]).forEach(function ([
-            key,
-            covered
-        ]) {
-            let skipped;
-            skipped = map && map[key].skip;
-            elem.total += 1;
-            if (covered || skipped) {
-                elem.covered += 1;
-            }
-            if (!covered && skipped) {
-                elem.skipped += 1;
-            }
-        });
-        elem.pct = percent(elem.covered, elem.total);
-        summary[key] = elem;
-    });
-    return summary;
+    ret.lines = computeSimpleTotals(fileCoverage, "l");
+    ret.functions = computeSimpleTotals(fileCoverage, "f", "fnMap");
+    ret.statements = computeSimpleTotals(fileCoverage, "s", "statementMap");
+    ret.branches = computeBranchTotals(fileCoverage);
+    return ret;
 }
 function mergeSummaryObjects(args) {
 /**
@@ -10687,7 +10685,7 @@ function mergeSummaryObjects(args) {
  * @param {Object} summary... multiple summary metrics objects
  * @return {Object} the merged summary metrics
  */
-    let summary = {
+    let ret = {
         lines: {
             total: 0,
             covered: 0,
@@ -10719,9 +10717,9 @@ function mergeSummaryObjects(args) {
     let increment = function (obj) {
         if (obj) {
             keys.forEach(function (key) {
-                summary[key].total += obj[key].total;
-                summary[key].covered += obj[key].covered;
-                summary[key].skipped += obj[key].skipped;
+                ret[key].total += obj[key].total;
+                ret[key].covered += obj[key].covered;
+                ret[key].skipped += obj[key].skipped;
             });
         }
     };
@@ -10729,9 +10727,9 @@ function mergeSummaryObjects(args) {
         increment(arg);
     });
     keys.forEach(function (key) {
-        summary[key].pct = percent(summary[key].covered, summary[key].total);
+        ret[key].pct = percent(ret[key].covered, ret[key].total);
     });
-    return summary;
+    return ret;
 }
 // init InsertionText
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
