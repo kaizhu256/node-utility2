@@ -10697,7 +10697,7 @@ InsertionText.prototype = {
 // init function
 coverageLevelGet = function (pct) {
 /*
- * this function will calculate <coverageLevel> from <pct>
+ * this function will get <coverageLevel> from <pct>
  */
     return (
         pct >= 80
@@ -10709,7 +10709,7 @@ coverageLevelGet = function (pct) {
 };
 coveragePercentGet = function (covered, total) {
 /*
- * this function will calculate <pct> from <covered> and <total>
+ * this function will get <pct> from <covered> and <total>
  */
     return (
         total > 0
@@ -11233,13 +11233,13 @@ templateDictCreate = function (node) {
  * this function will create template-dict with given <node>
  */
     let ii;
-    let linkPath;
     let parent;
+    let parentUrlList;
     parent = node.parent;
-    linkPath = [];
+    parentUrlList = [];
     ii = 0;
     while (parent) {
-        linkPath.unshift(
+        parentUrlList.unshift(
             "<a href=\"" + nodeParentUrlCreate(node, ii + 1)
             + "index.html\">" + parent.relativeName + "</a>"
         );
@@ -11247,12 +11247,12 @@ templateDictCreate = function (node) {
         ii += 1;
     }
     return {
+        coverageLevel: coverageLevelGet(node.metrics.statements.pct),
         entity: node.name || "All files",
         metrics: node.metrics,
-        coverageLevel: coverageLevelGet(node.metrics.statements.pct),
         pathHtml: "<div class=\"path\">" + (
-            linkPath.length > 0
-            ? linkPath.join(" &#187; ") + " &#187; " + node.relativeName
+            parentUrlList.length > 0
+            ? parentUrlList.join(" &#187; ") + " &#187; " + node.relativeName
             : ""
         ) + "</div>"
     };
@@ -11261,8 +11261,8 @@ templateRender = function (template, dict) {
 /*
  * this function will render <template> with given <dict>
  */
-    let replace;
-    replace = function (template, dict, withPrefix) {
+    let templateReplace;
+    templateReplace = function (template, dict, withPrefix) {
     /*
      * this function will search-and-replace
      * <template> with given <dict> and <withPrefix>
@@ -11296,7 +11296,7 @@ templateRender = function (template, dict) {
     template = template.replace((
         /\{\{#with\u0020(.+?)\}\}([\S\s]+?)\{\{\/with\}\}/g
     ), function (ignore, match1, match2) {
-        return replace(match2, dict, match1 + ".");
+        return templateReplace(match2, dict, match1 + ".");
     });
     // render helper show_ignores
     template = template.replace(
@@ -11397,7 +11397,7 @@ templateRender = function (template, dict) {
             );
         }
     );
-    template = replace(template, dict, "");
+    template = templateReplace(template, dict, "");
     // render helper show_code last
     template = template.replace(
         "{{#show_code}}",
