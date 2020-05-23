@@ -10623,15 +10623,11 @@ function summarizeFileCoverage(fileCoverage) {
             count
         ]) {
             let line;
-            let prevVal;
             if (count === 0 && fileCoverage.statementMap[st].skip) {
                 count = 1;
             }
             line = fileCoverage.statementMap[st].start.line;
-            prevVal = fileCoverage.l[line];
-            if (prevVal === undefined || prevVal < count) {
-                fileCoverage.l[line] = count;
-            }
+            fileCoverage.l[line] = Math.max(fileCoverage.l[line] | 0, count);
         });
     }
     [
