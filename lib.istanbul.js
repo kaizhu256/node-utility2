@@ -10616,25 +10616,24 @@ function summarizeFileCoverage(fileCoverage) {
         }
     };
     // count number of times each line was run
-    let statementMap = fileCoverage.statementMap;
-    let statements = fileCoverage.s;
     if (!fileCoverage.l) {
         fileCoverage.l = {};
-        Object.keys(statements).forEach(function (st) {
-            let line = statementMap[st].start.line;
-            let count = statements[st];
-            let prevVal = fileCoverage.l[line];
-            if (count === 0 && statementMap[st].skip) {
+        Object.entries(fileCoverage.s).forEach(function ([
+            st,
+            count
+        ]) {
+            let line;
+            let prevVal;
+            if (count === 0 && fileCoverage.statementMap[st].skip) {
                 count = 1;
             }
+            line = fileCoverage.statementMap[st].start.line;
+            prevVal = fileCoverage.l[line];
             if (prevVal === undefined || prevVal < count) {
                 fileCoverage.l[line] = count;
             }
         });
     }
-    //!! summary.lines = computeSimpleTotals(fileCoverage, "l");
-    //!! summary.functions = computeSimpleTotals(fileCoverage, "f", "fnMap");
-    //!! summary.statements = computeSimpleTotals(fileCoverage, "s", "statementMap");
     [
         [
             "lines", "l"
