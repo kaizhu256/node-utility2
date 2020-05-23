@@ -11270,7 +11270,7 @@ templateRender = function (template, dict) {
         let val;
         // search for keys in template
         return template.replace((
-            /\{\{.+?\}\}/g
+            /\{\{[^#].+?\}\}/g
         ), function (match0) {
             val = dict;
             // iteratively lookup nested values in dict
@@ -11298,6 +11298,7 @@ templateRender = function (template, dict) {
     ), function (ignore, match1, match2) {
         return templateReplace(match2, dict, match1 + ".");
     });
+    template = templateReplace(template, dict, "");
     // render helper show_ignores
     template = template.replace(
         "{{#show_ignores}}",
@@ -11397,7 +11398,6 @@ templateRender = function (template, dict) {
             );
         }
     );
-    template = templateReplace(template, dict, "");
     // render helper show_code last
     template = template.replace(
         "{{#show_code}}",
