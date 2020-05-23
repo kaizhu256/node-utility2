@@ -10523,11 +10523,8 @@ local.templateCoverageBadgeSvg =
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 */
 let TAB_SIZE;
-let dir;
-let filePrefix;
 let numberFormatPercent;
 let path;
-let root;
 let summaryMap;
 let writerData;
 let writerFile;
@@ -10996,6 +10993,9 @@ local.coverageReportCreate = function (opt) {
  * 3. return coverage in html-format as single document
  */
     let coverageReportHtml;
+    let dir;
+    let filePrefix;
+    let root;
     if (!(opt && opt.coverage)) {
         return "";
     }
