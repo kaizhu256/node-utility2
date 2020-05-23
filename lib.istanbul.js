@@ -11048,7 +11048,6 @@ templateRender = function (template, dict) {
     );
     return template;
 };
-local.nop(templateRender);
 
 
 
@@ -11126,7 +11125,6 @@ local.coverageReportCreate = function (opt) {
     let summaryMap;
     let templateData;
     let templateFill;
-    let templateFoot;
     let templateHead;
     let tmp;
     let tmpChildren;
@@ -11295,7 +11293,8 @@ local.coverageReportCreate = function (opt) {
                 output: linkMapper.fromParent(child)
             }) + "\n";
         }).join("") + (
-            "</tbody>\n</table>\n</div>\n" + templateFoot(templateData)
+            "</tbody>\n</table>\n</div>\n"
+            + templateRender(local.templateCoverageFoot, templateData)
         );
         node.children.forEach(function (child) {
             let fileCoverage;
@@ -11492,7 +11491,7 @@ local.coverageReportCreate = function (opt) {
                     structured,
                     maxLines: structured.length,
                     fileCoverage
-                }) + templateFoot(templateData)
+                }) + templateRender(local.templateCoverageFoot, templateData)
             );
         });
     };
@@ -11952,7 +11951,6 @@ local.coverageReportCreate = function (opt) {
         ), "");
     }
     templateHead = templateCompile(templateHead);
-    templateFoot = templateCompile(local.templateCoverageFoot);
     opt = opt || {};
     // hack-coverage - new Date() bugfix
     templateData = {
