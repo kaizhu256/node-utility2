@@ -10678,7 +10678,7 @@ InsertionText.prototype = {
     }
 };
 // init function
-function fill(str, width, right, tabs, clazz) {
+function stringFill(str, width, right, tabs, clazz) {
     let fillStr;
     let fmtStr;
     let leader;
@@ -10940,6 +10940,7 @@ local.coverageReportCreate = function (opt) {
  * 3. return coverage in html-format as single document
  */
     let addChild;
+    let ancestorHref;
     let calculateMetrics;
     let coverageReportHtml;
     let coverageReportWrite;
@@ -10950,8 +10951,10 @@ local.coverageReportCreate = function (opt) {
     let fillTemplate;
     let findNameWidth;
     let fixupNodes;
+    let getReportClass;
     let indexAndSortTree;
     let linkMapper;
+    let linkMapperAsset;
     let mergeSummaryObjects;
     let nameWidth;
     let path;
@@ -10974,469 +10977,7 @@ local.coverageReportCreate = function (opt) {
     path = require("path");
     dir = process.cwd() + "/tmp/build/coverage.html";
     // init function
-    mergeSummaryObjects = function (args) {
-    /**
-     * merges multiple summary metrics objects by summing up the `totals` and
-     * `covered` fields and recomputing the percentages.
-     * This function is generic and can accept any number of arguments.
-     *
-     * @method mergeSummaryObjects
-     * @static
-     * @param {Object} summary... multiple summary metrics objects
-     * @return {Object} the merged summary metrics
-     */
-        let increment;
-        let keys;
-        let summary;
-        summary = {
-            lines: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            },
-            statements: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            },
-            functions: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            },
-            branches: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            }
-        };
-        keys = [
-            "lines", "statements", "branches", "functions"
-        ];
-        increment = function (obj) {
-            if (obj) {
-                keys.forEach(function (key) {
-                    summary[key].total += obj[key].total;
-                    summary[key].covered += obj[key].covered;
-                    summary[key].skipped += obj[key].skipped;
-                });
-            }
-        };
-        args.forEach(function (arg) {
-            increment(arg);
-        });
-        keys.forEach(function (key) {
-            summary[key].pct = numberFormatPercent(
-                summary[key].covered / summary[key].total
-            );
-        });
-        return summary;
-    };
-    // merge previous coverage
-    if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
-        console.log("merging file " + dir + "/coverage.json to coverage");
-        try {
-            local.coverageMerge(opt.coverage, JSON.parse(
-                local.fs.readFileSync(dir + "/coverage.json", "utf8")
-            ));
-        } catch (ignore) {}
-        try {
-            Object.keys(JSON.parse(local.fs.readFileSync(
-                dir + "/coverage.code-dict.json",
-                "utf8"
-            ))).forEach(function (key) {
-                globalThis.__coverageCodeDict__[key] = (
-                    globalThis.__coverageCodeDict__[key]
-                    || true
-                );
-            });
-        } catch (ignore) {}
-    }
-    // init writer
-    coverageReportHtml = (
-        "<div class=\"coverageReportDiv\">\n"
-        + "<h1>coverage-report</h1>\n"
-        + "<div style=\""
-        + "background: #fff; border: 1px solid #999; margin 0; padding: 0;"
-        + "\">\n"
-    );
-    // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
-    writerData = "";
-    writerFile = "";
-    // create TextReport
-    findNameWidth = function (node, level, last) {
-        let idealWidth;
-        last = last || 0;
-        level = level || 0;
-        idealWidth = level * TAB_SIZE + node.relativeName.length;
-        if (idealWidth > last) {
-            last = idealWidth;
-        }
-        node.children.forEach(function (child) {
-            // recurse
-            last = findNameWidth(child, level + 1, last);
-        });
-        return last;
-    };
-    walk = function (node, level) {
-        let line;
-        let tableRow;
-        tableRow = [
-            node.metrics.statements.pct,
-            node.metrics.statements.pct,
-            node.metrics.branches.pct,
-            node.metrics.functions.pct,
-            node.metrics.lines.pct
-        ].map(function (pct, ii) {
-            let val;
-            val = (
-                val >= 80
-                ? "high"
-                : val >= 50
-                ? "medium"
-                : "low"
-            );
-            return (
-                ii === 0
-                ? fill(node.relativeName, nameWidth, false, level, val)
-                : fill(pct, 10, true, 0, val)
-            );
-        }).join(" |") + " |";
-        if (level !== 0) {
-            strings.push(tableRow);
-            node.children.forEach(function (child) {
-                walk(child, level + 1);
-            });
-            return;
-        }
-        line = (
-            "-".repeat(nameWidth)
-            + "-|-----------|-----------|-----------|-----------|"
-        );
-        strings.push(line);
-        strings.push(
-            fill("File", nameWidth, false, 0)
-            + " |   % Stmts |% Branches |   % Funcs |   % Lines |"
-        );
-        strings.push(line);
-        node.children.forEach(function (child) {
-            // recurse
-            walk(child, level + 1);
-        });
-        strings.push(line);
-        strings.push(tableRow);
-        strings.push(line);
-    };
-    summaryMap = {};
-    strings = [];
-    Object.entries(globalThis.__coverage__).forEach(function ([
-        file,
-        fileCoverage
-    ]) {
-        let elem;
-        let summary;
-        if (fileCoverage && globalThis.__coverageCodeDict__[file]) {
-            // reset derived info
-            delete globalThis.__coverage__[file].l;
-            // summarizeFileCoverage
-            summary = {
-                lines: {
-                    total: 0,
-                    covered: 0,
-                    skipped: 0,
-                    pct: "Unknown"
-                },
-                statements: {
-                    total: 0,
-                    covered: 0,
-                    skipped: 0,
-                    pct: "Unknown"
-                },
-                functions: {
-                    total: 0,
-                    covered: 0,
-                    skipped: 0,
-                    pct: "Unknown"
-                },
-                branches: {
-                    total: 0,
-                    covered: 0,
-                    skipped: 0,
-                    pct: "Unknown"
-                }
-            };
-            // addDerivedInfoForFile
-            if (!fileCoverage.l) {
-                fileCoverage.l = {};
-                Object.entries(fileCoverage.s).forEach(function ([
-                    st,
-                    count
-                ]) {
-                    let line;
-                    if (count === 0 && fileCoverage.statementMap[st].skip) {
-                        count = 1;
-                    }
-                    line = fileCoverage.statementMap[st].start.line;
-                    fileCoverage.l[line] = Math.max(
-                        fileCoverage.l[line] | 0,
-                        count
-                    );
-                });
-            }
-            // computeSimpleTotals
-            [
-                [
-                    "lines", "l"
-                ],
-                [
-                    "functions", "f", "fnMap"
-                ],
-                [
-                    "statements", "s", "statementMap"
-                ]
-            ].forEach(function ([
-                key, property, mapProperty
-            ]) {
-                let map;
-                elem = {
-                    total: 0,
-                    covered: 0,
-                    skipped: 0
-                };
-                map = fileCoverage[mapProperty];
-                Object.entries(fileCoverage[property]).forEach(function ([
-                    key,
-                    covered
-                ]) {
-                    let skipped;
-                    skipped = map && map[key].skip;
-                    elem.total += 1;
-                    elem.covered += Boolean(covered || skipped);
-                    elem.skipped += Boolean(!covered && skipped);
-                });
-                elem.pct = numberFormatPercent(elem.covered / elem.total);
-                summary[key] = elem;
-            });
-            // computeBranchTotals
-            elem = {
-                total: 0,
-                covered: 0,
-                skipped: 0
-            };
-            Object.entries(fileCoverage.b).forEach(function ([
-                key,
-                branches
-            ]) {
-                let map;
-                map = fileCoverage.branchMap[key].locations;
-                branches.forEach(function (covered, ii) {
-                    let skipped;
-                    skipped = map && map[ii] && map[ii].skip;
-                    elem.covered += Boolean(covered || skipped);
-                    elem.skipped += Boolean(!covered && skipped);
-                });
-                elem.total += branches.length;
-            });
-            elem.pct = numberFormatPercent(elem.covered / elem.total);
-            summary.branches = elem;
-            summaryMap[file] = summary;
-            // findCommonArrayPrefix
-            tmp = file.split(path.sep);
-            if (!filePrefix) {
-                filePrefix = tmp.slice(0, -1);
-                return;
-            }
-            filePrefix.some(function (elem, ii) {
-                if (elem !== tmp[ii]) {
-                    filePrefix = filePrefix.slice(0, ii);
-                    return true;
-                }
-            });
-        }
-    });
-    // coverageReportSummary = new TreeSummary();
-    addChild = function (node, child) {
-        node.children.push(child);
-        child.parent = node;
-    };
-    calculateMetrics = function (entry) {
-        let fileChildren;
-        if (entry.kind !== "dir") {
-            return;
-        }
-        entry.children.forEach(function (child) {
-            calculateMetrics(child);
-        });
-        entry.metrics = mergeSummaryObjects(
-            entry.children.map(function (child) {
-                return child.metrics;
-            })
-        );
-        // calclulate "java-style" package metrics where there is no hierarchy
-        // across packages
-        fileChildren = entry.children.filter(function (nn) {
-            return nn.kind !== "dir";
-        });
-        if (fileChildren.length > 0) {
-            entry.packageMetrics = mergeSummaryObjects(
-                fileChildren.map(function (child) {
-                    return child.metrics;
-                })
-            );
-        } else {
-            entry.packageMetrics = null;
-        }
-    };
-    createNode = function (fullName, kind, metrics) {
-        return {
-            children: [],
-            fullName,
-            kind,
-            metrics: metrics || null,
-            name: fullName,
-            parent: null
-        };
-    };
-    fixupNodes = function (node, filePrefix, parent) {
-        // fix name
-        if (node.name.indexOf(filePrefix) === 0) {
-            node.name = node.name.slice(filePrefix.length);
-        }
-        if (node.name[0] === path.sep) {
-            node.name = node.name.slice(1);
-        }
-        // init relativeName
-        node.relativeName = (
-            parent
-            ? (
-                parent.name !== "__root__/"
-                ? node.name.slice(parent.name.length)
-                : node.name
-            )
-            : node.name.slice(filePrefix.length)
-        ) || "All files";
-        node.children.forEach(function (child) {
-            // recurse
-            fixupNodes(child, filePrefix, node);
-        });
-    };
-    indexAndSortTree = function (node, map) {
-        map[node.name] = node;
-        node.children.sort(function (aa, bb) {
-            aa = aa.relativeName;
-            bb = bb.relativeName;
-            return (
-                aa < bb
-                ? -1
-                : aa > bb
-                ? 1
-                : 0
-            );
-        });
-        node.children.forEach(function (child) {
-            // recurse
-            indexAndSortTree(child, map);
-        });
-    };
-    // convertToTree
-    tmp = filePrefix.join(path.sep) + path.sep;
-    root = createNode(tmp, "dir");
-    seen = {};
-    seen[tmp] = root;
-    filesUnderRoot = false;
-    Object.entries(summaryMap).forEach(function ([
-        key,
-        metrics
-    ]) {
-        let node;
-        let parent;
-        let parentPath;
-        node = createNode(key, "file", metrics);
-        seen[key] = node;
-        parentPath = path.dirname(key) + path.sep;
-        if (parentPath === path.sep + path.sep) {
-            parentPath = path.sep + "__root__" + path.sep;
-        }
-        parent = seen[parentPath];
-        if (!parent) {
-            parent = createNode(parentPath, "dir");
-            addChild(root, parent);
-            seen[parentPath] = parent;
-        }
-        addChild(parent, node);
-        if (parent === root) {
-            filesUnderRoot = true;
-        }
-    });
-    if (filesUnderRoot && filePrefix.length > 0) {
-        filePrefix.pop(); //start at one level above
-        tmp = root;
-        tmpChildren = tmp.children;
-        tmp.children = [];
-        root = createNode(filePrefix.join(path.sep) + path.sep, "dir");
-        addChild(root, tmp);
-        tmpChildren.forEach(function (child) {
-            if (child.kind === "dir") {
-                addChild(root, child);
-            } else {
-                addChild(tmp, child);
-            }
-        });
-    }
-    fixupNodes(root, filePrefix.join(path.sep) + path.sep);
-    calculateMetrics(root);
-    indexAndSortTree(root, {});
-    nameWidth = findNameWidth(root);
-    walk(root, 0);
-    // 1. print coverage in text-format to stdout
-    console.log(strings.join("\n") + "\n");
-    // create HtmlReport
-    templateHead = local.templateCoverageHead;
-    if (local.isBrowser) {
-        templateHead = templateHead.replace(
-            "<!doctype html>\n",
-            ""
-        ).replace((
-            /(<\/?)(?:body|html)/g
-        ), "$1div");
-    }
-    if (!local.isBrowser && process.env.npm_package_homepage) {
-        templateHead = templateHead.replace(
-            "{{env.npm_package_homepage}}",
-            process.env.npm_package_homepage
-        ).replace(
-            "{{env.npm_package_name}}",
-            process.env.npm_package_name
-        ).replace(
-            "{{env.npm_package_version}}",
-            process.env.npm_package_version
-        );
-    } else {
-        templateHead = templateHead.replace((
-            /<h1\u0020[\S\s]*<\/h1>/
-        ), "");
-    }
-    templateHead = handlebarsCompile(templateHead);
-    templateFoot = handlebarsCompile(local.templateCoverageFoot);
-    function getReportClass(pct) {
-        return (
-            pct >= 80
-            ? "high"
-            : pct >= 50
-            ? "medium"
-            : "low"
-        );
-    }
-    opt = opt || {};
-    // hack-coverage - new Date() bugfix
-    templateData = {
-        datetime: new Date().toGMTString()
-    };
-    function ancestorHref(node, num) {
+    ancestorHref = function (node, num) {
         let href;
         let ii;
         let jj;
@@ -11454,8 +10995,8 @@ local.coverageReportCreate = function (opt) {
             ii += 1;
         }
         return href;
-    }
-    function linkMapperAsset(node, name) {
+    };
+    linkMapperAsset = function (node, name) {
         let ii;
         let parent;
         ii = 0;
@@ -11465,7 +11006,7 @@ local.coverageReportCreate = function (opt) {
             parent = parent.parent;
         }
         return ancestorHref(node, ii) + name;
-    }
+    };
     fillTemplate = function (node) {
         let ii;
         let linkPath;
@@ -11791,6 +11332,468 @@ local.coverageReportCreate = function (opt) {
                 }) + templateFoot(templateData)
             );
         });
+    };
+    getReportClass = function (pct) {
+        return (
+            pct >= 80
+            ? "high"
+            : pct >= 50
+            ? "medium"
+            : "low"
+        );
+    };
+    mergeSummaryObjects = function (args) {
+    /**
+     * merges multiple summary metrics objects by summing up the `totals` and
+     * `covered` fields and recomputing the percentages.
+     * This function is generic and can accept any number of arguments.
+     *
+     * @method mergeSummaryObjects
+     * @static
+     * @param {Object} summary... multiple summary metrics objects
+     * @return {Object} the merged summary metrics
+     */
+        let increment;
+        let keys;
+        let summary;
+        summary = {
+            lines: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            },
+            statements: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            },
+            functions: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            },
+            branches: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            }
+        };
+        keys = [
+            "lines", "statements", "branches", "functions"
+        ];
+        increment = function (obj) {
+            if (obj) {
+                keys.forEach(function (key) {
+                    summary[key].total += obj[key].total;
+                    summary[key].covered += obj[key].covered;
+                    summary[key].skipped += obj[key].skipped;
+                });
+            }
+        };
+        args.forEach(function (arg) {
+            increment(arg);
+        });
+        keys.forEach(function (key) {
+            summary[key].pct = numberFormatPercent(
+                summary[key].covered / summary[key].total
+            );
+        });
+        return summary;
+    };
+    // merge previous coverage
+    if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
+        console.log("merging file " + dir + "/coverage.json to coverage");
+        try {
+            local.coverageMerge(opt.coverage, JSON.parse(
+                local.fs.readFileSync(dir + "/coverage.json", "utf8")
+            ));
+        } catch (ignore) {}
+        try {
+            Object.keys(JSON.parse(local.fs.readFileSync(
+                dir + "/coverage.code-dict.json",
+                "utf8"
+            ))).forEach(function (key) {
+                globalThis.__coverageCodeDict__[key] = (
+                    globalThis.__coverageCodeDict__[key]
+                    || true
+                );
+            });
+        } catch (ignore) {}
+    }
+    // init writer
+    coverageReportHtml = (
+        "<div class=\"coverageReportDiv\">\n"
+        + "<h1>coverage-report</h1>\n"
+        + "<div style=\""
+        + "background: #fff; border: 1px solid #999; margin 0; padding: 0;"
+        + "\">\n"
+    );
+    // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
+    writerData = "";
+    writerFile = "";
+    // create TextReport
+    findNameWidth = function (node, level, last) {
+        let idealWidth;
+        last = last || 0;
+        level = level || 0;
+        idealWidth = level * TAB_SIZE + node.relativeName.length;
+        if (idealWidth > last) {
+            last = idealWidth;
+        }
+        node.children.forEach(function (child) {
+            // recurse
+            last = findNameWidth(child, level + 1, last);
+        });
+        return last;
+    };
+    walk = function (node, level) {
+        let line;
+        let tableRow;
+        tableRow = [
+            node.metrics.statements.pct,
+            node.metrics.statements.pct,
+            node.metrics.branches.pct,
+            node.metrics.functions.pct,
+            node.metrics.lines.pct
+        ].map(function (pct, ii) {
+            let val;
+            val = (
+                val >= 80
+                ? "high"
+                : val >= 50
+                ? "medium"
+                : "low"
+            );
+            return (
+                ii === 0
+                ? stringFill(node.relativeName, nameWidth, false, level, val)
+                : stringFill(pct, 10, true, 0, val)
+            );
+        }).join(" |") + " |";
+        if (level !== 0) {
+            strings.push(tableRow);
+            node.children.forEach(function (child) {
+                walk(child, level + 1);
+            });
+            return;
+        }
+        line = (
+            "-".repeat(nameWidth)
+            + "-|-----------|-----------|-----------|-----------|"
+        );
+        strings.push(line);
+        strings.push(
+            stringFill("File", nameWidth, false, 0)
+            + " |   % Stmts |% Branches |   % Funcs |   % Lines |"
+        );
+        strings.push(line);
+        node.children.forEach(function (child) {
+            // recurse
+            walk(child, level + 1);
+        });
+        strings.push(line);
+        strings.push(tableRow);
+        strings.push(line);
+    };
+    summaryMap = {};
+    strings = [];
+    Object.entries(globalThis.__coverage__).forEach(function ([
+        file,
+        fileCoverage
+    ]) {
+        let elem;
+        let summary;
+        if (fileCoverage && globalThis.__coverageCodeDict__[file]) {
+            // reset derived info
+            delete globalThis.__coverage__[file].l;
+            // summarizeFileCoverage
+            summary = {
+                lines: {
+                    total: 0,
+                    covered: 0,
+                    skipped: 0,
+                    pct: "Unknown"
+                },
+                statements: {
+                    total: 0,
+                    covered: 0,
+                    skipped: 0,
+                    pct: "Unknown"
+                },
+                functions: {
+                    total: 0,
+                    covered: 0,
+                    skipped: 0,
+                    pct: "Unknown"
+                },
+                branches: {
+                    total: 0,
+                    covered: 0,
+                    skipped: 0,
+                    pct: "Unknown"
+                }
+            };
+            // addDerivedInfoForFile
+            if (!fileCoverage.l) {
+                fileCoverage.l = {};
+                Object.entries(fileCoverage.s).forEach(function ([
+                    st,
+                    count
+                ]) {
+                    let line;
+                    if (count === 0 && fileCoverage.statementMap[st].skip) {
+                        count = 1;
+                    }
+                    line = fileCoverage.statementMap[st].start.line;
+                    fileCoverage.l[line] = Math.max(
+                        fileCoverage.l[line] | 0,
+                        count
+                    );
+                });
+            }
+            // computeSimpleTotals
+            [
+                [
+                    "lines", "l"
+                ],
+                [
+                    "functions", "f", "fnMap"
+                ],
+                [
+                    "statements", "s", "statementMap"
+                ]
+            ].forEach(function ([
+                key, property, mapProperty
+            ]) {
+                let map;
+                elem = {
+                    total: 0,
+                    covered: 0,
+                    skipped: 0
+                };
+                map = fileCoverage[mapProperty];
+                Object.entries(fileCoverage[property]).forEach(function ([
+                    key,
+                    covered
+                ]) {
+                    let skipped;
+                    skipped = map && map[key].skip;
+                    elem.total += 1;
+                    elem.covered += Boolean(covered || skipped);
+                    elem.skipped += Boolean(!covered && skipped);
+                });
+                elem.pct = numberFormatPercent(elem.covered / elem.total);
+                summary[key] = elem;
+            });
+            // computeBranchTotals
+            elem = {
+                total: 0,
+                covered: 0,
+                skipped: 0
+            };
+            Object.entries(fileCoverage.b).forEach(function ([
+                key,
+                branches
+            ]) {
+                let map;
+                map = fileCoverage.branchMap[key].locations;
+                branches.forEach(function (covered, ii) {
+                    let skipped;
+                    skipped = map && map[ii] && map[ii].skip;
+                    elem.covered += Boolean(covered || skipped);
+                    elem.skipped += Boolean(!covered && skipped);
+                });
+                elem.total += branches.length;
+            });
+            elem.pct = numberFormatPercent(elem.covered / elem.total);
+            summary.branches = elem;
+            summaryMap[file] = summary;
+            // findCommonArrayPrefix
+            tmp = file.split(path.sep);
+            if (!filePrefix) {
+                filePrefix = tmp.slice(0, -1);
+                return;
+            }
+            filePrefix.some(function (elem, ii) {
+                if (elem !== tmp[ii]) {
+                    filePrefix = filePrefix.slice(0, ii);
+                    return true;
+                }
+            });
+        }
+    });
+    // coverageReportSummary = new TreeSummary();
+    addChild = function (node, child) {
+        node.children.push(child);
+        child.parent = node;
+    };
+    calculateMetrics = function (entry) {
+        let fileChildren;
+        if (entry.kind !== "dir") {
+            return;
+        }
+        entry.children.forEach(function (child) {
+            calculateMetrics(child);
+        });
+        entry.metrics = mergeSummaryObjects(
+            entry.children.map(function (child) {
+                return child.metrics;
+            })
+        );
+        // calclulate "java-style" package metrics where there is no hierarchy
+        // across packages
+        fileChildren = entry.children.filter(function (nn) {
+            return nn.kind !== "dir";
+        });
+        if (fileChildren.length > 0) {
+            entry.packageMetrics = mergeSummaryObjects(
+                fileChildren.map(function (child) {
+                    return child.metrics;
+                })
+            );
+        } else {
+            entry.packageMetrics = null;
+        }
+    };
+    createNode = function (fullName, kind, metrics) {
+        return {
+            children: [],
+            fullName,
+            kind,
+            metrics: metrics || null,
+            name: fullName,
+            parent: null
+        };
+    };
+    fixupNodes = function (node, filePrefix, parent) {
+        // fix name
+        if (node.name.indexOf(filePrefix) === 0) {
+            node.name = node.name.slice(filePrefix.length);
+        }
+        if (node.name[0] === path.sep) {
+            node.name = node.name.slice(1);
+        }
+        // init relativeName
+        node.relativeName = (
+            parent
+            ? (
+                parent.name !== "__root__/"
+                ? node.name.slice(parent.name.length)
+                : node.name
+            )
+            : node.name.slice(filePrefix.length)
+        ) || "All files";
+        node.children.forEach(function (child) {
+            // recurse
+            fixupNodes(child, filePrefix, node);
+        });
+    };
+    indexAndSortTree = function (node, map) {
+        map[node.name] = node;
+        node.children.sort(function (aa, bb) {
+            aa = aa.relativeName;
+            bb = bb.relativeName;
+            return (
+                aa < bb
+                ? -1
+                : aa > bb
+                ? 1
+                : 0
+            );
+        });
+        node.children.forEach(function (child) {
+            // recurse
+            indexAndSortTree(child, map);
+        });
+    };
+    // convertToTree
+    tmp = filePrefix.join(path.sep) + path.sep;
+    root = createNode(tmp, "dir");
+    seen = {};
+    seen[tmp] = root;
+    filesUnderRoot = false;
+    Object.entries(summaryMap).forEach(function ([
+        key,
+        metrics
+    ]) {
+        let node;
+        let parent;
+        let parentPath;
+        node = createNode(key, "file", metrics);
+        seen[key] = node;
+        parentPath = path.dirname(key) + path.sep;
+        if (parentPath === path.sep + path.sep) {
+            parentPath = path.sep + "__root__" + path.sep;
+        }
+        parent = seen[parentPath];
+        if (!parent) {
+            parent = createNode(parentPath, "dir");
+            addChild(root, parent);
+            seen[parentPath] = parent;
+        }
+        addChild(parent, node);
+        if (parent === root) {
+            filesUnderRoot = true;
+        }
+    });
+    if (filesUnderRoot && filePrefix.length > 0) {
+        filePrefix.pop(); //start at one level above
+        tmp = root;
+        tmpChildren = tmp.children;
+        tmp.children = [];
+        root = createNode(filePrefix.join(path.sep) + path.sep, "dir");
+        addChild(root, tmp);
+        tmpChildren.forEach(function (child) {
+            if (child.kind === "dir") {
+                addChild(root, child);
+            } else {
+                addChild(tmp, child);
+            }
+        });
+    }
+    fixupNodes(root, filePrefix.join(path.sep) + path.sep);
+    calculateMetrics(root);
+    indexAndSortTree(root, {});
+    nameWidth = findNameWidth(root);
+    walk(root, 0);
+    // 1. print coverage in text-format to stdout
+    console.log(strings.join("\n") + "\n");
+    // create HtmlReport
+    templateHead = local.templateCoverageHead;
+    if (local.isBrowser) {
+        templateHead = templateHead.replace(
+            "<!doctype html>\n",
+            ""
+        ).replace((
+            /(<\/?)(?:body|html)/g
+        ), "$1div");
+    }
+    if (!local.isBrowser && process.env.npm_package_homepage) {
+        templateHead = templateHead.replace(
+            "{{env.npm_package_homepage}}",
+            process.env.npm_package_homepage
+        ).replace(
+            "{{env.npm_package_name}}",
+            process.env.npm_package_name
+        ).replace(
+            "{{env.npm_package_version}}",
+            process.env.npm_package_version
+        );
+    } else {
+        templateHead = templateHead.replace((
+            /<h1\u0020[\S\s]*<\/h1>/
+        ), "");
+    }
+    templateHead = handlebarsCompile(templateHead);
+    templateFoot = handlebarsCompile(local.templateCoverageFoot);
+    opt = opt || {};
+    // hack-coverage - new Date() bugfix
+    templateData = {
+        datetime: new Date().toGMTString()
     };
     coverageReportWrite(root, dir);
     // 2. write coverage in html-format to filesystem
