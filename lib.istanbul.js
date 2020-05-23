@@ -10503,7 +10503,7 @@ local.templateCoverageHead = '\
         <td>{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>\n\
     </tbody>\n\
     </table>\n\
-    {{pathHtml}}\n\
+    <div class="path">{{#show_path}}</div>\n\
 </div>\n\
 <div class="body">\n\
 ';
@@ -11249,12 +11249,7 @@ templateRender = function (template, dict, node) {
     }
     Object.assign(dict, {
         coverageLevel: metrics && coverageLevelGet(metrics.statements.pct),
-        entity: node.name || "All files",
-        pathHtml: "<div class=\"path\">" + (
-            parentUrlList.length > 0
-            ? parentUrlList.join(" &#187; ") + " &#187; " + node.relativeName
-            : ""
-        ) + "</div>"
+        entity: node.name || "All files"
     });
     // render <dict>
     template = template.replace((
@@ -11347,6 +11342,14 @@ templateRender = function (template, dict, node) {
             ii += 1;
         }
         return array;
+    });
+    // render #show_path
+    template = template.replace("{{#show_path}}", function () {
+        return (
+            parentUrlList.length > 0
+            ? parentUrlList.join(" &#187; ") + " &#187; " + node.relativeName
+            : ""
+        );
     });
     // render #show_percent_bar
     template = template.replace("{{#show_percent_bar}}", function () {
