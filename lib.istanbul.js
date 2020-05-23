@@ -10625,7 +10625,7 @@ InsertionText.prototype = {
         let ii;
         ii = 0;
         while (ii < len) {
-            if (!text.charAt(ii).match(
+            if (!text[ii].match(
                 /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
             )) {
                 pos = ii;
@@ -10644,7 +10644,7 @@ InsertionText.prototype = {
         let ii;
         ii = len - 1;
         while (ii >= 0) {
-            if (!text.charAt(ii).match(
+            if (!text[ii].match(
                 /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
             )) {
                 pos = ii;
@@ -10799,7 +10799,7 @@ function TreeSummary() {
         if (node.name.indexOf(filePrefix) === 0) {
             node.name = node.name.slice(filePrefix.length);
         }
-        if (node.name.charAt(0) === path.sep) {
+        if (node.name[0] === path.sep) {
             node.name = node.name.slice(1);
         }
         // init relativeName
@@ -11564,9 +11564,9 @@ function reportTextCreate(opt) {
                 ii = 0;
                 while (ii < node.relativeName.length) {
                     relativeName += (
-                        node.relativeName.charAt(ii) === path.sep
+                        node.relativeName[ii] === path.sep
                         ? "/"
-                        : node.relativeName.charAt(ii)
+                        : node.relativeName[ii]
                     );
                     ii += 1;
                 }
