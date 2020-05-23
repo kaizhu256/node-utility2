@@ -11071,20 +11071,6 @@ function fill(str, width, right, tabs, clazz) {
     }
     return leader + fmtStr;
 }
-function findNameWidth(node, level, last) {
-    let idealWidth;
-    last = last || 0;
-    level = level || 0;
-    idealWidth = TAB_SIZE * level + node.relativeName.length;
-    if (idealWidth > last) {
-        last = idealWidth;
-    }
-    node.children.forEach(function (child) {
-        // recurse
-        last = findNameWidth(child, level + 1, last);
-    });
-    return last;
-}
 function handlebarsCompile(template) {
 /*
  * this function will return a function
@@ -11255,9 +11241,25 @@ function handlebarsCompile(template) {
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 */
 function reportTextCreate(opt) {
+    let findNameWidth;
     let nameWidth;
     let strings;
-    function walk(node, array, level) {
+    let walk;
+    findNameWidth = function (node, level, last) {
+        let idealWidth;
+        last = last || 0;
+        level = level || 0;
+        idealWidth = TAB_SIZE * level + node.relativeName.length;
+        if (idealWidth > last) {
+            last = idealWidth;
+        }
+        node.children.forEach(function (child) {
+            // recurse
+            last = findNameWidth(child, level + 1, last);
+        });
+        return last;
+    };
+    walk = function (node, level) {
         let line;
         let tableRow;
         tableRow = [
@@ -11282,9 +11284,9 @@ function reportTextCreate(opt) {
             );
         }).join(" |") + " |";
         if (level !== 0) {
-            array.push(tableRow);
+            strings.push(tableRow);
             node.children.forEach(function (child) {
-                walk(child, array, level + 1);
+                walk(child, level + 1);
             });
             return;
         }
@@ -11292,33 +11294,31 @@ function reportTextCreate(opt) {
             "-".repeat(nameWidth)
             + "-|-----------|-----------|-----------|-----------|"
         );
-        array.push(line);
-        array.push(
+        strings.push(line);
+        strings.push(
             fill("File", nameWidth, false, 0)
             + " |   % Stmts |% Branches |   % Funcs |   % Lines |"
         );
-        array.push(line);
+        strings.push(line);
         node.children.forEach(function (child) {
             // recurse
-            walk(child, array, level + 1);
+            walk(child, level + 1);
         });
-        array.push(line);
-        array.push(tableRow);
-        array.push(line);
-    }
+        strings.push(line);
+        strings.push(tableRow);
+        strings.push(line);
+    };
     opt = opt || {};
     summaryMap = {};
     strings = [];
-    Object.keys(globalThis.__coverage__).forEach(function (key) {
-        if (
-            globalThis.__coverage__[key]
-            && globalThis.__coverageCodeDict__[key]
-        ) {
+    Object.entries(globalThis.__coverage__).forEach(function ([
+        key,
+        fileCoverage
+    ]) {
+        if (fileCoverage && globalThis.__coverageCodeDict__[key]) {
             // reset derived info
             delete globalThis.__coverage__[key].l;
-            summaryMap[key] = summarizeFileCoverage(
-                globalThis.__coverage__[key]
-            );
+            summaryMap[key] = summarizeFileCoverage(fileCoverage);
         }
     });
     coverageReportSummary = new TreeSummary(
