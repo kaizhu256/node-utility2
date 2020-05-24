@@ -10570,38 +10570,11 @@ htmlWrite = function (node, dir) {
 </thead>
 <tbody>`
     );
-    htmlData += Array.from(node.children).sort(function (a, b) {
-        return (
-            a.name < b.name
-            ? -1
-            : 1
-        );
-    }).map(function (child) {
-        let ii;
-        let url;
-        ii = 0;
-        url = child.relativeName;
-        if (path.sep !== "/") {
-            url = "";
-            ii = 0;
-            while (ii < child.relativeName.length) {
-                url += (
-                    child.relativeName[ii] === path.sep
-                    ? "/"
-                    : child.relativeName[ii]
-                );
-                ii += 1;
-            }
-        }
-        url += (
-            child.kind === "dir"
-            ? "index.html"
-            : ".html"
-        );
+    htmlData += node.children.sort.map(function (child) {
         return templateRender((
             `<tr>
 <td class="file {{metrics.statements.score}}"
-    data-value="{{relativeName}}"><a href="{{url}}"><div>{{relativeName}}</div>
+    data-value="{{relativeName}}"><a href="{{href}}"><div>{{relativeName}}</div>
     {{#show_percent_bar}}</a></td>
 <td class="pct {{metrics.statements.score}}"
     data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
@@ -10616,9 +10589,7 @@ htmlWrite = function (node, dir) {
     data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>
     ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
 </tr>`
-        ), Object.assign({
-            url
-        }, child)) + "\n";
+        ), child) + "\n";
     }).join("");
     htmlData += "</tbody>\n</table>\n</div>\n";
     htmlData += templateFoot;
@@ -11020,14 +10991,14 @@ nodeNormalize = function (node, level, filePrefix, parent) {
 /*
  * this function will recursively normalize <node>.name and <node>.relativeName
  */
-    // normalize <name>
+    // init <name>
     if (node.name.indexOf(filePrefix) === 0) {
         node.name = node.name.slice(filePrefix.length);
     }
     if (node.name[0] === path.sep) {
         node.name = node.name.slice(1);
     }
-    // normalize <relativeName>
+    // init <relativeName>
     node.relativeName = (
         parent
         ? (
@@ -11037,23 +11008,25 @@ nodeNormalize = function (node, level, filePrefix, parent) {
         )
         : node.name.slice(filePrefix.length)
     );
-    // normalize <nameOrAllFiles>
+    // init <nameOrAllFiles>
     node.nameOrAllFiles = node.name || "All files";
-    // normalize <relativeNameOrAllFiles>
+    // init <relativeNameOrAllFiles>
     node.relativeNameOrAllFiles = node.relativeName || "All files";
-    // normalize <nodeNameWidth>
+    // init <nodeNameWidth>
     nodeNameWidth = Math.max(
         nodeNameWidth,
         level * 2 + node.relativeNameOrAllFiles.length
     );
+    // init <href>
+    node.href = node.relativeName.split(path.sep).join("/");
+    // recurse
     node.children.forEach(function (child) {
-        // recurse
         nodeNormalize(child, level + 1, filePrefix, node);
     });
-    // sort <children> by <relativeName>
+    // sort <children> by <name>
     node.children.sort(function (aa, bb) {
         return (
-            aa.relativeName > bb.relativeName
+            aa.name > bb.name
             ? 1
             : -1
         );
