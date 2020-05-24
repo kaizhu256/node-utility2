@@ -11037,7 +11037,7 @@ nodeSummarize = function (node, level) {
         node.metrics.statements,
         node.metrics.branches,
         node.metrics.functions,
-        node.metrics.lines.score
+        node.metrics.lines
     ].map(function ({
         pct,
         score
