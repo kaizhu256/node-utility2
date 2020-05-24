@@ -11323,11 +11323,10 @@ local.coverageReportCreate = function (opt) {
     }
     // init function
     findNameWidth = function (node, level) {
-        let idealWidth;
-        idealWidth = level * 2 + node.relativeName.length;
-        if (idealWidth > nodeNameWidth) {
-            nodeNameWidth = idealWidth;
-        }
+        nodeNameWidth = Math.max(
+            nodeNameWidth,
+            level * 2 + node.relativeName.length
+        );
         node.children.forEach(function (child) {
             // recurse
             nodeNameWidth = findNameWidth(child, level + 1, nodeNameWidth);
