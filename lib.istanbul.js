@@ -10190,7 +10190,7 @@ local.templateCoverageHead = '\
 <!doctype html>\n\
 <html lang="en" class="x-istanbul">\n\
 <head>\n\
-    <title>Code coverage report for {{name}}</title>\n\
+    <title>Code coverage report for {{entity}}</title>\n\
     <meta charset="utf-8">\n\
 <style>\n\
 /* jslint utility2:true */\n\
@@ -10470,7 +10470,7 @@ local.templateCoverageHead = '\
     <h1 style="font-weight: bold;">\n\
         <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} ({{env.npm_package_version}})</a>\n\
     </h1>\n\
-    <h1>Code coverage report for <span class="entity">{{name}}</span></h1>\n\
+    <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
     <table class="tableHeader">\n\
     <thead>\n\
     <tr>\n\
@@ -11027,6 +11027,7 @@ nodeNormalize = function (node, level, filePrefix, parent) {
     if (node.name[0] === path.sep) {
         node.name = node.name.slice(1);
     }
+    node.entity = node.name || "All files";
     // normalize <relativeName>
     node.relativeName = (
         parent
@@ -11062,16 +11063,19 @@ nodeSummarize = function (node, level) {
     let line;
     let tableRow;
     tableRow = [
-        node.metrics.statements.score,
-        node.metrics.statements.score,
-        node.metrics.branches.score,
-        node.metrics.functions.score,
+        node.metrics.statements,
+        node.metrics.statements,
+        node.metrics.branches,
+        node.metrics.functions,
         node.metrics.lines.score
-    ].map(function (score, ii) {
+    ].map(function ({
+        pct,
+        score
+    }, ii) {
         return (
             ii === 0
             ? stringPad(node.relativeName, nodeNameWidth, false, level, score)
-            : stringPad(score, 10, true, 0, score)
+            : stringPad(pct, 10, true, 0, score)
         );
     }).join(" |") + " |";
     if (level !== 0) {
