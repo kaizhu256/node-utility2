@@ -10552,7 +10552,7 @@ function InsertionText(text, consumeBlanks) {
     let that;
     that = this;
     that.text = text;
-    that.origLength = text.length;
+    that.originalLength = text.length;
     that.offsets = [];
     that.consumeBlanks = consumeBlanks;
     that.startPos = that.findFirstNonBlank();
@@ -10603,11 +10603,6 @@ InsertionText.prototype = {
         }
         return pos;
     },
-    originalLength: function () {
-        let that;
-        that = this;
-        return that.origLength;
-    },
     insertAt: function (col, str, insertBefore, consumeBlanks) {
         let cumulativeOffset;
         let len;
@@ -10621,8 +10616,8 @@ InsertionText.prototype = {
             : consumeBlanks
         );
         col = (
-            col > that.originalLength()
-            ? that.originalLength()
+            col > that.originalLength
+            ? that.originalLength
             : col
         );
         col = (
@@ -10635,12 +10630,11 @@ InsertionText.prototype = {
                 col = 0;
             }
             if (col > that.endPos) {
-                col = that.origLength;
+                col = that.originalLength;
             }
         }
         len = str.length;
-
-        //!! cumulativeOffset = that.findOffset(col, len, insertBefore);
+        // cumulativeOffset = that.findOffset(col, len, insertBefore);
         let ii;
         let offsetObj;
         let offsets;
@@ -10668,7 +10662,6 @@ InsertionText.prototype = {
                 len
             });
         }
-
         realPos = col + cumulativeOffset;
         text = that.text;
         that.text = text.slice(0, realPos) + str + text.slice(realPos);
@@ -10880,7 +10873,7 @@ htmlWrite = function (node, dir) {
                 //skip branches taken
                 if (endLine !== startLine) {
                     endLine = startLine;
-                    endCol = structured[startLine].text.originalLength();
+                    endCol = structured[startLine].text.originalLength;
                 }
                 text = structured[startLine].text;
                 if (fileCoverage.branchMap[branchName].type === "if") {
@@ -10915,7 +10908,7 @@ htmlWrite = function (node, dir) {
                 ), (
                     startLine === endLine
                     ? endCol
-                    : text.originalLength()
+                    : text.originalLength
                 ), "\u0001/span\u0002");
             });
         });
@@ -10938,7 +10931,7 @@ htmlWrite = function (node, dir) {
             startLine = meta.loc.start.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = structured[startLine].text.originalLength();
+                endCol = structured[startLine].text.originalLength;
             }
             text = structured[startLine].text;
             text.wrap(meta.loc.start.column, ("\u0001span class=\"" + (
@@ -10948,7 +10941,7 @@ htmlWrite = function (node, dir) {
             ) + "\" title=\"function not covered\" \u0002"), (
                 startLine === endLine
                 ? endCol
-                : text.originalLength()
+                : text.originalLength
             ), "\u0001/span\u0002");
         });
         // annotateStatements(fileCoverage, structured);
@@ -10970,7 +10963,7 @@ htmlWrite = function (node, dir) {
             endLine = meta.end.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = structured[startLine].text.originalLength();
+                endCol = structured[startLine].text.originalLength;
             }
             text = structured[startLine].text;
             text.wrap(meta.start.column, ("\u0001span class=\"" + (
@@ -10980,7 +10973,7 @@ htmlWrite = function (node, dir) {
             ) + "\" title=\"statement not covered\" \u0002"), (
                 startLine === endLine
                 ? endCol
-                : text.originalLength()
+                : text.originalLength
             ), "\u0001/span\u0002");
         });
         structured.shift();
