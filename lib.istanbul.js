@@ -11329,7 +11329,7 @@ local.coverageReportCreate = function (opt) {
         );
         node.children.forEach(function (child) {
             // recurse
-            nodeNameWidth = findNameWidth(child, level + 1, nodeNameWidth);
+            findNameWidth(child, level + 1, nodeNameWidth);
         });
     };
     // init dir
