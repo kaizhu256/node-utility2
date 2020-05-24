@@ -10544,6 +10544,7 @@ let summaryMap;
 let templateFoot;
 let templateHead;
 let templateRender;
+let textInsertAt;
 // require module
 path = require("path");
 // init InsertionText
@@ -10582,70 +10583,11 @@ function InsertionText(text, consumeBlanks) {
     }
 }
 InsertionText.prototype = {
-    insertAt: function (col, str, insertBefore, consumeBlanks) {
-        let ii;
-        let offset;
-        let offsetObj;
-        let that;
-        that = this;
-        consumeBlanks = (
-            consumeBlanks === undefined
-            ? that.consumeBlanks
-            : consumeBlanks
-        );
-        col = (
-            col > that.origLength
-            ? that.origLength
-            : col
-        );
-        col = (
-            col < 0
-            ? 0
-            : col
-        );
-        if (consumeBlanks) {
-            if (col <= that.startPos) {
-                col = 0;
-            }
-            if (col > that.endPos) {
-                col = that.origLength;
-            }
-        }
-        //!! offset = that.findOffset(col, str.length, insertBefore);
-        offset = 0;
-        ii = 0;
-        while (ii < that.offsets.length) {
-            offsetObj = that.offsets[ii];
-            if (
-                offsetObj.col < col
-                || (offsetObj.col === col && !insertBefore)
-            ) {
-                offset += offsetObj.len;
-            }
-            if (offsetObj.col >= col) {
-                break;
-            }
-            ii += 1;
-        }
-        if (offsetObj && offsetObj.col === col) {
-            offsetObj.len += str.length;
-        } else {
-            that.offsets.splice(ii, 0, {
-                col,
-                len: str.length
-            });
-        }
-        col = col + offset;
-        that.text = (
-            that.text.slice(0, col) + str + that.text.slice(col)
-        );
-        return that;
-    },
     wrap: function (startPos, startText, endPos, endText, consumeBlanks) {
         let that;
         that = this;
-        that.insertAt(startPos, startText, true, consumeBlanks);
-        that.insertAt(endPos, endText, false, consumeBlanks);
+        textInsertAt(that, startPos, startText, true, consumeBlanks);
+        textInsertAt(that, endPos, endText, false, consumeBlanks);
         return that;
     }
 };
@@ -10848,7 +10790,8 @@ htmlWrite = function (node, dir) {
                 if (fileCoverage.branchMap[branchName].type === "if") {
                     // and "if" is a special case since the else branch
                     // might not be visible, being non-existent
-                    text.insertAt(
+                    textInsertAt(
+                        text,
                         meta.start.column,
                         "\u0001span class=\"" + (
                             meta.skip
@@ -11284,6 +11227,59 @@ templateRender = function (template, dict, node) {
         return val;
     });
     return template;
+};
+textInsertAt = function (text, col, str, insertBefore, consumeBlanks) {
+/*
+ * this function will insert <str> into <text> at <col>
+ */
+    let ii;
+    let offset;
+    let offsetObj;
+    consumeBlanks = (
+        consumeBlanks === undefined
+        ? text.consumeBlanks
+        : consumeBlanks
+    );
+    col = (
+        col > text.origLength
+        ? text.origLength
+        : col
+    );
+    col = (
+        col < 0
+        ? 0
+        : col
+    );
+    if (consumeBlanks) {
+        if (col <= text.startPos) {
+            col = 0;
+        }
+        if (col > text.endPos) {
+            col = text.origLength;
+        }
+    }
+    offset = col;
+    ii = 0;
+    while (ii < text.offsets.length) {
+        offsetObj = text.offsets[ii];
+        if (offsetObj.col < col || (offsetObj.col === col && !insertBefore)) {
+            offset += offsetObj.len;
+        }
+        if (offsetObj.col >= col) {
+            break;
+        }
+        ii += 1;
+    }
+    if (offsetObj && offsetObj.col === col) {
+        offsetObj.len += str.length;
+    } else {
+        text.offsets.splice(ii, 0, {
+            col,
+            len: str.length
+        });
+    }
+    text.text = text.text.slice(0, offset) + str + text.text.slice(offset);
+    return text;
 };
 
 
