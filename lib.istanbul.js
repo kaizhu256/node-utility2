@@ -10545,6 +10545,7 @@ let templateFoot;
 let templateHead;
 let templateRender;
 let textInsertAt;
+let textWrap;
 // require module
 path = require("path");
 // init InsertionText
@@ -10582,15 +10583,6 @@ function InsertionText(text, consumeBlanks) {
         ii -= 1;
     }
 }
-InsertionText.prototype = {
-    wrap: function (startPos, startText, endPos, endText, consumeBlanks) {
-        let that;
-        that = this;
-        textInsertAt(that, startPos, startText, true, consumeBlanks);
-        textInsertAt(that, endPos, endText, false, consumeBlanks);
-        return that;
-    }
-};
 // init function
 coverageLevelGet = function (pct) {
 /*
@@ -10811,7 +10803,7 @@ htmlWrite = function (node, dir) {
                     );
                     return;
                 }
-                text.wrap(meta.start.column, (
+                textWrap(text, meta.start.column, (
                     "\u0001span class=\"branch-" + ii + " " + (
                         meta.skip
                         ? "cbranch-skip"
@@ -10846,7 +10838,7 @@ htmlWrite = function (node, dir) {
                 endCol = structured[startLine].text.origLength;
             }
             text = structured[startLine].text;
-            text.wrap(meta.loc.start.column, ("\u0001span class=\"" + (
+            textWrap(text, meta.loc.start.column, ("\u0001span class=\"" + (
                 meta.skip
                 ? "fstat-skip"
                 : "fstat-no"
@@ -10878,7 +10870,7 @@ htmlWrite = function (node, dir) {
                 endCol = structured[startLine].text.origLength;
             }
             text = structured[startLine].text;
-            text.wrap(meta.start.column, ("\u0001span class=\"" + (
+            textWrap(text, meta.start.column, ("\u0001span class=\"" + (
                 meta.skip
                 ? "cstat-skip"
                 : "cstat-no"
@@ -11279,6 +11271,22 @@ textInsertAt = function (text, col, str, insertBefore, consumeBlanks) {
         });
     }
     text.text = text.text.slice(0, offset) + str + text.text.slice(offset);
+    return text;
+};
+textWrap = function (
+    text,
+    startPos,
+    startText,
+    endPos,
+    endText,
+    consumeBlanks
+) {
+/*
+ * this function will wrap <text>.slice(<startPos>, <endPos>)
+ * in <startText> and <endText>
+ */
+    textInsertAt(text, startPos, startText, true, consumeBlanks);
+    textInsertAt(text, endPos, endText, false, consumeBlanks);
     return text;
 };
 
