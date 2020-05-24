@@ -10531,6 +10531,249 @@ let templateRender;
 // require module
 path = require("path");
 // init function
+lineCreate = function (line, text, consumeBlanks) {
+/*
+ * this function will create line-object
+ */
+    let endCol;
+    let ii;
+    let startCol;
+    // init <startCol>
+    startCol = -1;
+    ii = 0;
+    while (ii < text.length) {
+        if (!text[ii].match(
+            /[\u0020\f\n\r\t\u000b\u00a0\u2028\u2029]/
+        )) {
+            startCol = ii;
+            break;
+        }
+        ii += 1;
+    }
+    // init <endCol>
+    endCol = text.length + 1;
+    ii = text.length - 1;
+    while (ii >= 0) {
+        if (!text[ii].match(
+            /[\u0020\f\n\r\t\u000b\u00a0\u2028\u2029]/
+        )) {
+            endCol = ii;
+            break;
+        }
+        ii -= 1;
+    }
+    return {
+        consumeBlanks,
+        covered: null,
+        endCol,
+        line,
+        offsets: [],
+        origLength: text.length,
+        startCol,
+        text
+    };
+};
+lineInsertAt = function (lineObj, col, str, insertBefore, consumeBlanks) {
+/*
+ * this function will insert <str> into <lineObj> at <col>
+ */
+    let ii;
+    let offset;
+    let offsetObj;
+    consumeBlanks = (
+        consumeBlanks === undefined
+        ? lineObj.consumeBlanks
+        : consumeBlanks
+    );
+    col = (
+        col > lineObj.origLength
+        ? lineObj.origLength
+        : col
+    );
+    col = (
+        col < 0
+        ? 0
+        : col
+    );
+    if (consumeBlanks) {
+        if (col <= lineObj.startCol) {
+            col = 0;
+        }
+        if (col > lineObj.endCol) {
+            col = lineObj.origLength;
+        }
+    }
+    // find <offset>
+    offset = col;
+    ii = 0;
+    while (ii < lineObj.offsets.length) {
+        offsetObj = lineObj.offsets[ii];
+        if (offsetObj.col < col || (offsetObj.col === col && !insertBefore)) {
+            offset += offsetObj.len;
+        }
+        if (offsetObj.col >= col) {
+            break;
+        }
+        ii += 1;
+    }
+    if (offsetObj && offsetObj.col === col) {
+        offsetObj.len += str.length;
+    } else {
+        lineObj.offsets.splice(ii, 0, {
+            col,
+            len: str.length
+        });
+    }
+    lineObj.text = (
+        lineObj.text.slice(0, offset) + str + lineObj.text.slice(offset)
+    );
+    return lineObj;
+};
+lineWrapAt = function (
+    lineObj,
+    startCol,
+    startText,
+    endCol,
+    endText,
+    consumeBlanks
+) {
+/*
+ * this function will wrap <lineObj>.slice(<startCol>, <endCol>)
+ * in <startText> and <endText>
+ */
+    lineInsertAt(lineObj, startCol, startText, true, consumeBlanks);
+    lineInsertAt(lineObj, endCol, endText, false, consumeBlanks);
+    return lineObj;
+};
+nodeChildAdd = function (node, child) {
+/*
+ * this function will add <child> to <node>
+ */
+    node.children.push(child);
+    child.parent = node;
+};
+nodeCreate = function (fullName, kind, metrics) {
+/*
+ * this function will create new node
+ */
+    return {
+        children: [],
+        fullName,
+        kind,
+        metrics: metrics || {
+            lines: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            },
+            statements: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            },
+            functions: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            },
+            branches: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            }
+        },
+        name: fullName,
+        parent: null
+    };
+};
+nodeNormalize = function (node, level, filePrefix, parent) {
+/*
+ * this function will recursively normalize <node>.name and <node>.relativeName
+ */
+    // init <name>
+    if (node.name.indexOf(filePrefix) === 0) {
+        node.name = node.name.slice(filePrefix.length);
+    }
+    if (node.name[0] === path.sep) {
+        node.name = node.name.slice(1);
+    }
+    // init <relativeName>
+    node.relativeName = (
+        parent
+        ? (
+            parent.name !== "__root__/"
+            ? node.name.slice(parent.name.length)
+            : node.name
+        )
+        : node.name.slice(filePrefix.length)
+    );
+    // init <nameOrAllFiles>
+    node.nameOrAllFiles = node.name || "All files";
+    // init <relativeNameOrAllFiles>
+    node.relativeNameOrAllFiles = node.relativeName || "All files";
+    // init <nodeNameWidth>
+    nodeNameWidth = Math.max(
+        nodeNameWidth,
+        level * 2 + node.relativeNameOrAllFiles.length
+    );
+    // init <href>
+    node.href = node.relativeName.split(path.sep).join("/") + (
+        node.kind === "dir"
+        ? "index.html"
+        : ".html"
+    );
+    // recurse
+    node.children.forEach(function (child) {
+        nodeNormalize(child, level + 1, filePrefix, node);
+    });
+    // sort <children> by <name>
+    node.children.sort(function (aa, bb) {
+        return (
+            aa.name > bb.name
+            ? 1
+            : -1
+        );
+    });
+    // init <metrics>
+    if (node.kind === "dir") {
+        node.children.forEach(function (child) {
+            if (!child && child.metrics) {
+                return;
+            }
+            [
+                "lines", "statements", "branches", "functions"
+            ].forEach(function (key) {
+                node.metrics[key].total += child.metrics[key].total;
+                node.metrics[key].covered += child.metrics[key].covered;
+                node.metrics[key].skipped += child.metrics[key].skipped;
+            });
+        });
+    }
+    // init <pct> and <score>
+    [
+        "lines", "statements", "branches", "functions"
+    ].forEach(function (key) {
+        node.metrics[key].pct = (
+            node.metrics[key].total > 0
+            ? Math.floor((
+                1000 * 100 * node.metrics[key].covered
+                / node.metrics[key].total + 5
+            ) / 10) / 100
+            : 100
+        );
+        node.metrics[key].score = (
+            node.metrics[key].pct >= 80
+            ? "high"
+            : node.metrics[key].pct >= 50
+            ? "medium"
+            : "low"
+        );
+    });
+};
 reportHtmlWrite = function (node, level, dir) {
 /*
  * this function will recursively write <htmlData>
@@ -10786,249 +11029,6 @@ reportHtmlWrite = function (node, level, dir) {
     htmlData += templateFoot;
     htmlAll += htmlData + "\n\n";
     local.fsWriteFileWithMkdirpSync(htmlFile, htmlData);
-};
-lineCreate = function (line, text, consumeBlanks) {
-/*
- * this function will create line-object
- */
-    let endCol;
-    let ii;
-    let startCol;
-    // init <startCol>
-    startCol = -1;
-    ii = 0;
-    while (ii < text.length) {
-        if (!text[ii].match(
-            /[\u0020\f\n\r\t\u000b\u00a0\u2028\u2029]/
-        )) {
-            startCol = ii;
-            break;
-        }
-        ii += 1;
-    }
-    // init <endCol>
-    endCol = text.length + 1;
-    ii = text.length - 1;
-    while (ii >= 0) {
-        if (!text[ii].match(
-            /[\u0020\f\n\r\t\u000b\u00a0\u2028\u2029]/
-        )) {
-            endCol = ii;
-            break;
-        }
-        ii -= 1;
-    }
-    return {
-        consumeBlanks,
-        covered: null,
-        endCol,
-        line,
-        offsets: [],
-        origLength: text.length,
-        startCol,
-        text
-    };
-};
-lineInsertAt = function (lineObj, col, str, insertBefore, consumeBlanks) {
-/*
- * this function will insert <str> into <lineObj> at <col>
- */
-    let ii;
-    let offset;
-    let offsetObj;
-    consumeBlanks = (
-        consumeBlanks === undefined
-        ? lineObj.consumeBlanks
-        : consumeBlanks
-    );
-    col = (
-        col > lineObj.origLength
-        ? lineObj.origLength
-        : col
-    );
-    col = (
-        col < 0
-        ? 0
-        : col
-    );
-    if (consumeBlanks) {
-        if (col <= lineObj.startCol) {
-            col = 0;
-        }
-        if (col > lineObj.endCol) {
-            col = lineObj.origLength;
-        }
-    }
-    // find <offset>
-    offset = col;
-    ii = 0;
-    while (ii < lineObj.offsets.length) {
-        offsetObj = lineObj.offsets[ii];
-        if (offsetObj.col < col || (offsetObj.col === col && !insertBefore)) {
-            offset += offsetObj.len;
-        }
-        if (offsetObj.col >= col) {
-            break;
-        }
-        ii += 1;
-    }
-    if (offsetObj && offsetObj.col === col) {
-        offsetObj.len += str.length;
-    } else {
-        lineObj.offsets.splice(ii, 0, {
-            col,
-            len: str.length
-        });
-    }
-    lineObj.text = (
-        lineObj.text.slice(0, offset) + str + lineObj.text.slice(offset)
-    );
-    return lineObj;
-};
-lineWrapAt = function (
-    lineObj,
-    startCol,
-    startText,
-    endCol,
-    endText,
-    consumeBlanks
-) {
-/*
- * this function will wrap <lineObj>.slice(<startCol>, <endCol>)
- * in <startText> and <endText>
- */
-    lineInsertAt(lineObj, startCol, startText, true, consumeBlanks);
-    lineInsertAt(lineObj, endCol, endText, false, consumeBlanks);
-    return lineObj;
-};
-nodeChildAdd = function (node, child) {
-/*
- * this function will add <child> to <node>
- */
-    node.children.push(child);
-    child.parent = node;
-};
-nodeCreate = function (fullName, kind, metrics) {
-/*
- * this function will create new node
- */
-    return {
-        children: [],
-        fullName,
-        kind,
-        metrics: metrics || {
-            lines: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            },
-            statements: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            },
-            functions: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            },
-            branches: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            }
-        },
-        name: fullName,
-        parent: null
-    };
-};
-nodeNormalize = function (node, level, filePrefix, parent) {
-/*
- * this function will recursively normalize <node>.name and <node>.relativeName
- */
-    // init <name>
-    if (node.name.indexOf(filePrefix) === 0) {
-        node.name = node.name.slice(filePrefix.length);
-    }
-    if (node.name[0] === path.sep) {
-        node.name = node.name.slice(1);
-    }
-    // init <relativeName>
-    node.relativeName = (
-        parent
-        ? (
-            parent.name !== "__root__/"
-            ? node.name.slice(parent.name.length)
-            : node.name
-        )
-        : node.name.slice(filePrefix.length)
-    );
-    // init <nameOrAllFiles>
-    node.nameOrAllFiles = node.name || "All files";
-    // init <relativeNameOrAllFiles>
-    node.relativeNameOrAllFiles = node.relativeName || "All files";
-    // init <nodeNameWidth>
-    nodeNameWidth = Math.max(
-        nodeNameWidth,
-        level * 2 + node.relativeNameOrAllFiles.length
-    );
-    // init <href>
-    node.href = node.relativeName.split(path.sep).join("/") + (
-        node.kind === "dir"
-        ? "index.html"
-        : ".html"
-    );
-    // recurse
-    node.children.forEach(function (child) {
-        nodeNormalize(child, level + 1, filePrefix, node);
-    });
-    // sort <children> by <name>
-    node.children.sort(function (aa, bb) {
-        return (
-            aa.name > bb.name
-            ? 1
-            : -1
-        );
-    });
-    // init <metrics>
-    if (node.kind === "dir") {
-        node.children.forEach(function (child) {
-            if (!child && child.metrics) {
-                return;
-            }
-            [
-                "lines", "statements", "branches", "functions"
-            ].forEach(function (key) {
-                node.metrics[key].total += child.metrics[key].total;
-                node.metrics[key].covered += child.metrics[key].covered;
-                node.metrics[key].skipped += child.metrics[key].skipped;
-            });
-        });
-    }
-    // init <pct> and <score>
-    [
-        "lines", "statements", "branches", "functions"
-    ].forEach(function (key) {
-        node.metrics[key].pct = (
-            node.metrics[key].total > 0
-            ? Math.floor((
-                1000 * 100 * node.metrics[key].covered
-                / node.metrics[key].total + 5
-            ) / 10) / 100
-            : 100
-        );
-        node.metrics[key].score = (
-            node.metrics[key].pct >= 80
-            ? "high"
-            : node.metrics[key].pct >= 50
-            ? "medium"
-            : "low"
-        );
-    });
 };
 reportTextWrite = function (node, level) {
 /*
