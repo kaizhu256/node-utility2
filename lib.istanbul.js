@@ -10519,7 +10519,6 @@ let lineCreate;
 let lineInsertAt;
 let lineWrapAt;
 let nodeChildAdd;
-let nodeChildrenSort;
 let nodeCreate;
 let nodeMetricsCalculate;
 let nodeNameWidth;
@@ -10939,26 +10938,6 @@ nodeChildAdd = function (node, child) {
     node.children.push(child);
     child.parent = node;
 };
-nodeChildrenSort = function (node) {
-/*
- * this function will recursively sort <node>.children by relativename
- */
-    node.children.sort(function (aa, bb) {
-        aa = aa.relativeName;
-        bb = bb.relativeName;
-        return (
-            aa < bb
-            ? -1
-            : aa > bb
-            ? 1
-            : 0
-        );
-    });
-    node.children.forEach(function (child) {
-        // recurse
-        nodeChildrenSort(child);
-    });
-};
 nodeCreate = function (fullName, kind, metrics) {
 /*
  * this function will create new node
@@ -11042,14 +11021,14 @@ nodeNormalize = function (node, filePrefix, parent) {
 /*
  * this function will recursively normalize <node>.name and <node>.relativeName
  */
-    // normalize name
+    // normalize <name>
     if (node.name.indexOf(filePrefix) === 0) {
         node.name = node.name.slice(filePrefix.length);
     }
     if (node.name[0] === path.sep) {
         node.name = node.name.slice(1);
     }
-    // normalize relativeName
+    // normalize <relativeName>
     node.relativeName = (
         parent
         ? (
@@ -11062,6 +11041,14 @@ nodeNormalize = function (node, filePrefix, parent) {
     node.children.forEach(function (child) {
         // recurse
         nodeNormalize(child, filePrefix, node);
+    });
+    // sort <children> by <relativeName>
+    node.children.sort(function (aa, bb) {
+        return (
+            aa.relativeName > bb.relativeName
+            ? 1
+            : -1
+        );
     });
 };
 nodeSummarize = function (node, level) {
@@ -11556,7 +11543,6 @@ local.coverageReportCreate = function (opt) {
     }
     nodeNormalize(root, filePrefix.join(path.sep) + path.sep);
     nodeMetricsCalculate(root);
-    nodeChildrenSort(root);
     nodeNameWidth = findNameWidth(root);
     nodeSummarize(root, 0);
     // 2. print coverage in text-format to stdout
