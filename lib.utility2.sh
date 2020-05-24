@@ -3642,17 +3642,9 @@ export UTILITY2_MACRO_JS='
             fs.writeFileSync(file, data);
         } catch (ignore) {
             // mkdir -p
-            require("child_process").spawnSync(
-                "mkdir",
-                [
-                    "-p", require("path").dirname(file)
-                ],
-                {
-                    stdio: [
-                        "ignore", 1, 2
-                    ]
-                }
-            );
+            fs.mkdirSync(require("path").dirname(file), {
+                recursive: true
+            });
             // rewrite file
             fs.writeFileSync(file, data);
         }

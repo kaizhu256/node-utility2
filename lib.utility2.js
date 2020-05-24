@@ -130,17 +130,9 @@
             fs.writeFileSync(file, data);
         } catch (ignore) {
             // mkdir -p
-            require("child_process").spawnSync(
-                "mkdir",
-                [
-                    "-p", require("path").dirname(file)
-                ],
-                {
-                    stdio: [
-                        "ignore", 1, 2
-                    ]
-                }
-            );
+            fs.mkdirSync(require("path").dirname(file), {
+                recursive: true
+            });
             // rewrite file
             fs.writeFileSync(file, data);
         }
@@ -418,17 +410,9 @@ local.assetsDict["/assets.utility2.header.js"] = '\
             fs.writeFileSync(file, data);\n\
         } catch (ignore) {\n\
             // mkdir -p\n\
-            require("child_process").spawnSync(\n\
-                "mkdir",\n\
-                [\n\
-                    "-p", require("path").dirname(file)\n\
-                ],\n\
-                {\n\
-                    stdio: [\n\
-                        "ignore", 1, 2\n\
-                    ]\n\
-                }\n\
-            );\n\
+            fs.mkdirSync(require("path").dirname(file), {\n\
+                recursive: true\n\
+            });\n\
             // rewrite file\n\
             fs.writeFileSync(file, data);\n\
         }\n\
