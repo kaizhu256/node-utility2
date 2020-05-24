@@ -10556,6 +10556,7 @@ function InsertionText(text, consumeBlanks) {
     that.origLength = text.length;
     that.offsets = [];
     that.consumeBlanks = consumeBlanks;
+    // init <startPos>
     that.startPos = -1;
     ii = 0;
     while (ii < that.text.length) {
@@ -10567,27 +10568,20 @@ function InsertionText(text, consumeBlanks) {
         }
         ii += 1;
     }
-    that.endPos = that.findLastNonBlank();
+    // init <endPos>
+    that.endPos = that.text.length + 1;
+    ii = that.text.length - 1;
+    while (ii >= 0) {
+        if (!that.text[ii].match(
+            /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
+        )) {
+            that.endPos = ii;
+            break;
+        }
+        ii -= 1;
+    }
 }
 InsertionText.prototype = {
-    findLastNonBlank: function () {
-        let ii;
-        let pos;
-        let that;
-        that = this;
-        pos = that.text.length + 1;
-        ii = that.text.length - 1;
-        while (ii >= 0) {
-            if (!that.text[ii].match(
-                /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
-            )) {
-                pos = ii;
-                break;
-            }
-            ii -= 1;
-        }
-        return pos;
-    },
     insertAt: function (col, str, insertBefore, consumeBlanks) {
         let offset;
         let realPos;
