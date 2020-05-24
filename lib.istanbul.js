@@ -11068,7 +11068,6 @@ nodeNormalize = function (node, filePrefix, parent, level) {
 /*
  * this function will recursively normalize <node>.name and <node>.relativeName
  */
-    let width;
     // normalize <name>
     if (node.name.indexOf(filePrefix) === 0) {
         node.name = node.name.slice(filePrefix.length);
@@ -11087,10 +11086,10 @@ nodeNormalize = function (node, filePrefix, parent, level) {
         : node.name.slice(filePrefix.length)
     ) || "All files";
     // normalize <nodeNameWidth>
-    width = level * 2 + node.relativeName.length;
-    if (!(width <= nodeNameWidth)) {
-        nodeNameWidth = width;
-    }
+    nodeNameWidth = Math.max(
+        nodeNameWidth | 0,
+        level * 2 + node.relativeName.length
+    );
     node.children.forEach(function (child) {
         // recurse
         nodeNormalize(child, filePrefix, node, level + 1);
