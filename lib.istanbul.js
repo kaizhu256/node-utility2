@@ -10190,7 +10190,7 @@ local.templateCoverageHead = '\
 <!doctype html>\n\
 <html lang="en" class="x-istanbul">\n\
 <head>\n\
-    <title>Code coverage report for {{entity}}</title>\n\
+    <title>Code coverage report for {{name}}</title>\n\
     <meta charset="utf-8">\n\
 <style>\n\
 /* jslint utility2:true */\n\
@@ -10470,7 +10470,7 @@ local.templateCoverageHead = '\
     <h1 style="font-weight: bold;">\n\
         <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} ({{env.npm_package_version}})</a>\n\
     </h1>\n\
-    <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
+    <h1>Code coverage report for <span class="entity">{{name}}</span></h1>\n\
     <table class="tableHeader">\n\
     <thead>\n\
     <tr>\n\
@@ -10601,7 +10601,7 @@ htmlWrite = function (node, dir) {
         return templateRender((
             `<tr>
 <td class="file {{metrics.statements.score}}"
-    data-value="{{file}}"><a href="{{url}}"><div>{{file}}</div>
+    data-value="{{relativeName}}"><a href="{{url}}"><div>{{relativeName}}</div>
     {{#show_percent_bar}}</a></td>
 <td class="pct {{metrics.statements.score}}"
     data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
@@ -10617,7 +10617,6 @@ htmlWrite = function (node, dir) {
     ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
 </tr>`
         ), {
-            file: child.relativeName,
             url
         }, child) + "\n";
     }).join("");
@@ -11148,10 +11147,7 @@ templateRender = function (template, dict, node) {
     let val;
     // render <node>
     metrics = node.metrics;
-    Object.assign(dict, {
-        metrics,
-        entity: node.name
-    });
+    Object.assign(dict, node);
     // render <dict>
     template = template.replace((
         /\{\{[^#].+?\}\}/g
