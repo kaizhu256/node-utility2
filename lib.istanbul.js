@@ -10568,7 +10568,9 @@ htmlWrite = function (node, dir) {
         local.fsWriteFileWithMkdirpSync(htmlFile, htmlData);
     }
     htmlFile = path.resolve(dir, "index.html");
-    htmlData = templateRender(templateHead, {}, node) + (
+    htmlData = "";
+    htmlData += templateRender(templateHead, {}, node);
+    htmlData += (
         `<div class="coverage-summary">
 <table>
 <thead>
@@ -10589,7 +10591,8 @@ htmlWrite = function (node, dir) {
 </tr>
 </thead>
 <tbody>`
-    ) + Array.from(node.children).sort(function (a, b) {
+    );
+    htmlData += Array.from(node.children).sort(function (a, b) {
         return (
             a.name < b.name
             ? -1
@@ -10648,9 +10651,8 @@ htmlWrite = function (node, dir) {
             file: child.relativeName,
             url
         }, child) + "\n";
-    }).join("") + (
-        "</tbody>\n</table>\n</div>\n" + templateFoot
-    );
+    }).join("");
+    htmlData += "</tbody>\n</table>\n</div>\n" + templateFoot;
     node.children.forEach(function (child) {
         let fileCoverage;
         let structured;
@@ -10831,22 +10833,21 @@ htmlWrite = function (node, dir) {
             ), "\u0001/span\u0002");
         });
         structured.shift();
-        htmlData = (
-            templateRender(templateHead, {}, child)
-            + templateRender((
-                `<pre><table class="coverage"><tr>
+        htmlData = "";
+        htmlData += templateRender(templateHead, {}, child);
+        htmlData += templateRender((
+            `<pre><table class="coverage"><tr>
 <td class="line-count">{{#show_lineno}}</td>
 <td class="line-coverage">{{#show_line_execution_count}}</td>
 <td class="text"><pre class="prettyprint lang-js" tabIndex="0"
 >{{#show_code}}</pre></td>
 </tr></table></pre>`
-            ), {
-                lines: fileCoverage.l,
-                maxLines: structured.length,
-                structured
-            }, {})
-            + templateFoot
-        );
+        ), {
+            lines: fileCoverage.l,
+            maxLines: structured.length,
+            structured
+        }, {});
+        htmlData += templateFoot;
     });
 };
 lineCreate = function (line, text, consumeBlanks) {
@@ -11406,11 +11407,9 @@ local.coverageReportCreate = function (opt) {
     }
     // init writer
     htmlAll = (
-        "<div class=\"coverageReportDiv\">\n"
-        + "<h1>coverage-report</h1>\n"
-        + "<div style=\""
-        + "background: #fff; border: 1px solid #999; margin 0; padding: 0;"
-        + "\">\n"
+        `<div class="coverageReportDiv">
+<h1>coverage-report</h1>
+<div style="background: #fff; border: 1px solid #999; margin 0; padding: 0;">`
     );
     // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
     htmlData = "";
