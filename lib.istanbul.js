@@ -10190,7 +10190,7 @@ local.templateCoverageHead = '\
 <!doctype html>\n\
 <html lang="en" class="x-istanbul">\n\
 <head>\n\
-    <title>Code coverage report for {{name}}</title>\n\
+    <title>Code coverage report for {{entity}}</title>\n\
     <meta charset="utf-8">\n\
 <style>\n\
 /* jslint utility2:true */\n\
@@ -10470,7 +10470,7 @@ local.templateCoverageHead = '\
     <h1 style="font-weight: bold;">\n\
         <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} ({{env.npm_package_version}})</a>\n\
     </h1>\n\
-    <h1>Code coverage report for <span class="entity">{{name}}</span></h1>\n\
+    <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
     <table class="tableHeader">\n\
     <thead>\n\
     <tr>\n\
@@ -10570,7 +10570,7 @@ htmlWrite = function (node, dir) {
     }
     htmlFile = path.resolve(dir, "index.html");
     htmlData = "";
-    htmlData += templateRender(templateHead, node);
+    htmlData += templateRender(templateHead, {}, node);
     htmlData += (
         `<div class="coverage-summary">
 <table>
@@ -10642,7 +10642,7 @@ htmlWrite = function (node, dir) {
     data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>
     ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
 </tr>`
-        ), Object.assign({
+        ), {
             coverageLevels: {
                 statements: coverageLevelGet(
                     child.metrics.statements.pct
@@ -10653,7 +10653,7 @@ htmlWrite = function (node, dir) {
             },
             file: child.relativeName,
             url
-        }, child)) + "\n";
+        }, child) + "\n";
     }).join("");
     htmlData += "</tbody>\n</table>\n</div>\n";
     htmlData += templateFoot;
@@ -10838,7 +10838,7 @@ htmlWrite = function (node, dir) {
         });
         structured.shift();
         htmlData = "";
-        htmlData += templateRender(templateHead, child);
+        htmlData += templateRender(templateHead, {}, child);
         htmlData += templateRender((
             `<pre><table class="coverage"><tr>
 <td class="line-count">{{#show_lineno}}</td>
@@ -10850,7 +10850,7 @@ htmlWrite = function (node, dir) {
             lines: fileCoverage.l,
             maxLines: structured.length,
             structured
-        });
+        }, {});
         htmlData += templateFoot;
     });
 };
@@ -11003,32 +11003,7 @@ nodeCreate = function (fullName, kind, metrics) {
         children: [],
         fullName,
         kind,
-        metrics: metrics || {
-            lines: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            },
-            statements: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            },
-            functions: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            },
-            branches: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            }
-        },
+        metrics: metrics || null,
         name: fullName,
         parent: null
     };
@@ -11100,7 +11075,6 @@ nodeNormalize = function (node, filePrefix, parent) {
     if (node.name[0] === path.sep) {
         node.name = node.name.slice(1);
     }
-    node.name = node.name || "All files";
     // normalize relativeName
     node.relativeName = (
         parent
@@ -11211,9 +11185,9 @@ stringPad = function (str, width, right, tabs, coverageLevel) {
     }
     return leader + fmtStr;
 };
-templateRender = function (template, node) {
+templateRender = function (template, dict, node) {
 /*
- * this function will render <template> with given <node> and <node>
+ * this function will render <template> with given <dict> and <node>
  */
     let ii;
     let jj;
@@ -11223,15 +11197,17 @@ templateRender = function (template, node) {
     let val;
     // render <node>
     metrics = node.metrics;
-    Object.assign(node, {
-        coverageLevel: metrics && coverageLevelGet(metrics.statements.pct)
+    Object.assign(dict, {
+        coverageLevel: metrics && coverageLevelGet(metrics.statements.pct),
+        metrics,
+        entity: node.name || "All files"
     });
-    // render <node>
+    // render <dict>
     template = template.replace((
         /\{\{[^#].+?\}\}/g
     ), function (match0) {
-        val = node;
-        // iteratively lookup nested <val> in <node>
+        val = dict;
+        // iteratively lookup nested <val> in <dict>
         String(match0.slice(2, -2)).split(".").forEach(function (key) {
             val = val && val[key];
         });
@@ -11245,13 +11221,13 @@ templateRender = function (template, node) {
     template = template.replace("{{#show_line_execution_count}}", function () {
         val = "";
         ii = 1;
-        while (ii <= node.maxLines) {
-            tmp = node.lines[ii];
+        while (ii <= dict.maxLines) {
+            tmp = dict.lines[ii];
             val += "<span class=\"cline-any " + (
                 tmp === undefined
                 ? "cline-neutral\">&nbsp;"
                 : tmp > 0
-                ? "cline-yes\">" + node.lines[ii]
+                ? "cline-yes\">" + dict.lines[ii]
                 : "cline-no\">&nbsp;"
             ) + "</span>\n";
             ii += 1;
@@ -11262,7 +11238,7 @@ templateRender = function (template, node) {
     template = template.replace("{{#show_lineno}}", function () {
         val = "";
         ii = 1;
-        while (ii <= node.maxLines) {
+        while (ii <= dict.maxLines) {
             // hack-coverage - hashtag lineno
             val += (
                 "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
@@ -11313,7 +11289,7 @@ templateRender = function (template, node) {
     });
     // render #show_code last
     template = template.replace("{{#show_code}}", function () {
-        val = node.structured.map(function (item) {
+        val = dict.structured.map(function (item) {
             return item.text;
         }).join("\n");
         // sanitize html
@@ -11641,7 +11617,7 @@ local.coverageReportCreate = function (opt) {
 </html>`
     ), {
         datetime: new Date().toGMTString()
-    });
+    }, {});
     // init templateHead
     templateHead = local.templateCoverageHead;
     if (local.isBrowser) {
