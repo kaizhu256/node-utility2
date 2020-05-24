@@ -10190,7 +10190,7 @@ local.templateCoverageHead = '\
 <!doctype html>\n\
 <html lang="en" class="x-istanbul">\n\
 <head>\n\
-    <title>Code coverage report for {{name}}</title>\n\
+    <title>Code coverage report for {{entity}}</title>\n\
     <meta charset="utf-8">\n\
 <style>\n\
 /* jslint utility2:true */\n\
@@ -10466,11 +10466,11 @@ local.templateCoverageHead = '\
     );\n\
 }());\n\
 </script>\n\
-<div class="header {{metrics.statements.score}}">\n\
+<div class="header {{coverageLevel}}">\n\
     <h1 style="font-weight: bold;">\n\
         <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} ({{env.npm_package_version}})</a>\n\
     </h1>\n\
-    <h1>Code coverage report for <span class="entity">{{name}}</span></h1>\n\
+    <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
     <table class="tableHeader">\n\
     <thead>\n\
     <tr>\n\
@@ -10511,6 +10511,8 @@ file none
 
 
 
+let coverageLevelGet;
+let coveragePercentGet;
 let htmlAll;
 let htmlData;
 let htmlFile;
@@ -10518,11 +10520,13 @@ let htmlWrite;
 let lineCreate;
 let lineInsertAt;
 let lineWrapAt;
+let nameWidth;
 let nodeChildAdd;
+let nodeChildrenSort;
 let nodeCreate;
-let nodeNameWidth;
+let nodeMetricsCalculate;
 let nodeNormalize;
-let nodeSummarize;
+let nodeWalk;
 let path;
 let stringPad;
 let summaryList;
@@ -10533,6 +10537,28 @@ let templateRender;
 // require module
 path = require("path");
 // init function
+coverageLevelGet = function (pct) {
+/*
+ * this function will get <coverageLevel> from <pct>
+ */
+    return (
+        pct >= 80
+        ? "high"
+        : pct >= 50
+        ? "medium"
+        : "low"
+    );
+};
+coveragePercentGet = function (covered, total) {
+/*
+ * this function will get <pct> from <covered> and <total>
+ */
+    return (
+        total > 0
+        ? Math.floor((1000 * 100 * covered / total + 5) / 10) / 100
+        : 100
+    );
+};
 htmlWrite = function (node, dir) {
 /*
  * this function will recursively write <htmlData>
@@ -10544,7 +10570,7 @@ htmlWrite = function (node, dir) {
     }
     htmlFile = path.resolve(dir, "index.html");
     htmlData = "";
-    htmlData += templateRender(templateHead, node);
+    htmlData += templateRender(templateHead, {}, node);
     htmlData += (
         `<div class="coverage-summary">
 <table>
@@ -10600,25 +10626,34 @@ htmlWrite = function (node, dir) {
         );
         return templateRender((
             `<tr>
-<td class="file {{metrics.statements.score}}"
-    data-value="{{relativeName}}"><a href="{{url}}"><div>{{relativeName}}</div>
+<td class="file {{coverageLevels.statements}}"
+    data-value="{{file}}"><a href="{{url}}"><div>{{file}}</div>
     {{#show_percent_bar}}</a></td>
-<td class="pct {{metrics.statements.score}}"
+<td class="pct {{coverageLevels.statements}}"
     data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
     ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>
-<td class="pct {{metrics.branches.score}}"
+<td class="pct {{coverageLevels.branches}}"
     data-value="{{metrics.branches.pct}}">{{metrics.branches.pct}}%<br>
     ({{metrics.branches.covered}} / {{metrics.branches.total}})</td>
-<td class="pct {{metrics.functions.score}}"
+<td class="pct {{coverageLevels.functions}}"
     data-value="{{metrics.functions.pct}}">{{metrics.functions.pct}}%<br>
     ({{metrics.functions.covered}} / {{metrics.functions.total}})</td>
-<td class="pct {{metrics.lines.score}}"
+<td class="pct {{coverageLevels.lines}}"
     data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>
     ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
 </tr>`
-        ), Object.assign({
+        ), {
+            coverageLevels: {
+                statements: coverageLevelGet(
+                    child.metrics.statements.pct
+                ),
+                lines: coverageLevelGet(child.metrics.lines.pct),
+                functions: coverageLevelGet(child.metrics.functions.pct),
+                branches: coverageLevelGet(child.metrics.branches.pct)
+            },
+            file: child.relativeName,
             url
-        }, child)) + "\n";
+        }, child) + "\n";
     }).join("");
     htmlData += "</tbody>\n</table>\n</div>\n";
     htmlData += templateFoot;
@@ -10627,7 +10662,10 @@ htmlWrite = function (node, dir) {
         let structured;
         if (child.kind === "dir") {
             // recurse
-            htmlWrite(child, path.resolve(dir, child.relativeName));
+            htmlWrite(
+                child,
+                path.resolve(dir, child.relativeName)
+            );
             return;
         }
         htmlAll += htmlData + "\n\n";
@@ -10800,7 +10838,7 @@ htmlWrite = function (node, dir) {
         });
         structured.shift();
         htmlData = "";
-        htmlData += templateRender(templateHead, child);
+        htmlData += templateRender(templateHead, {}, child);
         htmlData += templateRender((
             `<pre><table class="coverage"><tr>
 <td class="line-count">{{#show_lineno}}</td>
@@ -10812,7 +10850,7 @@ htmlWrite = function (node, dir) {
             lines: fileCoverage.l,
             maxLines: structured.length,
             structured
-        });
+        }, {});
         htmlData += templateFoot;
     });
 };
@@ -10937,6 +10975,26 @@ nodeChildAdd = function (node, child) {
     node.children.push(child);
     child.parent = node;
 };
+nodeChildrenSort = function (node) {
+/*
+ * this function will recursively sort <node>.children by relativename
+ */
+    node.children.sort(function (aa, bb) {
+        aa = aa.relativeName;
+        bb = bb.relativeName;
+        return (
+            aa < bb
+            ? -1
+            : aa > bb
+            ? 1
+            : 0
+        );
+    });
+    node.children.forEach(function (child) {
+        // recurse
+        nodeChildrenSort(child);
+    });
+};
 nodeCreate = function (fullName, kind, metrics) {
 /*
  * this function will create new node
@@ -10945,49 +11003,79 @@ nodeCreate = function (fullName, kind, metrics) {
         children: [],
         fullName,
         kind,
-        metrics: metrics || {
-            lines: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            },
-            statements: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            },
-            functions: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            },
-            branches: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            }
-        },
+        metrics: metrics || null,
         name: fullName,
         parent: null
     };
 };
-nodeNormalize = function (node, filePrefix, parent, level) {
+nodeMetricsCalculate = function (node) {
+/*
+ * this function will recursively calculate <node>.metrics
+ */
+    if (node.kind !== "dir") {
+        return;
+    }
+    // recurse
+    node.children.forEach(nodeMetricsCalculate);
+    node.metrics = {
+        lines: {
+            total: 0,
+            covered: 0,
+            skipped: 0,
+            pct: "Unknown"
+        },
+        statements: {
+            total: 0,
+            covered: 0,
+            skipped: 0,
+            pct: "Unknown"
+        },
+        functions: {
+            total: 0,
+            covered: 0,
+            skipped: 0,
+            pct: "Unknown"
+        },
+        branches: {
+            total: 0,
+            covered: 0,
+            skipped: 0,
+            pct: "Unknown"
+        }
+    };
+    node.children.forEach(function (child) {
+        if (!child && child.metrics) {
+            return;
+        }
+        [
+            "lines", "statements", "branches", "functions"
+        ].forEach(function (key) {
+            node.metrics[key].total += child.metrics[key].total;
+            node.metrics[key].covered += child.metrics[key].covered;
+            node.metrics[key].skipped += child.metrics[key].skipped;
+        });
+    });
+    [
+        "lines", "statements", "branches", "functions"
+    ].forEach(function (key) {
+        node.metrics[key].pct = coveragePercentGet(
+            node.metrics[key].covered,
+            node.metrics[key].total
+        );
+    });
+};
+nodeNormalize = function (node, filePrefix, parent) {
 /*
  * this function will recursively normalize <node>.name and <node>.relativeName
  */
-    // normalize <name>
+    // normalize name
     if (node.name.indexOf(filePrefix) === 0) {
         node.name = node.name.slice(filePrefix.length);
     }
     if (node.name[0] === path.sep) {
         node.name = node.name.slice(1);
     }
-    node.name = node.name || "All files";
-    // normalize <relativeName>
+    // normalize relativeName
     node.relativeName = (
         parent
         ? (
@@ -10997,103 +11085,65 @@ nodeNormalize = function (node, filePrefix, parent, level) {
         )
         : node.name.slice(filePrefix.length)
     ) || "All files";
-    // normalize <nodeNameWidth>
-    nodeNameWidth = Math.max(
-        nodeNameWidth,
-        level * 2 + node.relativeName.length
-    );
     node.children.forEach(function (child) {
         // recurse
-        nodeNormalize(child, filePrefix, node, level + 1);
-    });
-    // sort <children> by <relativeName>
-    node.children.sort(function (aa, bb) {
-        return (
-            aa.relativeName > bb.relativeName
-            ? 1
-            : -1
-        );
-    });
-    // normalize <metrics>
-    if (node.kind === "dir") {
-        node.children.forEach(function (child) {
-            [
-                "lines", "statements", "branches", "functions"
-            ].forEach(function (key) {
-                node.metrics[key].total += child.metrics[key].total;
-                node.metrics[key].covered += child.metrics[key].covered;
-                node.metrics[key].skipped += child.metrics[key].skipped;
-            });
-        });
-    }
-    // normalize <pct> and <score>
-    [
-        "lines", "statements", "branches", "functions"
-    ].forEach(function (key) {
-        node.metrics[key].pct = (
-            node.metrics[key].total > 0
-            ? Math.floor((
-                1000 * 100 * node.metrics[key].covered
-                / node.metrics[key].total + 5
-            ) / 10) / 100
-            : 100
-        );
-        node.metrics[key].score = (
-            node.metrics[key].pct >= 80
-            ? "high"
-            : node.metrics[key].pct >= 50
-            ? "medium"
-            : "low"
-        );
+        nodeNormalize(child, filePrefix, node);
     });
 };
-nodeSummarize = function (node, level) {
+nodeWalk = function (node, level) {
 /*
- * this function will recursively summarize <node>
+ * this function will recursively walk and summarize each <node>
  */
     let line;
     let tableRow;
-    // summarize
     tableRow = [
-        node.metrics.statements.score,
-        node.metrics.statements.score,
-        node.metrics.branches.score,
-        node.metrics.functions.score,
-        node.metrics.lines.score
-    ].map(function (score, ii) {
+        node.metrics.statements.pct,
+        node.metrics.statements.pct,
+        node.metrics.branches.pct,
+        node.metrics.functions.pct,
+        node.metrics.lines.pct
+    ].map(function (pct, ii) {
+        let val;
+        val = (
+            val >= 80
+            ? "high"
+            : val >= 50
+            ? "medium"
+            : "low"
+        );
         return (
             ii === 0
-            ? stringPad(node.relativeName, nodeNameWidth, false, level, score)
-            : stringPad(score, 10, true, 0, score)
+            ? stringPad(node.relativeName, nameWidth, false, level, val)
+            : stringPad(pct, 10, true, 0, val)
         );
     }).join(" |") + " |";
     if (level !== 0) {
         summaryList.push(tableRow);
         node.children.forEach(function (child) {
             // recurse
-            nodeSummarize(child, level + 1);
+            nodeWalk(child, level + 1);
         });
         return;
     }
     line = (
-        "-".repeat(nodeNameWidth)
+        "-".repeat(nameWidth)
         + "-|-----------|-----------|-----------|-----------|"
     );
     summaryList.push(line);
     summaryList.push(
-        stringPad("File", nodeNameWidth, false, 0)
+        stringPad("File", nameWidth, false, 0)
         + " |   % Stmts |% Branches |   % Funcs |   % Lines |"
     );
     summaryList.push(line);
     node.children.forEach(function (child) {
         // recurse
-        nodeSummarize(child, level + 1);
+        nodeWalk(child, level + 1);
     });
     summaryList.push(line);
     summaryList.push(tableRow);
     summaryList.push(line);
 };
-stringPad = function (str, width, right, tabs, score) {
+stringPad = function (str, width, right, tabs, coverageLevel) {
 /*
  * this function will pad <str> to given <width>
  */
@@ -11122,7 +11172,7 @@ stringPad = function (str, width, right, tabs, score) {
         );
     }
     // colorize
-    switch (process.stdout && process.stdout.isTTY && score) {
+    switch (process.stdout && process.stdout.isTTY && coverageLevel) {
     case "high":
         fmtStr = "\u001b[92m" + fmtStr + "\u001b[0m";
         break;
@@ -11135,9 +11185,9 @@ stringPad = function (str, width, right, tabs, score) {
     }
     return leader + fmtStr;
 };
-templateRender = function (template, node) {
+templateRender = function (template, dict, node) {
 /*
- * this function will render <template> with given <node>
+ * this function will render <template> with given <dict> and <node>
  */
     let ii;
     let jj;
@@ -11147,11 +11197,17 @@ templateRender = function (template, node) {
     let val;
     // render <node>
     metrics = node.metrics;
+    Object.assign(dict, {
+        coverageLevel: metrics && coverageLevelGet(metrics.statements.pct),
+        metrics,
+        entity: node.name || "All files"
+    });
+    // render <dict>
     template = template.replace((
         /\{\{[^#].+?\}\}/g
     ), function (match0) {
-        val = node;
-        // iteratively lookup nested <val> in <node>
+        val = dict;
+        // iteratively lookup nested <val> in <dict>
         String(match0.slice(2, -2)).split(".").forEach(function (key) {
             val = val && val[key];
         });
@@ -11165,13 +11221,13 @@ templateRender = function (template, node) {
     template = template.replace("{{#show_line_execution_count}}", function () {
         val = "";
         ii = 1;
-        while (ii <= node.maxLines) {
-            tmp = node.lines[ii];
+        while (ii <= dict.maxLines) {
+            tmp = dict.lines[ii];
             val += "<span class=\"cline-any " + (
                 tmp === undefined
                 ? "cline-neutral\">&nbsp;"
                 : tmp > 0
-                ? "cline-yes\">" + node.lines[ii]
+                ? "cline-yes\">" + dict.lines[ii]
                 : "cline-no\">&nbsp;"
             ) + "</span>\n";
             ii += 1;
@@ -11182,7 +11238,7 @@ templateRender = function (template, node) {
     template = template.replace("{{#show_lineno}}", function () {
         val = "";
         ii = 1;
-        while (ii <= node.maxLines) {
+        while (ii <= dict.maxLines) {
             // hack-coverage - hashtag lineno
             val += (
                 "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
@@ -11233,7 +11289,7 @@ templateRender = function (template, node) {
     });
     // render #show_code last
     template = template.replace("{{#show_code}}", function () {
-        val = node.structured.map(function (item) {
+        val = dict.structured.map(function (item) {
             return item.text;
         }).join("\n");
         // sanitize html
@@ -11310,6 +11366,7 @@ local.coverageReportCreate = function (opt) {
     let dir;
     let filePrefix;
     let filesUnderRoot;
+    let findNameWidth;
     let root;
     let seen;
     let tmp;
@@ -11317,6 +11374,21 @@ local.coverageReportCreate = function (opt) {
     if (!(opt && opt.coverage)) {
         return "";
     }
+    // init function
+    findNameWidth = function (node, level, last) {
+        let idealWidth;
+        last = last || 0;
+        level = level || 0;
+        idealWidth = level * 2 + node.relativeName.length;
+        if (idealWidth > last) {
+            last = idealWidth;
+        }
+        node.children.forEach(function (child) {
+            // recurse
+            last = findNameWidth(child, level + 1, last);
+        });
+        return last;
+    };
     // init dir
     dir = process.cwd() + "/tmp/build/coverage.html";
     // merge previous coverage
@@ -11437,6 +11509,7 @@ local.coverageReportCreate = function (opt) {
                     elem.covered += Boolean(covered || skipped);
                     elem.skipped += Boolean(!covered && skipped);
                 });
+                elem.pct = coveragePercentGet(elem.covered, elem.total);
                 summary[key] = elem;
             });
             // computeBranchTotals
@@ -11459,6 +11532,7 @@ local.coverageReportCreate = function (opt) {
                 });
                 elem.total += branches.length;
             });
+            elem.pct = coveragePercentGet(elem.covered, elem.total);
             summary.branches = elem;
             summaryMap[file] = summary;
             // findCommonArrayPrefix
@@ -11515,16 +11589,18 @@ local.coverageReportCreate = function (opt) {
         root = nodeCreate(filePrefix.join(path.sep) + path.sep, "dir");
         nodeChildAdd(root, tmp);
         tmpChildren.forEach(function (child) {
-            nodeChildAdd((
-                child.kind === "dir"
-                ? root
-                : tmp
-            ), child);
+            if (child.kind === "dir") {
+                nodeChildAdd(root, child);
+            } else {
+                nodeChildAdd(tmp, child);
+            }
         });
     }
-    nodeNameWidth = 0;
-    nodeNormalize(root, filePrefix.join(path.sep) + path.sep, 0);
-    nodeSummarize(root, 0);
+    nodeNormalize(root, filePrefix.join(path.sep) + path.sep);
+    nodeMetricsCalculate(root);
+    nodeChildrenSort(root);
+    nameWidth = findNameWidth(root);
+    nodeWalk(root, 0);
     // 2. print coverage in text-format to stdout
     console.log(summaryList.join("\n") + "\n");
     // create HtmlReport
@@ -11541,7 +11617,7 @@ local.coverageReportCreate = function (opt) {
 </html>`
     ), {
         datetime: new Date().toGMTString()
-    });
+    }, {});
     // init templateHead
     templateHead = local.templateCoverageHead;
     if (local.isBrowser) {
