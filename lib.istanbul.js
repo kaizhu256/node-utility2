@@ -10521,12 +10521,11 @@ let lineCreate;
 let lineInsertAt;
 let lineWrapAt;
 let nodeChildAdd;
-let nodeChildrenSort;
 let nodeCreate;
 let nodeMetricsCalculate;
 let nodeNameWidth;
 let nodeNormalize;
-let nodeWalk;
+let nodeSummarize;
 let path;
 let stringPad;
 let summaryList;
@@ -10975,26 +10974,6 @@ nodeChildAdd = function (node, child) {
     node.children.push(child);
     child.parent = node;
 };
-nodeChildrenSort = function (node) {
-/*
- * this function will recursively sort <node>.children by relativename
- */
-    node.children.sort(function (aa, bb) {
-        aa = aa.relativeName;
-        bb = bb.relativeName;
-        return (
-            aa < bb
-            ? -1
-            : aa > bb
-            ? 1
-            : 0
-        );
-    });
-    node.children.forEach(function (child) {
-        // recurse
-        nodeChildrenSort(child);
-    });
-};
 nodeCreate = function (fullName, kind, metrics) {
 /*
  * this function will create new node
@@ -11095,12 +11074,21 @@ nodeNormalize = function (node, filePrefix, parent, level) {
         nodeNormalize(child, filePrefix, node, level + 1);
     });
 };
-nodeWalk = function (node, level) {
+nodeSummarize = function (node, level) {
 /*
  * this function will recursively walk and summarize each <node>
  */
     let line;
     let tableRow;
+    // sort <children> by <relativeName>
+    node.children.sort(function (aa, bb) {
+        return (
+            aa.relativeName > bb.relativeName
+            ? 1
+            : -1
+        );
+    });
+    // summarize
     tableRow = [
         node.metrics.statements.pct,
         node.metrics.statements.pct,
@@ -11126,7 +11114,7 @@ nodeWalk = function (node, level) {
         summaryList.push(tableRow);
         node.children.forEach(function (child) {
             // recurse
-            nodeWalk(child, level + 1);
+            nodeSummarize(child, level + 1);
         });
         return;
     }
@@ -11142,7 +11130,7 @@ nodeWalk = function (node, level) {
     summaryList.push(line);
     node.children.forEach(function (child) {
         // recurse
-        nodeWalk(child, level + 1);
+        nodeSummarize(child, level + 1);
     });
     summaryList.push(line);
     summaryList.push(tableRow);
@@ -11587,8 +11575,7 @@ local.coverageReportCreate = function (opt) {
     }
     nodeNormalize(root, filePrefix.join(path.sep) + path.sep, 0);
     nodeMetricsCalculate(root);
-    nodeChildrenSort(root);
-    nodeWalk(root, 0);
+    nodeSummarize(root, 0);
     // 2. print coverage in text-format to stdout
     console.log(summaryList.join("\n") + "\n");
     // create HtmlReport
