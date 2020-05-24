@@ -10523,8 +10523,8 @@ let nodeNormalize;
 let nodeSummarize;
 let path;
 let stringPad;
-let summaryList;
 let summaryMap;
+let summaryText;
 let templateFoot;
 let templateHead;
 let templateRender;
@@ -10594,8 +10594,8 @@ htmlWrite = function (node, level, dir) {
         htmlData += templateFoot;
         htmlAll += htmlData + "\n\n";
         local.fsWriteFileWithMkdirpSync(htmlFile, htmlData);
+        // recurse
         node.children.forEach(function (child) {
-            // recurse
             htmlWrite(child, level + 1, path.resolve(dir, child.relativeName));
         });
         return;
@@ -11053,32 +11053,32 @@ nodeSummarize = function (node, level) {
             )
             : stringPad(pct, 10, true, 0, score)
         );
-    }).join(" |") + " |";
+    }).join(" |") + " |\n";
     if (level !== 0) {
-        summaryList.push(tableRow);
+        summaryText += tableRow;
+        // recurse
         node.children.forEach(function (child) {
-            // recurse
             nodeSummarize(child, level + 1);
         });
         return;
     }
     line = (
         "-".repeat(nodeNameWidth)
-        + "-|-----------|-----------|-----------|-----------|"
+        + "-|-----------|-----------|-----------|-----------|\n"
     );
-    summaryList.push(line);
-    summaryList.push(
+    summaryText += line;
+    summaryText += (
         stringPad("File", nodeNameWidth, false, 0)
-        + " |   % Stmts |% Branches |   % Funcs |   % Lines |"
+        + " |   % Stmts |% Branches |   % Funcs |   % Lines |\n"
     );
-    summaryList.push(line);
+    summaryText += line;
+    // recurse
     node.children.forEach(function (child) {
-        // recurse
         nodeSummarize(child, level + 1);
     });
-    summaryList.push(line);
-    summaryList.push(tableRow);
-    summaryList.push(line);
+    summaryText += line;
+    summaryText += tableRow;
+    summaryText += line;
 };
 stringPad = function (str, width, right, tabs, score) {
 /*
@@ -11334,7 +11334,7 @@ local.coverageReportCreate = function (opt) {
     ) + "\n";
     // create TextReport
     // 1. summarize coverage
-    summaryList = [];
+    summaryText = [];
     summaryMap = {};
     Object.entries(globalThis.__coverage__).forEach(function ([
         file,
@@ -11510,7 +11510,7 @@ local.coverageReportCreate = function (opt) {
     nodeNormalize(root, 0, filePrefix.join(path.sep) + path.sep);
     nodeSummarize(root, 0);
     // 2. print coverage in text-format to stdout
-    console.log(summaryList.join("\n") + "\n");
+    console.log(summaryText.join("\n") + "\n");
     // create HtmlReport
     // init templateFoot
     templateFoot = templateRender((
