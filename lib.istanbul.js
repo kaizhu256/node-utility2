@@ -11066,29 +11066,21 @@ nodeNormalize = function (node, filePrefix, parent) {
 };
 nodeSummarize = function (node, level) {
 /*
- * this function will recursively walk and summarize each <node>
+ * this function will recursively summarize <node>
  */
     let line;
     let tableRow;
     tableRow = [
-        node.metrics.statements.pct,
-        node.metrics.statements.pct,
-        node.metrics.branches.pct,
-        node.metrics.functions.pct,
-        node.metrics.lines.pct
-    ].map(function (pct, ii) {
-        let val;
-        val = (
-            val >= 80
-            ? "high"
-            : val >= 50
-            ? "medium"
-            : "low"
-        );
+        node.metrics.statements.score,
+        node.metrics.statements.score,
+        node.metrics.branches.score,
+        node.metrics.functions.score,
+        node.metrics.lines.score
+    ].map(function (score, ii) {
         return (
             ii === 0
-            ? stringPad(node.relativeName, nodeNameWidth, false, level, val)
-            : stringPad(pct, 10, true, 0, val)
+            ? stringPad(node.relativeName, nodeNameWidth, false, level, score)
+            : stringPad(score, 10, true, 0, score)
         );
     }).join(" |") + " |";
     if (level !== 0) {
@@ -11161,7 +11153,7 @@ stringPad = function (str, width, right, tabs, score) {
 };
 templateRender = function (template, node) {
 /*
- * this function will render <template> with given <node> and <node>
+ * this function will render <template> with given <node>
  */
     let ii;
     let jj;
@@ -11171,7 +11163,6 @@ templateRender = function (template, node) {
     let val;
     // render <node>
     metrics = node.metrics;
-    // render <node>
     template = template.replace((
         /\{\{[^#].+?\}\}/g
     ), function (match0) {
@@ -11556,11 +11547,11 @@ local.coverageReportCreate = function (opt) {
         root = nodeCreate(filePrefix.join(path.sep) + path.sep, "dir");
         nodeChildAdd(root, tmp);
         tmpChildren.forEach(function (child) {
-            if (child.kind === "dir") {
-                nodeChildAdd(root, child);
-            } else {
-                nodeChildAdd(tmp, child);
-            }
+            nodeChildAdd((
+                child.kind === "dir"
+                ? root
+                : tmp
+            ), child);
         });
     }
     nodeNormalize(root, filePrefix.join(path.sep) + path.sep);
