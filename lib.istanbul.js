@@ -10549,45 +10549,36 @@ path = require("path");
 // init InsertionText
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 function InsertionText(text, consumeBlanks) {
+    let ii;
     let that;
     that = this;
     that.text = text;
     that.offsets = [];
     that.consumeBlanks = consumeBlanks;
-    that.startPos = that.findFirstNonBlank();
-    that.endPos = that.findLastNonBlank();
+    that.startPos = -1;
+    ii = 0;
+    while (ii < that.text.length) {
+        if (!that.text[ii].match(
+            /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
+        )) {
+            that.startPos = ii;
+            break;
+        }
+        ii += 1;
+    }
+    that.endPos = that.text.length + 1;
+    ii = that.text.length - 1;
+    while (ii >= 0) {
+        if (!that.text[ii].match(
+            /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
+        )) {
+            that.endPos = ii;
+            break;
+        }
+        ii -= 1;
+    }
 }
 InsertionText.prototype = {
-    findFirstNonBlank: function () {
-        let ii;
-        let that;
-        that = this;
-        ii = 0;
-        while (ii < that.text.length) {
-            if (!that.text[ii].match(
-                /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
-            )) {
-                return ii;
-            }
-            ii += 1;
-        }
-        return -1;
-    },
-    findLastNonBlank: function () {
-        let ii;
-        let that;
-        that = this;
-        ii = that.text.length - 1;
-        while (ii >= 0) {
-            if (!that.text[ii].match(
-                /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
-            )) {
-                return ii;
-            }
-            ii -= 1;
-        }
-        return that.text.length + 1;
-    },
     insertAt: function (col, str, insertBefore, consumeBlanks) {
         let cumulativeOffset;
         let len;
