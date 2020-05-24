@@ -11322,19 +11322,16 @@ local.coverageReportCreate = function (opt) {
         return "";
     }
     // init function
-    findNameWidth = function (node, level, last) {
+    findNameWidth = function (node, level) {
         let idealWidth;
-        last = last || 0;
-        level = level || 0;
         idealWidth = level * 2 + node.relativeName.length;
-        if (idealWidth > last) {
-            last = idealWidth;
+        if (idealWidth > nodeNameWidth) {
+            nodeNameWidth = idealWidth;
         }
         node.children.forEach(function (child) {
             // recurse
-            last = findNameWidth(child, level + 1, last);
+            nodeNameWidth = findNameWidth(child, level + 1, nodeNameWidth);
         });
-        return last;
     };
     // init dir
     dir = process.cwd() + "/tmp/build/coverage.html";
@@ -11543,7 +11540,8 @@ local.coverageReportCreate = function (opt) {
     }
     nodeNormalize(root, filePrefix.join(path.sep) + path.sep);
     nodeMetricsCalculate(root);
-    nodeNameWidth = findNameWidth(root);
+    nodeNameWidth = 0;
+    findNameWidth(root, 0);
     nodeSummarize(root, 0);
     // 2. print coverage in text-format to stdout
     console.log(summaryList.join("\n") + "\n");
