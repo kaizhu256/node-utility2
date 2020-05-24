@@ -10561,25 +10561,18 @@ function InsertionText(text, consumeBlanks) {
 InsertionText.prototype = {
     findFirstNonBlank: function () {
         let ii;
-        let len;
-        let pos;
-        let text;
         let that;
         that = this;
-        pos = -1;
-        text = that.text;
-        len = text.length;
         ii = 0;
-        while (ii < len) {
-            if (!text[ii].match(
+        while (ii < that.text.length) {
+            if (!that.text[ii].match(
                 /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
             )) {
-                pos = ii;
-                break;
+                return ii;
             }
             ii += 1;
         }
-        return pos;
+        return -1;
     },
     findLastNonBlank: function () {
         let ii;
