@@ -10630,21 +10630,21 @@ InsertionText.prototype = {
         while (ii < offsets.length) {
             offsetObj = offsets[ii];
             if (
-                offsetObj.pos < col
-                || (offsetObj.pos === col && !insertBefore)
+                offsetObj.col < col
+                || (offsetObj.col === col && !insertBefore)
             ) {
                 cumulativeOffset += offsetObj.len;
             }
-            if (offsetObj.pos >= col) {
+            if (offsetObj.col >= col) {
                 break;
             }
             ii += 1;
         }
-        if (offsetObj && offsetObj.pos === col) {
+        if (offsetObj && offsetObj.col === col) {
             offsetObj.len += len;
         } else {
             offsets.splice(ii, 0, {
-                pos: col,
+                col,
                 len
             });
         }
