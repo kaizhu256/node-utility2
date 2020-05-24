@@ -11100,6 +11100,7 @@ nodeNormalize = function (node, filePrefix, parent) {
     if (node.name[0] === path.sep) {
         node.name = node.name.slice(1);
     }
+    node.name = node.name || "All files";
     // normalize relativeName
     node.relativeName = (
         parent
@@ -11225,7 +11226,7 @@ templateRender = function (template, dict, node) {
     Object.assign(dict, {
         coverageLevel: metrics && coverageLevelGet(metrics.statements.pct),
         metrics,
-        name: node.name || "All files"
+        name: node.name
     });
     // render <dict>
     template = template.replace((
