@@ -53,6 +53,7 @@ this zero-dependency package will provide high-level functions to to build, test
 
 #### changelog 2020.5.20
 - npm publish 2020.5.20
+- update shell-functions shCryptoTravisDecrypt, shCryptoTravisEncrypt
 - istanbul - inline writeReport
 - jslint - prefer undefined over null in file lib.jslint.js
 - jslint - validate sort nested switch-statements

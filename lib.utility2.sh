@@ -14,6 +14,8 @@
 # git ls-remote --heads origin
 # git update-index --chmod=+x aa.js
 # npm_package_private=1 GITHUB_REPO=aa/node-aa-bb-pro shCryptoWithGithubOrg aa shCryptoTravisEncrypt
+# shCryptoWithGithubOrg aa shCryptoTravisDecrypt ciphertext.txt
+# shCryptoWithGithubOrg aa shCryptoTravisEncrypt plaintext.txt
 # shCryptoWithGithubOrg aa shTravisRepoCreate aa/node-aa-bb
 # shCryptoWithGithubOrg aa shGithubApiRateLimitGet
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/node-aa-bb "touch" alpha
@@ -988,12 +990,17 @@ shCryptoTravisDecrypt () {(set -e
         shBuildPrint "no CRYPTO_AES_KEY"
         return 1
     fi
+    local FILE="$1"
+    if [ -f "$FILE" ]
+    then
+        cat "$FILE" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
+        return
+    fi
     # decrypt CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG
     URL="https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG"
     shBuildPrint "decrypting $URL ..."
-    printf "${1:-"$(curl -#Lf "$URL")"}" |
-        shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
+    curl -#Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
 )}
 
 shCryptoTravisEncrypt () {(set -e
@@ -1006,7 +1013,13 @@ shCryptoTravisEncrypt () {(set -e
         shBuildPrint "no CRYPTO_AES_KEY"
         return 1
     fi
-    if [ ! "$1" ] && [ -f .travis.yml ]
+    local FILE="$1"
+    if [ -f "$FILE" ]
+    then
+        cat "$FILE" | shCryptoAesXxxCbcRawEncrypt "$CRYPTO_AES_KEY" base64
+        return
+    fi
+    if [ -f .travis.yml ]
     then
         TMPFILE="$(mktemp)"
         URL="https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/key"
@@ -1035,13 +1048,6 @@ shCryptoTravisEncrypt () {(set -e
             shBuildPrint "updated .travis.yml with CRYPTO_AES_KEY_ENCRYPTED"
         fi
     fi
-    if [ ! -f "$FILE" ]
-    then
-        return
-    fi
-    # encrypt CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG
-    shBuildPrint "CRYPTO_AES_SH_ENCRYPTED:"
-    cat "$FILE" | shCryptoAesXxxCbcRawEncrypt "$CRYPTO_AES_KEY" base64
 )}
 
 shCryptoWithGithubOrg () {(set -e
