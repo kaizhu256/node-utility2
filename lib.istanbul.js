@@ -10999,7 +10999,7 @@ nodeNormalize = function (node, filePrefix, parent, level) {
     ) || "All files";
     // normalize <nodeNameWidth>
     nodeNameWidth = Math.max(
-        nodeNameWidth | 0,
+        nodeNameWidth,
         level * 2 + node.relativeName.length
     );
     node.children.forEach(function (child) {
@@ -11522,6 +11522,7 @@ local.coverageReportCreate = function (opt) {
             ), child);
         });
     }
+    nodeNameWidth = 0;
     nodeNormalize(root, filePrefix.join(path.sep) + path.sep, 0);
     nodeSummarize(root, 0);
     // 2. print coverage in text-format to stdout
