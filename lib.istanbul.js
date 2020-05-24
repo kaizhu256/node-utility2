@@ -11003,7 +11003,32 @@ nodeCreate = function (fullName, kind, metrics) {
         children: [],
         fullName,
         kind,
-        metrics: metrics || null,
+        metrics: metrics || {
+            lines: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            },
+            statements: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            },
+            functions: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            },
+            branches: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            }
+        },
         name: fullName,
         parent: null
     };
