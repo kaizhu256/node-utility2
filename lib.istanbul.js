@@ -10519,7 +10519,7 @@ let htmlFile;
 let htmlWrite;
 let lineCreate;
 let lineInsertAt;
-let lineWrap;
+let lineWrapAt;
 let nameWidth;
 let nodeChildAdd;
 let nodeCreate;
@@ -10747,7 +10747,7 @@ htmlWrite = function (node, dir) {
                     );
                     return;
                 }
-                lineWrap(lineObj, meta.start.column, (
+                lineWrapAt(lineObj, meta.start.column, (
                     "\u0001span class=\"branch-" + ii + " " + (
                         meta.skip
                         ? "cbranch-skip"
@@ -10782,15 +10782,21 @@ htmlWrite = function (node, dir) {
                 endCol = structured[startLine].origLength;
             }
             lineObj = structured[startLine];
-            lineWrap(lineObj, meta.loc.start.column, ("\u0001span class=\"" + (
-                meta.skip
-                ? "fstat-skip"
-                : "fstat-no"
-            ) + "\" title=\"function not covered\" \u0002"), (
-                startLine === endLine
-                ? endCol
-                : lineObj.origLength
-            ), "\u0001/span\u0002");
+            lineWrapAt(
+                lineObj,
+                meta.loc.start.column,
+                "\u0001span class=\"" + (
+                    meta.skip
+                    ? "fstat-skip"
+                    : "fstat-no"
+                ) + "\" title=\"function not covered\" \u0002",
+                (
+                    startLine === endLine
+                    ? endCol
+                    : lineObj.origLength
+                ),
+                "\u0001/span\u0002"
+            );
         });
         // annotateStatements(fileCoverage, structured);
         Object.entries(fileCoverage.s).forEach(function ([
@@ -10814,7 +10820,7 @@ htmlWrite = function (node, dir) {
                 endCol = structured[startLine].origLength;
             }
             lineObj = structured[startLine];
-            lineWrap(lineObj, meta.start.column, ("\u0001span class=\"" + (
+            lineWrapAt(lineObj, meta.start.column, ("\u0001span class=\"" + (
                 meta.skip
                 ? "cstat-skip"
                 : "cstat-no"
@@ -10940,7 +10946,7 @@ lineInsertAt = function (lineObj, col, str, insertBefore, consumeBlanks) {
     );
     return lineObj;
 };
-lineWrap = function (
+lineWrapAt = function (
     lineObj,
     startCol,
     startText,
