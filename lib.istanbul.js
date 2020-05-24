@@ -10568,10 +10568,10 @@ htmlWrite = function (node, dir) {
 </th>
 </tr>
 </thead>
-<tbody>`
+<tbody>` + "\n"
     );
-    htmlData += node.children.map(function (child) {
-        return templateRender((
+    node.children.forEach(function (child) {
+        htmlData += templateRender((
             `<tr>
 <td class="file {{metrics.statements.score}}"
     data-value="{{relativeName}}"><a href="{{href}}"><div>{{relativeName}}</div>
@@ -10589,8 +10589,8 @@ htmlWrite = function (node, dir) {
     data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>
     ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
 </tr>`
-        ), child) + "\n";
-    }).join("");
+        ), child);
+    });
     htmlData += "</tbody>\n</table>\n</div>\n";
     htmlData += templateFoot;
     node.children.forEach(function (child) {
@@ -11243,7 +11243,7 @@ templateRender = function (template, node) {
         ), ">");
         return val;
     });
-    return template;
+    return template.trim() + "\n";
 };
 
 
