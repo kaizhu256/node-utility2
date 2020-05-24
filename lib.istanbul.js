@@ -11013,6 +11013,9 @@ nodeMetricsCalculate = function (node) {
  * this function will recursively calculate <node>.metrics
  */
     if (node.kind !== "dir") {
+        if (node.children.length) {
+            throw new Error("!dir && children");
+        }
         return;
     }
     // recurse
