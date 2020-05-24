@@ -539,7 +539,7 @@ if (local.isBrowser) {
 }
 // init exports
 module.exports = local;
-// init assets
+// init assetsDict
 local.assetsDict = local.assetsDict || {};
 [
     "assets.swgg.swagger.json",

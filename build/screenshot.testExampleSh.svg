@@ -7,7 +7,7 @@
 
 <tspan x="10" y="58"></tspan>
 <tspan x="10" y="74">  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0</tspan>
-<tspan x="10" y="90">100 3131k  100 3131k    0     0  9693k      0 --:--:-- --:--:-- --:--:-- 9724k</tspan>
+<tspan x="10" y="90">100 3131k  100 3131k    0     0  9338k      0 --:--:-- --:--:-- --:--:-- 9348k</tspan>
 
 <tspan x="10" y="106"></tspan>
 
@@ -33,19 +33,19 @@
 
 <tspan x="10" y="314">jslint - 1ms /tmp/app/example.sh</tspan>
 
-<tspan x="10" y="330">serverLog - {"time":"2019-10-10T21:48:32.148Z","type":"serverResponse","method":"GET","url":"/",\</tspan>
-<tspan x="10" y="346">"statusCode":200,"timeElapsed":5,"reqContentLength":0,"resContentLength":0,"reqHeaderXForwardedF\</tspan>
-<tspan x="10" y="362">or":"","reqHeaderOrigin":"","reqHeaderReferer":"","reqHeaderUserAgent":"Mozilla/5.0 (X11; Linux \</tspan>
-<tspan x="10" y="378">x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/77.0.3865.120 Safari/537.36"}</tspan>
+<tspan x="10" y="330">serverLog - {"time":"2019-10-15T17:01:03.232Z","type":"serverResponse","method":"GET","url":"/",\</tspan>
+<tspan x="10" y="346">"statusCode":200,"timeElapsed":19,"reqContentLength":0,"resContentLength":0,"reqHeaderXForwarded\</tspan>
+<tspan x="10" y="362">For":"","reqHeaderOrigin":"","reqHeaderReferer":"","reqHeaderUserAgent":"Mozilla/5.0 (X11; Linux\</tspan>
+<tspan x="10" y="378"> x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/77.0.3865.120 Safari/537.36"}</tspan>
 
-<tspan x="10" y="394">serverLog - {"time":"2019-10-10T21:48:32.210Z","type":"serverResponse","method":"GET","url":"/as\</tspan>
-<tspan x="10" y="410">sets.app.js","statusCode":200,"timeElapsed":27,"reqContentLength":0,"resContentLength":0,"reqHea\</tspan>
+<tspan x="10" y="394">serverLog - {"time":"2019-10-15T17:01:03.264Z","type":"serverResponse","method":"GET","url":"/as\</tspan>
+<tspan x="10" y="410">sets.app.js","statusCode":200,"timeElapsed":22,"reqContentLength":0,"resContentLength":0,"reqHea\</tspan>
 <tspan x="10" y="426">derXForwardedFor":"","reqHeaderOrigin":"","reqHeaderReferer":"http://127.0.0.1:8081/","reqHeader\</tspan>
 <tspan x="10" y="442">UserAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrom\</tspan>
 <tspan x="10" y="458">e/77.0.3865.120 Safari/537.36"}</tspan>
 
-<tspan x="10" y="474">serverLog - {"time":"2019-10-10T21:48:32.455Z","type":"serverResponse","method":"GET","url":"/",\</tspan>
-<tspan x="10" y="490">"statusCode":304,"timeElapsed":1,"reqContentLength":0,"resContentLength":0,"reqHeaderXForwardedF\</tspan>
+<tspan x="10" y="474">serverLog - {"time":"2019-10-15T17:01:03.494Z","type":"serverResponse","method":"GET","url":"/",\</tspan>
+<tspan x="10" y="490">"statusCode":304,"timeElapsed":0,"reqContentLength":0,"resContentLength":0,"reqHeaderXForwardedF\</tspan>
 <tspan x="10" y="506">or":"","reqHeaderOrigin":"","reqHeaderReferer":"http://127.0.0.1:8081/","reqHeaderUserAgent":"Mo\</tspan>
 <tspan x="10" y="522">zilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/77.0.3865.12\</tspan>
 <tspan x="10" y="538">0 Safari/537.36"}</tspan>

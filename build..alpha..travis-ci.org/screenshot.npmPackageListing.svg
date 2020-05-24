@@ -5,7 +5,7 @@
 
 <tspan x="10" y="42"></tspan>
 
-<tspan x="10" y="58">0.    2019-10-10 16:44:46 -0500   4696048 bytes .</tspan>
+<tspan x="10" y="58">0.    2019-10-15 11:57:04 -0500   4696738 bytes .</tspan>
 
 <tspan x="10" y="74">1.    2019-09-07 01:24:41 -0500        85 bytes .dockerignore</tspan>
 
@@ -13,17 +13,17 @@
 
 <tspan x="10" y="106">3.    2019-09-07 01:24:41 -0500       103 bytes .gitignore</tspan>
 
-<tspan x="10" y="122">4.    2019-08-17 17:29:10 +0000       498 bytes .screenrc</tspan>
+<tspan x="10" y="122">4.    2019-08-22 12:19:45 -0500       498 bytes .screenrc</tspan>
 
 <tspan x="10" y="138">5.    2019-09-12 19:34:49 -0500      1015 bytes .travis.yml</tspan>
 
 <tspan x="10" y="154">6.    2019-09-18 19:05:42 -0500      6100 bytes .vimrc</tspan>
 
-<tspan x="10" y="170">7.    2019-08-17 17:29:10 +0000      1102 bytes LICENSE</tspan>
+<tspan x="10" y="170">7.    2019-08-22 12:19:45 -0500      1102 bytes LICENSE</tspan>
 
-<tspan x="10" y="186">8.    2019-10-09 19:53:07 -0500     55842 bytes README.md</tspan>
+<tspan x="10" y="186">8.    2019-10-11 14:19:48 -0500     55896 bytes README.md</tspan>
 
-<tspan x="10" y="202">9.    2019-08-17 17:29:10 +0000        11 bytes assets.hello.txt</tspan>
+<tspan x="10" y="202">9.    2019-08-22 12:19:45 -0500        11 bytes assets.hello.txt</tspan>
 
 <tspan x="10" y="218">10.   2019-10-09 12:17:59 -0500     47957 bytes lib.apidoc.js</tspan>
 
@@ -41,11 +41,11 @@
 
 <tspan x="10" y="330">17.   2019-10-09 12:17:59 -0500    260310 bytes lib.swgg.js</tspan>
 
-<tspan x="10" y="346">18.   2019-08-17 17:29:10 +0000    795189 bytes lib.terser.js</tspan>
+<tspan x="10" y="346">18.   2019-08-22 12:19:45 -0500    795189 bytes lib.terser.js</tspan>
 
-<tspan x="10" y="362">19.   2019-10-09 17:26:42 -0500    259153 bytes lib.utility2.js</tspan>
+<tspan x="10" y="362">19.   2019-10-11 13:36:09 -0500    259350 bytes lib.utility2.js</tspan>
 
-<tspan x="10" y="378">20.   2019-10-10 16:38:06 -0500    152953 bytes lib.utility2.sh</tspan>
+<tspan x="10" y="378">20.   2019-10-15 11:57:04 -0500    153387 bytes lib.utility2.sh</tspan>
 
 <tspan x="10" y="394">21.   2019-09-26 10:44:30 -0500      2002 bytes npm_scripts.sh</tspan>
 
@@ -55,9 +55,9 @@
 
 <tspan x="10" y="442">24.   2019-09-01 20:59:19 -0500    522340 bytes raw.jslint.js</tspan>
 
-<tspan x="10" y="458">25.   2019-10-10 16:44:46 -0500    378532 bytes raw.puppeteer.js</tspan>
+<tspan x="10" y="458">25.   2019-10-10 17:33:42 -0500    378537 bytes raw.puppeteer.js</tspan>
 
-<tspan x="10" y="474">26.   2019-08-17 17:29:10 +0000     53101 bytes raw.uglifyjs.js</tspan>
+<tspan x="10" y="474">26.   2019-08-22 12:19:45 -0500     53101 bytes raw.uglifyjs.js</tspan>
 
 <tspan x="10" y="490">27.   2019-10-09 12:17:59 -0500     91979 bytes test.js</tspan>
 

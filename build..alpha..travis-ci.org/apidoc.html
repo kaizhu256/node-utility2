@@ -2296,6 +2296,15 @@
 
         <li>
 
+            <a class="apidocElementLiA" href="#apidoc.elem.utility2.Module.syncBuiltinESMExports">
+            function <span class="apidocSignatureSpan">utility2.Module.</span>syncBuiltinESMExports
+            <span class="apidocSignatureSpan">()</span>
+            </a>
+
+        </li>
+
+        <li>
+
             <span class="apidocSignatureSpan">object <span class="apidocSignatureSpan">utility2.Module.</span>_cache</span>
 
         </li>
@@ -12263,17 +12272,17 @@ local.objectSetDefault(opt, {
 tmp = process.cwd() + &quot;/example.js&quot;;
 // jslint code
 local.jslintAndPrint(code, tmp);
-// cover code
+// instrument code
 code = local.istanbulInstrumentInPackage(code, tmp);
 // init module.exports
 module = new local.<span class="apidocCodeKeywordSpan">Module</span>(tmp);
 require.cache[tmp] = module;
-// load code into module
 module._compile(code, tmp);
 // init exports
 module.exports.utility2 = local;
 module.exports[local.env.npm_package_nameLib] = (
     globalThis.utility2_moduleExports
+);
 ...</pre></li>
     </ul>
 
@@ -15871,15 +15880,15 @@ local.fs.writeFile(
 tmp = process.cwd() + &quot;/example.js&quot;;
 // jslint code
 local.jslintAndPrint(code, tmp);
-// cover code
+// instrument code
 code = local.<span class="apidocCodeKeywordSpan">istanbulInstrumentInPackage</span>(code, tmp);
 // init module.exports
 module = new local.Module(tmp);
 require.cache[tmp] = module;
-// load code into module
 module._compile(code, tmp);
 // init exports
 module.exports.utility2 = local;
+module.exports[local.env.npm_package_nameLib] = (
 ...</pre></li>
     </ul>
 
@@ -18716,7 +18725,7 @@ local.cliDict[&quot;utility2.swaggerValidateFile&quot;] = function () {
         });
     }
     if (globalThis.utility2_rollup || local.env.npm_config_mode_start) {
-        // init assets
+        // init assets index.html
         local.assetsDict[&quot;/index.html&quot;] = (
             local.fsReadFileOrEmptyStringSync(&quot;index.html&quot;)
             || local.assetsDict[&quot;/index.rollup.html&quot;] || &quot;&quot;
@@ -18759,7 +18768,7 @@ local.cliDict[&quot;utility2.swaggerValidateFile&quot;] = function () {
         &quot;globalThis.utility2_moduleExports&quot;
     ).replace(
         new RegExp(&quot;require\\(.&quot; + local.env.npm_package_nameOriginal + &quot;.\\)&quot;),
-        &quot;globalThis.uti...</pre></li>
+        &quot;glo...</pre></li>
     <li>example usage<pre class="apidocCodePre">...
 \n\
 \n\
@@ -21646,17 +21655,17 @@ default:
 tmp = process.cwd() + &quot;/example.js&quot;;
 // jslint code
 local.jslintAndPrint(code, tmp);
-// cover code
+// instrument code
 code = local.istanbulInstrumentInPackage(code, tmp);
 // init module.exports
 module = new local.<span class="apidocCodeKeywordSpan">Module</span>(tmp);
 require.cache[tmp] = module;
-// load code into module
 module._compile(code, tmp);
 // init exports
 module.exports.utility2 = local;
 module.exports[local.env.npm_package_nameLib] = (
     globalThis.utility2_moduleExports
+);
 ...</pre></li>
     </ul>
 
@@ -21880,7 +21889,19 @@ module.exports[local.env.npm_package_nameLib] = (
 
   let threw = true;
   try {
-    module.load(filename);
+    // Intercept exceptions that occur during the first tick and rekey them
+    // on error instance rather than module instance (which will immediately be
+    // garbage collected).
+    if (enableSourceMaps) {
+      try {
+        module.load(filename);
+      } catch (err) {
+        rekeySourceMap(Module._cache[filename], err);
+        throw err;<span class="apidocCodeCommentSpan"> /* node-do-not-add-exception-line */
+</span>      }
+    } else {
+      module.load(filename);
+    }
     threw = false;
   } finally {
     if (threw) {
@@ -21993,7 +22014,7 @@ module.exports[local.env.npm_package_nameLib] = (
     if (Array.isArray(options.paths)) {
       const isRelative = request.startsWith(&apos;./&apos;) ||
           request.startsWith(&apos;../&apos;) ||
-          (isWindows &amp;&amp; request.startsWith(&apos;.\\&apos;) ||
+          ((isWindows &amp;&amp; request.startsWith(&apos;.\\&apos;)) ||
           request.startsWith(&apos;..\\&apos;));
 
       if (isRelative) {
@@ -22196,6 +22217,25 @@ module.exports[local.env.npm_package_nameLib] = (
 
 
 
+    <h2>
+        <a href="#apidoc.elem.utility2.Module.syncBuiltinESMExports" id="apidoc.elem.utility2.Module.syncBuiltinESMExports">
+        function <span class="apidocSignatureSpan">utility2.Module.</span>syncBuiltinESMExports
+        <span class="apidocSignatureSpan">()</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function syncBuiltinESMExports() {
+  for (const mod of NativeModule.map.values()) {
+    if (mod.canBeRequiredByUsers) {
+      mod.syncExports();
+    }
+  }
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
 
 
 
@@ -22321,20 +22361,20 @@ module.exports[local.env.npm_package_nameLib] = (
   return result;
 }</pre></li>
     <li>example usage<pre class="apidocCodePre">...
+// jslint code
 local.jslintAndPrint(code, tmp);
-// cover code
+// instrument code
 code = local.istanbulInstrumentInPackage(code, tmp);
 // init module.exports
 module = new local.Module(tmp);
 require.cache[tmp] = module;
-// load code into module
 module.<span class="apidocCodeKeywordSpan">_compile</span>(code, tmp);
 // init exports
 module.exports.utility2 = local;
 module.exports[local.env.npm_package_nameLib] = (
     globalThis.utility2_moduleExports
 );
-// init assets
+// init assets lib.xxx.js
 tmp = process.cwd() + &quot;/&quot; + local.env.npm_package_main;
 ...</pre></li>
     </ul>
@@ -22365,21 +22405,18 @@ tmp = process.cwd() + &quot;/&quot; + local.env.npm_package_main;
     const module = ESMLoader.moduleMap.get(url);
     // Create module entry at load time to snapshot exports correctly
     const exports = this.exports;
-    if (module !== undefined) { // Called from cjs translator
-      if (module.reflect) {
-        module.reflect.onReady((reflect) =&gt; {
-          reflect.exports.default.set(exports);
-        });
-      }
+    // Called from cjs translator
+    if (module !== undefined &amp;&amp; module.module !== undefined) {
+      if (module.module.getStatus() &gt;= kInstantiated)
+        module.module.setExport(&apos;default&apos;, exports);
     } else { // preemptively cache
       ESMLoader.moduleMap.set(
         url,
-        new ModuleJob(ESMLoader, url, async () =&gt; {
-          return createDynamicModule(
-            [], [&apos;default&apos;], url, (reflect) =&gt; {
-              reflect.exports.default.set(exports);
-            });
-        })
+        new ModuleJob(ESMLoader, url, () =&gt;
+          new ModuleWrap(function() {
+            this.setExport(&apos;default&apos;, exports);
+          }, [&apos;default&apos;], url)
+        )
       );
     }
   }
@@ -52072,17 +52109,17 @@ local.objectSetDefault(opt, {
 tmp = process.cwd() + &quot;/example.js&quot;;
 // jslint code
 local.jslintAndPrint(code, tmp);
-// cover code
+// instrument code
 code = local.istanbulInstrumentInPackage(code, tmp);
 // init module.exports
 module = new local.<span class="apidocCodeKeywordSpan">Module</span>(tmp);
 require.cache[tmp] = module;
-// load code into module
 module._compile(code, tmp);
 // init exports
 module.exports.utility2 = local;
 module.exports[local.env.npm_package_nameLib] = (
     globalThis.utility2_moduleExports
+);
 ...</pre></li>
     </ul>
 
@@ -56187,15 +56224,15 @@ local.fs.writeFile(
 tmp = process.cwd() + &quot;/example.js&quot;;
 // jslint code
 local.jslintAndPrint(code, tmp);
-// cover code
+// instrument code
 code = local.<span class="apidocCodeKeywordSpan">istanbulInstrumentInPackage</span>(code, tmp);
 // init module.exports
 module = new local.Module(tmp);
 require.cache[tmp] = module;
-// load code into module
 module._compile(code, tmp);
 // init exports
 module.exports.utility2 = local;
+module.exports[local.env.npm_package_nameLib] = (
 ...</pre></li>
     </ul>
 
@@ -59930,7 +59967,7 @@ local.cliDict[&quot;utility2.swaggerValidateFile&quot;] = function () {
         });
     }
     if (globalThis.utility2_rollup || local.env.npm_config_mode_start) {
-        // init assets
+        // init assets index.html
         local.assetsDict[&quot;/index.html&quot;] = (
             local.fsReadFileOrEmptyStringSync(&quot;index.html&quot;)
             || local.assetsDict[&quot;/index.rollup.html&quot;] || &quot;&quot;
@@ -59973,7 +60010,7 @@ local.cliDict[&quot;utility2.swaggerValidateFile&quot;] = function () {
         &quot;globalThis.utility2_moduleExports&quot;
     ).replace(
         new RegExp(&quot;require\\(.&quot; + local.env.npm_package_nameOriginal + &quot;.\\)&quot;),
-        &quot;globalThis.uti...</pre></li>
+        &quot;glo...</pre></li>
     <li>example usage<pre class="apidocCodePre">...
 \n\
 \n\

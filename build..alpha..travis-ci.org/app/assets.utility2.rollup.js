@@ -50111,7 +50111,7 @@ if (local.isBrowser) {\n\
 }\n\
 // init exports\n\
 module.exports = local;\n\
-// init assets\n\
+// init assetsDict\n\
 local.assetsDict = local.assetsDict || {};\n\
 [\n\
     "assets.swgg.swagger.json",\n\
@@ -54673,7 +54673,7 @@ local.requireReadme = function () {
         });
     }
     if (globalThis.utility2_rollup || local.env.npm_config_mode_start) {
-        // init assets
+        // init assets index.html
         local.assetsDict["/index.html"] = (
             local.fsReadFileOrEmptyStringSync("index.html")
             || local.assetsDict["/index.rollup.html"] || ""
@@ -54722,26 +54722,32 @@ local.requireReadme = function () {
     tmp = process.cwd() + "/example.js";
     // jslint code
     local.jslintAndPrint(code, tmp);
-    // cover code
+    // instrument code
     code = local.istanbulInstrumentInPackage(code, tmp);
     // init module.exports
     module = new local.Module(tmp);
     require.cache[tmp] = module;
-    // load code into module
     module._compile(code, tmp);
     // init exports
     module.exports.utility2 = local;
     module.exports[local.env.npm_package_nameLib] = (
         globalThis.utility2_moduleExports
     );
-    // init assets
+    // init assets lib.xxx.js
     tmp = process.cwd() + "/" + local.env.npm_package_main;
-    local.assetsDict["/assets." + local.env.npm_package_nameLib + ".js"] = (
-        local.fs.readFileSync(tmp, "utf8").replace((
+    [
+        "css", "js"
+    ].forEach(function (extname) {
+        local.assetsDict[
+            "/assets." + local.env.npm_package_nameLib + "." + extname
+        ] = local.fsReadFileOrEmptyStringSync(tmp.replace((
+            /\.[^.]*?$/
+        ), "." + extname), "utf8").replace((
             /^#!\//
-        ), "// ")
-    );
+        ), "// ");
+    });
     Object.assign(local.assetsDict, module.exports.assetsDict);
+    // instrument assets lib.xxx.js
     local.assetsDict["/assets." + local.env.npm_package_nameLib + ".js"] = (
         local.istanbulInstrumentInPackage(
             local.assetsDict[
@@ -64006,7 +64012,7 @@ if (local.isBrowser) {\n\
 }\n\
 // init exports\n\
 module.exports = local;\n\
-// init assets\n\
+// init assetsDict\n\
 local.assetsDict = local.assetsDict || {};\n\
 [\n\
     \"assets.swgg.swagger.json\",\n\
