@@ -10520,11 +10520,11 @@ let htmlWrite;
 let lineCreate;
 let lineInsertAt;
 let lineWrapAt;
-let nameWidth;
 let nodeChildAdd;
 let nodeChildrenSort;
 let nodeCreate;
 let nodeMetricsCalculate;
+let nodeNameWidth;
 let nodeNormalize;
 let nodeWalk;
 let path;
@@ -11113,7 +11113,7 @@ nodeWalk = function (node, level) {
         );
         return (
             ii === 0
-            ? stringPad(node.relativeName, nameWidth, false, level, val)
+            ? stringPad(node.relativeName, nodeNameWidth, false, level, val)
             : stringPad(pct, 10, true, 0, val)
         );
     }).join(" |") + " |";
@@ -11126,12 +11126,12 @@ nodeWalk = function (node, level) {
         return;
     }
     line = (
-        "-".repeat(nameWidth)
+        "-".repeat(nodeNameWidth)
         + "-|-----------|-----------|-----------|-----------|"
     );
     summaryList.push(line);
     summaryList.push(
-        stringPad("File", nameWidth, false, 0)
+        stringPad("File", nodeNameWidth, false, 0)
         + " |   % Stmts |% Branches |   % Funcs |   % Lines |"
     );
     summaryList.push(line);
@@ -11375,19 +11375,18 @@ local.coverageReportCreate = function (opt) {
         return "";
     }
     // init function
-    findNameWidth = function (node, level, last) {
+    findNameWidth = function (node, level) {
         let idealWidth;
-        last = last || 0;
+        nodeNameWidth = nodeNameWidth || 0;
         level = level || 0;
         idealWidth = level * 2 + node.relativeName.length;
-        if (idealWidth > last) {
-            last = idealWidth;
+        if (nodeNameWidth < idealWidth) {
+            nodeNameWidth = idealWidth;
         }
         node.children.forEach(function (child) {
             // recurse
-            last = findNameWidth(child, level + 1, last);
+            findNameWidth(child, level + 1, nodeNameWidth);
         });
-        return last;
     };
     // init dir
     dir = process.cwd() + "/tmp/build/coverage.html";
@@ -11599,7 +11598,7 @@ local.coverageReportCreate = function (opt) {
     nodeNormalize(root, filePrefix.join(path.sep) + path.sep);
     nodeMetricsCalculate(root);
     nodeChildrenSort(root);
-    nameWidth = findNameWidth(root);
+    nodeNameWidth = findNameWidth(root);
     nodeWalk(root, 0);
     // 2. print coverage in text-format to stdout
     console.log(summaryList.join("\n") + "\n");
