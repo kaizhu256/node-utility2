@@ -10522,6 +10522,7 @@ let lineInsertAt;
 let lineWrapAt;
 let nameWidth;
 let nodeChildAdd;
+let nodeChildrenSort;
 let nodeCreate;
 let nodeMetricsCalculate;
 let nodeNormalize;
@@ -10974,6 +10975,26 @@ nodeChildAdd = function (node, child) {
     node.children.push(child);
     child.parent = node;
 };
+nodeChildrenSort = function (node) {
+/*
+ * this function will recursively sort <node>.children by relativename
+ */
+    node.children.sort(function (aa, bb) {
+        aa = aa.relativeName;
+        bb = bb.relativeName;
+        return (
+            aa < bb
+            ? -1
+            : aa > bb
+            ? 1
+            : 0
+        );
+    });
+    node.children.forEach(function (child) {
+        // recurse
+        nodeChildrenSort(child);
+    });
+};
 nodeCreate = function (fullName, kind, metrics) {
 /*
  * this function will create new node
@@ -11346,7 +11367,6 @@ local.coverageReportCreate = function (opt) {
     let filePrefix;
     let filesUnderRoot;
     let findNameWidth;
-    let indexAndSortTree;
     let root;
     let seen;
     let tmp;
@@ -11368,23 +11388,6 @@ local.coverageReportCreate = function (opt) {
             last = findNameWidth(child, level + 1, last);
         });
         return last;
-    };
-    indexAndSortTree = function (node) {
-        node.children.sort(function (aa, bb) {
-            aa = aa.relativeName;
-            bb = bb.relativeName;
-            return (
-                aa < bb
-                ? -1
-                : aa > bb
-                ? 1
-                : 0
-            );
-        });
-        node.children.forEach(function (child) {
-            // recurse
-            indexAndSortTree(child);
-        });
     };
     // init dir
     dir = process.cwd() + "/tmp/build/coverage.html";
@@ -11595,7 +11598,7 @@ local.coverageReportCreate = function (opt) {
     }
     nodeNormalize(root, filePrefix.join(path.sep) + path.sep);
     nodeMetricsCalculate(root);
-    indexAndSortTree(root);
+    nodeChildrenSort(root);
     nameWidth = findNameWidth(root);
     nodeWalk(root, 0);
     // 2. print coverage in text-format to stdout
