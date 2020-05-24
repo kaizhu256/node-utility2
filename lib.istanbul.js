@@ -10603,11 +10603,6 @@ InsertionText.prototype = {
         }
         return pos;
     },
-    originalLength: function () {
-        let that;
-        that = this;
-        return that.origLength;
-    },
     insertAt: function (col, str, insertBefore, consumeBlanks) {
         let len;
         let offset;
@@ -10621,8 +10616,8 @@ InsertionText.prototype = {
             : consumeBlanks
         );
         col = (
-            col > that.originalLength()
-            ? that.originalLength()
+            col > that.origLength
+            ? that.origLength
             : col
         );
         col = (
@@ -10884,7 +10879,7 @@ htmlWrite = function (node, dir) {
                 //skip branches taken
                 if (endLine !== startLine) {
                     endLine = startLine;
-                    endCol = structured[startLine].text.originalLength();
+                    endCol = structured[startLine].text.origLength;
                 }
                 text = structured[startLine].text;
                 if (fileCoverage.branchMap[branchName].type === "if") {
@@ -10919,7 +10914,7 @@ htmlWrite = function (node, dir) {
                 ), (
                     startLine === endLine
                     ? endCol
-                    : text.originalLength()
+                    : text.origLength
                 ), "\u0001/span\u0002");
             });
         });
@@ -10942,7 +10937,7 @@ htmlWrite = function (node, dir) {
             startLine = meta.loc.start.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = structured[startLine].text.originalLength();
+                endCol = structured[startLine].text.origLength;
             }
             text = structured[startLine].text;
             text.wrap(meta.loc.start.column, ("\u0001span class=\"" + (
@@ -10952,7 +10947,7 @@ htmlWrite = function (node, dir) {
             ) + "\" title=\"function not covered\" \u0002"), (
                 startLine === endLine
                 ? endCol
-                : text.originalLength()
+                : text.origLength
             ), "\u0001/span\u0002");
         });
         // annotateStatements(fileCoverage, structured);
@@ -10974,7 +10969,7 @@ htmlWrite = function (node, dir) {
             endLine = meta.end.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = structured[startLine].text.originalLength();
+                endCol = structured[startLine].text.origLength;
             }
             text = structured[startLine].text;
             text.wrap(meta.start.column, ("\u0001span class=\"" + (
@@ -10984,7 +10979,7 @@ htmlWrite = function (node, dir) {
             ) + "\" title=\"statement not covered\" \u0002"), (
                 startLine === endLine
                 ? endCol
-                : text.originalLength()
+                : text.origLength
             ), "\u0001/span\u0002");
         });
         structured.shift();
