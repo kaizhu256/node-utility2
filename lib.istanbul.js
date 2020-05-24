@@ -10549,34 +10549,27 @@ path = require("path");
 // init InsertionText
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 function InsertionText(text, consumeBlanks) {
+    let ii;
     let that;
     that = this;
     that.text = text;
     that.origLength = text.length;
     that.offsets = [];
     that.consumeBlanks = consumeBlanks;
-    that.startPos = that.findFirstNonBlank();
+    that.startPos = -1;
+    ii = 0;
+    while (ii < that.text.length) {
+        if (!that.text[ii].match(
+            /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
+        )) {
+            that.startPos = ii;
+            break;
+        }
+        ii += 1;
+    }
     that.endPos = that.findLastNonBlank();
 }
 InsertionText.prototype = {
-    findFirstNonBlank: function () {
-        let ii;
-        let pos;
-        let that;
-        that = this;
-        pos = -1;
-        ii = 0;
-        while (ii < that.text.length) {
-            if (!that.text[ii].match(
-                /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
-            )) {
-                pos = ii;
-                break;
-            }
-            ii += 1;
-        }
-        return pos;
-    },
     findLastNonBlank: function () {
         let ii;
         let pos;
