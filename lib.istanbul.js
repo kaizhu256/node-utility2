@@ -10520,7 +10520,6 @@ let lineInsertAt;
 let lineWrapAt;
 let nodeChildAdd;
 let nodeCreate;
-let nodeMetricsCalculate;
 let nodeNameWidth;
 let nodeNormalize;
 let nodeSummarize;
@@ -10942,47 +10941,6 @@ nodeCreate = function (fullName, kind, metrics) {
         parent: null
     };
 };
-nodeMetricsCalculate = function (node) {
-/*
- * this function will recursively calculate <node>.metrics
- */
-    // recurse
-    node.children.forEach(nodeMetricsCalculate);
-    if (node.kind === "dir") {
-        node.children.forEach(function (child) {
-            if (!child && child.metrics) {
-                return;
-            }
-            [
-                "lines", "statements", "branches", "functions"
-            ].forEach(function (key) {
-                node.metrics[key].total += child.metrics[key].total;
-                node.metrics[key].covered += child.metrics[key].covered;
-                node.metrics[key].skipped += child.metrics[key].skipped;
-            });
-        });
-    }
-    // normalize <pct> and <score>
-    [
-        "lines", "statements", "branches", "functions"
-    ].forEach(function (key) {
-        node.metrics[key].pct = (
-            node.metrics[key].total > 0
-            ? Math.floor((
-                1000 * 100 * node.metrics[key].covered
-                / node.metrics[key].total + 5
-            ) / 10) / 100
-            : 100
-        );
-        node.metrics[key].score = (
-            node.metrics[key].pct >= 80
-            ? "high"
-            : node.metrics[key].pct >= 50
-            ? "medium"
-            : "low"
-        );
-    });
-};
 nodeNormalize = function (node, level, filePrefix, parent) {
 /*
  * this function will recursively normalize <node>.name and <node>.relativeName
@@ -11018,6 +10976,41 @@ nodeNormalize = function (node, level, filePrefix, parent) {
     // recurse
     node.children.forEach(function (child) {
         nodeNormalize(child, level + 1, filePrefix, node);
+    });
+    // init <metrics>
+    if (node.kind === "dir") {
+        node.children.forEach(function (child) {
+            if (!child && child.metrics) {
+                return;
+            }
+            [
+                "lines", "statements", "branches", "functions"
+            ].forEach(function (key) {
+                node.metrics[key].total += child.metrics[key].total;
+                node.metrics[key].covered += child.metrics[key].covered;
+                node.metrics[key].skipped += child.metrics[key].skipped;
+            });
+        });
+    }
+    // init <pct> and <score>
+    [
+        "lines", "statements", "branches", "functions"
+    ].forEach(function (key) {
+        node.metrics[key].pct = (
+            node.metrics[key].total > 0
+            ? Math.floor((
+                1000 * 100 * node.metrics[key].covered
+                / node.metrics[key].total + 5
+            ) / 10) / 100
+            : 100
+        );
+        node.metrics[key].score = (
+            node.metrics[key].pct >= 80
+            ? "high"
+            : node.metrics[key].pct >= 50
+            ? "medium"
+            : "low"
+        );
     });
     // sort <children> by <name>
     node.children.sort(function (aa, bb) {
@@ -11513,7 +11506,6 @@ local.coverageReportCreate = function (opt) {
     }
     nodeNameWidth = 0;
     nodeNormalize(root, 0, filePrefix.join(path.sep) + path.sep);
-    nodeMetricsCalculate(root);
     nodeSummarize(root, 0);
     // 2. print coverage in text-format to stdout
     console.log(summaryList.join("\n") + "\n");
