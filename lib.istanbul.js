@@ -10617,14 +10617,14 @@ InsertionText.prototype = {
         return that;
     },
     findOffset: function (col, len, insertBefore) {
-        let cumulativeOffset;
         let ii;
+        let offset;
         let offsetObj;
         let offsets;
         let that;
         that = this;
         offsets = that.offsets;
-        cumulativeOffset = 0;
+        offset = 0;
         ii = 0;
         while (ii < offsets.length) {
             offsetObj = offsets[ii];
@@ -10632,7 +10632,7 @@ InsertionText.prototype = {
                 offsetObj.col < col
                 || (offsetObj.col === col && !insertBefore)
             ) {
-                cumulativeOffset += offsetObj.len;
+                offset += offsetObj.len;
             }
             if (offsetObj.col >= col) {
                 break;
@@ -10647,7 +10647,7 @@ InsertionText.prototype = {
                 len
             });
         }
-        return cumulativeOffset;
+        return offset;
     },
     wrap: function (startPos, startText, endPos, endText, consumeBlanks) {
         let that;
