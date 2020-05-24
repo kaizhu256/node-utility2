@@ -10600,7 +10600,7 @@ htmlWrite = function (node, dir) {
         });
         return;
     }
-    htmlFile = path.resolve(dir, node.relativeName + ".html");
+    htmlFile = dir + ".html";
     fileCoverage = globalThis.__coverage__[node.fullName];
     structured = String(fileCoverage.code.join("\n") + "\n").split(
         /(?:\r?\n)|\r/
