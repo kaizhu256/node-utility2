@@ -10925,6 +10925,7 @@ lineInsertAt = function (lineObj, col, str, insertBefore, consumeBlanks) {
             col = lineObj.origLength;
         }
     }
+    // find <offset>
     offset = col;
     ii = 0;
     while (ii < lineObj.offsets.length) {
@@ -11046,14 +11047,14 @@ nodeNormalize = function (node, filePrefix, parent) {
 /*
  * this function will recursively normalize <node>.name and <node>.relativeName
  */
-    // fix name
+    // normalize name
     if (node.name.indexOf(filePrefix) === 0) {
         node.name = node.name.slice(filePrefix.length);
     }
     if (node.name[0] === path.sep) {
         node.name = node.name.slice(1);
     }
-    // init relativeName
+    // normalize relativeName
     node.relativeName = (
         parent
         ? (
@@ -11185,7 +11186,7 @@ templateRender = function (template, dict, node) {
         /\{\{[^#].+?\}\}/g
     ), function (match0) {
         val = dict;
-        // iteratively lookup nested values in dict
+        // iteratively lookup nested <val> in <dict>
         String(match0.slice(2, -2)).split(".").forEach(function (key) {
             val = val && val[key];
         });
@@ -11292,7 +11293,7 @@ templateRender = function (template, dict, node) {
 // init local
 local.coverageMerge = function (coverage1 = {}, coverage2 = {}) {
 /*
- * this function will inplace-merge coverage2 into coverage1
+ * this function will inplace-merge <coverage2> into <coverage1>
  */
     let dict1;
     let dict2;
@@ -11300,12 +11301,12 @@ local.coverageMerge = function (coverage1 = {}, coverage2 = {}) {
         if (!coverage2[file]) {
             return;
         }
-        // if file is undefined in coverage1, then add it
+        // if file is undefined in <coverage1>, then add it
         if (!coverage1[file]) {
             coverage1[file] = coverage2[file];
             return;
         }
-        // merge file from coverage2 into coverage1
+        // merge file from <coverage2> into <coverage1>
         [
             "b", "f", "s"
         ].forEach(function (key) {
@@ -11368,8 +11369,7 @@ local.coverageReportCreate = function (opt) {
         });
         return last;
     };
-    indexAndSortTree = function (node, map) {
-        map[node.name] = node;
+    indexAndSortTree = function (node) {
         node.children.sort(function (aa, bb) {
             aa = aa.relativeName;
             bb = bb.relativeName;
@@ -11383,7 +11383,7 @@ local.coverageReportCreate = function (opt) {
         });
         node.children.forEach(function (child) {
             // recurse
-            indexAndSortTree(child, map);
+            indexAndSortTree(child);
         });
     };
     // init dir
@@ -11595,7 +11595,7 @@ local.coverageReportCreate = function (opt) {
     }
     nodeNormalize(root, filePrefix.join(path.sep) + path.sep);
     nodeMetricsCalculate(root);
-    indexAndSortTree(root, {});
+    indexAndSortTree(root);
     nameWidth = findNameWidth(root);
     nodeWalk(root, 0);
     // 2. print coverage in text-format to stdout
