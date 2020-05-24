@@ -10531,6 +10531,9 @@ let htmlAll;
 let htmlData;
 let htmlFile;
 let htmlWrite;
+let lineCreate;
+let lineInsertAt;
+let lineWrap;
 let nameWidth;
 let nodeChildAdd;
 let nodeCreate;
@@ -10544,9 +10547,6 @@ let summaryMap;
 let templateFoot;
 let templateHead;
 let templateRender;
-let textCreate;
-let textInsertAt;
-let textWrap;
 // require module
 path = require("path");
 // init function
@@ -10688,13 +10688,13 @@ htmlWrite = function (node, dir) {
             return {
                 line: ii + 1,
                 covered: null,
-                text: textCreate(str, true)
+                text: lineCreate(str, true)
             };
         });
         structured.unshift({
             line: 0,
             covered: null,
-            text: textCreate("")
+            text: lineCreate("")
         });
         // annotateLines(fileCoverage, structured);
         Object.entries(fileCoverage.l).forEach(function ([
@@ -10748,7 +10748,7 @@ htmlWrite = function (node, dir) {
                 if (fileCoverage.branchMap[branchName].type === "if") {
                     // and "if" is a special case since the else branch
                     // might not be visible, being non-existent
-                    textInsertAt(
+                    lineInsertAt(
                         text,
                         meta.start.column,
                         "\u0001span class=\"" + (
@@ -10769,7 +10769,7 @@ htmlWrite = function (node, dir) {
                     );
                     return;
                 }
-                textWrap(text, meta.start.column, (
+                lineWrap(text, meta.start.column, (
                     "\u0001span class=\"branch-" + ii + " " + (
                         meta.skip
                         ? "cbranch-skip"
@@ -10804,7 +10804,7 @@ htmlWrite = function (node, dir) {
                 endCol = structured[startLine].text.origLength;
             }
             text = structured[startLine].text;
-            textWrap(text, meta.loc.start.column, ("\u0001span class=\"" + (
+            lineWrap(text, meta.loc.start.column, ("\u0001span class=\"" + (
                 meta.skip
                 ? "fstat-skip"
                 : "fstat-no"
@@ -10836,7 +10836,7 @@ htmlWrite = function (node, dir) {
                 endCol = structured[startLine].text.origLength;
             }
             text = structured[startLine].text;
-            textWrap(text, meta.start.column, ("\u0001span class=\"" + (
+            lineWrap(text, meta.start.column, ("\u0001span class=\"" + (
                 meta.skip
                 ? "cstat-skip"
                 : "cstat-no"
@@ -10865,6 +10865,115 @@ htmlWrite = function (node, dir) {
             }, {}) + templateFoot
         );
     });
+};
+lineCreate = function (text, consumeBlanks) {
+/*
+ * this function will create insertable text object
+ */
+    let endCol;
+    let ii;
+    let startCol;
+    // init <startCol>
+    startCol = -1;
+    ii = 0;
+    while (ii < text.length) {
+        if (!text[ii].match(
+            /[\u0020\f\n\r\t\u000b\u00a0\u2028\u2029]/
+        )) {
+            startCol = ii;
+            break;
+        }
+        ii += 1;
+    }
+    // init <endCol>
+    endCol = text.length + 1;
+    ii = text.length - 1;
+    while (ii >= 0) {
+        if (!text[ii].match(
+            /[\u0020\f\n\r\t\u000b\u00a0\u2028\u2029]/
+        )) {
+            endCol = ii;
+            break;
+        }
+        ii -= 1;
+    }
+    return {
+        consumeBlanks,
+        endCol,
+        offsets: [],
+        origLength: text.length,
+        startCol,
+        text
+    };
+};
+lineInsertAt = function (text, col, str, insertBefore, consumeBlanks) {
+/*
+ * this function will insert <str> into <text> at <col>
+ */
+    let ii;
+    let offset;
+    let offsetObj;
+    consumeBlanks = (
+        consumeBlanks === undefined
+        ? text.consumeBlanks
+        : consumeBlanks
+    );
+    col = (
+        col > text.origLength
+        ? text.origLength
+        : col
+    );
+    col = (
+        col < 0
+        ? 0
+        : col
+    );
+    if (consumeBlanks) {
+        if (col <= text.startCol) {
+            col = 0;
+        }
+        if (col > text.endCol) {
+            col = text.origLength;
+        }
+    }
+    offset = col;
+    ii = 0;
+    while (ii < text.offsets.length) {
+        offsetObj = text.offsets[ii];
+        if (offsetObj.col < col || (offsetObj.col === col && !insertBefore)) {
+            offset += offsetObj.len;
+        }
+        if (offsetObj.col >= col) {
+            break;
+        }
+        ii += 1;
+    }
+    if (offsetObj && offsetObj.col === col) {
+        offsetObj.len += str.length;
+    } else {
+        text.offsets.splice(ii, 0, {
+            col,
+            len: str.length
+        });
+    }
+    text.text = text.text.slice(0, offset) + str + text.text.slice(offset);
+    return text;
+};
+lineWrap = function (
+    text,
+    startCol,
+    startText,
+    endCol,
+    endText,
+    consumeBlanks
+) {
+/*
+ * this function will wrap <text>.slice(<startCol>, <endCol>)
+ * in <startText> and <endText>
+ */
+    lineInsertAt(text, startCol, startText, true, consumeBlanks);
+    lineInsertAt(text, endCol, endText, false, consumeBlanks);
+    return text;
 };
 nodeChildAdd = function (node, child) {
 /*
@@ -11185,112 +11294,6 @@ templateRender = function (template, dict, node) {
         return val;
     });
     return template;
-};
-textCreate = function (text, consumeBlanks) {
-/*
- * this function will create insertable text object
- */
-    let ii;
-    text = {
-        text
-    };
-    text.origLength = text.text.length;
-    text.offsets = [];
-    text.consumeBlanks = consumeBlanks;
-    // init <startPos>
-    text.startPos = -1;
-    ii = 0;
-    while (ii < text.text.length) {
-        if (!text.text[ii].match(
-            /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
-        )) {
-            text.startPos = ii;
-            break;
-        }
-        ii += 1;
-    }
-    // init <endPos>
-    text.endPos = text.text.length + 1;
-    ii = text.text.length - 1;
-    while (ii >= 0) {
-        if (!text.text[ii].match(
-            /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
-        )) {
-            text.endPos = ii;
-            break;
-        }
-        ii -= 1;
-    }
-    return text;
-};
-textInsertAt = function (text, col, str, insertBefore, consumeBlanks) {
-/*
- * this function will insert <str> into <text> at <col>
- */
-    let ii;
-    let offset;
-    let offsetObj;
-    consumeBlanks = (
-        consumeBlanks === undefined
-        ? text.consumeBlanks
-        : consumeBlanks
-    );
-    col = (
-        col > text.origLength
-        ? text.origLength
-        : col
-    );
-    col = (
-        col < 0
-        ? 0
-        : col
-    );
-    if (consumeBlanks) {
-        if (col <= text.startPos) {
-            col = 0;
-        }
-        if (col > text.endPos) {
-            col = text.origLength;
-        }
-    }
-    offset = col;
-    ii = 0;
-    while (ii < text.offsets.length) {
-        offsetObj = text.offsets[ii];
-        if (offsetObj.col < col || (offsetObj.col === col && !insertBefore)) {
-            offset += offsetObj.len;
-        }
-        if (offsetObj.col >= col) {
-            break;
-        }
-        ii += 1;
-    }
-    if (offsetObj && offsetObj.col === col) {
-        offsetObj.len += str.length;
-    } else {
-        text.offsets.splice(ii, 0, {
-            col,
-            len: str.length
-        });
-    }
-    text.text = text.text.slice(0, offset) + str + text.text.slice(offset);
-    return text;
-};
-textWrap = function (
-    text,
-    startPos,
-    startText,
-    endPos,
-    endText,
-    consumeBlanks
-) {
-/*
- * this function will wrap <text>.slice(<startPos>, <endPos>)
- * in <startText> and <endText>
- */
-    textInsertAt(text, startPos, startText, true, consumeBlanks);
-    textInsertAt(text, endPos, endText, false, consumeBlanks);
-    return text;
 };
 
 
