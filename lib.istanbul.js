@@ -10552,7 +10552,6 @@ function InsertionText(text, consumeBlanks) {
     let that;
     that = this;
     that.text = text;
-    that.originalLength = text.length;
     that.offsets = [];
     that.consumeBlanks = consumeBlanks;
     that.startPos = that.findFirstNonBlank();
@@ -10602,8 +10601,8 @@ InsertionText.prototype = {
             : consumeBlanks
         );
         col = (
-            col > that.originalLength
-            ? that.originalLength
+            col > that.text.length
+            ? that.text.length
             : col
         );
         col = (
@@ -10616,7 +10615,7 @@ InsertionText.prototype = {
                 col = 0;
             }
             if (col > that.endPos) {
-                col = that.originalLength;
+                col = that.text.length;
             }
         }
         len = str.length;
@@ -10859,7 +10858,7 @@ htmlWrite = function (node, dir) {
                 //skip branches taken
                 if (endLine !== startLine) {
                     endLine = startLine;
-                    endCol = structured[startLine].text.originalLength;
+                    endCol = structured[startLine].text.text.length;
                 }
                 text = structured[startLine].text;
                 if (fileCoverage.branchMap[branchName].type === "if") {
@@ -10894,7 +10893,7 @@ htmlWrite = function (node, dir) {
                 ), (
                     startLine === endLine
                     ? endCol
-                    : text.originalLength
+                    : text.text.length
                 ), "\u0001/span\u0002");
             });
         });
@@ -10917,7 +10916,7 @@ htmlWrite = function (node, dir) {
             startLine = meta.loc.start.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = structured[startLine].text.originalLength;
+                endCol = structured[startLine].text.text.length;
             }
             text = structured[startLine].text;
             text.wrap(meta.loc.start.column, ("\u0001span class=\"" + (
@@ -10927,7 +10926,7 @@ htmlWrite = function (node, dir) {
             ) + "\" title=\"function not covered\" \u0002"), (
                 startLine === endLine
                 ? endCol
-                : text.originalLength
+                : text.text.length
             ), "\u0001/span\u0002");
         });
         // annotateStatements(fileCoverage, structured);
@@ -10949,7 +10948,7 @@ htmlWrite = function (node, dir) {
             endLine = meta.end.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = structured[startLine].text.originalLength;
+                endCol = structured[startLine].text.text.length;
             }
             text = structured[startLine].text;
             text.wrap(meta.start.column, ("\u0001span class=\"" + (
@@ -10959,7 +10958,7 @@ htmlWrite = function (node, dir) {
             ) + "\" title=\"statement not covered\" \u0002"), (
                 startLine === endLine
                 ? endCol
-                : text.originalLength
+                : text.text.length
             ), "\u0001/span\u0002");
         });
         structured.shift();
