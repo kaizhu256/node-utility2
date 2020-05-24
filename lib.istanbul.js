@@ -10685,17 +10685,19 @@ htmlWrite = function (node, dir) {
         structured = String(fileCoverage.code.join("\n") + "\n").split(
             /(?:\r?\n)|\r/
         ).map(function (str, ii) {
-            return {
-                line: ii + 1,
-                covered: null,
-                text: lineCreate(str, true)
-            };
+            return lineCreate(ii + 1, str, true);
+            //!! return {
+                //!! line: ii + 1,
+                //!! covered: null,
+                //!! text: lineCreate(ii + 1, str, true)
+            //!! };
         });
-        structured.unshift({
-            line: 0,
-            covered: null,
-            text: lineCreate("")
-        });
+        structured.unshift(lineCreate(""));
+        //!! structured.unshift({
+            //!! line: 0,
+            //!! covered: null,
+            //!! text: lineCreate("")
+        //!! });
         // annotateLines(fileCoverage, structured);
         Object.entries(fileCoverage.l).forEach(function ([
             lineNumber,
@@ -10742,9 +10744,9 @@ htmlWrite = function (node, dir) {
                 //skip branches taken
                 if (endLine !== startLine) {
                     endLine = startLine;
-                    endCol = structured[startLine].text.origLength;
+                    endCol = structured[startLine].origLength;
                 }
-                text = structured[startLine].text;
+                text = structured[startLine];
                 if (fileCoverage.branchMap[branchName].type === "if") {
                     // and "if" is a special case since the else branch
                     // might not be visible, being non-existent
@@ -10801,9 +10803,9 @@ htmlWrite = function (node, dir) {
             startLine = meta.loc.start.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = structured[startLine].text.origLength;
+                endCol = structured[startLine].origLength;
             }
-            text = structured[startLine].text;
+            text = structured[startLine];
             lineWrap(text, meta.loc.start.column, ("\u0001span class=\"" + (
                 meta.skip
                 ? "fstat-skip"
@@ -10833,9 +10835,9 @@ htmlWrite = function (node, dir) {
             endLine = meta.end.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = structured[startLine].text.origLength;
+                endCol = structured[startLine].origLength;
             }
-            text = structured[startLine].text;
+            text = structured[startLine];
             lineWrap(text, meta.start.column, ("\u0001span class=\"" + (
                 meta.skip
                 ? "cstat-skip"
@@ -10866,9 +10868,9 @@ htmlWrite = function (node, dir) {
         );
     });
 };
-lineCreate = function (text, consumeBlanks) {
+lineCreate = function (line, text, consumeBlanks) {
 /*
- * this function will create insertable text object
+ * this function will create line-object
  */
     let endCol;
     let ii;
@@ -10899,7 +10901,9 @@ lineCreate = function (text, consumeBlanks) {
     }
     return {
         consumeBlanks,
+        covered: null,
         endCol,
+        line,
         offsets: [],
         origLength: text.length,
         startCol,
@@ -11277,7 +11281,7 @@ templateRender = function (template, dict, node) {
     // render #show_code last
     template = template.replace("{{#show_code}}", function () {
         val = dict.structured.map(function (item) {
-            return item.text.text;
+            return item.text;
         }).join("\n");
         // sanitize html
         val = val.replace((
