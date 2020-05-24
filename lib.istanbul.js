@@ -10531,7 +10531,7 @@ let templateRender;
 // require module
 path = require("path");
 // init function
-htmlWrite = function (node, dir) {
+htmlWrite = function (node, level, dir) {
 /*
  * this function will recursively write <htmlData>
  * from <node> to <dir>/<htmlFile>
@@ -10596,7 +10596,7 @@ htmlWrite = function (node, dir) {
         local.fsWriteFileWithMkdirpSync(htmlFile, htmlData);
         node.children.forEach(function (child) {
             // recurse
-            htmlWrite(child, path.resolve(dir, child.relativeName));
+            htmlWrite(child, level + 1, path.resolve(dir, child.relativeName));
         });
         return;
     }
@@ -11553,7 +11553,7 @@ local.coverageReportCreate = function (opt) {
         ), "");
     }
     // 3. write coverage in html-format to filesystem
-    htmlWrite(root, dir);
+    htmlWrite(root, 0, dir);
     // write coverage.json
     local.fsWriteFileWithMkdirpSync(
         dir + "/coverage.json",
