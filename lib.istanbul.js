@@ -10511,7 +10511,6 @@ file none
 
 
 
-let coveragePercentGet;
 let coverageScoreGet;
 let htmlAll;
 let htmlData;
@@ -10545,16 +10544,6 @@ coverageScoreGet = function (pct) {
         : pct >= 50
         ? "medium"
         : "low"
-    );
-};
-coveragePercentGet = function (covered, total) {
-/*
- * this function will get <pct> from <covered> and <total>
- */
-    return (
-        total > 0
-        ? Math.floor((1000 * 100 * covered / total + 5) / 10) / 100
-        : 100
     );
 };
 htmlWrite = function (node, dir) {
@@ -11048,24 +11037,27 @@ nodeNormalize = function (node, filePrefix, parent, level) {
         );
     });
     // normalize <metrics>
-    if (node.kind !== "dir") {
-        return;
-    }
-    node.children.forEach(function (child) {
-        [
-            "lines", "statements", "branches", "functions"
-        ].forEach(function (key) {
-            node.metrics[key].total += child.metrics[key].total;
-            node.metrics[key].covered += child.metrics[key].covered;
-            node.metrics[key].skipped += child.metrics[key].skipped;
+    if (node.kind === "dir") {
+        node.children.forEach(function (child) {
+            [
+                "lines", "statements", "branches", "functions"
+            ].forEach(function (key) {
+                node.metrics[key].total += child.metrics[key].total;
+                node.metrics[key].covered += child.metrics[key].covered;
+                node.metrics[key].skipped += child.metrics[key].skipped;
+            });
         });
-    });
+    }
     [
         "lines", "statements", "branches", "functions"
     ].forEach(function (key) {
-        node.metrics[key].pct = coveragePercentGet(
-            node.metrics[key].covered,
-            node.metrics[key].total
+        node.metrics[key].pct = (
+            node.metrics[key].total > 0
+            ? Math.floor((
+                1000 * 100 * node.metrics[key].covered
+                / node.metrics[key].total + 5
+            ) / 10) / 100
+            : 100
         );
     });
 };
@@ -11473,7 +11465,6 @@ local.coverageReportCreate = function (opt) {
                     elem.covered += Boolean(covered || skipped);
                     elem.skipped += Boolean(!covered && skipped);
                 });
-                elem.pct = coveragePercentGet(elem.covered, elem.total);
                 summary[key] = elem;
             });
             // computeBranchTotals
@@ -11496,7 +11487,6 @@ local.coverageReportCreate = function (opt) {
                 });
                 elem.total += branches.length;
             });
-            elem.pct = coveragePercentGet(elem.covered, elem.total);
             summary.branches = elem;
             summaryMap[file] = summary;
             // findCommonArrayPrefix
@@ -11553,11 +11543,11 @@ local.coverageReportCreate = function (opt) {
         root = nodeCreate(filePrefix.join(path.sep) + path.sep, "dir");
         nodeChildAdd(root, tmp);
         tmpChildren.forEach(function (child) {
-            if (child.kind === "dir") {
-                nodeChildAdd(root, child);
-            } else {
-                nodeChildAdd(tmp, child);
-            }
+            nodeChildAdd((
+                child.kind === "dir"
+                ? root
+                : tmp
+            ), child);
         });
     }
     nodeNormalize(root, filePrefix.join(path.sep) + path.sep, 0);
