@@ -10583,7 +10583,9 @@ function InsertionText(text, consumeBlanks) {
 }
 InsertionText.prototype = {
     insertAt: function (col, str, insertBefore, consumeBlanks) {
+        let ii;
         let offset;
+        let offsetObj;
         let that;
         that = this;
         consumeBlanks = (
@@ -10609,19 +10611,7 @@ InsertionText.prototype = {
                 col = that.origLength;
             }
         }
-        offset = that.findOffset(col, str.length, insertBefore);
-        col = col + offset;
-        that.text = (
-            that.text.slice(0, col) + str + that.text.slice(col)
-        );
-        return that;
-    },
-    findOffset: function (col, len, insertBefore) {
-        let ii;
-        let offset;
-        let offsetObj;
-        let that;
-        that = this;
+        //!! offset = that.findOffset(col, str.length, insertBefore);
         offset = 0;
         ii = 0;
         while (ii < that.offsets.length) {
@@ -10638,14 +10628,18 @@ InsertionText.prototype = {
             ii += 1;
         }
         if (offsetObj && offsetObj.col === col) {
-            offsetObj.len += len;
+            offsetObj.len += str.length;
         } else {
             that.offsets.splice(ii, 0, {
                 col,
-                len
+                len: str.length
             });
         }
-        return offset;
+        col = col + offset;
+        that.text = (
+            that.text.slice(0, col) + str + that.text.slice(col)
+        );
+        return that;
     },
     wrap: function (startPos, startText, endPos, endText, consumeBlanks) {
         let that;
