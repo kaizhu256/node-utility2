@@ -10576,25 +10576,18 @@ InsertionText.prototype = {
     },
     findLastNonBlank: function () {
         let ii;
-        let len;
-        let pos;
-        let text;
         let that;
         that = this;
-        text = that.text;
-        len = text.length;
-        pos = text.length + 1;
-        ii = len - 1;
+        ii = that.text.length - 1;
         while (ii >= 0) {
-            if (!text[ii].match(
+            if (!that.text[ii].match(
                 /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
             )) {
-                pos = ii;
-                break;
+                return ii;
             }
             ii -= 1;
         }
-        return pos;
+        return that.text.length + 1;
     },
     insertAt: function (col, str, insertBefore, consumeBlanks) {
         let cumulativeOffset;
