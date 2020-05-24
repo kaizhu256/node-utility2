@@ -10512,7 +10512,6 @@ file none
 
 
 let htmlAll;
-let htmlWrite;
 let lineCreate;
 let lineInsertAt;
 let lineWrapAt;
@@ -10520,8 +10519,9 @@ let nodeChildAdd;
 let nodeCreate;
 let nodeNameWidth;
 let nodeNormalize;
-let nodeSummarize;
 let path;
+let reportHtmlWrite;
+let reportTextWrite;
 let stringPad;
 let summaryMap;
 let summaryText;
@@ -10531,7 +10531,7 @@ let templateRender;
 // require module
 path = require("path");
 // init function
-htmlWrite = function (node, level, dir) {
+reportHtmlWrite = function (node, level, dir) {
 /*
  * this function will recursively write <htmlData>
  * from <node> to <dir>/<htmlFile>
@@ -10596,7 +10596,11 @@ htmlWrite = function (node, level, dir) {
         local.fsWriteFileWithMkdirpSync(htmlFile, htmlData);
         // recurse
         node.children.forEach(function (child) {
-            htmlWrite(child, level + 1, path.resolve(dir, child.relativeName));
+            reportHtmlWrite(
+                child,
+                level + 1,
+                path.resolve(dir, child.relativeName)
+            );
         });
         return;
     }
@@ -10982,6 +10986,14 @@ nodeNormalize = function (node, level, filePrefix, parent) {
     node.children.forEach(function (child) {
         nodeNormalize(child, level + 1, filePrefix, node);
     });
+    // sort <children> by <name>
+    node.children.sort(function (aa, bb) {
+        return (
+            aa.name > bb.name
+            ? 1
+            : -1
+        );
+    });
     // init <metrics>
     if (node.kind === "dir") {
         node.children.forEach(function (child) {
@@ -11017,16 +11029,8 @@ nodeNormalize = function (node, level, filePrefix, parent) {
             : "low"
         );
     });
-    // sort <children> by <name>
-    node.children.sort(function (aa, bb) {
-        return (
-            aa.name > bb.name
-            ? 1
-            : -1
-        );
-    });
 };
-nodeSummarize = function (node, level) {
+reportTextWrite = function (node, level) {
 /*
  * this function will recursively summarize <node>
  */
@@ -11058,7 +11062,7 @@ nodeSummarize = function (node, level) {
         summaryText += tableRow;
         // recurse
         node.children.forEach(function (child) {
-            nodeSummarize(child, level + 1);
+            reportTextWrite(child, level + 1);
         });
         return;
     }
@@ -11074,7 +11078,7 @@ nodeSummarize = function (node, level) {
     summaryText += line;
     // recurse
     node.children.forEach(function (child) {
-        nodeSummarize(child, level + 1);
+        reportTextWrite(child, level + 1);
     });
     summaryText += line;
     summaryText += tableRow;
@@ -11509,7 +11513,7 @@ local.coverageReportCreate = function (opt) {
     nodeNormalize(root, 0, filePrefix.join(path.sep) + path.sep);
     // 2. print coverage in text-format to stdout
     summaryText = "";
-    nodeSummarize(root, 0);
+    reportTextWrite(root, 0);
     console.log(summaryText);
     // create HtmlReport
     // init templateFoot
@@ -11553,7 +11557,7 @@ local.coverageReportCreate = function (opt) {
         ), "");
     }
     // 3. write coverage in html-format to filesystem
-    htmlWrite(root, 0, dir);
+    reportHtmlWrite(root, 0, dir);
     // write coverage.json
     local.fsWriteFileWithMkdirpSync(
         dir + "/coverage.json",

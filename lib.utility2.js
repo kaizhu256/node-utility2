@@ -5582,14 +5582,17 @@ local.replStart = function () {
             switch (match1) {
             // syntax-sugar - run shell-command
             case "$":
+                match2 = match2.replace((
+                    /^git\b/
+                ), "git --no-pager");
                 switch (match2) {
                 // syntax-sugar - run git diff
                 case "git diff":
-                    match2 = "git diff --color | cat";
+                    match2 = "git diff --color";
                     break;
                 // syntax-sugar - run git log
                 case "git log":
-                    match2 = "git log -n 4 | cat";
+                    match2 = "git log -n 4";
                     break;
                 // syntax-sugar - run ll
                 case "ll":
