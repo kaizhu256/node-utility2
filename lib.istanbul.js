@@ -10620,14 +10620,12 @@ InsertionText.prototype = {
         let ii;
         let offset;
         let offsetObj;
-        let offsets;
         let that;
         that = this;
-        offsets = that.offsets;
         offset = 0;
         ii = 0;
-        while (ii < offsets.length) {
-            offsetObj = offsets[ii];
+        while (ii < that.offsets.length) {
+            offsetObj = that.offsets[ii];
             if (
                 offsetObj.col < col
                 || (offsetObj.col === col && !insertBefore)
@@ -10642,7 +10640,7 @@ InsertionText.prototype = {
         if (offsetObj && offsetObj.col === col) {
             offsetObj.len += len;
         } else {
-            offsets.splice(ii, 0, {
+            that.offsets.splice(ii, 0, {
                 col,
                 len
             });
