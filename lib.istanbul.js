@@ -11334,7 +11334,6 @@ local.coverageReportCreate = function (opt) {
     ) + "\n";
     // create TextReport
     // 1. summarize coverage
-    summaryText = [];
     summaryMap = {};
     Object.entries(globalThis.__coverage__).forEach(function ([
         file,
@@ -11508,9 +11507,10 @@ local.coverageReportCreate = function (opt) {
     }
     nodeNameWidth = 0;
     nodeNormalize(root, 0, filePrefix.join(path.sep) + path.sep);
-    nodeSummarize(root, 0);
     // 2. print coverage in text-format to stdout
-    console.log(summaryText.join("\n") + "\n");
+    summaryText = "";
+    nodeSummarize(root, 0);
+    console.log(summaryText);
     // create HtmlReport
     // init templateFoot
     templateFoot = templateRender((
