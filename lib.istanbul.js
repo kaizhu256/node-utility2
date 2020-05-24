@@ -10466,7 +10466,7 @@ local.templateCoverageHead = '\
     );\n\
 }());\n\
 </script>\n\
-<div class="header {{coverageScore}}">\n\
+<div class="header {{metrics.statements.score}}">\n\
     <h1 style="font-weight: bold;">\n\
         <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} ({{env.npm_package_version}})</a>\n\
     </h1>\n\
@@ -10511,7 +10511,6 @@ file none
 
 
 
-let coverageScoreGet;
 let htmlAll;
 let htmlData;
 let htmlFile;
@@ -10534,18 +10533,6 @@ let templateRender;
 // require module
 path = require("path");
 // init function
-coverageScoreGet = function (pct) {
-/*
- * this function will get <coverageScore> from <pct>
- */
-    return (
-        pct >= 80
-        ? "high"
-        : pct >= 50
-        ? "medium"
-        : "low"
-    );
-};
 htmlWrite = function (node, dir) {
 /*
  * this function will recursively write <htmlData>
@@ -10613,31 +10600,23 @@ htmlWrite = function (node, dir) {
         );
         return templateRender((
             `<tr>
-<td class="file {{coverageScores.statements}}"
+<td class="file {{metrics.statements.score}}"
     data-value="{{file}}"><a href="{{url}}"><div>{{file}}</div>
     {{#show_percent_bar}}</a></td>
-<td class="pct {{coverageScores.statements}}"
+<td class="pct {{metrics.statements.score}}"
     data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
     ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>
-<td class="pct {{coverageScores.branches}}"
+<td class="pct {{metrics.branches.score}}"
     data-value="{{metrics.branches.pct}}">{{metrics.branches.pct}}%<br>
     ({{metrics.branches.covered}} / {{metrics.branches.total}})</td>
-<td class="pct {{coverageScores.functions}}"
+<td class="pct {{metrics.functions.score}}"
     data-value="{{metrics.functions.pct}}">{{metrics.functions.pct}}%<br>
     ({{metrics.functions.covered}} / {{metrics.functions.total}})</td>
-<td class="pct {{coverageScores.lines}}"
+<td class="pct {{metrics.lines.score}}"
     data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>
     ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
 </tr>`
         ), {
-            coverageScores: {
-                statements: coverageScoreGet(
-                    child.metrics.statements.pct
-                ),
-                lines: coverageScoreGet(child.metrics.lines.pct),
-                functions: coverageScoreGet(child.metrics.functions.pct),
-                branches: coverageScoreGet(child.metrics.branches.pct)
-            },
             file: child.relativeName,
             url
         }, child) + "\n";
@@ -11048,6 +11027,7 @@ nodeNormalize = function (node, filePrefix, parent, level) {
             });
         });
     }
+    // normalize <pct> and <score>
     [
         "lines", "statements", "branches", "functions"
     ].forEach(function (key) {
@@ -11059,6 +11039,13 @@ nodeNormalize = function (node, filePrefix, parent, level) {
             ) / 10) / 100
             : 100
         );
+        node.metrics[key].score = (
+            node.metrics[key].pct >= 80
+            ? "high"
+            : node.metrics[key].pct >= 50
+            ? "medium"
+            : "low"
+        );
     });
 };
 nodeSummarize = function (node, level) {
@@ -11069,24 +11056,16 @@ nodeSummarize = function (node, level) {
     let tableRow;
     // summarize
     tableRow = [
-        node.metrics.statements.pct,
-        node.metrics.statements.pct,
-        node.metrics.branches.pct,
-        node.metrics.functions.pct,
-        node.metrics.lines.pct
-    ].map(function (pct, ii) {
-        let val;
-        val = (
-            val >= 80
-            ? "high"
-            : val >= 50
-            ? "medium"
-            : "low"
-        );
+        node.metrics.statements.score,
+        node.metrics.statements.score,
+        node.metrics.branches.score,
+        node.metrics.functions.score,
+        node.metrics.lines.score
+    ].map(function (score, ii) {
         return (
             ii === 0
-            ? stringPad(node.relativeName, nodeNameWidth, false, level, val)
-            : stringPad(pct, 10, true, 0, val)
+            ? stringPad(node.relativeName, nodeNameWidth, false, level, score)
+            : stringPad(score, 10, true, 0, score)
         );
     }).join(" |") + " |";
     if (level !== 0) {
@@ -11115,7 +11094,7 @@ nodeSummarize = function (node, level) {
     summaryList.push(tableRow);
     summaryList.push(line);
 };
-stringPad = function (str, width, right, tabs, coverageScore) {
+stringPad = function (str, width, right, tabs, score) {
 /*
  * this function will pad <str> to given <width>
  */
@@ -11144,7 +11123,7 @@ stringPad = function (str, width, right, tabs, coverageScore) {
         );
     }
     // colorize
-    switch (process.stdout && process.stdout.isTTY && coverageScore) {
+    switch (process.stdout && process.stdout.isTTY && score) {
     case "high":
         fmtStr = "\u001b[92m" + fmtStr + "\u001b[0m";
         break;
@@ -11170,7 +11149,6 @@ templateRender = function (template, dict, node) {
     // render <node>
     metrics = node.metrics;
     Object.assign(dict, {
-        coverageScore: metrics && coverageScoreGet(metrics.statements.pct),
         metrics,
         entity: node.name
     });
