@@ -10466,7 +10466,7 @@ local.templateCoverageHead = '\
     );\n\
 }());\n\
 </script>\n\
-<div class="header {{coverageLevel}}">\n\
+<div class="header {{coverageScore}}">\n\
     <h1 style="font-weight: bold;">\n\
         <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} ({{env.npm_package_version}})</a>\n\
     </h1>\n\
@@ -10511,8 +10511,8 @@ file none
 
 
 
-let coverageLevelGet;
 let coveragePercentGet;
+let coverageScoreGet;
 let htmlAll;
 let htmlData;
 let htmlFile;
@@ -10535,9 +10535,9 @@ let templateRender;
 // require module
 path = require("path");
 // init function
-coverageLevelGet = function (pct) {
+coverageScoreGet = function (pct) {
 /*
- * this function will get <coverageLevel> from <pct>
+ * this function will get <coverageScore> from <pct>
  */
     return (
         pct >= 80
@@ -10624,30 +10624,30 @@ htmlWrite = function (node, dir) {
         );
         return templateRender((
             `<tr>
-<td class="file {{coverageLevels.statements}}"
+<td class="file {{coverageScores.statements}}"
     data-value="{{file}}"><a href="{{url}}"><div>{{file}}</div>
     {{#show_percent_bar}}</a></td>
-<td class="pct {{coverageLevels.statements}}"
+<td class="pct {{coverageScores.statements}}"
     data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
     ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>
-<td class="pct {{coverageLevels.branches}}"
+<td class="pct {{coverageScores.branches}}"
     data-value="{{metrics.branches.pct}}">{{metrics.branches.pct}}%<br>
     ({{metrics.branches.covered}} / {{metrics.branches.total}})</td>
-<td class="pct {{coverageLevels.functions}}"
+<td class="pct {{coverageScores.functions}}"
     data-value="{{metrics.functions.pct}}">{{metrics.functions.pct}}%<br>
     ({{metrics.functions.covered}} / {{metrics.functions.total}})</td>
-<td class="pct {{coverageLevels.lines}}"
+<td class="pct {{coverageScores.lines}}"
     data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>
     ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
 </tr>`
         ), {
-            coverageLevels: {
-                statements: coverageLevelGet(
+            coverageScores: {
+                statements: coverageScoreGet(
                     child.metrics.statements.pct
                 ),
-                lines: coverageLevelGet(child.metrics.lines.pct),
-                functions: coverageLevelGet(child.metrics.functions.pct),
-                branches: coverageLevelGet(child.metrics.branches.pct)
+                lines: coverageScoreGet(child.metrics.lines.pct),
+                functions: coverageScoreGet(child.metrics.functions.pct),
+                branches: coverageScoreGet(child.metrics.branches.pct)
             },
             file: child.relativeName,
             url
@@ -11019,6 +11019,7 @@ nodeNormalize = function (node, filePrefix, parent, level) {
     if (node.name[0] === path.sep) {
         node.name = node.name.slice(1);
     }
+    node.name = node.name || "All files";
     // normalize <relativeName>
     node.relativeName = (
         parent
@@ -11046,7 +11047,7 @@ nodeNormalize = function (node, filePrefix, parent, level) {
             : -1
         );
     });
-    // summarize metrics
+    // normalize <metrics>
     if (node.kind !== "dir") {
         return;
     }
@@ -11122,7 +11123,7 @@ nodeSummarize = function (node, level) {
     summaryList.push(tableRow);
     summaryList.push(line);
 };
-stringPad = function (str, width, right, tabs, coverageLevel) {
+stringPad = function (str, width, right, tabs, coverageScore) {
 /*
  * this function will pad <str> to given <width>
  */
@@ -11151,7 +11152,7 @@ stringPad = function (str, width, right, tabs, coverageLevel) {
         );
     }
     // colorize
-    switch (process.stdout && process.stdout.isTTY && coverageLevel) {
+    switch (process.stdout && process.stdout.isTTY && coverageScore) {
     case "high":
         fmtStr = "\u001b[92m" + fmtStr + "\u001b[0m";
         break;
@@ -11177,9 +11178,9 @@ templateRender = function (template, dict, node) {
     // render <node>
     metrics = node.metrics;
     Object.assign(dict, {
-        coverageLevel: metrics && coverageLevelGet(metrics.statements.pct),
+        coverageScore: metrics && coverageScoreGet(metrics.statements.pct),
         metrics,
-        entity: node.name || "All files"
+        entity: node.name
     });
     // render <dict>
     template = template.replace((
