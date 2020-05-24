@@ -10549,39 +10549,68 @@ path = require("path");
 // init InsertionText
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 function InsertionText(text, consumeBlanks) {
-    let ii;
     let that;
     that = this;
     that.text = text;
+    that.origLength = text.length;
     that.offsets = [];
     that.consumeBlanks = consumeBlanks;
-    that.startPos = -1;
-    ii = 0;
-    while (ii < that.text.length) {
-        if (!that.text[ii].match(
-            /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
-        )) {
-            that.startPos = ii;
-            break;
-        }
-        ii += 1;
-    }
-    that.endPos = that.text.length + 1;
-    ii = that.text.length - 1;
-    while (ii >= 0) {
-        if (!that.text[ii].match(
-            /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
-        )) {
-            that.endPos = ii;
-            break;
-        }
-        ii -= 1;
-    }
+    that.startPos = that.findFirstNonBlank();
+    that.endPos = that.findLastNonBlank();
 }
 InsertionText.prototype = {
-    insertAt: function (col, str, insertBefore, consumeBlanks) {
-        let cumulativeOffset;
+    findFirstNonBlank: function () {
+        let ii;
         let len;
+        let pos;
+        let text;
+        let that;
+        that = this;
+        pos = -1;
+        text = that.text;
+        len = text.length;
+        ii = 0;
+        while (ii < len) {
+            if (!text[ii].match(
+                /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
+            )) {
+                pos = ii;
+                break;
+            }
+            ii += 1;
+        }
+        return pos;
+    },
+    findLastNonBlank: function () {
+        let ii;
+        let len;
+        let pos;
+        let text;
+        let that;
+        that = this;
+        text = that.text;
+        len = text.length;
+        pos = text.length + 1;
+        ii = len - 1;
+        while (ii >= 0) {
+            if (!text[ii].match(
+                /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
+            )) {
+                pos = ii;
+                break;
+            }
+            ii -= 1;
+        }
+        return pos;
+    },
+    originalLength: function () {
+        let that;
+        that = this;
+        return that.origLength;
+    },
+    insertAt: function (col, str, insertBefore, consumeBlanks) {
+        let len;
+        let offset;
         let realPos;
         let text;
         let that;
@@ -10592,8 +10621,8 @@ InsertionText.prototype = {
             : consumeBlanks
         );
         col = (
-            col > that.text.length
-            ? that.text.length
+            col > that.originalLength()
+            ? that.originalLength()
             : col
         );
         col = (
@@ -10606,42 +10635,48 @@ InsertionText.prototype = {
                 col = 0;
             }
             if (col > that.endPos) {
-                col = that.text.length;
+                col = that.origLength;
             }
         }
         len = str.length;
-        // cumulativeOffset = that.findOffset(col, len, insertBefore);
+        offset = that.findOffset(col, len, insertBefore);
+        realPos = col + offset;
+        text = that.text;
+        that.text = text.slice(0, realPos) + str + text.slice(realPos);
+        return that;
+    },
+    findOffset: function (pos, len, insertBefore) {
+        let cumulativeOffset;
         let ii;
         let offsetObj;
         let offsets;
+        let that;
+        that = this;
         offsets = that.offsets;
         cumulativeOffset = 0;
         ii = 0;
         while (ii < offsets.length) {
             offsetObj = offsets[ii];
             if (
-                offsetObj.pos < col
-                || (offsetObj.pos === col && !insertBefore)
+                offsetObj.pos < pos
+                || (offsetObj.pos === pos && !insertBefore)
             ) {
                 cumulativeOffset += offsetObj.len;
             }
-            if (offsetObj.pos >= col) {
+            if (offsetObj.pos >= pos) {
                 break;
             }
             ii += 1;
         }
-        if (offsetObj && offsetObj.pos === col) {
+        if (offsetObj && offsetObj.pos === pos) {
             offsetObj.len += len;
         } else {
             offsets.splice(ii, 0, {
-                col,
+                pos,
                 len
             });
         }
-        realPos = col + cumulativeOffset;
-        text = that.text;
-        that.text = text.slice(0, realPos) + str + text.slice(realPos);
-        return that;
+        return cumulativeOffset;
     },
     wrap: function (startPos, startText, endPos, endText, consumeBlanks) {
         let that;
@@ -10649,6 +10684,11 @@ InsertionText.prototype = {
         that.insertAt(startPos, startText, true, consumeBlanks);
         that.insertAt(endPos, endText, false, consumeBlanks);
         return that;
+    },
+    toString: function () {
+        let that;
+        that = this;
+        return that.text;
     }
 };
 // init function
@@ -10844,7 +10884,7 @@ htmlWrite = function (node, dir) {
                 //skip branches taken
                 if (endLine !== startLine) {
                     endLine = startLine;
-                    endCol = structured[startLine].text.text.length;
+                    endCol = structured[startLine].text.originalLength();
                 }
                 text = structured[startLine].text;
                 if (fileCoverage.branchMap[branchName].type === "if") {
@@ -10879,7 +10919,7 @@ htmlWrite = function (node, dir) {
                 ), (
                     startLine === endLine
                     ? endCol
-                    : text.text.length
+                    : text.originalLength()
                 ), "\u0001/span\u0002");
             });
         });
@@ -10902,7 +10942,7 @@ htmlWrite = function (node, dir) {
             startLine = meta.loc.start.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = structured[startLine].text.text.length;
+                endCol = structured[startLine].text.originalLength();
             }
             text = structured[startLine].text;
             text.wrap(meta.loc.start.column, ("\u0001span class=\"" + (
@@ -10912,7 +10952,7 @@ htmlWrite = function (node, dir) {
             ) + "\" title=\"function not covered\" \u0002"), (
                 startLine === endLine
                 ? endCol
-                : text.text.length
+                : text.originalLength()
             ), "\u0001/span\u0002");
         });
         // annotateStatements(fileCoverage, structured);
@@ -10934,7 +10974,7 @@ htmlWrite = function (node, dir) {
             endLine = meta.end.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = structured[startLine].text.text.length;
+                endCol = structured[startLine].text.originalLength();
             }
             text = structured[startLine].text;
             text.wrap(meta.start.column, ("\u0001span class=\"" + (
@@ -10944,7 +10984,7 @@ htmlWrite = function (node, dir) {
             ) + "\" title=\"statement not covered\" \u0002"), (
                 startLine === endLine
                 ? endCol
-                : text.text.length
+                : text.originalLength()
             ), "\u0001/span\u0002");
         });
         structured.shift();
@@ -11269,7 +11309,7 @@ templateRender = function (template, dict, node) {
     // render #show_code last
     template = template.replace("{{#show_code}}", function () {
         val = dict.structured.map(function (item) {
-            return item.text.text;
+            return item.text.toString();
         }).join("\n");
         // sanitize html
         val = val.replace((
