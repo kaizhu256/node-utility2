@@ -11165,7 +11165,7 @@ templateRender = function (template, node) {
         return (
             val === undefined
             ? match0
-            : String(val)
+            : val
         );
     });
     // render #show_line_execution_count
