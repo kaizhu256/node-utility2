@@ -10584,7 +10584,6 @@ function InsertionText(text, consumeBlanks) {
 InsertionText.prototype = {
     insertAt: function (col, str, insertBefore, consumeBlanks) {
         let offset;
-        let realPos;
         let that;
         that = this;
         consumeBlanks = (
@@ -10611,9 +10610,9 @@ InsertionText.prototype = {
             }
         }
         offset = that.findOffset(col, str.length, insertBefore);
-        realPos = col + offset;
+        col = col + offset;
         that.text = (
-            that.text.slice(0, realPos) + str + that.text.slice(realPos)
+            that.text.slice(0, col) + str + that.text.slice(col)
         );
         return that;
     },
