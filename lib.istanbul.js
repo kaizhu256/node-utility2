@@ -11064,18 +11064,19 @@ nodeMetricsCalculate = function (node) {
         );
     });
 };
-nodeNormalize = function (node, filePrefix, parent) {
+nodeNormalize = function (node, filePrefix, parent, level) {
 /*
  * this function will recursively normalize <node>.name and <node>.relativeName
  */
-    // normalize name
+    let width;
+    // normalize <name>
     if (node.name.indexOf(filePrefix) === 0) {
         node.name = node.name.slice(filePrefix.length);
     }
     if (node.name[0] === path.sep) {
         node.name = node.name.slice(1);
     }
-    // normalize relativeName
+    // normalize <relativeName>
     node.relativeName = (
         parent
         ? (
@@ -11085,9 +11086,14 @@ nodeNormalize = function (node, filePrefix, parent) {
         )
         : node.name.slice(filePrefix.length)
     ) || "All files";
+    // normalize <nodeNameWidth>
+    width = level * 2 + node.relativeName.length;
+    if (!(width <= nodeNameWidth)) {
+        nodeNameWidth = width;
+    }
     node.children.forEach(function (child) {
         // recurse
-        nodeNormalize(child, filePrefix, node);
+        nodeNormalize(child, filePrefix, node, level + 1);
     });
 };
 nodeWalk = function (node, level) {
@@ -11366,7 +11372,6 @@ local.coverageReportCreate = function (opt) {
     let dir;
     let filePrefix;
     let filesUnderRoot;
-    let findNameWidth;
     let root;
     let seen;
     let tmp;
@@ -11374,20 +11379,6 @@ local.coverageReportCreate = function (opt) {
     if (!(opt && opt.coverage)) {
         return "";
     }
-    // init function
-    findNameWidth = function (node, level) {
-        let idealWidth;
-        nodeNameWidth = nodeNameWidth || 0;
-        level = level || 0;
-        idealWidth = level * 2 + node.relativeName.length;
-        if (nodeNameWidth < idealWidth) {
-            nodeNameWidth = idealWidth;
-        }
-        node.children.forEach(function (child) {
-            // recurse
-            findNameWidth(child, level + 1, nodeNameWidth);
-        });
-    };
     // init dir
     dir = process.cwd() + "/tmp/build/coverage.html";
     // merge previous coverage
@@ -11595,10 +11586,9 @@ local.coverageReportCreate = function (opt) {
             }
         });
     }
-    nodeNormalize(root, filePrefix.join(path.sep) + path.sep);
+    nodeNormalize(root, filePrefix.join(path.sep) + path.sep, 0);
     nodeMetricsCalculate(root);
     nodeChildrenSort(root);
-    nodeNameWidth = findNameWidth(root);
     nodeWalk(root, 0);
     // 2. print coverage in text-format to stdout
     console.log(summaryList.join("\n") + "\n");
