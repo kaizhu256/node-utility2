@@ -10512,8 +10512,6 @@ file none
 
 
 let htmlAll;
-let htmlData;
-let htmlFile;
 let htmlWrite;
 let lineCreate;
 let lineInsertAt;
@@ -10537,8 +10535,11 @@ htmlWrite = function (node, dir) {
 /*
  * this function will recursively write <htmlData>
  * from <node> to <dir>/<htmlFile>
+ * https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
  */
     let fileCoverage;
+    let htmlData;
+    let htmlFile;
     let structured;
     if (node.kind === "dir") {
         htmlFile = path.resolve(dir, "index.html");
@@ -10972,7 +10973,11 @@ nodeNormalize = function (node, level, filePrefix, parent) {
         level * 2 + node.relativeNameOrAllFiles.length
     );
     // init <href>
-    node.href = node.relativeName.split(path.sep).join("/");
+    node.href = node.relativeName.split(path.sep).join("/") + (
+        node.kind === "dir"
+        ? "index.html"
+        : ".html"
+    );
     // recurse
     node.children.forEach(function (child) {
         nodeNormalize(child, level + 1, filePrefix, node);
@@ -11321,15 +11326,12 @@ local.coverageReportCreate = function (opt) {
             });
         } catch (ignore) {}
     }
-    // init writer
+    // init htmlAll
     htmlAll = (
         `<div class="coverageReportDiv">
 <h1>coverage-report</h1>
 <div style="background: #fff; border: 1px solid #999; margin 0; padding: 0;">`
-    );
-    // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
-    htmlData = "";
-    htmlFile = "";
+    ) + "\n";
     // create TextReport
     // 1. summarize coverage
     summaryList = [];
@@ -11550,9 +11552,8 @@ local.coverageReportCreate = function (opt) {
             /<h1\u0020[\S\s]*<\/h1>/
         ), "");
     }
-    htmlWrite(root, dir);
     // 3. write coverage in html-format to filesystem
-    local.fsWriteFileWithMkdirpSync(htmlFile, htmlData);
+    htmlWrite(root, dir);
     // write coverage.json
     local.fsWriteFileWithMkdirpSync(
         dir + "/coverage.json",
