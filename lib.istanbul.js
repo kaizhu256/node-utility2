@@ -10466,7 +10466,7 @@ local.templateCoverageHead = '\
     );\n\
 }());\n\
 </script>\n\
-<div class="header {{coverageLevel}}">\n\
+<div class="header {{metrics.statements.score}}">\n\
     <h1 style="font-weight: bold;">\n\
         <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} ({{env.npm_package_version}})</a>\n\
     </h1>\n\
@@ -10511,8 +10511,6 @@ file none
 
 
 
-let coverageLevelGet;
-let coveragePercentGet;
 let htmlAll;
 let htmlData;
 let htmlFile;
@@ -10537,28 +10535,6 @@ let templateRender;
 // require module
 path = require("path");
 // init function
-coverageLevelGet = function (pct) {
-/*
- * this function will get <coverageLevel> from <pct>
- */
-    return (
-        pct >= 80
-        ? "high"
-        : pct >= 50
-        ? "medium"
-        : "low"
-    );
-};
-coveragePercentGet = function (covered, total) {
-/*
- * this function will get <pct> from <covered> and <total>
- */
-    return (
-        total > 0
-        ? Math.floor((1000 * 100 * covered / total + 5) / 10) / 100
-        : 100
-    );
-};
 htmlWrite = function (node, dir) {
 /*
  * this function will recursively write <htmlData>
@@ -10626,32 +10602,23 @@ htmlWrite = function (node, dir) {
         );
         return templateRender((
             `<tr>
-<td class="file {{coverageLevels.statements}}"
-    data-value="{{file}}"><a href="{{url}}"><div>{{file}}</div>
+<td class="file {{metrics.statements.score}}"
+    data-value="{{relativeName}}"><a href="{{url}}"><div>{{relativeName}}</div>
     {{#show_percent_bar}}</a></td>
-<td class="pct {{coverageLevels.statements}}"
+<td class="pct {{metrics.statements.score}}"
     data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
     ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>
-<td class="pct {{coverageLevels.branches}}"
+<td class="pct {{metrics.branches.score}}"
     data-value="{{metrics.branches.pct}}">{{metrics.branches.pct}}%<br>
     ({{metrics.branches.covered}} / {{metrics.branches.total}})</td>
-<td class="pct {{coverageLevels.functions}}"
+<td class="pct {{metrics.functions.score}}"
     data-value="{{metrics.functions.pct}}">{{metrics.functions.pct}}%<br>
     ({{metrics.functions.covered}} / {{metrics.functions.total}})</td>
-<td class="pct {{coverageLevels.lines}}"
+<td class="pct {{metrics.lines.score}}"
     data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>
     ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
 </tr>`
         ), Object.assign({
-            coverageLevels: {
-                statements: coverageLevelGet(
-                    child.metrics.statements.pct
-                ),
-                lines: coverageLevelGet(child.metrics.lines.pct),
-                functions: coverageLevelGet(child.metrics.functions.pct),
-                branches: coverageLevelGet(child.metrics.branches.pct)
-            },
-            file: child.relativeName,
             url
         }, child)) + "\n";
     }).join("");
@@ -11037,55 +11004,40 @@ nodeMetricsCalculate = function (node) {
 /*
  * this function will recursively calculate <node>.metrics
  */
-    if (node.kind !== "dir") {
-        return;
-    }
     // recurse
     node.children.forEach(nodeMetricsCalculate);
-    node.metrics = {
-        lines: {
-            total: 0,
-            covered: 0,
-            skipped: 0,
-            pct: "Unknown"
-        },
-        statements: {
-            total: 0,
-            covered: 0,
-            skipped: 0,
-            pct: "Unknown"
-        },
-        functions: {
-            total: 0,
-            covered: 0,
-            skipped: 0,
-            pct: "Unknown"
-        },
-        branches: {
-            total: 0,
-            covered: 0,
-            skipped: 0,
-            pct: "Unknown"
-        }
-    };
-    node.children.forEach(function (child) {
-        if (!child && child.metrics) {
-            return;
-        }
-        [
-            "lines", "statements", "branches", "functions"
-        ].forEach(function (key) {
-            node.metrics[key].total += child.metrics[key].total;
-            node.metrics[key].covered += child.metrics[key].covered;
-            node.metrics[key].skipped += child.metrics[key].skipped;
+    if (node.kind === "dir") {
+        node.children.forEach(function (child) {
+            if (!child && child.metrics) {
+                return;
+            }
+            [
+                "lines", "statements", "branches", "functions"
+            ].forEach(function (key) {
+                node.metrics[key].total += child.metrics[key].total;
+                node.metrics[key].covered += child.metrics[key].covered;
+                node.metrics[key].skipped += child.metrics[key].skipped;
+            });
         });
-    });
+    }
+    // normalize <pct> and <score>
     [
         "lines", "statements", "branches", "functions"
     ].forEach(function (key) {
-        node.metrics[key].pct = coveragePercentGet(
-            node.metrics[key].covered,
-            node.metrics[key].total
+        node.metrics[key].pct = (
+            node.metrics[key].total > 0
+            ? Math.floor((
+                1000 * 100 * node.metrics[key].covered
+                / node.metrics[key].total + 5
+            ) / 10) / 100
+            : 100
+        );
+        node.metrics[key].score = (
+            node.metrics[key].pct >= 80
+            ? "high"
+            : node.metrics[key].pct >= 50
+            ? "medium"
+            : "low"
         );
     });
 };
@@ -11168,7 +11120,7 @@ nodeWalk = function (node, level) {
     summaryList.push(tableRow);
     summaryList.push(line);
 };
-stringPad = function (str, width, right, tabs, coverageLevel) {
+stringPad = function (str, width, right, tabs, score) {
 /*
  * this function will pad <str> to given <width>
  */
@@ -11197,7 +11149,7 @@ stringPad = function (str, width, right, tabs, coverageLevel) {
         );
     }
     // colorize
-    switch (process.stdout && process.stdout.isTTY && coverageLevel) {
+    switch (process.stdout && process.stdout.isTTY && score) {
     case "high":
         fmtStr = "\u001b[92m" + fmtStr + "\u001b[0m";
         break;
@@ -11222,9 +11174,6 @@ templateRender = function (template, node) {
     let val;
     // render <node>
     metrics = node.metrics;
-    Object.assign(node, {
-        coverageLevel: metrics && coverageLevelGet(metrics.statements.pct)
-    });
     // render <node>
     template = template.replace((
         /\{\{[^#].+?\}\}/g
@@ -11532,7 +11481,6 @@ local.coverageReportCreate = function (opt) {
                     elem.covered += Boolean(covered || skipped);
                     elem.skipped += Boolean(!covered && skipped);
                 });
-                elem.pct = coveragePercentGet(elem.covered, elem.total);
                 summary[key] = elem;
             });
             // computeBranchTotals
@@ -11555,7 +11503,6 @@ local.coverageReportCreate = function (opt) {
                 });
                 elem.total += branches.length;
             });
-            elem.pct = coveragePercentGet(elem.covered, elem.total);
             summary.branches = elem;
             summaryMap[file] = summary;
             // findCommonArrayPrefix
