@@ -10522,7 +10522,6 @@ let lineInsertAt;
 let lineWrapAt;
 let nodeChildAdd;
 let nodeCreate;
-let nodeMetricsCalculate;
 let nodeNameWidth;
 let nodeNormalize;
 let nodeSummarize;
@@ -10979,66 +10978,35 @@ nodeCreate = function (fullName, kind, metrics) {
         children: [],
         fullName,
         kind,
-        metrics: metrics || null,
+        metrics: metrics || {
+            lines: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            },
+            statements: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            },
+            functions: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            },
+            branches: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            }
+        },
         name: fullName,
         parent: null
     };
-};
-nodeMetricsCalculate = function (node) {
-/*
- * this function will recursively calculate <node>.metrics
- */
-    if (node.kind !== "dir") {
-        return;
-    }
-    // recurse
-    node.children.forEach(nodeMetricsCalculate);
-    node.metrics = {
-        lines: {
-            total: 0,
-            covered: 0,
-            skipped: 0,
-            pct: "Unknown"
-        },
-        statements: {
-            total: 0,
-            covered: 0,
-            skipped: 0,
-            pct: "Unknown"
-        },
-        functions: {
-            total: 0,
-            covered: 0,
-            skipped: 0,
-            pct: "Unknown"
-        },
-        branches: {
-            total: 0,
-            covered: 0,
-            skipped: 0,
-            pct: "Unknown"
-        }
-    };
-    node.children.forEach(function (child) {
-        if (!child && child.metrics) {
-            return;
-        }
-        [
-            "lines", "statements", "branches", "functions"
-        ].forEach(function (key) {
-            node.metrics[key].total += child.metrics[key].total;
-            node.metrics[key].covered += child.metrics[key].covered;
-            node.metrics[key].skipped += child.metrics[key].skipped;
-        });
-    });
-    [
-        "lines", "statements", "branches", "functions"
-    ].forEach(function (key) {
-        node.metrics[key].pct = coveragePercentGet(
-            node.metrics[key].covered,
-            node.metrics[key].total
-        );
-    });
 };
 nodeNormalize = function (node, filePrefix, parent, level) {
 /*
@@ -11076,6 +11044,27 @@ nodeNormalize = function (node, filePrefix, parent, level) {
             aa.relativeName > bb.relativeName
             ? 1
             : -1
+        );
+    });
+    // summarize metrics
+    if (node.kind !== "dir") {
+        return;
+    }
+    node.children.forEach(function (child) {
+        [
+            "lines", "statements", "branches", "functions"
+        ].forEach(function (key) {
+            node.metrics[key].total += child.metrics[key].total;
+            node.metrics[key].covered += child.metrics[key].covered;
+            node.metrics[key].skipped += child.metrics[key].skipped;
+        });
+    });
+    [
+        "lines", "statements", "branches", "functions"
+    ].forEach(function (key) {
+        node.metrics[key].pct = coveragePercentGet(
+            node.metrics[key].covered,
+            node.metrics[key].total
         );
     });
 };
@@ -11571,7 +11560,6 @@ local.coverageReportCreate = function (opt) {
         });
     }
     nodeNormalize(root, filePrefix.join(path.sep) + path.sep, 0);
-    nodeMetricsCalculate(root);
     nodeSummarize(root, 0);
     // 2. print coverage in text-format to stdout
     console.log(summaryList.join("\n") + "\n");
