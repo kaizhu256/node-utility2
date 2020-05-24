@@ -11194,7 +11194,7 @@ textCreate = function (text, consumeBlanks) {
     text = {
         text
     };
-    text.origLength = text.length;
+    text.origLength = text.text.length;
     text.offsets = [];
     text.consumeBlanks = consumeBlanks;
     // init <startPos>
