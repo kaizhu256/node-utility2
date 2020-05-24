@@ -11017,7 +11017,7 @@ nodeMetricsCalculate = function (node) {
         );
     });
 };
-nodeNormalize = function (node, filePrefix, parent) {
+nodeNormalize = function (node, level, filePrefix, parent) {
 /*
  * this function will recursively normalize <node>.name and <node>.relativeName
  */
@@ -11040,7 +11040,7 @@ nodeNormalize = function (node, filePrefix, parent) {
     ) || "All files";
     node.children.forEach(function (child) {
         // recurse
-        nodeNormalize(child, filePrefix, node);
+        nodeNormalize(child, level + 1, filePrefix, node);
     });
     // sort <children> by <relativeName>
     node.children.sort(function (aa, bb) {
@@ -11537,9 +11537,9 @@ local.coverageReportCreate = function (opt) {
             ), child);
         });
     }
-    nodeNormalize(root, filePrefix.join(path.sep) + path.sep);
-    nodeMetricsCalculate(root);
     nodeNameWidth = 0;
+    nodeNormalize(root, 0, filePrefix.join(path.sep) + path.sep);
+    nodeMetricsCalculate(root);
     findNameWidth(root, 0);
     nodeSummarize(root, 0);
     // 2. print coverage in text-format to stdout
