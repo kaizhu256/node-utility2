@@ -10686,18 +10686,8 @@ htmlWrite = function (node, dir) {
             /(?:\r?\n)|\r/
         ).map(function (str, ii) {
             return lineCreate(ii + 1, str, true);
-            //!! return {
-                //!! line: ii + 1,
-                //!! covered: null,
-                //!! text: lineCreate(ii + 1, str, true)
-            //!! };
         });
-        structured.unshift(lineCreate(""));
-        //!! structured.unshift({
-            //!! line: 0,
-            //!! covered: null,
-            //!! text: lineCreate("")
-        //!! });
+        structured.unshift(lineCreate(0, ""));
         // annotateLines(fileCoverage, structured);
         Object.entries(fileCoverage.l).forEach(function ([
             lineNumber,
