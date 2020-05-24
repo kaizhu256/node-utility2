@@ -10518,13 +10518,13 @@ let htmlWrite;
 let lineCreate;
 let lineInsertAt;
 let lineWrapAt;
-let nameWidth;
 let nodeChildAdd;
 let nodeChildrenSort;
 let nodeCreate;
 let nodeMetricsCalculate;
+let nodeNameWidth;
 let nodeNormalize;
-let nodeWalk;
+let nodeSummarize;
 let path;
 let stringPad;
 let summaryList;
@@ -10629,10 +10629,7 @@ htmlWrite = function (node, dir) {
         let structured;
         if (child.kind === "dir") {
             // recurse
-            htmlWrite(
-                child,
-                path.resolve(dir, child.relativeName)
-            );
+            htmlWrite(child, path.resolve(dir, child.relativeName));
             return;
         }
         htmlAll += htmlData + "\n\n";
@@ -11067,7 +11064,7 @@ nodeNormalize = function (node, filePrefix, parent) {
         nodeNormalize(child, filePrefix, node);
     });
 };
-nodeWalk = function (node, level) {
+nodeSummarize = function (node, level) {
 /*
  * this function will recursively walk and summarize each <node>
  */
@@ -11090,7 +11087,7 @@ nodeWalk = function (node, level) {
         );
         return (
             ii === 0
-            ? stringPad(node.relativeName, nameWidth, false, level, val)
+            ? stringPad(node.relativeName, nodeNameWidth, false, level, val)
             : stringPad(pct, 10, true, 0, val)
         );
     }).join(" |") + " |";
@@ -11098,23 +11095,23 @@ nodeWalk = function (node, level) {
         summaryList.push(tableRow);
         node.children.forEach(function (child) {
             // recurse
-            nodeWalk(child, level + 1);
+            nodeSummarize(child, level + 1);
         });
         return;
     }
     line = (
-        "-".repeat(nameWidth)
+        "-".repeat(nodeNameWidth)
         + "-|-----------|-----------|-----------|-----------|"
     );
     summaryList.push(line);
     summaryList.push(
-        stringPad("File", nameWidth, false, 0)
+        stringPad("File", nodeNameWidth, false, 0)
         + " |   % Stmts |% Branches |   % Funcs |   % Lines |"
     );
     summaryList.push(line);
     node.children.forEach(function (child) {
         // recurse
-        nodeWalk(child, level + 1);
+        nodeSummarize(child, level + 1);
     });
     summaryList.push(line);
     summaryList.push(tableRow);
@@ -11569,8 +11566,8 @@ local.coverageReportCreate = function (opt) {
     nodeNormalize(root, filePrefix.join(path.sep) + path.sep);
     nodeMetricsCalculate(root);
     nodeChildrenSort(root);
-    nameWidth = findNameWidth(root);
-    nodeWalk(root, 0);
+    nodeNameWidth = findNameWidth(root);
+    nodeSummarize(root, 0);
     // 2. print coverage in text-format to stdout
     console.log(summaryList.join("\n") + "\n");
     // create HtmlReport
