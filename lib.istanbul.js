@@ -10190,7 +10190,7 @@ local.templateCoverageHead = '\
 <!doctype html>\n\
 <html lang="en" class="x-istanbul">\n\
 <head>\n\
-    <title>Code coverage report for {{displayName}}</title>\n\
+    <title>Code coverage report for {{nameOrAllFiles}}</title>\n\
     <meta charset="utf-8">\n\
 <style>\n\
 /* jslint utility2:true */\n\
@@ -10470,7 +10470,7 @@ local.templateCoverageHead = '\
     <h1 style="font-weight: bold;">\n\
         <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} ({{env.npm_package_version}})</a>\n\
     </h1>\n\
-    <h1>Code coverage report for <span class="entity">{{displayName}}</span></h1>\n\
+    <h1>Code coverage report for <span class="entity">{{nameOrAllFiles}}</span></h1>\n\
     <table class="tableHeader">\n\
     <thead>\n\
     <tr>\n\
@@ -11027,8 +11027,6 @@ nodeNormalize = function (node, level, filePrefix, parent) {
     if (node.name[0] === path.sep) {
         node.name = node.name.slice(1);
     }
-    // normalize <displayName>
-    node.displayName = node.name || "All files";
     // normalize <relativeName>
     node.relativeName = (
         parent
@@ -11038,11 +11036,15 @@ nodeNormalize = function (node, level, filePrefix, parent) {
             : node.name
         )
         : node.name.slice(filePrefix.length)
-    ) || "All files";
+    );
+    // normalize <nameOrAllFiles>
+    node.nameOrAllFiles = node.name || "All files";
+    // normalize <relativeNameOrAllFiles>
+    node.relativeNameOrAllFiles = node.relativeName || "All files";
     // normalize <nodeNameWidth>
     nodeNameWidth = Math.max(
         nodeNameWidth,
-        level * 2 + node.relativeName.length
+        level * 2 + node.relativeNameOrAllFiles.length
     );
     node.children.forEach(function (child) {
         // recurse
@@ -11075,7 +11077,13 @@ nodeSummarize = function (node, level) {
     }, ii) {
         return (
             ii === 0
-            ? stringPad(node.relativeName, nodeNameWidth, false, level, score)
+            ? stringPad(
+                node.relativeNameOrAllFiles,
+                nodeNameWidth,
+                false,
+                level,
+                score
+            )
             : stringPad(pct, 10, true, 0, score)
         );
     }).join(" |") + " |";
@@ -11215,8 +11223,8 @@ templateRender = function (template, node) {
         ii = 1;
         while (tmp) {
             val = (
-                "index.html\">" + tmp.relativeName + "</a>" + " &#187; "
-                + val
+                "index.html\">" + tmp.relativeNameOrAllFiles + "</a>"
+                + " &#187; " + val
             );
             jj = 0;
             while (jj < ii) {
