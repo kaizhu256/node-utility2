@@ -10563,15 +10563,13 @@ InsertionText.prototype = {
         let ii;
         let len;
         let pos;
-        let text;
         let that;
         that = this;
         pos = -1;
-        text = that.text;
-        len = text.length;
+        len = that.text.length;
         ii = 0;
         while (ii < len) {
-            if (!text[ii].match(
+            if (!that.text[ii].match(
                 /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
             )) {
                 pos = ii;
@@ -10585,15 +10583,13 @@ InsertionText.prototype = {
         let ii;
         let len;
         let pos;
-        let text;
         let that;
         that = this;
-        text = that.text;
-        len = text.length;
-        pos = text.length + 1;
+        len = that.text.length;
+        pos = that.text.length + 1;
         ii = len - 1;
         while (ii >= 0) {
-            if (!text[ii].match(
+            if (!that.text[ii].match(
                 /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
             )) {
                 pos = ii;
@@ -10607,7 +10603,6 @@ InsertionText.prototype = {
         let len;
         let offset;
         let realPos;
-        let text;
         let that;
         that = this;
         consumeBlanks = (
@@ -10636,8 +10631,9 @@ InsertionText.prototype = {
         len = str.length;
         offset = that.findOffset(col, len, insertBefore);
         realPos = col + offset;
-        text = that.text;
-        that.text = text.slice(0, realPos) + str + text.slice(realPos);
+        that.text = (
+            that.text.slice(0, realPos) + str + that.text.slice(realPos)
+        );
         return that;
     },
     findOffset: function (pos, len, insertBefore) {
