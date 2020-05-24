@@ -10654,7 +10654,8 @@ htmlWrite = function (node, dir) {
             url
         }, child) + "\n";
     }).join("");
-    htmlData += "</tbody>\n</table>\n</div>\n" + templateFoot;
+    htmlData += "</tbody>\n</table>\n</div>\n";
+    htmlData += templateFoot;
     node.children.forEach(function (child) {
         let fileCoverage;
         let structured;
