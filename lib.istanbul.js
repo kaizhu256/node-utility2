@@ -10661,10 +10661,7 @@ htmlWrite = function (node, dir) {
         let structured;
         if (child.kind === "dir") {
             // recurse
-            htmlWrite(
-                child,
-                path.resolve(dir, child.relativeName)
-            );
+            htmlWrite(child, path.resolve(dir, child.relativeName));
             return;
         }
         htmlAll += htmlData + "\n\n";
@@ -11073,13 +11070,6 @@ nodeNormalize = function (node, filePrefix, parent, level) {
         // recurse
         nodeNormalize(child, filePrefix, node, level + 1);
     });
-};
-nodeSummarize = function (node, level) {
-/*
- * this function will recursively walk and summarize each <node>
- */
-    let line;
-    let tableRow;
     // sort <children> by <relativeName>
     node.children.sort(function (aa, bb) {
         return (
@@ -11088,6 +11078,13 @@ nodeSummarize = function (node, level) {
             : -1
         );
     });
+};
+nodeSummarize = function (node, level) {
+/*
+ * this function will recursively summarize <node>
+ */
+    let line;
+    let tableRow;
     // summarize
     tableRow = [
         node.metrics.statements.pct,
