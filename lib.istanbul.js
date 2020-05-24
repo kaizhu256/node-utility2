@@ -10617,7 +10617,7 @@ InsertionText.prototype = {
         );
         return that;
     },
-    findOffset: function (pos, len, insertBefore) {
+    findOffset: function (col, len, insertBefore) {
         let cumulativeOffset;
         let ii;
         let offsetObj;
@@ -10630,21 +10630,21 @@ InsertionText.prototype = {
         while (ii < offsets.length) {
             offsetObj = offsets[ii];
             if (
-                offsetObj.pos < pos
-                || (offsetObj.pos === pos && !insertBefore)
+                offsetObj.pos < col
+                || (offsetObj.pos === col && !insertBefore)
             ) {
                 cumulativeOffset += offsetObj.len;
             }
-            if (offsetObj.pos >= pos) {
+            if (offsetObj.pos >= col) {
                 break;
             }
             ii += 1;
         }
-        if (offsetObj && offsetObj.pos === pos) {
+        if (offsetObj && offsetObj.pos === col) {
             offsetObj.len += len;
         } else {
             offsets.splice(ii, 0, {
-                pos,
+                pos: col,
                 len
             });
         }
