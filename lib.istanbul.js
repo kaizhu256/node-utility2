@@ -10649,11 +10649,6 @@ InsertionText.prototype = {
         that.insertAt(startPos, startText, true, consumeBlanks);
         that.insertAt(endPos, endText, false, consumeBlanks);
         return that;
-    },
-    toString: function () {
-        let that;
-        that = this;
-        return that.text;
     }
 };
 // init function
@@ -11274,7 +11269,7 @@ templateRender = function (template, dict, node) {
     // render #show_code last
     template = template.replace("{{#show_code}}", function () {
         val = dict.structured.map(function (item) {
-            return item.text.toString();
+            return item.text.text;
         }).join("\n");
         // sanitize html
         val = val.replace((
