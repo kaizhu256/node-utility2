@@ -10906,21 +10906,21 @@ lineCreate = function (text, consumeBlanks) {
         text
     };
 };
-lineInsertAt = function (text, col, str, insertBefore, consumeBlanks) {
+lineInsertAt = function (line, col, str, insertBefore, consumeBlanks) {
 /*
- * this function will insert <str> into <text> at <col>
+ * this function will insert <str> into <line> at <col>
  */
     let ii;
     let offset;
     let offsetObj;
     consumeBlanks = (
         consumeBlanks === undefined
-        ? text.consumeBlanks
+        ? line.consumeBlanks
         : consumeBlanks
     );
     col = (
-        col > text.origLength
-        ? text.origLength
+        col > line.origLength
+        ? line.origLength
         : col
     );
     col = (
@@ -10929,17 +10929,17 @@ lineInsertAt = function (text, col, str, insertBefore, consumeBlanks) {
         : col
     );
     if (consumeBlanks) {
-        if (col <= text.startCol) {
+        if (col <= line.startCol) {
             col = 0;
         }
-        if (col > text.endCol) {
-            col = text.origLength;
+        if (col > line.endCol) {
+            col = line.origLength;
         }
     }
     offset = col;
     ii = 0;
-    while (ii < text.offsets.length) {
-        offsetObj = text.offsets[ii];
+    while (ii < line.offsets.length) {
+        offsetObj = line.offsets[ii];
         if (offsetObj.col < col || (offsetObj.col === col && !insertBefore)) {
             offset += offsetObj.len;
         }
@@ -10951,16 +10951,16 @@ lineInsertAt = function (text, col, str, insertBefore, consumeBlanks) {
     if (offsetObj && offsetObj.col === col) {
         offsetObj.len += str.length;
     } else {
-        text.offsets.splice(ii, 0, {
+        line.offsets.splice(ii, 0, {
             col,
             len: str.length
         });
     }
-    text.text = text.text.slice(0, offset) + str + text.text.slice(offset);
-    return text;
+    line.text = line.text.slice(0, offset) + str + line.text.slice(offset);
+    return line;
 };
 lineWrap = function (
-    text,
+    line,
     startCol,
     startText,
     endCol,
@@ -10968,12 +10968,12 @@ lineWrap = function (
     consumeBlanks
 ) {
 /*
- * this function will wrap <text>.slice(<startCol>, <endCol>)
+ * this function will wrap <line>.slice(<startCol>, <endCol>)
  * in <startText> and <endText>
  */
-    lineInsertAt(text, startCol, startText, true, consumeBlanks);
-    lineInsertAt(text, endCol, endText, false, consumeBlanks);
-    return text;
+    lineInsertAt(line, startCol, startText, true, consumeBlanks);
+    lineInsertAt(line, endCol, endText, false, consumeBlanks);
+    return line;
 };
 nodeChildAdd = function (node, child) {
 /*
