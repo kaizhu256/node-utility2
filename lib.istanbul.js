@@ -10721,9 +10721,9 @@ htmlWrite = function (node, dir) {
             branchArray.forEach(function (count, ii) {
                 let endCol;
                 let endLine;
+                let lineObj;
                 let meta;
                 let startLine;
-                let text;
                 if (count !== 0) {
                     return;
                 }
@@ -10736,12 +10736,12 @@ htmlWrite = function (node, dir) {
                     endLine = startLine;
                     endCol = structured[startLine].origLength;
                 }
-                text = structured[startLine];
+                lineObj = structured[startLine];
                 if (fileCoverage.branchMap[branchName].type === "if") {
                     // and "if" is a special case since the else branch
                     // might not be visible, being non-existent
                     lineInsertAt(
-                        text,
+                        lineObj,
                         meta.start.column,
                         "\u0001span class=\"" + (
                             meta.skip
@@ -10761,7 +10761,7 @@ htmlWrite = function (node, dir) {
                     );
                     return;
                 }
-                lineWrap(text, meta.start.column, (
+                lineWrap(lineObj, meta.start.column, (
                     "\u0001span class=\"branch-" + ii + " " + (
                         meta.skip
                         ? "cbranch-skip"
@@ -10770,7 +10770,7 @@ htmlWrite = function (node, dir) {
                 ), (
                     startLine === endLine
                     ? endCol
-                    : text.origLength
+                    : lineObj.origLength
                 ), "\u0001/span\u0002");
             });
         });
@@ -10781,9 +10781,9 @@ htmlWrite = function (node, dir) {
         ]) {
             let endCol;
             let endLine;
+            let lineObj;
             let meta;
             let startLine;
-            let text;
             if (count !== 0) {
                 return;
             }
@@ -10795,15 +10795,15 @@ htmlWrite = function (node, dir) {
                 endLine = startLine;
                 endCol = structured[startLine].origLength;
             }
-            text = structured[startLine];
-            lineWrap(text, meta.loc.start.column, ("\u0001span class=\"" + (
+            lineObj = structured[startLine];
+            lineWrap(lineObj, meta.loc.start.column, ("\u0001span class=\"" + (
                 meta.skip
                 ? "fstat-skip"
                 : "fstat-no"
             ) + "\" title=\"function not covered\" \u0002"), (
                 startLine === endLine
                 ? endCol
-                : text.origLength
+                : lineObj.origLength
             ), "\u0001/span\u0002");
         });
         // annotateStatements(fileCoverage, structured);
@@ -10813,9 +10813,9 @@ htmlWrite = function (node, dir) {
         ]) {
             let endCol;
             let endLine;
+            let lineObj;
             let meta;
             let startLine;
-            let text;
             if (count !== 0) {
                 return;
             }
@@ -10827,15 +10827,15 @@ htmlWrite = function (node, dir) {
                 endLine = startLine;
                 endCol = structured[startLine].origLength;
             }
-            text = structured[startLine];
-            lineWrap(text, meta.start.column, ("\u0001span class=\"" + (
+            lineObj = structured[startLine];
+            lineWrap(lineObj, meta.start.column, ("\u0001span class=\"" + (
                 meta.skip
                 ? "cstat-skip"
                 : "cstat-no"
             ) + "\" title=\"statement not covered\" \u0002"), (
                 startLine === endLine
                 ? endCol
-                : text.origLength
+                : lineObj.origLength
             ), "\u0001/span\u0002");
         });
         structured.shift();
