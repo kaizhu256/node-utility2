@@ -10570,7 +10570,7 @@ htmlWrite = function (node, dir) {
 </thead>
 <tbody>`
     );
-    htmlData += node.children.sort.map(function (child) {
+    htmlData += node.children.map(function (child) {
         return templateRender((
             `<tr>
 <td class="file {{metrics.statements.score}}"
