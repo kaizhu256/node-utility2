@@ -10544,45 +10544,11 @@ let summaryMap;
 let templateFoot;
 let templateHead;
 let templateRender;
+let textCreate;
 let textInsertAt;
 let textWrap;
 // require module
 path = require("path");
-// init InsertionText
-// https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
-function InsertionText(text, consumeBlanks) {
-    let ii;
-    let that;
-    that = this;
-    that.text = text;
-    that.origLength = text.length;
-    that.offsets = [];
-    that.consumeBlanks = consumeBlanks;
-    // init <startPos>
-    that.startPos = -1;
-    ii = 0;
-    while (ii < that.text.length) {
-        if (!that.text[ii].match(
-            /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
-        )) {
-            that.startPos = ii;
-            break;
-        }
-        ii += 1;
-    }
-    // init <endPos>
-    that.endPos = that.text.length + 1;
-    ii = that.text.length - 1;
-    while (ii >= 0) {
-        if (!that.text[ii].match(
-            /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
-        )) {
-            that.endPos = ii;
-            break;
-        }
-        ii -= 1;
-    }
-}
 // init function
 coverageLevelGet = function (pct) {
 /*
@@ -10722,13 +10688,13 @@ htmlWrite = function (node, dir) {
             return {
                 line: ii + 1,
                 covered: null,
-                text: new InsertionText(str, true)
+                text: textCreate(str, true)
             };
         });
         structured.unshift({
             line: 0,
             covered: null,
-            text: new InsertionText("")
+            text: textCreate("")
         });
         // annotateLines(fileCoverage, structured);
         Object.entries(fileCoverage.l).forEach(function ([
@@ -11219,6 +11185,43 @@ templateRender = function (template, dict, node) {
         return val;
     });
     return template;
+};
+textCreate = function (text, consumeBlanks) {
+/*
+ * this function will create insertable text object
+ */
+    let ii;
+    text = {
+        text
+    };
+    text.origLength = text.length;
+    text.offsets = [];
+    text.consumeBlanks = consumeBlanks;
+    // init <startPos>
+    text.startPos = -1;
+    ii = 0;
+    while (ii < text.text.length) {
+        if (!text.text[ii].match(
+            /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
+        )) {
+            text.startPos = ii;
+            break;
+        }
+        ii += 1;
+    }
+    // init <endPos>
+    text.endPos = text.text.length + 1;
+    ii = text.text.length - 1;
+    while (ii >= 0) {
+        if (!text.text[ii].match(
+            /[\u0020\f\n\r\tv\u00A0\u2028\u2029]/
+        )) {
+            text.endPos = ii;
+            break;
+        }
+        ii -= 1;
+    }
+    return text;
 };
 textInsertAt = function (text, col, str, insertBefore, consumeBlanks) {
 /*
