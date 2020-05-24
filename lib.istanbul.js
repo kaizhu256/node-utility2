@@ -10190,7 +10190,7 @@ local.templateCoverageHead = '\
 <!doctype html>\n\
 <html lang="en" class="x-istanbul">\n\
 <head>\n\
-    <title>Code coverage report for {{entity}}</title>\n\
+    <title>Code coverage report for {{displayName}}</title>\n\
     <meta charset="utf-8">\n\
 <style>\n\
 /* jslint utility2:true */\n\
@@ -10470,7 +10470,7 @@ local.templateCoverageHead = '\
     <h1 style="font-weight: bold;">\n\
         <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} ({{env.npm_package_version}})</a>\n\
     </h1>\n\
-    <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
+    <h1>Code coverage report for <span class="entity">{{displayName}}</span></h1>\n\
     <table class="tableHeader">\n\
     <thead>\n\
     <tr>\n\
@@ -11027,7 +11027,8 @@ nodeNormalize = function (node, level, filePrefix, parent) {
     if (node.name[0] === path.sep) {
         node.name = node.name.slice(1);
     }
-    node.entity = node.name || "All files";
+    // normalize <displayName>
+    node.displayName = node.name || "All files";
     // normalize <relativeName>
     node.relativeName = (
         parent
