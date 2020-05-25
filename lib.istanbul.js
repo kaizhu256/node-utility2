@@ -435,8 +435,8 @@ let process;
 let require;
 // hack-jslint
 local.nop(require);
-globalThis.__coverageCodeDict__ = local.coalesce(
-    globalThis.__coverageCodeDict__,
+globalThis.__coverageInclude__ = local.coalesce(
+    globalThis.__coverageInclude__,
     {}
 );
 // mock builtins
@@ -11322,6 +11322,7 @@ local.coverageReportCreate = function (opt) {
  * 3. write coverage in html-format to filesystem
  * 4. return coverage in html-format as single document
  */
+    let coverageInclude;
     let dirCoverage;
     let filePrefix;
     let filesUnderRoot;
@@ -11336,6 +11337,7 @@ local.coverageReportCreate = function (opt) {
     // 1. init <dirCoverage>
     dirCoverage = process.cwd() + "/tmp/build/coverage.html";
     // 2. merge previous coverage <dirCoverage>/coverage.json
+    coverageInclude = opt.coverageInclude || globalThis.__coverageInclude__;
     if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
         console.log(
             "merging file " + dirCoverage + "/coverage.json to coverage"
@@ -11355,8 +11357,8 @@ local.coverageReportCreate = function (opt) {
                 "utf8"
             ));
         } catch (ignore) {}
-        Object.keys(tmp).forEach(function (key) {
-            globalThis.__coverageCodeDict__[key] = true;
+        Object.keys(tmp).forEach(function (file) {
+            coverageInclude[file] = 1;
         });
     }
     // 3. create <summaryDict> from <opt>.coverage
@@ -11369,10 +11371,7 @@ local.coverageReportCreate = function (opt) {
         let metric;
         let skipped;
         let summary;
-        if (
-            fileCoverage
-            && globalThis.__coverageCodeDict__.hasOwnProperty(file)
-        ) {
+        if (fileCoverage && coverageInclude.hasOwnProperty(file)) {
             // reset line-count
             delete opt.coverage[file].l;
             // init <summary>
@@ -11542,7 +11541,7 @@ local.coverageReportCreate = function (opt) {
     // 8. write <dirCoverage>/coverage.code-dict.json
     local.fsWriteFileWithMkdirpSync(
         dirCoverage + "/coverage.code-dict.json",
-        JSON.stringify(globalThis.__coverageCodeDict__)
+        JSON.stringify(coverageInclude)
     );
     // 9. write coverage.badge.svg
     tmp = nodeRoot.metrics.lines.pct;
@@ -11596,14 +11595,14 @@ local.instrumentSync = function (code, file) {
 /*
  * this function will
  * 1. normalize <file>
- * 2. save <code> to __coverageCodeDict__[<file>] for future html-report
- * 3. return instrumented code
+ * 2. save <code> to __coverageInclude__[<file>] for future html-report
+ * 3. return instrumented-code
  */
     // 1. normalize <file>
     file = local._istanbul_path.resolve("/", file);
-    // 2. save <code> to __coverageCodeDict__[<file>] for future html-report
-    globalThis.__coverageCodeDict__[file] = true;
-    // 3. return instrumented code
+    // 2. save <code> to __coverageInclude__[<file>] for future html-report
+    globalThis.__coverageInclude__[file] = 1;
+    // 3. return instrumented-code
     return new local.Instrumenter({
         embedSource: true,
         esModules: true,
@@ -11702,9 +11701,9 @@ local.cliDict.report = function () {
     globalThis.__coverage__ = JSON.parse(
         local.fs.readFileSync(process.argv[3])
     );
-    globalThis.__coverageCodeDict__ = {};
-    Object.keys(globalThis.__coverage__).forEach(function (key) {
-        globalThis.__coverageCodeDict__[key] = true;
+    globalThis.__coverageInclude__ = {};
+    Object.keys(globalThis.__coverage__).forEach(function (file) {
+        globalThis.__coverageInclude__[file] = 1;
     });
     local.coverageReportCreate({
         coverage: globalThis.__coverage__
