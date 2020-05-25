@@ -10515,7 +10515,6 @@ let path;
 let reportHtmlWrite;
 let reportTextWrite;
 let stringPad;
-let summaryMap;
 let templateRender;
 // require module
 path = require("path");
@@ -11334,10 +11333,11 @@ local.coverageReportCreate = function (opt) {
     let dir;
     let filePrefix;
     let filesUnderRoot;
-    let root;
     let seen;
+    let summaryMap;
     let tmp;
     let tmpChildren;
+    let tree;
     if (!(opt && opt.coverage)) {
         return "";
     }
@@ -11493,12 +11493,11 @@ local.coverageReportCreate = function (opt) {
             });
         }
     });
-    // coverageReportSummary = new TreeSummary();
-    // convertToTree
+    // convert <summaryMap> to <tree>
     tmp = filePrefix.join(path.sep) + path.sep;
-    root = nodeCreate(tmp, "dir");
+    tree = nodeCreate(tmp, "dir");
     seen = {};
-    seen[tmp] = root;
+    seen[tmp] = tree;
     filesUnderRoot = false;
     Object.entries(summaryMap).forEach(function ([
         key,
@@ -11516,37 +11515,37 @@ local.coverageReportCreate = function (opt) {
         parent = seen[parentPath];
         if (!parent) {
             parent = nodeCreate(parentPath, "dir");
-            nodeChildAdd(root, parent);
+            nodeChildAdd(tree, parent);
             seen[parentPath] = parent;
         }
         nodeChildAdd(parent, node);
-        if (parent === root) {
+        if (parent === tree) {
             filesUnderRoot = true;
         }
     });
     if (filesUnderRoot && filePrefix.length > 0) {
         //start at one level above
         filePrefix.pop();
-        tmp = root;
+        tmp = tree;
         tmpChildren = tmp.children;
         tmp.children = [];
-        root = nodeCreate(filePrefix.join(path.sep) + path.sep, "dir");
-        nodeChildAdd(root, tmp);
+        tree = nodeCreate(filePrefix.join(path.sep) + path.sep, "dir");
+        nodeChildAdd(tree, tmp);
         tmpChildren.forEach(function (child) {
             nodeChildAdd((
                 child.kind === "dir"
-                ? root
+                ? tree
                 : tmp
             ), child);
         });
     }
     nodeNameWidth = 0;
-    nodeNormalize(root, 0, filePrefix.join(path.sep) + path.sep);
+    nodeNormalize(tree, 0, filePrefix.join(path.sep) + path.sep);
     // 2. print coverage in text-format to stdout
-    reportTextWrite(root, dir);
+    reportTextWrite(tree, dir);
     // create HtmlReport
     // 3. write coverage in html-format to filesystem
-    reportHtmlWrite(root, dir);
+    reportHtmlWrite(tree, dir);
     // write coverage.json
     local.fsWriteFileWithMkdirpSync(
         dir + "/coverage.json",
@@ -11558,7 +11557,7 @@ local.coverageReportCreate = function (opt) {
         JSON.stringify(globalThis.__coverageCodeDict__)
     );
     // write coverage.badge.svg
-    tmp = root.metrics.lines.pct;
+    tmp = tree.metrics.lines.pct;
     local.fsWriteFileWithMkdirpSync(
         local._istanbul_path.dirname(dir) + "/coverage.badge.svg",
         // edit coverage badge percent
