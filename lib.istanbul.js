@@ -11023,7 +11023,7 @@ reportHtmlWrite = function (node, level, dir) {
 };
 reportTextWrite = function (node, dir) {
 /*
- * this function will recursively write <node> to <dir>/coverage.txt
+ * this function will write coverage-report of <node> to <dir>/coverage.txt
  */
     let recurse;
     let result;
