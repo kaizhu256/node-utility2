@@ -52,8 +52,8 @@
         "2020.01.20 bootstrap-lite",
         "2020.02.12 sqljs-lite",
         "2020.03.16 apidoc-lite",
-        "2020.03.16 jslint-lite",
-        "2020.02.17 utility2"
+        "2020.05.20 jslint-lite",
+        "2020.02.20 utility2"
     ],
-    "version": "2020.3.17"
+    "version": "2020.5.20"
 }

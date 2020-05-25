@@ -130,17 +130,9 @@
             fs.writeFileSync(file, data);
         } catch (ignore) {
             // mkdir -p
-            require("child_process").spawnSync(
-                "mkdir",
-                [
-                    "-p", require("path").dirname(file)
-                ],
-                {
-                    stdio: [
-                        "ignore", 1, 2
-                    ]
-                }
-            );
+            fs.mkdirSync(require("path").dirname(file), {
+                recursive: true
+            });
             // rewrite file
             fs.writeFileSync(file, data);
         }
@@ -604,12 +596,12 @@ local.coverageReportCreate = function (opt) {
         // write coverage.json
         local.fsWriteFileWithMkdirpSync(
             opt.dir + "/coverage.json",
-            JSON.stringify(opt.coverage)
+            JSON.stringify(opt.coverage || {})
         );
         // write coverage.code-dict.json
         local.fsWriteFileWithMkdirpSync(
             opt.dir + "/coverage.code-dict.json",
-            JSON.stringify(globalThis.__coverageCodeDict__)
+            JSON.stringify(globalThis.__coverageCodeDict__ || {})
         );
         // write coverage.badge.svg
         opt.pct = local.coverageReportSummary.root.metrics.lines.pct;

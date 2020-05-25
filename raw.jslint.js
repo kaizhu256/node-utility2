@@ -4,18 +4,13 @@ shRawLibFetch
     "replaceList": [
         {
             "flags": "g",
-            "replace": "// hack-jslint - var\nvar $1",
-            "source": "(?:const|let) (allowed_option|declared_globals|early_stop|lines|option)\\b"
-        },
-        {
-            "flags": "g",
-            "replace": "$1// hack-jslint - expected_at$1if (right.from !==",
+            "replace": "$1// hack-jslint - exact-margin$1if (right.from !==",
             "source": "(\\n\\u0020*?)if\\u0020\\(right.from\\u0020\\S+"
         }
     ],
     "urlList": [
         "https://github.com/CSSLint/csslint/blob/e8aeeda06c928636e21428e09b1af93f66621209/dist/csslint.js",
-        "https://github.com/douglascrockford/JSLint/blob/95c4e8a2cfd424d15e90745dbadadf3251533183/jslint.js"
+        "https://github.com/douglascrockford/JSLint/blob/686716b71f6d45d3c233e1cfa026a1e5f46747aa/jslint.js"
     ]
 }
 -                        margin += 4;
@@ -27,26 +22,88 @@ shRawLibFetch
 +                            margin += 4;
 +                        }
 
+-            && !regexp_seen
++            && !regexp_seen
++            // hack-jslint - ignore too_long url
++            && !(
++                option.utility2
++                && (
++                    /^\s*?(?:\/\/(?:!!\u0020|\u0020https:\/\/)|(?:\S+?\u0020)?(?:https:\/\/|this\u0020.*?\u0020package\u0020will\u0020))/m
++                ).test(whole_line)
++            )
+
 -            if (name.identifier && rx_bad_property.test(id)) {
 +            // hack-jslint - nomen
 +            if (!option.nomen && name.identifier && rx_bad_property.test(id)) {
 
--            if (warnings.length === 0) {
-+            // hack-jslint - !early_stop
-+            if (!early_stop) {
-
--        early_stop = true;
-+        // hack-jslint - early_stop = false
-+        early_stop = false;
-
 -        if (source_line !== undefined) {
 +        if (source_line !== undefined) {
-+            // hack-jslint - next_line_extra
-+            source_line = next_line_extra(source_line, line);
++            // hack-jslint - source_line
++            let line_extra;
++            let match;
++            line_extra = {};
++            line_extra.line = line;
++            line_extra.source = source_line;
++            lines_extra[line] = line_extra;
++            match = (
++                source_line.match(
++                    /^\/\*\u0020jslint\u0020(ignore:start|ignore:end|utility2:true)\u0020\*\/$/m
++                )
++                || source_line.slice(-50).match(
++                    /\u0020\/\/\u0020jslint\u0020(ignore:line)$/m
++                )
++            );
++            switch (match && match[1]) {
++            case "ignore:end":
++                line_ignore = undefined;
++                break;
++            case "ignore:line":
++                line_ignore = "line";
++                break;
++            case "ignore:start":
++                line_ignore = true;
++                break;
++            case "utility2:true":
++                option.bitwise = true;
++                option.browser = true;
++                option.node = true;
++                option.nomen = true;
++                option.this = true;
++                option.utility2 = true;
++                [].concat(
++                    allowed_option.browser,
++                    allowed_option.node,
++                    "globalThis"
++                ).forEach(function (key) {
++                    declared_globals[key] = false;
++                });
++                break;
++            }
++            line_extra.ignore = line_ignore;
++            switch (line_ignore) {
++            case "line":
++                line_ignore = undefined;
++                break;
++            case true:
++                source_line = "";
++                break;
++            }
 
--        warn("unexpected_a", right);
-+        // hack-jslint - unexpected_a
-+        warn("unexpected_a", right, null, null, left, right);
+-        warnings: warnings.sort(function (a, b) {
+-            return a.line - b.line || a.column - b.column;
+-        })
++        // hack-jslint - sort by early_stop
++        warnings: warnings.sort(function (a, b) {
++            return (
++                a.early_stop
++                ? -1
++                : b.early_stop
++                ? 1
++                : a.line - b.line || a.column - b.column
++            );
++        }),
++        // hack-jslint - autofix
++        source_autofixed: source
 
 -    if (cadet.id === "(comment)") {
 +    // hack-jslint - advance token async/await to next_token by context
@@ -60,34 +117,194 @@ shRawLibFetch
 +    }
 +    if (cadet.id === "(comment)") {
 
--    single: true,
-+    // hack-jslint - nomen
-+    nomen: true,
-+    single: true,
+-    return the_switch;
++    // hack-jslint - validate sorted-case-statements
++    let aa;
++    let bb;
++    let ii;
++    ii = 0;
++    while (ii < the_cases.length) {
++        aa = bb;
++        bb = the_cases[ii].expression[0];
++        if (!(
++            ii === 0
++            || (
++                aa.id === "(number)" && bb.id === "(number)"
++                && Number(aa.value) < Number(bb.value)
++            )
++            || lines[aa.line] < lines[bb.line]
++        )) {
++            the_cases.map(function (elem) {
++                return elem.expression[0];
++            });
++            warn_at(
++                "Unsorted case-statements.",
++                the_cases[ii].expression[0].line,
++                0
++            );
++            break;
++        }
++        ii += 1;
++    }
++    return the_switch;
 
--    throw warn(code, the_token, a, b, c, d);
-+    // hack-jslint - early_stop = true
-+    early_stop = true;
-+    throw warn(code, the_token, a, b, c, d);
-
--    throw warn_at(code, line, column, a, b, c, d);
-+    // hack-jslint - early_stop = true
-+    early_stop = true;
-+    throw warn_at(code, line, column, a, b, c, d);
+-    try {
+-        warnings = [];
++    // hack-jslint - init lines_extra
++    line_ignore = undefined;
++    lines = (
++        Array.isArray(source)
++        ? source
++        : source.split(
++            /\n|\r\n?/
++        )
++    );
++    lines_extra = lines.map(function () {
++        return {};
++    });
++    try {
++        warnings = [];
 
 -    warnings.push(warning);
 -    return warning;
-+    // hack-jslint - warn_at_extra
-+    return warn_at_extra(warning, warnings);
++    // hack-jslint - line_ignore
++    Object.assign(warning, lines_extra[warning.line]);
++    if (warning.ignore) {
++        return;
++    }
++    // hack-jslint - debug warning
++    if (option.debug) {
++        warning.stack = warning.stack || new Error().stack;
++    }
++    warnings.push(warning);
++    return warning;
 
 -    } catch (e) {
+-        if (e.name !== "JSLintError") {
+-            warnings.push(e);
+-        }
+-    }
 +    } catch (e) {
-+        // hack-jslint - e.early_stop = true
++        // hack-jslint - early_stop
 +        e.early_stop = true;
++        e.column = e.column || -1;
++        e.line = e.line || -1;
++        if (e.name !== "JSLintError") {
++            warnings.push(e);
++        }
++    }
++    // hack-jslint - autofix
++    warnings = warnings.filter(function (warning) {
++        let indent;
++        warning.source = warning.source || "";
++        warning.a = warning.a || warning.source.trim();
++        switch (option.autofix && warning.code) {
++        // expected_a_at_b_c: "Expected '{a}' at column {b}, not column {c}.",
++        case "expected_a_at_b_c":
++            // autofix indent - increment
++            indent = warning.b - warning.c;
++            if (indent >= 0) {
++                lines_extra[warning.line].source_autofixed = (
++                    " ".repeat(indent) + warning.source
++                );
++                return;
++            }
++            // autofix indent - decrement
++            indent = -indent;
++            if ((
++                /^\u0020*?$/m
++            ).test(warning.source.slice(0, warning.column))) {
++                lines_extra[warning.line].source_autofixed = (
++                    warning.source.slice(indent)
++                );
++                return;
++            }
++            // autofix indent - newline
++            lines_extra[warning.line].source_autofixed = (
++                warning.source.slice(0, warning.column) + "\n"
++                + " ".repeat(warning.b) + warning.source.slice(warning.column)
++            );
++            return;
++        // expected_identifier_a:
++        // "Expected an identifier and instead saw '{a}'.",
++        case "expected_identifier_a":
++            if (!(
++                (
++                    /^\d+$/m
++                ).test(warning.a)
++                && warning.source[warning.column + warning.a.length] === ":"
++            )) {
++                return;
++            }
++            lines_extra[warning.line].source_autofixed = (
++                warning.source.slice(0, warning.column)
++                + "\"" + warning.a + "\""
++                + warning.source.slice(warning.column + warning.a.length)
++            );
++            return;
++        // expected_space_a_b: "Expected one space between '{a}' and '{b}'.",
++        // unexpected_space_a_b: "Unexpected space between '{a}' and '{b}'.",
++        case "expected_space_a_b":
++        case "unexpected_space_a_b":
++            lines_extra[warning.line].source_autofixed = (
++                warning.source.slice(0, warning.column)
++                + "\u0000" + warning.code
++                + "\u0000" + warning.source.slice(warning.column)
++            );
++            return;
++        // use_spaces: "Use spaces, not tabs.",
++        case "use_spaces":
++            lines_extra[warning.line].source_autofixed = (
++                warning.source.replace((
++                    /^(\u0020*?)\t/
++                ), "$1   ")
++            );
++            return;
++        }
++        return true;
++    });
++    // expected_space_a_b: "Expected one space between '{a}' and '{b}'.",
++    // unexpected_space_a_b: "Unexpected space between '{a}' and '{b}'.",
++    source = lines_extra.map(function (element, ii) {
++        return element.source_autofixed || lines[ii];
++    }).join("\n").replace((
++        /\s+?\u0000/g
++    ), "\u0000").replace((
++        /(\n\u0020+)(.*?)\n\u0020*?(\/\/.*?)\u0000/g
++    ), "$1$3$1$2\u0000").replace((
++        /\u0000expected_space_a_b\u0000/g
++    ), " ").replace((
++        /\u0000unexpected_space_a_b\u0000/g
++    ), "");
++    // hack-jslint - debug warning
++    warnings.some(function (warning) {
++        if (!option.utility2) {
++            return true;
++        }
++        warning.option = Object.assign({}, option);
++        Object.keys(warning.option).forEach(function (key) {
++            if (typeof warning.option[key] === "object") {
++                delete warning.option[key];
++            }
++        });
++        warning.source_autofixed = (
++            lines_extra[warning.line]
++            && lines_extra[warning.line].source_autofixed
++        );
++        return true;
++    });
 
 -/*property
 +// hack-jslint - property
++let line_ignore;
++let lines_extra;
 +/*\property
+
+-const allowed_option = {
++const allowed_option = {
++    // hack-jslint - allowed_option extra
++    debug: true,
++    nomen: true,
 
 -const rx_token = /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0|[1-9][0-9]*))(.*)$/;
 -const rx_digits = /^([0-9]+)(.*)$/;
@@ -102,8 +319,8 @@ shRawLibFetch
 +const rx_bits = /^([01]+n?)(.*)$/;
 
 -export default Object.freeze(function jslint(
-+// hack-jslint - jslint0
-+jslint0 = Object.freeze(function (
++// hack-jslint - jslint_export
++local.jslint_export = Object.freeze(function (
 */
 
 
@@ -10832,17 +11049,17 @@ return CSSLint;
 
 
 /*
-repo https://github.com/douglascrockford/JSLint/tree/95c4e8a2cfd424d15e90745dbadadf3251533183
-committed 2020-01-17T22:36:41Z
+repo https://github.com/douglascrockford/JSLint/tree/686716b71f6d45d3c233e1cfa026a1e5f46747aa
+committed 2020-03-28T12:46:58Z
 */
 
 
 
 /*
-file https://github.com/douglascrockford/JSLint/blob/95c4e8a2cfd424d15e90745dbadadf3251533183/jslint.js
+file https://github.com/douglascrockford/JSLint/blob/686716b71f6d45d3c233e1cfa026a1e5f46747aa/jslint.js
 */
 // jslint.js
-// 2020-01-17
+// 2020-03-28
 // Copyright (c) 2015 Douglas Crockford  (www.JSLint.com)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -10929,6 +11146,8 @@ file https://github.com/douglascrockford/JSLint/blob/95c4e8a2cfd424d15e90745dbad
 // WARNING: JSLint will hurt your feelings.
 
 // hack-jslint - property
+let line_ignore;
+let lines_extra;
 /*\property
     a, and, arity, assign, b, bad_assignment_a, bad_directive_a, bad_get,
     bad_module_name_a, bad_option_a, bad_property_a, bad_set, bitwise, block,
@@ -10985,8 +11204,10 @@ function populate(array, object = empty(), value = true) {
     return object;
 }
 
-// hack-jslint - var
-var allowed_option = {
+const allowed_option = {
+    // hack-jslint - allowed_option extra
+    debug: true,
+    nomen: true,
 
 // These are the options that are recognized in the option object or that may
 // appear in a /*jslint*/ directive. Most options will have a boolean value,
@@ -11022,8 +11243,6 @@ var allowed_option = {
         "setImmediate", "setInterval", "setTimeout", "TextDecoder",
         "TextEncoder", "URL", "URLSearchParams", "__dirname", "__filename"
     ],
-    // hack-jslint - nomen
-    nomen: true,
     single: true,
     this: true,
     white: true
@@ -11262,12 +11481,10 @@ function supplant(string, object) {
 let anon;               // The guessed name for anonymous functions.
 let blockage;           // The current block.
 let block_stack;        // The stack of blocks.
-// hack-jslint - var
-var declared_globals;   // The object containing the global declarations.
+let declared_globals;   // The object containing the global declarations.
 let directives;         // The directive comments.
 let directive_mode;     // true if directives are still allowed.
-// hack-jslint - var
-var early_stop;         // true if JSLint cannot finish.
+let early_stop;         // true if JSLint cannot finish.
 let exports;            // The exported names and values.
 let froms;              // The array collecting all import-from strings.
 let fudge;              // true if the natural numbers start with 1.
@@ -11275,13 +11492,11 @@ let functionage;        // The current function.
 let functions;          // The array containing all of the functions.
 let global;             // The global object; the outermost context.
 let json_mode;          // true if parsing JSON.
-// hack-jslint - var
-var lines;              // The array containing source lines.
+let lines;              // The array containing source lines.
 let mega_mode;          // true if currently parsing a megastring literal.
 let module_mode;        // true if import or export was used.
 let next_token;         // The next token to be examined in the parse.
-// hack-jslint - var
-var option;             // The options parameter.
+let option;             // The options parameter.
 let property;           // The object containing the tallied property names.
 let shebang;            // true if a #! was seen on the first line.
 let stack;              // The stack of functions.
@@ -11354,16 +11569,23 @@ function warn_at(code, line, column, a, b, c, d) {
         warning.d = d;
     }
     warning.message = supplant(bundle[code] || code, warning);
-    // hack-jslint - warn_at_extra
-    return warn_at_extra(warning, warnings);
+    // hack-jslint - line_ignore
+    Object.assign(warning, lines_extra[warning.line]);
+    if (warning.ignore) {
+        return;
+    }
+    // hack-jslint - debug warning
+    if (option.debug) {
+        warning.stack = warning.stack || new Error().stack;
+    }
+    warnings.push(warning);
+    return warning;
 }
 
 function stop_at(code, line, column, a, b, c, d) {
 
 // Same as warn_at, except that it stops the analysis.
 
-    // hack-jslint - early_stop = true
-    early_stop = true;
     throw warn_at(code, line, column, a, b, c, d);
 }
 
@@ -11400,8 +11622,6 @@ function stop(code, the_token, a, b, c, d) {
         the_token = next_token;
     }
     delete the_token.warning;
-    // hack-jslint - early_stop = true
-    early_stop = true;
     throw warn(code, the_token, a, b, c, d);
 }
 
@@ -11459,6 +11679,13 @@ function tokenize(source) {
             && !json_mode
             && first
             && !regexp_seen
+            // hack-jslint - ignore too_long url
+            && !(
+                option.utility2
+                && (
+                    /^\s*?(?:\/\/(?:!!\u0020|\u0020https:\/\/)|(?:\S+?\u0020)?(?:https:\/\/|this\u0020.*?\u0020package\u0020will\u0020))/m
+                ).test(whole_line)
+            )
         ) {
             warn_at("too_long", line, 80);
         }
@@ -11468,8 +11695,56 @@ function tokenize(source) {
         source_line = lines[line];
         whole_line = source_line || "";
         if (source_line !== undefined) {
-            // hack-jslint - next_line_extra
-            source_line = next_line_extra(source_line, line);
+            // hack-jslint - source_line
+            let line_extra;
+            let match;
+            line_extra = {};
+            line_extra.line = line;
+            line_extra.source = source_line;
+            lines_extra[line] = line_extra;
+            match = (
+                source_line.match(
+                    /^\/\*\u0020jslint\u0020(ignore:start|ignore:end|utility2:true)\u0020\*\/$/m
+                )
+                || source_line.slice(-50).match(
+                    /\u0020\/\/\u0020jslint\u0020(ignore:line)$/m
+                )
+            );
+            switch (match && match[1]) {
+            case "ignore:end":
+                line_ignore = undefined;
+                break;
+            case "ignore:line":
+                line_ignore = "line";
+                break;
+            case "ignore:start":
+                line_ignore = true;
+                break;
+            case "utility2:true":
+                option.bitwise = true;
+                option.browser = true;
+                option.node = true;
+                option.nomen = true;
+                option.this = true;
+                option.utility2 = true;
+                [].concat(
+                    allowed_option.browser,
+                    allowed_option.node,
+                    "globalThis"
+                ).forEach(function (key) {
+                    declared_globals[key] = false;
+                });
+                break;
+            }
+            line_extra.ignore = line_ignore;
+            switch (line_ignore) {
+            case "line":
+                line_ignore = undefined;
+                break;
+            case true:
+                source_line = "";
+                break;
+            }
             at = source_line.search(rx_tab);
             if (at >= 0) {
                 if (!option.white) {
@@ -13036,8 +13311,7 @@ function left_check(left, right) {
             || (id !== "." && id !== "(" && id !== "[")
         )
     ) {
-        // hack-jslint - unexpected_a
-        warn("unexpected_a", right, null, null, left, right);
+        warn("unexpected_a", right);
         return false;
     }
     return true;
@@ -14338,6 +14612,25 @@ stmt("if", function () {
 });
 stmt("import", function () {
     const the_import = token;
+    if (next_token.id === "(") {
+        the_import.arity = "unary";
+        the_import.constant = true;
+        the_import.statement = false;
+        advance("(");
+        const string = expression(0);
+        if (string.id !== "(string)") {
+            warn("expected_string_a", string);
+        }
+        froms.push(token.value);
+        advance(")");
+        advance(".");
+        advance("then");
+        advance("(");
+        the_import.expression = expression(0);
+        advance(")");
+        semicolon();
+        return the_import;
+    }
     let name;
     if (typeof module_mode === "object") {
         warn("unexpected_directive_a", module_mode, module_mode.directive);
@@ -14485,6 +14778,34 @@ stmt("switch", function () {
     advance("}", the_switch);
     functionage.switch -= 1;
     the_switch.disrupt = the_disrupt;
+    // hack-jslint - validate sorted-case-statements
+    let aa;
+    let bb;
+    let ii;
+    ii = 0;
+    while (ii < the_cases.length) {
+        aa = bb;
+        bb = the_cases[ii].expression[0];
+        if (!(
+            ii === 0
+            || (
+                aa.id === "(number)" && bb.id === "(number)"
+                && Number(aa.value) < Number(bb.value)
+            )
+            || lines[aa.line] < lines[bb.line]
+        )) {
+            the_cases.map(function (elem) {
+                return elem.expression[0];
+            });
+            warn_at(
+                "Unsorted case-statements.",
+                the_cases[ii].expression[0].line,
+                0
+            );
+            break;
+        }
+        ii += 1;
+    }
     return the_switch;
 });
 stmt("throw", function () {
@@ -14690,6 +15011,7 @@ function walk_statement(thing) {
             } else if (
                 thing.arity !== "statement"
                 && thing.arity !== "assignment"
+                && thing.id !== "import"
             ) {
                 warn("unexpected_expression_a", thing);
             }
@@ -15227,18 +15549,20 @@ postaction("statement", "for", function (thing) {
 postaction("statement", "function", postaction_function);
 postaction("statement", "import", function (the_thing) {
     const name = the_thing.name;
-    if (Array.isArray(name)) {
-        name.forEach(function (name) {
+    if (name) {
+        if (Array.isArray(name)) {
+            name.forEach(function (name) {
+                name.dead = false;
+                name.init = true;
+                blockage.live.push(name);
+            });
+        } else {
             name.dead = false;
             name.init = true;
             blockage.live.push(name);
-        });
-    } else {
-        name.dead = false;
-        name.init = true;
-        blockage.live.push(name);
+        }
+        return top_level_only(the_thing);
     }
-    return top_level_only(the_thing);
 });
 postaction("statement", "let", action_var);
 postaction("statement", "try", function (thing) {
@@ -15403,7 +15727,7 @@ function whitage() {
 
     function at_margin(fit) {
         const at = margin + fit;
-        // hack-jslint - expected_at
+        // hack-jslint - exact-margin
         if (right.from !== at) {
             return expected_at(at);
         }
@@ -15444,12 +15768,12 @@ function whitage() {
                     ? margin
                     : margin + 8
                 );
-                // hack-jslint - expected_at
+                // hack-jslint - exact-margin
                 if (right.from !== at) {
                     expected_at(at);
                 }
             } else {
-                // hack-jslint - expected_at
+                // hack-jslint - exact-margin
                 if (right.from !== margin + 8) {
                     expected_at(margin + 8);
                 }
@@ -15479,7 +15803,7 @@ function whitage() {
                 );
             }
         } else {
-            // hack-jslint - expected_at
+            // hack-jslint - exact-margin
             if (right.from !== margin) {
                 expected_at(margin);
             }
@@ -15517,7 +15841,7 @@ function whitage() {
                             margin += 4;
                         }
                         if (right.role === "label") {
-                            // hack-jslint - expected_at
+                            // hack-jslint - exact-margin
                             if (right.from !== 0) {
                                 expected_at(0);
                             }
@@ -15578,7 +15902,7 @@ function whitage() {
                     if (right.switch) {
                         at_margin(-4);
                     } else if (right.role === "label") {
-                        // hack-jslint - expected_at
+                        // hack-jslint - exact-margin
                         if (right.from !== 0) {
                             expected_at(0);
                         }
@@ -15627,8 +15951,6 @@ function whitage() {
                     } else if (left.id === ";") {
                         if (open) {
                             at_margin(0);
-                        } else {
-                            one_space();
                         }
                     } else if (
                         left.arity === "ternary"
@@ -15709,12 +16031,24 @@ function whitage() {
 
 // The jslint function itself.
 
-// hack-jslint - jslint0
-jslint0 = Object.freeze(function (
+// hack-jslint - jslint_export
+local.jslint_export = Object.freeze(function (
     source = "",
     option_object = empty(),
     global_array = []
 ) {
+    // hack-jslint - init lines_extra
+    line_ignore = undefined;
+    lines = (
+        Array.isArray(source)
+        ? source
+        : source.split(
+            /\n|\r\n?/
+        )
+    );
+    lines_extra = lines.map(function () {
+        return {};
+    });
     try {
         warnings = [];
         option = Object.assign(empty(), option_object);
@@ -15723,8 +16057,7 @@ jslint0 = Object.freeze(function (
         declared_globals = empty();
         directive_mode = true;
         directives = [];
-        // hack-jslint - early_stop = false
-        early_stop = false;
+        early_stop = true;
         exports = empty();
         froms = [];
         fudge = (
@@ -15797,8 +16130,7 @@ jslint0 = Object.freeze(function (
             advance("(end)");
             functionage = global;
             walk_statement(tree);
-            // hack-jslint - !early_stop
-            if (!early_stop) {
+            if (warnings.length === 0) {
                 uninitialized_and_unused();
                 if (!option.white) {
                     whitage();
@@ -15814,15 +16146,117 @@ jslint0 = Object.freeze(function (
         }
         early_stop = false;
     } catch (e) {
-        // hack-jslint - e.early_stop = true
+        // hack-jslint - early_stop
         e.early_stop = true;
+        e.column = e.column || -1;
+        e.line = e.line || -1;
         if (e.name !== "JSLintError") {
             warnings.push(e);
         }
     }
+    // hack-jslint - autofix
+    warnings = warnings.filter(function (warning) {
+        let indent;
+        warning.source = warning.source || "";
+        warning.a = warning.a || warning.source.trim();
+        switch (option.autofix && warning.code) {
+        // expected_a_at_b_c: "Expected '{a}' at column {b}, not column {c}.",
+        case "expected_a_at_b_c":
+            // autofix indent - increment
+            indent = warning.b - warning.c;
+            if (indent >= 0) {
+                lines_extra[warning.line].source_autofixed = (
+                    " ".repeat(indent) + warning.source
+                );
+                return;
+            }
+            // autofix indent - decrement
+            indent = -indent;
+            if ((
+                /^\u0020*?$/m
+            ).test(warning.source.slice(0, warning.column))) {
+                lines_extra[warning.line].source_autofixed = (
+                    warning.source.slice(indent)
+                );
+                return;
+            }
+            // autofix indent - newline
+            lines_extra[warning.line].source_autofixed = (
+                warning.source.slice(0, warning.column) + "\n"
+                + " ".repeat(warning.b) + warning.source.slice(warning.column)
+            );
+            return;
+        // expected_identifier_a:
+        // "Expected an identifier and instead saw '{a}'.",
+        case "expected_identifier_a":
+            if (!(
+                (
+                    /^\d+$/m
+                ).test(warning.a)
+                && warning.source[warning.column + warning.a.length] === ":"
+            )) {
+                return;
+            }
+            lines_extra[warning.line].source_autofixed = (
+                warning.source.slice(0, warning.column)
+                + "\"" + warning.a + "\""
+                + warning.source.slice(warning.column + warning.a.length)
+            );
+            return;
+        // expected_space_a_b: "Expected one space between '{a}' and '{b}'.",
+        // unexpected_space_a_b: "Unexpected space between '{a}' and '{b}'.",
+        case "expected_space_a_b":
+        case "unexpected_space_a_b":
+            lines_extra[warning.line].source_autofixed = (
+                warning.source.slice(0, warning.column)
+                + "\u0000" + warning.code
+                + "\u0000" + warning.source.slice(warning.column)
+            );
+            return;
+        // use_spaces: "Use spaces, not tabs.",
+        case "use_spaces":
+            lines_extra[warning.line].source_autofixed = (
+                warning.source.replace((
+                    /^(\u0020*?)\t/
+                ), "$1   ")
+            );
+            return;
+        }
+        return true;
+    });
+    // expected_space_a_b: "Expected one space between '{a}' and '{b}'.",
+    // unexpected_space_a_b: "Unexpected space between '{a}' and '{b}'.",
+    source = lines_extra.map(function (element, ii) {
+        return element.source_autofixed || lines[ii];
+    }).join("\n").replace((
+        /\s+?\u0000/g
+    ), "\u0000").replace((
+        /(\n\u0020+)(.*?)\n\u0020*?(\/\/.*?)\u0000/g
+    ), "$1$3$1$2\u0000").replace((
+        /\u0000expected_space_a_b\u0000/g
+    ), " ").replace((
+        /\u0000unexpected_space_a_b\u0000/g
+    ), "");
+    // hack-jslint - debug warning
+    warnings.some(function (warning) {
+        if (!option.utility2) {
+            return true;
+        }
+        warning.option = Object.assign({}, option);
+        Object.keys(warning.option).forEach(function (key) {
+            if (typeof warning.option[key] === "object") {
+                delete warning.option[key];
+            }
+        });
+        warning.source_autofixed = (
+            lines_extra[warning.line]
+            && lines_extra[warning.line].source_autofixed
+        );
+        return true;
+    });
     return {
         directives,
-        edition: "2020-01-17",
+        edition: "2020-03-28",
         exports,
         froms,
         functions,
@@ -15842,9 +16276,18 @@ jslint0 = Object.freeze(function (
         stop: early_stop,
         tokens,
         tree,
+        // hack-jslint - sort by early_stop
         warnings: warnings.sort(function (a, b) {
-            return a.line - b.line || a.column - b.column;
-        })
+            return (
+                a.early_stop
+                ? -1
+                : b.early_stop
+                ? 1
+                : a.line - b.line || a.column - b.column
+            );
+        }),
+        // hack-jslint - autofix
+        source_autofixed: source
     };
 });
 

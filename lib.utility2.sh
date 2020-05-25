@@ -14,6 +14,8 @@
 # git ls-remote --heads origin
 # git update-index --chmod=+x aa.js
 # npm_package_private=1 GITHUB_REPO=aa/node-aa-bb-pro shCryptoWithGithubOrg aa shCryptoTravisEncrypt
+# shCryptoWithGithubOrg aa shCryptoTravisDecrypt ciphertext.txt
+# shCryptoWithGithubOrg aa shCryptoTravisEncrypt plaintext.txt
 # shCryptoWithGithubOrg aa shTravisRepoCreate aa/node-aa-bb
 # shCryptoWithGithubOrg aa shGithubApiRateLimitGet
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/node-aa-bb "touch" alpha
@@ -988,12 +990,17 @@ shCryptoTravisDecrypt () {(set -e
         shBuildPrint "no CRYPTO_AES_KEY"
         return 1
     fi
+    local FILE="$1"
+    if [ -f "$FILE" ]
+    then
+        cat "$FILE" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
+        return
+    fi
     # decrypt CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG
     URL="https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG"
     shBuildPrint "decrypting $URL ..."
-    printf "${1:-"$(curl -#Lf "$URL")"}" |
-        shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
+    curl -#Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
 )}
 
 shCryptoTravisEncrypt () {(set -e
@@ -1006,7 +1013,13 @@ shCryptoTravisEncrypt () {(set -e
         shBuildPrint "no CRYPTO_AES_KEY"
         return 1
     fi
-    if [ ! "$1" ] && [ -f .travis.yml ]
+    local FILE="$1"
+    if [ -f "$FILE" ]
+    then
+        cat "$FILE" | shCryptoAesXxxCbcRawEncrypt "$CRYPTO_AES_KEY" base64
+        return
+    fi
+    if [ -f .travis.yml ]
     then
         TMPFILE="$(mktemp)"
         URL="https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/key"
@@ -1035,13 +1048,6 @@ shCryptoTravisEncrypt () {(set -e
             shBuildPrint "updated .travis.yml with CRYPTO_AES_KEY_ENCRYPTED"
         fi
     fi
-    if [ ! -f "$FILE" ]
-    then
-        return
-    fi
-    # encrypt CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG
-    shBuildPrint "CRYPTO_AES_SH_ENCRYPTED:"
-    cat "$FILE" | shCryptoAesXxxCbcRawEncrypt "$CRYPTO_AES_KEY" base64
 )}
 
 shCryptoWithGithubOrg () {(set -e
@@ -1820,6 +1826,11 @@ require("http").createServer(function (req, res) {
             res.end();
             return;
         }
+        switch (require("path").extname(file)) {
+        case ".wasm":
+            res.setHeader("content-type", "application/wasm");
+            break;
+        }
         res.end(data);
     });
 }).listen(process.env.PORT);
@@ -2419,6 +2430,7 @@ Object.entries(repoDict).forEach(function ([
 process.on("exit", function () {
     let repoPrefix0;
     let requireDict;
+    let result0;
     let result;
     result = "";
     requireDict = {};
@@ -2489,10 +2501,17 @@ process.on("exit", function () {
     result = normalizeWhitespace(result);
     // replaceList
     Array.from(opt.replaceList || []).forEach(function (elem) {
+        result0 = result;
         result = result.replace(
             new RegExp(elem.source, elem.flags),
             elem.replace
         );
+        if (result0 === result) {
+            throw new Error(
+                "shRawLibFetch - cannot find-and-replace snippet "
+                + JSON.stringify(elem.source)
+            );
+        }
     });
     result = result.trim() + "\n";
     // replace diff
@@ -3623,17 +3642,9 @@ export UTILITY2_MACRO_JS='
             fs.writeFileSync(file, data);
         } catch (ignore) {
             // mkdir -p
-            require("child_process").spawnSync(
-                "mkdir",
-                [
-                    "-p", require("path").dirname(file)
-                ],
-                {
-                    stdio: [
-                        "ignore", 1, 2
-                    ]
-                }
-            );
+            fs.mkdirSync(require("path").dirname(file), {
+                recursive: true
+            });
             // rewrite file
             fs.writeFileSync(file, data);
         }
@@ -4146,7 +4157,8 @@ local.jsonStringifyOrdered = function (obj, replacer, space) {
      * this function will recursively JSON.stringify obj,
      * with object-keys sorted and circular-references removed
      */
-        // if obj is not an object or function, then JSON.stringify as normal
+        // if obj is not an object or function,
+        // then JSON.stringify as normal
         if (!(
             obj
             && typeof obj === "object"
@@ -4265,45 +4277,6 @@ local.objectSetDefault = function (dict, defaults, depth) {
             // recurse
             local.objectSetDefault(dict2, defaults2, depth - 1);
         }
-    });
-    return dict;
-};
-
-local.objectSetOverride = function (dict, overrides, depth, env) {
-/*
- * this function will recursively set overrides for items in dict
- */
-    dict = dict || {};
-    env = env || (typeof process === "object" && process.env) || {};
-    overrides = overrides || {};
-    Object.keys(overrides).forEach(function (key) {
-        let dict2;
-        let overrides2;
-        dict2 = dict[key];
-        overrides2 = overrides[key];
-        if (overrides2 === undefined) {
-            return;
-        }
-        // if both dict2 and overrides2 are non-undefined and non-array objects,
-        // then recurse with dict2 and overrides2
-        if (
-            depth > 1
-            // dict2 is a non-undefined and non-array object
-            && typeof dict2 === "object" && dict2 && !Array.isArray(dict2)
-            // overrides2 is a non-undefined and non-array object
-            && typeof overrides2 === "object" && overrides2
-            && !Array.isArray(overrides2)
-        ) {
-            local.objectSetOverride(dict2, overrides2, depth - 1, env);
-            return;
-        }
-        // else set dict[key] with overrides[key]
-        dict[key] = (
-            dict === env
-            // if dict is env, then overrides falsy-value with empty-string
-            ? overrides2 || ""
-            : overrides2
-        );
     });
     return dict;
 };
