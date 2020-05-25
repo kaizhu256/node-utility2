@@ -63,6 +63,7 @@ this zero-dependency package will provide high-level functions to to build, test
 - none
 
 #### todo
+- istanbul - remove filesUnderRoot subroutine
 - jslint - add nullish-coalescing support
 - jslint - add optional-chaining support
 - jslint - prefer undefined over null
