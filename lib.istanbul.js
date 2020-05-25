@@ -11042,7 +11042,7 @@ reportTextWrite = function (node, dir) {
                     node.relativeNameOrAllFiles,
                     nodeNameWidth,
                     false,
-                    level,
+                    Math.max(level - 1, 0),
                     score
                 )
                 : stringPad(pct, 10, true, 0, score)
@@ -11060,7 +11060,7 @@ reportTextWrite = function (node, dir) {
         + stringPad("File", nodeNameWidth, false, 0)
         + " |   % Stmts |% Branches |   % Funcs |   % Lines |\n"
         + result
-        + recurse(node)
+        + recurse(node, 0)
         + result
     );
     console.error(result);
