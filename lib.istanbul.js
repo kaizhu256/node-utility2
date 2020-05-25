@@ -10577,11 +10577,7 @@ lineInsertAt = function (lineObj, col, str, insertBefore, consumeBlanks) {
         ? lineObj.origLength
         : col
     );
-    col = (
-        col < 0
-        ? 0
-        : col
-    );
+    col = Math.max(col, 0);
     if (consumeBlanks) {
         if (col <= lineObj.startCol) {
             col = 0;
@@ -10727,9 +10723,6 @@ nodeNormalize = function (node, level, filePrefix, parent) {
     // init <metrics>
     if (node.kind === "dir") {
         node.children.forEach(function (child) {
-            if (!child && child.metrics) {
-                return;
-            }
             [
                 "lines", "statements", "branches", "functions"
             ].forEach(function (key) {
@@ -10760,7 +10753,7 @@ nodeNormalize = function (node, level, filePrefix, parent) {
         );
     });
 };
-reportHtmlWrite = function (node, dir, coverage) {
+reportHtmlWrite = function (node, dirCoverage, coverage) {
 /*
  * this function will recursively write <htmlData>
  * from <node> to <dir>/<htmlFile>
@@ -11067,7 +11060,13 @@ reportHtmlWrite = function (node, dir, coverage) {
             /<h1\u0020[\S\s]*<\/h1>/
         ), "");
     }
-    recurse(node, 0, dir);
+    recurse(node, 0, dirCoverage);
+    htmlAll += "</div>\n</div>\n";
+    // write coverage.rollup.html
+    local.fsWriteFileWithMkdirpSync(
+        dirCoverage + "/coverage.rollup.html",
+        htmlAll
+    );
 };
 reportTextWrite = function (node, dir) {
 /*
@@ -11286,9 +11285,6 @@ local.coverageMerge = function (coverage1 = {}, coverage2 = {}) {
     let dict1;
     let dict2;
     Object.keys(coverage2).forEach(function (file) {
-        if (!coverage2[file]) {
-            return;
-        }
         // if <coverage1>[<file>] is undefined, then add it
         if (!coverage1[file]) {
             coverage1[file] = coverage2[file];
@@ -11379,7 +11375,10 @@ local.coverageReportCreate = function (opt) {
         let metric;
         let skipped;
         let summary;
-        if (fileCoverage && globalThis.__coverageCodeDict__[file]) {
+        if (
+            fileCoverage
+            && globalThis.__coverageCodeDict__.hasOwnProperty(file)
+        ) {
             // reset line-count
             delete opt.coverage[file].l;
             // init <summary>
@@ -11410,23 +11409,20 @@ local.coverageReportCreate = function (opt) {
                 }
             };
             // init line-count
-            if (!fileCoverage.l) {
-                fileCoverage.l = {};
-                Object.entries(fileCoverage.s).forEach(function ([
-                    st,
-                    count
-                ]) {
-                    let line;
-                    if (count === 0 && fileCoverage.statementMap[st].skip) {
-                        count = 1;
-                    }
-                    line = fileCoverage.statementMap[st].start.line;
-                    fileCoverage.l[line] = Math.max(
-                        fileCoverage.l[line] | 0,
-                        count
-                    );
-                });
-            }
+            fileCoverage.l = {};
+            Object.entries(fileCoverage.s).forEach(function ([
+                key,
+                count
+            ]) {
+                let line;
+                if (count === 0 && fileCoverage.statementMap[key].skip) {
+                    count = 1;
+                }
+                line = fileCoverage.statementMap[key].start.line;
+                fileCoverage.l[line] = (
+                    Math.max(fileCoverage.l[line] | 0, count)
+                );
+            });
             // computeSimpleTotals
             [
                 [
@@ -11492,7 +11488,7 @@ local.coverageReportCreate = function (opt) {
             });
         }
     });
-    // convert <summaryDict> to <nodeRoot>
+    // 4. convert <summaryDict> to <nodeRoot>
     tmp = filePrefix.join(path.sep) + path.sep;
     nodeRoot = nodeCreate(tmp, "dir");
     nodeDict = {};
@@ -11540,22 +11536,21 @@ local.coverageReportCreate = function (opt) {
     }
     nodeNameWidth = 0;
     nodeNormalize(nodeRoot, 0, filePrefix.join(path.sep) + path.sep);
-    // 2. print coverage in text-format to stdout
+    // 5. write coverage-report in text-format to <dirCoverage>
     reportTextWrite(nodeRoot, dirCoverage);
-    // create HtmlReport
-    // 3. write coverage in html-format to filesystem
+    // 6. write coverage-report in html-format to <dirCoverage>
     reportHtmlWrite(nodeRoot, dirCoverage, opt.coverage);
-    // write coverage.json
+    // 7. write <dirCoverage>/coverage.json
     local.fsWriteFileWithMkdirpSync(
         dirCoverage + "/coverage.json",
         JSON.stringify(opt.coverage)
     );
-    // write coverage.code-dict.json
+    // 8. write <dirCoverage>/coverage.code-dict.json
     local.fsWriteFileWithMkdirpSync(
         dirCoverage + "/coverage.code-dict.json",
         JSON.stringify(globalThis.__coverageCodeDict__)
     );
-    // write coverage.badge.svg
+    // 9. write coverage.badge.svg
     tmp = nodeRoot.metrics.lines.pct;
     local.fsWriteFileWithMkdirpSync(
         local._istanbul_path.dirname(dirCoverage) + "/coverage.badge.svg",
@@ -11572,13 +11567,7 @@ local.coverageReportCreate = function (opt) {
         ))
     );
     console.log("created coverage file " + dirCoverage + "/index.html");
-    // 4. return coverage in html-format as single document
-    htmlAll += "</div>\n</div>\n";
-    // write coverage.rollup.html
-    local.fsWriteFileWithMkdirpSync(
-        dirCoverage + "/coverage.rollup.html",
-        htmlAll
-    );
+    // 10. return coverage-report in html-format as single document
     return htmlAll;
 };
 
