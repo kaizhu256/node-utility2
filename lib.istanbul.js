@@ -10678,7 +10678,7 @@ nodeCreate = function (fullName, kind, metrics) {
 };
 nodeNormalize = function (node, level, filePrefix, parent) {
 /*
- * this function will recursively normalize <node>.name and <node>.relativeName
+ * this function will recursively normalize <node> and its children
  */
     // init <name>
     if (node.name.indexOf(filePrefix) === 0) {
@@ -11333,8 +11333,8 @@ local.coverageReportCreate = function (opt) {
     let dirCoverage;
     let filePrefix;
     let filesUnderRoot;
+    let nodeDict;
     let nodeRoot;
-    let seen;
     let summaryDict;
     let tmp;
     let tmpChildren;
@@ -11495,8 +11495,8 @@ local.coverageReportCreate = function (opt) {
     // convert <summaryDict> to <nodeRoot>
     tmp = filePrefix.join(path.sep) + path.sep;
     nodeRoot = nodeCreate(tmp, "dir");
-    seen = {};
-    seen[tmp] = nodeRoot;
+    nodeDict = {};
+    nodeDict[tmp] = nodeRoot;
     filesUnderRoot = false;
     Object.entries(summaryDict).forEach(function ([
         key,
@@ -11506,16 +11506,16 @@ local.coverageReportCreate = function (opt) {
         let parent;
         let parentPath;
         node = nodeCreate(key, "file", metrics);
-        seen[key] = node;
+        nodeDict[key] = node;
         parentPath = path.dirname(key) + path.sep;
         if (parentPath === path.sep + path.sep) {
             parentPath = path.sep + "__root__" + path.sep;
         }
-        parent = seen[parentPath];
+        parent = nodeDict[parentPath];
         if (!parent) {
             parent = nodeCreate(parentPath, "dir");
             nodeChildAdd(nodeRoot, parent);
-            seen[parentPath] = parent;
+            nodeDict[parentPath] = parent;
         }
         nodeChildAdd(parent, node);
         if (parent === nodeRoot) {
