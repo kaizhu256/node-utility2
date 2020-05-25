@@ -11341,9 +11341,9 @@ local.coverageReportCreate = function (opt) {
     if (!(opt && opt.coverage)) {
         return "";
     }
-    // init <dirCoverage>
+    // 1. init <dirCoverage>
     dirCoverage = process.cwd() + "/tmp/build/coverage.html";
-    // merge previous coverage
+    // 2. merge previous coverage <dirCoverage>/coverage.json
     if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
         console.log(
             "merging file " + dirCoverage + "/coverage.json to coverage"
@@ -11369,9 +11369,9 @@ local.coverageReportCreate = function (opt) {
             );
         });
     }
-    // init <summaryDict>
+    // 3. create <summaryDict> from <opt>.coverage
     summaryDict = {};
-    Object.entries(globalThis.__coverage__).forEach(function ([
+    Object.entries(opt.coverage).forEach(function ([
         file,
         fileCoverage
     ]) {
@@ -11381,7 +11381,7 @@ local.coverageReportCreate = function (opt) {
         let summary;
         if (fileCoverage && globalThis.__coverageCodeDict__[file]) {
             // reset line-count
-            delete globalThis.__coverage__[file].l;
+            delete opt.coverage[file].l;
             // init <summary>
             summary = {
                 branches: {
