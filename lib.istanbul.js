@@ -11353,7 +11353,7 @@ local.coverageReportCreate = function (opt) {
         try {
             tmp = {};
             tmp = JSON.parse(local.fs.readFileSync(
-                dirCoverage + "/coverage.code-dict.json",
+                dirCoverage + "/coverage.include.json",
                 "utf8"
             ));
         } catch (ignore) {}
@@ -11538,9 +11538,9 @@ local.coverageReportCreate = function (opt) {
         dirCoverage + "/coverage.json",
         JSON.stringify(opt.coverage)
     );
-    // 8. write <dirCoverage>/coverage.code-dict.json
+    // 8. write <dirCoverage>/coverage.include.json
     local.fsWriteFileWithMkdirpSync(
-        dirCoverage + "/coverage.code-dict.json",
+        dirCoverage + "/coverage.include.json",
         JSON.stringify(coverageInclude)
     );
     // 9. write coverage.badge.svg
