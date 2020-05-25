@@ -11330,7 +11330,7 @@ local.coverageReportCreate = function (opt) {
  * 3. write coverage in html-format to filesystem
  * 4. return coverage in html-format as single document
  */
-    let dir;
+    let coverageDir;
     let filePrefix;
     let filesUnderRoot;
     let nodeRoot;
@@ -11341,15 +11341,17 @@ local.coverageReportCreate = function (opt) {
     if (!(opt && opt.coverage)) {
         return "";
     }
-    // init <dir>
-    dir = process.cwd() + "/tmp/build/coverage.html";
+    // init <coverageDir>
+    coverageDir = process.cwd() + "/tmp/build/coverage.html";
     // merge previous coverage
     if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
-        console.log("merging file " + dir + "/coverage.json to coverage");
+        console.log(
+            "merging file " + coverageDir + "/coverage.json to coverage"
+        );
         try {
             tmp = {};
             tmp = JSON.parse(local.fs.readFileSync(
-                dir + "/coverage.json",
+                coverageDir + "/coverage.json",
                 "utf8"
             ));
         } catch (ignore) {}
@@ -11357,7 +11359,7 @@ local.coverageReportCreate = function (opt) {
         try {
             tmp = {};
             tmp = JSON.parse(local.fs.readFileSync(
-                dir + "/coverage.code-dict.json",
+                coverageDir + "/coverage.code-dict.json",
                 "utf8"
             ));
         } catch (ignore) {}
@@ -11539,24 +11541,24 @@ local.coverageReportCreate = function (opt) {
     nodeNameWidth = 0;
     nodeNormalize(nodeRoot, 0, filePrefix.join(path.sep) + path.sep);
     // 2. print coverage in text-format to stdout
-    reportTextWrite(nodeRoot, dir);
+    reportTextWrite(nodeRoot, coverageDir);
     // create HtmlReport
     // 3. write coverage in html-format to filesystem
-    reportHtmlWrite(nodeRoot, dir);
+    reportHtmlWrite(nodeRoot, coverageDir);
     // write coverage.json
     local.fsWriteFileWithMkdirpSync(
-        dir + "/coverage.json",
+        coverageDir + "/coverage.json",
         JSON.stringify(opt.coverage)
     );
     // write coverage.code-dict.json
     local.fsWriteFileWithMkdirpSync(
-        dir + "/coverage.code-dict.json",
+        coverageDir + "/coverage.code-dict.json",
         JSON.stringify(globalThis.__coverageCodeDict__)
     );
     // write coverage.badge.svg
     tmp = nodeRoot.metrics.lines.pct;
     local.fsWriteFileWithMkdirpSync(
-        local._istanbul_path.dirname(dir) + "/coverage.badge.svg",
+        local._istanbul_path.dirname(coverageDir) + "/coverage.badge.svg",
         // edit coverage badge percent
         // edit coverage badge color
         local.templateCoverageBadgeSvg.replace((
@@ -11569,12 +11571,12 @@ local.coverageReportCreate = function (opt) {
             + "00"
         ))
     );
-    console.log("created coverage file " + dir + "/index.html");
+    console.log("created coverage file " + coverageDir + "/index.html");
     // 4. return coverage in html-format as single document
     htmlAll += "</div>\n</div>\n";
     // write coverage.rollup.html
     local.fsWriteFileWithMkdirpSync(
-        dir + "/coverage.rollup.html",
+        coverageDir + "/coverage.rollup.html",
         htmlAll
     );
     return htmlAll;
