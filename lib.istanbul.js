@@ -10555,7 +10555,6 @@ lineCreate = function (line, text, consumeBlanks) {
     }
     return {
         consumeBlanks,
-        covered: null,
         endCol,
         line,
         offsets: [],
@@ -10677,8 +10676,7 @@ nodeCreate = function (fullName, kind, metrics) {
                 pct: "Unknown"
             }
         },
-        name: fullName,
-        parent: null
+        name: fullName
     };
 };
 nodeNormalize = function (node, level, filePrefix, parent) {
@@ -10858,7 +10856,7 @@ reportHtmlWrite = function (node, level, dir) {
         );
     });
     structured.forEach(function (item) {
-        if (item.covered === null) {
+        if (item.covered === undefined) {
             item.covered = "neutral";
         }
     });
@@ -11241,12 +11239,12 @@ local.coverageMerge = function (coverage1 = {}, coverage2 = {}) {
         if (!coverage2[file]) {
             return;
         }
-        // if file is undefined in <coverage1>, then add it
+        // if <coverage1>[<file>] is undefined, then add it
         if (!coverage1[file]) {
             coverage1[file] = coverage2[file];
             return;
         }
-        // merge file from <coverage2> into <coverage1>
+        // merge <coverage2> into <coverage1>
         [
             "b", "f", "s"
         ].forEach(function (key) {
