@@ -11334,14 +11334,14 @@ local.coverageReportCreate = function (opt) {
     let filePrefix;
     let filesUnderRoot;
     let seen;
-    let summaryMap;
+    let summaryDict;
     let tmp;
     let tmpChildren;
     let tree;
     if (!(opt && opt.coverage)) {
         return "";
     }
-    // init dir
+    // init <dir>
     dir = process.cwd() + "/tmp/build/coverage.html";
     // merge previous coverage
     if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
@@ -11369,7 +11369,7 @@ local.coverageReportCreate = function (opt) {
     }
     // create TextReport
     // 1. summarize coverage
-    summaryMap = {};
+    summaryDict = {};
     Object.entries(globalThis.__coverage__).forEach(function ([
         file,
         fileCoverage
@@ -11478,7 +11478,7 @@ local.coverageReportCreate = function (opt) {
                 elem.total += branches.length;
             });
             summary.branches = elem;
-            summaryMap[file] = summary;
+            summaryDict[file] = summary;
             // findCommonArrayPrefix
             tmp = file.split(path.sep);
             if (!filePrefix) {
@@ -11493,13 +11493,13 @@ local.coverageReportCreate = function (opt) {
             });
         }
     });
-    // convert <summaryMap> to <tree>
+    // convert <summaryDict> to <tree>
     tmp = filePrefix.join(path.sep) + path.sep;
     tree = nodeCreate(tmp, "dir");
     seen = {};
     seen[tmp] = tree;
     filesUnderRoot = false;
-    Object.entries(summaryMap).forEach(function ([
+    Object.entries(summaryDict).forEach(function ([
         key,
         metrics
     ]) {
