@@ -10648,13 +10648,7 @@ nodeCreate = function (fullName, kind, metrics) {
         fullName,
         kind,
         metrics: metrics || {
-            lines: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: "Unknown"
-            },
-            statements: {
+            branches: {
                 total: 0,
                 covered: 0,
                 skipped: 0,
@@ -10666,7 +10660,13 @@ nodeCreate = function (fullName, kind, metrics) {
                 skipped: 0,
                 pct: "Unknown"
             },
-            branches: {
+            lines: {
+                total: 0,
+                covered: 0,
+                skipped: 0,
+                pct: "Unknown"
+            },
+            statements: {
                 total: 0,
                 covered: 0,
                 skipped: 0,
@@ -11367,8 +11367,7 @@ local.coverageReportCreate = function (opt) {
             );
         });
     }
-    // create TextReport
-    // 1. summarize coverage
+    // init <summaryMap>
     summaryDict = {};
     Object.entries(globalThis.__coverage__).forEach(function ([
         file,
@@ -11377,17 +11376,11 @@ local.coverageReportCreate = function (opt) {
         let elem;
         let summary;
         if (fileCoverage && globalThis.__coverageCodeDict__[file]) {
-            // reset derived info
+            // reset line-count
             delete globalThis.__coverage__[file].l;
-            // summarizeFileCoverage
+            // init <summary>
             summary = {
-                lines: {
-                    total: 0,
-                    covered: 0,
-                    skipped: 0,
-                    pct: "Unknown"
-                },
-                statements: {
+                branches: {
                     total: 0,
                     covered: 0,
                     skipped: 0,
@@ -11399,14 +11392,20 @@ local.coverageReportCreate = function (opt) {
                     skipped: 0,
                     pct: "Unknown"
                 },
-                branches: {
+                lines: {
+                    total: 0,
+                    covered: 0,
+                    skipped: 0,
+                    pct: "Unknown"
+                },
+                statements: {
                     total: 0,
                     covered: 0,
                     skipped: 0,
                     pct: "Unknown"
                 }
             };
-            // addDerivedInfoForFile
+            // init line-count
             if (!fileCoverage.l) {
                 fileCoverage.l = {};
                 Object.entries(fileCoverage.s).forEach(function ([
