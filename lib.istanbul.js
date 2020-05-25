@@ -11175,13 +11175,9 @@ templateRender = function (template, node) {
         val = node;
         // iteratively lookup nested <val> in <node>
         String(match0.slice(2, -2)).split(".").forEach(function (key) {
-            val = val && val[key];
+            val = val[key];
         });
-        return (
-            val === undefined
-            ? match0
-            : val
-        );
+        return val;
     });
     // render #show_line_execution_count
     template = template.replace("{{#show_line_execution_count}}", function () {
@@ -11360,9 +11356,7 @@ local.coverageReportCreate = function (opt) {
             ));
         } catch (ignore) {}
         Object.keys(tmp).forEach(function (key) {
-            globalThis.__coverageCodeDict__[key] = (
-                globalThis.__coverageCodeDict__[key] || true
-            );
+            globalThis.__coverageCodeDict__[key] = true;
         });
     }
     // 3. create <summaryDict> from <opt>.coverage
@@ -11573,9 +11567,9 @@ local.coverageReportCreate = function (opt) {
 
 local.instrumentInPackage = function (code, file) {
 /*
- * this function will instrument the code
- * only if the macro /\* istanbul instrument in package $npm_package_nameLib *\/
- * exists in the code
+ * this function will instrument <code>
+ * if macro /\* istanbul instrument in package $npm_package_nameLib *\/
+ * exists in <code>
  */
     return (
         (
@@ -11601,13 +11595,13 @@ local.instrumentInPackage = function (code, file) {
 local.instrumentSync = function (code, file) {
 /*
  * this function will
- * 1. normalize the file
- * 2. save code to __coverageCodeDict__[file] for future html-report
+ * 1. normalize <file>
+ * 2. save <code> to __coverageCodeDict__[<file>] for future html-report
  * 3. return instrumented code
  */
-    // 1. normalize the file
+    // 1. normalize <file>
     file = local._istanbul_path.resolve("/", file);
-    // 2. save code to __coverageCodeDict__[file] for future html-report
+    // 2. save <code> to __coverageCodeDict__[<file>] for future html-report
     globalThis.__coverageCodeDict__[file] = true;
     // 3. return instrumented code
     return new local.Instrumenter({
@@ -11709,9 +11703,8 @@ local.cliDict.report = function () {
         local.fs.readFileSync(process.argv[3])
     );
     globalThis.__coverageCodeDict__ = {};
-    Object.entries(globalThis.__coverage__).forEach(function (entry) {
-        globalThis.__coverageCodeDict__[entry[0]] = true;
-        entry[1].code = entry[1].code || entry[1].text.split("\n");
+    Object.keys(globalThis.__coverage__).forEach(function (key) {
+        globalThis.__coverageCodeDict__[key] = true;
     });
     local.coverageReportCreate({
         coverage: globalThis.__coverage__

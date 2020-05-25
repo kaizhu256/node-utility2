@@ -1400,7 +1400,7 @@ local.testCase_listShuffle_default = function (opt, onError) {
         opt.changed = opt.changed || opt.listShuffled !== opt.list;
         opt.ii += 1;
     }
-    // validate list changed at least once during the shuffle
+    // validate list changed at least once during shuffle
     local.assertOrThrow(opt.changed, opt);
     onError(undefined, opt);
 };
@@ -2776,7 +2776,7 @@ local.testCase_webpage_err = function (opt, onError) {
 
 local.utility2.serverLocalUrlTest = function (url) {
 /*
- * this function will test if the url is local
+ * this function will test if <url> is local
  */
     url = local.urlParse(url).pathname;
     return local.isBrowser && !local.env.npm_config_mode_backend && (
@@ -2802,7 +2802,7 @@ local.stateInit({});
 // init test-middleware
 local.middlewareList.push(function (req, res, next) {
 /*
- * this function will run the test-middleware
+ * this function will run test-middleware
  */
     switch (req.urlParsed.pathname) {
     // test http POST handling-behavior
