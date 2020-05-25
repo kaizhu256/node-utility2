@@ -10516,8 +10516,6 @@ let reportHtmlWrite;
 let reportTextWrite;
 let stringPad;
 let summaryMap;
-let templateFoot;
-let templateHead;
 let templateRender;
 // require module
 path = require("path");
@@ -10770,6 +10768,8 @@ reportHtmlWrite = function (node, dir) {
  * https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
  */
     let recurse;
+    let templateFoot;
+    let templateHead;
     recurse = function (node, level, dir) {
         let fileCoverage;
         let htmlData;
