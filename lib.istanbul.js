@@ -11367,13 +11367,15 @@ local.coverageReportCreate = function (opt) {
             );
         });
     }
-    // init <summaryMap>
+    // init <summaryDict>
     summaryDict = {};
     Object.entries(globalThis.__coverage__).forEach(function ([
         file,
         fileCoverage
     ]) {
-        let elem;
+        let map;
+        let metric;
+        let skipped;
         let summary;
         if (fileCoverage && globalThis.__coverageCodeDict__[file]) {
             // reset line-count
@@ -11435,29 +11437,27 @@ local.coverageReportCreate = function (opt) {
                     "statements", "s", "statementMap"
                 ]
             ].forEach(function ([
-                key, property, mapProperty
+                keyMetric, keyCovered, keyMap
             ]) {
-                let map;
-                elem = {
+                map = fileCoverage[keyMap];
+                metric = {
                     total: 0,
                     covered: 0,
                     skipped: 0
                 };
-                map = fileCoverage[mapProperty];
-                Object.entries(fileCoverage[property]).forEach(function ([
+                Object.entries(fileCoverage[keyCovered]).forEach(function ([
                     key,
                     covered
                 ]) {
-                    let skipped;
                     skipped = map && map[key].skip;
-                    elem.total += 1;
-                    elem.covered += Boolean(covered || skipped);
-                    elem.skipped += Boolean(!covered && skipped);
+                    metric.total += 1;
+                    metric.covered += Boolean(covered || skipped);
+                    metric.skipped += Boolean(!covered && skipped);
                 });
-                summary[key] = elem;
+                summary[keyMetric] = metric;
             });
             // computeBranchTotals
-            elem = {
+            metric = {
                 total: 0,
                 covered: 0,
                 skipped: 0
@@ -11466,17 +11466,15 @@ local.coverageReportCreate = function (opt) {
                 key,
                 branches
             ]) {
-                let map;
                 map = fileCoverage.branchMap[key].locations;
                 branches.forEach(function (covered, ii) {
-                    let skipped;
                     skipped = map && map[ii] && map[ii].skip;
-                    elem.covered += Boolean(covered || skipped);
-                    elem.skipped += Boolean(!covered && skipped);
+                    metric.covered += Boolean(covered || skipped);
+                    metric.skipped += Boolean(!covered && skipped);
                 });
-                elem.total += branches.length;
+                metric.total += branches.length;
             });
-            summary.branches = elem;
+            summary.branches = metric;
             summaryDict[file] = summary;
             // findCommonArrayPrefix
             tmp = file.split(path.sep);
