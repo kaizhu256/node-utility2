@@ -10516,7 +10516,6 @@ let reportHtmlWrite;
 let reportTextWrite;
 let stringPad;
 let summaryMap;
-let summaryText;
 let templateFoot;
 let templateHead;
 let templateRender;
@@ -11022,59 +11021,52 @@ reportHtmlWrite = function (node, level, dir) {
     htmlAll += htmlData + "\n\n";
     local.fsWriteFileWithMkdirpSync(htmlFile, htmlData);
 };
-reportTextWrite = function (node, level) {
+reportTextWrite = function (node, dir) {
 /*
- * this function will recursively summarize <node>
+ * this function will recursively write <node> to <dir>/coverage.txt
  */
-    let line;
-    let tableRow;
-    tableRow = [
-        node.metrics.statements,
-        node.metrics.statements,
-        node.metrics.branches,
-        node.metrics.functions,
-        node.metrics.lines
-    ].map(function ({
-        pct,
-        score
-    }, ii) {
-        return (
-            ii === 0
-            ? stringPad(
-                node.relativeNameOrAllFiles,
-                nodeNameWidth,
-                false,
-                level,
-                score
-            )
-            : stringPad(pct, 10, true, 0, score)
-        );
-    }).join(" |") + " |\n";
-    if (level !== 0) {
-        summaryText += tableRow;
-        // recurse
-        node.children.forEach(function (child) {
-            reportTextWrite(child, level + 1);
-        });
-        return;
-    }
-    line = (
+    let recurse;
+    let result;
+    recurse = function (node, level) {
+        return [
+            node.metrics.statements,
+            node.metrics.statements,
+            node.metrics.branches,
+            node.metrics.functions,
+            node.metrics.lines
+        ].map(function ({
+            pct,
+            score
+        }, ii) {
+            return (
+                ii === 0
+                ? stringPad(
+                    node.relativeNameOrAllFiles,
+                    nodeNameWidth,
+                    false,
+                    level,
+                    score
+                )
+                : stringPad(pct, 10, true, 0, score)
+            );
+        }).join(" |") + " |\n" + node.children.map(function (child) {
+            return recurse(child, level + 1);
+        }).join("");
+    };
+    result = (
         "-".repeat(nodeNameWidth)
         + "-|-----------|-----------|-----------|-----------|\n"
     );
-    summaryText += line;
-    summaryText += (
-        stringPad("File", nodeNameWidth, false, 0)
+    result = (
+        result
+        + stringPad("File", nodeNameWidth, false, 0)
         + " |   % Stmts |% Branches |   % Funcs |   % Lines |\n"
+        + result
+        + recurse(node)
+        + result
     );
-    summaryText += line;
-    // recurse
-    node.children.forEach(function (child) {
-        reportTextWrite(child, level + 1);
-    });
-    summaryText += line;
-    summaryText += tableRow;
-    summaryText += line;
+    console.error(result);
+    local.fsWriteFileWithMkdirpSync(path.resolve(dir, "coverage.txt"), result);
 };
 stringPad = function (str, width, right, tabs, score) {
 /*
@@ -11504,9 +11496,7 @@ local.coverageReportCreate = function (opt) {
     nodeNameWidth = 0;
     nodeNormalize(root, 0, filePrefix.join(path.sep) + path.sep);
     // 2. print coverage in text-format to stdout
-    summaryText = "";
-    reportTextWrite(root, 0);
-    console.log(summaryText);
+    reportTextWrite(root);
     // create HtmlReport
     // init templateFoot
     templateFoot = templateRender((
