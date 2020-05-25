@@ -10775,6 +10775,7 @@ reportHtmlWrite = function (node, dir) {
         let htmlData;
         let htmlFile;
         let structured;
+        // write dir
         if (node.kind === "dir") {
             htmlFile = path.resolve(dir, "index.html");
             htmlData = "";
@@ -10837,6 +10838,7 @@ reportHtmlWrite = function (node, dir) {
             });
             return;
         }
+        // write file
         htmlFile = dir + ".html";
         fileCoverage = globalThis.__coverage__[node.fullName];
         structured = String(fileCoverage.code.join("\n") + "\n").split(
