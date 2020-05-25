@@ -10760,7 +10760,7 @@ nodeNormalize = function (node, level, filePrefix, parent) {
         );
     });
 };
-reportHtmlWrite = function (node, dir) {
+reportHtmlWrite = function (node, dir, coverage) {
 /*
  * this function will recursively write <htmlData>
  * from <node> to <dir>/<htmlFile>
@@ -10839,7 +10839,7 @@ reportHtmlWrite = function (node, dir) {
         }
         // write file
         htmlFile = dir + ".html";
-        fileCoverage = globalThis.__coverage__[node.fullName];
+        fileCoverage = coverage[node.fullName];
         structured = String(fileCoverage.code.join("\n") + "\n").split(
             /(?:\r?\n)|\r/
         ).map(function (str, ii) {
@@ -11544,7 +11544,7 @@ local.coverageReportCreate = function (opt) {
     reportTextWrite(nodeRoot, dirCoverage);
     // create HtmlReport
     // 3. write coverage in html-format to filesystem
-    reportHtmlWrite(nodeRoot, dirCoverage);
+    reportHtmlWrite(nodeRoot, dirCoverage, opt.coverage);
     // write coverage.json
     local.fsWriteFileWithMkdirpSync(
         dirCoverage + "/coverage.json",
