@@ -11333,11 +11333,11 @@ local.coverageReportCreate = function (opt) {
     let dir;
     let filePrefix;
     let filesUnderRoot;
+    let nodeRoot;
     let seen;
     let summaryDict;
     let tmp;
     let tmpChildren;
-    let tree;
     if (!(opt && opt.coverage)) {
         return "";
     }
@@ -11490,11 +11490,11 @@ local.coverageReportCreate = function (opt) {
             });
         }
     });
-    // convert <summaryDict> to <tree>
+    // convert <summaryDict> to <nodeRoot>
     tmp = filePrefix.join(path.sep) + path.sep;
-    tree = nodeCreate(tmp, "dir");
+    nodeRoot = nodeCreate(tmp, "dir");
     seen = {};
-    seen[tmp] = tree;
+    seen[tmp] = nodeRoot;
     filesUnderRoot = false;
     Object.entries(summaryDict).forEach(function ([
         key,
@@ -11512,37 +11512,37 @@ local.coverageReportCreate = function (opt) {
         parent = seen[parentPath];
         if (!parent) {
             parent = nodeCreate(parentPath, "dir");
-            nodeChildAdd(tree, parent);
+            nodeChildAdd(nodeRoot, parent);
             seen[parentPath] = parent;
         }
         nodeChildAdd(parent, node);
-        if (parent === tree) {
+        if (parent === nodeRoot) {
             filesUnderRoot = true;
         }
     });
     if (filesUnderRoot && filePrefix.length > 0) {
         //start at one level above
         filePrefix.pop();
-        tmp = tree;
+        tmp = nodeRoot;
         tmpChildren = tmp.children;
         tmp.children = [];
-        tree = nodeCreate(filePrefix.join(path.sep) + path.sep, "dir");
-        nodeChildAdd(tree, tmp);
+        nodeRoot = nodeCreate(filePrefix.join(path.sep) + path.sep, "dir");
+        nodeChildAdd(nodeRoot, tmp);
         tmpChildren.forEach(function (child) {
             nodeChildAdd((
                 child.kind === "dir"
-                ? tree
+                ? nodeRoot
                 : tmp
             ), child);
         });
     }
     nodeNameWidth = 0;
-    nodeNormalize(tree, 0, filePrefix.join(path.sep) + path.sep);
+    nodeNormalize(nodeRoot, 0, filePrefix.join(path.sep) + path.sep);
     // 2. print coverage in text-format to stdout
-    reportTextWrite(tree, dir);
+    reportTextWrite(nodeRoot, dir);
     // create HtmlReport
     // 3. write coverage in html-format to filesystem
-    reportHtmlWrite(tree, dir);
+    reportHtmlWrite(nodeRoot, dir);
     // write coverage.json
     local.fsWriteFileWithMkdirpSync(
         dir + "/coverage.json",
@@ -11554,7 +11554,7 @@ local.coverageReportCreate = function (opt) {
         JSON.stringify(globalThis.__coverageCodeDict__)
     );
     // write coverage.badge.svg
-    tmp = tree.metrics.lines.pct;
+    tmp = nodeRoot.metrics.lines.pct;
     local.fsWriteFileWithMkdirpSync(
         local._istanbul_path.dirname(dir) + "/coverage.badge.svg",
         // edit coverage badge percent
