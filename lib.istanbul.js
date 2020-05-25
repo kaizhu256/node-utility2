@@ -11022,6 +11022,12 @@ reportHtmlWrite = function (node, dir) {
         htmlAll += htmlData + "\n\n";
         local.fsWriteFileWithMkdirpSync(htmlFile, htmlData);
     };
+    // init htmlAll
+    htmlAll = (
+        `<div class="coverageReportDiv">
+<h1>coverage-report</h1>
+<div style="background: #fff; border: 1px solid #999; margin 0; padding: 0;">`
+    ) + "\n";
     // init templateFoot
     templateFoot = templateRender((
         `</div>
@@ -11341,28 +11347,26 @@ local.coverageReportCreate = function (opt) {
     if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
         console.log("merging file " + dir + "/coverage.json to coverage");
         try {
-            local.coverageMerge(opt.coverage, JSON.parse(
-                local.fs.readFileSync(dir + "/coverage.json", "utf8")
+            tmp = {};
+            tmp = JSON.parse(local.fs.readFileSync(
+                dir + "/coverage.json",
+                "utf8"
             ));
         } catch (ignore) {}
+        local.coverageMerge(opt.coverage, tmp);
         try {
-            Object.keys(JSON.parse(local.fs.readFileSync(
+            tmp = {};
+            tmp = JSON.parse(local.fs.readFileSync(
                 dir + "/coverage.code-dict.json",
                 "utf8"
-            ))).forEach(function (key) {
-                globalThis.__coverageCodeDict__[key] = (
-                    globalThis.__coverageCodeDict__[key]
-                    || true
-                );
-            });
+            ));
         } catch (ignore) {}
+        Object.keys(tmp).forEach(function (key) {
+            globalThis.__coverageCodeDict__[key] = (
+                globalThis.__coverageCodeDict__[key] || true
+            );
+        });
     }
-    // init htmlAll
-    htmlAll = (
-        `<div class="coverageReportDiv">
-<h1>coverage-report</h1>
-<div style="background: #fff; border: 1px solid #999; margin 0; padding: 0;">`
-    ) + "\n";
     // create TextReport
     // 1. summarize coverage
     summaryMap = {};
