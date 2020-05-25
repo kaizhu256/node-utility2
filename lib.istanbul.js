@@ -11496,7 +11496,7 @@ local.coverageReportCreate = function (opt) {
     nodeNameWidth = 0;
     nodeNormalize(root, 0, filePrefix.join(path.sep) + path.sep);
     // 2. print coverage in text-format to stdout
-    reportTextWrite(root);
+    reportTextWrite(root, dir);
     // create HtmlReport
     // init templateFoot
     templateFoot = templateRender((
