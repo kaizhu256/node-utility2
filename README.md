@@ -55,21 +55,15 @@ this zero-dependency package will provide high-level functions to to build, test
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.5.20
-- npm publish 2020.5.20
-- jslint - add debug-option to pring stack-trace of first warning
-- update shell-functions shCryptoTravisDecrypt, shCryptoTravisEncrypt
-- jslint - prefer undefined over null in file lib.jslint.js
-- jslint - validate sort nested switch-statements
-- update to jslint v2020.03.28
-- update shell-function shRawLibFetch with check validating all replacement-expressions were used
+#### changelog 2020.5.25
+- npm publish 2020.5.25
+- istanbul - rename __coverageCodeDict__ to __coverageInclude__
+- istanbul - rewrite function coverageReportCreate
 - none
 
 #### todo
 - deprecate dependent github-crud
 - deprecate dependent swgg
-- istanbul - rename __coverageCodeDict__ to __coverageInclude__
-- istanbul - rewrite function coverageReportCreate
 - istanbul - remove filesUnderRoot subroutine
 - jslint - add nullish-coalescing support
 - jslint - add optional-chaining support
@@ -257,6 +251,7 @@ instruction
         // try to write file
         try {
             fs.writeFileSync(file, data);
+            return true;
         } catch (ignore) {
             // mkdir -p
             fs.mkdirSync(require("path").dirname(file), {
@@ -264,6 +259,7 @@ instruction
             });
             // rewrite file
             fs.writeFileSync(file, data);
+            return true;
         }
     };
     local.functionOrNop = function (fnc) {
@@ -1274,14 +1270,14 @@ local.http.createServer(function (req, res) {
     "utility2Dependents": [
         "2019.01.21 github-crud",
         "2019.09.14 swgg",
-        "2019.09.15 istanbul-lite master",
         "2020.01.20 bootstrap-lite",
         "2020.02.12 sqljs-lite",
         "2020.03.16 apidoc-lite",
         "2020.05.20 jslint-lite",
+        "2019.05.25 istanbul-lite master",
         "2020.02.20 utility2"
     ],
-    "version": "2020.5.20"
+    "version": "2020.5.25"
 }
 ```
 

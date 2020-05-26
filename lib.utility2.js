@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2020.5.20)
+ * lib.utility2.js (2020.5.25)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -128,6 +128,7 @@
         // try to write file
         try {
             fs.writeFileSync(file, data);
+            return true;
         } catch (ignore) {
             // mkdir -p
             fs.mkdirSync(require("path").dirname(file), {
@@ -135,6 +136,7 @@
             });
             // rewrite file
             fs.writeFileSync(file, data);
+            return true;
         }
     };
     local.functionOrNop = function (fnc) {
@@ -408,6 +410,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         // try to write file\n\
         try {\n\
             fs.writeFileSync(file, data);\n\
+            return true;\n\
         } catch (ignore) {\n\
             // mkdir -p\n\
             fs.mkdirSync(require("path").dirname(file), {\n\
@@ -415,6 +418,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
             });\n\
             // rewrite file\n\
             fs.writeFileSync(file, data);\n\
+            return true;\n\
         }\n\
     };\n\
     local.functionOrNop = function (fnc) {\n\
@@ -4538,23 +4542,6 @@ local.httpFetch = function (url, opt) {
         abort: opt.abort
     });
 };
-
-//!! // test
-//!! (async function () {
-    //!! let opt;
-    //!! let url;
-    //!! url = (
-        //!! globalThis.window
-        //!! ? "/"
-        //!! : "http://example2394872.com"
-    //!! );
-    //!! opt = await local.httpFetch(url, {
-        //!! modeDebug: true,
-        //!! responseType: "json2",
-        //!! timeout: 5000
-    //!! });
-    //!! debugInline(opt);
-//!! }());
 
 local.isNullOrUndefined = function (val) {
 /*

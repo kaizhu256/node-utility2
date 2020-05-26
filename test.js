@@ -118,6 +118,7 @@
         // try to write file
         try {
             fs.writeFileSync(file, data);
+            return true;
         } catch (ignore) {
             // mkdir -p
             fs.mkdirSync(require("path").dirname(file), {
@@ -125,6 +126,7 @@
             });
             // rewrite file
             fs.writeFileSync(file, data);
+            return true;
         }
     };
     local.functionOrNop = function (fnc) {

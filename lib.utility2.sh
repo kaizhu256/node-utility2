@@ -3640,6 +3640,7 @@ export UTILITY2_MACRO_JS='
         // try to write file
         try {
             fs.writeFileSync(file, data);
+            return true;
         } catch (ignore) {
             // mkdir -p
             fs.mkdirSync(require("path").dirname(file), {
@@ -3647,6 +3648,7 @@ export UTILITY2_MACRO_JS='
             });
             // rewrite file
             fs.writeFileSync(file, data);
+            return true;
         }
     };
     local.functionOrNop = function (fnc) {
