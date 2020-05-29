@@ -10680,9 +10680,13 @@ local.templateCoverageHead = '\
 }());\n\
 </script>\n\
 <div class="header {{metrics.statements.score}}">\n\
+{{#unless isBrowser}}\n\
+{{#if env.npm_package_homepage}}\n\
     <h1 style="font-weight: bold;">\n\
         <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} ({{env.npm_package_version}})</a>\n\
     </h1>\n\
+{{/if env.npm_package_homepage}}\n\
+{{/unless isBrowser}}\n\
     <h1>Code coverage report for <span class="entity">{{nameOrAllFiles}}</span></h1>\n\
     <table class="tableHeader">\n\
     <thead>\n\
@@ -11258,11 +11262,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
     );
     // init <templateHead>
     templateHead = local.templateCoverageHead;
-    if (local.isBrowser || !process.env.npm_package_homepage) {
-        templateHead = templateHead.replace((
-            /<h1\u0020[\S\s]*<\/h1>/
-        ), "");
-    }
     recurse(node, 0, dirCoverage);
     htmlAll += "</div>\n</div>\n";
     // write coverage.all.html
