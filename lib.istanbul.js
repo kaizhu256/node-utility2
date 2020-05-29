@@ -10735,6 +10735,27 @@ local.templateCoverageHead = '\
 </tr>\n\
 </thead>\n\
 <tbody>\n\
+{{#each node.children}}\n\
+<tr>\n\
+<td class="file {{metrics.statements.score}}"\n\
+    data-value="{{relativeName}}"><a href="{{href}}"><div>{{relativeName}}</div>\n\
+    {{#show_percent_bar}}</a></td>\n\
+<td class="pct {{metrics.statements.score}}"\n\
+    data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>\n\
+    ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>\n\
+<td class="pct {{metrics.branches.score}}"\n\
+    data-value="{{metrics.branches.pct}}">{{metrics.branches.pct}}%<br>\n\
+    ({{metrics.branches.covered}} / {{metrics.branches.total}})</td>\n\
+<td class="pct {{metrics.functions.score}}"\n\
+    data-value="{{metrics.functions.pct}}">{{metrics.functions.pct}}%<br>\n\
+    ({{metrics.functions.covered}} / {{metrics.functions.total}})</td>\n\
+<td class="pct {{metrics.lines.score}}"\n\
+    data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>\n\
+    ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>\n\
+</tr>\n\
+</tbody>\n\
+</table>\n\
+</div>\n\
 {{/if isFile}}\n\
 ';
 
@@ -10912,28 +10933,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             htmlFile = path.resolve(dir, "index.html");
             htmlData = "";
             htmlData += templateRender(templateHead, node);
-            node.children.forEach(function (child) {
-                htmlData += templateRender((
-                    `<tr>
-<td class="file {{metrics.statements.score}}"
-    data-value="{{relativeName}}"><a href="{{href}}"><div>{{relativeName}}</div>
-    {{#show_percent_bar}}</a></td>
-<td class="pct {{metrics.statements.score}}"
-    data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
-    ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>
-<td class="pct {{metrics.branches.score}}"
-    data-value="{{metrics.branches.pct}}">{{metrics.branches.pct}}%<br>
-    ({{metrics.branches.covered}} / {{metrics.branches.total}})</td>
-<td class="pct {{metrics.functions.score}}"
-    data-value="{{metrics.functions.pct}}">{{metrics.functions.pct}}%<br>
-    ({{metrics.functions.covered}} / {{metrics.functions.total}})</td>
-<td class="pct {{metrics.lines.score}}"
-    data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>
-    ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
-</tr>`
-                ), child);
-            });
-            htmlData += "</tbody>\n</table>\n</div>\n";
             htmlData += templateRender(templateFoot);
             htmlAll += htmlData + "\n\n";
             fileWrite(htmlFile, htmlData);
