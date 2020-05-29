@@ -10705,6 +10705,37 @@ local.templateCoverageHead = '\
     <div class="path">{{#show_path}}</div>\n\
 </div>\n\
 <div class="body">\n\
+{{#if isFile}}\n\
+<pre><table class="coverage"><tr>\n\
+<td class="line-count">{{#show_lineno}}</td>\n\
+<td class="line-coverage">{{#show_line_count}}</td>\n\
+<td class="text"><pre class="prettyprint lang-js" tabIndex="0"\n\
+>{{#show_code}}</pre></td>\n\
+</tr></table></pre>\n\
+{{#unless isFile}}\n\
+<div class="coverage-summary">\n\
+<table>\n\
+<thead>\n\
+<tr>\n\
+<th data-col="file" data-fmt="html" data-html="true" class="file">\n\
+    File\n\
+</th>\n\
+<th data-col="statements" data-type="number" data-fmt="pct" class="pct">\n\
+    Statements\n\
+</th>\n\
+<th data-col="branches" data-type="number" data-fmt="pct" class="pct">\n\
+    Branches\n\
+</th>\n\
+<th data-col="functions" data-type="number" data-fmt="pct" class="pct">\n\
+    Functions\n\
+</th>\n\
+<th data-col="lines" data-type="number" data-fmt="pct" class="pct">\n\
+    Lines\n\
+</th>\n\
+</tr>\n\
+</thead>\n\
+<tbody>\n\
+{{/if isFile}}\n\
 ';
 
 
@@ -10881,30 +10912,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             htmlFile = path.resolve(dir, "index.html");
             htmlData = "";
             htmlData += templateRender(templateHead, node);
-            htmlData += (
-                `<div class="coverage-summary">
-<table>
-<thead>
-<tr>
-<th data-col="file" data-fmt="html" data-html="true" class="file">
-    File
-</th>
-<th data-col="statements" data-type="number" data-fmt="pct" class="pct">
-    Statements
-</th>
-<th data-col="branches" data-type="number" data-fmt="pct" class="pct">
-    Branches
-</th>
-<th data-col="functions" data-type="number" data-fmt="pct" class="pct">
-    Functions
-</th>
-<th data-col="lines" data-type="number" data-fmt="pct" class="pct">
-    Lines
-</th>
-</tr>
-</thead>
-<tbody>`
-            ) + "\n";
             node.children.forEach(function (child) {
                 htmlData += templateRender((
                     `<tr>
@@ -11106,19 +11113,11 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         });
         lineList.shift();
         htmlData = "";
-        htmlData += templateRender(templateHead, node);
-        htmlData += templateRender((
-            `<pre><table class="coverage"><tr>
-<td class="line-count">{{#show_lineno}}</td>
-<td class="line-coverage">{{#show_line_count}}</td>
-<td class="text"><pre class="prettyprint lang-js" tabIndex="0"
->{{#show_code}}</pre></td>
-</tr></table></pre>`
-        ), {
+        htmlData += templateRender(templateHead, Object.assign({
             lines: fileCoverage.l,
             maxLines: lineList.length,
             lineList
-        });
+        }, node));
         htmlData += templateRender(templateFoot);
         htmlAll += htmlData + "\n\n";
         fileWrite(htmlFile, htmlData);
