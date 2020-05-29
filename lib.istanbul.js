@@ -10392,8 +10392,12 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
 */
 local.templateCoverageHead = '\
-{{#if isBrowser}}<!doctype html>{{/if isBrowser}}\n\
+{{#if isBrowser}}\n\
+<div>\n\
+{{#unless isBrowser}}\n\
+<!doctype html>\n\
 <html lang="en" class="x-istanbul">\n\
+{{/if isBrowser}}\n\
 <head>\n\
     <title>Code coverage report for {{nameOrAllFiles}}</title>\n\
     <meta charset="utf-8">\n\
@@ -10631,7 +10635,11 @@ local.templateCoverageHead = '\
 }\n\
 </style>\n\
 </head>\n\
+{{#if isBrowser}}\n\
+<div class="x-istanbul">\n\
+{{#unless isBrowser}}\n\
 <body class="x-istanbul">\n\
+{{/if isBrowser}}\n\
 <script>\n\
 // init domOnEventSelectAllWithinPre\n\
 (function () {\n\
@@ -10919,7 +10927,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 ), child);
             });
             htmlData += "</tbody>\n</table>\n</div>\n";
-            htmlData += templateFoot;
+            htmlData += templateRender(templateFoot);
             htmlAll += htmlData + "\n\n";
             fileWrite(htmlFile, htmlData);
             node.children.forEach(function (child) {
@@ -11111,7 +11119,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             maxLines: lineList.length,
             lineList
         });
-        htmlData += templateFoot;
+        htmlData += templateRender(templateFoot);
         htmlAll += htmlData + "\n\n";
         fileWrite(htmlFile, htmlData);
     };
@@ -11125,7 +11133,12 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         let metrics;
         let tmp;
         let val;
-        // render <metrics>
+        // init <node>
+        node = Object.assign({
+            env: local.env,
+            isBrowser: local.isBrowser
+        }, node);
+        // init <metrics>
         metrics = node.metrics;
         // render {{...}}
         template = local.templateRender(template, node);
@@ -11235,31 +11248,17 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
     target="_blank">utility2</a> at ${new Date().toGMTString()}
 </div>
 </div>
+{{#if isBrowser}}
+</div>
+</div>
+{{#unless isBrowser}}
 </body>
-</html>`
+</html>
+{{/if isBrowser}}`
     );
     // init <templateHead>
     templateHead = local.templateCoverageHead;
-    if (local.isBrowser) {
-        templateHead = templateHead.replace(
-            "<!doctype html>\n",
-            ""
-        ).replace((
-            /(<\/?)(?:body|html)/g
-        ), "$1div");
-    }
-    if (!local.isBrowser && process.env.npm_package_homepage) {
-        templateHead = templateHead.replace(
-            "{{env.npm_package_homepage}}",
-            process.env.npm_package_homepage
-        ).replace(
-            "{{env.npm_package_name}}",
-            process.env.npm_package_name
-        ).replace(
-            "{{env.npm_package_version}}",
-            process.env.npm_package_version
-        );
-    } else {
+    if (local.isBrowser || !process.env.npm_package_homepage) {
         templateHead = templateHead.replace((
             /<h1\u0020[\S\s]*<\/h1>/
         ), "");
