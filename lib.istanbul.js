@@ -10897,18 +10897,55 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         lineList.shift();
         htmlData = "";
         htmlData += templateRender(templateHead, node);
-        htmlData += templateRender((
-            `<pre><table class="coverage"><tr>
-<td class="line-count">{{#show_lineno}}</td>
-<td class="line-coverage">{{#show_line_count}}</td>
-<td class="text"><pre class="prettyprint lang-js" tabIndex="0"
->{{#show_code}}</pre></td>
-</tr></table></pre>`
-        ), {
-            lines: fileCoverage.l,
-            maxLines: lineList.length,
-            lineList
-        });
+        htmlData += "<pre><table class=\"coverage\"><tr>\n"
+//!! <td class="line-count">{{#show_lineno}}</td>
+//!! <td class="line-coverage">{{#show_line_count}}</td>
+//!! <td class="text"><pre class="prettyprint lang-js" tabIndex="0"
+//!! >{{#show_code}}</pre></td>
+//!! </tr></table></pre>`
+        //!! ), {
+            //!! lines: fileCoverage.l,
+            //!! maxLines: lineList.length,
+            //!! lineList
+        //!! });
+        //!! htmlData += templateRender((
+            //!! `<pre><table class="coverage"><tr>
+//!! <td class="line-count">{{#show_lineno}}</td>
+//!! <td class="line-coverage">{{#show_line_count}}</td>
+//!! <td class="text"><pre class="prettyprint lang-js" tabIndex="0"
+//!! >{{#show_code}}</pre></td>
+//!! </tr></table></pre>`
+        //!! ), {
+            //!! lines: fileCoverage.l,
+            //!! maxLines: lineList.length,
+            //!! lineList
+        //!! });
+        htmlData += "<td class=\"line-count\">\n";
+        //!! htmlData += lineList.map(function (lineObj) {
+        htmlData += lineList.map(function (ignore, ii) {
+            return "<span class=\"cline-any " + (
+                tmp = node.lines[ii];
+                tmp === undefined
+                ? "cline-neutral\">&nbsp;"
+                : tmp > 0
+                ? "cline-yes\">" + tmp
+                : "cline-no\">&nbsp;"
+            ) + "</span>\n";
+        }).join("");
+        htmlData += "</td>\n";
+        htmlData += "<td class=\"line-count\">\n";
+        htmlData += lineList.map(function (ignore, ii) {
+            return "<span class=\"cline-any " + (
+                tmp = node.lines[ii];
+                tmp === undefined
+                ? "cline-neutral\">&nbsp;"
+                : tmp > 0
+                ? "cline-yes\">" + tmp
+                : "cline-no\">&nbsp;"
+            ) + "</span>\n";
+        }).join("");
+        htmlData += "</td>\n";
+        htmlData += "</tr></table></pre>\n";
         htmlData += templateFoot;
         htmlAll += htmlData + "\n\n";
         fileWrite(htmlFile, htmlData);
@@ -10995,15 +11032,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 ii += 1;
             }
             return val;
-        });
-        // render #show_percent_bar
-        template = template.replace("{{#show_percent_bar}}", function () {
-            val = Number(metrics.statements.pct) | 0;
-            return (
-                "<span class=\"cover-fill cover-full\" style=\"width:" + val
-                + "px;\"></span><span class=\"cover-empty\" style=\"width:"
-                + (100 - val) + "px;\"></span>"
-            );
         });
         // render #show_code last
         template = template.replace("{{#show_code}}", function () {
