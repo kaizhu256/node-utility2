@@ -10686,36 +10686,27 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
 </thead>
 <tbody>`
             ) + "\n";
-            htmlData += node.children.map(function (child) {
-                return (
+            node.children.forEach(function (child) {
+                htmlData += templateRender((
                     `<tr>
-<td class="file ${child.metrics.statements.score}"
-    data-value="${child.relativeName}"><a href="${child.href}"><div
-    >${child.relativeName}</div>
-    <span class="cover-fill cover-full"
-        style="width:${child.metrics.statements.pct}px;"
-    ></span><span class="cover-empty"
-        style="width:${100 - child.metrics.statements.pct}px;"
-    ></span></a></td>
-<td class="pct ${child.metrics.statements.score}"
-    data-value="${child.metrics.statements.pct}"
-    >${child.metrics.statements.pct}%<br>
-    (${child.metrics.statements.covered}
-    / ${child.metrics.statements.total})</td>
-<td class="pct ${child.metrics.branches.score}"
-    data-value="${child.metrics.branches.pct}"
-    >${child.metrics.branches.pct}%<br>
-    (${child.metrics.branches.covered} / ${child.metrics.branches.total})</td>
-<td class="pct ${child.metrics.functions.score}"
-    data-value="${child.metrics.functions.pct}"
-    >${child.metrics.functions.pct}%<br>
-    (${child.metrics.functions.covered} / ${child.metrics.functions.total})</td>
-<td class="pct ${child.metrics.lines.score}"
-    data-value="${child.metrics.lines.pct}">${child.metrics.lines.pct}%<br>
-    (${child.metrics.lines.covered} / ${child.metrics.lines.total})</td>
+<td class="file {{metrics.statements.score}}"
+    data-value="{{relativeName}}"><a href="{{href}}"><div>{{relativeName}}</div>
+    {{#show_percent_bar}}</a></td>
+<td class="pct {{metrics.statements.score}}"
+    data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
+    ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>
+<td class="pct {{metrics.branches.score}}"
+    data-value="{{metrics.branches.pct}}">{{metrics.branches.pct}}%<br>
+    ({{metrics.branches.covered}} / {{metrics.branches.total}})</td>
+<td class="pct {{metrics.functions.score}}"
+    data-value="{{metrics.functions.pct}}">{{metrics.functions.pct}}%<br>
+    ({{metrics.functions.covered}} / {{metrics.functions.total}})</td>
+<td class="pct {{metrics.lines.score}}"
+    data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>
+    ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
 </tr>`
-                ) + "\n";
-            }).join("");
+                ), child);
+            });
             htmlData += "</tbody>\n</table>\n</div>\n";
             htmlData += templateFoot;
             htmlAll += htmlData + "\n\n";
@@ -10897,55 +10888,18 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         lineList.shift();
         htmlData = "";
         htmlData += templateRender(templateHead, node);
-        htmlData += "<pre><table class=\"coverage\"><tr>\n"
-//!! <td class="line-count">{{#show_lineno}}</td>
-//!! <td class="line-coverage">{{#show_line_count}}</td>
-//!! <td class="text"><pre class="prettyprint lang-js" tabIndex="0"
-//!! >{{#show_code}}</pre></td>
-//!! </tr></table></pre>`
-        //!! ), {
-            //!! lines: fileCoverage.l,
-            //!! maxLines: lineList.length,
-            //!! lineList
-        //!! });
-        //!! htmlData += templateRender((
-            //!! `<pre><table class="coverage"><tr>
-//!! <td class="line-count">{{#show_lineno}}</td>
-//!! <td class="line-coverage">{{#show_line_count}}</td>
-//!! <td class="text"><pre class="prettyprint lang-js" tabIndex="0"
-//!! >{{#show_code}}</pre></td>
-//!! </tr></table></pre>`
-        //!! ), {
-            //!! lines: fileCoverage.l,
-            //!! maxLines: lineList.length,
-            //!! lineList
-        //!! });
-        htmlData += "<td class=\"line-count\">\n";
-        //!! htmlData += lineList.map(function (lineObj) {
-        htmlData += lineList.map(function (ignore, ii) {
-            return "<span class=\"cline-any " + (
-                tmp = node.lines[ii];
-                tmp === undefined
-                ? "cline-neutral\">&nbsp;"
-                : tmp > 0
-                ? "cline-yes\">" + tmp
-                : "cline-no\">&nbsp;"
-            ) + "</span>\n";
-        }).join("");
-        htmlData += "</td>\n";
-        htmlData += "<td class=\"line-count\">\n";
-        htmlData += lineList.map(function (ignore, ii) {
-            return "<span class=\"cline-any " + (
-                tmp = node.lines[ii];
-                tmp === undefined
-                ? "cline-neutral\">&nbsp;"
-                : tmp > 0
-                ? "cline-yes\">" + tmp
-                : "cline-no\">&nbsp;"
-            ) + "</span>\n";
-        }).join("");
-        htmlData += "</td>\n";
-        htmlData += "</tr></table></pre>\n";
+        htmlData += templateRender((
+            `<pre><table class="coverage"><tr>
+<td class="line-count">{{#show_lineno}}</td>
+<td class="line-coverage">{{#show_line_count}}</td>
+<td class="text"><pre class="prettyprint lang-js" tabIndex="0"
+>{{#show_code}}</pre></td>
+</tr></table></pre>`
+        ), {
+            lines: fileCoverage.l,
+            maxLines: lineList.length,
+            lineList
+        });
         htmlData += templateFoot;
         htmlAll += htmlData + "\n\n";
         fileWrite(htmlFile, htmlData);
@@ -11033,6 +10987,15 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             }
             return val;
         });
+        // render #show_percent_bar
+        template = template.replace("{{#show_percent_bar}}", function () {
+            val = Number(metrics.statements.pct) | 0;
+            return (
+                "<span class=\"cover-fill cover-full\" style=\"width:" + val
+                + "px;\"></span><span class=\"cover-empty\" style=\"width:"
+                + (100 - val) + "px;\"></span>"
+            );
+        });
         // render #show_code last
         template = template.replace("{{#show_code}}", function () {
             val = node.lineList.map(function (item) {
@@ -11061,17 +11024,19 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
 <div style="background: #fff; border: 1px solid #999; margin 0; padding: 0;">`
     ) + "\n";
     // init <templateFoot>
-    templateFoot = (
+    templateFoot = templateRender((
         `</div>
 <div class="footer">
 <div class="meta">
     Generated by <a href="https://github.com/kaizhu256/node-utility2"
-    target="_blank">utility2</a> at ${new Date().toGMTString()}
+    target="_blank">utility2</a> at {{datetime}}
 </div>
 </div>
 </body>
 </html>`
-    );
+    ), {
+        datetime: new Date().toGMTString()
+    });
     // init <templateHead>
     templateHead = local.templateCoverageHead;
     if (local.isBrowser) {
