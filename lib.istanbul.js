@@ -10705,52 +10705,6 @@ local.templateCoverageHead = '\
     <div class="path">{{#show_path}}</div>\n\
 </div>\n\
 <div class="body">\n\
-{{#if isFile}}\n\
-<pre><table class="coverage"><tr>\n\
-    <td class="line-count">{{#show_lineno}}</td>\n\
-    <td class="line-coverage">{{#show_line_count}}</td>\n\
-    <td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code}}</pre></td>\n\
-</tr></table></pre>\n\
-{{#unless isFile}}\n\
-<div class="coverage-summary">\n\
-<table>\n\
-    <thead>\n\
-    <tr>\n\
-        <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>\n\
-        <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>\n\
-        <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>\n\
-        <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>\n\
-        <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>\n\
-    </tr>\n\
-    </thead>\n\
-    <tbody>\n\
-    {{#each node.children}}\n\
-    <tr>\n\
-        <td class="file {{metrics.statements.score}}" data-value="{{relativeName}}">\n\
-            <a href="{{href}}"><div>{{relativeName}}</div><br>\n\
-            {{#show_percent_bar}}</a>\n\
-        </td>\n\
-        <td class="pct {{metrics.statements.score}}" data-value="{{metrics.statements.pct}}">\n\
-            {{metrics.statements.pct}}%<br>\n\
-            ({{metrics.statements.covered}} / {{metrics.statements.total}})\n\
-        </td>\n\
-        <td class="pct {{metrics.branches.score}}" data-value="{{metrics.branches.pct}}">\n\
-            {{metrics.branches.pct}}%<br>\n\
-            ({{metrics.branches.covered}} / {{metrics.branches.total}})\n\
-        </td>\n\
-        <td class="pct {{metrics.functions.score}}" data-value="{{metrics.functions.pct}}">\n\
-            {{metrics.functions.pct}}%<br>\n\
-            ({{metrics.functions.covered}} / {{metrics.functions.total}})\n\
-        </td>\n\
-        <td class="pct {{metrics.lines.score}}" data-value="{{metrics.lines.pct}}">\n\
-            {{metrics.lines.pct}}%<br>\n\
-            ({{metrics.lines.covered}} / {{metrics.lines.total}})\n\
-        </td>\n\
-    </tr>\n\
-    </tbody>\n\
-    </table>\n\
-</div>\n\
-{{/if isFile}}\n\
 ';
 
 
@@ -10927,6 +10881,52 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             htmlFile = path.resolve(dir, "index.html");
             htmlData = "";
             htmlData += templateRender(templateHead, node);
+            htmlData += (
+                `<div class="coverage-summary">
+<table>
+<thead>
+<tr>
+<th data-col="file" data-fmt="html" data-html="true" class="file">
+    File
+</th>
+<th data-col="statements" data-type="number" data-fmt="pct" class="pct">
+    Statements
+</th>
+<th data-col="branches" data-type="number" data-fmt="pct" class="pct">
+    Branches
+</th>
+<th data-col="functions" data-type="number" data-fmt="pct" class="pct">
+    Functions
+</th>
+<th data-col="lines" data-type="number" data-fmt="pct" class="pct">
+    Lines
+</th>
+</tr>
+</thead>
+<tbody>`
+            ) + "\n";
+            node.children.forEach(function (child) {
+                htmlData += templateRender((
+                    `<tr>
+<td class="file {{metrics.statements.score}}"
+    data-value="{{relativeName}}"><a href="{{href}}"><div>{{relativeName}}</div>
+    {{#show_percent_bar}}</a></td>
+<td class="pct {{metrics.statements.score}}"
+    data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
+    ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>
+<td class="pct {{metrics.branches.score}}"
+    data-value="{{metrics.branches.pct}}">{{metrics.branches.pct}}%<br>
+    ({{metrics.branches.covered}} / {{metrics.branches.total}})</td>
+<td class="pct {{metrics.functions.score}}"
+    data-value="{{metrics.functions.pct}}">{{metrics.functions.pct}}%<br>
+    ({{metrics.functions.covered}} / {{metrics.functions.total}})</td>
+<td class="pct {{metrics.lines.score}}"
+    data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>
+    ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
+</tr>`
+                ), child);
+            });
+            htmlData += "</tbody>\n</table>\n</div>\n";
             htmlData += templateRender(templateFoot);
             htmlAll += htmlData + "\n\n";
             fileWrite(htmlFile, htmlData);
@@ -11106,11 +11106,19 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         });
         lineList.shift();
         htmlData = "";
-        htmlData += templateRender(templateHead, Object.assign({
+        htmlData += templateRender(templateHead, node);
+        htmlData += templateRender((
+            `<pre><table class="coverage"><tr>
+<td class="line-count">{{#show_lineno}}</td>
+<td class="line-coverage">{{#show_line_count}}</td>
+<td class="text"><pre class="prettyprint lang-js" tabIndex="0"
+>{{#show_code}}</pre></td>
+</tr></table></pre>`
+        ), {
             lines: fileCoverage.l,
             maxLines: lineList.length,
             lineList
-        }, node));
+        });
         htmlData += templateRender(templateFoot);
         htmlAll += htmlData + "\n\n";
         fileWrite(htmlFile, htmlData);
