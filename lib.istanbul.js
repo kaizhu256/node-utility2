@@ -10181,7 +10181,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
 */
 local.templateCoverageHead = '\
-<!doctype html>\n\
+{{#if isBrowser}}<!doctype html>{{/if isBrowser}}
 <html lang="en" class="x-istanbul">\n\
 <head>\n\
     <title>Code coverage report for {{nameOrAllFiles}}</title>\n\
@@ -10916,31 +10916,8 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         let val;
         // render <metrics>
         metrics = node.metrics;
-        // render <#if>...</if>
-        template = template.replace((
-            /\{\{#if\u0020(.+?)\}\}([\S\s]+?)\{\{\/if\}\}/g
-        ), function (ignore, match1, match2) {
-            val = node;
-            match1.split(".").some(function (key) {
-                val = val[key];
-                return val;
-            });
-            return (
-                val
-                ? match2
-                : ""
-            );
-        });
         // render {{...}}
-        template = template.replace((
-            /\{\{[^#].+?\}\}/g
-        ), function (match0) {
-            val = node;
-            match0.slice(2, -2).split(".").forEach(function (key) {
-                val = val[key];
-            });
-            return val;
-        });
+        template = local.templateRender(template, node);
         // render #show_line_count
         template = template.replace("{{#show_line_count}}", function () {
             val = "";
