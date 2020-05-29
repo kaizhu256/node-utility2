@@ -10658,7 +10658,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         let htmlFile;
         let lineList;
         // write dir
-        if (node.kind === "dir") {
+        if (!node.isFile) {
             htmlFile = path.resolve(dir, "index.html");
             htmlData = "";
             htmlData += templateRender(templateHead, node);
@@ -10722,7 +10722,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         }
         // write file
         htmlFile = dir + ".html";
-        fileCoverage = coverage[node.fullName];
+        fileCoverage = coverage[node.pathname];
         lineList = String(fileCoverage.code.join("\n") + "\n").split(
             /(?:\r?\n)|\r/
         ).map(function (str, ii) {
@@ -11255,15 +11255,14 @@ local.coverageReportCreate = function (opt) {
         node.children.push(child);
         child.parent = node;
     };
-    nodeCreate = function (fullName, kind, metrics) {
+    nodeCreate = function (pathname) {
     /*
      * this function will create a tree-node
      */
         return {
             children: [],
-            fullName,
-            kind,
-            metrics: metrics || {
+            pathname,
+            metrics: {
                 branches: {
                     total: 0,
                     covered: 0,
@@ -11289,7 +11288,7 @@ local.coverageReportCreate = function (opt) {
                     pct: "Unknown"
                 }
             },
-            name: fullName
+            name: pathname
         };
     };
     nodeNormalize = function (node, level, filePrefix, parent) {
@@ -11319,9 +11318,9 @@ local.coverageReportCreate = function (opt) {
         node.relativeNameOrAllFiles = node.relativeName || "All files";
         // init <href>
         node.href = node.relativeName.split(path.sep).join("/") + (
-            node.kind === "dir"
-            ? "index.html"
-            : ".html"
+            node.isFile
+            ? ".html"
+            : "index.html"
         );
         // recurse
         node.children.forEach(function (child) {
@@ -11336,7 +11335,7 @@ local.coverageReportCreate = function (opt) {
             );
         });
         // init <metrics>
-        if (node.kind === "dir") {
+        if (!node.isFile) {
             node.children.forEach(function (child) {
                 [
                     "lines", "statements", "branches", "functions"
@@ -11517,7 +11516,7 @@ local.coverageReportCreate = function (opt) {
     });
     // 3. convert <summaryDict> to <nodeRoot>
     tmp = filePrefix.join(path.sep) + path.sep;
-    nodeRoot = nodeCreate(tmp, "dir");
+    nodeRoot = nodeCreate(tmp);
     nodeDict = {};
     nodeDict[tmp] = nodeRoot;
     filesUnderRoot = false;
@@ -11528,7 +11527,9 @@ local.coverageReportCreate = function (opt) {
         let node;
         let parent;
         let parentPath;
-        node = nodeCreate(key, "file", metrics);
+        node = nodeCreate(key);
+        node.isFile = true;
+        node.metrics = metrics;
         nodeDict[key] = node;
         parentPath = path.dirname(key) + path.sep;
         if (parentPath === path.sep + path.sep) {
@@ -11536,7 +11537,7 @@ local.coverageReportCreate = function (opt) {
         }
         parent = nodeDict[parentPath];
         if (!parent) {
-            parent = nodeCreate(parentPath, "dir");
+            parent = nodeCreate(parentPath);
             nodeChildAdd(nodeRoot, parent);
             nodeDict[parentPath] = parent;
         }
@@ -11551,13 +11552,13 @@ local.coverageReportCreate = function (opt) {
         tmp = nodeRoot;
         tmpChildren = tmp.children;
         tmp.children = [];
-        nodeRoot = nodeCreate(filePrefix.join(path.sep) + path.sep, "dir");
+        nodeRoot = nodeCreate(filePrefix.join(path.sep) + path.sep);
         nodeChildAdd(nodeRoot, tmp);
         tmpChildren.forEach(function (child) {
             nodeChildAdd((
-                child.kind === "dir"
-                ? nodeRoot
-                : tmp
+                child.isFile
+                ? tmp
+                : nodeRoot
             ), child);
         });
     }
