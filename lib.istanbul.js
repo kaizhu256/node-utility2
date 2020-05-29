@@ -10707,54 +10707,48 @@ local.templateCoverageHead = '\
 <div class="body">\n\
 {{#if isFile}}\n\
 <pre><table class="coverage"><tr>\n\
-<td class="line-count">{{#show_lineno}}</td>\n\
-<td class="line-coverage">{{#show_line_count}}</td>\n\
-<td class="text"><pre class="prettyprint lang-js" tabIndex="0"\n\
->{{#show_code}}</pre></td>\n\
+    <td class="line-count">{{#show_lineno}}</td>\n\
+    <td class="line-coverage">{{#show_line_count}}</td>\n\
+    <td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code}}</pre></td>\n\
 </tr></table></pre>\n\
 {{#unless isFile}}\n\
 <div class="coverage-summary">\n\
 <table>\n\
-<thead>\n\
-<tr>\n\
-<th data-col="file" data-fmt="html" data-html="true" class="file">\n\
-    File\n\
-</th>\n\
-<th data-col="statements" data-type="number" data-fmt="pct" class="pct">\n\
-    Statements\n\
-</th>\n\
-<th data-col="branches" data-type="number" data-fmt="pct" class="pct">\n\
-    Branches\n\
-</th>\n\
-<th data-col="functions" data-type="number" data-fmt="pct" class="pct">\n\
-    Functions\n\
-</th>\n\
-<th data-col="lines" data-type="number" data-fmt="pct" class="pct">\n\
-    Lines\n\
-</th>\n\
-</tr>\n\
-</thead>\n\
-<tbody>\n\
-{{#each node.children}}\n\
-<tr>\n\
-<td class="file {{metrics.statements.score}}"\n\
-    data-value="{{relativeName}}"><a href="{{href}}"><div>{{relativeName}}</div>\n\
-    {{#show_percent_bar}}</a></td>\n\
-<td class="pct {{metrics.statements.score}}"\n\
-    data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>\n\
-    ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>\n\
-<td class="pct {{metrics.branches.score}}"\n\
-    data-value="{{metrics.branches.pct}}">{{metrics.branches.pct}}%<br>\n\
-    ({{metrics.branches.covered}} / {{metrics.branches.total}})</td>\n\
-<td class="pct {{metrics.functions.score}}"\n\
-    data-value="{{metrics.functions.pct}}">{{metrics.functions.pct}}%<br>\n\
-    ({{metrics.functions.covered}} / {{metrics.functions.total}})</td>\n\
-<td class="pct {{metrics.lines.score}}"\n\
-    data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>\n\
-    ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>\n\
-</tr>\n\
-</tbody>\n\
-</table>\n\
+    <thead>\n\
+    <tr>\n\
+        <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>\n\
+        <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>\n\
+        <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>\n\
+        <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>\n\
+        <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>\n\
+    </tr>\n\
+    </thead>\n\
+    <tbody>\n\
+    {{#each node.children}}\n\
+    <tr>\n\
+        <td class="file {{metrics.statements.score}}" data-value="{{relativeName}}">\n\
+            <a href="{{href}}"><div>{{relativeName}}</div><br>\n\
+            {{#show_percent_bar}}</a>\n\
+        </td>\n\
+        <td class="pct {{metrics.statements.score}}" data-value="{{metrics.statements.pct}}">\n\
+            {{metrics.statements.pct}}%<br>\n\
+            ({{metrics.statements.covered}} / {{metrics.statements.total}})\n\
+        </td>\n\
+        <td class="pct {{metrics.branches.score}}" data-value="{{metrics.branches.pct}}">\n\
+            {{metrics.branches.pct}}%<br>\n\
+            ({{metrics.branches.covered}} / {{metrics.branches.total}})\n\
+        </td>\n\
+        <td class="pct {{metrics.functions.score}}" data-value="{{metrics.functions.pct}}">\n\
+            {{metrics.functions.pct}}%<br>\n\
+            ({{metrics.functions.covered}} / {{metrics.functions.total}})\n\
+        </td>\n\
+        <td class="pct {{metrics.lines.score}}" data-value="{{metrics.lines.pct}}">\n\
+            {{metrics.lines.pct}}%<br>\n\
+            ({{metrics.lines.covered}} / {{metrics.lines.total}})\n\
+        </td>\n\
+    </tr>\n\
+    </tbody>\n\
+    </table>\n\
 </div>\n\
 {{/if isFile}}\n\
 ';
