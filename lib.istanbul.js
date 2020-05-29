@@ -427,6 +427,217 @@ local.cliRun = function (opt) {
     }
     local.cliDict._default();
 };
+
+local.templateRender = function (template, dict, opt, ii) {
+/*
+ * this function will render <template> with given <dict>
+ */
+    let argList;
+    let getVal;
+    let match;
+    let renderPartial;
+    let rgx;
+    let skip;
+    let val;
+    if (dict === null || dict === undefined) {
+        dict = {};
+    }
+    opt = opt || {};
+    getVal = function (key) {
+        argList = key.split(" ");
+        val = dict;
+        if (argList[0] === "#this/") {
+            return val;
+        }
+        if (argList[0] === "#ii/") {
+            return ii;
+        }
+        // iteratively lookup nested val in dict
+        argList[0].split(".").forEach(function (key) {
+            val = val && val[key];
+        });
+        return val;
+    };
+    renderPartial = function (match0, helper, key, partial) {
+        switch (helper) {
+        case "each":
+        case "eachTrimEndComma":
+            val = getVal(key);
+            val = (
+                Array.isArray(val)
+                ? val.map(function (dict, ii) {
+                    // recurse with partial
+                    return local.templateRender(partial, dict, opt, ii);
+                }).join("")
+                : ""
+            );
+            // remove trailing-comma from last elem
+            if (helper === "eachTrimEndComma") {
+                val = val.trimEnd().replace((
+                    /,$/
+                ), "");
+            }
+            return val;
+        case "if":
+            partial = partial.split("{{#unless " + key + "}}");
+            partial = (
+                getVal(key)
+                ? partial[0]
+                // handle "unless" case
+                : partial.slice(1).join("{{#unless " + key + "}}")
+            );
+            // recurse with partial
+            return local.templateRender(partial, dict, opt);
+        case "unless":
+            return (
+                getVal(key)
+                ? ""
+                // recurse with partial
+                : local.templateRender(partial, dict, opt)
+            );
+        default:
+            // recurse with partial
+            return match0[0] + local.templateRender(match0.slice(1), dict, opt);
+        }
+    };
+    // render partials
+    rgx = (
+        /\{\{#(\w+)\u0020([^}]+?)\}\}/g
+    );
+    template = template || "";
+    match = rgx.exec(template);
+    while (match) {
+        rgx.lastIndex += 1 - match[0].length;
+        template = template.replace(
+            new RegExp(
+                "\\{\\{#(" + match[1] + ") (" + match[2]
+                + ")\\}\\}([\\S\\s]*?)\\{\\{/" + match[1] + " " + match[2]
+                + "\\}\\}"
+            ),
+            renderPartial
+        );
+        match = rgx.exec(template);
+    }
+    // search for keys in the template
+    return template.replace((
+        /\{\{[^}]+?\}\}/g
+    ), function (match0) {
+        let markdownToHtml;
+        let notHtmlSafe;
+        notHtmlSafe = opt.notHtmlSafe;
+        try {
+            val = getVal(match0.slice(2, -2));
+            if (val === undefined) {
+                return match0;
+            }
+            argList.slice(1).forEach(function (fmt, ii, list) {
+                switch (fmt) {
+                case "*":
+                case "+":
+                case "-":
+                case "/":
+                    skip = ii + 1;
+                    val = String(
+                        fmt === "*"
+                        ? Number(val) * Number(list[skip])
+                        : fmt === "+"
+                        ? Number(val) + Number(list[skip])
+                        : fmt === "-"
+                        ? Number(val) - Number(list[skip])
+                        : Number(val) / Number(list[skip])
+                    );
+                    break;
+                case "alphanumeric":
+                    val = val.replace((
+                        /\W/g
+                    ), "_");
+                    break;
+                case "decodeURIComponent":
+                    val = decodeURIComponent(val);
+                    break;
+                case "encodeURIComponent":
+                    val = encodeURIComponent(val);
+                    break;
+                case "jsonStringify":
+                    val = JSON.stringify(val);
+                    break;
+                case "jsonStringify4":
+                    val = JSON.stringify(val, undefined, 4);
+                    break;
+                case "markdownSafe":
+                    val = val.replace((
+                        /`/g
+                    ), "'");
+                    break;
+                case "markdownToHtml":
+                    markdownToHtml = true;
+                    break;
+                case "notHtmlSafe":
+                    notHtmlSafe = true;
+                    break;
+                case "padEnd":
+                case "padStart":
+                case "replace":
+                case "slice":
+                    skip = ii + 2;
+                    val = String(val)[fmt](
+                        list[skip - 1],
+                        list[skip].replace("\"\"", "").replace("\"_\"", " ")
+                    );
+                    break;
+                case "truncate":
+                    skip = ii + 1;
+                    if (val.length > list[skip]) {
+                        val = val.slice(
+                            0,
+                            Math.max(list[skip] - 3, 0)
+                        ).trimEnd() + "...";
+                    }
+                    break;
+                // default to String.prototype[fmt]()
+                default:
+                    if (ii <= skip) {
+                        break;
+                    }
+                    val = val[fmt]();
+                }
+            });
+            val = String(val);
+            // default to htmlSafe
+            if (!notHtmlSafe) {
+                val = val.replace((
+                    /&/gu
+                ), "&amp;").replace((
+                    /"/gu
+                ), "&quot;").replace((
+                    /'/gu
+                ), "&apos;").replace((
+                    /</gu
+                ), "&lt;").replace((
+                    />/gu
+                ), "&gt;").replace((
+                    /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
+                ), "&$1");
+            }
+            markdownToHtml = (
+                markdownToHtml
+                && (typeof local.marked === "function" && local.marked)
+            );
+            if (markdownToHtml) {
+                val = markdownToHtml(val).replace((
+                    /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
+                ), "&$1");
+            }
+            return val;
+        } catch (errCaught) {
+            errCaught.message = (
+                "templateRender could not render expression "
+                + JSON.stringify(match0) + "\n"
+            ) + errCaught.message;
+            local.assertOrThrow(undefined, errCaught);
+        }
+    });
+};
 }());
 
 
@@ -10181,7 +10392,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
 */
 local.templateCoverageHead = '\
-{{#if isBrowser}}<!doctype html>{{/if isBrowser}}
+{{#if isBrowser}}<!doctype html>{{/if isBrowser}}\n\
 <html lang="en" class="x-istanbul">\n\
 <head>\n\
     <title>Code coverage report for {{nameOrAllFiles}}</title>\n\
