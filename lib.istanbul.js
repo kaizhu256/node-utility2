@@ -10687,25 +10687,34 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
 <tbody>`
             ) + "\n";
             node.children.forEach(function (child) {
-                htmlData += templateRender((
+                let {
+                    href,
+                    metrics,
+                    relativeName
+                } = child;
+                htmlData += (
                     `<tr>
-<td class="file {{metrics.statements.score}}"
-    data-value="{{relativeName}}"><a href="{{href}}"><div>{{relativeName}}</div>
-    {{#show_percent_bar}}</a></td>
-<td class="pct {{metrics.statements.score}}"
-    data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>
-    ({{metrics.statements.covered}} / {{metrics.statements.total}})</td>
-<td class="pct {{metrics.branches.score}}"
-    data-value="{{metrics.branches.pct}}">{{metrics.branches.pct}}%<br>
-    ({{metrics.branches.covered}} / {{metrics.branches.total}})</td>
-<td class="pct {{metrics.functions.score}}"
-    data-value="{{metrics.functions.pct}}">{{metrics.functions.pct}}%<br>
-    ({{metrics.functions.covered}} / {{metrics.functions.total}})</td>
-<td class="pct {{metrics.lines.score}}"
-    data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>
-    ({{metrics.lines.covered}} / {{metrics.lines.total}})</td>
+<td class="file ${metrics.statements.score}"
+    data-value="${relativeName}"><a href="${href}"><div>${relativeName}</div>
+    <span class="cover-fill cover-full"
+        style="width:${metrics.statements.pct}px;"
+    ></span><span class="cover-empty"
+        style="width:${100 - metrics.statements.pct}px;"
+    ></span></a></td>
+<td class="pct ${metrics.statements.score}"
+    data-value="${metrics.statements.pct}">${metrics.statements.pct}%<br>
+    (${metrics.statements.covered} / ${metrics.statements.total})</td>
+<td class="pct ${metrics.branches.score}"
+    data-value="${metrics.branches.pct}">${metrics.branches.pct}%<br>
+    (${metrics.branches.covered} / ${metrics.branches.total})</td>
+<td class="pct ${metrics.functions.score}"
+    data-value="${metrics.functions.pct}">${metrics.functions.pct}%<br>
+    (${metrics.functions.covered} / ${metrics.functions.total})</td>
+<td class="pct ${metrics.lines.score}"
+    data-value="${metrics.lines.pct}">${metrics.lines.pct}%<br>
+    (${metrics.lines.covered} / ${metrics.lines.total})</td>
 </tr>`
-                ), child);
+                );
             });
             htmlData += "</tbody>\n</table>\n</div>\n";
             htmlData += templateFoot;
