@@ -10798,7 +10798,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
     let recurse;
     let render;
     // init function
-    lineCreate = function (text, consumeBlanks) {
+    lineCreate = function (text) {
     /*
      * this function will create line-object with given <text>
      */
@@ -10830,7 +10830,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             ii -= 1;
         }
         return {
-            consumeBlanks,
             endCol,
             offsets: [],
             origLength: text.length,
@@ -10893,20 +10892,13 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         );
         return lineObj;
     };
-    lineWrapAt = function (
-        lineObj,
-        startCol,
-        startText,
-        endCol,
-        endText,
-        consumeBlanks
-    ) {
+    lineWrapAt = function (lineObj, startCol, startText, endCol, endText) {
     /*
      * this function will wrap <lineObj>.slice(<startCol>, <endCol>)
      * inside <startText> and <endText>
      */
-        lineInsertAt(lineObj, startCol, startText, true, consumeBlanks);
-        lineInsertAt(lineObj, endCol, endText, false, consumeBlanks);
+        lineInsertAt(lineObj, startCol, startText, true);
+        lineInsertAt(lineObj, endCol, endText, false);
         return lineObj;
     };
     recurse = function (node, level, dir) {
