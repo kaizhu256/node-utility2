@@ -2284,11 +2284,11 @@ local._testCase_webpage_default = function (opt, onError) {
 /*
  * this function will test webpage's default handling-behavior
  */
-    local.domStyleValidate();
     if (local.isBrowser) {
         onError(undefined, opt);
         return;
     }
+    local.domStyleValidate();
     local.browserTest({
         fileScreenshot: (
             local.env.npm_config_dir_build
@@ -4189,11 +4189,6 @@ local.domStyleValidate = function () {
  */
     let rgx;
     let tmp;
-    try {
-        document.querySelectorAll("#undefined");
-    } catch (ignore) {
-        return;
-    }
     rgx = (
         /^0\u0020(?:(body\u0020>\u0020)?(?:\.testReportDiv\u0020.+|\.x-istanbul\u0020.+|\.button|\.colorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
     );
