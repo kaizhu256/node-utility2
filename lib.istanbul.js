@@ -11102,7 +11102,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         let ii;
         let jj;
         let kk;
-        let metrics;
         let parent;
         let tmp;
         let val;
@@ -11112,8 +11111,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             env: process.env,
             isBrowser: local.isBrowser
         }, node);
-        // init <metrics>
-        metrics = node.metrics;
         // render {{...}}
         template = local.templateRender(template, node);
         // render #show_line_count
@@ -11179,8 +11176,12 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             return val;
         });
         // render #show_percent_bar
-        template = template.replace("{{#show_percent_bar}}", function () {
-            val = Number(metrics.statements.pct) | 0;
+        ii = 0;
+        template = template.replace((
+            /\{\{#show_percent_bar\}\}/g
+        ), function () {
+            val = node.children[ii].metrics.statements.pct | 0;
+            ii += 1;
             return (
                 "<span class=\"cover-fill cover-full\" style=\"width:" + val
                 + "px;\"></span><span class=\"cover-empty\" style=\"width:"
