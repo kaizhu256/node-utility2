@@ -10709,6 +10709,16 @@ local.templateCoverageHead = '\
     <div class="path">{{#show_path}}</div>\n\
 </div>\n\
 <div class="body">\n\
+{{#if isFile}}\n\
+<pre>\n\
+    <table class="coverage">\n\
+    <tr>\n\
+        <td class="line-count">{{#show_lineno}}</td>\n\
+        <td class="line-coverage">{{#show_line_count}}</td>\n\
+        <td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code}}</pre></td>\n\
+    </tr>\n\
+    </table>\n\
+</pre>\n\
 {{#unless isFile}}\n\
 <div class="coverage-summary">\n\
     <table>\n\
@@ -10722,7 +10732,7 @@ local.templateCoverageHead = '\
     </tr>\n\
     </thead>\n\
     <tbody>\n\
-{{/unless isFile}}\n\
+{{/if isFile}}\n\
 ';
 
 
@@ -11100,19 +11110,11 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         });
         lineList.shift();
         htmlData = "";
-        htmlData += render(templateHead, node);
-        htmlData += render((
-            `<pre><table class="coverage"><tr>
-<td class="line-count">{{#show_lineno}}</td>
-<td class="line-coverage">{{#show_line_count}}</td>
-<td class="text"><pre class="prettyprint lang-js" tabIndex="0"
->{{#show_code}}</pre></td>
-</tr></table></pre>`
-        ), {
+        htmlData += render(templateHead, Object.assign({
             lines: fileCoverage.l,
             maxLines: lineList.length,
             lineList
-        });
+        }, node));
         htmlData += render(templateFoot);
         htmlAll += htmlData + "\n\n";
         fileWrite(htmlFile, htmlData);
