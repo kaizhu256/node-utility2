@@ -4189,6 +4189,11 @@ local.domStyleValidate = function () {
  */
     let rgx;
     let tmp;
+    try {
+        document.querySelector("#undefined");
+    } catch (ignore) {
+        return;
+    }
     rgx = (
         /^0\u0020(?:(body\u0020>\u0020)?(?:\.testReportDiv\u0020.+|\.x-istanbul\u0020.+|\.button|\.colorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
     );
