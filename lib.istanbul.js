@@ -11593,7 +11593,7 @@ local.coverageReportCreate = function (opt) {
                 fileCoverage.l[lineno] = Math.max(
                     fileCoverage.l[lineno] | 0,
                     count
-                )
+                );
             });
             // computeSimpleTotals
             [
