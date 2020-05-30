@@ -10940,10 +10940,10 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         lineList.unshift(lineCreate(""));
         // annotateLines(fileCoverage, lineList);
         Object.entries(fileCoverage.l).forEach(function ([
-            line,
+            lineno,
             count
         ]) {
-            lineList[line].covered = (
+            lineList[lineno].covered = (
                 count > 0
                 ? "yes"
                 : "no"
@@ -11585,14 +11585,15 @@ local.coverageReportCreate = function (opt) {
                 key,
                 count
             ]) {
-                let line;
+                let lineno;
                 if (count === 0 && fileCoverage.statementMap[key].skip) {
                     count = 1;
                 }
-                line = fileCoverage.statementMap[key].start.line;
-                fileCoverage.l[line] = (
-                    Math.max(fileCoverage.l[line] | 0, count)
-                );
+                lineno = fileCoverage.statementMap[key].start.line;
+                fileCoverage.l[lineno] = Math.max(
+                    fileCoverage.l[lineno] | 0,
+                    count
+                )
             });
             // computeSimpleTotals
             [
