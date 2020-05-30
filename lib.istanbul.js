@@ -10928,7 +10928,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         ).map(function (str) {
             return lineCreate(str, true);
         });
-        lineList.unshift(lineCreate(""));
+        lineList.unshift(undefined);
         // annotateLines(fileCoverage, lineList);
         Object.entries(fileCoverage.l).forEach(function ([
             lineno,
