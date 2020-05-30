@@ -10913,8 +10913,11 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         // write dir
         if (!node.isFile) {
             htmlFile = path.resolve(dir, "index.html");
-            htmlData = "";
-            htmlData += render(local.templateCoverageReport, node);
+            htmlData = render(local.templateCoverageReport, Object.assign({
+                datetime,
+                env: process.env,
+                isBrowser: local.isBrowser
+            }, node));
             htmlAll += htmlData + "\n\n";
             fileWrite(htmlFile, htmlData);
             node.children.forEach(function (child) {
@@ -11086,8 +11089,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             ), "\u0001/span\u0002");
         });
         lineList.shift();
-        htmlData = "";
-        htmlData += render(local.templateCoverageReport, Object.assign({
+        htmlData = render(local.templateCoverageReport, Object.assign({
             lines: fileCoverage.l,
             maxLines: lineList.length,
             lineList
