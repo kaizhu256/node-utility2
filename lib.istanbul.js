@@ -10709,6 +10709,20 @@ local.templateCoverageHead = '\
     <div class="path">{{#show_path}}</div>\n\
 </div>\n\
 <div class="body">\n\
+{{#unless isFile}}\n\
+<div class="coverage-summary">\n\
+    <table>\n\
+    <thead>\n\
+    <tr>\n\
+        <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>\n\
+        <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>\n\
+        <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>\n\
+        <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>\n\
+        <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>\n\
+    </tr>\n\
+    </thead>\n\
+    <tbody>\n\
+{{/unless isFile}}\n\
 ';
 
 
@@ -10885,30 +10899,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             htmlFile = path.resolve(dir, "index.html");
             htmlData = "";
             htmlData += templateRender(templateHead, node);
-            htmlData += (
-                `<div class="coverage-summary">
-<table>
-<thead>
-<tr>
-<th data-col="file" data-fmt="html" data-html="true" class="file">
-    File
-</th>
-<th data-col="statements" data-type="number" data-fmt="pct" class="pct">
-    Statements
-</th>
-<th data-col="branches" data-type="number" data-fmt="pct" class="pct">
-    Branches
-</th>
-<th data-col="functions" data-type="number" data-fmt="pct" class="pct">
-    Functions
-</th>
-<th data-col="lines" data-type="number" data-fmt="pct" class="pct">
-    Lines
-</th>
-</tr>
-</thead>
-<tbody>`
-            ) + "\n";
             node.children.forEach(function (child) {
                 htmlData += templateRender((
                     `<tr>
