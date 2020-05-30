@@ -10923,7 +10923,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         // write file
         htmlFile = dir + ".html";
         fileCoverage = coverage[node.pathname];
-        lineList = String(fileCoverage.code.join("\n") + "\n").split(
+        lineList = fileCoverage.code.join("\n").split(
             /(?:\r?\n)|\r/
         ).map(function (str) {
             return lineCreate(str, true);
