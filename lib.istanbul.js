@@ -10769,9 +10769,9 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
     let lineInsertAt;
     let lineWrapAt;
     let recurse;
+    let render;
     let templateFoot;
     let templateHead;
-    let templateRender;
     // init function
     lineCreate = function (line, text, consumeBlanks) {
     /*
@@ -10898,9 +10898,9 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         if (!node.isFile) {
             htmlFile = path.resolve(dir, "index.html");
             htmlData = "";
-            htmlData += templateRender(templateHead, node);
+            htmlData += render(templateHead, node);
             node.children.forEach(function (child) {
-                htmlData += templateRender((
+                htmlData += render((
                     `<tr>
 <td class="file {{metrics.statements.score}}"
     data-value="{{relativeName}}"><a href="{{href}}"><div>{{relativeName}}</div>
@@ -10921,7 +10921,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 ), child);
             });
             htmlData += "</tbody>\n</table>\n</div>\n";
-            htmlData += templateRender(templateFoot);
+            htmlData += render(templateFoot);
             htmlAll += htmlData + "\n\n";
             fileWrite(htmlFile, htmlData);
             node.children.forEach(function (child) {
@@ -11100,8 +11100,8 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         });
         lineList.shift();
         htmlData = "";
-        htmlData += templateRender(templateHead, node);
-        htmlData += templateRender((
+        htmlData += render(templateHead, node);
+        htmlData += render((
             `<pre><table class="coverage"><tr>
 <td class="line-count">{{#show_lineno}}</td>
 <td class="line-coverage">{{#show_line_count}}</td>
@@ -11113,11 +11113,11 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             maxLines: lineList.length,
             lineList
         });
-        htmlData += templateRender(templateFoot);
+        htmlData += render(templateFoot);
         htmlAll += htmlData + "\n\n";
         fileWrite(htmlFile, htmlData);
     };
-    templateRender = function (template, node) {
+    render = function (template, node) {
     /*
      * this function will render <template> with given <node>
      */
