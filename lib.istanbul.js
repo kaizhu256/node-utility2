@@ -10391,7 +10391,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
 */
-local.templateCoverageReport = '\
+local.templateCoverageHead = '\
 {{#if isBrowser}}\n\
 <div>\n\
 {{#unless isBrowser}}\n\
@@ -10416,10 +10416,13 @@ local.templateCoverageReport = '\
 }\n\
 /* csslint ignore:end */\n\
 .x-istanbul {\n\
-    font-family: Helvetica Neue, Helvetica, Arial;\n\
+    font-family: Helvetica Neue, Helvetica,Arial;\n\
     font-size: 10pt;\n\
     margin: 0;\n\
     padding: 0;\n\
+}\n\
+.x-istanbul h1 {\n\
+    font-size: large;\n\
 }\n\
 .x-istanbul pre {\n\
     font-family: Consolas, Menlo, Monaco, monospace;\n\
@@ -10797,8 +10800,9 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
     let lineWrapAt;
     let recurse;
     let render;
+    let templateHead;
     // init function
-    lineCreate = function (text) {
+    lineCreate = function (line, text, consumeBlanks) {
     /*
      * this function will create line-object with given <text>
      */
@@ -10830,7 +10834,9 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             ii -= 1;
         }
         return {
+            consumeBlanks,
             endCol,
+            line,
             offsets: [],
             origLength: text.length,
             startCol,
@@ -10846,7 +10852,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         let offsetObj;
         consumeBlanks = (
             consumeBlanks === undefined
-            ? true
+            ? lineObj.consumeBlanks
             : consumeBlanks
         );
         col = (
@@ -10897,14 +10903,15 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         startCol,
         startText,
         endCol,
-        endText
+        endText,
+        consumeBlanks
     ) {
     /*
      * this function will wrap <lineObj>.slice(<startCol>, <endCol>)
      * inside <startText> and <endText>
      */
-        lineInsertAt(lineObj, startCol, startText, true);
-        lineInsertAt(lineObj, endCol, endText, false);
+        lineInsertAt(lineObj, startCol, startText, true, consumeBlanks);
+        lineInsertAt(lineObj, endCol, endText, false, consumeBlanks);
         return lineObj;
     };
     recurse = function (node, level, dir) {
@@ -10919,11 +10926,8 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         // write dir
         if (!node.isFile) {
             htmlFile = path.resolve(dir, "index.html");
-            htmlData = render(local.templateCoverageReport, Object.assign({
-                datetime,
-                env: process.env,
-                isBrowser: local.isBrowser
-            }, node));
+            htmlData = "";
+            htmlData += render(templateHead, node);
             htmlAll += htmlData + "\n\n";
             fileWrite(htmlFile, htmlData);
             node.children.forEach(function (child) {
@@ -10938,19 +10942,18 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         // write file
         htmlFile = dir + ".html";
         fileCoverage = coverage[node.pathname];
-        lineList = fileCoverage.code.join("\n").split(
+        lineList = String(fileCoverage.code.join("\n") + "\n").split(
             /(?:\r?\n)|\r/
-        ).map(function (str) {
-            return lineCreate(str, true);
+        ).map(function (str, ii) {
+            return lineCreate(ii + 1, str, true);
         });
-        lineList.push(lineCreate(""));
-        lineList.unshift(lineCreate(""));
+        lineList.unshift(lineCreate(0, ""));
         // annotateLines(fileCoverage, lineList);
         Object.entries(fileCoverage.l).forEach(function ([
-            lineno,
+            line,
             count
         ]) {
-            lineList[lineno].covered = (
+            lineList[line].covered = (
                 count > 0
                 ? "yes"
                 : "no"
@@ -11053,15 +11056,21 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 endCol = lineList[startLine].origLength;
             }
             lineObj = lineList[startLine];
-            lineWrapAt(lineObj, meta.loc.start.column, "\u0001span class=\"" + (
-                meta.skip
-                ? "fstat-skip"
-                : "fstat-no"
-            ) + "\" title=\"function not covered\" \u0002", (
-                startLine === endLine
-                ? endCol
-                : lineObj.origLength
-            ), "\u0001/span\u0002");
+            lineWrapAt(
+                lineObj,
+                meta.loc.start.column,
+                "\u0001span class=\"" + (
+                    meta.skip
+                    ? "fstat-skip"
+                    : "fstat-no"
+                ) + "\" title=\"function not covered\" \u0002",
+                (
+                    startLine === endLine
+                    ? endCol
+                    : lineObj.origLength
+                ),
+                "\u0001/span\u0002"
+            );
         });
         // annotateStatements(fileCoverage, lineList);
         Object.entries(fileCoverage.s).forEach(function ([
@@ -11096,10 +11105,8 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             ), "\u0001/span\u0002");
         });
         lineList.shift();
-        htmlData = render(local.templateCoverageReport, Object.assign({
-            datetime,
-            env: process.env,
-            isBrowser: local.isBrowser,
+        htmlData = "";
+        htmlData += render(templateHead, Object.assign({
             lines: fileCoverage.l,
             maxLines: lineList.length,
             lineList
@@ -11118,6 +11125,12 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         let parent;
         let tmp;
         let val;
+        // init <node>
+        node = Object.assign({
+            datetime,
+            env: process.env,
+            isBrowser: local.isBrowser
+        }, node);
         // init <metrics>
         metrics = node.metrics;
         // render {{...}}
@@ -11221,6 +11234,8 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
 <h1>coverage-report</h1>
 <div style="background: #fff; border: 1px solid #999; margin 0; padding: 0;">`
     ) + "\n";
+    // init <templateHead>
+    templateHead = local.templateCoverageHead;
     recurse(node, 0, dirCoverage);
     htmlAll += "</div>\n</div>\n";
     // write coverage.all.html
@@ -11585,13 +11600,13 @@ local.coverageReportCreate = function (opt) {
                 key,
                 count
             ]) {
-                let lineno;
+                let line;
                 if (count === 0 && fileCoverage.statementMap[key].skip) {
                     count = 1;
                 }
-                lineno = fileCoverage.statementMap[key].start.lineno;
-                fileCoverage.l[lineno] = (
-                    Math.max(fileCoverage.l[lineno] | 0, count)
+                line = fileCoverage.statementMap[key].start.line;
+                fileCoverage.l[line] = (
+                    Math.max(fileCoverage.l[line] | 0, count)
                 );
             });
             // computeSimpleTotals
