@@ -10846,7 +10846,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         let offsetObj;
         consumeBlanks = (
             consumeBlanks === undefined
-            ? lineObj.consumeBlanks
+            ? true
             : consumeBlanks
         );
         col = (
