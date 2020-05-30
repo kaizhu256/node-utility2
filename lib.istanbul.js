@@ -10798,7 +10798,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
     let recurse;
     let render;
     // init function
-    lineCreate = function (text, consumeBlanks) {
+    lineCreate = function (text) {
     /*
      * this function will create line-object with given <text>
      */
@@ -10830,7 +10830,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             ii -= 1;
         }
         return {
-            consumeBlanks,
             endCol,
             offsets: [],
             origLength: text.length,
@@ -10847,7 +10846,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         let offsetObj;
         consumeBlanks = (
             consumeBlanks === undefined
-            ? lineObj.consumeBlanks
+            ? true
             : consumeBlanks
         );
         col = (
@@ -10898,15 +10897,14 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         startCol,
         startText,
         endCol,
-        endText,
-        consumeBlanks
+        endText
     ) {
     /*
      * this function will wrap <lineObj>.slice(<startCol>, <endCol>)
      * inside <startText> and <endText>
      */
-        lineInsertAt(lineObj, startCol, startText, true, consumeBlanks);
-        lineInsertAt(lineObj, endCol, endText, false, consumeBlanks);
+        lineInsertAt(lineObj, startCol, startText, true);
+        lineInsertAt(lineObj, endCol, endText, false);
         return lineObj;
     };
     recurse = function (node, level, dir) {
@@ -10945,8 +10943,8 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         ).map(function (str) {
             return lineCreate(str, true);
         });
-        lineList.unshift(lineCreate(""));
         lineList.push(lineCreate(""));
+        lineList.unshift(lineCreate(""));
         // annotateLines(fileCoverage, lineList);
         Object.entries(fileCoverage.l).forEach(function ([
             lineno,
@@ -11055,21 +11053,15 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 endCol = lineList[startLine].origLength;
             }
             lineObj = lineList[startLine];
-            lineWrapAt(
-                lineObj,
-                meta.loc.start.column,
-                "\u0001span class=\"" + (
-                    meta.skip
-                    ? "fstat-skip"
-                    : "fstat-no"
-                ) + "\" title=\"function not covered\" \u0002",
-                (
-                    startLine === endLine
-                    ? endCol
-                    : lineObj.origLength
-                ),
-                "\u0001/span\u0002"
-            );
+            lineWrapAt(lineObj, meta.loc.start.column, "\u0001span class=\"" + (
+                meta.skip
+                ? "fstat-skip"
+                : "fstat-no"
+            ) + "\" title=\"function not covered\" \u0002", (
+                startLine === endLine
+                ? endCol
+                : lineObj.origLength
+            ), "\u0001/span\u0002");
         });
         // annotateStatements(fileCoverage, lineList);
         Object.entries(fileCoverage.s).forEach(function ([
