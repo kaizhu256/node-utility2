@@ -10844,16 +10844,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         let ii;
         let offset;
         let offsetObj;
-        consumeBlanks = (
-            consumeBlanks === undefined
-            ? true
-            : consumeBlanks
-        );
-        col = (
-            col > lineObj.origLength
-            ? lineObj.origLength
-            : col
-        );
+        col = math.Min(col, lineObj.origLength);
         if (consumeBlanks) {
             if (col <= lineObj.startCol) {
                 col = 0;
