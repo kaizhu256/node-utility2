@@ -11091,7 +11091,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         template = template.replace("{{#show_line_count}}", function () {
             val = "";
             ii = 1;
-            while (ii <= node.maxLines) {
+            while (ii < node.maxLines) {
                 tmp = node.lines[ii];
                 val += "<span class=\"cline-any " + (
                     tmp === undefined
@@ -11108,7 +11108,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         template = template.replace("{{#show_lineno}}", function () {
             val = "";
             ii = 1;
-            while (ii <= node.maxLines) {
+            while (ii < node.maxLines) {
                 // hack-coverage - hashtag lineno
                 val += (
                     "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
