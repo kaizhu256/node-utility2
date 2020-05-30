@@ -10391,7 +10391,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
 */
-local.templateCoverageHead = '\
+local.templateCoverageReport = '\
 {{#if isBrowser}}\n\
 <div>\n\
 {{#unless isBrowser}}\n\
@@ -10416,13 +10416,10 @@ local.templateCoverageHead = '\
 }\n\
 /* csslint ignore:end */\n\
 .x-istanbul {\n\
-    font-family: Helvetica Neue, Helvetica,Arial;\n\
+    font-family: Helvetica Neue, Helvetica, Arial;\n\
     font-size: 10pt;\n\
     margin: 0;\n\
     padding: 0;\n\
-}\n\
-.x-istanbul h1 {\n\
-    font-size: large;\n\
 }\n\
 .x-istanbul pre {\n\
     font-family: Consolas, Menlo, Monaco, monospace;\n\
@@ -10800,7 +10797,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
     let lineWrapAt;
     let recurse;
     let render;
-    let templateHead;
     // init function
     lineCreate = function (line, text, consumeBlanks) {
     /*
@@ -10927,7 +10923,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         if (!node.isFile) {
             htmlFile = path.resolve(dir, "index.html");
             htmlData = "";
-            htmlData += render(templateHead, node);
+            htmlData += render(local.templateCoverageReport, node);
             htmlAll += htmlData + "\n\n";
             fileWrite(htmlFile, htmlData);
             node.children.forEach(function (child) {
@@ -11106,7 +11102,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         });
         lineList.shift();
         htmlData = "";
-        htmlData += render(templateHead, Object.assign({
+        htmlData += render(local.templateCoverageReport, Object.assign({
             lines: fileCoverage.l,
             maxLines: lineList.length,
             lineList
@@ -11234,8 +11230,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
 <h1>coverage-report</h1>
 <div style="background: #fff; border: 1px solid #999; margin 0; padding: 0;">`
     ) + "\n";
-    // init <templateHead>
-    templateHead = local.templateCoverageHead;
     recurse(node, 0, dirCoverage);
     htmlAll += "</div>\n</div>\n";
     // write coverage.all.html
