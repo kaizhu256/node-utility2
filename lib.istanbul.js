@@ -11106,18 +11106,10 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         });
         // render #show_lineno
         template = template.replace("{{#show_lineno}}", function () {
-            val = "";
-            ii = 1;
-            while (ii < node.maxLines) {
-                // hack-coverage - hashtag lineno
-                val += (
-                    "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
-                    + ii
-                    + "</a>\n"
-                );
+            return node.lineList.map(function (ignore, ii) {
                 ii += 1;
-            }
-            return val;
+                return `<a href="#L${ii}" id="L${ii}">999</a>` + "\n";
+            });
         });
         // render #show_path
         template = template.replace("{{#show_path}}", function () {
