@@ -10792,51 +10792,11 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
  */
     let datetime;
     let htmlAll;
-    let lineCreate;
     let lineInsertAt;
     let lineWrapAt;
     let recurse;
     let render;
     // init function
-    lineCreate = function (text) {
-    /*
-     * this function will create line-object with given <text>
-     */
-        let endCol;
-        let ii;
-        let startCol;
-        // init <startCol>
-        startCol = -1;
-        ii = 0;
-        while (ii < text.length) {
-            if (!text[ii].match(
-                /[\u0020\f\n\r\t\u000b\u00a0\u2028\u2029]/
-            )) {
-                startCol = ii;
-                break;
-            }
-            ii += 1;
-        }
-        // init <endCol>
-        endCol = text.length + 1;
-        ii = text.length - 1;
-        while (ii >= 0) {
-            if (!text[ii].match(
-                /[\u0020\f\n\r\t\u000b\u00a0\u2028\u2029]/
-            )) {
-                endCol = ii;
-                break;
-            }
-            ii -= 1;
-        }
-        return {
-            endCol,
-            offsets: [],
-            origLength: text.length,
-            startCol,
-            text
-        };
-    };
     lineInsertAt = function (lineObj, col, str, insertBefore) {
     /*
      * this function will insert <str> into <lineObj> at <col>
@@ -10923,12 +10883,45 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         // write file
         htmlFile = dir + ".html";
         fileCoverage = coverage[node.pathname];
-        lineList = fileCoverage.code.join("\n").split(
-            /(?:\r?\n)|\r/
-        ).map(function (str) {
-            return lineCreate(str, true);
+        lineList = [
+            ""
+        ].concat(fileCoverage.code).map(function (text) {
+            let endCol;
+            let ii;
+            let startCol;
+            // new InsertionText
+            // init <startCol>
+            startCol = -1;
+            ii = 0;
+            while (ii < text.length) {
+                if (!text[ii].match(
+                    /[\u0020\f\n\r\t\u000b\u00a0\u2028\u2029]/
+                )) {
+                    startCol = ii;
+                    break;
+                }
+                ii += 1;
+            }
+            // init <endCol>
+            endCol = text.length + 1;
+            ii = text.length - 1;
+            while (ii >= 0) {
+                if (!text[ii].match(
+                    /[\u0020\f\n\r\t\u000b\u00a0\u2028\u2029]/
+                )) {
+                    endCol = ii;
+                    break;
+                }
+                ii -= 1;
+            }
+            return {
+                endCol,
+                offsets: [],
+                origLength: text.length,
+                startCol,
+                text
+            };
         });
-        lineList.unshift(undefined);
         // annotateLines(fileCoverage, lineList);
         Object.entries(fileCoverage.l).forEach(function ([
             lineno,
