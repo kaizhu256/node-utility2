@@ -10885,7 +10885,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         fileCoverage = coverage[node.pathname];
         lineList = [
             ""
-        ].concat(fileCoverage.code).map(function (text) {
+        ].concat(fileCoverage.code).map(function (text, lineno) {
             let endCol;
             let ii;
             let startCol;
@@ -10914,29 +10914,15 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 }
                 ii -= 1;
             }
+            // annotateLines(fileCoverage, lineList);
             return {
+                covered: fileCoverage.l[lineno],
                 endCol,
                 offsets: [],
                 origLength: text.length,
                 startCol,
                 text
             };
-        });
-        // annotateLines(fileCoverage, lineList);
-        Object.entries(fileCoverage.l).forEach(function ([
-            lineno,
-            count
-        ]) {
-            lineList[lineno].covered = (
-                count > 0
-                ? "yes"
-                : "no"
-            );
-        });
-        lineList.forEach(function (item) {
-            if (item.covered === undefined) {
-                item.covered = "neutral";
-            }
         });
         //note: order is important, since statements typically result
         //in spanning the whole line and doing branches late
