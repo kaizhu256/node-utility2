@@ -10837,22 +10837,14 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             text
         };
     };
-    lineInsertAt = function (lineObj, col, str, insertBefore, consumeBlanks) {
+    lineInsertAt = function (lineObj, col, str, insertBefore) {
     /*
      * this function will insert <str> into <lineObj> at <col>
      */
         let ii;
         let offset;
         let offsetObj;
-        col = math.Min(col, lineObj.origLength);
-        if (consumeBlanks) {
-            if (col <= lineObj.startCol) {
-                col = 0;
-            }
-            if (col > lineObj.endCol) {
-                col = lineObj.origLength;
-            }
-        }
+        col = Math.min(col, lineObj.origLength);
         // find <offset> from <col>
         offset = col;
         ii = 0;
@@ -10888,8 +10880,16 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
      * this function will wrap <lineObj>.slice(<startCol>, <endCol>)
      * inside <startText> and <endText>
      */
-        lineInsertAt(lineObj, startCol, startText, true);
-        lineInsertAt(lineObj, endCol, endText, false);
+        startCol = Math.min(startCol, lineObj.origLength);
+        // consumeBlanks
+        if (startCol <= lineObj.startCol) {
+            startCol = 0;
+        }
+        if (startCol > lineObj.endCol) {
+            startCol = lineObj.origLength;
+        }
+        lineInsertAt(lineObj, startCol, startText);
+        lineInsertAt(lineObj, endCol, endText);
         return lineObj;
     };
     recurse = function (node, level, dir) {
@@ -10997,8 +10997,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                             ? "I"
                             : "E"
                         ) + "\u0001/span\u0002",
-                        true,
-                        false
+                        true
                     );
                     return;
                 }
