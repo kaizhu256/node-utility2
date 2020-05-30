@@ -11172,29 +11172,31 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         });
         // render #show_path
         template = template.replace("{{#show_path}}", function () {
-            tmp = node.parent;
-            if (!tmp) {
+            let parent;
+            tmp = node;
+            parent = tmp.parent;
+            if (!parent) {
                 return "";
             }
-            val = node.relativeName;
+            val = tmp.relativeName;
             ii = 1;
-            while (tmp) {
+            while (parent) {
                 val = (
-                    "index.html\">" + tmp.relativeNameOrAllFiles + "</a>"
+                    "index.html\">" + parent.relativeNameOrAllFiles + "</a>"
                     + " &#187; " + val
                 );
                 jj = 0;
                 while (jj < ii) {
                     kk = 0;
-                    while (kk < node.relativeName.split(path.sep).length - 1) {
+                    while (kk < tmp.relativeName.split(path.sep).length - 1) {
                         val = "../" + val;
                         kk += 1;
                     }
-                    node = node.parent;
+                    tmp = tmp.parent;
                     jj += 1;
                 }
                 val = "<a href=\"" + val;
-                tmp = tmp.parent;
+                parent = parent.parent;
                 ii += 1;
             }
             return val;
