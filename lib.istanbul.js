@@ -10797,7 +10797,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
     let lineWrapAt;
     let recurse;
     let render;
-    let templateHead;
     // init function
     lineCreate = function (line, text, consumeBlanks) {
     /*
@@ -10924,7 +10923,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         if (!node.isFile) {
             htmlFile = path.resolve(dir, "index.html");
             htmlData = "";
-            htmlData += render(templateHead, node);
+            htmlData += render(local.templateCoverageReport, node);
             htmlAll += htmlData + "\n\n";
             fileWrite(htmlFile, htmlData);
             node.children.forEach(function (child) {
@@ -11053,21 +11052,15 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 endCol = lineList[startLine].origLength;
             }
             lineObj = lineList[startLine];
-            lineWrapAt(
-                lineObj,
-                meta.loc.start.column,
-                "\u0001span class=\"" + (
-                    meta.skip
-                    ? "fstat-skip"
-                    : "fstat-no"
-                ) + "\" title=\"function not covered\" \u0002",
-                (
-                    startLine === endLine
-                    ? endCol
-                    : lineObj.origLength
-                ),
-                "\u0001/span\u0002"
-            );
+            lineWrapAt(lineObj, meta.loc.start.column, "\u0001span class=\"" + (
+                meta.skip
+                ? "fstat-skip"
+                : "fstat-no"
+            ) + "\" title=\"function not covered\" \u0002", (
+                startLine === endLine
+                ? endCol
+                : lineObj.origLength
+            ), "\u0001/span\u0002");
         });
         // annotateStatements(fileCoverage, lineList);
         Object.entries(fileCoverage.s).forEach(function ([
@@ -11103,7 +11096,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         });
         lineList.shift();
         htmlData = "";
-        htmlData += render(templateHead, Object.assign({
+        htmlData += render(local.templateCoverageReport, Object.assign({
             lines: fileCoverage.l,
             maxLines: lineList.length,
             lineList
@@ -11231,8 +11224,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
 <h1>coverage-report</h1>
 <div style="background: #fff; border: 1px solid #999; margin 0; padding: 0;">`
     ) + "\n";
-    // init <templateHead>
-    templateHead = local.templateCoverageReport;
     recurse(node, 0, dirCoverage);
     htmlAll += "</div>\n</div>\n";
     // write coverage.all.html
