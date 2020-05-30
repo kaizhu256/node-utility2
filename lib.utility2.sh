@@ -670,7 +670,7 @@ shBuildCiInternal () {(set -e
         [ "$CI_BRANCH" = beta ] ||
         [ "$CI_BRANCH" = master ]
     then
-        COMMIT_LIMIT=20 shBuildGithubUpload
+        COMMIT_LIMIT=100 shBuildGithubUpload
     fi
     shGitInfo | head -n 4096 || true
     # validate http-links embedded in README.md

@@ -11125,7 +11125,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                     tmp === undefined
                     ? "cline-neutral\">&nbsp;"
                     : tmp > 0
-                    ? "cline-yes\">" + node.lines[ii]
+                    ? "cline-yes\">" + tmp
                     : "cline-no\">&nbsp;"
                 ) + "</span>\n";
                 ii += 1;
