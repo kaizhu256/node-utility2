@@ -1,5 +1,5 @@
-<svg height="558" width="720" xmlns="http://www.w3.org/2000/svg">
-<rect height="558" fill="#555" width="720"></rect>
+<svg height="590" width="720" xmlns="http://www.w3.org/2000/svg">
+<rect height="590" fill="#555" width="720"></rect>
 <text fill="#7f7" font-family="Courier New" font-size="12" xml:space="preserve">
 <tspan x="10" y="26">  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current</tspan>
 
@@ -7,7 +7,7 @@
 
 <tspan x="10" y="58"></tspan>
 <tspan x="10" y="74">  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0</tspan>
-<tspan x="10" y="90">100 3131k  100 3131k    0     0  9338k      0 --:--:-- --:--:-- --:--:-- 9348k</tspan>
+<tspan x="10" y="90">100 2953k  100 2953k    0     0  5655k      0 --:--:-- --:--:-- --:--:-- 5657k</tspan>
 
 <tspan x="10" y="106"></tspan>
 
@@ -31,24 +31,28 @@
 <tspan x="10" y="282">testExampleSh - merged test-report from file /home/travis/build/kaizhu256/node-utility2/tmp/buil\</tspan>
 <tspan x="10" y="298">d/test-report.json</tspan>
 
-<tspan x="10" y="314">jslint - 1ms /tmp/app/example.sh</tspan>
+<tspan x="10" y="314">jslint - 0ms /tmp/app/example.sh</tspan>
 
-<tspan x="10" y="330">serverLog - {"time":"2019-10-15T17:01:03.232Z","type":"serverResponse","method":"GET","url":"/",\</tspan>
-<tspan x="10" y="346">"statusCode":200,"timeElapsed":19,"reqContentLength":0,"resContentLength":0,"reqHeaderXForwarded\</tspan>
-<tspan x="10" y="362">For":"","reqHeaderOrigin":"","reqHeaderReferer":"","reqHeaderUserAgent":"Mozilla/5.0 (X11; Linux\</tspan>
-<tspan x="10" y="378"> x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/77.0.3865.120 Safari/537.36"}</tspan>
+<tspan x="10" y="330">serverLog - {"time":"2020-05-30T23:13:10.593Z","type":"serverResponse","method":"GET","url":"/",\</tspan>
+<tspan x="10" y="346">"statusCode":200,"timeElapsed":3,"reqContentLength":0,"resContentLength":0,"reqHeaderXForwardedF\</tspan>
+<tspan x="10" y="362">or":"","reqHeaderOrigin":"","reqHeaderReferer":"","reqHeaderUserAgent":"Mozilla/5.0 (X11; Linux \</tspan>
+<tspan x="10" y="378">x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/83.0.4103.61 Safari/537.36"}</tspan>
 
-<tspan x="10" y="394">serverLog - {"time":"2019-10-15T17:01:03.264Z","type":"serverResponse","method":"GET","url":"/as\</tspan>
-<tspan x="10" y="410">sets.app.js","statusCode":200,"timeElapsed":22,"reqContentLength":0,"resContentLength":0,"reqHea\</tspan>
-<tspan x="10" y="426">derXForwardedFor":"","reqHeaderOrigin":"","reqHeaderReferer":"http://127.0.0.1:8081/","reqHeader\</tspan>
-<tspan x="10" y="442">UserAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrom\</tspan>
-<tspan x="10" y="458">e/77.0.3865.120 Safari/537.36"}</tspan>
+<tspan x="10" y="394"></tspan>
 
-<tspan x="10" y="474">serverLog - {"time":"2019-10-15T17:01:03.494Z","type":"serverResponse","method":"GET","url":"/",\</tspan>
-<tspan x="10" y="490">"statusCode":304,"timeElapsed":0,"reqContentLength":0,"resContentLength":0,"reqHeaderXForwardedF\</tspan>
-<tspan x="10" y="506">or":"","reqHeaderOrigin":"","reqHeaderReferer":"http://127.0.0.1:8081/","reqHeaderUserAgent":"Mo\</tspan>
-<tspan x="10" y="522">zilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/77.0.3865.12\</tspan>
-<tspan x="10" y="538">0 Safari/537.36"}</tspan>
+<tspan x="10" y="410">serverLog - {"time":"2020-05-30T23:13:10.614Z","type":"serverResponse","method":"GET","url":"/as\</tspan>
+<tspan x="10" y="426">sets.app.js","statusCode":200,"timeElapsed":21,"reqContentLength":0,"resContentLength":0,"reqHea\</tspan>
+<tspan x="10" y="442">derXForwardedFor":"","reqHeaderOrigin":"","reqHeaderReferer":"http://127.0.0.1:8081/","reqHeader\</tspan>
+<tspan x="10" y="458">UserAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrom\</tspan>
+<tspan x="10" y="474">e/83.0.4103.61 Safari/537.36"}</tspan>
+
+<tspan x="10" y="490"></tspan>
+
+<tspan x="10" y="506">serverLog - {"time":"2020-05-30T23:13:10.850Z","type":"serverResponse","method":"GET","url":"/",\</tspan>
+<tspan x="10" y="522">"statusCode":304,"timeElapsed":1,"reqContentLength":0,"resContentLength":0,"reqHeaderXForwardedF\</tspan>
+<tspan x="10" y="538">or":"","reqHeaderOrigin":"","reqHeaderReferer":"http://127.0.0.1:8081/","reqHeaderUserAgent":"Mo\</tspan>
+<tspan x="10" y="554">zilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/83.0.4103.61\</tspan>
+<tspan x="10" y="570"> Safari/537.36"}</tspan>
 
 </text>
 </svg>

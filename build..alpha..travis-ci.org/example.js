@@ -23,8 +23,6 @@ instruction
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
-    let ArrayPrototypeFlat;
-    let TextXxcoder;
     let consoleError;
     let debugName;
     let local;
@@ -40,162 +38,17 @@ instruction
          * and return <argList>[0]
          */
             consoleError("\n\n" + debugName);
-            consoleError.apply(console, argList);
+            consoleError(...argList);
             consoleError("\n");
-            // return arg0 for inspection
             return argList[0];
         };
     }
-    // polyfill
-    ArrayPrototypeFlat = function (depth) {
-    /*
-     * this function will polyfill Array.prototype.flat
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        depth = (
-            globalThis.isNaN(depth)
-            ? 1
-            : Number(depth)
-        );
-        if (!depth) {
-            return Array.prototype.slice.call(this);
-        }
-        return Array.prototype.reduce.call(this, function (acc, cur) {
-            if (Array.isArray(cur)) {
-                // recurse
-                acc.push.apply(acc, ArrayPrototypeFlat.call(cur, depth - 1));
-            } else {
-                acc.push(cur);
-            }
-            return acc;
-        }, []);
-    };
-    Array.prototype.flat = Array.prototype.flat || ArrayPrototypeFlat;
-    Array.prototype.flatMap = Array.prototype.flatMap || function flatMap(
-        ...argList
-    ) {
-    /*
-     * this function will polyfill Array.prototype.flatMap
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        return this.map(...argList).flat();
-    };
     String.prototype.trimEnd = (
         String.prototype.trimEnd || String.prototype.trimRight
     );
     String.prototype.trimStart = (
         String.prototype.trimStart || String.prototype.trimLeft
     );
-    (function () {
-        try {
-            globalThis.TextDecoder = (
-                globalThis.TextDecoder || require("util").TextDecoder
-            );
-            globalThis.TextEncoder = (
-                globalThis.TextEncoder || require("util").TextEncoder
-            );
-        } catch (ignore) {}
-    }());
-    TextXxcoder = function () {
-    /*
-     * this function will polyfill TextDecoder/TextEncoder
-     * https://gist.github.com/Yaffle/5458286
-     */
-        return;
-    };
-    TextXxcoder.prototype.decode = function (octets) {
-    /*
-     * this function will polyfill TextDecoder.prototype.decode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bytesNeeded;
-        let codePoint;
-        let ii;
-        let kk;
-        let octet;
-        let string;
-        string = "";
-        ii = 0;
-        while (ii < octets.length) {
-            octet = octets[ii];
-            bytesNeeded = 0;
-            codePoint = 0;
-            if (octet <= 0x7F) {
-                bytesNeeded = 0;
-                codePoint = octet & 0xFF;
-            } else if (octet <= 0xDF) {
-                bytesNeeded = 1;
-                codePoint = octet & 0x1F;
-            } else if (octet <= 0xEF) {
-                bytesNeeded = 2;
-                codePoint = octet & 0x0F;
-            } else if (octet <= 0xF4) {
-                bytesNeeded = 3;
-                codePoint = octet & 0x07;
-            }
-            if (octets.length - ii - bytesNeeded > 0) {
-                kk = 0;
-                while (kk < bytesNeeded) {
-                    octet = octets[ii + kk + 1];
-                    codePoint = (codePoint << 6) | (octet & 0x3F);
-                    kk += 1;
-                }
-            } else {
-                codePoint = 0xFFFD;
-                bytesNeeded = octets.length - ii;
-            }
-            string += String.fromCodePoint(codePoint);
-            ii += bytesNeeded + 1;
-        }
-        return string;
-    };
-    TextXxcoder.prototype.encode = function (string) {
-    /*
-     * this function will polyfill TextEncoder.prototype.encode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bits;
-        let cc;
-        let codePoint;
-        let ii;
-        let length;
-        let octets;
-        octets = [];
-        length = string.length;
-        ii = 0;
-        while (ii < length) {
-            codePoint = string.codePointAt(ii);
-            cc = 0;
-            bits = 0;
-            if (codePoint <= 0x0000007F) {
-                cc = 0;
-                bits = 0x00;
-            } else if (codePoint <= 0x000007FF) {
-                cc = 6;
-                bits = 0xC0;
-            } else if (codePoint <= 0x0000FFFF) {
-                cc = 12;
-                bits = 0xE0;
-            } else if (codePoint <= 0x001FFFFF) {
-                cc = 18;
-                bits = 0xF0;
-            }
-            octets.push(bits | (codePoint >> cc));
-            cc -= 6;
-            while (cc >= 0) {
-                octets.push(0x80 | ((codePoint >> cc) & 0x3F));
-                cc -= 6;
-            }
-            ii += (
-                codePoint >= 0x10000
-                ? 2
-                : 1
-            );
-        }
-        return octets;
-    };
-    globalThis.TextDecoder = globalThis.TextDecoder || TextXxcoder;
-    globalThis.TextEncoder = globalThis.TextEncoder || TextXxcoder;
     // init local
     local = {};
     local.local = local;
@@ -208,34 +61,32 @@ instruction
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
-    local.assertOrThrow = function (passed, message) {
+    local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw err.<message> if <passed> is falsy
+     * this function will throw err.<msg> if <passed> is falsy
      */
-        let err;
         if (passed) {
             return;
         }
-        err = (
+        throw (
             (
-                message
-                && typeof message.message === "string"
-                && typeof message.stack === "string"
+                msg
+                && typeof msg.message === "string"
+                && typeof msg.stack === "string"
             )
-            // if message is errObj, then leave as is
-            ? message
+            // if msg is err, then leave as is
+            ? msg
             : new Error(
-                typeof message === "string"
-                // if message is a string, then leave as is
-                ? message
-                // else JSON.stringify message
-                : JSON.stringify(message, undefined, 4)
+                typeof msg === "string"
+                // if msg is a string, then leave as is
+                ? msg
+                // else JSON.stringify msg
+                : JSON.stringify(msg, undefined, 4)
             )
         );
-        throw err;
     };
     local.coalesce = function (...argList) {
     /*
@@ -258,6 +109,7 @@ instruction
      * this function will sync "rm -rf" <dir>
      */
         let child_process;
+        // do nothing if module does not exist
         try {
             child_process = require("child_process");
         } catch (ignore) {
@@ -276,6 +128,7 @@ instruction
      * this function will sync write <data> to <file> with "mkdir -p"
      */
         let fs;
+        // do nothing if module does not exist
         try {
             fs = require("fs");
         } catch (ignore) {
@@ -284,21 +137,15 @@ instruction
         // try to write file
         try {
             fs.writeFileSync(file, data);
+            return true;
         } catch (ignore) {
             // mkdir -p
-            require("child_process").spawnSync(
-                "mkdir",
-                [
-                    "-p", require("path").dirname(file)
-                ],
-                {
-                    stdio: [
-                        "ignore", 1, 2
-                    ]
-                }
-            );
+            fs.mkdirSync(require("path").dirname(file), {
+                recursive: true
+            });
             // rewrite file
             fs.writeFileSync(file, data);
+            return true;
         }
     };
     local.functionOrNop = function (fnc) {
@@ -388,9 +235,7 @@ instruction
         local.vm = require("vm");
         local.zlib = require("zlib");
     }
-}((typeof globalThis === "object" && globalThis) || (function () {
-    return Function("return this")(); // jslint ignore:line
-}())));
+}((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
 
 
@@ -506,7 +351,7 @@ if (!local.isBrowser) {
     }
     fnc = console[key];
     console[key] = function (...argList) {
-        fnc.apply(console, argList);
+        fnc(...argList);
         // append text to #outputStdout1
         elem.textContent += argList.map(function (arg) {
             return (
@@ -523,11 +368,6 @@ if (!local.isBrowser) {
 });
 local.objectAssignDefault(local, globalThis.domOnEventDelegateDict);
 globalThis.domOnEventDelegateDict = local;
-if ((
-    /\bmodeTest=1\b/
-).test(location.search)) {
-    local.testRunBrowser();
-}
 }());
 
 
@@ -555,7 +395,43 @@ local.assetsDict = local.assetsDict || {};
     }
 });
 /* jslint ignore:start */
-local.assetsDict["/assets.index.template.html"] = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<!-- "assets.utility2.template.html" -->\n<title>{{env.npm_package_name}} ({{env.npm_package_version}})</title>\n<style>\n/* jslint utility2:true */\n/*csslint\n*/\n/* csslint ignore:start */\n*,\n*:after,\n*:before {\n    box-sizing: border-box;\n}\n/* csslint ignore:end */\n@keyframes uiAnimateSpin {\n0% {\n    transform: rotate(0deg);\n}\n100% {\n    transform: rotate(360deg);\n}\n}\na {\n    overflow-wrap: break-word;\n}\nbody {\n    background: #f7f7f7;\n    font-family: Arial, Helvetica, sans-serif;\n    font-size: small;\n    margin: 0 40px;\n}\nbody > div,\nbody > input,\nbody > pre,\nbody > .button,\nbody > .textarea {\n    margin-bottom: 20px;\n    margin-top: 0;\n}\nbody > input,\nbody > .button {\n    width: 20rem;\n}\nbody > .readonly {\n    background: #ddd;\n}\nbody > .textarea {\n    height: 10rem;\n    resize: vertical;\n    width: 100%;\n}\ncode,\npre,\n.textarea {\n    font-family: Consolas, Menlo, monospace;\n    font-size: smaller;\n}\npre {\n    overflow-wrap: break-word;\n    white-space: pre-wrap;\n}\n.button {\n    background: #ddd;\n    border: 1px solid #999;\n    color: #000;\n    cursor: pointer;\n    display: inline-block;\n    padding: 2px 5px;\n    text-align: center;\n    text-decoration: none;\n}\n.button:hover {\n    background: #bbb;\n}\n.colorError {\n    color: #d00;\n}\n.textarea {\n    background: #fff;\n    border: 1px solid #999;\n    border-radius: 0;\n    cursor: auto;\n    overflow: auto;\n    padding: 2px;\n}\n.uiAnimateSlide {\n    overflow-y: hidden;\n    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;\n}\n.zeroPixel {\n    border: 0;\n    height: 0;\n    margin: 0;\n    padding: 0;\n    width: 0;\n}\n</style>\n</head>\n<body>\n<div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n<script>\n/* jslint utility2:true */\n// init domOnEventWindowOnloadTimeElapsed\n(function () {\n/*\n * this function will measure and print time-elapsed for window.onload\n */\n    "use strict";\n    if (!(\n        typeof window === "object" && window && window.document\n        && typeof document.addEventListener === "function"\n    ) || window.domOnEventWindowOnloadTimeElapsed) {\n        return;\n    }\n    window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;\n    window.addEventListener("load", function () {\n        setTimeout(function () {\n            window.domOnEventWindowOnloadTimeElapsed = (\n                Date.now()\n                - window.domOnEventWindowOnloadTimeElapsed\n            );\n            console.error(\n                "domOnEventWindowOnloadTimeElapsed = "\n                + window.domOnEventWindowOnloadTimeElapsed\n            );\n        }, 100);\n    });\n}());\n\n\n\n// init domOnEventAjaxProgressUpdate\n(function () {\n/*\n * this function will display incrementing ajax-progress-bar\n */\n    "use strict";\n    let opt;\n    if (!(\n        typeof window === "object" && window && window.document\n        && typeof document.addEventListener === "function"\n    ) || window.domOnEventAjaxProgressUpdate) {\n        return;\n    }\n    window.domOnEventAjaxProgressUpdate = function (gotoState, onError) {\n        gotoState = (gotoState | 0) + 1;\n        switch (gotoState) {\n        // ajaxProgress - show\n        case 1:\n            // init timerInterval and timerTimeout\n            opt.timerInterval = (\n                opt.timerInterval || setInterval(opt, 2000, 1, onError)\n            );\n            opt.timerTimeout = (\n                opt.timerTimeout || setTimeout(opt, 30000, 2, onError)\n            );\n            // show ajaxProgress\n            if (opt.width !== -1) {\n                opt.style.background = opt.background;\n            }\n            setTimeout(opt, 50, gotoState, onError);\n            break;\n        // ajaxProgress - increment\n        case 2:\n            // show ajaxProgress\n            if (opt.width === -1) {\n                return;\n            }\n            opt.style.background = opt.background;\n            // reset ajaxProgress if it goes too high\n            if ((opt.style.width.slice(0, -1) | 0) > 95) {\n                opt.width = 0;\n            }\n            // this algorithm will indefinitely increment ajaxProgress\n            // with successively smaller increments without reaching 100%\n            opt.width += 1;\n            opt.style.width = Math.max(\n                100 - 75 * Math.exp(-0.125 * opt.width),\n                opt.style.width.slice(0, -1) | 0\n            ) + "%";\n            if (!opt.counter) {\n                setTimeout(opt, 0, gotoState, onError);\n            }\n            break;\n        // ajaxProgress - 100%\n        case 3:\n            opt.width = -1;\n            opt.style.width = "100%";\n            setTimeout(opt, 1000, gotoState, onError);\n            break;\n        // ajaxProgress - hide\n        case 4:\n            // cleanup timerInterval and timerTimeout\n            clearInterval(opt.timerInterval);\n            opt.timerInterval = null;\n            clearTimeout(opt.timerTimeout);\n            opt.timerTimeout = null;\n            // hide ajaxProgress\n            opt.style.background = "transparent";\n            if (onError) {\n                onError();\n            }\n            setTimeout(opt, 250, gotoState);\n            break;\n        // ajaxProgress - reset\n        default:\n            // reset ajaxProgress\n            opt.counter = 0;\n            opt.width = 0;\n            opt.style.width = "0%";\n        }\n    };\n    opt = window.domOnEventAjaxProgressUpdate;\n    opt.end = function (onError) {\n        opt.counter = 0;\n        window.domOnEventAjaxProgressUpdate(2, onError);\n    };\n    opt.elem = document.getElementById("domElementAjaxProgress1");\n    if (!opt.elem) {\n        opt.elem = document.createElement("div");\n        setTimeout(function () {\n            document.body.insertBefore(opt.elem, document.body.firstChild);\n        });\n    }\n    opt.elem.id = "domElementAjaxProgress1";\n    opt.style = opt.elem.style;\n    // init style\n    Object.entries({\n        background: "#d00",\n        height: "2px",\n        left: "0",\n        margin: "0",\n        padding: "0",\n        position: "fixed",\n        top: "0",\n        transition: "background 250ms, width 750ms",\n        width: "0%",\n        "z-index": "1"\n    }).forEach(function (entry) {\n        opt.style[entry[0]] = opt.style[entry[0]] || entry[1];\n    });\n    // init state\n    opt.background = opt.style.background;\n    opt.counter = 0;\n    opt.width = 0;\n}());\n\n\n\n// init domOnEventDelegateDict\n(function () {\n/*\n * this function will handle delegated dom-evt\n */\n    "use strict";\n    let debounce;\n    let timerTimeout;\n    debounce = function () {\n        return setTimeout(function () {\n            timerTimeout = undefined;\n        }, 30);\n    };\n    if (!(\n        typeof window === "object" && window && window.document\n        && typeof document.addEventListener === "function"\n    ) || window.domOnEventDelegateDict) {\n        return;\n    }\n    window.domOnEventDelegateDict = {};\n    window.domOnEventDelegateDict.domOnEventDelegate = function (evt) {\n        evt.targetOnEvent = evt.target.closest("[data-onevent]");\n        if (\n            !evt.targetOnEvent\n            || evt.targetOnEvent.dataset.onevent === "domOnEventNop"\n            || evt.target.closest(".disabled,.readonly")\n        ) {\n            return;\n        }\n        // filter evt-change\n        switch (evt.type !== "change" && evt.target.type) {\n        case "checkbox":\n        case "file":\n        case "select-one":\n        case "radio":\n            return;\n        }\n        // filter evt-keyup\n        switch (evt.type) {\n        case "keyup":\n            if (!timerTimeout && (\n                evt.target.tagName === "INPUT"\n                || evt.target.tagName === "TEXTAREA"\n            )) {\n                timerTimeout = debounce();\n                if (evt.target.dataset.valueOld !== evt.target.value) {\n                    evt.target.dataset.valueOld = evt.target.value;\n                    break;\n                }\n            }\n            return;\n        }\n        switch (evt.targetOnEvent.tagName) {\n        case "BUTTON":\n        case "FORM":\n            evt.preventDefault();\n            break;\n        }\n        evt.stopPropagation();\n        // handle domOnEventClickTarget\n        if (evt.targetOnEvent.dataset.onevent === "domOnEventClickTarget") {\n            document.querySelector(\n                evt.targetOnEvent.dataset.clickTarget\n            ).click();\n            return;\n        }\n        window.domOnEventDelegateDict[evt.targetOnEvent.dataset.onevent](evt);\n    };\n    // handle evt\n    [\n        "change",\n        "click",\n        "keyup",\n        "submit"\n    ].forEach(function (eventType) {\n        document.addEventListener(\n            eventType,\n            window.domOnEventDelegateDict.domOnEventDelegate\n        );\n    });\n}());\n\n\n\n// init domOnEventSelectAllWithinPre\n(function () {\n/*\n * this function will limit select-all within <pre tabIndex="0"> elem\n * https://stackoverflow.com/questions/985272/selecting-text-in-an-element-akin-to-highlighting-with-your-mouse\n */\n    "use strict";\n    if (!(\n        typeof window === "object" && window && window.document\n        && typeof document.addEventListener === "function"\n    ) || window.domOnEventSelectAllWithinPre) {\n        return;\n    }\n    window.domOnEventSelectAllWithinPre = function (evt) {\n        let range;\n        let selection;\n        if (\n            evt && (evt.ctrlKey || evt.metaKey) && evt.key === "a"\n            && evt.target.closest("pre")\n        ) {\n            range = document.createRange();\n            range.selectNodeContents(evt.target.closest("pre"));\n            selection = window.getSelection();\n            selection.removeAllRanges();\n            selection.addRange(range);\n            evt.preventDefault();\n        }\n    };\n    // handle evt\n    document.addEventListener(\n        "keydown",\n        window.domOnEventSelectAllWithinPre\n    );\n}());\n</script>\n<h1>\n<!-- utility2-comment\n<a\n    {{#if env.npm_package_homepage}}\n    href="{{env.npm_package_homepage}}"\n    {{/if env.npm_package_homepage}}\n    target="_blank"\n>\nutility2-comment -->\n    {{env.npm_package_name}} ({{env.npm_package_version}})\n<!-- utility2-comment\n</a>\nutility2-comment -->\n</h1>\n<h3>{{env.npm_package_description}}</h3>\n<!-- utility2-comment\n<a class="button" download href="assets.app.js">download standalone app</a><br>\n<button class="button" data-onevent="testRunBrowser" id="buttonTestRun1">run browser-tests</button><br>\n<div class="uiAnimateSlide" id="htmlTestReport1" style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"></div>\nutility2-comment -->\n\n\n\n<!-- custom-html-start -->\n<label>edit or paste script below to cover and test</label>\n<textarea class="textarea" data-onevent="domOnEventInputChange" id="inputTextarea1">\n// remove comment below to disable jslint\n/*jslint browser, devel*/\n/*global window*/\n(function () {\n    "use strict";\n    var testCaseDict;\n    testCaseDict = {};\n    testCaseDict.modeTest = 1;\n\n    // comment this testCase to disable failed error demo\n    testCaseDict.testCase_failed_error_demo = function (opt, onError) {\n    /*\n     * this function will run a failed error demo\n     */\n        // hack-jslint\n        window.utility2.nop(opt);\n        onError(new Error("this is a failed error demo"));\n    };\n\n    testCaseDict.testCase_passed_ajax_demo = function (opt, onError) {\n    /*\n     * this function will demo a passed ajax test\n     */\n        var data;\n        opt = {url: "/"};\n        // test ajax-req for main-page "/"\n        window.utility2.ajax(opt, function (err, xhr) {\n            try {\n                // handle err\n                console.assert(!err, err);\n                // validate "200 ok" status\n                console.assert(xhr.statusCode === 200, xhr.statusCode);\n                // validate non-empty data\n                data = xhr.responseText;\n                console.assert(data && data.length > 0, data);\n                onError();\n            } catch (errCaught) {\n                onError(errCaught);\n            }\n        });\n    };\n\n    window.utility2.testRunDefault(testCaseDict);\n}());\n</textarea>\n<button class="button" data-onevent="domOnEventInputChange" id="buttonJslintAutofix1">jslint autofix</button><br>\n<pre class= "colorError" id="outputJslintPre1" tabindex="0"></pre>\n<label>instrumented-code</label>\n<textarea class="readonly textarea" id="outputTextarea1" readonly tabindex="0"></textarea>\n<label>stderr and stdout</label>\n<textarea class="onevent-reset-output readonly textarea" id="outputStdout1" readonly></textarea>\n<div id="htmlTestReport2"></div>\n<div id="htmlCoverageReport1"></div>\n<script>\n/* jslint utility2:true */\nwindow.addEventListener("load", function (local) {\n"use strict";\nlocal = window.utility2;\nlocal.querySelectorAll(\n    "#buttonTestRun1, #htmlTestReport1"\n).forEach(function (elem) {\n    elem.style.display = "none";\n});\nlocal.domOnEventInputChange = function (evt) {\n    switch (evt.type + "." + evt.target.id) {\n    case "click.buttonJslintAutofix1":\n    case "keyup.inputTextarea1":\n        // jslint #inputTextarea1\n        local.jslintAndPrint(local.querySelector(\n            "#inputTextarea1"\n        ).value, "inputTextarea1.js", {\n            autofix: evt.target.id === "buttonJslintAutofix1",\n            conditional: evt.target.id !== "buttonJslintAutofix1"\n        });\n        if (local.jslint.jslintResult.autofix) {\n            local.querySelector(\n                "#inputTextarea1"\n            ).value = local.jslint.jslintResult.code;\n        }\n        local.querySelector(\n            "#outputJslintPre1"\n        ).textContent = local.jslint.jslintResult.errMsg.replace((\n            /\\u001b\\[\\d*m/g\n        ), "").trim();\n        // try to cleanup __coverage__\n        try {\n            delete globalThis.__coverage__["/inputTextarea1.js"];\n        } catch (ignore) {}\n        // try to cover and eval #inputTextarea1\n        try {\n            local.querySelector(\n                "#outputTextarea1"\n            ).value = local.istanbul.instrumentSync(\n                local.querySelector("#inputTextarea1").value,\n                "/inputTextarea1.js"\n            );\n            eval( // jslint ignore:line\n                local.querySelector("#outputTextarea1").value\n            );\n        } catch (errCaught) {\n            console.error(errCaught);\n        }\n        break;\n    }\n};\n// handle evt\nlocal.on("utility2.testRunEnd", function () {\n    local.querySelector(\n        "#htmlCoverageReport1"\n    ).innerHTML = local.istanbul.coverageReportCreate({\n        coverage: globalThis.__coverage__\n    });\n});\nlocal.on("utility2.testRunProgressUpdate", function (testReport) {\n    local.querySelector(\n        "#htmlTestReport2"\n    ).innerHTML = local.testReportMerge(testReport, {});\n});\nlocal.domOnEventInputChange({\n    target: {\n        id: "inputTextarea1"\n    },\n    type: "keyup"\n});\n});\n</script>\n<!-- custom-html-end -->\n\n\n\n<!-- utility2-comment\n{{#if isRollup}}\n<script src="assets.app.js"></script>\n{{#unless isRollup}}\nutility2-comment -->\n<script src="assets.utility2.lib.istanbul.js"></script>\n<script src="assets.utility2.lib.jslint.js"></script>\n<script src="assets.utility2.lib.marked.js"></script>\n<script src="assets.utility2.lib.sjcl.js"></script>\n<script src="assets.utility2.js"></script>\n<script>window.utility2_onReadyBefore.counter += 1;</script>\n<script src="jsonp.utility2.stateInit?callback=window.utility2.stateInit"></script>\n<script src="assets.example.js"></script>\n<script src="assets.test.js"></script>\n<script>\nif (window.utility2_onReadyBefore) {\n    window.utility2_onReadyBefore();\n}\n</script>\n<!-- utility2-comment\n{{/if isRollup}}\nutility2-comment -->\n<div style="text-align: center;">\n    [\n    this app was created with\n    <a\n        href="https://github.com/kaizhu256/node-utility2" target="_blank"\n    >utility2</a>\n    ]\n</div>\n</body>\n</html>\n';
+local.assetsDict["/assets.index.template.html"] = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<!-- "assets.utility2.template.html" -->\n<title>{{env.npm_package_name}} ({{env.npm_package_version}})</title>\n<style>\n/* jslint utility2:true */\n/*csslint\n*/\n/* csslint ignore:start */\n*,\n*:after,\n*:before {\n    box-sizing: border-box;\n}\n.uiAnimateSlide {\n    overflow-y: hidden;\n    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;\n}\n/* csslint ignore:end */\n@keyframes uiAnimateSpin {\n0% {\n    transform: rotate(0deg);\n}\n100% {\n    transform: rotate(360deg);\n}\n}\na {\n    overflow-wrap: break-word;\n}\nbody {\n    background: #f7f7f7;\n    font-family: Arial, Helvetica, sans-serif;\n    font-size: small;\n    margin: 0 40px;\n}\nbody > div,\nbody > input,\nbody > pre,\nbody > .button,\nbody > .textarea {\n    margin-bottom: 20px;\n    margin-top: 0;\n}\nbody > input,\nbody > .button {\n    width: 20rem;\n}\nbody > .readonly {\n    background: #ddd;\n}\nbody > .textarea {\n    height: 10rem;\n    resize: vertical;\n    width: 100%;\n}\ncode,\npre,\n.textarea {\n    font-family: Consolas, Menlo, monospace;\n    font-size: smaller;\n}\npre {\n    overflow-wrap: break-word;\n    white-space: pre-wrap;\n}\n.button {\n    background: #ddd;\n    border: 1px solid #999;\n    color: #000;\n    cursor: pointer;\n    display: inline-block;\n    padding: 2px 5px;\n    text-align: center;\n    text-decoration: none;\n}\n.button:hover {\n    background: #bbb;\n}\n.colorError {\n    color: #d00;\n}\n.textarea {\n    background: #fff;\n    border: 1px solid #999;\n    border-radius: 0;\n    cursor: auto;\n    overflow: auto;\n    padding: 2px;\n}\n.zeroPixel {\n    border: 0;\n    height: 0;\n    margin: 0;\n    padding: 0;\n    width: 0;\n}\n</style>\n</head>\n<body>\n<div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n<script>\n/* jslint utility2:true */\n// init domOnEventWindowOnloadTimeElapsed\n(function () {\n/*\n * this function will measure and print time-elapsed for window.onload\n */\n    "use strict";\n    if (!(\n        typeof window === "object" && window && window.document\n        && typeof document.addEventListener === "function"\n    ) || window.domOnEventWindowOnloadTimeElapsed) {\n        return;\n    }\n    window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;\n    window.addEventListener("load", function () {\n        setTimeout(function () {\n            window.domOnEventWindowOnloadTimeElapsed = (\n                Date.now()\n                - window.domOnEventWindowOnloadTimeElapsed\n            );\n            console.error(\n                "domOnEventWindowOnloadTimeElapsed = "\n                + window.domOnEventWindowOnloadTimeElapsed\n            );\n        }, 100);\n    });\n}());\n\n\n\n// init domOnEventAjaxProgressUpdate\n(function () {\n/*\n * this function will display incrementing ajax-progress-bar\n */\n    "use strict";\n    let opt;\n    let styleBar0;\n    let styleBar;\n    let styleModal0;\n    let styleModal;\n    let timeStart;\n    let timerInterval;\n    let timerTimeout;\n    let tmp;\n    let width;\n    try {\n        if (\n            window.domOnEventAjaxProgressUpdate\n            || !document.getElementById("domElementAjaxProgressBar1").style\n        ) {\n            return;\n        }\n    } catch (ignore) {\n        return;\n    }\n    window.domOnEventAjaxProgressUpdate = function (gotoState, onError) {\n        gotoState = (gotoState | 0) + 1;\n        switch (gotoState) {\n        // ajaxProgress - show\n        case 1:\n            // init <timerInterval> and <timerTimeout>\n            if (!timerTimeout) {\n                timeStart = Date.now();\n                timerInterval = setInterval(opt, 2000, 1, onError);\n                timerTimeout = setTimeout(opt, opt.timeout, 2, onError);\n            }\n            // show ajaxProgressBar\n            if (width !== -1) {\n                styleBar.background = styleBar0.background;\n            }\n            setTimeout(opt, 50, gotoState, onError);\n            break;\n        // ajaxProgress - increment\n        case 2:\n            // show ajaxProgressBar\n            if (width === -1) {\n                break;\n            }\n            styleBar.background = styleBar0.background;\n            // reset ajaxProgress if it reaches end\n            if ((styleBar.width.slice(0, -1) | 0) > 95) {\n                width = 0;\n            }\n            // this algorithm will indefinitely increment ajaxProgress\n            // with successively smaller increments without reaching 100%\n            width += 1;\n            styleBar.width = Math.max(\n                100 - 75 * Math.exp(-0.125 * width),\n                styleBar.width.slice(0, -1) | 0\n            ) + "%";\n            // show ajaxProgressModal\n            styleModal.height = "100%";\n            styleModal.opacity = styleModal0.opacity;\n            if (!opt.cnt) {\n                setTimeout(opt, 0, gotoState, onError);\n            }\n            break;\n        // ajaxProgress - 100%\n        case 3:\n            width = -1;\n            styleBar.width = "100%";\n            setTimeout(opt, 1000, gotoState, onError);\n            break;\n        // ajaxProgress - hide\n        case 4:\n            // debug timeElapsed\n            tmp = Date.now();\n            console.error(\n                "domOnEventAjaxProgressUpdate - timeElapsed - "\n                + (tmp - timeStart)\n                + " ms"\n            );\n            // cleanup <timerInterval> and <timerTimeout>\n            timeStart = tmp;\n            clearInterval(timerInterval);\n            timerInterval = null;\n            clearTimeout(timerTimeout);\n            timerTimeout = null;\n            // hide ajaxProgressBar\n            styleBar.background = "transparent";\n            // hide ajaxProgressModal\n            styleModal.opacity = "0";\n            if (onError) {\n                onError();\n            }\n            setTimeout(opt, 250, gotoState);\n            break;\n        // ajaxProgress - reset\n        default:\n            opt.cnt = 0;\n            width = 0;\n            styleBar.width = "0%";\n            styleModal.height = "0";\n        }\n    };\n    opt = window.domOnEventAjaxProgressUpdate;\n    opt.end = function (onError) {\n        opt.cnt = 0;\n        window.domOnEventAjaxProgressUpdate(2, onError);\n    };\n    // init <styleBar>\n    styleBar = document.getElementById("domElementAjaxProgressBar1").style;\n    styleBar0 = Object.assign({}, styleBar);\n    Object.entries({\n        background: "#d00",\n        height: "2px",\n        left: "0",\n        margin: "0",\n        padding: "0",\n        position: "fixed",\n        top: "0",\n        transition: "background 250ms, width 750ms",\n        width: "0%",\n        "z-index": "1"\n    }).forEach(function (entry) {\n        styleBar[entry[0]] = styleBar[entry[0]] || entry[1];\n    });\n    // init <styleModal>\n    styleModal = document.getElementById("domElementAjaxProgressModal1") || {};\n    styleModal = styleModal.style || {};\n    styleModal0 = Object.assign({}, styleModal);\n    Object.entries({\n        height: "0",\n        left: "0",\n        margin: "0",\n        padding: "0",\n        position: "fixed",\n        top: "0",\n        transition: "opacity 125ms",\n        width: "100%",\n        "z-index": "1"\n    }).forEach(function (entry) {\n        styleModal[entry[0]] = styleModal[entry[0]] || entry[1];\n    });\n    // init state\n    width = 0;\n    opt.cnt = 0;\n    opt.timeout = 30000;\n    // init ajaxProgress\n    window.domOnEventAjaxProgressUpdate();\n}());\n\n\n\n// init domOnEventDelegateDict\n(function () {\n/*\n * this function will handle delegated dom-evt\n */\n    "use strict";\n    let debounce;\n    let timerTimeout;\n    debounce = function () {\n        return setTimeout(function () {\n            timerTimeout = undefined;\n        }, 30);\n    };\n    if (!(\n        typeof window === "object" && window && window.document\n        && typeof document.addEventListener === "function"\n    ) || window.domOnEventDelegateDict) {\n        return;\n    }\n    window.domOnEventDelegateDict = {};\n    window.domOnEventDelegateDict.domOnEventDelegate = function (evt) {\n        evt.targetOnEvent = evt.target.closest("[data-onevent]");\n        if (\n            !evt.targetOnEvent\n            || evt.targetOnEvent.dataset.onevent === "domOnEventNop"\n            || evt.target.closest(".disabled,.readonly")\n        ) {\n            return;\n        }\n        // filter evt-change\n        switch (evt.type !== "change" && evt.target.type) {\n        case "checkbox":\n        case "file":\n        case "select-one":\n        case "radio":\n            return;\n        }\n        // filter evt-keyup\n        switch (evt.type) {\n        case "keyup":\n            if (!timerTimeout && (\n                evt.target.tagName === "INPUT"\n                || evt.target.tagName === "TEXTAREA"\n            )) {\n                timerTimeout = debounce();\n                if (evt.target.dataset.valueOld !== evt.target.value) {\n                    evt.target.dataset.valueOld = evt.target.value;\n                    break;\n                }\n            }\n            return;\n        }\n        switch (evt.targetOnEvent.tagName) {\n        case "BUTTON":\n        case "FORM":\n            evt.preventDefault();\n            break;\n        }\n        evt.stopPropagation();\n        // handle domOnEventClickTarget\n        if (evt.targetOnEvent.dataset.onevent === "domOnEventClickTarget") {\n            document.querySelector(\n                evt.targetOnEvent.dataset.clickTarget\n            ).click();\n            return;\n        }\n        window.domOnEventDelegateDict[evt.targetOnEvent.dataset.onevent](evt);\n    };\n    // handle evt\n    [\n        "change",\n        "click",\n        "keyup",\n        "submit"\n    ].forEach(function (eventType) {\n        document.addEventListener(\n            eventType,\n            window.domOnEventDelegateDict.domOnEventDelegate\n        );\n    });\n}());\n\n\n\n// init domOnEventSelectAllWithinPre\n(function () {\n/*\n * this function will limit select-all within <pre tabIndex="0"> elem\n * https://stackoverflow.com/questions/985272/selecting-text-in-an-element-akin-to-highlighting-with-your-mouse\n */\n    "use strict";\n    if (!(\n        typeof window === "object" && window && window.document\n        && typeof document.addEventListener === "function"\n    ) || window.domOnEventSelectAllWithinPre) {\n        return;\n    }\n    window.domOnEventSelectAllWithinPre = function (evt) {\n        let range;\n        let selection;\n        if (\n            evt && (evt.ctrlKey || evt.metaKey) && evt.key === "a"\n            && evt.target.closest("pre")\n        ) {\n            range = document.createRange();\n            range.selectNodeContents(evt.target.closest("pre"));\n            selection = window.getSelection();\n            selection.removeAllRanges();\n            selection.addRange(range);\n            evt.preventDefault();\n        }\n    };\n    // handle evt\n    document.addEventListener(\n        "keydown",\n        window.domOnEventSelectAllWithinPre\n    );\n}());\n</script>\n<h1>\n<!-- utility2-comment\n<a\n    {{#if env.npm_package_homepage}}\n    href="{{env.npm_package_homepage}}"\n    {{/if env.npm_package_homepage}}\n    target="_blank"\n>\nutility2-comment -->\n    {{env.npm_package_name}} ({{env.npm_package_version}})\n<!-- utility2-comment\n</a>\nutility2-comment -->\n</h1>\n<h3>{{env.npm_package_description}}</h3>\n<!-- utility2-comment\n<a class="button" download href="assets.app.js">download standalone app</a><br>\n<button class="button" data-onevent="testRunBrowser" id="buttonTestRun1">run browser-tests</button><br>\n<div class="uiAnimateSlide" id="htmlTestReport1" style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"></div>\nutility2-comment -->\n\n\n\n<!-- custom-html-start -->\n<label>edit or paste script below to cover and test</label>\n<textarea class="textarea" data-onevent="domOnEventInputChange" id="inputTextarea1">\n// remove comment below to disable jslint\n/*jslint browser, devel*/\n/*global window*/\n(function () {\n    "use strict";\n    var testCaseDict;\n    testCaseDict = {};\n    testCaseDict.modeTest = 1;\n\n    // comment this testCase to disable failed error demo\n    testCaseDict.testCase_failed_error_demo = function (opt, onError) {\n    /*\n     * this function will run a failed error demo\n     */\n        // hack-jslint\n        window.utility2.nop(opt);\n        onError(new Error("this is a failed error demo"));\n    };\n\n    testCaseDict.testCase_passed_ajax_demo = function (opt, onError) {\n    /*\n     * this function will demo a passed ajax test\n     */\n        var data;\n        opt = {url: "/"};\n        // test ajax-req for main-page "/"\n        window.utility2.ajax(opt, function (err, xhr) {\n            try {\n                // handle err\n                console.assert(!err, err);\n                // validate "200 ok" status\n                console.assert(xhr.statusCode === 200, xhr.statusCode);\n                // validate non-empty data\n                data = xhr.responseText;\n                console.assert(data && data.length > 0, data);\n                onError();\n            } catch (errCaught) {\n                onError(errCaught);\n            }\n        });\n    };\n\n    window.utility2.testRunDefault(testCaseDict);\n}());\n</textarea>\n<button class="button" data-onevent="domOnEventInputChange" id="buttonJslintAutofix1">jslint autofix</button><br>\n<pre class= "colorError" id="outputJslintPre1" tabindex="0"></pre>\n<label>instrumented-code</label>\n<textarea class="readonly textarea" id="outputTextarea1" readonly tabindex="0"></textarea>\n<label>stderr and stdout</label>\n<textarea class="onevent-reset-output readonly textarea" id="outputStdout1" readonly></textarea>\n<div id="htmlTestReport2"></div>\n<div id="htmlCoverageReport1"></div>\n<script>\n/* jslint utility2:true */\nwindow.addEventListener("load", function (local) {\n"use strict";\nlocal = window.utility2;\nlocal.querySelectorAll(\n    "#buttonTestRun1, #htmlTestReport1"\n).forEach(function (elem) {\n    elem.style.display = "none";\n});\nlocal.domOnEventInputChange = function (evt) {\n    switch (evt.type + "." + evt.target.id) {\n    case "click.buttonJslintAutofix1":\n    case "keyup.inputTextarea1":\n        // jslint #inputTextarea1\n        local.jslintAndPrint(local.querySelector(\n            "#inputTextarea1"\n        ).value, "inputTextarea1.js", {\n            autofix: evt.target.id === "buttonJslintAutofix1",\n            conditional: evt.target.id !== "buttonJslintAutofix1"\n        });\n        if (local.jslint.jslintResult.autofix) {\n            local.querySelector(\n                "#inputTextarea1"\n            ).value = local.jslint.jslintResult.code;\n        }\n        local.querySelector(\n            "#outputJslintPre1"\n        ).textContent = local.jslint.jslintResult.errMsg.replace((\n            /\\u001b\\[\\d*m/g\n        ), "").trim();\n        // try to cleanup __coverage__\n        try {\n            delete globalThis.__coverage__["/inputTextarea1.js"];\n        } catch (ignore) {}\n        // try to cover and eval #inputTextarea1\n        try {\n            local.querySelector(\n                "#outputTextarea1"\n            ).value = local.istanbul.instrumentSync(\n                local.querySelector("#inputTextarea1").value,\n                "/inputTextarea1.js"\n            );\n            eval( // jslint ignore:line\n                local.querySelector("#outputTextarea1").value\n            );\n        } catch (errCaught) {\n            console.error(errCaught);\n        }\n        break;\n    }\n};\n// handle evt\nlocal.on("utility2.testRunEnd", function () {\n    local.querySelector(\n        "#htmlCoverageReport1"\n    ).innerHTML = local.istanbul.coverageReportCreate({\n        coverage: globalThis.__coverage__\n    });\n});\nlocal.on("utility2.testRunProgressUpdate", function (testReport) {\n    local.querySelector(\n        "#htmlTestReport2"\n    ).innerHTML = local.testReportMerge(testReport, {});\n});\nlocal.domOnEventInputChange({\n    target: {\n        id: "inputTextarea1"\n    },\n    type: "keyup"\n});\n});\n</script>\n<!-- custom-html-end -->\n\n\n\n<!-- utility2-comment\n{{#if isRollup}}\n<script src="assets.app.js"></script>\n{{#unless isRollup}}\nutility2-comment -->\n<script src="assets.utility2.lib.istanbul.js"></script>\n<script src="assets.utility2.lib.jslint.js"></script>\n<script src="assets.utility2.lib.marked.js"></script>\n<script src="assets.utility2.js"></script>\n<script>window.utility2_onReadyBefore.cnt += 1;</script>\n<script src="jsonp.utility2.stateInit?callback=window.utility2.stateInit"></script>\n<script src="assets.example.js"></script>\n<script src="assets.test.js"></script>\n<script>\nif (window.utility2_onReadyBefore) {\n    window.utility2_onReadyBefore();\n}\n</script>\n<!-- utility2-comment\n{{/if isRollup}}\nutility2-comment -->\n<div style="text-align: center;">\n    [\n    this app was created with\n    <a\n        href="https://github.com/kaizhu256/node-utility2" target="_blank"\n    >utility2</a>\n    ]\n</div>\n</body>\n</html>\n';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

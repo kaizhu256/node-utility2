@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- "assets.utility2.template.html" -->
-<title>utility2 (2019.10.9)</title>
+<title>utility2 (2020.5.25)</title>
 <style>
 /* jslint utility2:true */
 /*csslint
@@ -14,6 +14,10 @@
 *:after,
 *:before {
     box-sizing: border-box;
+}
+.uiAnimateSlide {
+    overflow-y: hidden;
+    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;
 }
 /* csslint ignore:end */
 @keyframes uiAnimateSpin {
@@ -87,10 +91,6 @@ pre {
     overflow: auto;
     padding: 2px;
 }
-.uiAnimateSlide {
-    overflow-y: hidden;
-    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;
-}
 .zeroPixel {
     border: 0;
     height: 0;
@@ -140,10 +140,23 @@ pre {
  */
     "use strict";
     let opt;
-    if (!(
-        typeof window === "object" && window && window.document
-        && typeof document.addEventListener === "function"
-    ) || window.domOnEventAjaxProgressUpdate) {
+    let styleBar0;
+    let styleBar;
+    let styleModal0;
+    let styleModal;
+    let timeStart;
+    let timerInterval;
+    let timerTimeout;
+    let tmp;
+    let width;
+    try {
+        if (
+            window.domOnEventAjaxProgressUpdate
+            || !document.getElementById("domElementAjaxProgressBar1").style
+        ) {
+            return;
+        }
+    } catch (ignore) {
         return;
     }
     window.domOnEventAjaxProgressUpdate = function (gotoState, onError) {
@@ -151,56 +164,68 @@ pre {
         switch (gotoState) {
         // ajaxProgress - show
         case 1:
-            // init timerInterval and timerTimeout
-            opt.timerInterval = (
-                opt.timerInterval || setInterval(opt, 2000, 1, onError)
-            );
-            opt.timerTimeout = (
-                opt.timerTimeout || setTimeout(opt, 30000, 2, onError)
-            );
-            // show ajaxProgress
-            if (opt.width !== -1) {
-                opt.style.background = opt.background;
+            // init <timerInterval> and <timerTimeout>
+            if (!timerTimeout) {
+                timeStart = Date.now();
+                timerInterval = setInterval(opt, 2000, 1, onError);
+                timerTimeout = setTimeout(opt, opt.timeout, 2, onError);
+            }
+            // show ajaxProgressBar
+            if (width !== -1) {
+                styleBar.background = styleBar0.background;
             }
             setTimeout(opt, 50, gotoState, onError);
             break;
         // ajaxProgress - increment
         case 2:
-            // show ajaxProgress
-            if (opt.width === -1) {
-                return;
+            // show ajaxProgressBar
+            if (width === -1) {
+                break;
             }
-            opt.style.background = opt.background;
-            // reset ajaxProgress if it goes too high
-            if ((opt.style.width.slice(0, -1) | 0) > 95) {
-                opt.width = 0;
+            styleBar.background = styleBar0.background;
+            // reset ajaxProgress if it reaches end
+            if ((styleBar.width.slice(0, -1) | 0) > 95) {
+                width = 0;
             }
             // this algorithm will indefinitely increment ajaxProgress
             // with successively smaller increments without reaching 100%
-            opt.width += 1;
-            opt.style.width = Math.max(
-                100 - 75 * Math.exp(-0.125 * opt.width),
-                opt.style.width.slice(0, -1) | 0
+            width += 1;
+            styleBar.width = Math.max(
+                100 - 75 * Math.exp(-0.125 * width),
+                styleBar.width.slice(0, -1) | 0
             ) + "%";
-            if (!opt.counter) {
+            // show ajaxProgressModal
+            styleModal.height = "100%";
+            styleModal.opacity = styleModal0.opacity;
+            if (!opt.cnt) {
                 setTimeout(opt, 0, gotoState, onError);
             }
             break;
         // ajaxProgress - 100%
         case 3:
-            opt.width = -1;
-            opt.style.width = "100%";
+            width = -1;
+            styleBar.width = "100%";
             setTimeout(opt, 1000, gotoState, onError);
             break;
         // ajaxProgress - hide
         case 4:
-            // cleanup timerInterval and timerTimeout
-            clearInterval(opt.timerInterval);
-            opt.timerInterval = null;
-            clearTimeout(opt.timerTimeout);
-            opt.timerTimeout = null;
-            // hide ajaxProgress
-            opt.style.background = "transparent";
+            // debug timeElapsed
+            tmp = Date.now();
+            console.error(
+                "domOnEventAjaxProgressUpdate - timeElapsed - "
+                + (tmp - timeStart)
+                + " ms"
+            );
+            // cleanup <timerInterval> and <timerTimeout>
+            timeStart = tmp;
+            clearInterval(timerInterval);
+            timerInterval = null;
+            clearTimeout(timerTimeout);
+            timerTimeout = null;
+            // hide ajaxProgressBar
+            styleBar.background = "transparent";
+            // hide ajaxProgressModal
+            styleModal.opacity = "0";
             if (onError) {
                 onError();
             }
@@ -208,27 +233,20 @@ pre {
             break;
         // ajaxProgress - reset
         default:
-            // reset ajaxProgress
-            opt.counter = 0;
-            opt.width = 0;
-            opt.style.width = "0%";
+            opt.cnt = 0;
+            width = 0;
+            styleBar.width = "0%";
+            styleModal.height = "0";
         }
     };
     opt = window.domOnEventAjaxProgressUpdate;
     opt.end = function (onError) {
-        opt.counter = 0;
+        opt.cnt = 0;
         window.domOnEventAjaxProgressUpdate(2, onError);
     };
-    opt.elem = document.getElementById("domElementAjaxProgress1");
-    if (!opt.elem) {
-        opt.elem = document.createElement("div");
-        setTimeout(function () {
-            document.body.insertBefore(opt.elem, document.body.firstChild);
-        });
-    }
-    opt.elem.id = "domElementAjaxProgress1";
-    opt.style = opt.elem.style;
-    // init style
+    // init <styleBar>
+    styleBar = document.getElementById("domElementAjaxProgressBar1").style;
+    styleBar0 = Object.assign({}, styleBar);
     Object.entries({
         background: "#d00",
         height: "2px",
@@ -241,12 +259,31 @@ pre {
         width: "0%",
         "z-index": "1"
     }).forEach(function (entry) {
-        opt.style[entry[0]] = opt.style[entry[0]] || entry[1];
+        styleBar[entry[0]] = styleBar[entry[0]] || entry[1];
+    });
+    // init <styleModal>
+    styleModal = document.getElementById("domElementAjaxProgressModal1") || {};
+    styleModal = styleModal.style || {};
+    styleModal0 = Object.assign({}, styleModal);
+    Object.entries({
+        height: "0",
+        left: "0",
+        margin: "0",
+        padding: "0",
+        position: "fixed",
+        top: "0",
+        transition: "opacity 125ms",
+        width: "100%",
+        "z-index": "1"
+    }).forEach(function (entry) {
+        styleModal[entry[0]] = styleModal[entry[0]] || entry[1];
     });
     // init state
-    opt.background = opt.style.background;
-    opt.counter = 0;
-    opt.width = 0;
+    width = 0;
+    opt.cnt = 0;
+    opt.timeout = 30000;
+    // init ajaxProgress
+    window.domOnEventAjaxProgressUpdate();
 }());
 
 
@@ -379,7 +416,7 @@ pre {
     target="_blank"
 >
 
-    utility2 (2019.10.9)
+    utility2 (2020.5.25)
 
 </a>
 

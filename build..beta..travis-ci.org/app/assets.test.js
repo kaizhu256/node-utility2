@@ -4,8 +4,6 @@
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
-    let ArrayPrototypeFlat;
-    let TextXxcoder;
     let consoleError;
     let debugName;
     let local;
@@ -21,162 +19,17 @@
          * and return <argList>[0]
          */
             consoleError("\n\n" + debugName);
-            consoleError.apply(console, argList);
+            consoleError(...argList);
             consoleError("\n");
-            // return arg0 for inspection
             return argList[0];
         };
     }
-    // polyfill
-    ArrayPrototypeFlat = function (depth) {
-    /*
-     * this function will polyfill Array.prototype.flat
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        depth = (
-            globalThis.isNaN(depth)
-            ? 1
-            : Number(depth)
-        );
-        if (!depth) {
-            return Array.prototype.slice.call(this);
-        }
-        return Array.prototype.reduce.call(this, function (acc, cur) {
-            if (Array.isArray(cur)) {
-                // recurse
-                acc.push.apply(acc, ArrayPrototypeFlat.call(cur, depth - 1));
-            } else {
-                acc.push(cur);
-            }
-            return acc;
-        }, []);
-    };
-    Array.prototype.flat = Array.prototype.flat || ArrayPrototypeFlat;
-    Array.prototype.flatMap = Array.prototype.flatMap || function flatMap(
-        ...argList
-    ) {
-    /*
-     * this function will polyfill Array.prototype.flatMap
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        return this.map(...argList).flat();
-    };
     String.prototype.trimEnd = (
         String.prototype.trimEnd || String.prototype.trimRight
     );
     String.prototype.trimStart = (
         String.prototype.trimStart || String.prototype.trimLeft
     );
-    (function () {
-        try {
-            globalThis.TextDecoder = (
-                globalThis.TextDecoder || require("util").TextDecoder
-            );
-            globalThis.TextEncoder = (
-                globalThis.TextEncoder || require("util").TextEncoder
-            );
-        } catch (ignore) {}
-    }());
-    TextXxcoder = function () {
-    /*
-     * this function will polyfill TextDecoder/TextEncoder
-     * https://gist.github.com/Yaffle/5458286
-     */
-        return;
-    };
-    TextXxcoder.prototype.decode = function (octets) {
-    /*
-     * this function will polyfill TextDecoder.prototype.decode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bytesNeeded;
-        let codePoint;
-        let ii;
-        let kk;
-        let octet;
-        let string;
-        string = "";
-        ii = 0;
-        while (ii < octets.length) {
-            octet = octets[ii];
-            bytesNeeded = 0;
-            codePoint = 0;
-            if (octet <= 0x7F) {
-                bytesNeeded = 0;
-                codePoint = octet & 0xFF;
-            } else if (octet <= 0xDF) {
-                bytesNeeded = 1;
-                codePoint = octet & 0x1F;
-            } else if (octet <= 0xEF) {
-                bytesNeeded = 2;
-                codePoint = octet & 0x0F;
-            } else if (octet <= 0xF4) {
-                bytesNeeded = 3;
-                codePoint = octet & 0x07;
-            }
-            if (octets.length - ii - bytesNeeded > 0) {
-                kk = 0;
-                while (kk < bytesNeeded) {
-                    octet = octets[ii + kk + 1];
-                    codePoint = (codePoint << 6) | (octet & 0x3F);
-                    kk += 1;
-                }
-            } else {
-                codePoint = 0xFFFD;
-                bytesNeeded = octets.length - ii;
-            }
-            string += String.fromCodePoint(codePoint);
-            ii += bytesNeeded + 1;
-        }
-        return string;
-    };
-    TextXxcoder.prototype.encode = function (string) {
-    /*
-     * this function will polyfill TextEncoder.prototype.encode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bits;
-        let cc;
-        let codePoint;
-        let ii;
-        let length;
-        let octets;
-        octets = [];
-        length = string.length;
-        ii = 0;
-        while (ii < length) {
-            codePoint = string.codePointAt(ii);
-            cc = 0;
-            bits = 0;
-            if (codePoint <= 0x0000007F) {
-                cc = 0;
-                bits = 0x00;
-            } else if (codePoint <= 0x000007FF) {
-                cc = 6;
-                bits = 0xC0;
-            } else if (codePoint <= 0x0000FFFF) {
-                cc = 12;
-                bits = 0xE0;
-            } else if (codePoint <= 0x001FFFFF) {
-                cc = 18;
-                bits = 0xF0;
-            }
-            octets.push(bits | (codePoint >> cc));
-            cc -= 6;
-            while (cc >= 0) {
-                octets.push(0x80 | ((codePoint >> cc) & 0x3F));
-                cc -= 6;
-            }
-            ii += (
-                codePoint >= 0x10000
-                ? 2
-                : 1
-            );
-        }
-        return octets;
-    };
-    globalThis.TextDecoder = globalThis.TextDecoder || TextXxcoder;
-    globalThis.TextEncoder = globalThis.TextEncoder || TextXxcoder;
     // init local
     local = {};
     local.local = local;
@@ -189,34 +42,32 @@
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
-    local.assertOrThrow = function (passed, message) {
+    local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw err.<message> if <passed> is falsy
+     * this function will throw err.<msg> if <passed> is falsy
      */
-        let err;
         if (passed) {
             return;
         }
-        err = (
+        throw (
             (
-                message
-                && typeof message.message === "string"
-                && typeof message.stack === "string"
+                msg
+                && typeof msg.message === "string"
+                && typeof msg.stack === "string"
             )
-            // if message is errObj, then leave as is
-            ? message
+            // if msg is err, then leave as is
+            ? msg
             : new Error(
-                typeof message === "string"
-                // if message is a string, then leave as is
-                ? message
-                // else JSON.stringify message
-                : JSON.stringify(message, undefined, 4)
+                typeof msg === "string"
+                // if msg is a string, then leave as is
+                ? msg
+                // else JSON.stringify msg
+                : JSON.stringify(msg, undefined, 4)
             )
         );
-        throw err;
     };
     local.coalesce = function (...argList) {
     /*
@@ -239,6 +90,7 @@
      * this function will sync "rm -rf" <dir>
      */
         let child_process;
+        // do nothing if module does not exist
         try {
             child_process = require("child_process");
         } catch (ignore) {
@@ -257,6 +109,7 @@
      * this function will sync write <data> to <file> with "mkdir -p"
      */
         let fs;
+        // do nothing if module does not exist
         try {
             fs = require("fs");
         } catch (ignore) {
@@ -265,21 +118,15 @@
         // try to write file
         try {
             fs.writeFileSync(file, data);
+            return true;
         } catch (ignore) {
             // mkdir -p
-            require("child_process").spawnSync(
-                "mkdir",
-                [
-                    "-p", require("path").dirname(file)
-                ],
-                {
-                    stdio: [
-                        "ignore", 1, 2
-                    ]
-                }
-            );
+            fs.mkdirSync(require("path").dirname(file), {
+                recursive: true
+            });
             // rewrite file
             fs.writeFileSync(file, data);
+            return true;
         }
     };
     local.functionOrNop = function (fnc) {
@@ -369,9 +216,7 @@
         local.vm = require("vm");
         local.zlib = require("zlib");
     }
-}((typeof globalThis === "object" && globalThis) || (function () {
-    return Function("return this")(); // jslint ignore:line
-}())));
+}((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
 
 
@@ -447,7 +292,7 @@ local.testCase_FormData_err = function (opt, onError) {
         [
             local.FormData.prototype, {
                 read: function (onError) {
-                    onError(local.errDefault);
+                    onError(local.errorDefault);
                 }
             }
         ]
@@ -532,10 +377,10 @@ local.testCase_ajax_default = function (opt, onError) {
  */
     let onParallel;
     onParallel = local.onParallel(onError);
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
 
     // test ajax's abort handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.onParallelList({
         list: [
             "",
@@ -545,7 +390,7 @@ local.testCase_ajax_default = function (opt, onError) {
         ]
     }, function (responseType, onParallel) {
         responseType = responseType.elem;
-        onParallel.counter += 1;
+        onParallel.cnt += 1;
         local.ajax({
             data: (
                 responseType === "arraybuffer"
@@ -597,7 +442,7 @@ local.testCase_ajax_default = function (opt, onError) {
     }, onParallel);
 
     // test ajax's data handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     opt = local.ajax({
         url: "/test.timeout"
     }, function (err, xhr) {
@@ -615,7 +460,7 @@ local.testCase_ajax_default = function (opt, onError) {
     opt.abort();
 
     // test ajax's echo handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.ajax({
         _aa: "aa",
         aa: "aa",
@@ -649,7 +494,7 @@ local.testCase_ajax_default = function (opt, onError) {
     });
 
     // test ajax's err handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.onParallelList({
         list: [
             {
@@ -672,9 +517,9 @@ local.testCase_ajax_default = function (opt, onError) {
                 //!! url: "https://undefined:0"
             }
         ]
-    }, function (option2, onParallel) {
-        onParallel.counter += 1;
-        local.ajax(option2.elem, function (err) {
+    }, function (opt2, onParallel) {
+        onParallel.cnt += 1;
+        local.ajax(opt2.elem, function (err) {
             // handle err
             local.assertOrThrow(err, err);
             onParallel(null, opt);
@@ -682,7 +527,7 @@ local.testCase_ajax_default = function (opt, onError) {
     }, onParallel);
 
     // test ajax's file handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.ajax({
         url: "LICENSE"
     }, function (err, xhr) {
@@ -698,7 +543,7 @@ local.testCase_ajax_default = function (opt, onError) {
     });
 
     // test ajax's standalone handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.testMock([
         [
             local, {
@@ -710,7 +555,7 @@ local.testCase_ajax_default = function (opt, onError) {
             "", "arraybuffer"
         ].forEach(function (responseType) {
             // test default handling-behavior
-            onParallel.counter += 1;
+            onParallel.cnt += 1;
             local.ajax({
                 responseType,
                 url: (
@@ -726,7 +571,7 @@ local.testCase_ajax_default = function (opt, onError) {
                 onParallel();
             });
             // test err handling-behavior
-            onParallel.counter += 1;
+            onParallel.cnt += 1;
             local.ajax({
                 responseType,
                 undefined,
@@ -750,7 +595,7 @@ local.testCase_ajax_default = function (opt, onError) {
     onParallel();
 
     // test ajax's timeout handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     setTimeout(function () {
         local.ajax({
             timeout: 1,
@@ -791,7 +636,7 @@ local.testCase_assertXxx_default = function (opt, onError) {
     });
     // test assertion failed with errObj
     local.tryCatchOnError(function () {
-        local.assertOrThrow(null, local.errDefault);
+        local.assertOrThrow(null, local.errorDefault);
     }, function (err) {
         // handle err
         local.assertOrThrow(err, err);
@@ -857,9 +702,9 @@ local.testCase_blobRead_default = function (opt, onError) {
  */
     let onParallel;
     onParallel = local.onParallel(onError);
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     // test data handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.blobRead(new local.Blob([
         "",
         "aa",
@@ -881,7 +726,7 @@ local.testCase_blobRead_default = function (opt, onError) {
         return;
     }
     // test err handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.testMock([
         [
             FileReader.prototype, {
@@ -1019,9 +864,6 @@ local.testCase_buildApp_default = function (opt, onError) {
             }, {
                 file: "/assets.utility2.lib.marked.js",
                 url: "/assets.utility2.lib.marked.js"
-            }, {
-                file: "/assets.utility2.lib.sjcl.js",
-                url: "/assets.utility2.lib.sjcl.js"
             }, {
                 file: "/assets.utility2.rollup.js",
                 url: "/assets.utility2.rollup.js"
@@ -1168,9 +1010,9 @@ local.testCase_childProcessSpawnWithTimeout_default = function (
     }
     opt = {};
     onParallel = local.onParallel(onError);
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     // test default handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.childProcessSpawnWithTimeout("ls").on(
         "error",
         onParallel
@@ -1182,7 +1024,7 @@ local.testCase_childProcessSpawnWithTimeout_default = function (
         onParallel(null, opt);
     });
     // test timeout handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.testMock([
         [
             local, {
@@ -1500,67 +1342,6 @@ local.testCase_jsonStringifyOrdered_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
-local.testCase_jwtAes256GcmXxx_default = function (opt, onError) {
-/*
- * this function will test jwtAes256GcmXxx's default handling-behavior
- */
-    opt = {};
-    opt.key = local.jwtAes256KeyCreate();
-    // use canonical example at https://jwt.io/
-    opt.data = JSON.parse(local.jsonStringifyOrdered(local.normalizeJwt({
-        sub: "1234567890",
-        name: "John Doe",
-        admin: true
-    })));
-    // encrypt token
-    opt.token = local.jwtAes256GcmEncrypt(opt.data, opt.key);
-    // validate encrypted-token
-    local.assertJsonEqual(
-        local.jwtAes256GcmDecrypt(opt.token, opt.key),
-        opt.data
-    );
-    // test decryption-failed handling-behavior
-    local.assertJsonEqual(local.jwtAes256GcmDecrypt(opt.token, null), {});
-    onError(undefined, opt);
-};
-
-local.testCase_jwtHs256Xxx_default = function (opt, onError) {
-/*
- * this function will test jwtHs256Xxx's default handling-behavior
- */
-    opt = {};
-    opt.key = local.normalizeJwtBase64Url(local.base64FromBuffer("secret"));
-    // use canonical example at https://jwt.io/
-    opt.data = {
-        sub: "1234567890",
-        name: "John Doe",
-        admin: true
-    };
-    opt.token = local.jwtHs256Encode(opt.data, opt.key);
-    // validate encoded-token
-    local.assertJsonEqual(
-        opt.token,
-        (
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-            + ".eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZ"
-            + "SI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9"
-            + ".TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
-        )
-    );
-    // validate decoded-data
-    local.assertJsonEqual(
-        local.jwtHs256Decode(opt.token, opt.key),
-        {
-            admin: true,
-            name: "John Doe",
-            sub: "1234567890"
-        }
-    );
-    // test decoding-failed handling-behavior
-    local.assertJsonEqual(local.jwtHs256Decode(opt.token, "undefined"), {});
-    onError(undefined, opt);
-};
-
 local.testCase_libUtility2Js_standalone = function (opt, onError) {
 /*
  * this function will test lib.utility2.js's standalone handling-behavior
@@ -1621,7 +1402,7 @@ local.testCase_listShuffle_default = function (opt, onError) {
         opt.changed = opt.changed || opt.listShuffled !== opt.list;
         opt.ii += 1;
     }
-    // validate list changed at least once during the shuffle
+    // validate list changed at least once during shuffle
     local.assertOrThrow(opt.changed, opt);
     onError(undefined, opt);
 };
@@ -1650,7 +1431,7 @@ local.testCase_localStorageSetItemOrClear_default = function (
             localStorage, {
                 clear: null,
                 setItem: function () {
-                    throw local.errDefault;
+                    throw local.errorDefault;
                 }
             }
         ]
@@ -1673,9 +1454,9 @@ local.testCase_middlewareForwardProxy_default = function (opt, onError) {
         return;
     }
     onParallel = local.onParallel(onError);
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     // test preflight-cors handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.ajax({
         headers: {
             "access-control-request-headers": (
@@ -1686,7 +1467,7 @@ local.testCase_middlewareForwardProxy_default = function (opt, onError) {
         url: ""
     }, onParallel);
     // test forward-proxy-http handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.ajax({
         headers: {
             "forward-proxy-url": "/assets.hello.txt"
@@ -1700,7 +1481,7 @@ local.testCase_middlewareForwardProxy_default = function (opt, onError) {
         onParallel(null, opt, xhr);
     });
     // test err handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.ajax({
         headers: {
             "forward-proxy-url": "https://undefined:0"
@@ -1863,6 +1644,137 @@ local.testCase_numberToRomanNumerals_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
+local.testCase_objectAssignRecurse_default = function (opt, onError) {
+/*
+ * this function will test objectAssignRecurse's default handling-behavior
+ */
+    // test null-case handling-behavior
+    local.objectAssignRecurse();
+    local.objectAssignRecurse({});
+    // test falsy handling-behavior
+    [
+        "", 0, false, null, undefined
+    ].forEach(function (aa) {
+        [
+            "", 0, false, null, undefined
+        ].forEach(function (bb) {
+            local.assertJsonEqual(
+                local.objectAssignRecurse({
+                    data: aa
+                }, {
+                    data: bb
+                }).data,
+                bb === undefined
+                ? aa
+                : bb
+            );
+        });
+    });
+    // test non-recursive handling-behavior
+    local.assertJsonEqual(local.objectAssignRecurse({
+        aa: 1,
+        bb: {
+            cc: 1
+        },
+        cc: {
+            dd: 1
+        },
+        dd: [
+            1, 1
+        ],
+        ee: [
+            1, 1
+        ]
+    }, {
+        aa: 2,
+        bb: {
+            dd: 2
+        },
+        cc: {
+            ee: 2
+        },
+        dd: [
+            2, 2
+        ],
+        ee: {
+            ff: 2
+        }
+    // test default-depth handling-behavior
+    }, null), {
+        aa: 2,
+        bb: {
+            dd: 2
+        },
+        cc: {
+            ee: 2
+        },
+        dd: [
+            2, 2
+        ],
+        ee: {
+            ff: 2
+        }
+    });
+    // test recursive handling-behavior
+    local.assertJsonEqual(local.objectAssignRecurse({
+        aa: 1,
+        bb: {
+            cc: 1
+        },
+        cc: {
+            dd: 1
+        },
+        dd: [
+            1, 1
+        ],
+        ee: [
+            1, 1
+        ]
+    }, {
+        aa: 2,
+        bb: {
+            dd: 2
+        },
+        cc: {
+            ee: 2
+        },
+        dd: [
+            2, 2
+        ],
+        ee: {
+            ff: 2
+        }
+    // test depth handling-behavior
+    }, 2), {
+        aa: 2,
+        bb: {
+            cc: 1,
+            dd: 2
+        },
+        cc: {
+            dd: 1,
+            ee: 2
+        },
+        dd: [
+            2, 2
+        ],
+        ee: {
+            ff: 2
+        }
+    });
+    // test env with empty-string handling-behavior
+    local.assertJsonEqual(local.objectAssignRecurse(
+        local.env,
+        {
+            "emptyString": null
+        },
+        // test default-depth handling-behavior
+        null,
+        local.env
+    ).emptyString, "");
+    onError(undefined, opt);
+};
+
 local.testCase_objectSetDefault_default = function (opt, onError) {
 /*
  * this function will test objectSetDefault's default handling-behavior
@@ -1987,137 +1899,6 @@ local.testCase_objectSetDefault_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
-local.testCase_objectSetOverride_default = function (opt, onError) {
-/*
- * this function will test objectSetOverride's default handling-behavior
- */
-    // test null-case handling-behavior
-    local.objectSetOverride();
-    local.objectSetOverride({});
-    // test falsy handling-behavior
-    [
-        "", 0, false, null, undefined
-    ].forEach(function (aa) {
-        [
-            "", 0, false, null, undefined
-        ].forEach(function (bb) {
-            local.assertJsonEqual(
-                local.objectSetOverride({
-                    data: aa
-                }, {
-                    data: bb
-                }).data,
-                bb === undefined
-                ? aa
-                : bb
-            );
-        });
-    });
-    // test non-recursive handling-behavior
-    local.assertJsonEqual(local.objectSetOverride({
-        aa: 1,
-        bb: {
-            cc: 1
-        },
-        cc: {
-            dd: 1
-        },
-        dd: [
-            1, 1
-        ],
-        ee: [
-            1, 1
-        ]
-    }, {
-        aa: 2,
-        bb: {
-            dd: 2
-        },
-        cc: {
-            ee: 2
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    // test default-depth handling-behavior
-    }, null), {
-        aa: 2,
-        bb: {
-            dd: 2
-        },
-        cc: {
-            ee: 2
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    });
-    // test recursive handling-behavior
-    local.assertJsonEqual(local.objectSetOverride({
-        aa: 1,
-        bb: {
-            cc: 1
-        },
-        cc: {
-            dd: 1
-        },
-        dd: [
-            1, 1
-        ],
-        ee: [
-            1, 1
-        ]
-    }, {
-        aa: 2,
-        bb: {
-            dd: 2
-        },
-        cc: {
-            ee: 2
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    // test depth handling-behavior
-    }, 2), {
-        aa: 2,
-        bb: {
-            cc: 1,
-            dd: 2
-        },
-        cc: {
-            dd: 1,
-            ee: 2
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    });
-    // test env with empty-string handling-behavior
-    local.assertJsonEqual(local.objectSetOverride(
-        local.env,
-        {
-            "emptyString": null
-        },
-        // test default-depth handling-behavior
-        null,
-        local.env
-    ).emptyString, "");
-    onError(undefined, opt);
-};
-
 local.testCase_onErrorDefault_default = function (opt, onError) {
 /*
  * this function will test onErrorDefault's default handling-behavior
@@ -2140,7 +1921,7 @@ local.testCase_onErrorDefault_default = function (opt, onError) {
         // validate opt
         local.assertOrThrow(!opt, opt);
         // test err handling-behavior
-        local.onErrorDefault(local.errDefault);
+        local.onErrorDefault(local.errorDefault);
         // validate opt
         local.assertOrThrow(opt, opt);
         onError(undefined, opt);
@@ -2152,7 +1933,7 @@ local.testCase_onErrorThrow_err = function (opt, onError) {
  * this function will test onErrorThrow's err handling-behavior
  */
     local.tryCatchOnError(function () {
-        local.onErrorThrow(local.errDefault);
+        local.onErrorThrow(local.errorDefault);
     }, function (err) {
         // handle err
         local.assertOrThrow(err, err);
@@ -2181,13 +1962,13 @@ local.testCase_onFileModifiedRestart_watchFile = function (opt, onError) {
         return;
     }
     onParallel = local.onParallel(onError);
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     local.fs.stat(__filename, function (err, stat) {
         // test default watchFile handling-behavior
-        onParallel.counter += 1;
+        onParallel.cnt += 1;
         local.fs.utimes(__filename, stat.atime, new Date(), onParallel);
         // test nop watchFile handling-behavior
-        onParallel.counter += 1;
+        onParallel.cnt += 1;
         setTimeout(function () {
             local.fs.utimes(__filename, stat.atime, stat.mtime, onParallel);
         }, 1000);
@@ -2203,7 +1984,7 @@ local.testCase_onNext_err = function (opt, onError) {
     opt = {};
     opt.modeDebug = true;
     local.gotoNext(opt, function () {
-        throw local.errDefault;
+        throw local.errorDefault;
     });
     opt.gotoState = 0;
     local.tryCatchOnError(function () {
@@ -2232,10 +2013,10 @@ local.testCase_onParallelList_default = function (opt, onError) {
             ];
             // test retryLimit handling-behavior
             opt.retryLimit = 1;
-            local.onParallelList(opt, function (option2, onParallel) {
-                onParallel.counter += 1;
+            local.onParallelList(opt, function (opt2, onParallel) {
+                onParallel.cnt += 1;
                 // test err handling-behavior
-                onParallel(local.errDefault, option2);
+                onParallel(local.errorDefault, opt2);
                 // test multiple-callback handling-behavior
                 setTimeout(onParallel, 5000);
             }, function (err) {
@@ -2256,22 +2037,22 @@ local.testCase_onParallelList_default = function (opt, onError) {
                     1, 2, 3, 4
                 ],
                 rateLimit: opt.rateLimit
-            }, function (option2, onParallel) {
-                onParallel.counter += 1;
+            }, function (opt2, onParallel) {
+                onParallel.cnt += 1;
                 opt.rateMax = Math.max(
-                    onParallel.counter - 1,
+                    onParallel.cnt - 1,
                     opt.rateMax
                 );
                 // test async handling-behavior
                 setTimeout(function () {
                     // test list-growth handling-behavior
-                    if (option2.ii === 3) {
-                        option2.list.push(5);
+                    if (opt2.ii === 3) {
+                        opt2.list.push(5);
                     }
-                    opt.data[option2.ii] = option2.elem;
+                    opt.data[opt2.ii] = opt2.elem;
                     // test retry handling-behavior
-                    local.assertOrThrow(option2.retry < 1);
-                    onParallel(null, option2);
+                    local.assertOrThrow(opt2.retry < 1);
+                    onParallel(null, opt2);
                 });
             }, opt.gotoNext, opt.rateLimit);
             break;
@@ -2289,11 +2070,11 @@ local.testCase_onParallelList_default = function (opt, onError) {
                     1, 2, 3, 4, 5
                 ],
                 rateLimit: opt.rateLimit
-            }, function (option2, onParallel) {
+            }, function (opt2, onParallel) {
                 // test sync handling-behavior
-                onParallel.counter += 1;
-                opt.rateMax = Math.max(onParallel.counter, opt.rateMax);
-                opt.data[option2.ii] = option2.elem;
+                onParallel.cnt += 1;
+                opt.rateMax = Math.max(onParallel.cnt, opt.rateMax);
+                opt.data[opt2.ii] = opt2.elem;
                 onParallel(null, opt);
             }, opt.gotoNext);
             break;
@@ -2321,22 +2102,22 @@ local.testCase_onParallel_default = function (opt, onError) {
     let onParallelError;
     // test onEach handling-behavior
     onParallel = local.onParallel(onError, function () {
-        // validate counter
-        local.assertOrThrow(onParallel.counter >= 0, onParallel);
+        // validate cnt
+        local.assertOrThrow(onParallel.cnt >= 0, onParallel);
     });
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     // test multiple-task handling-behavior
-    onParallel.counter += 1;
+    onParallel.cnt += 1;
     setTimeout(function () {
         onParallelError = local.onParallel(onParallel);
-        onParallelError.counter += 1;
+        onParallelError.cnt += 1;
         onParallelError();
         // test multiple-callback-error handling-behavior
         onParallelError();
         // handle err
         local.assertOrThrow(onParallelError.err, onParallelError.err);
         // test err handling-behavior
-        onParallelError(local.errDefault);
+        onParallelError(local.errorDefault);
         // handle err
         local.assertOrThrow(onParallelError.err, onParallelError.err);
         // test ignore-after-error handling-behavior
@@ -2618,63 +2399,6 @@ local.testCase_setTimeoutOnError_default = function (opt, onError) {
     );
 };
 
-local.testCase_sjclHashScryptXxx_default = function (opt, onError) {
-/*
- * this function will test sjclHashScryptXxx's default handling-behavior
- */
-    // test sjclHashScryptCreate's null-case handling-behavior
-    local.assertJsonEqual(
-        local.sjclHashScryptCreate().slice(0, 10),
-        "$s0$10801$"
-    );
-    // https://github.com/wg/scrypt
-    // test sjclHashScryptValidate's fail handling-behavior
-    local.assertJsonEqual(local.sjclHashScryptValidate(
-        "password",
-        (
-            "$s0$80801$epIxT/h6HbbwHaehFnh/bw=="
-            + "$l/guDhz2Q0v/D93gq0K0qtSX6FWP8pH5maAJkbIcRaEA"
-        )
-    ), false);
-    // https://github.com/wg/scrypt
-    // test sjclHashScryptValidate's pass handling-behavior
-    local.assertJsonEqual(local.sjclHashScryptValidate("password", (
-        "$s0$80801$epIxT/h6HbbwHaehFnh/bw=="
-        + "$l/guDhz2Q0v/D93gq0K0qtSX6FWP8pH5maAJkbIcRaE="
-    )), true);
-    onError(undefined, opt);
-};
-
-local.testCase_sjclHashShaXxxCreate_default = function (opt, onError) {
-/*
- * this function will test sjclHashShaXxxCreate's default handling-behavior
- */
-    local.assertJsonEqual(
-        local.sjclHashSha1Create("aa"),
-        "4MkDWJjdUvxlxBRUzsnE0mEb+zc="
-    );
-    local.assertJsonEqual(
-        local.sjclHashSha256Create("aa"),
-        "lhtt0+3jy47LqsvWjeBAzXjrLtWIkTDM60xJJo6k1QY="
-    );
-    onError(undefined, opt);
-};
-
-local.testCase_sjclHmacShaXxx_default = function (opt, onError) {
-/*
- * this function will test sjclHmacShaXxx's default handling-behavior
- */
-    local.assertJsonEqual(
-        local.sjclHmacSha1Create("aa", "bb"),
-        "15pOinCz63A+qZoxnv+mJB6UF1k="
-    );
-    local.assertJsonEqual(
-        local.sjclHmacSha256Create("aa", "bb"),
-        "94Xv3VdPHA+ohKyjkM1pb0W5ZVAuMVcmIAAI2AqNRCQ="
-    );
-    onError(undefined, opt);
-};
-
 local.testCase_stringHtmlSafe_default = function (opt, onError) {
 /*
  * this function will test stringHtmlSafe's default handling-behavior
@@ -2719,24 +2443,6 @@ local.testCase_stringRegexpEscape_default = function (opt, onError) {
             + "\u007f"
         )
     );
-    onError(undefined, opt);
-};
-
-local.testCase_stringTruncate_default = function (opt, onError) {
-/*
- * this function will test stringTruncate's default handling-behavior
- */
-    local.assertJsonEqual(local.stringTruncate("aa"), "aa");
-    local.assertJsonEqual(local.stringTruncate("aa", 1), "...");
-    local.assertJsonEqual(local.stringTruncate("aa", 2), "aa");
-    onError(undefined, opt);
-};
-
-local.testCase_stringUniqueKey_default = function (opt, onError) {
-/*
- * this function will test stringUniqueKey's default handling-behavior
- */
-    local.assertOrThrow(("zqxj").indexOf(local.stringUniqueKey("zqxj") < 0));
     onError(undefined, opt);
 };
 
@@ -3062,7 +2768,7 @@ local.testCase_webpage_err = function (opt, onError) {
     globalThis.utility2_testReport.testsPending = 0;
     setTimeout(function () {
         // test err from callback handling-behavior
-        onError(local.errDefault, opt);
+        onError(local.errorDefault, opt);
         // test err from multiple-callback handling-behavior
         onError(undefined, opt);
     }, 2000);
@@ -3072,7 +2778,7 @@ local.testCase_webpage_err = function (opt, onError) {
 
 local.utility2.serverLocalUrlTest = function (url) {
 /*
- * this function will test if the url is local
+ * this function will test if <url> is local
  */
     url = local.urlParse(url).pathname;
     return local.isBrowser && !local.env.npm_config_mode_backend && (
@@ -3098,7 +2804,7 @@ local.stateInit({});
 // init test-middleware
 local.middlewareList.push(function (req, res, next) {
 /*
- * this function will run the test-middleware
+ * this function will run test-middleware
  */
     switch (req.urlParsed.pathname) {
     // test http POST handling-behavior
@@ -3124,9 +2830,9 @@ local.middlewareList.push(function (req, res, next) {
     case "/test.err-500":
         // test multiple-callback serverRespondHeadSet handling-behavior
         local.serverRespondHeadSet(req, res, null, {});
-        next(local.errDefault);
+        next(local.errorDefault);
         // test multiple-callback-error handling-behavior
-        next(local.errDefault);
+        next(local.errorDefault);
         // test onErrorDefault handling-behavior
         local.testMock([
             [
@@ -3234,7 +2940,7 @@ if (module !== require.main || globalThis.utility2_rollup) {
 local.assetsDict["/assets.script_only.html"] = (
     "<h1>script_only_test</h1>\n"
     + "<script src=\"assets.utility2.js\"></script>\n"
-    + "<script>window.utility2_onReadyBefore.counter += 1;</script>\n"
+    + "<script>window.utility2_onReadyBefore.cnt += 1;</script>\n"
     + "<script src=\"assets.example.js\"></script>\n"
     + "<script src=\"assets.test.js\"></script>\n"
     + "<script>window.utility2_onReadyBefore();</script>\n"
@@ -3250,6 +2956,10 @@ if (process.argv[2]) {
     process.argv.splice(1, 1);
     process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
     local.Module.runMain();
+}
+// runme
+if (local.env.npm_config_runme) {
+    require(local.path.resolve(local.env.npm_config_runme));
 }
 }());
 }());

@@ -1,6 +1,6 @@
 // usr/bin/env node
 /*
- * lib.istanbul.js (2019.9.16)
+ * lib.istanbul.js (2020.5.25)
  * https://github.com/kaizhu256/node-istanbul-lite
  * this zero-dependency package will provide a browser-compatible version of the istanbul (v0.4.5) coverage-tool, with a working web-demo
  *
@@ -14,8 +14,6 @@
 /* jslint utility2:true */
 (function (globalThis) {
     "use strict";
-    let ArrayPrototypeFlat;
-    let TextXxcoder;
     let consoleError;
     let debugName;
     let local;
@@ -31,162 +29,17 @@
          * and return <argList>[0]
          */
             consoleError("\n\n" + debugName);
-            consoleError.apply(console, argList);
+            consoleError(...argList);
             consoleError("\n");
-            // return arg0 for inspection
             return argList[0];
         };
     }
-    // polyfill
-    ArrayPrototypeFlat = function (depth) {
-    /*
-     * this function will polyfill Array.prototype.flat
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        depth = (
-            globalThis.isNaN(depth)
-            ? 1
-            : Number(depth)
-        );
-        if (!depth) {
-            return Array.prototype.slice.call(this);
-        }
-        return Array.prototype.reduce.call(this, function (acc, cur) {
-            if (Array.isArray(cur)) {
-                // recurse
-                acc.push.apply(acc, ArrayPrototypeFlat.call(cur, depth - 1));
-            } else {
-                acc.push(cur);
-            }
-            return acc;
-        }, []);
-    };
-    Array.prototype.flat = Array.prototype.flat || ArrayPrototypeFlat;
-    Array.prototype.flatMap = Array.prototype.flatMap || function flatMap(
-        ...argList
-    ) {
-    /*
-     * this function will polyfill Array.prototype.flatMap
-     * https://github.com/jonathantneal/array-flat-polyfill
-     */
-        return this.map(...argList).flat();
-    };
     String.prototype.trimEnd = (
         String.prototype.trimEnd || String.prototype.trimRight
     );
     String.prototype.trimStart = (
         String.prototype.trimStart || String.prototype.trimLeft
     );
-    (function () {
-        try {
-            globalThis.TextDecoder = (
-                globalThis.TextDecoder || require("util").TextDecoder
-            );
-            globalThis.TextEncoder = (
-                globalThis.TextEncoder || require("util").TextEncoder
-            );
-        } catch (ignore) {}
-    }());
-    TextXxcoder = function () {
-    /*
-     * this function will polyfill TextDecoder/TextEncoder
-     * https://gist.github.com/Yaffle/5458286
-     */
-        return;
-    };
-    TextXxcoder.prototype.decode = function (octets) {
-    /*
-     * this function will polyfill TextDecoder.prototype.decode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bytesNeeded;
-        let codePoint;
-        let ii;
-        let kk;
-        let octet;
-        let string;
-        string = "";
-        ii = 0;
-        while (ii < octets.length) {
-            octet = octets[ii];
-            bytesNeeded = 0;
-            codePoint = 0;
-            if (octet <= 0x7F) {
-                bytesNeeded = 0;
-                codePoint = octet & 0xFF;
-            } else if (octet <= 0xDF) {
-                bytesNeeded = 1;
-                codePoint = octet & 0x1F;
-            } else if (octet <= 0xEF) {
-                bytesNeeded = 2;
-                codePoint = octet & 0x0F;
-            } else if (octet <= 0xF4) {
-                bytesNeeded = 3;
-                codePoint = octet & 0x07;
-            }
-            if (octets.length - ii - bytesNeeded > 0) {
-                kk = 0;
-                while (kk < bytesNeeded) {
-                    octet = octets[ii + kk + 1];
-                    codePoint = (codePoint << 6) | (octet & 0x3F);
-                    kk += 1;
-                }
-            } else {
-                codePoint = 0xFFFD;
-                bytesNeeded = octets.length - ii;
-            }
-            string += String.fromCodePoint(codePoint);
-            ii += bytesNeeded + 1;
-        }
-        return string;
-    };
-    TextXxcoder.prototype.encode = function (string) {
-    /*
-     * this function will polyfill TextEncoder.prototype.encode
-     * https://gist.github.com/Yaffle/5458286
-     */
-        let bits;
-        let cc;
-        let codePoint;
-        let ii;
-        let length;
-        let octets;
-        octets = [];
-        length = string.length;
-        ii = 0;
-        while (ii < length) {
-            codePoint = string.codePointAt(ii);
-            cc = 0;
-            bits = 0;
-            if (codePoint <= 0x0000007F) {
-                cc = 0;
-                bits = 0x00;
-            } else if (codePoint <= 0x000007FF) {
-                cc = 6;
-                bits = 0xC0;
-            } else if (codePoint <= 0x0000FFFF) {
-                cc = 12;
-                bits = 0xE0;
-            } else if (codePoint <= 0x001FFFFF) {
-                cc = 18;
-                bits = 0xF0;
-            }
-            octets.push(bits | (codePoint >> cc));
-            cc -= 6;
-            while (cc >= 0) {
-                octets.push(0x80 | ((codePoint >> cc) & 0x3F));
-                cc -= 6;
-            }
-            ii += (
-                codePoint >= 0x10000
-                ? 2
-                : 1
-            );
-        }
-        return octets;
-    };
-    globalThis.TextDecoder = globalThis.TextDecoder || TextXxcoder;
-    globalThis.TextEncoder = globalThis.TextEncoder || TextXxcoder;
     // init local
     local = {};
     local.local = local;
@@ -199,34 +52,32 @@
     );
     // init isWebWorker
     local.isWebWorker = (
-        local.isBrowser && typeof globalThis.importScript === "function"
+        local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
-    local.assertOrThrow = function (passed, message) {
+    local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw err.<message> if <passed> is falsy
+     * this function will throw err.<msg> if <passed> is falsy
      */
-        let err;
         if (passed) {
             return;
         }
-        err = (
+        throw (
             (
-                message
-                && typeof message.message === "string"
-                && typeof message.stack === "string"
+                msg
+                && typeof msg.message === "string"
+                && typeof msg.stack === "string"
             )
-            // if message is errObj, then leave as is
-            ? message
+            // if msg is err, then leave as is
+            ? msg
             : new Error(
-                typeof message === "string"
-                // if message is a string, then leave as is
-                ? message
-                // else JSON.stringify message
-                : JSON.stringify(message, undefined, 4)
+                typeof msg === "string"
+                // if msg is a string, then leave as is
+                ? msg
+                // else JSON.stringify msg
+                : JSON.stringify(msg, undefined, 4)
             )
         );
-        throw err;
     };
     local.coalesce = function (...argList) {
     /*
@@ -249,6 +100,7 @@
      * this function will sync "rm -rf" <dir>
      */
         let child_process;
+        // do nothing if module does not exist
         try {
             child_process = require("child_process");
         } catch (ignore) {
@@ -267,6 +119,7 @@
      * this function will sync write <data> to <file> with "mkdir -p"
      */
         let fs;
+        // do nothing if module does not exist
         try {
             fs = require("fs");
         } catch (ignore) {
@@ -275,21 +128,15 @@
         // try to write file
         try {
             fs.writeFileSync(file, data);
+            return true;
         } catch (ignore) {
             // mkdir -p
-            require("child_process").spawnSync(
-                "mkdir",
-                [
-                    "-p", require("path").dirname(file)
-                ],
-                {
-                    stdio: [
-                        "ignore", 1, 2
-                    ]
-                }
-            );
+            fs.mkdirSync(require("path").dirname(file), {
+                recursive: true
+            });
             // rewrite file
             fs.writeFileSync(file, data);
+            return true;
         }
     };
     local.functionOrNop = function (fnc) {
@@ -379,9 +226,7 @@
         local.vm = require("vm");
         local.zlib = require("zlib");
     }
-}((typeof globalThis === "object" && globalThis) || (function () {
-    return Function("return this")(); // jslint ignore:line
-}())));
+}((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
 
 
@@ -423,7 +268,7 @@ if (!local.isBrowser) {
 
 local.cliRun = function (opt) {
 /*
- * this function will run the cli with given <opt>
+ * this function will run cli with given <opt>
  */
     local.cliDict._eval = local.cliDict._eval || function () {
     /*
@@ -441,8 +286,8 @@ local.cliRun = function (opt) {
         let commandList;
         let file;
         let packageJson;
-        let text;
-        let textDict;
+        let str;
+        let strDict;
         commandList = [
             {
                 argList: "<arg2>  ...",
@@ -467,23 +312,23 @@ local.cliRun = function (opt) {
         opt.rgxComment = opt.rgxComment || (
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
-        textDict = {};
+        strDict = {};
         Object.keys(local.cliDict).sort().forEach(function (key, ii) {
             if (key[0] === "_" && key !== "_default") {
                 return;
             }
-            text = String(local.cliDict[key]);
+            str = String(local.cliDict[key]);
             if (key === "_default") {
                 key = "";
             }
-            textDict[text] = textDict[text] || (ii + 2);
-            ii = textDict[text];
+            strDict[str] = strDict[str] || (ii + 2);
+            ii = strDict[str];
             if (commandList[ii]) {
                 commandList[ii].command.push(key);
                 return;
             }
             try {
-                commandList[ii] = opt.rgxComment.exec(text);
+                commandList[ii] = opt.rgxComment.exec(str);
                 commandList[ii] = {
                     argList: local.coalesce(commandList[ii][1], "").trim(),
                     command: [
@@ -497,7 +342,7 @@ local.cliRun = function (opt) {
                     + key
                     + ":\nnew RegExp("
                     + JSON.stringify(opt.rgxComment.source)
-                    + ").exec(" + JSON.stringify(text).replace((
+                    + ").exec(" + JSON.stringify(str).replace((
                         /\\\\/g
                     ), "\u0000").replace((
                         /\\n/g
@@ -507,9 +352,9 @@ local.cliRun = function (opt) {
                 ));
             }
         });
-        text = "";
-        text += packageJson.name + " (" + packageJson.version + ")\n\n";
-        text += commandList.filter(function (elem) {
+        str = "";
+        str += packageJson.name + " (" + packageJson.version + ")\n\n";
+        str += commandList.filter(function (elem) {
             return elem;
         }).map(function (elem, ii) {
             elem.command = elem.command.filter(function (elem) {
@@ -536,7 +381,7 @@ local.cliRun = function (opt) {
                 + elem.argList.join("  ")
             );
         }).join("\n\n");
-        console.log(text);
+        console.log(str);
     };
     local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
     local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
@@ -582,29 +427,237 @@ local.cliRun = function (opt) {
     }
     local.cliDict._default();
 };
+
+local.templateRender = function (template, dict, opt, ii) {
+/*
+ * this function will render <template> with given <dict>
+ */
+    let argList;
+    let getVal;
+    let match;
+    let renderPartial;
+    let rgx;
+    let skip;
+    let val;
+    if (dict === null || dict === undefined) {
+        dict = {};
+    }
+    opt = opt || {};
+    getVal = function (key) {
+        argList = key.split(" ");
+        val = dict;
+        if (argList[0] === "#this/") {
+            return val;
+        }
+        if (argList[0] === "#ii/") {
+            return ii;
+        }
+        // iteratively lookup nested val in dict
+        argList[0].split(".").forEach(function (key) {
+            val = val && val[key];
+        });
+        return val;
+    };
+    renderPartial = function (match0, helper, key, partial) {
+        switch (helper) {
+        case "each":
+        case "eachTrimEndComma":
+            val = getVal(key);
+            val = (
+                Array.isArray(val)
+                ? val.map(function (dict, ii) {
+                    // recurse with partial
+                    return local.templateRender(partial, dict, opt, ii);
+                }).join("")
+                : ""
+            );
+            // remove trailing-comma from last elem
+            if (helper === "eachTrimEndComma") {
+                val = val.trimEnd().replace((
+                    /,$/
+                ), "");
+            }
+            return val;
+        case "if":
+            partial = partial.split("{{#unless " + key + "}}");
+            partial = (
+                getVal(key)
+                ? partial[0]
+                // handle "unless" case
+                : partial.slice(1).join("{{#unless " + key + "}}")
+            );
+            // recurse with partial
+            return local.templateRender(partial, dict, opt);
+        case "unless":
+            return (
+                getVal(key)
+                ? ""
+                // recurse with partial
+                : local.templateRender(partial, dict, opt)
+            );
+        default:
+            // recurse with partial
+            return match0[0] + local.templateRender(match0.slice(1), dict, opt);
+        }
+    };
+    // render partials
+    rgx = (
+        /\{\{#(\w+)\u0020([^}]+?)\}\}/g
+    );
+    template = template || "";
+    match = rgx.exec(template);
+    while (match) {
+        rgx.lastIndex += 1 - match[0].length;
+        template = template.replace(
+            new RegExp(
+                "\\{\\{#(" + match[1] + ") (" + match[2]
+                + ")\\}\\}([\\S\\s]*?)\\{\\{/" + match[1] + " " + match[2]
+                + "\\}\\}"
+            ),
+            renderPartial
+        );
+        match = rgx.exec(template);
+    }
+    // search for keys in the template
+    return template.replace((
+        /\{\{[^}]+?\}\}/g
+    ), function (match0) {
+        let markdownToHtml;
+        let notHtmlSafe;
+        notHtmlSafe = opt.notHtmlSafe;
+        try {
+            val = getVal(match0.slice(2, -2));
+            if (val === undefined) {
+                return match0;
+            }
+            argList.slice(1).forEach(function (fmt, ii, list) {
+                switch (fmt) {
+                case "*":
+                case "+":
+                case "-":
+                case "/":
+                    skip = ii + 1;
+                    val = String(
+                        fmt === "*"
+                        ? Number(val) * Number(list[skip])
+                        : fmt === "+"
+                        ? Number(val) + Number(list[skip])
+                        : fmt === "-"
+                        ? Number(val) - Number(list[skip])
+                        : Number(val) / Number(list[skip])
+                    );
+                    break;
+                case "alphanumeric":
+                    val = val.replace((
+                        /\W/g
+                    ), "_");
+                    break;
+                case "decodeURIComponent":
+                    val = decodeURIComponent(val);
+                    break;
+                case "encodeURIComponent":
+                    val = encodeURIComponent(val);
+                    break;
+                case "jsonStringify":
+                    val = JSON.stringify(val);
+                    break;
+                case "jsonStringify4":
+                    val = JSON.stringify(val, undefined, 4);
+                    break;
+                case "markdownSafe":
+                    val = val.replace((
+                        /`/g
+                    ), "'");
+                    break;
+                case "markdownToHtml":
+                    markdownToHtml = true;
+                    break;
+                case "notHtmlSafe":
+                    notHtmlSafe = true;
+                    break;
+                case "padEnd":
+                case "padStart":
+                case "replace":
+                case "slice":
+                    skip = ii + 2;
+                    val = String(val)[fmt](
+                        list[skip - 1],
+                        list[skip].replace("\"\"", "").replace("\"_\"", " ")
+                    );
+                    break;
+                case "truncate":
+                    skip = ii + 1;
+                    if (val.length > list[skip]) {
+                        val = val.slice(
+                            0,
+                            Math.max(list[skip] - 3, 0)
+                        ).trimEnd() + "...";
+                    }
+                    break;
+                // default to String.prototype[fmt]()
+                default:
+                    if (ii <= skip) {
+                        break;
+                    }
+                    val = val[fmt]();
+                }
+            });
+            val = String(val);
+            // default to htmlSafe
+            if (!notHtmlSafe) {
+                val = val.replace((
+                    /&/gu
+                ), "&amp;").replace((
+                    /"/gu
+                ), "&quot;").replace((
+                    /'/gu
+                ), "&apos;").replace((
+                    /</gu
+                ), "&lt;").replace((
+                    />/gu
+                ), "&gt;").replace((
+                    /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
+                ), "&$1");
+            }
+            markdownToHtml = (
+                markdownToHtml
+                && (typeof local.marked === "function" && local.marked)
+            );
+            if (markdownToHtml) {
+                val = markdownToHtml(val).replace((
+                    /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
+                ), "&$1");
+            }
+            return val;
+        } catch (errCaught) {
+            errCaught.message = (
+                "templateRender could not render expression "
+                + JSON.stringify(match0) + "\n"
+            ) + errCaught.message;
+            local.assertOrThrow(undefined, errCaught);
+        }
+    });
+};
 }());
 
 
 
 // run shared js-env code - function
 (function () {
-let __dirname;
 let process;
 let require;
 // hack-jslint
-local.nop(__dirname, require);
-globalThis.__coverageCodeDict__ = local.coalesce(
-    globalThis.__coverageCodeDict__,
+local.nop(require);
+globalThis.__coverageInclude__ = local.coalesce(
+    globalThis.__coverageInclude__,
     {}
 );
 // mock builtins
-__dirname = "";
 process = local.process || {
     cwd: function () {
         return "";
     },
-    env: {},
-    stdout: {}
+    env: {}
 };
 require = function (key) {
     try {
@@ -612,39 +665,6 @@ require = function (key) {
     } catch (ignore) {}
 };
 local["./package.json"] = {};
-// mock module fs
-local._istanbul_fs = {};
-local._istanbul_fs.readFileSync = function (file) {
-    // return head.txt or foot.txt
-    file = local[file.slice(-8)];
-    if (local.isBrowser) {
-        file = file.replace("<!doctype html>\n", "").replace((
-            /(<\/?)(?:body|html)/g
-        ), "$1div");
-    }
-    if (!local.isBrowser && process.env.npm_package_homepage) {
-        file = file.replace(
-            "{{env.npm_package_homepage}}",
-            process.env.npm_package_homepage
-        ).replace(
-            "{{env.npm_package_name}}",
-            process.env.npm_package_name
-        ).replace(
-            "{{env.npm_package_version}}",
-            process.env.npm_package_version
-        );
-    } else {
-        file = file.replace((
-            /<h1\u0020[\S\s]*<\/h1>/
-        ), "");
-    }
-    return file;
-};
-
-local._istanbul_fs.readdirSync = function () {
-    return [];
-};
-
 // mock module path
 local._istanbul_path = local.path || {
     dirname: function (file) {
@@ -652,192 +672,10 @@ local._istanbul_path = local.path || {
             /\/[\w\-.]+?$/
         ), "");
     },
-    resolve: function (aa, bb, cc, dd) {
-        return dd || cc || bb || aa;
-    }
-};
-
-local.coverageMerge = function (coverage1 = {}, coverage2 = {}) {
-/*
- * this function will inplace-merge coverage2 into coverage1
- */
-    let dict1;
-    let dict2;
-    Object.keys(coverage2).forEach(function (file) {
-        if (!coverage2[file]) {
-            return;
-        }
-        // if file is undefined in coverage1, then add it
-        if (!coverage1[file]) {
-            coverage1[file] = coverage2[file];
-            return;
-        }
-        // merge file from coverage2 into coverage1
-        [
-            "b", "f", "s"
-        ].forEach(function (key) {
-            dict1 = coverage1[file][key];
-            dict2 = coverage2[file][key];
-            switch (key) {
-            // increment coverage for branch lines
-            case "b":
-                Object.keys(dict2).forEach(function (key) {
-                    dict2[key].forEach(function (count, ii) {
-                        dict1[key][ii] += count;
-                    });
-                });
-                break;
-            // increment coverage for function and statement lines
-            case "f":
-            case "s":
-                Object.keys(dict2).forEach(function (key) {
-                    dict1[key] += dict2[key];
-                });
-                break;
-            }
-        });
-    });
-    return coverage1;
-};
-
-local.coverageReportCreate = function (opt) {
-/*
- * this function will
- * 1. print coverage in text-format to stdout
- * 2. write coverage in html-format to filesystem
- * 3. return coverage in html-format as single document
- */
-    if (!(opt && opt.coverage)) {
-        return "";
-    }
-    opt = {};
-    opt.dir = process.cwd() + "/tmp/build/coverage.html";
-    // merge previous coverage
-    if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
-        console.log("merging file " + opt.dir + "/coverage.json to coverage");
-        try {
-            local.coverageMerge(opt.coverage, JSON.parse(
-                local.fs.readFileSync(opt.dir + "/coverage.json", "utf8")
-            ));
-        } catch (ignore) {}
-        try {
-            Object.keys(JSON.parse(local.fs.readFileSync(
-                opt.dir + "/coverage.code-dict.json",
-                "utf8"
-            ))).forEach(function (key) {
-                globalThis.__coverageCodeDict__[key] = (
-                    globalThis.__coverageCodeDict__[key]
-                    || true
-                );
-            });
-        } catch (ignore) {}
-    }
-    // init writer
-    local.coverageReportHtml = "";
-    local.coverageReportHtml += (
-        "<div class=\"coverageReportDiv\">\n"
-        + "<h1>coverage-report</h1>\n"
-        + "<div style=\""
-        + "background: #fff; border: 1px solid #999; margin 0; padding: 0;"
-        + "\">\n"
-    );
-    local.writerData = "";
-    opt.sourceStore = {};
-    opt.writer = local.writer;
-    // 1. print coverage in text-format to stdout
-    new local.TextReport(opt).writeReport(local.collector);
-    // 2. write coverage in html-format to filesystem
-    new local.HtmlReport(opt).writeReport(local.collector);
-    local.writer.writeFile("", local.nop);
-    if (!local.isBrowser) {
-        // write coverage.json
-        local.fsWriteFileWithMkdirpSync(
-            opt.dir + "/coverage.json",
-            JSON.stringify(opt.coverage)
-        );
-        // write coverage.code-dict.json
-        local.fsWriteFileWithMkdirpSync(
-            opt.dir + "/coverage.code-dict.json",
-            JSON.stringify(globalThis.__coverageCodeDict__)
-        );
-        // write coverage.badge.svg
-        opt.pct = local.coverageReportSummary.root.metrics.lines.pct;
-        local.fsWriteFileWithMkdirpSync(
-            local._istanbul_path.dirname(opt.dir) + "/coverage.badge.svg",
-            // edit coverage badge percent
-            // edit coverage badge color
-            local.templateCoverageBadgeSvg.replace((
-                /100.0/g
-            ), opt.pct).replace((
-                /0d0/g
-            ), (
-                Math.round((100 - opt.pct) * 2.21).toString(16).padStart(2, "0")
-                + Math.round(opt.pct * 2.21).toString(16).padStart(2, "0")
-                + "00"
-            ))
-        );
-    }
-    console.log("created coverage file " + opt.dir + "/index.html");
-    // 3. return coverage in html-format as a single document
-    local.coverageReportHtml += "</div>\n</div>\n";
-    // write coverage.rollup.html
-    if (!local.isBrowser) {
-        local.fsWriteFileWithMkdirpSync(
-            opt.dir + "/coverage.rollup.html",
-            local.coverageReportHtml
-        );
-    }
-    return local.coverageReportHtml;
-};
-
-local.instrumentInPackage = function (code, file) {
-/*
- * this function will instrument the code
- * only if the macro /\* istanbul instrument in package $npm_package_nameLib *\/
- * exists in the code
- */
-    return (
-        (
-            process.env.npm_config_mode_coverage
-            && code.indexOf("/* istanbul ignore all */\n") < 0 && (
-                process.env.npm_config_mode_coverage === "all"
-                || process.env.npm_config_mode_coverage === "node_modules"
-                || code.indexOf(
-                    "/* istanbul instrument in package "
-                    + process.env.npm_package_nameLib + " */\n"
-                ) >= 0
-                || code.indexOf(
-                    "/* istanbul instrument in package "
-                    + process.env.npm_config_mode_coverage + " */\n"
-                ) >= 0
-            )
-        )
-        ? local.instrumentSync(code, file)
-        : code
-    );
-};
-
-local.instrumentSync = function (code, file) {
-/*
- * this function will
- * 1. normalize the file
- * 2. save code to __coverageCodeDict__[file] for future html-report
- * 3. return instrumented code
- */
-    // 1. normalize the file
-    file = local._istanbul_path.resolve("/", file);
-    // 2. save code to __coverageCodeDict__[file] for future html-report
-    globalThis.__coverageCodeDict__[file] = true;
-    // 3. return instrumented code
-    return new local.Instrumenter({
-        embedSource: true,
-        esModules: true,
-        noAutoWrap: true
-    }).instrumentSync(code, file).trimStart();
-};
-
-local.util = {
-inherits: local.nop
+    resolve: function (...argList) {
+        return argList[argList.length - 1];
+    },
+    sep: "/"
 };
 
 
@@ -9434,262 +9272,6 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 }());
-/* jslint ignore:end */
-
-
-
-/*
-file https://github.com/components/handlebars.js/blob/v1.2.1/handlebars.js
-*/
-/* validateLineSortedReset */
-local.handlebars = {};
-local.handlebars.compile = function (template) {
-/*
- * this function will return a function
- * that will render <template> with given <dict>
- */
-    return function (dict) {
-        let result;
-        result = template;
-        // render triple-curly-brace
-        result = result.replace((
-            /\{\{\{/g
-        ), "{{").replace((
-            /\}\}\}/g
-        ), "}}");
-        // render with-statement
-        result = result.replace((
-            /\{\{#with\u0020(.+?)\}\}([\S\s]+?)\{\{\/with\}\}/g
-        ), function (ignore, match1, match2) {
-            return local.handlebars.replace(match2, dict, match1 + ".");
-        });
-        // render helper
-        result = result.replace(
-            "{{#show_ignores metrics}}{{/show_ignores}}",
-            function () {
-                return local.handlebars.show_ignores(dict.metrics);
-            }
-        );
-        result = result.replace((
-            "{{#show_line_execution_counts fileCoverage}}"
-            + "{{maxLines}}{{/show_line_execution_counts}}"
-        ), function () {
-            return local.handlebars.show_line_execution_counts(
-                dict.fileCoverage,
-                {
-                    fn: function () {
-                        return dict.maxLines;
-                    }
-                }
-            );
-        });
-        result = result.replace(
-            "{{#show_lines}}{{maxLines}}{{/show_lines}}",
-            function () {
-                return local.handlebars.show_lines({
-                    fn: function () {
-                        return dict.maxLines;
-                    }
-                });
-            }
-        );
-        result = result.replace(
-            "{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}",
-            function () {
-                return local.handlebars.show_picture({
-                    fn: function () {
-                        return dict.metrics.statements.pct;
-                    }
-                });
-            }
-        );
-        result = local.handlebars.replace(result, dict, "");
-        // show code last
-        result = result.replace(
-            "{{#show_code structured}}{{/show_code}}",
-            function () {
-                return local.handlebars.show_code(dict.structured);
-            }
-        );
-        return result;
-    };
-};
-
-local.handlebars.registerHelper = function (key, helper) {
-/*
- * this function will register the helper-function
- */
-    local.handlebars[key] = function (aa, bb) {
-        try {
-            return helper(aa, bb);
-        } catch (ignore) {}
-    };
-};
-
-local.handlebars.replace = function (template, dict, withPrefix) {
-/*
- * this function will render <template> with given <dict>
- */
-    let value;
-    // search for keys in the template
-    return template.replace((
-        /\{\{.+?\}\}/g
-    ), function (match0) {
-        value = dict;
-        // iteratively lookup nested values in the dict
-        String(
-            withPrefix + match0.slice(2, -2)
-        ).split(".").forEach(function (key) {
-            value = value && value[key];
-        });
-        return (
-            value === undefined
-            ? match0
-            : String(value)
-        );
-    });
-};
-
-/*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/collector.js
-*/
-/* validateLineSortedReset */
-local.collector = {
-    fileCoverageFor: function (file) {
-        return globalThis.__coverage__[file];
-    },
-    files: function () {
-        return Object.keys(globalThis.__coverage__).filter(function (key) {
-            if (
-                globalThis.__coverage__[key]
-                && globalThis.__coverageCodeDict__[key]
-            ) {
-                // reset derived info
-                globalThis.__coverage__[key].l = null;
-                return true;
-            }
-        });
-    }
-};
-
-
-
-/*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
-*/
-/* istanbul ignore next */
-/* jslint ignore:start */
-(function () { let module; module = {};
-/*
- Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
- Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
- */
-
-function InsertionText(text, consumeBlanks) {
-    this.text = text;
-    this.origLength = text.length;
-    this.offsets = [];
-    this.consumeBlanks = consumeBlanks;
-    this.startPos = this.findFirstNonBlank();
-    this.endPos = this.findLastNonBlank();
-}
-
-var WHITE_RE = /[ \f\n\r\t\v\u00A0\u2028\u2029]/;
-
-InsertionText.prototype = {
-
-    findFirstNonBlank: function () {
-        var pos = -1,
-            text = this.text,
-            len = text.length,
-            i;
-        for (i = 0; i < len; i += 1) {
-            if (!text.charAt(i).match(WHITE_RE)) {
-                pos = i;
-                break;
-            }
-        }
-        return pos;
-    },
-    findLastNonBlank: function () {
-        var text = this.text,
-            len = text.length,
-            pos = text.length + 1,
-            i;
-        for (i = len - 1; i >= 0; i -= 1) {
-            if (!text.charAt(i).match(WHITE_RE)) {
-                pos = i;
-                break;
-            }
-        }
-        return pos;
-    },
-    originalLength: function () {
-        return this.origLength;
-    },
-
-    insertAt: function (col, str, insertBefore, consumeBlanks) {
-        consumeBlanks = typeof consumeBlanks === 'undefined' ? this.consumeBlanks : consumeBlanks;
-        col = col > this.originalLength() ? this.originalLength() : col;
-        col = col < 0 ? 0 : col;
-
-        if (consumeBlanks) {
-            if (col <= this.startPos) {
-                col = 0;
-            }
-            if (col > this.endPos) {
-                col = this.origLength;
-            }
-        }
-
-        var len = str.length,
-            offset = this.findOffset(col, len, insertBefore),
-            realPos = col + offset,
-            text = this.text;
-        this.text = text.substring(0, realPos) + str + text.substring(realPos);
-        return this;
-    },
-
-    findOffset: function (pos, len, insertBefore) {
-        var offsets = this.offsets,
-            offsetObj,
-            cumulativeOffset = 0,
-            i;
-
-        for (i = 0; i < offsets.length; i += 1) {
-            offsetObj = offsets[i];
-            if (offsetObj.pos < pos || (offsetObj.pos === pos && !insertBefore)) {
-                cumulativeOffset += offsetObj.len;
-            }
-            if (offsetObj.pos >= pos) {
-                break;
-            }
-        }
-        if (offsetObj && offsetObj.pos === pos) {
-            offsetObj.len += len;
-        } else {
-            offsets.splice(i, 0, { pos: pos, len: len });
-        }
-        return cumulativeOffset;
-    },
-
-    wrap: function (startPos, startText, endPos, endText, consumeBlanks) {
-        this.insertAt(startPos, startText, true, consumeBlanks);
-        this.insertAt(endPos, endText, false, consumeBlanks);
-        return this;
-    },
-
-    wrapLine: function (startText, endText) {
-        this.wrap(0, startText, this.originalLength(), endText);
-    },
-
-    toString: function () {
-        return this.text;
-    }
-};
-
-module.exports = InsertionText;
-local["../util/insertion-text"] = module.exports; }());
 
 
 
@@ -10575,7 +10157,9 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
         },
 
         splice: function (statements, node, walker) {
-            var targetNode = walker.isLabeled() ? walker.parent().node : node;
+            var targetNode = (
+                walker.isLabeled() ? walker.parent().node : node
+            );
             targetNode.prepend = targetNode.prepend || [];
             pushAll(targetNode.prepend, statements);
         },
@@ -10805,458 +10389,17 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 
 
 /*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
-*/
-/* istanbul ignore next */
-(function () { let module, window; module = undefined; window = local;
-/*
- Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
- Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
- */
-
-/**
- * utility methods to process coverage objects. A coverage object has the following
- * format.
- *
- *      {
- *          "/path/to/file1.js": { file1 coverage },
- *          "/path/to/file2.js": { file2 coverage }
- *      }
- *
- *  The internals of the file coverage object are intentionally not documented since
- *  it is not a public interface.
- *
- *  *Note:* When a method of this module has the word `File` in it, it will accept
- *  one of the sub-objects of the main coverage object as an argument. Other
- *  methods accept the higher level coverage object with multiple keys.
- *
- * Works on `node` as well as the browser.
- *
- * Usage on nodejs
- * ---------------
- *
- *      var objectUtils = require('istanbul').utils;
- *
- * Usage in a browser
- * ------------------
- *
- * Load this file using a `script` tag or other means. This will set `window.coverageUtils`
- * to this module's exports.
- *
- * @class ObjectUtils
- * @static
- */
-(function (isNode) {
-    /**
-     * adds line coverage information to a file coverage object, reverse-engineering
-     * it from statement coverage. The object passed in is updated in place.
-     *
-     * Note that if line coverage information is already present in the object,
-     * it is not recomputed.
-     *
-     * @method addDerivedInfoForFile
-     * @static
-     * @param {Object} fileCoverage the coverage object for a single file
-     */
-    function addDerivedInfoForFile(fileCoverage) {
-        var statementMap = fileCoverage.statementMap,
-            statements = fileCoverage.s,
-            lineMap;
-
-        if (!fileCoverage.l) {
-            fileCoverage.l = lineMap = {};
-            Object.keys(statements).forEach(function (st) {
-                var line = statementMap[st].start.line,
-                    count = statements[st],
-                    prevVal = lineMap[line];
-                if (count === 0 && statementMap[st].skip) { count = 1; }
-                if (typeof prevVal === 'undefined' || prevVal < count) {
-                    lineMap[line] = count;
-                }
-            });
-        }
-    }
-    /**
-     * adds line coverage information to all file coverage objects.
-     *
-     * @method addDerivedInfo
-     * @static
-     * @param {Object} coverage the coverage object
-     */
-    function addDerivedInfo(coverage) {
-        Object.keys(coverage).forEach(function (k) {
-            addDerivedInfoForFile(coverage[k]);
-        });
-    }
-    /**
-     * removes line coverage information from all file coverage objects
-     * @method removeDerivedInfo
-     * @static
-     * @param {Object} coverage the coverage object
-     */
-    function removeDerivedInfo(coverage) {
-        Object.keys(coverage).forEach(function (k) {
-            delete coverage[k].l;
-        });
-    }
-
-    function percent(covered, total) {
-        var tmp;
-        if (total > 0) {
-            tmp = 1000 * 100 * covered / total + 5;
-            return Math.floor(tmp / 10) / 100;
-        } else {
-            return 100.00;
-        }
-    }
-
-    function computeSimpleTotals(fileCoverage, property, mapProperty) {
-        var stats = fileCoverage[property],
-            map = mapProperty ? fileCoverage[mapProperty] : null,
-            ret = { total: 0, covered: 0, skipped: 0 };
-
-        Object.keys(stats).forEach(function (key) {
-            var covered = !!stats[key],
-                skipped = map && map[key].skip;
-            ret.total += 1;
-            if (covered || skipped) {
-                ret.covered += 1;
-            }
-            if (!covered && skipped) {
-                ret.skipped += 1;
-            }
-        });
-        ret.pct = percent(ret.covered, ret.total);
-        return ret;
-    }
-
-    function computeBranchTotals(fileCoverage) {
-        var stats = fileCoverage.b,
-            branchMap = fileCoverage.branchMap,
-            ret = { total: 0, covered: 0, skipped: 0 };
-
-        Object.keys(stats).forEach(function (key) {
-            var branches = stats[key],
-                map = branchMap[key],
-                covered,
-                skipped,
-                i;
-            for (i = 0; i < branches.length; i += 1) {
-                covered = branches[i] > 0;
-                skipped = map.locations && map.locations[i] && map.locations[i].skip;
-                if (covered || skipped) {
-                    ret.covered += 1;
-                }
-                if (!covered && skipped) {
-                    ret.skipped += 1;
-                }
-            }
-            ret.total += branches.length;
-        });
-        ret.pct = percent(ret.covered, ret.total);
-        return ret;
-    }
-    /**
-     * returns a blank summary metrics object. A metrics object has the following
-     * format.
-     *
-     *      {
-     *          lines: lineMetrics,
-     *          statements: statementMetrics,
-     *          functions: functionMetrics,
-     *          branches: branchMetrics
-     *      }
-     *
-     *  Each individual metric object looks as follows:
-     *
-     *      {
-     *          total: n,
-     *          covered: m,
-     *          pct: percent
-     *      }
-     *
-     * @method blankSummary
-     * @static
-     * @return {Object} a blank metrics object
-     */
-    function blankSummary() {
-        return {
-            lines: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: 'Unknown'
-            },
-            statements: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: 'Unknown'
-            },
-            functions: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: 'Unknown'
-            },
-            branches: {
-                total: 0,
-                covered: 0,
-                skipped: 0,
-                pct: 'Unknown'
-            }
-        };
-    }
-    /**
-     * returns the summary metrics given the coverage object for a single file. See `blankSummary()`
-     * to understand the format of the returned object.
-     *
-     * @method summarizeFileCoverage
-     * @static
-     * @param {Object} fileCoverage the coverage object for a single file.
-     * @return {Object} the summary metrics for the file
-     */
-    function summarizeFileCoverage(fileCoverage) {
-        var ret = blankSummary();
-        addDerivedInfoForFile(fileCoverage);
-        ret.lines = computeSimpleTotals(fileCoverage, 'l');
-        ret.functions = computeSimpleTotals(fileCoverage, 'f', 'fnMap');
-        ret.statements = computeSimpleTotals(fileCoverage, 's', 'statementMap');
-        ret.branches = computeBranchTotals(fileCoverage);
-        return ret;
-    }
-    /**
-     * merges two instances of file coverage objects *for the same file*
-     * such that the execution counts are correct.
-     *
-     * @method mergeFileCoverage
-     * @static
-     * @param {Object} first the first file coverage object for a given file
-     * @param {Object} second the second file coverage object for the same file
-     * @return {Object} an object that is a result of merging the two. Note that
-     *      the input objects are not changed in any way.
-     */
-    function mergeFileCoverage(first, second) {
-        var ret = JSON.parse(JSON.stringify(first)),
-            i;
-
-        delete ret.l; //remove derived info
-
-        Object.keys(second.s).forEach(function (k) {
-            ret.s[k] += second.s[k];
-        });
-        Object.keys(second.f).forEach(function (k) {
-            ret.f[k] += second.f[k];
-        });
-        Object.keys(second.b).forEach(function (k) {
-            var retArray = ret.b[k],
-                secondArray = second.b[k];
-            for (i = 0; i < retArray.length; i += 1) {
-                retArray[i] += secondArray[i];
-            }
-        });
-
-        return ret;
-    }
-    /**
-     * merges multiple summary metrics objects by summing up the `totals` and
-     * `covered` fields and recomputing the percentages. This function is generic
-     * and can accept any number of arguments.
-     *
-     * @method mergeSummaryObjects
-     * @static
-     * @param {Object} summary... multiple summary metrics objects
-     * @return {Object} the merged summary metrics
-     */
-    function mergeSummaryObjects() {
-        var ret = blankSummary(),
-            args = Array.prototype.slice.call(arguments),
-            keys = ['lines', 'statements', 'branches', 'functions'],
-            increment = function (obj) {
-                if (obj) {
-                    keys.forEach(function (key) {
-                        ret[key].total += obj[key].total;
-                        ret[key].covered += obj[key].covered;
-                        ret[key].skipped += obj[key].skipped;
-                    });
-                }
-            };
-        args.forEach(function (arg) {
-            increment(arg);
-        });
-        keys.forEach(function (key) {
-            ret[key].pct = percent(ret[key].covered, ret[key].total);
-        });
-
-        return ret;
-    }
-    /**
-     * returns the coverage summary for a single coverage object. This is
-     * wrapper over `summarizeFileCoverage` and `mergeSummaryObjects` for
-     * the common case of a single coverage object
-     * @method summarizeCoverage
-     * @static
-     * @param {Object} coverage  the coverage object
-     * @return {Object} summary coverage metrics across all files in the coverage object
-     */
-    function summarizeCoverage(coverage) {
-        var fileSummary = [];
-        Object.keys(coverage).forEach(function (key) {
-            fileSummary.push(summarizeFileCoverage(coverage[key]));
-        });
-        return mergeSummaryObjects.apply(null, fileSummary);
-    }
-
-    /**
-     * makes the coverage object generated by this library yuitest_coverage compatible.
-     * Note that this transformation is lossy since the returned object will not have
-     * statement and branch coverage.
-     *
-     * @method toYUICoverage
-     * @static
-     * @param {Object} coverage The `istanbul` coverage object
-     * @return {Object} a coverage object in `yuitest_coverage` format.
-     */
-    function toYUICoverage(coverage) {
-        var ret = {};
-
-        addDerivedInfo(coverage);
-
-        Object.keys(coverage).forEach(function (k) {
-            var fileCoverage = coverage[k],
-                lines = fileCoverage.l,
-                functions = fileCoverage.f,
-                fnMap = fileCoverage.fnMap,
-                o;
-
-            o = ret[k] = {
-                lines: {},
-                calledLines: 0,
-                coveredLines: 0,
-                functions: {},
-                calledFunctions: 0,
-                coveredFunctions: 0
-            };
-            Object.keys(lines).forEach(function (k) {
-                o.lines[k] = lines[k];
-                o.coveredLines += 1;
-                if (lines[k] > 0) {
-                    o.calledLines += 1;
-                }
-            });
-            Object.keys(functions).forEach(function (k) {
-                var name = fnMap[k].name + ':' + fnMap[k].line;
-                o.functions[name] = functions[k];
-                o.coveredFunctions += 1;
-                if (functions[k] > 0) {
-                    o.calledFunctions += 1;
-                }
-            });
-        });
-        return ret;
-    }
-
-    var exportables = {
-        addDerivedInfo: addDerivedInfo,
-        addDerivedInfoForFile: addDerivedInfoForFile,
-        removeDerivedInfo: removeDerivedInfo,
-        blankSummary: blankSummary,
-        summarizeFileCoverage: summarizeFileCoverage,
-        summarizeCoverage: summarizeCoverage,
-        mergeFileCoverage: mergeFileCoverage,
-        mergeSummaryObjects: mergeSummaryObjects,
-        toYUICoverage: toYUICoverage
-    };
-
-    /* istanbul ignore else: windows */
-    if (isNode) {
-        module.exports = exportables;
-    } else {
-        window.coverageUtils = exportables;
-    }
-}(typeof module !== 'undefined' && typeof module.exports !== 'undefined' && typeof exports !== 'undefined'));
-local["../object-utils"] = window.coverageUtils; }());
-
-
-
-/*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/common/defaults.js
-*/
-/* istanbul ignore next */
-(function () { let module; module = {};
-/*
- Copyright (c) 2013, Yahoo! Inc.  All rights reserved.
- Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
- */
-module.exports = {
-    watermarks: function () {
-        return {
-            statements: [ 50, 80 ],
-            lines: [ 50, 80 ],
-            functions: [ 50, 80],
-            branches: [ 50, 80 ]
-        };
-    },
-
-    classFor: function (type, metrics, watermarks) {
-        var mark = watermarks[type],
-            value = metrics[type].pct;
-        return value >= mark[1] ? 'high' : value >= mark[0] ? 'medium' : 'low';
-    },
-
-    colorize: function (str, clazz) {
-        /* istanbul ignore if: untestable in batch mode */
-        if (process.stdout.isTTY) {
-            switch (clazz) {
-                // hack-coverage - Octal escape sequences are not allowed in strict mode.
-                case 'low' : str = '\0x1b[91m' + str + '\0x1b[0m'; break;
-                case 'medium': str = '\0x1b[93m' + str + '\0x1b[0m'; break;
-                case 'high': str = '\0x1b[92m' + str + '\0x1b[0m'; break;
-            }
-        }
-        return str;
-    }
-};
-local["./common/defaults"] = module.exports; }());
-/* jslint ignore:end */
-
-
-
-/*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/index.js
-*/
-local["./index"] = {
-    call: local.nop,
-    mix: function (klass, prototype) {
-        klass.prototype = prototype;
-    }
-};
-
-
-
-/*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/foot.txt
-*/
-/* jslint ignore:start */
-local["foot.txt"] = '\
-</div>\n\
-<div class="footer">\n\
-    <div class="meta">Generated by <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a> at {{datetime}}</div>\n\
-</div>\n\
-</body>\n\
-</html>\n\
-';
-
-
-
-/*
 file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/templates/head.txt
 */
-local["head.txt"] = '\
+local.templateCoverageReport = '\
+{{#if isBrowser}}\n\
+<div>\n\
+{{#unless isBrowser}}\n\
 <!doctype html>\n\
 <html lang="en" class="x-istanbul">\n\
+{{/if isBrowser}}\n\
 <head>\n\
-    <title>Code coverage report for {{entity}}</title>\n\
+    <title>Code coverage report for {{nameOrAllFiles}}</title>\n\
     <meta charset="utf-8">\n\
 <style>\n\
 /* jslint utility2:true */\n\
@@ -11273,13 +10416,10 @@ local["head.txt"] = '\
 }\n\
 /* csslint ignore:end */\n\
 .x-istanbul {\n\
-    font-family: Helvetica Neue, Helvetica,Arial;\n\
+    font-family: Helvetica Neue, Helvetica, Arial;\n\
     font-size: 10pt;\n\
     margin: 0;\n\
     padding: 0;\n\
-}\n\
-.x-istanbul h1 {\n\
-    font-size: large;\n\
 }\n\
 .x-istanbul pre {\n\
     font-family: Consolas, Menlo, Monaco, monospace;\n\
@@ -11492,7 +10632,11 @@ local["head.txt"] = '\
 }\n\
 </style>\n\
 </head>\n\
+{{#if isBrowser}}\n\
+<div class="x-istanbul">\n\
+{{#unless isBrowser}}\n\
 <body class="x-istanbul">\n\
+{{/if isBrowser}}\n\
 <script>\n\
 // init domOnEventSelectAllWithinPre\n\
 (function () {\n\
@@ -11532,11 +10676,13 @@ local["head.txt"] = '\
     );\n\
 }());\n\
 </script>\n\
-<div class="header {{reportClass}}">\n\
+<div class="header {{metrics.statements.score}}">\n\
+{{#if env.npm_package_homepage}}\n\
     <h1 style="font-weight: bold;">\n\
         <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} ({{env.npm_package_version}})</a>\n\
     </h1>\n\
-    <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
+{{/if env.npm_package_homepage}}\n\
+    <h1>Code coverage report for <span class="entity">{{nameOrAllFiles}}</span></h1>\n\
     <table class="tableHeader">\n\
     <thead>\n\
     <tr>\n\
@@ -11548,1025 +10694,62 @@ local["head.txt"] = '\
     </tr>\n\
     </thead>\n\
     <tbody>\n\
-        <td>{{#show_ignores metrics}}{{/show_ignores}}</td>\n\
-        <td>{{#with metrics.statements}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>\n\
-        <td>{{#with metrics.branches}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>\n\
-        <td>{{#with metrics.functions}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>\n\
-        <td>{{#with metrics.lines}}{{pct}}%<br>({{covered}} / {{total}}){{/with}}</td>\n\
+        <td>Statements: {{metrics.statements.skipped}}<br>Branches: {{metrics.branches.skipped}}<br>Functions: {{metrics.functions.skipped}}</td>\n\
+        <td>{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>\n\
+        <td>{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>\n\
+        <td>{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>\n\
+        <td>{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>\n\
     </tbody>\n\
     </table>\n\
-    {{{pathHtml}}}\n\
+    <div class="path">{{#show_path}}</div>\n\
 </div>\n\
 <div class="body">\n\
+{{#if isFile}}\n\
+<pre><table class="coverage"><tr>\n\
+        <td class="line-count">{{#show_lineno}}</td>\n\
+        <td class="line-coverage">{{#show_line_count}}</td>\n\
+        <td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code}}</pre></td>\n\
+</tr></table></pre>\n\
+{{#unless isFile}}\n\
+<div class="coverage-summary">\n\
+    <table>\n\
+    <thead>\n\
+    <tr>\n\
+        <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>\n\
+        <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>\n\
+        <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>\n\
+        <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>\n\
+        <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>\n\
+    </tr>\n\
+    </thead>\n\
+    <tbody>\n\
+{{#each children}}\n\
+    <tr>\n\
+        <td class="file {{metrics.statements.score}}" data-value="{{relativeName}}"><a href="{{href}}">{{relativeName}}<br>{{#show_percent_bar}}</a></td>\n\
+        <td class="pct {{metrics.statements.score}}" data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>\n\
+        <td class="pct {{metrics.branches.score}}" data-value="{{metrics.branches.pct}}">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>\n\
+        <td class="pct {{metrics.functions.score}}" data-value="{{metrics.functions.pct}}">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>\n\
+        <td class="pct {{metrics.lines.score}}" data-value="{{metrics.lines.pct}}">{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>\n\
+    </tr>\n\
+{{/each children}}\n\
+    </tbody>\n\
+    </table>\n\
+</div>\n\
+{{/if isFile}}\n\
+</div>\n\
+<div class="footer">\n\
+<div class="meta">\n\
+    Generated by <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a> at ${datetime}\n\
+</div>\n\
+</div>\n\
+{{#if isBrowser}}\n\
+</div>\n\
+</div>\n\
+{{#unless isBrowser}}\n\
+</body>\n\
+</html>\n\
+{{/if isBrowser}}\n\
 ';
-/* jslint ignore:end */
-
-
-
-/*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
-*/
-local.writer = {
-    write: function (data) {
-        local.writerData += data;
-    },
-    writeFile: function (file, onError) {
-        local.coverageReportHtml += local.writerData + "\n\n";
-        if (!local.isBrowser && local.writerFile) {
-            local.fsWriteFileWithMkdirpSync(local.writerFile, local.writerData);
-        }
-        local.writerData = "";
-        local.writerFile = file;
-        onError(local.writer);
-    }
-};
-
-
-
-/*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
-*/
-/* istanbul ignore next */
-(function () {
-    let module;
-    module = {};
-/* jslint ignore:start */
-/*
- Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
- Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
- */
-
-var path = require('path'),
-    SEP = path.sep || '/',
-    utils = require('../object-utils');
-
-function commonArrayPrefix(first, second) {
-    var len = first.length < second.length ? first.length : second.length,
-        i,
-        ret = [];
-    for (i = 0; i < len; i += 1) {
-        if (first[i] === second[i]) {
-            ret.push(first[i]);
-        } else {
-            break;
-        }
-    }
-    return ret;
-}
-
-function findCommonArrayPrefix(args) {
-    if (args.length === 0) {
-        return [];
-    }
-
-    var separated = args.map(function (arg) { return arg.split(SEP); }),
-        ret = separated.pop();
-
-    if (separated.length === 0) {
-        return ret.slice(0, ret.length - 1);
-    } else {
-        return separated.reduce(commonArrayPrefix, ret);
-    }
-}
-
-function Node(fullName, kind, metrics) {
-    this.name = fullName;
-    this.fullName = fullName;
-    this.kind = kind;
-    this.metrics = metrics || null;
-    this.parent = null;
-    this.children = [];
-}
-
-Node.prototype = {
-    displayShortName: function () {
-        return this.relativeName;
-    },
-    fullPath: function () {
-        return this.fullName;
-    },
-    addChild: function (child) {
-        this.children.push(child);
-        child.parent = this;
-    },
-    toJSON: function () {
-        return {
-            name: this.name,
-            relativeName: this.relativeName,
-            fullName: this.fullName,
-            kind: this.kind,
-            metrics: this.metrics,
-            parent: this.parent === null ? null : this.parent.name,
-            children: this.children.map(function (node) { return node.toJSON(); })
-        };
-    }
-};
-
-function TreeSummary(summaryMap, commonPrefix) {
-    this.prefix = commonPrefix;
-    this.convertToTree(summaryMap, commonPrefix);
-}
-
-TreeSummary.prototype = {
-    getNode: function (shortName) {
-        return this.map[shortName];
-    },
-    convertToTree: function (summaryMap, arrayPrefix) {
-        var nodes = [],
-            rootPath = arrayPrefix.join(SEP) + SEP,
-            root = new Node(rootPath, 'dir'),
-            tmp,
-            tmpChildren,
-            seen = {},
-            filesUnderRoot = false;
-
-        seen[rootPath] = root;
-        Object.keys(summaryMap).forEach(function (key) {
-            var metrics = summaryMap[key],
-                node,
-                parentPath,
-                parent;
-            node = new Node(key, 'file', metrics);
-            seen[key] = node;
-            nodes.push(node);
-            parentPath = path.dirname(key) + SEP;
-            if (parentPath === SEP + SEP) {
-                parentPath = SEP + '__root__' + SEP;
-            }
-            parent = seen[parentPath];
-            if (!parent) {
-                parent = new Node(parentPath, 'dir');
-                root.addChild(parent);
-                seen[parentPath] = parent;
-            }
-            parent.addChild(node);
-            if (parent === root) { filesUnderRoot = true; }
-        });
-
-        if (filesUnderRoot && arrayPrefix.length > 0) {
-            arrayPrefix.pop(); //start at one level above
-            tmp = root;
-            tmpChildren = tmp.children;
-            tmp.children = [];
-            root = new Node(arrayPrefix.join(SEP) + SEP, 'dir');
-            root.addChild(tmp);
-            tmpChildren.forEach(function (child) {
-                if (child.kind === 'dir') {
-                    root.addChild(child);
-                } else {
-                    tmp.addChild(child);
-                }
-            });
-        }
-        this.fixupNodes(root, arrayPrefix.join(SEP) + SEP);
-        this.calculateMetrics(root);
-        this.root = root;
-        this.map = {};
-        this.indexAndSortTree(root, this.map);
-    },
-
-    fixupNodes: function (node, prefix, parent) {
-        var that = this;
-        if (node.name.indexOf(prefix) === 0) {
-            node.name = node.name.substring(prefix.length);
-        }
-        if (node.name.charAt(0) === SEP) {
-            node.name = node.name.substring(1);
-        }
-        if (parent) {
-            if (parent.name !== '__root__/') {
-                node.relativeName = node.name.substring(parent.name.length);
-            } else {
-                node.relativeName = node.name;
-            }
-        } else {
-            node.relativeName = node.name.substring(prefix.length);
-        }
-        node.children.forEach(function (child) {
-            that.fixupNodes(child, prefix, node);
-        });
-    },
-    calculateMetrics: function (entry) {
-        var that = this,
-            fileChildren;
-        if (entry.kind !== 'dir') {return; }
-        entry.children.forEach(function (child) {
-            that.calculateMetrics(child);
-        });
-        entry.metrics = utils.mergeSummaryObjects.apply(
-            null,
-            entry.children.map(function (child) { return child.metrics; })
-        );
-        // calclulate "java-style" package metrics where there is no hierarchy
-        // across packages
-        fileChildren = entry.children.filter(function (n) { return n.kind !== 'dir'; });
-        if (fileChildren.length > 0) {
-            entry.packageMetrics = utils.mergeSummaryObjects.apply(
-                null,
-                fileChildren.map(function (child) { return child.metrics; })
-            );
-        } else {
-            entry.packageMetrics = null;
-        }
-    },
-    indexAndSortTree: function (node, map) {
-        var that = this;
-        map[node.name] = node;
-        node.children.sort(function (a, b) {
-            a = a.relativeName;
-            b = b.relativeName;
-            return a < b ? -1 : a > b ? 1 : 0;
-        });
-        node.children.forEach(function (child) {
-            that.indexAndSortTree(child, map);
-        });
-    },
-    toJSON: function () {
-        return {
-            prefix: this.prefix,
-            root: this.root.toJSON()
-        };
-    }
-};
-
-function TreeSummarizer() {
-    this.summaryMap = {};
-}
-
-TreeSummarizer.prototype = {
-    addFileCoverageSummary: function (filePath, metrics) {
-        this.summaryMap[filePath] = metrics;
-    },
-    getTreeSummary: function () {
-        var commonArrayPrefix = findCommonArrayPrefix(Object.keys(this.summaryMap));
-        return new TreeSummary(this.summaryMap, commonArrayPrefix);
-    }
-};
-
-module.exports = TreeSummarizer;
-/* jslint ignore:end */
-    local["../util/tree-summarizer"] = module.exports;
-    module.exports.prototype._getTreeSummary = (
-        module.exports.prototype.getTreeSummary
-    );
-    module.exports.prototype.getTreeSummary = function () {
-        local.coverageReportSummary = this._getTreeSummary();
-        return local.coverageReportSummary;
-    };
-}());
-
-
-
-/*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
-*/
-/* istanbul ignore next */
-/* jslint ignore:start */
-(function () { let module; module = {};
-/*
- Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
- Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
- */
-
-/*jshint maxlen: 300 */
-var handlebars = require('handlebars'),
-    defaults = require('./common/defaults'),
-    path = require('path'),
-    SEP = path.sep || '/',
-    fs = require('fs'),
-    util = require('util'),
-    FileWriter = require('../util/file-writer'),
-    Report = require('./index'),
-    Store = require('../store'),
-    InsertionText = require('../util/insertion-text'),
-    TreeSummarizer = require('../util/tree-summarizer'),
-    utils = require('../object-utils'),
-    templateFor = function (name) { return handlebars.compile(fs.readFileSync(path.resolve(__dirname, 'templates', name + '.txt'), 'utf8')); },
-    headerTemplate = templateFor('head'),
-    footerTemplate = templateFor('foot'),
-    pathTemplate = handlebars.compile('<div class="path">{{{html}}}</div>'),
-    detailTemplate = handlebars.compile([
-        '<tr>',
-        '<td class="line-count">{{#show_lines}}{{maxLines}}{{/show_lines}}</td>',
-        '<td class="line-coverage">{{#show_line_execution_counts fileCoverage}}{{maxLines}}{{/show_line_execution_counts}}</td>',
-        // hack-coverage - domOnEventSelectAllWithinPre
-        '<td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code structured}}{{/show_code}}</pre></td>',
-        '</tr>\n'
-    ].join('')),
-    summaryTableHeader = [
-        '<div class="coverage-summary">',
-        '<table>',
-        '<thead>',
-        '<tr>',
-        // hack-coverage - compact summary
-        '   <th data-col="file" data-fmt="html" data-html="true" class="file">File</th>',
-        '   <th data-col="statements" data-type="number" data-fmt="pct" class="pct">Statements</th>',
-        '   <th data-col="branches" data-type="number" data-fmt="pct" class="pct">Branches</th>',
-        '   <th data-col="functions" data-type="number" data-fmt="pct" class="pct">Functions</th>',
-        '   <th data-col="lines" data-type="number" data-fmt="pct" class="pct">Lines</th>',
-        '</tr>',
-        '</thead>',
-        '<tbody>'
-    ].join('\n'),
-    summaryLineTemplate = handlebars.compile([
-        '<tr>',
-        // hack-coverage - compact summary
-        '<td class="file {{reportClasses.statements}}" data-value="{{file}}"><a href="{{output}}"><div>{{file}}</div>{{#show_picture}}{{metrics.statements.pct}}{{/show_picture}}</a></td>',
-        '<td data-value="{{metrics.statements.pct}}" class="pct {{reportClasses.statements}}">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>',
-        '<td data-value="{{metrics.branches.pct}}" class="pct {{reportClasses.branches}}">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>',
-        '<td data-value="{{metrics.functions.pct}}" class="pct {{reportClasses.functions}}">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>',
-        '<td data-value="{{metrics.lines.pct}}" class="pct {{reportClasses.lines}}">{{metrics.lines.pct}}%<br>({{metrics.lines.covered}} / {{metrics.lines.total}})</td>',
-        '</tr>\n'
-    ].join('\n\t')),
-    summaryTableFooter = [
-        '</tbody>',
-        '</table>',
-        '</div>'
-    ].join('\n'),
-    lt = '\u0001',
-    gt = '\u0002',
-    RE_LT = /</g,
-    RE_GT = />/g,
-    RE_AMP = /&/g,
-    RE_lt = /\u0001/g,
-    RE_gt = /\u0002/g;
-
-handlebars.registerHelper('show_picture', function (opts) {
-    var num = Number(opts.fn(this)),
-        rest,
-        cls = '';
-    if (isFinite(num)) {
-        if (num === 100) {
-            cls = ' cover-full';
-        }
-        num = Math.floor(num);
-        rest = 100 - num;
-        return '<span class="cover-fill' + cls + '" style="width: ' + num + 'px;"></span>' +
-            '<span class="cover-empty" style="width:' + rest + 'px;"></span>';
-    } else {
-        return '';
-    }
-});
-
-handlebars.registerHelper('show_ignores', function (metrics) {
-    var statements = metrics.statements.skipped,
-        functions = metrics.functions.skipped,
-        branches = metrics.branches.skipped,
-        result;
-
-    if (statements === 0 && functions === 0 && branches === 0) {
-        return '<span class="ignore-none">none</span>';
-    }
-
-    result = [];
-    // hack-coverage - compact summary
-    if (statements >0) { result.push('statements: ' + statements); }
-    if (branches >0) { result.push('branches: ' + branches); }
-    if (functions >0) { result.push('functions: ' + functions); }
-
-    return result.join('<br>');
-});
-
-// hack-coverage - hashtag lineno
-handlebars.registerHelper('show_lines', function (opts) {
-    var maxLines = Number(opts.fn(this)),
-        i,
-        array = "";
-
-    for (i = 1; i <= maxLines; i += 1) {
-        array += '<a href="#L' + i + '" id="L' + i + '">' + i + '</a>\n';
-    }
-    return array;
-});
-
-handlebars.registerHelper('show_line_execution_counts', function (context, opts) {
-    var lines = context.l,
-        maxLines = Number(opts.fn(this)),
-        i,
-        lineNumber,
-        array = [],
-        covered,
-        value = '';
-
-    for (i = 0; i < maxLines; i += 1) {
-        lineNumber = i + 1;
-        value = '&nbsp;';
-        covered = 'neutral';
-        if (lines.hasOwnProperty(lineNumber)) {
-            if (lines[lineNumber] > 0) {
-                covered = 'yes';
-                value = lines[lineNumber];
-            } else {
-                covered = 'no';
-            }
-        }
-        array.push('<span class="cline-any cline-' + covered + '">' + value + '</span>');
-    }
-    return array.join('\n');
-});
-
-function customEscape(text) {
-    text = text.toString();
-    return text.replace(RE_AMP, '&amp;')
-        .replace(RE_LT, '&lt;')
-        .replace(RE_GT, '&gt;')
-        .replace(RE_lt, '<')
-        .replace(RE_gt, '>');
-}
-
-handlebars.registerHelper('show_code', function (context /*, opts */) {
-    var array = [];
-
-    context.forEach(function (item) {
-        array.push(customEscape(item.text) || '&nbsp;');
-    });
-    return array.join('\n');
-});
-
-function title(str) {
-    return ' title="' + str + '" ';
-}
-
-function annotateLines(fileCoverage, structuredText) {
-    var lineStats = fileCoverage.l;
-    if (!lineStats) { return; }
-    Object.keys(lineStats).forEach(function (lineNumber) {
-        var count = lineStats[lineNumber];
-        structuredText[lineNumber].covered = count > 0 ? 'yes' : 'no';
-    });
-    structuredText.forEach(function (item) {
-        if (item.covered === null) {
-            item.covered = 'neutral';
-        }
-    });
-}
-
-function annotateStatements(fileCoverage, structuredText) {
-    var statementStats = fileCoverage.s,
-        statementMeta = fileCoverage.statementMap;
-    Object.keys(statementStats).forEach(function (stName) {
-        var count = statementStats[stName],
-            meta = statementMeta[stName],
-            type = count > 0 ? 'yes' : 'no',
-            startCol = meta.start.column,
-            endCol = meta.end.column + 1,
-            startLine = meta.start.line,
-            endLine = meta.end.line,
-            openSpan = lt + 'span class="' + (meta.skip ? 'cstat-skip' : 'cstat-no') + '"' + title('statement not covered') + gt,
-            closeSpan = lt + '/span' + gt,
-            text;
-
-        if (type === 'no') {
-            if (endLine !== startLine) {
-                endLine = startLine;
-                endCol = structuredText[startLine].text.originalLength();
-            }
-            text = structuredText[startLine].text;
-            text.wrap(startCol,
-                openSpan,
-                startLine === endLine ? endCol : text.originalLength(),
-                closeSpan);
-        }
-    });
-}
-
-function annotateFunctions(fileCoverage, structuredText) {
-
-    var fnStats = fileCoverage.f,
-        fnMeta = fileCoverage.fnMap;
-    if (!fnStats) { return; }
-    Object.keys(fnStats).forEach(function (fName) {
-        var count = fnStats[fName],
-            meta = fnMeta[fName],
-            type = count > 0 ? 'yes' : 'no',
-            startCol = meta.loc.start.column,
-            endCol = meta.loc.end.column + 1,
-            startLine = meta.loc.start.line,
-            endLine = meta.loc.end.line,
-            openSpan = lt + 'span class="' + (meta.skip ? 'fstat-skip' : 'fstat-no') + '"' + title('function not covered') + gt,
-            closeSpan = lt + '/span' + gt,
-            text;
-
-        if (type === 'no') {
-            if (endLine !== startLine) {
-                endLine = startLine;
-                endCol = structuredText[startLine].text.originalLength();
-            }
-            text = structuredText[startLine].text;
-            text.wrap(startCol,
-                openSpan,
-                startLine === endLine ? endCol : text.originalLength(),
-                closeSpan);
-        }
-    });
-}
-
-function annotateBranches(fileCoverage, structuredText) {
-    var branchStats = fileCoverage.b,
-        branchMeta = fileCoverage.branchMap;
-    if (!branchStats) { return; }
-
-    Object.keys(branchStats).forEach(function (branchName) {
-        var branchArray = branchStats[branchName],
-            sumCount = branchArray.reduce(function (p, n) { return p + n; }, 0),
-            metaArray = branchMeta[branchName].locations,
-            i,
-            count,
-            meta,
-            type,
-            startCol,
-            endCol,
-            startLine,
-            endLine,
-            openSpan,
-            closeSpan,
-            text;
-
-        if (sumCount > 0) { //only highlight if partial branches are missing
-            for (i = 0; i < branchArray.length; i += 1) {
-                count = branchArray[i];
-                meta = metaArray[i];
-                type = count > 0 ? 'yes' : 'no';
-                startCol = meta.start.column;
-                endCol = meta.end.column + 1;
-                startLine = meta.start.line;
-                endLine = meta.end.line;
-                openSpan = lt + 'span class="branch-' + i + ' ' + (meta.skip ? 'cbranch-skip' : 'cbranch-no') + '"' + title('branch not covered') + gt;
-                closeSpan = lt + '/span' + gt;
-
-                if (count === 0) { //skip branches taken
-                    if (endLine !== startLine) {
-                        endLine = startLine;
-                        endCol = structuredText[startLine].text.originalLength();
-                    }
-                    text = structuredText[startLine].text;
-                    if (branchMeta[branchName].type === 'if') { // and 'if' is a special case since the else branch might not be visible, being non-existent
-                        text.insertAt(startCol, lt + 'span class="' + (meta.skip ? 'skip-if-branch' : 'missing-if-branch') + '"' +
-                            title((i === 0 ? 'if' : 'else') + ' path not taken') + gt +
-                            (i === 0 ? 'I' : 'E')  + lt + '/span' + gt, true, false);
-                    } else {
-                        text.wrap(startCol,
-                            openSpan,
-                            startLine === endLine ? endCol : text.originalLength(),
-                            closeSpan);
-                    }
-                }
-            }
-        }
-    });
-}
-
-function getReportClass(stats, watermark) {
-    var coveragePct = stats.pct,
-        identity  = 1;
-    if (coveragePct * identity === coveragePct) {
-        return coveragePct >= watermark[1] ? 'high' : coveragePct >= watermark[0] ? 'medium' : 'low';
-    } else {
-        return '';
-    }
-}
-
-/**
- * a `Report` implementation that produces HTML coverage reports.
- *
- * Usage
- * -----
- *
- *      var report = require('istanbul').Report.create('html');
- *
- *
- * @class HtmlReport
- * @extends Report
- * @constructor
- * @param {Object} opts optional
- * @param {String} [opts.dir] the directory in which to generate reports. Defaults to `./html-report`
- */
-function HtmlReport(opts) {
-    Report.call(this);
-    this.opts = opts || {};
-    this.opts.dir = this.opts.dir || path.resolve(process.cwd(), 'html-report');
-    this.opts.sourceStore = this.opts.sourceStore || Store.create('fslookup');
-    this.opts.linkMapper = this.opts.linkMapper || this.standardLinkMapper();
-    this.opts.writer = this.opts.writer || null;
-    // hack-coverage - new Date() bugfix
-    this.opts.templateData = { datetime: new Date().toGMTString() };
-    this.opts.watermarks = this.opts.watermarks || defaults.watermarks();
-}
-
-HtmlReport.TYPE = 'html';
-util.inherits(HtmlReport, Report);
-
-Report.mix(HtmlReport, {
-
-    getPathHtml: function (node, linkMapper) {
-        var parent = node.parent,
-            nodePath = [],
-            linkPath = [],
-            i;
-
-        while (parent) {
-            nodePath.push(parent);
-            parent = parent.parent;
-        }
-
-        for (i = 0; i < nodePath.length; i += 1) {
-            linkPath.push('<a href="' + linkMapper.ancestor(node, i + 1) + '">' +
-                (nodePath[i].relativeName || 'All files') + '</a>');
-        }
-        linkPath.reverse();
-        return linkPath.length > 0 ? linkPath.join(' &#187; ') + ' &#187; ' +
-            node.displayShortName() : '';
-    },
-
-    fillTemplate: function (node, templateData) {
-        var opts = this.opts,
-            linkMapper = opts.linkMapper;
-
-        templateData.entity = node.name || 'All files';
-        templateData.metrics = node.metrics;
-        templateData.reportClass = getReportClass(node.metrics.statements, opts.watermarks.statements);
-        templateData.pathHtml = pathTemplate({ html: this.getPathHtml(node, linkMapper) });
-        templateData.prettify = {
-            js: linkMapper.asset(node, 'prettify.js'),
-            css: linkMapper.asset(node, 'prettify.css')
-        };
-    },
-    writeDetailPage: function (writer, node, fileCoverage) {
-        var opts = this.opts,
-            sourceStore = opts.sourceStore,
-            templateData = opts.templateData,
-            sourceText = fileCoverage.code && Array.isArray(fileCoverage.code) ?
-                fileCoverage.code.join('\n') + '\n' : sourceStore.get(fileCoverage.path),
-            code = sourceText.split(/(?:\r?\n)|\r/),
-            count = 0,
-            structured = code.map(function (str) { count += 1; return { line: count, covered: null, text: new InsertionText(str, true) }; }),
-            context;
-
-        structured.unshift({ line: 0, covered: null, text: new InsertionText("") });
-
-        this.fillTemplate(node, templateData);
-        writer.write(headerTemplate(templateData));
-        writer.write('<pre><table class="coverage">\n');
-
-        annotateLines(fileCoverage, structured);
-        //note: order is important, since statements typically result in spanning the whole line and doing branches late
-        //causes mismatched tags
-        annotateBranches(fileCoverage, structured);
-        annotateFunctions(fileCoverage, structured);
-        annotateStatements(fileCoverage, structured);
-
-        structured.shift();
-        context = {
-            structured: structured,
-            maxLines: structured.length,
-            fileCoverage: fileCoverage
-        };
-        writer.write(detailTemplate(context));
-        writer.write('</table></pre>\n');
-        writer.write(footerTemplate(templateData));
-    },
-
-    writeIndexPage: function (writer, node) {
-        var linkMapper = this.opts.linkMapper,
-            templateData = this.opts.templateData,
-            children = Array.prototype.slice.apply(node.children),
-            watermarks = this.opts.watermarks;
-
-        children.sort(function (a, b) {
-            return a.name < b.name ? -1 : 1;
-        });
-
-        this.fillTemplate(node, templateData);
-        writer.write(headerTemplate(templateData));
-        writer.write(summaryTableHeader);
-        children.forEach(function (child) {
-            var metrics = child.metrics,
-                reportClasses = {
-                    statements: getReportClass(metrics.statements, watermarks.statements),
-                    lines: getReportClass(metrics.lines, watermarks.lines),
-                    functions: getReportClass(metrics.functions, watermarks.functions),
-                    branches: getReportClass(metrics.branches, watermarks.branches)
-                },
-                data = {
-                    metrics: metrics,
-                    reportClasses: reportClasses,
-                    file: child.displayShortName(),
-                    output: linkMapper.fromParent(child)
-                };
-            writer.write(summaryLineTemplate(data) + '\n');
-        });
-        writer.write(summaryTableFooter);
-        writer.write(footerTemplate(templateData));
-    },
-
-    writeFiles: function (writer, node, dir, collector) {
-        var that = this,
-            indexFile = path.resolve(dir, 'index.html'),
-            childFile;
-        if (this.opts.verbose) { console.error('Writing ' + indexFile); }
-        writer.writeFile(indexFile, function (contentWriter) {
-            that.writeIndexPage(contentWriter, node);
-        });
-        node.children.forEach(function (child) {
-            if (child.kind === 'dir') {
-                that.writeFiles(writer, child, path.resolve(dir, child.relativeName), collector);
-            } else {
-                childFile = path.resolve(dir, child.relativeName + '.html');
-                if (that.opts.verbose) { console.error('Writing ' + childFile); }
-                writer.writeFile(childFile, function (contentWriter) {
-                    that.writeDetailPage(contentWriter, child, collector.fileCoverageFor(child.fullPath()));
-                });
-            }
-        });
-    },
-
-    standardLinkMapper: function () {
-        return {
-            fromParent: function (node) {
-                var i = 0,
-                    relativeName = node.relativeName,
-                    ch;
-                if (SEP !== '/') {
-                    relativeName = '';
-                    for (i = 0; i < node.relativeName.length; i += 1) {
-                        ch = node.relativeName.charAt(i);
-                        if (ch === SEP) {
-                            relativeName += '/';
-                        } else {
-                            relativeName += ch;
-                        }
-                    }
-                }
-                return node.kind === 'dir' ? relativeName + 'index.html' : relativeName + '.html';
-            },
-            ancestorHref: function (node, num) {
-                var href = '',
-                    separated,
-                    levels,
-                    i,
-                    j;
-                for (i = 0; i < num; i += 1) {
-                    separated = node.relativeName.split(SEP);
-                    levels = separated.length - 1;
-                    for (j = 0; j < levels; j += 1) {
-                        href += '../';
-                    }
-                    node = node.parent;
-                }
-                return href;
-            },
-            ancestor: function (node, num) {
-                return this.ancestorHref(node, num) + 'index.html';
-            },
-            asset: function (node, name) {
-                var i = 0,
-                    parent = node.parent;
-                while (parent) { i += 1; parent = parent.parent; }
-                return this.ancestorHref(node, i) + name;
-            }
-        };
-    },
-
-    writeReport: function (collector, sync) {
-        var opts = this.opts,
-            dir = opts.dir,
-            summarizer = new TreeSummarizer(),
-            writer = opts.writer || new FileWriter(sync),
-            tree;
-
-        collector.files().forEach(function (key) {
-            summarizer.addFileCoverageSummary(key, utils.summarizeFileCoverage(collector.fileCoverageFor(key)));
-        });
-        tree = summarizer.getTreeSummary();
-        fs.readdirSync(path.resolve(__dirname, '..', 'vendor')).forEach(function (f) {
-            var resolvedSource = path.resolve(__dirname, '..', 'vendor', f),
-                resolvedDestination = path.resolve(dir, f),
-                stat = fs.statSync(resolvedSource);
-
-            if (stat.isFile()) {
-                if (opts.verbose) {
-                    console.log('Write asset: ' + resolvedDestination);
-                }
-                writer.copyFile(resolvedSource, resolvedDestination);
-            }
-        });
-        //console.log(JSON.stringify(tree.root, undefined, 4));
-        this.writeFiles(writer, tree.root, dir, collector);
-    }
-});
-
-module.exports = HtmlReport;
-local.HtmlReport = module.exports; }());
-
-
-
-/*
-file https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
-*/
-/* istanbul ignore next */
-(function () { var module; module = {};
-/*
- Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
- Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
- */
-
-var path = require('path'),
-    mkdirp = require('mkdirp'),
-    fs = require('fs'),
-    defaults = require('./common/defaults'),
-    Report = require('./index'),
-    TreeSummarizer = require('../util/tree-summarizer'),
-    utils = require('../object-utils'),
-    PCT_COLS = 10,
-    TAB_SIZE = 3,
-    DELIM = ' |',
-    COL_DELIM = '-|';
-
-/**
- * a `Report` implementation that produces text output in a detailed table.
- *
- * Usage
- * -----
- *
- *      var report = require('istanbul').Report.create('text');
- *
- * @class TextReport
- * @extends Report
- * @constructor
- * @param {Object} opts optional
- * @param {String} [opts.dir] the directory in which to the text coverage report will be written, when writing to a file
- * @param {String} [opts.file] the filename for the report. When omitted, the report is written to console
- * @param {Number} [opts.maxcols] the max column width of the report. By default, the width of the report is adjusted based on the length of the paths
- *              to be reported.
- */
-function TextReport(opts) {
-    Report.call(this);
-    opts = opts || {};
-    this.dir = opts.dir || process.cwd();
-    this.file = opts.file;
-    this.summary = opts.summary;
-    this.maxCols = opts.maxCols || 0;
-    this.watermarks = opts.watermarks || defaults.watermarks();
-}
-
-TextReport.TYPE = 'text';
-
-function padding(num, ch) {
-    var str = '',
-        i;
-    ch = ch || ' ';
-    for (i = 0; i < num; i += 1) {
-        str += ch;
-    }
-    return str;
-}
-
-function fill(str, width, right, tabs, clazz) {
-    tabs = tabs || 0;
-    str = String(str);
-
-    var leadingSpaces = tabs * TAB_SIZE,
-        remaining = width - leadingSpaces,
-        leader = padding(leadingSpaces),
-        fmtStr = '',
-        fillStr,
-        strlen = str.length;
-
-    if (remaining > 0) {
-        if (remaining >= strlen) {
-            fillStr = padding(remaining - strlen);
-            fmtStr = right ? fillStr + str : str + fillStr;
-        } else {
-            fmtStr = str.substring(strlen - remaining);
-            fmtStr = '... ' + fmtStr.substring(4);
-        }
-    }
-
-    fmtStr = defaults.colorize(fmtStr, clazz);
-    return leader + fmtStr;
-}
-
-function formatName(name, maxCols, level, clazz) {
-    return fill(name, maxCols, false, level, clazz);
-}
-
-function formatPct(pct, clazz) {
-    return fill(pct, PCT_COLS, true, 0, clazz);
-}
-
-function nodeName(node) {
-    return node.displayShortName() || 'All files';
-}
-
-function tableHeader(maxNameCols) {
-    var elements = [];
-    elements.push(formatName('File', maxNameCols, 0));
-    elements.push(formatPct('% Stmts'));
-    elements.push(formatPct('% Branches'));
-    elements.push(formatPct('% Funcs'));
-    elements.push(formatPct('% Lines'));
-    return elements.join(' |') + ' |';
-}
-
-function tableRow(node, maxNameCols, level, watermarks) {
-    var name = nodeName(node),
-        statements = node.metrics.statements.pct,
-        branches = node.metrics.branches.pct,
-        functions = node.metrics.functions.pct,
-        lines = node.metrics.lines.pct,
-        elements = [];
-
-    elements.push(formatName(name, maxNameCols, level, defaults.classFor('statements', node.metrics, watermarks)));
-    elements.push(formatPct(statements, defaults.classFor('statements', node.metrics, watermarks)));
-    elements.push(formatPct(branches, defaults.classFor('branches', node.metrics, watermarks)));
-    elements.push(formatPct(functions, defaults.classFor('functions', node.metrics, watermarks)));
-    elements.push(formatPct(lines, defaults.classFor('lines', node.metrics, watermarks)));
-
-    return elements.join(DELIM) + DELIM;
-}
-
-function findNameWidth(node, level, last) {
-    last = last || 0;
-    level = level || 0;
-    var idealWidth = TAB_SIZE * level + nodeName(node).length;
-    if (idealWidth > last) {
-        last = idealWidth;
-    }
-    node.children.forEach(function (child) {
-        last = findNameWidth(child, level + 1, last);
-    });
-    return last;
-}
-
-function makeLine(nameWidth) {
-    var name = padding(nameWidth, '-'),
-        pct = padding(PCT_COLS, '-'),
-        elements = [];
-
-    elements.push(name);
-    elements.push(pct);
-    elements.push(pct);
-    elements.push(pct);
-    elements.push(pct);
-    return elements.join(COL_DELIM) + COL_DELIM;
-}
-
-function walk(node, nameWidth, array, level, watermarks) {
-    var line;
-    if (level === 0) {
-        line = makeLine(nameWidth);
-        array.push(line);
-        array.push(tableHeader(nameWidth));
-        array.push(line);
-    } else {
-        array.push(tableRow(node, nameWidth, level, watermarks));
-    }
-    node.children.forEach(function (child) {
-        walk(child, nameWidth, array, level + 1, watermarks);
-    });
-    if (level === 0) {
-        array.push(line);
-        array.push(tableRow(node, nameWidth, level, watermarks));
-        array.push(line);
-    }
-}
-
-Report.mix(TextReport, {
-    writeReport: function (collector /*, sync */) {
-        var summarizer = new TreeSummarizer(),
-            tree,
-            root,
-            nameWidth,
-            statsWidth = 4 * ( PCT_COLS + 2),
-            maxRemaining,
-            strings = [],
-            text;
-
-        collector.files().forEach(function (key) {
-            summarizer.addFileCoverageSummary(key, utils.summarizeFileCoverage(collector.fileCoverageFor(key)));
-        });
-        tree = summarizer.getTreeSummary();
-        root = tree.root;
-        nameWidth = findNameWidth(root);
-        if (this.maxCols > 0) {
-            maxRemaining = this.maxCols - statsWidth - 2;
-            if (nameWidth > maxRemaining) {
-                nameWidth = maxRemaining;
-            }
-        }
-        walk(root, nameWidth, strings, 0, this.watermarks);
-        text = strings.join('\n') + '\n';
-        if (this.file) {
-            mkdirp.sync(this.dir);
-            fs.writeFileSync(path.join(this.dir, this.file), text, 'utf8');
-        } else {
-            console.log(text);
-        }
-    }
-});
-
-module.exports = TextReport;
-local.TextReport = module.exports; }());
 
 
 
@@ -12575,13 +10758,1029 @@ file https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
 */
 local.templateCoverageBadgeSvg =
 '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
+/* jslint ignore:end */
 
 
 
 /*
 file none
 */
-/* jslint ignore:end */
+
+
+
+let fileWrite;
+let path;
+let reportHtmlWrite;
+let reportTextWrite;
+// require module
+path = require("path");
+// init function
+fileWrite = function (file, data) {
+/*
+ * this function will write <data> to <file>
+ */
+    if (local.fsWriteFileWithMkdirpSync(file, data)) {
+        console.error(
+            "coverage-report - wrote file " + path.resolve(file)
+        );
+    }
+};
+reportHtmlWrite = function (node, dirCoverage, coverage) {
+/*
+ * this function will recursively write coverage-report of <node> in html-format
+ * to <dirCoverage>
+ */
+    let datetime;
+    let htmlAll;
+    let lineCreate;
+    let lineInsertAt;
+    let lineWrapAt;
+    let recurse;
+    let render;
+    // init function
+    lineCreate = function (text) {
+    /*
+     * this function will create line-object with given <text>
+     */
+        let endCol;
+        let ii;
+        let startCol;
+        // init <startCol>
+        startCol = -1;
+        ii = 0;
+        while (ii < text.length) {
+            if (!text[ii].match(
+                /[\u0020\f\n\r\t\u000b\u00a0\u2028\u2029]/
+            )) {
+                startCol = ii;
+                break;
+            }
+            ii += 1;
+        }
+        // init <endCol>
+        endCol = text.length + 1;
+        ii = text.length - 1;
+        while (ii >= 0) {
+            if (!text[ii].match(
+                /[\u0020\f\n\r\t\u000b\u00a0\u2028\u2029]/
+            )) {
+                endCol = ii;
+                break;
+            }
+            ii -= 1;
+        }
+        return {
+            endCol,
+            offsets: [],
+            origLength: text.length,
+            startCol,
+            text
+        };
+    };
+    lineInsertAt = function (lineObj, col, str, insertBefore) {
+    /*
+     * this function will insert <str> into <lineObj> at <col>
+     */
+        let ii;
+        let offset;
+        let offsetObj;
+        col = Math.min(col, lineObj.origLength);
+        // find <offset> from <col>
+        offset = col;
+        ii = 0;
+        while (ii < lineObj.offsets.length) {
+            offsetObj = lineObj.offsets[ii];
+            if (
+                offsetObj.col < col
+                || (offsetObj.col === col && !insertBefore)
+            ) {
+                offset += offsetObj.len;
+            }
+            if (offsetObj.col >= col) {
+                break;
+            }
+            ii += 1;
+        }
+        if (offsetObj && offsetObj.col === col) {
+            offsetObj.len += str.length;
+        } else {
+            lineObj.offsets.splice(ii, 0, {
+                col,
+                len: str.length
+            });
+        }
+        // insert <str> at <offset>
+        lineObj.text = (
+            lineObj.text.slice(0, offset) + str + lineObj.text.slice(offset)
+        );
+        return lineObj;
+    };
+    lineWrapAt = function (lineObj, startCol, startText, endCol, endText) {
+    /*
+     * this function will wrap <lineObj>.slice(<startCol>, <endCol>)
+     * inside <startText> and <endText>
+     */
+        startCol = Math.min(startCol, lineObj.origLength);
+        // consumeBlanks
+        if (startCol <= lineObj.startCol) {
+            startCol = 0;
+        }
+        if (startCol > lineObj.endCol) {
+            startCol = lineObj.origLength;
+        }
+        lineInsertAt(lineObj, startCol, startText);
+        lineInsertAt(lineObj, endCol, endText);
+        return lineObj;
+    };
+    recurse = function (node, level, dir) {
+    /*
+     * this function will recursively write <htmlData> from <node>
+     * to <dir>/<htmlFile>
+     */
+        let fileCoverage;
+        let htmlData;
+        let htmlFile;
+        let lineList;
+        // write dir
+        if (!node.isFile) {
+            htmlFile = path.resolve(dir, "index.html");
+            htmlData = render(local.templateCoverageReport, Object.assign({
+                datetime,
+                env: process.env,
+                isBrowser: local.isBrowser
+            }, node));
+            htmlAll += htmlData + "\n\n";
+            fileWrite(htmlFile, htmlData);
+            node.children.forEach(function (child) {
+                recurse(
+                    child,
+                    level + 1,
+                    path.resolve(dir, child.relativeName)
+                );
+            });
+            return;
+        }
+        // write file
+        htmlFile = dir + ".html";
+        fileCoverage = coverage[node.pathname];
+        lineList = String(fileCoverage.code.join("\n") + "\n").split(
+            /(?:\r?\n)|\r/
+        ).map(function (str) {
+            return lineCreate(str, true);
+        });
+        lineList.unshift(lineCreate(""));
+        // annotateLines(fileCoverage, lineList);
+        Object.entries(fileCoverage.l).forEach(function ([
+            lineno,
+            count
+        ]) {
+            lineList[lineno].covered = (
+                count > 0
+                ? "yes"
+                : "no"
+            );
+        });
+        lineList.forEach(function (item) {
+            if (item.covered === undefined) {
+                item.covered = "neutral";
+            }
+        });
+        //note: order is important, since statements typically result
+        //in spanning the whole line and doing branches late
+        //causes mismatched tags
+        // annotateBranches(fileCoverage, lineList);
+        Object.entries(fileCoverage.b).forEach(function ([
+            branchName,
+            branchArray
+        ]) {
+            if (branchArray.reduce(function (p, n) {
+                return p + n;
+            }, 0) <= 0) {
+                return;
+            }
+            //only highlight if partial branches are missing
+            branchArray.forEach(function (count, ii) {
+                let endCol;
+                let endLine;
+                let lineObj;
+                let meta;
+                let startLine;
+                if (count !== 0) {
+                    return;
+                }
+                meta = fileCoverage.branchMap[branchName].locations[ii];
+                endCol = meta.end.column + 1;
+                endLine = meta.end.line;
+                startLine = meta.start.line;
+                //skip branches taken
+                if (endLine !== startLine) {
+                    endLine = startLine;
+                    endCol = lineList[startLine].origLength;
+                }
+                lineObj = lineList[startLine];
+                if (fileCoverage.branchMap[branchName].type === "if") {
+                    // and "if" is a special case since the else branch
+                    // might not be visible, being non-existent
+                    lineInsertAt(
+                        lineObj,
+                        meta.start.column,
+                        "\u0001span class=\"" + (
+                            meta.skip
+                            ? "skip-if-branch"
+                            : "missing-if-branch"
+                        ) + "\" title=\"" + ((
+                            ii === 0
+                            ? "if"
+                            : "else"
+                        ) + "\" path not taken\u0002") + (
+                            ii === 0
+                            ? "I"
+                            : "E"
+                        ) + "\u0001/span\u0002",
+                        true
+                    );
+                    return;
+                }
+                lineWrapAt(lineObj, meta.start.column, (
+                    "\u0001span class=\"branch-" + ii + " " + (
+                        meta.skip
+                        ? "cbranch-skip"
+                        : "cbranch-no"
+                    ) + "\" title=\"branch not covered\" \u0002"
+                ), (
+                    startLine === endLine
+                    ? endCol
+                    : lineObj.origLength
+                ), "\u0001/span\u0002");
+            });
+        });
+        // annotateFunctions(fileCoverage, lineList);
+        Object.entries(fileCoverage.f).forEach(function ([
+            fName,
+            count
+        ]) {
+            let endCol;
+            let endLine;
+            let lineObj;
+            let meta;
+            let startLine;
+            if (count !== 0) {
+                return;
+            }
+            meta = fileCoverage.fnMap[fName];
+            endCol = meta.loc.end.column + 1;
+            endLine = meta.loc.end.line;
+            startLine = meta.loc.start.line;
+            if (endLine !== startLine) {
+                endLine = startLine;
+                endCol = lineList[startLine].origLength;
+            }
+            lineObj = lineList[startLine];
+            lineWrapAt(lineObj, meta.loc.start.column, "\u0001span class=\"" + (
+                meta.skip
+                ? "fstat-skip"
+                : "fstat-no"
+            ) + "\" title=\"function not covered\" \u0002", (
+                startLine === endLine
+                ? endCol
+                : lineObj.origLength
+            ), "\u0001/span\u0002");
+        });
+        // annotateStatements(fileCoverage, lineList);
+        Object.entries(fileCoverage.s).forEach(function ([
+            stName,
+            count
+        ]) {
+            let endCol;
+            let endLine;
+            let lineObj;
+            let meta;
+            let startLine;
+            if (count !== 0) {
+                return;
+            }
+            meta = fileCoverage.statementMap[stName];
+            endCol = meta.end.column + 1;
+            startLine = meta.start.line;
+            endLine = meta.end.line;
+            if (endLine !== startLine) {
+                endLine = startLine;
+                endCol = lineList[startLine].origLength;
+            }
+            lineObj = lineList[startLine];
+            lineWrapAt(lineObj, meta.start.column, ("\u0001span class=\"" + (
+                meta.skip
+                ? "cstat-skip"
+                : "cstat-no"
+            ) + "\" title=\"statement not covered\" \u0002"), (
+                startLine === endLine
+                ? endCol
+                : lineObj.origLength
+            ), "\u0001/span\u0002");
+        });
+        lineList.shift();
+        htmlData = render(local.templateCoverageReport, Object.assign({
+            datetime,
+            env: process.env,
+            isBrowser: local.isBrowser,
+            lines: fileCoverage.l,
+            maxLines: lineList.length,
+            lineList
+        }, node));
+        htmlAll += htmlData + "\n\n";
+        fileWrite(htmlFile, htmlData);
+    };
+    render = function (template, node) {
+    /*
+     * this function will render <template> with given <node>
+     */
+        let ii;
+        let jj;
+        let kk;
+        let parent;
+        let tmp;
+        let val;
+        // init <node>
+        node = Object.assign({
+            datetime,
+            env: process.env,
+            isBrowser: local.isBrowser
+        }, node);
+        // render {{...}}
+        template = local.templateRender(template, node);
+        // render #show_line_count
+        template = template.replace("{{#show_line_count}}", function () {
+            val = "";
+            ii = 1;
+            while (ii <= node.maxLines) {
+                tmp = node.lines[ii];
+                val += "<span class=\"cline-any " + (
+                    tmp === undefined
+                    ? "cline-neutral\">&nbsp;"
+                    : tmp > 0
+                    ? "cline-yes\">" + tmp
+                    : "cline-no\">&nbsp;"
+                ) + "</span>\n";
+                ii += 1;
+            }
+            return val;
+        });
+        // render #show_lineno
+        template = template.replace("{{#show_lineno}}", function () {
+            val = "";
+            ii = 1;
+            while (ii <= node.maxLines) {
+                // hack-coverage - hashtag lineno
+                val += (
+                    "<a href=\"#L" + ii + "\" id=\"L" + ii + "\">"
+                    + ii
+                    + "</a>\n"
+                );
+                ii += 1;
+            }
+            return val;
+        });
+        // render #show_path
+        template = template.replace("{{#show_path}}", function () {
+            tmp = node;
+            parent = tmp.parent;
+            if (!parent) {
+                return "";
+            }
+            val = tmp.relativeName;
+            ii = 1;
+            while (parent) {
+                val = (
+                    "index.html\">" + parent.relativeNameOrAllFiles + "</a>"
+                    + " &#187; " + val
+                );
+                jj = 0;
+                while (jj < ii) {
+                    kk = 0;
+                    while (kk < tmp.relativeName.split(path.sep).length - 1) {
+                        val = "../" + val;
+                        kk += 1;
+                    }
+                    tmp = tmp.parent;
+                    jj += 1;
+                }
+                val = "<a href=\"" + val;
+                parent = parent.parent;
+                ii += 1;
+            }
+            return val;
+        });
+        // render #show_percent_bar
+        ii = 0;
+        template = template.replace((
+            /\{\{#show_percent_bar\}\}/g
+        ), function () {
+            val = node.children[ii].metrics.statements.pct | 0;
+            ii += 1;
+            return (
+                "<span class=\"cover-fill cover-full\" style=\"width:" + val
+                + "px;\"></span><span class=\"cover-empty\" style=\"width:"
+                + (100 - val) + "px;\"></span>"
+            );
+        });
+        // render #show_code last
+        template = template.replace("{{#show_code}}", function () {
+            val = node.lineList.map(function (item) {
+                return item.text;
+            }).join("\n");
+            // sanitize html
+            val = val.replace((
+                /&/g
+            ), "&amp;").replace((
+                /</g
+            ), "&lt;").replace((
+                />/g
+            ), "&gt;").replace((
+                /\u0001/g
+            ), "<").replace((
+                /\u0002/g
+            ), ">");
+            return val;
+        });
+        return template.trim() + "\n";
+    };
+    datetime = new Date().toGMTString();
+    // init <htmlAll>
+    htmlAll = (
+        `<div class="coverageReportDiv">
+<h1>coverage-report</h1>
+<div style="background: #fff; border: 1px solid #999; margin 0; padding: 0;">`
+    ) + "\n";
+    recurse(node, 0, dirCoverage);
+    htmlAll += "</div>\n</div>\n";
+    // write coverage.all.html
+    fileWrite(dirCoverage + "/coverage.all.html", htmlAll);
+    return htmlAll;
+};
+reportTextWrite = function (node, dircoverage) {
+/*
+ * this function will recursively write coverage-report of <node> in text-format
+ * to <dircoverage>/coverage.txt
+ */
+    let nodeNameWidth;
+    let recurse;
+    let result;
+    let stringPad;
+    // init function
+    recurse = function (node, level) {
+        // update <nodeNameWidth>
+        nodeNameWidth = Math.max(
+            nodeNameWidth,
+            Math.max(level, 0) * 2 + node.relativeNameOrAllFiles.length
+        );
+        // format <metrics>
+        return [
+            node.metrics.statements,
+            node.metrics.statements,
+            node.metrics.branches,
+            node.metrics.functions,
+            node.metrics.lines
+        ].map(function ({
+            pct,
+            score
+        }, ii) {
+            return (
+                ii === 0
+                ? stringPad(
+                    node.relativeNameOrAllFiles,
+                    nodeNameWidth,
+                    false,
+                    Math.max(level, 0) * 2,
+                    score
+                )
+                : stringPad(String(pct), 8, true, 0, score)
+            );
+        }).join(" |") + " |\n" + node.children.map(function (child) {
+            return recurse(child, level + 1);
+        }).join("");
+    };
+    stringPad = function (str, width, right, indent, score) {
+    /*
+     * this function will pad <str> to given <width>
+     */
+        let fillStr;
+        let fmtStr;
+        let remaining;
+        remaining = width - indent;
+        fmtStr = "";
+        if (remaining <= 0) {
+            fmtStr = str.slice(str.length - remaining);
+            fmtStr = "... " + fmtStr.slice(4);
+        } else if (remaining >= str.length) {
+            fillStr = " ".repeat(remaining - str.length);
+            fmtStr = (
+                right
+                ? fillStr + str
+                : str + fillStr
+            );
+        }
+        // colorize
+        switch (process.stdout && process.stdout.isTTY && score) {
+        case "high":
+            fmtStr = "\u001b[92m" + fmtStr + "\u001b[0m";
+            break;
+        case "low":
+            fmtStr = "\u001b[91m" + fmtStr + "\u001b[0m";
+            break;
+        case "medium":
+            fmtStr = "\u001b[93m" + fmtStr + "\u001b[0m";
+            break;
+        }
+        return " ".repeat(indent) + fmtStr;
+    };
+    // init <nodeNameWidth>
+    nodeNameWidth = 0;
+    recurse(node, -1);
+    // write coverage-report
+    result = (
+        "-".repeat(nodeNameWidth)
+        + "-|---------|---------|---------|---------|\n"
+    );
+    result = (
+        result
+        + stringPad("File", nodeNameWidth, false, 0, "")
+        + " | % Stmts | % Brchs | % Funcs | % Lines |\n"
+        + result
+        + recurse(node, -1)
+        + result
+    );
+    console.error(result);
+    fileWrite(path.resolve(dircoverage, "coverage.txt"), result);
+};
+
+
+
+// init local
+local.coverageMerge = function (coverage1 = {}, coverage2 = {}) {
+/*
+ * this function will inplace-merge <coverage2> into <coverage1>
+ */
+    let dict1;
+    let dict2;
+    Object.keys(coverage2).forEach(function (file) {
+        // if <coverage1>[<file>] is undefined, then add it
+        if (!coverage1[file]) {
+            coverage1[file] = coverage2[file];
+            return;
+        }
+        // merge <coverage2> into <coverage1>
+        [
+            "b", "f", "s"
+        ].forEach(function (key) {
+            dict1 = coverage1[file][key];
+            dict2 = coverage2[file][key];
+            switch (key) {
+            // increment coverage for branch lines
+            case "b":
+                Object.keys(dict2).forEach(function (key) {
+                    dict2[key].forEach(function (count, ii) {
+                        dict1[key][ii] += count;
+                    });
+                });
+                break;
+            // increment coverage for function and statement lines
+            case "f":
+            case "s":
+                Object.keys(dict2).forEach(function (key) {
+                    dict1[key] += dict2[key];
+                });
+                break;
+            }
+        });
+    });
+    return coverage1;
+};
+
+local.coverageReportCreate = function (opt) {
+/*
+ * this function will
+    // 1. merge previous <dirCoverage>/coverage.json into <opt>.coverage
+    // 2. convert <opt>.coverage to <summaryDict>
+    // 3. convert <summaryDict> to <nodeRoot>
+    // 4. convert <nodeRoot> to text-report <dirCoverage>/coverage.txt
+    // 5. convert <nodeRoot> to html-report <dirCoverage>/\*
+    // 6. return coverage-report in html-format as single document
+ */
+    let coverageInclude;
+    let dirCoverage;
+    let filePrefix;
+    let filesUnderRoot;
+    let htmlAll;
+    let nodeChildAdd;
+    let nodeCreate;
+    let nodeDict;
+    let nodeNormalize;
+    let nodeRoot;
+    let summaryDict;
+    let tmp;
+    let tmpChildren;
+    if (!(opt && opt.coverage)) {
+        return "";
+    }
+    // init function
+    nodeChildAdd = function (node, child) {
+    /*
+     * this function will add <child> to <node>
+     */
+        node.children.push(child);
+        child.parent = node;
+    };
+    nodeCreate = function (pathname) {
+    /*
+     * this function will create a tree-node
+     */
+        return {
+            children: [],
+            pathname,
+            metrics: {
+                branches: {
+                    total: 0,
+                    covered: 0,
+                    skipped: 0,
+                    pct: "Unknown"
+                },
+                functions: {
+                    total: 0,
+                    covered: 0,
+                    skipped: 0,
+                    pct: "Unknown"
+                },
+                lines: {
+                    total: 0,
+                    covered: 0,
+                    skipped: 0,
+                    pct: "Unknown"
+                },
+                statements: {
+                    total: 0,
+                    covered: 0,
+                    skipped: 0,
+                    pct: "Unknown"
+                }
+            },
+            name: pathname
+        };
+    };
+    nodeNormalize = function (node, level, filePrefix, parent) {
+    /*
+     * this function will recursively normalize <node> and its children
+     */
+        // init <name>
+        if (node.name.indexOf(filePrefix) === 0) {
+            node.name = node.name.slice(filePrefix.length);
+        }
+        if (node.name[0] === path.sep) {
+            node.name = node.name.slice(1);
+        }
+        // init <relativeName>
+        node.relativeName = (
+            parent
+            ? (
+                parent.name !== "__root__/"
+                ? node.name.slice(parent.name.length)
+                : node.name
+            )
+            : node.name.slice(filePrefix.length)
+        );
+        // init <nameOrAllFiles>
+        node.nameOrAllFiles = node.name || "All files";
+        // init <relativeNameOrAllFiles>
+        node.relativeNameOrAllFiles = node.relativeName || "All files";
+        // init <href>
+        node.href = node.relativeName.split(path.sep).join("/") + (
+            node.isFile
+            ? ".html"
+            : "index.html"
+        );
+        // recurse
+        node.children.forEach(function (child) {
+            nodeNormalize(child, level + 1, filePrefix, node);
+        });
+        // sort <children> by <name>
+        node.children.sort(function (aa, bb) {
+            return (
+                aa.name > bb.name
+                ? 1
+                : -1
+            );
+        });
+        // init <metrics>
+        if (!node.isFile) {
+            node.children.forEach(function (child) {
+                [
+                    "lines", "statements", "branches", "functions"
+                ].forEach(function (key) {
+                    node.metrics[key].total += child.metrics[key].total;
+                    node.metrics[key].covered += child.metrics[key].covered;
+                    node.metrics[key].skipped += child.metrics[key].skipped;
+                });
+            });
+        }
+        // calculate <pct> and <score>
+        [
+            "lines", "statements", "branches", "functions"
+        ].forEach(function (key) {
+            node.metrics[key].pct = (
+                node.metrics[key].total > 0
+                ? Math.floor((
+                    1000 * 100 * node.metrics[key].covered
+                    / node.metrics[key].total + 5
+                ) / 10) / 100
+                : 100
+            );
+            node.metrics[key].score = (
+                node.metrics[key].pct >= 80
+                ? "high"
+                : node.metrics[key].pct >= 50
+                ? "medium"
+                : "low"
+            );
+        });
+    };
+    // 1. merge previous <dirCoverage>/coverage.json into <opt>.coverage
+    dirCoverage = process.cwd() + "/tmp/build/coverage.html";
+    coverageInclude = opt.coverageInclude || globalThis.__coverageInclude__;
+    if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
+        console.error(
+            "istanbul - merging file "
+            + dirCoverage + "/coverage.json to coverage"
+        );
+        try {
+            tmp = {};
+            tmp = JSON.parse(local.fs.readFileSync(
+                dirCoverage + "/coverage.json",
+                "utf8"
+            ));
+        } catch (ignore) {}
+        local.coverageMerge(opt.coverage, tmp);
+        try {
+            tmp = {};
+            tmp = JSON.parse(local.fs.readFileSync(
+                dirCoverage + "/coverage.include.json",
+                "utf8"
+            ));
+        } catch (ignore) {}
+        Object.keys(tmp).forEach(function (file) {
+            coverageInclude[file] = 1;
+        });
+    }
+    // 2. convert <opt>.coverage to <summaryDict>
+    summaryDict = {};
+    Object.entries(opt.coverage).forEach(function ([
+        file,
+        fileCoverage
+    ]) {
+        let map;
+        let metric;
+        let skipped;
+        let summary;
+        if (fileCoverage && coverageInclude.hasOwnProperty(file)) {
+            // reset line-count
+            delete opt.coverage[file].l;
+            // init <summary>
+            summary = {
+                branches: {
+                    total: 0,
+                    covered: 0,
+                    skipped: 0,
+                    pct: "Unknown"
+                },
+                functions: {
+                    total: 0,
+                    covered: 0,
+                    skipped: 0,
+                    pct: "Unknown"
+                },
+                lines: {
+                    total: 0,
+                    covered: 0,
+                    skipped: 0,
+                    pct: "Unknown"
+                },
+                statements: {
+                    total: 0,
+                    covered: 0,
+                    skipped: 0,
+                    pct: "Unknown"
+                }
+            };
+            // init line-count
+            fileCoverage.l = {};
+            Object.entries(fileCoverage.s).forEach(function ([
+                key,
+                count
+            ]) {
+                let lineno;
+                if (count === 0 && fileCoverage.statementMap[key].skip) {
+                    count = 1;
+                }
+                lineno = fileCoverage.statementMap[key].start.line;
+                fileCoverage.l[lineno] = Math.max(
+                    fileCoverage.l[lineno] | 0,
+                    count
+                );
+            });
+            // computeSimpleTotals
+            [
+                [
+                    "lines", "l"
+                ],
+                [
+                    "functions", "f", "fnMap"
+                ],
+                [
+                    "statements", "s", "statementMap"
+                ]
+            ].forEach(function ([
+                keyMetric, keyCovered, keyMap
+            ]) {
+                map = fileCoverage[keyMap];
+                metric = {
+                    total: 0,
+                    covered: 0,
+                    skipped: 0
+                };
+                Object.entries(fileCoverage[keyCovered]).forEach(function ([
+                    key,
+                    covered
+                ]) {
+                    skipped = map && map[key].skip;
+                    metric.total += 1;
+                    metric.covered += Boolean(covered || skipped);
+                    metric.skipped += Boolean(!covered && skipped);
+                });
+                summary[keyMetric] = metric;
+            });
+            // computeBranchTotals
+            metric = {
+                total: 0,
+                covered: 0,
+                skipped: 0
+            };
+            Object.entries(fileCoverage.b).forEach(function ([
+                key,
+                branches
+            ]) {
+                map = fileCoverage.branchMap[key].locations;
+                branches.forEach(function (covered, ii) {
+                    skipped = map && map[ii] && map[ii].skip;
+                    metric.covered += Boolean(covered || skipped);
+                    metric.skipped += Boolean(!covered && skipped);
+                });
+                metric.total += branches.length;
+            });
+            summary.branches = metric;
+            summaryDict[file] = summary;
+            // findCommonArrayPrefix
+            tmp = file.split(path.sep);
+            if (!filePrefix) {
+                filePrefix = tmp.slice(0, -1);
+                return;
+            }
+            filePrefix.some(function (elem, ii) {
+                if (elem !== tmp[ii]) {
+                    filePrefix = filePrefix.slice(0, ii);
+                    return true;
+                }
+            });
+        }
+    });
+    // 3. convert <summaryDict> to <nodeRoot>
+    tmp = filePrefix.join(path.sep) + path.sep;
+    nodeRoot = nodeCreate(tmp);
+    nodeDict = {};
+    nodeDict[tmp] = nodeRoot;
+    filesUnderRoot = false;
+    Object.entries(summaryDict).forEach(function ([
+        key,
+        metrics
+    ]) {
+        let node;
+        let parent;
+        let parentPath;
+        node = nodeCreate(key);
+        node.isFile = true;
+        node.metrics = metrics;
+        nodeDict[key] = node;
+        parentPath = path.dirname(key) + path.sep;
+        if (parentPath === path.sep + path.sep) {
+            parentPath = path.sep + "__root__" + path.sep;
+        }
+        parent = nodeDict[parentPath];
+        if (!parent) {
+            parent = nodeCreate(parentPath);
+            nodeChildAdd(nodeRoot, parent);
+            nodeDict[parentPath] = parent;
+        }
+        nodeChildAdd(parent, node);
+        if (parent === nodeRoot) {
+            filesUnderRoot = true;
+        }
+    });
+    if (filesUnderRoot && filePrefix.length > 0) {
+        //start at one level above
+        filePrefix.pop();
+        tmp = nodeRoot;
+        tmpChildren = tmp.children;
+        tmp.children = [];
+        nodeRoot = nodeCreate(filePrefix.join(path.sep) + path.sep);
+        nodeChildAdd(nodeRoot, tmp);
+        tmpChildren.forEach(function (child) {
+            nodeChildAdd((
+                child.isFile
+                ? tmp
+                : nodeRoot
+            ), child);
+        });
+    }
+    nodeNormalize(nodeRoot, 0, filePrefix.join(path.sep) + path.sep);
+    // 4. convert <nodeRoot> to text-report <dirCoverage>/coverage.txt
+    reportTextWrite(nodeRoot, dirCoverage);
+    // 5. convert <nodeRoot> to html-report <dirCoverage>/\*
+    htmlAll = reportHtmlWrite(nodeRoot, dirCoverage, opt.coverage);
+    // save <opt>.coverage to <dirCoverage>/coverage.json
+    fileWrite(
+        dirCoverage + "/coverage.json",
+        JSON.stringify(opt.coverage)
+    );
+    // save <coverageInclude> to <dirCoverage>/coverage.include.json
+    fileWrite(
+        dirCoverage + "/coverage.include.json",
+        JSON.stringify(coverageInclude)
+    );
+    // write coverage.badge.svg
+    tmp = nodeRoot.metrics.lines.pct;
+    fileWrite(
+        local._istanbul_path.dirname(dirCoverage) + "/coverage.badge.svg",
+        // edit coverage badge percent
+        // edit coverage badge color
+        local.templateCoverageBadgeSvg.replace((
+            /100.0/g
+        ), tmp).replace((
+            /0d0/g
+        ), (
+            Math.round((100 - tmp) * 2.21).toString(16).padStart(2, "0")
+            + Math.round(tmp * 2.21).toString(16).padStart(2, "0")
+            + "00"
+        ))
+    );
+    console.error(
+        "istanbul - created coverage file " + dirCoverage + "/index.html"
+    );
+    // 6. return coverage-report in html-format as single document
+    return htmlAll;
+};
+
+local.instrumentInPackage = function (code, file) {
+/*
+ * this function will instrument <code>
+ * if macro /\* istanbul instrument in package $npm_package_nameLib *\/
+ * exists in <code>
+ */
+    return (
+        (
+            process.env.npm_config_mode_coverage
+            && code.indexOf("/* istanbul ignore all */\n") < 0 && (
+                process.env.npm_config_mode_coverage === "all"
+                || process.env.npm_config_mode_coverage === "node_modules"
+                || code.indexOf(
+                    "/* istanbul instrument in package "
+                    + process.env.npm_package_nameLib + " */\n"
+                ) >= 0
+                || code.indexOf(
+                    "/* istanbul instrument in package "
+                    + process.env.npm_config_mode_coverage + " */\n"
+                ) >= 0
+            )
+        )
+        ? local.instrumentSync(code, file)
+        : code
+    );
+};
+
+local.instrumentSync = function (code, file) {
+/*
+ * this function will
+ * 1. normalize <file>
+ * 2. save <code> to __coverageInclude__[<file>] for future html-report
+ * 3. return instrumented-code
+ */
+    // 1. normalize <file>
+    file = local._istanbul_path.resolve("/", file);
+    // 2. save <code> to __coverageInclude__[<file>] for future html-report
+    globalThis.__coverageInclude__[file] = 1;
+    // 3. return instrumented-code
+    return new local.Instrumenter({
+        embedSource: true,
+        esModules: true,
+        noAutoWrap: true
+    }).instrumentSync(code, file).trimStart();
+};
 }());
 
 
@@ -12642,7 +11841,7 @@ local.cliDict.cover = function () {
     // init process.argv
     process.argv.splice(1, 2);
     process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
-    console.log("\ncovering $ " + process.argv.join(" "));
+    console.error("\nistanbul - covering $ " + process.argv.join(" "));
     // create coverage on exit
     process.on("exit", function () {
         local.coverageReportCreate({
@@ -12674,10 +11873,9 @@ local.cliDict.report = function () {
     globalThis.__coverage__ = JSON.parse(
         local.fs.readFileSync(process.argv[3])
     );
-    globalThis.__coverageCodeDict__ = {};
-    Object.entries(globalThis.__coverage__).forEach(function (entry) {
-        globalThis.__coverageCodeDict__[entry[0]] = true;
-        entry[1].code = entry[1].code || entry[1].text.split("\n");
+    globalThis.__coverageInclude__ = {};
+    Object.keys(globalThis.__coverage__).forEach(function (file) {
+        globalThis.__coverageInclude__[file] = 1;
     });
     local.coverageReportCreate({
         coverage: globalThis.__coverage__

@@ -1,5 +1,5 @@
-<svg height="558" width="720" xmlns="http://www.w3.org/2000/svg">
-<rect height="558" fill="#555" width="720"></rect>
+<svg height="606" width="720" xmlns="http://www.w3.org/2000/svg">
+<rect height="606" fill="#555" width="720"></rect>
 <text fill="#7f7" font-family="Courier New" font-size="12" xml:space="preserve">
 <tspan x="10" y="26">  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current</tspan>
 
@@ -7,48 +7,53 @@
 
 <tspan x="10" y="58"></tspan>
 <tspan x="10" y="74">  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0</tspan>
-<tspan x="10" y="90">100 3143k  100 3143k    0     0  9312k      0 --:--:-- --:--:-- --:--:-- 9328k</tspan>
+<tspan x="10" y="90"> 57 2947k   57 1707k    0     0  3052k      0 --:--:-- --:--:-- --:--:-- 3049k</tspan>
+<tspan x="10" y="106">100 2947k  100 2947k    0     0  4634k      0 --:--:-- --:--:-- --:--:-- 4633k</tspan>
 
-<tspan x="10" y="106"></tspan>
+<tspan x="10" y="122"></tspan>
 
-<tspan x="10" y="122">testExampleSh - merged test-report from file /home/travis/build/kaizhu256/node-utility2/tmp/buil\</tspan>
-<tspan x="10" y="138">d/test-report.json</tspan>
+<tspan x="10" y="138">testExampleSh - merged test-report from file /home/travis/build/kaizhu256/node-utility2/tmp/buil\</tspan>
+<tspan x="10" y="154">d/test-report.json</tspan>
 
-<tspan x="10" y="154"></tspan>
+<tspan x="10" y="170"></tspan>
 
-<tspan x="10" y="170">testExampleSh - merged test-report from file /home/travis/build/kaizhu256/node-utility2/tmp/buil\</tspan>
-<tspan x="10" y="186">d/test-report.json</tspan>
+<tspan x="10" y="186">testExampleSh - merged test-report from file /home/travis/build/kaizhu256/node-utility2/tmp/buil\</tspan>
+<tspan x="10" y="202">d/test-report.json</tspan>
 
-<tspan x="10" y="202">http-server listening on port 8081</tspan>
+<tspan x="10" y="218">http-server listening on port 8081</tspan>
 
-<tspan x="10" y="218">&gt; </tspan>
+<tspan x="10" y="234">&gt; </tspan>
 
-<tspan x="10" y="234">testExampleSh - merged test-report from file /home/travis/build/kaizhu256/node-utility2/tmp/buil\</tspan>
-<tspan x="10" y="250">d/test-report.json</tspan>
+<tspan x="10" y="250">testExampleSh - merged test-report from file /home/travis/build/kaizhu256/node-utility2/tmp/buil\</tspan>
+<tspan x="10" y="266">d/test-report.json</tspan>
 
-<tspan x="10" y="266"></tspan>
+<tspan x="10" y="282"></tspan>
 
-<tspan x="10" y="282">testExampleSh - merged test-report from file /home/travis/build/kaizhu256/node-utility2/tmp/buil\</tspan>
-<tspan x="10" y="298">d/test-report.json</tspan>
+<tspan x="10" y="298">testExampleSh - merged test-report from file /home/travis/build/kaizhu256/node-utility2/tmp/buil\</tspan>
+<tspan x="10" y="314">d/test-report.json</tspan>
 
-<tspan x="10" y="314">jslint - 1ms /tmp/app/example.sh</tspan>
+<tspan x="10" y="330">jslint - 0ms /tmp/app/example.sh</tspan>
 
-<tspan x="10" y="330">serverLog - {"time":"2019-10-09T17:37:29.595Z","type":"serverResponse","method":"GET","url":"/",\</tspan>
-<tspan x="10" y="346">"statusCode":200,"timeElapsed":5,"reqContentLength":0,"resContentLength":0,"reqHeaderXForwardedF\</tspan>
-<tspan x="10" y="362">or":"","reqHeaderOrigin":"","reqHeaderReferer":"","reqHeaderUserAgent":"Mozilla/5.0 (X11; Linux \</tspan>
-<tspan x="10" y="378">x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/77.0.3865.90 Safari/537.36"}</tspan>
+<tspan x="10" y="346">serverLog - {"time":"2020-05-30T22:47:11.896Z","type":"serverResponse","method":"GET","url":"/",\</tspan>
+<tspan x="10" y="362">"statusCode":200,"timeElapsed":4,"reqContentLength":0,"resContentLength":0,"reqHeaderXForwardedF\</tspan>
+<tspan x="10" y="378">or":"","reqHeaderOrigin":"","reqHeaderReferer":"","reqHeaderUserAgent":"Mozilla/5.0 (X11; Linux \</tspan>
+<tspan x="10" y="394">x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/83.0.4103.61 Safari/537.36"}</tspan>
 
-<tspan x="10" y="394">serverLog - {"time":"2019-10-09T17:37:29.633Z","type":"serverResponse","method":"GET","url":"/as\</tspan>
-<tspan x="10" y="410">sets.app.js","statusCode":200,"timeElapsed":35,"reqContentLength":0,"resContentLength":0,"reqHea\</tspan>
-<tspan x="10" y="426">derXForwardedFor":"","reqHeaderOrigin":"","reqHeaderReferer":"http://127.0.0.1:8081/","reqHeader\</tspan>
-<tspan x="10" y="442">UserAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrom\</tspan>
-<tspan x="10" y="458">e/77.0.3865.90 Safari/537.36"}</tspan>
+<tspan x="10" y="410"></tspan>
 
-<tspan x="10" y="474">serverLog - {"time":"2019-10-09T17:37:29.863Z","type":"serverResponse","method":"GET","url":"/",\</tspan>
-<tspan x="10" y="490">"statusCode":304,"timeElapsed":1,"reqContentLength":0,"resContentLength":0,"reqHeaderXForwardedF\</tspan>
-<tspan x="10" y="506">or":"","reqHeaderOrigin":"","reqHeaderReferer":"http://127.0.0.1:8081/","reqHeaderUserAgent":"Mo\</tspan>
-<tspan x="10" y="522">zilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/77.0.3865.90\</tspan>
-<tspan x="10" y="538"> Safari/537.36"}</tspan>
+<tspan x="10" y="426">serverLog - {"time":"2020-05-30T22:47:11.916Z","type":"serverResponse","method":"GET","url":"/as\</tspan>
+<tspan x="10" y="442">sets.app.js","statusCode":200,"timeElapsed":20,"reqContentLength":0,"resContentLength":0,"reqHea\</tspan>
+<tspan x="10" y="458">derXForwardedFor":"","reqHeaderOrigin":"","reqHeaderReferer":"http://127.0.0.1:8081/","reqHeader\</tspan>
+<tspan x="10" y="474">UserAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrom\</tspan>
+<tspan x="10" y="490">e/83.0.4103.61 Safari/537.36"}</tspan>
+
+<tspan x="10" y="506"></tspan>
+
+<tspan x="10" y="522">serverLog - {"time":"2020-05-30T22:47:12.161Z","type":"serverResponse","method":"GET","url":"/",\</tspan>
+<tspan x="10" y="538">"statusCode":304,"timeElapsed":1,"reqContentLength":0,"resContentLength":0,"reqHeaderXForwardedF\</tspan>
+<tspan x="10" y="554">or":"","reqHeaderOrigin":"","reqHeaderReferer":"http://127.0.0.1:8081/","reqHeaderUserAgent":"Mo\</tspan>
+<tspan x="10" y="570">zilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/83.0.4103.61\</tspan>
+<tspan x="10" y="586"> Safari/537.36"}</tspan>
 
 </text>
 </svg>

@@ -15,6 +15,10 @@
 *:before {
     box-sizing: border-box;
 }
+.uiAnimateSlide {
+    overflow-y: hidden;
+    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;
+}
 /* csslint ignore:end */
 @keyframes uiAnimateSpin {
 0% {
@@ -86,10 +90,6 @@ pre {
     cursor: auto;
     overflow: auto;
     padding: 2px;
-}
-.uiAnimateSlide {
-    overflow-y: hidden;
-    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;
 }
 .zeroPixel {
     border: 0;
@@ -189,10 +189,23 @@ pre {
  */
     "use strict";
     let opt;
-    if (!(
-        typeof window === "object" && window && window.document
-        && typeof document.addEventListener === "function"
-    ) || window.domOnEventAjaxProgressUpdate) {
+    let styleBar0;
+    let styleBar;
+    let styleModal0;
+    let styleModal;
+    let timeStart;
+    let timerInterval;
+    let timerTimeout;
+    let tmp;
+    let width;
+    try {
+        if (
+            window.domOnEventAjaxProgressUpdate
+            || !document.getElementById("domElementAjaxProgressBar1").style
+        ) {
+            return;
+        }
+    } catch (ignore) {
         return;
     }
     window.domOnEventAjaxProgressUpdate = function (gotoState, onError) {
@@ -200,56 +213,68 @@ pre {
         switch (gotoState) {
         // ajaxProgress - show
         case 1:
-            // init timerInterval and timerTimeout
-            opt.timerInterval = (
-                opt.timerInterval || setInterval(opt, 2000, 1, onError)
-            );
-            opt.timerTimeout = (
-                opt.timerTimeout || setTimeout(opt, 30000, 2, onError)
-            );
-            // show ajaxProgress
-            if (opt.width !== -1) {
-                opt.style.background = opt.background;
+            // init <timerInterval> and <timerTimeout>
+            if (!timerTimeout) {
+                timeStart = Date.now();
+                timerInterval = setInterval(opt, 2000, 1, onError);
+                timerTimeout = setTimeout(opt, opt.timeout, 2, onError);
+            }
+            // show ajaxProgressBar
+            if (width !== -1) {
+                styleBar.background = styleBar0.background;
             }
             setTimeout(opt, 50, gotoState, onError);
             break;
         // ajaxProgress - increment
         case 2:
-            // show ajaxProgress
-            if (opt.width === -1) {
-                return;
+            // show ajaxProgressBar
+            if (width === -1) {
+                break;
             }
-            opt.style.background = opt.background;
-            // reset ajaxProgress if it goes too high
-            if ((opt.style.width.slice(0, -1) | 0) > 95) {
-                opt.width = 0;
+            styleBar.background = styleBar0.background;
+            // reset ajaxProgress if it reaches end
+            if ((styleBar.width.slice(0, -1) | 0) > 95) {
+                width = 0;
             }
             // this algorithm will indefinitely increment ajaxProgress
             // with successively smaller increments without reaching 100%
-            opt.width += 1;
-            opt.style.width = Math.max(
-                100 - 75 * Math.exp(-0.125 * opt.width),
-                opt.style.width.slice(0, -1) | 0
+            width += 1;
+            styleBar.width = Math.max(
+                100 - 75 * Math.exp(-0.125 * width),
+                styleBar.width.slice(0, -1) | 0
             ) + "%";
-            if (!opt.counter) {
+            // show ajaxProgressModal
+            styleModal.height = "100%";
+            styleModal.opacity = styleModal0.opacity;
+            if (!opt.cnt) {
                 setTimeout(opt, 0, gotoState, onError);
             }
             break;
         // ajaxProgress - 100%
         case 3:
-            opt.width = -1;
-            opt.style.width = "100%";
+            width = -1;
+            styleBar.width = "100%";
             setTimeout(opt, 1000, gotoState, onError);
             break;
         // ajaxProgress - hide
         case 4:
-            // cleanup timerInterval and timerTimeout
-            clearInterval(opt.timerInterval);
-            opt.timerInterval = null;
-            clearTimeout(opt.timerTimeout);
-            opt.timerTimeout = null;
-            // hide ajaxProgress
-            opt.style.background = "transparent";
+            // debug timeElapsed
+            tmp = Date.now();
+            console.error(
+                "domOnEventAjaxProgressUpdate - timeElapsed - "
+                + (tmp - timeStart)
+                + " ms"
+            );
+            // cleanup <timerInterval> and <timerTimeout>
+            timeStart = tmp;
+            clearInterval(timerInterval);
+            timerInterval = null;
+            clearTimeout(timerTimeout);
+            timerTimeout = null;
+            // hide ajaxProgressBar
+            styleBar.background = "transparent";
+            // hide ajaxProgressModal
+            styleModal.opacity = "0";
             if (onError) {
                 onError();
             }
@@ -257,27 +282,20 @@ pre {
             break;
         // ajaxProgress - reset
         default:
-            // reset ajaxProgress
-            opt.counter = 0;
-            opt.width = 0;
-            opt.style.width = "0%";
+            opt.cnt = 0;
+            width = 0;
+            styleBar.width = "0%";
+            styleModal.height = "0";
         }
     };
     opt = window.domOnEventAjaxProgressUpdate;
     opt.end = function (onError) {
-        opt.counter = 0;
+        opt.cnt = 0;
         window.domOnEventAjaxProgressUpdate(2, onError);
     };
-    opt.elem = document.getElementById("domElementAjaxProgress1");
-    if (!opt.elem) {
-        opt.elem = document.createElement("div");
-        setTimeout(function () {
-            document.body.insertBefore(opt.elem, document.body.firstChild);
-        });
-    }
-    opt.elem.id = "domElementAjaxProgress1";
-    opt.style = opt.elem.style;
-    // init style
+    // init <styleBar>
+    styleBar = document.getElementById("domElementAjaxProgressBar1").style;
+    styleBar0 = Object.assign({}, styleBar);
     Object.entries({
         background: "#d00",
         height: "2px",
@@ -290,12 +308,31 @@ pre {
         width: "0%",
         "z-index": "1"
     }).forEach(function (entry) {
-        opt.style[entry[0]] = opt.style[entry[0]] || entry[1];
+        styleBar[entry[0]] = styleBar[entry[0]] || entry[1];
+    });
+    // init <styleModal>
+    styleModal = document.getElementById("domElementAjaxProgressModal1") || {};
+    styleModal = styleModal.style || {};
+    styleModal0 = Object.assign({}, styleModal);
+    Object.entries({
+        height: "0",
+        left: "0",
+        margin: "0",
+        padding: "0",
+        position: "fixed",
+        top: "0",
+        transition: "opacity 125ms",
+        width: "100%",
+        "z-index": "1"
+    }).forEach(function (entry) {
+        styleModal[entry[0]] = styleModal[entry[0]] || entry[1];
     });
     // init state
-    opt.background = opt.style.background;
-    opt.counter = 0;
-    opt.width = 0;
+    width = 0;
+    opt.cnt = 0;
+    opt.timeout = 30000;
+    // init ajaxProgress
+    window.domOnEventAjaxProgressUpdate();
 }());
 
 
@@ -426,18 +463,18 @@ pre {
         href="https://github.com/kaizhu256/node-utility2"
         
     >
-        utility2 (2019.10.8)
+        utility2 (2020.5.25)
     </a>
 </h1>
 <div class="platform summary">
 <h2>summary</h2>
 <h4>
     <span>version</span>-
-        2019.10.8<br>
-    <span>test date</span>- 2019-10-09T17:37:10.702Z<br>
+        2020.5.25<br>
+    <span>test date</span>- 2020-05-30T22:46:53.171Z<br>
     <span>commit info</span>-
         
-        e8c6f66bb11b89679b9db134255b59aeb9287fdd - <br>
+        cc3549feddd48aef5cb277fed06d1c704dbc535d - <br>
         
 </h4>
 <table>
@@ -450,9 +487,9 @@ pre {
     </tr>
 </thead>
 <tbody><tr>
-    <td>166139 ms</td>
+    <td>115897 ms</td>
     <td class="testPassed">0</td>
-    <td>704</td>
+    <td>396</td>
     <td>0</td>
 </tr></tbody>
 </table>
@@ -460,10 +497,10 @@ pre {
 
 <div class="platform">
 <h4>
-    1. buildApidoc - node - linux v12.11.1 - 2019-10-09T17:35:25.732Z<br>
+    1. buildApidoc - node - linux v14.3.0 - 2020-05-30T22:45:14.876Z<br>
     
     
-    <span>time-elapsed</span>- 108231 ms<br>
+    <span>time-elapsed</span>- 101460 ms<br>
     <span>tests failed</span>- 0<br>
     <span>tests passed</span>- 1<br>
     <span>tests pending</span>- 0<br>
@@ -479,7 +516,7 @@ pre {
 
 <tr>
     <td>1</td>
-    <td>10687 ms</td>
+    <td>9409 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_buildApp_default</td>
 </tr>
@@ -493,7 +530,7 @@ pre {
 
 <div class="platform">
 <h4>
-    2. deployGithubTest - browser - /node-utility2/build..beta..travis-ci.org/app/ - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/77.0.3865.90 Safari/537.36 - 2019-10-09T17:36:52.510Z<br>
+    2. deployGithubTest - browser - /node-utility2/build..beta..travis-ci.org/app/ - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/83.0.4103.61 Safari/537.36 - 2020-05-30T22:46:35.251Z<br>
     
     <a href="screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png">
         <img alt="screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png" src="screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png">
@@ -501,11 +538,11 @@ pre {
     <br>
     
     
-    <span>onload-time</span>- 816 ms<br>
+    <span>onload-time</span>- 837 ms<br>
     
-    <span>time-elapsed</span>- 21540 ms<br>
+    <span>time-elapsed</span>- 21108 ms<br>
     <span>tests failed</span>- 0<br>
-    <span>tests passed</span>- 70<br>
+    <span>tests passed</span>- 63<br>
     <span>tests pending</span>- 0<br>
 </h4>
 <table>
@@ -519,7 +556,7 @@ pre {
 
 <tr>
     <td>2</td>
-    <td>907 ms</td>
+    <td>835 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_FormData_default</td>
 </tr>
@@ -533,21 +570,21 @@ pre {
 
 <tr>
     <td>4</td>
-    <td>532 ms</td>
+    <td>554 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_FormData_nullCase</td>
 </tr>
 
 <tr>
     <td>5</td>
-    <td>493 ms</td>
+    <td>494 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_ajax_200</td>
 </tr>
 
 <tr>
     <td>6</td>
-    <td>509 ms</td>
+    <td>508 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_ajax_404</td>
 </tr>
@@ -561,28 +598,28 @@ pre {
 
 <tr>
     <td>8</td>
-    <td>1024 ms</td>
+    <td>1034 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_ajax_default</td>
 </tr>
 
 <tr>
     <td>9</td>
-    <td>0 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_assertXxx_default</td>
 </tr>
 
 <tr>
     <td>10</td>
-    <td>1 ms</td>
+    <td>4 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_base64Xxx_default</td>
 </tr>
 
 <tr>
     <td>11</td>
-    <td>517 ms</td>
+    <td>563 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_blobRead_default</td>
 </tr>
@@ -624,14 +661,14 @@ pre {
 
 <tr>
     <td>17</td>
-    <td>0 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_buildReadme_default</td>
 </tr>
 
 <tr>
     <td>18</td>
-    <td>14 ms</td>
+    <td>12 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_buildXxx_default</td>
 </tr>
@@ -680,7 +717,7 @@ pre {
 
 <tr>
     <td>25</td>
-    <td>1 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_domFragmentRender_default</td>
 </tr>
@@ -708,300 +745,251 @@ pre {
 
 <tr>
     <td>29</td>
-    <td>31 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jwtAes256GcmXxx_default</td>
-</tr>
-
-<tr>
-    <td>30</td>
-    <td>14 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jwtHs256Xxx_default</td>
-</tr>
-
-<tr>
-    <td>31</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_libUtility2Js_standalone</td>
 </tr>
 
 <tr>
-    <td>32</td>
-    <td>0 ms</td>
+    <td>30</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_listGetElementRandom_default</td>
 </tr>
 
 <tr>
-    <td>33</td>
+    <td>31</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_listShuffle_default</td>
 </tr>
 
 <tr>
-    <td>34</td>
-    <td>9 ms</td>
+    <td>32</td>
+    <td>10 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_localStorageSetItemOrClear_default</td>
 </tr>
 
 <tr>
-    <td>35</td>
+    <td>33</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_middlewareForwardProxy_default</td>
 </tr>
 
 <tr>
-    <td>36</td>
-    <td>0 ms</td>
+    <td>34</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_moduleDirname_default</td>
 </tr>
 
 <tr>
-    <td>37</td>
+    <td>35</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_nop_default</td>
 </tr>
 
 <tr>
-    <td>38</td>
-    <td>0 ms</td>
+    <td>36</td>
+    <td>2 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_numberToRomanNumerals_default</td>
+</tr>
+
+<tr>
+    <td>37</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_objectAssignRecurse_default</td>
+</tr>
+
+<tr>
+    <td>38</td>
+    <td>3 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_objectSetDefault_default</td>
 </tr>
 
 <tr>
     <td>39</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_objectSetDefault_default</td>
-</tr>
-
-<tr>
-    <td>40</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_objectSetOverride_default</td>
-</tr>
-
-<tr>
-    <td>41</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
     <td>testCase_onErrorDefault_default</td>
 </tr>
 
 <tr>
-    <td>42</td>
+    <td>40</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onErrorThrow_err</td>
 </tr>
 
 <tr>
-    <td>43</td>
-    <td>0 ms</td>
+    <td>41</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onErrorWithStack_toString</td>
 </tr>
 
 <tr>
-    <td>44</td>
+    <td>42</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onFileModifiedRestart_watchFile</td>
 </tr>
 
 <tr>
-    <td>45</td>
+    <td>43</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onNext_err</td>
 </tr>
 
 <tr>
-    <td>46</td>
-    <td>1008 ms</td>
+    <td>44</td>
+    <td>1007 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onParallelList_default</td>
 </tr>
 
 <tr>
-    <td>47</td>
-    <td>103 ms</td>
+    <td>45</td>
+    <td>72 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onParallel_default</td>
 </tr>
 
 <tr>
-    <td>48</td>
-    <td>1000 ms</td>
+    <td>46</td>
+    <td>1001 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onTimeout_timeout</td>
 </tr>
 
 <tr>
-    <td>49</td>
-    <td>325 ms</td>
+    <td>47</td>
+    <td>245 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_profileXxx_default</td>
 </tr>
 
 <tr>
-    <td>50</td>
+    <td>48</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_replStart_default</td>
 </tr>
 
 <tr>
-    <td>51</td>
+    <td>49</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_requireReadme_start</td>
 </tr>
 
 <tr>
-    <td>52</td>
-    <td>1 ms</td>
+    <td>50</td>
+    <td>2 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_semverCompare_default</td>
+</tr>
+
+<tr>
+    <td>51</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_serverRespondTimeoutDefault_timeout</td>
+</tr>
+
+<tr>
+    <td>52</td>
+    <td>217 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_setTimeoutOnError_default</td>
 </tr>
 
 <tr>
     <td>53</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_serverRespondTimeoutDefault_timeout</td>
-</tr>
-
-<tr>
-    <td>54</td>
-    <td>331 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_setTimeoutOnError_default</td>
-</tr>
-
-<tr>
-    <td>55</td>
-    <td>75 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashScryptXxx_default</td>
-</tr>
-
-<tr>
-    <td>56</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashShaXxxCreate_default</td>
-</tr>
-
-<tr>
-    <td>57</td>
-    <td>2 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHmacShaXxx_default</td>
-</tr>
-
-<tr>
-    <td>58</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
     <td>testCase_stringHtmlSafe_default</td>
 </tr>
 
 <tr>
-    <td>59</td>
-    <td>0 ms</td>
+    <td>54</td>
+    <td>2 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_stringQuotedToAscii_default</td>
 </tr>
 
 <tr>
-    <td>60</td>
+    <td>55</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_stringRegexpEscape_default</td>
 </tr>
 
 <tr>
-    <td>61</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringTruncate_default</td>
-</tr>
-
-<tr>
-    <td>62</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringUniqueKey_default</td>
-</tr>
-
-<tr>
-    <td>63</td>
-    <td>7 ms</td>
+    <td>56</td>
+    <td>21 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_templateRender_default</td>
 </tr>
 
 <tr>
-    <td>64</td>
+    <td>57</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_testReportCreate_default</td>
 </tr>
 
 <tr>
-    <td>65</td>
-    <td>0 ms</td>
+    <td>58</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_throwError_default</td>
 </tr>
 
 <tr>
-    <td>66</td>
-    <td>0 ms</td>
+    <td>59</td>
+    <td>2 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_uiAnimateXxx_default</td>
 </tr>
 
 <tr>
-    <td>67</td>
-    <td>1 ms</td>
+    <td>60</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_urlJoin_default</td>
 </tr>
 
 <tr>
-    <td>68</td>
+    <td>61</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_urlParse_default</td>
 </tr>
 
 <tr>
-    <td>69</td>
+    <td>62</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_uuid4Create_default</td>
 </tr>
 
 <tr>
-    <td>70</td>
+    <td>63</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_webpage_default</td>
 </tr>
 
 <tr>
-    <td>71</td>
+    <td>64</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_webpage_err</td>
@@ -1016,7 +1004,7 @@ pre {
 
 <div class="platform">
 <h4>
-    3. deployGithubTest - browser - /node-utility2/build..beta..travis-ci.org/app/ - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/77.0.3865.90 Safari/537.36 - 2019-10-09T17:36:52.545Z<br>
+    3. deployGithubTest - browser - /node-utility2/build..beta..travis-ci.org/app/ - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/83.0.4103.61 Safari/537.36 - 2020-05-30T22:46:35.266Z<br>
     
     <a href="screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png">
         <img alt="screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png" src="screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png">
@@ -1026,9 +1014,9 @@ pre {
     
     <span>onload-time</span>- 820 ms<br>
     
-    <span>time-elapsed</span>- 21504 ms<br>
+    <span>time-elapsed</span>- 21110 ms<br>
     <span>tests failed</span>- 0<br>
-    <span>tests passed</span>- 70<br>
+    <span>tests passed</span>- 63<br>
     <span>tests pending</span>- 0<br>
 </h4>
 <table>
@@ -1041,1013 +1029,441 @@ pre {
 <tbody>
 
 <tr>
-    <td>72</td>
-    <td>1009 ms</td>
+    <td>65</td>
+    <td>856 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_FormData_default</td>
+</tr>
+
+<tr>
+    <td>66</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_FormData_err</td>
+</tr>
+
+<tr>
+    <td>67</td>
+    <td>512 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_FormData_nullCase</td>
+</tr>
+
+<tr>
+    <td>68</td>
+    <td>456 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_200</td>
+</tr>
+
+<tr>
+    <td>69</td>
+    <td>469 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_404</td>
+</tr>
+
+<tr>
+    <td>70</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_cache</td>
+</tr>
+
+<tr>
+    <td>71</td>
+    <td>1024 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_default</td>
+</tr>
+
+<tr>
+    <td>72</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_assertXxx_default</td>
 </tr>
 
 <tr>
     <td>73</td>
     <td>2 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_FormData_err</td>
+    <td>testCase_base64Xxx_default</td>
 </tr>
 
 <tr>
     <td>74</td>
-    <td>544 ms</td>
+    <td>580 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_FormData_nullCase</td>
+    <td>testCase_blobRead_default</td>
 </tr>
 
 <tr>
     <td>75</td>
-    <td>504 ms</td>
+    <td>3 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_ajax_200</td>
+    <td>testCase_bufferIndexOfSubBuffer_default</td>
 </tr>
 
 <tr>
     <td>76</td>
-    <td>512 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_ajax_404</td>
+    <td>testCase_bufferValidateAndCoerce_err</td>
 </tr>
 
 <tr>
     <td>77</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_ajax_cache</td>
+    <td>testCase_buildApidoc_default</td>
 </tr>
 
 <tr>
     <td>78</td>
-    <td>1039 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_ajax_default</td>
+    <td>testCase_buildApp_default</td>
 </tr>
 
 <tr>
     <td>79</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_assertXxx_default</td>
+    <td>testCase_buildLib_default</td>
 </tr>
 
 <tr>
     <td>80</td>
-    <td>5 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_base64Xxx_default</td>
+    <td>testCase_buildReadme_default</td>
 </tr>
 
 <tr>
     <td>81</td>
-    <td>530 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_blobRead_default</td>
-</tr>
-
-<tr>
-    <td>82</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_bufferIndexOfSubBuffer_default</td>
-</tr>
-
-<tr>
-    <td>83</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_bufferValidateAndCoerce_err</td>
-</tr>
-
-<tr>
-    <td>84</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildApidoc_default</td>
-</tr>
-
-<tr>
-    <td>85</td>
-    <td>4 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildApp_default</td>
-</tr>
-
-<tr>
-    <td>86</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildLib_default</td>
-</tr>
-
-<tr>
-    <td>87</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildReadme_default</td>
-</tr>
-
-<tr>
-    <td>88</td>
-    <td>20 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildXxx_default</td>
-</tr>
-
-<tr>
-    <td>89</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_childProcessSpawnWithTimeout_default</td>
-</tr>
-
-<tr>
-    <td>90</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_childProcessSpawnWithUtility2_err</td>
-</tr>
-
-<tr>
-    <td>91</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_cliRun_default</td>
-</tr>
-
-<tr>
-    <td>92</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_corsBackendHostInject_default</td>
-</tr>
-
-<tr>
-    <td>93</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
-</tr>
-
-<tr>
-    <td>94</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_cryptoAesXxxCbcRawXxx_default</td>
-</tr>
-
-<tr>
-    <td>95</td>
-    <td>2 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_domFragmentRender_default</td>
-</tr>
-
-<tr>
-    <td>96</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_isNullOrUndefined_default</td>
-</tr>
-
-<tr>
-    <td>97</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jsonCopy_default</td>
-</tr>
-
-<tr>
-    <td>98</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jsonStringifyOrdered_default</td>
-</tr>
-
-<tr>
-    <td>99</td>
-    <td>28 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jwtAes256GcmXxx_default</td>
-</tr>
-
-<tr>
-    <td>100</td>
-    <td>6 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jwtHs256Xxx_default</td>
-</tr>
-
-<tr>
-    <td>101</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_libUtility2Js_standalone</td>
-</tr>
-
-<tr>
-    <td>102</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_listGetElementRandom_default</td>
-</tr>
-
-<tr>
-    <td>103</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_listShuffle_default</td>
-</tr>
-
-<tr>
-    <td>104</td>
-    <td>10 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_localStorageSetItemOrClear_default</td>
-</tr>
-
-<tr>
-    <td>105</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_middlewareForwardProxy_default</td>
-</tr>
-
-<tr>
-    <td>106</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_moduleDirname_default</td>
-</tr>
-
-<tr>
-    <td>107</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_nop_default</td>
-</tr>
-
-<tr>
-    <td>108</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_numberToRomanNumerals_default</td>
-</tr>
-
-<tr>
-    <td>109</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_objectSetDefault_default</td>
-</tr>
-
-<tr>
-    <td>110</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_objectSetOverride_default</td>
-</tr>
-
-<tr>
-    <td>111</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onErrorDefault_default</td>
-</tr>
-
-<tr>
-    <td>112</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onErrorThrow_err</td>
-</tr>
-
-<tr>
-    <td>113</td>
-    <td>4 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onErrorWithStack_toString</td>
-</tr>
-
-<tr>
-    <td>114</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onFileModifiedRestart_watchFile</td>
-</tr>
-
-<tr>
-    <td>115</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onNext_err</td>
-</tr>
-
-<tr>
-    <td>116</td>
-    <td>1054 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onParallelList_default</td>
-</tr>
-
-<tr>
-    <td>117</td>
-    <td>66 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onParallel_default</td>
-</tr>
-
-<tr>
-    <td>118</td>
-    <td>1010 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onTimeout_timeout</td>
-</tr>
-
-<tr>
-    <td>119</td>
-    <td>425 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_profileXxx_default</td>
-</tr>
-
-<tr>
-    <td>120</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_replStart_default</td>
-</tr>
-
-<tr>
-    <td>121</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_requireReadme_start</td>
-</tr>
-
-<tr>
-    <td>122</td>
-    <td>3 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_semverCompare_default</td>
-</tr>
-
-<tr>
-    <td>123</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_serverRespondTimeoutDefault_timeout</td>
-</tr>
-
-<tr>
-    <td>124</td>
-    <td>378 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_setTimeoutOnError_default</td>
-</tr>
-
-<tr>
-    <td>125</td>
-    <td>132 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashScryptXxx_default</td>
-</tr>
-
-<tr>
-    <td>126</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashShaXxxCreate_default</td>
-</tr>
-
-<tr>
-    <td>127</td>
-    <td>2 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHmacShaXxx_default</td>
-</tr>
-
-<tr>
-    <td>128</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringHtmlSafe_default</td>
-</tr>
-
-<tr>
-    <td>129</td>
-    <td>2 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringQuotedToAscii_default</td>
-</tr>
-
-<tr>
-    <td>130</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringRegexpEscape_default</td>
-</tr>
-
-<tr>
-    <td>131</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringTruncate_default</td>
-</tr>
-
-<tr>
-    <td>132</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringUniqueKey_default</td>
-</tr>
-
-<tr>
-    <td>133</td>
-    <td>6 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_templateRender_default</td>
-</tr>
-
-<tr>
-    <td>134</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_testReportCreate_default</td>
-</tr>
-
-<tr>
-    <td>135</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_throwError_default</td>
-</tr>
-
-<tr>
-    <td>136</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_uiAnimateXxx_default</td>
-</tr>
-
-<tr>
-    <td>137</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_urlJoin_default</td>
-</tr>
-
-<tr>
-    <td>138</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_urlParse_default</td>
-</tr>
-
-<tr>
-    <td>139</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_uuid4Create_default</td>
-</tr>
-
-<tr>
-    <td>140</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_webpage_default</td>
-</tr>
-
-<tr>
-    <td>141</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_webpage_err</td>
-</tr>
-
-</tbody>
-</table>
-<pre class="displayNone" tabIndex="0">
-
-</pre>
-</div>
-
-<div class="platform">
-<h4>
-    4. deployHerokuTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/77.0.3865.90 Safari/537.36 - 2019-10-09T17:37:12.067Z<br>
-    
-    <a href="screenshot.deployHerokuTest.browser.%252F.png">
-        <img alt="screenshot.deployHerokuTest.browser.%252F.png" src="screenshot.deployHerokuTest.browser.%252F.png">
-    </a>
-    <br>
-    
-    
-    <span>onload-time</span>- 899 ms<br>
-    
-    <span>time-elapsed</span>- 1967 ms<br>
-    <span>tests failed</span>- 0<br>
-    <span>tests passed</span>- 70<br>
-    <span>tests pending</span>- 0<br>
-</h4>
-<table>
-<thead><tr>
-    <th>#</th>
-    <th>time-elapsed</th>
-    <th>status</th>
-    <th>test-case</th>
-</tr></thead>
-<tbody>
-
-<tr>
-    <td>142</td>
-    <td>976 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_FormData_default</td>
-</tr>
-
-<tr>
-    <td>143</td>
-    <td>2 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_FormData_err</td>
-</tr>
-
-<tr>
-    <td>144</td>
-    <td>465 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_FormData_nullCase</td>
-</tr>
-
-<tr>
-    <td>145</td>
-    <td>428 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_200</td>
-</tr>
-
-<tr>
-    <td>146</td>
-    <td>436 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_404</td>
-</tr>
-
-<tr>
-    <td>147</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_cache</td>
-</tr>
-
-<tr>
-    <td>148</td>
-    <td>1042 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_default</td>
-</tr>
-
-<tr>
-    <td>149</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_assertXxx_default</td>
-</tr>
-
-<tr>
-    <td>150</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_base64Xxx_default</td>
-</tr>
-
-<tr>
-    <td>151</td>
-    <td>465 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_blobRead_default</td>
-</tr>
-
-<tr>
-    <td>152</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_bufferIndexOfSubBuffer_default</td>
-</tr>
-
-<tr>
-    <td>153</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_bufferValidateAndCoerce_err</td>
-</tr>
-
-<tr>
-    <td>154</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildApidoc_default</td>
-</tr>
-
-<tr>
-    <td>155</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildApp_default</td>
-</tr>
-
-<tr>
-    <td>156</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildLib_default</td>
-</tr>
-
-<tr>
-    <td>157</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildReadme_default</td>
-</tr>
-
-<tr>
-    <td>158</td>
     <td>18 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_buildXxx_default</td>
 </tr>
 
 <tr>
-    <td>159</td>
-    <td>1 ms</td>
+    <td>82</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_childProcessSpawnWithTimeout_default</td>
 </tr>
 
 <tr>
-    <td>160</td>
-    <td>0 ms</td>
+    <td>83</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_childProcessSpawnWithUtility2_err</td>
 </tr>
 
 <tr>
-    <td>161</td>
+    <td>84</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_cliRun_default</td>
 </tr>
 
 <tr>
-    <td>162</td>
-    <td>0 ms</td>
+    <td>85</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_corsBackendHostInject_default</td>
 </tr>
 
 <tr>
-    <td>163</td>
-    <td>1 ms</td>
+    <td>86</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_corsForwardProxyHostIfNeeded_default</td>
 </tr>
 
 <tr>
-    <td>164</td>
+    <td>87</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_cryptoAesXxxCbcRawXxx_default</td>
 </tr>
 
 <tr>
-    <td>165</td>
-    <td>0 ms</td>
+    <td>88</td>
+    <td>2 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_domFragmentRender_default</td>
 </tr>
 
 <tr>
-    <td>166</td>
+    <td>89</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_isNullOrUndefined_default</td>
 </tr>
 
 <tr>
-    <td>167</td>
+    <td>90</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_jsonCopy_default</td>
 </tr>
 
 <tr>
-    <td>168</td>
+    <td>91</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_jsonStringifyOrdered_default</td>
 </tr>
 
 <tr>
-    <td>169</td>
-    <td>36 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jwtAes256GcmXxx_default</td>
-</tr>
-
-<tr>
-    <td>170</td>
-    <td>16 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jwtHs256Xxx_default</td>
-</tr>
-
-<tr>
-    <td>171</td>
-    <td>1 ms</td>
+    <td>92</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_libUtility2Js_standalone</td>
 </tr>
 
 <tr>
-    <td>172</td>
+    <td>93</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_listGetElementRandom_default</td>
 </tr>
 
 <tr>
-    <td>173</td>
-    <td>1 ms</td>
+    <td>94</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_listShuffle_default</td>
 </tr>
 
 <tr>
-    <td>174</td>
-    <td>11 ms</td>
+    <td>95</td>
+    <td>6 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_localStorageSetItemOrClear_default</td>
 </tr>
 
 <tr>
-    <td>175</td>
+    <td>96</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_middlewareForwardProxy_default</td>
 </tr>
 
 <tr>
-    <td>176</td>
+    <td>97</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_moduleDirname_default</td>
 </tr>
 
 <tr>
-    <td>177</td>
+    <td>98</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_nop_default</td>
 </tr>
 
 <tr>
-    <td>178</td>
-    <td>0 ms</td>
+    <td>99</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_numberToRomanNumerals_default</td>
 </tr>
 
 <tr>
-    <td>179</td>
+    <td>100</td>
+    <td>3 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_objectAssignRecurse_default</td>
+</tr>
+
+<tr>
+    <td>101</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_objectSetDefault_default</td>
 </tr>
 
 <tr>
-    <td>180</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_objectSetOverride_default</td>
-</tr>
-
-<tr>
-    <td>181</td>
+    <td>102</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onErrorDefault_default</td>
 </tr>
 
 <tr>
-    <td>182</td>
-    <td>0 ms</td>
+    <td>103</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onErrorThrow_err</td>
 </tr>
 
 <tr>
-    <td>183</td>
-    <td>1 ms</td>
+    <td>104</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onErrorWithStack_toString</td>
 </tr>
 
 <tr>
-    <td>184</td>
+    <td>105</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onFileModifiedRestart_watchFile</td>
 </tr>
 
 <tr>
-    <td>185</td>
-    <td>1 ms</td>
+    <td>106</td>
+    <td>2 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onNext_err</td>
 </tr>
 
 <tr>
-    <td>186</td>
-    <td>1005 ms</td>
+    <td>107</td>
+    <td>1006 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onParallelList_default</td>
 </tr>
 
 <tr>
-    <td>187</td>
-    <td>139 ms</td>
+    <td>108</td>
+    <td>109 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onParallel_default</td>
 </tr>
 
 <tr>
-    <td>188</td>
-    <td>1001 ms</td>
+    <td>109</td>
+    <td>1002 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onTimeout_timeout</td>
 </tr>
 
 <tr>
-    <td>189</td>
-    <td>465 ms</td>
+    <td>110</td>
+    <td>307 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_profileXxx_default</td>
 </tr>
 
 <tr>
-    <td>190</td>
+    <td>111</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_replStart_default</td>
 </tr>
 
 <tr>
-    <td>191</td>
+    <td>112</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_requireReadme_start</td>
 </tr>
 
 <tr>
-    <td>192</td>
-    <td>1 ms</td>
+    <td>113</td>
+    <td>2 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_semverCompare_default</td>
 </tr>
 
 <tr>
-    <td>193</td>
-    <td>0 ms</td>
+    <td>114</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_serverRespondTimeoutDefault_timeout</td>
 </tr>
 
 <tr>
-    <td>194</td>
-    <td>432 ms</td>
+    <td>115</td>
+    <td>221 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_setTimeoutOnError_default</td>
 </tr>
 
 <tr>
-    <td>195</td>
-    <td>114 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashScryptXxx_default</td>
-</tr>
-
-<tr>
-    <td>196</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashShaXxxCreate_default</td>
-</tr>
-
-<tr>
-    <td>197</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHmacShaXxx_default</td>
-</tr>
-
-<tr>
-    <td>198</td>
-    <td>0 ms</td>
+    <td>116</td>
+    <td>2 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_stringHtmlSafe_default</td>
 </tr>
 
 <tr>
-    <td>199</td>
-    <td>0 ms</td>
+    <td>117</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_stringQuotedToAscii_default</td>
 </tr>
 
 <tr>
-    <td>200</td>
-    <td>0 ms</td>
+    <td>118</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_stringRegexpEscape_default</td>
 </tr>
 
 <tr>
-    <td>201</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringTruncate_default</td>
-</tr>
-
-<tr>
-    <td>202</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringUniqueKey_default</td>
-</tr>
-
-<tr>
-    <td>203</td>
-    <td>7 ms</td>
+    <td>119</td>
+    <td>23 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_templateRender_default</td>
 </tr>
 
 <tr>
-    <td>204</td>
+    <td>120</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_testReportCreate_default</td>
 </tr>
 
 <tr>
-    <td>205</td>
+    <td>121</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_throwError_default</td>
 </tr>
 
 <tr>
-    <td>206</td>
-    <td>1 ms</td>
+    <td>122</td>
+    <td>2 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_uiAnimateXxx_default</td>
 </tr>
 
 <tr>
-    <td>207</td>
-    <td>0 ms</td>
+    <td>123</td>
+    <td>2 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_urlJoin_default</td>
 </tr>
 
 <tr>
-    <td>208</td>
+    <td>124</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_urlParse_default</td>
 </tr>
 
 <tr>
-    <td>209</td>
-    <td>0 ms</td>
+    <td>125</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_uuid4Create_default</td>
 </tr>
 
 <tr>
-    <td>210</td>
-    <td>1 ms</td>
+    <td>126</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_webpage_default</td>
 </tr>
 
 <tr>
-    <td>211</td>
+    <td>127</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_webpage_err</td>
@@ -2062,7 +1478,7 @@ pre {
 
 <div class="platform">
 <h4>
-    5. deployHerokuTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/77.0.3865.90 Safari/537.36 - 2019-10-09T17:37:12.117Z<br>
+    4. deployHerokuTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/83.0.4103.61 Safari/537.36 - 2020-05-30T22:46:54.394Z<br>
     
     <a href="screenshot.deployHerokuTest.browser.%252F.png">
         <img alt="screenshot.deployHerokuTest.browser.%252F.png" src="screenshot.deployHerokuTest.browser.%252F.png">
@@ -2070,11 +1486,11 @@ pre {
     <br>
     
     
-    <span>onload-time</span>- 1040 ms<br>
+    <span>onload-time</span>- 832 ms<br>
     
-    <span>time-elapsed</span>- 1916 ms<br>
+    <span>time-elapsed</span>- 1931 ms<br>
     <span>tests failed</span>- 0<br>
-    <span>tests passed</span>- 70<br>
+    <span>tests passed</span>- 63<br>
     <span>tests pending</span>- 0<br>
 </h4>
 <table>
@@ -2087,490 +1503,915 @@ pre {
 <tbody>
 
 <tr>
-    <td>212</td>
-    <td>1155 ms</td>
+    <td>128</td>
+    <td>704 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_FormData_default</td>
 </tr>
 
 <tr>
-    <td>213</td>
-    <td>5 ms</td>
+    <td>129</td>
+    <td>8 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_FormData_err</td>
 </tr>
 
 <tr>
-    <td>214</td>
-    <td>630 ms</td>
+    <td>130</td>
+    <td>416 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_FormData_nullCase</td>
 </tr>
 
 <tr>
-    <td>215</td>
-    <td>590 ms</td>
+    <td>131</td>
+    <td>374 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_ajax_200</td>
 </tr>
 
 <tr>
-    <td>216</td>
-    <td>596 ms</td>
+    <td>132</td>
+    <td>385 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_ajax_404</td>
 </tr>
 
 <tr>
-    <td>217</td>
-    <td>1 ms</td>
+    <td>133</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_ajax_cache</td>
 </tr>
 
 <tr>
-    <td>218</td>
-    <td>1153 ms</td>
+    <td>134</td>
+    <td>1020 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_ajax_default</td>
 </tr>
 
 <tr>
-    <td>219</td>
-    <td>0 ms</td>
+    <td>135</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_assertXxx_default</td>
 </tr>
 
 <tr>
-    <td>220</td>
-    <td>2 ms</td>
+    <td>136</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_base64Xxx_default</td>
 </tr>
 
 <tr>
-    <td>221</td>
-    <td>600 ms</td>
+    <td>137</td>
+    <td>396 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_blobRead_default</td>
 </tr>
 
 <tr>
-    <td>222</td>
+    <td>138</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_bufferIndexOfSubBuffer_default</td>
 </tr>
 
 <tr>
-    <td>223</td>
-    <td>1 ms</td>
+    <td>139</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_bufferValidateAndCoerce_err</td>
 </tr>
 
 <tr>
-    <td>224</td>
+    <td>140</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_buildApidoc_default</td>
 </tr>
 
 <tr>
-    <td>225</td>
+    <td>141</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_buildApp_default</td>
 </tr>
 
 <tr>
-    <td>226</td>
+    <td>142</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_buildLib_default</td>
 </tr>
 
 <tr>
-    <td>227</td>
+    <td>143</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_buildReadme_default</td>
 </tr>
 
 <tr>
-    <td>228</td>
-    <td>19 ms</td>
+    <td>144</td>
+    <td>13 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_buildXxx_default</td>
 </tr>
 
 <tr>
-    <td>229</td>
-    <td>0 ms</td>
+    <td>145</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_childProcessSpawnWithTimeout_default</td>
 </tr>
 
 <tr>
-    <td>230</td>
-    <td>0 ms</td>
+    <td>146</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_childProcessSpawnWithUtility2_err</td>
 </tr>
 
 <tr>
-    <td>231</td>
+    <td>147</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_cliRun_default</td>
 </tr>
 
 <tr>
-    <td>232</td>
-    <td>1 ms</td>
+    <td>148</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_corsBackendHostInject_default</td>
 </tr>
 
 <tr>
-    <td>233</td>
+    <td>149</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_corsForwardProxyHostIfNeeded_default</td>
 </tr>
 
 <tr>
-    <td>234</td>
+    <td>150</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_cryptoAesXxxCbcRawXxx_default</td>
 </tr>
 
 <tr>
-    <td>235</td>
-    <td>0 ms</td>
+    <td>151</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_domFragmentRender_default</td>
 </tr>
 
 <tr>
-    <td>236</td>
+    <td>152</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_isNullOrUndefined_default</td>
 </tr>
 
 <tr>
-    <td>237</td>
+    <td>153</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_jsonCopy_default</td>
 </tr>
 
 <tr>
-    <td>238</td>
-    <td>1 ms</td>
+    <td>154</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_jsonStringifyOrdered_default</td>
 </tr>
 
 <tr>
-    <td>239</td>
-    <td>17 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jwtAes256GcmXxx_default</td>
-</tr>
-
-<tr>
-    <td>240</td>
-    <td>8 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jwtHs256Xxx_default</td>
-</tr>
-
-<tr>
-    <td>241</td>
+    <td>155</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_libUtility2Js_standalone</td>
 </tr>
 
 <tr>
-    <td>242</td>
-    <td>0 ms</td>
+    <td>156</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_listGetElementRandom_default</td>
 </tr>
 
 <tr>
-    <td>243</td>
-    <td>1 ms</td>
+    <td>157</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_listShuffle_default</td>
 </tr>
 
 <tr>
-    <td>244</td>
-    <td>42 ms</td>
+    <td>158</td>
+    <td>9 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_localStorageSetItemOrClear_default</td>
 </tr>
 
 <tr>
-    <td>245</td>
+    <td>159</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_middlewareForwardProxy_default</td>
 </tr>
 
 <tr>
-    <td>246</td>
+    <td>160</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_moduleDirname_default</td>
 </tr>
 
 <tr>
-    <td>247</td>
+    <td>161</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_nop_default</td>
 </tr>
 
 <tr>
-    <td>248</td>
-    <td>0 ms</td>
+    <td>162</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_numberToRomanNumerals_default</td>
 </tr>
 
 <tr>
-    <td>249</td>
+    <td>163</td>
     <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_objectAssignRecurse_default</td>
+</tr>
+
+<tr>
+    <td>164</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_objectSetDefault_default</td>
 </tr>
 
 <tr>
-    <td>250</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_objectSetOverride_default</td>
-</tr>
-
-<tr>
-    <td>251</td>
+    <td>165</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onErrorDefault_default</td>
 </tr>
 
 <tr>
-    <td>252</td>
+    <td>166</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onErrorThrow_err</td>
 </tr>
 
 <tr>
-    <td>253</td>
-    <td>1 ms</td>
+    <td>167</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onErrorWithStack_toString</td>
 </tr>
 
 <tr>
-    <td>254</td>
-    <td>0 ms</td>
+    <td>168</td>
+    <td>3 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onFileModifiedRestart_watchFile</td>
 </tr>
 
 <tr>
-    <td>255</td>
-    <td>1 ms</td>
+    <td>169</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onNext_err</td>
 </tr>
 
 <tr>
-    <td>256</td>
+    <td>170</td>
     <td>1006 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onParallelList_default</td>
 </tr>
 
 <tr>
-    <td>257</td>
-    <td>53 ms</td>
+    <td>171</td>
+    <td>102 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onParallel_default</td>
 </tr>
 
 <tr>
-    <td>258</td>
+    <td>172</td>
     <td>1001 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_onTimeout_timeout</td>
 </tr>
 
 <tr>
-    <td>259</td>
-    <td>482 ms</td>
+    <td>173</td>
+    <td>244 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_profileXxx_default</td>
 </tr>
 
 <tr>
-    <td>260</td>
+    <td>174</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_replStart_default</td>
 </tr>
 
 <tr>
-    <td>261</td>
-    <td>1 ms</td>
+    <td>175</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_requireReadme_start</td>
 </tr>
 
 <tr>
-    <td>262</td>
-    <td>1 ms</td>
+    <td>176</td>
+    <td>2 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_semverCompare_default</td>
 </tr>
 
 <tr>
-    <td>263</td>
+    <td>177</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_serverRespondTimeoutDefault_timeout</td>
 </tr>
 
 <tr>
-    <td>264</td>
-    <td>460 ms</td>
+    <td>178</td>
+    <td>225 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_setTimeoutOnError_default</td>
 </tr>
 
 <tr>
-    <td>265</td>
-    <td>177 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashScryptXxx_default</td>
-</tr>
-
-<tr>
-    <td>266</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashShaXxxCreate_default</td>
-</tr>
-
-<tr>
-    <td>267</td>
-    <td>2 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHmacShaXxx_default</td>
-</tr>
-
-<tr>
-    <td>268</td>
+    <td>179</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_stringHtmlSafe_default</td>
 </tr>
 
 <tr>
-    <td>269</td>
+    <td>180</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_stringQuotedToAscii_default</td>
 </tr>
 
 <tr>
-    <td>270</td>
-    <td>0 ms</td>
+    <td>181</td>
+    <td>3 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_stringRegexpEscape_default</td>
 </tr>
 
 <tr>
-    <td>271</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringTruncate_default</td>
-</tr>
-
-<tr>
-    <td>272</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringUniqueKey_default</td>
-</tr>
-
-<tr>
-    <td>273</td>
-    <td>20 ms</td>
+    <td>182</td>
+    <td>10 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_templateRender_default</td>
 </tr>
 
 <tr>
-    <td>274</td>
+    <td>183</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_testReportCreate_default</td>
 </tr>
 
 <tr>
-    <td>275</td>
+    <td>184</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_throwError_default</td>
 </tr>
 
 <tr>
-    <td>276</td>
-    <td>1 ms</td>
+    <td>185</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_uiAnimateXxx_default</td>
 </tr>
 
 <tr>
-    <td>277</td>
+    <td>186</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_urlJoin_default</td>
 </tr>
 
 <tr>
-    <td>278</td>
+    <td>187</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_urlParse_default</td>
 </tr>
 
 <tr>
-    <td>279</td>
+    <td>188</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_uuid4Create_default</td>
 </tr>
 
 <tr>
-    <td>280</td>
+    <td>189</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_webpage_default</td>
 </tr>
 
 <tr>
-    <td>281</td>
+    <td>190</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_err</td>
+</tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="platform">
+<h4>
+    5. deployHerokuTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/83.0.4103.61 Safari/537.36 - 2020-05-30T22:46:54.462Z<br>
+    
+    <a href="screenshot.deployHerokuTest.browser.%252F.png">
+        <img alt="screenshot.deployHerokuTest.browser.%252F.png" src="screenshot.deployHerokuTest.browser.%252F.png">
+    </a>
+    <br>
+    
+    
+    <span>onload-time</span>- 1013 ms<br>
+    
+    <span>time-elapsed</span>- 1805 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 63<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
+
+<tr>
+    <td>191</td>
+    <td>805 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_FormData_default</td>
+</tr>
+
+<tr>
+    <td>192</td>
+    <td>12 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_FormData_err</td>
+</tr>
+
+<tr>
+    <td>193</td>
+    <td>545 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_FormData_nullCase</td>
+</tr>
+
+<tr>
+    <td>194</td>
+    <td>487 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_200</td>
+</tr>
+
+<tr>
+    <td>195</td>
+    <td>501 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_404</td>
+</tr>
+
+<tr>
+    <td>196</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_cache</td>
+</tr>
+
+<tr>
+    <td>197</td>
+    <td>1035 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_default</td>
+</tr>
+
+<tr>
+    <td>198</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_assertXxx_default</td>
+</tr>
+
+<tr>
+    <td>199</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_base64Xxx_default</td>
+</tr>
+
+<tr>
+    <td>200</td>
+    <td>505 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_blobRead_default</td>
+</tr>
+
+<tr>
+    <td>201</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_bufferIndexOfSubBuffer_default</td>
+</tr>
+
+<tr>
+    <td>202</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_bufferValidateAndCoerce_err</td>
+</tr>
+
+<tr>
+    <td>203</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApidoc_default</td>
+</tr>
+
+<tr>
+    <td>204</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApp_default</td>
+</tr>
+
+<tr>
+    <td>205</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildLib_default</td>
+</tr>
+
+<tr>
+    <td>206</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildReadme_default</td>
+</tr>
+
+<tr>
+    <td>207</td>
+    <td>17 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildXxx_default</td>
+</tr>
+
+<tr>
+    <td>208</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_childProcessSpawnWithTimeout_default</td>
+</tr>
+
+<tr>
+    <td>209</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_childProcessSpawnWithUtility2_err</td>
+</tr>
+
+<tr>
+    <td>210</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_cliRun_default</td>
+</tr>
+
+<tr>
+    <td>211</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_corsBackendHostInject_default</td>
+</tr>
+
+<tr>
+    <td>212</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
+</tr>
+
+<tr>
+    <td>213</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_cryptoAesXxxCbcRawXxx_default</td>
+</tr>
+
+<tr>
+    <td>214</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_domFragmentRender_default</td>
+</tr>
+
+<tr>
+    <td>215</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_isNullOrUndefined_default</td>
+</tr>
+
+<tr>
+    <td>216</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_jsonCopy_default</td>
+</tr>
+
+<tr>
+    <td>217</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_jsonStringifyOrdered_default</td>
+</tr>
+
+<tr>
+    <td>218</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_libUtility2Js_standalone</td>
+</tr>
+
+<tr>
+    <td>219</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_listGetElementRandom_default</td>
+</tr>
+
+<tr>
+    <td>220</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_listShuffle_default</td>
+</tr>
+
+<tr>
+    <td>221</td>
+    <td>5 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_localStorageSetItemOrClear_default</td>
+</tr>
+
+<tr>
+    <td>222</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_middlewareForwardProxy_default</td>
+</tr>
+
+<tr>
+    <td>223</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_moduleDirname_default</td>
+</tr>
+
+<tr>
+    <td>224</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_nop_default</td>
+</tr>
+
+<tr>
+    <td>225</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_numberToRomanNumerals_default</td>
+</tr>
+
+<tr>
+    <td>226</td>
+    <td>3 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_objectAssignRecurse_default</td>
+</tr>
+
+<tr>
+    <td>227</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_objectSetDefault_default</td>
+</tr>
+
+<tr>
+    <td>228</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onErrorDefault_default</td>
+</tr>
+
+<tr>
+    <td>229</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onErrorThrow_err</td>
+</tr>
+
+<tr>
+    <td>230</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onErrorWithStack_toString</td>
+</tr>
+
+<tr>
+    <td>231</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onFileModifiedRestart_watchFile</td>
+</tr>
+
+<tr>
+    <td>232</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onNext_err</td>
+</tr>
+
+<tr>
+    <td>233</td>
+    <td>1005 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onParallelList_default</td>
+</tr>
+
+<tr>
+    <td>234</td>
+    <td>124 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onParallel_default</td>
+</tr>
+
+<tr>
+    <td>235</td>
+    <td>1001 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onTimeout_timeout</td>
+</tr>
+
+<tr>
+    <td>236</td>
+    <td>212 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_profileXxx_default</td>
+</tr>
+
+<tr>
+    <td>237</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_replStart_default</td>
+</tr>
+
+<tr>
+    <td>238</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_requireReadme_start</td>
+</tr>
+
+<tr>
+    <td>239</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_semverCompare_default</td>
+</tr>
+
+<tr>
+    <td>240</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_serverRespondTimeoutDefault_timeout</td>
+</tr>
+
+<tr>
+    <td>241</td>
+    <td>154 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_setTimeoutOnError_default</td>
+</tr>
+
+<tr>
+    <td>242</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringHtmlSafe_default</td>
+</tr>
+
+<tr>
+    <td>243</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringQuotedToAscii_default</td>
+</tr>
+
+<tr>
+    <td>244</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringRegexpEscape_default</td>
+</tr>
+
+<tr>
+    <td>245</td>
+    <td>9 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_templateRender_default</td>
+</tr>
+
+<tr>
+    <td>246</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_testReportCreate_default</td>
+</tr>
+
+<tr>
+    <td>247</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_throwError_default</td>
+</tr>
+
+<tr>
+    <td>248</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_uiAnimateXxx_default</td>
+</tr>
+
+<tr>
+    <td>249</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_urlJoin_default</td>
+</tr>
+
+<tr>
+    <td>250</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_urlParse_default</td>
+</tr>
+
+<tr>
+    <td>251</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_uuid4Create_default</td>
+</tr>
+
+<tr>
+    <td>252</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_default</td>
+</tr>
+
+<tr>
+    <td>253</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_webpage_err</td>
@@ -2585,7 +2426,7 @@ pre {
 
 <div class="platform">
 <h4>
-    6. npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/77.0.3865.90 Safari/537.36 - 2019-10-09T17:35:17.875Z<br>
+    6. npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/83.0.4103.61 Safari/537.36 - 2020-05-30T22:45:07.047Z<br>
     
     <a href="screenshot.npmTest.browser.%252F.png">
         <img alt="screenshot.npmTest.browser.%252F.png" src="screenshot.npmTest.browser.%252F.png">
@@ -2593,11 +2434,11 @@ pre {
     <br>
     
     
-    <span>onload-time</span>- 3911 ms<br>
+    <span>onload-time</span>- 2218 ms<br>
     
-    <span>time-elapsed</span>- 116048 ms<br>
+    <span>time-elapsed</span>- 108934 ms<br>
     <span>tests failed</span>- 0<br>
-    <span>tests passed</span>- 70<br>
+    <span>tests passed</span>- 63<br>
     <span>tests pending</span>- 0<br>
 </h4>
 <table>
@@ -2610,3108 +2451,1144 @@ pre {
 <tbody>
 
 <tr>
-    <td>282</td>
-    <td>2559 ms</td>
+    <td>254</td>
+    <td>1573 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_FormData_default</td>
 </tr>
 
 <tr>
-    <td>283</td>
-    <td>18 ms</td>
+    <td>255</td>
+    <td>7 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_FormData_err</td>
 </tr>
 
 <tr>
-    <td>284</td>
-    <td>1461 ms</td>
+    <td>256</td>
+    <td>996 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_FormData_nullCase</td>
 </tr>
 
 <tr>
-    <td>285</td>
-    <td>1195 ms</td>
+    <td>257</td>
+    <td>1065 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_ajax_200</td>
 </tr>
 
 <tr>
-    <td>286</td>
-    <td>1218 ms</td>
+    <td>258</td>
+    <td>1069 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_ajax_404</td>
+</tr>
+
+<tr>
+    <td>259</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_cache</td>
+</tr>
+
+<tr>
+    <td>260</td>
+    <td>1538 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_default</td>
+</tr>
+
+<tr>
+    <td>261</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_assertXxx_default</td>
+</tr>
+
+<tr>
+    <td>262</td>
+    <td>13 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_base64Xxx_default</td>
+</tr>
+
+<tr>
+    <td>263</td>
+    <td>908 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_blobRead_default</td>
+</tr>
+
+<tr>
+    <td>264</td>
+    <td>7 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_bufferIndexOfSubBuffer_default</td>
+</tr>
+
+<tr>
+    <td>265</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_bufferValidateAndCoerce_err</td>
+</tr>
+
+<tr>
+    <td>266</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApidoc_default</td>
+</tr>
+
+<tr>
+    <td>267</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApp_default</td>
+</tr>
+
+<tr>
+    <td>268</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildLib_default</td>
+</tr>
+
+<tr>
+    <td>269</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildReadme_default</td>
+</tr>
+
+<tr>
+    <td>270</td>
+    <td>35 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildXxx_default</td>
+</tr>
+
+<tr>
+    <td>271</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_childProcessSpawnWithTimeout_default</td>
+</tr>
+
+<tr>
+    <td>272</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_childProcessSpawnWithUtility2_err</td>
+</tr>
+
+<tr>
+    <td>273</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_cliRun_default</td>
+</tr>
+
+<tr>
+    <td>274</td>
+    <td>4 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_corsBackendHostInject_default</td>
+</tr>
+
+<tr>
+    <td>275</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
+</tr>
+
+<tr>
+    <td>276</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_cryptoAesXxxCbcRawXxx_default</td>
+</tr>
+
+<tr>
+    <td>277</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_domFragmentRender_default</td>
+</tr>
+
+<tr>
+    <td>278</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_isNullOrUndefined_default</td>
+</tr>
+
+<tr>
+    <td>279</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_jsonCopy_default</td>
+</tr>
+
+<tr>
+    <td>280</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_jsonStringifyOrdered_default</td>
+</tr>
+
+<tr>
+    <td>281</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_libUtility2Js_standalone</td>
+</tr>
+
+<tr>
+    <td>282</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_listGetElementRandom_default</td>
+</tr>
+
+<tr>
+    <td>283</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_listShuffle_default</td>
+</tr>
+
+<tr>
+    <td>284</td>
+    <td>10 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_localStorageSetItemOrClear_default</td>
+</tr>
+
+<tr>
+    <td>285</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_middlewareForwardProxy_default</td>
+</tr>
+
+<tr>
+    <td>286</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_moduleDirname_default</td>
 </tr>
 
 <tr>
     <td>287</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_ajax_cache</td>
+    <td>testCase_nop_default</td>
 </tr>
 
 <tr>
     <td>288</td>
-    <td>2428 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_ajax_default</td>
+    <td>testCase_numberToRomanNumerals_default</td>
 </tr>
 
 <tr>
     <td>289</td>
-    <td>1 ms</td>
+    <td>9 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_assertXxx_default</td>
+    <td>testCase_objectAssignRecurse_default</td>
 </tr>
 
 <tr>
     <td>290</td>
-    <td>8 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_base64Xxx_default</td>
+    <td>testCase_objectSetDefault_default</td>
 </tr>
 
 <tr>
     <td>291</td>
-    <td>1441 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_blobRead_default</td>
+    <td>testCase_onErrorDefault_default</td>
 </tr>
 
 <tr>
     <td>292</td>
-    <td>1 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_bufferIndexOfSubBuffer_default</td>
+    <td>testCase_onErrorThrow_err</td>
 </tr>
 
 <tr>
     <td>293</td>
-    <td>1 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_bufferValidateAndCoerce_err</td>
+    <td>testCase_onErrorWithStack_toString</td>
 </tr>
 
 <tr>
     <td>294</td>
-    <td>1 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_buildApidoc_default</td>
+    <td>testCase_onFileModifiedRestart_watchFile</td>
 </tr>
 
 <tr>
     <td>295</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_buildApp_default</td>
+    <td>testCase_onNext_err</td>
 </tr>
 
 <tr>
     <td>296</td>
-    <td>0 ms</td>
+    <td>1208 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_buildLib_default</td>
+    <td>testCase_onParallelList_default</td>
 </tr>
 
 <tr>
     <td>297</td>
-    <td>0 ms</td>
+    <td>191 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_buildReadme_default</td>
+    <td>testCase_onParallel_default</td>
 </tr>
 
 <tr>
     <td>298</td>
-    <td>71 ms</td>
+    <td>1067 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_buildXxx_default</td>
+    <td>testCase_onTimeout_timeout</td>
 </tr>
 
 <tr>
     <td>299</td>
-    <td>0 ms</td>
+    <td>441 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_childProcessSpawnWithTimeout_default</td>
+    <td>testCase_profileXxx_default</td>
 </tr>
 
 <tr>
     <td>300</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_childProcessSpawnWithUtility2_err</td>
+    <td>testCase_replStart_default</td>
 </tr>
 
 <tr>
     <td>301</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_cliRun_default</td>
+    <td>testCase_requireReadme_start</td>
 </tr>
 
 <tr>
     <td>302</td>
-    <td>1 ms</td>
+    <td>12 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_corsBackendHostInject_default</td>
+    <td>testCase_semverCompare_default</td>
 </tr>
 
 <tr>
     <td>303</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
+    <td>testCase_serverRespondTimeoutDefault_timeout</td>
 </tr>
 
 <tr>
     <td>304</td>
-    <td>1 ms</td>
+    <td>371 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_cryptoAesXxxCbcRawXxx_default</td>
+    <td>testCase_setTimeoutOnError_default</td>
 </tr>
 
 <tr>
     <td>305</td>
-    <td>0 ms</td>
+    <td>8 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_domFragmentRender_default</td>
+    <td>testCase_stringHtmlSafe_default</td>
 </tr>
 
 <tr>
     <td>306</td>
-    <td>0 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_isNullOrUndefined_default</td>
+    <td>testCase_stringQuotedToAscii_default</td>
 </tr>
 
 <tr>
     <td>307</td>
-    <td>0 ms</td>
+    <td>16 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_jsonCopy_default</td>
+    <td>testCase_stringRegexpEscape_default</td>
 </tr>
 
 <tr>
     <td>308</td>
-    <td>8 ms</td>
+    <td>44 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_jsonStringifyOrdered_default</td>
+    <td>testCase_templateRender_default</td>
 </tr>
 
 <tr>
     <td>309</td>
-    <td>86 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_jwtAes256GcmXxx_default</td>
+    <td>testCase_testReportCreate_default</td>
 </tr>
 
 <tr>
     <td>310</td>
-    <td>25 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_jwtHs256Xxx_default</td>
+    <td>testCase_throwError_default</td>
 </tr>
 
 <tr>
     <td>311</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_libUtility2Js_standalone</td>
+    <td>testCase_uiAnimateXxx_default</td>
 </tr>
 
 <tr>
     <td>312</td>
-    <td>1 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_listGetElementRandom_default</td>
+    <td>testCase_urlJoin_default</td>
 </tr>
 
 <tr>
     <td>313</td>
-    <td>1 ms</td>
+    <td>2 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_listShuffle_default</td>
+    <td>testCase_urlParse_default</td>
 </tr>
 
 <tr>
     <td>314</td>
-    <td>17 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_localStorageSetItemOrClear_default</td>
+    <td>testCase_uuid4Create_default</td>
 </tr>
 
 <tr>
     <td>315</td>
-    <td>1 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_middlewareForwardProxy_default</td>
+    <td>testCase_webpage_default</td>
 </tr>
 
 <tr>
     <td>316</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_moduleDirname_default</td>
+    <td>testCase_webpage_err</td>
 </tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="platform">
+<h4>
+    7. npmTest - node - linux v14.3.0 - 2020-05-30T22:45:03.556Z<br>
+    
+    
+    <span>time-elapsed</span>- 112242 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 64<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
 
 <tr>
     <td>317</td>
-    <td>8 ms</td>
+    <td>515 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_nop_default</td>
+    <td>testCase_FormData_default</td>
 </tr>
 
 <tr>
     <td>318</td>
-    <td>1 ms</td>
+    <td>3 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_numberToRomanNumerals_default</td>
+    <td>testCase_FormData_err</td>
 </tr>
 
 <tr>
     <td>319</td>
-    <td>9 ms</td>
+    <td>510 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_objectSetDefault_default</td>
+    <td>testCase_FormData_nullCase</td>
 </tr>
 
 <tr>
     <td>320</td>
-    <td>1 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_objectSetOverride_default</td>
+    <td>testCase_ajax_200</td>
 </tr>
 
 <tr>
     <td>321</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_onErrorDefault_default</td>
+    <td>testCase_ajax_404</td>
 </tr>
 
 <tr>
     <td>322</td>
-    <td>16 ms</td>
+    <td>689 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_onErrorThrow_err</td>
+    <td>testCase_ajax_cache</td>
 </tr>
 
 <tr>
     <td>323</td>
-    <td>1 ms</td>
+    <td>1414 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_onErrorWithStack_toString</td>
+    <td>testCase_ajax_default</td>
 </tr>
 
 <tr>
     <td>324</td>
-    <td>0 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_onFileModifiedRestart_watchFile</td>
+    <td>testCase_assertXxx_default</td>
 </tr>
 
 <tr>
     <td>325</td>
-    <td>13 ms</td>
+    <td>3 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_onNext_err</td>
+    <td>testCase_base64Xxx_default</td>
 </tr>
 
 <tr>
     <td>326</td>
-    <td>1595 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_onParallelList_default</td>
+    <td>testCase_blobRead_default</td>
 </tr>
 
 <tr>
     <td>327</td>
-    <td>317 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_onParallel_default</td>
+    <td>testCase_bufferIndexOfSubBuffer_default</td>
 </tr>
 
 <tr>
     <td>328</td>
-    <td>1435 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_onTimeout_timeout</td>
+    <td>testCase_bufferValidateAndCoerce_err</td>
 </tr>
 
 <tr>
     <td>329</td>
-    <td>935 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_profileXxx_default</td>
+    <td>testCase_buildApidoc_default</td>
 </tr>
 
 <tr>
     <td>330</td>
-    <td>0 ms</td>
+    <td>8030 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_replStart_default</td>
+    <td>testCase_buildApp_default</td>
 </tr>
 
 <tr>
     <td>331</td>
-    <td>1 ms</td>
+    <td>2 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_requireReadme_start</td>
+    <td>testCase_buildLib_default</td>
 </tr>
 
 <tr>
     <td>332</td>
-    <td>2 ms</td>
+    <td>10 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_semverCompare_default</td>
+    <td>testCase_buildReadme_default</td>
 </tr>
 
 <tr>
     <td>333</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_serverRespondTimeoutDefault_timeout</td>
+    <td>testCase_buildTest_default</td>
 </tr>
 
 <tr>
     <td>334</td>
-    <td>815 ms</td>
+    <td>21 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_setTimeoutOnError_default</td>
+    <td>testCase_buildXxx_default</td>
 </tr>
 
 <tr>
     <td>335</td>
-    <td>246 ms</td>
+    <td>3070 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_sjclHashScryptXxx_default</td>
+    <td>testCase_childProcessSpawnWithTimeout_default</td>
 </tr>
 
 <tr>
     <td>336</td>
-    <td>1 ms</td>
+    <td>10 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_sjclHashShaXxxCreate_default</td>
+    <td>testCase_childProcessSpawnWithUtility2_err</td>
 </tr>
 
 <tr>
     <td>337</td>
-    <td>1 ms</td>
+    <td>5 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_sjclHmacShaXxx_default</td>
+    <td>testCase_cliRun_default</td>
 </tr>
 
 <tr>
     <td>338</td>
-    <td>0 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_stringHtmlSafe_default</td>
+    <td>testCase_corsBackendHostInject_default</td>
 </tr>
 
 <tr>
     <td>339</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_stringQuotedToAscii_default</td>
+    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
 </tr>
 
 <tr>
     <td>340</td>
-    <td>1 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_stringRegexpEscape_default</td>
+    <td>testCase_cryptoAesXxxCbcRawXxx_default</td>
 </tr>
 
 <tr>
     <td>341</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_stringTruncate_default</td>
+    <td>testCase_domFragmentRender_default</td>
 </tr>
 
 <tr>
     <td>342</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_stringUniqueKey_default</td>
+    <td>testCase_isNullOrUndefined_default</td>
 </tr>
 
 <tr>
     <td>343</td>
-    <td>25 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_templateRender_default</td>
+    <td>testCase_jsonCopy_default</td>
 </tr>
 
 <tr>
     <td>344</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_testReportCreate_default</td>
+    <td>testCase_jsonStringifyOrdered_default</td>
 </tr>
 
 <tr>
     <td>345</td>
-    <td>0 ms</td>
+    <td>63 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_throwError_default</td>
+    <td>testCase_libUtility2Js_standalone</td>
 </tr>
 
 <tr>
     <td>346</td>
-    <td>0 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_uiAnimateXxx_default</td>
+    <td>testCase_listGetElementRandom_default</td>
 </tr>
 
 <tr>
     <td>347</td>
-    <td>0 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_urlJoin_default</td>
+    <td>testCase_listShuffle_default</td>
 </tr>
 
 <tr>
     <td>348</td>
-    <td>1 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_urlParse_default</td>
+    <td>testCase_localStorageSetItemOrClear_default</td>
 </tr>
 
 <tr>
     <td>349</td>
-    <td>1 ms</td>
+    <td>424 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_uuid4Create_default</td>
+    <td>testCase_middlewareForwardProxy_default</td>
 </tr>
 
 <tr>
     <td>350</td>
-    <td>0 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_webpage_default</td>
+    <td>testCase_moduleDirname_default</td>
 </tr>
 
 <tr>
     <td>351</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_webpage_err</td>
+    <td>testCase_nop_default</td>
 </tr>
-
-</tbody>
-</table>
-<pre class="displayNone" tabIndex="0">
-
-</pre>
-</div>
-
-<div class="platform">
-<h4>
-    7. npmTest - node - linux v12.11.1 - 2019-10-09T17:35:13.272Z<br>
-    
-    
-    <span>time-elapsed</span>- 120097 ms<br>
-    <span>tests failed</span>- 0<br>
-    <span>tests passed</span>- 71<br>
-    <span>tests pending</span>- 0<br>
-</h4>
-<table>
-<thead><tr>
-    <th>#</th>
-    <th>time-elapsed</th>
-    <th>status</th>
-    <th>test-case</th>
-</tr></thead>
-<tbody>
 
 <tr>
     <td>352</td>
-    <td>639 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_FormData_default</td>
+    <td>testCase_numberToRomanNumerals_default</td>
 </tr>
 
 <tr>
     <td>353</td>
-    <td>4 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_FormData_err</td>
+    <td>testCase_objectAssignRecurse_default</td>
 </tr>
 
 <tr>
     <td>354</td>
-    <td>647 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_FormData_nullCase</td>
+    <td>testCase_objectSetDefault_default</td>
 </tr>
 
 <tr>
     <td>355</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_ajax_200</td>
+    <td>testCase_onErrorDefault_default</td>
 </tr>
 
 <tr>
     <td>356</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_ajax_404</td>
+    <td>testCase_onErrorThrow_err</td>
 </tr>
 
 <tr>
     <td>357</td>
-    <td>892 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_ajax_cache</td>
+    <td>testCase_onErrorWithStack_toString</td>
 </tr>
 
 <tr>
     <td>358</td>
-    <td>1321 ms</td>
+    <td>1267 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_ajax_default</td>
+    <td>testCase_onFileModifiedRestart_watchFile</td>
 </tr>
 
 <tr>
     <td>359</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_assertXxx_default</td>
+    <td>testCase_onNext_err</td>
 </tr>
 
 <tr>
     <td>360</td>
-    <td>3 ms</td>
+    <td>1292 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_base64Xxx_default</td>
+    <td>testCase_onParallelList_default</td>
 </tr>
 
 <tr>
     <td>361</td>
-    <td>0 ms</td>
+    <td>20 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_blobRead_default</td>
+    <td>testCase_onParallel_default</td>
 </tr>
 
 <tr>
     <td>362</td>
-    <td>0 ms</td>
+    <td>1063 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_bufferIndexOfSubBuffer_default</td>
+    <td>testCase_onTimeout_timeout</td>
 </tr>
 
 <tr>
     <td>363</td>
-    <td>0 ms</td>
+    <td>8 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_bufferValidateAndCoerce_err</td>
+    <td>testCase_profileXxx_default</td>
 </tr>
 
 <tr>
     <td>364</td>
-    <td>1 ms</td>
+    <td>7 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_buildApidoc_default</td>
+    <td>testCase_replStart_default</td>
 </tr>
 
 <tr>
     <td>365</td>
-    <td>8673 ms</td>
+    <td>12 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_buildApp_default</td>
+    <td>testCase_requireReadme_start</td>
 </tr>
 
 <tr>
     <td>366</td>
-    <td>3 ms</td>
+    <td>2 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_buildLib_default</td>
+    <td>testCase_semverCompare_default</td>
 </tr>
 
 <tr>
     <td>367</td>
-    <td>7 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_buildReadme_default</td>
+    <td>testCase_serverRespondTimeoutDefault_timeout</td>
 </tr>
 
 <tr>
     <td>368</td>
-    <td>1 ms</td>
+    <td>98 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_buildTest_default</td>
+    <td>testCase_setTimeoutOnError_default</td>
 </tr>
 
 <tr>
     <td>369</td>
-    <td>19 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_buildXxx_default</td>
+    <td>testCase_stringHtmlSafe_default</td>
 </tr>
 
 <tr>
     <td>370</td>
-    <td>3095 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_childProcessSpawnWithTimeout_default</td>
+    <td>testCase_stringQuotedToAscii_default</td>
 </tr>
 
 <tr>
     <td>371</td>
-    <td>11 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_childProcessSpawnWithUtility2_err</td>
+    <td>testCase_stringRegexpEscape_default</td>
 </tr>
 
 <tr>
     <td>372</td>
-    <td>5 ms</td>
+    <td>8 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_cliRun_default</td>
+    <td>testCase_templateRender_default</td>
 </tr>
 
 <tr>
     <td>373</td>
-    <td>1 ms</td>
+    <td>13 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_corsBackendHostInject_default</td>
+    <td>testCase_testReportCreate_default</td>
 </tr>
 
 <tr>
     <td>374</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
+    <td>testCase_throwError_default</td>
 </tr>
 
 <tr>
     <td>375</td>
-    <td>1 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_cryptoAesXxxCbcRawXxx_default</td>
+    <td>testCase_uiAnimateXxx_default</td>
 </tr>
 
 <tr>
     <td>376</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_domFragmentRender_default</td>
+    <td>testCase_urlJoin_default</td>
 </tr>
 
 <tr>
     <td>377</td>
-    <td>0 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_isNullOrUndefined_default</td>
+    <td>testCase_urlParse_default</td>
 </tr>
 
 <tr>
     <td>378</td>
-    <td>0 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_jsonCopy_default</td>
+    <td>testCase_uuid4Create_default</td>
 </tr>
 
 <tr>
     <td>379</td>
-    <td>1 ms</td>
+    <td>5524 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_jsonStringifyOrdered_default</td>
+    <td>testCase_webpage_default</td>
 </tr>
 
 <tr>
     <td>380</td>
-    <td>26 ms</td>
+    <td>4940 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_jwtAes256GcmXxx_default</td>
+    <td>testCase_webpage_err</td>
 </tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="platform">
+<h4>
+    8. testExampleJs - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/83.0.4103.61 Safari/537.36 - 2020-05-30T22:45:00.873Z<br>
+    
+    <a href="screenshot.testExampleJs.browser.%252F.png">
+        <img alt="screenshot.testExampleJs.browser.%252F.png" src="screenshot.testExampleJs.browser.%252F.png">
+    </a>
+    <br>
+    
+    
+    <span>time-elapsed</span>- 115568 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 4<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
 
 <tr>
     <td>381</td>
-    <td>9 ms</td>
+    <td>43 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_jwtHs256Xxx_default</td>
+    <td>testCase_ajax_200</td>
 </tr>
 
 <tr>
     <td>382</td>
-    <td>117 ms</td>
+    <td>47 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_libUtility2Js_standalone</td>
+    <td>testCase_ajax_404</td>
 </tr>
 
 <tr>
     <td>383</td>
-    <td>1 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_listGetElementRandom_default</td>
+    <td>testCase_nop_default</td>
 </tr>
 
 <tr>
     <td>384</td>
-    <td>1 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_listShuffle_default</td>
+    <td>testCase_webpage_default</td>
 </tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="platform">
+<h4>
+    9. testExampleJs - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/83.0.4103.61 Safari/537.36 - 2020-05-30T22:45:00.873Z<br>
+    
+    <a href="screenshot.testExampleJs.browser.%252F.png">
+        <img alt="screenshot.testExampleJs.browser.%252F.png" src="screenshot.testExampleJs.browser.%252F.png">
+    </a>
+    <br>
+    
+    
+    <span>time-elapsed</span>- 115568 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 4<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
 
 <tr>
     <td>385</td>
-    <td>0 ms</td>
+    <td>43 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_localStorageSetItemOrClear_default</td>
+    <td>testCase_ajax_200</td>
 </tr>
 
 <tr>
     <td>386</td>
-    <td>542 ms</td>
+    <td>47 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_middlewareForwardProxy_default</td>
+    <td>testCase_ajax_404</td>
 </tr>
 
 <tr>
     <td>387</td>
-    <td>1 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_moduleDirname_default</td>
+    <td>testCase_nop_default</td>
 </tr>
 
 <tr>
     <td>388</td>
     <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_nop_default</td>
+    <td>testCase_webpage_default</td>
 </tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="platform">
+<h4>
+    10. testExampleJs - node - linux v14.3.0 - 2020-05-30T22:45:00.525Z<br>
+    
+    
+    <span>time-elapsed</span>- 115897 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 4<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
 
 <tr>
     <td>389</td>
     <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_numberToRomanNumerals_default</td>
+    <td>testCase_ajax_200</td>
 </tr>
 
 <tr>
     <td>390</td>
-    <td>1 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_objectSetDefault_default</td>
+    <td>testCase_ajax_404</td>
 </tr>
 
 <tr>
     <td>391</td>
-    <td>1 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_objectSetOverride_default</td>
+    <td>testCase_nop_default</td>
 </tr>
 
 <tr>
     <td>392</td>
-    <td>0 ms</td>
+    <td>554 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_onErrorDefault_default</td>
+    <td>testCase_webpage_default</td>
 </tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="platform">
+<h4>
+    11. testExampleJs - node - linux v14.3.0 - 2020-05-30T22:45:00.525Z<br>
+    
+    
+    <span>time-elapsed</span>- 115897 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 4<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
 
 <tr>
     <td>393</td>
-    <td>0 ms</td>
+    <td>1 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_onErrorThrow_err</td>
+    <td>testCase_ajax_200</td>
 </tr>
 
 <tr>
     <td>394</td>
-    <td>1 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_onErrorWithStack_toString</td>
+    <td>testCase_ajax_404</td>
 </tr>
 
 <tr>
     <td>395</td>
-    <td>1087 ms</td>
+    <td>0 ms</td>
     <td class="testPassed">passed</td>
-    <td>testCase_onFileModifiedRestart_watchFile</td>
+    <td>testCase_nop_default</td>
 </tr>
 
 <tr>
     <td>396</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onNext_err</td>
-</tr>
-
-<tr>
-    <td>397</td>
-    <td>1397 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onParallelList_default</td>
-</tr>
-
-<tr>
-    <td>398</td>
-    <td>35 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onParallel_default</td>
-</tr>
-
-<tr>
-    <td>399</td>
-    <td>1025 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onTimeout_timeout</td>
-</tr>
-
-<tr>
-    <td>400</td>
-    <td>9 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_profileXxx_default</td>
-</tr>
-
-<tr>
-    <td>401</td>
-    <td>8 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_replStart_default</td>
-</tr>
-
-<tr>
-    <td>402</td>
-    <td>13 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_requireReadme_start</td>
-</tr>
-
-<tr>
-    <td>403</td>
-    <td>2 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_semverCompare_default</td>
-</tr>
-
-<tr>
-    <td>404</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_serverRespondTimeoutDefault_timeout</td>
-</tr>
-
-<tr>
-    <td>405</td>
-    <td>72 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_setTimeoutOnError_default</td>
-</tr>
-
-<tr>
-    <td>406</td>
-    <td>75 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashScryptXxx_default</td>
-</tr>
-
-<tr>
-    <td>407</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashShaXxxCreate_default</td>
-</tr>
-
-<tr>
-    <td>408</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHmacShaXxx_default</td>
-</tr>
-
-<tr>
-    <td>409</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringHtmlSafe_default</td>
-</tr>
-
-<tr>
-    <td>410</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringQuotedToAscii_default</td>
-</tr>
-
-<tr>
-    <td>411</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringRegexpEscape_default</td>
-</tr>
-
-<tr>
-    <td>412</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringTruncate_default</td>
-</tr>
-
-<tr>
-    <td>413</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringUniqueKey_default</td>
-</tr>
-
-<tr>
-    <td>414</td>
-    <td>25 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_templateRender_default</td>
-</tr>
-
-<tr>
-    <td>415</td>
-    <td>4 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_testReportCreate_default</td>
-</tr>
-
-<tr>
-    <td>416</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_throwError_default</td>
-</tr>
-
-<tr>
-    <td>417</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_uiAnimateXxx_default</td>
-</tr>
-
-<tr>
-    <td>418</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_urlJoin_default</td>
-</tr>
-
-<tr>
-    <td>419</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_urlParse_default</td>
-</tr>
-
-<tr>
-    <td>420</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_uuid4Create_default</td>
-</tr>
-
-<tr>
-    <td>421</td>
-    <td>6561 ms</td>
+    <td>554 ms</td>
     <td class="testPassed">passed</td>
     <td>testCase_webpage_default</td>
-</tr>
-
-<tr>
-    <td>422</td>
-    <td>6017 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_webpage_err</td>
-</tr>
-
-</tbody>
-</table>
-<pre class="displayNone" tabIndex="0">
-
-</pre>
-</div>
-
-<div class="platform">
-<h4>
-    8. npmTestPublished - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/77.0.3865.90 Safari/537.36 - 2019-10-09T17:34:31.749Z<br>
-    
-    <a href="screenshot.npmTestPublished.browser.%252F.png">
-        <img alt="screenshot.npmTestPublished.browser.%252F.png" src="screenshot.npmTestPublished.browser.%252F.png">
-    </a>
-    <br>
-    
-    
-    <span>onload-time</span>- 3831 ms<br>
-    
-    <span>time-elapsed</span>- 162218 ms<br>
-    <span>tests failed</span>- 0<br>
-    <span>tests passed</span>- 70<br>
-    <span>tests pending</span>- 0<br>
-</h4>
-<table>
-<thead><tr>
-    <th>#</th>
-    <th>time-elapsed</th>
-    <th>status</th>
-    <th>test-case</th>
-</tr></thead>
-<tbody>
-
-<tr>
-    <td>423</td>
-    <td>2711 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_FormData_default</td>
-</tr>
-
-<tr>
-    <td>424</td>
-    <td>11 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_FormData_err</td>
-</tr>
-
-<tr>
-    <td>425</td>
-    <td>1526 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_FormData_nullCase</td>
-</tr>
-
-<tr>
-    <td>426</td>
-    <td>1296 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_200</td>
-</tr>
-
-<tr>
-    <td>427</td>
-    <td>1302 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_404</td>
-</tr>
-
-<tr>
-    <td>428</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_cache</td>
-</tr>
-
-<tr>
-    <td>429</td>
-    <td>2583 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_default</td>
-</tr>
-
-<tr>
-    <td>430</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_assertXxx_default</td>
-</tr>
-
-<tr>
-    <td>431</td>
-    <td>3 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_base64Xxx_default</td>
-</tr>
-
-<tr>
-    <td>432</td>
-    <td>1575 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_blobRead_default</td>
-</tr>
-
-<tr>
-    <td>433</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_bufferIndexOfSubBuffer_default</td>
-</tr>
-
-<tr>
-    <td>434</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_bufferValidateAndCoerce_err</td>
-</tr>
-
-<tr>
-    <td>435</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildApidoc_default</td>
-</tr>
-
-<tr>
-    <td>436</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildApp_default</td>
-</tr>
-
-<tr>
-    <td>437</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildLib_default</td>
-</tr>
-
-<tr>
-    <td>438</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildReadme_default</td>
-</tr>
-
-<tr>
-    <td>439</td>
-    <td>64 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildXxx_default</td>
-</tr>
-
-<tr>
-    <td>440</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_childProcessSpawnWithTimeout_default</td>
-</tr>
-
-<tr>
-    <td>441</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_childProcessSpawnWithUtility2_err</td>
-</tr>
-
-<tr>
-    <td>442</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_cliRun_default</td>
-</tr>
-
-<tr>
-    <td>443</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_corsBackendHostInject_default</td>
-</tr>
-
-<tr>
-    <td>444</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
-</tr>
-
-<tr>
-    <td>445</td>
-    <td>13 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_cryptoAesXxxCbcRawXxx_default</td>
-</tr>
-
-<tr>
-    <td>446</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_domFragmentRender_default</td>
-</tr>
-
-<tr>
-    <td>447</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_isNullOrUndefined_default</td>
-</tr>
-
-<tr>
-    <td>448</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jsonCopy_default</td>
-</tr>
-
-<tr>
-    <td>449</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jsonStringifyOrdered_default</td>
-</tr>
-
-<tr>
-    <td>450</td>
-    <td>59 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jwtAes256GcmXxx_default</td>
-</tr>
-
-<tr>
-    <td>451</td>
-    <td>28 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jwtHs256Xxx_default</td>
-</tr>
-
-<tr>
-    <td>452</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_libUtility2Js_standalone</td>
-</tr>
-
-<tr>
-    <td>453</td>
-    <td>23 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_listGetElementRandom_default</td>
-</tr>
-
-<tr>
-    <td>454</td>
-    <td>14 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_listShuffle_default</td>
-</tr>
-
-<tr>
-    <td>455</td>
-    <td>10 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_localStorageSetItemOrClear_default</td>
-</tr>
-
-<tr>
-    <td>456</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_middlewareForwardProxy_default</td>
-</tr>
-
-<tr>
-    <td>457</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_moduleDirname_default</td>
-</tr>
-
-<tr>
-    <td>458</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_nop_default</td>
-</tr>
-
-<tr>
-    <td>459</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_numberToRomanNumerals_default</td>
-</tr>
-
-<tr>
-    <td>460</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_objectSetDefault_default</td>
-</tr>
-
-<tr>
-    <td>461</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_objectSetOverride_default</td>
-</tr>
-
-<tr>
-    <td>462</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onErrorDefault_default</td>
-</tr>
-
-<tr>
-    <td>463</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onErrorThrow_err</td>
-</tr>
-
-<tr>
-    <td>464</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onErrorWithStack_toString</td>
-</tr>
-
-<tr>
-    <td>465</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onFileModifiedRestart_watchFile</td>
-</tr>
-
-<tr>
-    <td>466</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onNext_err</td>
-</tr>
-
-<tr>
-    <td>467</td>
-    <td>1602 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onParallelList_default</td>
-</tr>
-
-<tr>
-    <td>468</td>
-    <td>288 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onParallel_default</td>
-</tr>
-
-<tr>
-    <td>469</td>
-    <td>1510 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onTimeout_timeout</td>
-</tr>
-
-<tr>
-    <td>470</td>
-    <td>992 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_profileXxx_default</td>
-</tr>
-
-<tr>
-    <td>471</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_replStart_default</td>
-</tr>
-
-<tr>
-    <td>472</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_requireReadme_start</td>
-</tr>
-
-<tr>
-    <td>473</td>
-    <td>3 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_semverCompare_default</td>
-</tr>
-
-<tr>
-    <td>474</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_serverRespondTimeoutDefault_timeout</td>
-</tr>
-
-<tr>
-    <td>475</td>
-    <td>872 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_setTimeoutOnError_default</td>
-</tr>
-
-<tr>
-    <td>476</td>
-    <td>265 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashScryptXxx_default</td>
-</tr>
-
-<tr>
-    <td>477</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashShaXxxCreate_default</td>
-</tr>
-
-<tr>
-    <td>478</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHmacShaXxx_default</td>
-</tr>
-
-<tr>
-    <td>479</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringHtmlSafe_default</td>
-</tr>
-
-<tr>
-    <td>480</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringQuotedToAscii_default</td>
-</tr>
-
-<tr>
-    <td>481</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringRegexpEscape_default</td>
-</tr>
-
-<tr>
-    <td>482</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringTruncate_default</td>
-</tr>
-
-<tr>
-    <td>483</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringUniqueKey_default</td>
-</tr>
-
-<tr>
-    <td>484</td>
-    <td>6 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_templateRender_default</td>
-</tr>
-
-<tr>
-    <td>485</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_testReportCreate_default</td>
-</tr>
-
-<tr>
-    <td>486</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_throwError_default</td>
-</tr>
-
-<tr>
-    <td>487</td>
-    <td>35 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_uiAnimateXxx_default</td>
-</tr>
-
-<tr>
-    <td>488</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_urlJoin_default</td>
-</tr>
-
-<tr>
-    <td>489</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_urlParse_default</td>
-</tr>
-
-<tr>
-    <td>490</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_uuid4Create_default</td>
-</tr>
-
-<tr>
-    <td>491</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_webpage_default</td>
-</tr>
-
-<tr>
-    <td>492</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_webpage_err</td>
-</tr>
-
-</tbody>
-</table>
-<pre class="displayNone" tabIndex="0">
-
-</pre>
-</div>
-
-<div class="platform">
-<h4>
-    9. npmTestPublished - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/77.0.3865.90 Safari/537.36 - 2019-10-09T17:34:31.749Z<br>
-    
-    <a href="screenshot.npmTestPublished.browser.%252F.png">
-        <img alt="screenshot.npmTestPublished.browser.%252F.png" src="screenshot.npmTestPublished.browser.%252F.png">
-    </a>
-    <br>
-    
-    
-    <span>onload-time</span>- 3831 ms<br>
-    
-    <span>time-elapsed</span>- 162218 ms<br>
-    <span>tests failed</span>- 0<br>
-    <span>tests passed</span>- 70<br>
-    <span>tests pending</span>- 0<br>
-</h4>
-<table>
-<thead><tr>
-    <th>#</th>
-    <th>time-elapsed</th>
-    <th>status</th>
-    <th>test-case</th>
-</tr></thead>
-<tbody>
-
-<tr>
-    <td>493</td>
-    <td>2711 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_FormData_default</td>
-</tr>
-
-<tr>
-    <td>494</td>
-    <td>11 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_FormData_err</td>
-</tr>
-
-<tr>
-    <td>495</td>
-    <td>1526 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_FormData_nullCase</td>
-</tr>
-
-<tr>
-    <td>496</td>
-    <td>1296 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_200</td>
-</tr>
-
-<tr>
-    <td>497</td>
-    <td>1302 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_404</td>
-</tr>
-
-<tr>
-    <td>498</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_cache</td>
-</tr>
-
-<tr>
-    <td>499</td>
-    <td>2583 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_default</td>
-</tr>
-
-<tr>
-    <td>500</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_assertXxx_default</td>
-</tr>
-
-<tr>
-    <td>501</td>
-    <td>3 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_base64Xxx_default</td>
-</tr>
-
-<tr>
-    <td>502</td>
-    <td>1575 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_blobRead_default</td>
-</tr>
-
-<tr>
-    <td>503</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_bufferIndexOfSubBuffer_default</td>
-</tr>
-
-<tr>
-    <td>504</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_bufferValidateAndCoerce_err</td>
-</tr>
-
-<tr>
-    <td>505</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildApidoc_default</td>
-</tr>
-
-<tr>
-    <td>506</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildApp_default</td>
-</tr>
-
-<tr>
-    <td>507</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildLib_default</td>
-</tr>
-
-<tr>
-    <td>508</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildReadme_default</td>
-</tr>
-
-<tr>
-    <td>509</td>
-    <td>64 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildXxx_default</td>
-</tr>
-
-<tr>
-    <td>510</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_childProcessSpawnWithTimeout_default</td>
-</tr>
-
-<tr>
-    <td>511</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_childProcessSpawnWithUtility2_err</td>
-</tr>
-
-<tr>
-    <td>512</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_cliRun_default</td>
-</tr>
-
-<tr>
-    <td>513</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_corsBackendHostInject_default</td>
-</tr>
-
-<tr>
-    <td>514</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
-</tr>
-
-<tr>
-    <td>515</td>
-    <td>13 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_cryptoAesXxxCbcRawXxx_default</td>
-</tr>
-
-<tr>
-    <td>516</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_domFragmentRender_default</td>
-</tr>
-
-<tr>
-    <td>517</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_isNullOrUndefined_default</td>
-</tr>
-
-<tr>
-    <td>518</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jsonCopy_default</td>
-</tr>
-
-<tr>
-    <td>519</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jsonStringifyOrdered_default</td>
-</tr>
-
-<tr>
-    <td>520</td>
-    <td>59 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jwtAes256GcmXxx_default</td>
-</tr>
-
-<tr>
-    <td>521</td>
-    <td>28 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jwtHs256Xxx_default</td>
-</tr>
-
-<tr>
-    <td>522</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_libUtility2Js_standalone</td>
-</tr>
-
-<tr>
-    <td>523</td>
-    <td>23 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_listGetElementRandom_default</td>
-</tr>
-
-<tr>
-    <td>524</td>
-    <td>14 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_listShuffle_default</td>
-</tr>
-
-<tr>
-    <td>525</td>
-    <td>10 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_localStorageSetItemOrClear_default</td>
-</tr>
-
-<tr>
-    <td>526</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_middlewareForwardProxy_default</td>
-</tr>
-
-<tr>
-    <td>527</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_moduleDirname_default</td>
-</tr>
-
-<tr>
-    <td>528</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_nop_default</td>
-</tr>
-
-<tr>
-    <td>529</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_numberToRomanNumerals_default</td>
-</tr>
-
-<tr>
-    <td>530</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_objectSetDefault_default</td>
-</tr>
-
-<tr>
-    <td>531</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_objectSetOverride_default</td>
-</tr>
-
-<tr>
-    <td>532</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onErrorDefault_default</td>
-</tr>
-
-<tr>
-    <td>533</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onErrorThrow_err</td>
-</tr>
-
-<tr>
-    <td>534</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onErrorWithStack_toString</td>
-</tr>
-
-<tr>
-    <td>535</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onFileModifiedRestart_watchFile</td>
-</tr>
-
-<tr>
-    <td>536</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onNext_err</td>
-</tr>
-
-<tr>
-    <td>537</td>
-    <td>1602 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onParallelList_default</td>
-</tr>
-
-<tr>
-    <td>538</td>
-    <td>288 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onParallel_default</td>
-</tr>
-
-<tr>
-    <td>539</td>
-    <td>1510 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onTimeout_timeout</td>
-</tr>
-
-<tr>
-    <td>540</td>
-    <td>992 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_profileXxx_default</td>
-</tr>
-
-<tr>
-    <td>541</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_replStart_default</td>
-</tr>
-
-<tr>
-    <td>542</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_requireReadme_start</td>
-</tr>
-
-<tr>
-    <td>543</td>
-    <td>3 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_semverCompare_default</td>
-</tr>
-
-<tr>
-    <td>544</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_serverRespondTimeoutDefault_timeout</td>
-</tr>
-
-<tr>
-    <td>545</td>
-    <td>872 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_setTimeoutOnError_default</td>
-</tr>
-
-<tr>
-    <td>546</td>
-    <td>265 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashScryptXxx_default</td>
-</tr>
-
-<tr>
-    <td>547</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashShaXxxCreate_default</td>
-</tr>
-
-<tr>
-    <td>548</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHmacShaXxx_default</td>
-</tr>
-
-<tr>
-    <td>549</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringHtmlSafe_default</td>
-</tr>
-
-<tr>
-    <td>550</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringQuotedToAscii_default</td>
-</tr>
-
-<tr>
-    <td>551</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringRegexpEscape_default</td>
-</tr>
-
-<tr>
-    <td>552</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringTruncate_default</td>
-</tr>
-
-<tr>
-    <td>553</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringUniqueKey_default</td>
-</tr>
-
-<tr>
-    <td>554</td>
-    <td>6 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_templateRender_default</td>
-</tr>
-
-<tr>
-    <td>555</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_testReportCreate_default</td>
-</tr>
-
-<tr>
-    <td>556</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_throwError_default</td>
-</tr>
-
-<tr>
-    <td>557</td>
-    <td>35 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_uiAnimateXxx_default</td>
-</tr>
-
-<tr>
-    <td>558</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_urlJoin_default</td>
-</tr>
-
-<tr>
-    <td>559</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_urlParse_default</td>
-</tr>
-
-<tr>
-    <td>560</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_uuid4Create_default</td>
-</tr>
-
-<tr>
-    <td>561</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_webpage_default</td>
-</tr>
-
-<tr>
-    <td>562</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_webpage_err</td>
-</tr>
-
-</tbody>
-</table>
-<pre class="displayNone" tabIndex="0">
-
-</pre>
-</div>
-
-<div class="platform">
-<h4>
-    10. npmTestPublished - node - linux v12.11.1 - 2019-10-09T17:34:26.668Z<br>
-    
-    
-    <span>time-elapsed</span>- 166139 ms<br>
-    <span>tests failed</span>- 0<br>
-    <span>tests passed</span>- 71<br>
-    <span>tests pending</span>- 0<br>
-</h4>
-<table>
-<thead><tr>
-    <th>#</th>
-    <th>time-elapsed</th>
-    <th>status</th>
-    <th>test-case</th>
-</tr></thead>
-<tbody>
-
-<tr>
-    <td>563</td>
-    <td>655 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_FormData_default</td>
-</tr>
-
-<tr>
-    <td>564</td>
-    <td>4 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_FormData_err</td>
-</tr>
-
-<tr>
-    <td>565</td>
-    <td>701 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_FormData_nullCase</td>
-</tr>
-
-<tr>
-    <td>566</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_200</td>
-</tr>
-
-<tr>
-    <td>567</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_404</td>
-</tr>
-
-<tr>
-    <td>568</td>
-    <td>1021 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_cache</td>
-</tr>
-
-<tr>
-    <td>569</td>
-    <td>1076 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_default</td>
-</tr>
-
-<tr>
-    <td>570</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_assertXxx_default</td>
-</tr>
-
-<tr>
-    <td>571</td>
-    <td>5 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_base64Xxx_default</td>
-</tr>
-
-<tr>
-    <td>572</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_blobRead_default</td>
-</tr>
-
-<tr>
-    <td>573</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_bufferIndexOfSubBuffer_default</td>
-</tr>
-
-<tr>
-    <td>574</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_bufferValidateAndCoerce_err</td>
-</tr>
-
-<tr>
-    <td>575</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildApidoc_default</td>
-</tr>
-
-<tr>
-    <td>576</td>
-    <td>8890 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildApp_default</td>
-</tr>
-
-<tr>
-    <td>577</td>
-    <td>8 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildLib_default</td>
-</tr>
-
-<tr>
-    <td>578</td>
-    <td>7 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildReadme_default</td>
-</tr>
-
-<tr>
-    <td>579</td>
-    <td>2 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildTest_default</td>
-</tr>
-
-<tr>
-    <td>580</td>
-    <td>22 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildXxx_default</td>
-</tr>
-
-<tr>
-    <td>581</td>
-    <td>3065 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_childProcessSpawnWithTimeout_default</td>
-</tr>
-
-<tr>
-    <td>582</td>
-    <td>16 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_childProcessSpawnWithUtility2_err</td>
-</tr>
-
-<tr>
-    <td>583</td>
-    <td>8 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_cliRun_default</td>
-</tr>
-
-<tr>
-    <td>584</td>
-    <td>3 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_corsBackendHostInject_default</td>
-</tr>
-
-<tr>
-    <td>585</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
-</tr>
-
-<tr>
-    <td>586</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_cryptoAesXxxCbcRawXxx_default</td>
-</tr>
-
-<tr>
-    <td>587</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_domFragmentRender_default</td>
-</tr>
-
-<tr>
-    <td>588</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_isNullOrUndefined_default</td>
-</tr>
-
-<tr>
-    <td>589</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jsonCopy_default</td>
-</tr>
-
-<tr>
-    <td>590</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jsonStringifyOrdered_default</td>
-</tr>
-
-<tr>
-    <td>591</td>
-    <td>26 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jwtAes256GcmXxx_default</td>
-</tr>
-
-<tr>
-    <td>592</td>
-    <td>9 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jwtHs256Xxx_default</td>
-</tr>
-
-<tr>
-    <td>593</td>
-    <td>13 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_libUtility2Js_standalone</td>
-</tr>
-
-<tr>
-    <td>594</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_listGetElementRandom_default</td>
-</tr>
-
-<tr>
-    <td>595</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_listShuffle_default</td>
-</tr>
-
-<tr>
-    <td>596</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_localStorageSetItemOrClear_default</td>
-</tr>
-
-<tr>
-    <td>597</td>
-    <td>751 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_middlewareForwardProxy_default</td>
-</tr>
-
-<tr>
-    <td>598</td>
-    <td>3 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_moduleDirname_default</td>
-</tr>
-
-<tr>
-    <td>599</td>
-    <td>22 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_nop_default</td>
-</tr>
-
-<tr>
-    <td>600</td>
-    <td>4 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_numberToRomanNumerals_default</td>
-</tr>
-
-<tr>
-    <td>601</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_objectSetDefault_default</td>
-</tr>
-
-<tr>
-    <td>602</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_objectSetOverride_default</td>
-</tr>
-
-<tr>
-    <td>603</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onErrorDefault_default</td>
-</tr>
-
-<tr>
-    <td>604</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onErrorThrow_err</td>
-</tr>
-
-<tr>
-    <td>605</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onErrorWithStack_toString</td>
-</tr>
-
-<tr>
-    <td>606</td>
-    <td>1243 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onFileModifiedRestart_watchFile</td>
-</tr>
-
-<tr>
-    <td>607</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onNext_err</td>
-</tr>
-
-<tr>
-    <td>608</td>
-    <td>1323 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onParallelList_default</td>
-</tr>
-
-<tr>
-    <td>609</td>
-    <td>42 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onParallel_default</td>
-</tr>
-
-<tr>
-    <td>610</td>
-    <td>1420 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onTimeout_timeout</td>
-</tr>
-
-<tr>
-    <td>611</td>
-    <td>47 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_profileXxx_default</td>
-</tr>
-
-<tr>
-    <td>612</td>
-    <td>7 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_replStart_default</td>
-</tr>
-
-<tr>
-    <td>613</td>
-    <td>13 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_requireReadme_start</td>
-</tr>
-
-<tr>
-    <td>614</td>
-    <td>4 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_semverCompare_default</td>
-</tr>
-
-<tr>
-    <td>615</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_serverRespondTimeoutDefault_timeout</td>
-</tr>
-
-<tr>
-    <td>616</td>
-    <td>314 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_setTimeoutOnError_default</td>
-</tr>
-
-<tr>
-    <td>617</td>
-    <td>120 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashScryptXxx_default</td>
-</tr>
-
-<tr>
-    <td>618</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashShaXxxCreate_default</td>
-</tr>
-
-<tr>
-    <td>619</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHmacShaXxx_default</td>
-</tr>
-
-<tr>
-    <td>620</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringHtmlSafe_default</td>
-</tr>
-
-<tr>
-    <td>621</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringQuotedToAscii_default</td>
-</tr>
-
-<tr>
-    <td>622</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringRegexpEscape_default</td>
-</tr>
-
-<tr>
-    <td>623</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringTruncate_default</td>
-</tr>
-
-<tr>
-    <td>624</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringUniqueKey_default</td>
-</tr>
-
-<tr>
-    <td>625</td>
-    <td>8 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_templateRender_default</td>
-</tr>
-
-<tr>
-    <td>626</td>
-    <td>4 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_testReportCreate_default</td>
-</tr>
-
-<tr>
-    <td>627</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_throwError_default</td>
-</tr>
-
-<tr>
-    <td>628</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_uiAnimateXxx_default</td>
-</tr>
-
-<tr>
-    <td>629</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_urlJoin_default</td>
-</tr>
-
-<tr>
-    <td>630</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_urlParse_default</td>
-</tr>
-
-<tr>
-    <td>631</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_uuid4Create_default</td>
-</tr>
-
-<tr>
-    <td>632</td>
-    <td>6330 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_webpage_default</td>
-</tr>
-
-<tr>
-    <td>633</td>
-    <td>5564 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_webpage_err</td>
-</tr>
-
-</tbody>
-</table>
-<pre class="displayNone" tabIndex="0">
-
-</pre>
-</div>
-
-<div class="platform">
-<h4>
-    11. npmTestPublished - node - linux v12.11.1 - 2019-10-09T17:34:26.668Z<br>
-    
-    
-    <span>time-elapsed</span>- 166139 ms<br>
-    <span>tests failed</span>- 0<br>
-    <span>tests passed</span>- 71<br>
-    <span>tests pending</span>- 0<br>
-</h4>
-<table>
-<thead><tr>
-    <th>#</th>
-    <th>time-elapsed</th>
-    <th>status</th>
-    <th>test-case</th>
-</tr></thead>
-<tbody>
-
-<tr>
-    <td>634</td>
-    <td>655 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_FormData_default</td>
-</tr>
-
-<tr>
-    <td>635</td>
-    <td>4 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_FormData_err</td>
-</tr>
-
-<tr>
-    <td>636</td>
-    <td>701 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_FormData_nullCase</td>
-</tr>
-
-<tr>
-    <td>637</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_200</td>
-</tr>
-
-<tr>
-    <td>638</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_404</td>
-</tr>
-
-<tr>
-    <td>639</td>
-    <td>1021 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_cache</td>
-</tr>
-
-<tr>
-    <td>640</td>
-    <td>1076 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_ajax_default</td>
-</tr>
-
-<tr>
-    <td>641</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_assertXxx_default</td>
-</tr>
-
-<tr>
-    <td>642</td>
-    <td>5 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_base64Xxx_default</td>
-</tr>
-
-<tr>
-    <td>643</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_blobRead_default</td>
-</tr>
-
-<tr>
-    <td>644</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_bufferIndexOfSubBuffer_default</td>
-</tr>
-
-<tr>
-    <td>645</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_bufferValidateAndCoerce_err</td>
-</tr>
-
-<tr>
-    <td>646</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildApidoc_default</td>
-</tr>
-
-<tr>
-    <td>647</td>
-    <td>8890 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildApp_default</td>
-</tr>
-
-<tr>
-    <td>648</td>
-    <td>8 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildLib_default</td>
-</tr>
-
-<tr>
-    <td>649</td>
-    <td>7 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildReadme_default</td>
-</tr>
-
-<tr>
-    <td>650</td>
-    <td>2 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildTest_default</td>
-</tr>
-
-<tr>
-    <td>651</td>
-    <td>22 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_buildXxx_default</td>
-</tr>
-
-<tr>
-    <td>652</td>
-    <td>3065 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_childProcessSpawnWithTimeout_default</td>
-</tr>
-
-<tr>
-    <td>653</td>
-    <td>16 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_childProcessSpawnWithUtility2_err</td>
-</tr>
-
-<tr>
-    <td>654</td>
-    <td>8 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_cliRun_default</td>
-</tr>
-
-<tr>
-    <td>655</td>
-    <td>3 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_corsBackendHostInject_default</td>
-</tr>
-
-<tr>
-    <td>656</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
-</tr>
-
-<tr>
-    <td>657</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_cryptoAesXxxCbcRawXxx_default</td>
-</tr>
-
-<tr>
-    <td>658</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_domFragmentRender_default</td>
-</tr>
-
-<tr>
-    <td>659</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_isNullOrUndefined_default</td>
-</tr>
-
-<tr>
-    <td>660</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jsonCopy_default</td>
-</tr>
-
-<tr>
-    <td>661</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jsonStringifyOrdered_default</td>
-</tr>
-
-<tr>
-    <td>662</td>
-    <td>26 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jwtAes256GcmXxx_default</td>
-</tr>
-
-<tr>
-    <td>663</td>
-    <td>9 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_jwtHs256Xxx_default</td>
-</tr>
-
-<tr>
-    <td>664</td>
-    <td>13 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_libUtility2Js_standalone</td>
-</tr>
-
-<tr>
-    <td>665</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_listGetElementRandom_default</td>
-</tr>
-
-<tr>
-    <td>666</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_listShuffle_default</td>
-</tr>
-
-<tr>
-    <td>667</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_localStorageSetItemOrClear_default</td>
-</tr>
-
-<tr>
-    <td>668</td>
-    <td>751 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_middlewareForwardProxy_default</td>
-</tr>
-
-<tr>
-    <td>669</td>
-    <td>3 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_moduleDirname_default</td>
-</tr>
-
-<tr>
-    <td>670</td>
-    <td>22 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_nop_default</td>
-</tr>
-
-<tr>
-    <td>671</td>
-    <td>4 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_numberToRomanNumerals_default</td>
-</tr>
-
-<tr>
-    <td>672</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_objectSetDefault_default</td>
-</tr>
-
-<tr>
-    <td>673</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_objectSetOverride_default</td>
-</tr>
-
-<tr>
-    <td>674</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onErrorDefault_default</td>
-</tr>
-
-<tr>
-    <td>675</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onErrorThrow_err</td>
-</tr>
-
-<tr>
-    <td>676</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onErrorWithStack_toString</td>
-</tr>
-
-<tr>
-    <td>677</td>
-    <td>1243 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onFileModifiedRestart_watchFile</td>
-</tr>
-
-<tr>
-    <td>678</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onNext_err</td>
-</tr>
-
-<tr>
-    <td>679</td>
-    <td>1323 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onParallelList_default</td>
-</tr>
-
-<tr>
-    <td>680</td>
-    <td>42 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onParallel_default</td>
-</tr>
-
-<tr>
-    <td>681</td>
-    <td>1420 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_onTimeout_timeout</td>
-</tr>
-
-<tr>
-    <td>682</td>
-    <td>47 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_profileXxx_default</td>
-</tr>
-
-<tr>
-    <td>683</td>
-    <td>7 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_replStart_default</td>
-</tr>
-
-<tr>
-    <td>684</td>
-    <td>13 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_requireReadme_start</td>
-</tr>
-
-<tr>
-    <td>685</td>
-    <td>4 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_semverCompare_default</td>
-</tr>
-
-<tr>
-    <td>686</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_serverRespondTimeoutDefault_timeout</td>
-</tr>
-
-<tr>
-    <td>687</td>
-    <td>314 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_setTimeoutOnError_default</td>
-</tr>
-
-<tr>
-    <td>688</td>
-    <td>120 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashScryptXxx_default</td>
-</tr>
-
-<tr>
-    <td>689</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHashShaXxxCreate_default</td>
-</tr>
-
-<tr>
-    <td>690</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_sjclHmacShaXxx_default</td>
-</tr>
-
-<tr>
-    <td>691</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringHtmlSafe_default</td>
-</tr>
-
-<tr>
-    <td>692</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringQuotedToAscii_default</td>
-</tr>
-
-<tr>
-    <td>693</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringRegexpEscape_default</td>
-</tr>
-
-<tr>
-    <td>694</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringTruncate_default</td>
-</tr>
-
-<tr>
-    <td>695</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_stringUniqueKey_default</td>
-</tr>
-
-<tr>
-    <td>696</td>
-    <td>8 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_templateRender_default</td>
-</tr>
-
-<tr>
-    <td>697</td>
-    <td>4 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_testReportCreate_default</td>
-</tr>
-
-<tr>
-    <td>698</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_throwError_default</td>
-</tr>
-
-<tr>
-    <td>699</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_uiAnimateXxx_default</td>
-</tr>
-
-<tr>
-    <td>700</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_urlJoin_default</td>
-</tr>
-
-<tr>
-    <td>701</td>
-    <td>1 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_urlParse_default</td>
-</tr>
-
-<tr>
-    <td>702</td>
-    <td>0 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_uuid4Create_default</td>
-</tr>
-
-<tr>
-    <td>703</td>
-    <td>6330 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_webpage_default</td>
-</tr>
-
-<tr>
-    <td>704</td>
-    <td>5564 ms</td>
-    <td class="testPassed">passed</td>
-    <td>testCase_webpage_err</td>
 </tr>
 
 </tbody>
