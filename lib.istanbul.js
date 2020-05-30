@@ -11090,6 +11090,9 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         });
         lineList.shift();
         htmlData = render(local.templateCoverageReport, Object.assign({
+            datetime,
+            env: process.env,
+            isBrowser: local.isBrowser,
             lines: fileCoverage.l,
             maxLines: lineList.length,
             lineList
