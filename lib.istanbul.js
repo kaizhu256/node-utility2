@@ -10946,6 +10946,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             return lineCreate(str, true);
         });
         lineList.unshift(lineCreate(""));
+        lineList.push(lineCreate(""));
         // annotateLines(fileCoverage, lineList);
         Object.entries(fileCoverage.l).forEach(function ([
             lineno,
