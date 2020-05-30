@@ -4193,16 +4193,14 @@ local.domStyleValidate = function () {
         /^0\u0020(?:(body\u0020>\u0020)?(?:\.testReportDiv\u0020.+|\.x-istanbul\u0020.+|\.button|\.colorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
     );
     tmp = [];
-    Array.from(
-        document.querySelectorAll("style")
-    ).map(function (elem, ii) {
+    local.querySelectorAll("style").map(function (elem, ii) {
         elem.innerHTML.replace((
             /\/\*[\S\s]*?\*\/|;|\}/g
         ), "\n").replace((
             /^([^\n\u0020@].*?)[,{:].*?$/gm
         ), function (match0, match1) {
             try {
-                ii = document.querySelectorAll(match1).length;
+                ii = local.querySelectorAll(match1).length;
             } catch (errCaught) {
                 console.error(errCaught);
             }
