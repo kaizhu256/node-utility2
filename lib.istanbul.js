@@ -10724,7 +10724,7 @@ local.templateCoverageReport = '\
 <pre><table class="coverage"><tr>\n\
         <td class="line-count">{{htmlLineIi notHtmlSafe}}</td>\n\
         <td class="line-coverage">{{htmlLineCnt notHtmlSafe}}</td>\n\
-        <td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{htmlLineCode notHtmlSafe}}</pre></td>\n\
+        <td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{htmlLineCode}}</pre></td>\n\
 </tr></table></pre>\n\
 {{#unless isFile}}\n\
 <div class="coverage-summary">\n\
@@ -11154,7 +11154,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             Object.assign({
                 datetime,
                 env: process.env,
-                htmlLineCode,
                 htmlLineCnt,
                 htmlLineIi,
                 htmlPath,
@@ -11162,6 +11161,9 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 lineList
             }, node)
         );
+        htmlData = htmlData.split("{{htmlLineCode}}");
+        htmlData.splice(1, 0, htmlLineCode);
+        htmlData = htmlData.join("");
         htmlAll += htmlData + "\n\n";
         fileWrite(htmlFile, htmlData);
     };
