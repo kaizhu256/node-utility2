@@ -11089,20 +11089,16 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         template = local.templateRender(template, node);
         // render #show_line_count
         template = template.replace("{{#show_line_count}}", function () {
-            val = "";
-            ii = 1;
-            while (ii < node.maxLines) {
-                tmp = node.lines[ii];
-                val += "<span class=\"cline-any " + (
-                    tmp === undefined
+            return node.lineList.map(function (covered) {
+                covered = covered.covered;
+                return "<span class=\"cline-any " + (
+                    covered === undefined
                     ? "cline-neutral\">&nbsp;"
-                    : tmp > 0
-                    ? "cline-yes\">" + tmp
+                    : covered > 0
+                    ? "cline-yes\">" + covered
                     : "cline-no\">&nbsp;"
-                ) + "</span>\n";
-                ii += 1;
-            }
-            return val;
+                ) + "</span>";
+            }).join("\n");
         });
         // render #show_lineno
         template = template.replace("{{#show_lineno}}", function () {
