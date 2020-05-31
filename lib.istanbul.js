@@ -10406,7 +10406,6 @@ local.templateCoverageReport = '\
 /*csslint\n\
     box-model: false,\n\
     important: false,\n\
-    qualified-headings: false,\n\
 */\n\
 /* csslint ignore:start */\n\
 *,\n\
@@ -10743,7 +10742,7 @@ local.templateCoverageReport = '\
     <tr>\n\
         <td class="file {{metrics.statements.score}}" data-value="{{relativeName}}">\n\
             <a href="{{href}}">{{relativeName}}<br>\n\
-            <span class="cover-fill cover-full" style="width:{{metrics.statements.width1}}px;"></span><span class="cover-empty" style="width:{{metrics.statements.width2}}px;"></span></a>\n\
+            <span class="cover-fill cover-full" style="width: {{metrics.statements.width1}}px;"></span><span class="cover-empty" style="width: {{metrics.statements.width2}}px;"></span></a>\n\
         </td>\n\
         <td>\n\
             {{metrics.statements.pct}}%<br>\n\
