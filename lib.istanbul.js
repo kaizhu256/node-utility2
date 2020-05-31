@@ -10723,7 +10723,7 @@ local.templateCoverageReport = '\
 {{#if isFile}}\n\
 <pre><table class="coverage"><tr>\n\
         <td class="line-count">{{#show_lineno}}</td>\n\
-        <td class="line-coverage">{{#show_line_count}}</td>\n\
+        <td class="line-coverage">{{#show_cnt}}</td>\n\
         <td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code}}</pre></td>\n\
 </tr></table></pre>\n\
 {{#unless isFile}}\n\
@@ -10945,7 +10945,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             }
             return {
                 // annotateLines(fileCoverage, structured);
-                covered: fileCoverage.l[lineno],
+                cnt: fileCoverage.l[lineno],
                 endCol,
                 length0: text.length,
                 offsets: [],
@@ -10959,15 +10959,15 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         // annotateBranches(fileCoverage, lineList);
         Object.entries(fileCoverage.b).forEach(function ([
             key,
-            branchArray
+            list
         ]) {
-            if (branchArray.reduce(function (p, n) {
-                return p + n;
+            if (list.reduce(function (aa, bb) {
+                return aa + bb;
             }, 0) <= 0) {
                 return;
             }
             //only highlight if partial branches are missing
-            branchArray.forEach(function (cnt, ii) {
+            list.forEach(function (cnt, ii) {
                 let endCol;
                 let endLine;
                 let lineObj;
@@ -11092,7 +11092,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             env: process.env,
             isBrowser: local.isBrowser,
             lines: fileCoverage.l,
-            maxLines: lineList.length,
             lineList
         }, node));
         htmlAll += htmlData + "\n\n";
@@ -11116,15 +11115,15 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         }, node);
         // render {{...}}
         template = local.templateRender(template, node);
-        // render #show_line_count
-        template = template.replace("{{#show_line_count}}", function () {
-            return node.lineList.map(function (covered) {
-                covered = covered.covered;
+        // render #show_cnt
+        template = template.replace("{{#show_cnt}}", function () {
+            return node.lineList.map(function (cnt) {
+                cnt = cnt.cnt;
                 return (
-                    covered === undefined
+                    cnt === undefined
                     ? `<span class="cline-any cline-neutral">&nbsp;</span>`
-                    : covered > 0
-                    ? `<span class="cline-any cline-yes">${covered}</span>`
+                    : cnt > 0
+                    ? `<span class="cline-any cline-yes">${cnt}</span>`
                     : `<span class="cline-any cline-no">&nbsp;</span>`
                 );
             }).join("\n");
