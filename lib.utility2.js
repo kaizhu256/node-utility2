@@ -5156,7 +5156,7 @@ local.moduleDirname = function (module, pathList) {
     let result;
     // search process.cwd()
     if (!module || module === "." || module.indexOf("/") >= 0) {
-        return require("path").resolve(process.cwd(), module || "");
+        return require("path").resolve(module || "");
     }
     // search pathList
     Array.from([
@@ -5167,10 +5167,7 @@ local.moduleDirname = function (module, pathList) {
         ]
     ]).flat().some(function (path) {
         try {
-            result = require("path").resolve(
-                process.cwd(),
-                path + "/" + module
-            );
+            result = require("path").resolve(path + "/" + module);
             result = require("fs").statSync(result).isDirectory() && result;
             return result;
         } catch (ignore) {

@@ -10810,6 +10810,7 @@ fileWrite = function (file, data) {
 /*
  * this function will write <data> to <file>
  */
+    file = path.resolve(file);
     if (local.fsWriteFileWithMkdirpSync(file, data)) {
         console.error("coverage-report - wrote file " + file);
     }
