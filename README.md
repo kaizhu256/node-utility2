@@ -55,10 +55,9 @@ this zero-dependency package will provide high-level functions to to build, test
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.5.25
-- npm publish 2020.5.25
-- istanbul - rename __coverageCodeDict__ to __coverageInclude__
-- istanbul - rewrite function coverageReportCreate
+#### changelog 2020.5.31
+- npm publish 2020.5.31
+- istanbul - inline function templateRender
 - none
 
 #### todo
@@ -1278,7 +1277,7 @@ local.http.createServer(function (req, res) {
         "2019.05.25 istanbul-lite master",
         "2020.02.20 utility2"
     ],
-    "version": "2020.5.25"
+    "version": "2020.5.31"
 }
 ```
 
