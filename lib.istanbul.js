@@ -10913,7 +10913,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         // write file
         htmlFile = dir + ".html";
         fileCoverage = coverage[node.pathname];
-        lineList = fileCoverage.code.map(function (text, lineno) {
+        lineList = fileCoverage.code.map(function (text) {
             let endCol;
             let startCol;
             // new InsertionText
@@ -10942,8 +10942,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 ii -= 1;
             }
             return {
-                // annotateLines(fileCoverage, structured);
-                cnt: fileCoverage.l[lineno],
                 endCol,
                 length0: text.length,
                 offsets: [],
@@ -10955,6 +10953,10 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         //note: order is important, since statements typically result
         //in spanning the whole line and doing branches late
         //causes mismatched tags
+        // annotateLines(fileCoverage, structured);
+        lineList.forEach(function (lineObj, lineno) {
+            lineObj.cnt = fileCoverage.l[lineno];
+        });
         // annotateBranches(fileCoverage, lineList);
         Object.entries(fileCoverage.b).forEach(function ([
             key,
