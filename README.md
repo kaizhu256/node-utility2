@@ -248,6 +248,7 @@ instruction
         } catch (ignore) {
             return;
         }
+        file = require("path").resolve(file);
         // try to write file
         try {
             fs.writeFileSync(file, data);

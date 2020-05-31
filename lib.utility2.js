@@ -125,6 +125,7 @@
         } catch (ignore) {
             return;
         }
+        file = require("path").resolve(file);
         // try to write file
         try {
             fs.writeFileSync(file, data);
@@ -407,6 +408,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         } catch (ignore) {\n\
             return;\n\
         }\n\
+        file = require("path").resolve(file);\n\
         // try to write file\n\
         try {\n\
             fs.writeFileSync(file, data);\n\

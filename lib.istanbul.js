@@ -125,6 +125,7 @@
         } catch (ignore) {
             return;
         }
+        file = require("path").resolve(file);
         // try to write file
         try {
             fs.writeFileSync(file, data);
@@ -11174,7 +11175,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
 <h1>coverage-report</h1>
 <div style="background: #fff; border: 1px solid #999; margin 0; padding: 0;">`
     ) + "\n";
-    // write html
+    // recursively write html
     recurse(node, 0, dirCoverage);
     htmlAll += "</div>\n</div>\n";
     // write coverage.all.html
