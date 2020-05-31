@@ -10949,14 +10949,13 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 text
             };
         });
-        lineList.unshift({});
         //note: order is important, since statements typically result
         //in spanning the whole line and doing branches late
         //causes mismatched tags
         // annotateLines(fileCoverage, structured);
         lineList.forEach(function (lineObj, lineno) {
             let cnt;
-            cnt = fileCoverage.l[lineno];
+            cnt = fileCoverage.l[lineno + 1];
             lineObj.cnt = (
                 cnt === undefined
                 ? `<span class="cline-any cline-neutral">&nbsp;</span>`
@@ -10992,9 +10991,9 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 //skip branches taken
                 if (endLine !== startLine) {
                     endLine = startLine;
-                    endCol = lineList[startLine].length0;
+                    endCol = lineList[startLine - 1].length0;
                 }
-                lineObj = lineList[startLine];
+                lineObj = lineList[startLine - 1];
                 if (fileCoverage.branchMap[key].type === "if") {
                     // and "if" is a special case since the else branch
                     // might not be visible, being non-existent
@@ -11046,9 +11045,9 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             startLine = meta.loc.start.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = lineList[startLine].length0;
+                endCol = lineList[startLine - 1].length0;
             }
-            lineObj = lineList[startLine];
+            lineObj = lineList[startLine - 1];
             lineWrapAt(lineObj, meta.loc.start.column, "\u0001span class=\"" + (
                 meta.skip
                 ? "fstat-skip"
@@ -11078,9 +11077,9 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             endLine = meta.end.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = lineList[startLine].length0;
+                endCol = lineList[startLine - 1].length0;
             }
-            lineObj = lineList[startLine];
+            lineObj = lineList[startLine - 1];
             lineWrapAt(lineObj, meta.start.column, ("\u0001span class=\"" + (
                 meta.skip
                 ? "cstat-skip"
@@ -11091,7 +11090,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 : lineObj.length0
             ), "\u0001/span\u0002");
         });
-        lineList.shift();
         // remove trailing whitespace
         ii = lineList.length - 1;
         while (ii >= 0 && !lineList[ii].text.trim()) {
