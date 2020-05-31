@@ -10694,7 +10694,11 @@ local.templateCoverageReport = '\
     </tr>\n\
     </thead>\n\
     <tbody>\n\
-        <td>Statements: {{metrics.statements.skipped}}<br>Branches: {{metrics.branches.skipped}}<br>Functions: {{metrics.functions.skipped}}</td>\n\
+        <td>\n\
+            Statements: {{metrics.statements.skipped}}<br>\n\
+            Branches: {{metrics.branches.skipped}}<br>\n\
+            Functions: {{metrics.functions.skipped}}\n\
+        </td>\n\
         <td>{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>\n\
         <td>{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>\n\
         <td>{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>\n\
@@ -10725,7 +10729,9 @@ local.templateCoverageReport = '\
     <tbody>\n\
 {{#each children}}\n\
     <tr>\n\
-        <td class="file {{metrics.statements.score}}" data-value="{{relativeName}}"><a href="{{href}}">{{relativeName}}<br>{{#show_percent_bar}}</a></td>\n\
+        <td class="file {{metrics.statements.score}}" data-value="{{relativeName}}">\n\
+            <a href="{{href}}">{{relativeName}}<br>{{#show_percent_bar}}</a>\n\
+        </td>\n\
         <td class="pct {{metrics.statements.score}}" data-value="{{metrics.statements.pct}}">{{metrics.statements.pct}}%<br>({{metrics.statements.covered}} / {{metrics.statements.total}})</td>\n\
         <td class="pct {{metrics.branches.score}}" data-value="{{metrics.branches.pct}}">{{metrics.branches.pct}}%<br>({{metrics.branches.covered}} / {{metrics.branches.total}})</td>\n\
         <td class="pct {{metrics.functions.score}}" data-value="{{metrics.functions.pct}}">{{metrics.functions.pct}}%<br>({{metrics.functions.covered}} / {{metrics.functions.total}})</td>\n\
