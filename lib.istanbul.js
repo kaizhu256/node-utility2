@@ -10949,20 +10949,13 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 text
             };
         });
+        lineList.unshift({});
         //note: order is important, since statements typically result
         //in spanning the whole line and doing branches late
         //causes mismatched tags
         // annotateLines(fileCoverage, structured);
         lineList.forEach(function (lineObj, lineno) {
-            let cnt;
-            cnt = fileCoverage.l[lineno + 1];
-            lineObj.cnt = (
-                cnt === undefined
-                ? `<span class="cline-any cline-neutral">&nbsp;</span>`
-                : cnt > 0
-                ? `<span class="cline-any cline-yes">${cnt}</span>`
-                : `<span class="cline-any cline-no">&nbsp;</span>`
-            );
+            lineObj.cnt = fileCoverage.l[lineno];
         });
         // annotateBranches(fileCoverage, lineList);
         Object.entries(fileCoverage.b).forEach(function ([
@@ -10991,9 +10984,9 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 //skip branches taken
                 if (endLine !== startLine) {
                     endLine = startLine;
-                    endCol = lineList[startLine - 1].length0;
+                    endCol = lineList[startLine].length0;
                 }
-                lineObj = lineList[startLine - 1];
+                lineObj = lineList[startLine];
                 if (fileCoverage.branchMap[key].type === "if") {
                     // and "if" is a special case since the else branch
                     // might not be visible, being non-existent
@@ -11045,9 +11038,9 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             startLine = meta.loc.start.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = lineList[startLine - 1].length0;
+                endCol = lineList[startLine].length0;
             }
-            lineObj = lineList[startLine - 1];
+            lineObj = lineList[startLine];
             lineWrapAt(lineObj, meta.loc.start.column, "\u0001span class=\"" + (
                 meta.skip
                 ? "fstat-skip"
@@ -11077,9 +11070,9 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             endLine = meta.end.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = lineList[startLine - 1].length0;
+                endCol = lineList[startLine].length0;
             }
-            lineObj = lineList[startLine - 1];
+            lineObj = lineList[startLine];
             lineWrapAt(lineObj, meta.start.column, ("\u0001span class=\"" + (
                 meta.skip
                 ? "cstat-skip"
@@ -11125,16 +11118,28 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         template = local.templateRender(template, node);
         // render #show_cnt
         template = template.replace("{{#show_cnt}}", function () {
-            return node.lineList.map(function (lineObj) {
-                return lineObj.cnt;
-            }).join("\n");
+            return node.lineList.map(function (cnt, ii) {
+                cnt = cnt.cnt;
+                if (!ii) {
+                    return "";
+                }
+                return (
+                    cnt === undefined
+                    ? `<span class="cline-any cline-neutral">&nbsp;</span>`
+                    : cnt > 0
+                    ? `<span class="cline-any cline-yes">${cnt}</span>`
+                    : `<span class="cline-any cline-no">&nbsp;</span>`
+                ) + "\n";
+            }).join("");
         });
         // render #show_lineno
         template = template.replace("{{#show_lineno}}", function () {
             return node.lineList.map(function (ignore, ii) {
-                ii += 1;
-                return `<a href="#l${ii}" id="l${ii}">${ii}</a>`;
-            }).join("\n");
+                if (!ii) {
+                    return "";
+                }
+                return `<a href="#l${ii}" id="l${ii}">${ii}</a>` + "\n";
+            }).join("");
         });
         // render #show_path
         template = template.replace("{{#show_path}}", function () {
