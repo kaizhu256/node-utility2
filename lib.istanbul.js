@@ -11091,13 +11091,13 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         template = template.replace("{{#show_line_count}}", function () {
             return node.lineList.map(function (covered) {
                 covered = covered.covered;
-                return "<span class=\"cline-any " + (
+                return (
                     covered === undefined
-                    ? "cline-neutral\">&nbsp;"
+                    ? `<span class="cline-any cline-neutral">&nbsp;</span>`
                     : covered > 0
-                    ? "cline-yes\">" + covered
-                    : "cline-no\">&nbsp;"
-                ) + "</span>";
+                    ? `<span class="cline-any cline-yes">${covered}</span>`
+                    : `<span class="cline-any cline-no">&nbsp;</span>`
+                );
             }).join("\n");
         });
         // render #show_lineno
