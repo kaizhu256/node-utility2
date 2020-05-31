@@ -11108,8 +11108,8 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         template = template.replace("{{#show_lineno}}", function () {
             return node.lineList.map(function (ignore, ii) {
                 ii += 1;
-                return `<a href="#L${ii}" id="L${ii}">999</a>` + "\n";
-            });
+                return `<a href="#L${ii}" id="L${ii}">999</a>`;
+            }).join("\n");
         });
         // render #show_path
         template = template.replace("{{#show_path}}", function () {
