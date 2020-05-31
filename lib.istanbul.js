@@ -10724,7 +10724,7 @@ local.templateCoverageReport = '\
 <pre><table class="coverage"><tr>\n\
         <td class="line-count">{{htmlLineIi notHtmlSafe}}</td>\n\
         <td class="line-coverage">{{htmlLineCnt notHtmlSafe}}</td>\n\
-        <td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code}}</pre></td>\n\
+        <td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{htmlLineCode notHtmlSafe}}</pre></td>\n\
 </tr></table></pre>\n\
 {{#unless isFile}}\n\
 <div class="coverage-summary">\n\
@@ -10890,6 +10890,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         let htmlData;
         let htmlFile;
         let htmlLineCnt;
+        let htmlLineCode;
         let htmlLineIi;
         let htmlPath;
         let ii;
@@ -11118,10 +11119,10 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             ii -= 1;
         }
         htmlLineCnt = "";
+        htmlLineCode = "";
         htmlLineIi = "";
         ii = 1;
         while (ii < lineList.length) {
-            tmp = lineList[ii];
             // render <htmlLineIi>
             htmlLineIi += `<a href="#l${ii}" id="l${ii}">${ii}</a>` + "\n";
             tmp = fileCoverage.l[ii];
@@ -11132,11 +11133,24 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 ? `<span class="cline-any cline-yes">${tmp}</span>`
                 : `<span class="cline-any cline-no">&nbsp;</span>`
             ) + "\n";
+            htmlLineCode += lineList[ii].text + "\n";
             ii += 1;
         }
+        htmlLineCode = htmlLineCode.replace((
+            /&/g
+        ), "&amp;").replace((
+            /</g
+        ), "&lt;").replace((
+            />/g
+        ), "&gt;").replace((
+            /\u0001/g
+        ), "<").replace((
+            /\u0002/g
+        ), ">");
         htmlData = render(local.templateCoverageReport, Object.assign({
             datetime,
             env: process.env,
+            htmlLineCode,
             htmlLineCnt,
             htmlLineIi,
             htmlPath,
@@ -11152,12 +11166,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
      */
         let ii;
         let val;
-        // init <node>
-        node = Object.assign({
-            datetime,
-            env: process.env,
-            isBrowser: local.isBrowser
-        }, node);
         // render {{...}}
         template = local.templateRender(template, node);
         // render #show_pct
@@ -11171,25 +11179,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 : 100 - val
             );
             ii += 1;
-            return val;
-        });
-        // render #show_code last
-        template = template.replace("{{#show_code}}", function () {
-            val = node.lineList.map(function (item) {
-                return item.text;
-            }).join("\n");
-            // sanitize html
-            val = val.replace((
-                /&/g
-            ), "&amp;").replace((
-                /</g
-            ), "&lt;").replace((
-                />/g
-            ), "&gt;").replace((
-                /\u0001/g
-            ), "<").replace((
-                /\u0002/g
-            ), ">");
             return val;
         });
         return template.trim() + "\n";
