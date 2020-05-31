@@ -10955,7 +10955,15 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         //causes mismatched tags
         // annotateLines(fileCoverage, structured);
         lineList.forEach(function (lineObj, lineno) {
-            lineObj.cnt = fileCoverage.l[lineno];
+            let cnt;
+            cnt = fileCoverage.l[lineno];
+            lineObj.cnt = (
+                cnt === undefined
+                ? `<span class="cline-any cline-neutral">&nbsp;</span>`
+                : cnt > 0
+                ? `<span class="cline-any cline-yes">${cnt}</span>`
+                : `<span class="cline-any cline-no">&nbsp;</span>`
+            );
         });
         // annotateBranches(fileCoverage, lineList);
         Object.entries(fileCoverage.b).forEach(function ([
@@ -11119,15 +11127,8 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         template = local.templateRender(template, node);
         // render #show_cnt
         template = template.replace("{{#show_cnt}}", function () {
-            return node.lineList.map(function (cnt) {
-                cnt = cnt.cnt;
-                return (
-                    cnt === undefined
-                    ? `<span class="cline-any cline-neutral">&nbsp;</span>`
-                    : cnt > 0
-                    ? `<span class="cline-any cline-yes">${cnt}</span>`
-                    : `<span class="cline-any cline-no">&nbsp;</span>`
-                );
+            return node.lineList.map(function (lineObj) {
+                return lineObj.cnt;
             }).join("\n");
         });
         // render #show_lineno
