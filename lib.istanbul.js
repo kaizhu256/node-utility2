@@ -10973,7 +10973,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 let lineObj;
                 let meta;
                 let startLine;
-                if (!cnt) {
+                if (cnt !== 0) {
                     return;
                 }
                 meta = fileCoverage.branchMap[key].locations[ii];
@@ -11032,7 +11032,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             let lineObj;
             let meta;
             let startLine;
-            if (!cnt) {
+            if (cnt !== 0) {
                 return;
             }
             meta = fileCoverage.fnMap[key];
@@ -11064,7 +11064,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             let lineObj;
             let meta;
             let startLine;
-            if (!cnt) {
+            if (cnt !== 0) {
                 return;
             }
             meta = fileCoverage.statementMap[key];
