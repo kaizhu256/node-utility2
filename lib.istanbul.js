@@ -10995,14 +10995,10 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                             meta.skip
                             ? "skip-if-branch"
                             : "missing-if-branch"
-                        ) + "\" title=\"" + ((
+                        ) + "\" title=\"" + (
                             ii === 0
-                            ? "if"
-                            : "else"
-                        ) + "\" path not taken\u0002") + (
-                            ii === 0
-                            ? "I"
-                            : "E"
+                            ? "if path not taken\"\u0002I"
+                            : "else path not taken\"\u0002E"
                         ) + "\u0001/span\u0002",
                         true
                     );
@@ -11013,7 +11009,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                         meta.skip
                         ? "cbranch-skip"
                         : "cbranch-no"
-                    ) + "\" title=\"branch not covered\" \u0002"
+                    ) + "\" title=\"branch not covered\"\u0002"
                 ), (
                     startLine === endLine
                     ? endCol
@@ -11047,7 +11043,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 meta.skip
                 ? "fstat-skip"
                 : "fstat-no"
-            ) + "\" title=\"function not covered\" \u0002", (
+            ) + "\" title=\"function not covered\"\u0002", (
                 startLine === endLine
                 ? endCol
                 : lineObj.length0
@@ -11079,7 +11075,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 meta.skip
                 ? "cstat-skip"
                 : "cstat-no"
-            ) + "\" title=\"statement not covered\" \u0002"), (
+            ) + "\" title=\"statement not covered\"\u0002"), (
                 startLine === endLine
                 ? endCol
                 : lineObj.length0
@@ -11175,10 +11171,11 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             /\{\{#show_pct\}\}/g
         ), function () {
             ii += 1;
-            if ((ii & 1) === 1) {
-                return 100 - val;
-            }
-            val = node.children[ii >> 1].metrics.statements.pct | 0;
+            val = (
+                (ii & 1) === 0
+                ? node.children[ii >> 1].metrics.statements.pct | 0
+                : 100 - val
+            );
             return val;
         });
         // render #show_code last
