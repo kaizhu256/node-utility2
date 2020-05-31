@@ -11412,6 +11412,7 @@ local.coverageReportCreate = function (opt) {
     /*
      * this function will recursively normalize <node> and its children
      */
+        let metric;
         // init <name>
         if (node.name.indexOf(filePrefix) === 0) {
             node.name = node.name.slice(filePrefix.length);
@@ -11457,9 +11458,10 @@ local.coverageReportCreate = function (opt) {
                 [
                     "lines", "statements", "branches", "functions"
                 ].forEach(function (key) {
-                    node.metrics[key].total += child.metrics[key].total;
-                    node.metrics[key].covered += child.metrics[key].covered;
-                    node.metrics[key].skipped += child.metrics[key].skipped;
+                    metric = node.metrics[key];
+                    metric.total += child.metrics[key].total;
+                    metric.covered += child.metrics[key].covered;
+                    metric.skipped += child.metrics[key].skipped;
                 });
             });
         }
@@ -11467,18 +11469,19 @@ local.coverageReportCreate = function (opt) {
         [
             "lines", "statements", "branches", "functions"
         ].forEach(function (key) {
-            node.metrics[key].pct = (
-                node.metrics[key].total > 0
-                ? Math.floor((
-                    1000 * 100 * node.metrics[key].covered
-                    / node.metrics[key].total + 5
-                ) / 10) / 100
+            metric = node.metrics[key];
+            metric.pct = (
+                metric.total > 0
+                ? Math.floor(
+                    (1000 * 100 * metric.covered / metric.total + 5)
+                    / 10
+                ) / 100
                 : 100
             );
-            node.metrics[key].score = (
-                node.metrics[key].pct >= 80
+            metric.score = (
+                metric.pct >= 80
                 ? "high"
-                : node.metrics[key].pct >= 50
+                : metric.pct >= 50
                 ? "medium"
                 : "low"
             );
