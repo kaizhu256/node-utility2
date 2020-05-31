@@ -10723,7 +10723,7 @@ local.templateCoverageReport = '\
 {{#if isFile}}\n\
 <pre><table class="coverage"><tr>\n\
         <td class="line-count">{{htmlLineno notHtmlSafe}}</td>\n\
-        <td class="line-coverage">{{#show_cnt}}</td>\n\
+        <td class="line-coverage">{{htmlCnt notHtmlSafe}}</td>\n\
         <td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code}}</pre></td>\n\
 </tr></table></pre>\n\
 {{#unless isFile}}\n\
@@ -10887,6 +10887,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
      * to <dir>/<htmlFile>
      */
         let fileCoverage;
+        let htmlCnt;
         let htmlData;
         let htmlFile;
         let htmlLineno;
@@ -10984,10 +10985,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         //note: order is important, since statements typically result
         //in spanning the whole line and doing branches late
         //causes mismatched tags
-        // annotateLines(fileCoverage, structured);
-        lineList.forEach(function (lineObj, lineno) {
-            lineObj.cnt = fileCoverage.l[lineno];
-        });
         // annotateBranches(fileCoverage, lineList);
         Object.entries(fileCoverage.b).forEach(function ([
             key,
@@ -11120,15 +11117,27 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             lineList.pop();
             ii -= 1;
         }
+        htmlCnt = "";
         htmlLineno = "";
         ii = 1;
         while (ii < lineList.length) {
+            tmp = lineList[ii];
+            // render <htmlLineno>
             htmlLineno += `<a href="#l${ii}" id="l${ii}">${ii}</a>` + "\n";
+            tmp = fileCoverage.l[ii];
+            htmlCnt += (
+                tmp === undefined
+                ? `<span class="cline-any cline-neutral">&nbsp;</span>`
+                : tmp > 0
+                ? `<span class="cline-any cline-yes">${tmp}</span>`
+                : `<span class="cline-any cline-no">&nbsp;</span>`
+            ) + "\n";
             ii += 1;
         }
         htmlData = render(local.templateCoverageReport, Object.assign({
             datetime,
             env: process.env,
+            htmlCnt,
             htmlLineno,
             htmlPath,
             isBrowser: local.isBrowser,
@@ -11151,22 +11160,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         }, node);
         // render {{...}}
         template = local.templateRender(template, node);
-        // render #show_cnt
-        template = template.replace("{{#show_cnt}}", function () {
-            return node.lineList.map(function (cnt, ii) {
-                cnt = cnt.cnt;
-                if (!ii) {
-                    return "";
-                }
-                return (
-                    cnt === undefined
-                    ? `<span class="cline-any cline-neutral">&nbsp;</span>`
-                    : cnt > 0
-                    ? `<span class="cline-any cline-yes">${cnt}</span>`
-                    : `<span class="cline-any cline-no">&nbsp;</span>`
-                ) + "\n";
-            }).join("");
-        });
         // render #show_pct
         ii = 0;
         template = template.replace((
