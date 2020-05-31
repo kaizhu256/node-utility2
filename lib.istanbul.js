@@ -10835,7 +10835,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         let ii;
         let offset;
         let offsetObj;
-        col = Math.min(col, lineObj.origLength);
+        col = Math.min(col, lineObj.length0);
         // find <offset> from <col>
         offset = col;
         ii = 0;
@@ -10864,24 +10864,22 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         lineObj.text = (
             lineObj.text.slice(0, offset) + str + lineObj.text.slice(offset)
         );
-        return lineObj;
     };
     lineWrapAt = function (lineObj, startCol, startText, endCol, endText) {
     /*
      * this function will wrap <lineObj>.slice(<startCol>, <endCol>)
      * inside <startText> and <endText>
      */
-        startCol = Math.min(startCol, lineObj.origLength);
+        startCol = Math.min(startCol, lineObj.length0);
         // consumeBlanks
         if (startCol <= lineObj.startCol) {
             startCol = 0;
         }
         if (startCol > lineObj.endCol) {
-            startCol = lineObj.origLength;
+            startCol = lineObj.length0;
         }
         lineInsertAt(lineObj, startCol, startText);
         lineInsertAt(lineObj, endCol, endText);
-        return lineObj;
     };
     recurse = function (node, level, dir) {
     /*
@@ -10949,8 +10947,8 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             return {
                 covered: fileCoverage.l[lineno],
                 endCol,
+                length0: text.length,
                 offsets: [],
-                origLength: text.length,
                 startCol,
                 text
             };
@@ -10985,7 +10983,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 //skip branches taken
                 if (endLine !== startLine) {
                     endLine = startLine;
-                    endCol = lineList[startLine].origLength;
+                    endCol = lineList[startLine].length0;
                 }
                 lineObj = lineList[startLine];
                 if (fileCoverage.branchMap[branchName].type === "if") {
@@ -11020,7 +11018,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 ), (
                     startLine === endLine
                     ? endCol
-                    : lineObj.origLength
+                    : lineObj.length0
                 ), "\u0001/span\u0002");
             });
         });
@@ -11043,7 +11041,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             startLine = meta.loc.start.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = lineList[startLine].origLength;
+                endCol = lineList[startLine].length0;
             }
             lineObj = lineList[startLine];
             lineWrapAt(lineObj, meta.loc.start.column, "\u0001span class=\"" + (
@@ -11053,7 +11051,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             ) + "\" title=\"function not covered\" \u0002", (
                 startLine === endLine
                 ? endCol
-                : lineObj.origLength
+                : lineObj.length0
             ), "\u0001/span\u0002");
         });
         // annotateStatements(fileCoverage, lineList);
@@ -11075,7 +11073,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             endLine = meta.end.line;
             if (endLine !== startLine) {
                 endLine = startLine;
-                endCol = lineList[startLine].origLength;
+                endCol = lineList[startLine].length0;
             }
             lineObj = lineList[startLine];
             lineWrapAt(lineObj, meta.start.column, ("\u0001span class=\"" + (
@@ -11085,7 +11083,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             ) + "\" title=\"statement not covered\" \u0002"), (
                 startLine === endLine
                 ? endCol
-                : lineObj.origLength
+                : lineObj.length0
             ), "\u0001/span\u0002");
         });
         lineList.shift();
@@ -11135,7 +11133,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         template = template.replace("{{#show_lineno}}", function () {
             return node.lineList.map(function (ignore, ii) {
                 ii += 1;
-                return `<a href="#l${ii}" id="l${ii}">{ii}</a>`;
+                return `<a href="#l${ii}" id="l${ii}">${ii}</a>`;
             }).join("\n");
         });
         // render #show_path
