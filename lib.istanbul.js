@@ -10717,7 +10717,7 @@ local.templateCoverageReport = '\
         </td>\n\
     </tbody>\n\
     </table>\n\
-    <div class="path">{{#show_path}}</div>\n\
+    <div class="path">{{htmlPath notHtmlSafe}}</div>\n\
 </div>\n\
 <div class="body">\n\
 {{#if isFile}}\n\
@@ -10889,14 +10889,47 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         let fileCoverage;
         let htmlData;
         let htmlFile;
+        let htmlPath;
         let ii;
+        let jj;
+        let kk;
         let lineList;
+        let parent;
+        let tmp;
+        // render <htmlPath>
+        tmp = node;
+        parent = tmp.parent;
+        if (!parent) {
+            return "";
+        }
+        htmlPath = tmp.relativeName;
+        ii = 1;
+        while (parent) {
+            htmlPath = (
+                "index.html\">" + parent.relativeNameOrAllFiles + "</a>"
+                + " &#187; " + htmlPath
+            );
+            jj = 0;
+            while (jj < ii) {
+                kk = 0;
+                while (kk < tmp.relativeName.split(path.sep).length - 1) {
+                    htmlPath = "../" + htmlPath;
+                    kk += 1;
+                }
+                tmp = tmp.parent;
+                jj += 1;
+            }
+            htmlPath = "<a href=\"" + htmlPath;
+            parent = parent.parent;
+            ii += 1;
+        }
         // write dir
         if (!node.isFile) {
             htmlFile = path.resolve(dir, "index.html");
             htmlData = render(local.templateCoverageReport, Object.assign({
                 datetime,
                 env: process.env,
+                htmlPath,
                 isBrowser: local.isBrowser
             }, node));
             htmlAll += htmlData + "\n\n";
@@ -11092,6 +11125,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         htmlData = render(local.templateCoverageReport, Object.assign({
             datetime,
             env: process.env,
+            htmlPath,
             isBrowser: local.isBrowser,
             lineList
         }, node));
@@ -11103,10 +11137,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
      * this function will render <template> with given <node>
      */
         let ii;
-        let jj;
-        let kk;
-        let parent;
-        let tmp;
         let val;
         // init <node>
         node = Object.assign({
@@ -11140,36 +11170,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 }
                 return `<a href="#l${ii}" id="l${ii}">${ii}</a>` + "\n";
             }).join("");
-        });
-        // render #show_path
-        template = template.replace("{{#show_path}}", function () {
-            tmp = node;
-            parent = tmp.parent;
-            if (!parent) {
-                return "";
-            }
-            val = tmp.relativeName;
-            ii = 1;
-            while (parent) {
-                val = (
-                    "index.html\">" + parent.relativeNameOrAllFiles + "</a>"
-                    + " &#187; " + val
-                );
-                jj = 0;
-                while (jj < ii) {
-                    kk = 0;
-                    while (kk < tmp.relativeName.split(path.sep).length - 1) {
-                        val = "../" + val;
-                        kk += 1;
-                    }
-                    tmp = tmp.parent;
-                    jj += 1;
-                }
-                val = "<a href=\"" + val;
-                parent = parent.parent;
-                ii += 1;
-            }
-            return val;
         });
         // render #show_pct
         ii = 0;
