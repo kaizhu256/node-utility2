@@ -10943,8 +10943,8 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 }
                 ii -= 1;
             }
-            // annotateLines(fileCoverage, lineList);
             return {
+                // annotateLines(fileCoverage, structured);
                 covered: fileCoverage.l[lineno],
                 endCol,
                 length0: text.length,
@@ -10958,7 +10958,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         //causes mismatched tags
         // annotateBranches(fileCoverage, lineList);
         Object.entries(fileCoverage.b).forEach(function ([
-            branchName,
+            key,
             branchArray
         ]) {
             if (branchArray.reduce(function (p, n) {
@@ -10967,16 +10967,16 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 return;
             }
             //only highlight if partial branches are missing
-            branchArray.forEach(function (count, ii) {
+            branchArray.forEach(function (cnt, ii) {
                 let endCol;
                 let endLine;
                 let lineObj;
                 let meta;
                 let startLine;
-                if (count !== 0) {
+                if (!cnt) {
                     return;
                 }
-                meta = fileCoverage.branchMap[branchName].locations[ii];
+                meta = fileCoverage.branchMap[key].locations[ii];
                 endCol = meta.end.column + 1;
                 endLine = meta.end.line;
                 startLine = meta.start.line;
@@ -10986,7 +10986,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                     endCol = lineList[startLine].length0;
                 }
                 lineObj = lineList[startLine];
-                if (fileCoverage.branchMap[branchName].type === "if") {
+                if (fileCoverage.branchMap[key].type === "if") {
                     // and "if" is a special case since the else branch
                     // might not be visible, being non-existent
                     lineInsertAt(
@@ -11024,18 +11024,18 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         });
         // annotateFunctions(fileCoverage, lineList);
         Object.entries(fileCoverage.f).forEach(function ([
-            fName,
-            count
+            key,
+            cnt
         ]) {
             let endCol;
             let endLine;
             let lineObj;
             let meta;
             let startLine;
-            if (count !== 0) {
+            if (!cnt) {
                 return;
             }
-            meta = fileCoverage.fnMap[fName];
+            meta = fileCoverage.fnMap[key];
             endCol = meta.loc.end.column + 1;
             endLine = meta.loc.end.line;
             startLine = meta.loc.start.line;
@@ -11056,18 +11056,18 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         });
         // annotateStatements(fileCoverage, lineList);
         Object.entries(fileCoverage.s).forEach(function ([
-            stName,
-            count
+            key,
+            cnt
         ]) {
             let endCol;
             let endLine;
             let lineObj;
             let meta;
             let startLine;
-            if (count !== 0) {
+            if (!cnt) {
                 return;
             }
-            meta = fileCoverage.statementMap[stName];
+            meta = fileCoverage.statementMap[key];
             endCol = meta.end.column + 1;
             startLine = meta.start.line;
             endLine = meta.end.line;
@@ -11337,8 +11337,8 @@ local.coverageMerge = function (coverage1 = {}, coverage2 = {}) {
             // increment coverage for branch lines
             case "b":
                 Object.keys(dict2).forEach(function (key) {
-                    dict2[key].forEach(function (count, ii) {
-                        dict1[key][ii] += count;
+                    dict2[key].forEach(function (cnt, ii) {
+                        dict1[key][ii] += cnt;
                     });
                 });
                 break;
@@ -11539,7 +11539,7 @@ local.coverageReportCreate = function (opt) {
         let skipped;
         let summary;
         if (fileCoverage && coverageInclude.hasOwnProperty(file)) {
-            // reset line-count
+            // reset line-cnt
             delete opt.coverage[file].l;
             // init <summary>
             summary = {
@@ -11568,20 +11568,20 @@ local.coverageReportCreate = function (opt) {
                     pct: "Unknown"
                 }
             };
-            // init line-count
+            // init line-cnt
             fileCoverage.l = {};
             Object.entries(fileCoverage.s).forEach(function ([
                 key,
-                count
+                cnt
             ]) {
                 let lineno;
-                if (count === 0 && fileCoverage.statementMap[key].skip) {
-                    count = 1;
+                if (cnt === 0 && fileCoverage.statementMap[key].skip) {
+                    cnt = 1;
                 }
                 lineno = fileCoverage.statementMap[key].start.line;
                 fileCoverage.l[lineno] = Math.max(
                     fileCoverage.l[lineno] | 0,
-                    count
+                    cnt
                 );
             });
             // computeSimpleTotals
