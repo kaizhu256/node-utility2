@@ -11091,7 +11091,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             datetime,
             env: process.env,
             isBrowser: local.isBrowser,
-            lines: fileCoverage.l,
             lineList
         }, node));
         htmlAll += htmlData + "\n\n";
