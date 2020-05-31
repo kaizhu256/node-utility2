@@ -11135,7 +11135,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         template = template.replace("{{#show_lineno}}", function () {
             return node.lineList.map(function (ignore, ii) {
                 ii += 1;
-                return `<a href="#L${ii}" id="L${ii}">999</a>`;
+                return `<a href="#l${ii}" id="l${ii}">{ii}</a>`;
             }).join("\n");
         });
         // render #show_path
@@ -11202,6 +11202,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         });
         return template.trim() + "\n";
     };
+    // init <datetime>
     datetime = new Date().toGMTString();
     // init <htmlAll>
     htmlAll = (
@@ -11209,10 +11210,12 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
 <h1>coverage-report</h1>
 <div style="background: #fff; border: 1px solid #999; margin 0; padding: 0;">`
     ) + "\n";
+    // write html
     recurse(node, 0, dirCoverage);
     htmlAll += "</div>\n</div>\n";
     // write coverage.all.html
     fileWrite(dirCoverage + "/coverage.all.html", htmlAll);
+    // return <htmlAll>
     return htmlAll;
 };
 reportTextWrite = function (node, dircoverage) {
