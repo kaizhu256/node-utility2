@@ -10743,7 +10743,7 @@ local.templateCoverageReport = '\
     <tr>\n\
         <td class="file {{metrics.statements.score}}" data-value="{{relativeName}}">\n\
             <a href="{{href}}">{{relativeName}}<br>\n\
-            {{#show_percent_bar}}</a>\n\
+            <span class="cover-fill cover-full" style="width:{{#show_pct}}px;"></span><span class="cover-empty" style="width:{{#show_pct}}px;"></span></a>\n\
         </td>\n\
         <td>\n\
             {{metrics.statements.pct}}%<br>\n\
@@ -11169,18 +11169,17 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             }
             return val;
         });
-        // render #show_percent_bar
+        // render #show_pct
         ii = 0;
         template = template.replace((
-            /\{\{#show_percent_bar\}\}/g
+            /\{\{#show_pct\}\}/g
         ), function () {
-            val = node.children[ii].metrics.statements.pct | 0;
             ii += 1;
-            return (
-                "<span class=\"cover-fill cover-full\" style=\"width:" + val
-                + "px;\"></span><span class=\"cover-empty\" style=\"width:"
-                + (100 - val) + "px;\"></span>"
-            );
+            if ((ii & 1) === 1) {
+                return 100 - val;
+            }
+            val = node.children[ii >> 1].metrics.statements.pct | 0;
+            return val;
         });
         // render #show_code last
         template = template.replace("{{#show_code}}", function () {
