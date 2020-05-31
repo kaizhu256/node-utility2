@@ -10889,6 +10889,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         let fileCoverage;
         let htmlData;
         let htmlFile;
+        let ii;
         let lineList;
         // write dir
         if (!node.isFile) {
@@ -10912,11 +10913,8 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         // write file
         htmlFile = dir + ".html";
         fileCoverage = coverage[node.pathname];
-        lineList = [
-            ""
-        ].concat(fileCoverage.code).map(function (text, lineno) {
+        lineList = fileCoverage.code.map(function (text, lineno) {
             let endCol;
-            let ii;
             let startCol;
             // new InsertionText
             // init <startCol>
@@ -10953,6 +10951,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 text
             };
         });
+        lineList.unshift({});
         //note: order is important, since statements typically result
         //in spanning the whole line and doing branches late
         //causes mismatched tags
@@ -11087,6 +11086,12 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             ), "\u0001/span\u0002");
         });
         lineList.shift();
+        // remove trailing whitespace
+        ii = lineList.length - 1;
+        while (ii >= 0 && !lineList[ii].text.trim()) {
+            lineList.pop();
+            ii -= 1;
+        }
         htmlData = render(local.templateCoverageReport, Object.assign({
             datetime,
             env: process.env,
