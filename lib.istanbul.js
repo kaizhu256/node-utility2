@@ -10811,9 +10811,7 @@ fileWrite = function (file, data) {
  * this function will write <data> to <file>
  */
     if (local.fsWriteFileWithMkdirpSync(file, data)) {
-        console.error(
-            "coverage-report - wrote file " + path.resolve(file)
-        );
+        console.error("coverage-report - wrote file " + file);
     }
 };
 reportHtmlWrite = function (node, dirCoverage, coverage) {
@@ -10924,7 +10922,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         }
         // write dir
         if (!node.isFile) {
-            htmlFile = path.resolve(dir, "index.html");
+            htmlFile = dir + "/index.html";
             htmlData = local.templateRender(
                 local.templateCoverageReport,
                 Object.assign({
@@ -10937,18 +10935,14 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             htmlAll += htmlData + "\n\n";
             fileWrite(htmlFile, htmlData);
             node.children.forEach(function (child) {
-                recurse(
-                    child,
-                    level + 1,
-                    path.resolve(dir, child.relativeName)
-                );
+                recurse(child, level + 1, dir + "/" + child.relativeName);
             });
             return;
         }
         // write file
         htmlFile = dir + ".html";
         fileCoverage = coverage[node.pathname];
-        lineList = fileCoverage.code.map(function (text) {
+        lineList = [].concat("", fileCoverage.code, "").map(function (text) {
             let endCol;
             let startCol;
             // new InsertionText
@@ -10984,7 +10978,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 text
             };
         });
-        lineList.unshift({});
         //note: order is important, since statements typically result
         //in spanning the whole line and doing branches late
         //causes mismatched tags
@@ -11116,7 +11109,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         });
         // remove trailing whitespace
         ii = lineList.length - 1;
-        while (ii >= 0 && !lineList[ii].text.trim()) {
+        while (ii > 1 && !lineList[ii].text.trim()) {
             lineList.pop();
             ii -= 1;
         }
@@ -11276,7 +11269,7 @@ reportTextWrite = function (node, dircoverage) {
         + result
     );
     console.error(result);
-    fileWrite(path.resolve(dircoverage, "coverage.txt"), result);
+    fileWrite(dircoverage + "/coverage.txt", result);
 };
 
 
