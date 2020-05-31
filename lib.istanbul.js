@@ -10722,7 +10722,7 @@ local.templateCoverageReport = '\
 <div class="body">\n\
 {{#if isFile}}\n\
 <pre><table class="coverage"><tr>\n\
-        <td class="line-count">{{#show_lineno}}</td>\n\
+        <td class="line-count">{{htmlLineno notHtmlSafe}}</td>\n\
         <td class="line-coverage">{{#show_cnt}}</td>\n\
         <td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code}}</pre></td>\n\
 </tr></table></pre>\n\
@@ -10889,6 +10889,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         let fileCoverage;
         let htmlData;
         let htmlFile;
+        let htmlLineno;
         let htmlPath;
         let ii;
         let jj;
@@ -11119,9 +11120,16 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             lineList.pop();
             ii -= 1;
         }
+        htmlLineno = "";
+        ii = 1;
+        while (ii < lineList.length) {
+            htmlLineno += `<a href="#l${ii}" id="l${ii}">${ii}</a>` + "\n";
+            ii += 1;
+        }
         htmlData = render(local.templateCoverageReport, Object.assign({
             datetime,
             env: process.env,
+            htmlLineno,
             htmlPath,
             isBrowser: local.isBrowser,
             lineList
@@ -11157,15 +11165,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                     ? `<span class="cline-any cline-yes">${cnt}</span>`
                     : `<span class="cline-any cline-no">&nbsp;</span>`
                 ) + "\n";
-            }).join("");
-        });
-        // render #show_lineno
-        template = template.replace("{{#show_lineno}}", function () {
-            return node.lineList.map(function (ignore, ii) {
-                if (!ii) {
-                    return "";
-                }
-                return `<a href="#l${ii}" id="l${ii}">${ii}</a>` + "\n";
             }).join("");
         });
         // render #show_pct
