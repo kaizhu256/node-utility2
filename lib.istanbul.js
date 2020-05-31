@@ -10743,7 +10743,7 @@ local.templateCoverageReport = '\
     <tr>\n\
         <td class="file {{metrics.statements.score}}" data-value="{{relativeName}}">\n\
             <a href="{{href}}">{{relativeName}}<br>\n\
-            <span class="cover-fill cover-full" style="width:{{#show_pct}}px;"></span><span class="cover-empty" style="width:{{#show_pct}}px;"></span></a>\n\
+            <span class="cover-fill cover-full" style="width:{{metrics.statements.width1}}px;"></span><span class="cover-empty" style="width:{{metrics.statements.width2}}px;"></span></a>\n\
         </td>\n\
         <td>\n\
             {{metrics.statements.pct}}%<br>\n\
@@ -10826,7 +10826,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
     let lineInsertAt;
     let lineWrapAt;
     let recurse;
-    let render;
     // init function
     lineInsertAt = function (lineObj, col, str, insertBefore) {
     /*
@@ -10926,12 +10925,15 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         // write dir
         if (!node.isFile) {
             htmlFile = path.resolve(dir, "index.html");
-            htmlData = render(local.templateCoverageReport, Object.assign({
-                datetime,
-                env: process.env,
-                htmlPath,
-                isBrowser: local.isBrowser
-            }, node));
+            htmlData = local.templateRender(
+                local.templateCoverageReport,
+                Object.assign({
+                    datetime,
+                    env: process.env,
+                    htmlPath,
+                    isBrowser: local.isBrowser
+                }, node)
+            );
             htmlAll += htmlData + "\n\n";
             fileWrite(htmlFile, htmlData);
             node.children.forEach(function (child) {
@@ -11147,41 +11149,21 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         ), "<").replace((
             /\u0002/g
         ), ">");
-        htmlData = render(local.templateCoverageReport, Object.assign({
-            datetime,
-            env: process.env,
-            htmlLineCode,
-            htmlLineCnt,
-            htmlLineIi,
-            htmlPath,
-            isBrowser: local.isBrowser,
-            lineList
-        }, node));
+        htmlData = local.templateRender(
+            local.templateCoverageReport,
+            Object.assign({
+                datetime,
+                env: process.env,
+                htmlLineCode,
+                htmlLineCnt,
+                htmlLineIi,
+                htmlPath,
+                isBrowser: local.isBrowser,
+                lineList
+            }, node)
+        );
         htmlAll += htmlData + "\n\n";
         fileWrite(htmlFile, htmlData);
-    };
-    render = function (template, node) {
-    /*
-     * this function will render <template> with given <node>
-     */
-        let ii;
-        let val;
-        // render {{...}}
-        template = local.templateRender(template, node);
-        // render #show_pct
-        ii = 0;
-        template = template.replace((
-            /\{\{#show_pct\}\}/g
-        ), function () {
-            val = (
-                (ii & 1) === 0
-                ? node.children[ii >> 1].metrics.statements.pct | 0
-                : 100 - val
-            );
-            ii += 1;
-            return val;
-        });
-        return template.trim() + "\n";
     };
     // init <datetime>
     datetime = new Date().toGMTString();
@@ -11478,6 +11460,8 @@ local.coverageReportCreate = function (opt) {
                 ) / 100
                 : 100
             );
+            metric.width1 = metric.pct | 0;
+            metric.width2 = 100 - metric.width1;
             metric.score = (
                 metric.pct >= 80
                 ? "high"
