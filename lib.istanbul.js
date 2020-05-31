@@ -11170,12 +11170,12 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         template = template.replace((
             /\{\{#show_pct\}\}/g
         ), function () {
-            ii += 1;
             val = (
                 (ii & 1) === 0
                 ? node.children[ii >> 1].metrics.statements.pct | 0
                 : 100 - val
             );
+            ii += 1;
             return val;
         });
         // render #show_code last
