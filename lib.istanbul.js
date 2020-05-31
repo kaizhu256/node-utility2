@@ -10899,9 +10899,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         // render <htmlPath>
         tmp = node;
         parent = tmp.parent;
-        if (!parent) {
-            return "";
-        }
         htmlPath = tmp.relativeName;
         ii = 1;
         while (parent) {
