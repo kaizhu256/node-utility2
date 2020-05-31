@@ -10722,8 +10722,8 @@ local.templateCoverageReport = '\
 <div class="body">\n\
 {{#if isFile}}\n\
 <pre><table class="coverage"><tr>\n\
-        <td class="line-count">{{htmlLineno notHtmlSafe}}</td>\n\
-        <td class="line-coverage">{{htmlCnt notHtmlSafe}}</td>\n\
+        <td class="line-count">{{htmlLineIi notHtmlSafe}}</td>\n\
+        <td class="line-coverage">{{htmlLineCnt notHtmlSafe}}</td>\n\
         <td class="text"><pre class="prettyprint lang-js" tabIndex="0">{{#show_code}}</pre></td>\n\
 </tr></table></pre>\n\
 {{#unless isFile}}\n\
@@ -10887,10 +10887,10 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
      * to <dir>/<htmlFile>
      */
         let fileCoverage;
-        let htmlCnt;
         let htmlData;
         let htmlFile;
-        let htmlLineno;
+        let htmlLineCnt;
+        let htmlLineIi;
         let htmlPath;
         let ii;
         let jj;
@@ -11117,15 +11117,15 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
             lineList.pop();
             ii -= 1;
         }
-        htmlCnt = "";
-        htmlLineno = "";
+        htmlLineCnt = "";
+        htmlLineIi = "";
         ii = 1;
         while (ii < lineList.length) {
             tmp = lineList[ii];
-            // render <htmlLineno>
-            htmlLineno += `<a href="#l${ii}" id="l${ii}">${ii}</a>` + "\n";
+            // render <htmlLineIi>
+            htmlLineIi += `<a href="#l${ii}" id="l${ii}">${ii}</a>` + "\n";
             tmp = fileCoverage.l[ii];
-            htmlCnt += (
+            htmlLineCnt += (
                 tmp === undefined
                 ? `<span class="cline-any cline-neutral">&nbsp;</span>`
                 : tmp > 0
@@ -11137,8 +11137,8 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         htmlData = render(local.templateCoverageReport, Object.assign({
             datetime,
             env: process.env,
-            htmlCnt,
-            htmlLineno,
+            htmlLineCnt,
+            htmlLineIi,
             htmlPath,
             isBrowser: local.isBrowser,
             lineList
@@ -11568,15 +11568,14 @@ local.coverageReportCreate = function (opt) {
                 key,
                 cnt
             ]) {
-                let lineno;
                 if (cnt === 0 && fileCoverage.statementMap[key].skip) {
                     cnt = 1;
                 }
-                lineno = fileCoverage.statementMap[key].start.line;
-                fileCoverage.l[lineno] = Math.max(
-                    fileCoverage.l[lineno] | 0,
-                    cnt
-                );
+                fileCoverage.l[
+                    fileCoverage.statementMap[key].start.line
+                ] = Math.max(fileCoverage.l[
+                    fileCoverage.statementMap[key].start.line
+                ] | 0, cnt);
             });
             // computeSimpleTotals
             [
