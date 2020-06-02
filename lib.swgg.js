@@ -95,9 +95,32 @@
         }
         return arg;
     };
-    local.fsRmrfSync = function (dir) {
+    local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
     /*
-     * this function will sync "rm -rf" <dir>
+     * this function will sync-read <pathname> with given <type> and <dflt>
+     */
+        let fs;
+        // do nothing if module does not exist
+        try {
+            fs = require("fs");
+        } catch (ignore) {
+            return dflt;
+        }
+        pathname = require("path").resolve(pathname);
+        // try to read <pathname>
+        try {
+            return (
+                type === "json"
+                ? JSON.parse(fs.readFileSync(pathname, "utf8"))
+                : fs.readFileSync(pathname, type)
+            );
+        } catch (ignore) {
+            return dflt;
+        }
+    };
+    local.fsRmrfSync = function (pathname) {
+    /*
+     * this function will sync "rm -rf" <pathname>
      */
         let child_process;
         // do nothing if module does not exist
@@ -106,17 +129,30 @@
         } catch (ignore) {
             return;
         }
-        child_process.spawnSync("rm", [
-            "-rf", dir
-        ], {
-            stdio: [
-                "ignore", 1, 2
-            ]
-        });
+        pathname = require("path").resolve(pathname);
+        if (process.platform !== "win32") {
+            child_process.spawnSync("rm", [
+                "-rf", pathname
+            ], {
+                stdio: [
+                    "ignore", 1, 2
+                ]
+            });
+            return;
+        }
+        try {
+            child_process.spawnSync("rd", [
+                "/s", "/q", pathname
+            ], {
+                stdio: [
+                    "ignore", 1, "ignore"
+                ]
+            });
+        } catch (ignore) {}
     };
-    local.fsWriteFileWithMkdirpSync = function (file, data) {
+    local.fsWriteFileWithMkdirpSync = function (pathname, data) {
     /*
-     * this function will sync write <data> to <file> with "mkdir -p"
+     * this function will sync write <data> to <pathname> with "mkdir -p"
      */
         let fs;
         // do nothing if module does not exist
@@ -125,17 +161,18 @@
         } catch (ignore) {
             return;
         }
-        // try to write file
+        pathname = require("path").resolve(pathname);
+        // try to write <pathname>
         try {
-            fs.writeFileSync(file, data);
+            fs.writeFileSync(pathname, data);
             return true;
         } catch (ignore) {
             // mkdir -p
-            fs.mkdirSync(require("path").dirname(file), {
+            fs.mkdirSync(require("path").dirname(pathname), {
                 recursive: true
             });
-            // rewrite file
-            fs.writeFileSync(file, data);
+            // re-write <pathname>
+            fs.writeFileSync(pathname, data);
             return true;
         }
     };

@@ -10,8 +10,8 @@
 
 /* istanbul instrument in package puppeteer */
 // assets.utility2.header.js - start
-/* istanbul ignore next */
 /* jslint utility2:true */
+/* istanbul ignore next */
 (function (globalThis) {
     "use strict";
     let consoleError;
@@ -95,9 +95,32 @@
         }
         return arg;
     };
-    local.fsRmrfSync = function (dir) {
+    local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
     /*
-     * this function will sync "rm -rf" <dir>
+     * this function will sync-read <pathname> with given <type> and <dflt>
+     */
+        let fs;
+        // do nothing if module does not exist
+        try {
+            fs = require("fs");
+        } catch (ignore) {
+            return dflt;
+        }
+        pathname = require("path").resolve(pathname);
+        // try to read pathname
+        try {
+            return (
+                type === "json"
+                ? JSON.parse(fs.readFileSync(pathname, "utf8"))
+                : fs.readFileSync(pathname, type)
+            );
+        } catch (ignore) {
+            return dflt;
+        }
+    };
+    local.fsRmrfSync = function (pathname) {
+    /*
+     * this function will sync "rm -rf" <pathname>
      */
         let child_process;
         // do nothing if module does not exist
@@ -106,46 +129,57 @@
         } catch (ignore) {
             return;
         }
-        child_process.spawnSync("rm", [
-            "-rf", dir
-        ], {
-            stdio: [
-                "ignore", 1, 2
-            ]
-        });
+        pathname = require("path").resolve(pathname);
+        if (process.platform !== "win32") {
+            child_process.spawnSync("rm", [
+                "-rf", pathname
+            ], {
+                stdio: [
+                    "ignore", 1, 2
+                ]
+            });
+            return;
+        }
+        try {
+            child_process.spawnSync("rd", [
+                "/s", "/q", pathname
+            ], {
+                stdio: [
+                    "ignore", 1, "ignore"
+                ]
+            });
+        } catch (ignore) {}
     };
-    local.fsWriteFileWithMkdirpSync = function (file, data) {
+    local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {
     /*
-     * this function will sync write <data> to <file> with "mkdir -p"
+     * this function will sync write <data> to <pathname> with "mkdir -p"
      */
         let fs;
+        let success;
         // do nothing if module does not exist
         try {
             fs = require("fs");
         } catch (ignore) {
             return;
         }
-        // try to write file
+        pathname = require("path").resolve(pathname);
+        // try to write pathname
         try {
-            fs.writeFileSync(file, data);
-            return true;
+            fs.writeFileSync(pathname, data);
+            success = true;
         } catch (ignore) {
             // mkdir -p
-            fs.mkdirSync(require("path").dirname(file), {
+            fs.mkdirSync(require("path").dirname(pathname), {
                 recursive: true
             });
-            // rewrite file
-            fs.writeFileSync(file, data);
-            return true;
+            // re-write pathname
+            fs.writeFileSync(pathname, data);
+            success = true;
         }
-    };
-    local.functionOrNop = function (fnc) {
-    /*
-     * this function will if <fnc> exists,
-     * return <fnc>,
-     * else return <nop>
-     */
-        return fnc || local.nop;
+        if (success && msg) {
+            console.error(msg.replace("{{pathname}}", pathname));
+        }
+        return success;
     };
     local.identity = function (val) {
     /*
@@ -159,42 +193,33 @@
      */
         return;
     };
-    local.objectAssignDefault = function (target, source) {
+    local.objectAssignDefault = function (tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <target> are null, undefined, or "",
-     * then overwrite them with items from <source>
+     * this function will if items from <tgt> are null, undefined, or "",
+     * then overwrite them with items from <src>
      */
-        target = target || {};
-        Object.keys(source || {}).forEach(function (key) {
-            if (
-                target[key] === null
-                || target[key] === undefined
-                || target[key] === ""
-            ) {
-                target[key] = target[key] || source[key];
-            }
-        });
-        return target;
-    };
-    local.querySelector = function (selectors) {
-    /*
-     * this function will return first dom-elem that match <selectors>
-     */
-        return (
-            typeof document === "object" && document
-            && typeof document.querySelector === "function"
-            && document.querySelector(selectors)
-        ) || {};
-    };
-    local.querySelectorAll = function (selectors) {
-    /*
-     * this function will return dom-elem-list that match <selectors>
-     */
-        return (
-            typeof document === "object" && document
-            && typeof document.querySelectorAll === "function"
-            && Array.from(document.querySelectorAll(selectors))
-        ) || [];
+        let recurse;
+        recurse = function (tgt, src, depth) {
+            Object.entries(src).forEach(function ([
+                key, bb
+            ]) {
+                let aa;
+                aa = tgt[key];
+                if (aa === undefined || aa === null || aa === "") {
+                    tgt[key] = bb;
+                    return;
+                }
+                if (
+                    depth !== 0
+                    && typeof aa === "object" && aa && !Array.isArray(aa)
+                    && typeof bb === "object" && bb && !Array.isArray(bb)
+                ) {
+                    recurse(aa, bb, depth - 1);
+                }
+            });
+        };
+        recurse(tgt, src, depth | 0);
+        return tgt;
     };
     // require builtin
     if (!local.isBrowser) {

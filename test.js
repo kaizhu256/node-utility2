@@ -1,7 +1,7 @@
 /* istanbul instrument in package utility2 */
 // assets.utility2.header.js - start
-/* istanbul ignore next */
 /* jslint utility2:true */
+/* istanbul ignore next */
 (function (globalThis) {
     "use strict";
     let consoleError;
@@ -85,9 +85,32 @@
         }
         return arg;
     };
-    local.fsRmrfSync = function (dir) {
+    local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
     /*
-     * this function will sync "rm -rf" <dir>
+     * this function will sync-read <pathname> with given <type> and <dflt>
+     */
+        let fs;
+        // do nothing if module does not exist
+        try {
+            fs = require("fs");
+        } catch (ignore) {
+            return dflt;
+        }
+        pathname = require("path").resolve(pathname);
+        // try to read pathname
+        try {
+            return (
+                type === "json"
+                ? JSON.parse(fs.readFileSync(pathname, "utf8"))
+                : fs.readFileSync(pathname, type)
+            );
+        } catch (ignore) {
+            return dflt;
+        }
+    };
+    local.fsRmrfSync = function (pathname) {
+    /*
+     * this function will sync "rm -rf" <pathname>
      */
         let child_process;
         // do nothing if module does not exist
@@ -96,46 +119,57 @@
         } catch (ignore) {
             return;
         }
-        child_process.spawnSync("rm", [
-            "-rf", dir
-        ], {
-            stdio: [
-                "ignore", 1, 2
-            ]
-        });
+        pathname = require("path").resolve(pathname);
+        if (process.platform !== "win32") {
+            child_process.spawnSync("rm", [
+                "-rf", pathname
+            ], {
+                stdio: [
+                    "ignore", 1, 2
+                ]
+            });
+            return;
+        }
+        try {
+            child_process.spawnSync("rd", [
+                "/s", "/q", pathname
+            ], {
+                stdio: [
+                    "ignore", 1, "ignore"
+                ]
+            });
+        } catch (ignore) {}
     };
-    local.fsWriteFileWithMkdirpSync = function (file, data) {
+    local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {
     /*
-     * this function will sync write <data> to <file> with "mkdir -p"
+     * this function will sync write <data> to <pathname> with "mkdir -p"
      */
         let fs;
+        let success;
         // do nothing if module does not exist
         try {
             fs = require("fs");
         } catch (ignore) {
             return;
         }
-        // try to write file
+        pathname = require("path").resolve(pathname);
+        // try to write pathname
         try {
-            fs.writeFileSync(file, data);
-            return true;
+            fs.writeFileSync(pathname, data);
+            success = true;
         } catch (ignore) {
             // mkdir -p
-            fs.mkdirSync(require("path").dirname(file), {
+            fs.mkdirSync(require("path").dirname(pathname), {
                 recursive: true
             });
-            // rewrite file
-            fs.writeFileSync(file, data);
-            return true;
+            // re-write pathname
+            fs.writeFileSync(pathname, data);
+            success = true;
         }
-    };
-    local.functionOrNop = function (fnc) {
-    /*
-     * this function will if <fnc> exists,
-     * return <fnc>,
-     * else return <nop>
-     */
-        return fnc || local.nop;
+        if (success && msg) {
+            console.error(msg.replace("{{pathname}}", pathname));
+        }
+        return success;
     };
     local.identity = function (val) {
     /*
@@ -149,42 +183,33 @@
      */
         return;
     };
-    local.objectAssignDefault = function (target, source) {
+    local.objectAssignDefault = function (tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <target> are null, undefined, or "",
-     * then overwrite them with items from <source>
+     * this function will if items from <tgt> are null, undefined, or "",
+     * then overwrite them with items from <src>
      */
-        target = target || {};
-        Object.keys(source || {}).forEach(function (key) {
-            if (
-                target[key] === null
-                || target[key] === undefined
-                || target[key] === ""
-            ) {
-                target[key] = target[key] || source[key];
-            }
-        });
-        return target;
-    };
-    local.querySelector = function (selectors) {
-    /*
-     * this function will return first dom-elem that match <selectors>
-     */
-        return (
-            typeof document === "object" && document
-            && typeof document.querySelector === "function"
-            && document.querySelector(selectors)
-        ) || {};
-    };
-    local.querySelectorAll = function (selectors) {
-    /*
-     * this function will return dom-elem-list that match <selectors>
-     */
-        return (
-            typeof document === "object" && document
-            && typeof document.querySelectorAll === "function"
-            && Array.from(document.querySelectorAll(selectors))
-        ) || [];
+        let recurse;
+        recurse = function (tgt, src, depth) {
+            Object.entries(src).forEach(function ([
+                key, bb
+            ]) {
+                let aa;
+                aa = tgt[key];
+                if (aa === undefined || aa === null || aa === "") {
+                    tgt[key] = bb;
+                    return;
+                }
+                if (
+                    depth !== 0
+                    && typeof aa === "object" && aa && !Array.isArray(aa)
+                    && typeof bb === "object" && bb && !Array.isArray(bb)
+                ) {
+                    recurse(aa, bb, depth - 1);
+                }
+            });
+        };
+        recurse(tgt, src, depth | 0);
+        return tgt;
     };
     // require builtin
     if (!local.isBrowser) {
@@ -506,15 +531,6 @@ local.testCase_ajax_default = function (opt, onError) {
             }, {
                 // test undefined-status-code handling-behavior
                 url: "/test.err-undefined"
-            //!! }, {
-                //!! // test corsForwardProxyHost handling-behavior
-                //!! corsForwardProxyHost: "https://undefined:0",
-                //!! location: {
-                    //!! host: "undefined.github.io"
-                //!! },
-                //!! timeout: 1,
-                //!! // test undefined-https-url handling-behavior
-                //!! url: "https://undefined:0"
             }
         ]
     }, function (opt2, onParallel) {
@@ -883,8 +899,18 @@ local.testCase_buildLib_default = function (opt, onError) {
     local.testMock([
         [
             local, {
+                templateRenderMyApp: function () {
+                    return local.assetsDict["/assets.my_app.template.js"];
+                }
+            }
+        ], [
+            local.fs, {
+                // test customize-local handling-behavior
+                existsSync: function () {
+                    return true;
+                },
                 // test duplicate local function handling-behavior
-                fsReadFileOrEmptyStringSync: function () {
+                readFileSync: function () {
                     return (
                         "local.nop = function () {\n"
                         + "/*\n"
@@ -899,16 +925,6 @@ local.testCase_buildLib_default = function (opt, onError) {
                         + "    return;\n"
                         + "};\n"
                     );
-                },
-                templateRenderMyApp: function () {
-                    return local.assetsDict["/assets.my_app.template.js"];
-                }
-            }
-        ], [
-            local.fs, {
-                // test customize-local handling-behavior
-                existsSync: function () {
-                    return true;
                 },
                 writeFileSync: local.nop
             }
@@ -983,14 +999,14 @@ local.testCase_buildXxx_default = function (opt, onError) {
             }
         ]
     ], function (onError) {
-        local._testCase_buildApidoc_default(null, local.nop);
-        local._testCase_buildApp_default(null, local.nop);
-        local._testCase_buildLib_default(null, local.nop);
-        local._testCase_buildReadme_default(null, local.nop);
-        local._testCase_buildTest_default(null, local.nop);
-        local._testCase_webpage_default(null, local.nop);
+        local._testCase_buildApidoc_default({}, local.nop);
+        local._testCase_buildApp_default({}, local.nop);
+        local._testCase_buildLib_default({}, local.nop);
+        local._testCase_buildReadme_default({}, local.nop);
+        local._testCase_buildTest_default({}, local.nop);
+        local._testCase_webpage_default({}, local.nop);
         local.assetsDict["/"] = "<script src=\"assets.test.js\"></script>";
-        local._testCase_webpage_default(null, local.nop);
+        local._testCase_webpage_default({}, local.nop);
         onError(undefined, opt);
     }, onError);
 };
@@ -1775,130 +1791,6 @@ local.testCase_objectAssignRecurse_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
-local.testCase_objectSetDefault_default = function (opt, onError) {
-/*
- * this function will test objectSetDefault's default handling-behavior
- */
-    // test null-case handling-behavior
-    local.objectSetDefault();
-    local.objectSetDefault({});
-    // test falsy handling-behavior
-    [
-        "", 0, false, null, undefined
-    ].forEach(function (aa) {
-        [
-            "", 0, false, null, undefined
-        ].forEach(function (bb) {
-            local.assertJsonEqual(
-                local.objectSetDefault({
-                    data: aa
-                }, {
-                    data: bb
-                }).data,
-                (aa === 0 || aa === false || bb === undefined)
-                ? aa
-                : bb
-            );
-        });
-    });
-    // test non-recursive handling-behavior
-    local.assertJsonEqual(local.objectSetDefault({
-        aa: 0,
-        bb: {
-            cc: 1
-        },
-        cc: {
-            dd: {}
-        },
-        dd: [
-            1, 1
-        ],
-        ee: [
-            1, 1
-        ]
-    }, {
-        aa: 2,
-        bb: {
-            dd: 2
-        },
-        cc: {
-            dd: {
-                ee: 2
-            }
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    // test default-depth handling-behavior
-    }, null), {
-        aa: 0,
-        bb: {
-            cc: 1
-        },
-        cc: {
-            dd: {}
-        },
-        dd: [
-            1, 1
-        ],
-        ee: [
-            1, 1
-        ]
-    });
-    // test recursive handling-behavior
-    local.assertJsonEqual(local.objectSetDefault({
-        aa: 0,
-        bb: {
-            cc: 1
-        },
-        cc: {
-            dd: {}
-        },
-        dd: [
-            1, 1
-        ],
-        ee: [
-            1, 1
-        ]
-    }, {
-        aa: 2,
-        bb: {
-            dd: 2
-        },
-        cc: {
-            dd: {
-                ee: 2
-            }
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    // test depth handling-behavior
-    }, 2), {
-        aa: 0,
-        bb: {
-            cc: 1,
-            dd: 2
-        },
-        cc: {
-            dd: {}
-        },
-        dd: [
-            1, 1
-        ],
-        ee: [
-            1, 1
-        ]
-    });
-    onError(undefined, opt);
-};
-
 local.testCase_onErrorDefault_default = function (opt, onError) {
 /*
  * this function will test onErrorDefault's default handling-behavior
@@ -1919,11 +1811,11 @@ local.testCase_onErrorDefault_default = function (opt, onError) {
         // test no err handling-behavior
         local.onErrorDefault();
         // validate opt
-        local.assertOrThrow(!opt, opt);
+        local.assertOrThrow(opt !== local.errorDefault, opt);
         // test err handling-behavior
         local.onErrorDefault(local.errorDefault);
         // validate opt
-        local.assertOrThrow(opt, opt);
+        local.assertOrThrow(opt === local.errorDefault, opt);
         onError(undefined, opt);
     }, onError);
 };
@@ -2127,57 +2019,6 @@ local.testCase_onParallel_default = function (opt, onError) {
     onParallel(null, opt);
 };
 
-local.testCase_onTimeout_timeout = function (opt, onError) {
-/*
- * this function will test onTimeout's timeout handling-behavior
- */
-    opt = local.timeElapsedStart();
-    local.onTimeout(function (err) {
-        // handle err
-        local.assertOrThrow(err, err);
-        // validate err.message
-        local.assertOrThrow(
-            err.message.indexOf("testCase_onTimeout_timeout") >= 0,
-            err
-        );
-        // poll timeElapsed
-        local.timeElapsedPoll(opt);
-        // validate timeElapsed passed is greater than timeout
-        local.assertOrThrow(opt.timeElapsed >= 1000, opt);
-        onError(undefined, opt);
-    }, 1000, "testCase_onTimeout_timeout");
-};
-
-local.testCase_profileXxx_default = function (opt, onError) {
-/*
- * this function will test profileXxx's default handling-behavior
- */
-    opt = {};
-    // test profileSync's handling-behavior
-    opt.timeElapsed = local.profileSync(function () {
-        return;
-    });
-    // validate timeElapsed
-    local.assertOrThrow(
-        0 <= opt.timeElapsed && opt.timeElapsed < 1000,
-        opt.timeElapsed
-    );
-    // test profile's async handling-behavior
-    local.profile(function (onError) {
-        setTimeout(onError);
-    }, function (err, timeElapsed) {
-        // handle err
-        local.assertOrThrow(!err, err);
-        opt.timeElapsed = timeElapsed;
-        // validate timeElapsed
-        local.assertOrThrow((
-            0 <= opt.timeElapsed
-            && opt.timeElapsed < local.timeoutDefault
-        ), opt.timeElapsed);
-        onError(undefined, opt);
-    });
-};
-
 local.testCase_replStart_default = function (opt, onError) {
 /*
  * this function will test replStart's default handling-behavior
@@ -2279,76 +2120,6 @@ local.testCase_requireReadme_start = function (opt, onError) {
         local.assertOrThrow(local._testCase_requireReadme_start === local);
         onError(undefined, opt);
     }, onError);
-};
-
-local.testCase_semverCompare_default = function (opt, onError) {
-/*
- * this function will test semverCompare's default handling-behavior
- */
-    // test aa = bb
-    opt = [
-        [
-            "",
-            "1",
-            "1.2",
-            null,
-            undefined
-        ],
-        [
-            "1.2.3",
-            "1.2.3+aa"
-        ],
-        [
-            "1.2.3-aa",
-            "1.2.3-aa+bb"
-        ]
-    ];
-    opt.forEach(function ([
-        aa, bb
-    ]) {
-        local.assertOrThrow(
-            local.semverCompare(aa, bb) === 0,
-            [
-                aa, bb, local.semverCompare(aa, bb)
-            ]
-        );
-    });
-    // test aa < bb
-    opt = [
-        "syntax-err",
-        "1.0.0-alpha",
-        "1.0.0-alpha.1",
-        "1.0.0-alpha.beta",
-        "1.0.0-beta",
-        "1.0.0-beta.2",
-        "1.0.0-beta.11",
-        "1.0.0-rc.1",
-        "1.0.0",
-        "2.2.2",
-        "2.2.10",
-        "2.10.2",
-        "10.2.2"
-    ];
-    opt.reduce(function (aa, bb) {
-        local.assertOrThrow(
-            local.semverCompare(aa, bb) === -1,
-            [
-                aa, bb, local.semverCompare(aa, bb)
-            ]
-        );
-        return bb;
-    });
-    // test aa > bb
-    opt.reverse().reduce(function (aa, bb) {
-        local.assertOrThrow(
-            local.semverCompare(aa, bb) === 1,
-            [
-                aa, bb, local.semverCompare(aa, bb)
-            ]
-        );
-        return bb;
-    });
-    onError(undefined, opt);
 };
 
 local.testCase_serverRespondTimeoutDefault_timeout = function (
@@ -2791,12 +2562,6 @@ local.utility2.serverLocalUrlTest = function (url) {
 
 // run shared js-env code - init-after
 (function () {
-// init assets
-local.assetsDict["/assets.swgg.swagger.json"] = (
-    local.fsReadFileOrEmptyStringSync("assets.swgg.swagger.json")
-    || local.assetsDict["/assets.swgg.swagger.json"]
-    || local.assetsDict["/assets.swgg.swagger.petstore.json"]
-);
 // hack-coverage - test testRunServer's multiple-call handling-behavior
 local.testRunServer(local);
 // hack-coverage - stateInit
@@ -2954,7 +2719,7 @@ if (process.argv[2]) {
     }
     // start
     process.argv.splice(1, 1);
-    process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
+    process.argv[1] = local.path.resolve(process.argv[1]);
     local.Module.runMain();
 }
 // runme

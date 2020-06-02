@@ -1,16 +1,20 @@
 /*
 shRawLibFetch
 {
+    "fetchList": [
+        {
+            "url": "https://github.com/CSSLint/csslint/blob/e8aeeda06c928636e21428e09b1af93f66621209/dist/csslint.js"
+        },
+        {
+            "url": "https://github.com/douglascrockford/JSLint/blob/686716b71f6d45d3c233e1cfa026a1e5f46747aa/jslint.js"
+        }
+    ],
     "replaceList": [
         {
             "flags": "g",
             "replace": "$1// hack-jslint - exact-margin$1if (right.from !==",
             "source": "(\\n\\u0020*?)if\\u0020\\(right.from\\u0020\\S+"
         }
-    ],
-    "urlList": [
-        "https://github.com/CSSLint/csslint/blob/e8aeeda06c928636e21428e09b1af93f66621209/dist/csslint.js",
-        "https://github.com/douglascrockford/JSLint/blob/686716b71f6d45d3c233e1cfa026a1e5f46747aa/jslint.js"
     ]
 }
 -                        margin += 4;

@@ -55,23 +55,42 @@ this zero-dependency package will provide high-level functions to to build, test
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.5.25
-- npm publish 2020.5.25
-- istanbul - rename __coverageCodeDict__ to __coverageInclude__
-- istanbul - rewrite function coverageReportCreate
+#### changelog 2020.5.31
+- npm publish 2020.5.31
+- update file raw.istanbul.js
+- remove excessive "the" from comments
+- remove build-process for css-file
+- replace function local.objectSetDefault with objectAssignDefault
+- replace process.cwd() with path.resolve()
+- rename shell-function shPackageJsonVersionUpdate to shPackageJsonVersionIncrement
+- remove functions
+    functionOrNop,
+    local.querySelector,
+    local.querySelectorAll,
+    middlewareForwardProxy,
+    onTimeout,
+    profile,
+    profileSync,
+    semverCompare,
+    serverRespondCors,
+- replace function fsReadFileOrEmptyStringSync with fsReadFileOrDefaultSync
+- remove dependency to file lib.swgg.js
+- inline object local.contentTypeDict
+- istanbul - inline function templateRender
 - none
 
 #### todo
+- istanbul - inline class Instrumenter into function instrumentSync
+- add eslint-rule no-multiple-empty-lines
+- remove file lib.swgg.js
+- remove sloppy-cases where npm-test falsely pass
 - deprecate dependent github-crud
-- deprecate dependent swgg
 - istanbul - remove filesUnderRoot subroutine
 - jslint - add nullish-coalescing support
 - jslint - add optional-chaining support
 - jslint - prefer undefined over null
-- replace function local.objectSetDefault with objectAssignDefault
 - replace function local.objectAssignRecurse with Object.assign
 - jslint - fix off-by-one line-error
-- remove excessive "the" from comments
 - replace db-lite with sql_lite.js
 - add default testCase _testCase_cliRun_help
 - add server stress-test using puppeteer
@@ -132,9 +151,10 @@ instruction
 
 
 
+/* istanbul instrument in package utility2 */
 // assets.utility2.header.js - start
-/* istanbul ignore next */
 /* jslint utility2:true */
+/* istanbul ignore next */
 (function (globalThis) {
     "use strict";
     let consoleError;
@@ -218,9 +238,32 @@ instruction
         }
         return arg;
     };
-    local.fsRmrfSync = function (dir) {
+    local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
     /*
-     * this function will sync "rm -rf" <dir>
+     * this function will sync-read <pathname> with given <type> and <dflt>
+     */
+        let fs;
+        // do nothing if module does not exist
+        try {
+            fs = require("fs");
+        } catch (ignore) {
+            return dflt;
+        }
+        pathname = require("path").resolve(pathname);
+        // try to read pathname
+        try {
+            return (
+                type === "json"
+                ? JSON.parse(fs.readFileSync(pathname, "utf8"))
+                : fs.readFileSync(pathname, type)
+            );
+        } catch (ignore) {
+            return dflt;
+        }
+    };
+    local.fsRmrfSync = function (pathname) {
+    /*
+     * this function will sync "rm -rf" <pathname>
      */
         let child_process;
         // do nothing if module does not exist
@@ -229,46 +272,57 @@ instruction
         } catch (ignore) {
             return;
         }
-        child_process.spawnSync("rm", [
-            "-rf", dir
-        ], {
-            stdio: [
-                "ignore", 1, 2
-            ]
-        });
+        pathname = require("path").resolve(pathname);
+        if (process.platform !== "win32") {
+            child_process.spawnSync("rm", [
+                "-rf", pathname
+            ], {
+                stdio: [
+                    "ignore", 1, 2
+                ]
+            });
+            return;
+        }
+        try {
+            child_process.spawnSync("rd", [
+                "/s", "/q", pathname
+            ], {
+                stdio: [
+                    "ignore", 1, "ignore"
+                ]
+            });
+        } catch (ignore) {}
     };
-    local.fsWriteFileWithMkdirpSync = function (file, data) {
+    local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {
     /*
-     * this function will sync write <data> to <file> with "mkdir -p"
+     * this function will sync write <data> to <pathname> with "mkdir -p"
      */
         let fs;
+        let success;
         // do nothing if module does not exist
         try {
             fs = require("fs");
         } catch (ignore) {
             return;
         }
-        // try to write file
+        pathname = require("path").resolve(pathname);
+        // try to write pathname
         try {
-            fs.writeFileSync(file, data);
-            return true;
+            fs.writeFileSync(pathname, data);
+            success = true;
         } catch (ignore) {
             // mkdir -p
-            fs.mkdirSync(require("path").dirname(file), {
+            fs.mkdirSync(require("path").dirname(pathname), {
                 recursive: true
             });
-            // rewrite file
-            fs.writeFileSync(file, data);
-            return true;
+            // re-write pathname
+            fs.writeFileSync(pathname, data);
+            success = true;
         }
-    };
-    local.functionOrNop = function (fnc) {
-    /*
-     * this function will if <fnc> exists,
-     * return <fnc>,
-     * else return <nop>
-     */
-        return fnc || local.nop;
+        if (success && msg) {
+            console.error(msg.replace("{{pathname}}", pathname));
+        }
+        return success;
     };
     local.identity = function (val) {
     /*
@@ -282,42 +336,33 @@ instruction
      */
         return;
     };
-    local.objectAssignDefault = function (target, source) {
+    local.objectAssignDefault = function (tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <target> are null, undefined, or "",
-     * then overwrite them with items from <source>
+     * this function will if items from <tgt> are null, undefined, or "",
+     * then overwrite them with items from <src>
      */
-        target = target || {};
-        Object.keys(source || {}).forEach(function (key) {
-            if (
-                target[key] === null
-                || target[key] === undefined
-                || target[key] === ""
-            ) {
-                target[key] = target[key] || source[key];
-            }
-        });
-        return target;
-    };
-    local.querySelector = function (selectors) {
-    /*
-     * this function will return first dom-elem that match <selectors>
-     */
-        return (
-            typeof document === "object" && document
-            && typeof document.querySelector === "function"
-            && document.querySelector(selectors)
-        ) || {};
-    };
-    local.querySelectorAll = function (selectors) {
-    /*
-     * this function will return dom-elem-list that match <selectors>
-     */
-        return (
-            typeof document === "object" && document
-            && typeof document.querySelectorAll === "function"
-            && Array.from(document.querySelectorAll(selectors))
-        ) || [];
+        let recurse;
+        recurse = function (tgt, src, depth) {
+            Object.entries(src).forEach(function ([
+                key, bb
+            ]) {
+                let aa;
+                aa = tgt[key];
+                if (aa === undefined || aa === null || aa === "") {
+                    tgt[key] = bb;
+                    return;
+                }
+                if (
+                    depth !== 0
+                    && typeof aa === "object" && aa && !Array.isArray(aa)
+                    && typeof bb === "object" && bb && !Array.isArray(bb)
+                ) {
+                    recurse(aa, bb, depth - 1);
+                }
+            });
+        };
+        recurse(tgt, src, depth | 0);
+        return tgt;
     };
     // require builtin
     if (!local.isBrowser) {
@@ -449,8 +494,8 @@ local.testCase_webpage_default = function (opt, onError) {
 
 
 
-/* istanbul ignore next */
 // run browser js-env code - init-test
+/* istanbul ignore next */
 (function () {
 if (!local.isBrowser) {
     return;
@@ -459,7 +504,7 @@ if (!local.isBrowser) {
 ["error", "log"].forEach(function (key) {
     let elem;
     let fnc;
-    elem = local.querySelector("#outputStdout1");
+    elem = document.querySelector("#outputStdout1");
     if (!elem) {
         return;
     }
@@ -487,6 +532,7 @@ globalThis.domOnEventDelegateDict = local;
 
 
 // run node js-env code - init-test
+/* istanbul ignore next */
 (function () {
 if (local.isBrowser) {
     return;
@@ -495,19 +541,6 @@ if (local.isBrowser) {
 module.exports = local;
 // init assetsDict
 local.assetsDict = local.assetsDict || {};
-[
-    "assets.swgg.swagger.json",
-    "assets.swgg.swagger.server.json"
-].forEach(function (file) {
-    file = "/" + file;
-    local.assetsDict[file] = local.assetsDict[file] || "";
-    if (local.fs.existsSync(local.__dirname + file)) {
-        local.assetsDict[file] = local.fs.readFileSync(
-            local.__dirname + file,
-            "utf8"
-        );
-    }
-});
 /* jslint ignore:start */
 local.assetsDict["/assets.index.template.html"] = '\
 <!doctype html>\n\
@@ -676,7 +709,7 @@ pre {\n\
         switch (gotoState) {\n\
         // ajaxProgress - show\n\
         case 1:\n\
-            // init <timerInterval> and <timerTimeout>\n\
+            // init timerInterval and timerTimeout\n\
             if (!timerTimeout) {\n\
                 timeStart = Date.now();\n\
                 timerInterval = setInterval(opt, 2000, 1, onError);\n\
@@ -728,12 +761,12 @@ pre {\n\
                 + (tmp - timeStart)\n\
                 + " ms"\n\
             );\n\
-            // cleanup <timerInterval> and <timerTimeout>\n\
+            // cleanup timerInterval and timerTimeout\n\
             timeStart = tmp;\n\
             clearInterval(timerInterval);\n\
-            timerInterval = null;\n\
+            timerInterval = undefined;\n\
             clearTimeout(timerTimeout);\n\
-            timerTimeout = null;\n\
+            timerTimeout = undefined;\n\
             // hide ajaxProgressBar\n\
             styleBar.background = "transparent";\n\
             // hide ajaxProgressModal\n\
@@ -756,7 +789,7 @@ pre {\n\
         opt.cnt = 0;\n\
         window.domOnEventAjaxProgressUpdate(2, onError);\n\
     };\n\
-    // init <styleBar>\n\
+    // init styleBar\n\
     styleBar = document.getElementById("domElementAjaxProgressBar1").style;\n\
     styleBar0 = Object.assign({}, styleBar);\n\
     Object.entries({\n\
@@ -773,7 +806,7 @@ pre {\n\
     }).forEach(function (entry) {\n\
         styleBar[entry[0]] = styleBar[entry[0]] || entry[1];\n\
     });\n\
-    // init <styleModal>\n\
+    // init styleModal\n\
     styleModal = document.getElementById("domElementAjaxProgressModal1") || {};\n\
     styleModal = styleModal.style || {};\n\
     styleModal0 = Object.assign({}, styleModal);\n\
@@ -1003,7 +1036,7 @@ utility2-comment -->\n\
 window.addEventListener("load", function (local) {\n\
 "use strict";\n\
 local = window.utility2;\n\
-local.querySelectorAll(\n\
+document.querySelectorAll(\n\
     "#buttonTestRun1, #htmlTestReport1"\n\
 ).forEach(function (elem) {\n\
     elem.style.display = "none";\n\
@@ -1013,18 +1046,18 @@ local.domOnEventInputChange = function (evt) {\n\
     case "click.buttonJslintAutofix1":\n\
     case "keyup.inputTextarea1":\n\
         // jslint #inputTextarea1\n\
-        local.jslintAndPrint(local.querySelector(\n\
+        local.jslintAndPrint(document.querySelector(\n\
             "#inputTextarea1"\n\
         ).value, "inputTextarea1.js", {\n\
             autofix: evt.target.id === "buttonJslintAutofix1",\n\
             conditional: evt.target.id !== "buttonJslintAutofix1"\n\
         });\n\
         if (local.jslint.jslintResult.autofix) {\n\
-            local.querySelector(\n\
+            document.querySelector(\n\
                 "#inputTextarea1"\n\
             ).value = local.jslint.jslintResult.code;\n\
         }\n\
-        local.querySelector(\n\
+        document.querySelector(\n\
             "#outputJslintPre1"\n\
         ).textContent = local.jslint.jslintResult.errMsg.replace((\n\
             /\\u001b\\[\\d*m/g\n\
@@ -1035,14 +1068,14 @@ local.domOnEventInputChange = function (evt) {\n\
         } catch (ignore) {}\n\
         // try to cover and eval #inputTextarea1\n\
         try {\n\
-            local.querySelector(\n\
+            document.querySelector(\n\
                 "#outputTextarea1"\n\
             ).value = local.istanbul.instrumentSync(\n\
-                local.querySelector("#inputTextarea1").value,\n\
+                document.querySelector("#inputTextarea1").value,\n\
                 "/inputTextarea1.js"\n\
             );\n\
             eval( // jslint ignore:line\n\
-                local.querySelector("#outputTextarea1").value\n\
+                document.querySelector("#outputTextarea1").value\n\
             );\n\
         } catch (errCaught) {\n\
             console.error(errCaught);\n\
@@ -1052,14 +1085,14 @@ local.domOnEventInputChange = function (evt) {\n\
 };\n\
 // handle evt\n\
 local.on("utility2.testRunEnd", function () {\n\
-    local.querySelector(\n\
+    document.querySelector(\n\
         "#htmlCoverageReport1"\n\
     ).innerHTML = local.istanbul.coverageReportCreate({\n\
         coverage: globalThis.__coverage__\n\
     });\n\
 });\n\
 local.on("utility2.testRunProgressUpdate", function (testReport) {\n\
-    local.querySelector(\n\
+    document.querySelector(\n\
         "#htmlTestReport2"\n\
     ).innerHTML = local.testReportMerge(testReport, {});\n\
 });\n\
@@ -1111,7 +1144,7 @@ utility2-comment -->\n\
 local.assetsDict["/assets.utility2.js"] = (
     local.assetsDict["/assets.utility2.js"]
     || local.fs.readFileSync(
-        local.__dirname + "/lib.utility2.js",
+        local.path.resolve(local.__dirname + "/lib.utility2.js"),
         "utf8"
     ).replace((
         /^#!\//
@@ -1189,17 +1222,11 @@ local.http.createServer(function (req, res) {
 1. [https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)
 
-1. [https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp%252Fassets.swgg.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp%252Fassets.swgg.html.png)
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp%252Fassets.swgg.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp%252Fassets.swgg.html.png)
-
 1. [https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)
 
 1. [https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)
-
-1. [https://kaizhu256.github.io/node-utility2/build/screenshot.deployHeroku.browser.%252Fassets.swgg.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.deployHeroku.browser.%252Fassets.swgg.html.png)
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployHeroku.browser.%252Fassets.swgg.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.deployHeroku.browser.%252Fassets.swgg.html.png)
 
 1. [https://kaizhu256.github.io/node-utility2/build/screenshot.deployHeroku.browser.%252F.png](https://kaizhu256.github.io/node-utility2/build/screenshot.deployHeroku.browser.%252F.png)
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployHeroku.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.deployHeroku.browser.%252F.png)
@@ -1273,11 +1300,11 @@ local.http.createServer(function (req, res) {
         "2020.01.20 bootstrap-lite",
         "2020.02.12 sqljs-lite",
         "2020.03.16 apidoc-lite",
-        "2020.05.20 jslint-lite",
-        "2019.05.25 istanbul-lite master",
-        "2020.02.20 utility2"
+        "2020.05.31 jslint-lite",
+        "2020.05.31 istanbul-lite",
+        "2020.05.31 utility2"
     ],
-    "version": "2020.5.25"
+    "version": "2020.5.31"
 }
 ```
 

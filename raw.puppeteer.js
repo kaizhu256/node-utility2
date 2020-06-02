@@ -1,55 +1,147 @@
 /*
 shRawLibFetch
 {
-    "rollupCommonJs": true,
-    "urlList": [
-        "https://github.com/websockets/ws/blob/6.2.1/package.json",
-        "https://github.com/websockets/ws/blob/6.2.1/lib/constants.js",
-        "https://github.com/websockets/ws/blob/6.2.1/lib/validation.js",
-        "https://github.com/websockets/ws/blob/6.2.1/lib/buffer-util.js",
-        "https://github.com/websockets/ws/blob/6.2.1/lib/event-target.js",
-        "https://github.com/websockets/ws/blob/6.2.1/lib/extension.js",
-        // "https://github.com/websockets/ws/blob/6.2.1/lib/permessage-deflate.js",
-        "https://github.com/websockets/ws/blob/6.2.1/lib/receiver.js",
-        "https://github.com/websockets/ws/blob/6.2.1/lib/sender.js",
-        "https://github.com/websockets/ws/blob/6.2.1/lib/websocket-server.js",
-        "https://github.com/websockets/ws/blob/6.2.1/lib/websocket.js",
-        "https://github.com/websockets/ws/blob/6.2.1/index.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/package.json",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/helper.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Accessibility.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Browser.js",
-        // "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/BrowserFetcher.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Coverage.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/DOMWorld.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/DeviceDescriptors.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Dialog.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/EmulationManager.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Errors.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Events.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/ExecutionContext.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/FrameManager.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Input.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/JSHandle.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Launcher.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/LifecycleWatcher.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Multimap.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/NetworkManager.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Page.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/PipeTransport.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Puppeteer.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Target.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/TaskQueue.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/TimeoutSettings.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Tracing.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/USKeyboardLayout.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/WebSocketTransport.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Worker.js",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/api.js",
-        // "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/externs.d.ts",
-        "https://github.com/puppeteer/puppeteer/blob/v1.19.0/index.js"
-    ]
+    "fetchList": [
+        {
+            "url": "https://github.com/websockets/ws/blob/6.2.1/package.json"
+        },
+        {
+            "url": "https://github.com/websockets/ws/blob/6.2.1/lib/constants.js"
+        },
+        {
+            "url": "https://github.com/websockets/ws/blob/6.2.1/lib/validation.js"
+        },
+        {
+            "url": "https://github.com/websockets/ws/blob/6.2.1/lib/buffer-util.js"
+        },
+        {
+            "url": "https://github.com/websockets/ws/blob/6.2.1/lib/event-target.js"
+        },
+        {
+            "url": "https://github.com/websockets/ws/blob/6.2.1/lib/extension.js"
+        },
+        {
+            // "url": "https://github.com/websockets/ws/blob/6.2.1/lib/permessage-deflate.js"
+        },
+        {
+            "url": "https://github.com/websockets/ws/blob/6.2.1/lib/receiver.js"
+        },
+        {
+            "url": "https://github.com/websockets/ws/blob/6.2.1/lib/sender.js"
+        },
+        {
+            "url": "https://github.com/websockets/ws/blob/6.2.1/lib/websocket-server.js"
+        },
+        {
+            "url": "https://github.com/websockets/ws/blob/6.2.1/lib/websocket.js"
+        },
+        {
+            "url": "https://github.com/websockets/ws/blob/6.2.1/index.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/package.json"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/helper.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Accessibility.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Browser.js"
+        },
+        {
+            // "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/BrowserFetcher.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Coverage.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/DOMWorld.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/DeviceDescriptors.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Dialog.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/EmulationManager.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Errors.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Events.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/ExecutionContext.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/FrameManager.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Input.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/JSHandle.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Launcher.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/LifecycleWatcher.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Multimap.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/NetworkManager.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Page.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/PipeTransport.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Puppeteer.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Target.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/TaskQueue.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/TimeoutSettings.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Tracing.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/USKeyboardLayout.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/WebSocketTransport.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Worker.js"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/api.js"
+        },
+        {
+            // "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/externs.d.ts"
+        },
+        {
+            "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/index.js"
+        }
+    ],
+    "rollupCommonJs": true
 }
 */
 

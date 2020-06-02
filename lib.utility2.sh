@@ -494,7 +494,7 @@ shBuildCi () {(set -e
             rm -f package-lock.json
             git add .
             # increment $npm_package_version
-            shPackageJsonVersionUpdate today publishedIncrement
+            shPackageJsonVersionIncrement today
             # update file touch.txt
             printf "$(shDateIso)\n" > .touch.txt
             git add -f .touch.txt
@@ -517,7 +517,7 @@ shBuildCi () {(set -e
             ;;
         "[npm publishAfterCommitAfterBuild]"*)
             # increment $npm_package_version
-            shPackageJsonVersionUpdate today publishedIncrement
+            shPackageJsonVersionIncrement today
             # update file touch.txt
             printf "$(shDateIso)\n" > .touch.txt
             git add -f .touch.txt
@@ -670,7 +670,7 @@ shBuildCiInternal () {(set -e
         [ "$CI_BRANCH" = beta ] ||
         [ "$CI_BRANCH" = master ]
     then
-        COMMIT_LIMIT=20 shBuildGithubUpload
+        COMMIT_LIMIT=100 shBuildGithubUpload
     fi
     shGitInfo | head -n 4096 || true
     # validate http-links embedded in README.md
@@ -1486,6 +1486,7 @@ shGitInfo () {(set -e
     git grep -E '\becho\b' *.sh || true
     printf "\n"
     git grep -E '\bset -\w*x\b' *.sh || true
+    cat package.json
 )}
 
 shGitInitBase () {(set -e
@@ -1800,22 +1801,19 @@ shHttpFileServer () {(set -e
 /* jslint utility2:true */
 (function () {
 "use strict";
-let processCwd;
-processCwd = process.cwd() + (
-    process.platform === "win32"
-    ? "\\"
-    : "/"
-);
 process.env.PORT = process.env.PORT || "8080";
 console.error("http-file-server listening on port " + process.env.PORT);
 require("http").createServer(function (req, res) {
     let file;
+    // resolve <file>
     file = require("path").resolve(
-        processCwd,
-        require("url").parse(req.url).pathname.slice(1)
+        // replace trailing "/" with "/index.html"
+        require("url").parse(req.url).pathname.slice(1).replace((
+            /\/$/
+        ), "/index.html")
     );
     // security - disable parent-directory lookup
-    if (file.indexOf(processCwd) !== 0) {
+    if (file.indexOf(process.cwd() + require("path").sep) !== 0) {
         res.statusCode = 404;
         res.end();
         return;
@@ -2035,7 +2033,7 @@ require("fs").writeFileSync(
 );
 }());
 ' "$MESSAGE"
-    shPackageJsonVersionUpdate "" publishedIncrement
+    shPackageJsonVersionIncrement
     npm publish
     npm deprecate "$NAME" "$MESSAGE"
 )}
@@ -2249,51 +2247,120 @@ shNpmTestPublished () {(set -e
     npm test --mode-coverage
 )}
 
-shPackageJsonVersionUpdate () {(set -e
-# this function will increment the package.json version before npm-publish
-    node -e "$UTILITY2_MACRO_JS"'
+shPackageJsonVersionIncrement () {(set -e
+# this function will increment package.json version
+    node -e '
 /* jslint utility2:true */
-(function (local) {
+(function () {
 "use strict";
 let aa;
 let bb;
+let cc;
+let dd;
+let ii;
 let packageJson;
+let result;
 packageJson = require("./package.json");
-aa = String(process.argv[1] || packageJson.version).replace((
+// increment packageJson.version
+aa = packageJson.version.replace((
+    /^(\d+?\.\d+?\.)(\d+)(\.*?)$/
+), function (ignore, match1, match2, match3) {
+    return match1 + (Number(match2) + 1) + match3;
+});
+bb = String(process.argv[1] || packageJson.version).replace((
     /^today$/
 ), new Date().toISOString().replace((
     /T.*?$/
 ), "").replace((
     /-0?/g
 ), "."));
-bb = String(process.argv[2] || "0.0.0").replace((
-    /^(\d+?\.\d+?\.)(\d+)(\.*?)$/
-), function (ignore, match1, match2, match3) {
-    return match1 + (Number(match2) + 1) + match3;
+[
+    aa, bb
+] = [
+    aa, bb
+].map(function (aa) {
+    // filter "+" metadata
+    // https://semver.org/#spec-item-10
+    aa = aa.split("+")[0];
+    // normalize x.y.z
+    aa = aa.split(".");
+    while (aa.length < 3) {
+        aa.push("0");
+    }
+    // split "-" pre-release-identifier
+    // https://semver.org/#spec-item-9
+    aa = [].concat(aa.slice(0, 2), aa.slice(2).join(".").split("-"));
+    // normalize x.y.z
+    ii = 0;
+    while (ii < 3) {
+        aa[ii] = String(aa[ii] | 0);
+        ii += 1;
+    }
+    return aa.map(function (aa) {
+        return (
+            Number.isFinite(aa)
+            ? Number(aa)
+            : aa
+        );
+    });
 });
-packageJson.version = (
-    local.semverCompare(aa, bb) === 1
-    ? aa
-    : bb
-);
+// compare precedence
+// https://semver.org/#spec-item-11
+result = aa;
+ii = 0;
+while (ii < Math.max(aa.length, bb.length)) {
+    cc = aa[ii];
+    dd = bb[ii];
+    if (
+        dd === undefined
+        || (typeof cc !== "number" && typeof dd === "number")
+    ) {
+        result = bb;
+        break;
+    }
+    if (
+        cc === undefined
+        || (typeof cc === "number" && typeof dd !== "number")
+    ) {
+        result = aa;
+        break;
+    }
+    if (cc < dd) {
+        result = bb;
+        break;
+    }
+    if (cc > dd) {
+        result = aa;
+        break;
+    }
+    ii += 1;
+}
+[
+    aa, bb, result
+] = [
+    aa, bb, result
+].map(function (aa) {
+    return aa[0] + "." + aa[1] + "." + aa.slice(2).join("-");
+});
+packageJson.version = result;
 console.error([
-    aa, bb, packageJson.version
+    aa, bb, result
 ]);
 // update package.json
 require("fs").writeFileSync(
     "package.json",
-    JSON.stringify(packageJson, null, 4) + "\n"
+    JSON.stringify(packageJson, undefined, 4) + "\n"
 );
 // update README.md
 require("fs").writeFileSync(
     "README.md",
     require("fs").readFileSync("README.md", "utf8").replace((
         /^(####\u0020changelog\u0020|-\u0020npm\u0020publish\u0020|\u0020{4}"version":\u0020")\d+?\.\d+?\.\d[^\n",]*/gm
-    ), "$1" + packageJson.version, null)
+    ), "$1" + packageJson.version, undefined)
 );
-console.error("shPackageJsonVersionUpdate - " + packageJson.version);
-}(globalThis.globalLocal));
-' "$1" "$([ "$2" = publishedIncrement ] && npm info "" version 2>/dev/null)"
+console.error("shPackageJsonVersionIncrement - " + packageJson.version);
+}());
+' "$1"
 )}
 
 shPasswordRandom () {(set -e
@@ -2317,6 +2384,7 @@ shRawLibFetch () {(set -e
 /* jslint utility2:true */
 (function () {
 "use strict";
+let child_process;
 let footer;
 let fs;
 let header;
@@ -2353,6 +2421,7 @@ normalizeWhitespace = function (str) {
     });
     return str;
 };
+child_process = require("child_process");
 fs = require("fs");
 https = require("https");
 path = require("path");
@@ -2382,11 +2451,15 @@ opt = JSON.parse(opt[1].replace((
 ), "").replace((
     /\u0020\/\/\u0020jslint\u0020ignore:line$/gm
 ), ""));
-opt.urlList.forEach(function (url, repo) {
-    repo = url.split("/").slice(0, 7).join("/");
+opt.fetchList.forEach(function (elem) {
+    let repo;
+    if (!elem.url) {
+        return;
+    }
+    repo = elem.url.split("/").slice(0, 7).join("/");
     if (!repoDict.hasOwnProperty(repo)) {
         repoDict[repo] = {
-            urlList: []
+            fetchList: []
         };
         https.request(repo.replace(
             "/blob/",
@@ -2404,26 +2477,37 @@ opt.urlList.forEach(function (url, repo) {
         }).end();
     }
     repo = repoDict[repo];
-    repo.urlList.push(url);
+    repo.fetchList.push(elem);
 });
 Object.entries(repoDict).forEach(function ([
     prefix, repo
 ], ii) {
     repo.prefix = prefix;
-    repo.urlList.forEach(function (url, jj) {
-        https.request(url.replace(
+    repo.fetchList.forEach(function (elem, jj) {
+        let file;
+        file = fs.createWriteStream(
+            process.env.DIR
+            + "/"
+            + String(ii).padStart(2, "0")
+            + "__"
+            + String(jj).padStart(2, "0")
+            + "__"
+            + elem.url.split("/").slice(7).join("__")
+        );
+        if (elem.sh) {
+            child_process.spawn(elem.sh, {
+                shell: true,
+                stdio: [
+                    "ignore", "pipe", 2
+                ]
+            }).stdout.pipe(file);
+            return;
+        }
+        https.request(elem.url.replace(
             "https://github.com/",
             "https://raw.githubusercontent.com/"
         ).replace("/blob/", "/"), function (res) {
-            res.pipe(fs.createWriteStream(
-                process.env.DIR
-                + "/"
-                + String(ii).padStart(2, "0")
-                + "__"
-                + String(jj).padStart(2, "0")
-                + "__"
-                + url.split("/").slice(7).join("__")
-            ));
+            res.pipe(file);
         }).end();
     });
 });
@@ -2440,7 +2524,7 @@ process.on("exit", function () {
         let prefix;
         let repo;
         repo = Object.values(repoDict)[Number(data.slice(0, 2))];
-        file = repo.urlList[Number(data.slice(4, 6))];
+        file = repo.fetchList[Number(data.slice(4, 6))].url;
         // init prefix
         prefix = "exports_" + path.dirname(file).replace(
             "https://github.com/",
@@ -3311,7 +3395,7 @@ shUbuntuInit () {
 
     # Add an "alert" alias for long running commands.  Use like so:
     #   sleep 10; alert
-    alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+    alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && printf "terminal\n" || printf "error\n")" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
     # Alias definitions.
     # You may want to put all your additions into a separate file like
@@ -3522,8 +3606,8 @@ export UTILITY2_DEPENDENTS="$(shUtility2Dependents)"
 export UTILITY2_MACRO_JS='
 /* istanbul instrument in package utility2 */
 // assets.utility2.header.js - start
-/* istanbul ignore next */
 /* jslint utility2:true */
+/* istanbul ignore next */
 (function (globalThis) {
     "use strict";
     let consoleError;
@@ -3607,9 +3691,32 @@ export UTILITY2_MACRO_JS='
         }
         return arg;
     };
-    local.fsRmrfSync = function (dir) {
+    local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
     /*
-     * this function will sync "rm -rf" <dir>
+     * this function will sync-read <pathname> with given <type> and <dflt>
+     */
+        let fs;
+        // do nothing if module does not exist
+        try {
+            fs = require("fs");
+        } catch (ignore) {
+            return dflt;
+        }
+        pathname = require("path").resolve(pathname);
+        // try to read pathname
+        try {
+            return (
+                type === "json"
+                ? JSON.parse(fs.readFileSync(pathname, "utf8"))
+                : fs.readFileSync(pathname, type)
+            );
+        } catch (ignore) {
+            return dflt;
+        }
+    };
+    local.fsRmrfSync = function (pathname) {
+    /*
+     * this function will sync "rm -rf" <pathname>
      */
         let child_process;
         // do nothing if module does not exist
@@ -3618,46 +3725,57 @@ export UTILITY2_MACRO_JS='
         } catch (ignore) {
             return;
         }
-        child_process.spawnSync("rm", [
-            "-rf", dir
-        ], {
-            stdio: [
-                "ignore", 1, 2
-            ]
-        });
+        pathname = require("path").resolve(pathname);
+        if (process.platform !== "win32") {
+            child_process.spawnSync("rm", [
+                "-rf", pathname
+            ], {
+                stdio: [
+                    "ignore", 1, 2
+                ]
+            });
+            return;
+        }
+        try {
+            child_process.spawnSync("rd", [
+                "/s", "/q", pathname
+            ], {
+                stdio: [
+                    "ignore", 1, "ignore"
+                ]
+            });
+        } catch (ignore) {}
     };
-    local.fsWriteFileWithMkdirpSync = function (file, data) {
+    local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {
     /*
-     * this function will sync write <data> to <file> with "mkdir -p"
+     * this function will sync write <data> to <pathname> with "mkdir -p"
      */
         let fs;
+        let success;
         // do nothing if module does not exist
         try {
             fs = require("fs");
         } catch (ignore) {
             return;
         }
-        // try to write file
+        pathname = require("path").resolve(pathname);
+        // try to write pathname
         try {
-            fs.writeFileSync(file, data);
-            return true;
+            fs.writeFileSync(pathname, data);
+            success = true;
         } catch (ignore) {
             // mkdir -p
-            fs.mkdirSync(require("path").dirname(file), {
+            fs.mkdirSync(require("path").dirname(pathname), {
                 recursive: true
             });
-            // rewrite file
-            fs.writeFileSync(file, data);
-            return true;
+            // re-write pathname
+            fs.writeFileSync(pathname, data);
+            success = true;
         }
-    };
-    local.functionOrNop = function (fnc) {
-    /*
-     * this function will if <fnc> exists,
-     * return <fnc>,
-     * else return <nop>
-     */
-        return fnc || local.nop;
+        if (success && msg) {
+            console.error(msg.replace("{{pathname}}", pathname));
+        }
+        return success;
     };
     local.identity = function (val) {
     /*
@@ -3671,42 +3789,33 @@ export UTILITY2_MACRO_JS='
      */
         return;
     };
-    local.objectAssignDefault = function (target, source) {
+    local.objectAssignDefault = function (tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <target> are null, undefined, or "",
-     * then overwrite them with items from <source>
+     * this function will if items from <tgt> are null, undefined, or "",
+     * then overwrite them with items from <src>
      */
-        target = target || {};
-        Object.keys(source || {}).forEach(function (key) {
-            if (
-                target[key] === null
-                || target[key] === undefined
-                || target[key] === ""
-            ) {
-                target[key] = target[key] || source[key];
-            }
-        });
-        return target;
-    };
-    local.querySelector = function (selectors) {
-    /*
-     * this function will return first dom-elem that match <selectors>
-     */
-        return (
-            typeof document === "object" && document
-            && typeof document.querySelector === "function"
-            && document.querySelector(selectors)
-        ) || {};
-    };
-    local.querySelectorAll = function (selectors) {
-    /*
-     * this function will return dom-elem-list that match <selectors>
-     */
-        return (
-            typeof document === "object" && document
-            && typeof document.querySelectorAll === "function"
-            && Array.from(document.querySelectorAll(selectors))
-        ) || [];
+        let recurse;
+        recurse = function (tgt, src, depth) {
+            Object.entries(src).forEach(function ([
+                key, bb
+            ]) {
+                let aa;
+                aa = tgt[key];
+                if (aa === undefined || aa === null || aa === "") {
+                    tgt[key] = bb;
+                    return;
+                }
+                if (
+                    depth !== 0
+                    && typeof aa === "object" && aa && !Array.isArray(aa)
+                    && typeof bb === "object" && bb && !Array.isArray(bb)
+                ) {
+                    recurse(aa, bb, depth - 1);
+                }
+            });
+        };
+        recurse(tgt, src, depth | 0);
+        return tgt;
     };
     // require builtin
     if (!local.isBrowser) {
@@ -4072,26 +4181,6 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
     }).catch(onError);
 };
 
-local.fsReadFileOrEmptyStringSync = function (file, opt) {
-/*
- * this function will try to read file or return empty-string, or
- * if <opt> === "json", then try to JSON.parse file or return {}
- */
-    try {
-        return (
-            opt === "json"
-            ? JSON.parse(local.fs.readFileSync(file, "utf8"))
-            : local.fs.readFileSync(file, opt)
-        );
-    } catch (ignore) {
-        return (
-            opt === "json"
-            ? {}
-            : ""
-        );
-    }
-};
-
 local.gotoNext = function (opt, onError) {
 /*
  * this function will wrap onError inside recursive-function <opt>.gotoNext,
@@ -4215,9 +4304,9 @@ local.moduleDirname = function (module, pathList) {
  * this function will search <pathList> for <module>'"'"'s __dirname
  */
     let result;
-    // search process.cwd()
+    // search "."
     if (!module || module === "." || module.indexOf("/") >= 0) {
-        return require("path").resolve(process.cwd(), module || "");
+        return require("path").resolve(module || "");
     }
     // search pathList
     Array.from([
@@ -4228,10 +4317,7 @@ local.moduleDirname = function (module, pathList) {
         ]
     ]).flat().some(function (path) {
         try {
-            result = require("path").resolve(
-                process.cwd(),
-                path + "/" + module
-            );
+            result = require("path").resolve(path + "/" + module);
             result = require("fs").statSync(result).isDirectory() && result;
             return result;
         } catch (ignore) {
@@ -4239,48 +4325,6 @@ local.moduleDirname = function (module, pathList) {
         }
     });
     return result;
-};
-
-local.objectSetDefault = function (dict, defaults, depth) {
-/*
- * this function will recursively set defaults for undefined-items in dict
- */
-    dict = dict || {};
-    defaults = defaults || {};
-    Object.keys(defaults).forEach(function (key) {
-        let defaults2;
-        let dict2;
-        dict2 = dict[key];
-        // handle misbehaving getter
-        try {
-            defaults2 = defaults[key];
-        } catch (ignore) {}
-        if (defaults2 === undefined) {
-            return;
-        }
-        // init dict[key] to default value defaults[key]
-        switch (dict2) {
-        case "":
-        case null:
-        case undefined:
-            dict[key] = defaults2;
-            return;
-        }
-        // if dict2 and defaults2 are both non-undefined and non-array objects,
-        // then recurse with dict2 and defaults2
-        if (
-            depth > 1
-            // dict2 is a non-undefined and non-array object
-            && typeof dict2 === "object" && dict2 && !Array.isArray(dict2)
-            // defaults2 is a non-undefined and non-array object
-            && typeof defaults2 === "object" && defaults2
-            && !Array.isArray(defaults2)
-        ) {
-            // recurse
-            local.objectSetDefault(dict2, defaults2, depth - 1);
-        }
-    });
-    return dict;
 };
 
 local.onErrorDefault = function (err) {
@@ -4309,16 +4353,13 @@ local.onErrorWithStack = function (onError) {
  */
     let onError2;
     let stack;
-    stack = new Error().stack.replace((
-        /(.*?)\n.*?$/m
-    ), "$1");
+    stack = new Error().stack;
     onError2 = function (err, data, meta) {
         // append current-stack to err.stack
         if (
             err
             && typeof err.stack === "string"
             && err !== local.errorDefault
-            && String(err.stack).indexOf(stack.split("\n")[2]) < 0
         ) {
             err.stack += "\n" + stack;
         }
@@ -4441,54 +4482,71 @@ local.semverCompare = function (aa, bb) {
     semverCompare("1.2.3", "1.2.3");  //  0
     semverCompare("10.2.2", "2.2.2"); //  1
  */
+    let cc;
+    let dd;
     let ii;
-    let len;
+    let result;
     [
         aa, bb
     ] = [
         aa, bb
-    ].map(function (val) {
-        val = (
-            /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z\-][0-9a-zA-Z\-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z\-][0-9a-zA-Z\-]*))*))?(?:\+([0-9a-zA-Z\-]+(?:\.[0-9a-zA-Z\-]+)*))?$/
-        ).exec(val) || [
-            "", "", "", ""
-        ];
-        val[4] = val[4] || "";
-        return val.slice(1, 4).concat(val[4].split("."));
-    });
-    ii = -1;
-    len = Math.max(aa.length, bb.length);
-    while (true) {
-        ii += 1;
-        if (ii >= len) {
-            return 0;
+    ].map(function (aa) {
+        // filter "+" metadata
+        // https://semver.org/#spec-item-10
+        aa = aa.split("+")[0];
+        // normalize x.y.z
+        aa = aa.split(".");
+        while (aa.length < 3) {
+            aa.push("0");
         }
-        aa[ii] = aa[ii] || "";
-        bb[ii] = bb[ii] || "";
-        if (ii === 3 && aa[ii] !== bb[ii]) {
-            // 1.2.3 > 1.2.3-alpha
-            if (!aa[ii]) {
-                return 1;
-            }
-            // 1.2.3-alpha < 1.2.3
-            if (!bb[ii]) {
-                return -1;
-            }
+        // split "-" pre-release-identifier
+        // https://semver.org/#spec-item-9
+        aa = [].concat(aa.slice(0, 2), aa.slice(2).join(".").split("-"));
+        // normalize x.y.z
+        ii = 0;
+        while (ii < 3) {
+            aa[ii] = String(aa[ii] | 0);
+            ii += 1;
         }
-        if (aa[ii] !== bb[ii]) {
-            aa = aa[ii];
-            bb = bb[ii];
+        return aa.map(function (aa) {
             return (
-                Number(aa) < Number(bb)
-                ? -1
-                : Number(aa) > Number(bb)
-                ? 1
-                : aa < bb
-                ? -1
-                : 1
+                Number.isFinite(aa)
+                ? Number(aa)
+                : aa
             );
+        });
+    });
+    result = aa;
+    ii = 0;
+    while (ii < Math.max(aa.length, bb.length)) {
+        cc = aa[ii];
+        dd = bb[ii];
+        if (
+            dd === undefined
+            || (typeof cc !== "number" && typeof dd === "number")
+        ) {
+            result = bb;
+            break;
         }
+        if (
+            cc === undefined
+            || (typeof cc === "number" && typeof dd !== "number")
+        ) {
+            result = aa;
+            break;
+        }
+        if (cc < dd) {
+            result = bb;
+            break;
+        }
+        if (cc > dd) {
+            result = aa;
+            break;
+        }
+        ii += 1;
     }
+    result = result[0] + "." + result[1] + "." + result.slice(2).join("-");
+    return result;
 };
 
 local.stringHtmlSafe = function (str) {
@@ -4534,12 +4592,8 @@ local.templateRenderMyApp = function (template) {
  */
     let githubRepo;
     let packageJson;
-    try {
-        packageJson = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
-    } catch (ignore) {
-        packageJson = {};
-    }
-    local.objectSetDefault(packageJson, {
+    packageJson = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
+    local.objectAssignDefault(packageJson, {
         nameLib: packageJson.name.replace((
             /\W/g
         ), "_"),
@@ -4786,7 +4840,7 @@ local.ajax = function (opt, onError) {
     /*
      * this function will init xhr
      */
-        // init <opt>
+        // init opt
         Object.keys(opt).forEach(function (key) {
             if (key[0] !== "_") {
                 xhr[key] = opt[key];
@@ -4909,7 +4963,10 @@ local.ajax = function (opt, onError) {
         xhr.upload.addEventListener("progress", ajaxProgressUpdate);
     }
     // open url - corsForwardProxyHost
-    if (local.functionOrNop(local2.corsForwardProxyHostIfNeeded)(xhr)) {
+    if (
+        local2.corsForwardProxyHostIfNeeded
+        && local2.corsForwardProxyHostIfNeeded(xhr)
+    ) {
         xhr.open(xhr.method, local2.corsForwardProxyHostIfNeeded(xhr));
         xhr.setRequestHeader(
             "forward-proxy-headers",
