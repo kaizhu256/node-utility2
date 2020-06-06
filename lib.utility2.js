@@ -975,8 +975,8 @@ globalThis.local = local;\n\
 \n\
 \n\
 \n\
-// run browser js\-env code - init-test\n\
 /* istanbul ignore next */\n\
+// run browser js\-env code - init-test\n\
 (function () {\n\
 if (!local.isBrowser) {\n\
     return;\n\
@@ -1012,8 +1012,8 @@ globalThis.domOnEventDelegateDict = local;\n\
 \n\
 \n\
 \n\
-// run node js\-env code - init-test\n\
 /* istanbul ignore next */\n\
+// run node js\-env code - init-test\n\
 (function () {\n\
 if (local.isBrowser) {\n\
     return;\n\
@@ -1363,8 +1363,8 @@ local.assetsDict["/assets.test.template.js"] = '\
 \n\
 \n\
 \n\
-/* istanbul ignore next */\n\
 /* jslint utility2:true */\n\
+/* istanbul ignore next */\n\
 (function (local) {\n\
 "use strict";\n\
 \n\

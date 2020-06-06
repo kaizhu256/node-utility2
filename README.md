@@ -472,8 +472,8 @@ local.testCase_webpage_default = function (opt, onError) {
 
 
 
-// run browser js-env code - init-test
 /* istanbul ignore next */
+// run browser js-env code - init-test
 (function () {
 if (!local.isBrowser) {
     return;
@@ -509,8 +509,8 @@ globalThis.domOnEventDelegateDict = local;
 
 
 
-// run node js-env code - init-test
 /* istanbul ignore next */
+// run node js-env code - init-test
 (function () {
 if (local.isBrowser) {
     return;

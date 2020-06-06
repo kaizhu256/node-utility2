@@ -189,8 +189,8 @@
 
 
 
-/* istanbul ignore next */
 /* jslint utility2:true */
+/* istanbul ignore next */
 (function (local) {
 "use strict";
 
