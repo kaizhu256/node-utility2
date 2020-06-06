@@ -991,7 +991,7 @@ local.testCase_cryptoAesXxxCbcRawXxx_default = function (opt, onError) {
 /*
  * this function will cryptoAesXxxCbcRawXxx's default handling-behavior
  */
-    if (local.isBrowser) {
+    if (!local.nop()) {
         onError();
         return;
     }
