@@ -3085,7 +3085,7 @@ local.buildReadme = function (opt, onError) {
         ),
         // customize example.js - shared js\u002denv code - init-before
         (
-            /\nglobalThis\.local\u0020=\u0020local;\n[^`]*?\n\/\/\u0020run\u0020browser\u0020js\u002denv\u0020code\u0020-\u0020init-test\n/
+            /\nglobalThis\.local\u0020=\u0020local;\n[^`]*?\n\/\*\u0020istanbul\u0020ignore\u0020next\u0020\*\/\n\/\/\u0020run\u0020browser\u0020js\u002denv\u0020code\u0020-\u0020init-test\n/
         ),
         // customize example.js - html-body
         (
