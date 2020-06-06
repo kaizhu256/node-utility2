@@ -23,6 +23,7 @@
 # shCryptoWithGithubOrg aa shGithubApiRateLimitGet
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/node-aa-bb "touch" alpha
 # DOCKER_V_GAME=1 DOCKER_V_HOME=1 DOCKER_PORT=4065 shDockerRestart work kaizhu256/node-utility2
+# shDockerSh work '. ~/lib.utility2.sh && shSource && shUtility2BuildApp'
 # shGitAddTee npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
 # shSource && shGitAddTee shUtility2DependentsSync
 # utility2 shReadmeTest example.js
@@ -3261,6 +3262,23 @@ opt.gotoNext();
     shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f alpha
 )}
 
+shUtility2BuildApp () {(set -e
+# this function will run shBuildApp in $UTILITY2_DEPENDENTS
+    cd "$HOME/Documents"
+    # shUtility2DependentsSync
+    (cd utility2 && shUtility2DependentsSync)
+    # shBuildApp
+    for DIR in $UTILITY2_DEPENDENTS
+    do
+        if [ -d "$DIR" ] && [ "$DIR" != utility2 ]
+        then
+            printf "\n\n\n\n$DIR\n\n\n\n"
+            (cd "$DIR" && shBuildApp)
+        fi
+    done
+    shUtility2GitDiffHead
+)}
+
 shUtility2DependentsSync () {(set -e
 # this function will
 # 1. sync files between utility2 and its dependents
@@ -3356,6 +3374,20 @@ shUtility2GitCommit () {(set -e
         printf "\n\n\n\n$PWD\n"
         git commit -am "'$MESSAGE'" || true
     done
+)}
+
+shUtility2GitDiffHead () {(set -e
+# this function will the git-status of $UTILITY2_DEPENDENTS to stdout
+    rm -f /tmp/shUtility2GitDiffHead.diff
+    for DIR in $UTILITY2_DEPENDENTS
+    do
+        cd "$HOME/Documents/$DIR" || continue
+        printf "\n\n\n\n$PWD\n\n\n\n" 2>&1 >> /tmp/shUtility2GitDiffHead.diff
+        shGitLsTree 2>&1 >> /tmp/shUtility2GitDiffHead.diff
+        git status 2>&1 >> /tmp/shUtility2GitDiffHead.diff
+        git diff HEAD 2>&1 >> /tmp/shUtility2GitDiffHead.diff
+    done
+    less /tmp/shUtility2GitDiffHead.diff
 )}
 
 shUtility2Grep () {(set -e

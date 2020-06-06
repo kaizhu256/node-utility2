@@ -72,11 +72,8 @@ this zero-dependency package will provide high-level functions to to build, test
     shReplClient,
     shTravisRepoBuildCancel,
     shTravisRepoBuildRestart,
-    shUtility2GitDiffHead,
     shTravisSync,
-    shUtility2BuildApp,
     shUtility2Dependents,
-    shUtility2GitDiffHead,
 - cleanup env-var UTILITY2_MACRO_JS
 - istanbul - fix html-coverage-report bug showing branch-metrics instead of line-metrics
 - inline local._http.STATUS_CODES into function serverRespondDefault
