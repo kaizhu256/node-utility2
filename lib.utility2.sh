@@ -3264,16 +3264,17 @@ opt.gotoNext();
 
 shUtility2BuildApp () {(set -e
 # this function will run shBuildApp in $UTILITY2_DEPENDENTS
-    cd "$HOME/Documents"
-    # shUtility2DependentsSync
-    (cd utility2 && shUtility2DependentsSync)
-    # shBuildApp
     for DIR in $UTILITY2_DEPENDENTS
     do
-        if [ -d "$DIR" ] && [ "$DIR" != utility2 ]
+        cd "$HOME/Documents/$DIR" || continue
+        printf "\n\n\n\n$PWD\n\n\n\n"
+        # shUtility2DependentsSync
+        if [ "$DIR" = utility2 ]
         then
-            printf "\n\n\n\n$DIR\n\n\n\n"
-            (cd "$DIR" && shBuildApp)
+            shUtility2DependentsSync
+        # shBuildApp
+        else
+            shBuildApp
         fi
     done
     shUtility2GitDiffHead
@@ -3282,9 +3283,8 @@ shUtility2BuildApp () {(set -e
 shUtility2DependentsSync () {(set -e
 # this function will
 # 1. sync files between utility2 and its dependents
-# 2. shBuildApp dir $HOME/Documents/$1
-# 3. git commit -am $2
-    CWD="${1:-$PWD}"
+# 2. shBuildApp $PWD
+    CWD="$PWD"
     cd "$HOME/Documents/utility2" && shBuildApp
     cd "$HOME/Documents"
     ln -f "utility2/lib.utility2.sh" "$HOME" || true
@@ -3295,15 +3295,12 @@ shUtility2DependentsSync () {(set -e
         ln -f "utility2/lib.jslint.js" "$HOME/bin/utility2-jslint" || true
         ln -f "utility2/lib.utility2.sh" "$HOME/bin/utility2" || true
     fi
-    for DIR in $UTILITY2_DEPENDENTS $(ls -d swgg-* 2>/dev/null)
+    for DIR in $UTILITY2_DEPENDENTS
     do
-        if [ "$DIR" = utility2 ] || [ ! -d "$DIR" ]
-        then
-            continue
-        fi
-        cd "$DIR"
+        [ "$DIR" = utility2 ] && continue
+        cd "$HOME/Documents/$DIR" || continue
         npm_config_dir_utility2="$HOME/Documents/utility2" shBuildAppSync
-        cd ..
+        cd "$HOME/Documents"
         # hardlink "lib.$LIB.js"
         LIB="$(printf "$DIR" | sed -e "s/-lite\$//" -e "s/-/_/g")"
         if [ -f "utility2/lib.$LIB.js" ]
@@ -3311,26 +3308,32 @@ shUtility2DependentsSync () {(set -e
             ln -f "utility2/lib.$LIB.js" "$DIR" || true
         fi
     done
+    # hardlink assets.utility2.rollup.js
     for DIR in $(ls -d * 2>/dev/null)
     do
-        if [ "$DIR" = utility2 ] || [ ! -d "$DIR" ]
+        if [ -f "$HOME/Documents/$DIR/assets.utility2.rollup.js" ]
         then
-            continue
+            ln -f \
+"$HOME/Documents/utility2/tmp/build/app/assets.utility2.rollup.js" \
+"$HOME/Documents/$DIR/assets.utility2.rollup.js"
         fi
-        cd "$DIR"
-        # hardlink assets.utility2.rollup.js
-        if [ -f "assets.utility2.rollup.js" ]
-        then
-            ln -f "$HOME\
-/Documents/utility2/tmp/build/app/assets.utility2.rollup.js" .
-        fi
-        cd ..
     done
-    cd "$CWD" && shBuildApp
-    if [ "$2" ]
+    if [ "$CWD" = "$HOME/Documents/utility2" ]
     then
-        git commit -am "$2"
+        return
     fi
+    cd "$CWD" && shBuildApp
+)}
+
+shUtility2GitCommitAndPush () {(set -e
+# this function will git-commit-and-push $UTILITY2_DEPENDENTS
+    for DIR in $UTILITY2_DEPENDENTS
+    do
+        cd "$HOME/Documents/$DIR" || continue
+        printf "\n\n\n\n$PWD\n\n\n\n"
+        git commit -am update || true
+        git push origin alpha
+    done
 )}
 
 shUtility2FncStat () {(set -e
@@ -3428,10 +3431,10 @@ shXvfbStart () {
 # run main-program
 export UTILITY2_GIT_BASE_ID=9fe8c2255f4ac330c86af7f624d381d768304183
 export UTILITY2_DEPENDENTS='
+utility2
 apidoc-lite
 istanbul-lite
 jslint-lite
-utility2
 '
 export UTILITY2_MACRO_JS='
 /* istanbul instrument in package utility2 */
