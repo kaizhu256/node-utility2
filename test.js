@@ -5,31 +5,23 @@
 (function (globalThis) {
     "use strict";
     let consoleError;
-    let debugName;
     let local;
-    debugName = "debug" + String("Inline");
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
-    // init debug_inline
-    if (!globalThis[debugName]) {
+    // init debugInline
+    if (!globalThis.debugInline) {
         consoleError = console.error;
-        globalThis[debugName] = function (...argList) {
+        globalThis.debugInline = function (...argList) {
         /*
          * this function will both print <argList> to stderr
          * and return <argList>[0]
          */
-            consoleError("\n\n" + debugName);
+            consoleError("\n\ndebugInline");
             consoleError(...argList);
             consoleError("\n");
             return argList[0];
         };
     }
-    String.prototype.trimEnd = (
-        String.prototype.trimEnd || String.prototype.trimRight
-    );
-    String.prototype.trimStart = (
-        String.prototype.trimStart || String.prototype.trimLeft
-    );
     // init local
     local = {};
     local.local = local;
@@ -45,6 +37,36 @@
         local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
+    local.assertJsonEqual = function (aa, bb) {
+    /*
+     * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
+     */
+        let objectDeepCopyWithKeysSorted;
+        objectDeepCopyWithKeysSorted = function (obj) {
+        /*
+         * this function will recursively deep-copy <obj> with keys sorted
+         */
+            let sorted;
+            if (!(typeof obj === "object" && obj)) {
+                return obj;
+            }
+            // recursively deep-copy list with child-keys sorted
+            if (Array.isArray(obj)) {
+                return obj.map(objectDeepCopyWithKeysSorted);
+            }
+            // recursively deep-copy obj with keys sorted
+            sorted = {};
+            Object.keys(obj).sort().forEach(function (key) {
+                sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
+            });
+            return sorted;
+        };
+        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
+        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
+        if (aa !== bb) {
+            throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));
+        }
+    };
     local.assertOrThrow = function (passed, msg) {
     /*
      * this function will throw err.<msg> if <passed> is falsy
@@ -62,7 +84,7 @@
             ? msg
             : new Error(
                 typeof msg === "string"
-                // if msg is a string, then leave as is
+                // if msg is string, then leave as is
                 ? msg
                 // else JSON.stringify msg
                 : JSON.stringify(msg, undefined, 4)
@@ -78,98 +100,12 @@
         ii = 0;
         while (ii < argList.length) {
             arg = argList[ii];
-            if (arg !== null && arg !== undefined && arg !== "") {
-                break;
+            if (arg !== undefined && arg !== null && arg !== "") {
+                return arg;
             }
             ii += 1;
         }
         return arg;
-    };
-    local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
-    /*
-     * this function will sync-read <pathname> with given <type> and <dflt>
-     */
-        let fs;
-        // do nothing if module does not exist
-        try {
-            fs = require("fs");
-        } catch (ignore) {
-            return dflt;
-        }
-        pathname = require("path").resolve(pathname);
-        // try to read pathname
-        try {
-            return (
-                type === "json"
-                ? JSON.parse(fs.readFileSync(pathname, "utf8"))
-                : fs.readFileSync(pathname, type)
-            );
-        } catch (ignore) {
-            return dflt;
-        }
-    };
-    local.fsRmrfSync = function (pathname) {
-    /*
-     * this function will sync "rm -rf" <pathname>
-     */
-        let child_process;
-        // do nothing if module does not exist
-        try {
-            child_process = require("child_process");
-        } catch (ignore) {
-            return;
-        }
-        pathname = require("path").resolve(pathname);
-        if (process.platform !== "win32") {
-            child_process.spawnSync("rm", [
-                "-rf", pathname
-            ], {
-                stdio: [
-                    "ignore", 1, 2
-                ]
-            });
-            return;
-        }
-        try {
-            child_process.spawnSync("rd", [
-                "/s", "/q", pathname
-            ], {
-                stdio: [
-                    "ignore", 1, "ignore"
-                ]
-            });
-        } catch (ignore) {}
-    };
-    local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {
-    /*
-     * this function will sync write <data> to <pathname> with "mkdir -p"
-     */
-        let fs;
-        let success;
-        // do nothing if module does not exist
-        try {
-            fs = require("fs");
-        } catch (ignore) {
-            return;
-        }
-        pathname = require("path").resolve(pathname);
-        // try to write pathname
-        try {
-            fs.writeFileSync(pathname, data);
-            success = true;
-        } catch (ignore) {
-            // mkdir -p
-            fs.mkdirSync(require("path").dirname(pathname), {
-                recursive: true
-            });
-            // re-write pathname
-            fs.writeFileSync(pathname, data);
-            success = true;
-        }
-        if (success && msg) {
-            console.error(msg.replace("{{pathname}}", pathname));
-        }
-        return success;
     };
     local.identity = function (val) {
     /*
@@ -213,6 +149,12 @@
     };
     // require builtin
     if (!local.isBrowser) {
+        if (process.unhandledRejections !== "strict") {
+            process.unhandledRejections = "strict";
+            process.on("unhandledRejection", function (err) {
+                throw err;
+            });
+        }
         local.assert = require("assert");
         local.buffer = require("buffer");
         local.child_process = require("child_process");
@@ -317,7 +259,7 @@ local.testCase_FormData_err = function (opt, onError) {
         [
             local.FormData.prototype, {
                 read: function (onError) {
-                    onError(local.errorDefault);
+                    onError(new Error());
                 }
             }
         ]
@@ -652,7 +594,7 @@ local.testCase_assertXxx_default = function (opt, onError) {
     });
     // test assertion failed with errObj
     local.tryCatchOnError(function () {
-        local.assertOrThrow(null, local.errorDefault);
+        local.assertOrThrow(null, new Error());
     }, function (err) {
         // handle err
         local.assertOrThrow(err, err);
@@ -667,21 +609,6 @@ local.testCase_assertXxx_default = function (opt, onError) {
         local.assertOrThrow(err, err);
         // validate err.message
         local.assertJsonEqual(err.message, "{\n    \"aa\": 1\n}");
-    });
-    [
-        "", 0, false, null, undefined
-    ].forEach(function (aa, ii) {
-        [
-            "", 0, false, null, undefined
-        ].forEach(function (bb, jj) {
-            if (ii === jj) {
-                // test assertJsonEqual's handling-behavior
-                local.assertJsonEqual(aa, bb);
-            } else {
-                // test assertJsonNotEqual's handling-behavior
-                local.assertJsonNotEqual(aa, bb);
-            }
-        });
     });
     onError(undefined, opt);
 };
@@ -764,66 +691,6 @@ local.testCase_blobRead_default = function (opt, onError) {
         onError(undefined, opt);
     }, onParallel);
     onParallel();
-};
-
-local.testCase_bufferIndexOfSubBuffer_default = function (opt, onError) {
-/*
- * this function will test bufferIndexOfSubBuffer's default handling-behavior
- */
-[
-    {
-        buffer: "",
-        subBuffer: "",
-        validate: 0
-    }, {
-        buffer: "",
-        subBuffer: "aa",
-        validate: -1
-    }, {
-        buffer: "aa",
-        subBuffer: "",
-        validate: 0
-    }, {
-        buffer: "aa",
-        subBuffer: "aa",
-        validate: 0
-    }, {
-        buffer: "aa",
-        subBuffer: "bb",
-        validate: -1
-    }, {
-        buffer: "aaaa",
-        subBuffer: "aa",
-        validate: 0
-    }, {
-        buffer: "aabb",
-        subBuffer: "aa",
-        validate: 0
-    }, {
-        buffer: "aabb",
-        subBuffer: "bb",
-        validate: 2
-    }, {
-        buffer: "aabbaa",
-        subBuffer: "aa",
-        validate: 0
-    }, {
-        buffer: "aabbaa",
-        subBuffer: "bb",
-        validate: 2
-    }, {
-        buffer: "aabbaa",
-        subBuffer: "ba",
-        validate: 3
-    }
-].forEach(function (opt) {
-    local.assertJsonEqual(local.bufferIndexOfSubBuffer(
-        new TextEncoder().encode(opt.buffer),
-        new TextEncoder().encode(opt.subBuffer),
-        opt.fromIndex
-    ), opt.validate);
-});
-onError(undefined, opt);
 };
 
 local.testCase_bufferValidateAndCoerce_err = function (opt, onError) {
@@ -1011,91 +878,6 @@ local.testCase_buildXxx_default = function (opt, onError) {
     }, onError);
 };
 
-local.testCase_childProcessSpawnWithTimeout_default = function (
-    opt,
-    onError
-) {
-/*
- * this function will test
- * childProcessSpawnWithTimeout's default handling-behavior
- */
-    let onParallel;
-    if (local.isBrowser) {
-        onError(undefined, opt);
-        return;
-    }
-    opt = {};
-    onParallel = local.onParallel(onError);
-    onParallel.cnt += 1;
-    // test default handling-behavior
-    onParallel.cnt += 1;
-    local.childProcessSpawnWithTimeout("ls").on(
-        "error",
-        onParallel
-    ).on("exit", function (exitCode, signal) {
-        // validate exitCode
-        local.assertJsonEqual(exitCode, 0);
-        // validate signal
-        local.assertJsonEqual(signal, null);
-        onParallel(null, opt);
-    });
-    // test timeout handling-behavior
-    onParallel.cnt += 1;
-    local.testMock([
-        [
-            local, {
-                timeoutDefault: 1000
-            }
-        ]
-    ], function (onError) {
-        opt.childProcess = (
-            local.childProcessSpawnWithTimeout("sleep", [
-                5000
-            ])
-        );
-        onError(undefined, opt);
-    }, local.onErrorThrow);
-    opt.childProcess.on(
-        "error",
-        onParallel
-    ).on("exit", function (exitCode, signal) {
-        // validate exitCode
-        local.assertJsonEqual(exitCode, null);
-        // validate signal
-        local.assertJsonEqual(signal, "SIGKILL");
-        onParallel(null, opt);
-    });
-    onParallel(null, opt);
-};
-
-local.testCase_childProcessSpawnWithUtility2_err = function (
-    opt,
-    onError
-) {
-/*
- * this function will test
- * childProcessSpawnWithTimeout's err handling-behavior
- */
-    if (local.isBrowser) {
-        onError(undefined, opt);
-        return;
-    }
-    local.testMock([
-        // test __dirname handling-behavior
-        [
-            process.env, {
-                npm_config_dir_utility2: ""
-            }
-        ]
-    ], function (onError) {
-        local.local.childProcessSpawnWithUtility2("undefined", function (err) {
-            // handle err
-            local.assertOrThrow(err, err);
-        });
-        onError(undefined, opt);
-    }, onError);
-};
-
 local.testCase_cliRun_default = function (opt, onError) {
 /*
  * this function will test cliRun's default handling-behavior
@@ -1153,36 +935,36 @@ local.testCase_cliRun_default = function (opt, onError) {
     }, onError);
 };
 
-local.testCase_corsBackendHostInject_default = function (opt, onError) {
-/*
- * this function will corsBackendHostInject's default handling-behavior
- */
-    // test null-case handling-behavior
-    local.assertJsonEqual(local.corsBackendHostInject(), undefined);
-    // test override-all handling-behavior
-    local.assertJsonEqual(local.corsBackendHostInject(
-        "cc.com",
-        "aa-alpha.bb.com",
-        null,
-        {
-            host: "github.io",
-            pathname: "/build..beta..travis-ci.org/"
-        }
-    ), "aa-beta.bb.com");
-    // test override-rgx handling-behavior
-    local.assertJsonEqual(local.corsBackendHostInject(
-        "cc/dd",
-        "aa-alpha.bb.com/",
-        (
-            /(^cc\/)/m
-        ),
-        {
-            host: "github.io",
-            pathname: "/build..beta..travis-ci.org/"
-        }
-    ), "aa-beta.bb.com/cc/dd");
-    onError(undefined, opt);
-};
+//!! local.testCase_corsBackendHostInject_default = function (opt, onError) {
+//!! /*
+ //!! * this function will corsBackendHostInject's default handling-behavior
+ //!! */
+    //!! // test null-case handling-behavior
+    //!! local.assertJsonEqual(local.corsBackendHostInject(), undefined);
+    //!! // test override-all handling-behavior
+    //!! local.assertJsonEqual(local.corsBackendHostInject(
+        //!! "cc.com",
+        //!! "aa-alpha.bb.com",
+        //!! null,
+        //!! {
+            //!! host: "github.io",
+            //!! pathname: "/build..beta..travis-ci.com/"
+        //!! }
+    //!! ), "aa-beta.bb.com");
+    //!! // test override-rgx handling-behavior
+    //!! local.assertJsonEqual(local.corsBackendHostInject(
+        //!! "cc/dd",
+        //!! "aa-alpha.bb.com/",
+        //!! (
+            //!! /(^cc\/)/m
+        //!! ),
+        //!! {
+            //!! host: "github.io",
+            //!! pathname: "/build..beta..travis-ci.com/"
+        //!! }
+    //!! ), "aa-beta.bb.com/cc/dd");
+    //!! onError(undefined, opt);
+//!! };
 
 local.testCase_corsForwardProxyHostIfNeeded_default = function (
     opt,
@@ -1209,7 +991,7 @@ local.testCase_cryptoAesXxxCbcRawXxx_default = function (opt, onError) {
 /*
  * this function will cryptoAesXxxCbcRawXxx's default handling-behavior
  */
-    if (!local.nop()) {
+    if (local.isBrowser) {
         onError();
         return;
     }
@@ -1275,89 +1057,6 @@ local.testCase_domFragmentRender_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
-local.testCase_isNullOrUndefined_default = function (opt, onError) {
-/*
- * this function will test isNullOrUndefined's default handling-behavior
- */
-    // validate data
-    local.assertJsonEqual(local.isNullOrUndefined(null), true);
-    // validate data
-    local.assertJsonEqual(local.isNullOrUndefined(undefined), true);
-    // validate data
-    local.assertJsonEqual(local.isNullOrUndefined(false), false);
-    onError(undefined, opt);
-};
-
-local.testCase_jsonCopy_default = function (opt, onError) {
-/*
- * this function will test jsonCopy's default handling-behavior
- */
-// test various data-type handling-behavior
-[
-    undefined, null, false, true, 0, 1, 1.5, "a"
-].forEach(function (elem) {
-    local.assertJsonEqual(local.jsonCopy(elem), elem);
-});
-onError(undefined, opt);
-};
-
-local.testCase_jsonStringifyOrdered_default = function (opt, onError) {
-/*
- * this function will test jsonStringifyOrdered's default handling-behavior
- */
-    // test data-type handling-behavior
-    ([
-        undefined,
-        null,
-        false,
-        true,
-        0,
-        1,
-        1.5,
-        "a",
-        {},
-        []
-    ]).forEach(function (data) {
-        local.assertJsonEqual(
-            local.jsonStringifyOrdered(data),
-            JSON.stringify(data)
-        );
-    });
-    // test data-ordering handling-behavior
-    opt = {
-        // test nested dict handling-behavior
-        ff: {
-            hh: 2,
-            gg: 1
-        },
-        // test nested array handling-behavior
-        ee: [
-            1, null, undefined
-        ],
-        dd: local.nop,
-        cc: undefined,
-        bb: null,
-        aa: 1
-    };
-    // test circular-reference handling-behavior
-    opt.zz = opt;
-    local.assertJsonEqual(
-        opt,
-        {
-            aa: 1,
-            bb: null,
-            ee: [
-                1, null, null
-            ],
-            ff: {
-                gg: 1,
-                hh: 2
-            }
-        }
-    );
-    onError(undefined, opt);
-};
-
 local.testCase_libUtility2Js_standalone = function (opt, onError) {
 /*
  * this function will test lib.utility2.js's standalone handling-behavior
@@ -1371,32 +1070,6 @@ local.testCase_libUtility2Js_standalone = function (opt, onError) {
         "utf8"
     ).replace("/* istanbul instrument in package utility2 */", ""));
     require("./tmp/lib.utility2.js");
-    onError(undefined, opt);
-};
-
-local.testCase_listGetElementRandom_default = function (opt, onError) {
-/*
- * this function will test listGetRandom's default handling-behavior
- */
-    opt = {};
-    // init list
-    opt.list = [
-        "aa", "bb", "cc", "dd"
-    ];
-    opt.elemDict = {};
-    // get 1000 random elem from list
-    opt.ii = 0;
-    while (opt.ii < 1000) {
-        opt.elemDict[local.listGetElementRandom(opt.list)] = true;
-        opt.ii += 1;
-    }
-    // validate all elem were retrieved from list
-    local.assertJsonEqual(
-        Object.keys(opt.elemDict).sort(),
-        [
-            "aa", "bb", "cc", "dd"
-        ]
-    );
     onError(undefined, opt);
 };
 
@@ -1421,43 +1094,6 @@ local.testCase_listShuffle_default = function (opt, onError) {
     // validate list changed at least once during shuffle
     local.assertOrThrow(opt.changed, opt);
     onError(undefined, opt);
-};
-
-local.testCase_localStorageSetItemOrClear_default = function (
-    opt,
-    onError
-) {
-/*
- * this function will localStorageSetItemOrClear's default handling-behavior
- */
-    if (!local.isBrowser) {
-        onError(undefined, opt);
-        return;
-    }
-    local.localStorageSetItemOrClear(
-        "testCase_localStorageSetItemOrClear_default",
-        null
-    );
-    local.assertJsonEqual(
-        localStorage.testCase_localStorageSetItemOrClear_default,
-        "null"
-    );
-    local.testMock([
-        [
-            localStorage, {
-                clear: null,
-                setItem: function () {
-                    throw local.errorDefault;
-                }
-            }
-        ]
-    ], function (onError) {
-        localStorage.clear = onError;
-        local.localStorageSetItemOrClear(
-            "testCase_localStorageSetItemOrClear_default",
-            null
-        );
-    }, onError);
 };
 
 local.testCase_middlewareForwardProxy_default = function (opt, onError) {
@@ -1538,125 +1174,6 @@ local.testCase_moduleDirname_default = function (opt, onError) {
         local.moduleDirname("syntax-err", module.paths),
         ""
     );
-    onError(undefined, opt);
-};
-
-local.testCase_numberToRomanNumerals_default = function (opt, onError) {
-/*
- * this function will test numberToRomanNumerals's default handling-behavior
- */
-    opt = {};
-    opt.list = [
-        "",
-        "I",
-        "II",
-        "III",
-        "IV",
-        "V",
-        "VI",
-        "VII",
-        "VIII",
-        "IX",
-        "X",
-        "XI",
-        "XII",
-        "XIII",
-        "XIV",
-        "XV",
-        "XVI",
-        "XVII",
-        "XVIII",
-        "XIX",
-        "XX",
-        "XXI",
-        "XXII",
-        "XXIII",
-        "XXIV",
-        "XXV",
-        "XXVI",
-        "XXVII",
-        "XXVIII",
-        "XXIX",
-        "XXX",
-        "XXXI",
-        "XXXII",
-        "XXXIII",
-        "XXXIV",
-        "XXXV",
-        "XXXVI",
-        "XXXVII",
-        "XXXVIII",
-        "XXXIX",
-        "XL",
-        "XLI",
-        "XLII",
-        "XLIII",
-        "XLIV",
-        "XLV",
-        "XLVI",
-        "XLVII",
-        "XLVIII",
-        "XLIX",
-        "L",
-        "LI",
-        "LII",
-        "LIII",
-        "LIV",
-        "LV",
-        "LVI",
-        "LVII",
-        "LVIII",
-        "LIX",
-        "LX",
-        "LXI",
-        "LXII",
-        "LXIII",
-        "LXIV",
-        "LXV",
-        "LXVI",
-        "LXVII",
-        "LXVIII",
-        "LXIX",
-        "LXX",
-        "LXXI",
-        "LXXII",
-        "LXXIII",
-        "LXXIV",
-        "LXXV",
-        "LXXVI",
-        "LXXVII",
-        "LXXVIII",
-        "LXXIX",
-        "LXXX",
-        "LXXXI",
-        "LXXXII",
-        "LXXXIII",
-        "LXXXIV",
-        "LXXXV",
-        "LXXXVI",
-        "LXXXVII",
-        "LXXXVIII",
-        "LXXXIX",
-        "XC",
-        "XCI",
-        "XCII",
-        "XCIII",
-        "XCIV",
-        "XCV",
-        "XCVI",
-        "XCVII",
-        "XCVIII",
-        "XCIX",
-        "C"
-    ];
-    opt.ii = 0;
-    while (opt.ii < 10) {
-        local.assertJsonEqual(
-            local.numberToRomanNumerals(opt.ii),
-            opt.list[opt.ii]
-        );
-        opt.ii += 1;
-    }
     onError(undefined, opt);
 };
 
@@ -1791,41 +1308,12 @@ local.testCase_objectAssignRecurse_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
-local.testCase_onErrorDefault_default = function (opt, onError) {
-/*
- * this function will test onErrorDefault's default handling-behavior
- */
-    local.testMock([
-        [
-            console, {
-                error: function (arg) {
-                    opt = arg;
-                }
-            }
-        ], [
-            globalThis, {
-                __coverage__: null
-            }
-        ]
-    ], function (onError) {
-        // test no err handling-behavior
-        local.onErrorDefault();
-        // validate opt
-        local.assertOrThrow(opt !== local.errorDefault, opt);
-        // test err handling-behavior
-        local.onErrorDefault(local.errorDefault);
-        // validate opt
-        local.assertOrThrow(opt === local.errorDefault, opt);
-        onError(undefined, opt);
-    }, onError);
-};
-
 local.testCase_onErrorThrow_err = function (opt, onError) {
 /*
  * this function will test onErrorThrow's err handling-behavior
  */
     local.tryCatchOnError(function () {
-        local.onErrorThrow(local.errorDefault);
+        local.onErrorThrow(new Error());
     }, function (err) {
         // handle err
         local.assertOrThrow(err, err);
@@ -1876,7 +1364,7 @@ local.testCase_onNext_err = function (opt, onError) {
     opt = {};
     opt.modeDebug = true;
     local.gotoNext(opt, function () {
-        throw local.errorDefault;
+        throw new Error();
     });
     opt.gotoState = 0;
     local.tryCatchOnError(function () {
@@ -1908,7 +1396,7 @@ local.testCase_onParallelList_default = function (opt, onError) {
             local.onParallelList(opt, function (opt2, onParallel) {
                 onParallel.cnt += 1;
                 // test err handling-behavior
-                onParallel(local.errorDefault, opt2);
+                onParallel(new Error(), opt2);
                 // test multiple-callback handling-behavior
                 setTimeout(onParallel, 5000);
             }, function (err) {
@@ -2009,7 +1497,7 @@ local.testCase_onParallel_default = function (opt, onError) {
         // handle err
         local.assertOrThrow(onParallelError.err, onParallelError.err);
         // test err handling-behavior
-        onParallelError(local.errorDefault);
+        onParallelError(new Error());
         // handle err
         local.assertOrThrow(onParallelError.err, onParallelError.err);
         // test ignore-after-error handling-behavior
@@ -2077,55 +1565,7 @@ local.testCase_replStart_default = function (opt, onError) {
     }, onError);
 };
 
-local.testCase_requireReadme_start = function (opt, onError) {
-/*
- * this function will test requireReadme's start handling-behavior
- */
-    if (local.isBrowser) {
-        onError(undefined, opt);
-        return;
-    }
-    local.testMock([
-        [
-            local, {
-                assetsDict: {},
-                onFileModifiedRestart: local.nop
-            }
-        ], [
-            local.env, {
-                npm_config_mode_start: "1",
-                npm_package_nameLib: "_testCase_requireReadme_start"
-            }
-        ], [
-            local.fs, {
-                readFile: function (file, opt, onError) {
-                    onError(undefined, "{}", file, opt);
-                },
-                readdirSync: function () {
-                    // test jslintAndPrint.conditional handling-behavior
-                    return [
-                        "aa.css",
-                        "aa.html",
-                        "aa.js",
-                        "aa.json",
-                        "aa.rollup.js",
-                        "assets.swgg.swagger.json"
-                    ];
-                }
-            }
-        ]
-    ], function (onError) {
-        // validate data
-        local.requireReadme();
-        local.assertOrThrow(local._testCase_requireReadme_start === local);
-        onError(undefined, opt);
-    }, onError);
-};
-
-local.testCase_serverRespondTimeoutDefault_timeout = function (
-    opt,
-    onError
-) {
+local.testCase_serverRespondTimeoutDefault_timeout = function (opt, onError) {
 /*
  * this function will test
  * serverRespondTimeoutDefault's timeout handling-behavior
@@ -2539,7 +1979,7 @@ local.testCase_webpage_err = function (opt, onError) {
     globalThis.utility2_testReport.testsPending = 0;
     setTimeout(function () {
         // test err from callback handling-behavior
-        onError(local.errorDefault, opt);
+        onError(new Error(), opt);
         // test err from multiple-callback handling-behavior
         onError(undefined, opt);
     }, 2000);
@@ -2595,9 +2035,9 @@ local.middlewareList.push(function (req, res, next) {
     case "/test.err-500":
         // test multiple-callback serverRespondHeadSet handling-behavior
         local.serverRespondHeadSet(req, res, null, {});
-        next(local.errorDefault);
+        next(new Error());
         // test multiple-callback-error handling-behavior
-        next(local.errorDefault);
+        next(new Error());
         // test onErrorDefault handling-behavior
         local.testMock([
             [

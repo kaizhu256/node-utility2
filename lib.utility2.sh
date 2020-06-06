@@ -6,6 +6,7 @@
 
 # useful sh one-liners
 # http://sed.sourceforge.net/sed1line.txt
+# apt list --installed
 # export NODE_TLS_REJECT_UNAUTHORIZED=0 # use with caution
 # git branch -d -r origin/aa
 # git config --global diff.algorithm histogram
@@ -14,6 +15,8 @@
 # git ls-remote --heads origin
 # git update-index --chmod=+x aa.js
 # npm_package_private=1 GITHUB_REPO=aa/node-aa-bb-pro shCryptoWithGithubOrg aa shCryptoTravisEncrypt
+# openssl rand -base64 32 # random key
+# printf "$USERNAME:$(openssl passwd -apr1 "$PASSWD")\n" # htpasswd
 # shCryptoWithGithubOrg aa shCryptoTravisDecrypt ciphertext.txt
 # shCryptoWithGithubOrg aa shCryptoTravisEncrypt plaintext.txt
 # shCryptoWithGithubOrg aa shTravisRepoCreate aa/node-aa-bb
@@ -137,7 +140,7 @@ opt.argList = [
 ];
 opt.command = process.env.CHROME_BIN;
 if (opt.argv[2] === "--debug") {
-    console.error(JSON.stringify(opt, null, 4));
+    console.error(JSON.stringify(opt, undefined, 4));
 }
 process.on("exit", function (exitCode) {
     if (typeof exitCode === "object" && exitCode) {
@@ -206,65 +209,66 @@ shBuildApp () {(set -e
         fi
     done
     # create file package.json
-    node -e "$UTILITY2_MACRO_JS"'
+    node -e '
 /* jslint utility2:true */
-(function (local) {
-"use strict";
-let result;
-result = Object.assign({
-    "description": "the greatest app in the world!",
-    "main": "lib." + process.env.npm_package_nameLib + ".js",
-    "name": process.env.npm_package_name,
-    "scripts": {
-        "test": "./npm_scripts.sh"
-    },
-    "version": "0.0.1"
-}, JSON.parse(require("fs").readFileSync("package.json")));
-result.scripts.test = result.scripts.test || "./npm_scripts.sh";
-require("fs").writeFileSync(
-    "package.json",
-    local.jsonStringifyOrdered(result, null, 4) + "\n"
-);
-}(globalThis.globalLocal));
+(function () {
+    "use strict";
+    let result;
+    result = Object.assign({
+        "description": "the greatest app in the world!",
+        "main": "lib." + process.env.npm_package_nameLib + ".js",
+        "name": process.env.npm_package_name,
+        "scripts": {
+            "test": "./npm_scripts.sh"
+        },
+        "version": "0.0.1"
+    }, JSON.parse(require("fs").readFileSync("package.json")));
+    result.scripts.test = result.scripts.test || "./npm_scripts.sh";
+    require("fs").writeFileSync(
+        "package.json",
+        JSON.stringify(result)
+    );
+}());
 '
+    shJsonNormalize package.json
     # create files README.md, lib.$npm_package.nameLib.js, test.js
     node -e '
 /* jslint utility2:true */
 (function (local) {
-"use strict";
-let tmp;
-if (!local.fs.existsSync("README.md", "utf8")) {
-    local.fs.writeFileSync("README.md", local.templateRenderMyApp(
-        local.assetsDict["/assets.readme.template.md"],
-        {}
-    ));
-}
-if (!local.fs.existsSync(
-    "lib." + process.env.npm_package_nameLib + ".js",
-    "utf8"
-)) {
-    tmp = local.assetsDict["/assets.my_app.template.js"];
-    if (local.fs.existsSync("assets.utility2.rollup.js")) {
-        tmp = tmp.replace(
-            "    // || globalThis.utility2_rollup_old || ",
-            "    || globalThis.utility2_rollup_old || "
-        );
+    "use strict";
+    let tmp;
+    if (!local.fs.existsSync("README.md", "utf8")) {
+        local.fs.writeFileSync("README.md", local.templateRenderMyApp(
+            local.assetsDict["/assets.readme.template.md"],
+            {}
+        ));
     }
-    local.fs.writeFileSync(
+    if (!local.fs.existsSync(
         "lib." + process.env.npm_package_nameLib + ".js",
-        local.templateRenderMyApp(tmp, {})
-    );
-}
-if (!local.fs.existsSync("test.js", "utf8")) {
-    tmp = local.assetsDict["/assets.test.template.js"];
-    if (local.fs.existsSync("assets.utility2.rollup.js")) {
-        tmp = tmp.replace(
-            "require(\u0027utility2\u0027)",
-            "require(\u0027./assets.utility2.rollup.js\u0027)"
+        "utf8"
+    )) {
+        tmp = local.assetsDict["/assets.my_app.template.js"];
+        if (local.fs.existsSync("assets.utility2.rollup.js")) {
+            tmp = tmp.replace(
+                "    // || globalThis.utility2_rollup_old || ",
+                "    || globalThis.utility2_rollup_old || "
+            );
+        }
+        local.fs.writeFileSync(
+            "lib." + process.env.npm_package_nameLib + ".js",
+            local.templateRenderMyApp(tmp, {})
         );
     }
-    local.fs.writeFileSync("test.js", local.templateRenderMyApp(tmp, {}));
-}
+    if (!local.fs.existsSync("test.js", "utf8")) {
+        tmp = local.assetsDict["/assets.test.template.js"];
+        if (local.fs.existsSync("assets.utility2.rollup.js")) {
+            tmp = tmp.replace(
+                "require(\u0027utility2\u0027)",
+                "require(\u0027./assets.utility2.rollup.js\u0027)"
+            );
+        }
+        local.fs.writeFileSync("test.js", local.templateRenderMyApp(tmp, {}));
+    }
 }(require(process.env.npm_config_dir_utility2)));
 '
     chmod 755 "lib.$npm_package_nameLib.js" npm_scripts.sh
@@ -314,10 +318,10 @@ shBuildCi () {(set -e
 # this function will run the main build
     shBuildInit
     export MODE_BUILD=buildCi
-    # init travis-ci.org env
+    # init travis-ci.com env
     if [ "$TRAVIS" ]
     then
-        export CI_HOST="${CI_HOST:-travis-ci.org}"
+        export CI_HOST="${CI_HOST:-travis-ci.com}"
         git remote remove origin 2>/dev/null || true
         git remote add origin "https://github.com/$GITHUB_REPO"
     fi
@@ -393,7 +397,7 @@ shBuildCi () {(set -e
                 --branch=alpha --single-branch --depth=50
             mkdir -p "$npm_config_dir_utility2/tmp/build/app"
             curl -Lfs https://raw.githubusercontent.com\
-/kaizhu256/node-utility2/gh-pages/build..alpha..travis-ci.org/app\
+/kaizhu256/node-utility2/gh-pages/build..alpha..travis-ci.com/app\
 /assets.utility2.rollup.js > \
 "$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js"
             ;;
@@ -681,7 +685,56 @@ shBuildCiInternal () {(set -e
         )
     then
         shSleep 60
-        shReadmeLinkValidate
+
+        #!! shReadmeLinkValidate
+#!! shReadmeLinkValidate () {(set -e
+#!! # this function will validate http-links embedded in README.md
+    node -e '
+/* jslint utility2:true */
+(function () {
+"use strict";
+let set;
+set = new Set();
+require("fs").readFileSync("README.md", "utf8").replace((
+    /\b(https?):\/\/.*?[)\]]/g
+), function (match0, match1) {
+    let req;
+    match0 = match0.slice(0, -1).replace((
+        /[\u0022\u0027]/g
+    ), "").replace((
+        /\bbeta\b|\bmaster\b/g
+    ), "alpha").replace((
+        /\/build\//g
+    ), "/build..alpha..travis-ci.com/");
+    // ignore private-link
+    if (
+        process.env.npm_package_private
+        && match0.indexOf("https://github.com/") === 0
+    ) {
+        return;
+    }
+    // ignore duplicate-link
+    if (set.has(match0)) {
+        return;
+    }
+    set.add(match0);
+    req = require(match1).request(require("url").parse(match0), function (res) {
+        console.log(
+            "shReadmeLinkValidate " + res.statusCode + " " + match0
+        );
+        if (!(res.statusCode < 400)) {
+            throw new Error("shReadmeLinkValidate - invalid link " + match0);
+        }
+        req.abort();
+        res.destroy();
+    });
+    req.setTimeout(30000);
+    req.end();
+});
+}());
+'
+#!! )}
+
     fi
 )}
 
@@ -889,7 +942,17 @@ shBuildInsideDocker () {(set -e
     # cleanup tmp
     rm -rf tmp
     # cleanup build
-    shDockerBuildCleanup
+    rm -rf \
+        /root/.npm \
+        /tmp/.* \
+        /tmp/* \
+        /var/cache/apt \
+        /var/lib/apt/lists \
+        /var/log/.* \
+        /var/log/* \
+        /var/tmp/.* \
+        /var/tmp/* \
+        2>/dev/null || true
 )}
 
 shBuildPrint () {(set -e
@@ -925,17 +988,17 @@ shCryptoAesXxxCbcRawDecrypt () {(set -e
 /* jslint utility2:true */
 (function (local) {
 "use strict";
-let chunkList;
-chunkList = [];
+let bufList;
+bufList = [];
 process.stdin.on("data", function (chunk) {
-    chunkList.push(chunk);
+    bufList.push(chunk);
 });
 process.stdin.on("end", function () {
     local.cryptoAesXxxCbcRawDecrypt({
         data: (
             process.argv[2] === "base64"
-            ? Buffer.concat(chunkList).toString()
-            : Buffer.concat(chunkList)
+            ? Buffer.concat(bufList).toString()
+            : Buffer.concat(bufList)
         ),
         key: process.argv[1],
         mode: process.argv[2]
@@ -957,14 +1020,14 @@ shCryptoAesXxxCbcRawEncrypt () {(set -e
 /* jslint utility2:true */
 (function (local) {
 "use strict";
-let chunkList;
-chunkList = [];
+let bufList;
+bufList = [];
 process.stdin.on("data", function (chunk) {
-    chunkList.push(chunk);
+    bufList.push(chunk);
 });
 process.stdin.on("end", function () {
     local.cryptoAesXxxCbcRawEncrypt({
-        data: Buffer.concat(chunkList),
+        data: Buffer.concat(bufList),
         key: process.argv[1],
         mode: process.argv[2]
     }, function (err, data) {
@@ -998,7 +1061,7 @@ shCryptoTravisDecrypt () {(set -e
     fi
     # decrypt CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG
     URL="https://raw.githubusercontent.com\
-/kaizhu256/node-utility2/gh-pages/CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG"
+/kaizhu256/node-utility2/gh-pages/.CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG"
     shBuildPrint "decrypting $URL ..."
     curl -#Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
 )}
@@ -1022,7 +1085,7 @@ shCryptoTravisEncrypt () {(set -e
     if [ -f .travis.yml ]
     then
         TMPFILE="$(mktemp)"
-        URL="https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/key"
+        URL="https://api.travis-ci.com/repos/$GITHUB_REPO/key"
         shBuildPrint "fetch $URL"
         curl -#Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" |
             sed -n -e \
@@ -1055,11 +1118,6 @@ shCryptoWithGithubOrg () {(set -e
     export GITHUB_ORG="$1"
     shift
     . "$HOME/.ssh/.CRYPTO_AES_SH_DECRYPTED_$GITHUB_ORG"
-    if [ "$npm_package_private" ] && [ "$TRAVIS_ACCESS_TOKEN_PRO" ]
-    then
-        export TRAVIS_ACCESS_TOKEN="$TRAVIS_ACCESS_TOKEN_PRO"
-        export TRAVIS_DOMAIN=travis-ci.com
-    fi
     "$@"
 )}
 
@@ -1082,7 +1140,7 @@ shDeployGithub () {(set -e
     export MODE_BUILD=deployGithub
     export TEST_URL="https://$(
         printf "$GITHUB_REPO" | sed -e "s/\//.github.io\//"
-    )/build..$CI_BRANCH..travis-ci.org/app"
+    )/build..$CI_BRANCH..travis-ci.com/app"
     shBuildPrint "deployed to $TEST_URL"
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
@@ -1097,7 +1155,6 @@ shDeployGithub () {(set -e
     fi
     # screenshot deployed app
     shBrowserScreenshot "$TEST_URL" &
-    shBrowserScreenshot "$TEST_URL/assets.swgg.html" &
     # test deployed app
     MODE_BUILD="${MODE_BUILD}Test" \
         shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
@@ -1134,26 +1191,9 @@ shDeployHeroku () {(set -e
     fi
     # screenshot deployed app
     shBrowserScreenshot "$TEST_URL" &
-    shBrowserScreenshot "$TEST_URL/assets.swgg.html" &
     # test deployed app
     MODE_BUILD="${MODE_BUILD}Test" \
         shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
-)}
-
-shDockerBuildCleanup () {(set -e
-# this function will cleanup the docker build
-# apt list --installed
-    rm -rf \
-        /root/.npm \
-        /tmp/.* \
-        /tmp/* \
-        /var/cache/apt \
-        /var/lib/apt/lists \
-        /var/log/.* \
-        /var/log/* \
-        /var/tmp/.* \
-        /var/tmp/* \
-        2>/dev/null || true
 )}
 
 shDockerRestart () {(set -e
@@ -1315,14 +1355,14 @@ shDockerRmiUntagged () {(set -e
 shDockerSh () {(set -e
 # this function will run /bin/bash in the docker-container $NAME
 # http://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
-    NAME="$1"
+    local NAME="$1"
     docker start "$NAME"
     case "$(uname)" in
     MINGW*)
-        winpty docker exec -it "$NAME" ${2:-bash}
+        winpty docker exec -it "$NAME" sh -c "${2:-bash}"
         ;;
     *)
-        docker exec -it "$NAME" ${2:-/bin/bash}
+        docker exec -it "$NAME" sh -c "${2:-/bin/bash}"
         ;;
     esac
 )}
@@ -1393,19 +1433,38 @@ console.log(Object.keys(process.env).sort().map(function (key) {
 shFileCustomizeFromToRgx () {(set -e
 # this function will customize segment of file $2 with segment of file $1,
 # with rgx-list $3...
-    node -e "$UTILITY2_MACRO_JS"'
+    node -e '
 /* jslint utility2:true */
-(function (local) {
+(function () {
 "use strict";
 let dataFrom;
 let dataTo;
+let local;
+local = {};
+local.stringMerge = function (str1, str2, rgx) {
+/*
+ * this function will merge <str2> into <str1>,
+ * for sections where both match <rgx>
+ */
+    str2.replace(rgx, function (match2) {
+        str1.replace(rgx, function (match1) {
+            str1 = str1.replace(match1, function () {
+                return match2;
+            });
+            return "";
+        });
+        return "";
+    });
+    return str1;
+};
+
 dataFrom = require("fs").readFileSync(process.argv[2], "utf8");
 dataTo = require("fs").readFileSync(process.argv[1], "utf8");
 process.argv.slice(3).forEach(function (rgx) {
     dataTo = local.stringMerge(dataTo, dataFrom, new RegExp(rgx));
 });
 require("fs").writeFileSync(process.argv[2], dataTo);
-}(globalThis.globalLocal));
+}());
 ' "$@"
 )}
 
@@ -1529,44 +1588,6 @@ shGitLsTree () {(set -e
     }' | sed -e "s/ /./"
 )}
 
-shGitLsTreeSort () {(set -e
-# this function will sort git-lstree by size
-    printf "# 0\n" > .gitlstree
-    shGitLsTree | sed -e "s/^.\{31\}//" >> .gitlstree
-    node -e '
-/* jslint utility2:true */
-(function () {
-"use strict";
-let dict;
-dict = {};
-require("fs").readFileSync(".gitlstree", "utf8").replace((
-    /(.*?)\u0020bytes\u0020(.*?)$/gm
-), function (ignore, match1, match2) {
-    dict[match1] = dict[match1] || [];
-    dict[match1].push(match2);
-});
-[
-    1,
-    2
-].forEach(function (ii) {
-    console.log("# " + ii);
-    Object.keys(dict).sort().reverse().forEach(function (key) {
-        if (dict[key].length < ii) {
-            return;
-        }
-        console.log(key.replace((
-            /\u0020/g
-        ), "_"));
-        dict[key].forEach(function (elem) {
-            console.log("    " + JSON.stringify(elem));
-        });
-    });
-});
-}());
-' >> .gitlstree
-    printf "#\n" >> .gitlstree
-)}
-
 shGitSquashPop () {(set -e
 # this function will squash HEAD to given $COMMIT
 # http://stackoverflow.com/questions/5189560
@@ -1597,15 +1618,6 @@ shGitSquashShift () {(set -e
 shGithubApiRateLimitGet () {(set -e
 # this function will the rate-limit for the $GITHUB_TOKEN
     curl -I https://api.github.com -H "Authorization: token $GITHUB_TOKEN"
-)}
-
-shGithubDateCommitted () {(set -e
-# this function will fetch the commit-date for the github-commit-url $1
-# example use:
-# shGithubDateCommitted https://github.com/kaizhu256/node-utility2/commits/master
-    printf "shGithubDateCommitted $1 # "
-    curl -Lfs "$1" | grep -m 1 -o -E \
-        "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z"
 )}
 
 shGithubRepoBranchId () {(set -e
@@ -1788,13 +1800,6 @@ Object.keys(dict).forEach(function (key) {
 ' "$@"
 )}
 
-shHtpasswdCreate () {(set -e
-# this function will create and print htpasswd to stdout
-    USERNAME="$1"
-    PASSWD="$2"
-    printf "$USERNAME:$(openssl passwd -apr1 "$PASSWD")\n"
-)}
-
 shHttpFileServer () {(set -e
 # this function will run a simple node http-file-server on port $PORT
     node -e '
@@ -1893,17 +1898,42 @@ shJsonNormalize () {(set -e
 # 1. read json-data from file $1
 # 2. normalize json-data
 # 3. write normalized json-data back to file $1
-    node -e "$UTILITY2_MACRO_JS"'
+    node -e '
 /* jslint utility2:true */
-(function (local) {
-"use strict";
-console.error("shJsonNormalize - " + process.argv[1]);
-require("fs").writeFileSync(process.argv[1], local.jsonStringifyOrdered(
-    JSON.parse(require("fs").readFileSync(process.argv[1])),
-    null,
-    4
-) + "\n");
-}(globalThis.globalLocal));
+(function () {
+    "use strict";
+    let objectDeepCopyWithKeysSorted;
+    objectDeepCopyWithKeysSorted = function (obj) {
+    /*
+     * this function will recursively deep-copy <obj> with keys sorted
+     */
+        let sorted;
+        if (!(typeof obj === "object" && obj)) {
+            return obj;
+        }
+        // recursively deep-copy list with child-keys sorted
+        if (Array.isArray(obj)) {
+            return obj.map(objectDeepCopyWithKeysSorted);
+        }
+        // recursively deep-copy obj with keys sorted
+        sorted = {};
+        Object.keys(obj).sort().forEach(function (key) {
+            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
+        });
+        return sorted;
+    };
+    console.error("shJsonNormalize - " + process.argv[1]);
+    require("fs").writeFileSync(
+        process.argv[1],
+        JSON.stringify(
+            objectDeepCopyWithKeysSorted(
+                JSON.parse(require("fs").readFileSync(process.argv[1]))
+            ),
+            undefined,
+            4
+        ) + "\n"
+    );
+}());
 ' "$1"
 )}
 
@@ -1916,80 +1946,45 @@ shMacAddressSpoof () {(set -e
     ifconfig en0
 )}
 
-shMediaHlsEncrypt () {(set -e
-# this function encrypt the hls-media with given hls.m3u8 file
-# example use:
-# CRYPTO_AES_KEY_MEDIA=0123456789abcdef0123456789abcdef shMediaHlsEncrypt
-    node -e "$UTILITY2_MACRO_JS"'
-/* jslint utility2:true */
-(function (local) {
-"use strict";
-let data;
-let ii;
-data = require("fs").readFileSync("hls.m3u8", "utf8");
-ii = 1;
-data = data.replace((
-    /^[^#].*?$/gm
-), function (match0, match1) {
-    ii += 1;
-    match1 = "aa." + ("0000" + ii).slice(-4) + ".bin";
-    require("fs").readFile(match0, function (err, data) {
-        console.assert(!err, err);
-        local.cryptoAesXxxCbcRawEncrypt({
-            data,
-            key: process.env.CRYPTO_AES_KEY_MEDIA
-        }, function (err, data) {
-            console.assert(!err, err);
-            require("fs").writeFile(match1, data, function (err) {
-                console.assert(!err, err);
-                console.error("encrypted file " + match0 + " to " + match1);
-            });
-        });
-    });
-    return match1;
-});
-local.cryptoAesXxxCbcRawEncrypt({
-    data: Buffer.from(data),
-    key: process.env.CRYPTO_AES_KEY_MEDIA,
-    mode: "base64"
-}, function (
-    err,
-    data
-) {
-    console.assert(!err, err);
-    require("fs").writeFile("aa.0001.bin", data, function (err) {
-        console.assert(!err, err);
-        console.error("encrypted file hls.m3u8 to aa.0001.bin");
-    });
-});
-}(globalThis.globalLocal));
-' "$@"
-)}
-
-shMediaHlsFromMp4 () {(set -e
-# this function convert the media $1 to hls
-# example use:
-# shMediaHlsFromMp4 a00.mp4
-    ffmpeg \
-        -i "$1" \
-        -c:v copy \
-        -c:a copy \
-        -hls_list_size 0 \
-        -hls_time 6 \
-        -hls_segment_filename hls.%04d.ts \
-        -y \
-        hls.m3u8
-)}
-
 shModuleDirname () {(set -e
 # this function will print the __dirname of the module $1
     MODULE="$1"
-    node -e "$UTILITY2_MACRO_JS"'
+    node -e '
 /* jslint utility2:true */
-(function (local) {
+(function () {
 "use strict";
+let local;
+local = {};
+local.moduleDirname = function (module, pathList) {
+/*
+ * this function will search <pathList> for <module>'"'"'s __dirname
+ */
+    let result;
+    // search "."
+    if (!module || module === "." || module.indexOf("/") >= 0) {
+        return require("path").resolve(module || "");
+    }
+    // search pathList
+    Array.from([
+        pathList,
+        require("module").globalPaths,
+        [
+            process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
+        ]
+    ]).flat().some(function (path) {
+        try {
+            result = require("path").resolve(path + "/" + module);
+            result = require("fs").statSync(result).isDirectory() && result;
+            return result;
+        } catch (ignore) {
+            result = "";
+        }
+    });
+    return result;
+};
+
 console.log(local.moduleDirname(process.argv[1], module.paths));
-}(globalThis.globalLocal));
+}());
 ' "$1"
 )}
 
@@ -2029,22 +2024,13 @@ Object.keys(packageJson).forEach(function (key) {
 });
 require("fs").writeFileSync(
     "package.json",
-    JSON.stringify(packageJson, null, 4) + "\n"
+    JSON.stringify(packageJson, undefined, 4) + "\n"
 );
 }());
 ' "$MESSAGE"
     shPackageJsonVersionIncrement
     npm publish
     npm deprecate "$NAME" "$MESSAGE"
-)}
-
-shNpmInstallTarball () {(set -e
-# this function will npm-install the tarball instead of the full module
-    NAME="$1"
-    mkdir -p "node_modules/$NAME"
-    curl -Lfs "$(
-        npm view "$NAME" dist.tarball
-    )" | tar --strip-components 1 -C "node_modules/$NAME" -xzf -
 )}
 
 shNpmPackageCliHelpCreate () {(set -e
@@ -2166,7 +2152,7 @@ packageJson.name = name || packageJson.name;
 packageJson.version = version || packageJson.version;
 require("fs").writeFileSync(
     "package.json",
-    JSON.stringify(packageJson, null, 4) + "\n"
+    JSON.stringify(packageJson, undefined, 4) + "\n"
 );
 }());
 ' "$NAME" "$VERSION"
@@ -2361,11 +2347,6 @@ require("fs").writeFileSync(
 console.error("shPackageJsonVersionIncrement - " + packageJson.version);
 }());
 ' "$1"
-)}
-
-shPasswordRandom () {(set -e
-# this function will create random-password
-    openssl rand -base64 32
 )}
 
 shRawLibDiff () {(set -e
@@ -2742,54 +2723,6 @@ process.on("exit", function () {
 ' "$@"
 )}
 
-shReadmeLinkValidate () {(set -e
-# this function will validate http-links embedded in README.md
-    node -e '
-/* jslint utility2:true */
-(function () {
-"use strict";
-let set;
-set = new Set();
-require("fs").readFileSync("README.md", "utf8").replace((
-    /\b(https?):\/\/.*?[)\]]/g
-), function (match0, match1) {
-    let req;
-    match0 = match0.slice(0, -1).replace((
-        /[\u0022\u0027]/g
-    ), "").replace((
-        /\bbeta\b|\bmaster\b/g
-    ), "alpha").replace((
-        /\/build\//g
-    ), "/build..alpha..travis-ci.org/");
-    // ignore private-link
-    if (
-        process.env.npm_package_private
-        && match0.indexOf("https://github.com/") === 0
-    ) {
-        return;
-    }
-    // ignore duplicate-link
-    if (set.has(match0)) {
-        return;
-    }
-    set.add(match0);
-    req = require(match1).request(require("url").parse(match0), function (res) {
-        console.log(
-            "shReadmeLinkValidate " + res.statusCode + " " + match0
-        );
-        if (!(res.statusCode < 400)) {
-            throw new Error("shReadmeLinkValidate - invalid link " + match0);
-        }
-        req.abort();
-        res.destroy();
-    });
-    req.setTimeout(30000);
-    req.end();
-});
-}());
-'
-)}
-
 shReadmeTest () {(set -e
 # this function will extract, save, and test the script $FILE embedded in README.md
     shBuildInit
@@ -2842,7 +2775,7 @@ shReadmeTest () {(set -e
         if [ "$CI_BRANCH" = alpha ]
         then
             sed -in \
--e "s|/build..beta..travis-ci.org/|/build..alpha..travis-ci.org/|g" \
+-e "s|/build..beta..travis-ci.com/|/build..alpha..travis-ci.com/|g" \
 -e "s|npm install $npm_package_name|npm install $GITHUB_REPO#alpha|g" \
 -e "s| -b beta | -b alpha |g" \
                 "$FILE"
@@ -2889,23 +2822,6 @@ shReadmeTest () {(set -e
         ;;
     esac
     shBuildPrint "... finished running command 'shReadmeTest $*'"
-)}
-
-shReplClient () {(set -e
-# this function will connect the repl-client to tcp-port $1
-# https://gist.github.com/TooTallNate/2209310
-    node -e '
-/* jslint utility2:true */
-(function () {
-"use strict";
-let socket;
-console.log("node repl-client connecting to tcp-port " + process.argv[1]);
-socket = require("net").connect(process.argv[1]);
-process.stdin.pipe(socket);
-socket.pipe(process.stdout);
-socket.on("end", process.exit);
-}());
-' "$@"
 )}
 
 shRmDsStore () {(set -e
@@ -3032,12 +2948,6 @@ require("fs").writeFileSync(
     return "$EXIT_CODE"
 )}
 
-shServerPortRandom () {(set -e
-# this function will print random unused tcp-port in the inclusive range
-# 0x8000 to 0xffff
-    node -e 'console.log(Math.random() * 65536 | 0x8000);'
-)}
-
 shSleep () {(set -e
 # this function will sleep $1
     shBuildPrint "sleep $1 ..."
@@ -3049,79 +2959,23 @@ shSource () {
     . "$HOME/.bashrc"
 }
 
-shSsh5022F () {(set -e
-# this function will ssh the reverse-tunnel-client
-# to the middleman $USER_HOST:5022
-# example use:
-# shSsh5022F travis@proxy.com -D 5080
-    USER_HOST="$1"
-    shift
-    ssh-keygen -R \
-        "[$(printf "$USER_HOST" | sed -e "s/.*\@//")]:5022" > /dev/null 2>&1 ||
-        true
-    ssh "$USER_HOST" -p 5022 -o StrictHostKeyChecking=no "$@"
-)}
-
-shSsh5022R () {(set -e
-# this function will ssh-reverse-tunnel the local-machine $USER@127.0.0.1
-# to the middleman $USER_HOST:5022
-# example use:
-# shSsh5022R travis@proxy.com root
-# pkill -f "ssh $USER_REMOTE@$HOST"
-    USER_HOST="$1"
-    HOST="$(printf "$USER_HOST" | sed -e "s/.*@//")"
-    USER="$(printf "$USER_HOST" | sed -e "s/@.*//")"
-    shift
-    USER_REMOTE="$1"
-    shift
-    printf "\nssh $USER_REMOTE@$HOST\n"
-    ssh "$USER_REMOTE@$HOST" -R 5022:127.0.0.1:22 -Tf \
-        -o StrictHostKeyChecking=no "
-ssh-keygen -R [127.0.0.1]:5022 > /dev/null 2>&1
-ssh $USER@127.0.0.1 -p 5022 -L $HOST:5022:127.0.0.1:22 -NTf \
-    -o StrictHostKeyChecking=no
-"
-)}
-
-shTravisRepoBuildCancel () {(set -e
-# this function will cancel the travis-repo build
-# https://docs.travis-ci.com/api#builds
-    GITHUB_REPO="$1"
-    BUILD_ID="$(
-        curl -#Lf \
-"https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/builds" |
-        grep -o -E "[0-9]{1,}" | head -n 1
-    )"
-    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
-        "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/builds/$BUILD_ID/cancel"
-)}
-
-shTravisRepoBuildRestart () {(set -e
-# this function will restart the travis-repo build
-# https://docs.travis-ci.com/api#builds
-    GITHUB_REPO="$1"
-    BUILD_ID="$(
-        curl -#Lf \
-"https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/builds" |
-        grep -o -E "[0-9]{1,}" | head -n 1
-    )"
-    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
-        "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/builds/$BUILD_ID/restart"
-)}
-
 shTravisRepoCreate () {(set -e
 # this function will create travis-repo https://github.com/$GITHUB_REPO
     export GITHUB_REPO="$1"
     export MODE_BUILD="${MODE_BUILD:-shTravisRepoCreate}"
-    export TRAVIS_DOMAIN=${TRAVIS_DOMAIN:-travis-ci.org}
     shBuildPrint "$GITHUB_REPO - creating ..."
     shGithubRepoCreate "$GITHUB_REPO"
     shSleep 5
-    shTravisSync
+    #!! shTravisSync () {(set -e
+    # this function will sync travis-ci with given $TRAVIS_ACCESS_TOKEN
+    # this is an expensive operation that will use up your github rate-limit quota
+        curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
+            "https://api.travis-ci.com/users/sync"
+    #!! )}
     while true
     do
         shSleep 2
-        if (curl "https://api.$TRAVIS_DOMAIN/repos/$GITHUB_REPO" \
+        if (curl "https://api.travis-ci.com/repos/$GITHUB_REPO" \
             -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -fs 2>&1 > /dev/null)
         then
             break
@@ -3145,8 +2999,7 @@ local.gotoNext(opt, function (err, data) {
                 Authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN
             },
             url: (
-                "https://api."
-                + process.env.TRAVIS_DOMAIN + "/repos/"
+                "https://api.travis-ci.com/repos/"
                 + process.env.GITHUB_REPO
             )
         }, opt.gotoNext);
@@ -3164,9 +3017,7 @@ local.gotoNext(opt, function (err, data) {
             },
             method: "PUT",
             url: (
-                "https://api."
-                + process.env.TRAVIS_DOMAIN
-                + "/hooks/" + opt.id
+                "https://api.travis-ci.com/hooks/" + opt.id
             )
         }, opt.gotoNext);
         break;
@@ -3186,7 +3037,7 @@ local.gotoNext(opt, function (err, data) {
             },
             method: "PATCH",
             url: (
-                "https://api." + process.env.TRAVIS_DOMAIN + "/repo/"
+                "https://api.travis-ci.com/repo/"
                 + opt.id + "/setting/builds_only_with_travis_yml"
             )
         }, onParallel);
@@ -3201,7 +3052,7 @@ local.gotoNext(opt, function (err, data) {
             },
             method: "PATCH",
             url: (
-                "https://api." + process.env.TRAVIS_DOMAIN + "/repo/"
+                "https://api.travis-ci.com/repo/"
                 + opt.id + "/setting/auto_cancel_pushes"
             )
         }, onParallel);
@@ -3262,7 +3113,7 @@ local.gotoNext(opt, function (err, data) {
                     "build-ci": "utility2 shBuildCi"
                 },
                 version: "0.0.1"
-            }, null, 4),
+            }, undefined, 4),
             onParallel
         );
         onParallel();
@@ -3292,16 +3143,9 @@ opt.gotoNext();
     shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f alpha
 )}
 
-shTravisSync () {(set -e
-# this function will sync travis-ci with given $TRAVIS_ACCESS_TOKEN
-# this is an expensive operation that will use up your github rate-limit quota
-    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
-        "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/users/sync"
-)}
-
 shUbuntuInit () {
-# this function will init ubuntu's default .bashrc
-# https://gist.github.com/kaizhu256/15950e6fc4a6fd6f12a8008cb9c46804
+# this function will init debian:stable /etc/skel/.bashrc
+# https://sources.debian.org/src/bash/4.4-5/debian/skel.bashrc/
     # ~/.bashrc: executed by bash(1) for non-login shells.
     # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
     # for examples
@@ -3332,7 +3176,7 @@ shUbuntuInit () {
     #shopt -s globstar
 
     # make less more friendly for non-text input files, see lesspipe(1)
-    # [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+    [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
     # set variable identifying the chroot you work in (used in the prompt below)
     if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
@@ -3351,12 +3195,12 @@ shUbuntuInit () {
 
     if [ -n "$force_color_prompt" ]; then
         if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-            # We have color support; assume it's compliant with Ecma-48
-            # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-            # a case would tend to support setf rather than setaf.)
-            color_prompt=yes
+        # We have color support; assume it's compliant with Ecma-48
+        # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+        # a case would tend to support setf rather than setaf.)
+        color_prompt=yes
         else
-            color_prompt=
+        color_prompt=
         fi
     fi
 
@@ -3384,18 +3228,17 @@ shUbuntuInit () {
         #alias vdir='vdir --color=auto'
 
         alias grep='grep --color=auto'
-        alias fgrep='fgrep --color=auto'
-        alias egrep='egrep --color=auto'
+        #alias fgrep='fgrep --color=auto'
+        #alias egrep='egrep --color=auto'
     fi
+
+    # colored GCC warnings and errors
+    #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
     # some more ls aliases
     alias ll='ls -alF'
-    alias la='ls -A'
-    alias l='ls -CF'
-
-    # Add an "alert" alias for long running commands.  Use like so:
-    #   sleep 10; alert
-    alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && printf "terminal\n" || printf "error\n")" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+    #alias la='ls -A'
+    #alias l='ls -CF'
 
     # Alias definitions.
     # You may want to put all your additions into a separate file like
@@ -3418,40 +3261,6 @@ shUbuntuInit () {
     fi
 }
 
-shUtility2BuildApp () {(set -e
-# this function will run shBuildApp in $UTILITY2_DEPENDENTS
-    shUtility2DependentsSync
-    cd "$HOME/Documents"
-    # shUtility2DependentsSync
-    (cd utility2 && shUtility2DependentsSync)
-    # shBuildApp
-    for DIR in $UTILITY2_DEPENDENTS
-    do
-        if [ -d "$DIR" ] && [ "$DIR" != utility2 ]
-        then
-            printf "\n\n\n\n$DIR\n\n\n\n"
-            (cd "$DIR" && shBuildApp)
-        fi
-    done
-    shUtility2GitDiffHead
-)}
-
-shUtility2Dependents () {(set -e
-# this function will return a list of utility2 dependents
-    cd "$HOME/Documents" 2>/dev/null || true
-printf "
-apidoc-lite
-bootstrap-lite
-github-crud
-istanbul-lite
-jslint-lite
-sqljs-lite
-swgg
-utility2
-wasm-sqlite
-"
-)}
-
 shUtility2DependentsSync () {(set -e
 # this function will
 # 1. sync files between utility2 and its dependents
@@ -3464,8 +3273,6 @@ shUtility2DependentsSync () {(set -e
     if [ -d "$HOME/bin" ]
     then
         ln -f "utility2/lib.apidoc.js" "$HOME/bin/utility2-apidoc" || true
-        ln -f "utility2/lib.github_crud.js" "$HOME/bin/utility2-github_crud" ||
-            true
         ln -f "utility2/lib.istanbul.js" "$HOME/bin/utility2-istanbul" || true
         ln -f "utility2/lib.jslint.js" "$HOME/bin/utility2-jslint" || true
         ln -f "utility2/lib.utility2.sh" "$HOME/bin/utility2" || true
@@ -3551,20 +3358,6 @@ shUtility2GitCommit () {(set -e
     done
 )}
 
-shUtility2GitDiffHead () {(set -e
-# this function will the git-status of $UTILITY2_DEPENDENTS to stdout
-    rm -f /tmp/shUtility2GitDiffHead.diff
-    for DIR in $UTILITY2_DEPENDENTS
-    do
-        cd "$HOME/Documents/$DIR" || continue
-        printf "\n\n\n\n$PWD\n\n\n\n" 2>&1 >> /tmp/shUtility2GitDiffHead.diff
-        shGitLsTree 2>&1 >> /tmp/shUtility2GitDiffHead.diff
-        git status 2>&1 >> /tmp/shUtility2GitDiffHead.diff
-        git diff HEAD 2>&1 >> /tmp/shUtility2GitDiffHead.diff
-    done
-    less /tmp/shUtility2GitDiffHead.diff
-)}
-
 shUtility2Grep () {(set -e
 # this function will recursively grep $UTILITY2_DEPENDENTS for the regexp $1
     for DIR in $UTILITY2_DEPENDENTS \
@@ -3580,14 +3373,14 @@ shUtility2Grep () {(set -e
 
 shUtility2Version () {(set -e
 # this function will print the latest versions in $UTILITY2_DEPENDENTS
-    printf "[\n"
+    printf "node -e 'console.log(JSON.stringify([\n"
     for DIR in $UTILITY2_DEPENDENTS
     do
-        printf "'$(npm info $DIR version) $DIR',\n"
+        printf "\"$(npm info $DIR version) $DIR\",\n"
     done
     printf "].map(function (element) {
     return element.replace((/(\\\\b\\\\d\\\\b)/g), '0\$1');
-}).sort()\n"
+}).sort(), undefined, 4));\n"
 )}
 
 shXvfbStart () {
@@ -3602,7 +3395,14 @@ shXvfbStart () {
 
 # run main-program
 export UTILITY2_GIT_BASE_ID=9fe8c2255f4ac330c86af7f624d381d768304183
-export UTILITY2_DEPENDENTS="$(shUtility2Dependents)"
+export UTILITY2_DEPENDENTS='
+apidoc-lite
+bootstrap-lite
+istanbul-lite
+jslint-lite
+sqljs-lite
+utility2
+'
 export UTILITY2_MACRO_JS='
 /* istanbul instrument in package utility2 */
 // assets.utility2.header.js - start
@@ -3611,31 +3411,23 @@ export UTILITY2_MACRO_JS='
 (function (globalThis) {
     "use strict";
     let consoleError;
-    let debugName;
     let local;
-    debugName = "debug" + String("Inline");
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
-    // init debug_inline
-    if (!globalThis[debugName]) {
+    // init debugInline
+    if (!globalThis.debugInline) {
         consoleError = console.error;
-        globalThis[debugName] = function (...argList) {
+        globalThis.debugInline = function (...argList) {
         /*
          * this function will both print <argList> to stderr
          * and return <argList>[0]
          */
-            consoleError("\n\n" + debugName);
+            consoleError("\n\ndebugInline");
             consoleError(...argList);
             consoleError("\n");
             return argList[0];
         };
     }
-    String.prototype.trimEnd = (
-        String.prototype.trimEnd || String.prototype.trimRight
-    );
-    String.prototype.trimStart = (
-        String.prototype.trimStart || String.prototype.trimLeft
-    );
     // init local
     local = {};
     local.local = local;
@@ -3651,6 +3443,36 @@ export UTILITY2_MACRO_JS='
         local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
+    local.assertJsonEqual = function (aa, bb) {
+    /*
+     * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
+     */
+        let objectDeepCopyWithKeysSorted;
+        objectDeepCopyWithKeysSorted = function (obj) {
+        /*
+         * this function will recursively deep-copy <obj> with keys sorted
+         */
+            let sorted;
+            if (!(typeof obj === "object" && obj)) {
+                return obj;
+            }
+            // recursively deep-copy list with child-keys sorted
+            if (Array.isArray(obj)) {
+                return obj.map(objectDeepCopyWithKeysSorted);
+            }
+            // recursively deep-copy obj with keys sorted
+            sorted = {};
+            Object.keys(obj).sort().forEach(function (key) {
+                sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
+            });
+            return sorted;
+        };
+        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
+        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
+        if (aa !== bb) {
+            throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));
+        }
+    };
     local.assertOrThrow = function (passed, msg) {
     /*
      * this function will throw err.<msg> if <passed> is falsy
@@ -3668,7 +3490,7 @@ export UTILITY2_MACRO_JS='
             ? msg
             : new Error(
                 typeof msg === "string"
-                // if msg is a string, then leave as is
+                // if msg is string, then leave as is
                 ? msg
                 // else JSON.stringify msg
                 : JSON.stringify(msg, undefined, 4)
@@ -3684,98 +3506,12 @@ export UTILITY2_MACRO_JS='
         ii = 0;
         while (ii < argList.length) {
             arg = argList[ii];
-            if (arg !== null && arg !== undefined && arg !== "") {
-                break;
+            if (arg !== undefined && arg !== null && arg !== "") {
+                return arg;
             }
             ii += 1;
         }
         return arg;
-    };
-    local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
-    /*
-     * this function will sync-read <pathname> with given <type> and <dflt>
-     */
-        let fs;
-        // do nothing if module does not exist
-        try {
-            fs = require("fs");
-        } catch (ignore) {
-            return dflt;
-        }
-        pathname = require("path").resolve(pathname);
-        // try to read pathname
-        try {
-            return (
-                type === "json"
-                ? JSON.parse(fs.readFileSync(pathname, "utf8"))
-                : fs.readFileSync(pathname, type)
-            );
-        } catch (ignore) {
-            return dflt;
-        }
-    };
-    local.fsRmrfSync = function (pathname) {
-    /*
-     * this function will sync "rm -rf" <pathname>
-     */
-        let child_process;
-        // do nothing if module does not exist
-        try {
-            child_process = require("child_process");
-        } catch (ignore) {
-            return;
-        }
-        pathname = require("path").resolve(pathname);
-        if (process.platform !== "win32") {
-            child_process.spawnSync("rm", [
-                "-rf", pathname
-            ], {
-                stdio: [
-                    "ignore", 1, 2
-                ]
-            });
-            return;
-        }
-        try {
-            child_process.spawnSync("rd", [
-                "/s", "/q", pathname
-            ], {
-                stdio: [
-                    "ignore", 1, "ignore"
-                ]
-            });
-        } catch (ignore) {}
-    };
-    local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {
-    /*
-     * this function will sync write <data> to <pathname> with "mkdir -p"
-     */
-        let fs;
-        let success;
-        // do nothing if module does not exist
-        try {
-            fs = require("fs");
-        } catch (ignore) {
-            return;
-        }
-        pathname = require("path").resolve(pathname);
-        // try to write pathname
-        try {
-            fs.writeFileSync(pathname, data);
-            success = true;
-        } catch (ignore) {
-            // mkdir -p
-            fs.mkdirSync(require("path").dirname(pathname), {
-                recursive: true
-            });
-            // re-write pathname
-            fs.writeFileSync(pathname, data);
-            success = true;
-        }
-        if (success && msg) {
-            console.error(msg.replace("{{pathname}}", pathname));
-        }
-        return success;
     };
     local.identity = function (val) {
     /*
@@ -3819,6 +3555,12 @@ export UTILITY2_MACRO_JS='
     };
     // require builtin
     if (!local.isBrowser) {
+        if (process.unhandledRejections !== "strict") {
+            process.unhandledRejections = "strict";
+            process.on("unhandledRejection", function (err) {
+                throw err;
+            });
+        }
         local.assert = require("assert");
         local.buffer = require("buffer");
         local.child_process = require("child_process");
@@ -3881,17 +3623,6 @@ local.utility2 = local;
 
 /* validateLineSortedReset */
 globalThis.local = local;
-
-local.assertJsonEqual = function (aa, bb, message) {
-/*
- * this function will assert jsonStringifyOrdered(<aa>) === JSON.stringify(<bb>)
- */
-    aa = local.jsonStringifyOrdered(aa);
-    bb = JSON.stringify(bb);
-    local.assertOrThrow(aa === bb, message || [
-        aa, bb
-    ]);
-};
 
 local.base64FromBuffer = function (buf) {
 /*
@@ -3983,7 +3714,7 @@ local.base64ToBuffer = function (str) {
         ii += 1;
     }
     // optimization - create resized-view of buf
-    return buf.subarray(0, jj);
+    return buf.slice(0, jj);
 };
 
 local.base64ToUtf8 = function (str) {
@@ -4069,36 +3800,37 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
         data = new Uint8Array(data);
     }
     // init iv
-    iv = data.subarray(0, 16);
+    iv = data.slice(0, 16);
     // optimization - create resized-view of data
-    data = data.subarray(16);
-    crypto = globalThis.crypto;
-    if (!local.isBrowser) {
-        setTimeout(function () {
-            crypto = require("crypto");
-            cipher = crypto.createDecipheriv(
-                "aes-" + (8 * key.byteLength) + "-cbc",
-                key,
-                iv
-            );
-            onError(undefined, Buffer.concat([
-                cipher.update(data), cipher.final()
-            ]));
-        });
+    data = data.slice(16);
+    try {
+        crypto = require("crypto");
+    } catch (ignore) {
+        crypto = globalThis.crypto;
+        crypto.subtle.importKey("raw", key, {
+            name: "AES-CBC"
+        }, false, [
+            "decrypt"
+        ]).then(function (key) {
+            crypto.subtle.decrypt({
+                iv,
+                name: "AES-CBC"
+            }, key, data).then(function (data) {
+                onError(undefined, new Uint8Array(data));
+            }).catch(onError);
+        }).catch(onError);
         return;
     }
-    crypto.subtle.importKey("raw", key, {
-        name: "AES-CBC"
-    }, false, [
-        "decrypt"
-    ]).then(function (key) {
-        crypto.subtle.decrypt({
-            iv,
-            name: "AES-CBC"
-        }, key, data).then(function (data) {
-            onError(undefined, new Uint8Array(data));
-        }).catch(onError);
-    }).catch(onError);
+    setTimeout(function () {
+        cipher = crypto.createDecipheriv(
+            "aes-" + (8 * key.byteLength) + "-cbc",
+            key,
+            iv
+        );
+        onError(undefined, Buffer.concat([
+            cipher.update(data), cipher.final()
+        ]));
+    });
 };
 
 local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
@@ -4146,7 +3878,7 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
             cipher = crypto.createCipheriv(
                 "aes-" + (8 * key.byteLength) + "-cbc",
                 key,
-                iv.subarray(0, 16)
+                iv.slice(0, 16)
             );
             data = cipher.update(data);
             iv.set(data, 16);
@@ -4167,7 +3899,7 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
         "encrypt"
     ]).then(function (key) {
         crypto.subtle.encrypt({
-            iv: iv.subarray(0, 16),
+            iv: iv.slice(0, 16),
             name: "AES-CBC"
         }, key, data).then(function (data) {
             iv.set(new Uint8Array(data), 16);
@@ -4196,7 +3928,7 @@ local.gotoNext = function (opt, onError) {
             if (opt.modeDebug) {
                 console.error("gotoNext - " + JSON.stringify({
                     gotoState: opt.gotoState,
-                    errorMessage: err && err.message
+                    errMsg: err && err.message
                 }));
                 if (err && err.stack) {
                     console.error(err.stack);
@@ -4216,133 +3948,12 @@ local.gotoNext = function (opt, onError) {
     return opt;
 };
 
-local.isNullOrUndefined = function (val) {
-/*
- * this function will test if val is null or undefined
- */
-    return val === null || val === undefined;
-};
-
-local.jsonCopy = function (obj) {
-/*
- * this function will deep-copy obj
- */
-    return (
-        obj === undefined
-        ? undefined
-        : JSON.parse(JSON.stringify(obj))
-    );
-};
-
-local.jsonStringifyOrdered = function (obj, replacer, space) {
-/*
- * this function will JSON.stringify <obj>,
- * with object-keys sorted and circular-references removed
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Syntax
- */
-    let circularSet;
-    let stringify;
-    let tmp;
-    stringify = function (obj) {
-    /*
-     * this function will recursively JSON.stringify obj,
-     * with object-keys sorted and circular-references removed
-     */
-        // if obj is not an object or function,
-        // then JSON.stringify as normal
-        if (!(
-            obj
-            && typeof obj === "object"
-            && typeof obj.toJSON !== "function"
-        )) {
-            return JSON.stringify(obj);
-        }
-        // ignore circular-reference
-        if (circularSet.has(obj)) {
-            return;
-        }
-        circularSet.add(obj);
-        // if obj is an array, then recurse items
-        if (Array.isArray(obj)) {
-            tmp = "[" + obj.map(function (obj) {
-                // recurse
-                tmp = stringify(obj);
-                return (
-                    typeof tmp === "string"
-                    ? tmp
-                    : "null"
-                );
-            }).join(",") + "]";
-            circularSet.delete(obj);
-            return tmp;
-        }
-        // if obj is not an array,
-        // then recurse its items with object-keys sorted
-        tmp = "{" + Object.keys(obj).sort().map(function (key) {
-            // recurse
-            tmp = stringify(obj[key]);
-            if (typeof tmp === "string") {
-                return JSON.stringify(key) + ":" + tmp;
-            }
-        }).filter(function (obj) {
-            return typeof obj === "string";
-        }).join(",") + "}";
-        circularSet.delete(obj);
-        return tmp;
-    };
-    circularSet = new Set();
-    return JSON.stringify((
-        (typeof obj === "object" && obj)
-        // recurse
-        ? JSON.parse(stringify(obj))
-        : obj
-    ), replacer, space);
-};
-
-local.moduleDirname = function (module, pathList) {
-/*
- * this function will search <pathList> for <module>'"'"'s __dirname
- */
-    let result;
-    // search "."
-    if (!module || module === "." || module.indexOf("/") >= 0) {
-        return require("path").resolve(module || "");
-    }
-    // search pathList
-    Array.from([
-        pathList,
-        require("module").globalPaths,
-        [
-            process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
-        ]
-    ]).flat().some(function (path) {
-        try {
-            result = require("path").resolve(path + "/" + module);
-            result = require("fs").statSync(result).isDirectory() && result;
-            return result;
-        } catch (ignore) {
-            result = "";
-        }
-    });
-    return result;
-};
-
 local.onErrorDefault = function (err) {
 /*
  * this function will if <err> exists, then print it to stderr
  */
     if (err) {
         console.error(err);
-    }
-    return err;
-};
-
-local.onErrorThrow = function (err) {
-/*
- * this function will if <err> exists, then throw it
- */
-    if (err) {
-        throw err;
     }
     return err;
 };
@@ -4356,11 +3967,7 @@ local.onErrorWithStack = function (onError) {
     stack = new Error().stack;
     onError2 = function (err, data, meta) {
         // append current-stack to err.stack
-        if (
-            err
-            && typeof err.stack === "string"
-            && err !== local.errorDefault
-        ) {
+        if (err && typeof err.stack === "string") {
             err.stack += "\n" + stack;
         }
         onError(err, data, meta);
@@ -4374,7 +3981,7 @@ local.onErrorWithStack = function (onError) {
 
 local.onParallel = function (onError, onEach, onRetry) {
 /*
- * this function will create a function that will
+ * this function will create function that will
  * 1. run async tasks in parallel
  * 2. if cnt === 0 or err occurred, then call onError(err)
  */
@@ -4414,176 +4021,6 @@ local.onParallel = function (onError, onEach, onRetry) {
     onParallel.cnt = 0;
     // return callback
     return onParallel;
-};
-
-local.onParallelList = function (opt, onEach, onError) {
-/*
- * this function will
- * 1. async-run onEach in parallel,
- *    with given <opt>.rateLimit and <opt>.retryLimit
- * 2. call <onError> when onParallel.ii + 1 === <opt>.list.length
- */
-    let isListEnd;
-    let onEach2;
-    let onParallel;
-    opt.list = opt.list || [];
-    onEach2 = function () {
-        while (true) {
-            if (!(onParallel.ii + 1 < opt.list.length)) {
-                isListEnd = true;
-                return;
-            }
-            if (!(onParallel.cnt < opt.rateLimit + 1)) {
-                return;
-            }
-            onParallel.ii += 1;
-            onEach({
-                elem: opt.list[onParallel.ii],
-                ii: onParallel.ii,
-                list: opt.list,
-                retry: 0
-            }, onParallel);
-        }
-    };
-    onParallel = local.onParallel(onError, onEach2, function (err, data) {
-        if (err && data && data.retry < opt.retryLimit) {
-            local.onErrorDefault(err);
-            data.retry += 1;
-            setTimeout(function () {
-                onParallel.cnt -= 1;
-                onEach(data, onParallel);
-            }, 1000);
-            return true;
-        }
-        // restart if opt.list has grown
-        if (isListEnd && (onParallel.ii + 1 < opt.list.length)) {
-            isListEnd = undefined;
-            onEach2();
-        }
-    });
-    onParallel.ii = -1;
-    opt.rateLimit = Number(opt.rateLimit) || 6;
-    opt.rateLimit = Math.max(opt.rateLimit, 1);
-    opt.retryLimit = Number(opt.retryLimit) || 2;
-    onParallel.cnt += 1;
-    onEach2();
-    onParallel();
-};
-
-local.semverCompare = function (aa, bb) {
-/*
- * this function will compare semver versions aa ? bb and return
- * -1 if aa < bb
- *  0 if aa = bb
- *  1 if aa > bb
- * https://semver.org/#spec-item-11
- * example use:
-    semverCompare("2.2.2", "10.2.2"); // -1
-    semverCompare("1.2.3", "1.2.3");  //  0
-    semverCompare("10.2.2", "2.2.2"); //  1
- */
-    let cc;
-    let dd;
-    let ii;
-    let result;
-    [
-        aa, bb
-    ] = [
-        aa, bb
-    ].map(function (aa) {
-        // filter "+" metadata
-        // https://semver.org/#spec-item-10
-        aa = aa.split("+")[0];
-        // normalize x.y.z
-        aa = aa.split(".");
-        while (aa.length < 3) {
-            aa.push("0");
-        }
-        // split "-" pre-release-identifier
-        // https://semver.org/#spec-item-9
-        aa = [].concat(aa.slice(0, 2), aa.slice(2).join(".").split("-"));
-        // normalize x.y.z
-        ii = 0;
-        while (ii < 3) {
-            aa[ii] = String(aa[ii] | 0);
-            ii += 1;
-        }
-        return aa.map(function (aa) {
-            return (
-                Number.isFinite(aa)
-                ? Number(aa)
-                : aa
-            );
-        });
-    });
-    result = aa;
-    ii = 0;
-    while (ii < Math.max(aa.length, bb.length)) {
-        cc = aa[ii];
-        dd = bb[ii];
-        if (
-            dd === undefined
-            || (typeof cc !== "number" && typeof dd === "number")
-        ) {
-            result = bb;
-            break;
-        }
-        if (
-            cc === undefined
-            || (typeof cc === "number" && typeof dd !== "number")
-        ) {
-            result = aa;
-            break;
-        }
-        if (cc < dd) {
-            result = bb;
-            break;
-        }
-        if (cc > dd) {
-            result = aa;
-            break;
-        }
-        ii += 1;
-    }
-    result = result[0] + "." + result[1] + "." + result.slice(2).join("-");
-    return result;
-};
-
-local.stringHtmlSafe = function (str) {
-/*
- * this function will make <str> html-safe
- * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
- */
-    return str.replace((
-        /&/gu
-    ), "&amp;").replace((
-        /"/gu
-    ), "&quot;").replace((
-        /'"'"'/gu
-    ), "&apos;").replace((
-        /</gu
-    ), "&lt;").replace((
-        />/gu
-    ), "&gt;").replace((
-        /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
-    ), "&$1");
-};
-
-local.stringMerge = function (str1, str2, rgx) {
-/*
- * this function will merge <str2> into <str1>,
- * for sections where both match <rgx>
- */
-    str2.replace(rgx, function (match2) {
-        str1.replace(rgx, function (match1) {
-            str1 = str1.replace(match1, function () {
-                return match2;
-            });
-            return "";
-        });
-        return "";
-    });
-    return str1;
 };
 
 local.templateRenderMyApp = function (template) {

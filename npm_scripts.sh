@@ -49,12 +49,16 @@ shMain () {(set -e
     test)
         if [ "$npm_package_nameLib" = utility2 ]
         then
-            export PORT=$(./lib.utility2.sh shServerPortRandom)
+            export PORT="$(
+                node -e 'console.log((Math.random() * 0x10000) | 0x8000);'
+            )"
             export npm_config_mode_auto_restart=1
             ./lib.utility2.sh test test.js
             return
         fi
-        export PORT=$(utility2 shServerPortRandom)
+        export PORT="$(
+            node -e 'console.log((Math.random() * 0x10000) | 0x8000);'
+        )"
         utility2 test test.js
         ;;
     utility2)
