@@ -3325,17 +3325,6 @@ shUtility2DependentsSync () {(set -e
     cd "$CWD" && shBuildApp
 )}
 
-shUtility2GitCommitAndPush () {(set -e
-# this function will git-commit-and-push $UTILITY2_DEPENDENTS
-    for DIR in $UTILITY2_DEPENDENTS
-    do
-        cd "$HOME/Documents/$DIR" || continue
-        printf "\n\n\n\n$PWD\n\n\n\n"
-        git commit -am update || true
-        git push origin alpha
-    done
-)}
-
 shUtility2FncStat () {(set -e
 # this function will print histogram of utility2-fnc code-frequency
 # in current dir
@@ -3376,6 +3365,17 @@ shUtility2GitCommit () {(set -e
         cd "$HOME/Documents/$DIR" || continue
         printf "\n\n\n\n$PWD\n"
         git commit -am "'$MESSAGE'" || true
+    done
+)}
+
+shUtility2GitCommitAndPush () {(set -e
+# this function will git-commit-and-push $UTILITY2_DEPENDENTS
+    for DIR in $UTILITY2_DEPENDENTS
+    do
+        cd "$HOME/Documents/$DIR" || continue
+        printf "\n\n\n\n$PWD\n\n\n\n"
+        git commit -am shUtility2GitCommitAndPush || true
+        git push origin alpha
     done
 )}
 
