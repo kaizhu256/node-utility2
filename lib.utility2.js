@@ -58,7 +58,7 @@
          * this function will recursively deep-copy <obj> with keys sorted
          */
             let sorted;
-            if (!(typeof obj === "object" && obj)) {
+            if (typeof obj !== "object" || !obj) {
                 return obj;
             }
             // recursively deep-copy list with child-keys sorted
@@ -307,7 +307,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
          * this function will recursively deep-copy <obj> with keys sorted\n\
          */\n\
             let sorted;\n\
-            if (!(typeof obj === "object" && obj)) {\n\
+            if (typeof obj !== "object" || !obj) {\n\
                 return obj;\n\
             }\n\
             // recursively deep-copy list with child-keys sorted\n\

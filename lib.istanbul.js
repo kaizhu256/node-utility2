@@ -58,7 +58,7 @@
          * this function will recursively deep-copy <obj> with keys sorted
          */
             let sorted;
-            if (!(typeof obj === "object" && obj)) {
+            if (typeof obj !== "object" || !obj) {
                 return obj;
             }
             // recursively deep-copy list with child-keys sorted
