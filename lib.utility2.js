@@ -80,7 +80,7 @@
     };
     local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw err.<msg> if <passed> is falsy
+     * this function will throw <msg> if <passed> is falsy
      */
         if (passed) {
             return;
@@ -97,7 +97,7 @@
                 typeof msg === "string"
                 // if msg is string, then leave as is
                 ? msg
-                // else JSON.stringify msg
+                // else JSON.stringify(msg)
                 : JSON.stringify(msg, undefined, 4)
             )
         );
@@ -329,7 +329,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
     };\n\
     local.assertOrThrow = function (passed, msg) {\n\
     /*\n\
-     * this function will throw err.<msg> if <passed> is falsy\n\
+     * this function will throw <msg> if <passed> is falsy\n\
      */\n\
         if (passed) {\n\
             return;\n\
@@ -346,7 +346,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
                 typeof msg === "string"\n\
                 // if msg is string, then leave as is\n\
                 ? msg\n\
-                // else JSON.stringify msg\n\
+                // else JSON.stringify(msg)\n\
                 : JSON.stringify(msg, undefined, 4)\n\
             )\n\
         );\n\
