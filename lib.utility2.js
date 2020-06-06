@@ -12,6 +12,7 @@
 // assets.utility2.header.js - start
 /* jslint utility2:true */
 /* istanbul ignore next */
+// run shared js-env code - init-local
 (function (globalThis) {
     "use strict";
     let consoleError;
@@ -260,6 +261,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
 // assets.utility2.header.js - start\n\
 /* jslint utility2:true */\n\
 /* istanbul ignore next */\n\
+// run shared js-env code - init-local\n\
 (function (globalThis) {\n\
     "use strict";\n\
     let consoleError;\n\
