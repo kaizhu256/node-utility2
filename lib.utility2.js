@@ -17,7 +17,6 @@
     "use strict";
     let consoleError;
     let local;
-
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debugInline
