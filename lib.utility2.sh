@@ -3395,8 +3395,7 @@ shUtility2GitDiffHead () {(set -e
 
 shUtility2Grep () {(set -e
 # this function will recursively grep $UTILITY2_DEPENDENTS for the regexp $1
-    for DIR in $UTILITY2_DEPENDENTS \
-        $(cd "$HOME/Documents"; ls -d swgg-* 2>/dev/null)
+    for DIR in $UTILITY2_DEPENDENTS
     do
         DIR="$HOME/Documents/$DIR"
         if [ -d "$DIR" ]
