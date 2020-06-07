@@ -2522,7 +2522,6 @@ local.browserTest = function (opt, onError) {
  * this function will spawn google-puppeteer-process to test <opt>.url
  */
     let browser;
-    let env;
     let fileScreenshot;
     let isDone;
     let onParallel;
@@ -2530,8 +2529,6 @@ local.browserTest = function (opt, onError) {
     let testId;
     let testName;
     let timerTimeout;
-    // init env
-    env = process.env;
     // init utility2_testReport
     globalThis.utility2_testReport = globalThis.utility2_testReport || {
         coverage: globalThis.__coverage__,
@@ -2562,16 +2559,18 @@ local.browserTest = function (opt, onError) {
             onParallel.cnt += 1;
             isDone = 0;
             testId = Math.random().toString(16);
-            testName = env.MODE_BUILD + ".browser." + encodeURIComponent(
-                new url.URL(opt.url).pathname.replace(
-                    "/build.."
-                    + env.CI_BRANCH
-                    + ".." + env.CI_HOST,
-                    "/build"
+            testName = (
+                process.env.MODE_BUILD + ".browser." + encodeURIComponent(
+                    new url.URL(opt.url).pathname.replace(
+                        "/build.."
+                        + process.env.CI_BRANCH
+                        + ".." + process.env.CI_HOST,
+                        "/build"
+                    )
                 )
             );
             fileScreenshot = (
-                env.npm_config_dir_build + "/screenshot."
+                process.env.npm_config_dir_build + "/screenshot."
                 + testName
                 + ".png"
             );
@@ -2597,7 +2596,7 @@ local.browserTest = function (opt, onError) {
                     "--remote-debugging-port=0"
                 ],
                 dumpio: !opt.modeSilent,
-                executablePath: env.CHROME_BIN,
+                executablePath: process.env.CHROME_BIN,
                 ignoreDefaultArgs: true
             }).then(opt.gotoNextData);
             break;
@@ -2660,13 +2659,13 @@ local.browserTest = function (opt, onError) {
             onParallel.cnt += 1;
             require("fs").writeFile(
                 require("path").resolve(
-                    env.npm_config_dir_build + "/test-report.json"
+                    process.env.npm_config_dir_build + "/test-report.json"
                 ),
                 JSON.stringify(globalThis.utility2_testReport),
                 function (err) {
                     console.error(
                         "\nbrowserTest - merged test-report "
-                        + env.npm_config_dir_build + "/test-report.json"
+                        + process.env.npm_config_dir_build + "/test-report.json"
                         + "\n"
                     );
                     onParallel(err);

@@ -224,33 +224,30 @@ shBrowserScreenshot () {(set -e
 /* jslint utility2:true */
 (function () {
     "use strict";
-    let opt;
+    let file;
+    let timeStart;
     let url;
-    opt = {};
-    opt.timeStart = Date.now();
+    timeStart = Date.now();
     url = process.argv[1];
     if (!(
         /^\w+?:/
     ).test(url)) {
         url = require("path").resolve(url);
     }
-    opt.file = require("url").parse(url).pathname;
-    if (opt.file.indexOf(process.cwd()) === 0) {
-        opt.file = opt.file.replace(process.cwd(), "");
+    file = require("url").parse(url).pathname;
+    if (file.indexOf(process.cwd()) === 0) {
+        file = file.replace(process.cwd(), "");
     }
-    opt.file = (
+    file = (
         process.env.npm_config_dir_build
         + "/screenshot."
         + process.env.MODE_BUILD + ".browser."
-        + encodeURIComponent(opt.file.replace(
+        + encodeURIComponent(file.replace(
             "/build.." + process.env.CI_BRANCH + ".." + process.env.CI_HOST,
             "/build"
         ))
         + ".png"
     );
-    if (process.argv[2] === "--debug") {
-        console.error(JSON.stringify(opt, undefined, 4));
-    }
     process.on("exit", function (exitCode) {
         if (typeof exitCode === "object" && exitCode) {
             console.error(exitCode);
@@ -258,19 +255,21 @@ shBrowserScreenshot () {(set -e
         }
         console.error(
             "\nshBrowserScreenshot"
-            + " - " + (Date.now() - opt.timeStart) + " ms"
+            + " - " + (Date.now() - timeStart) + " ms"
             + " - exitCode " + exitCode
             + " - " + url
+            + " - " + file
             + "\n"
         );
     });
     process.on("uncaughtException", process.exit);
+    process.on("unhandledRejection", process.exit);
     require("child_process").spawn(process.env.CHROME_BIN, [
         "--headless",
         "--incognito",
         "--screenshot",
         "--timeout=30000",
-        "-screenshot=" + opt.file,
+        "-screenshot=" + file,
         url
     ], {
         stdio: [
