@@ -167,8 +167,6 @@
             });
         }
         local.fs = require("fs");
-        local.http = require("http");
-        local.https = require("https");
         local.path = require("path");
         local.url = require("url");
     }
@@ -394,8 +392,6 @@ local.assetsDict["/assets.utility2.header.js"] = '\
             });\n\
         }\n\
         local.fs = require("fs");\n\
-        local.http = require("http");\n\
-        local.https = require("https");\n\
         local.path = require("path");\n\
         local.url = require("url");\n\
     }\n\
@@ -6956,7 +6952,6 @@ if (!local.isBrowser) {
 }
 // require modules
 local.http = local._http;
-local.https = local._http;
 }());
 
 
@@ -6967,6 +6962,7 @@ local.https = local._http;
 if (local.isBrowser) {
     return;
 }
+local.http = require("http");
 local.Module = require("module");
 // init env
 local.objectAssignDefault(local.env, {

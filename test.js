@@ -157,8 +157,6 @@
             });
         }
         local.fs = require("fs");
-        local.http = require("http");
-        local.https = require("https");
         local.path = require("path");
         local.url = require("url");
     }
