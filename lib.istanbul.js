@@ -167,13 +167,10 @@
             });
         }
         local.assert = require("assert");
-        local.crypto = require("crypto");
         local.fs = require("fs");
         local.http = require("http");
         local.https = require("https");
         local.path = require("path");
-        local.repl = require("repl");
-        local.stream = require("stream");
         local.url = require("url");
     }
 }((typeof globalThis === "object" && globalThis) || window));
