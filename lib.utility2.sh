@@ -1,8 +1,9 @@
 #!/bin/sh
 # jslint utility2:true
 
-# POSIX test utility
+# POSIX reference
 # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/test.html
+# http://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
 
 # useful sh one-liners
 # http://sed.sourceforge.net/sed1line.txt
@@ -1472,18 +1473,22 @@ shDockerRmiUntagged () {(set -e
 )}
 
 shDockerSh () {(set -e
-# this function will run /bin/bash in the docker-container $NAME
-# http://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
-    local NAME="$1"
-    docker start "$NAME"
+# this function will run /bin/bash in the docker-container $1
+    docker start "$1"
     case "$(uname)" in
     MINGW*)
-        winpty docker exec -it "$NAME" sh -c "${2:-bash}"
+        winpty docker exec -it "$1" sh -c "${2:-bash}"
         ;;
     *)
-        docker exec -it "$NAME" sh -c "${2:-/bin/bash}"
+        docker exec -it "$1" sh -c "${2:-/bin/bash}"
         ;;
     esac
+)}
+
+shDockerShUtility2 () {(set -e
+# this function will run command $3 in dir $2 in the docker-container $1
+    shDockerSh "$1" \
+". ~/lib.utility2.sh && shSource && cd ~/Documents/$2 && ($3)"
 )}
 
 shDockerStart () {(set -e
