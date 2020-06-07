@@ -4036,7 +4036,9 @@ local.templateRenderMyApp = function (template) {
  */
     let githubRepo;
     let packageJson;
-    packageJson = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
+    packageJson = JSON.parse(
+        require("fs").readFileSync("package.json", "utf8")
+    );
     local.objectAssignDefault(packageJson, {
         nameLib: packageJson.name.replace((
             /\W/g

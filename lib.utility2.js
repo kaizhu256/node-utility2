@@ -978,7 +978,7 @@ local.assetsDict["/assets.index.template.html"] = \'\\\n\
 /* jslint ignore:end */\n\
 local.assetsDict["/assets.my_app.js"] = (\n\
     local.assetsDict["/assets.my_app.js"]\n\
-    || local.fs.readFileSync(\n\
+    || require("fs").readFileSync(\n\
         require("path").resolve(local.__dirname + "/lib.my_app.js"),\n\
         "utf8"\n\
     ).replace((\n\
@@ -1011,7 +1011,7 @@ if (module !== require.main || globalThis.utility2_rollup) {\n\
 }\n\
 local.assetsDict["/assets.example.js"] = (\n\
     local.assetsDict["/assets.example.js"]\n\
-    || local.fs.readFileSync(__filename, "utf8")\n\
+    || require("fs").readFileSync(__filename, "utf8")\n\
 );\n\
 local.assetsDict["/favicon.ico"] = local.assetsDict["/favicon.ico"] || "";\n\
 local.assetsDict["/index.html"] = local.assetsDict["/"];\n\
@@ -1583,12 +1583,14 @@ local.cliDict["utility2.testReportCreate"] = function () {
  */
     process.exit(
         local.testReportCreate(
-            JSON.parse(local.fs.readFileSync(
-                require("path").resolve(
-                    local.env.npm_config_dir_build + "/test-report.json"
-                ),
-                "utf8"
-            ))
+            JSON.parse(
+                require("fs").readFileSync(
+                    require("path").resolve(
+                        local.env.npm_config_dir_build + "/test-report.json"
+                    ),
+                    "utf8"
+                )
+            )
         ).testsFailed !== 0
     );
 };
@@ -2652,7 +2654,7 @@ local.browserTest = function (opt, onError) {
             local.testReportMerge(globalThis.utility2_testReport, data);
             // save test-report.json
             onParallel.cnt += 1;
-            local.fs.writeFile(
+            require("fs").writeFile(
                 require("path").resolve(
                     local.env.npm_config_dir_build + "/test-report.json"
                 ),
@@ -2887,7 +2889,7 @@ local.buildLib = function (opt, onError) {
     let result;
     local.objectAssignDefault(opt, {
         customize: local.nop,
-        dataFrom: local.fs.readFileSync(
+        dataFrom: require("fs").readFileSync(
             "lib." + local.env.npm_package_nameLib + ".js",
             "utf8"
         ),
@@ -2910,7 +2912,7 @@ local.buildLib = function (opt, onError) {
     });
     // customize assets.utility2.rollup.js
     if (
-        local.fs.existsSync("./assets.utility2.rollup.js")
+        require("fs").existsSync("./assets.utility2.rollup.js")
     ) {
         opt.dataTo = opt.dataTo.replace(
             "    // || globalThis.utility2_rollup_old",
@@ -2942,7 +2944,7 @@ local.buildReadme = function (opt, onError) {
     local.objectAssignDefault(opt, {
         customize: local.nop,
         // reset toc
-        dataFrom: local.fs.readFileSync(
+        dataFrom: require("fs").readFileSync(
             "README.md",
             "utf8"
         ).replace((
@@ -2965,7 +2967,7 @@ local.buildReadme = function (opt, onError) {
         opt.packageJson.description = opt.dataFrom.split("\n")[1];
         local.objectAssignDefault(opt.packageJson, {
             nameLib: JSON.parse(
-                local.fs.readFileSync("package.json", "utf8")
+                require("fs").readFileSync("package.json", "utf8")
             ).nameLib
         });
         opt.packageJson = local.objectAssignDefault(opt.packageJson, {
@@ -3217,7 +3219,7 @@ local.buildTest = function (opt, onError) {
     let result;
     local.objectAssignDefault(opt, {
         customize: local.nop,
-        dataFrom: local.fs.readFileSync("test.js", "utf8"),
+        dataFrom: require("fs").readFileSync("test.js", "utf8"),
         dataTo: local.templateRenderMyApp(
             local.assetsDict["/assets.test.template.js"]
         )
@@ -3236,7 +3238,7 @@ local.buildTest = function (opt, onError) {
         "./assets.utility2.rollup.js",
         "./lib.utility2.js"
     ].forEach(function (file) {
-        if (local.fs.existsSync(file)) {
+        if (require("fs").existsSync(file)) {
             opt.dataTo = opt.dataTo.replace(
                 "require(\"utility2\")",
                 "require(\"" + file + "\")"
@@ -4169,7 +4171,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
     // customize local for assets.utility2.rollup.js
     if (
         file === "lib." + process.env.npm_package_nameLib + ".js"
-        && local.fs.existsSync("./assets.utility2.rollup.js")
+        && require("fs").existsSync("./assets.utility2.rollup.js")
     ) {
         code = code.replace(
             "    // || globalThis.utility2_rollup_old",
@@ -4286,7 +4288,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
         dictProp[key] = true;
     });
     // local-function - missing
-    switch (local.fs.existsSync("assets.utility2.rollup.js") || file) {
+    switch (require("fs").existsSync("assets.utility2.rollup.js") || file) {
     case "README.md":
     case "lib.utility2.js":
     case "test.js":
@@ -4751,29 +4753,6 @@ local.onErrorWithStack = function (onError) {
     return onError2;
 };
 
-local.onFileModifiedRestart = function (file) {
-/*
- * this function will watch <file>, and if modified, then restart process
- */
-    if (
-        local.env.npm_config_mode_auto_restart
-        && local.fs.existsSync(file)
-        && local.fs.statSync(file).isFile()
-    ) {
-        local.fs.watchFile(file, {
-            interval: 1000,
-            persistent: false
-        }, function (stat2, stat1) {
-            if (stat2.mtime > stat1.mtime) {
-                console.error("file modified - " + file);
-                setTimeout(function () {
-                    process.exit(77);
-                }, 1000);
-            }
-        });
-    }
-};
-
 local.onParallel = function (onError, onEach, onRetry) {
 /*
  * this function will create function that will
@@ -5025,6 +5004,29 @@ local.requireReadme = function () {
     let tmp;
     // init module.exports
     module = {};
+    // if file is modified, then restart process
+    if (local.env.npm_config_mode_auto_restart) {
+        require("fs").readdir(".", function (ignore, fileList) {
+            fileList.forEach(function (file) {
+                require("fs").stat(file, function (ignore, data) {
+                    if (!data.isFile()) {
+                        return;
+                    }
+                    require("fs").watchFile(file, {
+                        interval: 1000,
+                        persistent: false
+                    }, function (stat2, stat1) {
+                        if (stat2.mtime > stat1.mtime) {
+                            console.error("file modified - " + file);
+                            setTimeout(function () {
+                                process.exit(77);
+                            }, 1000);
+                        }
+                    });
+                });
+            });
+        });
+    }
     if (local.isBrowser) {
         module.exports = local.objectAssignDefault(
             globalThis.utility2_rollup || globalThis.local,
@@ -5034,22 +5036,6 @@ local.requireReadme = function () {
     }
     // start repl-debugger
     local.replStart();
-    // debug dir
-    [
-        __dirname + "/lib.jslint.js",
-        __filename,
-        "undefined"
-    ].forEach(function (file) {
-        local.fs.exists(file, function (exists) {
-            if (exists) {
-                local.onFileModifiedRestart(file);
-            }
-        });
-    });
-    // if file is modified, then restart process
-    local.fs.readdirSync(".").forEach(function (file) {
-        local.onFileModifiedRestart(file);
-    });
     // jslint process.cwd()
     if (!local.env.npm_config_mode_lib) {
         require("child_process").spawn("node", [
@@ -5076,7 +5062,7 @@ local.requireReadme = function () {
             || local.assetsDict["/index.rollup.html"] || ""
         );
         local.assetsDict["/"] = local.assetsDict["/index.html"];
-        local.assetsDict["/assets.app.js"] = local.fs.readFileSync(
+        local.assetsDict["/assets.app.js"] = require("fs").readFileSync(
             __filename,
             "utf8"
         ).replace((
@@ -5151,7 +5137,7 @@ local.requireReadme = function () {
     module.exports.assetsDict = local.assetsDict;
     local.assetsDict["/assets.example.js"] = code;
     local.assetsDict["/assets.test.js"] = local.istanbulInstrumentInPackage(
-        local.fs.readFileSync("test.js", "utf8"),
+        require("fs").readFileSync("test.js", "utf8"),
         "test.js"
     );
     // init assets index.html
@@ -5258,7 +5244,7 @@ instruction\n\
                 stateInit: true
             });
             // add extra physical files to assetsDict
-            local.fs.readdirSync(".").forEach(function (file) {
+            require("fs").readdirSync(".").forEach(function (file) {
                 file = "/" + file;
                 if (
                     local.assetsDict[file]
@@ -5817,7 +5803,9 @@ local.templateRenderMyApp = function (template) {
  */
     let githubRepo;
     let packageJson;
-    packageJson = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
+    packageJson = JSON.parse(
+        require("fs").readFileSync("package.json", "utf8")
+    );
     local.objectAssignDefault(packageJson, {
         nameLib: packageJson.name.replace((
             /\W/g
@@ -7004,7 +6992,7 @@ if (module === require.main && (!globalThis.utility2_rollup || (
 // override assets
 if (globalThis.utility2_rollup) {
     local.assetsDict["/assets.utility2.rollup.js"] = (
-        local.fs.readFileSync(
+        require("fs").readFileSync(
             __filename,
             "utf8"
         ).split("\n/* script-end /assets.utility2.rollup.end.js */")[0]

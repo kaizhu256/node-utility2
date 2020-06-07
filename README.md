@@ -53,14 +53,8 @@ this zero-dependency package will provide high-level functions to to build, test
 
 #### changelog 2020.5.32
 - npm publish 2020.5.32
-- remove eagerly requiring builtins:
-    buffer,
-    dgam,
-    dns,
-    vm,
-    tls,
-    tty,
-    zlib
+- minimize dependency to local
+- remove eagerly requiring nodejs-builtins except fs
 - migrate ci from travis-ci.org to travis-ci.com
 - remove "a" from comments
 - remove shell-functions
@@ -94,6 +88,7 @@ this zero-dependency package will provide high-level functions to to build, test
     childProcessEval,
     fsWriteFileWithMkdirp,
 - remove functions
+    onFileModifiedRestart,
     jsonStringifyOrdered,
     jsonCopy,
     listGetElementRandom,
@@ -120,6 +115,7 @@ this zero-dependency package will provide high-level functions to to build, test
 - none
 
 #### todo
+- remove eagerly requiring nodejs-builtin fs
 - remove globalThis polyfill
 - istanbul - inline class Instrumenter into function instrumentSync
 - add eslint-rule no-multiple-empty-lines
