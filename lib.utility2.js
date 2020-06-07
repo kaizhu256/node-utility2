@@ -1573,8 +1573,8 @@ local.cliDict["utility2.start"] = function () {
     globalThis.local = local;
     local.replStart();
     local.testRunServer({});
-    if (local.env.npm_config_runme) {
-        require(require("path").resolve(local.env.npm_config_runme));
+    if (process.env.npm_config_runme) {
+        require(require("path").resolve(process.env.npm_config_runme));
     }
 };
 
@@ -1588,7 +1588,7 @@ local.cliDict["utility2.testReportCreate"] = function () {
             JSON.parse(
                 require("fs").readFileSync(
                     require("path").resolve(
-                        local.env.npm_config_dir_build + "/test-report.json"
+                        process.env.npm_config_dir_build + "/test-report.json"
                     ),
                     "utf8"
                 )
@@ -1851,8 +1851,8 @@ local._testCase_buildApidoc_default = function (opt, onError) {
         return exports;
     };
     if (
-        local.env.npm_config_mode_coverage
-        || local.env.npm_config_mode_test_case
+        process.env.npm_config_mode_coverage
+        || process.env.npm_config_mode_test_case
         !== "testCase_buildApidoc_default"
     ) {
         onError(undefined, opt);
@@ -6834,24 +6834,24 @@ local.http = require("http");
 /* validateLineSortedReset */
 local.Module = require("module");
 // init env
-local.objectAssignDefault(local.env, {
+local.objectAssignDefault(process.env, {
     npm_config_dir_build: require("path").resolve("tmp/build"),
     npm_config_dir_tmp: require("path").resolve("tmp")
 });
 // merge previous test-report
-if (local.env.npm_config_file_test_report_merge) {
+if (process.env.npm_config_file_test_report_merge) {
     local.testReportMerge(
         globalThis.utility2_testReport,
         local.fsReadFileOrDefaultSync(
-            local.env.npm_config_file_test_report_merge,
+            process.env.npm_config_file_test_report_merge,
             "json",
             {}
         )
     );
     if (process.argv[2] !== "--help") {
         console.error(
-            "\n" + local.env.MODE_BUILD + " - merged test-report from file "
-            + local.env.npm_config_file_test_report_merge
+            "\n" + process.env.MODE_BUILD + " - merged test-report from file "
+            + process.env.npm_config_file_test_report_merge
         );
     }
 }
