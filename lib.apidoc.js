@@ -840,7 +840,7 @@ local.apidocCreate = function (opt) {
             result = local.identity(
                 "\n\n\n\n\n\n\n\n"
                 // bug-workaround - truncate example to manageable size
-                + local.fs.readFileSync(file, "utf8").slice(0, 262144)
+                + require("fs").readFileSync(file, "utf8").slice(0, 262144)
                 + "\n\n\n\n\n\n\n\n"
             ).replace((
                 /\r\n*/g

@@ -55,7 +55,7 @@ this zero-dependency package will provide high-level functions to to build, test
 - npm publish 2020.5.32
 - remove ajax-helper-class FormData
 - minimize dependency to local
-- remove eagerly requiring nodejs-builtins except fs
+- remove eagerly requiring nodejs-builtins
 - migrate ci from travis-ci.org to travis-ci.com
 - remove "a" from comments
 - remove shell-functions
@@ -116,7 +116,6 @@ this zero-dependency package will provide high-level functions to to build, test
 - none
 
 #### todo
-- remove eagerly requiring nodejs-builtin fs
 - remove globalThis polyfill
 - istanbul - inline class Instrumenter into function instrumentSync
 - add eslint-rule no-multiple-empty-lines

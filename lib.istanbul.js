@@ -11787,7 +11787,7 @@ local.cliDict.cover = function () {
     let moduleExtensionsJs;
     let tmp;
     try {
-        tmp = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
+        tmp = JSON.parse(require("fs").readFileSync("package.json", "utf8"));
         process.env.npm_package_nameLib = (
             process.env.npm_package_nameLib
             || tmp.nameLib
@@ -11818,7 +11818,7 @@ local.cliDict.cover = function () {
             )
         )) {
             module._compile(local.instrumentInPackage(
-                local.fs.readFileSync(file, "utf8"),
+                require("fs").readFileSync(file, "utf8"),
                 file
             ), file);
             return;
@@ -11846,7 +11846,7 @@ local.cliDict.instrument = function () {
  */
     process.argv[3] = require("path").resolve(process.argv[3]);
     process.stdout.write(local.instrumentSync(
-        local.fs.readFileSync(process.argv[3], "utf8"),
+        require("fs").readFileSync(process.argv[3], "utf8"),
         process.argv[3]
     ));
 };
@@ -11858,7 +11858,7 @@ local.cliDict.report = function () {
  */
     process.argv[3] = require("path").resolve(process.argv[3]);
     globalThis.__coverage__ = JSON.parse(
-        local.fs.readFileSync(process.argv[3])
+        require("fs").readFileSync(process.argv[3])
     );
     globalThis.__coverageInclude__ = {};
     Object.keys(globalThis.__coverage__).forEach(function (file) {

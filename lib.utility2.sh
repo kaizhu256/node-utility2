@@ -473,11 +473,12 @@ shBuildCi () {(set -e
 /* jslint utility2:true */
 (function (local) {
 "use strict";
-["assets.utility2.rollup.js"].forEach(function (file) {
-    if (local.fs.existsSync(file)) {
-        local.fs.writeFileSync(file, local.assetsDict["/" + file]);
+    if (require("fs").existsSync("assets.utility2.rollup.js")) {
+        require("fs").writeFileSync(
+            file,
+            local.assetsDict["/assets.utility2.rollup.js"]
+        );
     }
-});
 }(require("utility2")));
 '
             shBuildApp
@@ -3187,7 +3188,7 @@ local.gotoNext(opt, function (err, data) {
             )
         }, function (err, xhr) {
             local.assertOrThrow(!err, err);
-            local.fs.writeFile(
+            require("fs").writeFile(
                 "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.gitignore",
                 xhr.responseText,
                 onParallel
@@ -3201,19 +3202,19 @@ local.gotoNext(opt, function (err, data) {
             )
         }, function (err, xhr) {
             local.assertOrThrow(!err, err);
-            local.fs.writeFile(
+            require("fs").writeFile(
                 "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.travis.yml",
                 xhr.responseText,
                 onParallel
             );
         });
         onParallel.cnt += 1;
-        local.fs.open("README.md", "w", function (err, fd) {
+        require("fs").open("README.md", "w", function (err, fd) {
             local.assertOrThrow(!err, err);
-            local.fs.close(fd, onParallel);
+            require("fs").close(fd, onParallel);
         });
         onParallel.cnt += 1;
-        local.fs.writeFile(
+        require("fs").writeFile(
             "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/package.json",
             JSON.stringify({
                 devDependencies: {
