@@ -16399,6 +16399,8 @@ local.jslintAndPrint = function (code = "", file = "undefined", opt = {}) {
         opt.errMsg = "";
         // preserve lineno
         if (opt.iiStart) {
+            // optimization - efficiently count number of newlines
+            // https://jsperf.com/regexp-counting-2/8
             opt.lineOffset |= 0;
             ii = 0;
             while (true) {
@@ -16569,10 +16571,10 @@ local.jslintAndPrint = function (code = "", file = "undefined", opt = {}) {
             && !opt.fileType0
             && !opt.stop
             && code !== opt.code0
-            && local.fs.existsSync(file)
+            && require("fs").existsSync(file)
         ) {
-            local.fs.writeFileSync(file, code);
-            local.fs.writeFileSync(file + ".autofix.old", opt.code0);
+            require("fs").writeFileSync(file, code);
+            require("fs").writeFileSync(file + ".autofix.old", opt.code0);
             require("child_process").spawnSync(
                 "diff",
                 [
@@ -16584,7 +16586,7 @@ local.jslintAndPrint = function (code = "", file = "undefined", opt = {}) {
                     ]
                 }
             );
-            local.fs.unlinkSync(file + ".autofix.old");
+            require("fs").unlinkSync(file + ".autofix.old");
             console.error(
                 "\u001b[1mjslint-autofix - modified and saved file " + file
                 + "\u001b[22m"
@@ -17421,7 +17423,7 @@ local.cliDict._default = function () {
             return;
         }
         local.jslintAndPrint(
-            local.fs.readFileSync(require("path").resolve(file), "utf8"),
+            require("fs").readFileSync(require("path").resolve(file), "utf8"),
             file,
             {
                 autofix: process.argv.indexOf("--autofix") >= 0,
