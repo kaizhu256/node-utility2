@@ -1927,8 +1927,8 @@ local._testCase_buildApidoc_default = function (opt, onError) {
     };
     if (
         local.isBrowser
-        || local.env.npm_config_mode_coverage
-        || local.env.npm_config_mode_test_case
+        || process.env.npm_config_mode_coverage
+        || process.env.npm_config_mode_test_case
         !== "testCase_buildApidoc_default"
     ) {
         onError(undefined, opt);
@@ -2004,8 +2004,8 @@ local._testCase_webpage_default = function (opt, onError) {
     local.domStyleValidate();
     local.browserTest({
         fileScreenshot: (
-            local.env.npm_config_dir_build
-            + "/screenshot." + local.env.MODE_BUILD + ".browser.%2F.png"
+            process.env.npm_config_dir_build
+            + "/screenshot." + process.env.MODE_BUILD + ".browser.%2F.png"
         ),
         url: (
             local.serverLocalHost
@@ -2522,6 +2522,7 @@ local.browserTest = function (opt, onError) {
  * this function will spawn google-puppeteer-process to test <opt>.url
  */
     let browser;
+    let env;
     let fileScreenshot;
     let isDone;
     let onParallel;
@@ -2529,6 +2530,8 @@ local.browserTest = function (opt, onError) {
     let testId;
     let testName;
     let timerTimeout;
+    // init env
+    env = process.env;
     // init utility2_testReport
     globalThis.utility2_testReport = globalThis.utility2_testReport || {
         coverage: globalThis.__coverage__,
@@ -2559,16 +2562,16 @@ local.browserTest = function (opt, onError) {
             onParallel.cnt += 1;
             isDone = 0;
             testId = Math.random().toString(16);
-            testName = local.env.MODE_BUILD + ".browser." + encodeURIComponent(
+            testName = env.MODE_BUILD + ".browser." + encodeURIComponent(
                 new url.URL(opt.url).pathname.replace(
                     "/build.."
-                    + local.env.CI_BRANCH
-                    + ".." + local.env.CI_HOST,
+                    + env.CI_BRANCH
+                    + ".." + env.CI_HOST,
                     "/build"
                 )
             );
             fileScreenshot = (
-                local.env.npm_config_dir_build + "/screenshot."
+                env.npm_config_dir_build + "/screenshot."
                 + testName
                 + ".png"
             );
@@ -2594,7 +2597,7 @@ local.browserTest = function (opt, onError) {
                     "--remote-debugging-port=0"
                 ],
                 dumpio: !opt.modeSilent,
-                executablePath: local.env.CHROME_BIN,
+                executablePath: env.CHROME_BIN,
                 ignoreDefaultArgs: true
             }).then(opt.gotoNextData);
             break;
@@ -2657,13 +2660,13 @@ local.browserTest = function (opt, onError) {
             onParallel.cnt += 1;
             require("fs").writeFile(
                 require("path").resolve(
-                    local.env.npm_config_dir_build + "/test-report.json"
+                    env.npm_config_dir_build + "/test-report.json"
                 ),
                 JSON.stringify(globalThis.utility2_testReport),
                 function (err) {
                     console.error(
                         "\nbrowserTest - merged test-report "
-                        + local.env.npm_config_dir_build + "/test-report.json"
+                        + env.npm_config_dir_build + "/test-report.json"
                         + "\n"
                     );
                     onParallel(err);
