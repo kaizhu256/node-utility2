@@ -351,38 +351,40 @@ shBuildApp () {(set -e
 /* jslint utility2:true */
 (function (local) {
     "use strict";
+    let fs;
     let tmp;
-    if (!local.fs.existsSync("README.md", "utf8")) {
-        local.fs.writeFileSync("README.md", local.templateRenderMyApp(
+    fs = require("fs");
+    if (!fs.existsSync("README.md", "utf8")) {
+        fs.writeFileSync("README.md", local.templateRenderMyApp(
             local.assetsDict["/assets.readme.template.md"],
             {}
         ));
     }
-    if (!local.fs.existsSync(
+    if (!fs.existsSync(
         "lib." + process.env.npm_package_nameLib + ".js",
         "utf8"
     )) {
         tmp = local.assetsDict["/assets.my_app.template.js"];
-        if (local.fs.existsSync("assets.utility2.rollup.js")) {
+        if (fs.existsSync("assets.utility2.rollup.js")) {
             tmp = tmp.replace(
                 "    // || globalThis.utility2_rollup_old || ",
                 "    || globalThis.utility2_rollup_old || "
             );
         }
-        local.fs.writeFileSync(
+        fs.writeFileSync(
             "lib." + process.env.npm_package_nameLib + ".js",
             local.templateRenderMyApp(tmp, {})
         );
     }
-    if (!local.fs.existsSync("test.js", "utf8")) {
+    if (!fs.existsSync("test.js", "utf8")) {
         tmp = local.assetsDict["/assets.test.template.js"];
-        if (local.fs.existsSync("assets.utility2.rollup.js")) {
+        if (fs.existsSync("assets.utility2.rollup.js")) {
             tmp = tmp.replace(
                 "require(\u0027utility2\u0027)",
                 "require(\u0027./assets.utility2.rollup.js\u0027)"
             );
         }
-        local.fs.writeFileSync("test.js", local.templateRenderMyApp(tmp, {}));
+        fs.writeFileSync("test.js", local.templateRenderMyApp(tmp, {}));
     }
 }(require(process.env.npm_config_dir_utility2)));
 '
@@ -1260,7 +1262,7 @@ shDeployGithub () {(set -e
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
     if [ "$(
-        curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL"
+        curl -Ls --connect-timeout 60 -o /dev/null -w "%{http_code}" "$TEST_URL"
     )" -lt 400 ]
     then
         shBuildPrint "curl test passed for $TEST_URL"
@@ -1296,7 +1298,7 @@ shDeployHeroku () {(set -e
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
     if [ "$(
-        curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL"
+        curl -Ls --connect-timeout 60 -o /dev/null -w "%{http_code}" "$TEST_URL"
     )" -lt 400 ]
     then
         shBuildPrint "curl test passed for $TEST_URL"
@@ -1660,6 +1662,7 @@ shGitInfo () {(set -e
     git grep -E '\becho\b' *.sh || true
     printf "\n"
     git grep -E '\bset -\w*x\b' *.sh || true
+    git grep -E '\bcurl [^-].* -' *.sh || true
     cat package.json
 )}
 
@@ -3084,14 +3087,14 @@ shTravisRepoCreate () {(set -e
     #!! shTravisSync () {(set -e
     # this function will sync travis-ci with given $TRAVIS_ACCESS_TOKEN
     # this is an expensive operation that will use up your github rate-limit quota
-        curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
+        curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -X POST \
             "https://api.travis-ci.com/users/sync"
     #!! )}
     while true
     do
         shSleep 2
-        if (curl "https://api.travis-ci.com/repos/$GITHUB_REPO" \
-            -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -fs 2>&1 > /dev/null)
+        if (curl -Lfs "https://api.travis-ci.com/repos/$GITHUB_REPO" \
+            -H "Authorization: token $TRAVIS_ACCESS_TOKEN" 2>&1 > /dev/null)
         then
             break
         fi
