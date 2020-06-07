@@ -1622,124 +1622,6 @@ local.Blob = globalThis.Blob || function (list, opt) {
     this.type = (opt && opt.type) || "";
 };
 
-// init lib FormData
-local.FormData = function () {
-/*
- * this function will create serverLocal-compatible FormData instance
- * The FormData(form) constructor must run these steps:
- * 1. Let fd be a new FormData object.
- * 2. If form is given, set fd's entries to the result
- *    of constructing the form data set for form. (not implemented)
- * 3. Return fd.
- * https://xhr.spec.whatwg.org/#dom-formdata
- */
-    this.entryList = [];
-};
-
-local.FormData.prototype.append = function (name, value, filename) {
-/*
- * The append(name, value, filename) method, when invoked, must run these steps:
- * 1. If the filename argument is given, set value to a new File object
- *    whose contents are value and name is filename.
- * 2. Append a new entry whose name is name, and value is value,
- *    to context object's list of entries.
- * https://xhr.spec.whatwg.org/#dom-formdata-append
- */
-    if (filename) {
-        // bug-workaround - chromium cannot assign name to Blob instance
-        local.tryCatchOnError(function () {
-            value.name = filename;
-        }, local.nop);
-    }
-    this.entryList.push({
-        name,
-        value
-    });
-};
-
-local.FormData.prototype.read = function (onError) {
-/*
- * this function will read from formData as buffer, e.g.
- * --Boundary\r\n
- * Content-Disposition: form-data; name="key"\r\n
- * \r\n
- * value\r\n
- * --Boundary\r\n
- * Content-Disposition: form-data; name="input1"; filename="file1.png"\r\n
- * Content-Type: image/jpeg\r\n
- * \r\n
- * <data1>\r\n
- * --Boundary\r\n
- * Content-Disposition: form-data; name="input2"; filename="file2.png"\r\n
- * Content-Type: image/jpeg\r\n
- * \r\n
- * <data2>\r\n
- * --Boundary--\r\n
- * https://tools.ietf.org/html/rfc7578
- */
-    let boundary;
-    let result;
-    // handle null-case
-    if (!this.entryList.length) {
-        onError();
-        return;
-    }
-    // init boundary
-    boundary = "--" + Date.now().toString(16) + Math.random().toString(16);
-    // init result
-    result = [];
-    local.onParallelList({
-        list: this.entryList
-    }, function (opt2, onParallel) {
-        let value;
-        value = opt2.elem.value;
-        if (!(value && value.constructor === local.Blob)) {
-            result[opt2.ii] = [
-                (
-                    boundary + "\r\nContent-Disposition: form-data; name=\""
-                    + opt2.elem.name + "\"\r\n\r\n"
-                ), value, "\r\n"
-            ];
-            onParallel.cnt += 1;
-            onParallel();
-            return;
-        }
-        // read from blob in parallel
-        onParallel.cnt += 1;
-        local.blobRead(value, function (err, data) {
-            result[opt2.ii] = !err && [
-                (
-                    boundary + "\r\nContent-Disposition: form-data; name=\""
-                    + opt2.elem.name + "\"" + (
-                        (value && value.name)
-                        // read param filename
-                        ? "; filename=\"" + value.name + "\""
-                        : ""
-                    ) + "\r\n" + (
-                        (value && value.type)
-                        // read param Content-Type
-                        ? "Content-Type: " + value.type + "\r\n"
-                        : ""
-                    ) + "\r\n"
-                ), data, "\r\n"
-            ];
-            onParallel(err);
-        });
-    }, function (err) {
-        // add closing boundary
-        result.push([
-            boundary + "--\r\n"
-        ]);
-        // concatenate result
-        onError(
-            err,
-            // flatten result
-            !err
-            && local.bufferConcat(result.flat())
-        );
-    });
-};
-
 // init lib _http
 local._http = {};
 
@@ -2357,9 +2239,6 @@ local.ajax = function (opt, onError) {
     // Blob
     // https://developer.mozilla.org/en-US/docs/Web/API/Blob
     case local2.Blob:
-    // FormData
-    // https://developer.mozilla.org/en-US/docs/Web/API/FormData
-    case local2.FormData:
         local2.blobRead(xhr.data, function (err, data) {
             if (err) {
                 xhr.onEvent(err);
@@ -2481,10 +2360,6 @@ local.blobRead = function (blob, onError) {
  */
     let isDone;
     let reader;
-    if (blob && blob.constructor && blob.constructor === local.FormData) {
-        blob.read(onError);
-        return;
-    }
     if (!local.isBrowser) {
         onError(undefined, local.bufferValidateAndCoerce(blob.buf));
         return;

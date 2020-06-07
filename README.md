@@ -53,6 +53,7 @@ this zero-dependency package will provide high-level functions to to build, test
 
 #### changelog 2020.5.32
 - npm publish 2020.5.32
+- remove ajax-helper-class FormData
 - minimize dependency to local
 - remove eagerly requiring nodejs-builtins except fs
 - migrate ci from travis-ci.org to travis-ci.com
