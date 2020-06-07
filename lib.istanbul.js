@@ -10827,7 +10827,7 @@ let reportTextWrite;
 // mock module path
 path = (
     local.isBrowser
-    ?  {
+    ? {
         dirname: function (file) {
             return file.replace((
                 /\/[\w\-.]+?$/
