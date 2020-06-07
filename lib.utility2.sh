@@ -3587,7 +3587,7 @@ export UTILITY2_MACRO_JS='
         recurse(tgt, src, depth | 0);
         return tgt;
     };
-    // require builtin
+    // bug-workaround - throw unhandedRejection
     if (!local.isBrowser) {
         if (process.unhandledRejections !== "strict") {
             process.unhandledRejections = "strict";
@@ -3595,7 +3595,6 @@ export UTILITY2_MACRO_JS='
                 throw err;
             });
         }
-        local.fs = require("fs");
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
