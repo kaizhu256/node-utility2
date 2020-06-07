@@ -152,14 +152,19 @@
         recurse(tgt, src, depth | 0);
         return tgt;
     };
+    // bug-workaround - throw unhandledRejections in node-process
+    if (
+        typeof process === "object" && process
+        && typeof process.on === "function"
+        && process.unhandledRejections !== "strict"
+    ) {
+        process.unhandledRejections = "strict";
+        process.on("unhandledRejection", function (err) {
+            throw err;
+        });
+    }
     // require builtin
     if (!local.isBrowser) {
-        if (process.unhandledRejections !== "strict") {
-            process.unhandledRejections = "strict";
-            process.on("unhandledRejection", function (err) {
-                throw err;
-            });
-        }
         local.fs = require("fs");
     }
 }((typeof globalThis === "object" && globalThis) || window));
