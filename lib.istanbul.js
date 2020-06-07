@@ -10825,17 +10825,21 @@ let path;
 let reportHtmlWrite;
 let reportTextWrite;
 // mock module path
-path = local.path || {
-    dirname: function (file) {
-        return file.replace((
-            /\/[\w\-.]+?$/
-        ), "");
-    },
-    resolve: function (...argList) {
-        return argList[argList.length - 1];
-    },
-    sep: "/"
-};
+path = (
+    local.isBrowser
+    ?  {
+        dirname: function (file) {
+            return file.replace((
+                /\/[\w\-.]+?$/
+            ), "");
+        },
+        resolve: function (...argList) {
+            return argList[argList.length - 1];
+        },
+        sep: "/"
+    }
+    : require("path")
+);
 // init function
 fileWrite = function (file, data) {
 /*
