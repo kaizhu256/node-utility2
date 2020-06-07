@@ -472,10 +472,10 @@ shBuildCi () {(set -e
             node -e '
 /* jslint utility2:true */
 (function (local) {
-"use strict";
+    "use strict";
     if (require("fs").existsSync("assets.utility2.rollup.js")) {
         require("fs").writeFileSync(
-            file,
+            "assets.utility2.rollup.js",
             local.assetsDict["/assets.utility2.rollup.js"]
         );
     }
