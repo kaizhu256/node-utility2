@@ -6963,6 +6963,7 @@ if (local.isBrowser) {
     return;
 }
 local.http = require("http");
+/* validateLineSortedReset */
 local.Module = require("module");
 // init env
 local.objectAssignDefault(local.env, {
