@@ -23,6 +23,7 @@
 # shCryptoWithGithubOrg aa shGithubApiRateLimitGet
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/node-aa-bb "touch" alpha
 # DOCKER_V_GAME=1 DOCKER_V_HOME=1 DOCKER_PORT=4065 shDockerRestart work kaizhu256/node-utility2
+# shDockerSh work '. ~/lib.utility2.sh && shSource && shUtility2BuildApp'
 # shGitAddTee npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
 # shSource && shGitAddTee shUtility2DependentsSync
 # utility2 shReadmeTest example.js
@@ -65,7 +66,7 @@ shBaseInit () {
         fi
     done
     # init ubuntu .bashrc
-    shUbuntuInit || return "$?"
+    shBashrcDebianInit || return "$?"
     # init custom alias
     alias lld="ls -adlF" || return "$?"
 }
@@ -97,6 +98,124 @@ shBaseInstall () {
     fi
     # source .bashrc
     . "$HOME/.bashrc" || return "$?"
+}
+
+shBashrcDebianInit () {
+# this function will init debian:stable /etc/skel/.bashrc
+# https://sources.debian.org/src/bash/4.4-5/debian/skel.bashrc/
+    # ~/.bashrc: executed by bash(1) for non-login shells.
+    # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+    # for examples
+
+    # If not running interactively, don't do anything
+    case $- in
+        *i*) ;;
+          *) return;;
+    esac
+
+    # don't put duplicate lines or lines starting with space in the history.
+    # See bash(1) for more options
+    HISTCONTROL=ignoreboth
+
+    # append to the history file, don't overwrite it
+    shopt -s histappend
+
+    # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+    HISTSIZE=1000
+    HISTFILESIZE=2000
+
+    # check the window size after each command and, if necessary,
+    # update the values of LINES and COLUMNS.
+    shopt -s checkwinsize
+
+    # If set, the pattern "**" used in a pathname expansion context will
+    # match all files and zero or more directories and subdirectories.
+    #shopt -s globstar
+
+    # make less more friendly for non-text input files, see lesspipe(1)
+    [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+    # set variable identifying the chroot you work in (used in the prompt below)
+    if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+        debian_chroot=$(cat /etc/debian_chroot)
+    fi
+
+    # set a fancy prompt (non-color, unless we know we "want" color)
+    case "$TERM" in
+        xterm-color|*-256color) color_prompt=yes;;
+    esac
+
+    # uncomment for a colored prompt, if the terminal has the capability; turned
+    # off by default to not distract the user: the focus in a terminal window
+    # should be on the output of commands, not on the prompt
+    #force_color_prompt=yes
+
+    if [ -n "$force_color_prompt" ]; then
+        if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+        # We have color support; assume it's compliant with Ecma-48
+        # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+        # a case would tend to support setf rather than setaf.)
+        color_prompt=yes
+        else
+        color_prompt=
+        fi
+    fi
+
+    if [ "$color_prompt" = yes ]; then
+        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+    else
+        PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+    fi
+    unset color_prompt force_color_prompt
+
+    # If this is an xterm set the title to user@host:dir
+    case "$TERM" in
+    xterm*|rxvt*)
+        PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+        ;;
+    *)
+        ;;
+    esac
+
+    # enable color support of ls and also add handy aliases
+    if [ -x /usr/bin/dircolors ]; then
+        test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+        alias ls='ls --color=auto'
+        #alias dir='dir --color=auto'
+        #alias vdir='vdir --color=auto'
+
+        alias grep='grep --color=auto'
+        #alias fgrep='fgrep --color=auto'
+        #alias egrep='egrep --color=auto'
+    fi
+
+    # colored GCC warnings and errors
+    #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
+    # some more ls aliases
+    alias ll='ls -alF'
+    #alias la='ls -A'
+    #alias l='ls -CF'
+
+    # Alias definitions.
+    # You may want to put all your additions into a separate file like
+    # ~/.bash_aliases, instead of adding them here directly.
+    # See /usr/share/doc/bash-doc/examples in the bash-doc package.
+
+    if [ -f ~/.bash_aliases ]; then
+        . ~/.bash_aliases
+    fi
+
+    # enable programmable completion features (you don't need to enable
+    # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+    # sources /etc/bash.bashrc).
+    if ! shopt -oq posix; then
+        if [ -f /usr/share/bash-completion/bash_completion ]; then
+            . /usr/share/bash-completion/bash_completion
+        elif [ -f /etc/bash_completion ]; then
+            . /etc/bash_completion
+        fi
+    fi
 }
 
 shBrowserScreenshot () {(set -e
@@ -3143,130 +3262,29 @@ opt.gotoNext();
     shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f alpha
 )}
 
-shUbuntuInit () {
-# this function will init debian:stable /etc/skel/.bashrc
-# https://sources.debian.org/src/bash/4.4-5/debian/skel.bashrc/
-    # ~/.bashrc: executed by bash(1) for non-login shells.
-    # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
-    # for examples
-
-    # If not running interactively, don't do anything
-    case $- in
-        *i*) ;;
-          *) return;;
-    esac
-
-    # don't put duplicate lines or lines starting with space in the history.
-    # See bash(1) for more options
-    HISTCONTROL=ignoreboth
-
-    # append to the history file, don't overwrite it
-    shopt -s histappend
-
-    # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-    HISTSIZE=1000
-    HISTFILESIZE=2000
-
-    # check the window size after each command and, if necessary,
-    # update the values of LINES and COLUMNS.
-    shopt -s checkwinsize
-
-    # If set, the pattern "**" used in a pathname expansion context will
-    # match all files and zero or more directories and subdirectories.
-    #shopt -s globstar
-
-    # make less more friendly for non-text input files, see lesspipe(1)
-    [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
-
-    # set variable identifying the chroot you work in (used in the prompt below)
-    if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
-        debian_chroot=$(cat /etc/debian_chroot)
-    fi
-
-    # set a fancy prompt (non-color, unless we know we "want" color)
-    case "$TERM" in
-        xterm-color|*-256color) color_prompt=yes;;
-    esac
-
-    # uncomment for a colored prompt, if the terminal has the capability; turned
-    # off by default to not distract the user: the focus in a terminal window
-    # should be on the output of commands, not on the prompt
-    #force_color_prompt=yes
-
-    if [ -n "$force_color_prompt" ]; then
-        if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-        # We have color support; assume it's compliant with Ecma-48
-        # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-        # a case would tend to support setf rather than setaf.)
-        color_prompt=yes
+shUtility2BuildApp () {(set -e
+# this function will run shBuildApp in $UTILITY2_DEPENDENTS
+    for DIR in $UTILITY2_DEPENDENTS
+    do
+        cd "$HOME/Documents/$DIR" || continue
+        printf "\n\n\n\n$PWD\n\n\n\n"
+        # shUtility2DependentsSync
+        if [ "$DIR" = utility2 ]
+        then
+            shUtility2DependentsSync
+        # shBuildApp
         else
-        color_prompt=
+            shBuildApp
         fi
-    fi
-
-    if [ "$color_prompt" = yes ]; then
-        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-    else
-        PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
-    fi
-    unset color_prompt force_color_prompt
-
-    # If this is an xterm set the title to user@host:dir
-    case "$TERM" in
-    xterm*|rxvt*)
-        PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-        ;;
-    *)
-        ;;
-    esac
-
-    # enable color support of ls and also add handy aliases
-    if [ -x /usr/bin/dircolors ]; then
-        test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-        alias ls='ls --color=auto'
-        #alias dir='dir --color=auto'
-        #alias vdir='vdir --color=auto'
-
-        alias grep='grep --color=auto'
-        #alias fgrep='fgrep --color=auto'
-        #alias egrep='egrep --color=auto'
-    fi
-
-    # colored GCC warnings and errors
-    #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
-
-    # some more ls aliases
-    alias ll='ls -alF'
-    #alias la='ls -A'
-    #alias l='ls -CF'
-
-    # Alias definitions.
-    # You may want to put all your additions into a separate file like
-    # ~/.bash_aliases, instead of adding them here directly.
-    # See /usr/share/doc/bash-doc/examples in the bash-doc package.
-
-    if [ -f ~/.bash_aliases ]; then
-        . ~/.bash_aliases
-    fi
-
-    # enable programmable completion features (you don't need to enable
-    # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
-    # sources /etc/bash.bashrc).
-    if ! shopt -oq posix; then
-        if [ -f /usr/share/bash-completion/bash_completion ]; then
-            . /usr/share/bash-completion/bash_completion
-        elif [ -f /etc/bash_completion ]; then
-            . /etc/bash_completion
-        fi
-    fi
-}
+    done
+    shUtility2GitDiffHead
+)}
 
 shUtility2DependentsSync () {(set -e
 # this function will
 # 1. sync files between utility2 and its dependents
-# 2. shBuildApp dir $HOME/Documents/$1
-# 3. git commit -am $2
-    CWD="${1:-$PWD}"
+# 2. shBuildApp $PWD
+    CWD="$PWD"
     cd "$HOME/Documents/utility2" && shBuildApp
     cd "$HOME/Documents"
     ln -f "utility2/lib.utility2.sh" "$HOME" || true
@@ -3277,15 +3295,12 @@ shUtility2DependentsSync () {(set -e
         ln -f "utility2/lib.jslint.js" "$HOME/bin/utility2-jslint" || true
         ln -f "utility2/lib.utility2.sh" "$HOME/bin/utility2" || true
     fi
-    for DIR in $UTILITY2_DEPENDENTS $(ls -d swgg-* 2>/dev/null)
+    for DIR in $UTILITY2_DEPENDENTS
     do
-        if [ "$DIR" = utility2 ] || [ ! -d "$DIR" ]
-        then
-            continue
-        fi
-        cd "$DIR"
+        [ "$DIR" = utility2 ] && continue
+        cd "$HOME/Documents/$DIR" || continue
         npm_config_dir_utility2="$HOME/Documents/utility2" shBuildAppSync
-        cd ..
+        cd "$HOME/Documents"
         # hardlink "lib.$LIB.js"
         LIB="$(printf "$DIR" | sed -e "s/-lite\$//" -e "s/-/_/g")"
         if [ -f "utility2/lib.$LIB.js" ]
@@ -3293,26 +3308,21 @@ shUtility2DependentsSync () {(set -e
             ln -f "utility2/lib.$LIB.js" "$DIR" || true
         fi
     done
+    # hardlink assets.utility2.rollup.js
     for DIR in $(ls -d * 2>/dev/null)
     do
-        if [ "$DIR" = utility2 ] || [ ! -d "$DIR" ]
+        if [ -f "$HOME/Documents/$DIR/assets.utility2.rollup.js" ]
         then
-            continue
+            ln -f \
+"$HOME/Documents/utility2/tmp/build/app/assets.utility2.rollup.js" \
+"$HOME/Documents/$DIR/assets.utility2.rollup.js"
         fi
-        cd "$DIR"
-        # hardlink assets.utility2.rollup.js
-        if [ -f "assets.utility2.rollup.js" ]
-        then
-            ln -f "$HOME\
-/Documents/utility2/tmp/build/app/assets.utility2.rollup.js" .
-        fi
-        cd ..
     done
-    cd "$CWD" && shBuildApp
-    if [ "$2" ]
+    if [ "$CWD" = "$HOME/Documents/utility2" ]
     then
-        git commit -am "$2"
+        return
     fi
+    cd "$CWD" && shBuildApp
 )}
 
 shUtility2FncStat () {(set -e
@@ -3358,10 +3368,34 @@ shUtility2GitCommit () {(set -e
     done
 )}
 
+shUtility2GitCommitAndPush () {(set -e
+# this function will git-commit-and-push $UTILITY2_DEPENDENTS
+    for DIR in $UTILITY2_DEPENDENTS
+    do
+        cd "$HOME/Documents/$DIR" || continue
+        printf "\n\n\n\n$PWD\n\n\n\n"
+        git commit -am "${1:-shUtility2GitCommitAndPush}" || true
+        git push origin alpha
+    done
+)}
+
+shUtility2GitDiffHead () {(set -e
+# this function will the git-status of $UTILITY2_DEPENDENTS to stdout
+    rm -f /tmp/shUtility2GitDiffHead.diff
+    for DIR in $UTILITY2_DEPENDENTS
+    do
+        cd "$HOME/Documents/$DIR" || continue
+        printf "\n\n\n\n$PWD\n\n\n\n" 2>&1 >> /tmp/shUtility2GitDiffHead.diff
+        shGitLsTree 2>&1 >> /tmp/shUtility2GitDiffHead.diff
+        git status 2>&1 >> /tmp/shUtility2GitDiffHead.diff
+        git diff HEAD 2>&1 >> /tmp/shUtility2GitDiffHead.diff
+    done
+    less /tmp/shUtility2GitDiffHead.diff
+)}
+
 shUtility2Grep () {(set -e
 # this function will recursively grep $UTILITY2_DEPENDENTS for the regexp $1
-    for DIR in $UTILITY2_DEPENDENTS \
-        $(cd "$HOME/Documents"; ls -d swgg-* 2>/dev/null)
+    for DIR in $UTILITY2_DEPENDENTS
     do
         DIR="$HOME/Documents/$DIR"
         if [ -d "$DIR" ]
@@ -3396,18 +3430,17 @@ shXvfbStart () {
 # run main-program
 export UTILITY2_GIT_BASE_ID=9fe8c2255f4ac330c86af7f624d381d768304183
 export UTILITY2_DEPENDENTS='
+utility2
 apidoc-lite
-bootstrap-lite
 istanbul-lite
 jslint-lite
-sqljs-lite
-utility2
 '
 export UTILITY2_MACRO_JS='
 /* istanbul instrument in package utility2 */
 // assets.utility2.header.js - start
 /* jslint utility2:true */
 /* istanbul ignore next */
+// run shared js-env code - init-local
 (function (globalThis) {
     "use strict";
     let consoleError;
@@ -3453,7 +3486,7 @@ export UTILITY2_MACRO_JS='
          * this function will recursively deep-copy <obj> with keys sorted
          */
             let sorted;
-            if (!(typeof obj === "object" && obj)) {
+            if (typeof obj !== "object" || !obj) {
                 return obj;
             }
             // recursively deep-copy list with child-keys sorted
@@ -3475,7 +3508,7 @@ export UTILITY2_MACRO_JS='
     };
     local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw err.<msg> if <passed> is falsy
+     * this function will throw <msg> if <passed> is falsy
      */
         if (passed) {
             return;
@@ -3492,7 +3525,7 @@ export UTILITY2_MACRO_JS='
                 typeof msg === "string"
                 // if msg is string, then leave as is
                 ? msg
-                // else JSON.stringify msg
+                // else JSON.stringify(msg)
                 : JSON.stringify(msg, undefined, 4)
             )
         );
@@ -3561,33 +3594,7 @@ export UTILITY2_MACRO_JS='
                 throw err;
             });
         }
-        local.assert = require("assert");
-        local.buffer = require("buffer");
-        local.child_process = require("child_process");
-        local.cluster = require("cluster");
-        local.crypto = require("crypto");
-        local.dgram = require("dgram");
-        local.dns = require("dns");
-        local.domain = require("domain");
-        local.events = require("events");
         local.fs = require("fs");
-        local.http = require("http");
-        local.https = require("https");
-        local.net = require("net");
-        local.os = require("os");
-        local.path = require("path");
-        local.querystring = require("querystring");
-        local.readline = require("readline");
-        local.repl = require("repl");
-        local.stream = require("stream");
-        local.string_decoder = require("string_decoder");
-        local.timers = require("timers");
-        local.tls = require("tls");
-        local.tty = require("tty");
-        local.url = require("url");
-        local.util = require("util");
-        local.vm = require("vm");
-        local.zlib = require("zlib");
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
@@ -4029,7 +4036,9 @@ local.templateRenderMyApp = function (template) {
  */
     let githubRepo;
     let packageJson;
-    packageJson = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
+    packageJson = JSON.parse(
+        require("fs").readFileSync("package.json", "utf8")
+    );
     local.objectAssignDefault(packageJson, {
         nameLib: packageJson.name.replace((
             /\W/g

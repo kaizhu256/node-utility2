@@ -12,6 +12,7 @@
 // assets.utility2.header.js - start
 /* jslint utility2:true */
 /* istanbul ignore next */
+// run shared js-env code - init-local
 (function (globalThis) {
     "use strict";
     let consoleError;
@@ -57,7 +58,7 @@
          * this function will recursively deep-copy <obj> with keys sorted
          */
             let sorted;
-            if (!(typeof obj === "object" && obj)) {
+            if (typeof obj !== "object" || !obj) {
                 return obj;
             }
             // recursively deep-copy list with child-keys sorted
@@ -79,7 +80,7 @@
     };
     local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw err.<msg> if <passed> is falsy
+     * this function will throw <msg> if <passed> is falsy
      */
         if (passed) {
             return;
@@ -96,7 +97,7 @@
                 typeof msg === "string"
                 // if msg is string, then leave as is
                 ? msg
-                // else JSON.stringify msg
+                // else JSON.stringify(msg)
                 : JSON.stringify(msg, undefined, 4)
             )
         );
@@ -165,33 +166,7 @@
                 throw err;
             });
         }
-        local.assert = require("assert");
-        local.buffer = require("buffer");
-        local.child_process = require("child_process");
-        local.cluster = require("cluster");
-        local.crypto = require("crypto");
-        local.dgram = require("dgram");
-        local.dns = require("dns");
-        local.domain = require("domain");
-        local.events = require("events");
         local.fs = require("fs");
-        local.http = require("http");
-        local.https = require("https");
-        local.net = require("net");
-        local.os = require("os");
-        local.path = require("path");
-        local.querystring = require("querystring");
-        local.readline = require("readline");
-        local.repl = require("repl");
-        local.stream = require("stream");
-        local.string_decoder = require("string_decoder");
-        local.timers = require("timers");
-        local.tls = require("tls");
-        local.tty = require("tty");
-        local.url = require("url");
-        local.util = require("util");
-        local.vm = require("vm");
-        local.zlib = require("zlib");
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
@@ -260,6 +235,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
 // assets.utility2.header.js - start\n\
 /* jslint utility2:true */\n\
 /* istanbul ignore next */\n\
+// run shared js-env code - init-local\n\
 (function (globalThis) {\n\
     "use strict";\n\
     let consoleError;\n\
@@ -305,7 +281,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
          * this function will recursively deep-copy <obj> with keys sorted\n\
          */\n\
             let sorted;\n\
-            if (!(typeof obj === "object" && obj)) {\n\
+            if (typeof obj !== "object" || !obj) {\n\
                 return obj;\n\
             }\n\
             // recursively deep-copy list with child-keys sorted\n\
@@ -327,7 +303,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
     };\n\
     local.assertOrThrow = function (passed, msg) {\n\
     /*\n\
-     * this function will throw err.<msg> if <passed> is falsy\n\
+     * this function will throw <msg> if <passed> is falsy\n\
      */\n\
         if (passed) {\n\
             return;\n\
@@ -344,7 +320,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
                 typeof msg === "string"\n\
                 // if msg is string, then leave as is\n\
                 ? msg\n\
-                // else JSON.stringify msg\n\
+                // else JSON.stringify(msg)\n\
                 : JSON.stringify(msg, undefined, 4)\n\
             )\n\
         );\n\
@@ -413,33 +389,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
                 throw err;\n\
             });\n\
         }\n\
-        local.assert = require("assert");\n\
-        local.buffer = require("buffer");\n\
-        local.child_process = require("child_process");\n\
-        local.cluster = require("cluster");\n\
-        local.crypto = require("crypto");\n\
-        local.dgram = require("dgram");\n\
-        local.dns = require("dns");\n\
-        local.domain = require("domain");\n\
-        local.events = require("events");\n\
         local.fs = require("fs");\n\
-        local.http = require("http");\n\
-        local.https = require("https");\n\
-        local.net = require("net");\n\
-        local.os = require("os");\n\
-        local.path = require("path");\n\
-        local.querystring = require("querystring");\n\
-        local.readline = require("readline");\n\
-        local.repl = require("repl");\n\
-        local.stream = require("stream");\n\
-        local.string_decoder = require("string_decoder");\n\
-        local.timers = require("timers");\n\
-        local.tls = require("tls");\n\
-        local.tty = require("tty");\n\
-        local.url = require("url");\n\
-        local.util = require("util");\n\
-        local.vm = require("vm");\n\
-        local.zlib = require("zlib");\n\
     }\n\
 }((typeof globalThis === "object" && globalThis) || window));\n\
 // assets.utility2.header.js - end\n\
@@ -973,8 +923,8 @@ globalThis.local = local;\n\
 \n\
 \n\
 \n\
-// run browser js\-env code - init-test\n\
 /* istanbul ignore next */\n\
+// run browser js\-env code - init-test\n\
 (function () {\n\
 if (!local.isBrowser) {\n\
     return;\n\
@@ -1010,8 +960,8 @@ globalThis.domOnEventDelegateDict = local;\n\
 \n\
 \n\
 \n\
-// run node js\-env code - init-test\n\
 /* istanbul ignore next */\n\
+// run node js\-env code - init-test\n\
 (function () {\n\
 if (local.isBrowser) {\n\
     return;\n\
@@ -1028,8 +978,8 @@ local.assetsDict["/assets.index.template.html"] = \'\\\n\
 /* jslint ignore:end */\n\
 local.assetsDict["/assets.my_app.js"] = (\n\
     local.assetsDict["/assets.my_app.js"]\n\
-    || local.fs.readFileSync(\n\
-        local.path.resolve(local.__dirname + "/lib.my_app.js"),\n\
+    || require("fs").readFileSync(\n\
+        require("path").resolve(local.__dirname + "/lib.my_app.js"),\n\
         "utf8"\n\
     ).replace((\n\
         /^#!\\//\n\
@@ -1061,7 +1011,7 @@ if (module !== require.main || globalThis.utility2_rollup) {\n\
 }\n\
 local.assetsDict["/assets.example.js"] = (\n\
     local.assetsDict["/assets.example.js"]\n\
-    || local.fs.readFileSync(__filename, "utf8")\n\
+    || require("fs").readFileSync(__filename, "utf8")\n\
 );\n\
 local.assetsDict["/favicon.ico"] = local.assetsDict["/favicon.ico"] || "";\n\
 local.assetsDict["/index.html"] = local.assetsDict["/"];\n\
@@ -1076,8 +1026,8 @@ if (globalThis.utility2_serverHttp1) {\n\
 }\n\
 process.env.PORT = process.env.PORT || "8081";\n\
 console.error("http-server listening on port " + process.env.PORT);\n\
-local.http.createServer(function (req, res) {\n\
-    req.urlParsed = local.url.parse(req.url);\n\
+require("http").createServer(function (req, res) {\n\
+    req.urlParsed = require("url").parse(req.url);\n\
     if (local.assetsDict[req.urlParsed.pathname] !== undefined) {\n\
         res.end(local.assetsDict[req.urlParsed.pathname]);\n\
         return;\n\
@@ -1361,8 +1311,8 @@ local.assetsDict["/assets.test.template.js"] = '\
 \n\
 \n\
 \n\
-/* istanbul ignore next */\n\
 /* jslint utility2:true */\n\
+/* istanbul ignore next */\n\
 (function (local) {\n\
 "use strict";\n\
 \n\
@@ -1618,10 +1568,12 @@ local.cliDict["utility2.start"] = function () {
  * <port>
  * will start utility2 http-server on given <port> (default 8081)
  */
-    local.env.PORT = process.argv[3] || local.env.PORT;
     globalThis.local = local;
     local.replStart();
     local.testRunServer({});
+    if (local.env.npm_config_runme) {
+        require(require("path").resolve(local.env.npm_config_runme));
+    }
 };
 
 local.cliDict["utility2.testReportCreate"] = function () {
@@ -1631,12 +1583,14 @@ local.cliDict["utility2.testReportCreate"] = function () {
  */
     process.exit(
         local.testReportCreate(
-            JSON.parse(local.fs.readFileSync(
-                local.path.resolve(
-                    local.env.npm_config_dir_build + "/test-report.json"
-                ),
-                "utf8"
-            ))
+            JSON.parse(
+                require("fs").readFileSync(
+                    require("path").resolve(
+                        local.env.npm_config_dir_build + "/test-report.json"
+                    ),
+                    "utf8"
+                )
+            )
         ).testsFailed !== 0
     );
 };
@@ -1940,9 +1894,9 @@ local._testCase_buildApidoc_default = function (opt, onError) {
             ], [
                 globalThis, "process"
             ], [
-                local.stream, "prototype"
-            ], [
                 process, "stdin"
+            ], [
+                require("local.stream"), "prototype"
             ]
         ].forEach(function (elem, tmp) {
             tmp = elem[0][elem[1]];
@@ -2595,15 +2549,17 @@ local.browserTest = function (opt, onError) {
         return;
     }
     local.gotoNext(opt, function (err, data) {
+        let url;
         switch (opt.gotoState) {
         // node - init
         case 1:
+            url = require("url");
             onParallel = local.onParallel(opt.gotoNext);
             onParallel.cnt += 1;
             isDone = 0;
             testId = Math.random().toString(16);
             testName = local.env.MODE_BUILD + ".browser." + encodeURIComponent(
-                new local.url.URL(opt.url).pathname.replace(
+                new url.URL(opt.url).pathname.replace(
                     "/build.."
                     + local.env.CI_BRANCH
                     + ".." + local.env.CI_HOST,
@@ -2698,8 +2654,8 @@ local.browserTest = function (opt, onError) {
             local.testReportMerge(globalThis.utility2_testReport, data);
             // save test-report.json
             onParallel.cnt += 1;
-            local.fs.writeFile(
-                local.path.resolve(
+            require("fs").writeFile(
+                require("path").resolve(
                     local.env.npm_config_dir_build + "/test-report.json"
                 ),
                 JSON.stringify(globalThis.utility2_testReport),
@@ -2933,7 +2889,7 @@ local.buildLib = function (opt, onError) {
     let result;
     local.objectAssignDefault(opt, {
         customize: local.nop,
-        dataFrom: local.fs.readFileSync(
+        dataFrom: require("fs").readFileSync(
             "lib." + local.env.npm_package_nameLib + ".js",
             "utf8"
         ),
@@ -2956,7 +2912,7 @@ local.buildLib = function (opt, onError) {
     });
     // customize assets.utility2.rollup.js
     if (
-        local.fs.existsSync("./assets.utility2.rollup.js")
+        require("fs").existsSync("./assets.utility2.rollup.js")
     ) {
         opt.dataTo = opt.dataTo.replace(
             "    // || globalThis.utility2_rollup_old",
@@ -2988,7 +2944,7 @@ local.buildReadme = function (opt, onError) {
     local.objectAssignDefault(opt, {
         customize: local.nop,
         // reset toc
-        dataFrom: local.fs.readFileSync(
+        dataFrom: require("fs").readFileSync(
             "README.md",
             "utf8"
         ).replace((
@@ -3011,7 +2967,7 @@ local.buildReadme = function (opt, onError) {
         opt.packageJson.description = opt.dataFrom.split("\n")[1];
         local.objectAssignDefault(opt.packageJson, {
             nameLib: JSON.parse(
-                local.fs.readFileSync("package.json", "utf8")
+                require("fs").readFileSync("package.json", "utf8")
             ).nameLib
         });
         opt.packageJson = local.objectAssignDefault(opt.packageJson, {
@@ -3083,7 +3039,7 @@ local.buildReadme = function (opt, onError) {
         ),
         // customize example.js - shared js\u002denv code - init-before
         (
-            /\nglobalThis\.local\u0020=\u0020local;\n[^`]*?\n\/\/\u0020run\u0020browser\u0020js\u002denv\u0020code\u0020-\u0020init-test\n/
+            /\nglobalThis\.local\u0020=\u0020local;\n[^`]*?\n\/\*\u0020istanbul\u0020ignore\u0020next\u0020\*\/\n\/\/\u0020run\u0020browser\u0020js\u002denv\u0020code\u0020-\u0020init-test\n/
         ),
         // customize example.js - html-body
         (
@@ -3263,7 +3219,7 @@ local.buildTest = function (opt, onError) {
     let result;
     local.objectAssignDefault(opt, {
         customize: local.nop,
-        dataFrom: local.fs.readFileSync("test.js", "utf8"),
+        dataFrom: require("fs").readFileSync("test.js", "utf8"),
         dataTo: local.templateRenderMyApp(
             local.assetsDict["/assets.test.template.js"]
         )
@@ -3282,7 +3238,7 @@ local.buildTest = function (opt, onError) {
         "./assets.utility2.rollup.js",
         "./lib.utility2.js"
     ].forEach(function (file) {
-        if (local.fs.existsSync(file)) {
+        if (require("fs").existsSync(file)) {
             opt.dataTo = opt.dataTo.replace(
                 "require(\"utility2\")",
                 "require(\"" + file + "\")"
@@ -3315,7 +3271,7 @@ local.childProcessEval = function (code, opt) {
     promise.child = require("child_process").spawn("node", [
         "-e", (
             "/*jslint node*/\n"
-            + "let code = \"\";\n"
+            + "let data = \"\";\n"
             + "process.stdin.setEncoding(\"utf8\");\n"
             + "process.stdin.on(\"readable\", function () {\n"
             + "    let chunk;\n"
@@ -3324,11 +3280,11 @@ local.childProcessEval = function (code, opt) {
             + "        if (chunk === null) {\n"
             + "            return;\n"
             + "        }\n"
-            + "        code += chunk;\n"
+            + "        data += chunk;\n"
             + "    }\n"
             + "});\n"
             + "process.stdin.on(\"end\", function () {\n"
-            + "    require(\"vm\").runInThisContext(code);\n"
+            + "    require(\"vm\").runInThisContext(data);\n"
             + "});\n"
         )
     ], Object.assign({
@@ -3349,15 +3305,17 @@ local.cliRun = function (opt) {
 /*
  * this function will run cli with given <opt>
  */
-    local.cliDict._eval = local.cliDict._eval || function () {
+    let cliDict;
+    cliDict = local.cliDict;
+    cliDict._eval = cliDict._eval || function () {
     /*
      * <code>
      * will eval <code>
      */
         globalThis.local = local;
-        local.vm.runInThisContext(process.argv[3]);
+        require("vm").runInThisContext(process.argv[3]);
     };
-    local.cliDict._help = local.cliDict._help || function () {
+    cliDict._help = cliDict._help || function () {
     /*
      *
      * will print help
@@ -3392,11 +3350,11 @@ local.cliRun = function (opt) {
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         strDict = {};
-        Object.keys(local.cliDict).sort().forEach(function (key, ii) {
+        Object.keys(cliDict).sort().forEach(function (key, ii) {
             if (key[0] === "_" && key !== "_default") {
                 return;
             }
-            str = String(local.cliDict[key]);
+            str = String(cliDict[key]);
             if (key === "_default") {
                 key = "";
             }
@@ -3462,13 +3420,13 @@ local.cliRun = function (opt) {
         }).join("\n\n");
         console.log(str);
     };
-    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
-    local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
-    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
-    local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
-    local.cliDict._default = local.cliDict._default || local.cliDict._help;
-    local.cliDict.help = local.cliDict.help || local.cliDict._help;
-    local.cliDict._interactive = local.cliDict._interactive || function () {
+    cliDict["--eval"] = cliDict["--eval"] || cliDict._eval;
+    cliDict["--help"] = cliDict["--help"] || cliDict._help;
+    cliDict["-e"] = cliDict["-e"] || cliDict._eval;
+    cliDict["-h"] = cliDict["-h"] || cliDict._help;
+    cliDict._default = cliDict._default || cliDict._help;
+    cliDict.help = cliDict.help || cliDict._help;
+    cliDict._interactive = cliDict._interactive || function () {
     /*
      *
      * will start interactive-mode
@@ -3478,33 +3436,27 @@ local.cliRun = function (opt) {
             useGlobal: true
         });
     };
-    local.cliDict["--interactive"] = (
-        local.cliDict["--interactive"]
-        || local.cliDict._interactive
-    );
-    local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
-    local.cliDict._version = local.cliDict._version || function () {
+    cliDict["--interactive"] = cliDict["--interactive"] || cliDict._interactive;
+    cliDict["-i"] = cliDict["-i"] || cliDict._interactive;
+    cliDict._version = cliDict._version || function () {
     /*
      *
      * will print version
      */
         console.log(require(__dirname + "/package.json").version);
     };
-    local.cliDict["--version"] = (
-        local.cliDict["--version"]
-        || local.cliDict._version
-    );
-    local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
+    cliDict["--version"] = cliDict["--version"] || cliDict._version;
+    cliDict["-v"] = cliDict["-v"] || cliDict._version;
     // default to --help command if no arguments are given
     if (process.argv.length <= 2) {
-        local.cliDict._help();
+        cliDict._help();
         return;
     }
-    if (local.cliDict[process.argv[2]]) {
-        local.cliDict[process.argv[2]]();
+    if (cliDict[process.argv[2]]) {
+        cliDict[process.argv[2]]();
         return;
     }
-    local.cliDict._default();
+    cliDict._default();
 };
 
 local.corsBackendHostInject = function (url, backendHost, rgx, location) {
@@ -4219,7 +4171,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
     // customize local for assets.utility2.rollup.js
     if (
         file === "lib." + process.env.npm_package_nameLib + ".js"
-        && local.fs.existsSync("./assets.utility2.rollup.js")
+        && require("fs").existsSync("./assets.utility2.rollup.js")
     ) {
         code = code.replace(
             "    // || globalThis.utility2_rollup_old",
@@ -4336,7 +4288,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
         dictProp[key] = true;
     });
     // local-function - missing
-    switch (local.fs.existsSync("assets.utility2.rollup.js") || file) {
+    switch (require("fs").existsSync("assets.utility2.rollup.js") || file) {
     case "README.md":
     case "lib.utility2.js":
     case "test.js":
@@ -4801,29 +4753,6 @@ local.onErrorWithStack = function (onError) {
     return onError2;
 };
 
-local.onFileModifiedRestart = function (file) {
-/*
- * this function will watch <file>, and if modified, then restart process
- */
-    if (
-        local.env.npm_config_mode_auto_restart
-        && local.fs.existsSync(file)
-        && local.fs.statSync(file).isFile()
-    ) {
-        local.fs.watchFile(file, {
-            interval: 1000,
-            persistent: false
-        }, function (stat2, stat1) {
-            if (stat2.mtime > stat1.mtime) {
-                console.error("file modified - " + file);
-                setTimeout(function () {
-                    process.exit(77);
-                }, 1000);
-            }
-        });
-    }
-};
-
 local.onParallel = function (onError, onEach, onRetry) {
 /*
  * this function will create function that will
@@ -5075,6 +5004,29 @@ local.requireReadme = function () {
     let tmp;
     // init module.exports
     module = {};
+    // if file is modified, then restart process
+    if (local.env.npm_config_mode_auto_restart) {
+        require("fs").readdir(".", function (ignore, fileList) {
+            fileList.forEach(function (file) {
+                require("fs").stat(file, function (ignore, data) {
+                    if (!data.isFile()) {
+                        return;
+                    }
+                    require("fs").watchFile(file, {
+                        interval: 1000,
+                        persistent: false
+                    }, function (stat2, stat1) {
+                        if (stat2.mtime > stat1.mtime) {
+                            console.error("file modified - " + file);
+                            setTimeout(function () {
+                                process.exit(77);
+                            }, 1000);
+                        }
+                    });
+                });
+            });
+        });
+    }
     if (local.isBrowser) {
         module.exports = local.objectAssignDefault(
             globalThis.utility2_rollup || globalThis.local,
@@ -5084,25 +5036,9 @@ local.requireReadme = function () {
     }
     // start repl-debugger
     local.replStart();
-    // debug dir
-    [
-        __dirname + "/lib.jslint.js",
-        __filename,
-        "undefined"
-    ].forEach(function (file) {
-        local.fs.exists(file, function (exists) {
-            if (exists) {
-                local.onFileModifiedRestart(file);
-            }
-        });
-    });
-    // if file is modified, then restart process
-    local.fs.readdirSync(".").forEach(function (file) {
-        local.onFileModifiedRestart(file);
-    });
     // jslint process.cwd()
     if (!local.env.npm_config_mode_lib) {
-        local.child_process.spawn("node", [
+        require("child_process").spawn("node", [
             "-e", (
                 "require("
                 + JSON.stringify(__filename)
@@ -5126,7 +5062,7 @@ local.requireReadme = function () {
             || local.assetsDict["/index.rollup.html"] || ""
         );
         local.assetsDict["/"] = local.assetsDict["/index.html"];
-        local.assetsDict["/assets.app.js"] = local.fs.readFileSync(
+        local.assetsDict["/assets.app.js"] = require("fs").readFileSync(
             __filename,
             "utf8"
         ).replace((
@@ -5139,7 +5075,7 @@ local.requireReadme = function () {
     }
     // init file $npm_package_main
     globalThis.utility2_moduleExports = require(
-        local.path.resolve(local.env.npm_package_main)
+        require("path").resolve(local.env.npm_package_main)
     );
     globalThis.utility2_moduleExports.globalThis = globalThis;
     // read code from README.md
@@ -5164,7 +5100,7 @@ local.requireReadme = function () {
         "globalThis.utility2_moduleExports"
     );
     // init example.js
-    tmp = local.path.resolve("example.js");
+    tmp = require("path").resolve("example.js");
     // jslint code
     local.jslintAndPrint(code, tmp);
     // instrument code
@@ -5201,7 +5137,7 @@ local.requireReadme = function () {
     module.exports.assetsDict = local.assetsDict;
     local.assetsDict["/assets.example.js"] = code;
     local.assetsDict["/assets.test.js"] = local.istanbulInstrumentInPackage(
-        local.fs.readFileSync("test.js", "utf8"),
+        require("fs").readFileSync("test.js", "utf8"),
         "test.js"
     );
     // init assets index.html
@@ -5308,7 +5244,7 @@ instruction\n\
                 stateInit: true
             });
             // add extra physical files to assetsDict
-            local.fs.readdirSync(".").forEach(function (file) {
+            require("fs").readdirSync(".").forEach(function (file) {
                 file = "/" + file;
                 if (
                     local.assetsDict[file]
@@ -5867,7 +5803,9 @@ local.templateRenderMyApp = function (template) {
  */
     let githubRepo;
     let packageJson;
-    packageJson = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
+    packageJson = JSON.parse(
+        require("fs").readFileSync("package.json", "utf8")
+    );
     local.objectAssignDefault(packageJson, {
         nameLib: packageJson.name.replace((
             /\W/g
@@ -6771,7 +6709,7 @@ local.urlParse = function (url) {
             ).test(url)) {
                 url = local.serverLocalHost + "/" + url;
             }
-            urlParsed = local.url.parse(url);
+            urlParsed = require("url").parse(url);
         }
         // init query
         urlParsed.query = {};
@@ -6996,7 +6934,6 @@ if (!local.isBrowser) {
 }
 // require modules
 local.http = local._http;
-local.https = local._http;
 }());
 
 
@@ -7007,11 +6944,13 @@ local.https = local._http;
 if (local.isBrowser) {
     return;
 }
+local.http = require("http");
+/* validateLineSortedReset */
 local.Module = require("module");
 // init env
 local.objectAssignDefault(local.env, {
-    npm_config_dir_build: local.path.resolve("tmp/build"),
-    npm_config_dir_tmp: local.path.resolve("tmp")
+    npm_config_dir_build: require("path").resolve("tmp/build"),
+    npm_config_dir_tmp: require("path").resolve("tmp")
 });
 // merge previous test-report
 if (local.env.npm_config_file_test_report_merge) {
@@ -7036,7 +6975,7 @@ if (module === require.main && (!globalThis.utility2_rollup || (
     && local.cliDict[process.argv[2]]
     && process.argv[2].indexOf("utility2.") === 0
 ))) {
-    local.cliRun({}, local.nop);
+    local.cliRun({});
     if (local.cliDict[process.argv[2]]) {
         local.cliDict[process.argv[2]]();
         switch (process.argv[2]) {
@@ -7053,7 +6992,7 @@ if (module === require.main && (!globalThis.utility2_rollup || (
 // override assets
 if (globalThis.utility2_rollup) {
     local.assetsDict["/assets.utility2.rollup.js"] = (
-        local.fs.readFileSync(
+        require("fs").readFileSync(
             __filename,
             "utf8"
         ).split("\n/* script-end /assets.utility2.rollup.end.js */")[0]
