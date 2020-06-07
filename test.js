@@ -157,7 +157,6 @@
             });
         }
         local.fs = require("fs");
-        local.path = require("path");
         local.url = require("url");
     }
 }((typeof globalThis === "object" && globalThis) || window));
@@ -2136,12 +2135,12 @@ if (process.argv[2]) {
     }
     // start
     process.argv.splice(1, 1);
-    process.argv[1] = local.path.resolve(process.argv[1]);
+    process.argv[1] = require("path").resolve(process.argv[1]);
     local.Module.runMain();
 }
 // runme
 if (local.env.npm_config_runme) {
-    require(local.path.resolve(local.env.npm_config_runme));
+    require(require("path").resolve(local.env.npm_config_runme));
 }
 }());
 }());

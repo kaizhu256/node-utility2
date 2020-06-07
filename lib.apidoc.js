@@ -167,7 +167,6 @@
             });
         }
         local.fs = require("fs");
-        local.path = require("path");
         local.url = require("url");
     }
 }((typeof globalThis === "object" && globalThis) || window));
@@ -840,7 +839,7 @@ local.apidocCreate = function (opt) {
      */
         let result;
         local.tryCatchOnError(function () {
-            file = local.path.resolve(opt.dir, file);
+            file = require("path").resolve(opt.dir, file);
             console.error("apidocCreate - readExample " + file);
             result = "";
             result = local.identity(
@@ -1113,7 +1112,10 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
     opt.libFileList.every(function (file) {
         local.tryCatchOnError(function () {
             tmp = {};
-            tmp.name = local.path.basename(file).replace("lib.", "").replace((
+            tmp.name = require("path").basename(file).replace(
+                "lib.",
+                ""
+            ).replace((
                 /\.[^.]*?$/
             ), "").replace((
                 /\W/g

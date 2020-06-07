@@ -350,7 +350,6 @@ instruction
             });
         }
         local.fs = require("fs");
-        local.path = require("path");
         local.url = require("url");
     }
 }((typeof globalThis === "object" && globalThis) || window));

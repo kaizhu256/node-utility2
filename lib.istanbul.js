@@ -167,7 +167,6 @@
             });
         }
         local.fs = require("fs");
-        local.path = require("path");
         local.url = require("url");
     }
 }((typeof globalThis === "object" && globalThis) || window));
@@ -11809,11 +11808,12 @@ local.cliDict.cover = function () {
     tmp._extensions[".js"] = function (module, file) {
         if (typeof file === "string" && (
             file.indexOf(process.env.npm_config_mode_coverage_dir) === 0 || (
-                file.indexOf(process.cwd() + local.path.sep) === 0
+                file.indexOf(process.cwd() + require("path").sep) === 0
                 && (
                     process.env.npm_config_mode_coverage === "node_modules"
                     || file.indexOf(
-                        local.path.resolve("node_modules") + local.path.sep
+                        require("path").resolve("node_modules")
+                        + require("path").sep
                     ) !== 0
                 )
             )
@@ -11828,7 +11828,7 @@ local.cliDict.cover = function () {
     };
     // init process.argv
     process.argv.splice(1, 2);
-    process.argv[1] = local.path.resolve(process.argv[1]);
+    process.argv[1] = require("path").resolve(process.argv[1]);
     console.error("\nistanbul - covering $ " + process.argv.join(" "));
     // create coverage on exit
     process.on("exit", function () {
@@ -11845,7 +11845,7 @@ local.cliDict.instrument = function () {
  * <script>
  * will instrument <script> and print result to stdout
  */
-    process.argv[3] = local.path.resolve(process.argv[3]);
+    process.argv[3] = require("path").resolve(process.argv[3]);
     process.stdout.write(local.instrumentSync(
         local.fs.readFileSync(process.argv[3], "utf8"),
         process.argv[3]
@@ -11857,7 +11857,7 @@ local.cliDict.report = function () {
  * <coverageJson>
  * will create coverage-report from file <coverageJson>
  */
-    process.argv[3] = local.path.resolve(process.argv[3]);
+    process.argv[3] = require("path").resolve(process.argv[3]);
     globalThis.__coverage__ = JSON.parse(
         local.fs.readFileSync(process.argv[3])
     );
@@ -11883,7 +11883,7 @@ local.cliDict.test = function () {
     }
     // restart node with __filename removed from process.argv
     process.argv.splice(1, 2);
-    process.argv[1] = local.path.resolve(process.argv[1]);
+    process.argv[1] = require("path").resolve(process.argv[1]);
     // re-init cli
     require("module").runMain();
 };

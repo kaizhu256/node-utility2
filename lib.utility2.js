@@ -167,7 +167,6 @@
             });
         }
         local.fs = require("fs");
-        local.path = require("path");
         local.url = require("url");
     }
 }((typeof globalThis === "object" && globalThis) || window));
@@ -392,7 +391,6 @@ local.assetsDict["/assets.utility2.header.js"] = '\
             });\n\
         }\n\
         local.fs = require("fs");\n\
-        local.path = require("path");\n\
         local.url = require("url");\n\
     }\n\
 }((typeof globalThis === "object" && globalThis) || window));\n\

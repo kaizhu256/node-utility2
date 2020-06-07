@@ -167,7 +167,6 @@
             });
         }
         local.fs = require("fs");
-        local.path = require("path");
         local.url = require("url");
     }
 }((typeof globalThis === "object" && globalThis) || window));
@@ -17422,7 +17421,7 @@ local.cliDict._default = function () {
             return;
         }
         local.jslintAndPrint(
-            local.fs.readFileSync(local.path.resolve(file), "utf8"),
+            local.fs.readFileSync(require("path").resolve(file), "utf8"),
             file,
             {
                 autofix: process.argv.indexOf("--autofix") >= 0,
