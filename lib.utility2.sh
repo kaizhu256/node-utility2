@@ -3103,7 +3103,7 @@ shTravisRepoCreate () {(set -e
         }, opt);
         console.error("httpRequestSimple - " + JSON.stringify({
             method: opt.method,
-            url: opt.url
+            hostname: require("url").parse(opt.url).hostname
         }));
         promise = new Promise(function (arg) {
             resolve = arg;
@@ -3122,10 +3122,10 @@ shTravisRepoCreate () {(set -e
             : "https"
         ).request(opt.url, opt, function (res) {
             let data;
-            if (res.statusCode < 400 && !opt.ignoreStatusCode) {
+            if (!(res.statusCode < 400) && !opt.modeIgnoreStatusCode) {
                 onError2(new Error(JSON.stringify({
                     method: opt.method,
-                    url: opt.url,
+                    hostname: require("url").parse(opt.url).hostname,
                     statusCode: res.statusCode
                 })));
             }
@@ -3222,8 +3222,9 @@ shTravisRepoCreate () {(set -e
                 "travis-api-version": 3
             },
             method: "POST",
+            modeIgnoreStatusCode: true,
             url: (
-                "https://api.travis-ci.com/repo2/"
+                "https://api.travis-ci.com/repo/"
                 + process.env.GITHUB_REPO.replace("/", "%2F")
                 + "/activate"
             )
