@@ -617,6 +617,10 @@ local.testCase_buildApp_default = function (opt, onError) {
 /*
  * this function will test buildApp's default handling-behavior
  */
+    if (local.isBrowser) {
+        onError(undefined, opt);
+        return;
+    }
     local.testCase_buildReadme_default(opt, local.onErrorThrow);
     local.testCase_buildLib_default(opt, local.onErrorThrow);
     local.testCase_buildTest_default(opt, local.onErrorThrow);
@@ -649,6 +653,10 @@ local.testCase_buildReadme_default = function (opt, onError) {
 /*
  * this function will test buildReadme's default handling-behavior
  */
+    if (local.isBrowser) {
+        onError(undefined, opt);
+        return;
+    }
     opt = {};
     opt.customize = function () {
         // search-and-replace - customize dataTo

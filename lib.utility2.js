@@ -1767,6 +1767,7 @@ local._testCase_assetsAppJs_standalone = function (opt, onError) {
             ]
         }).on("error", onError).on("exit", function (exitCode) {
             local.assertOrThrow(!exitCode, exitCode);
+            onError();
         });
     });
 };
