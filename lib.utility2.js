@@ -5015,12 +5015,15 @@ local.requireReadme = function () {
  * this function will require and export example.js embedded in README.md
  */
     let code;
+    let env;
     let module;
     let tmp;
+    // init env
     // init module.exports
+    env = (typeof process === "object" && process && process.env) || local.env;
     module = {};
     // if file is modified, then restart process
-    if (local.env.npm_config_mode_auto_restart) {
+    if (env.npm_config_mode_auto_restart) {
         require("fs").readdir(".", function (ignore, fileList) {
             fileList.forEach(function (file) {
                 require("fs").stat(file, function (ignore, data) {
@@ -5052,7 +5055,7 @@ local.requireReadme = function () {
     // start repl-debugger
     local.replStart();
     // jslint process.cwd()
-    if (!local.env.npm_config_mode_lib) {
+    if (!env.npm_config_mode_lib) {
         require("child_process").spawn("node", [
             "-e", (
                 "require("
@@ -5062,7 +5065,7 @@ local.requireReadme = function () {
                 + ", {autofix:true,conditional:true}, process.exit);"
             )
         ], {
-            env: Object.assign({}, local.env, {
+            env: Object.assign({}, env, {
                 npm_config_mode_lib: "1"
             }),
             stdio: [
@@ -5070,7 +5073,7 @@ local.requireReadme = function () {
             ]
         });
     }
-    if (globalThis.utility2_rollup || local.env.npm_config_mode_start) {
+    if (globalThis.utility2_rollup || env.npm_config_mode_start) {
         // init assets index.html
         local.assetsDict["/index.html"] = (
             local.fsReadFileOrDefaultSync("index.html", "utf8", "")
@@ -5084,13 +5087,13 @@ local.requireReadme = function () {
             /^#!\//
         ), "// ");
         // init exports
-        local[local.env.npm_package_nameLib] = local;
+        local[env.npm_package_nameLib] = local;
         module.exports = local;
         return module.exports;
     }
     // init file $npm_package_main
     globalThis.utility2_moduleExports = require(
-        require("path").resolve(local.env.npm_package_main)
+        require("path").resolve(env.npm_package_main)
     );
     globalThis.utility2_moduleExports.globalThis = globalThis;
     // read code from README.md
@@ -5108,10 +5111,10 @@ local.requireReadme = function () {
     });
     // alias require($npm_package_name) to utility2_moduleExports;
     code = code.replace(
-        new RegExp("require\\(." + local.env.npm_package_name + ".\\)"),
+        new RegExp("require\\(." + env.npm_package_name + ".\\)"),
         "globalThis.utility2_moduleExports"
     ).replace(
-        new RegExp("require\\(." + local.env.npm_package_nameOriginal + ".\\)"),
+        new RegExp("require\\(." + env.npm_package_nameOriginal + ".\\)"),
         "globalThis.utility2_moduleExports"
     );
     // init example.js
@@ -5126,14 +5129,14 @@ local.requireReadme = function () {
     module._compile(code, tmp);
     // init exports
     module.exports.utility2 = local;
-    module.exports[local.env.npm_package_nameLib] = (
+    module.exports[env.npm_package_nameLib] = (
         globalThis.utility2_moduleExports
     );
     // init assets lib.xxx.js
     local.assetsDict[
-        "/assets." + local.env.npm_package_nameLib + ".js"
+        "/assets." + env.npm_package_nameLib + ".js"
     ] = local.fsReadFileOrDefaultSync(
-        local.env.npm_package_main,
+        env.npm_package_main,
         "utf8",
         ""
     ).replace((
@@ -5141,12 +5144,12 @@ local.requireReadme = function () {
     ), "// ");
     Object.assign(local.assetsDict, module.exports.assetsDict);
     // instrument assets lib.xxx.js
-    local.assetsDict["/assets." + local.env.npm_package_nameLib + ".js"] = (
+    local.assetsDict["/assets." + env.npm_package_nameLib + ".js"] = (
         local.istanbulInstrumentInPackage(
             local.assetsDict[
-                "/assets." + local.env.npm_package_nameLib + ".js"
+                "/assets." + env.npm_package_nameLib + ".js"
             ],
-            local.env.npm_package_main
+            env.npm_package_main
         )
     );
     module.exports.assetsDict = local.assetsDict;
@@ -5182,10 +5185,10 @@ local.requireReadme = function () {
                 /<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g
             ), "$1"),
             {
-                env: local.env,
+                env,
                 isRollup,
                 packageJson: {
-                    nameLib: local.env.npm_package_nameLib
+                    nameLib: env.npm_package_nameLib
                 }
             }
         );
@@ -5215,7 +5218,7 @@ return '\
 /*\n\
 assets.app.js\n\
 \n\
-' + local.env.npm_package_description + '\n\
+' + env.npm_package_description + '\n\
 \n\
 instruction\n\
     1. save this script as assets.app.js\n\
@@ -5230,7 +5233,7 @@ instruction\n\
 /* jslint ignore:end */
         case "/assets.my_app.js":
             // handle large string-replace
-            tmp = "/assets." + local.env.npm_package_nameLib + ".js";
+            tmp = "/assets." + env.npm_package_nameLib + ".js";
             code = local.assetsDict["/assets.utility2.rollup.content.js"].split(
                 "/* utility2.rollup.js content */"
             );
