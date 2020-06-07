@@ -75,10 +75,10 @@ shBaseInstall () {
 # this function will install .bashrc, .screenrc, .vimrc, and lib.utility2.sh in $HOME,
 # and is intended for aws-ec2 setup
 # example use:
-# curl -o "$HOME/lib.utility2.sh" https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh && . "$HOME/lib.utility2.sh" && shBaseInstall
+# curl -Lf -o "$HOME/lib.utility2.sh" https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh && . "$HOME/lib.utility2.sh" && shBaseInstall
     for FILE in .screenrc .vimrc lib.utility2.sh
     do
-        curl -Lfs -o "$HOME/$FILE" \
+        curl -Lf -o "$HOME/$FILE" \
 "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE" ||
             return "$?"
     done
@@ -319,7 +319,7 @@ shBuildApp () {(set -e
     do
         if [ ! -f "$FILE" ]
         then
-            curl -Lfs -O \
+            curl -Lf -O \
 "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE"
         fi
     done
@@ -513,10 +513,11 @@ shBuildCi () {(set -e
                 "$npm_config_dir_utility2" \
                 --branch=alpha --single-branch --depth=50
             mkdir -p "$npm_config_dir_utility2/tmp/build/app"
-            curl -Lfs https://raw.githubusercontent.com\
+            curl -Lf -o \
+"$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js" \
+https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/build..alpha..travis-ci.com/app\
-/assets.utility2.rollup.js > \
-"$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js"
+/assets.utility2.rollup.js
             ;;
         esac
         shBuildCiInternal
@@ -1180,7 +1181,7 @@ shCryptoTravisDecrypt () {(set -e
     URL="https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/.CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG"
     shBuildPrint "decrypting $URL ..."
-    curl -#Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
+    curl -Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
 )}
 
 shCryptoTravisEncrypt () {(set -e
@@ -1204,7 +1205,7 @@ shCryptoTravisEncrypt () {(set -e
         TMPFILE="$(mktemp)"
         URL="https://api.travis-ci.com/repos/$GITHUB_REPO/key"
         shBuildPrint "fetch $URL"
-        curl -#Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" |
+        curl -Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" |
             sed -n -e \
 "s/.*-----BEGIN [RSA ]*PUBLIC KEY-----\(.*\)-----END [RSA ]*PUBLIC KEY-----.*/\
 -----BEGIN PUBLIC KEY-----\\1-----END PUBLIC KEY-----/" \
@@ -1262,8 +1263,8 @@ shDeployGithub () {(set -e
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
     if [ "$(
-        curl -Ls --connect-timeout 60 -o /dev/null -w "%{http_code}" "$TEST_URL"
-    )" -lt 400 ]
+        curl --connect-timeout 60 -o /dev/null -w "%{http_code}" "$TEST_URL"
+    )" -lt 300 ]
     then
         shBuildPrint "curl test passed for $TEST_URL"
     else
@@ -1298,8 +1299,8 @@ shDeployHeroku () {(set -e
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
     if [ "$(
-        curl -Ls --connect-timeout 60 -o /dev/null -w "%{http_code}" "$TEST_URL"
-    )" -lt 400 ]
+        curl --connect-timeout 60 -o /dev/null -w "%{http_code}" "$TEST_URL"
+    )" -lt 300 ]
     then
         shBuildPrint "curl test passed for $TEST_URL"
     else
@@ -1675,8 +1676,8 @@ shGitInitBase () {(set -e
     git checkout -b alpha
     git add .
     git commit -am "initial commit"
-    curl https://raw.githubusercontent.com/kaizhu256/node-utility2\
-/alpha/.gitconfig > .git/config
+    curl -Lf -o .git/config \
+https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig
 )}
 
 shGitLsTree () {(set -e
@@ -1735,13 +1736,13 @@ shGitSquashShift () {(set -e
 
 shGithubApiRateLimitGet () {(set -e
 # this function will the rate-limit for the $GITHUB_TOKEN
-    curl -I https://api.github.com -H "Authorization: token $GITHUB_TOKEN"
+    curl -Lf -H "Authorization: token $GITHUB_TOKEN" -I https://api.github.com
 )}
 
 shGithubRepoBranchId () {(set -e
 # this function will print the $COMMIT_ID for $GITHUB_REPO:#$BRANCH
     BRANCH="$1"
-    curl -H "user-agent: undefined" -Lfs "https://api.github.com\
+    curl -Lf -H "user-agent: undefined" "https://api.github.com\
 /repos/$GITHUB_REPO/commits?access_token=$GITHUB_TOKEN&sha=$BRANCH" |
         sed -e 's/^\[{"sha":"//' -e 's/".*//'
 )}
@@ -1769,7 +1770,7 @@ shGithubRepoCreate () {(set -e
     mkdir -p "/tmp/githubRepo/$(printf "$GITHUB_REPO" | sed -e "s/\/.*//")"
     cp -a /tmp/githubRepo/kaizhu256/base "/tmp/githubRepo/$GITHUB_REPO"
     cd "/tmp/githubRepo/$GITHUB_REPO"
-    curl -Lfs \
+    curl -Lf \
 https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig |
         sed -e "s|kaizhu256/node-utility2|$GITHUB_REPO|" > .git/config
     # create github-repo
@@ -1827,7 +1828,7 @@ shGithubRepoDescriptionUpdate () {(set -e
     GITHUB_REPO="$1"
     DESCRIPTION="$2"
     shBuildPrint "update $GITHUB_REPO description"
-    curl -#Lf \
+    curl -Lf \
         -H "Authorization: token $GITHUB_TOKEN" \
         -H "Content-Type: application/json" \
         -H "User-Agent: undefined" \
@@ -1964,11 +1965,11 @@ shImageToDataUri () {(set -e
     case "$1" in
     http://*)
         FILE=/tmp/shImageToDataUri.png
-        curl -#Lf -o "$FILE" "$1"
+        curl -Lf -o "$FILE" "$1"
         ;;
     https://*)
         FILE=/tmp/shImageToDataUri.png
-        curl -#Lf -o "$FILE" "$1"
+        curl -Lf -o "$FILE" "$1"
         ;;
     *)
         FILE="$1"
@@ -3087,13 +3088,13 @@ shTravisRepoCreate () {(set -e
     #!! shTravisSync () {(set -e
     # this function will sync travis-ci with given $TRAVIS_ACCESS_TOKEN
     # this is an expensive operation that will use up your github rate-limit quota
-        curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -X POST \
+        curl -Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -X POST \
             "https://api.travis-ci.com/users/sync"
     #!! )}
     while true
     do
         shSleep 2
-        if (curl -Lfs "https://api.travis-ci.com/repos/$GITHUB_REPO" \
+        if (curl -Lf "https://api.travis-ci.com/repos/$GITHUB_REPO" \
             -H "Authorization: token $TRAVIS_ACCESS_TOKEN" 2>&1 > /dev/null)
         then
             break

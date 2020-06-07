@@ -1302,13 +1302,13 @@ RUN (set -e; \
         gnupg; \
     (busybox --list | xargs -n1 /bin/sh -c \
         'ln -s /bin/busybox /bin/$0 2>/dev/null' || true); \
-    curl -Ls https://deb.nodesource.com/setup_12.x | /bin/bash -; \
+    curl -Lf https://deb.nodesource.com/setup_12.x | /bin/bash -; \
     apt-get install -y nodejs; \
     (cd /usr/lib && npm install sqlite3@4); \
 )
 # install google-chrome-stable
 RUN (set -e; \
-    curl -Ls https://dl.google.com/linux/linux_signing_key.pub | \
+    curl -Lf https://dl.google.com/linux/linux_signing_key.pub | \
         apt-key add -; \
     printf "deb http://dl.google.com/linux/chrome/deb/ stable main\n" > \
         /etc/apt/sources.list.d/google.list; \
@@ -1403,7 +1403,7 @@ shBuildCiAfter () {(set -e
         for PACKAGE in utility2 "kaizhu256/node-utility2#alpha"
         do
             docker run "$GITHUB_REPO:$DOCKER_TAG" /bin/sh -c "set -e
-                curl -Ls https://raw.githubusercontent.com\
+                curl -Lf https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/alpha/lib.utility2.sh > /tmp/lib.utility2.sh
                 . /tmp/lib.utility2.sh
                 npm install '$PACKAGE'
