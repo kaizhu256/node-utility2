@@ -1779,7 +1779,7 @@ local._testCase_buildApidoc_default = function (opt, onError) {
             ], [
                 process, "stdin"
             ], [
-                require("local.stream"), "prototype"
+                require("stream"), "prototype"
             ]
         ].forEach(function (elem, tmp) {
             tmp = elem[0][elem[1]];
