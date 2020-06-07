@@ -617,10 +617,6 @@ local.testCase_buildApp_default = function (opt, onError) {
 /*
  * this function will test buildApp's default handling-behavior
  */
-    if (local.isBrowser) {
-        onError(undefined, opt);
-        return;
-    }
     local.testCase_buildReadme_default(opt, local.onErrorThrow);
     local.testCase_buildLib_default(opt, local.onErrorThrow);
     local.testCase_buildTest_default(opt, local.onErrorThrow);
@@ -649,67 +645,10 @@ local.testCase_buildApp_default = function (opt, onError) {
     }, onError);
 };
 
-local.testCase_buildLib_default = function (opt, onError) {
-/*
- * this function will test buildLib's default handling-behavior
- */
-    if (local.isBrowser) {
-        onError(undefined, opt);
-        return;
-    }
-    local.testMock([
-        [
-            local, {
-                templateRenderMyApp: function () {
-                    return local.assetsDict["/assets.my_app.template.js"];
-                }
-            }
-        ], [
-            require("fs"), {
-                // test customize-local handling-behavior
-                existsSync: function () {
-                    return true;
-                },
-                // test duplicate local function handling-behavior
-                readFileSync: function () {
-                    return (
-                        "local.nop = function () {\n"
-                        + "/*\n"
-                        + " * this function will do nothing\n"
-                        + " */\n"
-                        + "    return;\n"
-                        + "};\n"
-                        + "local.nop = function () {\n"
-                        + "/*\n"
-                        + " * this function will do nothing\n"
-                        + " */\n"
-                        + "    return;\n"
-                        + "};\n"
-                    );
-                },
-                writeFileSync: local.nop
-            }
-        ]
-    ], function (onError) {
-        local.buildLib({}, onError);
-    }, local.onErrorThrow);
-    local.buildLib({}, onError);
-};
-
 local.testCase_buildReadme_default = function (opt, onError) {
 /*
  * this function will test buildReadme's default handling-behavior
  */
-    if (local.isBrowser) {
-        onError(undefined, opt);
-        return;
-    }
-    opt = {};
-    // test shNpmTestPublished handling-behavior
-    opt.dataFrom = require("fs").readFileSync("README.md", "utf8").replace(
-        "#\u0021! shNpmTestPublished",
-        "shNpmTestPublished"
-    );
     opt = {};
     opt.customize = function () {
         // search-and-replace - customize dataTo
@@ -731,9 +670,7 @@ local.testCase_buildReadme_default = function (opt, onError) {
                 /\n#\u0020internal\u0020build\u0020script\n[\S\s]*?\nshBuildCi\n/
             )
         ].forEach(function (rgx) {
-            opt.dataFrom.replace(rgx, function (match0) {
-                opt.dataTo = opt.dataTo.replace(rgx, match0);
-            });
+            opt.dataTo = local.stringMerge(opt.dataTo, opt.dataFrom, rgx);
         });
     };
     local.buildReadme(opt, onError);

@@ -16394,19 +16394,21 @@ local.jslintAndPrint = function (code = "", file = "undefined", opt = {}) {
         opt.errList = [];
         opt.errMsg = "";
         // preserve lineno
-        // optimization - efficiently count number of newlines
-        // https://jsperf.com/regexp-counting-2/8
-        opt.lineOffset |= 0;
-        ii = 0;
-        while (true) {
-            ii = code.indexOf("\n", ii);
-            if (ii === 0 || ii > opt.iiStart) {
-                break;
+        if (opt.iiStart) {
+            // optimization - efficiently count number of newlines
+            // https://jsperf.com/regexp-counting-2/8
+            opt.lineOffset |= 0;
+            ii = 0;
+            while (true) {
+                ii = code.indexOf("\n", ii);
+                if (ii === 0 || ii > opt.iiStart) {
+                    break;
+                }
+                ii += 1;
+                opt.lineOffset += 1;
             }
-            ii += 1;
-            opt.lineOffset += 1;
+            code = code.slice(opt.iiStart, opt.iiEnd || code.length);
         }
-        code = code.slice(opt.iiStart, opt.iiEnd || code.length);
         switch (opt.fileType0) {
         // de-embed-js - '\\n\\\n...\\n\\\n'
         case ".\\n\\":

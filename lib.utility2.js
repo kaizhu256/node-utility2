@@ -5416,23 +5416,6 @@ local.stringHtmlSafe = function (str) {
     ), "&$1");
 };
 
-local.stringLineCount = function (str, start, end) {
-/*
- * this function will count number of "\n" in <str>
- * from <start> to <end>
- * https://jsperf.com/regexp-counting-2/8
- */
-    let count;
-    count = 0;
-    while (true) {
-        start = str.indexOf("\n", start) + 1;
-        if (start === 0 || start >= end) {
-            return count;
-        }
-        count += 1;
-    }
-};
-
 local.stringMerge = function (str1, str2, rgx) {
 /*
  * this function will merge <str2> into <str1>,
