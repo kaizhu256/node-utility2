@@ -1755,6 +1755,7 @@ shGithubRepoBranchId () {(set -e
 
 shGithubRepoCreate () {(set -e
 # this function will create base github-repo https://github.com/$GITHUB_REPO
+    local GITHUB_REPO
     GITHUB_REPO="$1"
     export MODE_BUILD="${MODE_BUILD:-shGithubRepoCreate}"
     # init /tmp/githubRepo/kaizhu256/base
@@ -1780,45 +1781,27 @@ shGithubRepoCreate () {(set -e
 https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig |
         sed -e "s|kaizhu256/node-utility2|$GITHUB_REPO|" > .git/config
     # create github-repo
-    node -e "$UTILITY2_MACRO_JS""$UTILITY2_MACRO_AJAX_JS"'
+    node -e '
 /* jslint utility2:true */
-(function (local) {
-"use strict";
-local.ajax({
-    data: "{\"name\":\"" + process.argv[1].split("/")[1] + "\"}",
-    headers: {
-        Authorization: "token " + process.env.GITHUB_TOKEN,
-        "User-Agent": "undefined"
-    },
-    method: "POST",
-    url: (
-        "https://api.github.com/orgs/"
-        + process.argv[1].split("/")[0]
-        + "/repos"
-    )
-}, function (err, xhr) {
-    if (xhr.statusCode !== 404) {
-        local.onErrorDefault(err && xhr && (
-            "https://github.com/" + process.argv[1] + " - " + xhr.responseText
-        ));
-        return;
-    }
-    local.ajax({
-        data: "{\"name\":\"" + process.argv[1].split("/")[1] + "\"}",
-        headers: {
-            Authorization: "token " + process.env.GITHUB_TOKEN,
-            "User-Agent": "undefined"
-        },
-        method: "POST",
-        url: "https://api.github.com/user/repos"
-    }, function (err, xhr) {
-        local.onErrorDefault(err && xhr && (
-            "https://github.com/" + process.argv[1] + " - " + xhr.responseText
-        ));
-        return;
+(function () {
+    "use strict";
+    [
+        (
+            "https://api.github.com/orgs/"
+            + process.argv[1].split("/")[0]
+            + "/repos"
+        ),
+        "https://api.github.com/user/repos"
+    ].forEach(function (url) {
+        require("https").request(url, {
+            headers: {
+                Authorization: "token " + process.env.GITHUB_TOKEN,
+                "User-Agent": "undefined"
+            },
+            method: "POST"
+        }).end("{\"name\":\"" + process.argv[1].split("/")[1] + "\"}");
     });
-});
-}(globalThis.globalLocal));
+}());
 ' "$GITHUB_REPO"
     # set default-branch to beta
     shGitCommandWithGithubToken push \
