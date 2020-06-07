@@ -10820,23 +10820,22 @@ let fileWrite;
 let path;
 let reportHtmlWrite;
 let reportTextWrite;
+// mock path
+path = {
+    dirname: function (file) {
+        return file.replace((
+            /\/[\w\-.]+?$/
+        ), "");
+    },
+    resolve: function (...argList) {
+        return argList[argList.length - 1];
+    },
+    sep: "/"
+};
 // require path
 try {
     path = require("path");
-// mock path
-} catch (ignore) {
-    path = {
-        dirname: function (file) {
-            return file.replace((
-                /\/[\w\-.]+?$/
-            ), "");
-        },
-        resolve: function (...argList) {
-            return argList[argList.length - 1];
-        },
-        sep: "/"
-    };
-}
+} catch (ignore) {}
 // init function
 fileWrite = function (file, data) {
 /*

@@ -1928,8 +1928,8 @@ local._testCase_webpage_default = function (opt, onError) {
     local.domStyleValidate();
     local.browserTest({
         fileScreenshot: (
-            local.env.npm_config_dir_build
-            + "/screenshot." + local.env.MODE_BUILD + ".browser.%2F.png"
+            process.env.npm_config_dir_build
+            + "/screenshot." + process.env.MODE_BUILD + ".browser.%2F.png"
         ),
         url: (
             local.serverLocalHost
@@ -2788,7 +2788,7 @@ local.buildLib = function (opt, onError) {
     local.objectAssignDefault(opt, {
         customize: local.nop,
         dataFrom: require("fs").readFileSync(
-            "lib." + local.env.npm_package_nameLib + ".js",
+            "lib." + process.env.npm_package_nameLib + ".js",
             "utf8"
         ),
         dataTo: local.templateRenderMyApp(
@@ -2822,9 +2822,9 @@ local.buildLib = function (opt, onError) {
     }
     // save lib
     result = opt.dataTo;
-    if (!local.env.npm_config_mode_coverage) {
+    if (!process.env.npm_config_mode_coverage) {
         local.fsWriteFileWithMkdirpSync(
-            "lib." + local.env.npm_package_nameLib + ".js",
+            "lib." + process.env.npm_package_nameLib + ".js",
             result,
             "wrote file - lib - {{pathname}}"
         );
@@ -2955,13 +2955,13 @@ local.buildReadme = function (opt, onError) {
         opt.dataTo = local.stringMerge(opt.dataTo, opt.dataFrom, rgx);
     });
     // customize private-repository
-    if (local.env.npm_package_private) {
+    if (process.env.npm_package_private) {
         opt.dataTo = opt.dataTo.replace((
             /\n\[!\[NPM\]\(https:\/\/nodei.co\/npm\/.*?\n/
         ), "");
         opt.dataTo = opt.dataTo.replace("$ npm install ", (
             "$ git clone \\\n"
-            + local.env.npm_package_repository_url.replace(
+            + process.env.npm_package_repository_url.replace(
                 "git+https://github.com/",
                 "git@github.com:"
             ) + " \\\n--single-branch -b beta node_modules/"
@@ -3026,13 +3026,13 @@ local.buildReadme = function (opt, onError) {
     }
     // customize shNpmTestPublished
     opt.dataTo = opt.dataTo.replace(
-        "$ npm install " + local.env.GITHUB_REPO + "#alpha",
-        "$ npm install " + local.env.npm_package_name
+        "$ npm install " + process.env.GITHUB_REPO + "#alpha",
+        "$ npm install " + process.env.npm_package_name
     );
     if (opt.dataFrom.indexOf("    shNpmTestPublished\n") < 0) {
         opt.dataTo = opt.dataTo.replace(
-            "$ npm install " + local.env.npm_package_name,
-            "$ npm install " + local.env.GITHUB_REPO + "#alpha"
+            "$ npm install " + process.env.npm_package_name,
+            "$ npm install " + process.env.GITHUB_REPO + "#alpha"
         );
         [
             (
@@ -4902,7 +4902,7 @@ local.requireReadme = function () {
     let module;
     let tmp;
     // init env
-    env = (typeof process === "object" && process && process.env) || local.env;
+    env = (typeof process === "object" && process && process.env) || {};
     // init module.exports
     module = {};
     // if file is modified, then restart process
