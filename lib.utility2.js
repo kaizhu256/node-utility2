@@ -167,7 +167,6 @@
             });
         }
         local.assert = require("assert");
-        local.child_process = require("child_process");
         local.crypto = require("crypto");
         local.fs = require("fs");
         local.http = require("http");
@@ -399,7 +398,6 @@ local.assetsDict["/assets.utility2.header.js"] = '\
             });\n\
         }\n\
         local.assert = require("assert");\n\
-        local.child_process = require("child_process");\n\
         local.crypto = require("crypto");\n\
         local.fs = require("fs");\n\
         local.http = require("http");\n\
@@ -5072,7 +5070,7 @@ local.requireReadme = function () {
     });
     // jslint process.cwd()
     if (!local.env.npm_config_mode_lib) {
-        local.child_process.spawn("node", [
+        require("child_process").spawn("node", [
             "-e", (
                 "require("
                 + JSON.stringify(__filename)

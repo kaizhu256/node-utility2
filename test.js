@@ -157,7 +157,6 @@
             });
         }
         local.assert = require("assert");
-        local.child_process = require("child_process");
         local.crypto = require("crypto");
         local.fs = require("fs");
         local.http = require("http");
@@ -1504,7 +1503,7 @@ local.testCase_replStart_default = function (opt, onError) {
     local.replStart();
     local.testMock([
         [
-            local.child_process, {
+            require("child_process"), {
                 spawn: function () {
                     return {
                         on: function (evt, callback) {

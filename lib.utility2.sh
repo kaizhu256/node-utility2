@@ -3595,7 +3595,6 @@ export UTILITY2_MACRO_JS='
             });
         }
         local.assert = require("assert");
-        local.child_process = require("child_process");
         local.crypto = require("crypto");
         local.fs = require("fs");
         local.http = require("http");

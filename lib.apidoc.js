@@ -167,7 +167,6 @@
             });
         }
         local.assert = require("assert");
-        local.child_process = require("child_process");
         local.crypto = require("crypto");
         local.fs = require("fs");
         local.http = require("http");
@@ -961,7 +960,7 @@ local.apidocCreate = function (opt) {
         opt.exampleList = opt.exampleList.concat(
             // find . -maxdepth 1 -mindepth 1 -name "*.js" -type f
             // https://stackoverflow.com/questions/4509624/how-to-limit-depth-for-recursive-file-list
-            local.child_process.execSync(
+            require("child_process").execSync(
                 "find \"" + opt.dir
                 + "\" -maxdepth " + depth + " -mindepth " + depth
                 + " -type f | sed -e \"s|" + opt.dir
@@ -1088,7 +1087,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
         opt.libFileList = opt.libFileList.concat(
             // find . -maxdepth 1 -mindepth 1 -name "*.js" -type f
             // https://stackoverflow.com/questions/4509624/how-to-limit-depth-for-recursive-file-list
-            local.child_process.execSync(
+            require("child_process").execSync(
                 "find \"" + opt.dir
                 + "\" -maxdepth " + depth + " -mindepth " + depth
                 + " -name \"*.js\" -type f | sed -e \"s|" + opt.dir

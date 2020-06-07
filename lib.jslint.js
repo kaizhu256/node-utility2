@@ -167,7 +167,6 @@
             });
         }
         local.assert = require("assert");
-        local.child_process = require("child_process");
         local.crypto = require("crypto");
         local.fs = require("fs");
         local.http = require("http");
@@ -16581,7 +16580,7 @@ local.jslintAndPrint = function (code = "", file = "undefined", opt = {}) {
         ) {
             local.fs.writeFileSync(file, code);
             local.fs.writeFileSync(file + ".autofix.old", opt.code0);
-            local.child_process.spawnSync(
+            require("child_process").spawnSync(
                 "diff",
                 [
                     "-u", file + ".autofix.old", file
