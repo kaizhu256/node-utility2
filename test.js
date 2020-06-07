@@ -159,10 +159,6 @@
             throw err;
         });
     }
-    // require builtin
-    if (!local.isBrowser) {
-        local.fs = require("fs");
-    }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
 

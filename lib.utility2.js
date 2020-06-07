@@ -169,10 +169,6 @@
             throw err;
         });
     }
-    // require builtin
-    if (!local.isBrowser) {
-        local.fs = require("fs");
-    }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
 
@@ -396,10 +392,6 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         process.on("unhandledRejection", function (err) {\n\
             throw err;\n\
         });\n\
-    }\n\
-    // require builtin\n\
-    if (!local.isBrowser) {\n\
-        local.fs = require("fs");\n\
     }\n\
 }((typeof globalThis === "object" && globalThis) || window));\n\
 // assets.utility2.header.js - end\n\
