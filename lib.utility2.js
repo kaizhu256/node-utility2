@@ -158,14 +158,16 @@
         recurse(tgt, src, depth | 0);
         return tgt;
     };
-    // bug-workaround - throw unhandedRejection
-    if (!local.isBrowser) {
-        if (process.unhandledRejections !== "strict") {
-            process.unhandledRejections = "strict";
-            process.on("unhandledRejection", function (err) {
-                throw err;
-            });
-        }
+    // bug-workaround - throw unhandledRejections in node-process
+    if (
+        typeof process === "object" && process
+        && typeof process.on === "function"
+        && process.unhandledRejections !== "strict"
+    ) {
+        process.unhandledRejections = "strict";
+        process.on("unhandledRejection", function (err) {
+            throw err;
+        });
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
@@ -380,14 +382,16 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         recurse(tgt, src, depth | 0);\n\
         return tgt;\n\
     };\n\
-    // bug-workaround - throw unhandedRejection\n\
-    if (!local.isBrowser) {\n\
-        if (process.unhandledRejections !== "strict") {\n\
-            process.unhandledRejections = "strict";\n\
-            process.on("unhandledRejection", function (err) {\n\
-                throw err;\n\
-            });\n\
-        }\n\
+    // bug-workaround - throw unhandledRejections in node-process\n\
+    if (\n\
+        typeof process === "object" && process\n\
+        && typeof process.on === "function"\n\
+        && process.unhandledRejections !== "strict"\n\
+    ) {\n\
+        process.unhandledRejections = "strict";\n\
+        process.on("unhandledRejection", function (err) {\n\
+            throw err;\n\
+        });\n\
     }\n\
 }((typeof globalThis === "object" && globalThis) || window));\n\
 // assets.utility2.header.js - end\n\
