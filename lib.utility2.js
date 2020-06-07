@@ -5420,6 +5420,7 @@ local.stringLineCount = function (str, start, end) {
 /*
  * this function will count number of "\n" in <str>
  * from <start> to <end>
+ * https://jsperf.com/regexp-counting-2/8
  */
     let count;
     count = 0;
