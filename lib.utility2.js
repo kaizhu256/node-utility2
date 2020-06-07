@@ -2690,91 +2690,93 @@ local.bufferValidateAndCoerce = function (buf, mode) {
     return buf;
 };
 
-local.buildApp = async function (opt, onError) {
+local.buildApp = function (opt, onError) {
 /*
  * this function will build app with given <opt>
  */
-    let exitCode;
     // cleanup app
-    exitCode = await new Promise(function (resolve, reject) {
-        require("child_process").spawn((
-            "rm -rf tmp/build/app; mkdir -p tmp/build/app"
-        ), {
-            shell: true,
-            stdio: [
-                "ignore", 1, 2
-            ]
-        }).on("error", reject).on("exit", resolve);
-    });
-    local.assertOrThrow(!exitCode, exitCode);
-    // build app
-    await Promise.all([
-        {
-            file: "/LICENSE",
-            url: "/LICENSE"
-        }, {
-            file: "/assets." + process.env.npm_package_nameLib + ".html",
-            url: "/index.html"
-        }, {
-            file: "/assets." + process.env.npm_package_nameLib + ".js",
-            url: "/assets." + process.env.npm_package_nameLib + ".js"
-        }, {
-            file: "/assets.app.js",
-            url: "/assets.app.js"
-        }, {
-            file: "/assets.example.html",
-            url: "/assets.example.html"
-        }, {
-            file: "/assets.example.js",
-            url: "/assets.example.js"
-        }, {
-            file: "/assets.test.js",
-            url: "/assets.test.js"
-        }, {
-            file: "/assets.utility2.html",
-            url: "/assets.utility2.html"
-        }, {
-            file: "/assets.utility2.rollup.js",
-            url: "/assets.utility2.rollup.js"
-        }, {
-            file: "/index.html",
-            url: "/index.html"
-        }, {
-            file: "/index.rollup.html",
-            url: "/index.rollup.html"
-        }, {
-            file: "/jsonp.utility2.stateInit",
-            url: (
-                "/jsonp.utility2.stateInit"
-                + "?callback=window.utility2.stateInit"
-            )
-        }
-    ].concat(opt.assetsList).map(async function (elem) {
-        let xhr;
-        if (!elem) {
-            return;
-        }
-        xhr = await local.httpFetch(
-            "http://127.0.0.1:" + process.env.PORT + elem.url,
-            {
-                responseType: "raw"
-            }
-        );
-        await local.fsWriteFileWithMkdirp(
-            "tmp/build/app/" + elem.file,
-            xhr.data,
-            "wrote file - app - {{pathname}}"
-        );
-    }));
-    // jslint app
-    await local.childProcessEval((
-        local.assetsDict["/assets.utility2.lib.jslint.js"]
-        + ";module.exports.jslintAndPrintDir(\".\","
-        + "{conditional:true});"
+    require("child_process").spawn((
+        "rm -rf tmp/build/app; mkdir -p tmp/build/app"
     ), {
-        cwd: "tmp/build/app"
+        shell: true,
+        stdio: [
+            "ignore", 1, 2
+        ]
+    }).on("error", onError).on("exit", function (exitCode) {
+        // validate exitCode
+        local.assertOrThrow(!exitCode, exitCode);
+        // build app
+        Promise.all([
+            {
+                file: "/LICENSE",
+                url: "/LICENSE"
+            }, {
+                file: "/assets." + process.env.npm_package_nameLib + ".html",
+                url: "/index.html"
+            }, {
+                file: "/assets." + process.env.npm_package_nameLib + ".js",
+                url: "/assets." + process.env.npm_package_nameLib + ".js"
+            }, {
+                file: "/assets.app.js",
+                url: "/assets.app.js"
+            }, {
+                file: "/assets.example.html",
+                url: "/assets.example.html"
+            }, {
+                file: "/assets.example.js",
+                url: "/assets.example.js"
+            }, {
+                file: "/assets.test.js",
+                url: "/assets.test.js"
+            }, {
+                file: "/assets.utility2.html",
+                url: "/assets.utility2.html"
+            }, {
+                file: "/assets.utility2.rollup.js",
+                url: "/assets.utility2.rollup.js"
+            }, {
+                file: "/index.html",
+                url: "/index.html"
+            }, {
+                file: "/index.rollup.html",
+                url: "/index.rollup.html"
+            }, {
+                file: "/jsonp.utility2.stateInit",
+                url: (
+                    "/jsonp.utility2.stateInit"
+                    + "?callback=window.utility2.stateInit"
+                )
+            }
+        ].concat(opt.assetsList).map(function (elem) {
+            return new Promise(function (resolve) {
+                if (!elem) {
+                    resolve();
+                    return;
+                }
+                local.httpFetch(
+                    "http://127.0.0.1:" + process.env.PORT + elem.url,
+                    {
+                        responseType: "raw"
+                    }
+                ).then(function (xhr) {
+                    return local.fsWriteFileWithMkdirp(
+                        "tmp/build/app/" + elem.file,
+                        xhr.data,
+                        "wrote file - app - {{pathname}}"
+                    );
+                }).then(resolve);
+            });
+        })).then(function () {
+            // jslint app
+            local.local.childProcessEval((
+                local.assetsDict["/assets.utility2.lib.jslint.js"]
+                + ";module.exports.jslintAndPrintDir(\".\","
+                + "{conditional:true});"
+            ), {
+                cwd: "tmp/build/app"
+            }).then(onError);
+        });
     });
-    onError();
 };
 
 local.buildLib = function (opt, onError) {
