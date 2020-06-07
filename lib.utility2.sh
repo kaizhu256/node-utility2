@@ -1077,8 +1077,7 @@ shBuildInsideDocker () {(set -e
 
 shBuildPrint () {(set -e
 # this function will print debug info about the build state
-    printf '%b' \
-        "\n\x1b[35m[MODE_BUILD=$MODE_BUILD]\x1b[0m - $(shDateIso) - $*\n\n" 1>&2
+    printf "\n\x1b[35m[MODE_BUILD=$MODE_BUILD]\x1b[0m - $(shDateIso) - $*\n\n" 1>&2
 )}
 
 shChromeSocks5 () {(set -e
@@ -1755,8 +1754,7 @@ shGithubRepoBranchId () {(set -e
 
 shGithubRepoCreate () {(set -e
 # this function will create base github-repo https://github.com/$GITHUB_REPO
-    local GITHUB_REPO
-    GITHUB_REPO="$1"
+    local GITHUB_REPO="$1"
     export MODE_BUILD="${MODE_BUILD:-shGithubRepoCreate}"
     # init /tmp/githubRepo/kaizhu256/base
     if [ ! -d /tmp/githubRepo/kaizhu256/base ]
@@ -3073,182 +3071,319 @@ shTravisRepoCreate () {(set -e
     export MODE_BUILD="${MODE_BUILD:-shTravisRepoCreate}"
     shBuildPrint "$GITHUB_REPO - creating ..."
     shGithubRepoCreate "$GITHUB_REPO"
-    shSleep 5
-    #!! shTravisSync () {(set -e
-    # this function will sync travis-ci with given $TRAVIS_ACCESS_TOKEN
-    # this is an expensive operation that will use up your github rate-limit quota
-        curl -Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -X POST \
-            "https://api.travis-ci.com/users/sync"
-    #!! )}
-    while true
-    do
-        shSleep 2
-        if (curl -Lf "https://api.travis-ci.com/repos/$GITHUB_REPO" \
-            -H "Authorization: token $TRAVIS_ACCESS_TOKEN" 2>&1 > /dev/null)
-        then
-            break
-        fi
-    done
-    node -e "$UTILITY2_MACRO_JS""$UTILITY2_MACRO_AJAX_JS"'
+    node -e '
 /* jslint utility2:true */
-(function (local) {
-"use strict";
-let onParallel;
-let opt;
-opt = {};
-local.gotoNext(opt, function (err, data) {
-    switch (opt.gotoState) {
-    case 1:
-        opt.shBuildPrintPrefix = (
-            "\n\u001b[35m[MODE_BUILD=shTravisRepoCreate]\u001b[0m - "
-        );
-        local.ajax({
-            headers: {
-                Authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN
-            },
-            url: (
-                "https://api.travis-ci.com/repos/"
-                + process.env.GITHUB_REPO
-            )
-        }, opt.gotoNext);
-        break;
-    case 2:
-        opt.id = JSON.parse(data.responseText).id;
-        setTimeout(opt.gotoNext, 5000);
-        break;
-    case 3:
-        local.ajax({
-            data: "{\"hook\":{\"active\":true}}",
-            headers: {
-                Authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
-                "Content-Type": "application/json; charset=utf-8"
-            },
-            method: "PUT",
-            url: (
-                "https://api.travis-ci.com/hooks/" + opt.id
-            )
-        }, opt.gotoNext);
-        break;
-    case 4:
-        setTimeout(opt.gotoNext, 5000);
-        break;
-    case 5:
-        onParallel = local.onParallel(opt.gotoNext);
-        onParallel.cnt += 1;
-        onParallel.cnt += 1;
-        local.ajax({
-            data: "{\"setting.value\":true}",
-            headers: {
-                Authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
-                "Content-Type": "application/json; charset=utf-8",
-                "Travis-API-Version": 3
-            },
-            method: "PATCH",
-            url: (
-                "https://api.travis-ci.com/repo/"
-                + opt.id + "/setting/builds_only_with_travis_yml"
-            )
-        }, onParallel);
-        onParallel.cnt += 1;
-        local.ajax({
-            data: "{\"setting.value\":true}",
-            headers: {
-                Authorization: "token "
-                + process.env.TRAVIS_ACCESS_TOKEN,
-                "Content-Type": "application/json; charset=utf-8",
-                "Travis-API-Version": 3
-            },
-            method: "PATCH",
-            url: (
-                "https://api.travis-ci.com/repo/"
-                + opt.id + "/setting/auto_cancel_pushes"
-            )
-        }, onParallel);
-        onParallel();
-        break;
-    case 6:
-        onParallel.cnt += 1;
-        onParallel.cnt += 1;
-        local.ajax({
-            url: (
-                "https://raw.githubusercontent.com"
-                + "/kaizhu256/node-utility2/alpha/.gitignore"
-            )
-        }, function (err, xhr) {
-            local.assertOrThrow(!err, err);
-            require("fs").writeFile(
-                "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.gitignore",
-                xhr.responseText,
-                onParallel
+(async function () {
+    "use strict";
+    let httpRequestSimple;
+    let sleep;
+    let tmp;
+    let writeFile;
+    httpRequestSimple = function (opt, onError) {
+    /*
+     * this function will make simple http-request to <opt>.url
+     * and return <opt>.statusCode and <opt>.responseText
+     * and throw any err encountered as uncaughtException
+     */
+        let onError2;
+        let promise;
+        let resolve;
+        onError2 = function (err, responseText) {
+            if (err) {
+                throw err;
+            }
+            opt.responseText = responseText;
+            if (onError) {
+                onError(undefined, opt);
+            }
+            resolve(opt);
+        };
+        opt = Object.assign({
+            method: "GET"
+        }, opt);
+        console.error("httpRequestSimple - " + JSON.stringify({
+            method: opt.method,
+            url: opt.url
+        }));
+        promise = new Promise(function (arg) {
+            resolve = arg;
+        });
+        if (opt.url.indexOf("file://") === 0) {
+            require("fs").readFile(
+                require("path").resolve(opt.url.replace("file://", "")),
+                "utf8",
+                onError2
             );
+            return promise;
+        }
+        require(
+            opt.url.indexOf("http:") === 0
+            ? "http"
+            : "https"
+        ).request(opt.url, opt, function (res) {
+            let data;
+            if (res.statusCode < 400 && !opt.ignoreStatusCode) {
+                onError2(new Error(JSON.stringify({
+                    method: opt.method,
+                    url: opt.url,
+                    statusCode: res.statusCode
+                })));
+            }
+            data = "";
+            opt.statusCode = res.statusCode;
+            res.setEncoding("utf8");
+            res.on("data", function (chunk) {
+                data += chunk;
+            }).on("end", function () {
+                onError2(undefined, data);
+            });
+        }).end(opt.data);
+        return promise;
+    };
+    sleep = function (time) {
+        return new Promise(function (resolve) {
+            setTimeout(resolve, time);
         });
-        onParallel.cnt += 1;
-        local.ajax({
+    };
+    writeFile = require("fs").promises.writeFile;
+    process.on("unhandledRejection", function (err) {
+        throw err;
+    });
+    // request github-assets
+    [
+        (
+            "https://raw.githubusercontent.com"
+            + "/kaizhu256/node-utility2/alpha/.gitignore"
+        ), (
+            "https://raw.githubusercontent.com"
+            + "/kaizhu256/node-utility2/alpha/.travis.yml"
+        )
+    ].forEach(function (url) {
+        httpRequestSimple({
+            url
+        }, function (ignore, opt) {
+            writeFile((
+                "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/"
+                + require("path").basename(url)
+            ), opt.responseText);
+        });
+    });
+    writeFile("README.md", "");
+    writeFile(
+        "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/package.json",
+        JSON.stringify({
+            devDependencies: {
+                utility2: "kaizhu256/node-utility2#alpha"
+            },
+            homepage: "https://github.com/" + process.env.GITHUB_REPO,
+            name: process.env.GITHUB_REPO.replace((
+                /.+?\/node-|.+?\//
+            ), ""),
+            repository: {
+                type: "git",
+                url: "https://github.com/" + process.env.GITHUB_REPO + ".git"
+            },
+            scripts: {
+                "build-ci": "utility2 shBuildCi"
+            },
+            version: "0.0.1"
+        }, undefined, 4)
+    );
+    await sleep(5000);
+    // request travis-userid
+    tmp = await httpRequestSimple({
+        headers: {
+            authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
+            "content-type": "application/json",
+            "travis-api-version": 3
+        },
+        url: "https://api.travis-ci.com/user"
+    });
+    // sync travis-userid
+    tmp = await httpRequestSimple({
+        headers: {
+            authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
+            "content-type": "application/json",
+            "travis-api-version": 3
+        },
+        method: "POST",
+        url: (
+            "https://api.travis-ci.com/user/" + JSON.parse(tmp.responseText).id
+            + "/sync"
+        )
+    });
+    // activate travis-repo
+    while (true) {
+        await sleep(2000);
+        tmp = await httpRequestSimple({
+            headers: {
+                authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
+                "content-type": "application/json",
+                "travis-api-version": 3
+            },
+            method: "POST",
             url: (
-                "https://raw.githubusercontent.com"
-                + "/kaizhu256/node-utility2/alpha/.travis.yml"
+                "https://api.travis-ci.com/repo2/"
+                + process.env.GITHUB_REPO.replace("/", "%2F")
+                + "/activate"
             )
-        }, function (err, xhr) {
-            local.assertOrThrow(!err, err);
-            require("fs").writeFile(
-                "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.travis.yml",
-                xhr.responseText,
-                onParallel
-            );
         });
-        onParallel.cnt += 1;
-        require("fs").open("README.md", "w", function (err, fd) {
-            local.assertOrThrow(!err, err);
-            require("fs").close(fd, onParallel);
-        });
-        onParallel.cnt += 1;
-        require("fs").writeFile(
-            "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/package.json",
-            JSON.stringify({
-                devDependencies: {
-                    utility2: "kaizhu256/node-utility2#alpha"
-                },
-                name: process.env.GITHUB_REPO.replace((
-                    /.+?\/node-|.+?\//
-                ), ""),
-                homepage: "https://github.com/" + process.env.GITHUB_REPO,
-                repository: {
-                    type: "git",
-                    url: "https://github.com/" + process.env.GITHUB_REPO
-                    + ".git"
-                },
-                scripts: {
-                    "build-ci": "utility2 shBuildCi"
-                },
-                version: "0.0.1"
-            }, undefined, 4),
-            onParallel
-        );
-        onParallel();
-        break;
-    default:
-        console.error(
-            opt.shBuildPrintPrefix + new Date().toISOString()
-            + process.env.GITHUB_REPO + (
-                err
-                ? " - ... failed to create - gotoState = " + opt.gotoState
-                : " - ... created"
-            )
-        );
+        if (tmp.statusCode < 400) {
+            break;
+        }
     }
-});
-opt.gotoState = 0;
-opt.gotoNext();
-}(globalThis.globalLocal));
+    //!! [
+        //!! [
+            //!! "auto_cancel_pull_requests"
+            //!! "auto_cancel_pushes"
+            //!! "build_pull_requests"
+            //!! "build_pushes"
+            //!! "builds_only_with_travis_yml"
+            //!! "builds_only_with_travis_yml",
+            //!! "maximum_number_of_builds"
+    //!! ].forEach(function (setting) {
+    //!! });
+    //!! httpRequestSimple({
+        //!! data: "{\"setting.value\":true}",
+        //!! method: "PATCH",
+        //!! url: `/repo/${process.env.GITHUB_REPO.replace("/", "%2F")}/setting/builds_only_with_travis_yml`
+    //!! });
+    //!! console.error(tmp);
+}());
 '
-    cd "/tmp/githubRepo/$GITHUB_REPO"
-    unset GITHUB_ORG
-    unset GITHUB_REPO
-    shBuildInit
-    shCryptoTravisEncrypt > /dev/null
-    git add -f . .gitignore .travis.yml
-    git commit -am "[npm publishAfterCommitAfterBuild]"
-    shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f alpha
+    #!! case 3:
+        #!! local.ajax({
+            #!! data: "{\"hook\":{\"active\":true}}",
+            #!! headers: {
+                #!! Authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
+                #!! "Content-Type": "application/json; charset=utf-8"
+            #!! },
+            #!! method: "PUT",
+            #!! url: (
+                #!! "https://api.travis-ci.com/hooks/" + opt.id
+            #!! )
+        #!! }, opt.gotoNext);
+        #!! break;
+    #!! case 4:
+        #!! setTimeout(opt.gotoNext, 5000);
+        #!! break;
+    #!! case 5:
+        #!! onParallel = local.onParallel(opt.gotoNext);
+        #!! onParallel.cnt += 1;
+        #!! onParallel.cnt += 1;
+        #!! local.ajax({
+            #!! data: "{\"setting.value\":true}",
+            #!! headers: {
+                #!! Authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
+                #!! "Content-Type": "application/json; charset=utf-8",
+                #!! "Travis-API-Version": 3
+            #!! },
+            #!! method: "PATCH",
+            #!! url: (
+                #!! "https://api.travis-ci.com/repo/"
+                #!! + opt.id + "/setting/builds_only_with_travis_yml"
+            #!! )
+        #!! }, onParallel);
+        #!! onParallel.cnt += 1;
+        #!! local.ajax({
+            #!! data: "{\"setting.value\":true}",
+            #!! headers: {
+                #!! Authorization: "token "
+                #!! + process.env.TRAVIS_ACCESS_TOKEN,
+                #!! "Content-Type": "application/json; charset=utf-8",
+                #!! "Travis-API-Version": 3
+            #!! },
+            #!! method: "PATCH",
+            #!! url: (
+                #!! "https://api.travis-ci.com/repo/"
+                #!! + opt.id + "/setting/auto_cancel_pushes"
+            #!! )
+        #!! }, onParallel);
+        #!! onParallel();
+        #!! break;
+    #!! case 6:
+        #!! onParallel.cnt += 1;
+        #!! onParallel.cnt += 1;
+        #!! local.ajax({
+            #!! url: (
+                #!! "https://raw.githubusercontent.com"
+                #!! + "/kaizhu256/node-utility2/alpha/.gitignore"
+            #!! )
+        #!! }, function (err, xhr) {
+            #!! local.assertOrThrow(!err, err);
+            #!! require("fs").writeFile(
+                #!! "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.gitignore",
+                #!! xhr.responseText,
+                #!! onParallel
+            #!! );
+        #!! });
+        #!! onParallel.cnt += 1;
+        #!! local.ajax({
+            #!! url: (
+                #!! "https://raw.githubusercontent.com"
+                #!! + "/kaizhu256/node-utility2/alpha/.travis.yml"
+            #!! )
+        #!! }, function (err, xhr) {
+            #!! local.assertOrThrow(!err, err);
+            #!! require("fs").writeFile(
+                #!! "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.travis.yml",
+                #!! xhr.responseText,
+                #!! onParallel
+            #!! );
+        #!! });
+        #!! onParallel.cnt += 1;
+        #!! require("fs").open("README.md", "w", function (err, fd) {
+            #!! local.assertOrThrow(!err, err);
+            #!! require("fs").close(fd, onParallel);
+        #!! });
+        #!! onParallel.cnt += 1;
+        #!! require("fs").writeFile(
+            #!! "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/package.json",
+            #!! JSON.stringify({
+                #!! devDependencies: {
+                    #!! utility2: "kaizhu256/node-utility2#alpha"
+                #!! },
+                #!! name: process.env.GITHUB_REPO.replace((
+                    #!! /.+?\/node-|.+?\//
+                #!! ), ""),
+                #!! homepage: "https://github.com/" + process.env.GITHUB_REPO,
+                #!! repository: {
+                    #!! type: "git",
+                    #!! url: "https://github.com/" + process.env.GITHUB_REPO
+                    #!! + ".git"
+                #!! },
+                #!! scripts: {
+                    #!! "build-ci": "utility2 shBuildCi"
+                #!! },
+                #!! version: "0.0.1"
+            #!! }, undefined, 4),
+            #!! onParallel
+        #!! );
+        #!! onParallel();
+        #!! break;
+    #!! default:
+        #!! console.error(
+            #!! opt.shBuildPrintPrefix + new Date().toISOString()
+            #!! + process.env.GITHUB_REPO + (
+                #!! err
+                #!! ? " - ... failed to create - gotoState = " + opt.gotoState
+                #!! : " - ... created"
+            #!! )
+        #!! );
+    #!! }
+#!! });
+#!! opt.gotoState = 0;
+#!! opt.gotoNext();
+#!! }(globalThis.globalLocal));
+#!! '
+    #!! cd "/tmp/githubRepo/$GITHUB_REPO"
+    #!! unset GITHUB_ORG
+    #!! unset GITHUB_REPO
+    #!! shBuildInit
+    #!! shCryptoTravisEncrypt > /dev/null
+    #!! git add -f . .gitignore .travis.yml
+    #!! git commit -am "[npm publishAfterCommitAfterBuild]"
+    #!! shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f alpha
 )}
 
 shUtility2BuildApp () {(set -e
