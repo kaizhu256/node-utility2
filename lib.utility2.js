@@ -3303,7 +3303,9 @@ local.cliRun = function (opt) {
 /*
  * this function will run cli with given <opt>
  */
-    local.cliDict._eval = local.cliDict._eval || function () {
+    let cliDict;
+    cliDict = local.cliDict;
+    cliDict._eval = cliDict._eval || function () {
     /*
      * <code>
      * will eval <code>
@@ -3311,7 +3313,7 @@ local.cliRun = function (opt) {
         globalThis.local = local;
         require("vm").runInThisContext(process.argv[3]);
     };
-    local.cliDict._help = local.cliDict._help || function () {
+    cliDict._help = cliDict._help || function () {
     /*
      *
      * will print help
@@ -3346,11 +3348,11 @@ local.cliRun = function (opt) {
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         strDict = {};
-        Object.keys(local.cliDict).sort().forEach(function (key, ii) {
+        Object.keys(cliDict).sort().forEach(function (key, ii) {
             if (key[0] === "_" && key !== "_default") {
                 return;
             }
-            str = String(local.cliDict[key]);
+            str = String(cliDict[key]);
             if (key === "_default") {
                 key = "";
             }
@@ -3416,13 +3418,13 @@ local.cliRun = function (opt) {
         }).join("\n\n");
         console.log(str);
     };
-    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
-    local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
-    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
-    local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
-    local.cliDict._default = local.cliDict._default || local.cliDict._help;
-    local.cliDict.help = local.cliDict.help || local.cliDict._help;
-    local.cliDict._interactive = local.cliDict._interactive || function () {
+    cliDict["--eval"] = cliDict["--eval"] || cliDict._eval;
+    cliDict["--help"] = cliDict["--help"] || cliDict._help;
+    cliDict["-e"] = cliDict["-e"] || cliDict._eval;
+    cliDict["-h"] = cliDict["-h"] || cliDict._help;
+    cliDict._default = cliDict._default || cliDict._help;
+    cliDict.help = cliDict.help || cliDict._help;
+    cliDict._interactive = cliDict._interactive || function () {
     /*
      *
      * will start interactive-mode
@@ -3432,33 +3434,27 @@ local.cliRun = function (opt) {
             useGlobal: true
         });
     };
-    local.cliDict["--interactive"] = (
-        local.cliDict["--interactive"]
-        || local.cliDict._interactive
-    );
-    local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
-    local.cliDict._version = local.cliDict._version || function () {
+    cliDict["--interactive"] = cliDict["--interactive"] || cliDict._interactive;
+    cliDict["-i"] = cliDict["-i"] || cliDict._interactive;
+    cliDict._version = cliDict._version || function () {
     /*
      *
      * will print version
      */
         console.log(require(__dirname + "/package.json").version);
     };
-    local.cliDict["--version"] = (
-        local.cliDict["--version"]
-        || local.cliDict._version
-    );
-    local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
+    cliDict["--version"] = cliDict["--version"] || cliDict._version;
+    cliDict["-v"] = cliDict["-v"] || cliDict._version;
     // default to --help command if no arguments are given
     if (process.argv.length <= 2) {
-        local.cliDict._help();
+        cliDict._help();
         return;
     }
-    if (local.cliDict[process.argv[2]]) {
-        local.cliDict[process.argv[2]]();
+    if (cliDict[process.argv[2]]) {
+        cliDict[process.argv[2]]();
         return;
     }
-    local.cliDict._default();
+    cliDict._default();
 };
 
 local.corsBackendHostInject = function (url, backendHost, rgx, location) {
@@ -6991,7 +6987,7 @@ if (module === require.main && (!globalThis.utility2_rollup || (
     && local.cliDict[process.argv[2]]
     && process.argv[2].indexOf("utility2.") === 0
 ))) {
-    local.cliRun({}, local.nop);
+    local.cliRun({});
     if (local.cliDict[process.argv[2]]) {
         local.cliDict[process.argv[2]]();
         switch (process.argv[2]) {
