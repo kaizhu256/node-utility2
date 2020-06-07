@@ -223,63 +223,60 @@ shBrowserScreenshot () {(set -e
     node -e '
 /* jslint utility2:true */
 (function () {
-"use strict";
-let opt;
-opt = {};
-opt.argv = process.argv;
-opt.cwd = process.cwd();
-opt.timeStart = Date.now();
-opt.url = opt.argv[1];
-if (!(
-    /^\w+?:/
-).test(opt.url)) {
-    opt.url = require("path").resolve(opt.url);
-}
-opt.file = require("url").parse(opt.url).pathname;
-if (opt.file.indexOf(opt.cwd) === 0) {
-    opt.file = opt.file.replace(opt.cwd, "");
-}
-opt.file = (
-    process.env.npm_config_dir_build
-    + "/screenshot."
-    + process.env.MODE_BUILD + ".browser."
-    + encodeURIComponent(opt.file.replace(
-        "/build.." + process.env.CI_BRANCH + ".." + process.env.CI_HOST,
-        "/build"
-    ))
-    + ".png"
-);
-opt.argList = [
-    "--headless",
-    "--incognito",
-    "--screenshot",
-    "--timeout=30000",
-    "-screenshot=" + opt.file,
-    opt.url
-];
-opt.command = process.env.CHROME_BIN;
-if (opt.argv[2] === "--debug") {
-    console.error(JSON.stringify(opt, undefined, 4));
-}
-process.on("exit", function (exitCode) {
-    if (typeof exitCode === "object" && exitCode) {
-        console.error(exitCode);
-        exitCode = 1;
+    "use strict";
+    let opt;
+    let url;
+    opt = {};
+    opt.timeStart = Date.now();
+    url = process.argv[1];
+    if (!(
+        /^\w+?:/
+    ).test(url)) {
+        url = require("path").resolve(url);
     }
-    console.error(
-        "\nshBrowserScreenshot"
-        + " - " + (Date.now() - opt.timeStart) + " ms"
-        + " - exitCode " + exitCode
-        + " - " + opt.url
-        + "\n"
+    opt.file = require("url").parse(url).pathname;
+    if (opt.file.indexOf(process.cwd()) === 0) {
+        opt.file = opt.file.replace(process.cwd(), "");
+    }
+    opt.file = (
+        process.env.npm_config_dir_build
+        + "/screenshot."
+        + process.env.MODE_BUILD + ".browser."
+        + encodeURIComponent(opt.file.replace(
+            "/build.." + process.env.CI_BRANCH + ".." + process.env.CI_HOST,
+            "/build"
+        ))
+        + ".png"
     );
-});
-process.on("uncaughtException", process.exit);
-require("child_process").spawn(opt.command, opt.argList, {
-    stdio: [
-        "ignore", 1, 2
-    ]
-});
+    if (process.argv[2] === "--debug") {
+        console.error(JSON.stringify(opt, undefined, 4));
+    }
+    process.on("exit", function (exitCode) {
+        if (typeof exitCode === "object" && exitCode) {
+            console.error(exitCode);
+            exitCode = 1;
+        }
+        console.error(
+            "\nshBrowserScreenshot"
+            + " - " + (Date.now() - opt.timeStart) + " ms"
+            + " - exitCode " + exitCode
+            + " - " + url
+            + "\n"
+        );
+    });
+    process.on("uncaughtException", process.exit);
+    require("child_process").spawn(process.env.CHROME_BIN, [
+        "--headless",
+        "--incognito",
+        "--screenshot",
+        "--timeout=30000",
+        "-screenshot=" + opt.file,
+        url
+    ], {
+        stdio: [
+            "ignore", 1, 2
+        ]
+    });
 }());
 ' "$1" "$2"
 )}
