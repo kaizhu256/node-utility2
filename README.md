@@ -89,6 +89,7 @@ this zero-dependency package will provide high-level functions to to build, test
     childProcessEval,
     fsWriteFileWithMkdirp,
 - remove functions
+    stringLineCount,
     onFileModifiedRestart,
     jsonStringifyOrdered,
     jsonCopy,

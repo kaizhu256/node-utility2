@@ -4886,8 +4886,8 @@ local.requireReadme = function () {
     let module;
     let tmp;
     // init env
-    // init module.exports
     env = (typeof process === "object" && process && process.env) || local.env;
+    // init module.exports
     module = {};
     // if file is modified, then restart process
     if (env.npm_config_mode_auto_restart) {
@@ -5411,22 +5411,6 @@ local.stringHtmlSafe = function (str) {
     ), "&gt;").replace((
         /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
     ), "&$1");
-};
-
-local.stringLineCount = function (str, start, end) {
-/*
- * this function will count number of "\n" in <str>
- * from <start> to <end>
- */
-    let count;
-    count = 0;
-    while (true) {
-        start = str.indexOf("\n", start) + 1;
-        if (start === 0 || start >= end) {
-            return count;
-        }
-        count += 1;
-    }
 };
 
 local.stringMerge = function (str1, str2, rgx) {
