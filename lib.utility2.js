@@ -1739,11 +1739,47 @@ local._http.request = function (xhr, onResponse) {
     return xhr;
 };
 
+local._testCase_assetsAppJs_standalone = function (opt, onError) {
+/*
+ * this function will test assets.app.js's standalone handling-behavior
+ */
+    if (local.isBrowser) {
+        onError(undefined, opt);
+        return;
+    }
+    // test standalone assets.app.js
+    local.fsWriteFileWithMkdirp(
+        "tmp/buildApp/assets.app.js",
+        local.assetsDict["/assets.app.js"],
+        "wrote file - assets.app.js - {{pathname}}"
+    ).then(function () {
+        require("child_process").spawn("node", [
+            "assets.app.js"
+        ], {
+            cwd: "tmp/buildApp",
+            env: {
+                PATH: process.env.PATH,
+                PORT: (Math.random() * 0x10000) | 0x8000,
+                npm_config_timeout_exit: 5000
+            },
+            stdio: [
+                "ignore", 1, 2
+            ]
+        }).on("error", onError).on("exit", function (exitCode) {
+            local.assertOrThrow(!exitCode, exitCode);
+        });
+    });
+};
+
 local._testCase_buildApidoc_default = function (opt, onError) {
 /*
  * this function will test buildApidoc's default handling-behavior
  */
     let require2;
+    if (local.isBrowser) {
+        onError(undefined, opt);
+        return;
+    }
     require2 = function (file) {
     /*
      * this function will require <file> in sandbox-env
@@ -1814,8 +1850,7 @@ local._testCase_buildApidoc_default = function (opt, onError) {
         return exports;
     };
     if (
-        local.isBrowser
-        || local.env.npm_config_mode_coverage
+        local.env.npm_config_mode_coverage
         || local.env.npm_config_mode_test_case
         !== "testCase_buildApidoc_default"
     ) {
@@ -2739,28 +2774,6 @@ local.buildApp = async function (opt, onError) {
     ), {
         cwd: "tmp/build/app"
     });
-    // test standalone assets.app.js
-    await local.fsWriteFileWithMkdirp(
-        "tmp/buildApp/assets.app.js",
-        local.assetsDict["/assets.app.js"],
-        "wrote file - assets.app.js - {{pathname}}"
-    );
-    exitCode = await new Promise(function (resolve, reject) {
-        require("child_process").spawn("node", [
-            "assets.app.js"
-        ], {
-            cwd: "tmp/buildApp",
-            env: {
-                PATH: process.env.PATH,
-                PORT: (Math.random() * 0x10000) | 0x8000,
-                npm_config_timeout_exit: 5000
-            },
-            stdio: [
-                "ignore", 1, 2
-            ]
-        }).on("error", reject).on("exit", resolve);
-    });
-    local.assertOrThrow(!exitCode, exitCode);
     onError();
 };
 
@@ -5161,6 +5174,7 @@ instruction\n\
     Object.keys(local).forEach(function (key) {
         if (
             key.indexOf("_testCase_build") === 0
+            || key === "_testCase_assetsAppJs_standalone"
             || key === "_testCase_webpage_default"
         ) {
             module.exports[key.slice(1)] = (
