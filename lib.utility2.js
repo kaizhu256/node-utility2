@@ -167,7 +167,6 @@
             });
         }
         local.fs = require("fs");
-        local.url = require("url");
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
@@ -391,7 +390,6 @@ local.assetsDict["/assets.utility2.header.js"] = '\
             });\n\
         }\n\
         local.fs = require("fs");\n\
-        local.url = require("url");\n\
     }\n\
 }((typeof globalThis === "object" && globalThis) || window));\n\
 // assets.utility2.header.js - end\n\
@@ -1028,8 +1026,8 @@ if (globalThis.utility2_serverHttp1) {\n\
 }\n\
 process.env.PORT = process.env.PORT || "8081";\n\
 console.error("http-server listening on port " + process.env.PORT);\n\
-local.http.createServer(function (req, res) {\n\
-    req.urlParsed = local.url.parse(req.url);\n\
+require("http").createServer(function (req, res) {\n\
+    req.urlParsed = require("url").parse(req.url);\n\
     if (local.assetsDict[req.urlParsed.pathname] !== undefined) {\n\
         res.end(local.assetsDict[req.urlParsed.pathname]);\n\
         return;\n\
@@ -2549,15 +2547,17 @@ local.browserTest = function (opt, onError) {
         return;
     }
     local.gotoNext(opt, function (err, data) {
+        let url;
         switch (opt.gotoState) {
         // node - init
         case 1:
+            url = require("url");
             onParallel = local.onParallel(opt.gotoNext);
             onParallel.cnt += 1;
             isDone = 0;
             testId = Math.random().toString(16);
             testName = local.env.MODE_BUILD + ".browser." + encodeURIComponent(
-                new local.url.URL(opt.url).pathname.replace(
+                new url.URL(opt.url).pathname.replace(
                     "/build.."
                     + local.env.CI_BRANCH
                     + ".." + local.env.CI_HOST,
@@ -6725,7 +6725,7 @@ local.urlParse = function (url) {
             ).test(url)) {
                 url = local.serverLocalHost + "/" + url;
             }
-            urlParsed = local.url.parse(url);
+            urlParsed = require("url").parse(url);
         }
         // init query
         urlParsed.query = {};

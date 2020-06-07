@@ -350,7 +350,6 @@ instruction
             });
         }
         local.fs = require("fs");
-        local.url = require("url");
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
@@ -1149,8 +1148,8 @@ if (globalThis.utility2_serverHttp1) {
 }
 process.env.PORT = process.env.PORT || "8081";
 console.error("http-server listening on port " + process.env.PORT);
-local.http.createServer(function (req, res) {
-    req.urlParsed = local.url.parse(req.url);
+require("http").createServer(function (req, res) {
+    req.urlParsed = require("url").parse(req.url);
     if (local.assetsDict[req.urlParsed.pathname] !== undefined) {
         res.end(local.assetsDict[req.urlParsed.pathname]);
         return;

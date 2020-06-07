@@ -157,7 +157,6 @@
             });
         }
         local.fs = require("fs");
-        local.url = require("url");
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end

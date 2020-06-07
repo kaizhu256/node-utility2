@@ -167,7 +167,6 @@
             });
         }
         local.fs = require("fs");
-        local.url = require("url");
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
@@ -640,7 +639,7 @@ let esprima;
 let estraverse;
 let esutils;
 let process;
-let require;
+let require2;
 // mock builtins
 escodegen = {};
 esprima = {};
@@ -654,7 +653,7 @@ process = (
     }
     : globalThis.process
 );
-require = function (key) {
+require2 = function (key) {
     switch (key) {
     case "./package.json":
     case "source-map":
@@ -665,7 +664,7 @@ require = function (key) {
         return esutils;
     }
 };
-require(escodegen, esprima);
+require2(escodegen, esprima);
 
 
 
@@ -6501,7 +6500,7 @@ file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
         return tree;
     }
 
-    exports.version = require('./package.json').version;
+    exports.version = require2('./package.json').version;
     exports.Syntax = Syntax;
     exports.traverse = traverse;
     exports.replace = replace;
@@ -6747,8 +6746,8 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
         FORMAT_MINIFY,
         FORMAT_DEFAULTS;
 
-    estraverse = require('estraverse');
-    esutils = require('esutils');
+    estraverse = require2('estraverse');
+    esutils = require2('esutils');
 
     Syntax = estraverse.Syntax;
 
@@ -9233,7 +9232,7 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
             if (!exports.browser) {
                 // We assume environment is node.js
                 // And prevent from including source-map by browserify
-                SourceNode = require('source-map').SourceNode;
+                SourceNode = require2('source-map').SourceNode;
             } else {
                 SourceNode = global.sourceMap.SourceNode;
             }
@@ -9279,7 +9278,7 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
 
     FORMAT_DEFAULTS = getDefaultOptions().format;
 
-    exports.version = require('./package.json').version;
+    exports.version = require2('./package.json').version;
     exports.generate = generate;
     exports.attachComments = estraverse.attachComments;
     exports.Precedence = updateDeeply({}, Precedence);
@@ -9314,9 +9313,9 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
     "use strict";
     var SYNTAX,
         nodeType,
-        ESP = isNode ? require('esprima') : esprima,
-        ESPGEN = isNode ? require('escodegen') : escodegen,  //TODO - package as dependency
-        crypto = isNode ? require('crypto') : null,
+        ESP = isNode ? require2('esprima') : esprima,
+        ESPGEN = isNode ? require2('escodegen') : escodegen,  //TODO - package as dependency
+        crypto = isNode ? require2('crypto') : null,
         LEADER_WRAP = '(function () { ',
         TRAILER_WRAP = '\n}());',
         COMMENT_RE = /^\s*istanbul\s+ignore\s+(if|else|next)(?=\W|$)/,
