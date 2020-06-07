@@ -10821,21 +10821,20 @@ let path;
 let reportHtmlWrite;
 let reportTextWrite;
 // mock module path
-path = (
-    local.isBrowser
-    ? {
-        dirname: function (file) {
-            return file.replace((
-                /\/[\w\-.]+?$/
-            ), "");
-        },
-        resolve: function (...argList) {
-            return argList[argList.length - 1];
-        },
-        sep: "/"
-    }
-    : require("path")
-);
+path = {
+    dirname: function (file) {
+        return file.replace((
+            /\/[\w\-.]+?$/
+        ), "");
+    },
+    resolve: function (...argList) {
+        return argList[argList.length - 1];
+    },
+    sep: "/"
+};
+try {
+    path = require("path");
+} catch (ignore) {}
 // init function
 fileWrite = function (file, data) {
 /*

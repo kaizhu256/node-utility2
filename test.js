@@ -617,10 +617,6 @@ local.testCase_buildApp_default = function (opt, onError) {
 /*
  * this function will test buildApp's default handling-behavior
  */
-    if (local.isBrowser) {
-        onError(undefined, opt);
-        return;
-    }
     local.testCase_buildReadme_default(opt, local.onErrorThrow);
     local.testCase_buildLib_default(opt, local.onErrorThrow);
     local.testCase_buildTest_default(opt, local.onErrorThrow);
@@ -649,67 +645,10 @@ local.testCase_buildApp_default = function (opt, onError) {
     }, onError);
 };
 
-local.testCase_buildLib_default = function (opt, onError) {
-/*
- * this function will test buildLib's default handling-behavior
- */
-    if (local.isBrowser) {
-        onError(undefined, opt);
-        return;
-    }
-    local.testMock([
-        [
-            local, {
-                templateRenderMyApp: function () {
-                    return local.assetsDict["/assets.my_app.template.js"];
-                }
-            }
-        ], [
-            require("fs"), {
-                // test customize-local handling-behavior
-                existsSync: function () {
-                    return true;
-                },
-                // test duplicate local function handling-behavior
-                readFileSync: function () {
-                    return (
-                        "local.nop = function () {\n"
-                        + "/*\n"
-                        + " * this function will do nothing\n"
-                        + " */\n"
-                        + "    return;\n"
-                        + "};\n"
-                        + "local.nop = function () {\n"
-                        + "/*\n"
-                        + " * this function will do nothing\n"
-                        + " */\n"
-                        + "    return;\n"
-                        + "};\n"
-                    );
-                },
-                writeFileSync: local.nop
-            }
-        ]
-    ], function (onError) {
-        local.buildLib({}, onError);
-    }, local.onErrorThrow);
-    local.buildLib({}, onError);
-};
-
 local.testCase_buildReadme_default = function (opt, onError) {
 /*
  * this function will test buildReadme's default handling-behavior
  */
-    if (local.isBrowser) {
-        onError(undefined, opt);
-        return;
-    }
-    opt = {};
-    // test shNpmTestPublished handling-behavior
-    opt.dataFrom = require("fs").readFileSync("README.md", "utf8").replace(
-        "#\u0021! shNpmTestPublished",
-        "shNpmTestPublished"
-    );
     opt = {};
     opt.customize = function () {
         // search-and-replace - customize dataTo
@@ -731,9 +670,7 @@ local.testCase_buildReadme_default = function (opt, onError) {
                 /\n#\u0020internal\u0020build\u0020script\n[\S\s]*?\nshBuildCi\n/
             )
         ].forEach(function (rgx) {
-            opt.dataFrom.replace(rgx, function (match0) {
-                opt.dataTo = opt.dataTo.replace(rgx, match0);
-            });
+            opt.dataTo = local.stringMerge(opt.dataTo, opt.dataFrom, rgx);
         });
     };
     local.buildReadme(opt, onError);
@@ -1075,137 +1012,6 @@ local.testCase_moduleDirname_default = function (opt, onError) {
         local.moduleDirname("syntax-err", module.paths),
         ""
     );
-    onError(undefined, opt);
-};
-
-local.testCase_objectAssignRecurse_default = function (opt, onError) {
-/*
- * this function will test objectAssignRecurse's default handling-behavior
- */
-    // test null-case handling-behavior
-    local.objectAssignRecurse();
-    local.objectAssignRecurse({});
-    // test falsy handling-behavior
-    [
-        "", 0, false, null, undefined
-    ].forEach(function (aa) {
-        [
-            "", 0, false, null, undefined
-        ].forEach(function (bb) {
-            assertJsonEqual(
-                local.objectAssignRecurse({
-                    data: aa
-                }, {
-                    data: bb
-                }).data,
-                bb === undefined
-                ? aa
-                : bb
-            );
-        });
-    });
-    // test non-recursive handling-behavior
-    assertJsonEqual(local.objectAssignRecurse({
-        aa: 1,
-        bb: {
-            cc: 1
-        },
-        cc: {
-            dd: 1
-        },
-        dd: [
-            1, 1
-        ],
-        ee: [
-            1, 1
-        ]
-    }, {
-        aa: 2,
-        bb: {
-            dd: 2
-        },
-        cc: {
-            ee: 2
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    // test default-depth handling-behavior
-    }, null), {
-        aa: 2,
-        bb: {
-            dd: 2
-        },
-        cc: {
-            ee: 2
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    });
-    // test recursive handling-behavior
-    assertJsonEqual(local.objectAssignRecurse({
-        aa: 1,
-        bb: {
-            cc: 1
-        },
-        cc: {
-            dd: 1
-        },
-        dd: [
-            1, 1
-        ],
-        ee: [
-            1, 1
-        ]
-    }, {
-        aa: 2,
-        bb: {
-            dd: 2
-        },
-        cc: {
-            ee: 2
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    // test depth handling-behavior
-    }, 2), {
-        aa: 2,
-        bb: {
-            cc: 1,
-            dd: 2
-        },
-        cc: {
-            dd: 1,
-            ee: 2
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    });
-    // test env with empty-string handling-behavior
-    assertJsonEqual(local.objectAssignRecurse(
-        local.env,
-        {
-            "emptyString": null
-        },
-        // test default-depth handling-behavior
-        null,
-        local.env
-    ).emptyString, "");
     onError(undefined, opt);
 };
 
@@ -1959,7 +1765,7 @@ if (local.isBrowser) {
 
 
 (function () {
-    switch (local.env.HEROKU_APP_NAME) {
+    switch (process.env.HEROKU_APP_NAME) {
     case "h1-cron1":
         // heroku-keepalive
         setInterval(function () {
@@ -2029,7 +1835,7 @@ local.assetsDict["/assets.script_only.html"] = (
 );
 if (process.argv[2]) {
     // start with coverage
-    if (local.env.npm_config_mode_coverage) {
+    if (process.env.npm_config_mode_coverage) {
         process.argv.splice(1, 1, __dirname + "/lib.istanbul.js", "cover");
         local.istanbul.cliDict[process.argv[2]]();
         return;
@@ -2040,8 +1846,8 @@ if (process.argv[2]) {
     local.Module.runMain();
 }
 // runme
-if (local.env.npm_config_runme) {
-    require(require("path").resolve(local.env.npm_config_runme));
+if (process.env.npm_config_runme) {
+    require(require("path").resolve(process.env.npm_config_runme));
 }
 }());
 }());
