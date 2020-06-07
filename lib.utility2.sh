@@ -23,7 +23,6 @@
 # shCryptoWithGithubOrg aa shGithubApiRateLimitGet
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/node-aa-bb "touch" alpha
 # DOCKER_V_GAME=1 DOCKER_V_HOME=1 DOCKER_PORT=4065 shDockerRestart work kaizhu256/node-utility2
-# shDockerSh work '. ~/lib.utility2.sh && shSource && shUtility2BuildApp'
 # shGitAddTee npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
 # shSource && shGitAddTee shUtility2DependentsSync
 # utility2 shReadmeTest example.js
@@ -66,7 +65,7 @@ shBaseInit () {
         fi
     done
     # init ubuntu .bashrc
-    shBashrcDebianInit || return "$?"
+    shUbuntuInit || return "$?"
     # init custom alias
     alias lld="ls -adlF" || return "$?"
 }
@@ -75,10 +74,10 @@ shBaseInstall () {
 # this function will install .bashrc, .screenrc, .vimrc, and lib.utility2.sh in $HOME,
 # and is intended for aws-ec2 setup
 # example use:
-# curl -Lf -o "$HOME/lib.utility2.sh" https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh && . "$HOME/lib.utility2.sh" && shBaseInstall
+# curl -o "$HOME/lib.utility2.sh" https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh && . "$HOME/lib.utility2.sh" && shBaseInstall
     for FILE in .screenrc .vimrc lib.utility2.sh
     do
-        curl -Lf -o "$HOME/$FILE" \
+        curl -Lfs -o "$HOME/$FILE" \
 "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE" ||
             return "$?"
     done
@@ -100,182 +99,68 @@ shBaseInstall () {
     . "$HOME/.bashrc" || return "$?"
 }
 
-shBashrcDebianInit () {
-# this function will init debian:stable /etc/skel/.bashrc
-# https://sources.debian.org/src/bash/4.4-5/debian/skel.bashrc/
-    # ~/.bashrc: executed by bash(1) for non-login shells.
-    # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
-    # for examples
-
-    # If not running interactively, don't do anything
-    case $- in
-        *i*) ;;
-          *) return;;
-    esac
-
-    # don't put duplicate lines or lines starting with space in the history.
-    # See bash(1) for more options
-    HISTCONTROL=ignoreboth
-
-    # append to the history file, don't overwrite it
-    shopt -s histappend
-
-    # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-    HISTSIZE=1000
-    HISTFILESIZE=2000
-
-    # check the window size after each command and, if necessary,
-    # update the values of LINES and COLUMNS.
-    shopt -s checkwinsize
-
-    # If set, the pattern "**" used in a pathname expansion context will
-    # match all files and zero or more directories and subdirectories.
-    #shopt -s globstar
-
-    # make less more friendly for non-text input files, see lesspipe(1)
-    [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
-
-    # set variable identifying the chroot you work in (used in the prompt below)
-    if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
-        debian_chroot=$(cat /etc/debian_chroot)
-    fi
-
-    # set a fancy prompt (non-color, unless we know we "want" color)
-    case "$TERM" in
-        xterm-color|*-256color) color_prompt=yes;;
-    esac
-
-    # uncomment for a colored prompt, if the terminal has the capability; turned
-    # off by default to not distract the user: the focus in a terminal window
-    # should be on the output of commands, not on the prompt
-    #force_color_prompt=yes
-
-    if [ -n "$force_color_prompt" ]; then
-        if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-        # We have color support; assume it's compliant with Ecma-48
-        # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-        # a case would tend to support setf rather than setaf.)
-        color_prompt=yes
-        else
-        color_prompt=
-        fi
-    fi
-
-    if [ "$color_prompt" = yes ]; then
-        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-    else
-        PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
-    fi
-    unset color_prompt force_color_prompt
-
-    # If this is an xterm set the title to user@host:dir
-    case "$TERM" in
-    xterm*|rxvt*)
-        PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-        ;;
-    *)
-        ;;
-    esac
-
-    # enable color support of ls and also add handy aliases
-    if [ -x /usr/bin/dircolors ]; then
-        test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-        alias ls='ls --color=auto'
-        #alias dir='dir --color=auto'
-        #alias vdir='vdir --color=auto'
-
-        alias grep='grep --color=auto'
-        #alias fgrep='fgrep --color=auto'
-        #alias egrep='egrep --color=auto'
-    fi
-
-    # colored GCC warnings and errors
-    #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
-
-    # some more ls aliases
-    alias ll='ls -alF'
-    #alias la='ls -A'
-    #alias l='ls -CF'
-
-    # Alias definitions.
-    # You may want to put all your additions into a separate file like
-    # ~/.bash_aliases, instead of adding them here directly.
-    # See /usr/share/doc/bash-doc/examples in the bash-doc package.
-
-    if [ -f ~/.bash_aliases ]; then
-        . ~/.bash_aliases
-    fi
-
-    # enable programmable completion features (you don't need to enable
-    # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
-    # sources /etc/bash.bashrc).
-    if ! shopt -oq posix; then
-        if [ -f /usr/share/bash-completion/bash_completion ]; then
-            . /usr/share/bash-completion/bash_completion
-        elif [ -f /etc/bash_completion ]; then
-            . /etc/bash_completion
-        fi
-    fi
-}
-
 shBrowserScreenshot () {(set -e
 # this function will run headless-chromium to screenshot url "$1"
     node -e '
 /* jslint utility2:true */
 (function () {
-    "use strict";
-    let file;
-    let timeStart;
-    let url;
-    timeStart = Date.now();
-    url = process.argv[1];
-    if (!(
-        /^\w+?:/
-    ).test(url)) {
-        url = require("path").resolve(url);
+"use strict";
+let opt;
+opt = {};
+opt.argv = process.argv;
+opt.cwd = process.cwd();
+opt.timeStart = Date.now();
+opt.url = opt.argv[1];
+if (!(
+    /^\w+?:/
+).test(opt.url)) {
+    opt.url = require("path").resolve(opt.url);
+}
+opt.file = require("url").parse(opt.url).pathname;
+if (opt.file.indexOf(opt.cwd) === 0) {
+    opt.file = opt.file.replace(opt.cwd, "");
+}
+opt.file = (
+    process.env.npm_config_dir_build
+    + "/screenshot."
+    + process.env.MODE_BUILD + ".browser."
+    + encodeURIComponent(opt.file.replace(
+        "/build.." + process.env.CI_BRANCH + ".." + process.env.CI_HOST,
+        "/build"
+    ))
+    + ".png"
+);
+opt.argList = [
+    "--headless",
+    "--incognito",
+    "--screenshot",
+    "--timeout=30000",
+    "-screenshot=" + opt.file,
+    opt.url
+];
+opt.command = process.env.CHROME_BIN;
+if (opt.argv[2] === "--debug") {
+    console.error(JSON.stringify(opt, undefined, 4));
+}
+process.on("exit", function (exitCode) {
+    if (typeof exitCode === "object" && exitCode) {
+        console.error(exitCode);
+        exitCode = 1;
     }
-    file = require("url").parse(url).pathname;
-    if (file.indexOf(process.cwd()) === 0) {
-        file = file.replace(process.cwd(), "");
-    }
-    file = (
-        process.env.npm_config_dir_build
-        + "/screenshot."
-        + process.env.MODE_BUILD + ".browser."
-        + encodeURIComponent(file.replace(
-            "/build.." + process.env.CI_BRANCH + ".." + process.env.CI_HOST,
-            "/build"
-        ))
-        + ".png"
+    console.error(
+        "\nshBrowserScreenshot"
+        + " - " + (Date.now() - opt.timeStart) + " ms"
+        + " - exitCode " + exitCode
+        + " - " + opt.url
+        + "\n"
     );
-    process.on("exit", function (exitCode) {
-        if (typeof exitCode === "object" && exitCode) {
-            console.error(exitCode);
-            exitCode = 1;
-        }
-        console.error(
-            "\nshBrowserScreenshot"
-            + " - " + (Date.now() - timeStart) + " ms"
-            + " - exitCode " + exitCode
-            + " - " + url
-            + " - " + file
-            + "\n"
-        );
-    });
-    process.on("uncaughtException", process.exit);
-    process.on("unhandledRejection", process.exit);
-    require("child_process").spawn(process.env.CHROME_BIN, [
-        "--headless",
-        "--incognito",
-        "--screenshot",
-        "--timeout=30000",
-        "-screenshot=" + file,
-        url
-    ], {
-        stdio: [
-            "ignore", 1, 2
-        ]
-    });
+});
+process.on("uncaughtException", process.exit);
+require("child_process").spawn(opt.command, opt.argList, {
+    stdio: [
+        "ignore", 1, 2
+    ]
+});
 }());
 ' "$1" "$2"
 )}
@@ -319,7 +204,7 @@ shBuildApp () {(set -e
     do
         if [ ! -f "$FILE" ]
         then
-            curl -Lf -O \
+            curl -Lfs -O \
 "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE"
         fi
     done
@@ -351,40 +236,38 @@ shBuildApp () {(set -e
 /* jslint utility2:true */
 (function (local) {
     "use strict";
-    let fs;
     let tmp;
-    fs = require("fs");
-    if (!fs.existsSync("README.md", "utf8")) {
-        fs.writeFileSync("README.md", local.templateRenderMyApp(
+    if (!local.fs.existsSync("README.md", "utf8")) {
+        local.fs.writeFileSync("README.md", local.templateRenderMyApp(
             local.assetsDict["/assets.readme.template.md"],
             {}
         ));
     }
-    if (!fs.existsSync(
+    if (!local.fs.existsSync(
         "lib." + process.env.npm_package_nameLib + ".js",
         "utf8"
     )) {
         tmp = local.assetsDict["/assets.my_app.template.js"];
-        if (fs.existsSync("assets.utility2.rollup.js")) {
+        if (local.fs.existsSync("assets.utility2.rollup.js")) {
             tmp = tmp.replace(
                 "    // || globalThis.utility2_rollup_old || ",
                 "    || globalThis.utility2_rollup_old || "
             );
         }
-        fs.writeFileSync(
+        local.fs.writeFileSync(
             "lib." + process.env.npm_package_nameLib + ".js",
             local.templateRenderMyApp(tmp, {})
         );
     }
-    if (!fs.existsSync("test.js", "utf8")) {
+    if (!local.fs.existsSync("test.js", "utf8")) {
         tmp = local.assetsDict["/assets.test.template.js"];
-        if (fs.existsSync("assets.utility2.rollup.js")) {
+        if (local.fs.existsSync("assets.utility2.rollup.js")) {
             tmp = tmp.replace(
                 "require(\u0027utility2\u0027)",
                 "require(\u0027./assets.utility2.rollup.js\u0027)"
             );
         }
-        fs.writeFileSync("test.js", local.templateRenderMyApp(tmp, {}));
+        local.fs.writeFileSync("test.js", local.templateRenderMyApp(tmp, {}));
     }
 }(require(process.env.npm_config_dir_utility2)));
 '
@@ -472,13 +355,12 @@ shBuildCi () {(set -e
             node -e '
 /* jslint utility2:true */
 (function (local) {
-    "use strict";
-    if (require("fs").existsSync("assets.utility2.rollup.js")) {
-        require("fs").writeFileSync(
-            "assets.utility2.rollup.js",
-            local.assetsDict["/assets.utility2.rollup.js"]
-        );
+"use strict";
+["assets.utility2.rollup.js"].forEach(function (file) {
+    if (local.fs.existsSync(file)) {
+        local.fs.writeFileSync(file, local.assetsDict["/" + file]);
     }
+});
 }(require("utility2")));
 '
             shBuildApp
@@ -514,11 +396,10 @@ shBuildCi () {(set -e
                 "$npm_config_dir_utility2" \
                 --branch=alpha --single-branch --depth=50
             mkdir -p "$npm_config_dir_utility2/tmp/build/app"
-            curl -Lf -o \
-"$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js" \
-https://raw.githubusercontent.com\
+            curl -Lfs https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/build..alpha..travis-ci.com/app\
-/assets.utility2.rollup.js
+/assets.utility2.rollup.js > \
+"$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js"
             ;;
         esac
         shBuildCiInternal
@@ -1182,7 +1063,7 @@ shCryptoTravisDecrypt () {(set -e
     URL="https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/.CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG"
     shBuildPrint "decrypting $URL ..."
-    curl -Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
+    curl -#Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
 )}
 
 shCryptoTravisEncrypt () {(set -e
@@ -1206,7 +1087,7 @@ shCryptoTravisEncrypt () {(set -e
         TMPFILE="$(mktemp)"
         URL="https://api.travis-ci.com/repos/$GITHUB_REPO/key"
         shBuildPrint "fetch $URL"
-        curl -Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" |
+        curl -#Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" |
             sed -n -e \
 "s/.*-----BEGIN [RSA ]*PUBLIC KEY-----\(.*\)-----END [RSA ]*PUBLIC KEY-----.*/\
 -----BEGIN PUBLIC KEY-----\\1-----END PUBLIC KEY-----/" \
@@ -1264,7 +1145,7 @@ shDeployGithub () {(set -e
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
     if [ "$(
-        curl -L --connect-timeout 60 -o /dev/null -w "%{http_code}" "$TEST_URL"
+        curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL"
     )" -lt 400 ]
     then
         shBuildPrint "curl test passed for $TEST_URL"
@@ -1300,7 +1181,7 @@ shDeployHeroku () {(set -e
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
     if [ "$(
-        curl -L --connect-timeout 60 -o /dev/null -w "%{http_code}" "$TEST_URL"
+        curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL"
     )" -lt 400 ]
     then
         shBuildPrint "curl test passed for $TEST_URL"
@@ -1664,7 +1545,6 @@ shGitInfo () {(set -e
     git grep -E '\becho\b' *.sh || true
     printf "\n"
     git grep -E '\bset -\w*x\b' *.sh || true
-    git grep -E '\bcurl [^-].* -' *.sh || true
     cat package.json
 )}
 
@@ -1677,8 +1557,8 @@ shGitInitBase () {(set -e
     git checkout -b alpha
     git add .
     git commit -am "initial commit"
-    curl -Lf -o .git/config \
-https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig
+    curl https://raw.githubusercontent.com/kaizhu256/node-utility2\
+/alpha/.gitconfig > .git/config
 )}
 
 shGitLsTree () {(set -e
@@ -1737,13 +1617,13 @@ shGitSquashShift () {(set -e
 
 shGithubApiRateLimitGet () {(set -e
 # this function will the rate-limit for the $GITHUB_TOKEN
-    curl -Lf -H "Authorization: token $GITHUB_TOKEN" -I https://api.github.com
+    curl -I https://api.github.com -H "Authorization: token $GITHUB_TOKEN"
 )}
 
 shGithubRepoBranchId () {(set -e
 # this function will print the $COMMIT_ID for $GITHUB_REPO:#$BRANCH
     BRANCH="$1"
-    curl -Lf -H "user-agent: undefined" "https://api.github.com\
+    curl -H "user-agent: undefined" -Lfs "https://api.github.com\
 /repos/$GITHUB_REPO/commits?access_token=$GITHUB_TOKEN&sha=$BRANCH" |
         sed -e 's/^\[{"sha":"//' -e 's/".*//'
 )}
@@ -1771,7 +1651,7 @@ shGithubRepoCreate () {(set -e
     mkdir -p "/tmp/githubRepo/$(printf "$GITHUB_REPO" | sed -e "s/\/.*//")"
     cp -a /tmp/githubRepo/kaizhu256/base "/tmp/githubRepo/$GITHUB_REPO"
     cd "/tmp/githubRepo/$GITHUB_REPO"
-    curl -Lf \
+    curl -Lfs \
 https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig |
         sed -e "s|kaizhu256/node-utility2|$GITHUB_REPO|" > .git/config
     # create github-repo
@@ -1829,7 +1709,7 @@ shGithubRepoDescriptionUpdate () {(set -e
     GITHUB_REPO="$1"
     DESCRIPTION="$2"
     shBuildPrint "update $GITHUB_REPO description"
-    curl -Lf \
+    curl -#Lf \
         -H "Authorization: token $GITHUB_TOKEN" \
         -H "Content-Type: application/json" \
         -H "User-Agent: undefined" \
@@ -1966,11 +1846,11 @@ shImageToDataUri () {(set -e
     case "$1" in
     http://*)
         FILE=/tmp/shImageToDataUri.png
-        curl -Lf -o "$FILE" "$1"
+        curl -#Lf -o "$FILE" "$1"
         ;;
     https://*)
         FILE=/tmp/shImageToDataUri.png
-        curl -Lf -o "$FILE" "$1"
+        curl -#Lf -o "$FILE" "$1"
         ;;
     *)
         FILE="$1"
@@ -3089,14 +2969,14 @@ shTravisRepoCreate () {(set -e
     #!! shTravisSync () {(set -e
     # this function will sync travis-ci with given $TRAVIS_ACCESS_TOKEN
     # this is an expensive operation that will use up your github rate-limit quota
-        curl -Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -X POST \
+        curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
             "https://api.travis-ci.com/users/sync"
     #!! )}
     while true
     do
         shSleep 2
-        if (curl -Lf "https://api.travis-ci.com/repos/$GITHUB_REPO" \
-            -H "Authorization: token $TRAVIS_ACCESS_TOKEN" 2>&1 > /dev/null)
+        if (curl "https://api.travis-ci.com/repos/$GITHUB_REPO" \
+            -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -fs 2>&1 > /dev/null)
         then
             break
         fi
@@ -3188,7 +3068,7 @@ local.gotoNext(opt, function (err, data) {
             )
         }, function (err, xhr) {
             local.assertOrThrow(!err, err);
-            require("fs").writeFile(
+            local.fs.writeFile(
                 "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.gitignore",
                 xhr.responseText,
                 onParallel
@@ -3202,19 +3082,19 @@ local.gotoNext(opt, function (err, data) {
             )
         }, function (err, xhr) {
             local.assertOrThrow(!err, err);
-            require("fs").writeFile(
+            local.fs.writeFile(
                 "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.travis.yml",
                 xhr.responseText,
                 onParallel
             );
         });
         onParallel.cnt += 1;
-        require("fs").open("README.md", "w", function (err, fd) {
+        local.fs.open("README.md", "w", function (err, fd) {
             local.assertOrThrow(!err, err);
-            require("fs").close(fd, onParallel);
+            local.fs.close(fd, onParallel);
         });
         onParallel.cnt += 1;
-        require("fs").writeFile(
+        local.fs.writeFile(
             "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/package.json",
             JSON.stringify({
                 devDependencies: {
@@ -3263,29 +3143,130 @@ opt.gotoNext();
     shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f alpha
 )}
 
-shUtility2BuildApp () {(set -e
-# this function will run shBuildApp in $UTILITY2_DEPENDENTS
-    for DIR in $UTILITY2_DEPENDENTS
-    do
-        cd "$HOME/Documents/$DIR" || continue
-        printf "\n\n\n\n$PWD\n\n\n\n"
-        # shUtility2DependentsSync
-        if [ "$DIR" = utility2 ]
-        then
-            shUtility2DependentsSync
-        # shBuildApp
+shUbuntuInit () {
+# this function will init debian:stable /etc/skel/.bashrc
+# https://sources.debian.org/src/bash/4.4-5/debian/skel.bashrc/
+    # ~/.bashrc: executed by bash(1) for non-login shells.
+    # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+    # for examples
+
+    # If not running interactively, don't do anything
+    case $- in
+        *i*) ;;
+          *) return;;
+    esac
+
+    # don't put duplicate lines or lines starting with space in the history.
+    # See bash(1) for more options
+    HISTCONTROL=ignoreboth
+
+    # append to the history file, don't overwrite it
+    shopt -s histappend
+
+    # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+    HISTSIZE=1000
+    HISTFILESIZE=2000
+
+    # check the window size after each command and, if necessary,
+    # update the values of LINES and COLUMNS.
+    shopt -s checkwinsize
+
+    # If set, the pattern "**" used in a pathname expansion context will
+    # match all files and zero or more directories and subdirectories.
+    #shopt -s globstar
+
+    # make less more friendly for non-text input files, see lesspipe(1)
+    [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+    # set variable identifying the chroot you work in (used in the prompt below)
+    if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+        debian_chroot=$(cat /etc/debian_chroot)
+    fi
+
+    # set a fancy prompt (non-color, unless we know we "want" color)
+    case "$TERM" in
+        xterm-color|*-256color) color_prompt=yes;;
+    esac
+
+    # uncomment for a colored prompt, if the terminal has the capability; turned
+    # off by default to not distract the user: the focus in a terminal window
+    # should be on the output of commands, not on the prompt
+    #force_color_prompt=yes
+
+    if [ -n "$force_color_prompt" ]; then
+        if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+        # We have color support; assume it's compliant with Ecma-48
+        # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+        # a case would tend to support setf rather than setaf.)
+        color_prompt=yes
         else
-            shBuildApp
+        color_prompt=
         fi
-    done
-    shUtility2GitDiffHead
-)}
+    fi
+
+    if [ "$color_prompt" = yes ]; then
+        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+    else
+        PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+    fi
+    unset color_prompt force_color_prompt
+
+    # If this is an xterm set the title to user@host:dir
+    case "$TERM" in
+    xterm*|rxvt*)
+        PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+        ;;
+    *)
+        ;;
+    esac
+
+    # enable color support of ls and also add handy aliases
+    if [ -x /usr/bin/dircolors ]; then
+        test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+        alias ls='ls --color=auto'
+        #alias dir='dir --color=auto'
+        #alias vdir='vdir --color=auto'
+
+        alias grep='grep --color=auto'
+        #alias fgrep='fgrep --color=auto'
+        #alias egrep='egrep --color=auto'
+    fi
+
+    # colored GCC warnings and errors
+    #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
+    # some more ls aliases
+    alias ll='ls -alF'
+    #alias la='ls -A'
+    #alias l='ls -CF'
+
+    # Alias definitions.
+    # You may want to put all your additions into a separate file like
+    # ~/.bash_aliases, instead of adding them here directly.
+    # See /usr/share/doc/bash-doc/examples in the bash-doc package.
+
+    if [ -f ~/.bash_aliases ]; then
+        . ~/.bash_aliases
+    fi
+
+    # enable programmable completion features (you don't need to enable
+    # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+    # sources /etc/bash.bashrc).
+    if ! shopt -oq posix; then
+        if [ -f /usr/share/bash-completion/bash_completion ]; then
+            . /usr/share/bash-completion/bash_completion
+        elif [ -f /etc/bash_completion ]; then
+            . /etc/bash_completion
+        fi
+    fi
+}
 
 shUtility2DependentsSync () {(set -e
 # this function will
 # 1. sync files between utility2 and its dependents
-# 2. shBuildApp $PWD
-    CWD="$PWD"
+# 2. shBuildApp dir $HOME/Documents/$1
+# 3. git commit -am $2
+    CWD="${1:-$PWD}"
     cd "$HOME/Documents/utility2" && shBuildApp
     cd "$HOME/Documents"
     ln -f "utility2/lib.utility2.sh" "$HOME" || true
@@ -3296,12 +3277,15 @@ shUtility2DependentsSync () {(set -e
         ln -f "utility2/lib.jslint.js" "$HOME/bin/utility2-jslint" || true
         ln -f "utility2/lib.utility2.sh" "$HOME/bin/utility2" || true
     fi
-    for DIR in $UTILITY2_DEPENDENTS
+    for DIR in $UTILITY2_DEPENDENTS $(ls -d swgg-* 2>/dev/null)
     do
-        [ "$DIR" = utility2 ] && continue
-        cd "$HOME/Documents/$DIR" || continue
+        if [ "$DIR" = utility2 ] || [ ! -d "$DIR" ]
+        then
+            continue
+        fi
+        cd "$DIR"
         npm_config_dir_utility2="$HOME/Documents/utility2" shBuildAppSync
-        cd "$HOME/Documents"
+        cd ..
         # hardlink "lib.$LIB.js"
         LIB="$(printf "$DIR" | sed -e "s/-lite\$//" -e "s/-/_/g")"
         if [ -f "utility2/lib.$LIB.js" ]
@@ -3309,21 +3293,26 @@ shUtility2DependentsSync () {(set -e
             ln -f "utility2/lib.$LIB.js" "$DIR" || true
         fi
     done
-    # hardlink assets.utility2.rollup.js
     for DIR in $(ls -d * 2>/dev/null)
     do
-        if [ -f "$HOME/Documents/$DIR/assets.utility2.rollup.js" ]
+        if [ "$DIR" = utility2 ] || [ ! -d "$DIR" ]
         then
-            ln -f \
-"$HOME/Documents/utility2/tmp/build/app/assets.utility2.rollup.js" \
-"$HOME/Documents/$DIR/assets.utility2.rollup.js"
+            continue
         fi
+        cd "$DIR"
+        # hardlink assets.utility2.rollup.js
+        if [ -f "assets.utility2.rollup.js" ]
+        then
+            ln -f "$HOME\
+/Documents/utility2/tmp/build/app/assets.utility2.rollup.js" .
+        fi
+        cd ..
     done
-    if [ "$CWD" = "$HOME/Documents/utility2" ]
-    then
-        return
-    fi
     cd "$CWD" && shBuildApp
+    if [ "$2" ]
+    then
+        git commit -am "$2"
+    fi
 )}
 
 shUtility2FncStat () {(set -e
@@ -3369,34 +3358,10 @@ shUtility2GitCommit () {(set -e
     done
 )}
 
-shUtility2GitCommitAndPush () {(set -e
-# this function will git-commit-and-push $UTILITY2_DEPENDENTS
-    for DIR in $UTILITY2_DEPENDENTS
-    do
-        cd "$HOME/Documents/$DIR" || continue
-        printf "\n\n\n\n$PWD\n\n\n\n"
-        git commit -am "${1:-shUtility2GitCommitAndPush}" || true
-        git push origin alpha
-    done
-)}
-
-shUtility2GitDiffHead () {(set -e
-# this function will the git-status of $UTILITY2_DEPENDENTS to stdout
-    rm -f /tmp/shUtility2GitDiffHead.diff
-    for DIR in $UTILITY2_DEPENDENTS
-    do
-        cd "$HOME/Documents/$DIR" || continue
-        printf "\n\n\n\n$PWD\n\n\n\n" 2>&1 >> /tmp/shUtility2GitDiffHead.diff
-        shGitLsTree 2>&1 >> /tmp/shUtility2GitDiffHead.diff
-        git status 2>&1 >> /tmp/shUtility2GitDiffHead.diff
-        git diff HEAD 2>&1 >> /tmp/shUtility2GitDiffHead.diff
-    done
-    less /tmp/shUtility2GitDiffHead.diff
-)}
-
 shUtility2Grep () {(set -e
 # this function will recursively grep $UTILITY2_DEPENDENTS for the regexp $1
-    for DIR in $UTILITY2_DEPENDENTS
+    for DIR in $UTILITY2_DEPENDENTS \
+        $(cd "$HOME/Documents"; ls -d swgg-* 2>/dev/null)
     do
         DIR="$HOME/Documents/$DIR"
         if [ -d "$DIR" ]
@@ -3431,17 +3396,18 @@ shXvfbStart () {
 # run main-program
 export UTILITY2_GIT_BASE_ID=9fe8c2255f4ac330c86af7f624d381d768304183
 export UTILITY2_DEPENDENTS='
-utility2
 apidoc-lite
+bootstrap-lite
 istanbul-lite
 jslint-lite
+sqljs-lite
+utility2
 '
 export UTILITY2_MACRO_JS='
 /* istanbul instrument in package utility2 */
 // assets.utility2.header.js - start
 /* jslint utility2:true */
 /* istanbul ignore next */
-// run shared js-env code - init-local
 (function (globalThis) {
     "use strict";
     let consoleError;
@@ -3487,7 +3453,7 @@ export UTILITY2_MACRO_JS='
          * this function will recursively deep-copy <obj> with keys sorted
          */
             let sorted;
-            if (typeof obj !== "object" || !obj) {
+            if (!(typeof obj === "object" && obj)) {
                 return obj;
             }
             // recursively deep-copy list with child-keys sorted
@@ -3509,7 +3475,7 @@ export UTILITY2_MACRO_JS='
     };
     local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw <msg> if <passed> is falsy
+     * this function will throw err.<msg> if <passed> is falsy
      */
         if (passed) {
             return;
@@ -3526,7 +3492,7 @@ export UTILITY2_MACRO_JS='
                 typeof msg === "string"
                 // if msg is string, then leave as is
                 ? msg
-                // else JSON.stringify(msg)
+                // else JSON.stringify msg
                 : JSON.stringify(msg, undefined, 4)
             )
         );
@@ -3587,16 +3553,41 @@ export UTILITY2_MACRO_JS='
         recurse(tgt, src, depth | 0);
         return tgt;
     };
-    // bug-workaround - throw unhandledRejections in node-process
-    if (
-        typeof process === "object" && process
-        && typeof process.on === "function"
-        && process.unhandledRejections !== "strict"
-    ) {
-        process.unhandledRejections = "strict";
-        process.on("unhandledRejection", function (err) {
-            throw err;
-        });
+    // require builtin
+    if (!local.isBrowser) {
+        if (process.unhandledRejections !== "strict") {
+            process.unhandledRejections = "strict";
+            process.on("unhandledRejection", function (err) {
+                throw err;
+            });
+        }
+        local.assert = require("assert");
+        local.buffer = require("buffer");
+        local.child_process = require("child_process");
+        local.cluster = require("cluster");
+        local.crypto = require("crypto");
+        local.dgram = require("dgram");
+        local.dns = require("dns");
+        local.domain = require("domain");
+        local.events = require("events");
+        local.fs = require("fs");
+        local.http = require("http");
+        local.https = require("https");
+        local.net = require("net");
+        local.os = require("os");
+        local.path = require("path");
+        local.querystring = require("querystring");
+        local.readline = require("readline");
+        local.repl = require("repl");
+        local.stream = require("stream");
+        local.string_decoder = require("string_decoder");
+        local.timers = require("timers");
+        local.tls = require("tls");
+        local.tty = require("tty");
+        local.url = require("url");
+        local.util = require("util");
+        local.vm = require("vm");
+        local.zlib = require("zlib");
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
@@ -4038,9 +4029,7 @@ local.templateRenderMyApp = function (template) {
  */
     let githubRepo;
     let packageJson;
-    packageJson = JSON.parse(
-        require("fs").readFileSync("package.json", "utf8")
-    );
+    packageJson = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
     local.objectAssignDefault(packageJson, {
         nameLib: packageJson.name.replace((
             /\W/g
@@ -4434,6 +4423,9 @@ local.ajax = function (opt, onError) {
     // Blob
     // https://developer.mozilla.org/en-US/docs/Web/API/Blob
     case local2.Blob:
+    // FormData
+    // https://developer.mozilla.org/en-US/docs/Web/API/FormData
+    case local2.FormData:
         local2.blobRead(xhr.data, function (err, data) {
             if (err) {
                 xhr.onEvent(err);

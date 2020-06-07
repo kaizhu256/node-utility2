@@ -12,7 +12,6 @@
 // assets.utility2.header.js - start
 /* jslint utility2:true */
 /* istanbul ignore next */
-// run shared js-env code - init-local
 (function (globalThis) {
     "use strict";
     let consoleError;
@@ -58,7 +57,7 @@
          * this function will recursively deep-copy <obj> with keys sorted
          */
             let sorted;
-            if (typeof obj !== "object" || !obj) {
+            if (!(typeof obj === "object" && obj)) {
                 return obj;
             }
             // recursively deep-copy list with child-keys sorted
@@ -80,7 +79,7 @@
     };
     local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw <msg> if <passed> is falsy
+     * this function will throw err.<msg> if <passed> is falsy
      */
         if (passed) {
             return;
@@ -97,7 +96,7 @@
                 typeof msg === "string"
                 // if msg is string, then leave as is
                 ? msg
-                // else JSON.stringify(msg)
+                // else JSON.stringify msg
                 : JSON.stringify(msg, undefined, 4)
             )
         );
@@ -158,16 +157,41 @@
         recurse(tgt, src, depth | 0);
         return tgt;
     };
-    // bug-workaround - throw unhandledRejections in node-process
-    if (
-        typeof process === "object" && process
-        && typeof process.on === "function"
-        && process.unhandledRejections !== "strict"
-    ) {
-        process.unhandledRejections = "strict";
-        process.on("unhandledRejection", function (err) {
-            throw err;
-        });
+    // require builtin
+    if (!local.isBrowser) {
+        if (process.unhandledRejections !== "strict") {
+            process.unhandledRejections = "strict";
+            process.on("unhandledRejection", function (err) {
+                throw err;
+            });
+        }
+        local.assert = require("assert");
+        local.buffer = require("buffer");
+        local.child_process = require("child_process");
+        local.cluster = require("cluster");
+        local.crypto = require("crypto");
+        local.dgram = require("dgram");
+        local.dns = require("dns");
+        local.domain = require("domain");
+        local.events = require("events");
+        local.fs = require("fs");
+        local.http = require("http");
+        local.https = require("https");
+        local.net = require("net");
+        local.os = require("os");
+        local.path = require("path");
+        local.querystring = require("querystring");
+        local.readline = require("readline");
+        local.repl = require("repl");
+        local.stream = require("stream");
+        local.string_decoder = require("string_decoder");
+        local.timers = require("timers");
+        local.tls = require("tls");
+        local.tty = require("tty");
+        local.url = require("url");
+        local.util = require("util");
+        local.vm = require("vm");
+        local.zlib = require("zlib");
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
@@ -206,17 +230,15 @@ local.cliRun = function (opt) {
 /*
  * this function will run cli with given <opt>
  */
-    let cliDict;
-    cliDict = local.cliDict;
-    cliDict._eval = cliDict._eval || function () {
+    local.cliDict._eval = local.cliDict._eval || function () {
     /*
      * <code>
      * will eval <code>
      */
         globalThis.local = local;
-        require("vm").runInThisContext(process.argv[3]);
+        local.vm.runInThisContext(process.argv[3]);
     };
-    cliDict._help = cliDict._help || function () {
+    local.cliDict._help = local.cliDict._help || function () {
     /*
      *
      * will print help
@@ -251,11 +273,11 @@ local.cliRun = function (opt) {
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         strDict = {};
-        Object.keys(cliDict).sort().forEach(function (key, ii) {
+        Object.keys(local.cliDict).sort().forEach(function (key, ii) {
             if (key[0] === "_" && key !== "_default") {
                 return;
             }
-            str = String(cliDict[key]);
+            str = String(local.cliDict[key]);
             if (key === "_default") {
                 key = "";
             }
@@ -321,13 +343,13 @@ local.cliRun = function (opt) {
         }).join("\n\n");
         console.log(str);
     };
-    cliDict["--eval"] = cliDict["--eval"] || cliDict._eval;
-    cliDict["--help"] = cliDict["--help"] || cliDict._help;
-    cliDict["-e"] = cliDict["-e"] || cliDict._eval;
-    cliDict["-h"] = cliDict["-h"] || cliDict._help;
-    cliDict._default = cliDict._default || cliDict._help;
-    cliDict.help = cliDict.help || cliDict._help;
-    cliDict._interactive = cliDict._interactive || function () {
+    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
+    local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
+    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
+    local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
+    local.cliDict._default = local.cliDict._default || local.cliDict._help;
+    local.cliDict.help = local.cliDict.help || local.cliDict._help;
+    local.cliDict._interactive = local.cliDict._interactive || function () {
     /*
      *
      * will start interactive-mode
@@ -337,27 +359,33 @@ local.cliRun = function (opt) {
             useGlobal: true
         });
     };
-    cliDict["--interactive"] = cliDict["--interactive"] || cliDict._interactive;
-    cliDict["-i"] = cliDict["-i"] || cliDict._interactive;
-    cliDict._version = cliDict._version || function () {
+    local.cliDict["--interactive"] = (
+        local.cliDict["--interactive"]
+        || local.cliDict._interactive
+    );
+    local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
+    local.cliDict._version = local.cliDict._version || function () {
     /*
      *
      * will print version
      */
         console.log(require(__dirname + "/package.json").version);
     };
-    cliDict["--version"] = cliDict["--version"] || cliDict._version;
-    cliDict["-v"] = cliDict["-v"] || cliDict._version;
+    local.cliDict["--version"] = (
+        local.cliDict["--version"]
+        || local.cliDict._version
+    );
+    local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
     // default to --help command if no arguments are given
     if (process.argv.length <= 2) {
-        cliDict._help();
+        local.cliDict._help();
         return;
     }
-    if (cliDict[process.argv[2]]) {
-        cliDict[process.argv[2]]();
+    if (local.cliDict[process.argv[2]]) {
+        local.cliDict[process.argv[2]]();
         return;
     }
-    cliDict._default();
+    local.cliDict._default();
 };
 
 local.moduleDirname = function (module, pathList) {
@@ -835,13 +863,13 @@ local.apidocCreate = function (opt) {
      */
         let result;
         local.tryCatchOnError(function () {
-            file = require("path").resolve(opt.dir, file);
+            file = local.path.resolve(opt.dir, file);
             console.error("apidocCreate - readExample " + file);
             result = "";
             result = local.identity(
                 "\n\n\n\n\n\n\n\n"
                 // bug-workaround - truncate example to manageable size
-                + require("fs").readFileSync(file, "utf8").slice(0, 262144)
+                + local.fs.readFileSync(file, "utf8").slice(0, 262144)
                 + "\n\n\n\n\n\n\n\n"
             ).replace((
                 /\r\n*/g
@@ -949,7 +977,7 @@ local.apidocCreate = function (opt) {
         opt.exampleList = opt.exampleList.concat(
             // find . -maxdepth 1 -mindepth 1 -name "*.js" -type f
             // https://stackoverflow.com/questions/4509624/how-to-limit-depth-for-recursive-file-list
-            require("child_process").execSync(
+            local.child_process.execSync(
                 "find \"" + opt.dir
                 + "\" -maxdepth " + depth + " -mindepth " + depth
                 + " -type f | sed -e \"s|" + opt.dir
@@ -1076,7 +1104,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
         opt.libFileList = opt.libFileList.concat(
             // find . -maxdepth 1 -mindepth 1 -name "*.js" -type f
             // https://stackoverflow.com/questions/4509624/how-to-limit-depth-for-recursive-file-list
-            require("child_process").execSync(
+            local.child_process.execSync(
                 "find \"" + opt.dir
                 + "\" -maxdepth " + depth + " -mindepth " + depth
                 + " -name \"*.js\" -type f | sed -e \"s|" + opt.dir
@@ -1108,10 +1136,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
     opt.libFileList.every(function (file) {
         local.tryCatchOnError(function () {
             tmp = {};
-            tmp.name = require("path").basename(file).replace(
-                "lib.",
-                ""
-            ).replace((
+            tmp.name = local.path.basename(file).replace("lib.", "").replace((
                 /\.[^.]*?$/
             ), "").replace((
                 /\W/g

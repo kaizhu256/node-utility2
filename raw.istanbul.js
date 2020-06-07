@@ -18,13 +18,6 @@ shRawLibFetch
         {
             "url": "https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js"
         }
-    ],
-    "replaceList": [
-        {
-            "flags": "g",
-            "replace": "require2(",
-            "source": "\\brequire\\("
-        }
     ]
 }
 -                program = ESP.parse(code, {
@@ -5883,7 +5876,7 @@ file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
         return tree;
     }
 
-    exports.version = require2('./package.json').version;
+    exports.version = require('./package.json').version;
     exports.Syntax = Syntax;
     exports.traverse = traverse;
     exports.replace = replace;
@@ -6123,8 +6116,8 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
         FORMAT_MINIFY,
         FORMAT_DEFAULTS;
 
-    estraverse = require2('estraverse');
-    esutils = require2('esutils');
+    estraverse = require('estraverse');
+    esutils = require('esutils');
 
     Syntax = estraverse.Syntax;
 
@@ -8609,7 +8602,7 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
             if (!exports.browser) {
                 // We assume environment is node.js
                 // And prevent from including source-map by browserify
-                SourceNode = require2('source-map').SourceNode;
+                SourceNode = require('source-map').SourceNode;
             } else {
                 SourceNode = global.sourceMap.SourceNode;
             }
@@ -8655,7 +8648,7 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
 
     FORMAT_DEFAULTS = getDefaultOptions().format;
 
-    exports.version = require2('./package.json').version;
+    exports.version = require('./package.json').version;
     exports.generate = generate;
     exports.attachComments = estraverse.attachComments;
     exports.Precedence = updateDeeply({}, Precedence);
@@ -8687,9 +8680,9 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
     "use strict";
     var SYNTAX,
         nodeType,
-        ESP = isNode ? require2('esprima') : esprima,
-        ESPGEN = isNode ? require2('escodegen') : escodegen,  //TODO - package as dependency
-        crypto = isNode ? require2('crypto') : null,
+        ESP = isNode ? require('esprima') : esprima,
+        ESPGEN = isNode ? require('escodegen') : escodegen,  //TODO - package as dependency
+        crypto = isNode ? require('crypto') : null,
         LEADER_WRAP = '(function () { ',
         TRAILER_WRAP = '\n}());',
         COMMENT_RE = /^\s*istanbul\s+ignore\s+(if|else|next)(?=\W|$)/,
@@ -9015,7 +9008,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
      * Usage on nodejs
      * ---------------
      *
-     *      var instrumenter = new require2('istanbul').Instrumenter(),
+     *      var instrumenter = new require('istanbul').Instrumenter(),
      *          changed = instrumenter.instrumentSync('function meaningOfLife() { return 42; }', 'filename.js');
      *
      * Usage in a browser
