@@ -75,10 +75,10 @@ shBaseInstall () {
 # this function will install .bashrc, .screenrc, .vimrc, and lib.utility2.sh in $HOME,
 # and is intended for aws-ec2 setup
 # example use:
-# curl -o "$HOME/lib.utility2.sh" https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh && . "$HOME/lib.utility2.sh" && shBaseInstall
+# curl -Lf -o "$HOME/lib.utility2.sh" https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh && . "$HOME/lib.utility2.sh" && shBaseInstall
     for FILE in .screenrc .vimrc lib.utility2.sh
     do
-        curl -Lfs -o "$HOME/$FILE" \
+        curl -Lf -o "$HOME/$FILE" \
 "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE" ||
             return "$?"
     done
@@ -223,63 +223,59 @@ shBrowserScreenshot () {(set -e
     node -e '
 /* jslint utility2:true */
 (function () {
-"use strict";
-let opt;
-opt = {};
-opt.argv = process.argv;
-opt.cwd = process.cwd();
-opt.timeStart = Date.now();
-opt.url = opt.argv[1];
-if (!(
-    /^\w+?:/
-).test(opt.url)) {
-    opt.url = require("path").resolve(opt.url);
-}
-opt.file = require("url").parse(opt.url).pathname;
-if (opt.file.indexOf(opt.cwd) === 0) {
-    opt.file = opt.file.replace(opt.cwd, "");
-}
-opt.file = (
-    process.env.npm_config_dir_build
-    + "/screenshot."
-    + process.env.MODE_BUILD + ".browser."
-    + encodeURIComponent(opt.file.replace(
-        "/build.." + process.env.CI_BRANCH + ".." + process.env.CI_HOST,
-        "/build"
-    ))
-    + ".png"
-);
-opt.argList = [
-    "--headless",
-    "--incognito",
-    "--screenshot",
-    "--timeout=30000",
-    "-screenshot=" + opt.file,
-    opt.url
-];
-opt.command = process.env.CHROME_BIN;
-if (opt.argv[2] === "--debug") {
-    console.error(JSON.stringify(opt, undefined, 4));
-}
-process.on("exit", function (exitCode) {
-    if (typeof exitCode === "object" && exitCode) {
-        console.error(exitCode);
-        exitCode = 1;
+    "use strict";
+    let file;
+    let timeStart;
+    let url;
+    timeStart = Date.now();
+    url = process.argv[1];
+    if (!(
+        /^\w+?:/
+    ).test(url)) {
+        url = require("path").resolve(url);
     }
-    console.error(
-        "\nshBrowserScreenshot"
-        + " - " + (Date.now() - opt.timeStart) + " ms"
-        + " - exitCode " + exitCode
-        + " - " + opt.url
-        + "\n"
+    file = require("url").parse(url).pathname;
+    if (file.indexOf(process.cwd()) === 0) {
+        file = file.replace(process.cwd(), "");
+    }
+    file = (
+        process.env.npm_config_dir_build
+        + "/screenshot."
+        + process.env.MODE_BUILD + ".browser."
+        + encodeURIComponent(file.replace(
+            "/build.." + process.env.CI_BRANCH + ".." + process.env.CI_HOST,
+            "/build"
+        ))
+        + ".png"
     );
-});
-process.on("uncaughtException", process.exit);
-require("child_process").spawn(opt.command, opt.argList, {
-    stdio: [
-        "ignore", 1, 2
-    ]
-});
+    process.on("exit", function (exitCode) {
+        if (typeof exitCode === "object" && exitCode) {
+            console.error(exitCode);
+            exitCode = 1;
+        }
+        console.error(
+            "\nshBrowserScreenshot"
+            + " - " + (Date.now() - timeStart) + " ms"
+            + " - exitCode " + exitCode
+            + " - " + url
+            + " - " + file
+            + "\n"
+        );
+    });
+    process.on("uncaughtException", process.exit);
+    process.on("unhandledRejection", process.exit);
+    require("child_process").spawn(process.env.CHROME_BIN, [
+        "--headless",
+        "--incognito",
+        "--screenshot",
+        "--timeout=30000",
+        "-screenshot=" + file,
+        url
+    ], {
+        stdio: [
+            "ignore", 1, 2
+        ]
+    });
 }());
 ' "$1" "$2"
 )}
@@ -323,7 +319,7 @@ shBuildApp () {(set -e
     do
         if [ ! -f "$FILE" ]
         then
-            curl -Lfs -O \
+            curl -Lf -O \
 "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE"
         fi
     done
@@ -355,38 +351,40 @@ shBuildApp () {(set -e
 /* jslint utility2:true */
 (function (local) {
     "use strict";
+    let fs;
     let tmp;
-    if (!local.fs.existsSync("README.md", "utf8")) {
-        local.fs.writeFileSync("README.md", local.templateRenderMyApp(
+    fs = require("fs");
+    if (!fs.existsSync("README.md", "utf8")) {
+        fs.writeFileSync("README.md", local.templateRenderMyApp(
             local.assetsDict["/assets.readme.template.md"],
             {}
         ));
     }
-    if (!local.fs.existsSync(
+    if (!fs.existsSync(
         "lib." + process.env.npm_package_nameLib + ".js",
         "utf8"
     )) {
         tmp = local.assetsDict["/assets.my_app.template.js"];
-        if (local.fs.existsSync("assets.utility2.rollup.js")) {
+        if (fs.existsSync("assets.utility2.rollup.js")) {
             tmp = tmp.replace(
                 "    // || globalThis.utility2_rollup_old || ",
                 "    || globalThis.utility2_rollup_old || "
             );
         }
-        local.fs.writeFileSync(
+        fs.writeFileSync(
             "lib." + process.env.npm_package_nameLib + ".js",
             local.templateRenderMyApp(tmp, {})
         );
     }
-    if (!local.fs.existsSync("test.js", "utf8")) {
+    if (!fs.existsSync("test.js", "utf8")) {
         tmp = local.assetsDict["/assets.test.template.js"];
-        if (local.fs.existsSync("assets.utility2.rollup.js")) {
+        if (fs.existsSync("assets.utility2.rollup.js")) {
             tmp = tmp.replace(
                 "require(\u0027utility2\u0027)",
                 "require(\u0027./assets.utility2.rollup.js\u0027)"
             );
         }
-        local.fs.writeFileSync("test.js", local.templateRenderMyApp(tmp, {}));
+        fs.writeFileSync("test.js", local.templateRenderMyApp(tmp, {}));
     }
 }(require(process.env.npm_config_dir_utility2)));
 '
@@ -474,12 +472,13 @@ shBuildCi () {(set -e
             node -e '
 /* jslint utility2:true */
 (function (local) {
-"use strict";
-["assets.utility2.rollup.js"].forEach(function (file) {
-    if (local.fs.existsSync(file)) {
-        local.fs.writeFileSync(file, local.assetsDict["/" + file]);
+    "use strict";
+    if (require("fs").existsSync("assets.utility2.rollup.js")) {
+        require("fs").writeFileSync(
+            "assets.utility2.rollup.js",
+            local.assetsDict["/assets.utility2.rollup.js"]
+        );
     }
-});
 }(require("utility2")));
 '
             shBuildApp
@@ -515,10 +514,11 @@ shBuildCi () {(set -e
                 "$npm_config_dir_utility2" \
                 --branch=alpha --single-branch --depth=50
             mkdir -p "$npm_config_dir_utility2/tmp/build/app"
-            curl -Lfs https://raw.githubusercontent.com\
+            curl -Lf -o \
+"$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js" \
+https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/build..alpha..travis-ci.com/app\
-/assets.utility2.rollup.js > \
-"$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js"
+/assets.utility2.rollup.js
             ;;
         esac
         shBuildCiInternal
@@ -1182,7 +1182,7 @@ shCryptoTravisDecrypt () {(set -e
     URL="https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/.CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG"
     shBuildPrint "decrypting $URL ..."
-    curl -#Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
+    curl -Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
 )}
 
 shCryptoTravisEncrypt () {(set -e
@@ -1206,7 +1206,7 @@ shCryptoTravisEncrypt () {(set -e
         TMPFILE="$(mktemp)"
         URL="https://api.travis-ci.com/repos/$GITHUB_REPO/key"
         shBuildPrint "fetch $URL"
-        curl -#Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" |
+        curl -Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" |
             sed -n -e \
 "s/.*-----BEGIN [RSA ]*PUBLIC KEY-----\(.*\)-----END [RSA ]*PUBLIC KEY-----.*/\
 -----BEGIN PUBLIC KEY-----\\1-----END PUBLIC KEY-----/" \
@@ -1264,7 +1264,7 @@ shDeployGithub () {(set -e
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
     if [ "$(
-        curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL"
+        curl -L --connect-timeout 60 -o /dev/null -w "%{http_code}" "$TEST_URL"
     )" -lt 400 ]
     then
         shBuildPrint "curl test passed for $TEST_URL"
@@ -1300,7 +1300,7 @@ shDeployHeroku () {(set -e
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
     if [ "$(
-        curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL"
+        curl -L --connect-timeout 60 -o /dev/null -w "%{http_code}" "$TEST_URL"
     )" -lt 400 ]
     then
         shBuildPrint "curl test passed for $TEST_URL"
@@ -1664,6 +1664,7 @@ shGitInfo () {(set -e
     git grep -E '\becho\b' *.sh || true
     printf "\n"
     git grep -E '\bset -\w*x\b' *.sh || true
+    git grep -E '\bcurl [^-].* -' *.sh || true
     cat package.json
 )}
 
@@ -1676,8 +1677,8 @@ shGitInitBase () {(set -e
     git checkout -b alpha
     git add .
     git commit -am "initial commit"
-    curl https://raw.githubusercontent.com/kaizhu256/node-utility2\
-/alpha/.gitconfig > .git/config
+    curl -Lf -o .git/config \
+https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig
 )}
 
 shGitLsTree () {(set -e
@@ -1736,13 +1737,13 @@ shGitSquashShift () {(set -e
 
 shGithubApiRateLimitGet () {(set -e
 # this function will the rate-limit for the $GITHUB_TOKEN
-    curl -I https://api.github.com -H "Authorization: token $GITHUB_TOKEN"
+    curl -Lf -H "Authorization: token $GITHUB_TOKEN" -I https://api.github.com
 )}
 
 shGithubRepoBranchId () {(set -e
 # this function will print the $COMMIT_ID for $GITHUB_REPO:#$BRANCH
     BRANCH="$1"
-    curl -H "user-agent: undefined" -Lfs "https://api.github.com\
+    curl -Lf -H "user-agent: undefined" "https://api.github.com\
 /repos/$GITHUB_REPO/commits?access_token=$GITHUB_TOKEN&sha=$BRANCH" |
         sed -e 's/^\[{"sha":"//' -e 's/".*//'
 )}
@@ -1770,7 +1771,7 @@ shGithubRepoCreate () {(set -e
     mkdir -p "/tmp/githubRepo/$(printf "$GITHUB_REPO" | sed -e "s/\/.*//")"
     cp -a /tmp/githubRepo/kaizhu256/base "/tmp/githubRepo/$GITHUB_REPO"
     cd "/tmp/githubRepo/$GITHUB_REPO"
-    curl -Lfs \
+    curl -Lf \
 https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig |
         sed -e "s|kaizhu256/node-utility2|$GITHUB_REPO|" > .git/config
     # create github-repo
@@ -1828,7 +1829,7 @@ shGithubRepoDescriptionUpdate () {(set -e
     GITHUB_REPO="$1"
     DESCRIPTION="$2"
     shBuildPrint "update $GITHUB_REPO description"
-    curl -#Lf \
+    curl -Lf \
         -H "Authorization: token $GITHUB_TOKEN" \
         -H "Content-Type: application/json" \
         -H "User-Agent: undefined" \
@@ -1965,11 +1966,11 @@ shImageToDataUri () {(set -e
     case "$1" in
     http://*)
         FILE=/tmp/shImageToDataUri.png
-        curl -#Lf -o "$FILE" "$1"
+        curl -Lf -o "$FILE" "$1"
         ;;
     https://*)
         FILE=/tmp/shImageToDataUri.png
-        curl -#Lf -o "$FILE" "$1"
+        curl -Lf -o "$FILE" "$1"
         ;;
     *)
         FILE="$1"
@@ -3088,14 +3089,14 @@ shTravisRepoCreate () {(set -e
     #!! shTravisSync () {(set -e
     # this function will sync travis-ci with given $TRAVIS_ACCESS_TOKEN
     # this is an expensive operation that will use up your github rate-limit quota
-        curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
+        curl -Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -X POST \
             "https://api.travis-ci.com/users/sync"
     #!! )}
     while true
     do
         shSleep 2
-        if (curl "https://api.travis-ci.com/repos/$GITHUB_REPO" \
-            -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -fs 2>&1 > /dev/null)
+        if (curl -Lf "https://api.travis-ci.com/repos/$GITHUB_REPO" \
+            -H "Authorization: token $TRAVIS_ACCESS_TOKEN" 2>&1 > /dev/null)
         then
             break
         fi
@@ -3187,7 +3188,7 @@ local.gotoNext(opt, function (err, data) {
             )
         }, function (err, xhr) {
             local.assertOrThrow(!err, err);
-            local.fs.writeFile(
+            require("fs").writeFile(
                 "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.gitignore",
                 xhr.responseText,
                 onParallel
@@ -3201,19 +3202,19 @@ local.gotoNext(opt, function (err, data) {
             )
         }, function (err, xhr) {
             local.assertOrThrow(!err, err);
-            local.fs.writeFile(
+            require("fs").writeFile(
                 "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.travis.yml",
                 xhr.responseText,
                 onParallel
             );
         });
         onParallel.cnt += 1;
-        local.fs.open("README.md", "w", function (err, fd) {
+        require("fs").open("README.md", "w", function (err, fd) {
             local.assertOrThrow(!err, err);
-            local.fs.close(fd, onParallel);
+            require("fs").close(fd, onParallel);
         });
         onParallel.cnt += 1;
-        local.fs.writeFile(
+        require("fs").writeFile(
             "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/package.json",
             JSON.stringify({
                 devDependencies: {
