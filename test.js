@@ -1163,137 +1163,6 @@ local.testCase_moduleDirname_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
-local.testCase_objectAssignRecurse_default = function (opt, onError) {
-/*
- * this function will test objectAssignRecurse's default handling-behavior
- */
-    // test null-case handling-behavior
-    local.objectAssignRecurse();
-    local.objectAssignRecurse({});
-    // test falsy handling-behavior
-    [
-        "", 0, false, null, undefined
-    ].forEach(function (aa) {
-        [
-            "", 0, false, null, undefined
-        ].forEach(function (bb) {
-            assertJsonEqual(
-                local.objectAssignRecurse({
-                    data: aa
-                }, {
-                    data: bb
-                }).data,
-                bb === undefined
-                ? aa
-                : bb
-            );
-        });
-    });
-    // test non-recursive handling-behavior
-    assertJsonEqual(local.objectAssignRecurse({
-        aa: 1,
-        bb: {
-            cc: 1
-        },
-        cc: {
-            dd: 1
-        },
-        dd: [
-            1, 1
-        ],
-        ee: [
-            1, 1
-        ]
-    }, {
-        aa: 2,
-        bb: {
-            dd: 2
-        },
-        cc: {
-            ee: 2
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    // test default-depth handling-behavior
-    }, null), {
-        aa: 2,
-        bb: {
-            dd: 2
-        },
-        cc: {
-            ee: 2
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    });
-    // test recursive handling-behavior
-    assertJsonEqual(local.objectAssignRecurse({
-        aa: 1,
-        bb: {
-            cc: 1
-        },
-        cc: {
-            dd: 1
-        },
-        dd: [
-            1, 1
-        ],
-        ee: [
-            1, 1
-        ]
-    }, {
-        aa: 2,
-        bb: {
-            dd: 2
-        },
-        cc: {
-            ee: 2
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    // test depth handling-behavior
-    }, 2), {
-        aa: 2,
-        bb: {
-            cc: 1,
-            dd: 2
-        },
-        cc: {
-            dd: 1,
-            ee: 2
-        },
-        dd: [
-            2, 2
-        ],
-        ee: {
-            ff: 2
-        }
-    });
-    // test env with empty-string handling-behavior
-    assertJsonEqual(local.objectAssignRecurse(
-        local.env,
-        {
-            "emptyString": null
-        },
-        // test default-depth handling-behavior
-        null,
-        local.env
-    ).emptyString, "");
-    onError(undefined, opt);
-};
-
 local.testCase_onErrorThrow_err = function (opt, onError) {
 /*
  * this function will test onErrorThrow's err handling-behavior
@@ -2044,7 +1913,7 @@ if (local.isBrowser) {
 
 
 (function () {
-    switch (local.env.HEROKU_APP_NAME) {
+    switch (process.env.HEROKU_APP_NAME) {
     case "h1-cron1":
         // heroku-keepalive
         setInterval(function () {
@@ -2114,7 +1983,7 @@ local.assetsDict["/assets.script_only.html"] = (
 );
 if (process.argv[2]) {
     // start with coverage
-    if (local.env.npm_config_mode_coverage) {
+    if (process.env.npm_config_mode_coverage) {
         process.argv.splice(1, 1, __dirname + "/lib.istanbul.js", "cover");
         local.istanbul.cliDict[process.argv[2]]();
         return;
@@ -2125,8 +1994,8 @@ if (process.argv[2]) {
     local.Module.runMain();
 }
 // runme
-if (local.env.npm_config_runme) {
-    require(require("path").resolve(local.env.npm_config_runme));
+if (process.env.npm_config_runme) {
+    require(require("path").resolve(process.env.npm_config_runme));
 }
 }());
 }());
