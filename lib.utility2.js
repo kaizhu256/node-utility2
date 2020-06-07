@@ -1031,7 +1031,7 @@ local.assetsDict["/assets.index.template.html"] = \'\\\n\
 local.assetsDict["/assets.my_app.js"] = (\n\
     local.assetsDict["/assets.my_app.js"]\n\
     || local.fs.readFileSync(\n\
-        local.path.resolve(local.__dirname + "/lib.my_app.js"),\n\
+        require("path").resolve(local.__dirname + "/lib.my_app.js"),\n\
         "utf8"\n\
     ).replace((\n\
         /^#!\\//\n\
@@ -1620,10 +1620,12 @@ local.cliDict["utility2.start"] = function () {
  * <port>
  * will start utility2 http-server on given <port> (default 8081)
  */
-    local.env.PORT = process.argv[3] || local.env.PORT;
     globalThis.local = local;
     local.replStart();
     local.testRunServer({});
+    if (local.env.npm_config_runme) {
+        require(require("path").resolve(local.env.npm_config_runme));
+    }
 };
 
 local.cliDict["utility2.testReportCreate"] = function () {
@@ -1634,7 +1636,7 @@ local.cliDict["utility2.testReportCreate"] = function () {
     process.exit(
         local.testReportCreate(
             JSON.parse(local.fs.readFileSync(
-                local.path.resolve(
+                require("path").resolve(
                     local.env.npm_config_dir_build + "/test-report.json"
                 ),
                 "utf8"
@@ -2701,7 +2703,7 @@ local.browserTest = function (opt, onError) {
             // save test-report.json
             onParallel.cnt += 1;
             local.fs.writeFile(
-                local.path.resolve(
+                require("path").resolve(
                     local.env.npm_config_dir_build + "/test-report.json"
                 ),
                 JSON.stringify(globalThis.utility2_testReport),
@@ -3317,7 +3319,7 @@ local.childProcessEval = function (code, opt) {
     promise.child = require("child_process").spawn("node", [
         "-e", (
             "/*jslint node*/\n"
-            + "let code = \"\";\n"
+            + "let data = \"\";\n"
             + "process.stdin.setEncoding(\"utf8\");\n"
             + "process.stdin.on(\"readable\", function () {\n"
             + "    let chunk;\n"
@@ -3326,11 +3328,11 @@ local.childProcessEval = function (code, opt) {
             + "        if (chunk === null) {\n"
             + "            return;\n"
             + "        }\n"
-            + "        code += chunk;\n"
+            + "        data += chunk;\n"
             + "    }\n"
             + "});\n"
             + "process.stdin.on(\"end\", function () {\n"
-            + "    require(\"vm\").runInThisContext(code);\n"
+            + "    require(\"vm\").runInThisContext(data);\n"
             + "});\n"
         )
     ], Object.assign({
@@ -5141,7 +5143,7 @@ local.requireReadme = function () {
     }
     // init file $npm_package_main
     globalThis.utility2_moduleExports = require(
-        local.path.resolve(local.env.npm_package_main)
+        require("path").resolve(local.env.npm_package_main)
     );
     globalThis.utility2_moduleExports.globalThis = globalThis;
     // read code from README.md
@@ -5166,7 +5168,7 @@ local.requireReadme = function () {
         "globalThis.utility2_moduleExports"
     );
     // init example.js
-    tmp = local.path.resolve("example.js");
+    tmp = require("path").resolve("example.js");
     // jslint code
     local.jslintAndPrint(code, tmp);
     // instrument code
@@ -7012,8 +7014,8 @@ if (local.isBrowser) {
 local.Module = require("module");
 // init env
 local.objectAssignDefault(local.env, {
-    npm_config_dir_build: local.path.resolve("tmp/build"),
-    npm_config_dir_tmp: local.path.resolve("tmp")
+    npm_config_dir_build: require("path").resolve("tmp/build"),
+    npm_config_dir_tmp: require("path").resolve("tmp")
 });
 // merge previous test-report
 if (local.env.npm_config_file_test_report_merge) {
