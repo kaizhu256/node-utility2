@@ -5826,7 +5826,7 @@ local.testReportCreate = function (testReport) {
             /0000-00-00\u002000:00:00\u0020UTC\u0020-\u0020master\u0020-\u0020aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g
         ), (
             new Date().toISOString().slice(0, 19).replace("T", " ")
-            + " - " + local.env.CI_BRANCH + " - " + local.env.CI_COMMIT_ID
+            + " - " + process.env.CI_BRANCH + " - " + process.env.CI_COMMIT_ID
         )),
         "wrote file - test-report - {{pathname}}"
     );
@@ -5848,7 +5848,7 @@ local.testReportCreate = function (testReport) {
     );
     // if any test failed, then exit with non-zero exitCode
     console.error(
-        "\n" + local.env.MODE_BUILD
+        "\n" + process.env.MODE_BUILD
         + " - " + testReport.testsFailed + " failed tests\n"
     );
     // print failed testCase
@@ -6581,10 +6581,10 @@ local.urlParse = function (url) {
                 "/" + urlParsed.href.split("/").slice(3).join("/").split("#")[0]
             );
         } else {
-            local.env.PORT = local.env.PORT || "8081";
+            process.env.PORT = process.env.PORT || "8081";
             local.serverLocalHost = (
                 local.serverLocalHost
-                || ("http://127.0.0.1:" + local.env.PORT)
+                || ("http://127.0.0.1:" + process.env.PORT)
             );
             // resolve absolute path
             if (url[0] === "/") {
