@@ -1600,10 +1600,8 @@ local.cliDict["utility2.testReportCreate"] = function () {
 
 // run shared js-env code - function
 (function () {
-let env;
 let localEventListenerDict;
 // init var
-env = (typeof process === "object" && process && process.env) || {};
 localEventListenerDict = {};
 // init lib Blob
 local.Blob = globalThis.Blob || function (list, opt) {
@@ -5003,8 +5001,11 @@ local.requireReadme = function () {
  * this function will require and export example.js embedded in README.md
  */
     let code;
+    let env;
     let module;
     let tmp;
+    // init env
+    env = (typeof process === "object" && process && process.env) || {};
     // init module.exports
     module = {};
     // if file is modified, then restart process
