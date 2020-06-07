@@ -3374,7 +3374,7 @@ shUtility2GitCommitAndPush () {(set -e
     do
         cd "$HOME/Documents/$DIR" || continue
         printf "\n\n\n\n$PWD\n\n\n\n"
-        git commit -am shUtility2GitCommitAndPush || true
+        git commit -am "${1:-shUtility2GitCommitAndPush}" || true
         git push origin alpha
     done
 )}

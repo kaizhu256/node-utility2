@@ -1120,7 +1120,7 @@ utility2-comment -->\n\
 local.assetsDict["/assets.utility2.js"] = (
     local.assetsDict["/assets.utility2.js"]
     || local.fs.readFileSync(
-        local.path.resolve(local.__dirname + "/lib.utility2.js"),
+        require("path").resolve(local.__dirname + "/lib.utility2.js"),
         "utf8"
     ).replace((
         /^#!\//
