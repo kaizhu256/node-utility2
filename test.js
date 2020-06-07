@@ -156,7 +156,6 @@
                 throw err;
             });
         }
-        local.assert = require("assert");
         local.fs = require("fs");
         local.http = require("http");
         local.https = require("https");
@@ -881,7 +880,7 @@ local.testCase_cliRun_default = function (opt, onError) {
                 argv: []
             }
         ], [
-            require("local.repl"), {
+            require("repl"), {
                 start: local.nop
             }
         ], [

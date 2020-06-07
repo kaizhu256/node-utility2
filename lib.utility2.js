@@ -166,7 +166,6 @@
                 throw err;
             });
         }
-        local.assert = require("assert");
         local.fs = require("fs");
         local.http = require("http");
         local.https = require("https");
@@ -394,7 +393,6 @@ local.assetsDict["/assets.utility2.header.js"] = '\
                 throw err;\n\
             });\n\
         }\n\
-        local.assert = require("assert");\n\
         local.fs = require("fs");\n\
         local.http = require("http");\n\
         local.https = require("https");\n\

@@ -3594,7 +3594,6 @@ export UTILITY2_MACRO_JS='
                 throw err;
             });
         }
-        local.assert = require("assert");
         local.fs = require("fs");
         local.http = require("http");
         local.https = require("https");
