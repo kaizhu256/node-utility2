@@ -1888,40 +1888,45 @@ local._testCase_buildApidoc_default = function (opt, onError) {
         ];
         [
             [
-                local, "child_process"
+                process, "process"
             ], [
-                local, "cluster"
+                process.stdin, "stdin"
             ], [
-                local, "http"
+                require("child_process"), "child_process"
             ], [
-                local, "https"
+                require("cluster"), "cluster"
             ], [
-                local, "net"
+                require("fs"), "cluster"
             ], [
-                local, "repl"
+                require("http"), "http"
             ], [
-                local.events, "prototype"
+                require("https"), "https"
             ], [
-                globalThis, "process"
+                require("net"), "net"
             ], [
-                process, "stdin"
+                require("repl"), "repl"
             ], [
-                require("local.stream"), "prototype"
+                require("events").prototype, "prototype"
+            ], [
+                require("stream").prototype, "prototype"
             ]
-        ].forEach(function (elem, tmp) {
-            tmp = elem[0][elem[1]];
+        ].forEach(function ([
+            dict, name
+        ]) {
             mockDict = {};
-            Object.keys(tmp).forEach(function (key) {
-                if (typeof tmp[key] === "function" && !(
+            Object.entries(dict).forEach(function ([
+                key, val
+            ]) {
+                if (typeof val === "function" && !(
                     /^(?:fs\.Read|fs\.read|process\.binding|process\.dlopen)/
-                ).test(elem[1] + "." + key)) {
+                ).test(name + "." + key)) {
                     mockDict[key] = function () {
                         return;
                     };
                 }
             });
             mockList.push([
-                tmp, mockDict
+                dict, mockDict
             ]);
         });
         local.testMock(mockList, function (onError) {
