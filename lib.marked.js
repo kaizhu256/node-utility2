@@ -161,12 +161,9 @@
             });
         }
         local.assert = require("assert");
-        local.buffer = require("buffer");
         local.child_process = require("child_process");
         local.cluster = require("cluster");
         local.crypto = require("crypto");
-        local.dgram = require("dgram");
-        local.dns = require("dns");
         local.domain = require("domain");
         local.events = require("events");
         local.fs = require("fs");
@@ -181,12 +178,8 @@
         local.stream = require("stream");
         local.string_decoder = require("string_decoder");
         local.timers = require("timers");
-        local.tls = require("tls");
-        local.tty = require("tty");
         local.url = require("url");
         local.util = require("util");
-        local.vm = require("vm");
-        local.zlib = require("zlib");
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end

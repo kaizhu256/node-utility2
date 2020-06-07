@@ -167,12 +167,9 @@
             });
         }
         local.assert = require("assert");
-        local.buffer = require("buffer");
         local.child_process = require("child_process");
         local.cluster = require("cluster");
         local.crypto = require("crypto");
-        local.dgram = require("dgram");
-        local.dns = require("dns");
         local.domain = require("domain");
         local.events = require("events");
         local.fs = require("fs");
@@ -187,12 +184,8 @@
         local.stream = require("stream");
         local.string_decoder = require("string_decoder");
         local.timers = require("timers");
-        local.tls = require("tls");
-        local.tty = require("tty");
         local.url = require("url");
         local.util = require("util");
-        local.vm = require("vm");
-        local.zlib = require("zlib");
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
@@ -416,12 +409,9 @@ local.assetsDict["/assets.utility2.header.js"] = '\
             });\n\
         }\n\
         local.assert = require("assert");\n\
-        local.buffer = require("buffer");\n\
         local.child_process = require("child_process");\n\
         local.cluster = require("cluster");\n\
         local.crypto = require("crypto");\n\
-        local.dgram = require("dgram");\n\
-        local.dns = require("dns");\n\
         local.domain = require("domain");\n\
         local.events = require("events");\n\
         local.fs = require("fs");\n\
@@ -436,12 +426,8 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         local.stream = require("stream");\n\
         local.string_decoder = require("string_decoder");\n\
         local.timers = require("timers");\n\
-        local.tls = require("tls");\n\
-        local.tty = require("tty");\n\
         local.url = require("url");\n\
         local.util = require("util");\n\
-        local.vm = require("vm");\n\
-        local.zlib = require("zlib");\n\
     }\n\
 }((typeof globalThis === "object" && globalThis) || window));\n\
 // assets.utility2.header.js - end\n\
@@ -3359,7 +3345,7 @@ local.cliRun = function (opt) {
      * will eval <code>
      */
         globalThis.local = local;
-        local.vm.runInThisContext(process.argv[3]);
+        require("vm").runInThisContext(process.argv[3]);
     };
     local.cliDict._help = local.cliDict._help || function () {
     /*
