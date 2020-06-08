@@ -1748,11 +1748,12 @@ local._testCase_assetsAppJs_standalone = function (opt, onError) {
         return;
     }
     // test standalone assets.app.js
-    local.fsWriteFileWithMkdirp(
-        "tmp/buildApp/assets.app.js",
-        local.assetsDict["/assets.app.js"],
-        "wrote file - assets.app.js - {{pathname}}"
-    ).then(function () {
+    local.fsWriteFileWithMkdirp({
+        data: local.assetsDict["/assets.app.js"],
+        modeDebug: true,
+        modeUncaughtException: true,
+        pathname: "tmp/buildApp/assets.app.js"
+    }, function () {
         require("child_process").spawn("node", [
             "assets.app.js"
         ], {
@@ -2760,12 +2761,13 @@ local.buildApp = function (opt, onError) {
                         responseType: "raw"
                     }
                 ).then(function (xhr) {
-                    return local.fsWriteFileWithMkdirp(
-                        "tmp/build/app/" + elem.file,
-                        xhr.data,
-                        "wrote file - app - {{pathname}}"
-                    );
-                }).then(resolve);
+                    local.fsWriteFileWithMkdirp({
+                        data: xhr.data,
+                        modeDebug: true,
+                        modeUncaughtException: true,
+                        pathname: "tmp/build/app/" + elem.file
+                    }, resolve);
+                });
             });
         })).then(function () {
             // jslint app
@@ -3731,36 +3733,52 @@ local.fsRmrfSync = function (pathname) {
     } catch (ignore) {}
 };
 
-local.fsWriteFileWithMkdirp = async function (pathname, data, msg) {
+local.fsWriteFileWithMkdirp = function ({
+    data,
+    modeDebug,
+    modeUncaughtException,
+    pathname
+}, onError) {
 /*
  * this function will async write <data> to <pathname> with "mkdir -p"
  */
     let fs;
-    let success;
     // do nothing if module does not exist
     try {
-        fs = require("fs").promises;
+        fs = require("fs");
     } catch (ignore) {
-        return;
+        onError();
     }
     pathname = require("path").resolve(pathname);
-    // try to write pathname
-    try {
-        await fs.writeFile(pathname, data);
-        success = true;
-    } catch (ignore) {
+    // write pathname
+    fs.writeFile(pathname, data, function (err) {
+        if (!err) {
+            if (modeDebug) {
+                console.error("fsWriteFileWithMkdirp - " + pathname);
+            }
+            onError(undefined, true);
+            return;
+        }
         // mkdir -p
-        await fs.mkdir(require("path").dirname(pathname), {
+        fs.mkdir(require("path").dirname(pathname), {
             recursive: true
+        }, function (ignore) {
+            // re-write pathname
+            fs.writeFile(pathname, data, function (err) {
+                if (!err) {
+                    if (modeDebug) {
+                        console.error("fsWriteFileWithMkdirp - " + pathname);
+                    }
+                    onError(undefined, true);
+                    return;
+                }
+                if (modeUncaughtException) {
+                    throw err;
+                }
+                onError(err);
+            });
         });
-        // re-write pathname
-        await fs.writeFile(pathname, data);
-        success = true;
-    }
-    if (success && msg) {
-        console.error(msg.replace("{{pathname}}", pathname));
-    }
-    return success;
+    });
 };
 
 local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {

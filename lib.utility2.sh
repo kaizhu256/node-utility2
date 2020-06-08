@@ -3088,14 +3088,18 @@ shTravisRepoCreate () {(set -e
         let onError2;
         let promise;
         let resolve;
+        onError = onError || function () {
+        /*
+         * this function will do nothing
+         */
+            return;
+        };
         onError2 = function (err, responseText) {
             if (err) {
                 throw err;
             }
             opt.responseText = responseText;
-            if (onError) {
-                onError(undefined, opt);
-            }
+            onError(undefined, opt);
             resolve(opt);
         };
         opt = Object.assign({
@@ -3252,139 +3256,14 @@ shTravisRepoCreate () {(set -e
     //!! console.error(tmp);
 }());
 '
-    #!! case 3:
-        #!! local.ajax({
-            #!! data: "{\"hook\":{\"active\":true}}",
-            #!! headers: {
-                #!! Authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
-                #!! "Content-Type": "application/json; charset=utf-8"
-            #!! },
-            #!! method: "PUT",
-            #!! url: (
-                #!! "https://api.travis-ci.com/hooks/" + opt.id
-            #!! )
-        #!! }, opt.gotoNext);
-        #!! break;
-    #!! case 4:
-        #!! setTimeout(opt.gotoNext, 5000);
-        #!! break;
-    #!! case 5:
-        #!! onParallel = local.onParallel(opt.gotoNext);
-        #!! onParallel.cnt += 1;
-        #!! onParallel.cnt += 1;
-        #!! local.ajax({
-            #!! data: "{\"setting.value\":true}",
-            #!! headers: {
-                #!! Authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
-                #!! "Content-Type": "application/json; charset=utf-8",
-                #!! "Travis-API-Version": 3
-            #!! },
-            #!! method: "PATCH",
-            #!! url: (
-                #!! "https://api.travis-ci.com/repo/"
-                #!! + opt.id + "/setting/builds_only_with_travis_yml"
-            #!! )
-        #!! }, onParallel);
-        #!! onParallel.cnt += 1;
-        #!! local.ajax({
-            #!! data: "{\"setting.value\":true}",
-            #!! headers: {
-                #!! Authorization: "token "
-                #!! + process.env.TRAVIS_ACCESS_TOKEN,
-                #!! "Content-Type": "application/json; charset=utf-8",
-                #!! "Travis-API-Version": 3
-            #!! },
-            #!! method: "PATCH",
-            #!! url: (
-                #!! "https://api.travis-ci.com/repo/"
-                #!! + opt.id + "/setting/auto_cancel_pushes"
-            #!! )
-        #!! }, onParallel);
-        #!! onParallel();
-        #!! break;
-    #!! case 6:
-        #!! onParallel.cnt += 1;
-        #!! onParallel.cnt += 1;
-        #!! local.ajax({
-            #!! url: (
-                #!! "https://raw.githubusercontent.com"
-                #!! + "/kaizhu256/node-utility2/alpha/.gitignore"
-            #!! )
-        #!! }, function (err, xhr) {
-            #!! local.assertOrThrow(!err, err);
-            #!! require("fs").writeFile(
-                #!! "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.gitignore",
-                #!! xhr.responseText,
-                #!! onParallel
-            #!! );
-        #!! });
-        #!! onParallel.cnt += 1;
-        #!! local.ajax({
-            #!! url: (
-                #!! "https://raw.githubusercontent.com"
-                #!! + "/kaizhu256/node-utility2/alpha/.travis.yml"
-            #!! )
-        #!! }, function (err, xhr) {
-            #!! local.assertOrThrow(!err, err);
-            #!! require("fs").writeFile(
-                #!! "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.travis.yml",
-                #!! xhr.responseText,
-                #!! onParallel
-            #!! );
-        #!! });
-        #!! onParallel.cnt += 1;
-        #!! require("fs").open("README.md", "w", function (err, fd) {
-            #!! local.assertOrThrow(!err, err);
-            #!! require("fs").close(fd, onParallel);
-        #!! });
-        #!! onParallel.cnt += 1;
-        #!! require("fs").writeFile(
-            #!! "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/package.json",
-            #!! JSON.stringify({
-                #!! devDependencies: {
-                    #!! utility2: "kaizhu256/node-utility2#alpha"
-                #!! },
-                #!! name: process.env.GITHUB_REPO.replace((
-                    #!! /.+?\/node-|.+?\//
-                #!! ), ""),
-                #!! homepage: "https://github.com/" + process.env.GITHUB_REPO,
-                #!! repository: {
-                    #!! type: "git",
-                    #!! url: "https://github.com/" + process.env.GITHUB_REPO
-                    #!! + ".git"
-                #!! },
-                #!! scripts: {
-                    #!! "build-ci": "utility2 shBuildCi"
-                #!! },
-                #!! version: "0.0.1"
-            #!! }, undefined, 4),
-            #!! onParallel
-        #!! );
-        #!! onParallel();
-        #!! break;
-    #!! default:
-        #!! console.error(
-            #!! opt.shBuildPrintPrefix + new Date().toISOString()
-            #!! + process.env.GITHUB_REPO + (
-                #!! err
-                #!! ? " - ... failed to create - gotoState = " + opt.gotoState
-                #!! : " - ... created"
-            #!! )
-        #!! );
-    #!! }
-#!! });
-#!! opt.gotoState = 0;
-#!! opt.gotoNext();
-#!! }(globalThis.globalLocal));
-#!! '
-    #!! cd "/tmp/githubRepo/$GITHUB_REPO"
-    #!! unset GITHUB_ORG
-    #!! unset GITHUB_REPO
-    #!! shBuildInit
-    #!! shCryptoTravisEncrypt > /dev/null
-    #!! git add -f . .gitignore .travis.yml
-    #!! git commit -am "[npm publishAfterCommitAfterBuild]"
-    #!! shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f alpha
+    cd "/tmp/githubRepo/$GITHUB_REPO"
+    unset GITHUB_ORG
+    unset GITHUB_REPO
+    shBuildInit
+    shCryptoTravisEncrypt > /dev/null
+    git add -f . .gitignore .travis.yml
+    git commit -am "[npm publishAfterCommitAfterBuild]"
+    shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f alpha
 )}
 
 shUtility2BuildApp () {(set -e
