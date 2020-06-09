@@ -1,11 +1,13 @@
 #!/bin/sh
 # jslint utility2:true
 
-# POSIX test utility
+# POSIX reference
 # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/test.html
+# http://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
 
 # useful sh one-liners
 # http://sed.sourceforge.net/sed1line.txt
+# apt list --installed
 # export NODE_TLS_REJECT_UNAUTHORIZED=0 # use with caution
 # git branch -d -r origin/aa
 # git config --global diff.algorithm histogram
@@ -14,12 +16,15 @@
 # git ls-remote --heads origin
 # git update-index --chmod=+x aa.js
 # npm_package_private=1 GITHUB_REPO=aa/node-aa-bb-pro shCryptoWithGithubOrg aa shCryptoTravisEncrypt
+# openssl rand -base64 32 # random key
+# printf "$USERNAME:$(openssl passwd -apr1 "$PASSWD")\n" # htpasswd
 # shCryptoWithGithubOrg aa shCryptoTravisDecrypt ciphertext.txt
 # shCryptoWithGithubOrg aa shCryptoTravisEncrypt plaintext.txt
 # shCryptoWithGithubOrg aa shTravisRepoCreate aa/node-aa-bb
 # shCryptoWithGithubOrg aa shGithubApiRateLimitGet
-# shCryptoWithGithubOrg aa shGithubRepoTouch aa/node-aa-bb "touch" alpha
+# shCryptoWithGithubOrg aa shGithubRepoTouch aa/node-aa-bb alpha "[build app]"
 # DOCKER_V_GAME=1 DOCKER_V_HOME=1 DOCKER_PORT=4065 shDockerRestart work kaizhu256/node-utility2
+# shDockerSh work 'cd ~/Documents/utility2 && shUtility2DependentsSync'
 # shGitAddTee npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
 # shSource && shGitAddTee shUtility2DependentsSync
 # utility2 shReadmeTest example.js
@@ -62,7 +67,7 @@ shBaseInit () {
         fi
     done
     # init ubuntu .bashrc
-    shUbuntuInit || return "$?"
+    shBashrcDebianInit || return "$?"
     # init custom alias
     alias lld="ls -adlF" || return "$?"
 }
@@ -71,10 +76,10 @@ shBaseInstall () {
 # this function will install .bashrc, .screenrc, .vimrc, and lib.utility2.sh in $HOME,
 # and is intended for aws-ec2 setup
 # example use:
-# curl -o "$HOME/lib.utility2.sh" https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh && . "$HOME/lib.utility2.sh" && shBaseInstall
+# curl -Lf -o "$HOME/lib.utility2.sh" https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh && . "$HOME/lib.utility2.sh" && shBaseInstall
     for FILE in .screenrc .vimrc lib.utility2.sh
     do
-        curl -Lfs -o "$HOME/$FILE" \
+        curl -Lf -o "$HOME/$FILE" \
 "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE" ||
             return "$?"
     done
@@ -96,68 +101,182 @@ shBaseInstall () {
     . "$HOME/.bashrc" || return "$?"
 }
 
+shBashrcDebianInit () {
+# this function will init debian:stable /etc/skel/.bashrc
+# https://sources.debian.org/src/bash/4.4-5/debian/skel.bashrc/
+    # ~/.bashrc: executed by bash(1) for non-login shells.
+    # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+    # for examples
+
+    # If not running interactively, don't do anything
+    case $- in
+        *i*) ;;
+          *) return;;
+    esac
+
+    # don't put duplicate lines or lines starting with space in the history.
+    # See bash(1) for more options
+    HISTCONTROL=ignoreboth
+
+    # append to the history file, don't overwrite it
+    shopt -s histappend
+
+    # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+    HISTSIZE=1000
+    HISTFILESIZE=2000
+
+    # check the window size after each command and, if necessary,
+    # update the values of LINES and COLUMNS.
+    shopt -s checkwinsize
+
+    # If set, the pattern "**" used in a pathname expansion context will
+    # match all files and zero or more directories and subdirectories.
+    #shopt -s globstar
+
+    # make less more friendly for non-text input files, see lesspipe(1)
+    [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+    # set variable identifying the chroot you work in (used in the prompt below)
+    if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+        debian_chroot=$(cat /etc/debian_chroot)
+    fi
+
+    # set a fancy prompt (non-color, unless we know we "want" color)
+    case "$TERM" in
+        xterm-color|*-256color) color_prompt=yes;;
+    esac
+
+    # uncomment for a colored prompt, if the terminal has the capability; turned
+    # off by default to not distract the user: the focus in a terminal window
+    # should be on the output of commands, not on the prompt
+    #force_color_prompt=yes
+
+    if [ -n "$force_color_prompt" ]; then
+        if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+        # We have color support; assume it's compliant with Ecma-48
+        # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+        # a case would tend to support setf rather than setaf.)
+        color_prompt=yes
+        else
+        color_prompt=
+        fi
+    fi
+
+    if [ "$color_prompt" = yes ]; then
+        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+    else
+        PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+    fi
+    unset color_prompt force_color_prompt
+
+    # If this is an xterm set the title to user@host:dir
+    case "$TERM" in
+    xterm*|rxvt*)
+        PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+        ;;
+    *)
+        ;;
+    esac
+
+    # enable color support of ls and also add handy aliases
+    if [ -x /usr/bin/dircolors ]; then
+        test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+        alias ls='ls --color=auto'
+        #alias dir='dir --color=auto'
+        #alias vdir='vdir --color=auto'
+
+        alias grep='grep --color=auto'
+        #alias fgrep='fgrep --color=auto'
+        #alias egrep='egrep --color=auto'
+    fi
+
+    # colored GCC warnings and errors
+    #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
+    # some more ls aliases
+    alias ll='ls -alF'
+    #alias la='ls -A'
+    #alias l='ls -CF'
+
+    # Alias definitions.
+    # You may want to put all your additions into a separate file like
+    # ~/.bash_aliases, instead of adding them here directly.
+    # See /usr/share/doc/bash-doc/examples in the bash-doc package.
+
+    if [ -f ~/.bash_aliases ]; then
+        . ~/.bash_aliases
+    fi
+
+    # enable programmable completion features (you don't need to enable
+    # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+    # sources /etc/bash.bashrc).
+    if ! shopt -oq posix; then
+        if [ -f /usr/share/bash-completion/bash_completion ]; then
+            . /usr/share/bash-completion/bash_completion
+        elif [ -f /etc/bash_completion ]; then
+            . /etc/bash_completion
+        fi
+    fi
+}
+
 shBrowserScreenshot () {(set -e
 # this function will run headless-chromium to screenshot url "$1"
     node -e '
 /* jslint utility2:true */
 (function () {
-"use strict";
-let opt;
-opt = {};
-opt.argv = process.argv;
-opt.cwd = process.cwd();
-opt.timeStart = Date.now();
-opt.url = opt.argv[1];
-if (!(
-    /^\w+?:/
-).test(opt.url)) {
-    opt.url = require("path").resolve(opt.url);
-}
-opt.file = require("url").parse(opt.url).pathname;
-if (opt.file.indexOf(opt.cwd) === 0) {
-    opt.file = opt.file.replace(opt.cwd, "");
-}
-opt.file = (
-    process.env.npm_config_dir_build
-    + "/screenshot."
-    + process.env.MODE_BUILD + ".browser."
-    + encodeURIComponent(opt.file.replace(
-        "/build.." + process.env.CI_BRANCH + ".." + process.env.CI_HOST,
-        "/build"
-    ))
-    + ".png"
-);
-opt.argList = [
-    "--headless",
-    "--incognito",
-    "--screenshot",
-    "--timeout=30000",
-    "-screenshot=" + opt.file,
-    opt.url
-];
-opt.command = process.env.CHROME_BIN;
-if (opt.argv[2] === "--debug") {
-    console.error(JSON.stringify(opt, null, 4));
-}
-process.on("exit", function (exitCode) {
-    if (typeof exitCode === "object" && exitCode) {
-        console.error(exitCode);
-        exitCode = 1;
+    "use strict";
+    let file;
+    let timeStart;
+    let url;
+    timeStart = Date.now();
+    url = process.argv[1];
+    if (!(
+        /^\w+?:/
+    ).test(url)) {
+        url = require("path").resolve(url);
     }
-    console.error(
-        "\nshBrowserScreenshot"
-        + " - " + (Date.now() - opt.timeStart) + " ms"
-        + " - exitCode " + exitCode
-        + " - " + opt.url
-        + "\n"
+    file = require("url").parse(url).pathname;
+    if (file.indexOf(process.cwd()) === 0) {
+        file = file.replace(process.cwd(), "");
+    }
+    file = (
+        process.env.npm_config_dir_build
+        + "/screenshot."
+        + process.env.MODE_BUILD + ".browser."
+        + encodeURIComponent(file.replace(
+            "/build.." + process.env.CI_BRANCH + ".." + process.env.CI_HOST,
+            "/build"
+        ))
+        + ".png"
     );
-});
-process.on("uncaughtException", process.exit);
-require("child_process").spawn(opt.command, opt.argList, {
-    stdio: [
-        "ignore", 1, 2
-    ]
-});
+    process.on("exit", function (exitCode) {
+        if (typeof exitCode === "object" && exitCode) {
+            console.error(exitCode);
+            exitCode = 1;
+        }
+        console.error(
+            "\nshBrowserScreenshot"
+            + " - " + (Date.now() - timeStart) + " ms"
+            + " - exitCode " + exitCode
+            + " - " + url
+            + " - " + file
+            + "\n"
+        );
+    });
+    process.on("uncaughtException", process.exit);
+    process.on("unhandledRejection", process.exit);
+    require("child_process").spawn(process.env.CHROME_BIN, [
+        "--headless",
+        "--incognito",
+        "--screenshot",
+        "--timeout=30000",
+        "-screenshot=" + file,
+        url
+    ], {
+        stdio: [
+            "ignore", 1, 2
+        ]
+    });
 }());
 ' "$1" "$2"
 )}
@@ -182,9 +301,11 @@ shBuildApidoc () {(set -e
 )}
 
 shBuildApp () {(set -e
-# this function will build the app
+# this function will build the app with name $1
     shEnvSanitize
     export MODE_BUILD=buildApp
+    # cleanup empty-file
+    find . -maxdepth 1 -empty | xargs rm -f
     if [ "$1" ]
     then
         unset npm_package_nameLib
@@ -196,75 +317,86 @@ shBuildApp () {(set -e
         rm -f package.jsonn
     fi
     shBuildInit
-    # create file .gitignore .travis.yml LICENSE
-    for FILE in .gitignore .travis.yml LICENSE npm_scripts.sh
-    do
-        if [ ! -f "$FILE" ]
-        then
-            curl -Lfs -O \
-"https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE"
-        fi
-    done
-    # create file package.json
-    node -e "$UTILITY2_MACRO_JS"'
-/* jslint utility2:true */
-(function (local) {
-"use strict";
-let result;
-result = Object.assign({
-    "description": "the greatest app in the world!",
-    "main": "lib." + process.env.npm_package_nameLib + ".js",
-    "name": process.env.npm_package_name,
-    "scripts": {
-        "test": "./npm_scripts.sh"
-    },
-    "version": "0.0.1"
-}, JSON.parse(require("fs").readFileSync("package.json")));
-result.scripts.test = result.scripts.test || "./npm_scripts.sh";
-require("fs").writeFileSync(
-    "package.json",
-    local.jsonStringifyOrdered(result, null, 4) + "\n"
-);
-}(globalThis.globalLocal));
-'
-    # create files README.md, lib.$npm_package.nameLib.js, test.js
     node -e '
 /* jslint utility2:true */
 (function (local) {
-"use strict";
-let tmp;
-if (!local.fs.existsSync("README.md", "utf8")) {
-    local.fs.writeFileSync("README.md", local.templateRenderMyApp(
-        local.assetsDict["/assets.readme.template.md"],
-        {}
-    ));
-}
-if (!local.fs.existsSync(
-    "lib." + process.env.npm_package_nameLib + ".js",
-    "utf8"
-)) {
-    tmp = local.assetsDict["/assets.my_app.template.js"];
-    if (local.fs.existsSync("assets.utility2.rollup.js")) {
-        tmp = tmp.replace(
-            "    // || globalThis.utility2_rollup_old || ",
-            "    || globalThis.utility2_rollup_old || "
-        );
+/*
+ * this function will create file, if not exist
+ * .gitignore, .travis.yml, LICENSE
+ * package.json
+ * README.md, lib.$npm_package.nameLib.js, package.json, test.js
+ */
+    "use strict";
+    let aa;
+    let bb;
+    let fs;
+    let modeUtility2Rollup;
+    fs = require("fs");
+    // create file .gitignore .travis.yml LICENSE
+    [
+        ".gitignore",
+        ".travis.yml",
+        "LICENSE",
+        "npm_scripts.sh"
+    ].forEach(function (file) {
+        fs.exists(file, function (exists) {
+            if (exists) {
+                return;
+            }
+            require("https").request((
+                "https://raw.githubusercontent.com/kaizhu256/node-utility2"
+                + "/alpha/" + file
+            ), function (res) {
+                res.pipe(fs.createWriteStream(file));
+            }).end();
+        });
+    });
+    // create file package.json
+    aa = fs.readFileSync("package.json");
+    bb = JSON.stringify(local.objectDeepCopyWithKeysSorted(
+        Object.assign({
+            "description": "the greatest app in the world!",
+            "main": "lib." + process.env.npm_package_nameLib + ".js",
+            "name": process.env.npm_package_name,
+            "scripts": {
+                "test": "./npm_scripts.sh"
+            },
+            "version": "0.0.1"
+        }, JSON.parse(aa))
+    ), undefined, 4) + "\n";
+    if (bb !== aa) {
+        fs.writeFileSync("package.json", bb);
     }
-    local.fs.writeFileSync(
+    // create file README.md, lib.$npm_package.nameLib.js, test.js
+    modeUtility2Rollup = fs.existsSync("assets.utility2.rollup.js");
+    [
+        "README.md",
         "lib." + process.env.npm_package_nameLib + ".js",
-        local.templateRenderMyApp(tmp, {})
-    );
-}
-if (!local.fs.existsSync("test.js", "utf8")) {
-    tmp = local.assetsDict["/assets.test.template.js"];
-    if (local.fs.existsSync("assets.utility2.rollup.js")) {
-        tmp = tmp.replace(
-            "require(\u0027utility2\u0027)",
-            "require(\u0027./assets.utility2.rollup.js\u0027)"
-        );
-    }
-    local.fs.writeFileSync("test.js", local.templateRenderMyApp(tmp, {}));
-}
+        "test.js"
+    ].forEach(function (file) {
+        fs.exists(file, function (exists) {
+            if (exists) {
+                return;
+            }
+            fs.writeFile(file, local.templateRenderMyApp((
+                file === "README.md"
+                ? local.assetsDict["/assets.readme.template.md"]
+                : file === "test.js"
+                ? local.assetsDict["/assets.test.template.js"]
+                : local.assetsDict["/assets.my_app.template.js"]
+            ).replace("require(\u0027utility2\u0027)", function (match0) {
+                return (
+                    modeUtility2Rollup
+                    ? "require(\u0027./assets.utility2.rollup.js\u0027)"
+                    : match0
+                );
+            }), {}).trimRight() + "\n", function (err) {
+                if (err) {
+                    throw err;
+                }
+            });
+        });
+    });
 }(require(process.env.npm_config_dir_utility2)));
 '
     chmod 755 "lib.$npm_package_nameLib.js" npm_scripts.sh
@@ -314,10 +446,10 @@ shBuildCi () {(set -e
 # this function will run the main build
     shBuildInit
     export MODE_BUILD=buildCi
-    # init travis-ci.org env
+    # init travis-ci.com env
     if [ "$TRAVIS" ]
     then
-        export CI_HOST="${CI_HOST:-travis-ci.org}"
+        export CI_HOST="${CI_HOST:-travis-ci.com}"
         git remote remove origin 2>/dev/null || true
         git remote add origin "https://github.com/$GITHUB_REPO"
     fi
@@ -347,22 +479,23 @@ shBuildCi () {(set -e
     case "$CI_BRANCH" in
     alpha)
         case "$CI_COMMIT_MESSAGE" in
-        "[build app]"*)
+        "[build app"*)
             node -e '
 /* jslint utility2:true */
 (function (local) {
-"use strict";
-["assets.utility2.rollup.js"].forEach(function (file) {
-    if (local.fs.existsSync(file)) {
-        local.fs.writeFileSync(file, local.assetsDict["/" + file]);
+    "use strict";
+    if (require("fs").existsSync("assets.utility2.rollup.js")) {
+        require("fs").writeFileSync(
+            "assets.utility2.rollup.js",
+            local.assetsDict["/assets.utility2.rollup.js"]
+        );
     }
-});
 }(require("utility2")));
 '
             shBuildApp
             ;;
         # example use:
-        # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc "[git squashPop HEAD~1] [npm publishAfterCommitAfterBuild]"
+        # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc alpha "[git squashPop HEAD~1] [npm publishAfterCommitAfterBuild]"
         "[git squashPop "*)
             shGitSquashPop \
                 "$(shGithubRepoBranchId $(
@@ -374,7 +507,7 @@ shBuildCi () {(set -e
             return
             ;;
         # example use:
-        # shCryptoWithGithubOrg npmdoc shGithubRepoTouch "npmdoc/node-npmdoc-mysql npmdoc/node-npmdoc-mysql" "[npm publishAfterCommitAfterBuild]"
+        # shCryptoWithGithubOrg npmdoc shGithubRepoTouch "npmdoc/node-npmdoc-mysql npmdoc/node-npmdoc-mysql" alpha "[npm publishAfterCommitAfterBuild]"
         "[npm publishAfterCommitAfterBuild]"*)
             if [ ! "$GITHUB_TOKEN" ]
             then
@@ -392,10 +525,11 @@ shBuildCi () {(set -e
                 "$npm_config_dir_utility2" \
                 --branch=alpha --single-branch --depth=50
             mkdir -p "$npm_config_dir_utility2/tmp/build/app"
-            curl -Lfs https://raw.githubusercontent.com\
-/kaizhu256/node-utility2/gh-pages/build..alpha..travis-ci.org/app\
-/assets.utility2.rollup.js > \
-"$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js"
+            curl -Lf -o \
+"$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js" \
+https://raw.githubusercontent.com\
+/kaizhu256/node-utility2/gh-pages/build..alpha..travis-ci.com/app\
+/assets.utility2.rollup.js
             ;;
         esac
         shBuildCiInternal
@@ -441,7 +575,7 @@ shBuildCi () {(set -e
             eval "$(printf "$CI_COMMIT_MESSAGE_META" | sed -e "s/^..//")"
             ;;
         # example use:
-        # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-sandbox2 "[debug travis@proxy.com root]" task
+        # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-sandbox2 task "[debug travis@proxy.com root]"
         "[debug "*)
             if [ ! "$SSH_KEY" ]
             then
@@ -465,7 +599,7 @@ shBuildCi () {(set -e
             done
             ;;
         # example use:
-        # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc "[git push origin beta:master]" task
+        # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc task "[git push origin beta:master]"
         "[git push origin "*)
             git fetch --depth=50 origin "$(
                 printf "$CI_COMMIT_MESSAGE_META" |
@@ -492,13 +626,10 @@ shBuildCi () {(set -e
         "[build app"*)
             # rm file package-lock.json
             rm -f package-lock.json
-            git add .
             # increment $npm_package_version
             shPackageJsonVersionIncrement today
-            # update file touch.txt
-            printf "$(shDateIso)\n" > .touch.txt
-            git add -f .touch.txt
             # git commit and push
+            git add .
             git commit -am "[ci skip] $CI_COMMIT_MESSAGE"
             shGitCommandWithGithubToken push \
                 "https://github.com/$GITHUB_REPO" -f HEAD:alpha
@@ -518,12 +649,8 @@ shBuildCi () {(set -e
         "[npm publishAfterCommitAfterBuild]"*)
             # increment $npm_package_version
             shPackageJsonVersionIncrement today
-            # update file touch.txt
-            printf "$(shDateIso)\n" > .touch.txt
-            git add -f .touch.txt
             # git commit and push
             git add .
-            git rm --cached -f .travis.yml
             git commit -am "[npm publishAfterCommit]"
             shGitCommandWithGithubToken push \
                 "https://github.com/$GITHUB_REPO" -f HEAD:alpha
@@ -677,11 +804,58 @@ shBuildCiInternal () {(set -e
     if [ ! "$npm_package_private" ] &&
         ! (
             printf "$CI_COMMIT_MESSAGE_META" |
-            grep -q -E "^npm publishAfterCommitAfterBuild"
+            grep -q -E "^build app|^npm publishAfterCommitAfterBuild"
         )
     then
         shSleep 60
-        shReadmeLinkValidate
+        node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    let set;
+    set = new Set();
+    require("fs").readFileSync("README.md", "utf8").replace((
+        /\b(https?):\/\/.*?[)\]]/g
+    ), function (match0, match1) {
+        let req;
+        match0 = match0.slice(0, -1).replace((
+            /[\u0022\u0027]/g
+        ), "").replace((
+            /\bbeta\b|\bmaster\b/g
+        ), "alpha").replace((
+            /\/build\//g
+        ), "/build..alpha..travis-ci.com/");
+        // ignore private-link
+        if (
+            process.env.npm_package_private
+            && match0.indexOf("https://github.com/") === 0
+        ) {
+            return;
+        }
+        // ignore duplicate-link
+        if (set.has(match0)) {
+            return;
+        }
+        set.add(match0);
+        req = require(match1).request(require("url").parse(
+            match0
+        ), function (res) {
+            console.log(
+                "shReadmeLinkValidate " + res.statusCode + " " + match0
+            );
+            if (!(res.statusCode < 400)) {
+                throw new Error(
+                    "shReadmeLinkValidate - invalid link " + match0
+                );
+            }
+            req.abort();
+            res.destroy();
+        });
+        req.setTimeout(30000);
+        req.end();
+    });
+}());
+'
     fi
 )}
 
@@ -759,11 +933,23 @@ shBuildInit () {
         elif [ -f "$HOME/Documents/utility2/lib.utility2.js" ]
         then
             export npm_config_dir_utility2="$HOME/Documents/utility2"
+        else
+            export npm_config_dir_utility2="$(node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    try {
+        process.stdout.write(
+            require("path").dirname(require.resolve("utility2"))
+        );
+    } catch (ignore) {
+        process.stdout.write(
+            require("path").resolve(process.env.HOME + "/node_modules/utility2")
+        );
+    }
+}());
+')"
         fi
-        export npm_config_dir_utility2="${npm_config_dir_utility2:-\
-$(shModuleDirname utility2)}" || return "$?"
-        export npm_config_dir_utility2="${npm_config_dir_utility2:-\
-$HOME/node_modules/utility2}" || return "$?"
         export PATH="$PATH\
 :$npm_config_dir_utility2:$npm_config_dir_utility2/../.bin" || return "$?"
     fi
@@ -773,51 +959,51 @@ $HOME/node_modules/utility2}" || return "$?"
         eval "$(node -e '
 /* jslint utility2:true */
 (function () {
-"use strict";
-let packageJson;
-let value;
-packageJson = require("./package.json");
-Object.keys(packageJson).forEach(function (key) {
-    value = packageJson[key];
-    if (!(
-        /\W/g
-    ).test(key) && typeof value === "string" && !(
-        /[\n$]/
-    ).test(value)) {
-        process.stdout.write(
-            "export npm_package_" + key + "=\u0027"
-            + value.replace((
-                /\u0027/g
-            ), "\u0027\"\u0027\"\u0027") + "\u0027;"
-        );
+    "use strict";
+    let packageJson;
+    let val;
+    packageJson = require("./package.json");
+    Object.keys(packageJson).forEach(function (key) {
+        val = packageJson[key];
+        if (!(
+            /\W/g
+        ).test(key) && typeof val === "string" && !(
+            /[\n$]/
+        ).test(val)) {
+            process.stdout.write(
+                "export npm_package_" + key + "=\u0027"
+                + val.replace((
+                    /\u0027/g
+                ), "\u0027\"\u0027\"\u0027") + "\u0027;"
+            );
+        }
+    });
+    val = String(
+        (packageJson.repository && packageJson.repository.url)
+        || packageJson.repository
+        || ""
+    ).split(":").slice(-1)[0].split("/").slice(-2).join("/").replace((
+        /\.git$/
+    ), "");
+    if ((
+        /^[^\/]+\/[^\/]+$/
+    ).test(val)) {
+        val = val.split("/");
+        if (!process.env.GITHUB_REPO) {
+            process.env.GITHUB_REPO = val.join("/");
+            process.stdout.write(
+                "export GITHUB_REPO=" + JSON.stringify(process.env.GITHUB_REPO)
+                + ";"
+            );
+        }
+        if (!process.env.GITHUB_ORG) {
+            process.env.GITHUB_ORG = val[0];
+            process.stdout.write(
+                "export GITHUB_ORG=" + JSON.stringify(process.env.GITHUB_ORG)
+                + ";"
+            );
+        }
     }
-});
-value = String(
-    (packageJson.repository && packageJson.repository.url)
-    || packageJson.repository
-    || ""
-).split(":").slice(-1)[0].toString().split("/").slice(-2).join("/").replace((
-    /\.git$/
-), "");
-if ((
-    /^[^\/]+\/[^\/]+$/
-).test(value)) {
-    value = value.split("/");
-    if (!process.env.GITHUB_REPO) {
-        process.env.GITHUB_REPO = value.join("/");
-        process.stdout.write(
-            "export GITHUB_REPO=" + JSON.stringify(process.env.GITHUB_REPO)
-            + ";"
-        );
-    }
-    if (!process.env.GITHUB_ORG) {
-        process.env.GITHUB_ORG = value[0];
-        process.stdout.write(
-            "export GITHUB_ORG=" + JSON.stringify(process.env.GITHUB_ORG)
-            + ";"
-        );
-    }
-}
 }());
 ')" || return "$?"
     else
@@ -841,32 +1027,32 @@ if ((
         node -e '
 /* jslint utility2:true */
 (function () {
-"use strict";
-require("fs").readFileSync("README.md", "utf8").replace((
-    /```\w*?(\n[\W\s]*?(\w\S*?)[\n"][\S\s]*?)\n```/g
-), function (match0, match1, match2, ii, text) {
-    // preserve lineno
-    match0 = text.slice(0, ii).replace((
-        /.+/g
-    ), "") + match1.replace((
-        // parse "\" line-continuation
-        /(?:.*\\\n)+.*/g
-    ), function (match0) {
-        return match0.replace((
-            /\\\n/g
-        ), "") + match0.replace((
+    "use strict";
+    require("fs").readFileSync("README.md", "utf8").replace((
+        /```\w*?(\n[\W\s]*?(\w\S*?)[\n"][\S\s]*?)\n```/g
+    ), function (match0, match1, match2, ii, text) {
+        // preserve lineno
+        match0 = text.slice(0, ii).replace((
             /.+/g
-        ), "");
+        ), "") + match1.replace((
+            // parse "\" line-continuation
+            /(?:.*\\\n)+.*/g
+        ), function (match0) {
+            return match0.replace((
+                /\\\n/g
+            ), "") + match0.replace((
+                /.+/g
+            ), "");
+        });
+        // trim json-file
+        if (match2.slice(-5) === ".json") {
+            match0 = match0.trim();
+        }
+        require("fs").writeFileSync(
+            "tmp/README." + match2,
+            match0.trimEnd() + "\n"
+        );
     });
-    // trim json-file
-    if (match2.slice(-5) === ".json") {
-        match0 = match0.trim();
-    }
-    require("fs").writeFileSync(
-        "tmp/README." + match2,
-        match0.trimEnd() + "\n"
-    );
-});
 }());
 '
     fi
@@ -889,13 +1075,22 @@ shBuildInsideDocker () {(set -e
     # cleanup tmp
     rm -rf tmp
     # cleanup build
-    shDockerBuildCleanup
+    rm -rf \
+        /root/.npm \
+        /tmp/.* \
+        /tmp/* \
+        /var/cache/apt \
+        /var/lib/apt/lists \
+        /var/log/.* \
+        /var/log/* \
+        /var/tmp/.* \
+        /var/tmp/* \
+        2>/dev/null || true
 )}
 
 shBuildPrint () {(set -e
 # this function will print debug info about the build state
-    printf '%b' \
-        "\n\x1b[35m[MODE_BUILD=$MODE_BUILD]\x1b[0m - $(shDateIso) - $*\n\n" 1>&2
+    printf "\n\x1b[35m[MODE_BUILD=$MODE_BUILD]\x1b[0m - $(shDateIso) - $*\n\n" 1>&2
 )}
 
 shChromeSocks5 () {(set -e
@@ -924,27 +1119,27 @@ shCryptoAesXxxCbcRawDecrypt () {(set -e
     node -e "$UTILITY2_MACRO_JS"'
 /* jslint utility2:true */
 (function (local) {
-"use strict";
-let chunkList;
-chunkList = [];
-process.stdin.on("data", function (chunk) {
-    chunkList.push(chunk);
-});
-process.stdin.on("end", function () {
-    local.cryptoAesXxxCbcRawDecrypt({
-        data: (
-            process.argv[2] === "base64"
-            ? Buffer.concat(chunkList).toString()
-            : Buffer.concat(chunkList)
-        ),
-        key: process.argv[1],
-        mode: process.argv[2]
-    }, function (err, data) {
-        local.assertOrThrow(!err, err);
-        Object.setPrototypeOf(data, Buffer.prototype);
-        process.stdout.write(data);
+    "use strict";
+    let bufList;
+    bufList = [];
+    process.stdin.on("data", function (chunk) {
+        bufList.push(chunk);
     });
-});
+    process.stdin.on("end", function () {
+        local.cryptoAesXxxCbcRawDecrypt({
+            data: (
+                process.argv[2] === "base64"
+                ? Buffer.concat(bufList).toString()
+                : Buffer.concat(bufList)
+            ),
+            key: process.argv[1],
+            mode: process.argv[2]
+        }, function (err, data) {
+            local.assertOrThrow(!err, err);
+            Object.setPrototypeOf(data, Buffer.prototype);
+            process.stdout.write(data);
+        });
+    });
 }(globalThis.globalLocal));
 ' "$@"
 )}
@@ -956,23 +1151,23 @@ shCryptoAesXxxCbcRawEncrypt () {(set -e
     node -e "$UTILITY2_MACRO_JS"'
 /* jslint utility2:true */
 (function (local) {
-"use strict";
-let chunkList;
-chunkList = [];
-process.stdin.on("data", function (chunk) {
-    chunkList.push(chunk);
-});
-process.stdin.on("end", function () {
-    local.cryptoAesXxxCbcRawEncrypt({
-        data: Buffer.concat(chunkList),
-        key: process.argv[1],
-        mode: process.argv[2]
-    }, function (err, data) {
-        local.assertOrThrow(!err, err);
-        Object.setPrototypeOf(data, Buffer.prototype);
-        process.stdout.write(data);
+    "use strict";
+    let bufList;
+    bufList = [];
+    process.stdin.on("data", function (chunk) {
+        bufList.push(chunk);
     });
-});
+    process.stdin.on("end", function () {
+        local.cryptoAesXxxCbcRawEncrypt({
+            data: Buffer.concat(bufList),
+            key: process.argv[1],
+            mode: process.argv[2]
+        }, function (err, data) {
+            local.assertOrThrow(!err, err);
+            Object.setPrototypeOf(data, Buffer.prototype);
+            process.stdout.write(data);
+        });
+    });
 }(globalThis.globalLocal));
 ' "$@"
 )}
@@ -998,9 +1193,9 @@ shCryptoTravisDecrypt () {(set -e
     fi
     # decrypt CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG
     URL="https://raw.githubusercontent.com\
-/kaizhu256/node-utility2/gh-pages/CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG"
+/kaizhu256/node-utility2/gh-pages/.CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG"
     shBuildPrint "decrypting $URL ..."
-    curl -#Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
+    curl -Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
 )}
 
 shCryptoTravisEncrypt () {(set -e
@@ -1022,9 +1217,9 @@ shCryptoTravisEncrypt () {(set -e
     if [ -f .travis.yml ]
     then
         TMPFILE="$(mktemp)"
-        URL="https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/key"
+        URL="https://api.travis-ci.com/repos/$GITHUB_REPO/key"
         shBuildPrint "fetch $URL"
-        curl -#Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" |
+        curl -Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" |
             sed -n -e \
 "s/.*-----BEGIN [RSA ]*PUBLIC KEY-----\(.*\)-----END [RSA ]*PUBLIC KEY-----.*/\
 -----BEGIN PUBLIC KEY-----\\1-----END PUBLIC KEY-----/" \
@@ -1055,11 +1250,6 @@ shCryptoWithGithubOrg () {(set -e
     export GITHUB_ORG="$1"
     shift
     . "$HOME/.ssh/.CRYPTO_AES_SH_DECRYPTED_$GITHUB_ORG"
-    if [ "$npm_package_private" ] && [ "$TRAVIS_ACCESS_TOKEN_PRO" ]
-    then
-        export TRAVIS_ACCESS_TOKEN="$TRAVIS_ACCESS_TOKEN_PRO"
-        export TRAVIS_DOMAIN=travis-ci.com
-    fi
     "$@"
 )}
 
@@ -1082,12 +1272,12 @@ shDeployGithub () {(set -e
     export MODE_BUILD=deployGithub
     export TEST_URL="https://$(
         printf "$GITHUB_REPO" | sed -e "s/\//.github.io\//"
-    )/build..$CI_BRANCH..travis-ci.org/app"
+    )/build..$CI_BRANCH..travis-ci.com/app"
     shBuildPrint "deployed to $TEST_URL"
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
     if [ "$(
-        curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL"
+        curl -L --connect-timeout 60 -o /dev/null -w "%{http_code}" "$TEST_URL"
     )" -lt 400 ]
     then
         shBuildPrint "curl test passed for $TEST_URL"
@@ -1097,7 +1287,6 @@ shDeployGithub () {(set -e
     fi
     # screenshot deployed app
     shBrowserScreenshot "$TEST_URL" &
-    shBrowserScreenshot "$TEST_URL/assets.swgg.html" &
     # test deployed app
     MODE_BUILD="${MODE_BUILD}Test" \
         shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
@@ -1124,7 +1313,7 @@ shDeployHeroku () {(set -e
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
     if [ "$(
-        curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL"
+        curl -L --connect-timeout 60 -o /dev/null -w "%{http_code}" "$TEST_URL"
     )" -lt 400 ]
     then
         shBuildPrint "curl test passed for $TEST_URL"
@@ -1134,26 +1323,9 @@ shDeployHeroku () {(set -e
     fi
     # screenshot deployed app
     shBrowserScreenshot "$TEST_URL" &
-    shBrowserScreenshot "$TEST_URL/assets.swgg.html" &
     # test deployed app
     MODE_BUILD="${MODE_BUILD}Test" \
         shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
-)}
-
-shDockerBuildCleanup () {(set -e
-# this function will cleanup the docker build
-# apt list --installed
-    rm -rf \
-        /root/.npm \
-        /tmp/.* \
-        /tmp/* \
-        /var/cache/apt \
-        /var/lib/apt/lists \
-        /var/log/.* \
-        /var/log/* \
-        /var/tmp/.* \
-        /var/tmp/* \
-        2>/dev/null || true
 )}
 
 shDockerRestart () {(set -e
@@ -1313,16 +1485,17 @@ shDockerRmiUntagged () {(set -e
 )}
 
 shDockerSh () {(set -e
-# this function will run /bin/bash in the docker-container $NAME
-# http://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
-    NAME="$1"
-    docker start "$NAME"
+# this function will run /bin/bash in the docker-container $1
+    local CMD="[ -f ~/lib.utility2.sh ] &&
+. ~/lib.utility2.sh && shBaseInit
+${2:-bash}"
+    docker start "$1"
     case "$(uname)" in
     MINGW*)
-        winpty docker exec -it "$NAME" ${2:-bash}
+        winpty docker exec -it "$1" sh -c "$CMD"
         ;;
     *)
-        docker exec -it "$NAME" ${2:-/bin/bash}
+        docker exec -it "$1" sh -c "$CMD"
         ;;
     esac
 )}
@@ -1372,20 +1545,20 @@ shEnvSanitize () {
     eval "$(node -e '
 /* jslint utility2:true */
 (function () {
-"use strict";
-console.log(Object.keys(process.env).sort().map(function (key) {
-    return (
-        ((
-            /(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/i
-        ).test(key) || (
-            (
-                /Crypt|Decrypt|Key|Pass|Private|Secret|Token/
-            ).test(key)
-        ))
-        ? "unset " + key + "; "
-        : ""
-    );
-}).join("").trim());
+    "use strict";
+    console.log(Object.keys(process.env).sort().map(function (key) {
+        return (
+            ((
+                /(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/i
+            ).test(key) || (
+                (
+                    /Crypt|Decrypt|Key|Pass|Private|Secret|Token/
+                ).test(key)
+            ))
+            ? "unset " + key + "; "
+            : ""
+        );
+    }).join("").trim());
 }());
 ')"
 }
@@ -1393,19 +1566,28 @@ console.log(Object.keys(process.env).sort().map(function (key) {
 shFileCustomizeFromToRgx () {(set -e
 # this function will customize segment of file $2 with segment of file $1,
 # with rgx-list $3...
-    node -e "$UTILITY2_MACRO_JS"'
+    node -e '
 /* jslint utility2:true */
-(function (local) {
-"use strict";
-let dataFrom;
-let dataTo;
-dataFrom = require("fs").readFileSync(process.argv[2], "utf8");
-dataTo = require("fs").readFileSync(process.argv[1], "utf8");
-process.argv.slice(3).forEach(function (rgx) {
-    dataTo = local.stringMerge(dataTo, dataFrom, new RegExp(rgx));
-});
-require("fs").writeFileSync(process.argv[2], dataTo);
-}(globalThis.globalLocal));
+(function () {
+    "use strict";
+    let aa;
+    let bb;
+    aa = require("fs").readFileSync(process.argv[1], "utf8");
+    bb = require("fs").readFileSync(process.argv[2], "utf8");
+    process.argv.slice(3).forEach(function (rgx) {
+        rgx = new RegExp(rgx);
+        bb.replace(rgx, function (match2) {
+            aa.replace(rgx, function (match1) {
+                aa = aa.replace(match1, function () {
+                    return match2;
+                });
+                return "";
+            });
+            return "";
+        });
+    });
+    require("fs").writeFileSync(process.argv[2], aa);
+}());
 ' "$@"
 )}
 
@@ -1481,12 +1663,15 @@ shGitInfo () {(set -e
     printf "\n"
     shGitLsTree
     printf "\n"
+    cat package.json
+    printf "\n"
     git grep -E '[^!]!\! ' || true
+    printf "\n"
+    git grep -E '\bcurl [^-].* -' *.sh || true
     printf "\n"
     git grep -E '\becho\b' *.sh || true
     printf "\n"
     git grep -E '\bset -\w*x\b' *.sh || true
-    cat package.json
 )}
 
 shGitInitBase () {(set -e
@@ -1498,8 +1683,8 @@ shGitInitBase () {(set -e
     git checkout -b alpha
     git add .
     git commit -am "initial commit"
-    curl https://raw.githubusercontent.com/kaizhu256/node-utility2\
-/alpha/.gitconfig > .git/config
+    curl -Lf -o .git/config \
+https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig
 )}
 
 shGitLsTree () {(set -e
@@ -1527,44 +1712,6 @@ shGitLsTree () {(set -e
     size = sizeTotal
     printf("%-4s  %s %9s bytes %s\n", ii, date, size, file)
     }' | sed -e "s/ /./"
-)}
-
-shGitLsTreeSort () {(set -e
-# this function will sort git-lstree by size
-    printf "# 0\n" > .gitlstree
-    shGitLsTree | sed -e "s/^.\{31\}//" >> .gitlstree
-    node -e '
-/* jslint utility2:true */
-(function () {
-"use strict";
-let dict;
-dict = {};
-require("fs").readFileSync(".gitlstree", "utf8").replace((
-    /(.*?)\u0020bytes\u0020(.*?)$/gm
-), function (ignore, match1, match2) {
-    dict[match1] = dict[match1] || [];
-    dict[match1].push(match2);
-});
-[
-    1,
-    2
-].forEach(function (ii) {
-    console.log("# " + ii);
-    Object.keys(dict).sort().reverse().forEach(function (key) {
-        if (dict[key].length < ii) {
-            return;
-        }
-        console.log(key.replace((
-            /\u0020/g
-        ), "_"));
-        dict[key].forEach(function (elem) {
-            console.log("    " + JSON.stringify(elem));
-        });
-    });
-});
-}());
-' >> .gitlstree
-    printf "#\n" >> .gitlstree
 )}
 
 shGitSquashPop () {(set -e
@@ -1596,29 +1743,20 @@ shGitSquashShift () {(set -e
 
 shGithubApiRateLimitGet () {(set -e
 # this function will the rate-limit for the $GITHUB_TOKEN
-    curl -I https://api.github.com -H "Authorization: token $GITHUB_TOKEN"
-)}
-
-shGithubDateCommitted () {(set -e
-# this function will fetch the commit-date for the github-commit-url $1
-# example use:
-# shGithubDateCommitted https://github.com/kaizhu256/node-utility2/commits/master
-    printf "shGithubDateCommitted $1 # "
-    curl -Lfs "$1" | grep -m 1 -o -E \
-        "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z"
+    curl -Lf -H "Authorization: token $GITHUB_TOKEN" -I https://api.github.com
 )}
 
 shGithubRepoBranchId () {(set -e
 # this function will print the $COMMIT_ID for $GITHUB_REPO:#$BRANCH
     BRANCH="$1"
-    curl -H "user-agent: undefined" -Lfs "https://api.github.com\
+    curl -Lf -H "user-agent: undefined" "https://api.github.com\
 /repos/$GITHUB_REPO/commits?access_token=$GITHUB_TOKEN&sha=$BRANCH" |
         sed -e 's/^\[{"sha":"//' -e 's/".*//'
 )}
 
 shGithubRepoCreate () {(set -e
 # this function will create base github-repo https://github.com/$GITHUB_REPO
-    GITHUB_REPO="$1"
+    local GITHUB_REPO="$1"
     export MODE_BUILD="${MODE_BUILD:-shGithubRepoCreate}"
     # init /tmp/githubRepo/kaizhu256/base
     if [ ! -d /tmp/githubRepo/kaizhu256/base ]
@@ -1639,49 +1777,31 @@ shGithubRepoCreate () {(set -e
     mkdir -p "/tmp/githubRepo/$(printf "$GITHUB_REPO" | sed -e "s/\/.*//")"
     cp -a /tmp/githubRepo/kaizhu256/base "/tmp/githubRepo/$GITHUB_REPO"
     cd "/tmp/githubRepo/$GITHUB_REPO"
-    curl -Lfs \
+    curl -Lf \
 https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig |
         sed -e "s|kaizhu256/node-utility2|$GITHUB_REPO|" > .git/config
     # create github-repo
-    node -e "$UTILITY2_MACRO_JS""$UTILITY2_MACRO_AJAX_JS"'
+    node -e '
 /* jslint utility2:true */
-(function (local) {
-"use strict";
-local.ajax({
-    data: "{\"name\":\"" + process.argv[1].split("/")[1] + "\"}",
-    headers: {
-        Authorization: "token " + process.env.GITHUB_TOKEN,
-        "User-Agent": "undefined"
-    },
-    method: "POST",
-    url: (
-        "https://api.github.com/orgs/"
-        + process.argv[1].split("/")[0]
-        + "/repos"
-    )
-}, function (err, xhr) {
-    if (xhr.statusCode !== 404) {
-        local.onErrorDefault(err && xhr && (
-            "https://github.com/" + process.argv[1] + " - " + xhr.responseText
-        ));
-        return;
-    }
-    local.ajax({
-        data: "{\"name\":\"" + process.argv[1].split("/")[1] + "\"}",
-        headers: {
-            Authorization: "token " + process.env.GITHUB_TOKEN,
-            "User-Agent": "undefined"
-        },
-        method: "POST",
-        url: "https://api.github.com/user/repos"
-    }, function (err, xhr) {
-        local.onErrorDefault(err && xhr && (
-            "https://github.com/" + process.argv[1] + " - " + xhr.responseText
-        ));
-        return;
+(function () {
+    "use strict";
+    [
+        (
+            "https://api.github.com/orgs/"
+            + process.argv[1].split("/")[0]
+            + "/repos"
+        ),
+        "https://api.github.com/user/repos"
+    ].forEach(function (url) {
+        require("https").request(url, {
+            headers: {
+                Authorization: "token " + process.env.GITHUB_TOKEN,
+                "User-Agent": "undefined"
+            },
+            method: "POST"
+        }).end("{\"name\":\"" + process.argv[1].split("/")[1] + "\"}");
     });
-});
-}(globalThis.globalLocal));
+}());
 ' "$GITHUB_REPO"
     # set default-branch to beta
     shGitCommandWithGithubToken push \
@@ -1697,7 +1817,7 @@ shGithubRepoDescriptionUpdate () {(set -e
     GITHUB_REPO="$1"
     DESCRIPTION="$2"
     shBuildPrint "update $GITHUB_REPO description"
-    curl -#Lf \
+    curl -Lf \
         -H "Authorization: token $GITHUB_TOKEN" \
         -H "Content-Type: application/json" \
         -H "User-Agent: undefined" \
@@ -1712,16 +1832,54 @@ shGithubRepoDescriptionUpdate () {(set -e
 )}
 
 shGithubRepoTouch () {(set -e
-# this function will touch the $GITHUB_REPO $LIST with the $CI_COMMIT_MESSAGE
-    LIST="$1"
-    CI_COMMIT_MESSAGE="$2"
-    BRANCH="${3:-alpha}"
-    LIST2=""
-    for GITHUB_REPO in $LIST
-    do
-        LIST2="$LIST2,https://github.com/$GITHUB_REPO/blob/$BRANCH/package.json"
-    done
-    utility2-github-crud touch "$LIST2" "$CI_COMMIT_MESSAGE"
+# this function will touch github-repo $1, branch $2, with commit-message $2
+    node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    require("https").request((
+        "https://api.github.com/repos/" + process.argv[1]
+        + "/contents/package.json?ref=" + process.argv[2]
+    ), {
+        headers: {
+            "authorization": "token " + process.env.GITHUB_TOKEN,
+            "user-agent": "undefined"
+        }
+    }, function (res) {
+        let data;
+        if (res.statusCode !== 200) {
+            throw new Error(res.statusCode);
+        }
+        data = "";
+        res.on("data", function (chunk) {
+            data += chunk;
+        }).on("end", function () {
+            data = JSON.parse(data);
+            require("https").request((
+
+                "https://api.github.com/repos/" + process.argv[1]
+                + "/contents/package.json?branch=" + process.argv[2]
+            ), {
+                headers: {
+                    "authorization": "token " + process.env.GITHUB_TOKEN,
+                    "user-agent": "undefined"
+                },
+                method: "PUT"
+            }, function (res) {
+                if (res.statusCode !== 200) {
+                    throw new Error(res.statusCode);
+                }
+                process.exit();
+            }).end(JSON.stringify({
+                branch: process.argv[2],
+                content: data.content,
+                message: process.argv[3] || "touch",
+                sha: data.sha
+            }));
+        }).setEncoding("utf8");
+    }).end();
+}());
+' "$@"
 )}
 
 shGrep () {(set -e
@@ -1762,37 +1920,30 @@ shGrepReplace () {(set -e
     node -e '
 /* jslint utility2:true */
 (function () {
-"use strict";
-let dict;
-dict = {};
-require("fs").readFileSync(
-    process.argv[1],
-    "utf8"
-).split("\n").forEach(function (element) {
-    element = (
-        /^(.+?):(\d+?):(.+?)$/
-    ).exec(element);
-    if (!element) {
-        return;
-    }
-    dict[element[1]] = (
-        dict[element[1]]
-        || require("fs").readFileSync(element[1], "utf8").split("\n")
-    );
-    dict[element[1]][element[2] - 1] = element[3];
-});
-Object.keys(dict).forEach(function (key) {
-    require("fs").writeFileSync(key, dict[key].join("\n"));
-});
+    "use strict";
+    let dict;
+    dict = {};
+    require("fs").readFileSync(
+        process.argv[1],
+        "utf8"
+    ).split("\n").forEach(function (element) {
+        element = (
+            /^(.+?):(\d+?):(.+?)$/
+        ).exec(element);
+        if (!element) {
+            return;
+        }
+        dict[element[1]] = (
+            dict[element[1]]
+            || require("fs").readFileSync(element[1], "utf8").split("\n")
+        );
+        dict[element[1]][element[2] - 1] = element[3];
+    });
+    Object.keys(dict).forEach(function (key) {
+        require("fs").writeFileSync(key, dict[key].join("\n"));
+    });
 }());
 ' "$@"
-)}
-
-shHtpasswdCreate () {(set -e
-# this function will create and print htpasswd to stdout
-    USERNAME="$1"
-    PASSWD="$2"
-    printf "$USERNAME:$(openssl passwd -apr1 "$PASSWD")\n"
 )}
 
 shHttpFileServer () {(set -e
@@ -1800,38 +1951,38 @@ shHttpFileServer () {(set -e
     node -e '
 /* jslint utility2:true */
 (function () {
-"use strict";
-process.env.PORT = process.env.PORT || "8080";
-console.error("http-file-server listening on port " + process.env.PORT);
-require("http").createServer(function (req, res) {
-    let file;
-    // resolve <file>
-    file = require("path").resolve(
-        // replace trailing "/" with "/index.html"
-        require("url").parse(req.url).pathname.slice(1).replace((
-            /\/$/
-        ), "/index.html")
-    );
-    // security - disable parent-directory lookup
-    if (file.indexOf(process.cwd() + require("path").sep) !== 0) {
-        res.statusCode = 404;
-        res.end();
-        return;
-    }
-    require("fs").readFile(file, function (err, data) {
-        if (err) {
+    "use strict";
+    process.env.PORT = process.env.PORT || "8080";
+    console.error("http-file-server listening on port " + process.env.PORT);
+    require("http").createServer(function (req, res) {
+        let file;
+        // resolve <file>
+        file = require("path").resolve(
+            // replace trailing "/" with "/index.html"
+            require("url").parse(req.url).pathname.slice(1).replace((
+                /\/$/
+            ), "/index.html")
+        );
+        // security - disable parent-directory lookup
+        if (file.indexOf(process.cwd() + require("path").sep) !== 0) {
             res.statusCode = 404;
             res.end();
             return;
         }
-        switch (require("path").extname(file)) {
-        case ".wasm":
-            res.setHeader("content-type", "application/wasm");
-            break;
-        }
-        res.end(data);
-    });
-}).listen(process.env.PORT);
+        require("fs").readFile(file, function (err, data) {
+            if (err) {
+                res.statusCode = 404;
+                res.end();
+                return;
+            }
+            switch (require("path").extname(file)) {
+            case ".wasm":
+                res.setHeader("content-type", "application/wasm");
+                break;
+            }
+            res.end(data);
+        });
+    }).listen(process.env.PORT);
 }());
 '
 )}
@@ -1841,11 +1992,11 @@ shImageToDataUri () {(set -e
     case "$1" in
     http://*)
         FILE=/tmp/shImageToDataUri.png
-        curl -#Lf -o "$FILE" "$1"
+        curl -Lf -o "$FILE" "$1"
         ;;
     https://*)
         FILE=/tmp/shImageToDataUri.png
-        curl -#Lf -o "$FILE" "$1"
+        curl -Lf -o "$FILE" "$1"
         ;;
     *)
         FILE="$1"
@@ -1854,13 +2005,13 @@ shImageToDataUri () {(set -e
     node -e '
 /* jslint utility2:true */
 (function () {
-"use strict";
-console.log(
-    "data:image/"
-    + require("path").extname(process.argv[1]).slice(1)
-    + ";base64,"
-    + require("fs").readFileSync(process.argv[1]).toString("base64")
-);
+    "use strict";
+    console.log(
+        "data:image/"
+        + require("path").extname(process.argv[1]).slice(1)
+        + ";base64,"
+        + require("fs").readFileSync(process.argv[1]).toString("base64")
+    );
 }());
 ' "$FILE"
 )}
@@ -1893,17 +2044,42 @@ shJsonNormalize () {(set -e
 # 1. read json-data from file $1
 # 2. normalize json-data
 # 3. write normalized json-data back to file $1
-    node -e "$UTILITY2_MACRO_JS"'
+    node -e '
 /* jslint utility2:true */
-(function (local) {
-"use strict";
-console.error("shJsonNormalize - " + process.argv[1]);
-require("fs").writeFileSync(process.argv[1], local.jsonStringifyOrdered(
-    JSON.parse(require("fs").readFileSync(process.argv[1])),
-    null,
-    4
-) + "\n");
-}(globalThis.globalLocal));
+(function () {
+    "use strict";
+    let objectDeepCopyWithKeysSorted;
+    objectDeepCopyWithKeysSorted = function (obj) {
+    /*
+     * this function will recursively deep-copy <obj> with keys sorted
+     */
+        let sorted;
+        if (!(typeof obj === "object" && obj)) {
+            return obj;
+        }
+        // recursively deep-copy list with child-keys sorted
+        if (Array.isArray(obj)) {
+            return obj.map(objectDeepCopyWithKeysSorted);
+        }
+        // recursively deep-copy obj with keys sorted
+        sorted = {};
+        Object.keys(obj).sort().forEach(function (key) {
+            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
+        });
+        return sorted;
+    };
+    console.error("shJsonNormalize - " + process.argv[1]);
+    require("fs").writeFileSync(
+        process.argv[1],
+        JSON.stringify(
+            objectDeepCopyWithKeysSorted(
+                JSON.parse(require("fs").readFileSync(process.argv[1]))
+            ),
+            undefined,
+            4
+        ) + "\n"
+    );
+}());
 ' "$1"
 )}
 
@@ -1914,83 +2090,6 @@ shMacAddressSpoof () {(set -e
     sudo ifconfig en0 ether "$MAC_ADDRESS"
     # sudo ifconfig en0 ether Wi-Fi "$MAC_ADDRESS"
     ifconfig en0
-)}
-
-shMediaHlsEncrypt () {(set -e
-# this function encrypt the hls-media with given hls.m3u8 file
-# example use:
-# CRYPTO_AES_KEY_MEDIA=0123456789abcdef0123456789abcdef shMediaHlsEncrypt
-    node -e "$UTILITY2_MACRO_JS"'
-/* jslint utility2:true */
-(function (local) {
-"use strict";
-let data;
-let ii;
-data = require("fs").readFileSync("hls.m3u8", "utf8");
-ii = 1;
-data = data.replace((
-    /^[^#].*?$/gm
-), function (match0, match1) {
-    ii += 1;
-    match1 = "aa." + ("0000" + ii).slice(-4) + ".bin";
-    require("fs").readFile(match0, function (err, data) {
-        console.assert(!err, err);
-        local.cryptoAesXxxCbcRawEncrypt({
-            data,
-            key: process.env.CRYPTO_AES_KEY_MEDIA
-        }, function (err, data) {
-            console.assert(!err, err);
-            require("fs").writeFile(match1, data, function (err) {
-                console.assert(!err, err);
-                console.error("encrypted file " + match0 + " to " + match1);
-            });
-        });
-    });
-    return match1;
-});
-local.cryptoAesXxxCbcRawEncrypt({
-    data: Buffer.from(data),
-    key: process.env.CRYPTO_AES_KEY_MEDIA,
-    mode: "base64"
-}, function (
-    err,
-    data
-) {
-    console.assert(!err, err);
-    require("fs").writeFile("aa.0001.bin", data, function (err) {
-        console.assert(!err, err);
-        console.error("encrypted file hls.m3u8 to aa.0001.bin");
-    });
-});
-}(globalThis.globalLocal));
-' "$@"
-)}
-
-shMediaHlsFromMp4 () {(set -e
-# this function convert the media $1 to hls
-# example use:
-# shMediaHlsFromMp4 a00.mp4
-    ffmpeg \
-        -i "$1" \
-        -c:v copy \
-        -c:a copy \
-        -hls_list_size 0 \
-        -hls_time 6 \
-        -hls_segment_filename hls.%04d.ts \
-        -y \
-        hls.m3u8
-)}
-
-shModuleDirname () {(set -e
-# this function will print the __dirname of the module $1
-    MODULE="$1"
-    node -e "$UTILITY2_MACRO_JS"'
-/* jslint utility2:true */
-(function (local) {
-"use strict";
-console.log(local.moduleDirname(process.argv[1], module.paths));
-}(globalThis.globalLocal));
-' "$1"
 )}
 
 shNpmDeprecateAlias () {(set -e
@@ -2018,19 +2117,19 @@ shNpmDeprecateAlias () {(set -e
     node -e '
 /* jslint utility2:true */
 (function () {
-"use strict";
-let packageJson;
-packageJson = require("./package.json");
-packageJson.description = process.argv[1];
-Object.keys(packageJson).forEach(function (key) {
-    if (key[0] === "_") {
-        delete packageJson[key];
-    }
-});
-require("fs").writeFileSync(
-    "package.json",
-    JSON.stringify(packageJson, null, 4) + "\n"
-);
+    "use strict";
+    let packageJson;
+    packageJson = require("./package.json");
+    packageJson.description = process.argv[1];
+    Object.keys(packageJson).forEach(function (key) {
+        if (key[0] === "_") {
+            delete packageJson[key];
+        }
+    });
+    require("fs").writeFileSync(
+        "package.json",
+        JSON.stringify(packageJson, undefined, 4) + "\n"
+    );
 }());
 ' "$MESSAGE"
     shPackageJsonVersionIncrement
@@ -2038,29 +2137,14 @@ require("fs").writeFileSync(
     npm deprecate "$NAME" "$MESSAGE"
 )}
 
-shNpmInstallTarball () {(set -e
-# this function will npm-install the tarball instead of the full module
-    NAME="$1"
-    mkdir -p "node_modules/$NAME"
-    curl -Lfs "$(
-        npm view "$NAME" dist.tarball
-    )" | tar --strip-components 1 -C "node_modules/$NAME" -xzf -
-)}
-
 shNpmPackageCliHelpCreate () {(set -e
 # this function will create a svg cli-help npm-package
     shBuildInit
     export MODE_BUILD=npmPackageCliHelp
     shBuildPrint "creating npmPackageCliHelp ..."
-    FILE="$(node -e '
-/* jslint utility2:true */
-(function () {
-"use strict";
-let dict;
-dict = require("./package.json").bin || {};
-process.stdout.write(String(dict[Object.keys(dict)[0]]));
-}());
-')"
+    FILE="$(node -e 'console.log(
+    Object.values(require("./package.json").bin || {})[0]
+);')"
     shRunWithScreenshotTxt printf none
     if [ -f "./$FILE" ]
     then
@@ -2154,20 +2238,20 @@ shNpmPublishAlias () {(set -e
     node -e '
 /* jslint utility2:true */
 (function () {
-"use strict";
-let name;
-let packageJson;
-let version;
-name = process.argv[1];
-version = process.argv[2];
-packageJson = require("./package.json");
-packageJson.nameOriginal = packageJson.name;
-packageJson.name = name || packageJson.name;
-packageJson.version = version || packageJson.version;
-require("fs").writeFileSync(
-    "package.json",
-    JSON.stringify(packageJson, null, 4) + "\n"
-);
+    "use strict";
+    let name;
+    let packageJson;
+    let version;
+    name = process.argv[1];
+    version = process.argv[2];
+    packageJson = require("./package.json");
+    packageJson.nameOriginal = packageJson.name;
+    packageJson.name = name || packageJson.name;
+    packageJson.version = version || packageJson.version;
+    require("fs").writeFileSync(
+        "package.json",
+        JSON.stringify(packageJson, undefined, 4) + "\n"
+    );
 }());
 ' "$NAME" "$VERSION"
     npm publish
@@ -2252,120 +2336,115 @@ shPackageJsonVersionIncrement () {(set -e
     node -e '
 /* jslint utility2:true */
 (function () {
-"use strict";
-let aa;
-let bb;
-let cc;
-let dd;
-let ii;
-let packageJson;
-let result;
-packageJson = require("./package.json");
-// increment packageJson.version
-aa = packageJson.version.replace((
-    /^(\d+?\.\d+?\.)(\d+)(\.*?)$/
-), function (ignore, match1, match2, match3) {
-    return match1 + (Number(match2) + 1) + match3;
-});
-bb = String(process.argv[1] || packageJson.version).replace((
-    /^today$/
-), new Date().toISOString().replace((
-    /T.*?$/
-), "").replace((
-    /-0?/g
-), "."));
-[
-    aa, bb
-] = [
-    aa, bb
-].map(function (aa) {
-    // filter "+" metadata
-    // https://semver.org/#spec-item-10
-    aa = aa.split("+")[0];
-    // normalize x.y.z
-    aa = aa.split(".");
-    while (aa.length < 3) {
-        aa.push("0");
-    }
-    // split "-" pre-release-identifier
-    // https://semver.org/#spec-item-9
-    aa = [].concat(aa.slice(0, 2), aa.slice(2).join(".").split("-"));
-    // normalize x.y.z
+    "use strict";
+    let aa;
+    let bb;
+    let cc;
+    let dd;
+    let ii;
+    let packageJson;
+    let result;
+    packageJson = require("./package.json");
+    // increment packageJson.version
+    aa = packageJson.version.replace((
+        /^(\d+?\.\d+?\.)(\d+)(\.*?)$/
+    ), function (ignore, match1, match2, match3) {
+        return match1 + (Number(match2) + 1) + match3;
+    });
+    bb = String(process.argv[1] || packageJson.version).replace((
+        /^today$/
+    ), new Date().toISOString().replace((
+        /T.*?$/
+    ), "").replace((
+        /-0?/g
+    ), "."));
+    [
+        aa, bb
+    ] = [
+        aa, bb
+    ].map(function (aa) {
+        // filter "+" metadata
+        // https://semver.org/#spec-item-10
+        aa = aa.split("+")[0];
+        // normalize x.y.z
+        aa = aa.split(".");
+        while (aa.length < 3) {
+            aa.push("0");
+        }
+        // split "-" pre-release-identifier
+        // https://semver.org/#spec-item-9
+        aa = [].concat(aa.slice(0, 2), aa.slice(2).join(".").split("-"));
+        // normalize x.y.z
+        ii = 0;
+        while (ii < 3) {
+            aa[ii] = String(aa[ii] | 0);
+            ii += 1;
+        }
+        return aa.map(function (aa) {
+            return (
+                Number.isFinite(aa)
+                ? Number(aa)
+                : aa
+            );
+        });
+    });
+    // compare precedence
+    // https://semver.org/#spec-item-11
+    result = aa;
     ii = 0;
-    while (ii < 3) {
-        aa[ii] = String(aa[ii] | 0);
+    while (ii < Math.max(aa.length, bb.length)) {
+        cc = aa[ii];
+        dd = bb[ii];
+        if (
+            dd === undefined
+            || (typeof cc !== "number" && typeof dd === "number")
+        ) {
+            result = bb;
+            break;
+        }
+        if (
+            cc === undefined
+            || (typeof cc === "number" && typeof dd !== "number")
+        ) {
+            result = aa;
+            break;
+        }
+        if (cc < dd) {
+            result = bb;
+            break;
+        }
+        if (cc > dd) {
+            result = aa;
+            break;
+        }
         ii += 1;
     }
-    return aa.map(function (aa) {
-        return (
-            Number.isFinite(aa)
-            ? Number(aa)
-            : aa
-        );
+    [
+        aa, bb, result
+    ] = [
+        aa, bb, result
+    ].map(function (aa) {
+        return aa[0] + "." + aa[1] + "." + aa.slice(2).join("-");
     });
-});
-// compare precedence
-// https://semver.org/#spec-item-11
-result = aa;
-ii = 0;
-while (ii < Math.max(aa.length, bb.length)) {
-    cc = aa[ii];
-    dd = bb[ii];
-    if (
-        dd === undefined
-        || (typeof cc !== "number" && typeof dd === "number")
-    ) {
-        result = bb;
-        break;
-    }
-    if (
-        cc === undefined
-        || (typeof cc === "number" && typeof dd !== "number")
-    ) {
-        result = aa;
-        break;
-    }
-    if (cc < dd) {
-        result = bb;
-        break;
-    }
-    if (cc > dd) {
-        result = aa;
-        break;
-    }
-    ii += 1;
-}
-[
-    aa, bb, result
-] = [
-    aa, bb, result
-].map(function (aa) {
-    return aa[0] + "." + aa[1] + "." + aa.slice(2).join("-");
-});
-packageJson.version = result;
-console.error([
-    aa, bb, result
-]);
-// update package.json
-require("fs").writeFileSync(
-    "package.json",
-    JSON.stringify(packageJson, undefined, 4) + "\n"
-);
-// update README.md
-require("fs").writeFileSync(
-    "README.md",
-    require("fs").readFileSync("README.md", "utf8").replace((
-        /^(####\u0020changelog\u0020|-\u0020npm\u0020publish\u0020|\u0020{4}"version":\u0020")\d+?\.\d+?\.\d[^\n",]*/gm
-    ), "$1" + packageJson.version, undefined)
-);
-console.error("shPackageJsonVersionIncrement - " + packageJson.version);
+    packageJson.version = result;
+    console.error([
+        aa, bb, result
+    ]);
+    // update package.json
+    require("fs").writeFileSync(
+        "package.json",
+        JSON.stringify(packageJson, undefined, 4) + "\n"
+    );
+    // update README.md
+    require("fs").writeFileSync(
+        "README.md",
+        require("fs").readFileSync("README.md", "utf8").replace((
+            /^(####\u0020changelog\u0020|-\u0020npm\u0020publish\u0020|\u0020{4}"version":\u0020")\d+?\.\d+?\.\d[^\n",]*/gm
+        ), "$1" + packageJson.version, undefined)
+    );
+    console.error("shPackageJsonVersionIncrement - " + packageJson.version);
 }());
 ' "$1"
-)}
-
-shPasswordRandom () {(set -e
-# this function will create random-password
-    openssl rand -base64 32
 )}
 
 shRawLibDiff () {(set -e
@@ -2383,411 +2462,363 @@ shRawLibFetch () {(set -e
     node -e '
 /* jslint utility2:true */
 (function () {
-"use strict";
-let child_process;
-let footer;
-let fs;
-let header;
-let https;
-let normalizeWhitespace;
-let opt;
-let path;
-let replaceDiff;
-let repoDict;
-normalizeWhitespace = function (str) {
-/*
- * this function will normalize whitespace
- */
-    // normalize newline
-    str = str.replace((
-        /\r\n|\r/g
-    ), "\n");
-    // remove trailing-whitespace
-    str = str.replace((
-        /[\t\u0020]+$/gm
-    ), "");
-    // remove leading-newline before ket
-    str = str.replace((
-        /\n+(\n\u0020*?\})/g
-    ), "$1");
-    // normalize newline between code-section
-    str = str.replace((
-        /\n{3,}/g
-    ), function (match0) {
-        if (match0.length === 3) {
-            return "\n\n";
-        }
-        return "\n\n\n\n";
-    });
-    return str;
-};
-child_process = require("child_process");
-fs = require("fs");
-https = require("https");
-path = require("path");
-repoDict = {};
-opt = (
-    /^\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?)\n\*\/\n/m
-).exec(fs.readFileSync(process.argv[1], "utf8"));
-replaceDiff = opt[2].split("\n\n").filter(function (elem) {
-    return elem.trim();
-}).map(function (elem) {
-    return elem.trim() + "\n";
-}).sort().join("\n");
-footer = (
-    /\n\/\*\nfile\u0020none\n\*\/\n([\S\s]+)/
-).exec(opt.input);
-footer = String(
-    (footer && footer[1].trim())
-    ? "\n\n\n" + footer[1].trim() + "\n"
-    : ""
-);
-header = (
-    opt.input.slice(0, opt.index)
-    + "/*\nshRawLibFetch\n" + opt[1].trim() + "\n" + replaceDiff + "*/\n\n\n\n"
-);
-opt = JSON.parse(opt[1].replace((
-    /^\u0020*?\/\/.*?$/gm
-), "").replace((
-    /\u0020\/\/\u0020jslint\u0020ignore:line$/gm
-), ""));
-opt.fetchList.forEach(function (elem) {
-    let repo;
-    if (!elem.url) {
-        return;
-    }
-    repo = elem.url.split("/").slice(0, 7).join("/");
-    if (!repoDict.hasOwnProperty(repo)) {
-        repoDict[repo] = {
-            fetchList: []
-        };
-        https.request(repo.replace(
-            "/blob/",
-            "/commits/"
-        ), function (res) {
-            repo.dateCommitted = "";
-            res.on("data", function (buf) {
-                repo.dateCommitted += buf.toString();
-            });
-            res.on("end", function () {
-                repo.dateCommitted = repo.dateCommitted.match(
-                    /\b\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\b/
-                )[0];
-            });
-        }).end();
-    }
-    repo = repoDict[repo];
-    repo.fetchList.push(elem);
-});
-Object.entries(repoDict).forEach(function ([
-    prefix, repo
-], ii) {
-    repo.prefix = prefix;
-    repo.fetchList.forEach(function (elem, jj) {
-        let file;
-        file = fs.createWriteStream(
-            process.env.DIR
-            + "/"
-            + String(ii).padStart(2, "0")
-            + "__"
-            + String(jj).padStart(2, "0")
-            + "__"
-            + elem.url.split("/").slice(7).join("__")
-        );
-        if (elem.sh) {
-            child_process.spawn(elem.sh, {
-                shell: true,
-                stdio: [
-                    "ignore", "pipe", 2
-                ]
-            }).stdout.pipe(file);
-            return;
-        }
-        https.request(elem.url.replace(
-            "https://github.com/",
-            "https://raw.githubusercontent.com/"
-        ).replace("/blob/", "/"), function (res) {
-            res.pipe(file);
-        }).end();
-    });
-});
-process.on("exit", function () {
-    let repoPrefix0;
-    let requireDict;
-    let result0;
-    let result;
-    result = "";
-    requireDict = {};
-    fs.readdirSync(process.env.DIR).sort().forEach(function (data) {
-        let exports;
-        let file;
-        let prefix;
-        let repo;
-        repo = Object.values(repoDict)[Number(data.slice(0, 2))];
-        file = repo.fetchList[Number(data.slice(4, 6))].url;
-        // init prefix
-        prefix = "exports_" + path.dirname(file).replace(
-            "https://github.com/",
-            ""
-        ).replace((
-            /\/blob\/[^\/]*/
-        ), "/").replace((
-            /\W/g
-        ), "_").replace((
-            /(_)_+|_+$/g
+    "use strict";
+    let child_process;
+    let footer;
+    let fs;
+    let header;
+    let https;
+    let normalizeWhitespace;
+    let opt;
+    let path;
+    let replaceDiff;
+    let repoDict;
+    normalizeWhitespace = function (str) {
+    /*
+     * this function will normalize whitespace
+     */
+        // normalize newline
+        str = str.replace((
+            /\r\n|\r/g
+        ), "\n");
+        // remove trailing-whitespace
+        str = str.replace((
+            /[\t\u0020]+$/gm
+        ), "");
+        // remove leading-newline before ket
+        str = str.replace((
+            /\n+(\n\u0020*?\})/g
         ), "$1");
-        exports = prefix + "_" + path.basename(file).replace((
-            /\.js$/
-        ), "").replace((
-            /\W/g
-        ), "_");
-        if (repo.prefix !== repoPrefix0) {
-            repoPrefix0 = repo.prefix;
-            result += (
-                "\n\n\n\n/*\n"
-                + "repo " + repo.prefix.replace("/blob/", "/tree/") + "\n"
-                + "committed " + repo.dateCommitted + "\n"
-                + "*/"
-            );
-        }
-        // mangle module.exports
-        data = fs.readFileSync(process.env.DIR + "/" + data, "utf8");
-        if (!opt.rollupCommonJs) {
-            result += "\n\n\n\n/*\nfile " + file + "\n*/\n" + data.trim();
+        // normalize newline between code-section
+        str = str.replace((
+            /\n{3,}/g
+        ), function (match0) {
+            if (match0.length === 3) {
+                return "\n\n";
+            }
+            return "\n\n\n\n";
+        });
+        return str;
+    };
+    child_process = require("child_process");
+    fs = require("fs");
+    https = require("https");
+    path = require("path");
+    repoDict = {};
+    opt = (
+        /^\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?)\n\*\/\n/m
+    ).exec(fs.readFileSync(process.argv[1], "utf8"));
+    replaceDiff = opt[2].split("\n\n").filter(function (elem) {
+        return elem.trim();
+    }).map(function (elem) {
+        return elem.trim() + "\n";
+    }).sort().join("\n");
+    footer = (
+        /\n\/\*\nfile\u0020none\n\*\/\n([\S\s]+)/
+    ).exec(opt.input);
+    footer = String(
+        (footer && footer[1].trim())
+        ? "\n\n\n" + footer[1].trim() + "\n"
+        : ""
+    );
+    header = (
+        opt.input.slice(0, opt.index) + "/*\nshRawLibFetch\n" + opt[1].trim()
+        + "\n" + replaceDiff + "*/\n\n\n\n"
+    );
+    opt = JSON.parse(opt[1].replace((
+        /^\u0020*?\/\/.*?$/gm
+    ), "").replace((
+        /\u0020\/\/\u0020jslint\u0020ignore:line$/gm
+    ), ""));
+    opt.fetchList.forEach(function (elem) {
+        let repo;
+        if (!elem.url) {
             return;
         }
-        data = data.replace((
-            /\bmodule\.exports\b|(^\u0020*?)exports\b/gm
-        ), "$1" + exports);
-        // inline require(...)
-        data = data.replace((
-            /\brequire\(.\.[.\/]*?\/(\w.*?).\)/gm
-        ), function (ignore, match1) {
-            return prefix + "_" + match1.replace((
+        repo = elem.url.split("/").slice(0, 7).join("/");
+        if (!repoDict.hasOwnProperty(repo)) {
+            repoDict[repo] = {
+                fetchList: []
+            };
+            https.request(repo.replace(
+                "/blob/",
+                "/commits/"
+            ), function (res) {
+                repo.dateCommitted = "";
+                res.on("data", function (buf) {
+                    repo.dateCommitted += buf.toString();
+                });
+                res.on("end", function () {
+                    repo.dateCommitted = repo.dateCommitted.match(
+                        /\b\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\b/
+                    )[0];
+                });
+            }).end();
+        }
+        repo = repoDict[repo];
+        repo.fetchList.push(elem);
+    });
+    Object.entries(repoDict).forEach(function ([
+        prefix, repo
+    ], ii) {
+        repo.prefix = prefix;
+        repo.fetchList.forEach(function (elem, jj) {
+            let file;
+            file = fs.createWriteStream(
+                process.env.DIR
+                + "/"
+                + String(ii).padStart(2, "0")
+                + "__"
+                + String(jj).padStart(2, "0")
+                + "__"
+                + elem.url.split("/").slice(7).join("__")
+            );
+            if (elem.sh) {
+                child_process.spawn(elem.sh, {
+                    shell: true,
+                    stdio: [
+                        "ignore", "pipe", 2
+                    ]
+                }).stdout.pipe(file);
+                return;
+            }
+            https.request(elem.url.replace(
+                "https://github.com/",
+                "https://raw.githubusercontent.com/"
+            ).replace("/blob/", "/"), function (res) {
+                res.pipe(file);
+            }).end();
+        });
+    });
+    process.on("exit", function () {
+        let repoPrefix0;
+        let requireDict;
+        let result0;
+        let result;
+        result = "";
+        requireDict = {};
+        fs.readdirSync(process.env.DIR).sort().forEach(function (data) {
+            let exports;
+            let file;
+            let prefix;
+            let repo;
+            repo = Object.values(repoDict)[Number(data.slice(0, 2))];
+            file = repo.fetchList[Number(data.slice(4, 6))].url;
+            // init prefix
+            prefix = "exports_" + path.dirname(file).replace(
+                "https://github.com/",
+                ""
+            ).replace((
+                /\/blob\/[^\/]*/
+            ), "/").replace((
+                /\W/g
+            ), "_").replace((
+                /(_)_+|_+$/g
+            ), "$1");
+            exports = prefix + "_" + path.basename(file).replace((
                 /\.js$/
             ), "").replace((
                 /\W/g
             ), "_");
-        });
-        result += "\n\n\n\n/*\nfile " + file + "\n*/\n";
-        if ((
-            /\bpackage\.json$/
-        ).test(file)) {
-            result += exports + " = ";
-        }
-        result += data.trim();
-    });
-    // comment #!
-    result = result.replace((
-        /^#!/gm
-    ), "// $&");
-    // normalize whitespace
-    result = normalizeWhitespace(result);
-    // replaceList
-    Array.from(opt.replaceList || []).forEach(function (elem) {
-        result0 = result;
-        result = result.replace(
-            new RegExp(elem.source, elem.flags),
-            elem.replace
-        );
-        if (result0 === result) {
-            throw new Error(
-                "shRawLibFetch - cannot find-and-replace snippet "
-                + JSON.stringify(elem.source)
-            );
-        }
-    });
-    result = result.trim() + "\n";
-    // replace diff
-    replaceDiff.replace((
-        /((?:^-.*?\n)+?)((?:^\+.*?\n)+)/gm
-    ), function (ignore, match1, match2) {
-        match1 = match1.replace((
-            /^-/gm
-        ), "");
-        match2 = match2.replace((
-            /^\+/gm
-        ), "");
-        if (result.indexOf(match1) < 0) {
-            throw new Error(
-                "shRawLibFetch - cannot find-and-replace snippet "
-                + JSON.stringify(match1)
-            );
-        }
-        result = result.replace(match1, match2);
-    });
-    if (!opt.rollupCommonJs) {
-        fs.writeFileSync(
-            process.argv[1],
-            header + result.trim() + "\n\n\n\n/*\nfile none\n*/\n" + footer
-        );
-        return;
-    }
-    // comment ... = require(...)
-    result = result.replace((
-        /^\u0020*?[$A-Z_a-z].*?\brequire\(.*$/gm
-    ), function (match0) {
-        requireDict[match0.replace((
-            /\bconst\b|\bvar\b/
-        ), "let").trim()] = "";
-        return "// " + match0;
-    });
-    result = result.replace((
-        /^\u0020*?(?:const|let|var)\u0020(?:\w+?|\{[^}]+?\})\u0020=\u0020exports_.*$/gm
-    ), function (match0) {
-        requireDict[match0.replace((
-            /\bconst\b|\bvar\b/
-        ), "let").trim()] = "";
-        return match0.replace((
-            /^/gm
-        ), "// ");
-    });
-    // normalize whitespace
-    result = normalizeWhitespace(result);
-    // normalize requireDict - let exports_... = {}
-    result.replace((
-        /\bexports_\w+/g
-    ), function (match0) {
-        requireDict["let " + match0 + " = {};"] = "";
-        return "";
-    });
-    // normalize requireDict - let {...} = exports_...
-    Object.keys(requireDict).forEach(function (key) {
-        if (key.indexOf("let {") === 0) {
-            delete requireDict[key];
-            key = key.split(" = ");
-            key[1] = key[1].trim().replace(";", "");
-            key[0].split("{")[1].replace((
-                /\w+/g
-            ), function (match0) {
-                requireDict[`let ${match0} = ${key[1]}.${match0};`] = "";
-                return "";
+            if (repo.prefix !== repoPrefix0) {
+                repoPrefix0 = repo.prefix;
+                result += (
+                    "\n\n\n\n/*\n"
+                    + "repo " + repo.prefix.replace("/blob/", "/tree/") + "\n"
+                    + "committed " + repo.dateCommitted + "\n"
+                    + "*/"
+                );
+            }
+            // mangle module.exports
+            data = fs.readFileSync(process.env.DIR + "/" + data, "utf8");
+            if (!opt.rollupCommonJs) {
+                result += "\n\n\n\n/*\nfile " + file + "\n*/\n" + data.trim();
+                return;
+            }
+            data = data.replace((
+                /\bmodule\.exports\b|(^\u0020*?)exports\b/gm
+            ), "$1" + exports);
+            // inline require(...)
+            data = data.replace((
+                /\brequire\(.\.[.\/]*?\/(\w.*?).\)/gm
+            ), function (ignore, match1) {
+                return prefix + "_" + match1.replace((
+                    /\.js$/
+                ), "").replace((
+                    /\W/g
+                ), "_");
             });
+            result += "\n\n\n\n/*\nfile " + file + "\n*/\n";
+            if ((
+                /\bpackage\.json$/
+            ).test(file)) {
+                result += exports + " = ";
+            }
+            result += data.trim();
+        });
+        // comment #!
+        result = result.replace((
+            /^#!/gm
+        ), "// $&");
+        // normalize whitespace
+        result = normalizeWhitespace(result);
+        // replaceList
+        Array.from(opt.replaceList || []).forEach(function (elem) {
+            result0 = result;
+            result = result.replace(
+                new RegExp(elem.source, elem.flags),
+                elem.replace
+            );
+            if (result0 === result) {
+                throw new Error(
+                    "shRawLibFetch - cannot find-and-replace snippet "
+                    + JSON.stringify(elem.source)
+                );
+            }
+        });
+        result = result.trim() + "\n";
+        // replace diff
+        replaceDiff.replace((
+            /((?:^-.*?\n)+?)((?:^\+.*?\n)+)/gm
+        ), function (ignore, match1, match2) {
+            match1 = match1.replace((
+                /^-/gm
+            ), "");
+            match2 = match2.replace((
+                /^\+/gm
+            ), "");
+            if (result.indexOf(match1) < 0) {
+                throw new Error(
+                    "shRawLibFetch - cannot find-and-replace snippet "
+                    + JSON.stringify(match1)
+                );
+            }
+            result = result.replace(match1, match2);
+        });
+        if (!opt.rollupCommonJs) {
+            fs.writeFileSync(
+                process.argv[1],
+                header + result.trim() + "\n\n\n\n/*\nfile none\n*/\n" + footer
+            );
             return;
         }
-        if (key.slice(-1) !== ";") {
-            delete requireDict[key];
-            requireDict[key + ";"] = "";
-        }
-    });
-    // normalize requireDict - collate let
-    Object.keys(requireDict).forEach(function (key, val) {
-        val = key;
-        key = key.split(" ")[1];
-        requireDict[key] = requireDict[key] || [];
-        requireDict[key].push(val);
-    });
-    // normalize requireDict - comment duplicate in code
-    result.replace((
-        /^\u0020*?(?:class|const|function|let|var)\u0020(\w+?)\b/gm
-    ), function (ignore, match1) {
-        Array.from(requireDict[match1] || []).forEach(function (key) {
-            requireDict[key] = "// ";
+        // comment ... = require(...)
+        result = result.replace((
+            /^\u0020*?[$A-Z_a-z].*?\brequire\(.*$/gm
+        ), function (match0) {
+            requireDict[match0.replace((
+                /\bconst\b|\bvar\b/
+            ), "let").trim()] = "";
+            return "// " + match0;
         });
-        delete requireDict[match1];
-        return "";
-    });
-    // normalize requireDict - comment duplicate in let
-    Object.entries(requireDict).forEach(function ([
-        key, val
-    ]) {
-        if (Array.isArray(val)) {
-            delete requireDict[key];
-            val.sort().slice(1).forEach(function (key) {
+        result = result.replace((
+            /^\u0020*?(?:const|let|var)\u0020(?:\w+?|\{[^}]+?\})\u0020=\u0020exports_.*$/gm
+        ), function (match0) {
+            requireDict[match0.replace((
+                /\bconst\b|\bvar\b/
+            ), "let").trim()] = "";
+            return match0.replace((
+                /^/gm
+            ), "// ");
+        });
+        // normalize whitespace
+        result = normalizeWhitespace(result);
+        // normalize requireDict - let exports_... = {}
+        result.replace((
+            /\bexports_\w+/g
+        ), function (match0) {
+            requireDict["let " + match0 + " = {};"] = "";
+            return "";
+        });
+        // normalize requireDict - let {...} = exports_...
+        Object.keys(requireDict).forEach(function (key) {
+            if (key.indexOf("let {") === 0) {
+                delete requireDict[key];
+                key = key.split(" = ");
+                key[1] = key[1].trim().replace(";", "");
+                key[0].split("{")[1].replace((
+                    /\w+/g
+                ), function (match0) {
+                    requireDict[`let ${match0} = ${key[1]}.${match0};`] = "";
+                    return "";
+                });
+                return;
+            }
+            if (key.slice(-1) !== ";") {
+                delete requireDict[key];
+                requireDict[key + ";"] = "";
+            }
+        });
+        // normalize requireDict - collate let
+        Object.keys(requireDict).forEach(function (key, val) {
+            val = key;
+            key = key.split(" ")[1];
+            requireDict[key] = requireDict[key] || [];
+            requireDict[key].push(val);
+        });
+        // normalize requireDict - comment duplicate in code
+        result.replace((
+            /^\u0020*?(?:class|const|function|let|var)\u0020(\w+?)\b/gm
+        ), function (ignore, match1) {
+            Array.from(requireDict[match1] || []).forEach(function (key) {
                 requireDict[key] = "// ";
             });
-        }
+            delete requireDict[match1];
+            return "";
+        });
+        // normalize requireDict - comment duplicate in let
+        Object.entries(requireDict).forEach(function ([
+            key, val
+        ]) {
+            if (Array.isArray(val)) {
+                delete requireDict[key];
+                val.sort().slice(1).forEach(function (key) {
+                    requireDict[key] = "// ";
+                });
+            }
+        });
+        header += "(function () {\n\"use strict\";\n";
+        Object.keys(requireDict).map(function (key) {
+            return (
+                key.indexOf(" = exports_") >= 0
+                ? ""
+                : key.indexOf(" = require(") >= 0
+                ? "1\u0000" + key
+                : "2\u0000" + key
+            );
+        }).filter(function (elem) {
+            return elem;
+        }).sort().forEach(function (key) {
+            key = key.split("\u0000")[1];
+            header += requireDict[key] + key + "\n";
+        });
+        result = header + result.trim() + "\n";
+        Object.keys(requireDict).map(function (key) {
+            return (
+                key.indexOf(" = exports_") >= 0
+                ? key.replace((
+                    /(.*?)\u0020=\u0020(.*?)$/gm
+                ), function (ignore, match1, match2) {
+                    return (
+                        match2 + "\u0000"
+                        + match1.padEnd(19, " ") + " = " + match2
+                    );
+                })
+                : ""
+            );
+        }).filter(function (elem) {
+            return elem;
+        }).sort().forEach(function (key) {
+            key = key.split("\u0000")[1];
+            result += requireDict[key.replace((
+                /\u0020{2,}/
+            ), " ")] + key + "\n";
+        });
+        result += "}());\n\n\n\n/*\nfile none\n*/\n";
+        fs.writeFileSync(process.argv[1], result);
     });
-    header += "(function () {\n\"use strict\";\n";
-    Object.keys(requireDict).map(function (key) {
-        return (
-            key.indexOf(" = exports_") >= 0
-            ? ""
-            : key.indexOf(" = require(") >= 0
-            ? "1\u0000" + key
-            : "2\u0000" + key
-        );
-    }).filter(function (elem) {
-        return elem;
-    }).sort().forEach(function (key) {
-        key = key.split("\u0000")[1];
-        header += requireDict[key] + key + "\n";
-    });
-    result = header + result.trim() + "\n";
-    Object.keys(requireDict).map(function (key) {
-        return (
-            key.indexOf(" = exports_") >= 0
-            ? key.replace((
-                /(.*?)\u0020=\u0020(.*?)$/gm
-            ), function (ignore, match1, match2) {
-                return (
-                    match2 + "\u0000"
-                    + match1.padEnd(19, " ") + " = " + match2
-                );
-            })
-            : ""
-        );
-    }).filter(function (elem) {
-        return elem;
-    }).sort().forEach(function (key) {
-        key = key.split("\u0000")[1];
-        result += requireDict[key.replace((
-            /\u0020{2,}/
-        ), " ")] + key + "\n";
-    });
-    result += "}());\n\n\n\n/*\nfile none\n*/\n";
-    fs.writeFileSync(process.argv[1], result);
-});
 }());
 ' "$@"
-)}
-
-shReadmeLinkValidate () {(set -e
-# this function will validate http-links embedded in README.md
-    node -e '
-/* jslint utility2:true */
-(function () {
-"use strict";
-let set;
-set = new Set();
-require("fs").readFileSync("README.md", "utf8").replace((
-    /\b(https?):\/\/.*?[)\]]/g
-), function (match0, match1) {
-    let req;
-    match0 = match0.slice(0, -1).replace((
-        /[\u0022\u0027]/g
-    ), "").replace((
-        /\bbeta\b|\bmaster\b/g
-    ), "alpha").replace((
-        /\/build\//g
-    ), "/build..alpha..travis-ci.org/");
-    // ignore private-link
-    if (
-        process.env.npm_package_private
-        && match0.indexOf("https://github.com/") === 0
-    ) {
-        return;
-    }
-    // ignore duplicate-link
-    if (set.has(match0)) {
-        return;
-    }
-    set.add(match0);
-    req = require(match1).request(require("url").parse(match0), function (res) {
-        console.log(
-            "shReadmeLinkValidate " + res.statusCode + " " + match0
-        );
-        if (!(res.statusCode < 400)) {
-            throw new Error("shReadmeLinkValidate - invalid link " + match0);
-        }
-        req.abort();
-        res.destroy();
-    });
-    req.setTimeout(30000);
-    req.end();
-});
-}());
-'
 )}
 
 shReadmeTest () {(set -e
@@ -2842,7 +2873,7 @@ shReadmeTest () {(set -e
         if [ "$CI_BRANCH" = alpha ]
         then
             sed -in \
--e "s|/build..beta..travis-ci.org/|/build..alpha..travis-ci.org/|g" \
+-e "s|/build..beta..travis-ci.com/|/build..alpha..travis-ci.com/|g" \
 -e "s|npm install $npm_package_name|npm install $GITHUB_REPO#alpha|g" \
 -e "s| -b beta | -b alpha |g" \
                 "$FILE"
@@ -2889,23 +2920,6 @@ shReadmeTest () {(set -e
         ;;
     esac
     shBuildPrint "... finished running command 'shReadmeTest $*'"
-)}
-
-shReplClient () {(set -e
-# this function will connect the repl-client to tcp-port $1
-# https://gist.github.com/TooTallNate/2209310
-    node -e '
-/* jslint utility2:true */
-(function () {
-"use strict";
-let socket;
-console.log("node repl-client connecting to tcp-port " + process.argv[1]);
-socket = require("net").connect(process.argv[1]);
-process.stdin.pipe(socket);
-socket.pipe(process.stdout);
-socket.on("end", process.exit);
-}());
-' "$@"
 )}
 
 shRmDsStore () {(set -e
@@ -2974,68 +2988,63 @@ shRunWithScreenshotTxt () {(set -e
     node -e '
 /* jslint utility2:true */
 (function () {
-"use strict";
-let result;
-let wordwrap;
-let yy;
-wordwrap = function (line, ii) {
-    if (ii && !line) {
-        return "";
-    }
-    yy += 16;
-    return "<tspan x=\"10\" y=\"" + yy + "\">" + line.replace((
-        /&/g
-    ), "&amp;").replace((
-        /</g
-    ), "&lt;").replace((
-        />/g
-    ), "&gt;") + "</tspan>\n";
-};
-yy = 10;
-result = require("fs").readFileSync(
-    process.env.npm_config_dir_tmp + "/runWithScreenshotTxt",
-    "utf8"
-);
-// remove ansi escape-code
-result = result.replace((
-    /\u001b.*?m/g
-), "");
-// format unicode
-result = result.replace((
-    /\\u[0-9a-f]{4}/g
-), function (match0) {
-    return String.fromCharCode("0x" + match0.slice(-4));
-}).trimEnd().split("\n").map(function (line) {
-    return line.replace((
-        /.{0,96}/g
-    ), wordwrap).replace((
-        /(<\/tspan>\n<tspan)/g
-    ), "\\$1").slice();
-}).join("\n") + "\n";
-result = (
-    "<svg height=\"" + (yy + 20)
-    + "\" width=\"720\" xmlns=\"http://www.w3.org/2000/svg\">\n"
-    + "<rect height=\"" + (yy + 20) + "\" fill=\"#555\" width=\"720\"></rect>\n"
-    + "<text fill=\"#7f7\" font-family=\"Courier New\" font-size=\"12\" "
-    + "xml:space=\"preserve\">\n"
-    + result + "</text>\n</svg>\n"
-);
-require("fs").writeFileSync(
-    process.env.npm_config_dir_build
-    + "/" + process.env.MODE_BUILD_SCREENSHOT_IMG,
-    result
-);
+    "use strict";
+    let result;
+    let wordwrap;
+    let yy;
+    wordwrap = function (line, ii) {
+        if (ii && !line) {
+            return "";
+        }
+        yy += 16;
+        return "<tspan x=\"10\" y=\"" + yy + "\">" + line.replace((
+            /&/g
+        ), "&amp;").replace((
+            /</g
+        ), "&lt;").replace((
+            />/g
+        ), "&gt;") + "</tspan>\n";
+    };
+    yy = 10;
+    result = require("fs").readFileSync(
+        process.env.npm_config_dir_tmp + "/runWithScreenshotTxt",
+        "utf8"
+    );
+    // remove ansi escape-code
+    result = result.replace((
+        /\u001b.*?m/g
+    ), "");
+    // format unicode
+    result = result.replace((
+        /\\u[0-9a-f]{4}/g
+    ), function (match0) {
+        return String.fromCharCode("0x" + match0.slice(-4));
+    }).trimEnd().split("\n").map(function (line) {
+        return line.replace((
+            /.{0,96}/g
+        ), wordwrap).replace((
+            /(<\/tspan>\n<tspan)/g
+        ), "\\$1").slice();
+    }).join("\n") + "\n";
+    result = (
+        "<svg height=\"" + (yy + 20)
+        + "\" width=\"720\" xmlns=\"http://www.w3.org/2000/svg\">\n"
+        + "<rect height=\"" + (yy + 20)
+        + "\" fill=\"#555\" width=\"720\"></rect>\n"
+        + "<text fill=\"#7f7\" font-family=\"Courier New\" font-size=\"12\" "
+        + "xml:space=\"preserve\">\n"
+        + result + "</text>\n</svg>\n"
+    );
+    require("fs").writeFileSync(
+        process.env.npm_config_dir_build
+        + "/" + process.env.MODE_BUILD_SCREENSHOT_IMG,
+        result
+    );
 }());
 '
     shBuildPrint \
 "created screenshot file $npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
     return "$EXIT_CODE"
-)}
-
-shServerPortRandom () {(set -e
-# this function will print random unused tcp-port in the inclusive range
-# 0x8000 to 0xffff
-    node -e 'console.log(Math.random() * 65536 | 0x8000);'
 )}
 
 shSleep () {(set -e
@@ -3049,238 +3058,171 @@ shSource () {
     . "$HOME/.bashrc"
 }
 
-shSsh5022F () {(set -e
-# this function will ssh the reverse-tunnel-client
-# to the middleman $USER_HOST:5022
-# example use:
-# shSsh5022F travis@proxy.com -D 5080
-    USER_HOST="$1"
-    shift
-    ssh-keygen -R \
-        "[$(printf "$USER_HOST" | sed -e "s/.*\@//")]:5022" > /dev/null 2>&1 ||
-        true
-    ssh "$USER_HOST" -p 5022 -o StrictHostKeyChecking=no "$@"
-)}
-
-shSsh5022R () {(set -e
-# this function will ssh-reverse-tunnel the local-machine $USER@127.0.0.1
-# to the middleman $USER_HOST:5022
-# example use:
-# shSsh5022R travis@proxy.com root
-# pkill -f "ssh $USER_REMOTE@$HOST"
-    USER_HOST="$1"
-    HOST="$(printf "$USER_HOST" | sed -e "s/.*@//")"
-    USER="$(printf "$USER_HOST" | sed -e "s/@.*//")"
-    shift
-    USER_REMOTE="$1"
-    shift
-    printf "\nssh $USER_REMOTE@$HOST\n"
-    ssh "$USER_REMOTE@$HOST" -R 5022:127.0.0.1:22 -Tf \
-        -o StrictHostKeyChecking=no "
-ssh-keygen -R [127.0.0.1]:5022 > /dev/null 2>&1
-ssh $USER@127.0.0.1 -p 5022 -L $HOST:5022:127.0.0.1:22 -NTf \
-    -o StrictHostKeyChecking=no
-"
-)}
-
-shTravisRepoBuildCancel () {(set -e
-# this function will cancel the travis-repo build
-# https://docs.travis-ci.com/api#builds
-    GITHUB_REPO="$1"
-    BUILD_ID="$(
-        curl -#Lf \
-"https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/builds" |
-        grep -o -E "[0-9]{1,}" | head -n 1
-    )"
-    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
-        "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/builds/$BUILD_ID/cancel"
-)}
-
-shTravisRepoBuildRestart () {(set -e
-# this function will restart the travis-repo build
-# https://docs.travis-ci.com/api#builds
-    GITHUB_REPO="$1"
-    BUILD_ID="$(
-        curl -#Lf \
-"https://api.${TRAVIS_DOMAIN:-travis-ci.org}/repos/$GITHUB_REPO/builds" |
-        grep -o -E "[0-9]{1,}" | head -n 1
-    )"
-    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
-        "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/builds/$BUILD_ID/restart"
-)}
-
 shTravisRepoCreate () {(set -e
 # this function will create travis-repo https://github.com/$GITHUB_REPO
     export GITHUB_REPO="$1"
     export MODE_BUILD="${MODE_BUILD:-shTravisRepoCreate}"
-    export TRAVIS_DOMAIN=${TRAVIS_DOMAIN:-travis-ci.org}
     shBuildPrint "$GITHUB_REPO - creating ..."
     shGithubRepoCreate "$GITHUB_REPO"
-    shSleep 5
-    shTravisSync
-    while true
-    do
-        shSleep 2
-        if (curl "https://api.$TRAVIS_DOMAIN/repos/$GITHUB_REPO" \
-            -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -fs 2>&1 > /dev/null)
-        then
-            break
-        fi
-    done
-    node -e "$UTILITY2_MACRO_JS""$UTILITY2_MACRO_AJAX_JS"'
+    node -e '
 /* jslint utility2:true */
-(function (local) {
-"use strict";
-let onParallel;
-let opt;
-opt = {};
-local.gotoNext(opt, function (err, data) {
-    switch (opt.gotoState) {
-    case 1:
-        opt.shBuildPrintPrefix = (
-            "\n\u001b[35m[MODE_BUILD=shTravisRepoCreate]\u001b[0m - "
-        );
-        local.ajax({
-            headers: {
-                Authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN
-            },
-            url: (
-                "https://api."
-                + process.env.TRAVIS_DOMAIN + "/repos/"
-                + process.env.GITHUB_REPO
-            )
-        }, opt.gotoNext);
-        break;
-    case 2:
-        opt.id = JSON.parse(data.responseText).id;
-        setTimeout(opt.gotoNext, 5000);
-        break;
-    case 3:
-        local.ajax({
-            data: "{\"hook\":{\"active\":true}}",
-            headers: {
-                Authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
-                "Content-Type": "application/json; charset=utf-8"
-            },
-            method: "PUT",
-            url: (
-                "https://api."
-                + process.env.TRAVIS_DOMAIN
-                + "/hooks/" + opt.id
-            )
-        }, opt.gotoNext);
-        break;
-    case 4:
-        setTimeout(opt.gotoNext, 5000);
-        break;
-    case 5:
-        onParallel = local.onParallel(opt.gotoNext);
-        onParallel.cnt += 1;
-        onParallel.cnt += 1;
-        local.ajax({
-            data: "{\"setting.value\":true}",
-            headers: {
-                Authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
-                "Content-Type": "application/json; charset=utf-8",
-                "Travis-API-Version": 3
-            },
-            method: "PATCH",
-            url: (
-                "https://api." + process.env.TRAVIS_DOMAIN + "/repo/"
-                + opt.id + "/setting/builds_only_with_travis_yml"
-            )
-        }, onParallel);
-        onParallel.cnt += 1;
-        local.ajax({
-            data: "{\"setting.value\":true}",
-            headers: {
-                Authorization: "token "
-                + process.env.TRAVIS_ACCESS_TOKEN,
-                "Content-Type": "application/json; charset=utf-8",
-                "Travis-API-Version": 3
-            },
-            method: "PATCH",
-            url: (
-                "https://api." + process.env.TRAVIS_DOMAIN + "/repo/"
-                + opt.id + "/setting/auto_cancel_pushes"
-            )
-        }, onParallel);
-        onParallel();
-        break;
-    case 6:
-        onParallel.cnt += 1;
-        onParallel.cnt += 1;
-        local.ajax({
-            url: (
-                "https://raw.githubusercontent.com"
-                + "/kaizhu256/node-utility2/alpha/.gitignore"
-            )
-        }, function (err, xhr) {
-            local.assertOrThrow(!err, err);
-            local.fs.writeFile(
-                "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.gitignore",
-                xhr.responseText,
-                onParallel
-            );
+(async function () {
+    "use strict";
+    let httpRequest;
+    let sleep;
+    let tmp;
+    httpRequest = function (opt) {
+    /*
+     * this function will make simple http-request to <opt>.url
+     * and return <opt>.statusCode and <opt>.responseText
+     * and throw any err encountered as uncaughtException
+     */
+        let promise;
+        let resolve;
+        promise = new Promise(function (arg) {
+            resolve = arg;
         });
-        onParallel.cnt += 1;
-        local.ajax({
+        opt = Object.assign({
+            method: "GET"
+        }, opt);
+        console.error("httpRequest - " + JSON.stringify({
+            method: opt.method,
+            hostname: require("url").parse(opt.url).hostname
+        }));
+        require("https").request(opt.url, opt, function (res) {
+            if (!(res.statusCode < 400) && !opt.modeIgnoreStatusCode) {
+                throw new Error(JSON.stringify({
+                    method: opt.method,
+                    hostname: require("url").parse(opt.url).hostname,
+                    statusCode: res.statusCode
+                }));
+            }
+            opt.responseText = "";
+            opt.statusCode = res.statusCode;
+            res.on("data", function (chunk) {
+                opt.responseText += chunk;
+            }).on("end", function () {
+                resolve(opt);
+            }).setEncoding("utf8");
+        }).end(opt.data);
+        return promise;
+    };
+    sleep = function (time) {
+        return new Promise(function (resolve) {
+            setTimeout(resolve, time);
+        });
+    };
+    process.on("unhandledRejection", function (err) {
+        throw err;
+    });
+    // request github-assets
+    [
+        (
+            "https://raw.githubusercontent.com"
+            + "/kaizhu256/node-utility2/alpha/.gitignore"
+        ), (
+            "https://raw.githubusercontent.com"
+            + "/kaizhu256/node-utility2/alpha/.travis.yml"
+        )
+    ].forEach(function (url) {
+        httpRequest({
+            url
+        }).then(function (opt) {
+            require("fs").promises.writeFile((
+                "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/"
+                + require("path").basename(url)
+            ), opt.responseText);
+        });
+    });
+    require("fs").promises.writeFile(
+        "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/package.json",
+        JSON.stringify({
+            devDependencies: {
+                utility2: "kaizhu256/node-utility2#alpha"
+            },
+            homepage: "https://github.com/" + process.env.GITHUB_REPO,
+            name: process.env.GITHUB_REPO.replace((
+                /.+?\/node-|.+?\//
+            ), ""),
+            repository: {
+                type: "git",
+                url: "https://github.com/" + process.env.GITHUB_REPO + ".git"
+            },
+            scripts: {
+                "build-ci": "utility2 shBuildCi"
+            },
+            version: "0.0.1"
+        }, undefined, 4)
+    );
+    await sleep(5000);
+    // request travis-userid
+    tmp = await httpRequest({
+        headers: {
+            authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
+            "content-type": "application/json",
+            "travis-api-version": 3
+        },
+        url: "https://api.travis-ci.com/user"
+    });
+    // sync travis-userid
+    tmp = await httpRequest({
+        headers: {
+            authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
+            "content-type": "application/json",
+            "travis-api-version": 3
+        },
+        method: "POST",
+        url: (
+            "https://api.travis-ci.com/user/" + JSON.parse(tmp.responseText).id
+            + "/sync"
+        )
+    });
+    // activate travis-repo
+    while (true) {
+        await sleep(2000);
+        tmp = await httpRequest({
+            headers: {
+                authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
+                "content-type": "application/json",
+                "travis-api-version": 3
+            },
+            method: "POST",
+            modeIgnoreStatusCode: true,
             url: (
-                "https://raw.githubusercontent.com"
-                + "/kaizhu256/node-utility2/alpha/.travis.yml"
+                "https://api.travis-ci.com/repo/"
+                + process.env.GITHUB_REPO.replace("/", "%2F")
+                + "/activate"
             )
-        }, function (err, xhr) {
-            local.assertOrThrow(!err, err);
-            local.fs.writeFile(
-                "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/.travis.yml",
-                xhr.responseText,
-                onParallel
-            );
         });
-        onParallel.cnt += 1;
-        local.fs.open("README.md", "w", function (err, fd) {
-            local.assertOrThrow(!err, err);
-            local.fs.close(fd, onParallel);
-        });
-        onParallel.cnt += 1;
-        local.fs.writeFile(
-            "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/package.json",
-            JSON.stringify({
-                devDependencies: {
-                    utility2: "kaizhu256/node-utility2#alpha"
-                },
-                name: process.env.GITHUB_REPO.replace((
-                    /.+?\/node-|.+?\//
-                ), ""),
-                homepage: "https://github.com/" + process.env.GITHUB_REPO,
-                repository: {
-                    type: "git",
-                    url: "https://github.com/" + process.env.GITHUB_REPO
-                    + ".git"
-                },
-                scripts: {
-                    "build-ci": "utility2 shBuildCi"
-                },
-                version: "0.0.1"
-            }, null, 4),
-            onParallel
-        );
-        onParallel();
-        break;
-    default:
-        console.error(
-            opt.shBuildPrintPrefix + new Date().toISOString()
-            + process.env.GITHUB_REPO + (
-                err
-                ? " - ... failed to create - gotoState = " + opt.gotoState
-                : " - ... created"
-            )
-        );
+        if (tmp.statusCode < 400) {
+            break;
+        }
     }
-});
-opt.gotoState = 0;
-opt.gotoNext();
-}(globalThis.globalLocal));
+    // update travis-repo settings
+    [
+        // "auto_cancel_pull_requests",
+        "auto_cancel_pushes",
+        // "build_pull_requests",
+        // "build_pushes",
+        // "maximum_number_of_builds",
+        "builds_only_with_travis_yml"
+    ].forEach(function (setting) {
+        httpRequest({
+            data: "{\"setting.value\":true}",
+            headers: {
+                authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
+                "content-type": "application/json",
+                "travis-api-version": 3
+            },
+            method: "PATCH",
+            url: (
+                "https://api.travis-ci.com/repo/"
+                + process.env.GITHUB_REPO.replace("/", "%2F")
+                + "/setting/" + setting
+            )
+        });
+    });
+}());
 '
     cd "/tmp/githubRepo/$GITHUB_REPO"
     unset GITHUB_ORG
@@ -3292,193 +3234,71 @@ opt.gotoNext();
     shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f alpha
 )}
 
-shTravisSync () {(set -e
-# this function will sync travis-ci with given $TRAVIS_ACCESS_TOKEN
-# this is an expensive operation that will use up your github rate-limit quota
-    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
-        "https://api.${TRAVIS_DOMAIN:-travis-ci.org}/users/sync"
+shTravisRepoTrigger () {(set -e
+# this function will trigger travis-repo $1, branch $2
+    node -e '
+/* jslint utility2:true */
+(function () {
+    // trigger travis-repo
+    require("https").request((
+        "https://api.travis-ci.com/repo/"
+        + process.argv[1].replace("/", "%2F")
+        + "/requests"
+    ), {
+        headers: {
+            authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
+            "content-type": "application/json",
+            "travis-api-version": 3
+        },
+        method: "POST"
+    }, function (res) {
+        if (!(res.statusCode < 400)) {
+            throw new Error(res.statusCode);
+        }
+    }).end("{\"request\":{\"branch\":\"" + process.argv[2] + "\"}}");
+}());
+' "$@"
 )}
-
-shUbuntuInit () {
-# this function will init ubuntu's default .bashrc
-# https://gist.github.com/kaizhu256/15950e6fc4a6fd6f12a8008cb9c46804
-    # ~/.bashrc: executed by bash(1) for non-login shells.
-    # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
-    # for examples
-
-    # If not running interactively, don't do anything
-    case $- in
-        *i*) ;;
-          *) return;;
-    esac
-
-    # don't put duplicate lines or lines starting with space in the history.
-    # See bash(1) for more options
-    HISTCONTROL=ignoreboth
-
-    # append to the history file, don't overwrite it
-    shopt -s histappend
-
-    # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-    HISTSIZE=1000
-    HISTFILESIZE=2000
-
-    # check the window size after each command and, if necessary,
-    # update the values of LINES and COLUMNS.
-    shopt -s checkwinsize
-
-    # If set, the pattern "**" used in a pathname expansion context will
-    # match all files and zero or more directories and subdirectories.
-    #shopt -s globstar
-
-    # make less more friendly for non-text input files, see lesspipe(1)
-    # [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
-
-    # set variable identifying the chroot you work in (used in the prompt below)
-    if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
-        debian_chroot=$(cat /etc/debian_chroot)
-    fi
-
-    # set a fancy prompt (non-color, unless we know we "want" color)
-    case "$TERM" in
-        xterm-color|*-256color) color_prompt=yes;;
-    esac
-
-    # uncomment for a colored prompt, if the terminal has the capability; turned
-    # off by default to not distract the user: the focus in a terminal window
-    # should be on the output of commands, not on the prompt
-    #force_color_prompt=yes
-
-    if [ -n "$force_color_prompt" ]; then
-        if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-            # We have color support; assume it's compliant with Ecma-48
-            # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-            # a case would tend to support setf rather than setaf.)
-            color_prompt=yes
-        else
-            color_prompt=
-        fi
-    fi
-
-    if [ "$color_prompt" = yes ]; then
-        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-    else
-        PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
-    fi
-    unset color_prompt force_color_prompt
-
-    # If this is an xterm set the title to user@host:dir
-    case "$TERM" in
-    xterm*|rxvt*)
-        PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-        ;;
-    *)
-        ;;
-    esac
-
-    # enable color support of ls and also add handy aliases
-    if [ -x /usr/bin/dircolors ]; then
-        test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-        alias ls='ls --color=auto'
-        #alias dir='dir --color=auto'
-        #alias vdir='vdir --color=auto'
-
-        alias grep='grep --color=auto'
-        alias fgrep='fgrep --color=auto'
-        alias egrep='egrep --color=auto'
-    fi
-
-    # some more ls aliases
-    alias ll='ls -alF'
-    alias la='ls -A'
-    alias l='ls -CF'
-
-    # Add an "alert" alias for long running commands.  Use like so:
-    #   sleep 10; alert
-    alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && printf "terminal\n" || printf "error\n")" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
-
-    # Alias definitions.
-    # You may want to put all your additions into a separate file like
-    # ~/.bash_aliases, instead of adding them here directly.
-    # See /usr/share/doc/bash-doc/examples in the bash-doc package.
-
-    if [ -f ~/.bash_aliases ]; then
-        . ~/.bash_aliases
-    fi
-
-    # enable programmable completion features (you don't need to enable
-    # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
-    # sources /etc/bash.bashrc).
-    if ! shopt -oq posix; then
-        if [ -f /usr/share/bash-completion/bash_completion ]; then
-            . /usr/share/bash-completion/bash_completion
-        elif [ -f /etc/bash_completion ]; then
-            . /etc/bash_completion
-        fi
-    fi
-}
 
 shUtility2BuildApp () {(set -e
 # this function will run shBuildApp in $UTILITY2_DEPENDENTS
-    shUtility2DependentsSync
-    cd "$HOME/Documents"
-    # shUtility2DependentsSync
-    (cd utility2 && shUtility2DependentsSync)
-    # shBuildApp
     for DIR in $UTILITY2_DEPENDENTS
     do
-        if [ -d "$DIR" ] && [ "$DIR" != utility2 ]
+        cd "$HOME/Documents/$DIR" || continue
+        printf "\n\n\n\n$PWD\n\n\n\n"
+        # shUtility2DependentsSync
+        if [ "$DIR" = utility2 ]
         then
-            printf "\n\n\n\n$DIR\n\n\n\n"
-            (cd "$DIR" && shBuildApp)
+            shUtility2DependentsSync
+        # shBuildApp
+        else
+            shBuildApp
         fi
     done
     shUtility2GitDiffHead
 )}
 
-shUtility2Dependents () {(set -e
-# this function will return a list of utility2 dependents
-    cd "$HOME/Documents" 2>/dev/null || true
-printf "
-apidoc-lite
-bootstrap-lite
-github-crud
-istanbul-lite
-jslint-lite
-sqljs-lite
-swgg
-utility2
-wasm-sqlite
-"
-)}
-
 shUtility2DependentsSync () {(set -e
 # this function will
 # 1. sync files between utility2 and its dependents
-# 2. shBuildApp dir $HOME/Documents/$1
-# 3. git commit -am $2
-    CWD="${1:-$PWD}"
+# 2. shBuildApp $PWD
+    CWD="$PWD"
     cd "$HOME/Documents/utility2" && shBuildApp
     cd "$HOME/Documents"
     ln -f "utility2/lib.utility2.sh" "$HOME" || true
     if [ -d "$HOME/bin" ]
     then
         ln -f "utility2/lib.apidoc.js" "$HOME/bin/utility2-apidoc" || true
-        ln -f "utility2/lib.github_crud.js" "$HOME/bin/utility2-github_crud" ||
-            true
         ln -f "utility2/lib.istanbul.js" "$HOME/bin/utility2-istanbul" || true
         ln -f "utility2/lib.jslint.js" "$HOME/bin/utility2-jslint" || true
         ln -f "utility2/lib.utility2.sh" "$HOME/bin/utility2" || true
     fi
-    for DIR in $UTILITY2_DEPENDENTS $(ls -d swgg-* 2>/dev/null)
+    for DIR in $UTILITY2_DEPENDENTS
     do
-        if [ "$DIR" = utility2 ] || [ ! -d "$DIR" ]
-        then
-            continue
-        fi
-        cd "$DIR"
+        [ "$DIR" = utility2 ] && continue
+        cd "$HOME/Documents/$DIR" || continue
         npm_config_dir_utility2="$HOME/Documents/utility2" shBuildAppSync
-        cd ..
+        cd "$HOME/Documents"
         # hardlink "lib.$LIB.js"
         LIB="$(printf "$DIR" | sed -e "s/-lite\$//" -e "s/-/_/g")"
         if [ -f "utility2/lib.$LIB.js" ]
@@ -3486,26 +3306,21 @@ shUtility2DependentsSync () {(set -e
             ln -f "utility2/lib.$LIB.js" "$DIR" || true
         fi
     done
+    # hardlink assets.utility2.rollup.js
     for DIR in $(ls -d * 2>/dev/null)
     do
-        if [ "$DIR" = utility2 ] || [ ! -d "$DIR" ]
+        if [ -f "$HOME/Documents/$DIR/assets.utility2.rollup.js" ]
         then
-            continue
+            ln -f \
+"$HOME/Documents/utility2/tmp/build/app/assets.utility2.rollup.js" \
+"$HOME/Documents/$DIR/assets.utility2.rollup.js"
         fi
-        cd "$DIR"
-        # hardlink assets.utility2.rollup.js
-        if [ -f "assets.utility2.rollup.js" ]
-        then
-            ln -f "$HOME\
-/Documents/utility2/tmp/build/app/assets.utility2.rollup.js" .
-        fi
-        cd ..
     done
-    cd "$CWD" && shBuildApp
-    if [ "$2" ]
+    if [ "$CWD" = "$HOME/Documents/utility2" ]
     then
-        git commit -am "$2"
+        return
     fi
+    cd "$CWD" && shBuildApp
 )}
 
 shUtility2FncStat () {(set -e
@@ -3514,27 +3329,27 @@ shUtility2FncStat () {(set -e
     node -e '
 /* jslint utility2:true */
 (function () {
-"use strict";
-let dict;
-dict = {};
-require("child_process").spawnSync("git", [
-    "grep", "-i", "local\\.\\w\\w*\\|\\<sh[A-Z]\\w*\\>"
-], {
-    encoding: "utf8",
-    stdio: [
-        "ignore", "pipe", 2
-    ]
-}).stdout.replace((
-    /\blocal\.\w\w*?\b|\bsh[A-Z]\w*?\b/g
-), function (match0) {
-    dict[match0] = (dict[match0] | 0) + 1;
-    return "";
-});
-console.log(Object.entries(dict).map(function ([
-    key, val
-]) {
-    return String(val).padStart(8, " ") + " -- " + key;
-}).sort().join("\n"));
+    "use strict";
+    let dict;
+    dict = {};
+    require("child_process").spawnSync("git", [
+        "grep", "-i", "local\\.\\w\\w*\\|\\<sh[A-Z]\\w*\\>"
+    ], {
+        encoding: "utf8",
+        stdio: [
+            "ignore", "pipe", 2
+        ]
+    }).stdout.replace((
+        /\blocal\.\w\w*?\b|\bsh[A-Z]\w*?\b/g
+    ), function (match0) {
+        dict[match0] = (dict[match0] | 0) + 1;
+        return "";
+    });
+    console.log(Object.entries(dict).map(function ([
+        key, val
+    ]) {
+        return String(val).padStart(8, " ") + " -- " + key;
+    }).sort().join("\n"));
 }());
 '
 )}
@@ -3548,6 +3363,17 @@ shUtility2GitCommit () {(set -e
         cd "$HOME/Documents/$DIR" || continue
         printf "\n\n\n\n$PWD\n"
         git commit -am "'$MESSAGE'" || true
+    done
+)}
+
+shUtility2GitCommitAndPush () {(set -e
+# this function will git-commit-and-push $UTILITY2_DEPENDENTS
+    for DIR in $UTILITY2_DEPENDENTS
+    do
+        cd "$HOME/Documents/$DIR" || continue
+        printf "\n\n\n\n$PWD\n\n\n\n"
+        git commit -am "${1:-shUtility2GitCommitAndPush}" || true
+        git push origin alpha
     done
 )}
 
@@ -3567,8 +3393,7 @@ shUtility2GitDiffHead () {(set -e
 
 shUtility2Grep () {(set -e
 # this function will recursively grep $UTILITY2_DEPENDENTS for the regexp $1
-    for DIR in $UTILITY2_DEPENDENTS \
-        $(cd "$HOME/Documents"; ls -d swgg-* 2>/dev/null)
+    for DIR in $UTILITY2_DEPENDENTS
     do
         DIR="$HOME/Documents/$DIR"
         if [ -d "$DIR" ]
@@ -3580,14 +3405,40 @@ shUtility2Grep () {(set -e
 
 shUtility2Version () {(set -e
 # this function will print the latest versions in $UTILITY2_DEPENDENTS
-    printf "[\n"
-    for DIR in $UTILITY2_DEPENDENTS
-    do
-        printf "'$(npm info $DIR version) $DIR',\n"
-    done
-    printf "].map(function (element) {
-    return element.replace((/(\\\\b\\\\d\\\\b)/g), '0\$1');
-}).sort()\n"
+    node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    let list;
+    list = process.env.UTILITY2_DEPENDENTS.split(
+        /\s/
+    ).filter(function (elem) {
+        return elem;
+    });
+    list.forEach(function (name, ii) {
+        require("https").request((
+            "https://registry.npmjs.org/" + name
+        ), function (res) {
+            let data;
+            data = "";
+            res.on("data", function (chunk) {
+                data += chunk;
+            }).on("end", function () {
+                data = JSON.parse(data);
+                list[ii] = data["dist-tags"].latest.replace((
+                    /\b\d\b/g
+                ), "0$&") + " " + name;
+            }).setEncoding("utf8");
+        }).end();
+    });
+    process.on("exit", function (exitCode) {
+        if (exitCode) {
+            return;
+        }
+        console.error(JSON.stringify(list.sort(), undefined, 4));
+    });
+}());
+'
 )}
 
 shXvfbStart () {
@@ -3602,40 +3453,38 @@ shXvfbStart () {
 
 # run main-program
 export UTILITY2_GIT_BASE_ID=9fe8c2255f4ac330c86af7f624d381d768304183
-export UTILITY2_DEPENDENTS="$(shUtility2Dependents)"
+export UTILITY2_DEPENDENTS='
+utility2
+apidoc-lite
+istanbul-lite
+jslint-lite
+'
 export UTILITY2_MACRO_JS='
 /* istanbul instrument in package utility2 */
 // assets.utility2.header.js - start
 /* jslint utility2:true */
 /* istanbul ignore next */
+// run shared js-env code - init-local
 (function (globalThis) {
     "use strict";
     let consoleError;
-    let debugName;
     let local;
-    debugName = "debug" + String("Inline");
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
-    // init debug_inline
-    if (!globalThis[debugName]) {
+    // init debugInline
+    if (!globalThis.debugInline) {
         consoleError = console.error;
-        globalThis[debugName] = function (...argList) {
+        globalThis.debugInline = function (...argList) {
         /*
          * this function will both print <argList> to stderr
          * and return <argList>[0]
          */
-            consoleError("\n\n" + debugName);
+            consoleError("\n\ndebugInline");
             consoleError(...argList);
             consoleError("\n");
             return argList[0];
         };
     }
-    String.prototype.trimEnd = (
-        String.prototype.trimEnd || String.prototype.trimRight
-    );
-    String.prototype.trimStart = (
-        String.prototype.trimStart || String.prototype.trimLeft
-    );
     // init local
     local = {};
     local.local = local;
@@ -3651,9 +3500,39 @@ export UTILITY2_MACRO_JS='
         local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
+    local.assertJsonEqual = function (aa, bb) {
+    /*
+     * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
+     */
+        let objectDeepCopyWithKeysSorted;
+        objectDeepCopyWithKeysSorted = function (obj) {
+        /*
+         * this function will recursively deep-copy <obj> with keys sorted
+         */
+            let sorted;
+            if (typeof obj !== "object" || !obj) {
+                return obj;
+            }
+            // recursively deep-copy list with child-keys sorted
+            if (Array.isArray(obj)) {
+                return obj.map(objectDeepCopyWithKeysSorted);
+            }
+            // recursively deep-copy obj with keys sorted
+            sorted = {};
+            Object.keys(obj).sort().forEach(function (key) {
+                sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
+            });
+            return sorted;
+        };
+        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
+        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
+        if (aa !== bb) {
+            throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));
+        }
+    };
     local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw err.<msg> if <passed> is falsy
+     * this function will throw <msg> if <passed> is falsy
      */
         if (passed) {
             return;
@@ -3668,9 +3547,9 @@ export UTILITY2_MACRO_JS='
             ? msg
             : new Error(
                 typeof msg === "string"
-                // if msg is a string, then leave as is
+                // if msg is string, then leave as is
                 ? msg
-                // else JSON.stringify msg
+                // else JSON.stringify(msg)
                 : JSON.stringify(msg, undefined, 4)
             )
         );
@@ -3684,98 +3563,12 @@ export UTILITY2_MACRO_JS='
         ii = 0;
         while (ii < argList.length) {
             arg = argList[ii];
-            if (arg !== null && arg !== undefined && arg !== "") {
-                break;
+            if (arg !== undefined && arg !== null && arg !== "") {
+                return arg;
             }
             ii += 1;
         }
         return arg;
-    };
-    local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
-    /*
-     * this function will sync-read <pathname> with given <type> and <dflt>
-     */
-        let fs;
-        // do nothing if module does not exist
-        try {
-            fs = require("fs");
-        } catch (ignore) {
-            return dflt;
-        }
-        pathname = require("path").resolve(pathname);
-        // try to read pathname
-        try {
-            return (
-                type === "json"
-                ? JSON.parse(fs.readFileSync(pathname, "utf8"))
-                : fs.readFileSync(pathname, type)
-            );
-        } catch (ignore) {
-            return dflt;
-        }
-    };
-    local.fsRmrfSync = function (pathname) {
-    /*
-     * this function will sync "rm -rf" <pathname>
-     */
-        let child_process;
-        // do nothing if module does not exist
-        try {
-            child_process = require("child_process");
-        } catch (ignore) {
-            return;
-        }
-        pathname = require("path").resolve(pathname);
-        if (process.platform !== "win32") {
-            child_process.spawnSync("rm", [
-                "-rf", pathname
-            ], {
-                stdio: [
-                    "ignore", 1, 2
-                ]
-            });
-            return;
-        }
-        try {
-            child_process.spawnSync("rd", [
-                "/s", "/q", pathname
-            ], {
-                stdio: [
-                    "ignore", 1, "ignore"
-                ]
-            });
-        } catch (ignore) {}
-    };
-    local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {
-    /*
-     * this function will sync write <data> to <pathname> with "mkdir -p"
-     */
-        let fs;
-        let success;
-        // do nothing if module does not exist
-        try {
-            fs = require("fs");
-        } catch (ignore) {
-            return;
-        }
-        pathname = require("path").resolve(pathname);
-        // try to write pathname
-        try {
-            fs.writeFileSync(pathname, data);
-            success = true;
-        } catch (ignore) {
-            // mkdir -p
-            fs.mkdirSync(require("path").dirname(pathname), {
-                recursive: true
-            });
-            // re-write pathname
-            fs.writeFileSync(pathname, data);
-            success = true;
-        }
-        if (success && msg) {
-            console.error(msg.replace("{{pathname}}", pathname));
-        }
-        return success;
     };
     local.identity = function (val) {
     /*
@@ -3817,35 +3610,16 @@ export UTILITY2_MACRO_JS='
         recurse(tgt, src, depth | 0);
         return tgt;
     };
-    // require builtin
-    if (!local.isBrowser) {
-        local.assert = require("assert");
-        local.buffer = require("buffer");
-        local.child_process = require("child_process");
-        local.cluster = require("cluster");
-        local.crypto = require("crypto");
-        local.dgram = require("dgram");
-        local.dns = require("dns");
-        local.domain = require("domain");
-        local.events = require("events");
-        local.fs = require("fs");
-        local.http = require("http");
-        local.https = require("https");
-        local.net = require("net");
-        local.os = require("os");
-        local.path = require("path");
-        local.querystring = require("querystring");
-        local.readline = require("readline");
-        local.repl = require("repl");
-        local.stream = require("stream");
-        local.string_decoder = require("string_decoder");
-        local.timers = require("timers");
-        local.tls = require("tls");
-        local.tty = require("tty");
-        local.url = require("url");
-        local.util = require("util");
-        local.vm = require("vm");
-        local.zlib = require("zlib");
+    // bug-workaround - throw unhandledRejections in node-process
+    if (
+        typeof process === "object" && process
+        && typeof process.on === "function"
+        && process.unhandledRejections !== "strict"
+    ) {
+        process.unhandledRejections = "strict";
+        process.on("unhandledRejection", function (err) {
+            throw err;
+        });
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
@@ -3881,17 +3655,6 @@ local.utility2 = local;
 
 /* validateLineSortedReset */
 globalThis.local = local;
-
-local.assertJsonEqual = function (aa, bb, message) {
-/*
- * this function will assert jsonStringifyOrdered(<aa>) === JSON.stringify(<bb>)
- */
-    aa = local.jsonStringifyOrdered(aa);
-    bb = JSON.stringify(bb);
-    local.assertOrThrow(aa === bb, message || [
-        aa, bb
-    ]);
-};
 
 local.base64FromBuffer = function (buf) {
 /*
@@ -3983,7 +3746,7 @@ local.base64ToBuffer = function (str) {
         ii += 1;
     }
     // optimization - create resized-view of buf
-    return buf.subarray(0, jj);
+    return buf.slice(0, jj);
 };
 
 local.base64ToUtf8 = function (str) {
@@ -4069,36 +3832,37 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
         data = new Uint8Array(data);
     }
     // init iv
-    iv = data.subarray(0, 16);
+    iv = data.slice(0, 16);
     // optimization - create resized-view of data
-    data = data.subarray(16);
-    crypto = globalThis.crypto;
-    if (!local.isBrowser) {
-        setTimeout(function () {
-            crypto = require("crypto");
-            cipher = crypto.createDecipheriv(
-                "aes-" + (8 * key.byteLength) + "-cbc",
-                key,
-                iv
-            );
-            onError(undefined, Buffer.concat([
-                cipher.update(data), cipher.final()
-            ]));
-        });
+    data = data.slice(16);
+    try {
+        crypto = require("crypto");
+    } catch (ignore) {
+        crypto = globalThis.crypto;
+        crypto.subtle.importKey("raw", key, {
+            name: "AES-CBC"
+        }, false, [
+            "decrypt"
+        ]).then(function (key) {
+            crypto.subtle.decrypt({
+                iv,
+                name: "AES-CBC"
+            }, key, data).then(function (data) {
+                onError(undefined, new Uint8Array(data));
+            }).catch(onError);
+        }).catch(onError);
         return;
     }
-    crypto.subtle.importKey("raw", key, {
-        name: "AES-CBC"
-    }, false, [
-        "decrypt"
-    ]).then(function (key) {
-        crypto.subtle.decrypt({
-            iv,
-            name: "AES-CBC"
-        }, key, data).then(function (data) {
-            onError(undefined, new Uint8Array(data));
-        }).catch(onError);
-    }).catch(onError);
+    setTimeout(function () {
+        cipher = crypto.createDecipheriv(
+            "aes-" + (8 * key.byteLength) + "-cbc",
+            key,
+            iv
+        );
+        onError(undefined, Buffer.concat([
+            cipher.update(data), cipher.final()
+        ]));
+    });
 };
 
 local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
@@ -4146,7 +3910,7 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
             cipher = crypto.createCipheriv(
                 "aes-" + (8 * key.byteLength) + "-cbc",
                 key,
-                iv.subarray(0, 16)
+                iv.slice(0, 16)
             );
             data = cipher.update(data);
             iv.set(data, 16);
@@ -4167,7 +3931,7 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
         "encrypt"
     ]).then(function (key) {
         crypto.subtle.encrypt({
-            iv: iv.subarray(0, 16),
+            iv: iv.slice(0, 16),
             name: "AES-CBC"
         }, key, data).then(function (data) {
             iv.set(new Uint8Array(data), 16);
@@ -4196,7 +3960,7 @@ local.gotoNext = function (opt, onError) {
             if (opt.modeDebug) {
                 console.error("gotoNext - " + JSON.stringify({
                     gotoState: opt.gotoState,
-                    errorMessage: err && err.message
+                    errMsg: err && err.message
                 }));
                 if (err && err.stack) {
                     console.error(err.stack);
@@ -4216,115 +3980,31 @@ local.gotoNext = function (opt, onError) {
     return opt;
 };
 
-local.isNullOrUndefined = function (val) {
+local.objectDeepCopyWithKeysSorted = function (obj) {
 /*
- * this function will test if val is null or undefined
+ * this function will recursively deep-copy <obj> with keys sorted
  */
-    return val === null || val === undefined;
-};
-
-local.jsonCopy = function (obj) {
-/*
- * this function will deep-copy obj
- */
-    return (
-        obj === undefined
-        ? undefined
-        : JSON.parse(JSON.stringify(obj))
-    );
-};
-
-local.jsonStringifyOrdered = function (obj, replacer, space) {
-/*
- * this function will JSON.stringify <obj>,
- * with object-keys sorted and circular-references removed
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Syntax
- */
-    let circularSet;
-    let stringify;
-    let tmp;
-    stringify = function (obj) {
+    let objectDeepCopyWithKeysSorted;
+    objectDeepCopyWithKeysSorted = function (obj) {
     /*
-     * this function will recursively JSON.stringify obj,
-     * with object-keys sorted and circular-references removed
+     * this function will recursively deep-copy <obj> with keys sorted
      */
-        // if obj is not an object or function,
-        // then JSON.stringify as normal
-        if (!(
-            obj
-            && typeof obj === "object"
-            && typeof obj.toJSON !== "function"
-        )) {
-            return JSON.stringify(obj);
+        let sorted;
+        if (!(typeof obj === "object" && obj)) {
+            return obj;
         }
-        // ignore circular-reference
-        if (circularSet.has(obj)) {
-            return;
-        }
-        circularSet.add(obj);
-        // if obj is an array, then recurse items
+        // recursively deep-copy list with child-keys sorted
         if (Array.isArray(obj)) {
-            tmp = "[" + obj.map(function (obj) {
-                // recurse
-                tmp = stringify(obj);
-                return (
-                    typeof tmp === "string"
-                    ? tmp
-                    : "null"
-                );
-            }).join(",") + "]";
-            circularSet.delete(obj);
-            return tmp;
+            return obj.map(objectDeepCopyWithKeysSorted);
         }
-        // if obj is not an array,
-        // then recurse its items with object-keys sorted
-        tmp = "{" + Object.keys(obj).sort().map(function (key) {
-            // recurse
-            tmp = stringify(obj[key]);
-            if (typeof tmp === "string") {
-                return JSON.stringify(key) + ":" + tmp;
-            }
-        }).filter(function (obj) {
-            return typeof obj === "string";
-        }).join(",") + "}";
-        circularSet.delete(obj);
-        return tmp;
+        // recursively deep-copy obj with keys sorted
+        sorted = {};
+        Object.keys(obj).sort().forEach(function (key) {
+            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
+        });
+        return sorted;
     };
-    circularSet = new Set();
-    return JSON.stringify((
-        (typeof obj === "object" && obj)
-        // recurse
-        ? JSON.parse(stringify(obj))
-        : obj
-    ), replacer, space);
-};
-
-local.moduleDirname = function (module, pathList) {
-/*
- * this function will search <pathList> for <module>'"'"'s __dirname
- */
-    let result;
-    // search "."
-    if (!module || module === "." || module.indexOf("/") >= 0) {
-        return require("path").resolve(module || "");
-    }
-    // search pathList
-    Array.from([
-        pathList,
-        require("module").globalPaths,
-        [
-            process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
-        ]
-    ]).flat().some(function (path) {
-        try {
-            result = require("path").resolve(path + "/" + module);
-            result = require("fs").statSync(result).isDirectory() && result;
-            return result;
-        } catch (ignore) {
-            result = "";
-        }
-    });
-    return result;
+    return objectDeepCopyWithKeysSorted(obj);
 };
 
 local.onErrorDefault = function (err) {
@@ -4333,16 +4013,6 @@ local.onErrorDefault = function (err) {
  */
     if (err) {
         console.error(err);
-    }
-    return err;
-};
-
-local.onErrorThrow = function (err) {
-/*
- * this function will if <err> exists, then throw it
- */
-    if (err) {
-        throw err;
     }
     return err;
 };
@@ -4356,11 +4026,7 @@ local.onErrorWithStack = function (onError) {
     stack = new Error().stack;
     onError2 = function (err, data, meta) {
         // append current-stack to err.stack
-        if (
-            err
-            && typeof err.stack === "string"
-            && err !== local.errorDefault
-        ) {
+        if (err && typeof err.stack === "string") {
             err.stack += "\n" + stack;
         }
         onError(err, data, meta);
@@ -4374,7 +4040,7 @@ local.onErrorWithStack = function (onError) {
 
 local.onParallel = function (onError, onEach, onRetry) {
 /*
- * this function will create a function that will
+ * this function will create function that will
  * 1. run async tasks in parallel
  * 2. if cnt === 0 or err occurred, then call onError(err)
  */
@@ -4416,183 +4082,15 @@ local.onParallel = function (onError, onEach, onRetry) {
     return onParallel;
 };
 
-local.onParallelList = function (opt, onEach, onError) {
-/*
- * this function will
- * 1. async-run onEach in parallel,
- *    with given <opt>.rateLimit and <opt>.retryLimit
- * 2. call <onError> when onParallel.ii + 1 === <opt>.list.length
- */
-    let isListEnd;
-    let onEach2;
-    let onParallel;
-    opt.list = opt.list || [];
-    onEach2 = function () {
-        while (true) {
-            if (!(onParallel.ii + 1 < opt.list.length)) {
-                isListEnd = true;
-                return;
-            }
-            if (!(onParallel.cnt < opt.rateLimit + 1)) {
-                return;
-            }
-            onParallel.ii += 1;
-            onEach({
-                elem: opt.list[onParallel.ii],
-                ii: onParallel.ii,
-                list: opt.list,
-                retry: 0
-            }, onParallel);
-        }
-    };
-    onParallel = local.onParallel(onError, onEach2, function (err, data) {
-        if (err && data && data.retry < opt.retryLimit) {
-            local.onErrorDefault(err);
-            data.retry += 1;
-            setTimeout(function () {
-                onParallel.cnt -= 1;
-                onEach(data, onParallel);
-            }, 1000);
-            return true;
-        }
-        // restart if opt.list has grown
-        if (isListEnd && (onParallel.ii + 1 < opt.list.length)) {
-            isListEnd = undefined;
-            onEach2();
-        }
-    });
-    onParallel.ii = -1;
-    opt.rateLimit = Number(opt.rateLimit) || 6;
-    opt.rateLimit = Math.max(opt.rateLimit, 1);
-    opt.retryLimit = Number(opt.retryLimit) || 2;
-    onParallel.cnt += 1;
-    onEach2();
-    onParallel();
-};
-
-local.semverCompare = function (aa, bb) {
-/*
- * this function will compare semver versions aa ? bb and return
- * -1 if aa < bb
- *  0 if aa = bb
- *  1 if aa > bb
- * https://semver.org/#spec-item-11
- * example use:
-    semverCompare("2.2.2", "10.2.2"); // -1
-    semverCompare("1.2.3", "1.2.3");  //  0
-    semverCompare("10.2.2", "2.2.2"); //  1
- */
-    let cc;
-    let dd;
-    let ii;
-    let result;
-    [
-        aa, bb
-    ] = [
-        aa, bb
-    ].map(function (aa) {
-        // filter "+" metadata
-        // https://semver.org/#spec-item-10
-        aa = aa.split("+")[0];
-        // normalize x.y.z
-        aa = aa.split(".");
-        while (aa.length < 3) {
-            aa.push("0");
-        }
-        // split "-" pre-release-identifier
-        // https://semver.org/#spec-item-9
-        aa = [].concat(aa.slice(0, 2), aa.slice(2).join(".").split("-"));
-        // normalize x.y.z
-        ii = 0;
-        while (ii < 3) {
-            aa[ii] = String(aa[ii] | 0);
-            ii += 1;
-        }
-        return aa.map(function (aa) {
-            return (
-                Number.isFinite(aa)
-                ? Number(aa)
-                : aa
-            );
-        });
-    });
-    result = aa;
-    ii = 0;
-    while (ii < Math.max(aa.length, bb.length)) {
-        cc = aa[ii];
-        dd = bb[ii];
-        if (
-            dd === undefined
-            || (typeof cc !== "number" && typeof dd === "number")
-        ) {
-            result = bb;
-            break;
-        }
-        if (
-            cc === undefined
-            || (typeof cc === "number" && typeof dd !== "number")
-        ) {
-            result = aa;
-            break;
-        }
-        if (cc < dd) {
-            result = bb;
-            break;
-        }
-        if (cc > dd) {
-            result = aa;
-            break;
-        }
-        ii += 1;
-    }
-    result = result[0] + "." + result[1] + "." + result.slice(2).join("-");
-    return result;
-};
-
-local.stringHtmlSafe = function (str) {
-/*
- * this function will make <str> html-safe
- * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
- */
-    return str.replace((
-        /&/gu
-    ), "&amp;").replace((
-        /"/gu
-    ), "&quot;").replace((
-        /'"'"'/gu
-    ), "&apos;").replace((
-        /</gu
-    ), "&lt;").replace((
-        />/gu
-    ), "&gt;").replace((
-        /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
-    ), "&$1");
-};
-
-local.stringMerge = function (str1, str2, rgx) {
-/*
- * this function will merge <str2> into <str1>,
- * for sections where both match <rgx>
- */
-    str2.replace(rgx, function (match2) {
-        str1.replace(rgx, function (match1) {
-            str1 = str1.replace(match1, function () {
-                return match2;
-            });
-            return "";
-        });
-        return "";
-    });
-    return str1;
-};
-
 local.templateRenderMyApp = function (template) {
 /*
  * this function will render my-app-lite template
  */
     let githubRepo;
     let packageJson;
-    packageJson = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
+    packageJson = JSON.parse(
+        require("fs").readFileSync("package.json", "utf8")
+    );
     local.objectAssignDefault(packageJson, {
         nameLib: packageJson.name.replace((
             /\W/g
@@ -4642,368 +4140,6 @@ local.throwError = function () {
 };
 }());
 }());
-'
-export UTILITY2_MACRO_AJAX_JS='
-(function (local) {
-"use strict";
-local.ajax = function (opt, onError) {
-/*
- * this function will send an ajax-req
- * with given <opt>.url and callback <onError>
- * with err and timeout handling
- * example use:
-    local.ajax({
-        data: "hello world",
-        header: {"x-header-hello": "world"},
-        method: "POST",
-        url: "/index.html"
-    }, function (err, xhr) {
-        console.log(xhr.statusCode);
-        console.log(xhr.responseText);
-    });
- */
-    let ajaxProgressUpdate;
-    let bufferValidateAndCoerce;
-    let isDone;
-    let local2;
-    let onError2;
-    let onEvent;
-    let stack;
-    let streamCleanup;
-    let timeout;
-    let tmp;
-    let xhr;
-    let xhrInit;
-    // init local2
-    local2 = opt.local2 || local.utility2 || {};
-    // init function
-    ajaxProgressUpdate = local2.ajaxProgressUpdate || function () {
-        return;
-    };
-    bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (
-        buf,
-        mode
-    ) {
-    /*
-     * this function will validate and coerce/convert
-     * <buf> to Buffer/Uint8Array, or String if <mode> = "string"
-     */
-        // coerce ArrayBuffer to Buffer
-        if (Object.prototype.toString.call(buf) === "[object ArrayBuffer]") {
-            buf = new Uint8Array(buf);
-        }
-        // convert Buffer to utf8
-        if (mode === "string" && typeof buf !== "string") {
-            buf = String(buf);
-        }
-        return buf;
-    };
-    onEvent = function (evt) {
-    /*
-     * this function will handle events
-     */
-        if (Object.prototype.toString.call(evt) === "[object Error]") {
-            xhr.err = xhr.err || evt;
-            xhr.onEvent({
-                type: "error"
-            });
-            return;
-        }
-        // init statusCode
-        xhr.statusCode = (xhr.statusCode || xhr.status) | 0;
-        switch (evt.type) {
-        case "abort":
-        case "error":
-        case "load":
-            if (isDone) {
-                return;
-            }
-            isDone = true;
-            // decrement cnt
-            ajaxProgressUpdate.cnt = Math.max(
-                ajaxProgressUpdate.cnt - 1,
-                0
-            );
-            ajaxProgressUpdate();
-            // handle abort or err event
-            switch (!xhr.err && evt.type) {
-            case "abort":
-            case "error":
-                xhr.err = new Error("ajax - event " + evt.type);
-                break;
-            case "load":
-                if (xhr.statusCode >= 400) {
-                    xhr.err = new Error(
-                        "ajax - statusCode " + xhr.statusCode
-                    );
-                }
-                break;
-            }
-            // debug statusCode / method / url
-            if (xhr.err) {
-                xhr.statusCode = xhr.statusCode || 500;
-                xhr.err.statusCode = xhr.statusCode;
-                tmp = (
-                    (
-                        local.isBrowser
-                        ? "browser"
-                        : "node"
-                    )
-                    + " - " + xhr.statusCode + " " + xhr.method + " " + xhr.url
-                    + "\n"
-                );
-                xhr.err.message = tmp + xhr.err.message;
-                xhr.err.stack = tmp + xhr.err.stack;
-            }
-            // update resHeaders
-            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders
-            if (xhr.getAllResponseHeaders) {
-                xhr.getAllResponseHeaders().replace((
-                    /(.*?):\u0020*(.*?)\r\n/g
-                ), function (ignore, key, val) {
-                    xhr.resHeaders[key.toLowerCase()] = val;
-                });
-            }
-            // debug ajaxResponse
-            xhr.resContentLength = (
-                xhr.response
-                && (xhr.response.byteLength || xhr.response.length)
-            ) | 0;
-            xhr.timeElapsed = Date.now() - xhr.timeStart;
-            if (xhr.modeDebug) {
-                console.error("serverLog - " + JSON.stringify({
-                    time: new Date(xhr.timeStart).toISOString(),
-                    type: "ajaxResponse",
-                    method: xhr.method,
-                    url: xhr.url,
-                    statusCode: xhr.statusCode,
-                    timeElapsed: xhr.timeElapsed,
-                    // extra
-                    resContentLength: xhr.resContentLength
-                }) + "\n");
-            }
-            // init responseType
-            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType
-            switch (xhr.response && xhr.responseType) {
-            // init responseText
-            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseText
-            case "":
-            case "text":
-                if (typeof xhr.responseText === "string") {
-                    break;
-                }
-                xhr.responseText = bufferValidateAndCoerce(
-                    xhr.response,
-                    "string"
-                );
-                break;
-            case "arraybuffer":
-                xhr.responseBuffer = bufferValidateAndCoerce(xhr.response);
-                break;
-            }
-            // cleanup timerTimeout
-            clearTimeout(xhr.timerTimeout);
-            // cleanup reqStream and resStream
-            streamCleanup(xhr.reqStream);
-            streamCleanup(xhr.resStream);
-            onError2(xhr.err, xhr);
-            break;
-        }
-    };
-    // init onError2
-    stack = new Error().stack;
-    onError2 = function (err, xhr) {
-        if (err && typeof err.stack === "string") {
-            err.stack += "\n" + stack;
-        }
-        onError(err, xhr);
-    };
-    streamCleanup = function (stream) {
-    /*
-     * this function will try to end or destroy <stream>
-     */
-        let err;
-        // try to end stream
-        try {
-            stream.end();
-        } catch (errCaught) {
-            err = errCaught;
-        }
-        // if err, then try to destroy stream
-        if (err) {
-            try {
-                stream.destroy();
-            } catch (ignore) {}
-        }
-    };
-    xhrInit = function () {
-    /*
-     * this function will init xhr
-     */
-        // init opt
-        Object.keys(opt).forEach(function (key) {
-            if (key[0] !== "_") {
-                xhr[key] = opt[key];
-            }
-        });
-        // init timeout
-        timeout = xhr.timeout || local2.timeoutDefault || 30000;
-        // init default
-        local.objectAssignDefault(xhr, {
-            corsForwardProxyHost: local2.corsForwardProxyHost,
-            headers: {},
-            location: (local.isBrowser && location) || {},
-            method: "GET",
-            responseType: ""
-        });
-        // init headers
-        Object.keys(xhr.headers).forEach(function (key) {
-            xhr.headers[key.toLowerCase()] = xhr.headers[key];
-        });
-        // coerce Uint8Array to Buffer
-        if (
-            !local.isBrowser
-            && !Buffer.isBuffer(xhr.data)
-            && Object.prototype.toString.call(xhr.data)
-            === "[object Uint8Array]"
-        ) {
-            Object.setPrototypeOf(xhr.data, Buffer.prototype);
-        }
-        // init misc
-        local2._debugXhr = xhr;
-        xhr.onEvent = onEvent;
-        xhr.resHeaders = {};
-        xhr.timeStart = xhr.timeStart || Date.now();
-    };
-    // init xhr - XMLHttpRequest
-    xhr = (
-        local.isBrowser
-        && !opt.httpReq
-        && !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(opt.url))
-        && new XMLHttpRequest()
-    );
-    // init xhr - http.request
-    if (!xhr) {
-        xhr = local.identity(local2.urlParse || require("url").parse)(opt.url);
-        // init xhr
-        xhrInit();
-        // init xhr - http.request
-        xhr = local.identity(
-            opt.httpReq
-            || (local.isBrowser && local2.http.request)
-            || require(xhr.protocol.slice(0, -1)).request
-        )(xhr, function (resStream) {
-        /*
-         * this function will read <resStream>
-         */
-            let bufList;
-            bufList = [];
-            xhr.resHeaders = resStream.headers || xhr.resHeaders;
-            xhr.resStream = resStream;
-            xhr.statusCode = resStream.statusCode;
-            resStream.dataLength = 0;
-            resStream.on("data", function (buf) {
-                bufList.push(buf);
-            });
-            resStream.on("end", function () {
-                xhr.response = (
-                    local.isBrowser
-                    ? bufList[0]
-                    : Buffer.concat(bufList)
-                );
-                resStream.dataLength = (
-                    xhr.response.byteLength || xhr.response.length
-                );
-                xhr.onEvent({
-                    type: "load"
-                });
-            });
-            resStream.on("error", xhr.onEvent);
-        });
-        xhr.abort = function () {
-        /*
-         * this function will abort xhr-req
-         * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/abort
-         */
-            xhr.onEvent({
-                type: "abort"
-            });
-        };
-        xhr.addEventListener = local.nop;
-        xhr.open = local.nop;
-        xhr.reqStream = xhr;
-        xhr.send = xhr.end;
-        xhr.setRequestHeader = local.nop;
-        xhr.on("error", onEvent);
-    }
-    // init xhr
-    xhrInit();
-    // init timerTimeout
-    xhr.timerTimeout = setTimeout(function () {
-        xhr.err = xhr.err || new Error(
-            "onTimeout - "
-            + timeout + " ms - " + "ajax " + xhr.method + " " + xhr.url
-        );
-        xhr.abort();
-        // cleanup reqStream and resStream
-        streamCleanup(xhr.reqStream);
-        streamCleanup(xhr.resStream);
-    }, timeout);
-    // increment cnt
-    ajaxProgressUpdate.cnt |= 0;
-    ajaxProgressUpdate.cnt += 1;
-    // handle evt
-    xhr.addEventListener("abort", xhr.onEvent);
-    xhr.addEventListener("error", xhr.onEvent);
-    xhr.addEventListener("load", xhr.onEvent);
-    xhr.addEventListener("loadstart", ajaxProgressUpdate);
-    xhr.addEventListener("progress", ajaxProgressUpdate);
-    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
-    if (xhr.upload && xhr.upload.addEventListener) {
-        xhr.upload.addEventListener("progress", ajaxProgressUpdate);
-    }
-    // open url - corsForwardProxyHost
-    if (
-        local2.corsForwardProxyHostIfNeeded
-        && local2.corsForwardProxyHostIfNeeded(xhr)
-    ) {
-        xhr.open(xhr.method, local2.corsForwardProxyHostIfNeeded(xhr));
-        xhr.setRequestHeader(
-            "forward-proxy-headers",
-            JSON.stringify(xhr.headers)
-        );
-        xhr.setRequestHeader("forward-proxy-url", xhr.url);
-    // open url - default
-    } else {
-        xhr.open(xhr.method, xhr.url);
-    }
-    // send headers
-    Object.keys(xhr.headers).forEach(function (key) {
-        xhr.setRequestHeader(key, xhr.headers[key]);
-    });
-    // send data
-    switch ((xhr.data && xhr.data.constructor) || true) {
-    // Blob
-    // https://developer.mozilla.org/en-US/docs/Web/API/Blob
-    case local2.Blob:
-    // FormData
-    // https://developer.mozilla.org/en-US/docs/Web/API/FormData
-    case local2.FormData:
-        local2.blobRead(xhr.data, function (err, data) {
-            if (err) {
-                xhr.onEvent(err);
-                return;
-            }
-            // send data
-            xhr.send(data);
-        });
-        break;
-    default:
-        xhr.send(xhr.data);
-    }
-    return xhr;
-};
-}(globalThis.globalLocal));
 '
 (set -e
     if [ ! "$1" ]

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2020.5.31)
+ * lib.utility2.js (2020.6.9)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -12,34 +12,27 @@
 // assets.utility2.header.js - start
 /* jslint utility2:true */
 /* istanbul ignore next */
+// run shared js-env code - init-local
 (function (globalThis) {
     "use strict";
     let consoleError;
-    let debugName;
     let local;
-    debugName = "debug" + String("Inline");
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
-    // init debug_inline
-    if (!globalThis[debugName]) {
+    // init debugInline
+    if (!globalThis.debugInline) {
         consoleError = console.error;
-        globalThis[debugName] = function (...argList) {
+        globalThis.debugInline = function (...argList) {
         /*
          * this function will both print <argList> to stderr
          * and return <argList>[0]
          */
-            consoleError("\n\n" + debugName);
+            consoleError("\n\ndebugInline");
             consoleError(...argList);
             consoleError("\n");
             return argList[0];
         };
     }
-    String.prototype.trimEnd = (
-        String.prototype.trimEnd || String.prototype.trimRight
-    );
-    String.prototype.trimStart = (
-        String.prototype.trimStart || String.prototype.trimLeft
-    );
     // init local
     local = {};
     local.local = local;
@@ -55,9 +48,39 @@
         local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
+    local.assertJsonEqual = function (aa, bb) {
+    /*
+     * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
+     */
+        let objectDeepCopyWithKeysSorted;
+        objectDeepCopyWithKeysSorted = function (obj) {
+        /*
+         * this function will recursively deep-copy <obj> with keys sorted
+         */
+            let sorted;
+            if (typeof obj !== "object" || !obj) {
+                return obj;
+            }
+            // recursively deep-copy list with child-keys sorted
+            if (Array.isArray(obj)) {
+                return obj.map(objectDeepCopyWithKeysSorted);
+            }
+            // recursively deep-copy obj with keys sorted
+            sorted = {};
+            Object.keys(obj).sort().forEach(function (key) {
+                sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
+            });
+            return sorted;
+        };
+        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
+        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
+        if (aa !== bb) {
+            throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));
+        }
+    };
     local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw err.<msg> if <passed> is falsy
+     * this function will throw <msg> if <passed> is falsy
      */
         if (passed) {
             return;
@@ -72,9 +95,9 @@
             ? msg
             : new Error(
                 typeof msg === "string"
-                // if msg is a string, then leave as is
+                // if msg is string, then leave as is
                 ? msg
-                // else JSON.stringify msg
+                // else JSON.stringify(msg)
                 : JSON.stringify(msg, undefined, 4)
             )
         );
@@ -88,98 +111,12 @@
         ii = 0;
         while (ii < argList.length) {
             arg = argList[ii];
-            if (arg !== null && arg !== undefined && arg !== "") {
-                break;
+            if (arg !== undefined && arg !== null && arg !== "") {
+                return arg;
             }
             ii += 1;
         }
         return arg;
-    };
-    local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
-    /*
-     * this function will sync-read <pathname> with given <type> and <dflt>
-     */
-        let fs;
-        // do nothing if module does not exist
-        try {
-            fs = require("fs");
-        } catch (ignore) {
-            return dflt;
-        }
-        pathname = require("path").resolve(pathname);
-        // try to read pathname
-        try {
-            return (
-                type === "json"
-                ? JSON.parse(fs.readFileSync(pathname, "utf8"))
-                : fs.readFileSync(pathname, type)
-            );
-        } catch (ignore) {
-            return dflt;
-        }
-    };
-    local.fsRmrfSync = function (pathname) {
-    /*
-     * this function will sync "rm -rf" <pathname>
-     */
-        let child_process;
-        // do nothing if module does not exist
-        try {
-            child_process = require("child_process");
-        } catch (ignore) {
-            return;
-        }
-        pathname = require("path").resolve(pathname);
-        if (process.platform !== "win32") {
-            child_process.spawnSync("rm", [
-                "-rf", pathname
-            ], {
-                stdio: [
-                    "ignore", 1, 2
-                ]
-            });
-            return;
-        }
-        try {
-            child_process.spawnSync("rd", [
-                "/s", "/q", pathname
-            ], {
-                stdio: [
-                    "ignore", 1, "ignore"
-                ]
-            });
-        } catch (ignore) {}
-    };
-    local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {
-    /*
-     * this function will sync write <data> to <pathname> with "mkdir -p"
-     */
-        let fs;
-        let success;
-        // do nothing if module does not exist
-        try {
-            fs = require("fs");
-        } catch (ignore) {
-            return;
-        }
-        pathname = require("path").resolve(pathname);
-        // try to write pathname
-        try {
-            fs.writeFileSync(pathname, data);
-            success = true;
-        } catch (ignore) {
-            // mkdir -p
-            fs.mkdirSync(require("path").dirname(pathname), {
-                recursive: true
-            });
-            // re-write pathname
-            fs.writeFileSync(pathname, data);
-            success = true;
-        }
-        if (success && msg) {
-            console.error(msg.replace("{{pathname}}", pathname));
-        }
-        return success;
     };
     local.identity = function (val) {
     /*
@@ -221,35 +158,16 @@
         recurse(tgt, src, depth | 0);
         return tgt;
     };
-    // require builtin
-    if (!local.isBrowser) {
-        local.assert = require("assert");
-        local.buffer = require("buffer");
-        local.child_process = require("child_process");
-        local.cluster = require("cluster");
-        local.crypto = require("crypto");
-        local.dgram = require("dgram");
-        local.dns = require("dns");
-        local.domain = require("domain");
-        local.events = require("events");
-        local.fs = require("fs");
-        local.http = require("http");
-        local.https = require("https");
-        local.net = require("net");
-        local.os = require("os");
-        local.path = require("path");
-        local.querystring = require("querystring");
-        local.readline = require("readline");
-        local.repl = require("repl");
-        local.stream = require("stream");
-        local.string_decoder = require("string_decoder");
-        local.timers = require("timers");
-        local.tls = require("tls");
-        local.tty = require("tty");
-        local.url = require("url");
-        local.util = require("util");
-        local.vm = require("vm");
-        local.zlib = require("zlib");
+    // bug-workaround - throw unhandledRejections in node-process
+    if (
+        typeof process === "object" && process
+        && typeof process.on === "function"
+        && process.unhandledRejections !== "strict"
+    ) {
+        process.unhandledRejections = "strict";
+        process.on("unhandledRejection", function (err) {
+            throw err;
+        });
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
@@ -289,7 +207,6 @@ globalThis.utility2 = local;
 // init lib extra
 [
     "apidoc",
-    "github_crud",
     "istanbul",
     "jslint",
     "marked",
@@ -319,34 +236,27 @@ local.assetsDict["/assets.utility2.header.js"] = '\
 // assets.utility2.header.js - start\n\
 /* jslint utility2:true */\n\
 /* istanbul ignore next */\n\
+// run shared js-env code - init-local\n\
 (function (globalThis) {\n\
     "use strict";\n\
     let consoleError;\n\
-    let debugName;\n\
     let local;\n\
-    debugName = "debug" + String("Inline");\n\
     // init globalThis\n\
     globalThis.globalThis = globalThis.globalThis || globalThis;\n\
-    // init debug_inline\n\
-    if (!globalThis[debugName]) {\n\
+    // init debugInline\n\
+    if (!globalThis.debugInline) {\n\
         consoleError = console.error;\n\
-        globalThis[debugName] = function (...argList) {\n\
+        globalThis.debugInline = function (...argList) {\n\
         /*\n\
          * this function will both print <argList> to stderr\n\
          * and return <argList>[0]\n\
          */\n\
-            consoleError("\\n\\n" + debugName);\n\
+            consoleError("\\n\\ndebugInline");\n\
             consoleError(...argList);\n\
             consoleError("\\n");\n\
             return argList[0];\n\
         };\n\
     }\n\
-    String.prototype.trimEnd = (\n\
-        String.prototype.trimEnd || String.prototype.trimRight\n\
-    );\n\
-    String.prototype.trimStart = (\n\
-        String.prototype.trimStart || String.prototype.trimLeft\n\
-    );\n\
     // init local\n\
     local = {};\n\
     local.local = local;\n\
@@ -362,9 +272,39 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         local.isBrowser && typeof globalThis.importScripts === "function"\n\
     );\n\
     // init function\n\
+    local.assertJsonEqual = function (aa, bb) {\n\
+    /*\n\
+     * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)\n\
+     */\n\
+        let objectDeepCopyWithKeysSorted;\n\
+        objectDeepCopyWithKeysSorted = function (obj) {\n\
+        /*\n\
+         * this function will recursively deep-copy <obj> with keys sorted\n\
+         */\n\
+            let sorted;\n\
+            if (typeof obj !== "object" || !obj) {\n\
+                return obj;\n\
+            }\n\
+            // recursively deep-copy list with child-keys sorted\n\
+            if (Array.isArray(obj)) {\n\
+                return obj.map(objectDeepCopyWithKeysSorted);\n\
+            }\n\
+            // recursively deep-copy obj with keys sorted\n\
+            sorted = {};\n\
+            Object.keys(obj).sort().forEach(function (key) {\n\
+                sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);\n\
+            });\n\
+            return sorted;\n\
+        };\n\
+        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));\n\
+        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));\n\
+        if (aa !== bb) {\n\
+            throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));\n\
+        }\n\
+    };\n\
     local.assertOrThrow = function (passed, msg) {\n\
     /*\n\
-     * this function will throw err.<msg> if <passed> is falsy\n\
+     * this function will throw <msg> if <passed> is falsy\n\
      */\n\
         if (passed) {\n\
             return;\n\
@@ -379,9 +319,9 @@ local.assetsDict["/assets.utility2.header.js"] = '\
             ? msg\n\
             : new Error(\n\
                 typeof msg === "string"\n\
-                // if msg is a string, then leave as is\n\
+                // if msg is string, then leave as is\n\
                 ? msg\n\
-                // else JSON.stringify msg\n\
+                // else JSON.stringify(msg)\n\
                 : JSON.stringify(msg, undefined, 4)\n\
             )\n\
         );\n\
@@ -395,98 +335,12 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         ii = 0;\n\
         while (ii < argList.length) {\n\
             arg = argList[ii];\n\
-            if (arg !== null && arg !== undefined && arg !== "") {\n\
-                break;\n\
+            if (arg !== undefined && arg !== null && arg !== "") {\n\
+                return arg;\n\
             }\n\
             ii += 1;\n\
         }\n\
         return arg;\n\
-    };\n\
-    local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {\n\
-    /*\n\
-     * this function will sync-read <pathname> with given <type> and <dflt>\n\
-     */\n\
-        let fs;\n\
-        // do nothing if module does not exist\n\
-        try {\n\
-            fs = require("fs");\n\
-        } catch (ignore) {\n\
-            return dflt;\n\
-        }\n\
-        pathname = require("path").resolve(pathname);\n\
-        // try to read pathname\n\
-        try {\n\
-            return (\n\
-                type === "json"\n\
-                ? JSON.parse(fs.readFileSync(pathname, "utf8"))\n\
-                : fs.readFileSync(pathname, type)\n\
-            );\n\
-        } catch (ignore) {\n\
-            return dflt;\n\
-        }\n\
-    };\n\
-    local.fsRmrfSync = function (pathname) {\n\
-    /*\n\
-     * this function will sync "rm -rf" <pathname>\n\
-     */\n\
-        let child_process;\n\
-        // do nothing if module does not exist\n\
-        try {\n\
-            child_process = require("child_process");\n\
-        } catch (ignore) {\n\
-            return;\n\
-        }\n\
-        pathname = require("path").resolve(pathname);\n\
-        if (process.platform !== "win32") {\n\
-            child_process.spawnSync("rm", [\n\
-                "-rf", pathname\n\
-            ], {\n\
-                stdio: [\n\
-                    "ignore", 1, 2\n\
-                ]\n\
-            });\n\
-            return;\n\
-        }\n\
-        try {\n\
-            child_process.spawnSync("rd", [\n\
-                "/s", "/q", pathname\n\
-            ], {\n\
-                stdio: [\n\
-                    "ignore", 1, "ignore"\n\
-                ]\n\
-            });\n\
-        } catch (ignore) {}\n\
-    };\n\
-    local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {\n\
-    /*\n\
-     * this function will sync write <data> to <pathname> with "mkdir -p"\n\
-     */\n\
-        let fs;\n\
-        let success;\n\
-        // do nothing if module does not exist\n\
-        try {\n\
-            fs = require("fs");\n\
-        } catch (ignore) {\n\
-            return;\n\
-        }\n\
-        pathname = require("path").resolve(pathname);\n\
-        // try to write pathname\n\
-        try {\n\
-            fs.writeFileSync(pathname, data);\n\
-            success = true;\n\
-        } catch (ignore) {\n\
-            // mkdir -p\n\
-            fs.mkdirSync(require("path").dirname(pathname), {\n\
-                recursive: true\n\
-            });\n\
-            // re-write pathname\n\
-            fs.writeFileSync(pathname, data);\n\
-            success = true;\n\
-        }\n\
-        if (success && msg) {\n\
-            console.error(msg.replace("{{pathname}}", pathname));\n\
-        }\n\
-        return success;\n\
     };\n\
     local.identity = function (val) {\n\
     /*\n\
@@ -528,35 +382,16 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         recurse(tgt, src, depth | 0);\n\
         return tgt;\n\
     };\n\
-    // require builtin\n\
-    if (!local.isBrowser) {\n\
-        local.assert = require("assert");\n\
-        local.buffer = require("buffer");\n\
-        local.child_process = require("child_process");\n\
-        local.cluster = require("cluster");\n\
-        local.crypto = require("crypto");\n\
-        local.dgram = require("dgram");\n\
-        local.dns = require("dns");\n\
-        local.domain = require("domain");\n\
-        local.events = require("events");\n\
-        local.fs = require("fs");\n\
-        local.http = require("http");\n\
-        local.https = require("https");\n\
-        local.net = require("net");\n\
-        local.os = require("os");\n\
-        local.path = require("path");\n\
-        local.querystring = require("querystring");\n\
-        local.readline = require("readline");\n\
-        local.repl = require("repl");\n\
-        local.stream = require("stream");\n\
-        local.string_decoder = require("string_decoder");\n\
-        local.timers = require("timers");\n\
-        local.tls = require("tls");\n\
-        local.tty = require("tty");\n\
-        local.url = require("url");\n\
-        local.util = require("util");\n\
-        local.vm = require("vm");\n\
-        local.zlib = require("zlib");\n\
+    // bug-workaround - throw unhandledRejections in node-process\n\
+    if (\n\
+        typeof process === "object" && process\n\
+        && typeof process.on === "function"\n\
+        && process.unhandledRejections !== "strict"\n\
+    ) {\n\
+        process.unhandledRejections = "strict";\n\
+        process.on("unhandledRejection", function (err) {\n\
+            throw err;\n\
+        });\n\
     }\n\
 }((typeof globalThis === "object" && globalThis) || window));\n\
 // assets.utility2.header.js - end\n\
@@ -1052,14 +887,14 @@ local.assetsDict["/assets.example.template.js"] = '\
 /*\n\
 example.js\n\
 \n\
-this script will run a web-demo of my-app-lite\n\
+this script will run web-demo of my-app-lite\n\
 \n\
 instruction\n\
     1. save this script as example.js\n\
     2. run shell-command:\n\
         $ npm install my-app-lite && \\\n\
             PORT=8081 node example.js\n\
-    3. open a browser to http://127.0.0.1:8081 and play with web-demo\n\
+    3. open browser to http://127.0.0.1:8081 and play with web-demo\n\
     4. edit this script to suit your needs\n\
 */\n\
 \n\
@@ -1090,8 +925,8 @@ globalThis.local = local;\n\
 \n\
 \n\
 \n\
-// run browser js\-env code - init-test\n\
 /* istanbul ignore next */\n\
+// run browser js\-env code - init-test\n\
 (function () {\n\
 if (!local.isBrowser) {\n\
     return;\n\
@@ -1127,8 +962,8 @@ globalThis.domOnEventDelegateDict = local;\n\
 \n\
 \n\
 \n\
-// run node js\-env code - init-test\n\
 /* istanbul ignore next */\n\
+// run node js\-env code - init-test\n\
 (function () {\n\
 if (local.isBrowser) {\n\
     return;\n\
@@ -1145,8 +980,8 @@ local.assetsDict["/assets.index.template.html"] = \'\\\n\
 /* jslint ignore:end */\n\
 local.assetsDict["/assets.my_app.js"] = (\n\
     local.assetsDict["/assets.my_app.js"]\n\
-    || local.fs.readFileSync(\n\
-        local.path.resolve(local.__dirname + "/lib.my_app.js"),\n\
+    || require("fs").readFileSync(\n\
+        require("path").resolve(local.__dirname + "/lib.my_app.js"),\n\
         "utf8"\n\
     ).replace((\n\
         /^#!\\//\n\
@@ -1178,7 +1013,7 @@ if (module !== require.main || globalThis.utility2_rollup) {\n\
 }\n\
 local.assetsDict["/assets.example.js"] = (\n\
     local.assetsDict["/assets.example.js"]\n\
-    || local.fs.readFileSync(__filename, "utf8")\n\
+    || require("fs").readFileSync(__filename, "utf8")\n\
 );\n\
 local.assetsDict["/favicon.ico"] = local.assetsDict["/favicon.ico"] || "";\n\
 local.assetsDict["/index.html"] = local.assetsDict["/"];\n\
@@ -1193,10 +1028,11 @@ if (globalThis.utility2_serverHttp1) {\n\
 }\n\
 process.env.PORT = process.env.PORT || "8081";\n\
 console.error("http-server listening on port " + process.env.PORT);\n\
-local.http.createServer(function (req, res) {\n\
-    req.urlParsed = local.url.parse(req.url);\n\
-    if (local.assetsDict[req.urlParsed.pathname] !== undefined) {\n\
-        res.end(local.assetsDict[req.urlParsed.pathname]);\n\
+require("http").createServer(function (req, res) {\n\
+    let data;\n\
+    data = local.assetsDict[require("url").parse(req.url).pathname];\n\
+    if (data !== undefined) {\n\
+        res.end(data);\n\
         return;\n\
     }\n\
     res.statusCode = 404;\n\
@@ -1264,25 +1100,25 @@ local.assetsDict["/assets.readme.template.md"] = '\
 the greatest app in the world!\n\
 \n\
 # live web demo\n\
-- [https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/app](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/app)\n\
+- [https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/app](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/app)\n\
 \n\
-[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployGithub.browser.%252Fnode-my-app-lite%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/app)\n\
+[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployGithub.browser.%252Fnode-my-app-lite%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/app)\n\
 \n\
 \n\
 \n\
-[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-my-app-lite.svg)](https://travis-ci.org/kaizhu256/node-my-app-lite) [![coverage](https://kaizhu256.github.io/node-my-app-lite/build/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build/coverage.html/index.html)\n\
+[![travis-ci.com build-status](https://api.travis-ci.com/kaizhu256/node-my-app-lite.svg)](https://travis-ci.com/kaizhu256/node-my-app-lite) [![coverage](https://kaizhu256.github.io/node-my-app-lite/build/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build/coverage.html/index.html)\n\
 \n\
 [![NPM](https://nodei.co/npm/my-app-lite.png?downloads=true)](https://www.npmjs.com/package/my-app-lite)\n\
 \n\
-[![build commit status](https://kaizhu256.github.io/node-my-app-lite/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-my-app-lite)\n\
+[![build commit status](https://kaizhu256.github.io/node-my-app-lite/build/build.badge.svg)](https://travis-ci.com/kaizhu256/node-my-app-lite)\n\
 \n\
 | git-branch : | [master](https://github.com/kaizhu256/node-my-app-lite/tree/master) | [beta](https://github.com/kaizhu256/node-my-app-lite/tree/beta) | [alpha](https://github.com/kaizhu256/node-my-app-lite/tree/alpha)|\n\
 |--:|:--|:--|:--|\n\
-| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-my-app-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-my-app-lite/build..master..travis-ci.org/app) | [![github.com test-server](https://kaizhu256.github.io/node-my-app-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/app) | [![github.com test-server](https://kaizhu256.github.io/node-my-app-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-my-app-lite/build..alpha..travis-ci.org/app)|\n\
+| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-my-app-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-my-app-lite/build..master..travis-ci.com/app) | [![github.com test-server](https://kaizhu256.github.io/node-my-app-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/app) | [![github.com test-server](https://kaizhu256.github.io/node-my-app-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-my-app-lite/build..alpha..travis-ci.com/app)|\n\
 | test-server-heroku : | [![heroku.com test-server](https://kaizhu256.github.io/node-my-app-lite/heroku-logo.75x25.png)](https://h1-my-app-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-my-app-lite/heroku-logo.75x25.png)](https://h1-my-app-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-my-app-lite/heroku-logo.75x25.png)](https://h1-my-app-alpha.herokuapp.com)|\n\
-| test-report : | [![test-report](https://kaizhu256.github.io/node-my-app-lite/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-my-app-lite/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..alpha..travis-ci.org/test-report.html)|\n\
-| coverage : | [![coverage](https://kaizhu256.github.io/node-my-app-lite/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..master..travis-ci.org/coverage.html/index.html) | [![coverage](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/coverage.html/index.html) | [![coverage](https://kaizhu256.github.io/node-my-app-lite/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..alpha..travis-ci.org/coverage.html/index.html)|\n\
-| build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-my-app-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-my-app-lite/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-my-app-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-my-app-lite/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-my-app-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-my-app-lite/tree/gh-pages/build..alpha..travis-ci.org)|\n\
+| test-report : | [![test-report](https://kaizhu256.github.io/node-my-app-lite/build..master..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..master..travis-ci.com/test-report.html) | [![test-report](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/test-report.html) | [![test-report](https://kaizhu256.github.io/node-my-app-lite/build..alpha..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..alpha..travis-ci.com/test-report.html)|\n\
+| coverage : | [![coverage](https://kaizhu256.github.io/node-my-app-lite/build..master..travis-ci.com/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..master..travis-ci.com/coverage.html/index.html) | [![coverage](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/coverage.html/index.html) | [![coverage](https://kaizhu256.github.io/node-my-app-lite/build..alpha..travis-ci.com/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..alpha..travis-ci.com/coverage.html/index.html)|\n\
+| build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-my-app-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-my-app-lite/tree/gh-pages/build..master..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-my-app-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-my-app-lite/tree/gh-pages/build..beta..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-my-app-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-my-app-lite/tree/gh-pages/build..alpha..travis-ci.com)|\n\
 \n\
 [![npmPackageListing](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.npmPackageListing.svg)](https://github.com/kaizhu256/node-my-app-lite)\n\
 \n\
@@ -1295,15 +1131,15 @@ the greatest app in the world!\n\
 \n\
 \n\
 # cdn download\n\
-- [https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/app/assets.my_app.js](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/app/assets.my_app.js)\n\
+- [https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/app/assets.my_app.js](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/app/assets.my_app.js)\n\
 \n\
 \n\
 \n\
 # documentation\n\
 #### api doc\n\
-- [https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/apidoc.html)\n\
+- [https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/apidoc.html](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/apidoc.html)\n\
 \n\
-[![apidoc](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/apidoc.html)\n\
+[![apidoc](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/apidoc.html)\n\
 \n\
 #### cli help\n\
 ![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.npmPackageCliHelp.svg)\n\
@@ -1323,17 +1159,17 @@ the greatest app in the world!\n\
 \n\
 # quickstart standalone app\n\
 #### to run this example, follow instruction in script below\n\
-- [assets.app.js](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/app/assets.app.js)\n\
+- [assets.app.js](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/app/assets.app.js)\n\
 ```shell\n\
 # example.sh\n\
 \n\
-# this shell script will download and run a web-demo of my-app-lite as a standalone app\n\
+# this shell script will download and run web-demo of my-app-lite as standalone app\n\
 \n\
 # 1. download standalone app\n\
-curl -O https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/app/assets.app.js\n\
+curl -O https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/app/assets.app.js\n\
 # 2. run standalone app\n\
 PORT=8081 node ./assets.app.js\n\
-# 3. open a browser to http://127.0.0.1:8081 and play with web-demo\n\
+# 3. open browser to http://127.0.0.1:8081 and play with web-demo\n\
 # 4. edit file assets.app.js to suit your needs\n\
 ```\n\
 \n\
@@ -1349,7 +1185,7 @@ PORT=8081 node ./assets.app.js\n\
 [![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-my-app-lite/build/app/assets.example.html)\n\
 \n\
 #### to run this example, follow instruction in script below\n\
-- [example.js](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.org/example.js)\n\
+- [example.js](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/example.js)\n\
 ```javascript\n' + local.assetsDict["/assets.example.template.js"] + '```\n\
 \n\
 #### output from browser\n\
@@ -1478,8 +1314,8 @@ local.assetsDict["/assets.test.template.js"] = '\
 \n\
 \n\
 \n\
-/* istanbul ignore next */\n\
 /* jslint utility2:true */\n\
+/* istanbul ignore next */\n\
 (function (local) {\n\
 "use strict";\n\
 \n\
@@ -1641,9 +1477,9 @@ local.assetsDict["/assets.testReport.template.html"] =
 </tbody>\n\
 </table>\n\
 <pre class="{{preClass}}" tabIndex="0">\n\
-{{#each errorStackList}}\n\
-{{errorStack}}\n\
-{{/each errorStackList}}\n\
+{{#each errStackList}}\n\
+{{errStack}}\n\
+{{/each errStackList}}\n\
 </pre>\n\
 </div>\n\
 {{/each testPlatformList}}\n\
@@ -1723,91 +1559,10 @@ local.cliDict["utility2.browserTest"] = function () {
  */
     local.browserTest({
         url: process.argv[3]
-    }, local.onErrorDefault);
-};
-
-local.cliDict["utility2.githubCrudContentDelete"] = function () {
-/*
- * <fileRemote|dirRemote> <commitMessage>
- * will delete from github <fileRemote|dirRemote>
- */
-    local.github_crud.githubCrudContentDelete({
-        message: process.argv[4],
-        url: process.argv[3]
     }, function (err) {
-        process.exit(Boolean(err));
-    });
-};
-
-local.cliDict["utility2.githubCrudContentGet"] = function () {
-/*
- * <fileRemote>
- * will get from github <fileRemote>
- */
-    local.github_crud.githubCrudContentGet({
-        url: process.argv[3]
-    }, function (err, data) {
-        try {
-            process.stdout.write(data);
-        } catch (ignore) {}
-        process.exit(Boolean(err));
-    });
-};
-
-local.cliDict["utility2.githubCrudContentPut"] = function () {
-/*
- * <fileRemote> <fileLocal> <commitMessage>
- * will put on github <fileRemote>, <fileLocal>
- */
-    local.github_crud.githubCrudContentPutFile({
-        message: process.argv[5],
-        url: process.argv[3],
-        file: process.argv[4]
-    }, function (err) {
-        process.exit(Boolean(err));
-    });
-};
-
-local.cliDict["utility2.githubCrudContentTouch"] = function () {
-/*
- * <fileRemoteList> <commitMessage>
- * will touch on github in parallel, comma-separated <fileRemoteList>
- */
-    local.github_crud.githubCrudContentTouchList({
-        message: process.argv[4],
-        urlList: process.argv[3].split(
-            /[,\s]/g
-        ).filter(local.identity)
-    }, function (err) {
-        process.exit(Boolean(err));
-    });
-};
-
-local.cliDict["utility2.githubCrudRepoCreate"] = function () {
-/*
- * <repoList>
- * will create on github in parallel, comma-separated <repoList>
- */
-    local.github_crud.githubCrudRepoCreateList({
-        urlList: process.argv[3].split(
-            /[,\s]/g
-        ).filter(local.identity)
-    }, function (err) {
-        process.exit(Boolean(err));
-    });
-};
-
-local.cliDict["utility2.githubCrudRepoDelete"] = function () {
-/*
- * <repoList>
- * will delete from github in parallel, comma-separated <repoList>
- */
-    local.github_crud.githubCrudRepoDeleteList({
-        urlList: process.argv[3].split(
-            /[,\s]/g
-        ).filter(local.identity)
-    }, function (err) {
-        process.exit(Boolean(err));
+        if (err) {
+            console.log(err);
+        }
     });
 };
 
@@ -1816,10 +1571,12 @@ local.cliDict["utility2.start"] = function () {
  * <port>
  * will start utility2 http-server on given <port> (default 8081)
  */
-    local.env.PORT = process.argv[3] || local.env.PORT;
     globalThis.local = local;
     local.replStart();
     local.testRunServer({});
+    if (process.env.npm_config_runme) {
+        require(require("path").resolve(process.env.npm_config_runme));
+    }
 };
 
 local.cliDict["utility2.testReportCreate"] = function () {
@@ -1829,12 +1586,14 @@ local.cliDict["utility2.testReportCreate"] = function () {
  */
     process.exit(
         local.testReportCreate(
-            JSON.parse(local.fs.readFileSync(
-                local.path.resolve(
-                    local.env.npm_config_dir_build + "/test-report.json"
-                ),
-                "utf8"
-            ))
+            JSON.parse(
+                require("fs").readFileSync(
+                    require("path").resolve(
+                        process.env.npm_config_dir_build + "/test-report.json"
+                    ),
+                    "utf8"
+                )
+            )
         ).testsFailed !== 0
     );
 };
@@ -1844,6 +1603,8 @@ local.cliDict["utility2.testReportCreate"] = function () {
 
 // run shared js-env code - function
 (function () {
+let localEventListenerDict;
+localEventListenerDict = {};
 // init lib Blob
 local.Blob = globalThis.Blob || function (list, opt) {
     /*
@@ -1863,192 +1624,8 @@ local.Blob = globalThis.Blob || function (list, opt) {
     this.type = (opt && opt.type) || "";
 };
 
-// init lib FormData
-local.FormData = function () {
-/*
- * this function will create a serverLocal-compatible FormData instance
- * The FormData(form) constructor must run these steps:
- * 1. Let fd be a new FormData object.
- * 2. If form is given, set fd's entries to the result
- *    of constructing the form data set for form. (not implemented)
- * 3. Return fd.
- * https://xhr.spec.whatwg.org/#dom-formdata
- */
-    this.entryList = [];
-};
-
-local.FormData.prototype.append = function (name, value, filename) {
-/*
- * The append(name, value, filename) method, when invoked, must run these steps:
- * 1. If the filename argument is given, set value to a new File object
- *    whose contents are value and name is filename.
- * 2. Append a new entry whose name is name, and value is value,
- *    to context object's list of entries.
- * https://xhr.spec.whatwg.org/#dom-formdata-append
- */
-    if (filename) {
-        // bug-workaround - chromium cannot assign name to Blob instance
-        local.tryCatchOnError(function () {
-            value.name = filename;
-        }, local.nop);
-    }
-    this.entryList.push({
-        name,
-        value
-    });
-};
-
-local.FormData.prototype.read = function (onError) {
-/*
- * this function will read from formData as a buffer, e.g.
- * --Boundary\r\n
- * Content-Disposition: form-data; name="key"\r\n
- * \r\n
- * value\r\n
- * --Boundary\r\n
- * Content-Disposition: form-data; name="input1"; filename="file1.png"\r\n
- * Content-Type: image/jpeg\r\n
- * \r\n
- * <data1>\r\n
- * --Boundary\r\n
- * Content-Disposition: form-data; name="input2"; filename="file2.png"\r\n
- * Content-Type: image/jpeg\r\n
- * \r\n
- * <data2>\r\n
- * --Boundary--\r\n
- * https://tools.ietf.org/html/rfc7578
- */
-    let boundary;
-    let result;
-    // handle null-case
-    if (!this.entryList.length) {
-        onError();
-        return;
-    }
-    // init boundary
-    boundary = "--" + Date.now().toString(16) + Math.random().toString(16);
-    // init result
-    result = [];
-    local.onParallelList({
-        list: this.entryList
-    }, function (opt2, onParallel) {
-        let value;
-        value = opt2.elem.value;
-        if (!(value && value.constructor === local.Blob)) {
-            result[opt2.ii] = [
-                (
-                    boundary + "\r\nContent-Disposition: form-data; name=\""
-                    + opt2.elem.name + "\"\r\n\r\n"
-                ), value, "\r\n"
-            ];
-            onParallel.cnt += 1;
-            onParallel();
-            return;
-        }
-        // read from blob in parallel
-        onParallel.cnt += 1;
-        local.blobRead(value, function (err, data) {
-            result[opt2.ii] = !err && [
-                (
-                    boundary + "\r\nContent-Disposition: form-data; name=\""
-                    + opt2.elem.name + "\"" + (
-                        (value && value.name)
-                        // read param filename
-                        ? "; filename=\"" + value.name + "\""
-                        : ""
-                    ) + "\r\n" + (
-                        (value && value.type)
-                        // read param Content-Type
-                        ? "Content-Type: " + value.type + "\r\n"
-                        : ""
-                    ) + "\r\n"
-                ), data, "\r\n"
-            ];
-            onParallel(err);
-        });
-    }, function (err) {
-        // add closing boundary
-        result.push([
-            boundary + "--\r\n"
-        ]);
-        // concatenate result
-        onError(
-            err,
-            // flatten result
-            !err
-            && local.bufferConcat(result.flat())
-        );
-    });
-};
-
 // init lib _http
 local._http = {};
-
-local._http.STATUS_CODES = {
-    "100": "Continue",
-    "101": "Switching Protocols",
-    "102": "Processing",
-    "103": "Early Hints",
-    "200": "OK",
-    "201": "Created",
-    "202": "Accepted",
-    "203": "Non-Authoritative Information",
-    "204": "No Content",
-    "205": "Reset Content",
-    "206": "Partial Content",
-    "207": "Multi-Status",
-    "208": "Already Reported",
-    "226": "IM Used",
-    "300": "Multiple Choices",
-    "301": "Moved Permanently",
-    "302": "Found",
-    "303": "See Other",
-    "304": "Not Modified",
-    "305": "Use Proxy",
-    "307": "Temporary Redirect",
-    "308": "Permanent Redirect",
-    "400": "Bad Request",
-    "401": "Unauthorized",
-    "402": "Payment Required",
-    "403": "Forbidden",
-    "404": "Not Found",
-    "405": "Method Not Allowed",
-    "406": "Not Acceptable",
-    "407": "Proxy Authentication Required",
-    "408": "Request Timeout",
-    "409": "Conflict",
-    "410": "Gone",
-    "411": "Length Required",
-    "412": "Precondition Failed",
-    "413": "Payload Too Large",
-    "414": "URI Too Long",
-    "415": "Unsupported Media Type",
-    "416": "Range Not Satisfiable",
-    "417": "Expectation Failed",
-    "418": "I'm a Teapot",
-    "421": "Misdirected Request",
-    "422": "Unprocessable Entity",
-    "423": "Locked",
-    "424": "Failed Dependency",
-    "425": "Unordered Collection",
-    "426": "Upgrade Required",
-    "428": "Precondition Required",
-    "429": "Too Many Requests",
-    "431": "Request Header Fields Too Large",
-    "451": "Unavailable For Legal Reasons",
-    "500": "Internal Server Error",
-    "501": "Not Implemented",
-    "502": "Bad Gateway",
-    "503": "Service Unavailable",
-    "504": "Gateway Timeout",
-    "505": "HTTP Version Not Supported",
-    "506": "Variant Also Negotiates",
-    "507": "Insufficient Storage",
-    "508": "Loop Detected",
-    "509": "Bandwidth Limit Exceeded",
-    "510": "Not Extended",
-    "511": "Network Authentication Required"
-};
 
 local._http.createServer = function () {
 /*
@@ -2168,6 +1745,10 @@ local._testCase_buildApidoc_default = function (opt, onError) {
  * this function will test buildApidoc's default handling-behavior
  */
     let require2;
+    if (local.isBrowser) {
+        onError(undefined, opt);
+        return;
+    }
     require2 = function (file) {
     /*
      * this function will require <file> in sandbox-env
@@ -2175,80 +1756,94 @@ local._testCase_buildApidoc_default = function (opt, onError) {
         let exports;
         let mockDict;
         let mockList;
+        let nop;
+        nop = function () {
+        /*
+         * this function will do nothing
+         */
+            return;
+        };
+        // coverage-hack
+        nop();
         mockList = [
             [
                 globalThis, {
-                    setImmediate: local.nop,
-                    setInterval: local.nop,
-                    setTimeout: local.nop
+                    setImmediate: nop,
+                    setInterval: nop,
+                    setTimeout: nop
                 }
             ]
         ];
+        // disable io and side-effect
         [
-            [
-                local, "child_process"
-            ], [
-                local, "cluster"
-            ], [
-                local, "http"
-            ], [
-                local, "https"
-            ], [
-                local, "net"
-            ], [
-                local, "repl"
-            ], [
-                local.events, "prototype"
-            ], [
-                globalThis, "process"
-            ], [
-                local.stream, "prototype"
-            ], [
-                process, "stdin"
-            ]
-        ].forEach(function (elem, tmp) {
-            tmp = elem[0][elem[1]];
+            process,
+            process.stdin,
+            process.stdout,
+            require("child_process"),
+            require("cluster"),
+            require("crypto"),
+            require("dgram"),
+            require("dns"),
+            require("domain"),
+            require("events").prototype,
+            require("http"),
+            require("https"),
+            require("net"),
+            require("os"),
+            require("readline"),
+            require("repl"),
+            require("stream").prototype,
+            require("timers"),
+            require("tls"),
+            require("tty"),
+            require("util"),
+            require("v8"),
+            require("vm"),
+            {
+                "__zjqx1234__": nop
+            }
+        ].forEach(function (dict) {
             mockDict = {};
-            Object.keys(tmp).forEach(function (key) {
-                if (typeof tmp[key] === "function" && !(
-                    /^(?:fs\.Read|fs\.read|process\.binding|process\.dlopen)/
-                ).test(elem[1] + "." + key)) {
-                    mockDict[key] = function () {
-                        return;
-                    };
+            Object.keys(dict).forEach(function (key) {
+                if (typeof dict[key] === "function" && (
+                    process.env.npm_config_mode_test_case
+                    === "testCase_buildApidoc_default"
+                    // coverage-hack
+                    || key === "__zjqx1234__"
+                )) {
+                    mockDict[key] = nop;
                 }
             });
             mockList.push([
-                tmp, mockDict
+                dict, mockDict
             ]);
         });
         local.testMock(mockList, function (onError) {
-            local.tryCatchOnError(function () {
+            try {
                 exports = require(file);
-            }, local.onErrorDefault);
+            } catch (errCaught) {
+                console.error(errCaught);
+            }
             onError();
         }, local.onErrorThrow);
         return exports;
     };
-    if (
-        local.isBrowser
-        || local.env.npm_config_mode_coverage
-        || local.env.npm_config_mode_test_case
-        !== "testCase_buildApidoc_default"
-    ) {
-        onError(undefined, opt);
-        return;
-    }
+    // coverage-hack
+    require2();
     // save apidoc.html
-    local.fsWriteFileWithMkdirpSync(
-        "tmp/build/apidoc.html",
-        local.apidocCreate(local.objectAssignDefault(opt, {
+    local.fsWriteFileWithMkdirp({
+        data: local.apidocCreate(local.objectAssignDefault(opt, {
             blacklistDict: local,
+            modeNop: (
+                process.env.npm_config_mode_test_case
+                !== "testCase_buildApidoc_default"
+            ),
             require: require2
         })),
-        "wrote file apidoc - {{pathname}}"
-    );
-    onError();
+        modeDebug: true,
+        modeUncaughtException: true,
+        pathname: "tmp/build/apidoc.html"
+    }, onError);
 };
 
 local._testCase_buildApp_default = function (opt, onError) {
@@ -2309,8 +1904,8 @@ local._testCase_webpage_default = function (opt, onError) {
     local.domStyleValidate();
     local.browserTest({
         fileScreenshot: (
-            local.env.npm_config_dir_build
-            + "/screenshot." + local.env.MODE_BUILD + ".browser.%2F.png"
+            process.env.npm_config_dir_build
+            + "/screenshot." + process.env.MODE_BUILD + ".browser.%2F.png"
         ),
         url: (
             local.serverLocalHost
@@ -2662,9 +2257,6 @@ local.ajax = function (opt, onError) {
     // Blob
     // https://developer.mozilla.org/en-US/docs/Web/API/Blob
     case local2.Blob:
-    // FormData
-    // https://developer.mozilla.org/en-US/docs/Web/API/FormData
-    case local2.FormData:
         local2.blobRead(xhr.data, function (err, data) {
             if (err) {
                 xhr.onEvent(err);
@@ -2678,28 +2270,6 @@ local.ajax = function (opt, onError) {
         xhr.send(xhr.data);
     }
     return xhr;
-};
-
-local.assertJsonEqual = function (aa, bb, message) {
-/*
- * this function will assert jsonStringifyOrdered(<aa>) === JSON.stringify(<bb>)
- */
-    aa = local.jsonStringifyOrdered(aa);
-    bb = JSON.stringify(bb);
-    local.assertOrThrow(aa === bb, message || [
-        aa, bb
-    ]);
-};
-
-local.assertJsonNotEqual = function (aa, bb, message) {
-/*
- * this function will assert jsonStringifyOrdered(<aa>) !== JSON.stringify(<bb>)
- */
-    aa = local.jsonStringifyOrdered(aa);
-    bb = JSON.stringify(bb);
-    local.assertOrThrow(aa !== bb, [
-        aa
-    ], message || aa);
 };
 
 local.base64FromBuffer = function (buf) {
@@ -2792,7 +2362,7 @@ local.base64ToBuffer = function (str) {
         ii += 1;
     }
     // optimization - create resized-view of buf
-    return buf.subarray(0, jj);
+    return buf.slice(0, jj);
 };
 
 local.base64ToUtf8 = function (str) {
@@ -2802,27 +2372,12 @@ local.base64ToUtf8 = function (str) {
     return local.bufferValidateAndCoerce(local.base64ToBuffer(str), "string");
 };
 
-local.base64urlFromBuffer = function (str) {
-/*
- * this function will convert base64url <str> to Uint8Array
- */
-    return local.base64FromBuffer(str).replace((
-        /\+/g
-    ), "-").replace((
-        /\//g
-    ), "_");
-};
-
 local.blobRead = function (blob, onError) {
 /*
  * this function will read from <blob>
  */
     let isDone;
     let reader;
-    if (blob && blob.constructor && blob.constructor === local.FormData) {
-        blob.read(onError);
-        return;
-    }
     if (!local.isBrowser) {
         onError(undefined, local.bufferValidateAndCoerce(blob.buf));
         return;
@@ -2888,15 +2443,17 @@ local.browserTest = function (opt, onError) {
         return;
     }
     local.gotoNext(opt, function (err, data) {
+        let url;
         switch (opt.gotoState) {
         // node - init
         case 1:
+            url = require("url");
             onParallel = local.onParallel(opt.gotoNext);
             onParallel.cnt += 1;
             isDone = 0;
             testId = Math.random().toString(16);
             testName = local.env.MODE_BUILD + ".browser." + encodeURIComponent(
-                new local.url.URL(opt.url).pathname.replace(
+                new url.URL(opt.url).pathname.replace(
                     "/build.."
                     + local.env.CI_BRANCH
                     + ".." + local.env.CI_HOST,
@@ -2991,8 +2548,8 @@ local.browserTest = function (opt, onError) {
             local.testReportMerge(globalThis.utility2_testReport, data);
             // save test-report.json
             onParallel.cnt += 1;
-            local.fs.writeFile(
-                local.path.resolve(
+            require("fs").writeFile(
+                require("path").resolve(
                     local.env.npm_config_dir_build + "/test-report.json"
                 ),
                 JSON.stringify(globalThis.utility2_testReport),
@@ -3070,51 +2627,6 @@ local.bufferConcat = function (bufList) {
     return result;
 };
 
-local.bufferIndexOfSubBuffer = function (buf, subBff, fromIndex) {
-/*
- * this function will search <buf> from <fromIndex> for position of <subBff>
- */
-    let ii;
-    let jj;
-    let kk;
-    if (!subBff.length) {
-        return 0;
-    }
-    ii = fromIndex || 0;
-    while (ii < buf.length) {
-        kk = ii;
-        jj = 0;
-        while (jj < subBff.length) {
-            if (subBff[jj] !== buf[kk]) {
-                break;
-            }
-            kk += 1;
-            jj += 1;
-        }
-        if (jj === subBff.length) {
-            return kk - jj;
-        }
-        ii += 1;
-    }
-    return -1;
-};
-
-local.bufferRandomBytes = function (length) {
-/*
- * this function will return a Buffer with given <length>,
- * filled with cryptographically-strong random-values
- */
-    return (
-        (
-            typeof window === "object"
-            && window.crypto
-            && typeof window.crypto.getRandomValues === "function"
-        )
-        ? window.crypto.getRandomValues(new Uint8Array(length))
-        : require("crypto").randomBytes(length)
-    );
-};
-
 local.bufferToUtf8 = function (buf) {
 /*
  * this function will convert Uint8Array <buf> to utf8
@@ -3159,22 +2671,57 @@ local.buildApp = function (opt, onError) {
 /*
  * this function will build app with given <opt>
  */
-    opt = local.objectAssignDefault(opt, {
-        assetsList: []
-    });
-    // build assets
-    local.fsRmrfSync("tmp/build/app");
-    local.onParallelList({
-        list: [
+    // cleanup app
+    require("child_process").spawn((
+        "rm -rf tmp/build/app tmp/buildAssetsAppJs;"
+    ), {
+        shell: true,
+        stdio: [
+            "ignore", 1, 2
+        ]
+    }).on("error", onError).on("exit", function (exitCode) {
+        let promiseList;
+        // validate exitCode
+        local.assertOrThrow(!exitCode, exitCode);
+        promiseList = [];
+        // test standalone assets.app.js
+        promiseList.push(new Promise(function (resolve) {
+            local.fsWriteFileWithMkdirp({
+                data: local.assetsDict["/assets.app.js"],
+                modeDebug: true,
+                modeUncaughtException: true,
+                pathname: "tmp/buildAssetsAppJs/assets.app.js"
+            }, function () {
+                require("child_process").spawn("node", [
+                    "assets.app.js"
+                ], {
+                    cwd: "tmp/buildAssetsAppJs",
+                    env: {
+                        PATH: process.env.PATH,
+                        PORT: (Math.random() * 0x10000) | 0x8000,
+                        npm_config_timeout_exit: 5000
+                    },
+                    stdio: [
+                        "ignore", 1, 2
+                    ]
+                }).on("exit", function (exitCode) {
+                    // handle exitCode
+                    local.assertOrThrow(!exitCode, exitCode);
+                    resolve();
+                });
+            });
+        }));
+        // build app
+        [
             {
                 file: "/LICENSE",
                 url: "/LICENSE"
             }, {
-                file: "/assets." + local.env.npm_package_nameLib + ".html",
+                file: "/assets." + process.env.npm_package_nameLib + ".html",
                 url: "/index.html"
             }, {
-                file: "/assets." + local.env.npm_package_nameLib + ".js",
-                url: "/assets." + local.env.npm_package_nameLib + ".js"
+                file: "/assets." + process.env.npm_package_nameLib + ".js",
+                url: "/assets." + process.env.npm_package_nameLib + ".js"
             }, {
                 file: "/assets.app.js",
                 url: "/assets.app.js"
@@ -3206,55 +2753,43 @@ local.buildApp = function (opt, onError) {
                     + "?callback=window.utility2.stateInit"
                 )
             }
-        ].concat(opt.assetsList)
-    }, async function (opt2, onParallel) {
-        let xhr;
-        opt2 = opt2.elem;
-        onParallel.cnt += 1;
-        xhr = await local.httpFetch(local.serverLocalHost + opt2.url, {
-            responseType: "raw"
+        ].concat(opt.assetsList).forEach(function (elem) {
+            promiseList.push(new Promise(function (resolve) {
+                if (!elem) {
+                    resolve();
+                    return;
+                }
+                require("http").request((
+                    "http://127.0.0.1:" + process.env.PORT + elem.url
+                ), function (res) {
+                    let data;
+                    data = [];
+                    if (!(res.statusCode < 400)) {
+                        resolve();
+                        return;
+                    }
+                    res.on("data", function (chunk) {
+                        data.push(chunk);
+                    }).on("end", function () {
+                        local.fsWriteFileWithMkdirp({
+                            data: Buffer.concat(data),
+                            modeDebug: true,
+                            modeUncaughtException: true,
+                            pathname: "tmp/build/app/" + elem.file
+                        }, resolve);
+                    });
+                }).end();
+            }));
         });
-        // jslint file
-        local.jslintAndPrint(xhr.data.toString(), opt2.file, {
-            conditional: true,
-            coverage: local.env.npm_config_mode_coverage
-        });
-        // handle err
-        local.assertOrThrow(
-            !local.jslint.jslintResult.errMsg,
-            local.jslint.jslintResult.errMsg
-        );
-        local.fsWriteFileWithMkdirpSync(
-            "tmp/build/app" + opt2.file,
-            xhr.data,
-            "wrote file - app - {{pathname}}"
-        );
-        onParallel();
-    }, function (err) {
-        // handle err
-        local.assertOrThrow(!err, err);
-        // test standalone assets.app.js
-        local.fsWriteFileWithMkdirpSync(
-            "tmp/buildApp/assets.app.js",
-            local.assetsDict["/assets.app.js"],
-            "wrote file - assets.app.js - {{pathname}}"
-        );
-        local.childProcessSpawnWithTimeout("node", [
-            "assets.app.js"
-        ], {
-            cwd: "tmp/buildApp",
-            env: {
-                PATH: local.env.PATH,
-                PORT: (Math.random() * 0x10000) | 0x8000,
-                npm_config_timeout_exit: 5000
-            },
-            stdio: [
-                "ignore", "ignore", 2
-            ]
-        }).on("error", onError).on("exit", function (exitCode) {
-            // validate exitCode
-            local.assertOrThrow(!exitCode, exitCode);
-            onError();
+        // jslint app
+        Promise.all(promiseList).then(function () {
+            local.local.childProcessEval((
+                local.assetsDict["/assets.utility2.lib.jslint.js"]
+                + ";module.exports.jslintAndPrintDir(\".\","
+                + "{conditional:true});"
+            ), {
+                cwd: "tmp/build/app"
+            }).then(onError);
         });
     });
 };
@@ -3266,8 +2801,8 @@ local.buildLib = function (opt, onError) {
     let result;
     local.objectAssignDefault(opt, {
         customize: local.nop,
-        dataFrom: local.fs.readFileSync(
-            "lib." + local.env.npm_package_nameLib + ".js",
+        dataFrom: require("fs").readFileSync(
+            "lib." + process.env.npm_package_nameLib + ".js",
             "utf8"
         ),
         dataTo: local.templateRenderMyApp(
@@ -3288,9 +2823,7 @@ local.buildLib = function (opt, onError) {
         opt.dataTo = local.stringMerge(opt.dataTo, opt.dataFrom, rgx);
     });
     // customize assets.utility2.rollup.js
-    if (
-        local.fs.existsSync("./assets.utility2.rollup.js")
-    ) {
+    if (require("fs").existsSync("./assets.utility2.rollup.js")) {
         opt.dataTo = opt.dataTo.replace(
             "    // || globalThis.utility2_rollup_old",
             "    || globalThis.utility2_rollup_old"
@@ -3301,9 +2834,9 @@ local.buildLib = function (opt, onError) {
     }
     // save lib
     result = opt.dataTo;
-    if (!local.env.npm_config_mode_coverage) {
+    if (!process.env.npm_config_mode_coverage) {
         local.fsWriteFileWithMkdirpSync(
-            "lib." + local.env.npm_package_nameLib + ".js",
+            "lib." + process.env.npm_package_nameLib + ".js",
             result,
             "wrote file - lib - {{pathname}}"
         );
@@ -3321,7 +2854,7 @@ local.buildReadme = function (opt, onError) {
     local.objectAssignDefault(opt, {
         customize: local.nop,
         // reset toc
-        dataFrom: local.fs.readFileSync(
+        dataFrom: require("fs").readFileSync(
             "README.md",
             "utf8"
         ).replace((
@@ -3344,7 +2877,7 @@ local.buildReadme = function (opt, onError) {
         opt.packageJson.description = opt.dataFrom.split("\n")[1];
         local.objectAssignDefault(opt.packageJson, {
             nameLib: JSON.parse(
-                local.fs.readFileSync("package.json", "utf8")
+                require("fs").readFileSync("package.json", "utf8")
             ).nameLib
         });
         opt.packageJson = local.objectAssignDefault(opt.packageJson, {
@@ -3376,7 +2909,9 @@ local.buildReadme = function (opt, onError) {
         // save package.json
         local.fsWriteFileWithMkdirpSync(
             "package.json",
-            local.jsonStringifyOrdered(opt.packageJson, undefined, 4) + "\n",
+            JSON.stringify(local.objectDeepCopyWithKeysSorted(
+                opt.packageJson
+            ), undefined, 4) + "\n",
             "wrote file - package.json - {{pathname}}"
         );
         // re-render dataTo
@@ -3387,9 +2922,12 @@ local.buildReadme = function (opt, onError) {
             opt.packageJsonRgx,
             match0.replace(
                 match1,
-                local.jsonStringifyOrdered(opt.packageJson, undefined, 4)
+                JSON.stringify(local.objectDeepCopyWithKeysSorted(
+                    opt.packageJson
+                ), undefined, 4)
             )
         );
+        return "";
     });
     // search-and-replace - customize dataTo
     [
@@ -3411,7 +2949,7 @@ local.buildReadme = function (opt, onError) {
         ),
         // customize example.js - shared js\u002denv code - init-before
         (
-            /\nglobalThis\.local\u0020=\u0020local;\n[^`]*?\n\/\/\u0020run\u0020browser\u0020js\u002denv\u0020code\u0020-\u0020init-test\n/
+            /\nglobalThis\.local\u0020=\u0020local;\n[^`]*?\n\/\*\u0020istanbul\u0020ignore\u0020next\u0020\*\/\n\/\/\u0020run\u0020browser\u0020js\u002denv\u0020code\u0020-\u0020init-test\n/
         ),
         // customize example.js - html-body
         (
@@ -3429,13 +2967,13 @@ local.buildReadme = function (opt, onError) {
         opt.dataTo = local.stringMerge(opt.dataTo, opt.dataFrom, rgx);
     });
     // customize private-repository
-    if (local.env.npm_package_private) {
+    if (process.env.npm_package_private) {
         opt.dataTo = opt.dataTo.replace((
             /\n\[!\[NPM\]\(https:\/\/nodei.co\/npm\/.*?\n/
         ), "");
         opt.dataTo = opt.dataTo.replace("$ npm install ", (
             "$ git clone \\\n"
-            + local.env.npm_package_repository_url.replace(
+            + process.env.npm_package_repository_url.replace(
                 "git+https://github.com/",
                 "git@github.com:"
             ) + " \\\n--single-branch -b beta node_modules/"
@@ -3500,13 +3038,13 @@ local.buildReadme = function (opt, onError) {
     }
     // customize shNpmTestPublished
     opt.dataTo = opt.dataTo.replace(
-        "$ npm install " + local.env.GITHUB_REPO + "#alpha",
-        "$ npm install " + local.env.npm_package_name
+        "$ npm install " + process.env.GITHUB_REPO + "#alpha",
+        "$ npm install " + process.env.npm_package_name
     );
     if (opt.dataFrom.indexOf("    shNpmTestPublished\n") < 0) {
         opt.dataTo = opt.dataTo.replace(
-            "$ npm install " + local.env.npm_package_name,
-            "$ npm install " + local.env.GITHUB_REPO + "#alpha"
+            "$ npm install " + process.env.npm_package_name,
+            "$ npm install " + process.env.GITHUB_REPO + "#alpha"
         );
         [
             (
@@ -3591,7 +3129,7 @@ local.buildTest = function (opt, onError) {
     let result;
     local.objectAssignDefault(opt, {
         customize: local.nop,
-        dataFrom: local.fs.readFileSync("test.js", "utf8"),
+        dataFrom: require("fs").readFileSync("test.js", "utf8"),
         dataTo: local.templateRenderMyApp(
             local.assetsDict["/assets.test.template.js"]
         )
@@ -3610,7 +3148,7 @@ local.buildTest = function (opt, onError) {
         "./assets.utility2.rollup.js",
         "./lib.utility2.js"
     ].forEach(function (file) {
-        if (local.fs.existsSync(file)) {
+        if (require("fs").existsSync(file)) {
             opt.dataTo = opt.dataTo.replace(
                 "require(\"utility2\")",
                 "require(\"" + file + "\")"
@@ -3629,82 +3167,64 @@ local.buildTest = function (opt, onError) {
     return result;
 };
 
-local.childProcessSpawnWithTimeout = function (command, args, opt) {
+local.childProcessEval = function (code, opt) {
 /*
- * this function will run like child_process.spawn,
- * but with auto-timeout after timeout milliseconds
- * example use:
-    let child = local.childProcessSpawnWithTimeout(
-        "/bin/sh",
-        ["-c", "echo hello world"],
-        {stdio: ["ignore", 1, 2], timeout: 5000}
-    );
-    child.on("error", console.error);
-    child.on("exit", function (exitCode) {
-        console.error("exitCode " + exitCode);
-    });
+ * this function will eval <code> in child-process
  */
-    let child;
-    let child_process;
-    let timerTimeout;
-    child_process = require("child_process");
-    // spawn child
-    child = child_process.spawn(command, args, opt).on("exit", function () {
-        // cleanup timerTimeout
-        try {
-            process.kill(timerTimeout.pid);
-        } catch (ignore) {}
+    let promise;
+    let reject;
+    let resolve;
+    promise = new Promise(function (aa, bb) {
+        reject = bb;
+        resolve = aa;
     });
-    // init timerTimeout
-    timerTimeout = child_process.spawn(
-        // convert timeout to integer seconds with 2 second delay
-        "sleep "
-        + Math.floor(
-            0.001 * (Number(opt && opt.timeout) || local.timeoutDefault)
-            + 2
+    promise.child = require("child_process").spawn("node", [
+        "-e", (
+            "/*jslint node*/\n"
+            + "let data = \"\";\n"
+            + "process.stdin.on(\"readable\", function () {\n"
+            + "    let chunk;\n"
+            + "    while (true) {\n"
+            + "        chunk = process.stdin.read();\n"
+            + "        if (chunk === null) {\n"
+            + "            return;\n"
+            + "        }\n"
+            + "        data += chunk;\n"
+            + "    }\n"
+            + "}).setEncoding(\"utf8\");\n"
+            + "process.stdin.on(\"end\", function () {\n"
+            + "    require(\"vm\").runInThisContext(data);\n"
+            + "});\n"
         )
-        + "; kill -9 " + child.pid + " 2>/dev/null",
-        {
-            shell: true,
-            stdio: "ignore"
+    ], Object.assign({
+        stdio: [
+            "pipe", 1, 2
+        ]
+    }, opt)).on("error", reject).on("exit", function (exitCode) {
+        if (!exitCode) {
+            resolve();
+            return;
         }
-    );
-    return child;
-};
-
-local.childProcessSpawnWithUtility2 = function (script, onError) {
-/*
- * this function will run child_process.spawn, with lib.utility2.sh sourced
- */
-    require("child_process").spawn(
-        ". " + (process.env.npm_config_dir_utility2 || __dirname)
-        + "/lib.utility2.sh; " + script,
-        {
-            shell: true,
-            stdio: [
-                "ignore", 1, 2
-            ]
-        }
-    ).on("exit", function (exitCode) {
-        onError(exitCode && Object.assign(new Error(), {
-            exitCode
-        }));
-    });
+        reject(new Error("child-process - exitCode " + exitCode));
+    }).stdin.end(code);
+    return promise;
 };
 
 local.cliRun = function (opt) {
 /*
  * this function will run cli with given <opt>
  */
-    local.cliDict._eval = local.cliDict._eval || function () {
+    let cliDict;
+    cliDict = local.cliDict;
+    cliDict._eval = cliDict._eval || function () {
     /*
      * <code>
      * will eval <code>
      */
         globalThis.local = local;
-        local.vm.runInThisContext(process.argv[3]);
+        require("vm").runInThisContext(process.argv[3]);
     };
-    local.cliDict._help = local.cliDict._help || function () {
+    cliDict._help = cliDict._help || function () {
     /*
      *
      * will print help
@@ -3739,11 +3259,11 @@ local.cliRun = function (opt) {
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         strDict = {};
-        Object.keys(local.cliDict).sort().forEach(function (key, ii) {
+        Object.keys(cliDict).sort().forEach(function (key, ii) {
             if (key[0] === "_" && key !== "_default") {
                 return;
             }
-            str = String(local.cliDict[key]);
+            str = String(cliDict[key]);
             if (key === "_default") {
                 key = "";
             }
@@ -3809,13 +3329,13 @@ local.cliRun = function (opt) {
         }).join("\n\n");
         console.log(str);
     };
-    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
-    local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
-    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
-    local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
-    local.cliDict._default = local.cliDict._default || local.cliDict._help;
-    local.cliDict.help = local.cliDict.help || local.cliDict._help;
-    local.cliDict._interactive = local.cliDict._interactive || function () {
+    cliDict["--eval"] = cliDict["--eval"] || cliDict._eval;
+    cliDict["--help"] = cliDict["--help"] || cliDict._help;
+    cliDict["-e"] = cliDict["-e"] || cliDict._eval;
+    cliDict["-h"] = cliDict["-h"] || cliDict._help;
+    cliDict._default = cliDict._default || cliDict._help;
+    cliDict.help = cliDict.help || cliDict._help;
+    cliDict._interactive = cliDict._interactive || function () {
     /*
      *
      * will start interactive-mode
@@ -3825,58 +3345,27 @@ local.cliRun = function (opt) {
             useGlobal: true
         });
     };
-    local.cliDict["--interactive"] = (
-        local.cliDict["--interactive"]
-        || local.cliDict._interactive
-    );
-    local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
-    local.cliDict._version = local.cliDict._version || function () {
+    cliDict["--interactive"] = cliDict["--interactive"] || cliDict._interactive;
+    cliDict["-i"] = cliDict["-i"] || cliDict._interactive;
+    cliDict._version = cliDict._version || function () {
     /*
      *
      * will print version
      */
         console.log(require(__dirname + "/package.json").version);
     };
-    local.cliDict["--version"] = (
-        local.cliDict["--version"]
-        || local.cliDict._version
-    );
-    local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
+    cliDict["--version"] = cliDict["--version"] || cliDict._version;
+    cliDict["-v"] = cliDict["-v"] || cliDict._version;
     // default to --help command if no arguments are given
     if (process.argv.length <= 2) {
-        local.cliDict._help();
+        cliDict._help();
         return;
     }
-    if (local.cliDict[process.argv[2]]) {
-        local.cliDict[process.argv[2]]();
+    if (cliDict[process.argv[2]]) {
+        cliDict[process.argv[2]]();
         return;
     }
-    local.cliDict._default();
-};
-
-local.corsBackendHostInject = function (url, backendHost, rgx, location) {
-/*
- * this function will if <location>.host is a github site,
- * inject <backendHost> into <url> with given <rgx>
- */
-    location = (
-        location
-        || (typeof window === "object" && window && window.location)
-    );
-    if (!(backendHost && location && (
-        /\bgithub.io$/
-    ).test(location.host))) {
-        return url;
-    }
-    // init github-branch
-    location.pathname.replace((
-        /\/build\.\.(alpha|beta|master)\.\.travis-ci\.org\//
-    ), function (ignore, match1) {
-        backendHost = backendHost.replace("-alpha.", "-" + match1 + ".");
-    });
-    return url.replace(rgx || (
-        /.*?($)/m
-    ), backendHost + "$1");
+    cliDict._default();
 };
 
 local.corsForwardProxyHostIfNeeded = function (xhr) {
@@ -3943,36 +3432,37 @@ local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
         data = new Uint8Array(data);
     }
     // init iv
-    iv = data.subarray(0, 16);
+    iv = data.slice(0, 16);
     // optimization - create resized-view of data
-    data = data.subarray(16);
-    crypto = globalThis.crypto;
-    if (!local.isBrowser) {
-        setTimeout(function () {
-            crypto = require("crypto");
-            cipher = crypto.createDecipheriv(
-                "aes-" + (8 * key.byteLength) + "-cbc",
-                key,
-                iv
-            );
-            onError(undefined, Buffer.concat([
-                cipher.update(data), cipher.final()
-            ]));
-        });
+    data = data.slice(16);
+    try {
+        crypto = require("crypto");
+    } catch (ignore) {
+        crypto = globalThis.crypto;
+        crypto.subtle.importKey("raw", key, {
+            name: "AES-CBC"
+        }, false, [
+            "decrypt"
+        ]).then(function (key) {
+            crypto.subtle.decrypt({
+                iv,
+                name: "AES-CBC"
+            }, key, data).then(function (data) {
+                onError(undefined, new Uint8Array(data));
+            }).catch(onError);
+        }).catch(onError);
         return;
     }
-    crypto.subtle.importKey("raw", key, {
-        name: "AES-CBC"
-    }, false, [
-        "decrypt"
-    ]).then(function (key) {
-        crypto.subtle.decrypt({
-            iv,
-            name: "AES-CBC"
-        }, key, data).then(function (data) {
-            onError(undefined, new Uint8Array(data));
-        }).catch(onError);
-    }).catch(onError);
+    setTimeout(function () {
+        cipher = crypto.createDecipheriv(
+            "aes-" + (8 * key.byteLength) + "-cbc",
+            key,
+            iv
+        );
+        onError(undefined, Buffer.concat([
+            cipher.update(data), cipher.final()
+        ]));
+    });
 };
 
 /* istanbul ignore next */
@@ -4021,7 +3511,7 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
             cipher = crypto.createCipheriv(
                 "aes-" + (8 * key.byteLength) + "-cbc",
                 key,
-                iv.subarray(0, 16)
+                iv.slice(0, 16)
             );
             data = cipher.update(data);
             iv.set(data, 16);
@@ -4042,7 +3532,7 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
         "encrypt"
     ]).then(function (key) {
         crypto.subtle.encrypt({
-            iv: iv.subarray(0, 16),
+            iv: iv.slice(0, 16),
             name: "AES-CBC"
         }, key, data).then(function (data) {
             iv.set(new Uint8Array(data), 16);
@@ -4054,84 +3544,6 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
             onError(undefined, iv);
         }).catch(onError);
     }).catch(onError);
-};
-
-local.dateGetWeekOfMonth = function (date) {
-/*
- * this function will return sunday-based week-of-month from <date>
- */
-    date = new Date(date.slice(0, 10) + "T00:00:00Z");
-    return Math.ceil((date.getUTCDate() + new Date(
-        date.getUTCFullYear(),
-        date.getUTCMonth(),
-        1
-    ).getUTCDay()) / 7) - 1;
-};
-
-local.dateGetWeekOfYear = function (date) {
-/*
- * this function will return ISO week-of-year from <date>
- *
- * Based on information at:
- *
- *    http://www.merlyn.demon.co.uk/weekcalc.htm#WNR
- *
- * Algorithm is to find nearest thursday, it's year
- * is the year of the week number. Then get weeks
- * between that date and the first day of that year.
- *
- * Note that dates in one year can be weeks of previous
- * or next year, overlap is up to 3 days.
- *
- * e.g. 2014/12/29 is Monday in week  1 of 2015
- *      2012/1/1   is Sunday in week 52 of 2011
- *
- * https://stackoverflow.com/questions/6117814/get-week-of-year-in-javascript-like-in-php
- */
-    date = new Date(date.slice(0, 10) + "T00:00:00Z");
-    // Set to nearest Thursday: current date + 4 - current day number
-    // Make Sunday's day number 7
-    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
-    // Calculate full weeks to nearest Thursday
-    return Math.ceil((((
-        date
-        // Get first day of year
-        - new Date(Date.UTC(date.getUTCFullYear(), 0, 1))
-    ) / 86400000) + 1) / 7);
-};
-
-local.dateUtcFromLocal = function (date, timezoneOffset) {
-/*
- * this function will convert local-<date> to utc-date
- */
-    if (!date) {
-        return "";
-    }
-    local.assertOrThrow((
-        /^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+?)?$/
-    ).test(date), "invalid local-date " + date);
-    if (!timezoneOffset) {
-        return new Date(date).toISOString();
-    }
-    return new Date(
-        new Date(date + "Z").getTime() + timezoneOffset * 60000
-    ).toISOString();
-};
-
-local.dateUtcToLocal = function (date, timezoneOffset) {
-/*
- * this function will convert utc-<date> to local-date
- */
-    if (!date) {
-        return "";
-    }
-    local.assertOrThrow((
-        /^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+?)?Z$/
-    ).test(date), "invalid utc-date " + date);
-    timezoneOffset = timezoneOffset || new Date(date).getTimezoneOffset();
-    return new Date(
-        new Date(date).getTime() - timezoneOffset * 60000
-    ).toISOString();
 };
 
 local.domFragmentRender = function (template, dict) {
@@ -4209,82 +3621,181 @@ local.domStyleValidate = function () {
     });
 };
 
-local.eventEmitterCreate = function (that = {}) {
+local.eventListenerAdd = function (type, listener, opt = {}) {
 /*
- * this function will create a simple, node-like event-emitter with <that>,
- * with methods emit, on, once, removeListener
+ * this function will listen evt <type> with <listener>
  */
-    let dict;
-    let emit;
-    let on;
-    let once;
-    let remove;
-    emit = function (type, msg) {
-    /*
-     * this function will emit evt <type> with <msg>
-     */
-        Array.from(dict[type] || []).forEach(function (listener) {
-            listener(msg);
-        });
-    };
-    on = function (type, listener, opt = {}) {
-    /*
-     * this function will listen to evt <type> with <listener>
-     */
-        let isDone;
-        if (typeof listener === "function") {
-            dict[type] = dict[type] || [];
-            dict[type].push(
-                opt.once
-                ? function listener2(msg) {
-                    remove(type, listener2);
-                    if (!isDone) {
-                        isDone = true;
-                        listener(msg);
-                    }
-                }
-                : listener
-            );
-        }
-        return that;
-    };
-    once = function (type, listener, opt = {}) {
-    /*
-     * this function will listen to evt <type> once with <listener>
-     */
-        opt.once = true;
-        return on(type, listener, opt);
-    };
-    remove = function (type, listener) {
-    /*
-     * this function will stop listening to evt <type> with <listener>
-     */
+    let isDone;
+    let listenerOnce;
+    listenerOnce = function listener2(msg) {
         let ii;
-        let list;
-        list = dict[type] || [];
-        ii = list.length;
+        ii = localEventListenerDict[type].length;
         while (ii > 0) {
             ii -= 1;
-            if (list[ii] === listener) {
-                list.splice(ii, 1);
+            if (localEventListenerDict[type][ii] === listener2) {
+                localEventListenerDict[type].splice(ii, 1);
             }
         }
-        return that;
+        if (!isDone) {
+            isDone = true;
+            listener(msg);
+        }
     };
-    dict = {};
-    that.emit = that.emit || emit;
-    that.listenerEmit = that.listenerEmit || emit;
-    that.on = that.on || on;
-    that.once = that.once || once;
-    that.removeListener = that.removeListener || remove;
-    that.removeEventListener = that.removeEventListener || remove;
-    that.listenerOn = that.listenerOn || on;
-    that.listenerOnce = that.listenerOnce || once;
-    that.listenerRemove = that.listenerRemove || remove;
-    return that;
+    localEventListenerDict[type] = localEventListenerDict[type] || [];
+    localEventListenerDict[type].push(
+        opt.once
+        ? listenerOnce
+        : listener
+    );
 };
 
-local.eventEmitterCreate(local);
+local.eventListenerEmit = function (type, msg) {
+/*
+ * this function will emit evt <type> with <msg>
+ */
+    Array.from(
+        localEventListenerDict[type] || []
+    ).forEach(function (listener) {
+        listener(msg);
+    });
+};
+
+local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
+/*
+ * this function will sync-read <pathname> with given <type> and <dflt>
+ */
+    let fs;
+    // do nothing if module does not exist
+    try {
+        fs = require("fs");
+    } catch (ignore) {
+        return dflt;
+    }
+    pathname = require("path").resolve(pathname);
+    // try to read pathname
+    try {
+        return (
+            type === "json"
+            ? JSON.parse(fs.readFileSync(pathname, "utf8"))
+            : fs.readFileSync(pathname, type)
+        );
+    } catch (ignore) {
+        return dflt;
+    }
+};
+
+local.fsRmrfSync = function (pathname) {
+/*
+ * this function will sync "rm -rf" <pathname>
+ */
+    let child_process;
+    // do nothing if module does not exist
+    try {
+        child_process = require("child_process");
+    } catch (ignore) {
+        return;
+    }
+    pathname = require("path").resolve(pathname);
+    if (process.platform !== "win32") {
+        child_process.spawnSync("rm", [
+            "-rf", pathname
+        ], {
+            stdio: [
+                "ignore", 1, 2
+            ]
+        });
+        return;
+    }
+    try {
+        child_process.spawnSync("rd", [
+            "/s", "/q", pathname
+        ], {
+            stdio: [
+                "ignore", 1, 2
+            ]
+        });
+    } catch (ignore) {}
+};
+
+local.fsWriteFileWithMkdirp = function ({
+    data,
+    modeDebug,
+    modeUncaughtException,
+    pathname
+}, onError) {
+/*
+ * this function will async write <data> to <pathname> with "mkdir -p"
+ */
+    let fs;
+    // do nothing if module does not exist
+    try {
+        fs = require("fs");
+    } catch (ignore) {
+        onError();
+    }
+    pathname = require("path").resolve(pathname);
+    // write pathname
+    fs.writeFile(pathname, data, function (err) {
+        if (!err) {
+            if (modeDebug) {
+                console.error("fsWriteFileWithMkdirp - " + pathname);
+            }
+            onError(undefined, true);
+            return;
+        }
+        // mkdir -p
+        fs.mkdir(require("path").dirname(pathname), {
+            recursive: true
+        }, function (ignore) {
+            // re-write pathname
+            fs.writeFile(pathname, data, function (err) {
+                if (!err) {
+                    if (modeDebug) {
+                        console.error("fsWriteFileWithMkdirp - " + pathname);
+                    }
+                    onError(undefined, true);
+                    return;
+                }
+                if (modeUncaughtException) {
+                    throw err;
+                }
+                onError(err);
+            });
+        });
+    });
+};
+
+local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {
+/*
+ * this function will sync write <data> to <pathname> with "mkdir -p"
+ */
+    let fs;
+    let success;
+    // do nothing if module does not exist
+    try {
+        fs = require("fs");
+    } catch (ignore) {
+        return;
+    }
+    pathname = require("path").resolve(pathname);
+    // try to write pathname
+    try {
+        fs.writeFileSync(pathname, data);
+        success = true;
+    } catch (ignore) {
+        // mkdir -p
+        fs.mkdirSync(require("path").dirname(pathname), {
+            recursive: true
+        });
+        // re-write pathname
+        fs.writeFileSync(pathname, data);
+        success = true;
+    }
+    if (success && msg) {
+        console.error(msg.replace("{{pathname}}", pathname));
+    }
+    return success;
+};
 
 local.gotoNext = function (opt, onError) {
 /*
@@ -4301,7 +3812,7 @@ local.gotoNext = function (opt, onError) {
             if (opt.modeDebug) {
                 console.error("gotoNext - " + JSON.stringify({
                     gotoState: opt.gotoState,
-                    errorMessage: err && err.message
+                    errMsg: err && err.message
                 }));
                 if (err && err.stack) {
                     console.error(err.stack);
@@ -4321,206 +3832,6 @@ local.gotoNext = function (opt, onError) {
     return opt;
 };
 
-local.httpFetch = function (url, opt) {
-/*
- * this function will fetch <url> with given <opt>
- * https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch
- * https://developer.mozilla.org/en-US/docs/Web/API/Response
- */
-    let buf;
-    let cleanup;
-    let controller;
-    let debug;
-    let errStack;
-    let httpFetchProgressUpdate;
-    let isBrowser;
-    let isDebugged;
-    let isDone;
-    let nop;
-    let reject2;
-    let reject;
-    let request;
-    let resolve2;
-    let resolve;
-    let response;
-    let timeStart;
-    let timeout;
-    let timerTimeout;
-    // init function
-    cleanup = function () {
-        if (isDone) {
-            return true;
-        }
-        isDone = true;
-        // cleanup timerTimeout
-        clearTimeout(timerTimeout);
-        // decrement httpFetchProgressUpdate.cnt
-        httpFetchProgressUpdate.cnt = Math.max(
-            httpFetchProgressUpdate.cnt - 1,
-            0
-        );
-        httpFetchProgressUpdate();
-    };
-    debug = function () {
-        if (isDebugged) {
-            return;
-        }
-        isDebugged = true;
-        console.error("serverLog - " + JSON.stringify({
-            time: new Date(timeStart).toISOString(),
-            type: "httpFetchResponse",
-            method: opt.method,
-            url,
-            status: opt.status,
-            timeElapsed: Date.now() - timeStart,
-            // extra
-            responseContentLength: buf.byteLength
-        }) + "\n");
-    };
-    nop = function () {
-        return;
-    };
-    reject2 = function (err) {
-        if (cleanup()) {
-            return;
-        }
-        debug();
-        // append errStack
-        if (errStack) {
-            err.stack += "\n" + errStack;
-        }
-        Object.assign(err, opt);
-        reject(err);
-    };
-    resolve2 = async function (response) {
-        try {
-            if (isBrowser) {
-                Array.from(response.headers).forEach(function ([
-                    key, val
-                ]) {
-                    opt.responseHeaders[key.toLowerCase()] = val;
-                });
-                opt.status = response.status;
-                opt.ok = response.ok;
-                buf = new Uint8Array(
-                    await response.arrayBuffer()
-                );
-            } else {
-                // init responseproperties specified in
-                // https://fetch.spec.whatwg.org/#response-class
-                opt.responseHeaders = response.headers;
-                opt.status = response.statusCode;
-                opt.ok = 200 <= opt.status && opt.status <= 299;
-            }
-            switch (opt.responseType) {
-            case "json":
-                opt.data = JSON.parse(new TextDecoder().decode(buf));
-                break;
-            case "raw":
-                opt.data = buf;
-                break;
-            default:
-                opt.data = new TextDecoder().decode(buf);
-            }
-            if (opt.modeDebug) {
-                debug();
-            }
-            if (!opt.ok) {
-                reject2(new Error("httpFetch - status " + opt.status));
-                return;
-            }
-        } catch (err) {
-            reject2(err);
-            return;
-        }
-        cleanup();
-        resolve(opt);
-    };
-    // init httpFetchProgressUpdate
-    httpFetchProgressUpdate = globalThis.httpFetchProgressUpdate || nop;
-    httpFetchProgressUpdate.cnt |= 0;
-    httpFetchProgressUpdate.cnt += 1;
-    httpFetchProgressUpdate();
-    // init opt
-    opt = opt || {};
-    opt.abort = function (err) {
-        controller.abort();
-        request.destroy();
-        response.destroy();
-        reject2(err || new Error("httpFetch - abort"));
-    };
-    opt.method = opt.method || "GET";
-    opt.responseHeaders = {};
-    opt.status = 400;
-    // init var
-    buf = new Uint8Array(0);
-    controller = {
-        abort: nop,
-        destroy: nop
-    };
-    isBrowser = (
-        typeof globalThis.AbortController === "function"
-        && typeof globalThis.fetch === "function"
-    );
-    request = controller;
-    response = controller;
-    timeStart = Date.now();
-    timeout = opt.timeout || 30000;
-    // init timerTimeout
-    timerTimeout = setTimeout(function () {
-        opt.abort(new Error("httpFetch - timeout " + timeout + " ms"));
-    }, timeout);
-    // init promise
-    return Object.assign(new Promise(function (aa, bb) {
-        reject = bb;
-        resolve = aa;
-        // browser - fetch
-        if (isBrowser) {
-            controller = new globalThis.AbortController();
-            opt.signal = controller.signal;
-            globalThis.fetch(url, opt).then(resolve2).catch(reject2);
-            return;
-        }
-        // node - request
-        errStack = new Error().stack;
-        request = require(
-            url.indexOf("https:") === 0
-            ? "https"
-            : "http"
-        ).request(url, opt, function (aa) {
-            response = aa;
-            let bufList;
-            // handle err
-            response.on("error", reject2);
-            // handle stream
-            if (opt.responseType === "stream") {
-                resolve2(response);
-                return;
-            }
-            // read buf
-            bufList = [];
-            response.on("data", function (chunk) {
-                bufList.push(chunk);
-            });
-            response.on("end", function () {
-                buf = Buffer.concat(bufList);
-                resolve2(response);
-            });
-        });
-        request.on("error", reject2);
-        request.end(opt.body);
-    }), {
-        abort: opt.abort
-    });
-};
-
-local.isNullOrUndefined = function (val) {
-/*
- * this function will test if val is null or undefined
- */
-    return val === null || val === undefined;
-};
-
 local.jslintAutofixLocalFunction = function (code, file) {
 /*
  * this function will jslint-autofix local-function
@@ -4528,17 +3839,19 @@ local.jslintAutofixLocalFunction = function (code, file) {
     let code2;
     let dictFnc;
     let dictProp;
-    let tmp;
     if (local.isBrowser) {
         return code;
     }
-    file = local.path.resolve(file).replace(process.cwd() + local.path.sep, "");
+    // make file relative
+    file = require("path").resolve(file);
+    if (file.indexOf(process.cwd() + require("path").sep) === 0) {
+        file = file.replace(process.cwd() + require("path").sep, "");
+    }
     switch (file) {
     case "README.md":
     case "lib." + process.env.npm_package_nameLib + ".js":
     case "lib." + process.env.npm_package_nameLib + ".sh":
     case "lib.apidoc.js":
-    case "lib.github_crud.js":
     case "lib.istanbul.js":
     case "lib.jslint.js":
     case "lib.marked.js":
@@ -4566,7 +3879,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
     // customize local for assets.utility2.rollup.js
     if (
         file === "lib." + process.env.npm_package_nameLib + ".js"
-        && local.fs.existsSync("./assets.utility2.rollup.js")
+        && require("fs").existsSync("./assets.utility2.rollup.js")
     ) {
         code = code.replace(
             "    // || globalThis.utility2_rollup_old",
@@ -4581,18 +3894,18 @@ local.jslintAutofixLocalFunction = function (code, file) {
         [
             "utility2"
         ], [
-            "utility2", "apidoc", "github_crud"
+            "utility2", "apidoc"
         ]
     ].forEach(function (dictList, ii) {
-        tmp = (
+        dictFnc = (
             ii
             ? "functionAllDict"
             : "functionBaseDict"
         );
-        if (local[tmp]) {
+        if (local[dictFnc]) {
             return;
         }
-        local[tmp] = {};
+        local[dictFnc] = {};
         dictList.forEach(function (dict) {
             dict = local[dict];
             Object.keys(dict).forEach(function (key) {
@@ -4602,13 +3915,15 @@ local.jslintAutofixLocalFunction = function (code, file) {
                     ).test(key)
                     && typeof dict[key] === "function"
                 ) {
-                    local[tmp][key] = local[tmp][key] || String(dict[key]);
+                    local[dictFnc][key] = (
+                        local[dictFnc][key] || String(dict[key])
+                    );
                 }
             });
         });
-        Object.keys(local[tmp]).forEach(function (key) {
+        Object.keys(local[dictFnc]).forEach(function (key) {
             if (process.binding("natives")[key]) {
-                local[tmp][key] = undefined;
+                local[dictFnc][key] = undefined;
             }
         });
     });
@@ -4667,25 +3982,21 @@ local.jslintAutofixLocalFunction = function (code, file) {
             dict[key] = dict[key] && local.functionBaseDict[key];
         });
     });
-    dictFnc = local.jsonCopy(dictFnc);
-    dictProp = local.jsonCopy(dictProp);
+    dictFnc = JSON.parse(JSON.stringify(dictFnc));
+    dictProp = JSON.parse(JSON.stringify(dictProp));
     [
+        "assertJsonEqual",
         "assertOrThrow",
         "coalesce",
-        "fsReadFileOrDefaultSync",
-        "fsRmrfSync",
-        "fsWriteFileWithMkdirpSync",
         "identity",
         "nop",
-        "objectAssignDefault",
-        "querySelector",
-        "querySelectorAll"
+        "objectAssignDefault"
     ].forEach(function (key) {
         dictFnc[key] = true;
         dictProp[key] = true;
     });
     // local-function - missing
-    switch (local.fs.existsSync("assets.utility2.rollup.js") || file) {
+    switch (require("fs").existsSync("assets.utility2.rollup.js") || file) {
     case "README.md":
     case "lib.utility2.js":
     case "test.js":
@@ -4717,89 +4028,6 @@ local.jslintAutofixLocalFunction = function (code, file) {
     return code;
 };
 
-local.jsonCopy = function (obj) {
-/*
- * this function will deep-copy obj
- */
-    return (
-        obj === undefined
-        ? undefined
-        : JSON.parse(JSON.stringify(obj))
-    );
-};
-
-local.jsonStringifyOrdered = function (obj, replacer, space) {
-/*
- * this function will JSON.stringify <obj>,
- * with object-keys sorted and circular-references removed
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Syntax
- */
-    let circularSet;
-    let stringify;
-    let tmp;
-    stringify = function (obj) {
-    /*
-     * this function will recursively JSON.stringify obj,
-     * with object-keys sorted and circular-references removed
-     */
-        // if obj is not an object or function,
-        // then JSON.stringify as normal
-        if (!(
-            obj
-            && typeof obj === "object"
-            && typeof obj.toJSON !== "function"
-        )) {
-            return JSON.stringify(obj);
-        }
-        // ignore circular-reference
-        if (circularSet.has(obj)) {
-            return;
-        }
-        circularSet.add(obj);
-        // if obj is an array, then recurse items
-        if (Array.isArray(obj)) {
-            tmp = "[" + obj.map(function (obj) {
-                // recurse
-                tmp = stringify(obj);
-                return (
-                    typeof tmp === "string"
-                    ? tmp
-                    : "null"
-                );
-            }).join(",") + "]";
-            circularSet.delete(obj);
-            return tmp;
-        }
-        // if obj is not an array,
-        // then recurse its items with object-keys sorted
-        tmp = "{" + Object.keys(obj).sort().map(function (key) {
-            // recurse
-            tmp = stringify(obj[key]);
-            if (typeof tmp === "string") {
-                return JSON.stringify(key) + ":" + tmp;
-            }
-        }).filter(function (obj) {
-            return typeof obj === "string";
-        }).join(",") + "}";
-        circularSet.delete(obj);
-        return tmp;
-    };
-    circularSet = new Set();
-    return JSON.stringify((
-        (typeof obj === "object" && obj)
-        // recurse
-        ? JSON.parse(stringify(obj))
-        : obj
-    ), replacer, space);
-};
-
-local.listGetElementRandom = function (list) {
-/*
- * this function will return random elem from <list>
- */
-    return list[Math.floor(Math.random() * list.length)];
-};
-
 local.listShuffle = function (list) {
 /*
  * this function will inplace shuffle <list> using fisher-yates algorithm
@@ -4819,18 +4047,6 @@ local.listShuffle = function (list) {
     return list;
 };
 
-local.localStorageSetItemOrClear = function (key, value) {
-/*
- * this function will try to set <key>/<value> pair to localStorage,
- * or else call localStorage.clear()
- */
-    try {
-        localStorage.setItem(key, value);
-    } catch (ignore) {
-        localStorage.clear();
-    }
-};
-
 local.middlewareAssetsCached = function (req, res, next) {
 /*
  * this function will run middleware to serve cached-assets
@@ -4845,7 +4061,7 @@ local.middlewareAssetsCached = function (req, res, next) {
         local.serverResponseHeaderLastModified = (
             local.serverResponseHeaderLastModified
             // resolve to 1000 ms
-            || new Date(new Date().toUTCString())
+            || new Date()
         );
         // respond with 304 If-Modified-Since serverResponseHeaderLastModified
         if (
@@ -5041,14 +4257,6 @@ local.middlewareInit = function (req, res, next) {
  * this function will run middleware to init <req> and <res>
  */
     let contentType;
-    // debug req and res
-    local._debugServerReqRes4 = local._debugServerReqRes3;
-    local._debugServerReqRes3 = local._debugServerReqRes2;
-    local._debugServerReqRes2 = local._debugServerReqRes1;
-    local._debugServerReqRes1 = {
-        req,
-        res
-    };
     // init timerTimeout
     local.serverRespondTimeoutDefault(req, res, local.timeoutDefault);
     // init req.urlParsed
@@ -5128,133 +4336,31 @@ local.middlewareJsonpStateInit = function (req, res, next) {
     );
 };
 
-local.moduleDirname = function (module, pathList) {
+local.objectDeepCopyWithKeysSorted = function (obj) {
 /*
- * this function will search <pathList> for <module>'s __dirname
+ * this function will recursively deep-copy <obj> with keys sorted
  */
-    let result;
-    // search "."
-    if (!module || module === "." || module.indexOf("/") >= 0) {
-        return require("path").resolve(module || "");
-    }
-    // search pathList
-    Array.from([
-        pathList,
-        require("module").globalPaths,
-        [
-            process.env.HOME + "/node_modules", "/usr/local/lib/node_modules"
-        ]
-    ]).flat().some(function (path) {
-        try {
-            result = require("path").resolve(path + "/" + module);
-            result = require("fs").statSync(result).isDirectory() && result;
-            return result;
-        } catch (ignore) {
-            result = "";
+    let objectDeepCopyWithKeysSorted;
+    objectDeepCopyWithKeysSorted = function (obj) {
+    /*
+     * this function will recursively deep-copy <obj> with keys sorted
+     */
+        let sorted;
+        if (!(typeof obj === "object" && obj)) {
+            return obj;
         }
-    });
-    return result;
-};
-
-local.normalizeJwt = function (data) {
-/*
- * this function will normalize jwt-data with registered-headers
- * https://tools.ietf.org/html/rfc7519#section-4.1
- */
-    let timeNow;
-    timeNow = Date.now() / 1000;
-    return local.objectAssignDefault(data, {
-        exp: timeNow + 5 * 60,
-        iat: timeNow,
-        jti: Math.random().toString(16).slice(2),
-        nbf: timeNow
-    });
-};
-
-local.normalizeJwtBase64Url = function (str) {
-/*
- * this function will normlize <str> to base64url format
- */
-    return str.replace((
-        /\=/g
-    ), "").replace((
-        /\+/g
-    ), "-").replace((
-        /\//g
-    ), "_");
-};
-
-local.numberToRomanNumerals = function (num) {
-/*
- * this function will convert num to a roman-numeral
- * https://stackoverflow.com/questions/9083037/convert-a-number-into-a-roman-numeral-in-javascript
- */
-    let digits;
-    let ii;
-    let key;
-    let roman;
-    digits = String(num).split("");
-    key = [
-        "", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM",
-        "", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC",
-        "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"
-    ];
-    roman = "";
-    ii = 3;
-    while (ii) {
-        ii -= 1;
-        roman = (key[Number(digits.pop()) + (ii * 10)] || "") + roman;
-    }
-    return new Array(Number(digits.join("") + 1)).join("M") + roman;
-};
-
-local.objectAssignRecurse = function (dict, overrides, depth, env) {
-/*
- * this function will recursively set overrides for items in dict
- */
-    dict = dict || {};
-    env = env || (typeof process === "object" && process.env) || {};
-    overrides = overrides || {};
-    Object.keys(overrides).forEach(function (key) {
-        let dict2;
-        let overrides2;
-        dict2 = dict[key];
-        overrides2 = overrides[key];
-        if (overrides2 === undefined) {
-            return;
+        // recursively deep-copy list with child-keys sorted
+        if (Array.isArray(obj)) {
+            return obj.map(objectDeepCopyWithKeysSorted);
         }
-        // if both dict2 and overrides2 are non-undefined and non-array objects,
-        // then recurse with dict2 and overrides2
-        if (
-            depth > 1
-            // dict2 is a non-undefined and non-array object
-            && typeof dict2 === "object" && dict2 && !Array.isArray(dict2)
-            // overrides2 is a non-undefined and non-array object
-            && typeof overrides2 === "object" && overrides2
-            && !Array.isArray(overrides2)
-        ) {
-            local.objectAssignRecurse(dict2, overrides2, depth - 1, env);
-            return;
-        }
-        // else set dict[key] with overrides[key]
-        dict[key] = (
-            dict === env
-            // if dict is env, then overrides falsy-value with empty-string
-            ? overrides2 || ""
-            : overrides2
-        );
-    });
-    return dict;
-};
-
-local.onErrorDefault = function (err) {
-/*
- * this function will if <err> exists, then print it to stderr
- */
-    if (err) {
-        console.error(err);
-    }
-    return err;
+        // recursively deep-copy obj with keys sorted
+        sorted = {};
+        Object.keys(obj).sort().forEach(function (key) {
+            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
+        });
+        return sorted;
+    };
+    return objectDeepCopyWithKeysSorted(obj);
 };
 
 local.onErrorThrow = function (err) {
@@ -5276,11 +4382,7 @@ local.onErrorWithStack = function (onError) {
     stack = new Error().stack;
     onError2 = function (err, data, meta) {
         // append current-stack to err.stack
-        if (
-            err
-            && typeof err.stack === "string"
-            && err !== local.errorDefault
-        ) {
+        if (err && typeof err.stack === "string") {
             err.stack += "\n" + stack;
         }
         onError(err, data, meta);
@@ -5292,32 +4394,9 @@ local.onErrorWithStack = function (onError) {
     return onError2;
 };
 
-local.onFileModifiedRestart = function (file) {
-/*
- * this function will watch <file>, and if modified, then restart process
- */
-    if (
-        local.env.npm_config_mode_auto_restart
-        && local.fs.existsSync(file)
-        && local.fs.statSync(file).isFile()
-    ) {
-        local.fs.watchFile(file, {
-            interval: 1000,
-            persistent: false
-        }, function (stat2, stat1) {
-            if (stat2.mtime > stat1.mtime) {
-                console.error("file modified - " + file);
-                setTimeout(function () {
-                    process.exit(77);
-                }, 1000);
-            }
-        });
-    }
-};
-
 local.onParallel = function (onError, onEach, onRetry) {
 /*
- * this function will create a function that will
+ * this function will create function that will
  * 1. run async tasks in parallel
  * 2. if cnt === 0 or err occurred, then call onError(err)
  */
@@ -5390,7 +4469,7 @@ local.onParallelList = function (opt, onEach, onError) {
     };
     onParallel = local.onParallel(onError, onEach2, function (err, data) {
         if (err && data && data.retry < opt.retryLimit) {
-            local.onErrorDefault(err);
+            console.error(err);
             data.retry += 1;
             setTimeout(function () {
                 onParallel.cnt -= 1;
@@ -5411,23 +4490,6 @@ local.onParallelList = function (opt, onEach, onError) {
     onParallel.cnt += 1;
     onEach2();
     onParallel();
-};
-
-local.promisify = function (fnc) {
-/*
- * this function will promisify <fnc>
- */
-    return function (...argList) {
-        return new Promise(function (resolve, reject) {
-            fnc(...argList, function (err, ...argList) {
-                if (err) {
-                    reject(err, ...argList);
-                    return;
-                }
-                resolve(...argList);
-            });
-        });
-    };
 };
 
 local.replStart = function () {
@@ -5458,11 +4520,11 @@ local.replStart = function () {
                 ), "git --no-pager");
                 switch (match2) {
                 // syntax-sugar - run git diff
-                case "git diff":
+                case "git --no-pager diff":
                     match2 = "git diff --color";
                     break;
                 // syntax-sugar - run git log
-                case "git log":
+                case "git --no-pager log":
                     match2 = "git log -n 4";
                     break;
                 // syntax-sugar - run ll
@@ -5579,10 +4641,39 @@ local.requireReadme = function () {
  * this function will require and export example.js embedded in README.md
  */
     let code;
+    let env;
     let module;
     let tmp;
+    // init env
+    env = (typeof process === "object" && process && process.env) || {};
+    // library-mode
+    if (env.npm_config_mode_lib) {
+        local.testRunDefault = local.nop;
+        return local;
+    }
     // init module.exports
     module = {};
+    // if file is modified, then restart process
+    if (env.npm_config_mode_auto_restart) {
+        require("fs").readdir(".", function (ignore, fileList) {
+            fileList.forEach(function (file) {
+                require("fs").stat(file, function (ignore, data) {
+                    if (!data.isFile()) {
+                        return;
+                    }
+                    require("fs").watchFile(file, {
+                        interval: 1000,
+                        persistent: false
+                    }, function () {
+                        console.error("file modified - " + file);
+                        setTimeout(function () {
+                            process.exit(77);
+                        }, 1000);
+                    });
+                });
+            });
+        });
+    }
     if (local.isBrowser) {
         module.exports = local.objectAssignDefault(
             globalThis.utility2_rollup || globalThis.local,
@@ -5592,62 +4683,44 @@ local.requireReadme = function () {
     }
     // start repl-debugger
     local.replStart();
-    // debug dir
-    [
-        __dirname + "/lib.jslint.js",
-        __filename,
-        "undefined"
-    ].forEach(function (file) {
-        local.fs.exists(file, function (exists) {
-            if (exists) {
-                local.onFileModifiedRestart(file);
-            }
-        });
-    });
-    // if file is modified, then restart process
-    local.fs.readdirSync(".").forEach(function (file) {
-        local.onFileModifiedRestart(file);
-    });
     // jslint process.cwd()
-    if (!local.env.npm_config_mode_library) {
-        local.child_process.spawn("node", [
-            "-e", (
-                "require("
-                + JSON.stringify(__filename)
-                + ").jslint.jslintAndPrintDir("
-                + JSON.stringify(process.cwd())
-                + ", {autofix:true,conditional:true}, process.exit);"
-            )
-        ], {
-            env: Object.assign({}, local.env, {
-                npm_config_mode_library: "1"
-            }),
-            stdio: [
-                "ignore", "ignore", 2
-            ]
-        });
-    }
-    if (globalThis.utility2_rollup || local.env.npm_config_mode_start) {
+    require("child_process").spawn("node", [
+        "-e", (
+            "require("
+            + JSON.stringify(__filename)
+            + ").jslint.jslintAndPrintDir("
+            + JSON.stringify(process.cwd())
+            + ", {autofix:true,conditional:true}, process.exit);"
+        )
+    ], {
+        env: Object.assign({}, env, {
+            npm_config_mode_lib: "1"
+        }),
+        stdio: [
+            "ignore", "ignore", 2
+        ]
+    });
+    if (globalThis.utility2_rollup || env.npm_config_mode_start) {
         // init assets index.html
         local.assetsDict["/index.html"] = (
             local.fsReadFileOrDefaultSync("index.html", "utf8", "")
             || local.assetsDict["/index.rollup.html"] || ""
         );
         local.assetsDict["/"] = local.assetsDict["/index.html"];
-        local.assetsDict["/assets.app.js"] = local.fs.readFileSync(
+        local.assetsDict["/assets.app.js"] = require("fs").readFileSync(
             __filename,
             "utf8"
         ).replace((
             /^#!\//
         ), "// ");
         // init exports
-        local[local.env.npm_package_nameLib] = local;
+        local[env.npm_package_nameLib] = local;
         module.exports = local;
         return module.exports;
     }
     // init file $npm_package_main
     globalThis.utility2_moduleExports = require(
-        local.path.resolve(local.env.npm_package_main)
+        require("path").resolve(env.npm_package_main)
     );
     globalThis.utility2_moduleExports.globalThis = globalThis;
     // read code from README.md
@@ -5665,14 +4738,14 @@ local.requireReadme = function () {
     });
     // alias require($npm_package_name) to utility2_moduleExports;
     code = code.replace(
-        new RegExp("require\\(." + local.env.npm_package_name + ".\\)"),
+        new RegExp("require\\(." + env.npm_package_name + ".\\)"),
         "globalThis.utility2_moduleExports"
     ).replace(
-        new RegExp("require\\(." + local.env.npm_package_nameOriginal + ".\\)"),
+        new RegExp("require\\(." + env.npm_package_nameOriginal + ".\\)"),
         "globalThis.utility2_moduleExports"
     );
     // init example.js
-    tmp = local.path.resolve("example.js");
+    tmp = require("path").resolve("example.js");
     // jslint code
     local.jslintAndPrint(code, tmp);
     // instrument code
@@ -5683,14 +4756,14 @@ local.requireReadme = function () {
     module._compile(code, tmp);
     // init exports
     module.exports.utility2 = local;
-    module.exports[local.env.npm_package_nameLib] = (
+    module.exports[env.npm_package_nameLib] = (
         globalThis.utility2_moduleExports
     );
     // init assets lib.xxx.js
     local.assetsDict[
-        "/assets." + local.env.npm_package_nameLib + ".js"
+        "/assets." + env.npm_package_nameLib + ".js"
     ] = local.fsReadFileOrDefaultSync(
-        local.env.npm_package_main,
+        env.npm_package_main,
         "utf8",
         ""
     ).replace((
@@ -5698,18 +4771,18 @@ local.requireReadme = function () {
     ), "// ");
     Object.assign(local.assetsDict, module.exports.assetsDict);
     // instrument assets lib.xxx.js
-    local.assetsDict["/assets." + local.env.npm_package_nameLib + ".js"] = (
+    local.assetsDict["/assets." + env.npm_package_nameLib + ".js"] = (
         local.istanbulInstrumentInPackage(
             local.assetsDict[
-                "/assets." + local.env.npm_package_nameLib + ".js"
+                "/assets." + env.npm_package_nameLib + ".js"
             ],
-            local.env.npm_package_main
+            env.npm_package_main
         )
     );
     module.exports.assetsDict = local.assetsDict;
     local.assetsDict["/assets.example.js"] = code;
     local.assetsDict["/assets.test.js"] = local.istanbulInstrumentInPackage(
-        local.fs.readFileSync("test.js", "utf8"),
+        require("fs").readFileSync("test.js", "utf8"),
         "test.js"
     );
     // init assets index.html
@@ -5739,10 +4812,10 @@ local.requireReadme = function () {
                 /<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g
             ), "$1"),
             {
-                env: local.env,
+                env,
                 isRollup,
                 packageJson: {
-                    nameLib: local.env.npm_package_nameLib
+                    nameLib: env.npm_package_nameLib
                 }
             }
         );
@@ -5772,13 +4845,13 @@ return '\
 /*\n\
 assets.app.js\n\
 \n\
-' + local.env.npm_package_description + '\n\
+' + env.npm_package_description + '\n\
 \n\
 instruction\n\
     1. save this script as assets.app.js\n\
     2. run shell-command:\n\
         $ PORT=8081 node assets.app.js\n\
-    3. open a browser to http://127.0.0.1:8081 and play with web-demo\n\
+    3. open browser to http://127.0.0.1:8081 and play with web-demo\n\
     4. edit this script to suit your needs\n\
 */\n\
 ' + local.assetsDict["/assets.utility2.rollup.start.js"].replace((
@@ -5786,37 +4859,31 @@ instruction\n\
 ), "utility2_app");
 /* jslint ignore:end */
         case "/assets.my_app.js":
+            tmp = "/assets." + env.npm_package_nameLib + ".js";
             // handle large string-replace
-            tmp = "/assets." + local.env.npm_package_nameLib + ".js";
-            code = local.assetsDict["/assets.utility2.rollup.content.js"].split(
-                "/* utility2.rollup.js content */"
-            );
-            code.splice(
-                1,
-                0,
-                "local.assetsDict[\"" + tmp + "\"] = "
-                + JSON.stringify(local.assetsDict[tmp]).replace((
-                    /\\\\/g
-                ), "\u0000").replace((
-                    /\\n/g
-                ), "\\n\\\n").replace((
-                    /\u0000/g
-                ), "\\\\")
-            );
-            code = code.join("");
-            code += "\n";
-            code += local.assetsDict[tmp];
+            code = local.assetsDict[
+                "/assets.utility2.rollup.content.js"
+            ].replace("/* utility2.rollup.js content */", function () {
+                return (
+                    "local.assetsDict[\"" + tmp + "\"] = (\n"
+                    + JSON.stringify(local.assetsDict[tmp]).replace((
+                        /\\\\/g
+                    ), "\u0000").replace((
+                        /\\n/g
+                    ), "\\n\\\n").replace((
+                        /\u0000/g
+                    ), "\\\\")
+                    + ");\n"
+                    + local.assetsDict[tmp]
+                );
+            });
             break;
         case "local.stateInit":
-            // handle large string-replace
-            code = local.assetsDict["/assets.utility2.rollup.content.js"].split(
-                "/* utility2.rollup.js content */"
-            );
             tmp = local.middlewareJsonpStateInit({
                 stateInit: true
             });
             // add extra physical files to assetsDict
-            local.fs.readdirSync(".").forEach(function (file) {
+            require("fs").readdirSync(".").forEach(function (file) {
                 file = "/" + file;
                 if (
                     local.assetsDict[file]
@@ -5827,12 +4894,16 @@ instruction\n\
                     tmp.utility2.assetsDict[file] = local.assetsDict[file];
                 }
             });
-            code.splice(
-                1,
-                0,
-                key + "(" + JSON.stringify(tmp, undefined, 4) + ");"
-            );
-            code = code.join("");
+            // handle large string-replace
+            code = local.assetsDict[
+                "/assets.utility2.rollup.content.js"
+            ].replace("/* utility2.rollup.js content */", function () {
+                return (
+                    "local.stateInit("
+                    + JSON.stringify(tmp, undefined, 4)
+                    + ");"
+                );
+            });
             break;
         default:
             code = local.assetsDict[key];
@@ -5860,18 +4931,14 @@ instruction\n\
 
 local.serverRespondDefault = function (req, res, statusCode, err) {
 /*
- * this function will respond with a default message,
+ * this function will respond with default http <statusCode> and message,
  * or <err>.stack for given statusCode
  */
+    let msg;
     // init statusCode and contentType
-    local.serverRespondHeadSet(
-        req,
-        res,
-        statusCode,
-        {
-            "Content-Type": "text/plain; charset=utf-8"
-        }
-    );
+    local.serverRespondHeadSet(req, res, statusCode, {
+        "Content-Type": "text/plain; charset=utf-8"
+    });
     if (err) {
         // debug statusCode / method / url
         err.message = (
@@ -5879,15 +4946,79 @@ local.serverRespondDefault = function (req, res, statusCode, err) {
             + err.message
         );
         // print err.stack to stderr
-        local.onErrorDefault(err);
+        console.error(err);
         // end res with err.stack
         res.end(err.stack);
         return;
     }
-    // end res with default statusCode message
-    res.end(
-        statusCode + " " + local.http.STATUS_CODES[statusCode]
-    );
+    // end res with default statusCode and http-message
+    msg = {
+        "100": "Continue",
+        "101": "Switching Protocols",
+        "102": "Processing",
+        "103": "Early Hints",
+        "200": "OK",
+        "201": "Created",
+        "202": "Accepted",
+        "203": "Non-Authoritative Information",
+        "204": "No Content",
+        "205": "Reset Content",
+        "206": "Partial Content",
+        "207": "Multi-Status",
+        "208": "Already Reported",
+        "226": "IM Used",
+        "300": "Multiple Choices",
+        "301": "Moved Permanently",
+        "302": "Found",
+        "303": "See Other",
+        "304": "Not Modified",
+        "305": "Use Proxy",
+        "307": "Temporary Redirect",
+        "308": "Permanent Redirect",
+        "400": "Bad Request",
+        "401": "Unauthorized",
+        "402": "Payment Required",
+        "403": "Forbidden",
+        "404": "Not Found",
+        "405": "Method Not Allowed",
+        "406": "Not Acceptable",
+        "407": "Proxy Authentication Required",
+        "408": "Request Timeout",
+        "409": "Conflict",
+        "410": "Gone",
+        "411": "Length Required",
+        "412": "Precondition Failed",
+        "413": "Payload Too Large",
+        "414": "URI Too Long",
+        "415": "Unsupported Media Type",
+        "416": "Range Not Satisfiable",
+        "417": "Expectation Failed",
+        "418": "I'm a Teapot",
+        "421": "Misdirected Request",
+        "422": "Unprocessable Entity",
+        "423": "Locked",
+        "424": "Failed Dependency",
+        "425": "Unordered Collection",
+        "426": "Upgrade Required",
+        "428": "Precondition Required",
+        "429": "Too Many Requests",
+        "431": "Request Header Fields Too Large",
+        "451": "Unavailable For Legal Reasons",
+        "500": "Internal Server Error",
+        "501": "Not Implemented",
+        "502": "Bad Gateway",
+        "503": "Service Unavailable",
+        "504": "Gateway Timeout",
+        "505": "HTTP Version Not Supported",
+        "506": "Variant Also Negotiates",
+        "507": "Insufficient Storage",
+        "508": "Loop Detected",
+        "509": "Bandwidth Limit Exceeded",
+        "510": "Not Extended",
+        "511": "Network Authentication Required"
+    };
+    msg = statusCode + " " + msg[statusCode];
+    res.end(msg);
 };
 
 local.serverRespondEcho = function (req, res) {
@@ -5916,9 +5047,7 @@ local.serverRespondHeadSet = function (ignore, res, statusCode, headers) {
         res.statusCode = Number(statusCode);
     }
     Object.keys(headers).forEach(function (key) {
-        if (headers[key]) {
-            res.setHeader(key, headers[key]);
-        }
+        res.setHeader(key, headers[key]);
     });
     return true;
 };
@@ -6000,7 +5129,18 @@ local.stateInit = function (opt) {
 /*
  * this function will init state <opt>
  */
-    local.objectAssignRecurse(local, opt, 10);
+    [
+        opt, local
+    ].forEach(function (dict) {
+        local.objectAssignDefault(dict, {
+            utility2: {
+                assetsDict: {},
+                env: {}
+            }
+        }, -1);
+    });
+    Object.assign(local.utility2.assetsDict, opt.utility2.assetsDict);
+    Object.assign(local.utility2.env, opt.utility2.env);
 };
 
 local.streamCleanup = function (stream) {
@@ -6042,26 +5182,10 @@ local.stringHtmlSafe = function (str) {
     ), "&$1");
 };
 
-local.stringLineCount = function (str, start, end) {
-/*
- * this function will count number of "\n" in <str>
- * from <start> to <end>
- */
-    let count;
-    count = 0;
-    while (true) {
-        start = str.indexOf("\n", start) + 1;
-        if (start === 0 || start >= end) {
-            return count;
-        }
-        count += 1;
-    }
-};
-
 local.stringMerge = function (str1, str2, rgx) {
 /*
  * this function will merge <str2> into <str1>,
- * for sections where both match <rgx>
+ * for sections where both match <rgx> with no magic
  */
     str2.replace(rgx, function (match2) {
         str1.replace(rgx, function (match1) {
@@ -6101,7 +5225,7 @@ local.stringRegexpEscape = function (str) {
     ), "\\$&");
 };
 
-local.templateRender = function (template, dict, opt, ii) {
+local.templateRender = function (template, dict, opt = {}, ii = 0) {
 /*
  * this function will render <template> with given <dict>
  */
@@ -6115,7 +5239,6 @@ local.templateRender = function (template, dict, opt, ii) {
     if (dict === null || dict === undefined) {
         dict = {};
     }
-    opt = opt || {};
     getVal = function (key) {
         argList = key.split(" ");
         val = dict;
@@ -6318,7 +5441,9 @@ local.templateRenderMyApp = function (template) {
  */
     let githubRepo;
     let packageJson;
-    packageJson = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
+    packageJson = JSON.parse(
+        require("fs").readFileSync("package.json", "utf8")
+    );
     local.objectAssignDefault(packageJson, {
         nameLib: packageJson.name.replace((
             /\W/g
@@ -6383,41 +5508,32 @@ local.testMock = function (mockList, onTestCase, onError) {
         onError(err);
     };
     // suppress console.error and console.log
-    if (!(mockList[0] && mockList[0][0] === console)) {
-        mockList.unshift([
-            console, {}
-        ]);
-    }
+    mockList.unshift([
+        console, {}
+    ]);
     local.objectAssignDefault(mockList[0][1], {
         error: local.nop,
         log: local.nop
     });
-    // mock-objects
+    // mock mock[0]
     mockList.forEach(function (mock) {
         mock[2] = {};
         // backup mock[0] into mock[2]
         Object.keys(mock[1]).forEach(function (key) {
-            mock[2][key] = (
-                (
-                    typeof process === "object"
-                    && process.env === mock[0]
-                    && mock[0][key] === undefined
-                )
-                // handle process.env
-                ? ""
-                : mock[0][key]
-            );
+            mock[2][key] = mock[0][key];
         });
         // override mock[0] with mock[1]
         Object.keys(mock[1]).forEach(function (key) {
             mock[0][key] = mock[1][key];
         });
     });
-    // try to call onError with mock-objects
-    local.tryCatchOnError(function () {
+    // try to run onTestCase with mock[0]
+    try {
         // run onTestCase
         onTestCase(onError2);
-    }, onError2);
+    } catch (errCaught) {
+        onError2(errCaught);
+    }
 };
 
 local.testReportCreate = function (testReport) {
@@ -6462,7 +5578,7 @@ local.testReportCreate = function (testReport) {
             /0000-00-00\u002000:00:00\u0020UTC\u0020-\u0020master\u0020-\u0020aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g
         ), (
             new Date().toISOString().slice(0, 19).replace("T", " ")
-            + " - " + local.env.CI_BRANCH + " - " + local.env.CI_COMMIT_ID
+            + " - " + process.env.CI_BRANCH + " - " + process.env.CI_COMMIT_ID
         )),
         "wrote file - test-report - {{pathname}}"
     );
@@ -6484,7 +5600,7 @@ local.testReportCreate = function (testReport) {
     );
     // if any test failed, then exit with non-zero exitCode
     console.error(
-        "\n" + local.env.MODE_BUILD
+        "\n" + process.env.MODE_BUILD
         + " - " + testReport.testsFailed + " failed tests\n"
     );
     // print failed testCase
@@ -6498,16 +5614,15 @@ local.testReportCreate = function (testReport) {
     return testReport;
 };
 
-local.testReportMerge = function (testReport1, testReport2) {
+local.testReportMerge = function (testReport1, testReport2 = {}) {
 /*
  * this function will
  * 1. merge testReport2 into testReport1
  * 2. return testReport1 in html-format
  */
-    let errorStackList;
+    let errStackList;
     let testCaseNumber;
     let testReport;
-    testReport2 = testReport2 || {};
     // 1. merge testReport2 into testReport1
     [
         testReport1, testReport2
@@ -6515,7 +5630,7 @@ local.testReportMerge = function (testReport1, testReport2) {
         ii += 1;
         local.objectAssignDefault(testReport, {
             date: new Date().toISOString(),
-            errorStackList: [],
+            errStackList: [],
             testPlatformList: [],
             timeElapsed: 0
         }, -1);
@@ -6558,14 +5673,14 @@ local.testReportMerge = function (testReport1, testReport2) {
             // security - handle malformed testPlatform.testCaseList
             testPlatform.testCaseList.forEach(function (testCase) {
                 local.objectAssignDefault(testCase, {
-                    errorStack: "",
+                    errStack: "",
                     name: "undefined",
                     timeElapsed: 0
                 }, -1);
                 local.assertOrThrow(
-                    typeof testCase.errorStack === "string",
-                    ii + " invalid testCase.errorStack "
-                    + typeof testCase.errorStack
+                    typeof testCase.errStack === "string",
+                    ii + " invalid testCase.errStack "
+                    + typeof testCase.errStack
                 );
                 local.assertOrThrow(
                     typeof testCase.name === "string",
@@ -6645,8 +5760,8 @@ local.testReportMerge = function (testReport1, testReport2) {
         local.timeElapsedPoll(testReport);
     }
     // 2. return testReport1 in html-format
-    // json-copy testReport that will be modified for html templating
-    testReport = local.jsonCopy(testReport1);
+    // deepcopy testReport that will be modified for html templating
+    testReport = JSON.parse(JSON.stringify(testReport1));
     // update timeElapsed
     local.timeElapsedPoll(testReport);
     testReport.testPlatformList.forEach(function (testPlatform) {
@@ -6680,9 +5795,9 @@ local.testReportMerge = function (testReport1, testReport2) {
                 // if testPlatform has no tests, then filter it out
                 return testPlatform.testCaseList.length;
             }).map(function (testPlatform, ii) {
-                errorStackList = [];
+                errStackList = [];
                 return Object.assign(testPlatform, {
-                    errorStackList,
+                    errStackList,
                     name: testPlatform.name,
                     screenshot: testPlatform.screenshot,
                     // map testCaseList
@@ -6690,11 +5805,11 @@ local.testReportMerge = function (testReport1, testReport2) {
                         testCase
                     ) {
                         testCaseNumber += 1;
-                        if (testCase.errorStack) {
-                            errorStackList.push({
-                                errorStack: (
+                        if (testCase.errStack) {
+                            errStackList.push({
+                                errStack: (
                                     testCaseNumber + ". " + testCase.name
-                                    + "\n" + testCase.errorStack
+                                    + "\n" + testCase.errStack
                                 )
                             });
                         }
@@ -6708,7 +5823,7 @@ local.testReportMerge = function (testReport1, testReport2) {
                         });
                     }),
                     preClass: (
-                        errorStackList.length
+                        errStackList.length
                         ? ""
                         : "displayNone"
                     ),
@@ -6801,7 +5916,7 @@ local.testRunDefault = function (opt) {
     );
     console.error = function (...argList) {
     /*
-     * this function will ignore serverLog-messages during test-run
+     * this function will ignore serverLog-msg during test-run
      */
         if (!isCoverage && !(
             /^serverLog\u0020-\u0020\{/
@@ -6822,11 +5937,11 @@ local.testRunDefault = function (opt) {
     // init testReport
     testReport = globalThis.utility2_testReport;
     // init testReport timer
-    local.timeElapsedStart(testReport);
+    local.timeElapsedPoll(testReport);
     // init testPlatform
     testPlatform = testReport.testPlatformList[0];
     // init testPlatform timer
-    local.timeElapsedStart(testPlatform);
+    local.timeElapsedPoll(testPlatform);
     // reset testPlatform.testCaseList
     testPlatform.testCaseList.length = 0;
     // add tests into testPlatform.testCaseList
@@ -6856,7 +5971,7 @@ local.testRunDefault = function (opt) {
             elem.innerHTML = local.testReportMerge(testReport);
         });
     }
-    local.emit("utility2.testRunStart", testReport);
+    local.eventListenerEmit("utility2.testRunStart", testReport);
     // testRunProgressUpdate every 2000 ms until isDone
     timerInterval = setInterval(function () {
         // update testPlatform.timeElapsed
@@ -6866,7 +5981,7 @@ local.testRunDefault = function (opt) {
                 "#htmlTestReport1"
             ).innerHTML = local.testReportMerge(testReport);
         }
-        local.emit("utility2.testRunProgressUpdate", testReport);
+        local.eventListenerEmit("utility2.testRunProgressUpdate", testReport);
         // cleanup timerInterval
         if (!testReport.testsPending) {
             clearInterval(timerInterval);
@@ -6914,13 +6029,13 @@ local.testRunDefault = function (opt) {
                     + testPlatform.timeElapsed + " ms - testCase failed - "
                     + testCase.name + "\n" + err.message + "\n" + err.stack
                 );
-                testCase.errorStack = (
-                    testCase.errorStack || err.message + "\n" + err.stack
+                testCase.errStack = (
+                    testCase.errStack || err.message + "\n" + err.stack
                 );
-                // validate errorStack is non-empty
+                // validate errStack is non-empty
                 local.assertOrThrow(
-                    testCase.errorStack,
-                    "invalid errorStack " + testCase.errorStack
+                    testCase.errStack,
+                    "invalid errStack " + testCase.errStack
                 );
             }
             // if tests isDone, then do nothing
@@ -6962,15 +6077,15 @@ local.testRunDefault = function (opt) {
         onParallel.cnt += 1;
         // try to run testCase
         local.tryCatchOnError(function () {
-            // start testCase timer
-            local.timeElapsedStart(testCase);
+            // init timeElapsed
+            local.timeElapsedPoll(testCase);
             testCase.onTestCase({}, onError);
         }, onError);
     }, function () {
     /*
      * this function will create test-report after all tests isDone
      */
-        // update testPlatform.timeElapsed
+        // update timeElapsed
         local.timeElapsedPoll(testPlatform);
         globalThis.utility2_modeTest = 1;
         local.ajaxProgressUpdate();
@@ -7000,7 +6115,7 @@ local.testRunDefault = function (opt) {
         // save testReport and coverage
         testReport.coverage = globalThis.__coverage__;
         console.timeStamp(globalThis.utility2_testId);
-        local.emit("utility2.testRunEnd", testReport);
+        local.eventListenerEmit("utility2.testRunEnd", testReport);
         // exit with number of tests failed
         if (processExit) {
             process.exit(testReport.testsFailed, testReport);
@@ -7023,7 +6138,11 @@ local.testRunServer = function (opt) {
         local.middlewareJsonpStateInit,
         local.middlewareFileServer
     ];
-    if (local.env.npm_config_mode_library || globalThis.utility2_serverHttp1) {
+    if (globalThis.utility2_serverHttp1 || (
+        typeof process === "object"
+        && process
+        && process.env.npm_config_mode_lib
+    )) {
         return;
     }
     globalThis.utility2_onReadyBefore.cnt += 1;
@@ -7065,20 +6184,10 @@ local.throwError = function () {
 
 local.timeElapsedPoll = function (opt) {
 /*
- * this function will poll <opt>.timeElapsed
+ * this function will poll (Date.now() - <opt>.timeStart)
  */
-    opt = local.timeElapsedStart(opt);
-    opt.timeElapsed = Date.now() - opt.timeStart;
-    return opt;
-};
-
-local.timeElapsedStart = function (opt) {
-/*
- * this function will start <opt>.timeElapsed
- */
-    opt = opt || {};
     opt.timeStart = opt.timeStart || Date.now();
-    return opt;
+    opt.timeElapsed = Date.now() - opt.timeStart;
 };
 
 local.tryCatchOnError = function (fnc, onError) {
@@ -7091,9 +6200,9 @@ local.tryCatchOnError = function (fnc, onError) {
     local.assertOrThrow(typeof onError === "function", typeof onError);
     try {
         // reset errCaught
-        local._debugTryCatchError = null;
+        delete local._debugTryCatchError;
         result = fnc();
-        local._debugTryCatchError = null;
+        delete local._debugTryCatchError;
         return result;
     } catch (errCaught) {
         // debug errCaught
@@ -7195,7 +6304,8 @@ local.urlJoin = function (aa, bb) {
 
 local.urlParse = function (url) {
 /*
- * this function will parse <url> according to below spec, plus a query param
+ * this function will parse <url> according to below spec,
+ * with additional query-property
  * https://developer.mozilla.org/en-US/docs/Web/API/URL
  */
     let urlParsed;
@@ -7227,10 +6337,10 @@ local.urlParse = function (url) {
                 "/" + urlParsed.href.split("/").slice(3).join("/").split("#")[0]
             );
         } else {
-            local.env.PORT = local.env.PORT || "8081";
+            process.env.PORT = process.env.PORT || "8081";
             local.serverLocalHost = (
                 local.serverLocalHost
-                || ("http://127.0.0.1:" + local.env.PORT)
+                || ("http://127.0.0.1:" + process.env.PORT)
             );
             // resolve absolute path
             if (url[0] === "/") {
@@ -7241,7 +6351,7 @@ local.urlParse = function (url) {
             ).test(url)) {
                 url = local.serverLocalHost + "/" + url;
             }
-            urlParsed = local.url.parse(url);
+            urlParsed = require("url").parse(url);
         }
         // init query
         urlParsed.query = {};
@@ -7286,7 +6396,7 @@ local.urlParse = function (url) {
 
 local.uuid4Create = function () {
 /*
- * this function will create a random uuid,
+ * this function will create random uuid,
  * with format 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
  */
     // code derived from http://jsperf.com/uuid4
@@ -7334,7 +6444,6 @@ local.apidocCreate = local.apidoc.apidocCreate;
 local.browserTest({
     modeTestReportCreate: true
 });
-local.cacheDict = {};
 local.env = (
     local.isBrowser
     ? {}
@@ -7354,7 +6463,6 @@ local.objectAssignDefault(local.env, {
     npm_package_nameLib: "my_app",
     npm_package_version: "0.0.1"
 });
-local.errorDefault = new Error("default-error");
 local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.identity;
 // cbranch-no cstat-no fstat-no missing-if-branch
 local.istanbulCoverageReportCreate = (
@@ -7405,7 +6513,6 @@ local.stringCharsetEncodeUriComponent = (
     + "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
 );
 local.stringHelloEmoji = "hello \ud83d\ude01\n";
-local.taskOnTaskDict = {};
 // init serverLocalHost
 local.urlParse("");
 // init timeoutDefault
@@ -7442,7 +6549,9 @@ globalThis.utility2_onReadyAfter = (
      * this function will call onError when utility2_onReadyBefore.cnt === 0
      */
         globalThis.utility2_onReadyBefore.cnt += 1;
-        local.once("utility2_onReadyAfter", onError);
+        local.eventListenerAdd("utility2_onReadyAfter", onError, {
+            once: true
+        });
         setTimeout(globalThis.utility2_onReadyBefore);
         return onError;
     }
@@ -7452,7 +6561,7 @@ globalThis.utility2_onReadyBefore = (
     /*
      * this function will keep track of utility2_onReadyBefore.cnt
      */
-        local.emit("utility2_onReadyAfter", err);
+        local.eventListenerEmit("utility2_onReadyAfter", err);
     })
 );
 globalThis.utility2_onReadyAfter(local.nop);
@@ -7467,7 +6576,6 @@ if (!local.isBrowser) {
 }
 // require modules
 local.http = local._http;
-local.https = local._http;
 }());
 
 
@@ -7478,26 +6586,28 @@ local.https = local._http;
 if (local.isBrowser) {
     return;
 }
+local.http = require("http");
+/* validateLineSortedReset */
 local.Module = require("module");
 // init env
-local.objectAssignDefault(local.env, {
-    npm_config_dir_build: local.path.resolve("tmp/build"),
-    npm_config_dir_tmp: local.path.resolve("tmp")
+local.objectAssignDefault(process.env, {
+    npm_config_dir_build: require("path").resolve("tmp/build"),
+    npm_config_dir_tmp: require("path").resolve("tmp")
 });
 // merge previous test-report
-if (local.env.npm_config_file_test_report_merge) {
+if (process.env.npm_config_file_test_report_merge) {
     local.testReportMerge(
         globalThis.utility2_testReport,
         local.fsReadFileOrDefaultSync(
-            local.env.npm_config_file_test_report_merge,
+            process.env.npm_config_file_test_report_merge,
             "json",
             {}
         )
     );
     if (process.argv[2] !== "--help") {
         console.error(
-            "\n" + local.env.MODE_BUILD + " - merged test-report from file "
-            + local.env.npm_config_file_test_report_merge
+            "\n" + process.env.MODE_BUILD + " - merged test-report from file "
+            + process.env.npm_config_file_test_report_merge
         );
     }
 }
@@ -7507,7 +6617,7 @@ if (module === require.main && (!globalThis.utility2_rollup || (
     && local.cliDict[process.argv[2]]
     && process.argv[2].indexOf("utility2.") === 0
 ))) {
-    local.cliRun({}, local.nop);
+    local.cliRun({});
     if (local.cliDict[process.argv[2]]) {
         local.cliDict[process.argv[2]]();
         switch (process.argv[2]) {
@@ -7524,7 +6634,7 @@ if (module === require.main && (!globalThis.utility2_rollup || (
 // override assets
 if (globalThis.utility2_rollup) {
     local.assetsDict["/assets.utility2.rollup.js"] = (
-        local.fs.readFileSync(
+        require("fs").readFileSync(
             __filename,
             "utf8"
         ).split("\n/* script-end /assets.utility2.rollup.end.js */")[0]
@@ -7538,7 +6648,6 @@ if (globalThis.utility2_rollup) {
     "/assets.utility2.html",
     "/assets.utility2.test.js",
     "lib.apidoc.js",
-    "lib.github_crud.js",
     "lib.istanbul.js",
     "lib.jslint.js",
     "lib.marked.js",
@@ -7639,7 +6748,6 @@ local.assetsDict["/assets.utility2.rollup.js"] = [
     "header",
     "/assets.utility2.rollup.start.js",
     "lib.apidoc.js",
-    "lib.github_crud.js",
     "lib.istanbul.js",
     "lib.jslint.js",
     "lib.marked.js",
@@ -7647,34 +6755,36 @@ local.assetsDict["/assets.utility2.rollup.js"] = [
     "lib.utility2.js",
     "/assets.utility2.example.js",
     "/assets.utility2.html",
+    "/assets.utility2.lib.jslint.js",
     "/assets.utility2.test.js",
     "/assets.utility2.rollup.end.js"
 ].map(function (key) {
-    let script;
+    let code;
     switch (key) {
     case "/assets.utility2.example.js":
     case "/assets.utility2.html":
+    case "/assets.utility2.lib.jslint.js":
     case "/assets.utility2.test.js":
         // handle large string-replace
-        script = local.assetsDict["/assets.utility2.rollup.content.js"].split(
-            "/* utility2.rollup.js content */"
-        );
-        script.splice(1, 0, local.identity(
-            "local.assetsDict[\"" + key + "\"] = "
-            + JSON.stringify(local.assetsDict[key])
-        ).replace((
-            /\\\\/g
-        ), "\u0000").replace((
-            /\\n/g
-        ), "\\n\\\n").replace((
-            /\u0000/g
-        ), "\\\\"));
-        script = script.join("");
-        script += "\n";
+        code = local.assetsDict[
+            "/assets.utility2.rollup.content.js"
+        ].replace("/* utility2.rollup.js content */", function () {
+            return (
+                "local.assetsDict[\"" + key + "\"] = (\n"
+                + JSON.stringify(local.assetsDict[key]).replace((
+                    /\\\\/g
+                ), "\u0000").replace((
+                    /\\n/g
+                ), "\\n\\\n").replace((
+                    /\u0000/g
+                ), "\\\\")
+                + ");\n"
+            );
+        });
         break;
     case "/assets.utility2.rollup.start.js":
     case "/assets.utility2.rollup.end.js":
-        script = local.assetsDict[key];
+        code = local.assetsDict[key];
         break;
     case "header":
         return (
@@ -7684,15 +6794,15 @@ local.assetsDict["/assets.utility2.rollup.js"] = [
         );
     case "lib.utility2.js":
         key = "/assets." + key.replace("lib.", "");
-        script = local.assetsDict[key];
+        code = local.assetsDict[key];
         break;
     default:
         key = "/assets.utility2." + key;
-        script = local.assetsDict[key];
+        code = local.assetsDict[key];
     }
     return (
         "/* script-begin " + key + " */\n"
-        + script.trim()
+        + code.trim()
         + "\n/* script-end " + key + " */\n"
     );
 }).join("\n\n\n");

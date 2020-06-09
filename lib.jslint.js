@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.jslint.js (2020.5.32)
+ * lib.jslint.js (2020.6.8)
  * https://github.com/kaizhu256/node-jslint-lite
  * this zero-dependency package will provide browser-compatible versions of jslint (v2020.3.28) and csslint (v2018.2.25), with working web-demo
  *
@@ -12,34 +12,27 @@
 // assets.utility2.header.js - start
 /* jslint utility2:true */
 /* istanbul ignore next */
+// run shared js-env code - init-local
 (function (globalThis) {
     "use strict";
     let consoleError;
-    let debugName;
     let local;
-    debugName = "debug" + String("Inline");
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
-    // init debug_inline
-    if (!globalThis[debugName]) {
+    // init debugInline
+    if (!globalThis.debugInline) {
         consoleError = console.error;
-        globalThis[debugName] = function (...argList) {
+        globalThis.debugInline = function (...argList) {
         /*
          * this function will both print <argList> to stderr
          * and return <argList>[0]
          */
-            consoleError("\n\n" + debugName);
+            consoleError("\n\ndebugInline");
             consoleError(...argList);
             consoleError("\n");
             return argList[0];
         };
     }
-    String.prototype.trimEnd = (
-        String.prototype.trimEnd || String.prototype.trimRight
-    );
-    String.prototype.trimStart = (
-        String.prototype.trimStart || String.prototype.trimLeft
-    );
     // init local
     local = {};
     local.local = local;
@@ -55,9 +48,39 @@
         local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
+    local.assertJsonEqual = function (aa, bb) {
+    /*
+     * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
+     */
+        let objectDeepCopyWithKeysSorted;
+        objectDeepCopyWithKeysSorted = function (obj) {
+        /*
+         * this function will recursively deep-copy <obj> with keys sorted
+         */
+            let sorted;
+            if (typeof obj !== "object" || !obj) {
+                return obj;
+            }
+            // recursively deep-copy list with child-keys sorted
+            if (Array.isArray(obj)) {
+                return obj.map(objectDeepCopyWithKeysSorted);
+            }
+            // recursively deep-copy obj with keys sorted
+            sorted = {};
+            Object.keys(obj).sort().forEach(function (key) {
+                sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
+            });
+            return sorted;
+        };
+        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
+        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
+        if (aa !== bb) {
+            throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));
+        }
+    };
     local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw err.<msg> if <passed> is falsy
+     * this function will throw <msg> if <passed> is falsy
      */
         if (passed) {
             return;
@@ -72,9 +95,9 @@
             ? msg
             : new Error(
                 typeof msg === "string"
-                // if msg is a string, then leave as is
+                // if msg is string, then leave as is
                 ? msg
-                // else JSON.stringify msg
+                // else JSON.stringify(msg)
                 : JSON.stringify(msg, undefined, 4)
             )
         );
@@ -88,98 +111,12 @@
         ii = 0;
         while (ii < argList.length) {
             arg = argList[ii];
-            if (arg !== null && arg !== undefined && arg !== "") {
-                break;
+            if (arg !== undefined && arg !== null && arg !== "") {
+                return arg;
             }
             ii += 1;
         }
         return arg;
-    };
-    local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
-    /*
-     * this function will sync-read <pathname> with given <type> and <dflt>
-     */
-        let fs;
-        // do nothing if module does not exist
-        try {
-            fs = require("fs");
-        } catch (ignore) {
-            return dflt;
-        }
-        pathname = require("path").resolve(pathname);
-        // try to read pathname
-        try {
-            return (
-                type === "json"
-                ? JSON.parse(fs.readFileSync(pathname, "utf8"))
-                : fs.readFileSync(pathname, type)
-            );
-        } catch (ignore) {
-            return dflt;
-        }
-    };
-    local.fsRmrfSync = function (pathname) {
-    /*
-     * this function will sync "rm -rf" <pathname>
-     */
-        let child_process;
-        // do nothing if module does not exist
-        try {
-            child_process = require("child_process");
-        } catch (ignore) {
-            return;
-        }
-        pathname = require("path").resolve(pathname);
-        if (process.platform !== "win32") {
-            child_process.spawnSync("rm", [
-                "-rf", pathname
-            ], {
-                stdio: [
-                    "ignore", 1, 2
-                ]
-            });
-            return;
-        }
-        try {
-            child_process.spawnSync("rd", [
-                "/s", "/q", pathname
-            ], {
-                stdio: [
-                    "ignore", 1, "ignore"
-                ]
-            });
-        } catch (ignore) {}
-    };
-    local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {
-    /*
-     * this function will sync write <data> to <pathname> with "mkdir -p"
-     */
-        let fs;
-        let success;
-        // do nothing if module does not exist
-        try {
-            fs = require("fs");
-        } catch (ignore) {
-            return;
-        }
-        pathname = require("path").resolve(pathname);
-        // try to write pathname
-        try {
-            fs.writeFileSync(pathname, data);
-            success = true;
-        } catch (ignore) {
-            // mkdir -p
-            fs.mkdirSync(require("path").dirname(pathname), {
-                recursive: true
-            });
-            // re-write pathname
-            fs.writeFileSync(pathname, data);
-            success = true;
-        }
-        if (success && msg) {
-            console.error(msg.replace("{{pathname}}", pathname));
-        }
-        return success;
     };
     local.identity = function (val) {
     /*
@@ -221,35 +158,16 @@
         recurse(tgt, src, depth | 0);
         return tgt;
     };
-    // require builtin
-    if (!local.isBrowser) {
-        local.assert = require("assert");
-        local.buffer = require("buffer");
-        local.child_process = require("child_process");
-        local.cluster = require("cluster");
-        local.crypto = require("crypto");
-        local.dgram = require("dgram");
-        local.dns = require("dns");
-        local.domain = require("domain");
-        local.events = require("events");
-        local.fs = require("fs");
-        local.http = require("http");
-        local.https = require("https");
-        local.net = require("net");
-        local.os = require("os");
-        local.path = require("path");
-        local.querystring = require("querystring");
-        local.readline = require("readline");
-        local.repl = require("repl");
-        local.stream = require("stream");
-        local.string_decoder = require("string_decoder");
-        local.timers = require("timers");
-        local.tls = require("tls");
-        local.tty = require("tty");
-        local.url = require("url");
-        local.util = require("util");
-        local.vm = require("vm");
-        local.zlib = require("zlib");
+    // bug-workaround - throw unhandledRejections in node-process
+    if (
+        typeof process === "object" && process
+        && typeof process.on === "function"
+        && process.unhandledRejections !== "strict"
+    ) {
+        process.unhandledRejections = "strict";
+        process.on("unhandledRejection", function (err) {
+            throw err;
+        });
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
@@ -288,15 +206,17 @@ local.cliRun = function (opt) {
 /*
  * this function will run cli with given <opt>
  */
-    local.cliDict._eval = local.cliDict._eval || function () {
+    let cliDict;
+    cliDict = local.cliDict;
+    cliDict._eval = cliDict._eval || function () {
     /*
      * <code>
      * will eval <code>
      */
         globalThis.local = local;
-        local.vm.runInThisContext(process.argv[3]);
+        require("vm").runInThisContext(process.argv[3]);
     };
-    local.cliDict._help = local.cliDict._help || function () {
+    cliDict._help = cliDict._help || function () {
     /*
      *
      * will print help
@@ -331,11 +251,11 @@ local.cliRun = function (opt) {
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         strDict = {};
-        Object.keys(local.cliDict).sort().forEach(function (key, ii) {
+        Object.keys(cliDict).sort().forEach(function (key, ii) {
             if (key[0] === "_" && key !== "_default") {
                 return;
             }
-            str = String(local.cliDict[key]);
+            str = String(cliDict[key]);
             if (key === "_default") {
                 key = "";
             }
@@ -401,13 +321,13 @@ local.cliRun = function (opt) {
         }).join("\n\n");
         console.log(str);
     };
-    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
-    local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
-    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
-    local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
-    local.cliDict._default = local.cliDict._default || local.cliDict._help;
-    local.cliDict.help = local.cliDict.help || local.cliDict._help;
-    local.cliDict._interactive = local.cliDict._interactive || function () {
+    cliDict["--eval"] = cliDict["--eval"] || cliDict._eval;
+    cliDict["--help"] = cliDict["--help"] || cliDict._help;
+    cliDict["-e"] = cliDict["-e"] || cliDict._eval;
+    cliDict["-h"] = cliDict["-h"] || cliDict._help;
+    cliDict._default = cliDict._default || cliDict._help;
+    cliDict.help = cliDict.help || cliDict._help;
+    cliDict._interactive = cliDict._interactive || function () {
     /*
      *
      * will start interactive-mode
@@ -417,167 +337,54 @@ local.cliRun = function (opt) {
             useGlobal: true
         });
     };
-    local.cliDict["--interactive"] = (
-        local.cliDict["--interactive"]
-        || local.cliDict._interactive
-    );
-    local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
-    local.cliDict._version = local.cliDict._version || function () {
+    cliDict["--interactive"] = cliDict["--interactive"] || cliDict._interactive;
+    cliDict["-i"] = cliDict["-i"] || cliDict._interactive;
+    cliDict._version = cliDict._version || function () {
     /*
      *
      * will print version
      */
         console.log(require(__dirname + "/package.json").version);
     };
-    local.cliDict["--version"] = (
-        local.cliDict["--version"]
-        || local.cliDict._version
-    );
-    local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
+    cliDict["--version"] = cliDict["--version"] || cliDict._version;
+    cliDict["-v"] = cliDict["-v"] || cliDict._version;
     // default to --help command if no arguments are given
     if (process.argv.length <= 2) {
-        local.cliDict._help();
+        cliDict._help();
         return;
     }
-    if (local.cliDict[process.argv[2]]) {
-        local.cliDict[process.argv[2]]();
+    if (cliDict[process.argv[2]]) {
+        cliDict[process.argv[2]]();
         return;
     }
-    local.cliDict._default();
+    cliDict._default();
 };
 
-local.jsonStringifyOrdered = function (obj, replacer, space) {
+local.objectDeepCopyWithKeysSorted = function (obj) {
 /*
- * this function will JSON.stringify <obj>,
- * with object-keys sorted and circular-references removed
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Syntax
+ * this function will recursively deep-copy <obj> with keys sorted
  */
-    let circularSet;
-    let stringify;
-    let tmp;
-    stringify = function (obj) {
+    let objectDeepCopyWithKeysSorted;
+    objectDeepCopyWithKeysSorted = function (obj) {
     /*
-     * this function will recursively JSON.stringify obj,
-     * with object-keys sorted and circular-references removed
+     * this function will recursively deep-copy <obj> with keys sorted
      */
-        // if obj is not an object or function,
-        // then JSON.stringify as normal
-        if (!(
-            obj
-            && typeof obj === "object"
-            && typeof obj.toJSON !== "function"
-        )) {
-            return JSON.stringify(obj);
+        let sorted;
+        if (!(typeof obj === "object" && obj)) {
+            return obj;
         }
-        // ignore circular-reference
-        if (circularSet.has(obj)) {
-            return;
-        }
-        circularSet.add(obj);
-        // if obj is an array, then recurse items
+        // recursively deep-copy list with child-keys sorted
         if (Array.isArray(obj)) {
-            tmp = "[" + obj.map(function (obj) {
-                // recurse
-                tmp = stringify(obj);
-                return (
-                    typeof tmp === "string"
-                    ? tmp
-                    : "null"
-                );
-            }).join(",") + "]";
-            circularSet.delete(obj);
-            return tmp;
+            return obj.map(objectDeepCopyWithKeysSorted);
         }
-        // if obj is not an array,
-        // then recurse its items with object-keys sorted
-        tmp = "{" + Object.keys(obj).sort().map(function (key) {
-            // recurse
-            tmp = stringify(obj[key]);
-            if (typeof tmp === "string") {
-                return JSON.stringify(key) + ":" + tmp;
-            }
-        }).filter(function (obj) {
-            return typeof obj === "string";
-        }).join(",") + "}";
-        circularSet.delete(obj);
-        return tmp;
+        // recursively deep-copy obj with keys sorted
+        sorted = {};
+        Object.keys(obj).sort().forEach(function (key) {
+            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
+        });
+        return sorted;
     };
-    circularSet = new Set();
-    return JSON.stringify((
-        (typeof obj === "object" && obj)
-        // recurse
-        ? JSON.parse(stringify(obj))
-        : obj
-    ), replacer, space);
-};
-
-local.onErrorWithStack = function (onError) {
-/*
- * this function will wrap <onError> with wrapper preserving current-stack
- */
-    let onError2;
-    let stack;
-    stack = new Error().stack;
-    onError2 = function (err, data, meta) {
-        // append current-stack to err.stack
-        if (
-            err
-            && typeof err.stack === "string"
-            && err !== local.errorDefault
-        ) {
-            err.stack += "\n" + stack;
-        }
-        onError(err, data, meta);
-    };
-    // debug onError
-    onError2.toString = function () {
-        return String(onError);
-    };
-    return onError2;
-};
-
-local.onParallel = function (onError, onEach, onRetry) {
-/*
- * this function will create a function that will
- * 1. run async tasks in parallel
- * 2. if cnt === 0 or err occurred, then call onError(err)
- */
-    let onParallel;
-    onError = local.onErrorWithStack(onError);
-    onEach = onEach || local.nop;
-    onRetry = onRetry || local.nop;
-    onParallel = function (err, data) {
-        if (onRetry(err, data)) {
-            return;
-        }
-        // decrement cnt
-        onParallel.cnt -= 1;
-        // validate cnt
-        if (!(onParallel.cnt >= 0 || err || onParallel.err)) {
-            err = new Error(
-                "invalid onParallel.cnt = " + onParallel.cnt
-            );
-        // ensure onError is run only once
-        } else if (onParallel.cnt < 0) {
-            return;
-        }
-        // handle err
-        if (err) {
-            onParallel.err = err;
-            // ensure cnt <= 0
-            onParallel.cnt = -Math.abs(onParallel.cnt);
-        }
-        // call onError when isDone
-        if (onParallel.cnt <= 0) {
-            onError(err, data);
-            return;
-        }
-        onEach();
-    };
-    // init cnt
-    onParallel.cnt = 0;
-    // return callback
-    return onParallel;
+    return objectDeepCopyWithKeysSorted(obj);
 };
 }());
 
@@ -16588,6 +16395,8 @@ local.jslintAndPrint = function (code = "", file = "undefined", opt = {}) {
         opt.errMsg = "";
         // preserve lineno
         if (opt.iiStart) {
+            // optimization - efficiently count number of newlines
+            // https://jsperf.com/regexp-counting-2/8
             opt.lineOffset |= 0;
             ii = 0;
             while (true) {
@@ -16758,11 +16567,11 @@ local.jslintAndPrint = function (code = "", file = "undefined", opt = {}) {
             && !opt.fileType0
             && !opt.stop
             && code !== opt.code0
-            && local.fs.existsSync(file)
+            && require("fs").existsSync(file)
         ) {
-            local.fs.writeFileSync(file, code);
-            local.fs.writeFileSync(file + ".autofix.old", opt.code0);
-            local.child_process.spawnSync(
+            require("fs").writeFileSync(file, code);
+            require("fs").writeFileSync(file + ".autofix.old", opt.code0);
+            require("child_process").spawnSync(
                 "diff",
                 [
                     "-u", file + ".autofix.old", file
@@ -16773,7 +16582,7 @@ local.jslintAndPrint = function (code = "", file = "undefined", opt = {}) {
                     ]
                 }
             );
-            local.fs.unlinkSync(file + ".autofix.old");
+            require("fs").unlinkSync(file + ".autofix.old");
             console.error(
                 "\u001b[1mjslint-autofix - modified and saved file " + file
                 + "\u001b[22m"
@@ -16822,15 +16631,19 @@ local.jslintAndPrint = function (code = "", file = "undefined", opt = {}) {
     return local.jslintAndPrint(code, file, opt);
 };
 
-local.jslintAndPrintDir = function (dir, opt, onError) {
+local.jslintAndPrintDir = async function (dir, opt) {
 /*
  * this function will jslint files in shallow <dir>
  */
-    let onParallel;
-    onParallel = local.onParallel(onError);
-    local.fs.readdirSync(dir).forEach(function (file) {
+    let errCnt;
+    errCnt = 0;
+    await Promise.all((
+        await require("fs").promises.readdir(require("path").resolve(dir))
+    ).map(async function (file) {
+        let data;
         let timeStart;
-        file = local.path.resolve(file);
+        timeStart = Date.now();
+        file = require("path").resolve(file);
         switch ((
             /\.\w+?$|$/m
         ).exec(file)[0]) {
@@ -16845,21 +16658,17 @@ local.jslintAndPrintDir = function (dir, opt, onError) {
             ).test(file)) {
                 return;
             }
-            onParallel.cnt += 1;
             // jslint file
-            local.fs.readFile(file, "utf8", function (err, data) {
-                // handle err
-                local.assertOrThrow(!err, err);
-                timeStart = Date.now();
-                local.jslintAndPrint(data, file, opt);
-                console.error(
-                    "jslint - " + (Date.now() - timeStart) + "ms " + file
-                );
-                onParallel();
-            });
+            data = await require("fs").promises.readFile(file, "utf8");
+            local.jslintAndPrint(data, file, opt);
+            errCnt += local.jslintResult.errList.length;
+            console.error(
+                "jslint - " + (Date.now() - timeStart) + "ms - " + file
+            );
             break;
         }
-    });
+    }));
+    return Math.min(errCnt, 255);
 };
 
 local.jslintAutofix = function (code, file, opt) {
@@ -17229,7 +17038,11 @@ local.jslintAutofix = function (code, file, opt) {
         }
         // autofix-json - jsonStringifyOrdered
         if (opt.fileType === ".json") {
-            code = local.jsonStringifyOrdered(JSON.parse(code), undefined, 4);
+            code = JSON.stringify(
+                local.objectDeepCopyWithKeysSorted(JSON.parse(code)),
+                undefined,
+                4
+            );
             break;
         }
         // autofix-js - remux - code, dataList./_/ to code
@@ -17606,7 +17419,7 @@ local.cliDict._default = function () {
             return;
         }
         local.jslintAndPrint(
-            local.fs.readFileSync(local.path.resolve(file), "utf8"),
+            require("fs").readFileSync(require("path").resolve(file), "utf8"),
             file,
             {
                 autofix: process.argv.indexOf("--autofix") >= 0,
@@ -17626,7 +17439,7 @@ local.cliDict.dir = function () {
     local.jslintAndPrintDir(process.argv[3], {
         autofix: process.argv.indexOf("--autofix") >= 0,
         conditional: process.argv.indexOf("--conditional") >= 0
-    }, process.exit);
+    }).then(process.exit);
 };
 
 // run the cli

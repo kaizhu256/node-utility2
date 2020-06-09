@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.istanbul.js (2020.5.32)
+ * lib.istanbul.js (2020.6.8)
  * https://github.com/kaizhu256/node-istanbul-lite
  * this zero-dependency package will provide browser-compatible version of istanbul coverage-tool (v0.4.5), with working web-demo
  *
@@ -12,34 +12,27 @@
 // assets.utility2.header.js - start
 /* jslint utility2:true */
 /* istanbul ignore next */
+// run shared js-env code - init-local
 (function (globalThis) {
     "use strict";
     let consoleError;
-    let debugName;
     let local;
-    debugName = "debug" + String("Inline");
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
-    // init debug_inline
-    if (!globalThis[debugName]) {
+    // init debugInline
+    if (!globalThis.debugInline) {
         consoleError = console.error;
-        globalThis[debugName] = function (...argList) {
+        globalThis.debugInline = function (...argList) {
         /*
          * this function will both print <argList> to stderr
          * and return <argList>[0]
          */
-            consoleError("\n\n" + debugName);
+            consoleError("\n\ndebugInline");
             consoleError(...argList);
             consoleError("\n");
             return argList[0];
         };
     }
-    String.prototype.trimEnd = (
-        String.prototype.trimEnd || String.prototype.trimRight
-    );
-    String.prototype.trimStart = (
-        String.prototype.trimStart || String.prototype.trimLeft
-    );
     // init local
     local = {};
     local.local = local;
@@ -55,9 +48,39 @@
         local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
+    local.assertJsonEqual = function (aa, bb) {
+    /*
+     * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
+     */
+        let objectDeepCopyWithKeysSorted;
+        objectDeepCopyWithKeysSorted = function (obj) {
+        /*
+         * this function will recursively deep-copy <obj> with keys sorted
+         */
+            let sorted;
+            if (typeof obj !== "object" || !obj) {
+                return obj;
+            }
+            // recursively deep-copy list with child-keys sorted
+            if (Array.isArray(obj)) {
+                return obj.map(objectDeepCopyWithKeysSorted);
+            }
+            // recursively deep-copy obj with keys sorted
+            sorted = {};
+            Object.keys(obj).sort().forEach(function (key) {
+                sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
+            });
+            return sorted;
+        };
+        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
+        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
+        if (aa !== bb) {
+            throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));
+        }
+    };
     local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw err.<msg> if <passed> is falsy
+     * this function will throw <msg> if <passed> is falsy
      */
         if (passed) {
             return;
@@ -72,9 +95,9 @@
             ? msg
             : new Error(
                 typeof msg === "string"
-                // if msg is a string, then leave as is
+                // if msg is string, then leave as is
                 ? msg
-                // else JSON.stringify msg
+                // else JSON.stringify(msg)
                 : JSON.stringify(msg, undefined, 4)
             )
         );
@@ -88,98 +111,12 @@
         ii = 0;
         while (ii < argList.length) {
             arg = argList[ii];
-            if (arg !== null && arg !== undefined && arg !== "") {
-                break;
+            if (arg !== undefined && arg !== null && arg !== "") {
+                return arg;
             }
             ii += 1;
         }
         return arg;
-    };
-    local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
-    /*
-     * this function will sync-read <pathname> with given <type> and <dflt>
-     */
-        let fs;
-        // do nothing if module does not exist
-        try {
-            fs = require("fs");
-        } catch (ignore) {
-            return dflt;
-        }
-        pathname = require("path").resolve(pathname);
-        // try to read pathname
-        try {
-            return (
-                type === "json"
-                ? JSON.parse(fs.readFileSync(pathname, "utf8"))
-                : fs.readFileSync(pathname, type)
-            );
-        } catch (ignore) {
-            return dflt;
-        }
-    };
-    local.fsRmrfSync = function (pathname) {
-    /*
-     * this function will sync "rm -rf" <pathname>
-     */
-        let child_process;
-        // do nothing if module does not exist
-        try {
-            child_process = require("child_process");
-        } catch (ignore) {
-            return;
-        }
-        pathname = require("path").resolve(pathname);
-        if (process.platform !== "win32") {
-            child_process.spawnSync("rm", [
-                "-rf", pathname
-            ], {
-                stdio: [
-                    "ignore", 1, 2
-                ]
-            });
-            return;
-        }
-        try {
-            child_process.spawnSync("rd", [
-                "/s", "/q", pathname
-            ], {
-                stdio: [
-                    "ignore", 1, "ignore"
-                ]
-            });
-        } catch (ignore) {}
-    };
-    local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {
-    /*
-     * this function will sync write <data> to <pathname> with "mkdir -p"
-     */
-        let fs;
-        let success;
-        // do nothing if module does not exist
-        try {
-            fs = require("fs");
-        } catch (ignore) {
-            return;
-        }
-        pathname = require("path").resolve(pathname);
-        // try to write pathname
-        try {
-            fs.writeFileSync(pathname, data);
-            success = true;
-        } catch (ignore) {
-            // mkdir -p
-            fs.mkdirSync(require("path").dirname(pathname), {
-                recursive: true
-            });
-            // re-write pathname
-            fs.writeFileSync(pathname, data);
-            success = true;
-        }
-        if (success && msg) {
-            console.error(msg.replace("{{pathname}}", pathname));
-        }
-        return success;
     };
     local.identity = function (val) {
     /*
@@ -221,35 +158,16 @@
         recurse(tgt, src, depth | 0);
         return tgt;
     };
-    // require builtin
-    if (!local.isBrowser) {
-        local.assert = require("assert");
-        local.buffer = require("buffer");
-        local.child_process = require("child_process");
-        local.cluster = require("cluster");
-        local.crypto = require("crypto");
-        local.dgram = require("dgram");
-        local.dns = require("dns");
-        local.domain = require("domain");
-        local.events = require("events");
-        local.fs = require("fs");
-        local.http = require("http");
-        local.https = require("https");
-        local.net = require("net");
-        local.os = require("os");
-        local.path = require("path");
-        local.querystring = require("querystring");
-        local.readline = require("readline");
-        local.repl = require("repl");
-        local.stream = require("stream");
-        local.string_decoder = require("string_decoder");
-        local.timers = require("timers");
-        local.tls = require("tls");
-        local.tty = require("tty");
-        local.url = require("url");
-        local.util = require("util");
-        local.vm = require("vm");
-        local.zlib = require("zlib");
+    // bug-workaround - throw unhandledRejections in node-process
+    if (
+        typeof process === "object" && process
+        && typeof process.on === "function"
+        && process.unhandledRejections !== "strict"
+    ) {
+        process.unhandledRejections = "strict";
+        process.on("unhandledRejection", function (err) {
+            throw err;
+        });
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
@@ -284,26 +202,21 @@ local.istanbul = local;
 
 
 /* validateLineSortedReset */
-// init custom
-if (!local.isBrowser) {
-    local.__istanbul_module = require("module");
-    local.process = process;
-    local.require = require;
-}
-
 local.cliRun = function (opt) {
 /*
  * this function will run cli with given <opt>
  */
-    local.cliDict._eval = local.cliDict._eval || function () {
+    let cliDict;
+    cliDict = local.cliDict;
+    cliDict._eval = cliDict._eval || function () {
     /*
      * <code>
      * will eval <code>
      */
         globalThis.local = local;
-        local.vm.runInThisContext(process.argv[3]);
+        require("vm").runInThisContext(process.argv[3]);
     };
-    local.cliDict._help = local.cliDict._help || function () {
+    cliDict._help = cliDict._help || function () {
     /*
      *
      * will print help
@@ -338,11 +251,11 @@ local.cliRun = function (opt) {
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         strDict = {};
-        Object.keys(local.cliDict).sort().forEach(function (key, ii) {
+        Object.keys(cliDict).sort().forEach(function (key, ii) {
             if (key[0] === "_" && key !== "_default") {
                 return;
             }
-            str = String(local.cliDict[key]);
+            str = String(cliDict[key]);
             if (key === "_default") {
                 key = "";
             }
@@ -408,13 +321,13 @@ local.cliRun = function (opt) {
         }).join("\n\n");
         console.log(str);
     };
-    local.cliDict["--eval"] = local.cliDict["--eval"] || local.cliDict._eval;
-    local.cliDict["--help"] = local.cliDict["--help"] || local.cliDict._help;
-    local.cliDict["-e"] = local.cliDict["-e"] || local.cliDict._eval;
-    local.cliDict["-h"] = local.cliDict["-h"] || local.cliDict._help;
-    local.cliDict._default = local.cliDict._default || local.cliDict._help;
-    local.cliDict.help = local.cliDict.help || local.cliDict._help;
-    local.cliDict._interactive = local.cliDict._interactive || function () {
+    cliDict["--eval"] = cliDict["--eval"] || cliDict._eval;
+    cliDict["--help"] = cliDict["--help"] || cliDict._help;
+    cliDict["-e"] = cliDict["-e"] || cliDict._eval;
+    cliDict["-h"] = cliDict["-h"] || cliDict._help;
+    cliDict._default = cliDict._default || cliDict._help;
+    cliDict.help = cliDict.help || cliDict._help;
+    cliDict._interactive = cliDict._interactive || function () {
     /*
      *
      * will start interactive-mode
@@ -424,36 +337,86 @@ local.cliRun = function (opt) {
             useGlobal: true
         });
     };
-    local.cliDict["--interactive"] = (
-        local.cliDict["--interactive"]
-        || local.cliDict._interactive
-    );
-    local.cliDict["-i"] = local.cliDict["-i"] || local.cliDict._interactive;
-    local.cliDict._version = local.cliDict._version || function () {
+    cliDict["--interactive"] = cliDict["--interactive"] || cliDict._interactive;
+    cliDict["-i"] = cliDict["-i"] || cliDict._interactive;
+    cliDict._version = cliDict._version || function () {
     /*
      *
      * will print version
      */
         console.log(require(__dirname + "/package.json").version);
     };
-    local.cliDict["--version"] = (
-        local.cliDict["--version"]
-        || local.cliDict._version
-    );
-    local.cliDict["-v"] = local.cliDict["-v"] || local.cliDict._version;
+    cliDict["--version"] = cliDict["--version"] || cliDict._version;
+    cliDict["-v"] = cliDict["-v"] || cliDict._version;
     // default to --help command if no arguments are given
     if (process.argv.length <= 2) {
-        local.cliDict._help();
+        cliDict._help();
         return;
     }
-    if (local.cliDict[process.argv[2]]) {
-        local.cliDict[process.argv[2]]();
+    if (cliDict[process.argv[2]]) {
+        cliDict[process.argv[2]]();
         return;
     }
-    local.cliDict._default();
+    cliDict._default();
 };
 
-local.templateRender = function (template, dict, opt, ii) {
+local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
+/*
+ * this function will sync-read <pathname> with given <type> and <dflt>
+ */
+    let fs;
+    // do nothing if module does not exist
+    try {
+        fs = require("fs");
+    } catch (ignore) {
+        return dflt;
+    }
+    pathname = require("path").resolve(pathname);
+    // try to read pathname
+    try {
+        return (
+            type === "json"
+            ? JSON.parse(fs.readFileSync(pathname, "utf8"))
+            : fs.readFileSync(pathname, type)
+        );
+    } catch (ignore) {
+        return dflt;
+    }
+};
+
+local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {
+/*
+ * this function will sync write <data> to <pathname> with "mkdir -p"
+ */
+    let fs;
+    let success;
+    // do nothing if module does not exist
+    try {
+        fs = require("fs");
+    } catch (ignore) {
+        return;
+    }
+    pathname = require("path").resolve(pathname);
+    // try to write pathname
+    try {
+        fs.writeFileSync(pathname, data);
+        success = true;
+    } catch (ignore) {
+        // mkdir -p
+        fs.mkdirSync(require("path").dirname(pathname), {
+            recursive: true
+        });
+        // re-write pathname
+        fs.writeFileSync(pathname, data);
+        success = true;
+    }
+    if (success && msg) {
+        console.error(msg.replace("{{pathname}}", pathname));
+    }
+    return success;
+};
+
+local.templateRender = function (template, dict, opt = {}, ii = 0) {
 /*
  * this function will render <template> with given <dict>
  */
@@ -467,7 +430,6 @@ local.templateRender = function (template, dict, opt, ii) {
     if (dict === null || dict === undefined) {
         dict = {};
     }
-    opt = opt || {};
     getVal = function (key) {
         argList = key.split(" ");
         val = dict;
@@ -669,39 +631,37 @@ local.templateRender = function (template, dict, opt, ii) {
 
 // run shared js-env code - function
 (function () {
+let escodegen;
+let esprima;
+let estraverse;
+let esutils;
 let process;
-let require;
-// hack-jslint
-local.nop(require);
-globalThis.__coverageInclude__ = local.coalesce(
-    globalThis.__coverageInclude__,
-    {}
-);
+let require2;
 // mock builtins
-process = local.process || {
-    cwd: function () {
-        return "";
-    },
-    env: {}
+escodegen = {};
+esprima = {};
+estraverse = {};
+esutils = {};
+process = (
+    local.isBrowser
+    ? {
+        env: {},
+        stdout: {}
+    }
+    : globalThis.process
+);
+require2 = function (key) {
+    switch (key) {
+    case "./package.json":
+    case "source-map":
+        return {};
+    case "estraverse":
+        return estraverse;
+    case "esutils":
+        return esutils;
+    }
 };
-require = function (key) {
-    try {
-        return local["__istanbul_" + key] || local[key] || local.require(key);
-    } catch (ignore) {}
-};
-local["./package.json"] = {};
-// mock module path
-local.__istanbul_path = local.path || {
-    dirname: function (file) {
-        return file.replace((
-            /\/[\w\-.]+?$/
-        ), "");
-    },
-    resolve: function (...argList) {
-        return argList[argList.length - 1];
-    },
-    sep: "/"
-};
+require2(escodegen, esprima);
 
 
 
@@ -717,7 +677,7 @@ file https://github.com/acornjs/acorn/blob/6.3.0/acorn/dist/acorn.js
 */
 /* istanbul ignore next */
 /* jslint ignore:start */
-(function () { let exports, module; exports = module = local.esprima = {};
+(function () { let exports, module; exports = module = esprima;
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -5700,7 +5660,7 @@ committed 2016-03-10T21:51:59Z
 file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
 */
 /* istanbul ignore next */
-(function () { let exports; exports = local.estraverse = {};
+(function () { let exports; exports = estraverse;
 /*
   Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
@@ -6537,7 +6497,7 @@ file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
         return tree;
     }
 
-    exports.version = require('./package.json').version;
+    exports.version = require2('./package.json').version;
     exports.Syntax = Syntax;
     exports.traverse = traverse;
     exports.replace = replace;
@@ -6701,7 +6661,7 @@ file https://github.com/estools/esutils/blob/2.0.3/lib/code.js
     };
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
-local.esutils = { code: module.exports }; }());
+esutils = { code: module.exports }; }());
 
 
 
@@ -6716,7 +6676,7 @@ committed 2019-08-13T02:08:40Z
 file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
 */
 /* istanbul ignore next */
-(function () { let exports; exports = local.escodegen = {};
+(function () { let exports; exports = escodegen;
 /*
   Copyright (C) 2012-2014 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2015 Ingvar Stepanyan <me@rreverser.com>
@@ -6783,8 +6743,8 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
         FORMAT_MINIFY,
         FORMAT_DEFAULTS;
 
-    estraverse = require('estraverse');
-    esutils = require('esutils');
+    estraverse = require2('estraverse');
+    esutils = require2('esutils');
 
     Syntax = estraverse.Syntax;
 
@@ -9269,7 +9229,7 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
             if (!exports.browser) {
                 // We assume environment is node.js
                 // And prevent from including source-map by browserify
-                SourceNode = require('source-map').SourceNode;
+                SourceNode = require2('source-map').SourceNode;
             } else {
                 SourceNode = global.sourceMap.SourceNode;
             }
@@ -9315,7 +9275,7 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
 
     FORMAT_DEFAULTS = getDefaultOptions().format;
 
-    exports.version = require('./package.json').version;
+    exports.version = require2('./package.json').version;
     exports.generate = generate;
     exports.attachComments = estraverse.attachComments;
     exports.Precedence = updateDeeply({}, Precedence);
@@ -9339,7 +9299,7 @@ committed 2016-08-21T19:53:22Z
 file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 */
 /* istanbul ignore next */
-(function () { let escodegen, esprima, module, window; escodegen = local.escodegen; esprima = local.esprima; module = undefined; window = local;
+(function () { let module, window; module = undefined; window = local;
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
  Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
@@ -9350,9 +9310,9 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
     "use strict";
     var SYNTAX,
         nodeType,
-        ESP = isNode ? require('esprima') : esprima,
-        ESPGEN = isNode ? require('escodegen') : escodegen,  //TODO - package as dependency
-        crypto = isNode ? require('crypto') : null,
+        ESP = isNode ? require2('esprima') : esprima,
+        ESPGEN = isNode ? require2('escodegen') : escodegen,  //TODO - package as dependency
+        crypto = isNode ? require2('crypto') : null,
         LEADER_WRAP = '(function () { ',
         TRAILER_WRAP = '\n}());',
         COMMENT_RE = /^\s*istanbul\s+ignore\s+(if|else|next)(?=\W|$)/,
@@ -9678,7 +9638,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
      * Usage on nodejs
      * ---------------
      *
-     *      var instrumenter = new require('istanbul').Instrumenter(),
+     *      var instrumenter = new require2('istanbul').Instrumenter(),
      *          changed = instrumenter.instrumentSync('function meaningOfLife() { return 42; }', 'filename.js');
      *
      * Usage in a browser
@@ -10757,8 +10717,8 @@ local.templateCoverageReport = '\
             Functions: {{metrics.functions.skipped}}\n\
         </td>\n\
         <td>\n\
-            {{metrics.branches.pct}}%<br>\n\
-            ({{metrics.branches.covered}} / {{metrics.branches.total}})\n\
+            {{metrics.statements.pct}}%<br>\n\
+            ({{metrics.statements.covered}} / {{metrics.statements.total}})\n\
         </td>\n\
         <td>\n\
             {{metrics.branches.pct}}%<br>\n\
@@ -10860,8 +10820,22 @@ let fileWrite;
 let path;
 let reportHtmlWrite;
 let reportTextWrite;
-// require module
-path = require("path");
+// mock path
+path = {
+    dirname: function (file) {
+        return file.replace((
+            /\/[\w\-.]+?$/
+        ), "");
+    },
+    resolve: function (...argList) {
+        return argList[argList.length - 1];
+    },
+    sep: "/"
+};
+// require path
+try {
+    path = require("path");
+} catch (ignore) {}
 // init function
 fileWrite = function (file, data) {
 /*
@@ -10930,9 +10904,6 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
         // consumeBlanks
         if (startCol <= lineObj.startCol) {
             startCol = 0;
-        }
-        if (startCol > lineObj.endCol) {
-            startCol = lineObj.length0;
         }
         lineInsertAt(lineObj, startCol, startText);
         lineInsertAt(lineObj, endCol, endText);
@@ -11089,17 +11060,17 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                     );
                     return;
                 }
-                lineWrapAt(lineObj, meta.start.column, (
+                lineWrapAt(
+                    lineObj,
+                    meta.start.column,
                     "\u0001span class=\"branch-" + ii + " " + (
                         meta.skip
                         ? "cbranch-skip"
                         : "cbranch-no"
-                    ) + "\" title=\"branch not covered\"\u0002"
-                ), (
-                    startLine === endLine
-                    ? endCol
-                    : lineObj.length0
-                ), "\u0001/span\u0002");
+                    ) + "\" title=\"branch not covered\"\u0002",
+                    endCol,
+                    "\u0001/span\u0002"
+                );
             });
         });
         // annotateFunctions(fileCoverage, lineList);
@@ -11124,15 +11095,17 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 endCol = lineList[startLine].length0;
             }
             lineObj = lineList[startLine];
-            lineWrapAt(lineObj, meta.loc.start.column, "\u0001span class=\"" + (
-                meta.skip
-                ? "fstat-skip"
-                : "fstat-no"
-            ) + "\" title=\"function not covered\"\u0002", (
-                startLine === endLine
-                ? endCol
-                : lineObj.length0
-            ), "\u0001/span\u0002");
+            lineWrapAt(
+                lineObj,
+                meta.loc.start.column,
+                "\u0001span class=\"" + (
+                    meta.skip
+                    ? "fstat-skip"
+                    : "fstat-no"
+                ) + "\" title=\"function not covered\"\u0002",
+                endCol,
+                "\u0001/span\u0002"
+            );
         });
         // annotateStatements(fileCoverage, lineList);
         Object.entries(fileCoverage.s).forEach(function ([
@@ -11156,15 +11129,17 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 endCol = lineList[startLine].length0;
             }
             lineObj = lineList[startLine];
-            lineWrapAt(lineObj, meta.start.column, ("\u0001span class=\"" + (
-                meta.skip
-                ? "cstat-skip"
-                : "cstat-no"
-            ) + "\" title=\"statement not covered\"\u0002"), (
-                startLine === endLine
-                ? endCol
-                : lineObj.length0
-            ), "\u0001/span\u0002");
+            lineWrapAt(
+                lineObj,
+                meta.start.column,
+                "\u0001span class=\"" + (
+                    meta.skip
+                    ? "cstat-skip"
+                    : "cstat-no"
+                ) + "\" title=\"statement not covered\"\u0002",
+                endCol,
+                "\u0001/span\u0002"
+            );
         });
         // remove trailing whitespace
         ii = lineList.length - 1;
@@ -11283,22 +11258,15 @@ reportTextWrite = function (node, dircoverage) {
      */
         let fillStr;
         let fmtStr;
-        let remaining;
-        remaining = width - indent;
         fmtStr = "";
-        if (remaining <= 0) {
-            fmtStr = str.slice(str.length - remaining);
-            fmtStr = "... " + fmtStr.slice(4);
-        } else if (remaining >= str.length) {
-            fillStr = " ".repeat(remaining - str.length);
-            fmtStr = (
-                right
-                ? fillStr + str
-                : str + fillStr
-            );
-        }
+        fillStr = " ".repeat(width - indent - str.length);
+        fmtStr = (
+            right
+            ? fillStr + str
+            : str + fillStr
+        );
         // colorize
-        switch (process.stdout && process.stdout.isTTY && score) {
+        switch (process.stdout.isTTY && score) {
         case "high":
             fmtStr = "\u001b[92m" + fmtStr + "\u001b[0m";
             break;
@@ -11789,6 +11757,7 @@ local.instrumentSync = function (code, file) {
     // 1. normalize <file>
     file = path.resolve(file);
     // 2. save <code> to __coverageInclude__[<file>] for future html-report
+    globalThis.__coverageInclude__ = globalThis.__coverageInclude__ || {};
     globalThis.__coverageInclude__[file] = 1;
     // 3. return instrumented-code
     return new local.Instrumenter({
@@ -11816,9 +11785,10 @@ local.cliDict.cover = function () {
  * <script>
  * will run and cover <script>
  */
+    let moduleExtensionsJs;
     let tmp;
     try {
-        tmp = JSON.parse(local.fs.readFileSync("package.json", "utf8"));
+        tmp = JSON.parse(require("fs").readFileSync("package.json", "utf8"));
         process.env.npm_package_nameLib = (
             process.env.npm_package_nameLib
             || tmp.nameLib
@@ -11833,32 +11803,32 @@ local.cliDict.cover = function () {
         || "all"
     );
     // add coverage hook to require
-    local.__istanbul_moduleExtensionsJs = (
-        local.__istanbul_module._extensions[".js"]
-    );
-    local.__istanbul_module._extensions[".js"] = function (module, file) {
+    tmp = require("module");
+    moduleExtensionsJs = tmp._extensions[".js"];
+    tmp._extensions[".js"] = function (module, file) {
         if (typeof file === "string" && (
             file.indexOf(process.env.npm_config_mode_coverage_dir) === 0 || (
-                file.indexOf(process.cwd() + local.path.sep) === 0
+                file.indexOf(process.cwd() + require("path").sep) === 0
                 && (
                     process.env.npm_config_mode_coverage === "node_modules"
                     || file.indexOf(
-                        local.path.resolve("node_modules") + local.path.sep
+                        require("path").resolve("node_modules")
+                        + require("path").sep
                     ) !== 0
                 )
             )
         )) {
             module._compile(local.instrumentInPackage(
-                local.fs.readFileSync(file, "utf8"),
+                require("fs").readFileSync(file, "utf8"),
                 file
             ), file);
             return;
         }
-        local.__istanbul_moduleExtensionsJs(module, file);
+        moduleExtensionsJs(module, file);
     };
     // init process.argv
     process.argv.splice(1, 2);
-    process.argv[1] = local.path.resolve(process.argv[1]);
+    process.argv[1] = require("path").resolve(process.argv[1]);
     console.error("\nistanbul - covering $ " + process.argv.join(" "));
     // create coverage on exit
     process.on("exit", function () {
@@ -11867,7 +11837,7 @@ local.cliDict.cover = function () {
         });
     });
     // re-init cli
-    local.__istanbul_module.runMain();
+    tmp.runMain();
 };
 
 local.cliDict.instrument = function () {
@@ -11875,9 +11845,9 @@ local.cliDict.instrument = function () {
  * <script>
  * will instrument <script> and print result to stdout
  */
-    process.argv[3] = local.path.resolve(process.argv[3]);
+    process.argv[3] = require("path").resolve(process.argv[3]);
     process.stdout.write(local.instrumentSync(
-        local.fs.readFileSync(process.argv[3], "utf8"),
+        require("fs").readFileSync(process.argv[3], "utf8"),
         process.argv[3]
     ));
 };
@@ -11887,9 +11857,9 @@ local.cliDict.report = function () {
  * <coverageJson>
  * will create coverage-report from file <coverageJson>
  */
-    process.argv[3] = local.path.resolve(process.argv[3]);
+    process.argv[3] = require("path").resolve(process.argv[3]);
     globalThis.__coverage__ = JSON.parse(
-        local.fs.readFileSync(process.argv[3])
+        require("fs").readFileSync(process.argv[3])
     );
     globalThis.__coverageInclude__ = {};
     Object.keys(globalThis.__coverage__).forEach(function (file) {
@@ -11913,9 +11883,9 @@ local.cliDict.test = function () {
     }
     // restart node with __filename removed from process.argv
     process.argv.splice(1, 2);
-    process.argv[1] = local.path.resolve(process.argv[1]);
+    process.argv[1] = require("path").resolve(process.argv[1]);
     // re-init cli
-    local.__istanbul_module.runMain();
+    require("module").runMain();
 };
 
 // run the cli

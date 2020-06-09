@@ -2,25 +2,25 @@
 this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
 
 # live web demo
-- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/)
+- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app/)
 
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/)
+[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app/)
 
 
 
-[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html)
+[![travis-ci.com build-status](https://api.travis-ci.com/kaizhu256/node-utility2.svg)](https://travis-ci.com/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html)
 
 [![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
 
-[![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
+[![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.com/kaizhu256/node-utility2)
 
 | git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
 |--:|:--|:--|:--|
-| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/app) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/app)|
+| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/app) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/app)|
 | test-server-heroku : | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-alpha.herokuapp.com)|
-| test-report : | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html)|
-| coverage : | [![coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/index.html) | [![coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/index.html) | [![coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/index.html)|
-| build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
+| test-report : | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/test-report.html)|
+| coverage : | [![coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/coverage.html/index.html) | [![coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/coverage.html/index.html) | [![coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/coverage.html/index.html)|
+| build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.com)|
 
 [![npmPackageListing](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
 
@@ -42,49 +42,80 @@ this zero-dependency package will provide high-level functions to to build, test
 
 
 # cdn download
-- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.js)
+- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app/assets.utility2.rollup.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app/assets.utility2.rollup.js)
 
 
 
 # documentation
 #### api doc
-- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
+- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/apidoc.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/apidoc.html)
 
-[![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
+[![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/apidoc.html)
 
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.5.31
-- npm publish 2020.5.31
-- update file raw.istanbul.js
-- remove excessive "the" from comments
-- remove build-process for css-file
-- replace function local.objectSetDefault with objectAssignDefault
-- replace process.cwd() with path.resolve()
-- rename shell-function shPackageJsonVersionUpdate to shPackageJsonVersionIncrement
+#### changelog 2020.6.9
+- npm publish 2020.6.9
+- add shell-function shTravisRepoTrigger
+- remove shell-macro UTILITY2_MACRO_AJAX_JS
+- remove ajax-helper-class FormData
+- minimize dependency to local
+- remove eagerly requiring nodejs-builtins
+- migrate ci from travis-ci.org to travis-ci.com
+- remove "a" from comments
+- remove shell-functions
+    shModuleDirname,
+    shDockerBuildCleanup,
+    shHtpasswdCreate,
+    shGitLsTreeSort, shGithubDateCommitted,
+    shHtpasswdCreate,
+    shMediaHlsEncrypt, shMediaHlsFromMp4,
+    shNpmInstallTarball,
+    shPasswordRandom,
+    shSsh5022F, shSsh5022R, shServerPortRandom,
+    shReadmeLinkValidate, shReplClient,
+    shTravisRepoBuildCancel, shTravisRepoBuildRestart, shTravisSync,
+    shUtility2Dependents,
+- cleanup env-var UTILITY2_MACRO_JS
+- istanbul - fix html-coverage-report bug showing branch-metrics instead of line-metrics
+- inline local._http.STATUS_CODES into function serverRespondDefault
+- remove object local.errorDefault
+- rename errorMessage to errMsg, errorStack to errStack
+- remove polyfills String.prototype.trimStart, String.prototype.trimEnd
+- throw error on unhandled-rejections via process.unhandledRejections=strict
+- add functions
+    objectDeepCopyWithKeysSorted,
+    childProcessEval,
+    fsWriteFileWithMkdirp,
 - remove functions
-    functionOrNop,
-    local.querySelector,
-    local.querySelectorAll,
-    middlewareForwardProxy,
-    onTimeout,
-    profile,
-    profileSync,
-    semverCompare,
-    serverRespondCors,
-- replace function fsReadFileOrEmptyStringSync with fsReadFileOrDefaultSync
-- remove dependency to file lib.swgg.js
-- inline object local.contentTypeDict
-- istanbul - inline function templateRender
+    httpFetch,
+    objectAssignRecurse,
+    corsBackendHostInject,
+    stringLineCount,
+    onFileModifiedRestart,
+    jsonStringifyOrdered, jsonCopy,
+    listGetElementRandom,
+    bufferIndexOfSubBuffer, base64urlFromBuffer bufferRandomBytes,
+    assertJsonNotEqual,
+    childProcessSpawnWithTimeout, childProcessSpawnWithUtility2,
+    dateGetWeekOfMonth, dateGetWeekOfYear, dateUtcFromLocal, dateUtcToLocal,
+    isNullOrUndefined,
+    localStorageSetItemOrClear,
+    normalizeJwt, normalizeJwtBase64Url, numberToRomanNumerals,
+    onErrorDefault,
+    promisify,
+    timeElapsedPoll, timeElapsedStart,
+- remove dependency to files lib.github_crud.js, lib.swgg.js
 - none
 
 #### todo
+- remove dependency to req.urlParsed
+- remove globalThis polyfill
 - istanbul - inline class Instrumenter into function instrumentSync
 - add eslint-rule no-multiple-empty-lines
 - remove file lib.swgg.js
 - remove sloppy-cases where npm-test falsely pass
-- deprecate dependent github-crud
 - istanbul - remove filesUnderRoot subroutine
 - jslint - add nullish-coalescing support
 - jslint - add optional-chaining support
@@ -103,17 +134,17 @@ this zero-dependency package will provide high-level functions to to build, test
 
 # quickstart standalone app
 #### to run this example, follow instruction in script below
-- [assets.app.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.app.js)
+- [assets.app.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app/assets.app.js)
 ```shell
 # example.sh
 
-# this shell script will download and run a web-demo of utility2 as a standalone app
+# this shell script will download and run web-demo of utility2 as standalone app
 
 # 1. download standalone app
-curl -O https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.app.js
+curl -O https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app/assets.app.js
 # 2. run standalone app
 PORT=8081 node ./assets.app.js
-# 3. open a browser to http://127.0.0.1:8081 and play with web-demo
+# 3. open browser to http://127.0.0.1:8081 and play with web-demo
 # 4. edit file assets.app.js to suit your needs
 ```
 
@@ -155,34 +186,27 @@ instruction
 // assets.utility2.header.js - start
 /* jslint utility2:true */
 /* istanbul ignore next */
+// run shared js-env code - init-local
 (function (globalThis) {
     "use strict";
     let consoleError;
-    let debugName;
     let local;
-    debugName = "debug" + String("Inline");
     // init globalThis
     globalThis.globalThis = globalThis.globalThis || globalThis;
-    // init debug_inline
-    if (!globalThis[debugName]) {
+    // init debugInline
+    if (!globalThis.debugInline) {
         consoleError = console.error;
-        globalThis[debugName] = function (...argList) {
+        globalThis.debugInline = function (...argList) {
         /*
          * this function will both print <argList> to stderr
          * and return <argList>[0]
          */
-            consoleError("\n\n" + debugName);
+            consoleError("\n\ndebugInline");
             consoleError(...argList);
             consoleError("\n");
             return argList[0];
         };
     }
-    String.prototype.trimEnd = (
-        String.prototype.trimEnd || String.prototype.trimRight
-    );
-    String.prototype.trimStart = (
-        String.prototype.trimStart || String.prototype.trimLeft
-    );
     // init local
     local = {};
     local.local = local;
@@ -198,9 +222,39 @@ instruction
         local.isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
+    local.assertJsonEqual = function (aa, bb) {
+    /*
+     * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
+     */
+        let objectDeepCopyWithKeysSorted;
+        objectDeepCopyWithKeysSorted = function (obj) {
+        /*
+         * this function will recursively deep-copy <obj> with keys sorted
+         */
+            let sorted;
+            if (typeof obj !== "object" || !obj) {
+                return obj;
+            }
+            // recursively deep-copy list with child-keys sorted
+            if (Array.isArray(obj)) {
+                return obj.map(objectDeepCopyWithKeysSorted);
+            }
+            // recursively deep-copy obj with keys sorted
+            sorted = {};
+            Object.keys(obj).sort().forEach(function (key) {
+                sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
+            });
+            return sorted;
+        };
+        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
+        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
+        if (aa !== bb) {
+            throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));
+        }
+    };
     local.assertOrThrow = function (passed, msg) {
     /*
-     * this function will throw err.<msg> if <passed> is falsy
+     * this function will throw <msg> if <passed> is falsy
      */
         if (passed) {
             return;
@@ -215,9 +269,9 @@ instruction
             ? msg
             : new Error(
                 typeof msg === "string"
-                // if msg is a string, then leave as is
+                // if msg is string, then leave as is
                 ? msg
-                // else JSON.stringify msg
+                // else JSON.stringify(msg)
                 : JSON.stringify(msg, undefined, 4)
             )
         );
@@ -231,98 +285,12 @@ instruction
         ii = 0;
         while (ii < argList.length) {
             arg = argList[ii];
-            if (arg !== null && arg !== undefined && arg !== "") {
-                break;
+            if (arg !== undefined && arg !== null && arg !== "") {
+                return arg;
             }
             ii += 1;
         }
         return arg;
-    };
-    local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
-    /*
-     * this function will sync-read <pathname> with given <type> and <dflt>
-     */
-        let fs;
-        // do nothing if module does not exist
-        try {
-            fs = require("fs");
-        } catch (ignore) {
-            return dflt;
-        }
-        pathname = require("path").resolve(pathname);
-        // try to read pathname
-        try {
-            return (
-                type === "json"
-                ? JSON.parse(fs.readFileSync(pathname, "utf8"))
-                : fs.readFileSync(pathname, type)
-            );
-        } catch (ignore) {
-            return dflt;
-        }
-    };
-    local.fsRmrfSync = function (pathname) {
-    /*
-     * this function will sync "rm -rf" <pathname>
-     */
-        let child_process;
-        // do nothing if module does not exist
-        try {
-            child_process = require("child_process");
-        } catch (ignore) {
-            return;
-        }
-        pathname = require("path").resolve(pathname);
-        if (process.platform !== "win32") {
-            child_process.spawnSync("rm", [
-                "-rf", pathname
-            ], {
-                stdio: [
-                    "ignore", 1, 2
-                ]
-            });
-            return;
-        }
-        try {
-            child_process.spawnSync("rd", [
-                "/s", "/q", pathname
-            ], {
-                stdio: [
-                    "ignore", 1, "ignore"
-                ]
-            });
-        } catch (ignore) {}
-    };
-    local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {
-    /*
-     * this function will sync write <data> to <pathname> with "mkdir -p"
-     */
-        let fs;
-        let success;
-        // do nothing if module does not exist
-        try {
-            fs = require("fs");
-        } catch (ignore) {
-            return;
-        }
-        pathname = require("path").resolve(pathname);
-        // try to write pathname
-        try {
-            fs.writeFileSync(pathname, data);
-            success = true;
-        } catch (ignore) {
-            // mkdir -p
-            fs.mkdirSync(require("path").dirname(pathname), {
-                recursive: true
-            });
-            // re-write pathname
-            fs.writeFileSync(pathname, data);
-            success = true;
-        }
-        if (success && msg) {
-            console.error(msg.replace("{{pathname}}", pathname));
-        }
-        return success;
     };
     local.identity = function (val) {
     /*
@@ -364,35 +332,16 @@ instruction
         recurse(tgt, src, depth | 0);
         return tgt;
     };
-    // require builtin
-    if (!local.isBrowser) {
-        local.assert = require("assert");
-        local.buffer = require("buffer");
-        local.child_process = require("child_process");
-        local.cluster = require("cluster");
-        local.crypto = require("crypto");
-        local.dgram = require("dgram");
-        local.dns = require("dns");
-        local.domain = require("domain");
-        local.events = require("events");
-        local.fs = require("fs");
-        local.http = require("http");
-        local.https = require("https");
-        local.net = require("net");
-        local.os = require("os");
-        local.path = require("path");
-        local.querystring = require("querystring");
-        local.readline = require("readline");
-        local.repl = require("repl");
-        local.stream = require("stream");
-        local.string_decoder = require("string_decoder");
-        local.timers = require("timers");
-        local.tls = require("tls");
-        local.tty = require("tty");
-        local.url = require("url");
-        local.util = require("util");
-        local.vm = require("vm");
-        local.zlib = require("zlib");
+    // bug-workaround - throw unhandledRejections in node-process
+    if (
+        typeof process === "object" && process
+        && typeof process.on === "function"
+        && process.unhandledRejections !== "strict"
+    ) {
+        process.unhandledRejections = "strict";
+        process.on("unhandledRejection", function (err) {
+            throw err;
+        });
     }
 }((typeof globalThis === "object" && globalThis) || window));
 // assets.utility2.header.js - end
@@ -494,8 +443,8 @@ local.testCase_webpage_default = function (opt, onError) {
 
 
 
-// run browser js-env code - init-test
 /* istanbul ignore next */
+// run browser js-env code - init-test
 (function () {
 if (!local.isBrowser) {
     return;
@@ -531,8 +480,8 @@ globalThis.domOnEventDelegateDict = local;
 
 
 
-// run node js-env code - init-test
 /* istanbul ignore next */
+// run node js-env code - init-test
 (function () {
 if (local.isBrowser) {
     return;
@@ -1084,14 +1033,14 @@ local.domOnEventInputChange = function (evt) {\n\
     }\n\
 };\n\
 // handle evt\n\
-local.on("utility2.testRunEnd", function () {\n\
+local.eventListenerAdd("utility2.testRunEnd", function () {\n\
     document.querySelector(\n\
         "#htmlCoverageReport1"\n\
     ).innerHTML = local.istanbul.coverageReportCreate({\n\
         coverage: globalThis.__coverage__\n\
     });\n\
 });\n\
-local.on("utility2.testRunProgressUpdate", function (testReport) {\n\
+local.eventListenerAdd("utility2.testRunProgressUpdate", function (testReport) {\n\
     document.querySelector(\n\
         "#htmlTestReport2"\n\
     ).innerHTML = local.testReportMerge(testReport, {});\n\
@@ -1143,8 +1092,8 @@ utility2-comment -->\n\
 /* jslint ignore:end */
 local.assetsDict["/assets.utility2.js"] = (
     local.assetsDict["/assets.utility2.js"]
-    || local.fs.readFileSync(
-        local.path.resolve(local.__dirname + "/lib.utility2.js"),
+    || require("fs").readFileSync(
+        require("path").resolve(local.__dirname + "/lib.utility2.js"),
         "utf8"
     ).replace((
         /^#!\//
@@ -1176,7 +1125,7 @@ if (module !== require.main || globalThis.utility2_rollup) {
 }
 local.assetsDict["/assets.example.js"] = (
     local.assetsDict["/assets.example.js"]
-    || local.fs.readFileSync(__filename, "utf8")
+    || require("fs").readFileSync(__filename, "utf8")
 );
 local.assetsDict["/favicon.ico"] = local.assetsDict["/favicon.ico"] || "";
 local.assetsDict["/index.html"] = local.assetsDict["/"];
@@ -1191,10 +1140,11 @@ if (globalThis.utility2_serverHttp1) {
 }
 process.env.PORT = process.env.PORT || "8081";
 console.error("http-server listening on port " + process.env.PORT);
-local.http.createServer(function (req, res) {
-    req.urlParsed = local.url.parse(req.url);
-    if (local.assetsDict[req.urlParsed.pathname] !== undefined) {
-        res.end(local.assetsDict[req.urlParsed.pathname]);
+require("http").createServer(function (req, res) {
+    let data;
+    data = local.assetsDict[require("url").parse(req.url).pathname];
+    if (data !== undefined) {
+        res.end(data);
         return;
     }
     res.statusCode = 404;
@@ -1252,7 +1202,6 @@ local.http.createServer(function (req, res) {
     "bin": {
         "utility2": "lib.utility2.sh",
         "utility2-apidoc": "lib.apidoc.js",
-        "utility2-github-crud": "lib.github_crud.js",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js"
     },
@@ -1261,7 +1210,7 @@ local.http.createServer(function (req, res) {
     "engines": {
         "node": ">=12.0"
     },
-    "fileCount": 25,
+    "fileCount": 23,
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
         "continuous-integration",
@@ -1295,16 +1244,15 @@ local.http.createServer(function (req, res) {
         "utility2": "./npm_scripts.sh"
     },
     "utility2Dependents": [
-        "2019.01.21 github-crud",
         "2019.09.14 swgg",
         "2020.01.20 bootstrap-lite",
         "2020.02.12 sqljs-lite",
-        "2020.03.16 apidoc-lite",
-        "2020.05.31 jslint-lite",
-        "2020.05.31 istanbul-lite",
-        "2020.05.31 utility2"
+        "2020.06.08 apidoc-lite",
+        "2020.06.08 istanbul-lite",
+        "2020.06.08 jslint-lite",
+        "2020.06.09 utility2"
     ],
-    "version": "2020.5.31"
+    "version": "2020.6.9"
 }
 ```
 
@@ -1350,13 +1298,13 @@ RUN (set -e; \
         gnupg; \
     (busybox --list | xargs -n1 /bin/sh -c \
         'ln -s /bin/busybox /bin/$0 2>/dev/null' || true); \
-    curl -Ls https://deb.nodesource.com/setup_12.x | /bin/bash -; \
+    curl -Lf https://deb.nodesource.com/setup_12.x | /bin/bash -; \
     apt-get install -y nodejs; \
     (cd /usr/lib && npm install sqlite3@4); \
 )
 # install google-chrome-stable
 RUN (set -e; \
-    curl -Ls https://dl.google.com/linux/linux_signing_key.pub | \
+    curl -Lf https://dl.google.com/linux/linux_signing_key.pub | \
         apt-key add -; \
     printf "deb http://dl.google.com/linux/chrome/deb/ stable main\n" > \
         /etc/apt/sources.list.d/google.list; \
@@ -1451,7 +1399,7 @@ shBuildCiAfter () {(set -e
         for PACKAGE in utility2 "kaizhu256/node-utility2#alpha"
         do
             docker run "$GITHUB_REPO:$DOCKER_TAG" /bin/sh -c "set -e
-                curl -Ls https://raw.githubusercontent.com\
+                curl -Lf https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/alpha/lib.utility2.sh > /tmp/lib.utility2.sh
                 . /tmp/lib.utility2.sh
                 npm install '$PACKAGE'

@@ -16,7 +16,7 @@ branches:
 cache:
     npm: false
 dist:
-    xenial
+    # xenial
 env:
     global:
     # this value is auto-created by shTravisCryptoAesEncryptYml
@@ -24,7 +24,7 @@ env:
 language:
     - node_js
 node_js:
-    # - 8
+    # - 12
     - node
 script:
     - npm run build-ci
