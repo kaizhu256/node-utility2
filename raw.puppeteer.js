@@ -21,7 +21,7 @@ shRawLibFetch
             "url": "https://github.com/websockets/ws/blob/6.2.1/lib/extension.js"
         },
         {
-            // "url": "https://github.com/websockets/ws/blob/6.2.1/lib/permessage-deflate.js"
+            "urlIgnore": "https://github.com/websockets/ws/blob/6.2.1/lib/permessage-deflate.js"
         },
         {
             "url": "https://github.com/websockets/ws/blob/6.2.1/lib/receiver.js"
@@ -51,7 +51,7 @@ shRawLibFetch
             "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Browser.js"
         },
         {
-            // "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/BrowserFetcher.js"
+            "urlIgnore": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/BrowserFetcher.js"
         },
         {
             "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js"
@@ -135,16 +135,210 @@ shRawLibFetch
             "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/api.js"
         },
         {
-            // "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/externs.d.ts"
+            "urlIgnore": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/externs.d.ts"
         },
         {
             "url": "https://github.com/puppeteer/puppeteer/blob/v1.19.0/index.js"
         }
     ],
-    "rollupCommonJs": true
+    "isRollupCommonJs": true
 }
-*/
+-    let functionText = pageFunction.toString();
++    let functionText = pageFunction.toString();
++    // hack-coverage - un-instrument
++    functionText = functionText.replace((/\b__cov_.*?\+\+/g), "0");
 
+-//   const api = exports_puppeteer_puppeteer_lib_api;
++     const api = exports_puppeteer_puppeteer_lib_api;
+
+-// const Errors = exports_puppeteer_puppeteer_lib_Errors;
+-// const DeviceDescriptors = exports_puppeteer_puppeteer_lib_DeviceDescriptors;
++const Errors = exports_puppeteer_puppeteer_lib_Errors;
++const DeviceDescriptors = exports_puppeteer_puppeteer_lib_DeviceDescriptors;
+
+-// const packageJson = exports_puppeteer_puppeteer_package_json;
++const packageJson = exports_puppeteer_puppeteer_package_json;
+
+-exports_puppeteer_puppeteer_index = new Puppeteer(__dirname, preferredRevision, isPuppeteerCore);
+-// let Accessibility   = exports_puppeteer_puppeteer_lib_Accessibility.Accessibility;
+-// let Browser         = exports_puppeteer_puppeteer_lib_Browser.Browser;
+-let BrowserFetcher  = exports_puppeteer_puppeteer_lib_BrowserFetcher;
+-// let Connection      = exports_puppeteer_puppeteer_lib_Connection.Connection;
+-// let Coverage        = exports_puppeteer_puppeteer_lib_Coverage.Coverage;
+-// let DOMWorld        = exports_puppeteer_puppeteer_lib_DOMWorld.DOMWorld;
+-let DeviceDescriptors = exports_puppeteer_puppeteer_lib_DeviceDescriptors;
+-// let Dialog          = exports_puppeteer_puppeteer_lib_Dialog.Dialog;
+-// let EmulationManager = exports_puppeteer_puppeteer_lib_EmulationManager.EmulationManager;
+-// let TimeoutError    = exports_puppeteer_puppeteer_lib_Errors.TimeoutError;
+-let Errors          = exports_puppeteer_puppeteer_lib_Errors;
+-// let Events          = exports_puppeteer_puppeteer_lib_Events.Events;
+-// let EVALUATION_SCRIPT_URL = exports_puppeteer_puppeteer_lib_ExecutionContext.EVALUATION_SCRIPT_URL;
+-// let ExecutionContext = exports_puppeteer_puppeteer_lib_ExecutionContext.ExecutionContext;
+-// let FrameManager    = exports_puppeteer_puppeteer_lib_FrameManager.FrameManager;
+-// let Keyboard        = exports_puppeteer_puppeteer_lib_Input.Keyboard;
+-// let Mouse           = exports_puppeteer_puppeteer_lib_Input.Mouse;
+-// let Touchscreen     = exports_puppeteer_puppeteer_lib_Input.Touchscreen;
+-// let JSHandle        = exports_puppeteer_puppeteer_lib_JSHandle.JSHandle;
+-// let createJSHandle  = exports_puppeteer_puppeteer_lib_JSHandle.createJSHandle;
+-// let Launcher        = exports_puppeteer_puppeteer_lib_Launcher;
+-// let LifecycleWatcher = exports_puppeteer_puppeteer_lib_LifecycleWatcher.LifecycleWatcher;
+-// let NetworkManager  = exports_puppeteer_puppeteer_lib_NetworkManager.NetworkManager;
+-// let Page            = exports_puppeteer_puppeteer_lib_Page.Page;
+-// let PipeTransport   = exports_puppeteer_puppeteer_lib_PipeTransport;
+-// let Target          = exports_puppeteer_puppeteer_lib_Target.Target;
+-// let TaskQueue       = exports_puppeteer_puppeteer_lib_TaskQueue.TaskQueue;
+-// let TimeoutSettings = exports_puppeteer_puppeteer_lib_TimeoutSettings.TimeoutSettings;
+-// let Tracing         = exports_puppeteer_puppeteer_lib_Tracing;
+-let keyDefinitions  = exports_puppeteer_puppeteer_lib_USKeyboardLayout;
+-// let WebSocketTransport = exports_puppeteer_puppeteer_lib_WebSocketTransport;
+-// let Worker          = exports_puppeteer_puppeteer_lib_Worker.Worker;
+-let api             = exports_puppeteer_puppeteer_lib_api;
+-// let assert          = exports_puppeteer_puppeteer_lib_helper.assert;
+-let debugError      = exports_puppeteer_puppeteer_lib_helper.debugError;
+-let helper          = exports_puppeteer_puppeteer_lib_helper.helper;
+-let packageJson     = exports_puppeteer_puppeteer_package_json;
+-let applyMask       = exports_websockets_ws_lib_buffer_util.applyMask;
+-// let concat          = exports_websockets_ws_lib_buffer_util.concat;
+-// let mask            = exports_websockets_ws_lib_buffer_util.mask;
+-// let toArrayBuffer   = exports_websockets_ws_lib_buffer_util.toArrayBuffer;
+-// let toBuffer        = exports_websockets_ws_lib_buffer_util.toBuffer;
+-let unmask          = exports_websockets_ws_lib_buffer_util.unmask;
+-let BINARY_TYPES    = exports_websockets_ws_lib_constants.BINARY_TYPES;
+-let EMPTY_BUFFER    = exports_websockets_ws_lib_constants.EMPTY_BUFFER;
+-let GUID            = exports_websockets_ws_lib_constants.GUID;
+-let NOOP            = exports_websockets_ws_lib_constants.NOOP;
+-let kStatusCode     = exports_websockets_ws_lib_constants.kStatusCode;
+-let kWebSocket      = exports_websockets_ws_lib_constants.kWebSocket;
+-// let EventTarget     = exports_websockets_ws_lib_event_target;
+-let extension       = exports_websockets_ws_lib_extension;
+-let PerMessageDeflate = exports_websockets_ws_lib_permessage_deflate;
+-// let Receiver        = exports_websockets_ws_lib_receiver;
+-// let Sender          = exports_websockets_ws_lib_sender;
+-let isValidStatusCode = exports_websockets_ws_lib_validation.isValidStatusCode;
+-let isValidUTF8     = exports_websockets_ws_lib_validation.isValidUTF8;
+-// let WebSocket       = exports_websockets_ws_lib_websocket;
+-}());
++exports_puppeteer_puppeteer_index = new Puppeteer(__dirname, preferredRevision, isPuppeteerCore);
++// let Accessibility   = exports_puppeteer_puppeteer_lib_Accessibility.Accessibility;
++// let Browser         = exports_puppeteer_puppeteer_lib_Browser.Browser;
++let BrowserFetcher  = exports_puppeteer_puppeteer_lib_BrowserFetcher;
++// let Connection      = exports_puppeteer_puppeteer_lib_Connection.Connection;
++// let Coverage        = exports_puppeteer_puppeteer_lib_Coverage.Coverage;
++// let DOMWorld        = exports_puppeteer_puppeteer_lib_DOMWorld.DOMWorld;
++// let DeviceDescriptors = exports_puppeteer_puppeteer_lib_DeviceDescriptors;
++// let Dialog          = exports_puppeteer_puppeteer_lib_Dialog.Dialog;
++// let EmulationManager = exports_puppeteer_puppeteer_lib_EmulationManager.EmulationManager;
++// let TimeoutError    = exports_puppeteer_puppeteer_lib_Errors.TimeoutError;
++// let Errors          = exports_puppeteer_puppeteer_lib_Errors;
++// let Events          = exports_puppeteer_puppeteer_lib_Events.Events;
++// let EVALUATION_SCRIPT_URL = exports_puppeteer_puppeteer_lib_ExecutionContext.EVALUATION_SCRIPT_URL;
++// let ExecutionContext = exports_puppeteer_puppeteer_lib_ExecutionContext.ExecutionContext;
++// let FrameManager    = exports_puppeteer_puppeteer_lib_FrameManager.FrameManager;
++// let Keyboard        = exports_puppeteer_puppeteer_lib_Input.Keyboard;
++// let Mouse           = exports_puppeteer_puppeteer_lib_Input.Mouse;
++// let Touchscreen     = exports_puppeteer_puppeteer_lib_Input.Touchscreen;
++// let JSHandle        = exports_puppeteer_puppeteer_lib_JSHandle.JSHandle;
++// let createJSHandle  = exports_puppeteer_puppeteer_lib_JSHandle.createJSHandle;
++// let Launcher        = exports_puppeteer_puppeteer_lib_Launcher;
++// let LifecycleWatcher = exports_puppeteer_puppeteer_lib_LifecycleWatcher.LifecycleWatcher;
++// let NetworkManager  = exports_puppeteer_puppeteer_lib_NetworkManager.NetworkManager;
++// let Page            = exports_puppeteer_puppeteer_lib_Page.Page;
++// let PipeTransport   = exports_puppeteer_puppeteer_lib_PipeTransport;
++// let Target          = exports_puppeteer_puppeteer_lib_Target.Target;
++// let TaskQueue       = exports_puppeteer_puppeteer_lib_TaskQueue.TaskQueue;
++// let TimeoutSettings = exports_puppeteer_puppeteer_lib_TimeoutSettings.TimeoutSettings;
++// let Tracing         = exports_puppeteer_puppeteer_lib_Tracing;
++let keyDefinitions  = exports_puppeteer_puppeteer_lib_USKeyboardLayout;
++// let WebSocketTransport = exports_puppeteer_puppeteer_lib_WebSocketTransport;
++// let Worker          = exports_puppeteer_puppeteer_lib_Worker.Worker;
++let api             = exports_puppeteer_puppeteer_lib_api;
++// let assert          = exports_puppeteer_puppeteer_lib_helper.assert;
++// let debugError      = exports_puppeteer_puppeteer_lib_helper.debugError;
++// let helper          = exports_puppeteer_puppeteer_lib_helper.helper;
++// let packageJson     = exports_puppeteer_puppeteer_package_json;
++let applyMask       = exports_websockets_ws_lib_buffer_util.mask;
++// let concat          = exports_websockets_ws_lib_buffer_util.concat;
++// let mask            = exports_websockets_ws_lib_buffer_util.mask;
++// let toArrayBuffer   = exports_websockets_ws_lib_buffer_util.toArrayBuffer;
++// let toBuffer        = exports_websockets_ws_lib_buffer_util.toBuffer;
++let unmask          = exports_websockets_ws_lib_buffer_util.unmask;
++let BINARY_TYPES    = exports_websockets_ws_lib_constants.BINARY_TYPES;
++let EMPTY_BUFFER    = exports_websockets_ws_lib_constants.EMPTY_BUFFER;
++let GUID            = exports_websockets_ws_lib_constants.GUID;
++let NOOP            = exports_websockets_ws_lib_constants.NOOP;
++let kStatusCode     = exports_websockets_ws_lib_constants.kStatusCode;
++let kWebSocket      = exports_websockets_ws_lib_constants.kWebSocket;
++// let EventTarget     = exports_websockets_ws_lib_event_target;
++let extension       = exports_websockets_ws_lib_extension;
++let PerMessageDeflate = exports_websockets_ws_lib_permessage_deflate;
++// let Receiver        = exports_websockets_ws_lib_receiver;
++// let Sender          = exports_websockets_ws_lib_sender;
++let isValidStatusCode = exports_websockets_ws_lib_validation.isValidStatusCode;
++let isValidUTF8     = exports_websockets_ws_lib_validation.isValidUTF8;
++// let WebSocket       = exports_websockets_ws_lib_websocket;
++local._puppeteer = exports_puppeteer_puppeteer_index;
++local.puppeteerApi = exports_puppeteer_puppeteer_lib_api;
++local.puppeteerLaunch = local._puppeteer.launch.bind(local._puppeteer);
++local.nop(local.puppeteerLaunch);
+
+-exports_puppeteer_puppeteer_lib_helper = {
+-  helper: Helper,
+-  assert,
+-  debugError
+-};
++exports_puppeteer_puppeteer_lib_helper = {
++  helper: Helper,
++  assert,
++  debugError
++};
++// hack-puppeteer - init helper
++let helper = exports_puppeteer_puppeteer_lib_helper.helper;
+
+-let EventEmitter = require('events');
+-let URL = require('url');
+-// let WebSocket = require('ws');
+-let Writable = require('stream').Writable;
+-let bufferUtil = require('bufferutil');
+-let childProcess = require('child_process');
+-let crypto = require('crypto');
+-// let debugError = require('debug')(`puppeteer:error`);
+-let debugProtocol = require('debug')('puppeteer:protocol');
+-let fs = require('fs');
+-let http = require('http');
+-let https = require('https');
+-// let isValidUTF8 = require('utf-8-validate');
+-let mime = require('mime');
+-let net = require('net');
+-let os = require('os');
+-// let path = require('path');
+-let randomBytes = require('crypto').randomBytes;
+-let readline = require('readline');
+-let removeFolder = require('rimraf');
+-let tls = require('tls');
+-// let url = require('url');
++let EventEmitter = require('events');
++let URL = require('url');
++// let WebSocket = require('ws');
++let Writable = require('stream').Writable;
++// let bufferUtil = require('bufferutil');
++let childProcess = require('child_process');
++let crypto = require('crypto');
++// let debugError = require('debug')(`puppeteer:error`);
++// let debugProtocol = require('debug')('puppeteer:protocol');
++let fs = require('fs');
++let http = require('http');
++let https = require('https');
++// let isValidUTF8 = require('utf-8-validate');
++// let mime = require('mime');
++let net = require('net');
++let os = require('os');
++let path = require('path');
++let randomBytes = require('crypto').randomBytes;
++let readline = require('readline');
++// let removeFolder = require('rimraf');
++let tls = require('tls');
++let url = require('url');
+*/
 
 
 (function () {
@@ -153,24 +347,24 @@ let EventEmitter = require('events');
 let URL = require('url');
 // let WebSocket = require('ws');
 let Writable = require('stream').Writable;
-let bufferUtil = require('bufferutil');
+// let bufferUtil = require('bufferutil');
 let childProcess = require('child_process');
 let crypto = require('crypto');
 // let debugError = require('debug')(`puppeteer:error`);
-let debugProtocol = require('debug')('puppeteer:protocol');
+// let debugProtocol = require('debug')('puppeteer:protocol');
 let fs = require('fs');
 let http = require('http');
 let https = require('https');
 // let isValidUTF8 = require('utf-8-validate');
-let mime = require('mime');
+// let mime = require('mime');
 let net = require('net');
 let os = require('os');
-// let path = require('path');
+let path = require('path');
 let randomBytes = require('crypto').randomBytes;
 let readline = require('readline');
-let removeFolder = require('rimraf');
+// let removeFolder = require('rimraf');
 let tls = require('tls');
-// let url = require('url');
+let url = require('url');
 let exports_puppeteer_puppeteer_index = {};
 let exports_puppeteer_puppeteer_lib_Accessibility = {};
 let exports_puppeteer_puppeteer_lib_Browser = {};
@@ -223,7 +417,6 @@ committed 2019-03-27T08:34:10Z
 */
 
 
-
 /*
 file https://github.com/websockets/ws/blob/6.2.1/package.json
 */
@@ -274,7 +467,6 @@ exports_websockets_ws_package_json = {
 }
 
 
-
 /*
 file https://github.com/websockets/ws/blob/6.2.1/lib/constants.js
 */
@@ -288,7 +480,6 @@ exports_websockets_ws_lib_constants = {
   EMPTY_BUFFER: Buffer.alloc(0),
   NOOP: () => {}
 };
-
 
 
 /*
@@ -324,7 +515,6 @@ exports_websockets_ws_lib_validation.isValidStatusCode = (code) => {
     (code >= 3000 && code <= 4999)
   );
 };
-
 
 
 /*
@@ -474,7 +664,6 @@ try {
     unmask: _unmask
   };
 }
-
 
 
 /*
@@ -650,7 +839,6 @@ const EventTarget = {
 };
 
 exports_websockets_ws_lib_event_target = EventTarget;
-
 
 
 /*
@@ -878,7 +1066,6 @@ function format(extensions) {
 }
 
 exports_websockets_ws_lib_extension = { format, parse };
-
 
 
 /*
@@ -1378,7 +1565,6 @@ function error(ErrorCtor, message, prefix, statusCode) {
 }
 
 
-
 /*
 file https://github.com/websockets/ws/blob/6.2.1/lib/sender.js
 */
@@ -1740,7 +1926,6 @@ class Sender {
 }
 
 exports_websockets_ws_lib_sender = Sender;
-
 
 
 /*
@@ -2147,7 +2332,6 @@ function abortHandshake(socket, code, message, headers) {
   socket.removeListener('error', socketOnError);
   socket.destroy();
 }
-
 
 
 /*
@@ -3050,7 +3234,6 @@ function socketOnError() {
 }
 
 
-
 /*
 file https://github.com/websockets/ws/blob/6.2.1/index.js
 */
@@ -3065,12 +3248,10 @@ WebSocket.Sender = exports_websockets_ws_lib_sender;
 exports_websockets_ws_index = WebSocket;
 
 
-
 /*
 repo https://github.com/puppeteer/puppeteer/tree/v1.19.0
 committed 2019-07-23T05:02:45Z
 */
-
 
 
 /*
@@ -3149,7 +3330,6 @@ exports_puppeteer_puppeteer_package_json = {
     "readline": false
   }
 }
-
 
 
 /*
@@ -3432,7 +3612,8 @@ exports_puppeteer_puppeteer_lib_helper = {
   assert,
   debugError
 };
-
+// hack-puppeteer - init helper
+let helper = exports_puppeteer_puppeteer_lib_helper.helper;
 
 
 /*
@@ -3567,6 +3748,7 @@ function serializeTree(node, whitelistedNodes) {
     serializedNode.children = children;
   return [serializedNode];
 }
+
 
 class AXNode {
   /**
@@ -3859,7 +4041,6 @@ class AXNode {
 }
 
 exports_puppeteer_puppeteer_lib_Accessibility = {Accessibility};
-
 
 
 /*
@@ -4250,7 +4431,6 @@ class BrowserContext extends EventEmitter {
 exports_puppeteer_puppeteer_lib_Browser = {Browser, BrowserContext};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
 */
@@ -4496,7 +4676,6 @@ function rewriteError(error, message) {
 }
 
 exports_puppeteer_puppeteer_lib_Connection = {Connection, CDPSession};
-
 
 
 /*
@@ -4814,7 +4993,6 @@ function convertToDisjointRanges(nestedRanges) {
   // Filter out empty ranges.
   return results.filter(range => range.end - range.start > 1);
 }
-
 
 
 /*
@@ -5539,7 +5717,6 @@ async function waitForPredicatePageFunction(predicateBody, polling, timeout, ...
 }
 
 exports_puppeteer_puppeteer_lib_DOMWorld = {DOMWorld};
-
 
 
 /*
@@ -6395,7 +6572,6 @@ for (const device of exports_puppeteer_puppeteer_lib_DeviceDescriptors)
   exports_puppeteer_puppeteer_lib_DeviceDescriptors[device.name] = device;
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Dialog.js
 */
@@ -6484,7 +6660,6 @@ Dialog.Type = {
 exports_puppeteer_puppeteer_lib_Dialog = {Dialog};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/EmulationManager.js
 */
@@ -6544,7 +6719,6 @@ class EmulationManager {
 exports_puppeteer_puppeteer_lib_EmulationManager = {EmulationManager};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Errors.js
 */
@@ -6577,7 +6751,6 @@ class TimeoutError extends CustomError {}
 exports_puppeteer_puppeteer_lib_Errors = {
   TimeoutError,
 };
-
 
 
 /*
@@ -6663,7 +6836,6 @@ const Events = {
 };
 
 exports_puppeteer_puppeteer_lib_Events = { Events };
-
 
 
 /*
@@ -6757,6 +6929,8 @@ class ExecutionContext {
       throw new Error(`Expected to get |string| or |function| as the first argument, but got "${pageFunction}" instead.`);
 
     let functionText = pageFunction.toString();
+    // hack-coverage - un-instrument
+    functionText = functionText.replace((/\b__cov_.*?\+\+/g), "0");
     try {
       new Function('(' + functionText + ')');
     } catch (e1) {
@@ -6872,7 +7046,6 @@ class ExecutionContext {
 }
 
 exports_puppeteer_puppeteer_lib_ExecutionContext = {ExecutionContext, EVALUATION_SCRIPT_URL};
-
 
 
 /*
@@ -7598,7 +7771,6 @@ function assertNoLegacyNavigationOptions(options) {
 exports_puppeteer_puppeteer_lib_FrameManager = {FrameManager, Frame};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Input.js
 */
@@ -7915,7 +8087,6 @@ class Touchscreen {
 }
 
 exports_puppeteer_puppeteer_lib_Input = { Keyboard, Mouse, Touchscreen};
-
 
 
 /*
@@ -8448,7 +8619,6 @@ function computeQuadArea(quad) {
 exports_puppeteer_puppeteer_lib_JSHandle = {createJSHandle, JSHandle, ElementHandle};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Launcher.js
 */
@@ -8894,8 +9064,8 @@ function getWSEndpoint(browserURL) {
  * @property {number=} slowMo
  */
 
-exports_puppeteer_puppeteer_lib_Launcher = Launcher;
 
+exports_puppeteer_puppeteer_lib_Launcher = Launcher;
 
 
 /*
@@ -9101,7 +9271,6 @@ const puppeteerToProtocolLifecycle = {
 exports_puppeteer_puppeteer_lib_LifecycleWatcher = {LifecycleWatcher};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Multimap.js
 */
@@ -9241,7 +9410,6 @@ class Multimap {
 }
 
 exports_puppeteer_puppeteer_lib_Multimap = Multimap;
-
 
 
 /*
@@ -9488,6 +9656,7 @@ class NetworkManager extends EventEmitter {
     this._requestIdToRequest.set(event.requestId, request);
     this.emit(Events.NetworkManager.Request, request);
   }
+
 
   /**
    * @param {!Protocol.Network.requestServedFromCachePayload} event
@@ -10044,7 +10213,6 @@ const STATUS_TEXTS = {
 };
 
 exports_puppeteer_puppeteer_lib_NetworkManager = {Request, Response, NetworkManager, SecurityDetails};
-
 
 
 /*
@@ -11291,6 +11459,7 @@ function convertPrintParameterToInches(parameter) {
  * @property {("Strict"|"Lax"|"Extended"|"None")=} sameSite
  */
 
+
 /**
  * @typedef {Object} Network.CookieParam
  * @property {string} name
@@ -11401,7 +11570,6 @@ class FileChooser {
 exports_puppeteer_puppeteer_lib_Page = {Page, ConsoleMessage, FileChooser};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/PipeTransport.js
 */
@@ -11487,7 +11655,6 @@ class PipeTransport {
 exports_puppeteer_puppeteer_lib_PipeTransport = PipeTransport;
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Puppeteer.js
 */
@@ -11508,8 +11675,8 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Puppeteer.js
  */
 // const Launcher = exports_puppeteer_puppeteer_lib_Launcher;
 // const BrowserFetcher = exports_puppeteer_puppeteer_lib_BrowserFetcher;
-// const Errors = exports_puppeteer_puppeteer_lib_Errors;
-// const DeviceDescriptors = exports_puppeteer_puppeteer_lib_DeviceDescriptors;
+const Errors = exports_puppeteer_puppeteer_lib_Errors;
+const DeviceDescriptors = exports_puppeteer_puppeteer_lib_DeviceDescriptors;
 
 exports_puppeteer_puppeteer_lib_Puppeteer = class {
   /**
@@ -11575,7 +11742,6 @@ exports_puppeteer_puppeteer_lib_Puppeteer = class {
     return new BrowserFetcher(this._projectRoot, options);
   }
 };
-
 
 
 /*
@@ -11739,7 +11905,6 @@ class Target {
 exports_puppeteer_puppeteer_lib_Target = {Target};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/TaskQueue.js
 */
@@ -11760,7 +11925,6 @@ class TaskQueue {
 }
 
 exports_puppeteer_puppeteer_lib_TaskQueue = {TaskQueue};
-
 
 
 /*
@@ -11823,7 +11987,6 @@ class TimeoutSettings {
 }
 
 exports_puppeteer_puppeteer_lib_TimeoutSettings = {TimeoutSettings};
-
 
 
 /*
@@ -11901,7 +12064,6 @@ class Tracing {
 }
 
 exports_puppeteer_puppeteer_lib_Tracing = Tracing;
-
 
 
 /*
@@ -12197,7 +12359,6 @@ exports_puppeteer_puppeteer_lib_USKeyboardLayout = {
 };
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/WebSocketTransport.js
 */
@@ -12269,7 +12430,6 @@ class WebSocketTransport {
 }
 
 exports_puppeteer_puppeteer_lib_WebSocketTransport = WebSocketTransport;
-
 
 
 /*
@@ -12357,7 +12517,6 @@ class Worker extends EventEmitter {
 exports_puppeteer_puppeteer_lib_Worker = {Worker};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/api.js
 */
@@ -12406,7 +12565,6 @@ exports_puppeteer_puppeteer_lib_api = {
 };
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/index.js
 */
@@ -12435,7 +12593,7 @@ try {
 
 if (asyncawait) {
 //   const {helper} = exports_puppeteer_puppeteer_lib_helper;
-//   const api = exports_puppeteer_puppeteer_lib_api;
+     const api = exports_puppeteer_puppeteer_lib_api;
   for (const className in api) {
     // Puppeteer-web excludes certain classes from bundle, e.g. BrowserFetcher.
     if (typeof api[className] === 'function')
@@ -12445,7 +12603,7 @@ if (asyncawait) {
 
 // If node does not support async await, use the compiled version.
 const Puppeteer = asyncawait ? exports_puppeteer_puppeteer_lib_Puppeteer : exports_puppeteer_puppeteer_node6_lib_Puppeteer;
-// const packageJson = exports_puppeteer_puppeteer_package_json;
+const packageJson = exports_puppeteer_puppeteer_package_json;
 const preferredRevision = packageJson.puppeteer.chromium_revision;
 const isPuppeteerCore = packageJson.name === 'puppeteer-core';
 
@@ -12456,11 +12614,11 @@ let BrowserFetcher  = exports_puppeteer_puppeteer_lib_BrowserFetcher;
 // let Connection      = exports_puppeteer_puppeteer_lib_Connection.Connection;
 // let Coverage        = exports_puppeteer_puppeteer_lib_Coverage.Coverage;
 // let DOMWorld        = exports_puppeteer_puppeteer_lib_DOMWorld.DOMWorld;
-let DeviceDescriptors = exports_puppeteer_puppeteer_lib_DeviceDescriptors;
+// let DeviceDescriptors = exports_puppeteer_puppeteer_lib_DeviceDescriptors;
 // let Dialog          = exports_puppeteer_puppeteer_lib_Dialog.Dialog;
 // let EmulationManager = exports_puppeteer_puppeteer_lib_EmulationManager.EmulationManager;
 // let TimeoutError    = exports_puppeteer_puppeteer_lib_Errors.TimeoutError;
-let Errors          = exports_puppeteer_puppeteer_lib_Errors;
+// let Errors          = exports_puppeteer_puppeteer_lib_Errors;
 // let Events          = exports_puppeteer_puppeteer_lib_Events.Events;
 // let EVALUATION_SCRIPT_URL = exports_puppeteer_puppeteer_lib_ExecutionContext.EVALUATION_SCRIPT_URL;
 // let ExecutionContext = exports_puppeteer_puppeteer_lib_ExecutionContext.ExecutionContext;
@@ -12484,10 +12642,10 @@ let keyDefinitions  = exports_puppeteer_puppeteer_lib_USKeyboardLayout;
 // let Worker          = exports_puppeteer_puppeteer_lib_Worker.Worker;
 let api             = exports_puppeteer_puppeteer_lib_api;
 // let assert          = exports_puppeteer_puppeteer_lib_helper.assert;
-let debugError      = exports_puppeteer_puppeteer_lib_helper.debugError;
-let helper          = exports_puppeteer_puppeteer_lib_helper.helper;
-let packageJson     = exports_puppeteer_puppeteer_package_json;
-let applyMask       = exports_websockets_ws_lib_buffer_util.applyMask;
+// let debugError      = exports_puppeteer_puppeteer_lib_helper.debugError;
+// let helper          = exports_puppeteer_puppeteer_lib_helper.helper;
+// let packageJson     = exports_puppeteer_puppeteer_package_json;
+let applyMask       = exports_websockets_ws_lib_buffer_util.mask;
 // let concat          = exports_websockets_ws_lib_buffer_util.concat;
 // let mask            = exports_websockets_ws_lib_buffer_util.mask;
 // let toArrayBuffer   = exports_websockets_ws_lib_buffer_util.toArrayBuffer;
@@ -12507,8 +12665,10 @@ let PerMessageDeflate = exports_websockets_ws_lib_permessage_deflate;
 let isValidStatusCode = exports_websockets_ws_lib_validation.isValidStatusCode;
 let isValidUTF8     = exports_websockets_ws_lib_validation.isValidUTF8;
 // let WebSocket       = exports_websockets_ws_lib_websocket;
-}());
-
+local._puppeteer = exports_puppeteer_puppeteer_index;
+local.puppeteerApi = exports_puppeteer_puppeteer_lib_api;
+local.puppeteerLaunch = local._puppeteer.launch.bind(local._puppeteer);
+local.nop(local.puppeteerLaunch);
 
 
 /*

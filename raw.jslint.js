@@ -11,9 +11,9 @@ shRawLibFetch
     ],
     "replaceList": [
         {
-            "flags": "g",
-            "replace": "$1// hack-jslint - exact-margin$1if (right.from !==",
-            "source": "(\\n\\u0020*?)if\\u0020\\(right.from\\u0020\\S+"
+            "aa": "(\\n\\u0020*?)if\\u0020\\(right.from\\u0020\\S+",
+            "bb": "$1// hack-jslint - exact-margin$1if (right.from !==",
+            "flags": "g"
         }
     ]
 }
@@ -70,6 +70,7 @@ shRawLibFetch
 +            case "utility2:true":
 +                option.bitwise = true;
 +                option.browser = true;
++                option.debug = true;
 +                option.node = true;
 +                option.nomen = true;
 +                option.this = true;
@@ -328,12 +329,10 @@ shRawLibFetch
 */
 
 
-
 /*
 repo https://github.com/CSSLint/csslint/tree/e8aeeda06c928636e21428e09b1af93f66621209
 committed 2018-02-25T11:28:16Z
 */
-
 
 
 /*
@@ -1106,6 +1105,7 @@ function Parser(options) {
     //inherit event functionality
     EventTarget.call(this);
 
+
     this.options = options || {};
 
     this._tokenStream = null;
@@ -1610,6 +1610,7 @@ Parser.prototype = function() {
                 });
             },
 
+
             //CSS3 Media Queries
             _media_query_list: function() {
                 /*
@@ -1619,6 +1620,7 @@ Parser.prototype = function() {
                  */
                 var tokenStream = this._tokenStream,
                     mediaList   = [];
+
 
                 this._readWhitespace();
 
@@ -2183,6 +2185,7 @@ Parser.prototype = function() {
                     tt,
                     selectors;
 
+
                 /*
                  * Error Recovery: If even a single selector fails to parse,
                  * then the entire ruleset should be thrown away.
@@ -2384,6 +2387,7 @@ Parser.prototype = function() {
                     line,
                     col;
 
+
                 //get starting line and column for the selector
                 line = tokenStream.LT(1).startLine;
                 col = tokenStream.LT(1).startCol;
@@ -2424,6 +2428,7 @@ Parser.prototype = function() {
                         component = null;
                     }
                 }
+
 
                 return selectorText !== "" ?
                         new SelectorPart(elementName, modifiers, selectorText, line, col) :
@@ -3347,6 +3352,7 @@ Parser.prototype = function() {
                 var tokenStream = this._tokenStream,
                     tt;
 
+
                 this._readWhitespace();
 
                 if (checkStart) {
@@ -3426,6 +3432,7 @@ Parser.prototype = function() {
 
                 return ws;
             },
+
 
             /**
              * Throws an error when an unexpected token is found.
@@ -3579,6 +3586,7 @@ Parser.prototype = function() {
 
     return proto;
 }();
+
 
 /*
 nth
@@ -4828,6 +4836,7 @@ var h = /^[0-9a-fA-F]$/,
 // Helper functions
 //-----------------------------------------------------------------------------
 
+
 function isHexDigit(c) {
     return c !== null && h.test(c);
 }
@@ -4869,6 +4878,7 @@ function mix(receiver, supplier) {
 // CSS Token Stream
 //-----------------------------------------------------------------------------
 
+
 /**
  * A token stream that produces CSS tokens.
  * @param {String|Reader} input The source of text to tokenize.
@@ -4898,6 +4908,7 @@ TokenStream.prototype = mix(new TokenStreamBase(), {
             startCol    = reader.getCol();
 
         c = reader.read();
+
 
         while (c) {
             switch (c) {
@@ -5609,6 +5620,7 @@ TokenStream.prototype = mix(new TokenStreamBase(), {
         return this.createToken(Tokens.S, value, startLine, startCol);
     },
 
+
     //-------------------------------------------------------------------------
     // Methods to read values from the string stream
     //-------------------------------------------------------------------------
@@ -5657,6 +5669,7 @@ TokenStream.prototype = mix(new TokenStreamBase(), {
             number  = first,
             hasDot  = (first === "."),
             c       = reader.peek();
+
 
         while (c) {
             if (isDigit(c)) {
@@ -6263,6 +6276,7 @@ copy(ValidationTypes, {
         return result;
     },
 
+
     simple: {
         __proto__: null,
 
@@ -6768,6 +6782,7 @@ function StringReader(text) {
      */
     this._input = text.replace(/(\r\n?|\n)/g, "\n");
 
+
     /**
      * The row for the character to be read next.
      * @property _line
@@ -6775,6 +6790,7 @@ function StringReader(text) {
      * @private
      */
     this._line = 1;
+
 
     /**
      * The column for the character to be read next.
@@ -6995,6 +7011,7 @@ StringReader.prototype = {
         return value;
     },
 
+
     /**
      * Reads a given number of characters. If the end of the input is reached,
      * it reads only the remaining characters and does not throw an error.
@@ -7070,6 +7087,7 @@ module.exports = SyntaxUnit;
  * @param {int} col The column of text on which the unit resides.
  */
 function SyntaxUnit(text, line, col, type) {
+
 
     /**
      * The column of text on which the unit resides.
@@ -8058,6 +8076,7 @@ var CSSLint = (function() {
             }
         }
 
+
         // capture most horrible error type
         try {
             parser.parse(text);
@@ -8708,6 +8727,7 @@ CSSLint.addRule({
             "writing-mode"               : "epub ms"
         };
 
+
         for (prop in compatiblePrefixes) {
             if (compatiblePrefixes.hasOwnProperty(prop)) {
                 variations = [];
@@ -9203,6 +9223,7 @@ CSSLint.addRule({
         "use strict";
         var rule = this,
             count = 0;
+
 
         parser.addListener("startfontface", function() {
             count++;
@@ -10088,6 +10109,7 @@ CSSLint.addRule({
             textIndent,
             direction;
 
+
         function startRule() {
             textIndent = false;
             direction = "inherit";
@@ -10591,6 +10613,7 @@ CSSLint.addRule({
                 return "net.csslint." + rule.name.replace(/\s/g, "");
             };
 
+
             if (messages.length > 0) {
                 output.push("<file name=\""+filename+"\">");
                 CSSLint.Util.forEach(messages, function (message) {
@@ -11051,12 +11074,10 @@ return CSSLint;
 })();
 
 
-
 /*
 repo https://github.com/douglascrockford/JSLint/tree/686716b71f6d45d3c233e1cfa026a1e5f46747aa
 committed 2020-03-28T12:46:58Z
 */
-
 
 
 /*
@@ -11727,6 +11748,7 @@ function tokenize(source) {
             case "utility2:true":
                 option.bitwise = true;
                 option.browser = true;
+                option.debug = true;
                 option.node = true;
                 option.nomen = true;
                 option.this = true;
@@ -16294,7 +16316,6 @@ local.jslint_export = Object.freeze(function (
         source_autofixed: source
     };
 });
-
 
 
 /*

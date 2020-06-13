@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 /*
- * lib.jslint.js (2020.6.8)
+ * lib.jslint.js (2020.6.9)
  * https://github.com/kaizhu256/node-jslint-lite
  * this zero-dependency package will provide browser-compatible versions of jslint (v2020.3.28) and csslint (v2018.2.25), with working web-demo
  *
  */
-
 
 
 /* istanbul instrument in package jslint */
@@ -13,12 +12,10 @@
 /* jslint utility2:true */
 /* istanbul ignore next */
 // run shared js-env code - init-local
-(function (globalThis) {
+(function () {
     "use strict";
     let consoleError;
     let local;
-    // init globalThis
-    globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debugInline
     if (!globalThis.debugInline) {
         consoleError = console.error;
@@ -169,14 +166,12 @@
             throw err;
         });
     }
-}((typeof globalThis === "object" && globalThis) || window));
+}());
 // assets.utility2.header.js - end
-
 
 
 (function (local) {
 "use strict";
-
 
 
 /* istanbul ignore next */
@@ -198,7 +193,6 @@ if (local.isBrowser) {
 }
 // init lib main
 local.jslint = local;
-
 
 
 /* validateLineSortedReset */
@@ -389,7 +383,6 @@ local.objectDeepCopyWithKeysSorted = function (obj) {
 }());
 
 
-
 /* istanbul ignore next */
 // run shared js-env code - function
 /* jslint ignore:start */
@@ -398,7 +391,6 @@ local.objectDeepCopyWithKeysSorted = function (obj) {
 repo https://github.com/CSSLint/csslint/tree/e8aeeda06c928636e21428e09b1af93f66621209
 committed 2018-02-25T11:28:16Z
 */
-
 
 
 /*
@@ -1171,6 +1163,7 @@ function Parser(options) {
     //inherit event functionality
     EventTarget.call(this);
 
+
     this.options = options || {};
 
     this._tokenStream = null;
@@ -1675,6 +1668,7 @@ Parser.prototype = function() {
                 });
             },
 
+
             //CSS3 Media Queries
             _media_query_list: function() {
                 /*
@@ -1684,6 +1678,7 @@ Parser.prototype = function() {
                  */
                 var tokenStream = this._tokenStream,
                     mediaList   = [];
+
 
                 this._readWhitespace();
 
@@ -2248,6 +2243,7 @@ Parser.prototype = function() {
                     tt,
                     selectors;
 
+
                 /*
                  * Error Recovery: If even a single selector fails to parse,
                  * then the entire ruleset should be thrown away.
@@ -2449,6 +2445,7 @@ Parser.prototype = function() {
                     line,
                     col;
 
+
                 //get starting line and column for the selector
                 line = tokenStream.LT(1).startLine;
                 col = tokenStream.LT(1).startCol;
@@ -2489,6 +2486,7 @@ Parser.prototype = function() {
                         component = null;
                     }
                 }
+
 
                 return selectorText !== "" ?
                         new SelectorPart(elementName, modifiers, selectorText, line, col) :
@@ -3412,6 +3410,7 @@ Parser.prototype = function() {
                 var tokenStream = this._tokenStream,
                     tt;
 
+
                 this._readWhitespace();
 
                 if (checkStart) {
@@ -3491,6 +3490,7 @@ Parser.prototype = function() {
 
                 return ws;
             },
+
 
             /**
              * Throws an error when an unexpected token is found.
@@ -3644,6 +3644,7 @@ Parser.prototype = function() {
 
     return proto;
 }();
+
 
 /*
 nth
@@ -4893,6 +4894,7 @@ var h = /^[0-9a-fA-F]$/,
 // Helper functions
 //-----------------------------------------------------------------------------
 
+
 function isHexDigit(c) {
     return c !== null && h.test(c);
 }
@@ -4934,6 +4936,7 @@ function mix(receiver, supplier) {
 // CSS Token Stream
 //-----------------------------------------------------------------------------
 
+
 /**
  * A token stream that produces CSS tokens.
  * @param {String|Reader} input The source of text to tokenize.
@@ -4963,6 +4966,7 @@ TokenStream.prototype = mix(new TokenStreamBase(), {
             startCol    = reader.getCol();
 
         c = reader.read();
+
 
         while (c) {
             switch (c) {
@@ -5674,6 +5678,7 @@ TokenStream.prototype = mix(new TokenStreamBase(), {
         return this.createToken(Tokens.S, value, startLine, startCol);
     },
 
+
     //-------------------------------------------------------------------------
     // Methods to read values from the string stream
     //-------------------------------------------------------------------------
@@ -5722,6 +5727,7 @@ TokenStream.prototype = mix(new TokenStreamBase(), {
             number  = first,
             hasDot  = (first === "."),
             c       = reader.peek();
+
 
         while (c) {
             if (isDigit(c)) {
@@ -6328,6 +6334,7 @@ copy(ValidationTypes, {
         return result;
     },
 
+
     simple: {
         __proto__: null,
 
@@ -6833,6 +6840,7 @@ function StringReader(text) {
      */
     this._input = text.replace(/(\r\n?|\n)/g, "\n");
 
+
     /**
      * The row for the character to be read next.
      * @property _line
@@ -6840,6 +6848,7 @@ function StringReader(text) {
      * @private
      */
     this._line = 1;
+
 
     /**
      * The column for the character to be read next.
@@ -7060,6 +7069,7 @@ StringReader.prototype = {
         return value;
     },
 
+
     /**
      * Reads a given number of characters. If the end of the input is reached,
      * it reads only the remaining characters and does not throw an error.
@@ -7135,6 +7145,7 @@ module.exports = SyntaxUnit;
  * @param {int} col The column of text on which the unit resides.
  */
 function SyntaxUnit(text, line, col, type) {
+
 
     /**
      * The column of text on which the unit resides.
@@ -8123,6 +8134,7 @@ var CSSLint = (function() {
             }
         }
 
+
         // capture most horrible error type
         try {
             parser.parse(text);
@@ -8773,6 +8785,7 @@ CSSLint.addRule({
             "writing-mode"               : "epub ms"
         };
 
+
         for (prop in compatiblePrefixes) {
             if (compatiblePrefixes.hasOwnProperty(prop)) {
                 variations = [];
@@ -9268,6 +9281,7 @@ CSSLint.addRule({
         "use strict";
         var rule = this,
             count = 0;
+
 
         parser.addListener("startfontface", function() {
             count++;
@@ -10153,6 +10167,7 @@ CSSLint.addRule({
             textIndent,
             direction;
 
+
         function startRule() {
             textIndent = false;
             direction = "inherit";
@@ -10656,6 +10671,7 @@ CSSLint.addRule({
                 return "net.csslint." + rule.name.replace(/\s/g, "");
             };
 
+
             if (messages.length > 0) {
                 output.push("<file name=\""+filename+"\">");
                 CSSLint.Util.forEach(messages, function (message) {
@@ -11116,12 +11132,10 @@ return CSSLint;
 })();
 
 
-
 /*
 repo https://github.com/douglascrockford/JSLint/tree/686716b71f6d45d3c233e1cfa026a1e5f46747aa
 committed 2020-03-28T12:46:58Z
 */
-
 
 
 /*
@@ -16362,14 +16376,12 @@ local.jslint_export = Object.freeze(function (
 });
 
 
-
 /*
 file none
 */
 local.CSSLint = CSSLint;
 }());
 /* jslint ignore:end */
-
 
 
 // run shared js-env code - function
@@ -16701,14 +16713,11 @@ local.jslintAutofix = function (code, file, opt) {
         code = code.replace((
             /\n+?(\n\u0020*?[)\]}])/g
         ), "$1");
-        // autofix-all - normalize newlines to \n\n
+        // autofix-all - eslint - no-multiple-empty-lines
+        // https://github.com/eslint/eslint/blob/v7.2.0/docs/rules/no-multiple-empty-lines.md
         code = code.replace((
-            /([^\n])\n{3}([^\n])/g
-        ), "$1\n\n$2");
-        // autofix-all - normalize newlines to \n\n\n\n
-        code = code.replace((
-            /\n{5,}/g
-        ), "\n\n\n\n");
+            /\n{4,}/g
+        ), "\n\n\n");
         // autofix-all - recurse <script>...</script>, <style>...</style>
         code = code.replace((
             /(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/\\n\\\n(?:^.*?\\n\\\n)*?)(';$|<\/script>\\n\\$|<\/style>\\n\\$)/gm
@@ -16949,10 +16958,10 @@ local.jslintAutofix = function (code, file, opt) {
         code = code.replace((
             /\/\/_([^\n])/g
         ), "//_\n$1");
-        // autofix-js-whitespace - normalize (function { to \n\n\n\n(function {
+        // autofix-js-whitespace - normalize (function { to \n\n\n(function {
         code = code.replace((
             /\n+((?:\/\*_\*\/\n|\/\/_\n)*?\(function\u0020.*?)\n+/g
-        ), "\n\n\n\n$1\n");
+        ), "\n\n\n$1\n");
         // autofix-js-whitespace - remove double-whitespace
         code = code.replace((
             /(\S\u0020)\u0020+/g
@@ -17396,7 +17405,6 @@ local.jslintUtility2 = function (code, ignore, opt) {
     }
 };
 }());
-
 
 
 /* istanbul ignore next */

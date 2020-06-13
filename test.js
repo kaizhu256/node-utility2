@@ -3,12 +3,10 @@
 /* jslint utility2:true */
 /* istanbul ignore next */
 // run shared js-env code - init-local
-(function (globalThis) {
+(function () {
     "use strict";
     let consoleError;
     let local;
-    // init globalThis
-    globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debugInline
     if (!globalThis.debugInline) {
         consoleError = console.error;
@@ -159,18 +157,16 @@
             throw err;
         });
     }
-}((typeof globalThis === "object" && globalThis) || window));
+}());
 // assets.utility2.header.js - end
 
 
-
 /* jslint utility2:true */
-/* istanbul ignore next */
 (function (local) {
 "use strict";
 
 
-
+/* istanbul ignore next */
 // run shared js-env code - init-before
 (function () {
 // init local
@@ -180,7 +176,6 @@ globalThis.local = local;
 // init test
 local.testRunDefault(local);
 }());
-
 
 
 // run shared js-env code - function
@@ -663,7 +658,7 @@ local.testCase_buildReadme_default = function (opt, onError) {
         [
             // customize quickstart-example-js-instruction
             (
-                /#\u0020quickstart\u0020example.js[\S\s]*?\n\n\n\n/
+                /#\u0020quickstart\u0020example.js[\S\s]*?\n\n\n/
             ),
             // customize quickstart-example-js-script
             (
@@ -1679,7 +1674,6 @@ local.utility2.serverLocalUrlTest = function (url) {
 }());
 
 
-
 // run shared js-env code - init-after
 (function () {
 // hack-coverage - test testRunServer's multiple-call handling-behavior
@@ -1751,14 +1745,12 @@ local.middlewareList.push(function (req, res, next) {
 }());
 
 
-
 // run node js-env code - init-after
 /* istanbul ignore next */
 (function () {
 if (local.isBrowser) {
     return;
 }
-
 
 
 (function () {
@@ -1815,7 +1807,6 @@ if (local.isBrowser) {
         break;
     }
 }());
-
 
 
 // init cli

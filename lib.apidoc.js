@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 /*
- * lib.apidoc.js (2020.6.8)
+ * lib.apidoc.js (2020.6.9)
  * https://github.com/kaizhu256/node-apidoc-lite
  * this zero-dependency package will auto-generate documentation for your npm-package with zero-config
  *
  */
-
 
 
 /* istanbul instrument in package apidoc */
@@ -13,12 +12,10 @@
 /* jslint utility2:true */
 /* istanbul ignore next */
 // run shared js-env code - init-local
-(function (globalThis) {
+(function () {
     "use strict";
     let consoleError;
     let local;
-    // init globalThis
-    globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debugInline
     if (!globalThis.debugInline) {
         consoleError = console.error;
@@ -169,14 +166,12 @@
             throw err;
         });
     }
-}((typeof globalThis === "object" && globalThis) || window));
+}());
 // assets.utility2.header.js - end
-
 
 
 (function (local) {
 "use strict";
-
 
 
 /* istanbul ignore next */
@@ -198,7 +193,6 @@ if (local.isBrowser) {
 }
 // init lib main
 local.apidoc = local;
-
 
 
 /* validateLineSortedReset */
@@ -749,7 +743,6 @@ local.tryCatchOnError = function (fnc, onError) {
 }());
 
 
-
 // run shared js-env code - function
 (function () {
 local.apidocCreate = function (opt) {
@@ -1274,14 +1267,12 @@ local.apidocModuleDictAdd = function (opt, moduleDict) {
 }());
 
 
-
 // run node js-env code - init-after
 /* istanbul ignore next */
 (function () {
 if (local.isBrowser) {
     return;
 }
-
 
 
 local.cliDict = {};

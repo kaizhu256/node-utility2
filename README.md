@@ -7,7 +7,6 @@ this zero-dependency package will provide high-level functions to to build, test
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app/)
 
 
-
 [![travis-ci.com build-status](https://api.travis-ci.com/kaizhu256/node-utility2.svg)](https://travis-ci.com/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html)
 
 [![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
@@ -27,7 +26,6 @@ this zero-dependency package will provide high-level functions to to build, test
 ![npmPackageDependencyTree](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageDependencyTree.svg)
 
 
-
 # table of contents
 1. [cdn download](#cdn-download)
 1. [documentation](#documentation)
@@ -40,10 +38,8 @@ this zero-dependency package will provide high-level functions to to build, test
 1. [misc](#misc)
 
 
-
 # cdn download
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app/assets.utility2.rollup.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app/assets.utility2.rollup.js)
-
 
 
 # documentation
@@ -55,67 +51,25 @@ this zero-dependency package will provide high-level functions to to build, test
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.6.9
-- npm publish 2020.6.9
-- add shell-function shTravisRepoTrigger
-- remove shell-macro UTILITY2_MACRO_AJAX_JS
-- remove ajax-helper-class FormData
-- minimize dependency to local
-- remove eagerly requiring nodejs-builtins
-- migrate ci from travis-ci.org to travis-ci.com
-- remove "a" from comments
-- remove shell-functions
-    shModuleDirname,
-    shDockerBuildCleanup,
-    shHtpasswdCreate,
-    shGitLsTreeSort, shGithubDateCommitted,
-    shHtpasswdCreate,
-    shMediaHlsEncrypt, shMediaHlsFromMp4,
-    shNpmInstallTarball,
-    shPasswordRandom,
-    shSsh5022F, shSsh5022R, shServerPortRandom,
-    shReadmeLinkValidate, shReplClient,
-    shTravisRepoBuildCancel, shTravisRepoBuildRestart, shTravisSync,
-    shUtility2Dependents,
-- cleanup env-var UTILITY2_MACRO_JS
-- istanbul - fix html-coverage-report bug showing branch-metrics instead of line-metrics
-- inline local._http.STATUS_CODES into function serverRespondDefault
-- remove object local.errorDefault
-- rename errorMessage to errMsg, errorStack to errStack
-- remove polyfills String.prototype.trimStart, String.prototype.trimEnd
-- throw error on unhandled-rejections via process.unhandledRejections=strict
-- add functions
-    objectDeepCopyWithKeysSorted,
-    childProcessEval,
-    fsWriteFileWithMkdirp,
-- remove functions
-    httpFetch,
-    objectAssignRecurse,
-    corsBackendHostInject,
-    stringLineCount,
-    onFileModifiedRestart,
-    jsonStringifyOrdered, jsonCopy,
-    listGetElementRandom,
-    bufferIndexOfSubBuffer, base64urlFromBuffer bufferRandomBytes,
-    assertJsonNotEqual,
-    childProcessSpawnWithTimeout, childProcessSpawnWithUtility2,
-    dateGetWeekOfMonth, dateGetWeekOfYear, dateUtcFromLocal, dateUtcToLocal,
-    isNullOrUndefined,
-    localStorageSetItemOrClear,
-    normalizeJwt, normalizeJwtBase64Url, numberToRomanNumerals,
-    onErrorDefault,
-    promisify,
-    timeElapsedPoll, timeElapsedStart,
-- remove dependency to files lib.github_crud.js, lib.swgg.js
+#### changelog 2020.6.13
+- fix excessive istanbul.ignore in test.js
+- update function shRawLibFetch to inline dataUri assets
+- jslint - add eslint-rule no-multiple-empty-lines
+- bootstrap-lite - re-enable including css-asset in build-process
+- add limited win32-compat
+- rename function middlewareJsonpStateInit to middlewareUtility2StateInit
+- merge shell-function shBuildAppSync and shUtility2DependentsSync into shBuildApp
+- replace shell-function prefix shUtility2 with shUtility2Dependents
+- replace deprecated fs.exists() with fs.access()
+- add shell-function shUtility2DependentsShellEval
+- remove globalThis polyfill
+- remove shell-function shGitAddTee, shGithubRepoBranchId
 - none
 
 #### todo
+- update function shRawLibFetch to minify assets
 - remove dependency to req.urlParsed
-- remove globalThis polyfill
 - istanbul - inline class Instrumenter into function instrumentSync
-- add eslint-rule no-multiple-empty-lines
-- remove file lib.swgg.js
-- remove sloppy-cases where npm-test falsely pass
 - istanbul - remove filesUnderRoot subroutine
 - jslint - add nullish-coalescing support
 - jslint - add optional-chaining support
@@ -126,10 +80,6 @@ this zero-dependency package will provide high-level functions to to build, test
 - add default testCase _testCase_cliRun_help
 - add server stress-test using puppeteer
 - none
-
-#### this package requires
-- darwin or linux os
-
 
 
 # quickstart standalone app
@@ -153,7 +103,6 @@ PORT=8081 node ./assets.app.js
 
 #### output from shell
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleSh.svg)
-
 
 
 # quickstart example.js
@@ -181,18 +130,15 @@ instruction
 */
 
 
-
 /* istanbul instrument in package utility2 */
 // assets.utility2.header.js - start
 /* jslint utility2:true */
 /* istanbul ignore next */
 // run shared js-env code - init-local
-(function (globalThis) {
+(function () {
     "use strict";
     let consoleError;
     let local;
-    // init globalThis
-    globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debugInline
     if (!globalThis.debugInline) {
         consoleError = console.error;
@@ -343,15 +289,13 @@ instruction
             throw err;
         });
     }
-}((typeof globalThis === "object" && globalThis) || window));
+}());
 // assets.utility2.header.js - end
-
 
 
 /* jslint utility2:true */
 (function (local) {
 "use strict";
-
 
 
 // run shared js-env code - init-before
@@ -370,7 +314,6 @@ local.testRunServer(local);
 local.assetsDict["/assets.hello.txt"] = "hello \ud83d\ude01\n";
 local.assetsDict["/assets.index.template.html"] = "";
 }());
-
 
 
 // run shared js-env code - function
@@ -442,7 +385,6 @@ local.testCase_webpage_default = function (opt, onError) {
 }());
 
 
-
 /* istanbul ignore next */
 // run browser js-env code - init-test
 (function () {
@@ -477,7 +419,6 @@ if (!local.isBrowser) {
 local.objectAssignDefault(local, globalThis.domOnEventDelegateDict);
 globalThis.domOnEventDelegateDict = local;
 }());
-
 
 
 /* istanbul ignore next */
@@ -624,7 +565,6 @@ pre {\n\
         }, 100);\n\
     });\n\
 }());\n\
-\n\
 \n\
 \n\
 // init domOnEventAjaxProgressUpdate\n\
@@ -781,7 +721,6 @@ pre {\n\
 }());\n\
 \n\
 \n\
-\n\
 // init domOnEventDelegateDict\n\
 (function () {\n\
 /*\n\
@@ -865,7 +804,6 @@ pre {\n\
 }());\n\
 \n\
 \n\
-\n\
 // init domOnEventSelectAllWithinPre\n\
 (function () {\n\
 /*\n\
@@ -921,7 +859,6 @@ utility2-comment -->\n\
 <button class="button" data-onevent="testRunBrowser" id="buttonTestRun1">run browser-tests</button><br>\n\
 <div class="uiAnimateSlide" id="htmlTestReport1" style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"></div>\n\
 utility2-comment -->\n\
-\n\
 \n\
 \n\
 <!-- custom-html-start -->\n\
@@ -1056,7 +993,6 @@ local.domOnEventInputChange({\n\
 <!-- custom-html-end -->\n\
 \n\
 \n\
-\n\
 <!-- utility2-comment\n\
 {{#if isRollup}}\n\
 <script src="assets.app.js"></script>\n\
@@ -1067,7 +1003,7 @@ utility2-comment -->\n\
 <script src="assets.utility2.lib.marked.js"></script>\n\
 <script src="assets.utility2.js"></script>\n\
 <script>window.utility2_onReadyBefore.cnt += 1;</script>\n\
-<script src="jsonp.utility2.stateInit?callback=window.utility2.stateInit"></script>\n\
+<script src="utility2.state.init.js"></script>\n\
 <script src="assets.example.js"></script>\n\
 <script src="assets.test.js"></script>\n\
 <script>\n\
@@ -1161,7 +1097,6 @@ require("http").createServer(function (req, res) {
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.svg)
 
 
-
 # extra screenshots
 1. [https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)
@@ -1194,7 +1129,6 @@ require("http").createServer(function (req, res) {
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleSh.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleSh.browser.%252F.png)
 
 
-
 # package.json
 ```json
 {
@@ -1225,10 +1159,6 @@ require("http").createServer(function (req, res) {
     "nameAliasPublish": "npmtest-lite test-lite",
     "nameLib": "utility2",
     "nameOriginal": "utility2",
-    "os": [
-        "darwin",
-        "linux"
-    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/kaizhu256/node-utility2.git"
@@ -1245,22 +1175,20 @@ require("http").createServer(function (req, res) {
     },
     "utility2Dependents": [
         "2019.09.14 swgg",
-        "2020.01.20 bootstrap-lite",
         "2020.02.12 sqljs-lite",
         "2020.06.08 apidoc-lite",
         "2020.06.08 istanbul-lite",
         "2020.06.08 jslint-lite",
-        "2020.06.09 utility2"
+        "2020.06.12 bootstrap-lite",
+        "2020.06.13 utility2"
     ],
-    "version": "2020.6.9"
+    "version": "2020.6.13"
 }
 ```
 
 
-
 # changelog of last 50 commits
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.gitLog.svg)](https://github.com/kaizhu256/node-utility2/commits)
-
 
 
 # internal build script
@@ -1432,7 +1360,6 @@ shBuildCiBefore () {(set -e
 . ./lib.utility2.sh
 shBuildCi
 ```
-
 
 
 # misc

@@ -26,10 +26,6 @@
     "nameAliasPublish": "npmtest-lite test-lite",
     "nameLib": "utility2",
     "nameOriginal": "utility2",
-    "os": [
-        "darwin",
-        "linux"
-    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/kaizhu256/node-utility2.git"
@@ -46,12 +42,12 @@
     },
     "utility2Dependents": [
         "2019.09.14 swgg",
-        "2020.01.20 bootstrap-lite",
         "2020.02.12 sqljs-lite",
         "2020.06.08 apidoc-lite",
         "2020.06.08 istanbul-lite",
         "2020.06.08 jslint-lite",
-        "2020.06.09 utility2"
+        "2020.06.12 bootstrap-lite",
+        "2020.06.13 utility2"
     ],
-    "version": "2020.6.9"
+    "version": "2020.6.13"
 }

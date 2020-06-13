@@ -7,18 +7,15 @@
  */
 
 
-
 /* istanbul instrument in package puppeteer */
 // assets.utility2.header.js - start
 /* jslint utility2:true */
 /* istanbul ignore next */
 // run shared js-env code - init-local
-(function (globalThis) {
+(function () {
     "use strict";
     let consoleError;
     let local;
-    // init globalThis
-    globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debugInline
     if (!globalThis.debugInline) {
         consoleError = console.error;
@@ -169,14 +166,12 @@
             throw err;
         });
     }
-}((typeof globalThis === "object" && globalThis) || window));
+}());
 // assets.utility2.header.js - end
-
 
 
 (function (local) {
 "use strict";
-
 
 
 /* istanbul ignore next */
@@ -198,7 +193,6 @@ if (local.isBrowser) {
 }
 // init lib main
 local.puppeteer = local;
-
 
 
 /* validateLineSortedReset */
@@ -362,7 +356,6 @@ local.cliRun = function (opt) {
 }());
 
 
-
 /* istanbul ignore next */
 // run node js-env code - function
 (function () {
@@ -428,6 +421,8 @@ const removeFolder = function (dir, onError) {
 };
 removeFolder.sync = local.fsRmrfSync;
 const removeRecursive = removeFolder;
+
+
 let EventEmitter = require('events');
 let URL = require('url');
 // let WebSocket = require('ws');
@@ -498,8 +493,8 @@ let exports_websockets_ws_lib_websocket_server = {};
 let exports_websockets_ws_package_json = {};
 /*
 repo https://github.com/websockets/ws/tree/6.2.1
+committed 2019-03-27T08:34:10Z
 */
-
 
 
 /*
@@ -552,7 +547,6 @@ exports_websockets_ws_package_json = {
 }
 
 
-
 /*
 file https://github.com/websockets/ws/blob/6.2.1/lib/constants.js
 */
@@ -566,7 +560,6 @@ exports_websockets_ws_lib_constants = {
   EMPTY_BUFFER: Buffer.alloc(0),
   NOOP: () => {}
 };
-
 
 
 /*
@@ -602,7 +595,6 @@ exports_websockets_ws_lib_validation.isValidStatusCode = (code) => {
     (code >= 3000 && code <= 4999)
   );
 };
-
 
 
 /*
@@ -752,7 +744,6 @@ try {
     unmask: _unmask
   };
 }
-
 
 
 /*
@@ -928,7 +919,6 @@ const EventTarget = {
 };
 
 exports_websockets_ws_lib_event_target = EventTarget;
-
 
 
 /*
@@ -1156,7 +1146,6 @@ function format(extensions) {
 }
 
 exports_websockets_ws_lib_extension = { format, parse };
-
 
 
 /*
@@ -1656,7 +1645,6 @@ function error(ErrorCtor, message, prefix, statusCode) {
 }
 
 
-
 /*
 file https://github.com/websockets/ws/blob/6.2.1/lib/sender.js
 */
@@ -2018,7 +2006,6 @@ class Sender {
 }
 
 exports_websockets_ws_lib_sender = Sender;
-
 
 
 /*
@@ -2425,7 +2412,6 @@ function abortHandshake(socket, code, message, headers) {
   socket.removeListener('error', socketOnError);
   socket.destroy();
 }
-
 
 
 /*
@@ -3328,7 +3314,6 @@ function socketOnError() {
 }
 
 
-
 /*
 file https://github.com/websockets/ws/blob/6.2.1/index.js
 */
@@ -3343,11 +3328,10 @@ WebSocket.Sender = exports_websockets_ws_lib_sender;
 exports_websockets_ws_index = WebSocket;
 
 
-
 /*
 repo https://github.com/puppeteer/puppeteer/tree/v1.19.0
+committed 2019-07-23T05:02:45Z
 */
-
 
 
 /*
@@ -3426,7 +3410,6 @@ exports_puppeteer_puppeteer_package_json = {
     "readline": false
   }
 }
-
 
 
 /*
@@ -3709,8 +3692,8 @@ exports_puppeteer_puppeteer_lib_helper = {
   assert,
   debugError
 };
+// hack-puppeteer - init helper
 let helper = exports_puppeteer_puppeteer_lib_helper.helper;
-
 
 
 /*
@@ -3845,6 +3828,7 @@ function serializeTree(node, whitelistedNodes) {
     serializedNode.children = children;
   return [serializedNode];
 }
+
 
 class AXNode {
   /**
@@ -4137,7 +4121,6 @@ class AXNode {
 }
 
 exports_puppeteer_puppeteer_lib_Accessibility = {Accessibility};
-
 
 
 /*
@@ -4528,7 +4511,6 @@ class BrowserContext extends EventEmitter {
 exports_puppeteer_puppeteer_lib_Browser = {Browser, BrowserContext};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
 */
@@ -4774,7 +4756,6 @@ function rewriteError(error, message) {
 }
 
 exports_puppeteer_puppeteer_lib_Connection = {Connection, CDPSession};
-
 
 
 /*
@@ -5092,7 +5073,6 @@ function convertToDisjointRanges(nestedRanges) {
   // Filter out empty ranges.
   return results.filter(range => range.end - range.start > 1);
 }
-
 
 
 /*
@@ -5817,7 +5797,6 @@ async function waitForPredicatePageFunction(predicateBody, polling, timeout, ...
 }
 
 exports_puppeteer_puppeteer_lib_DOMWorld = {DOMWorld};
-
 
 
 /*
@@ -6673,7 +6652,6 @@ for (const device of exports_puppeteer_puppeteer_lib_DeviceDescriptors)
   exports_puppeteer_puppeteer_lib_DeviceDescriptors[device.name] = device;
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Dialog.js
 */
@@ -6762,7 +6740,6 @@ Dialog.Type = {
 exports_puppeteer_puppeteer_lib_Dialog = {Dialog};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/EmulationManager.js
 */
@@ -6822,7 +6799,6 @@ class EmulationManager {
 exports_puppeteer_puppeteer_lib_EmulationManager = {EmulationManager};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Errors.js
 */
@@ -6855,7 +6831,6 @@ class TimeoutError extends CustomError {}
 exports_puppeteer_puppeteer_lib_Errors = {
   TimeoutError,
 };
-
 
 
 /*
@@ -6941,7 +6916,6 @@ const Events = {
 };
 
 exports_puppeteer_puppeteer_lib_Events = { Events };
-
 
 
 /*
@@ -7152,7 +7126,6 @@ class ExecutionContext {
 }
 
 exports_puppeteer_puppeteer_lib_ExecutionContext = {ExecutionContext, EVALUATION_SCRIPT_URL};
-
 
 
 /*
@@ -7878,7 +7851,6 @@ function assertNoLegacyNavigationOptions(options) {
 exports_puppeteer_puppeteer_lib_FrameManager = {FrameManager, Frame};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Input.js
 */
@@ -8195,7 +8167,6 @@ class Touchscreen {
 }
 
 exports_puppeteer_puppeteer_lib_Input = { Keyboard, Mouse, Touchscreen};
-
 
 
 /*
@@ -8728,7 +8699,6 @@ function computeQuadArea(quad) {
 exports_puppeteer_puppeteer_lib_JSHandle = {createJSHandle, JSHandle, ElementHandle};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Launcher.js
 */
@@ -8780,7 +8750,7 @@ const DEFAULT_ARGS = [
   '--disable-default-apps',
   '--disable-dev-shm-usage',
   '--disable-extensions',
-  // TODO: Support OOOPIF. @see https://github.com/puppeteer/puppeteer/issues/2548
+  // TODO: Support OOOPIF. @see https://github.com/GoogleChrome/puppeteer/issues/2548
   // BlinkGenPropertyTrees disabled due to crbug.com/937609
   '--disable-features=site-per-process,TranslateUI,BlinkGenPropertyTrees',
   '--disable-hang-monitor',
@@ -9083,7 +9053,7 @@ function waitForWSEndpoint(chromeProcess, timeout, preferredRevision) {
         'Failed to launch chrome!' + (error ? ' ' + error.message : ''),
         stderr,
         '',
-        'TROUBLESHOOTING: https://github.com/puppeteer/puppeteer/blob/master/docs/troubleshooting.md',
+        'TROUBLESHOOTING: https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md',
         '',
       ].join('\n')));
     }
@@ -9174,8 +9144,8 @@ function getWSEndpoint(browserURL) {
  * @property {number=} slowMo
  */
 
-exports_puppeteer_puppeteer_lib_Launcher = Launcher;
 
+exports_puppeteer_puppeteer_lib_Launcher = Launcher;
 
 
 /*
@@ -9381,7 +9351,6 @@ const puppeteerToProtocolLifecycle = {
 exports_puppeteer_puppeteer_lib_LifecycleWatcher = {LifecycleWatcher};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Multimap.js
 */
@@ -9521,7 +9490,6 @@ class Multimap {
 }
 
 exports_puppeteer_puppeteer_lib_Multimap = Multimap;
-
 
 
 /*
@@ -9768,6 +9736,7 @@ class NetworkManager extends EventEmitter {
     this._requestIdToRequest.set(event.requestId, request);
     this.emit(Events.NetworkManager.Request, request);
   }
+
 
   /**
    * @param {!Protocol.Network.requestServedFromCachePayload} event
@@ -10326,7 +10295,6 @@ const STATUS_TEXTS = {
 exports_puppeteer_puppeteer_lib_NetworkManager = {Request, Response, NetworkManager, SecurityDetails};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Page.js
 */
@@ -10874,7 +10842,7 @@ class Page extends EventEmitter {
       //   to the 'console'
       //   page event.
       //
-      // @see https://github.com/puppeteer/puppeteer/issues/3865
+      // @see https://github.com/GoogleChrome/puppeteer/issues/3865
       return;
     }
     const context = this._frameManager.executionContextById(event.executionContextId);
@@ -11571,6 +11539,7 @@ function convertPrintParameterToInches(parameter) {
  * @property {("Strict"|"Lax"|"Extended"|"None")=} sameSite
  */
 
+
 /**
  * @typedef {Object} Network.CookieParam
  * @property {string} name
@@ -11681,7 +11650,6 @@ class FileChooser {
 exports_puppeteer_puppeteer_lib_Page = {Page, ConsoleMessage, FileChooser};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/PipeTransport.js
 */
@@ -11765,7 +11733,6 @@ class PipeTransport {
 }
 
 exports_puppeteer_puppeteer_lib_PipeTransport = PipeTransport;
-
 
 
 /*
@@ -11855,7 +11822,6 @@ exports_puppeteer_puppeteer_lib_Puppeteer = class {
     return new BrowserFetcher(this._projectRoot, options);
   }
 };
-
 
 
 /*
@@ -12019,7 +11985,6 @@ class Target {
 exports_puppeteer_puppeteer_lib_Target = {Target};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/TaskQueue.js
 */
@@ -12040,7 +12005,6 @@ class TaskQueue {
 }
 
 exports_puppeteer_puppeteer_lib_TaskQueue = {TaskQueue};
-
 
 
 /*
@@ -12103,7 +12067,6 @@ class TimeoutSettings {
 }
 
 exports_puppeteer_puppeteer_lib_TimeoutSettings = {TimeoutSettings};
-
 
 
 /*
@@ -12181,7 +12144,6 @@ class Tracing {
 }
 
 exports_puppeteer_puppeteer_lib_Tracing = Tracing;
-
 
 
 /*
@@ -12477,7 +12439,6 @@ exports_puppeteer_puppeteer_lib_USKeyboardLayout = {
 };
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/WebSocketTransport.js
 */
@@ -12549,7 +12510,6 @@ class WebSocketTransport {
 }
 
 exports_puppeteer_puppeteer_lib_WebSocketTransport = WebSocketTransport;
-
 
 
 /*
@@ -12637,7 +12597,6 @@ class Worker extends EventEmitter {
 exports_puppeteer_puppeteer_lib_Worker = {Worker};
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/api.js
 */
@@ -12686,7 +12645,6 @@ exports_puppeteer_puppeteer_lib_api = {
 };
 
 
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/index.js
 */
@@ -12715,7 +12673,7 @@ try {
 
 if (asyncawait) {
 //   const {helper} = exports_puppeteer_puppeteer_lib_helper;
-  const api = exports_puppeteer_puppeteer_lib_api;
+     const api = exports_puppeteer_puppeteer_lib_api;
   for (const className in api) {
     // Puppeteer-web excludes certain classes from bundle, e.g. BrowserFetcher.
     if (typeof api[className] === 'function')
@@ -12791,7 +12749,6 @@ local._puppeteer = exports_puppeteer_puppeteer_index;
 local.puppeteerApi = exports_puppeteer_puppeteer_lib_api;
 local.puppeteerLaunch = local._puppeteer.launch.bind(local._puppeteer);
 local.nop(local.puppeteerLaunch);
-
 
 
 /*

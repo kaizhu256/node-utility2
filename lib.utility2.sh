@@ -24,13 +24,13 @@
 # shCryptoWithGithubOrg aa shGithubApiRateLimitGet
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/node-aa-bb alpha "[build app]"
 # DOCKER_V_GAME=1 DOCKER_V_HOME=1 DOCKER_PORT=4065 shDockerRestart work kaizhu256/node-utility2
-# shDockerSh work 'cd ~/Documents/utility2 && shUtility2DependentsSync'
-# shGitAddTee npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
-# shSource && shGitAddTee shUtility2DependentsSync
+# shDockerSh work 'cd ~/Documents/utility2 && PORT=4065 npm start'
+# shDockerSh work 'shUtility2DependentsShellEval shBuildApp'
+# npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
 # utility2 shReadmeTest example.js
 
 shBaseInit () {
-# this function will init the base bash-login env, and is intended for aws-ec2 setup
+# this function will init bash-login base-env, and is intended for aws-ec2 setup
     local FILE || return "$?"
     # PATH=/usr/local/bin:/usr/bin:/bin
     # init $PATH_BIN
@@ -221,6 +221,7 @@ shBashrcDebianInit () {
 
 shBrowserScreenshot () {(set -e
 # this function will run headless-chromium to screenshot url "$1"
+    shBuildInit
     node -e '
 /* jslint utility2:true */
 (function () {
@@ -229,6 +230,15 @@ shBrowserScreenshot () {(set -e
     let timeStart;
     let url;
     timeStart = Date.now();
+    // windows-env
+    [
+        "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+    ].forEach(function (file) {
+        if (!process.env.CHROME_BIN && require("fs").existsSync(file)) {
+            process.env.CHROME_BIN = file;
+        }
+    });
     url = process.argv[1];
     if (!(
         /^\w+?:/
@@ -239,7 +249,7 @@ shBrowserScreenshot () {(set -e
     if (file.indexOf(process.cwd()) === 0) {
         file = file.replace(process.cwd(), "");
     }
-    file = (
+    file = require("path").resolve(
         process.env.npm_config_dir_build
         + "/screenshot."
         + process.env.MODE_BUILD + ".browser."
@@ -283,7 +293,7 @@ shBrowserScreenshot () {(set -e
 
 shBrowserTest () {(set -e
 # this function will spawn google-puppeteer-process to test url $1,
-# and merge the test-report into the existing test-report
+# and merge test-report into existing test-report
     shBuildInit
     export MODE_BUILD="${MODE_BUILD:-browserTest}"
     shBuildPrint "shBrowserTest $*"
@@ -294,18 +304,27 @@ shBrowserTest () {(set -e
 )}
 
 shBuildApidoc () {(set -e
-# this function will build the apidoc
+# this function will build apidoc
     shEnvSanitize
     export MODE_BUILD=buildApidoc
     npm test --mode-coverage="" --mode-test-case=testCase_buildApidoc_default
 )}
 
 shBuildApp () {(set -e
-# this function will build the app with name $1
+# this function will build app in "$CWD" with name "$1"
+    # if windows-env, then run inside docker
+    case "$(uname)" in
+    MINGW*)
+        shDockerSh work \
+            "cd ~/Documents/$(printf "$PWD" | sed -e "s/.*\///") && shBuildApp"
+        return
+        ;;
+    esac
     shEnvSanitize
     export MODE_BUILD=buildApp
     # cleanup empty-file
     find . -maxdepth 1 -empty | xargs rm -f
+    # update app-name to "$1"
     if [ "$1" ]
     then
         unset npm_package_nameLib
@@ -317,30 +336,165 @@ shBuildApp () {(set -e
         rm -f package.jsonn
     fi
     shBuildInit
+    # hardlink file .gitignore, lib.xxx, assets.utility2.rollup.js
+    # hardlink file ~/lib.utility2.sh, bin/utility2
+    # bin/utility2-apidoc, bin/utility2-istanbul, bin/utility2-jslint
+    # update file .travis.yml, npm_scripts.sh
+    node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    let dirBin;
+    let dirDev;
+    let fs;
+    let onErrorThrow;
+    let path;
+    fs = require("fs");
+    path = require("path");
+    dirBin = path.resolve(process.env.HOME + "/bin") + path.sep;
+    dirDev = path.resolve(process.env.HOME + "/Documents/utility2") + path.sep;
+    onErrorThrow = function (err) {
+        if (err) {
+            throw err;
+        }
+    };
+    if (!fs.existsSync(dirDev + "lib.utility2.js")) {
+        return;
+    }
+    // hardlink file ~/lib.utility2.sh, bin/utility2
+    // bin/utility2-apidoc, bin/utility2-istanbul, bin/utility2-jslint
+    [
+        [
+            dirDev + "lib.utility2.sh", path.resolve(
+                process.env.HOME + "/lib.utility2.sh"
+            )
+        ],
+        [
+            dirDev + "lib.utility2.sh", dirBin + "utility2"
+        ],
+        [
+            dirDev + "lib.apidoc.js", dirBin + "utility2-apidoc"
+        ],
+        [
+            dirDev + "lib.istanbul.js", dirBin + "utility2-istanbul"
+        ],
+        [
+            dirDev + "lib.jslint.js", dirBin + "utility2-jslint"
+        ]
+    ].forEach(function ([
+        aa, bb
+    ]) {
+        fs.unlink(bb, function (ignore) {
+            fs.link(aa, bb, function (err) {
+                if (!err) {
+                    console.error("shBuildApp - hardlink - " + bb);
+                }
+            });
+        });
+    });
+    if (process.cwd() === path.resolve(dirDev)) {
+        return;
+    }
+    // hardlink file .gitignore, lib.xxx, assets.utility2.rollup.js
+    fs.readdir(dirDev, function (err, fileList) {
+        onErrorThrow(err);
+        fileList.concat([
+            "assets.utility2.rollup.js"
+        ]).forEach(function (file) {
+            if (!(
+                file === ".gitignore"
+                || file === "assets.utility2.rollup.js"
+                || file.indexOf("lib.") === 0
+            )) {
+                return;
+            }
+            fs.access(file, function (notExist) {
+                if (notExist) {
+                    return;
+                }
+                fs.unlink(file, function (err) {
+                    onErrorThrow(err);
+                    fs.link((
+                        file === "assets.utility2.rollup.js"
+                        ? path.resolve(
+                            dirDev + "tmp/build/app/assets.utility2.rollup.js"
+                        )
+                        : dirDev + file
+                    ), file, function (err) {
+                        onErrorThrow(err);
+                        console.error("shBuildApp - hardlink - " + file);
+                    });
+                });
+            });
+        });
+    });
+    // update file .travis.yml, npm_scripts.sh
+    [
+        ".travis.yml", "npm_scripts.sh"
+    ].forEach(function (file) {
+        let aa;
+        let bb;
+        fs.readFile(file, "utf8", function (err, data) {
+            if (err) {
+                return;
+            }
+            bb = data;
+            fs.readFile(dirDev + file, "utf8", function (err, data) {
+                onErrorThrow(err);
+                aa = data;
+                [
+                    (
+                        /\n\u0020{4}-\u0020secure:\u0020.*?\u0020#\u0020CRYPTO_AES_KEY\n/
+                    ), (
+                        /\n\u0020{4}#\u0020run\u0020command\u0020-\u0020custom\n[\S\s]*?\n\u0020{4}esac\n/
+                    ), (
+                        /\n\)\}\n[\S\s]*?\n#\u0020run\u0020command\n/
+                    )
+                ].forEach(function (rgx) {
+                    bb.replace(rgx, function (match2) {
+                        aa.replace(rgx, function (match1) {
+                            aa = aa.replace(match1, function () {
+                                return match2;
+                            });
+                            return "";
+                        });
+                        return "";
+                    });
+                });
+                if (aa !== bb) {
+                    fs.writeFile(file, aa, onErrorThrow);
+                    console.error("shBuildApp - modified - " + file);
+                }
+            });
+        });
+    });
+}());
+'
+    # if not exist, create file
+    # .gitignore, .travis.yml, LICENSE, npm_scripts.sh
+    # package.json
+    # README.md, lib.$npm_package.nameLib.js, test.js
     node -e '
 /* jslint utility2:true */
 (function (local) {
-/*
- * this function will create file, if not exist
- * .gitignore, .travis.yml, LICENSE
- * package.json
- * README.md, lib.$npm_package.nameLib.js, package.json, test.js
- */
     "use strict";
     let aa;
     let bb;
     let fs;
     let modeUtility2Rollup;
+    let onErrorThrow;
     fs = require("fs");
-    // create file .gitignore .travis.yml LICENSE
+    onErrorThrow = function (err) {
+        if (err) {
+            throw err;
+        }
+    };
+    // fetch file .gitignore, .travis.yml, LICENSE, npm_scripts.sh
     [
-        ".gitignore",
-        ".travis.yml",
-        "LICENSE",
-        "npm_scripts.sh"
+        ".gitignore", ".travis.yml", "LICENSE", "npm_scripts.sh"
     ].forEach(function (file) {
-        fs.exists(file, function (exists) {
-            if (exists) {
+        fs.access(file, function (notExist) {
+            if (!notExist) {
                 return;
             }
             require("https").request((
@@ -352,7 +506,7 @@ shBuildApp () {(set -e
         });
     });
     // create file package.json
-    aa = fs.readFileSync("package.json");
+    aa = fs.readFileSync("package.json", "utf8");
     bb = JSON.stringify(local.objectDeepCopyWithKeysSorted(
         Object.assign({
             "description": "the greatest app in the world!",
@@ -366,6 +520,7 @@ shBuildApp () {(set -e
     ), undefined, 4) + "\n";
     if (bb !== aa) {
         fs.writeFileSync("package.json", bb);
+        console.error("shBuildApp - modified - package.json");
     }
     // create file README.md, lib.$npm_package.nameLib.js, test.js
     modeUtility2Rollup = fs.existsSync("assets.utility2.rollup.js");
@@ -374,8 +529,8 @@ shBuildApp () {(set -e
         "lib." + process.env.npm_package_nameLib + ".js",
         "test.js"
     ].forEach(function (file) {
-        fs.exists(file, function (exists) {
-            if (exists) {
+        fs.access(file, function (notExist) {
+            if (!notExist) {
                 return;
             }
             fs.writeFile(file, local.templateRenderMyApp((
@@ -391,59 +546,24 @@ shBuildApp () {(set -e
                     : match0
                 );
             }), {}).trimRight() + "\n", function (err) {
-                if (err) {
-                    throw err;
-                }
+                onErrorThrow(err);
+                console.error("shBuildApp - modified - " + file);
             });
         });
     });
 }(require(process.env.npm_config_dir_utility2)));
 '
-    chmod 755 "lib.$npm_package_nameLib.js" npm_scripts.sh
-    if [ "$npm_package_nameLib" != utility2 ]
-    then
-        shBuildAppSync
-    fi
+    # build app
     npm test --mode-coverage="" --mode-test-case=testCase_buildApp_default
+    # git diff
+    if [ -d .git ]
+    then
+        git --no-pager diff HEAD
+    fi
 )}
 
-shBuildAppSync () {
-# this function will sync files with utility2
-# optimization - do not run in subshell and do not call shBuildInit
-    # update .travis.yml
-    if [ -f "$npm_config_dir_utility2/.travis.yml" ]
-    then
-        shFileCustomizeFromToRgx \
-            "$npm_config_dir_utility2/.travis.yml" \
-            ".travis.yml" \
-            '\n    - secure: .*? # CRYPTO_AES_KEY\n'
-    fi
-    # update npm_scripts.sh
-    shFileCustomizeFromToRgx \
-        "$npm_config_dir_utility2/npm_scripts.sh" \
-        "npm_scripts.sh" \
-        '\n    # run command - custom\n[\S\s]*?\n    esac\n' \
-        '\n\)\}\n[\S\s]*?\n# run command\n'
-    # hardlink .gitignore
-    if [ -f "$npm_config_dir_utility2/.travis.yml" ]
-    then
-        ln -f "$npm_config_dir_utility2/.gitignore" . || true
-    fi
-    # hardlink assets.utility2.rollup.js
-    if [ -f "assets.utility2.rollup.js" ] &&
-        [ \
-            -f \
-            "$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js" \
-        ]
-    then
-        ln -f \
-            "$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js" \
-            . || true
-    fi
-}
-
 shBuildCi () {(set -e
-# this function will run the main build
+# this function will run main-build
     shBuildInit
     export MODE_BUILD=buildCi
     # init travis-ci.com env
@@ -514,12 +634,7 @@ shBuildCi () {(set -e
                 shBuildPrint "no GITHUB_TOKEN"
                 return 1
             fi
-            # pre-build app for first-time
-            if [ ! -f test.js ]
-            then
-                shBuildApp
-            fi
-            # shBuildAppSync
+            shBuildApp
             rm -rf "$npm_config_dir_utility2"
             git clone https://github.com/kaizhu256/node-utility2 \
                 "$npm_config_dir_utility2" \
@@ -724,7 +839,7 @@ $(node -e 'process.stdout.write(require("./package.json").version)')]"
 )}
 
 shBuildCiInternal () {(set -e
-# this function will run the internal build
+# this function will run internal-build
     shBuildInit
     # run build-ci-before
     if (type shBuildCiBefore > /dev/null 2>&1)
@@ -733,7 +848,6 @@ shBuildCiInternal () {(set -e
     fi
     export npm_config_file_test_report_merge=\
 "$npm_config_dir_build/test-report.json"
-
 
 
     # npm-test
@@ -756,7 +870,6 @@ shBuildCiInternal () {(set -e
     MODE_BUILD=gitLog shRunWithScreenshotTxt git log -50 --pretty="%ai\\u000a%B"
 
 
-
     # screenshot coverage
     FILE="$(
         find "$npm_config_dir_build" -name *.js.html 2>/dev/null | tail -n 1
@@ -773,7 +886,6 @@ shBuildCiInternal () {(set -e
             MODE_BUILD=buildCi shBrowserScreenshot "file://$FILE" &
         fi
     done
-
 
 
     if [ ! "$GITHUB_TOKEN" ]
@@ -815,10 +927,10 @@ shBuildCiInternal () {(set -e
     let set;
     set = new Set();
     require("fs").readFileSync("README.md", "utf8").replace((
-        /\b(https?):\/\/.*?[)\]]/g
+        /[(\[](https?):\/\/.*?[)\]]/g
     ), function (match0, match1) {
         let req;
-        match0 = match0.slice(0, -1).replace((
+        match0 = match0.slice(1, -1).replace((
             /[\u0022\u0027]/g
         ), "").replace((
             /\bbeta\b|\bmaster\b/g
@@ -905,7 +1017,7 @@ shBuildGithubUpload () {(set -e
 )}
 
 shBuildInit () {
-# this function will init the env
+# this function will init env
     # init $CHROME_BIN
     CHROME_BIN="${CHROME_BIN:-$(which google-chrome-stable 2>/dev/null)}" ||
         true
@@ -1021,7 +1133,7 @@ shBuildInit () {
     mkdir -p "$npm_config_dir_tmp" || return "$?"
     export npm_config_file_tmp="${npm_config_file_tmp:-$PWD/tmp/tmpfile}" ||
         return "$?"
-    # extract and save the scripts embedded in README.md to tmp/
+    # extract and save scripts embedded in README.md to tmp/
     if [ -f README.md ]
     then
         node -e '
@@ -1059,7 +1171,7 @@ shBuildInit () {
 }
 
 shBuildInsideDocker () {(set -e
-# this function will run the build inside docker
+# this function will run build inside docker
     shEnvSanitize
     export npm_config_unsafe_perm=1
     # start xvfb
@@ -1089,7 +1201,7 @@ shBuildInsideDocker () {(set -e
 )}
 
 shBuildPrint () {(set -e
-# this function will print debug info about the build state
+# this function will print debug-info about current build-state
     printf "\n\x1b[35m[MODE_BUILD=$MODE_BUILD]\x1b[0m - $(shDateIso) - $*\n\n" 1>&2
 )}
 
@@ -1266,8 +1378,8 @@ shDeployCustom () {
 }
 
 shDeployGithub () {(set -e
-# this function will deploy the app to $GITHUB_REPO
-# and run a simple curl check for $TEST_URL
+# this function will deploy app to $GITHUB_REPO
+# and run simple curl-check for $TEST_URL
 # and test $TEST_URL
     export MODE_BUILD=deployGithub
     export TEST_URL="https://$(
@@ -1293,8 +1405,8 @@ shDeployGithub () {(set -e
 )}
 
 shDeployHeroku () {(set -e
-# this function will deploy the app to heroku
-# and run a simple curl check for $TEST_URL
+# this function will deploy app to heroku
+# and run simple curl-check for $TEST_URL
 # and test $TEST_URL
     export npm_package_nameHeroku=\
 "${npm_package_nameHeroku:-$(printf "h1-$npm_package_nameLib" | tr "_" "-")}"
@@ -1329,13 +1441,13 @@ shDeployHeroku () {(set -e
 )}
 
 shDockerRestart () {(set -e
-# this function will restart the docker-container
+# this function will restart docker-container
     docker rm -fv "$1" || true
     shDockerStart "$@"
 )}
 
 shDockerRestartNginx () {(set -e
-# this function will restart the docker-container nginx
+# this function will restart docker-container nginx
     # init htpasswd
     # printf "aa:$(openssl passwd -crypt bb)\n" > \
         "$HOME/docker/etc.nginx.htpasswd.private"
@@ -1435,7 +1547,7 @@ server {
 )}
 
 shDockerRestartTransmission () {(set -e
-# this function will restart the docker-container transmission
+# this function will restart docker-container transmission
 # http://transmission:transmission@127.0.0.1:9091
     case "$(uname)" in
     Linux)
@@ -1465,7 +1577,7 @@ shDockerRestartTransmission () {(set -e
 )}
 
 shDockerRm () {(set -e
-# this function will rm the docker-containers "$@"
+# this function will rm docker-containers "$@"
     docker rm -fv "$@" || true
 )}
 
@@ -1485,7 +1597,7 @@ shDockerRmiUntagged () {(set -e
 )}
 
 shDockerSh () {(set -e
-# this function will run /bin/bash in the docker-container $1
+# this function will run /bin/bash in docker-container $1
     local CMD="[ -f ~/lib.utility2.sh ] &&
 . ~/lib.utility2.sh && shBaseInit
 ${2:-bash}"
@@ -1562,45 +1674,6 @@ shEnvSanitize () {
 }());
 ')"
 }
-
-shFileCustomizeFromToRgx () {(set -e
-# this function will customize segment of file $2 with segment of file $1,
-# with rgx-list $3...
-    node -e '
-/* jslint utility2:true */
-(function () {
-    "use strict";
-    let aa;
-    let bb;
-    aa = require("fs").readFileSync(process.argv[1], "utf8");
-    bb = require("fs").readFileSync(process.argv[2], "utf8");
-    process.argv.slice(3).forEach(function (rgx) {
-        rgx = new RegExp(rgx);
-        bb.replace(rgx, function (match2) {
-            aa.replace(rgx, function (match1) {
-                aa = aa.replace(match1, function () {
-                    return match2;
-                });
-                return "";
-            });
-            return "";
-        });
-    });
-    require("fs").writeFileSync(process.argv[2], aa);
-}());
-' "$@"
-)}
-
-shGitAddTee () {(set -e
-# this function will run "git add ." and "$@ 2>&1 | tee -a ..."
-    git add .
-    mkdir -p tmp
-    printf "\n\n\n\n$(shDateIso) - shGitAddTee\n\n" 2>&1 |
-        tee -a tmp/shGitAddTee.diff
-    "$@" 2>&1 | tee -a /tmp/shGitAddTee.diff
-    git diff 2>&1 | tee -a /tmp/shGitAddTee.diff
-    git status 2>&1 | tee -a /tmp/shGitAddTee.diff
-)}
 
 shGitCommandWithGithubToken () {(set -e
 # this function will run git $COMMAND with $GITHUB_TOKEN
@@ -1728,7 +1801,7 @@ shGitSquashPop () {(set -e
 )}
 
 shGitSquashShift () {(set -e
-# this function will squash $RANGE to the first commit
+# this function will squash $RANGE to first commit
     BRANCH="$(git rev-parse --abbrev-ref HEAD)"
     RANGE="$1"
     git checkout -q "HEAD~$RANGE"
@@ -1742,16 +1815,8 @@ shGitSquashShift () {(set -e
 )}
 
 shGithubApiRateLimitGet () {(set -e
-# this function will the rate-limit for the $GITHUB_TOKEN
+# this function will fetch current rate-limit with given $GITHUB_TOKEN
     curl -Lf -H "Authorization: token $GITHUB_TOKEN" -I https://api.github.com
-)}
-
-shGithubRepoBranchId () {(set -e
-# this function will print the $COMMIT_ID for $GITHUB_REPO:#$BRANCH
-    BRANCH="$1"
-    curl -Lf -H "user-agent: undefined" "https://api.github.com\
-/repos/$GITHUB_REPO/commits?access_token=$GITHUB_TOKEN&sha=$BRANCH" |
-        sed -e 's/^\[{"sha":"//' -e 's/".*//'
 )}
 
 shGithubRepoCreate () {(set -e
@@ -1878,12 +1943,17 @@ shGithubRepoTouch () {(set -e
             }));
         }).setEncoding("utf8");
     }).end();
+    process.on("exit", function (exitCode) {
+        if (!exitCode) {
+            console.error("shGithubRepoTouch - touched " + process.argv[1]);
+        }
+    });
 }());
 ' "$@"
 )}
 
 shGrep () {(set -e
-# this function will recursively grep $DIR for the $REGEXP
+# this function will recursively grep $DIR for $REGEXP
     DIR="$1"
     shift
     REGEXP="$1"
@@ -1916,7 +1986,7 @@ vendor)s{0,1}(\\b|_)\
 )}
 
 shGrepReplace () {(set -e
-# this function will save the grep-and-replace lines in file $1
+# this function will inline grep-and-replace files in $1
     node -e '
 /* jslint utility2:true */
 (function () {
@@ -1947,7 +2017,7 @@ shGrepReplace () {(set -e
 )}
 
 shHttpFileServer () {(set -e
-# this function will run a simple node http-file-server on port $PORT
+# this function will run simple node http-file-server on port $PORT
     node -e '
 /* jslint utility2:true */
 (function () {
@@ -1988,7 +2058,7 @@ shHttpFileServer () {(set -e
 )}
 
 shImageToDataUri () {(set -e
-# this function will convert the image $FILE to a data-uri string
+# this function will convert image $FILE to data-uri string
     case "$1" in
     http://*)
         FILE=/tmp/shImageToDataUri.png
@@ -2093,7 +2163,7 @@ shMacAddressSpoof () {(set -e
 )}
 
 shNpmDeprecateAlias () {(set -e
-# this function will deprecate the npm-package $NAME with given $MESSAGE
+# this function will deprecate npm-package $NAME with given $MESSAGE
 # example use:
 # shNpmDeprecateAlias deprecated-package
     shEnvSanitize
@@ -2138,13 +2208,13 @@ shNpmDeprecateAlias () {(set -e
 )}
 
 shNpmPackageCliHelpCreate () {(set -e
-# this function will create a svg cli-help npm-package
+# this function will create svg of cli-help in current npm-package
     shBuildInit
     export MODE_BUILD=npmPackageCliHelp
     shBuildPrint "creating npmPackageCliHelp ..."
-    FILE="$(node -e 'console.log(
-    Object.values(require("./package.json").bin || {})[0]
-);')"
+    FILE="$(
+node -e 'console.log(Object.values(require("./package.json").bin || {})[0]);
+')"
     shRunWithScreenshotTxt printf none
     if [ -f "./$FILE" ]
     then
@@ -2154,7 +2224,7 @@ shNpmPackageCliHelpCreate () {(set -e
 )}
 
 shNpmPackageDependencyTreeCreate () {(set -e
-# this function will create a svg dependency-tree of the npm-package
+# this function will create svg-dependency-tree of npm-package
     if [ -f README.md ] && ! (grep -q -E "https://nodei.co/npm/$1\b" README.md)
     then
         return
@@ -2191,7 +2261,7 @@ shNpmPackageDependencyTreeCreate () {(set -e
 )}
 
 shNpmPackageListingCreate () {(set -e
-# this function will create a svg listing of the npm-package
+# this function will create svg-listing of npm-package
     cd "$1"
     # init git
     if [ ! -d .git ]
@@ -2224,7 +2294,7 @@ lineList[NR] = $0
 )}
 
 shNpmPublishAlias () {(set -e
-# this function will npm-publish $DIR as $NAME@$VERSION with a clean repo
+# this function will npm-publish $DIR as $NAME@$VERSION
     cd "$1"
     NAME="$2"
     VERSION="$3"
@@ -2258,7 +2328,7 @@ shNpmPublishAlias () {(set -e
 )}
 
 shNpmPublishV0 () {(set -e
-# this function will npm-publish the name $1 with a bare package.json
+# this function will npm-publish name $1 with bare package.json
     DIR=/tmp/npmPublishV0
     rm -rf "$DIR" && mkdir -p "$DIR" && cd "$DIR"
     printf "{\"name\":\"$1\",\"version\":\"0.0.1\"}" > package.json
@@ -2300,7 +2370,7 @@ shNpmTest () {(set -e
 )}
 
 shNpmTestPublished () {(set -e
-# this function will npm-test the published npm-package $npm_package_name
+# this function will npm-test published npm-package $npm_package_name
     export MODE_BUILD=npmTestPublished
     if [ "$TRAVIS" ] && ([ ! "$NPM_TOKEN" ] || (
         [ "$CI_BRANCH" = alpha ] &&
@@ -2463,16 +2533,17 @@ shRawLibFetch () {(set -e
 /* jslint utility2:true */
 (function () {
     "use strict";
-    let child_process;
+    let fetchList;
     let footer;
-    let fs;
     let header;
-    let https;
     let normalizeWhitespace;
+    let onResponse;
     let opt;
-    let path;
-    let replaceDiff;
+    let replaceAndWriteFile;
+    let replaceList;
     let repoDict;
+    let requireDict;
+    let result;
     normalizeWhitespace = function (str) {
     /*
      * this function will normalize whitespace
@@ -2487,32 +2558,103 @@ shRawLibFetch () {(set -e
         ), "");
         // remove leading-newline before ket
         str = str.replace((
-            /\n+(\n\u0020*?\})/g
+            /\n+?(\n\u0020*?\})/g
         ), "$1");
-        // normalize newline between code-section
+        // eslint - no-multiple-empty-lines
+        // https://github.com/eslint/eslint/blob/v7.2.0/docs/rules/no-multiple-empty-lines.md
         str = str.replace((
-            /\n{3,}/g
-        ), function (match0) {
-            if (match0.length === 3) {
-                return "\n\n";
-            }
-            return "\n\n\n\n";
-        });
-        return str;
+            /\n{4,}/g
+        ), "\n\n\n");
+        return str.trim() + "\n";
     };
-    child_process = require("child_process");
-    fs = require("fs");
-    https = require("https");
-    path = require("path");
-    repoDict = {};
+    onResponse = function (res, dict, key) {
+    /*
+     * this function will concat data from <res> to <dict>[<key>]
+     */
+        let data;
+        data = [];
+        res.on("data", function (chunk) {
+            data.push(chunk);
+        }).on("end", function () {
+            dict[key] = Buffer.concat(data);
+        });
+    };
+    replaceAndWriteFile = function () {
+    /*
+     * this function will replace result with replaceList and write to file
+     */
+        let aa;
+        let bb;
+        let data;
+        let result0;
+        // replace from replaceList
+        replaceList.forEach(function (elem) {
+            result0 = result;
+            result = result.replace(new RegExp(elem.aa, elem.flags), elem.bb);
+            if (result0 === result) {
+                throw new Error(
+                    "shRawLibFetch - cannot find-and-replace snippet "
+                    + JSON.stringify(elem.aa)
+                );
+            }
+        });
+        // replace from header
+        header.replace((
+            /((?:^-.*?\n)+?)((?:^\+.*?\n)+)/gm
+        ), function (ignore, match1, match2) {
+            aa = "\n" + match1.replace((
+                /^-/gm
+            ), "");
+            bb = "\n" + match2.replace((
+                /^\+/gm
+            ), "");
+            result0 = result;
+            // disable $-escape in replacement-string
+            result = result.replace(aa, function () {
+                return bb;
+            });
+            if (result0 === result) {
+                throw new Error(
+                    "shRawLibFetch - cannot find-and-replace snippet "
+                    + JSON.stringify(aa)
+                );
+            }
+            return "";
+        });
+        // replace from fetchList
+        fetchList.forEach(function (elem) {
+            if (elem.type !== "dataUri") {
+                return;
+            }
+            data = (
+                "data:" + elem.contentType + ";base64,"
+                + elem.data.toString("base64")
+            );
+            result0 = result;
+            result = result.replace(
+                new RegExp("^" + elem.exports + "$", "gm"),
+                // disable $-escape in replacement-string
+                function () {
+                    return data;
+                }
+            );
+            if (result0 === result) {
+                throw new Error(
+                    "shRawLibFetch - cannot find-and-replace snippet "
+                    + JSON.stringify(elem.exports)
+                );
+            }
+        });
+        require("fs").writeFileSync(
+            process.argv[1],
+            normalizeWhitespace(result)
+        );
+    };
+    // init opt
     opt = (
         /^\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?)\n\*\/\n/m
-    ).exec(fs.readFileSync(process.argv[1], "utf8"));
-    replaceDiff = opt[2].split("\n\n").filter(function (elem) {
-        return elem.trim();
-    }).map(function (elem) {
-        return elem.trim() + "\n";
-    }).sort().join("\n");
+    ).exec(require("fs").readFileSync(process.argv[1], "utf8"));
+    // init footer
     footer = (
         /\n\/\*\nfile\u0020none\n\*\/\n([\S\s]+)/
     ).exec(opt.input);
@@ -2521,91 +2663,77 @@ shRawLibFetch () {(set -e
         ? "\n\n\n" + footer[1].trim() + "\n"
         : ""
     );
+    // init header
     header = (
-        opt.input.slice(0, opt.index) + "/*\nshRawLibFetch\n" + opt[1].trim()
-        + "\n" + replaceDiff + "*/\n\n\n\n"
+        opt.input.slice(0, opt.index) + "/*\nshRawLibFetch\n"
+        + JSON.stringify(JSON.parse(opt[1]), undefined, 4) + "\n"
+        + opt[2].split("\n\n").filter(function (elem) {
+            return elem.trim();
+        }).map(function (elem) {
+            return elem.trim() + "\n";
+        }).sort().join("\n") + "*/\n\n\n"
     );
-    opt = JSON.parse(opt[1].replace((
-        /^\u0020*?\/\/.*?$/gm
-    ), "").replace((
-        /\u0020\/\/\u0020jslint\u0020ignore:line$/gm
-    ), ""));
-    opt.fetchList.forEach(function (elem) {
-        let repo;
+    // JSON.parse opt with comment
+    opt = JSON.parse(opt[1]);
+    // init replaceList
+    replaceList = opt.replaceList || [];
+    // init repoDict, fetchList
+    repoDict = {};
+    fetchList = opt.fetchList;
+    fetchList.forEach(function (elem) {
         if (!elem.url) {
             return;
         }
-        repo = elem.url.split("/").slice(0, 7).join("/");
-        if (!repoDict.hasOwnProperty(repo)) {
-            repoDict[repo] = {
-                fetchList: []
-            };
-            https.request(repo.replace(
+        elem.prefix = elem.url.split("/").slice(0, 7).join("/");
+        // fetch dateCommitted
+        if (!repoDict.hasOwnProperty(elem.prefix)) {
+            repoDict[elem.prefix] = true;
+            require("https").request(elem.prefix.replace(
                 "/blob/",
                 "/commits/"
             ), function (res) {
-                repo.dateCommitted = "";
-                res.on("data", function (buf) {
-                    repo.dateCommitted += buf.toString();
-                });
-                res.on("end", function () {
-                    repo.dateCommitted = repo.dateCommitted.match(
-                        /\b\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\b/
-                    )[0];
-                });
+                onResponse(res, elem, "dateCommitted");
             }).end();
         }
-        repo = repoDict[repo];
-        repo.fetchList.push(elem);
+        // fetch file
+        if (elem.node) {
+            onResponse(require("child_process").spawn("node", [
+                "-e", elem.node
+            ], {
+                stdio: [
+                    "ignore", "pipe", 2
+                ]
+            }).stdout, elem, "data");
+            return;
+        }
+        if (elem.sh) {
+            onResponse(require("child_process").spawn(elem.sh, {
+                shell: true,
+                stdio: [
+                    "ignore", "pipe", 2
+                ]
+            }).stdout, elem, "data");
+            return;
+        }
+        require("https").request(elem.url2 || elem.url.replace(
+            "https://github.com/",
+            "https://raw.githubusercontent.com/"
+        ).replace("/blob/", "/"), function (res) {
+            onResponse(res, elem, "data");
+        }).end();
     });
-    Object.entries(repoDict).forEach(function ([
-        prefix, repo
-    ], ii) {
-        repo.prefix = prefix;
-        repo.fetchList.forEach(function (elem, jj) {
-            let file;
-            file = fs.createWriteStream(
-                process.env.DIR
-                + "/"
-                + String(ii).padStart(2, "0")
-                + "__"
-                + String(jj).padStart(2, "0")
-                + "__"
-                + elem.url.split("/").slice(7).join("__")
-            );
-            if (elem.sh) {
-                child_process.spawn(elem.sh, {
-                    shell: true,
-                    stdio: [
-                        "ignore", "pipe", 2
-                    ]
-                }).stdout.pipe(file);
-                return;
-            }
-            https.request(elem.url.replace(
-                "https://github.com/",
-                "https://raw.githubusercontent.com/"
-            ).replace("/blob/", "/"), function (res) {
-                res.pipe(file);
-            }).end();
-        });
-    });
+    // parse fetched data
     process.on("exit", function () {
-        let repoPrefix0;
-        let requireDict;
-        let result0;
-        let result;
         result = "";
         requireDict = {};
-        fs.readdirSync(process.env.DIR).sort().forEach(function (data) {
-            let exports;
-            let file;
+        fetchList.forEach(function (elem) {
+            let data;
             let prefix;
-            let repo;
-            repo = Object.values(repoDict)[Number(data.slice(0, 2))];
-            file = repo.fetchList[Number(data.slice(4, 6))].url;
+            if (!elem.url) {
+                return;
+            }
             // init prefix
-            prefix = "exports_" + path.dirname(file).replace(
+            prefix = "exports_" + require("path").dirname(elem.url).replace(
                 "https://github.com/",
                 ""
             ).replace((
@@ -2615,29 +2743,35 @@ shRawLibFetch () {(set -e
             ), "_").replace((
                 /(_)_+|_+$/g
             ), "$1");
-            exports = prefix + "_" + path.basename(file).replace((
+            elem.exports = prefix + "_" + require("path").basename(
+                elem.url
+            ).replace((
                 /\.js$/
             ), "").replace((
                 /\W/g
             ), "_");
-            if (repo.prefix !== repoPrefix0) {
-                repoPrefix0 = repo.prefix;
+            if (elem.type === "dataUri") {
+                return;
+            }
+            if (elem.dateCommitted) {
                 result += (
-                    "\n\n\n\n/*\n"
-                    + "repo " + repo.prefix.replace("/blob/", "/tree/") + "\n"
-                    + "committed " + repo.dateCommitted + "\n"
+                    "\n\n\n/*\n"
+                    + "repo " + elem.prefix.replace("/blob/", "/tree/") + "\n"
+                    + "committed " + (
+                        /\b\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\b/
+                    ).exec(elem.dateCommitted)[0] + "\n"
                     + "*/"
                 );
             }
             // mangle module.exports
-            data = fs.readFileSync(process.env.DIR + "/" + data, "utf8");
-            if (!opt.rollupCommonJs) {
-                result += "\n\n\n\n/*\nfile " + file + "\n*/\n" + data.trim();
+            data = elem.data.toString();
+            if (!opt.isRollupCommonJs) {
+                result += "\n\n\n/*\nfile " + elem.url + "\n*/\n" + data.trim();
                 return;
             }
             data = data.replace((
                 /\bmodule\.exports\b|(^\u0020*?)exports\b/gm
-            ), "$1" + exports);
+            ), "$1" + elem.exports);
             // inline require(...)
             data = data.replace((
                 /\brequire\(.\.[.\/]*?\/(\w.*?).\)/gm
@@ -2648,11 +2782,11 @@ shRawLibFetch () {(set -e
                     /\W/g
                 ), "_");
             });
-            result += "\n\n\n\n/*\nfile " + file + "\n*/\n";
+            result += "\n\n\n/*\nfile " + elem.url + "\n*/\n";
             if ((
                 /\bpackage\.json$/
-            ).test(file)) {
-                result += exports + " = ";
+            ).test(elem.url)) {
+                result += elem.exports + " = ";
             }
             result += data.trim();
         });
@@ -2662,44 +2796,11 @@ shRawLibFetch () {(set -e
         ), "// $&");
         // normalize whitespace
         result = normalizeWhitespace(result);
-        // replaceList
-        Array.from(opt.replaceList || []).forEach(function (elem) {
-            result0 = result;
-            result = result.replace(
-                new RegExp(elem.source, elem.flags),
-                elem.replace
+        if (!opt.isRollupCommonJs) {
+            result = (
+                header + result.trim() + "\n\n\n/*\nfile none\n*/\n" + footer
             );
-            if (result0 === result) {
-                throw new Error(
-                    "shRawLibFetch - cannot find-and-replace snippet "
-                    + JSON.stringify(elem.source)
-                );
-            }
-        });
-        result = result.trim() + "\n";
-        // replace diff
-        replaceDiff.replace((
-            /((?:^-.*?\n)+?)((?:^\+.*?\n)+)/gm
-        ), function (ignore, match1, match2) {
-            match1 = match1.replace((
-                /^-/gm
-            ), "");
-            match2 = match2.replace((
-                /^\+/gm
-            ), "");
-            if (result.indexOf(match1) < 0) {
-                throw new Error(
-                    "shRawLibFetch - cannot find-and-replace snippet "
-                    + JSON.stringify(match1)
-                );
-            }
-            result = result.replace(match1, match2);
-        });
-        if (!opt.rollupCommonJs) {
-            fs.writeFileSync(
-                process.argv[1],
-                header + result.trim() + "\n\n\n\n/*\nfile none\n*/\n" + footer
-            );
+            replaceAndWriteFile();
             return;
         }
         // comment ... = require(...)
@@ -2814,15 +2915,15 @@ shRawLibFetch () {(set -e
                 /\u0020{2,}/
             ), " ")] + key + "\n";
         });
-        result += "}());\n\n\n\n/*\nfile none\n*/\n";
-        fs.writeFileSync(process.argv[1], result);
+        result += "}());\n\n\n/*\nfile none\n*/\n";
+        replaceAndWriteFile();
     });
 }());
 ' "$@"
 )}
 
 shReadmeTest () {(set -e
-# this function will extract, save, and test the script $FILE embedded in README.md
+# this function will extract, save, and test script $FILE embedded in README.md
     shBuildInit
     export MODE_BUILD=readmeTest
     shBuildPrint "running command 'shReadmeTest $*' ..."
@@ -2897,7 +2998,7 @@ shReadmeTest () {(set -e
         # http://sed.sourceforge.net/sed1line.txt
         printf "# file-begin\n"
         printf "$SCRIPT" | sed -e '/./,$!d' -e :a -e '/^\n*$/{$d;N;ba' -e '}'
-        printf "\n# file-end\n\n\n\n"
+        printf "\n# file-end\n\n\n"
         shRunWithScreenshotTxt eval "$SCRIPT"
         ;;
     example.sh)
@@ -2906,7 +3007,7 @@ shReadmeTest () {(set -e
         # http://sed.sourceforge.net/sed1line.txt
         printf "# file-begin\n"
         cat "$FILE" | sed -e '/./,$!d' -e :a -e '/^\n*$/{$d;N;ba' -e '}'
-        printf "\n# file-end\n\n\n\n"
+        printf "\n# file-end\n\n\n"
         shRunWithScreenshotTxt /bin/sh "$FILE"
         ;;
     tmp/README.build_ci.sh)
@@ -2915,7 +3016,7 @@ shReadmeTest () {(set -e
         # http://sed.sourceforge.net/sed1line.txt
         printf "# file-begin\n"
         cat "$FILE" | sed -e '/./,$!d' -e :a -e '/^\n*$/{$d;N;ba' -e '}'
-        printf "\n# file-end\n\n\n\n"
+        printf "\n# file-end\n\n\n"
         unset PORT && unset npm_config_timeout_exit && /bin/sh "$FILE"
         ;;
     esac
@@ -2923,7 +3024,7 @@ shReadmeTest () {(set -e
 )}
 
 shRmDsStore () {(set -e
-# this function will recursively rm .DS_Store from the current dir
+# this function will recursively rm .DS_Store from current-dir
 # http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
     for NAME in "._*" ".DS_Store" "desktop.ini" "npm-debug.log" "*~"
     do
@@ -2932,7 +3033,7 @@ shRmDsStore () {(set -e
 )}
 
 shRun () {(set -e
-# this function will run the command "$@" with auto-restart
+# this function will run command "$@" with auto-restart
     EXIT_CODE=0
     # eval argv
     if [ ! "$npm_config_mode_auto_restart" ] ||
@@ -2965,7 +3066,7 @@ shRun () {(set -e
 )}
 
 shRunWithScreenshotTxt () {(set -e
-# this function will run the command "$@" and screenshot the text-output
+# this function will run command "$@" and screenshot text-output
 # http://www.cnx-software.com/2011/09/22
 # /how-to-convert-a-command-line-result-into-an-image-in-linux/
     EXIT_CODE=0
@@ -3260,139 +3361,20 @@ shTravisRepoTrigger () {(set -e
 ' "$@"
 )}
 
-shUtility2BuildApp () {(set -e
-# this function will run shBuildApp in $UTILITY2_DEPENDENTS
-    for DIR in $UTILITY2_DEPENDENTS
-    do
-        cd "$HOME/Documents/$DIR" || continue
-        printf "\n\n\n\n$PWD\n\n\n\n"
-        # shUtility2DependentsSync
-        if [ "$DIR" = utility2 ]
-        then
-            shUtility2DependentsSync
-        # shBuildApp
-        else
-            shBuildApp
-        fi
-    done
-    shUtility2GitDiffHead
-)}
-
-shUtility2DependentsSync () {(set -e
-# this function will
-# 1. sync files between utility2 and its dependents
-# 2. shBuildApp $PWD
-    CWD="$PWD"
-    cd "$HOME/Documents/utility2" && shBuildApp
-    cd "$HOME/Documents"
-    ln -f "utility2/lib.utility2.sh" "$HOME" || true
-    if [ -d "$HOME/bin" ]
-    then
-        ln -f "utility2/lib.apidoc.js" "$HOME/bin/utility2-apidoc" || true
-        ln -f "utility2/lib.istanbul.js" "$HOME/bin/utility2-istanbul" || true
-        ln -f "utility2/lib.jslint.js" "$HOME/bin/utility2-jslint" || true
-        ln -f "utility2/lib.utility2.sh" "$HOME/bin/utility2" || true
-    fi
-    for DIR in $UTILITY2_DEPENDENTS
-    do
-        [ "$DIR" = utility2 ] && continue
-        cd "$HOME/Documents/$DIR" || continue
-        npm_config_dir_utility2="$HOME/Documents/utility2" shBuildAppSync
-        cd "$HOME/Documents"
-        # hardlink "lib.$LIB.js"
-        LIB="$(printf "$DIR" | sed -e "s/-lite\$//" -e "s/-/_/g")"
-        if [ -f "utility2/lib.$LIB.js" ]
-        then
-            ln -f "utility2/lib.$LIB.js" "$DIR" || true
-        fi
-    done
-    # hardlink assets.utility2.rollup.js
-    for DIR in $(ls -d * 2>/dev/null)
-    do
-        if [ -f "$HOME/Documents/$DIR/assets.utility2.rollup.js" ]
-        then
-            ln -f \
-"$HOME/Documents/utility2/tmp/build/app/assets.utility2.rollup.js" \
-"$HOME/Documents/$DIR/assets.utility2.rollup.js"
-        fi
-    done
-    if [ "$CWD" = "$HOME/Documents/utility2" ]
-    then
-        return
-    fi
-    cd "$CWD" && shBuildApp
-)}
-
-shUtility2FncStat () {(set -e
-# this function will print histogram of utility2-fnc code-frequency
-# in current dir
-    node -e '
-/* jslint utility2:true */
-(function () {
-    "use strict";
-    let dict;
-    dict = {};
-    require("child_process").spawnSync("git", [
-        "grep", "-i", "local\\.\\w\\w*\\|\\<sh[A-Z]\\w*\\>"
-    ], {
-        encoding: "utf8",
-        stdio: [
-            "ignore", "pipe", 2
-        ]
-    }).stdout.replace((
-        /\blocal\.\w\w*?\b|\bsh[A-Z]\w*?\b/g
-    ), function (match0) {
-        dict[match0] = (dict[match0] | 0) + 1;
-        return "";
-    });
-    console.log(Object.entries(dict).map(function ([
-        key, val
-    ]) {
-        return String(val).padStart(8, " ") + " -- " + key;
-    }).sort().join("\n"));
-}());
-'
-)}
-
-shUtility2GitCommit () {(set -e
-# this function will git-commit $UTILITY2_DEPENDENTS with given $MESSAGE
-    # init $MESSAGE
-    MESSAGE="$1"
-    for DIR in $UTILITY2_DEPENDENTS
-    do
-        cd "$HOME/Documents/$DIR" || continue
-        printf "\n\n\n\n$PWD\n"
-        git commit -am "'$MESSAGE'" || true
-    done
-)}
-
-shUtility2GitCommitAndPush () {(set -e
+shUtility2DependentsGitCommit () {(set -e
 # this function will git-commit-and-push $UTILITY2_DEPENDENTS
+    local DIR
     for DIR in $UTILITY2_DEPENDENTS
     do
         cd "$HOME/Documents/$DIR" || continue
-        printf "\n\n\n\n$PWD\n\n\n\n"
+        printf "\n\n\n#### shUtility2DependentsGitCommit - $PWD - $@ ####\n\n\n"
         git commit -am "${1:-shUtility2GitCommitAndPush}" || true
-        git push origin alpha
     done
 )}
 
-shUtility2GitDiffHead () {(set -e
-# this function will the git-status of $UTILITY2_DEPENDENTS to stdout
-    rm -f /tmp/shUtility2GitDiffHead.diff
-    for DIR in $UTILITY2_DEPENDENTS
-    do
-        cd "$HOME/Documents/$DIR" || continue
-        printf "\n\n\n\n$PWD\n\n\n\n" 2>&1 >> /tmp/shUtility2GitDiffHead.diff
-        shGitLsTree 2>&1 >> /tmp/shUtility2GitDiffHead.diff
-        git status 2>&1 >> /tmp/shUtility2GitDiffHead.diff
-        git diff HEAD 2>&1 >> /tmp/shUtility2GitDiffHead.diff
-    done
-    less /tmp/shUtility2GitDiffHead.diff
-)}
-
-shUtility2Grep () {(set -e
-# this function will recursively grep $UTILITY2_DEPENDENTS for the regexp $1
+shUtility2DependentsGrep () {(set -e
+# this function will grep $UTILITY2_DEPENDENTS for regexp $1
+    local DIR
     for DIR in $UTILITY2_DEPENDENTS
     do
         DIR="$HOME/Documents/$DIR"
@@ -3403,8 +3385,20 @@ shUtility2Grep () {(set -e
     done
 )}
 
-shUtility2Version () {(set -e
-# this function will print the latest versions in $UTILITY2_DEPENDENTS
+shUtility2DependentsShellEval () {(set -e
+# this function will shell-eval "$@" in utility2 and its dependents
+    local DIR
+    for DIR in $UTILITY2_DEPENDENTS
+    do
+        cd "$HOME/Documents/$DIR" || continue
+        printf "\n\n\n#### shUtility2DependentsShellEval - $PWD - $@ ####\n\n\n"
+        eval "$@"
+    done
+    printf "\n\n\n"
+)}
+
+shUtility2DependentsVersion () {(set -e
+# this function will print latest versions of $UTILITY2_DEPENDENTS
     node -e '
 /* jslint utility2:true */
 (function () {
@@ -3441,6 +3435,37 @@ shUtility2Version () {(set -e
 '
 )}
 
+shUtility2FncStat () {(set -e
+# this function will print histogram of utility2-fnc code-frequency
+# in current dir
+    node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    let dict;
+    dict = {};
+    require("child_process").spawnSync("git", [
+        "grep", "-i", "local\\.\\w\\w*\\|\\<sh[A-Z]\\w*\\>"
+    ], {
+        encoding: "utf8",
+        stdio: [
+            "ignore", "pipe", 2
+        ]
+    }).stdout.replace((
+        /\blocal\.\w\w*?\b|\bsh[A-Z]\w*?\b/g
+    ), function (match0) {
+        dict[match0] = (dict[match0] | 0) + 1;
+        return "";
+    });
+    console.log(Object.entries(dict).map(function ([
+        key, val
+    ]) {
+        return String(val).padStart(8, " ") + " -- " + key;
+    }).sort().join("\n"));
+}());
+'
+)}
+
 shXvfbStart () {
 # this function will start xvfb
     if [ "$(uname)" = Linux ] && [ ! "$DISPLAY" ]
@@ -3456,6 +3481,7 @@ export UTILITY2_GIT_BASE_ID=9fe8c2255f4ac330c86af7f624d381d768304183
 export UTILITY2_DEPENDENTS='
 utility2
 apidoc-lite
+bootstrap-lite
 istanbul-lite
 jslint-lite
 '
@@ -3465,12 +3491,10 @@ export UTILITY2_MACRO_JS='
 /* jslint utility2:true */
 /* istanbul ignore next */
 // run shared js-env code - init-local
-(function (globalThis) {
+(function () {
     "use strict";
     let consoleError;
     let local;
-    // init globalThis
-    globalThis.globalThis = globalThis.globalThis || globalThis;
     // init debugInline
     if (!globalThis.debugInline) {
         consoleError = console.error;
@@ -3621,14 +3645,12 @@ export UTILITY2_MACRO_JS='
             throw err;
         });
     }
-}((typeof globalThis === "object" && globalThis) || window));
+}());
 // assets.utility2.header.js - end
-
 
 
 (function (local) {
 "use strict";
-
 
 
 /* istanbul ignore next */
@@ -3650,7 +3672,6 @@ if (local.isBrowser) {
 }
 // init lib main
 local.utility2 = local;
-
 
 
 /* validateLineSortedReset */
@@ -3945,41 +3966,6 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
     }).catch(onError);
 };
 
-local.gotoNext = function (opt, onError) {
-/*
- * this function will wrap onError inside recursive-function <opt>.gotoNext,
- * and append current-stack to any err
- */
-    opt.gotoNext = local.onErrorWithStack(function (err, data, meta) {
-        try {
-            opt.gotoState += (
-                (err && !opt.modeErrorIgnore)
-                ? 1000
-                : 1
-            );
-            if (opt.modeDebug) {
-                console.error("gotoNext - " + JSON.stringify({
-                    gotoState: opt.gotoState,
-                    errMsg: err && err.message
-                }));
-                if (err && err.stack) {
-                    console.error(err.stack);
-                }
-            }
-            onError(err, data, meta);
-        } catch (errCaught) {
-            // throw errCaught to break infinite recursion-loop
-            if (opt.errCaught) {
-                local.assertOrThrow(undefined, opt.errCaught);
-            }
-            opt.errCaught = errCaught;
-            opt.gotoNext(errCaught, data, meta);
-        }
-    });
-    opt.gotoNextData = opt.gotoNext.bind(undefined, undefined);
-    return opt;
-};
-
 local.objectDeepCopyWithKeysSorted = function (obj) {
 /*
  * this function will recursively deep-copy <obj> with keys sorted
@@ -4005,81 +3991,6 @@ local.objectDeepCopyWithKeysSorted = function (obj) {
         return sorted;
     };
     return objectDeepCopyWithKeysSorted(obj);
-};
-
-local.onErrorDefault = function (err) {
-/*
- * this function will if <err> exists, then print it to stderr
- */
-    if (err) {
-        console.error(err);
-    }
-    return err;
-};
-
-local.onErrorWithStack = function (onError) {
-/*
- * this function will wrap <onError> with wrapper preserving current-stack
- */
-    let onError2;
-    let stack;
-    stack = new Error().stack;
-    onError2 = function (err, data, meta) {
-        // append current-stack to err.stack
-        if (err && typeof err.stack === "string") {
-            err.stack += "\n" + stack;
-        }
-        onError(err, data, meta);
-    };
-    // debug onError
-    onError2.toString = function () {
-        return String(onError);
-    };
-    return onError2;
-};
-
-local.onParallel = function (onError, onEach, onRetry) {
-/*
- * this function will create function that will
- * 1. run async tasks in parallel
- * 2. if cnt === 0 or err occurred, then call onError(err)
- */
-    let onParallel;
-    onError = local.onErrorWithStack(onError);
-    onEach = onEach || local.nop;
-    onRetry = onRetry || local.nop;
-    onParallel = function (err, data) {
-        if (onRetry(err, data)) {
-            return;
-        }
-        // decrement cnt
-        onParallel.cnt -= 1;
-        // validate cnt
-        if (!(onParallel.cnt >= 0 || err || onParallel.err)) {
-            err = new Error(
-                "invalid onParallel.cnt = " + onParallel.cnt
-            );
-        // ensure onError is run only once
-        } else if (onParallel.cnt < 0) {
-            return;
-        }
-        // handle err
-        if (err) {
-            onParallel.err = err;
-            // ensure cnt <= 0
-            onParallel.cnt = -Math.abs(onParallel.cnt);
-        }
-        // call onError when isDone
-        if (onParallel.cnt <= 0) {
-            onError(err, data);
-            return;
-        }
-        onEach();
-    };
-    // init cnt
-    onParallel.cnt = 0;
-    // return callback
-    return onParallel;
 };
 
 local.templateRenderMyApp = function (template) {

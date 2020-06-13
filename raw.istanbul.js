@@ -22,8 +22,8 @@ shRawLibFetch
     "replaceList": [
         {
             "flags": "g",
-            "replace": "require2(",
-            "source": "\\brequire\\("
+            "aa": "\\brequire\\(",
+            "bb": "require2("
         }
     ]
 }
@@ -56,12 +56,10 @@ shRawLibFetch
 */
 
 
-
 /*
 repo https://github.com/acornjs/acorn/tree/6.3.0
 committed 2019-08-12T09:40:59Z
 */
-
 
 
 /*
@@ -5036,12 +5034,10 @@ file https://github.com/acornjs/acorn/blob/6.3.0/acorn/dist/acorn.js
 }));
 
 
-
 /*
 repo https://github.com/estools/estraverse/tree/4.2.0
 committed 2016-03-10T21:51:59Z
 */
-
 
 
 /*
@@ -5898,12 +5894,10 @@ file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
 /* vim: set sw=4 ts=4 et tw=80 : */
 
 
-
 /*
 repo https://github.com/estools/esutils/tree/2.0.3
 committed 2019-07-31T01:06:44Z
 */
-
 
 
 /*
@@ -6046,12 +6040,10 @@ file https://github.com/estools/esutils/blob/2.0.3/lib/code.js
 /* vim: set sw=4 ts=4 et tw=80 : */
 
 
-
 /*
 repo https://github.com/estools/escodegen/tree/v1.12.0
 committed 2019-08-13T02:08:40Z
 */
-
 
 
 /*
@@ -8516,6 +8508,7 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
 
         result = this[type](expr, precedence, flags);
 
+
         if (extra.comment) {
             result = addComments(expr, result);
         }
@@ -8622,6 +8615,7 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
             return options.sourceMapWithCode ? pair : pair.code;
         }
 
+
         pair = result.toStringWithSourceMap({
             file: options.file,
             sourceRoot: options.sourceMapRoot
@@ -8666,12 +8660,10 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
 /* vim: set sw=4 ts=4 et tw=80 : */
 
 
-
 /*
 repo https://github.com/gotwarlost/istanbul/tree/v0.4.5
 committed 2016-08-21T19:53:22Z
 */
-
 
 
 /*
@@ -9779,7 +9771,6 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
         window.Instrumenter = Instrumenter;
     }
 }(typeof module !== 'undefined' && typeof module.exports !== 'undefined' && typeof exports !== 'undefined'));
-
 
 
 /*
