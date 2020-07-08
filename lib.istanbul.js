@@ -155,6 +155,14 @@
         recurse(tgt, src, depth | 0);
         return tgt;
     };
+    local.onErrorThrow = function (err) {
+    /*
+     * this function will throw <err> if exists
+     */
+        if (err) {
+            throw err;
+        }
+    };
     // bug-workaround - throw unhandledRejections in node-process
     if (
         typeof process === "object" && process
@@ -359,13 +367,13 @@ local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
  * this function will sync-read <pathname> with given <type> and <dflt>
  */
     let fs;
-    // do nothing if module does not exist
+    // do nothing if module not exists
     try {
         fs = require("fs");
+        pathname = require("path").resolve(pathname);
     } catch (ignore) {
         return dflt;
     }
-    pathname = require("path").resolve(pathname);
     // try to read pathname
     try {
         return (
@@ -378,23 +386,21 @@ local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
     }
 };
 
-local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {
+local.fsWriteFileWithMkdirpSync = function (pathname, data) {
 /*
  * this function will sync write <data> to <pathname> with "mkdir -p"
  */
     let fs;
-    let success;
-    // do nothing if module does not exist
+    // do nothing if module not exists
     try {
         fs = require("fs");
+        pathname = require("path").resolve(pathname);
     } catch (ignore) {
         return;
     }
-    pathname = require("path").resolve(pathname);
     // try to write pathname
     try {
         fs.writeFileSync(pathname, data);
-        success = true;
     } catch (ignore) {
         // mkdir -p
         fs.mkdirSync(require("path").dirname(pathname), {
@@ -402,12 +408,9 @@ local.fsWriteFileWithMkdirpSync = function (pathname, data, msg) {
         });
         // re-write pathname
         fs.writeFileSync(pathname, data);
-        success = true;
     }
-    if (success && msg) {
-        console.error(msg.replace("{{pathname}}", pathname));
-    }
-    return success;
+    console.error("fsWriteFileWithMkdirpSync - " + pathname);
+    return true;
 };
 
 local.templateRender = function (template, dict, opt = {}, ii = 0) {
@@ -10822,11 +10825,7 @@ fileWrite = function (file, data) {
 /*
  * this function will write <data> to <file>
  */
-    local.fsWriteFileWithMkdirpSync(
-        file,
-        data,
-        "wrote file - coverage-report - {{pathname}}"
-    );
+    local.fsWriteFileWithMkdirpSync(file, data);
 };
 reportHtmlWrite = function (node, dirCoverage, coverage) {
 /*
@@ -11737,10 +11736,11 @@ local.instrumentSync = function (code, file) {
     // 1. normalize <file>
     file = path.resolve(file);
     // 2. save <code> to __coverageInclude__[<file>] for future html-report
-    globalThis.__coverageInclude__ = globalThis.__coverageInclude__ || {};
-    globalThis.__coverageInclude__[file] = 1;
     // 3. return instrumented-code
-    return new local.Instrumenter({
+    return (
+        "globalThis.__coverageInclude__ = globalThis.__coverageInclude__ || {};"
+        + "globalThis.__coverageInclude__[" + JSON.stringify(file) + "] = 1;\n"
+    ) + new local.Instrumenter({
         embedSource: true,
         esModules: true,
         noAutoWrap: true
@@ -11785,15 +11785,12 @@ local.cliDict.cover = function () {
     moduleExtensionsJs = tmp._extensions[".js"];
     tmp._extensions[".js"] = function (module, file) {
         if (typeof file === "string" && (
-            file.indexOf(process.env.npm_config_mode_coverage_dir) === 0 || (
-                file.indexOf(process.cwd() + require("path").sep) === 0
-                && (
-                    process.env.npm_config_mode_coverage === "node_modules"
-                    || file.indexOf(
-                        require("path").resolve("node_modules")
-                        + require("path").sep
-                    ) !== 0
-                )
+            file.indexOf(process.cwd() + require("path").sep) === 0 && (
+                process.env.npm_config_mode_coverage === "node_modules"
+                || file.indexOf(
+                    require("path").resolve("node_modules")
+                    + require("path").sep
+                ) !== 0
             )
         )) {
             module._compile(local.instrumentInPackage(

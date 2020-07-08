@@ -6,7 +6,7 @@ shRawLibFetch
             "url": "https://github.com/CSSLint/csslint/blob/e8aeeda06c928636e21428e09b1af93f66621209/dist/csslint.js"
         },
         {
-            "url": "https://github.com/douglascrockford/JSLint/blob/686716b71f6d45d3c233e1cfa026a1e5f46747aa/jslint.js"
+            "url": "https://github.com/douglascrockford/JSLint/blob/118167e967b4ebfc08759fdd1ab2d87f5a27cc37/jslint.js"
         }
     ],
     "replaceList": [
@@ -100,15 +100,14 @@ shRawLibFetch
 +        // hack-jslint - sort by early_stop
 +        warnings: warnings.sort(function (a, b) {
 +            return (
-+                a.early_stop
-+                ? -1
-+                : b.early_stop
-+                ? 1
-+                : a.line - b.line || a.column - b.column
-+            );
++                Boolean(a.early_stop) * -1
++                + Boolean(b.early_stop) * 1
++            ) || (a.line - b.line);
 +        }),
 +        // hack-jslint - autofix
-+        source_autofixed: source
++        source_autofixed: lines_extra.map(function (element, ii) {
++            return element.source_autofixed || lines[ii];
++        }).join("\n")
 
 -    if (cadet.id === "(comment)") {
 +    // hack-jslint - advance token async/await to next_token by context
@@ -139,9 +138,6 @@ shRawLibFetch
 +            )
 +            || lines[aa.line] < lines[bb.line]
 +        )) {
-+            the_cases.map(function (elem) {
-+                return elem.expression[0];
-+            });
 +            warn_at(
 +                "Unsorted case-statements.",
 +                the_cases[ii].expression[0].line,
@@ -189,6 +185,10 @@ shRawLibFetch
 -            warnings.push(e);
 -        }
 -    }
++        // hack-jslint - throw_error
++        if (option.throw_error) {
++            throw new Error();
++        }
 +    } catch (e) {
 +        // hack-jslint - early_stop
 +        e.early_stop = true;
@@ -200,87 +200,124 @@ shRawLibFetch
 +    }
 +    // hack-jslint - autofix
 +    warnings = warnings.filter(function (warning) {
-+        let indent;
-+        warning.source = warning.source || "";
-+        warning.a = warning.a || warning.source.trim();
++        let aa;
++        let bb;
++        let tmp;
++        if (!lines_extra[warning.line]) {
++            return true;
++        }
++        aa = lines_extra[warning.line].source;
++        warning.a = warning.a || aa.trim();
 +        switch (option.autofix && warning.code) {
 +        // expected_a_at_b_c: "Expected '{a}' at column {b}, not column {c}.",
 +        case "expected_a_at_b_c":
 +            // autofix indent - increment
-+            indent = warning.b - warning.c;
-+            if (indent >= 0) {
-+                lines_extra[warning.line].source_autofixed = (
-+                    " ".repeat(indent) + warning.source
-+                );
-+                return;
++            tmp = warning.b - warning.c;
++            if (tmp >= 0) {
++                bb = " ".repeat(tmp) + aa;
++                break;
 +            }
 +            // autofix indent - decrement
-+            indent = -indent;
++            tmp = -tmp;
 +            if ((
 +                /^\u0020*?$/m
-+            ).test(warning.source.slice(0, warning.column))) {
-+                lines_extra[warning.line].source_autofixed = (
-+                    warning.source.slice(indent)
-+                );
-+                return;
++            ).test(aa.slice(0, warning.column))) {
++                bb = aa.slice(tmp);
++                break;
 +            }
 +            // autofix indent - newline
-+            lines_extra[warning.line].source_autofixed = (
-+                warning.source.slice(0, warning.column) + "\n"
-+                + " ".repeat(warning.b) + warning.source.slice(warning.column)
++            bb = (
++                aa.slice(0, warning.column) + "\n"
++                + " ".repeat(warning.b) + aa.slice(warning.column)
 +            );
-+            return;
++            break;
++        // expected_a_b: "Expected '{a}' and instead saw '{b}'.",
++        case "expected_a_b":
++            if (
++                (warning.a === "\\s" || warning.a === "\\u0020")
++                && warning.b === " "
++            ) {
++                bb = (
++                    aa.slice(0, warning.column) + "\\u0020"
++                    + aa.slice(warning.column + 1)
++                );
++            }
++            break;
++        // expected_a_before_b: "Expected '{a}' before '{b}'.",
++        case "expected_a_before_b":
++            bb = (
++                aa.slice(0, warning.column) + warning.a
++                + aa.slice(warning.column)
++            );
++            break;
 +        // expected_identifier_a:
 +        // "Expected an identifier and instead saw '{a}'.",
 +        case "expected_identifier_a":
-+            if (!(
++            if (
 +                (
 +                    /^\d+$/m
 +                ).test(warning.a)
-+                && warning.source[warning.column + warning.a.length] === ":"
-+            )) {
-+                return;
++                && aa[warning.column + warning.a.length] === ":"
++            ) {
++                bb = (
++                    aa.slice(0, warning.column) + "\"" + warning.a + "\""
++                    + aa.slice(warning.column + warning.a.length)
++                );
++                break;
 +            }
-+            lines_extra[warning.line].source_autofixed = (
-+                warning.source.slice(0, warning.column)
-+                + "\"" + warning.a + "\""
-+                + warning.source.slice(warning.column + warning.a.length)
-+            );
-+            return;
++            break;
 +        // expected_space_a_b: "Expected one space between '{a}' and '{b}'.",
-+        // unexpected_space_a_b: "Unexpected space between '{a}' and '{b}'.",
 +        case "expected_space_a_b":
-+        case "unexpected_space_a_b":
-+            lines_extra[warning.line].source_autofixed = (
-+                warning.source.slice(0, warning.column)
-+                + "\u0000" + warning.code
-+                + "\u0000" + warning.source.slice(warning.column)
++            bb = (
++                aa.slice(0, warning.column).trimRight() + " "
++                + aa.slice(warning.column)
 +            );
-+            return;
++            break;
++        // unexpected_space_a_b: "Unexpected space between '{a}' and '{b}'.",
++        case "unexpected_space_a_b":
++            bb = (
++                aa.slice(0, warning.column).trimRight()
++                + aa.slice(warning.column)
++            );
++            break;
++        // use_double: "Use double quotes, not single quotes.",
++        case "use_double":
++            tmp = undefined;
++            bb = aa.slice(
++                0,
++                warning.column - 1
++            ) + "\"" + aa.slice(warning.column, tmp).replace((
++                /\\.|"|'/g
++            ), function (match0) {
++                if (tmp) {
++                    return match0;
++                }
++                if (match0 === "'") {
++                    tmp = true;
++                    return "\"";
++                }
++                return (
++                    match0 === "\""
++                    ? "\\\""
++                    : match0[1] === "'"
++                    ? "'"
++                    : match0
++                );
++            });
++            break;
 +        // use_spaces: "Use spaces, not tabs.",
 +        case "use_spaces":
-+            lines_extra[warning.line].source_autofixed = (
-+                warning.source.replace((
-+                    /^(\u0020*?)\t/
-+                ), "$1   ")
-+            );
++            bb = aa.replace((
++                /^(\u0020*?)\t/
++            ), "$1   ");
++            break;
++        }
++        if (bb !== undefined) {
++            lines_extra[warning.line].source_autofixed = bb;
 +            return;
 +        }
 +        return true;
 +    });
-+    // expected_space_a_b: "Expected one space between '{a}' and '{b}'.",
-+    // unexpected_space_a_b: "Unexpected space between '{a}' and '{b}'.",
-+    source = lines_extra.map(function (element, ii) {
-+        return element.source_autofixed || lines[ii];
-+    }).join("\n").replace((
-+        /\s+?\u0000/g
-+    ), "\u0000").replace((
-+        /(\n\u0020+)(.*?)\n\u0020*?(\/\/.*?)\u0000/g
-+    ), "$1$3$1$2\u0000").replace((
-+        /\u0000expected_space_a_b\u0000/g
-+    ), " ").replace((
-+        /\u0000unexpected_space_a_b\u0000/g
-+    ), "");
 +    // hack-jslint - debug warning
 +    warnings.some(function (warning) {
 +        if (!option.utility2) {
@@ -292,10 +329,6 @@ shRawLibFetch
 +                delete warning.option[key];
 +            }
 +        });
-+        warning.source_autofixed = (
-+            lines_extra[warning.line]
-+            && lines_extra[warning.line].source_autofixed
-+        );
 +        return true;
 +    });
 
@@ -310,22 +343,27 @@ shRawLibFetch
 +    // hack-jslint - allowed_option extra
 +    debug: true,
 +    nomen: true,
++    throw_error: true,
 
--const rx_token = /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0|[1-9][0-9]*))(.*)$/;
+-const rx_token = /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|\*[*\/=]?|\/[*\/]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0|[1-9][0-9]*))(.*)$/;
 -const rx_digits = /^([0-9]+)(.*)$/;
 -const rx_hexs = /^([0-9a-fA-F]+)(.*)$/;
 -const rx_octals = /^([0-7]+)(.*)$/;
 -const rx_bits = /^([01]+)(.*)$/;
 +// hack-jslint - bigint
-+const rx_token = /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0n?|[1-9][0-9]*n?))(.*)$/;
++const rx_token = /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|\*[*\/=]?|\/[*\/]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0n?|[1-9][0-9]*n?))(.*)$/;
 +const rx_digits = /^([0-9]+)(.*)$/;
 +const rx_hexs = /^([0-9a-fA-F]+n?)(.*)$/;
 +const rx_octals = /^([0-7]+n?)(.*)$/;
 +const rx_bits = /^([01]+n?)(.*)$/;
 
 -export default Object.freeze(function jslint(
-+// hack-jslint - jslint_export
-+local.jslint_export = Object.freeze(function (
++// hack-jslint - jslint0
++local.jslint0 = Object.freeze(function (
+
+-var CSSLint = (function(){
++/* istanbul ignore next */
++var CSSLint = (function(){
 */
 
 
@@ -362,6 +400,7 @@ THE SOFTWARE.
 
 */
 
+/* istanbul ignore next */
 var CSSLint = (function(){
   var module = module || {},
       exports = exports || {};
@@ -11075,16 +11114,16 @@ return CSSLint;
 
 
 /*
-repo https://github.com/douglascrockford/JSLint/tree/686716b71f6d45d3c233e1cfa026a1e5f46747aa
-committed 2020-03-28T12:46:58Z
+repo https://github.com/douglascrockford/JSLint/tree/118167e967b4ebfc08759fdd1ab2d87f5a27cc37
+committed 2020-07-02T15:21:03Z
 */
 
 
 /*
-file https://github.com/douglascrockford/JSLint/blob/686716b71f6d45d3c233e1cfa026a1e5f46747aa/jslint.js
+file https://github.com/douglascrockford/JSLint/blob/118167e967b4ebfc08759fdd1ab2d87f5a27cc37/jslint.js
 */
 // jslint.js
-// 2020-03-28
+// 2020-07-02
 // Copyright (c) 2015 Douglas Crockford  (www.JSLint.com)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -11233,6 +11272,7 @@ const allowed_option = {
     // hack-jslint - allowed_option extra
     debug: true,
     nomen: true,
+    throw_error: true,
 
 // These are the options that are recognized in the option object or that may
 // appear in a /*jslint*/ directive. Most options will have a boolean value,
@@ -11473,7 +11513,7 @@ const rx_directive = /^(jslint|property|global)\s+(.*)$/;
 const rx_directive_part = /^([a-zA-Z$_][a-zA-Z0-9$_]*)(?::\s*(true|false))?,?\s*(.*)$/;
 // token (sorry it is so long)
 // hack-jslint - bigint
-const rx_token = /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|[*\/][*\/=]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0n?|[1-9][0-9]*n?))(.*)$/;
+const rx_token = /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|\*[*\/=]?|\/[*\/]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0n?|[1-9][0-9]*n?))(.*)$/;
 const rx_digits = /^([0-9]+)(.*)$/;
 const rx_hexs = /^([0-9a-fA-F]+n?)(.*)$/;
 const rx_octals = /^([0-7]+n?)(.*)$/;
@@ -12659,7 +12699,7 @@ function tokenize(source) {
                     return the_token;
                 }
             }
-            if (source_line[0] === "/") {
+            if (source_line[0] === "=") {
                 column += 1;
                 source_line = source_line.slice(1);
                 snippet = "/=";
@@ -12906,6 +12946,9 @@ function json_value() {
         negative.arity = "unary";
         advance("-");
         advance("(number)");
+        if (!rx_JSON_number.test(token.value)) {
+            warn("unexpected_a", token);
+        }
         negative.expression = token;
         return negative;
     }
@@ -14820,9 +14863,6 @@ stmt("switch", function () {
             )
             || lines[aa.line] < lines[bb.line]
         )) {
-            the_cases.map(function (elem) {
-                return elem.expression[0];
-            });
             warn_at(
                 "Unsorted case-statements.",
                 the_cases[ii].expression[0].line,
@@ -15097,6 +15137,7 @@ function lookup(thing) {
             the_variable.dead
             && (
                 the_variable.calls === undefined
+                || functionage.name === undefined
                 || the_variable.calls[functionage.name.id] === undefined
             )
         ) {
@@ -16057,8 +16098,8 @@ function whitage() {
 
 // The jslint function itself.
 
-// hack-jslint - jslint_export
-local.jslint_export = Object.freeze(function (
+// hack-jslint - jslint0
+local.jslint0 = Object.freeze(function (
     source = "",
     option_object = empty(),
     global_array = []
@@ -16171,6 +16212,10 @@ local.jslint_export = Object.freeze(function (
             });
         }
         early_stop = false;
+        // hack-jslint - throw_error
+        if (option.throw_error) {
+            throw new Error();
+        }
     } catch (e) {
         // hack-jslint - early_stop
         e.early_stop = true;
@@ -16182,87 +16227,124 @@ local.jslint_export = Object.freeze(function (
     }
     // hack-jslint - autofix
     warnings = warnings.filter(function (warning) {
-        let indent;
-        warning.source = warning.source || "";
-        warning.a = warning.a || warning.source.trim();
+        let aa;
+        let bb;
+        let tmp;
+        if (!lines_extra[warning.line]) {
+            return true;
+        }
+        aa = lines_extra[warning.line].source;
+        warning.a = warning.a || aa.trim();
         switch (option.autofix && warning.code) {
         // expected_a_at_b_c: "Expected '{a}' at column {b}, not column {c}.",
         case "expected_a_at_b_c":
             // autofix indent - increment
-            indent = warning.b - warning.c;
-            if (indent >= 0) {
-                lines_extra[warning.line].source_autofixed = (
-                    " ".repeat(indent) + warning.source
-                );
-                return;
+            tmp = warning.b - warning.c;
+            if (tmp >= 0) {
+                bb = " ".repeat(tmp) + aa;
+                break;
             }
             // autofix indent - decrement
-            indent = -indent;
+            tmp = -tmp;
             if ((
                 /^\u0020*?$/m
-            ).test(warning.source.slice(0, warning.column))) {
-                lines_extra[warning.line].source_autofixed = (
-                    warning.source.slice(indent)
-                );
-                return;
+            ).test(aa.slice(0, warning.column))) {
+                bb = aa.slice(tmp);
+                break;
             }
             // autofix indent - newline
-            lines_extra[warning.line].source_autofixed = (
-                warning.source.slice(0, warning.column) + "\n"
-                + " ".repeat(warning.b) + warning.source.slice(warning.column)
+            bb = (
+                aa.slice(0, warning.column) + "\n"
+                + " ".repeat(warning.b) + aa.slice(warning.column)
             );
-            return;
+            break;
+        // expected_a_b: "Expected '{a}' and instead saw '{b}'.",
+        case "expected_a_b":
+            if (
+                (warning.a === "\\s" || warning.a === "\\u0020")
+                && warning.b === " "
+            ) {
+                bb = (
+                    aa.slice(0, warning.column) + "\\u0020"
+                    + aa.slice(warning.column + 1)
+                );
+            }
+            break;
+        // expected_a_before_b: "Expected '{a}' before '{b}'.",
+        case "expected_a_before_b":
+            bb = (
+                aa.slice(0, warning.column) + warning.a
+                + aa.slice(warning.column)
+            );
+            break;
         // expected_identifier_a:
         // "Expected an identifier and instead saw '{a}'.",
         case "expected_identifier_a":
-            if (!(
+            if (
                 (
                     /^\d+$/m
                 ).test(warning.a)
-                && warning.source[warning.column + warning.a.length] === ":"
-            )) {
-                return;
+                && aa[warning.column + warning.a.length] === ":"
+            ) {
+                bb = (
+                    aa.slice(0, warning.column) + "\"" + warning.a + "\""
+                    + aa.slice(warning.column + warning.a.length)
+                );
+                break;
             }
-            lines_extra[warning.line].source_autofixed = (
-                warning.source.slice(0, warning.column)
-                + "\"" + warning.a + "\""
-                + warning.source.slice(warning.column + warning.a.length)
-            );
-            return;
+            break;
         // expected_space_a_b: "Expected one space between '{a}' and '{b}'.",
-        // unexpected_space_a_b: "Unexpected space between '{a}' and '{b}'.",
         case "expected_space_a_b":
-        case "unexpected_space_a_b":
-            lines_extra[warning.line].source_autofixed = (
-                warning.source.slice(0, warning.column)
-                + "\u0000" + warning.code
-                + "\u0000" + warning.source.slice(warning.column)
+            bb = (
+                aa.slice(0, warning.column).trimRight() + " "
+                + aa.slice(warning.column)
             );
-            return;
+            break;
+        // unexpected_space_a_b: "Unexpected space between '{a}' and '{b}'.",
+        case "unexpected_space_a_b":
+            bb = (
+                aa.slice(0, warning.column).trimRight()
+                + aa.slice(warning.column)
+            );
+            break;
+        // use_double: "Use double quotes, not single quotes.",
+        case "use_double":
+            tmp = undefined;
+            bb = aa.slice(
+                0,
+                warning.column - 1
+            ) + "\"" + aa.slice(warning.column, tmp).replace((
+                /\\.|"|'/g
+            ), function (match0) {
+                if (tmp) {
+                    return match0;
+                }
+                if (match0 === "'") {
+                    tmp = true;
+                    return "\"";
+                }
+                return (
+                    match0 === "\""
+                    ? "\\\""
+                    : match0[1] === "'"
+                    ? "'"
+                    : match0
+                );
+            });
+            break;
         // use_spaces: "Use spaces, not tabs.",
         case "use_spaces":
-            lines_extra[warning.line].source_autofixed = (
-                warning.source.replace((
-                    /^(\u0020*?)\t/
-                ), "$1   ")
-            );
+            bb = aa.replace((
+                /^(\u0020*?)\t/
+            ), "$1   ");
+            break;
+        }
+        if (bb !== undefined) {
+            lines_extra[warning.line].source_autofixed = bb;
             return;
         }
         return true;
     });
-    // expected_space_a_b: "Expected one space between '{a}' and '{b}'.",
-    // unexpected_space_a_b: "Unexpected space between '{a}' and '{b}'.",
-    source = lines_extra.map(function (element, ii) {
-        return element.source_autofixed || lines[ii];
-    }).join("\n").replace((
-        /\s+?\u0000/g
-    ), "\u0000").replace((
-        /(\n\u0020+)(.*?)\n\u0020*?(\/\/.*?)\u0000/g
-    ), "$1$3$1$2\u0000").replace((
-        /\u0000expected_space_a_b\u0000/g
-    ), " ").replace((
-        /\u0000unexpected_space_a_b\u0000/g
-    ), "");
     // hack-jslint - debug warning
     warnings.some(function (warning) {
         if (!option.utility2) {
@@ -16274,15 +16356,11 @@ local.jslint_export = Object.freeze(function (
                 delete warning.option[key];
             }
         });
-        warning.source_autofixed = (
-            lines_extra[warning.line]
-            && lines_extra[warning.line].source_autofixed
-        );
         return true;
     });
     return {
         directives,
-        edition: "2020-03-28",
+        edition: "2020-07-02",
         exports,
         froms,
         functions,
@@ -16305,15 +16383,14 @@ local.jslint_export = Object.freeze(function (
         // hack-jslint - sort by early_stop
         warnings: warnings.sort(function (a, b) {
             return (
-                a.early_stop
-                ? -1
-                : b.early_stop
-                ? 1
-                : a.line - b.line || a.column - b.column
-            );
+                Boolean(a.early_stop) * -1
+                + Boolean(b.early_stop) * 1
+            ) || (a.line - b.line);
         }),
         // hack-jslint - autofix
-        source_autofixed: source
+        source_autofixed: lines_extra.map(function (element, ii) {
+            return element.source_autofixed || lines[ii];
+        }).join("\n")
     };
 });
 

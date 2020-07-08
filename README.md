@@ -51,31 +51,37 @@ this zero-dependency package will provide high-level functions to to build, test
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.6.13
-- fix excessive istanbul.ignore in test.js
-- update function shRawLibFetch to inline dataUri assets
-- jslint - add eslint-rule no-multiple-empty-lines
-- bootstrap-lite - re-enable including css-asset in build-process
-- add limited win32-compat
-- rename function middlewareJsonpStateInit to middlewareUtility2StateInit
-- merge shell-function shBuildAppSync and shUtility2DependentsSync into shBuildApp
-- replace shell-function prefix shUtility2 with shUtility2Dependents
-- replace deprecated fs.exists() with fs.access()
-- add shell-function shUtility2DependentsShellEval
-- remove globalThis polyfill
-- remove shell-function shGitAddTee, shGithubRepoBranchId
+#### changelog 2020.7.8
+- jslint - generalize autofix-js-braket - normalize {\s+} to {}
+- jslint - disable autofix-js - normalize prefix-operators to beginning-of-line
+- jslint - disable autofix-js - escape non-ascii
+- jslint - disable autofix-js-whitespace - remove double-whitespace
+- jslint - disable autofix-js-braket - normalize to jslint-open-form (\n...\n)
+- jslint - inline autofix-use_double
+- re-add shell-function shServerPortRandom with port-availibility-check
+- add shell-function shDockerCdHostPwd
+- jslint - untangle goto-logic in function jslintAndPrint
+- istanbul - inline __coverageInclude__ in function instrumentSync
+- add function eventListenerRemove
+- merge function buildLib, buildReadme, buildTest into buildApp
+- split function buildApp into sub-functions buildAppAssets and buildAppStandalone
+- jslint - revert function jslintAndPrintDir from promise to callback
+- inline function onErrorThrow
+- remove function childProcessEval, rmrfSync
+- simplify function fsWriteFileWithMkdirp and fsWriteFileWithMkdirpSync to always console.error write-notification
+- try to replace sync-functions with async-functions
 - none
 
 #### todo
+- update function fsWriteFileWithMkdirp to write to tmpfile first
+- jslint - unmangle function jslintAutofixLocalFunction
 - update function shRawLibFetch to minify assets
 - remove dependency to req.urlParsed
 - istanbul - inline class Instrumenter into function instrumentSync
 - istanbul - remove filesUnderRoot subroutine
 - jslint - add nullish-coalescing support
 - jslint - add optional-chaining support
-- jslint - prefer undefined over null
 - replace function local.objectAssignRecurse with Object.assign
-- jslint - fix off-by-one line-error
 - replace db-lite with sql_lite.js
 - add default testCase _testCase_cliRun_help
 - add server stress-test using puppeteer
@@ -277,6 +283,14 @@ instruction
         };
         recurse(tgt, src, depth | 0);
         return tgt;
+    };
+    local.onErrorThrow = function (err) {
+    /*
+     * this function will throw <err> if exists
+     */
+        if (err) {
+            throw err;
+        }
     };
     // bug-workaround - throw unhandledRejections in node-process
     if (
@@ -1182,7 +1196,7 @@ require("http").createServer(function (req, res) {
         "2020.06.12 bootstrap-lite",
         "2020.06.13 utility2"
     ],
-    "version": "2020.6.13"
+    "version": "2020.7.8"
 }
 ```
 

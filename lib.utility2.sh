@@ -23,7 +23,7 @@
 # shCryptoWithGithubOrg aa shTravisRepoCreate aa/node-aa-bb
 # shCryptoWithGithubOrg aa shGithubApiRateLimitGet
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/node-aa-bb alpha "[build app]"
-# DOCKER_V_GAME=1 DOCKER_V_HOME=1 DOCKER_PORT=4065 shDockerRestart work kaizhu256/node-utility2
+# shDockerRestartUtility2 work kaizhu256/node-utility2
 # shDockerSh work 'cd ~/Documents/utility2 && PORT=4065 npm start'
 # shDockerSh work 'shUtility2DependentsShellEval shBuildApp'
 # npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
@@ -246,7 +246,9 @@ shBrowserScreenshot () {(set -e
         url = require("path").resolve(url);
     }
     file = require("url").parse(url).pathname;
-    if (file.indexOf(process.cwd()) === 0) {
+    if (String(
+        file + require("path").sep
+    ).indexOf(process.cwd() + require("path").sep) === 0) {
         file = file.replace(process.cwd(), "");
     }
     file = require("path").resolve(
@@ -315,8 +317,7 @@ shBuildApp () {(set -e
     # if windows-env, then run inside docker
     case "$(uname)" in
     MINGW*)
-        shDockerSh work \
-            "cd ~/Documents/$(printf "$PWD" | sed -e "s/.*\///") && shBuildApp"
+        shDockerSh work shBuildApp
         return
         ;;
     esac
@@ -354,6 +355,9 @@ shBuildApp () {(set -e
     dirBin = path.resolve(process.env.HOME + "/bin") + path.sep;
     dirDev = path.resolve(process.env.HOME + "/Documents/utility2") + path.sep;
     onErrorThrow = function (err) {
+    /*
+     * this function will throw <err> if exists
+     */
         if (err) {
             throw err;
         }
@@ -386,9 +390,8 @@ shBuildApp () {(set -e
     ]) {
         fs.unlink(bb, function (ignore) {
             fs.link(aa, bb, function (err) {
-                if (!err) {
-                    console.error("shBuildApp - hardlink - " + bb);
-                }
+                onErrorThrow(err);
+                console.error("shBuildApp - hardlink - " + bb);
             });
         });
     });
@@ -470,7 +473,7 @@ shBuildApp () {(set -e
     });
 }());
 '
-    # if not exist, create file
+    # create file if not exists
     # .gitignore, .travis.yml, LICENSE, npm_scripts.sh
     # package.json
     # README.md, lib.$npm_package.nameLib.js, test.js
@@ -478,13 +481,14 @@ shBuildApp () {(set -e
 /* jslint utility2:true */
 (function (local) {
     "use strict";
-    let aa;
-    let bb;
     let fs;
     let modeUtility2Rollup;
     let onErrorThrow;
     fs = require("fs");
     onErrorThrow = function (err) {
+    /*
+     * this function will throw <err> if exists
+     */
         if (err) {
             throw err;
         }
@@ -506,22 +510,25 @@ shBuildApp () {(set -e
         });
     });
     // create file package.json
-    aa = fs.readFileSync("package.json", "utf8");
-    bb = JSON.stringify(local.objectDeepCopyWithKeysSorted(
-        Object.assign({
-            "description": "the greatest app in the world!",
-            "main": "lib." + process.env.npm_package_nameLib + ".js",
-            "name": process.env.npm_package_name,
-            "scripts": {
-                "test": "./npm_scripts.sh"
-            },
-            "version": "0.0.1"
-        }, JSON.parse(aa))
-    ), undefined, 4) + "\n";
-    if (bb !== aa) {
-        fs.writeFileSync("package.json", bb);
-        console.error("shBuildApp - modified - package.json");
-    }
+    fs.readFile("package.json", "utf8", function (err, aa) {
+        let bb;
+        onErrorThrow(err);
+        bb = JSON.stringify(local.objectDeepCopyWithKeysSorted(
+            Object.assign({
+                "description": "the greatest app in the world!",
+                "main": "lib." + process.env.npm_package_nameLib + ".js",
+                "name": process.env.npm_package_name,
+                "scripts": {
+                    "test": "./npm_scripts.sh"
+                },
+                "version": "0.0.1"
+            }, JSON.parse(aa))
+        ), undefined, 4) + "\n";
+        if (bb !== aa) {
+            fs.writeFile("package.json", bb, onErrorThrow);
+            console.error("shBuildApp - modified - package.json");
+        }
+    });
     // create file README.md, lib.$npm_package.nameLib.js, test.js
     modeUtility2Rollup = fs.existsSync("assets.utility2.rollup.js");
     [
@@ -1247,7 +1254,7 @@ shCryptoAesXxxCbcRawDecrypt () {(set -e
             key: process.argv[1],
             mode: process.argv[2]
         }, function (err, data) {
-            local.assertOrThrow(!err, err);
+            local.onErrorThrow(err);
             Object.setPrototypeOf(data, Buffer.prototype);
             process.stdout.write(data);
         });
@@ -1440,11 +1447,26 @@ shDeployHeroku () {(set -e
         shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
 )}
 
-shDockerRestart () {(set -e
-# this function will restart docker-container
-    docker rm -fv "$1" || true
-    shDockerStart "$@"
-)}
+shDockerCdHostPwd () {
+# this function cd $HOST_PWD inside docker
+    cd "$(node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    let home;
+    let pwd;
+    home = process.env.HOST_HOME + require("path").sep;
+    pwd = process.env.HOST_PWD + require("path").sep;
+    if (home.length > 1 && pwd.length > 1 && pwd.indexOf(home) === 0) {
+        console.log(require("path").resolve(
+            process.env.HOME + "/" + pwd.replace(home, "")
+        ));
+        return;
+    }
+    console.log(process.env.PWD);
+}());
+')"
+}
 
 shDockerRestartNginx () {(set -e
 # this function will restart docker-container nginx
@@ -1550,11 +1572,11 @@ shDockerRestartTransmission () {(set -e
 # this function will restart docker-container transmission
 # http://transmission:transmission@127.0.0.1:9091
     case "$(uname)" in
-    Linux)
-        LOCALHOST="${LOCALHOST:-127.0.0.1}"
+    Darwin)
+        LOCALHOST="${LOCALHOST:-192.168.99.100}"
         ;;
     *)
-        LOCALHOST="${LOCALHOST:-192.168.99.100}"
+        LOCALHOST="${LOCALHOST:-127.0.0.1}"
         ;;
     esac
     mkdir -p "$HOME/downloads"
@@ -1574,6 +1596,32 @@ shDockerRestartTransmission () {(set -e
         --no-auth \
         --no-portmap
 "
+)}
+
+shDockerRestartUtility2 () {(set -e
+# this function will restart docker-container $1 $2 with utility2 env
+    docker rm -fv "$1" || true
+    case "$(uname)" in
+    Darwin)
+        LOCALHOST="${LOCALHOST:-192.168.99.100}"
+        ;;
+    MINGW*)
+        export HOME="$USERPROFILE"
+        ;;
+    *)
+        LOCALHOST="${LOCALHOST:-127.0.0.1}"
+        ;;
+    esac
+    if [ -d /g ]
+    then
+        DOCKER_V_GAME="-v g:/:/mnt"
+    fi
+    docker run --name "$1" -dt -e debian_chroot="$1" \
+        $DOCKER_V_GAME \
+        -v "$HOME:/root" \
+        -p "$LOCALHOST:4065:4065" \
+        -p "$LOCALHOST:9229:9229" \
+        "$2"
 )}
 
 shDockerRm () {(set -e
@@ -1598,51 +1646,23 @@ shDockerRmiUntagged () {(set -e
 
 shDockerSh () {(set -e
 # this function will run /bin/bash in docker-container $1
-    local CMD="[ -f ~/lib.utility2.sh ] &&
-. ~/lib.utility2.sh && shBaseInit
-${2:-bash}"
+    local CMD;
+    CMD="[ -f ~/lib.utility2.sh ] && . ~/lib.utility2.sh && shBaseInit"
+    CMD="$CMD && shDockerCdHostPwd;"
+    CMD="$CMD ${2:-bash}"
     docker start "$1"
     case "$(uname)" in
     MINGW*)
-        winpty docker exec -it "$1" sh -c "$CMD"
+        winpty docker exec \
+            -e HOST_HOME="$HOME" -e HOST_PWD="$PWD" \
+            -it "$1" sh -c "$CMD"
         ;;
     *)
-        docker exec -it "$1" sh -c "$CMD"
+        docker exec \
+            -e HOST_HOME="$HOME" -e HOST_PWD="$PWD" \
+            -it "$1" sh -c "$CMD"
         ;;
     esac
-)}
-
-shDockerStart () {(set -e
-# this function will start docker-container $IMAGE:$NAME with command "$@"
-    case "$(uname)" in
-    Linux)
-        LOCALHOST="${LOCALHOST:-127.0.0.1}"
-        ;;
-    MINGW*)
-        export HOME="$USERPROFILE"
-        ;;
-    *)
-        LOCALHOST="${LOCALHOST:-192.168.99.100}"
-        ;;
-    esac
-    NAME="$1"
-    shift
-    IMAGE="$1"
-    shift
-    if [ "$DOCKER_V_GAME" ] && [ -d /g ]
-    then
-        DOCKER_OPTIONS="$DOCKER_OPTIONS -v g:/:/mnt"
-    fi
-    if [ "$DOCKER_V_HOME" ]
-    then
-        DOCKER_OPTIONS="$DOCKER_OPTIONS -v $HOME:/root"
-    fi
-    if [ "$DOCKER_PORT" ]
-    then
-        DOCKER_OPTIONS="$DOCKER_OPTIONS -p $LOCALHOST:$DOCKER_PORT:$DOCKER_PORT"
-    fi
-    docker run --name "$NAME" -dt -e debian_chroot="$NAME" $DOCKER_OPTIONS \
-        "$IMAGE" "$@"
 )}
 
 shDuList () {(set -e
@@ -1971,6 +1991,7 @@ jquery|\
 log|\
 min|misc|mock|\
 node_module|\
+old|\
 raw|\rollup|\
 swp|\
 tmp|\
@@ -1993,24 +2014,24 @@ shGrepReplace () {(set -e
     "use strict";
     let dict;
     dict = {};
-    require("fs").readFileSync(
-        process.argv[1],
-        "utf8"
-    ).split("\n").forEach(function (element) {
-        element = (
-            /^(.+?):(\d+?):(.+?)$/
-        ).exec(element);
-        if (!element) {
-            return;
-        }
-        dict[element[1]] = (
-            dict[element[1]]
-            || require("fs").readFileSync(element[1], "utf8").split("\n")
-        );
-        dict[element[1]][element[2] - 1] = element[3];
+    require("fs").readFileSync(process.argv[1], "utf8").replace((
+        /^(.+?):(\d+?):(.*?)$/gm
+    ), function (ignore, file, lineno, str) {
+        dict[file] = dict[file] || require("fs").readFileSync(
+            require("path").resolve(file),
+            "utf8"
+        ).split("\n");
+        dict[file][lineno - 1] = str;
+        return "";
     });
-    Object.keys(dict).forEach(function (key) {
-        require("fs").writeFileSync(key, dict[key].join("\n"));
+    Object.entries(dict).forEach(function ([
+        file, data
+    ]) {
+        require("fs").writeFile(file, data.join("\n"), function (err) {
+            if (err) {
+                throw err;
+            }
+        });
     });
 }());
 ' "$@"
@@ -2026,7 +2047,7 @@ shHttpFileServer () {(set -e
     console.error("http-file-server listening on port " + process.env.PORT);
     require("http").createServer(function (req, res) {
         let file;
-        // resolve <file>
+        // resolve file
         file = require("path").resolve(
             // replace trailing "/" with "/index.html"
             require("url").parse(req.url).pathname.slice(1).replace((
@@ -2096,7 +2117,7 @@ shIstanbulCover () {(set -e
     fi
     if [ "$npm_config_mode_inspect" ]
     then
-        "$NODE_BINARY" inspect "$@"
+        "$NODE_BINARY" --inspect-brk=0.0.0.0 "$@"
         return "$?"
     fi
     if [ "$npm_config_mode_winpty" ] &&
@@ -2141,13 +2162,9 @@ shJsonNormalize () {(set -e
     console.error("shJsonNormalize - " + process.argv[1]);
     require("fs").writeFileSync(
         process.argv[1],
-        JSON.stringify(
-            objectDeepCopyWithKeysSorted(
-                JSON.parse(require("fs").readFileSync(process.argv[1]))
-            ),
-            undefined,
-            4
-        ) + "\n"
+        JSON.stringify(objectDeepCopyWithKeysSorted(
+            JSON.parse(require("fs").readFileSync(process.argv[1]))
+        ), undefined, 4) + "\n"
     );
 }());
 ' "$1"
@@ -2412,8 +2429,17 @@ shPackageJsonVersionIncrement () {(set -e
     let cc;
     let dd;
     let ii;
+    let onErrorThrow;
     let packageJson;
     let result;
+    onErrorThrow = function (err) {
+    /*
+     * this function will throw <err> if exists
+     */
+        if (err) {
+            throw err;
+        }
+    };
     packageJson = require("./package.json");
     // increment packageJson.version
     aa = packageJson.version.replace((
@@ -2501,18 +2527,23 @@ shPackageJsonVersionIncrement () {(set -e
         aa, bb, result
     ]);
     // update package.json
-    require("fs").writeFileSync(
+    require("fs").writeFile(
         "package.json",
-        JSON.stringify(packageJson, undefined, 4) + "\n"
+        JSON.stringify(packageJson, undefined, 4) + "\n",
+        onErrorThrow
     );
     // update README.md
-    require("fs").writeFileSync(
-        "README.md",
-        require("fs").readFileSync("README.md", "utf8").replace((
+    require("fs").readFile("README.md", "utf8", function (err, data) {
+        onErrorThrow(err);
+        require("fs").writeFile("README.md", data.replace((
             /^(####\u0020changelog\u0020|-\u0020npm\u0020publish\u0020|\u0020{4}"version":\u0020")\d+?\.\d+?\.\d[^\n",]*/gm
-        ), "$1" + packageJson.version, undefined)
-    );
-    console.error("shPackageJsonVersionIncrement - " + packageJson.version);
+        ), "$1" + packageJson.version), function (err) {
+            onErrorThrow(err);
+            console.error(
+                "shPackageJsonVersionIncrement - " + packageJson.version
+            );
+        });
+    });
 }());
 ' "$1"
 )}
@@ -3148,6 +3179,35 @@ shRunWithScreenshotTxt () {(set -e
     return "$EXIT_CODE"
 )}
 
+shServerPortRandom () {(set -e
+# this function will print random unused tcp-port in the inclusive range
+# 0x8000 to 0xffff
+    node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    let port;
+    let recurse;
+    let server;
+    recurse = function (err) {
+        if (server) {
+            server.close();
+        }
+        if (!err) {
+            console.log(port);
+            return;
+        }
+        port = Number(
+            "0x" + require("crypto").randomBytes(2).toString("hex")
+        ) | 0x8000;
+        server = require("net").createServer().listen(port);
+        server.on("error", recurse).on("listening", recurse);
+    };
+    recurse(true);
+}());
+'
+)}
+
 shSleep () {(set -e
 # this function will sleep $1
     shBuildPrint "sleep $1 ..."
@@ -3633,6 +3693,14 @@ export UTILITY2_MACRO_JS='
         };
         recurse(tgt, src, depth | 0);
         return tgt;
+    };
+    local.onErrorThrow = function (err) {
+    /*
+     * this function will throw <err> if exists
+     */
+        if (err) {
+            throw err;
+        }
     };
     // bug-workaround - throw unhandledRejections in node-process
     if (

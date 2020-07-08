@@ -155,6 +155,14 @@
         recurse(tgt, src, depth | 0);
         return tgt;
     };
+    local.onErrorThrow = function (err) {
+    /*
+     * this function will throw <err> if exists
+     */
+        if (err) {
+            throw err;
+        }
+    };
     // bug-workaround - throw unhandledRejections in node-process
     if (
         typeof process === "object" && process
@@ -367,7 +375,7 @@ local.fsRmrfSync = function (pathname) {
  * this function will sync "rm -rf" <pathname>
  */
     let child_process;
-    // do nothing if module does not exist
+    // do nothing if module not exists
     try {
         child_process = require("child_process");
     } catch (ignore) {

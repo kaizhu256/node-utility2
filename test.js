@@ -146,6 +146,14 @@
         recurse(tgt, src, depth | 0);
         return tgt;
     };
+    local.onErrorThrow = function (err) {
+    /*
+     * this function will throw <err> if exists
+     */
+        if (err) {
+            throw err;
+        }
+    };
     // bug-workaround - throw unhandledRejections in node-process
     if (
         typeof process === "object" && process
@@ -182,8 +190,10 @@ local.testRunDefault(local);
 (function () {
 let assertJsonEqual;
 let assertOrThrow;
+let onErrorThrow;
 assertJsonEqual = local.assertJsonEqual;
 assertOrThrow = local.assertOrThrow;
+onErrorThrow = local.onErrorThrow;
 local.testCase_ajax_cache = function (opt, onError) {
 /*
  * this function will test ajax's cache handling-behavior
@@ -267,8 +277,7 @@ local.testCase_ajax_default = function (opt, onError) {
             responseType: responseType.replace("blob", "arraybuffer"),
             url: "/test.body"
         }, function (err, xhr) {
-            // handle err
-            assertOrThrow(!err, err);
+            onErrorThrow(err);
             // validate statusCode
             assertJsonEqual(xhr.statusCode, 200);
             // validate responseText
@@ -330,8 +339,7 @@ local.testCase_ajax_default = function (opt, onError) {
         modeDebug: true,
         url: "/test.echo"
     }, function (err, xhr) {
-        // handle err
-        assertOrThrow(!err, err);
+        onErrorThrow(err);
         // validate statusCode
         assertJsonEqual(xhr.statusCode, 200);
         // validate resHeaders
@@ -378,8 +386,7 @@ local.testCase_ajax_default = function (opt, onError) {
     local.ajax({
         url: "LICENSE"
     }, function (err, xhr) {
-        // handle err
-        assertOrThrow(!err, err);
+        onErrorThrow(err);
         // validate statusCode
         assertJsonEqual(xhr.statusCode, 200);
         // validate responseText
@@ -411,8 +418,7 @@ local.testCase_ajax_default = function (opt, onError) {
                     : local.serverLocalHost
                 )
             }, function (err, xhr) {
-                // handle err
-                assertOrThrow(!err, err);
+                onErrorThrow(err);
                 // validate statusCode
                 assertJsonEqual(xhr.statusCode, 200);
                 onParallel();
@@ -544,8 +550,7 @@ local.testCase_blobRead_default = function (opt, onError) {
         new Uint8Array(0),
         local.stringHelloEmoji
     ]), function (err, data) {
-        // handle err
-        assertOrThrow(!err, err);
+        onErrorThrow(err);
         // validate data
         assertJsonEqual(
             local.bufferToUtf8(data),
@@ -612,14 +617,7 @@ local.testCase_buildApp_default = function (opt, onError) {
 /*
  * this function will test buildApp's default handling-behavior
  */
-    if (local.isBrowser) {
-        onError(undefined, opt);
-        return;
-    }
-    local.testCase_buildReadme_default(opt, local.onErrorThrow);
-    local.testCase_buildLib_default(opt, local.onErrorThrow);
-    local.testCase_buildTest_default(opt, local.onErrorThrow);
-    local.buildApp({
+    local._testCase_buildApp_default({
         assetsList: [
             {
                 file: "/assets.hello.txt",
@@ -640,43 +638,41 @@ local.testCase_buildApp_default = function (opt, onError) {
                 file: "/assets.utility2.rollup.js",
                 url: "/assets.utility2.rollup.js"
             }
+        ],
+        customizeReadmeList: [
+            {
+                // customize quickstart-example-js-instruction
+                merge: (
+                    /#\u0020quickstart\u0020example.js[\S\s]*?\n\n\n/
+                )
+            }, {
+                // customize quickstart-example-js-script
+                merge: (
+                    /#unless\u0020isRollup[\S\s]*?<script\u0020src="assets\.example\.js">/
+                )
+            }, {
+                // customize quickstart-example-js-screenshot
+                merge: (
+                    /```[^`]*?\n#\u0020extra\u0020screenshots/
+                )
+            }, {
+                // customize build-script
+                merge: (
+                    /\n#\u0020internal\u0020build\u0020script\n[\S\s]*?\nshBuildCi\n/
+                )
+            }, {
+                // coverage-hack
+                aa: " ",
+                bb: " "
+            }, {
+                // coverage-hack
+                aa: "__zjqx1234__" + Math.random()
+            }, {
+                // coverage-hack
+                merge: new RegExp("__zjqx1234__" + Math.random())
+            }
         ]
-    }, onError);
-};
-
-local.testCase_buildReadme_default = function (opt, onError) {
-/*
- * this function will test buildReadme's default handling-behavior
- */
-    if (local.isBrowser) {
-        onError(undefined, opt);
-        return;
-    }
-    opt = {};
-    opt.customize = function () {
-        // search-and-replace - customize dataTo
-        [
-            // customize quickstart-example-js-instruction
-            (
-                /#\u0020quickstart\u0020example.js[\S\s]*?\n\n\n/
-            ),
-            // customize quickstart-example-js-script
-            (
-                /#unless\u0020isRollup[\S\s]*?<script\u0020src="assets\.example\.js">/
-            ),
-            // customize quickstart-example-js-screenshot
-            (
-                /```[^`]*?\n#\u0020extra\u0020screenshots/
-            ),
-            // customize build-script
-            (
-                /\n#\u0020internal\u0020build\u0020script\n[\S\s]*?\nshBuildCi\n/
-            )
-        ].forEach(function (rgx) {
-            opt.dataTo = local.stringMerge(opt.dataTo, opt.dataFrom, rgx);
-        });
-    };
-    local.buildReadme(opt, onError);
+    }, onError, opt);
 };
 
 local.testCase_buildXxx_default = function (opt, onError) {
@@ -686,28 +682,17 @@ local.testCase_buildXxx_default = function (opt, onError) {
     local.testMock([
         [
             local, {
-                assetsDict: {
-                    "/": ""
-                },
-                browserTest: local.nop,
-                buildApidoc: local.nop,
-                buildLib: local.nop,
-                buildReadme: local.nop,
-                buildTest: local.nop,
-                fsWriteFileWithMkdirp: local.nop,
-                testCase_buildReadme_default: local.nop,
-                testCase_buildLib_default: local.nop,
-                testCase_buildTest_default: local.nop
+                //!! assetsDict: {
+                    //!! "/": ""
+                //!! },
+                browserTest: local.nop
+                //!! buildApidoc: local.nop,
+                //!! fsWriteFileWithMkdirp: local.nop,
             }
         ]
     ], function (onError) {
-        local._testCase_buildApidoc_default({}, local.nop);
-        local._testCase_buildApp_default({}, local.nop);
-        local._testCase_buildLib_default({}, local.nop);
-        local._testCase_buildReadme_default({}, local.nop);
-        local._testCase_buildTest_default({}, local.nop);
-        local._testCase_webpage_default({}, local.nop);
-        local.assetsDict["/"] = "<script src=\"assets.test.js\"></script>";
+        //!! local._testCase_buildApidoc_default({}, local.nop);
+        //!! local.assetsDict["/"] = "<script src=\"assets.test.js\"></script>";
         local._testCase_webpage_default({}, local.nop);
         onError(undefined, opt);
     }, onError);
@@ -861,6 +846,24 @@ local.testCase_domFragmentRender_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
+local.testCase_eventListenerXxx_default = function (opt, onError) {
+/*
+ * this function will test eventListenerXxx's default handling-behavior
+ */
+    let listener;
+    listener = function (msg) {
+        assertJsonEqual(msg, "bb");
+    };
+    local.eventListenerAdd("aa", listener);
+    local.eventListenerAdd("aa", listener, {
+        once: true
+    });
+    local.eventListenerEmit("aa", "bb");
+    local.eventListenerEmit("aa", "bb");
+    local.eventListenerRemove(listener);
+    onError(undefined, opt);
+};
+
 local.testCase_libUtility2Js_standalone = function (opt, onError) {
 /*
  * this function will test lib.utility2.js's standalone handling-behavior
@@ -870,14 +873,12 @@ local.testCase_libUtility2Js_standalone = function (opt, onError) {
         return;
     }
     require("fs").readFile("lib.utility2.js", "utf8", function (err, data) {
-        // handle err
-        assertOrThrow(!err, err);
+        onErrorThrow(err);
         require("fs").writeFile("tmp/lib.utility2.js", data.replace(
             "/* istanbul instrument in package utility2 */",
             ""
         ), function (err) {
-            // handle err
-            assertOrThrow(!err, err);
+            onErrorThrow(err);
             require("./tmp/lib.utility2.js");
         });
         onError(undefined, opt);
@@ -937,8 +938,7 @@ local.testCase_middlewareForwardProxy_default = function (opt, onError) {
         },
         url: ""
     }, function (err, xhr) {
-        // handle err
-        assertOrThrow(!err, err);
+        onErrorThrow(err);
         // validate responseText
         assertJsonEqual(xhr.responseText, local.stringHelloEmoji);
         onParallel(undefined, opt, xhr);
@@ -956,19 +956,6 @@ local.testCase_middlewareForwardProxy_default = function (opt, onError) {
         onParallel(undefined, opt);
     });
     onParallel(undefined, opt);
-};
-
-local.testCase_onErrorThrow_err = function (opt, onError) {
-/*
- * this function will test onErrorThrow's err handling-behavior
- */
-    local.tryCatchOnError(function () {
-        local.onErrorThrow(new Error());
-    }, function (err) {
-        // handle err
-        assertOrThrow(err, err);
-        onError(undefined, opt);
-    });
 };
 
 local.testCase_onErrorWithStack_toString = function (opt, onError) {
@@ -1011,7 +998,7 @@ local.testCase_onParallelList_default = function (opt, onError) {
         switch (opt.gotoState) {
         case 1:
             // test null-case handling-behavior
-            local.onParallelList({}, local.onErrorThrow, opt.gotoNext);
+            local.onParallelList({}, onErrorThrow, opt.gotoNext);
             break;
         case 2:
             opt.list = [
@@ -1216,11 +1203,10 @@ local.testCase_requireReadme_misc = function (opt, onError) {
     ], function (onError) {
         local.requireReadme();
         onError(undefined, opt);
-    }, local.onErrorThrow);
+    }, onErrorThrow);
     // test file-modified handling-behavior
     require("fs").utimes(__filename, new Date(), new Date(), function (err) {
-        // handle err
-        local.assertOrThrow(!err, err);
+        onErrorThrow(err);
         onError(undefined, opt);
     });
 };
