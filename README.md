@@ -7,7 +7,7 @@ this zero-dependency package will provide high-level functions to to build, test
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app/)
 
 
-[![travis-ci.com build-status](https://api.travis-ci.com/kaizhu256/node-utility2.svg)](https://travis-ci.com/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html)
+[![travis-ci.com build-status](https://api.travis-ci.com/kaizhu256/node-utility2.svg)](https://travis-ci.com/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage/index.html)
 
 [![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
 
@@ -18,7 +18,7 @@ this zero-dependency package will provide high-level functions to to build, test
 | test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/app) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/app)|
 | test-server-heroku : | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-alpha.herokuapp.com)|
 | test-report : | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/test-report.html)|
-| coverage : | [![coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/coverage.html/index.html) | [![coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/coverage.html/index.html) | [![coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/coverage.html/index.html)|
+| coverage : | [![coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/coverage/index.html) | [![coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/coverage/index.html) | [![coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/coverage/index.html)|
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.com)|
 
 [![npmPackageListing](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
@@ -46,39 +46,25 @@ this zero-dependency package will provide high-level functions to to build, test
 #### api doc
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/apidoc.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/apidoc.html)
 
-[![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/apidoc.html)
+[![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/apidoc.html)
 
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.7.8
-- jslint - generalize autofix-js-braket - normalize {\s+} to {}
-- jslint - disable autofix-js - normalize prefix-operators to beginning-of-line
-- jslint - disable autofix-js - escape non-ascii
-- jslint - disable autofix-js-whitespace - remove double-whitespace
-- jslint - disable autofix-js-braket - normalize to jslint-open-form (\n...\n)
-- jslint - inline autofix-use_double
-- re-add shell-function shServerPortRandom with port-availibility-check
-- add shell-function shDockerCdHostPwd
-- jslint - untangle goto-logic in function jslintAndPrint
-- istanbul - inline __coverageInclude__ in function instrumentSync
-- add function eventListenerRemove
-- merge function buildLib, buildReadme, buildTest into buildApp
-- split function buildApp into sub-functions buildAppAssets and buildAppStandalone
-- jslint - revert function jslintAndPrintDir from promise to callback
-- inline function onErrorThrow
-- remove function childProcessEval, rmrfSync
-- simplify function fsWriteFileWithMkdirp and fsWriteFileWithMkdirpSync to always console.error write-notification
-- try to replace sync-functions with async-functions
+#### changelog 2020.8.1
+- change build-dir from tmp/build to .tmp/build
+- istanbul - change coverage-directory from coverage.html/ to coverage/
+- istanbul - remove filesUnderRoot subroutine
+- istanbul - upgrade to acorn v6.4.1
 - none
 
 #### todo
+- jslint - require macro jslint-autofix:true to conditionally-autofix .json file
 - update function fsWriteFileWithMkdirp to write to tmpfile first
 - jslint - unmangle function jslintAutofixLocalFunction
 - update function shRawLibFetch to minify assets
 - remove dependency to req.urlParsed
 - istanbul - inline class Instrumenter into function instrumentSync
-- istanbul - remove filesUnderRoot subroutine
 - jslint - add nullish-coalescing support
 - jslint - add optional-chaining support
 - replace function local.objectAssignRecurse with Object.assign
@@ -112,7 +98,7 @@ PORT=8081 node ./assets.app.js
 
 
 # quickstart example.js
-![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252Ftmp%252Fapp%252Ftmp%252Fbuild%252Ftest-report.html.png)
+![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252Ftmp%252Fapp%252F.tmp%252Fbuild%252Ftest-report.html.png)
 
 #### to run this example, follow the instruction in the script below
 - [example.js](https://kaizhu256.github.io/node-utility2/build/example.js)
@@ -131,8 +117,8 @@ instruction
             PORT=8081 \
             npm_config_mode_coverage=utility2 \
             node_modules/.bin/utility2 test example.js
-    3. view test-report in ./tmp/build/test-report.html
-    4. view coverage in ./tmp/build/coverage.html/index.html
+    3. view test-report in .tmp/build/test-report.html
+    4. view coverage in .tmp/build/coverage/index.html
 */
 
 
@@ -144,6 +130,8 @@ instruction
 (function () {
     "use strict";
     let consoleError;
+    let isBrowser;
+    let isWebWorker;
     let local;
     // init debugInline
     if (!globalThis.debugInline) {
@@ -159,22 +147,18 @@ instruction
             return argList[0];
         };
     }
-    // init local
-    local = {};
-    local.local = local;
-    globalThis.globalLocal = local;
     // init isBrowser
-    local.isBrowser = (
+    isBrowser = (
         typeof globalThis.XMLHttpRequest === "function"
         && globalThis.navigator
         && typeof globalThis.navigator.userAgent === "string"
     );
     // init isWebWorker
-    local.isWebWorker = (
-        local.isBrowser && typeof globalThis.importScripts === "function"
+    isWebWorker = (
+        isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
-    local.assertJsonEqual = function (aa, bb) {
+    function assertJsonEqual(aa, bb) {
     /*
      * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
      */
@@ -203,8 +187,8 @@ instruction
         if (aa !== bb) {
             throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));
         }
-    };
-    local.assertOrThrow = function (passed, msg) {
+    }
+    function assertOrThrow(passed, msg) {
     /*
      * this function will throw <msg> if <passed> is falsy
      */
@@ -227,8 +211,8 @@ instruction
                 : JSON.stringify(msg, undefined, 4)
             )
         );
-    };
-    local.coalesce = function (...argList) {
+    }
+    function coalesce(...argList) {
     /*
      * this function will coalesce null, undefined, or "" in <argList>
      */
@@ -243,20 +227,20 @@ instruction
             ii += 1;
         }
         return arg;
-    };
-    local.identity = function (val) {
+    }
+    function identity(val) {
     /*
      * this function will return <val>
      */
         return val;
-    };
-    local.nop = function () {
+    }
+    function nop() {
     /*
      * this function will do nothing
      */
         return;
-    };
-    local.objectAssignDefault = function (tgt = {}, src = {}, depth = 0) {
+    }
+    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
      * this function will if items from <tgt> are null, undefined, or "",
      * then overwrite them with items from <src>
@@ -283,15 +267,15 @@ instruction
         };
         recurse(tgt, src, depth | 0);
         return tgt;
-    };
-    local.onErrorThrow = function (err) {
+    }
+    function onErrorThrow(err) {
     /*
      * this function will throw <err> if exists
      */
         if (err) {
             throw err;
         }
-    };
+    }
     // bug-workaround - throw unhandledRejections in node-process
     if (
         typeof process === "object" && process
@@ -303,6 +287,19 @@ instruction
             throw err;
         });
     }
+    // init local
+    local = {};
+    local.local = local;
+    globalThis.globalLocal = local;
+    local.assertJsonEqual = assertJsonEqual;
+    local.assertOrThrow = assertOrThrow;
+    local.coalesce = coalesce;
+    local.identity = identity;
+    local.isBrowser = isBrowser;
+    local.isWebWorker = isWebWorker;
+    local.nop = nop;
+    local.objectAssignDefault = objectAssignDefault;
+    local.onErrorThrow = onErrorThrow;
 }());
 // assets.utility2.header.js - end
 
@@ -1105,21 +1102,21 @@ require("http").createServer(function (req, res) {
 ```
 
 #### output from browser
-![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252Ftmp%252Fapp%252Ftmp%252Fbuild%252Ftest-report.html.png)
+![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252Ftmp%252Fapp%252F.tmp%252Fbuild%252Ftest-report.html.png)
 
 #### output from shell
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.svg)
 
 
 # extra screenshots
-1. [https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)
+1. [https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)
+[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)
 
-1. [https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png)
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png)
+1. [https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)
+[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)
 
-1. [https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)
+1. [https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)
+[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)
 
 1. [https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)
@@ -1188,15 +1185,14 @@ require("http").createServer(function (req, res) {
         "utility2": "./npm_scripts.sh"
     },
     "utility2Dependents": [
-        "2019.09.14 swgg",
         "2020.02.12 sqljs-lite",
         "2020.06.08 apidoc-lite",
-        "2020.06.08 istanbul-lite",
-        "2020.06.08 jslint-lite",
         "2020.06.12 bootstrap-lite",
-        "2020.06.13 utility2"
+        "2020.07.08 jslint-lite",
+        "2020.08.01 istanbul-lite",
+        "2020.08.01 utility2"
     ],
-    "version": "2020.7.8"
+    "version": "2020.8.1"
 }
 ```
 
@@ -1209,8 +1205,8 @@ require("http").createServer(function (req, res) {
 - Dockerfile.base
 ```shell
 # Dockerfile.base
-# docker build -f tmp/README.Dockerfile.base -t kaizhu256/node-utility2:base .
-# docker build -f "tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" .
+# docker build -f .tmp/README.Dockerfile.base -t kaizhu256/node-utility2:base .
+# docker build -f ".tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" .
 # https://hub.docker.com/_/node/
 FROM debian:stable-slim
 MAINTAINER kai zhu <kaizhu256@gmail.com>
@@ -1332,7 +1328,7 @@ shBuildCiAfter () {(set -e
     fi
     # docker build
     docker build \
-        -f "tmp/README.Dockerfile.$DOCKER_TAG" \
+        -f ".tmp/README.Dockerfile.$DOCKER_TAG" \
         -t "$GITHUB_REPO:$DOCKER_TAG" .
     # docker test
     case "$CI_BRANCH" in
@@ -1365,9 +1361,9 @@ shBuildCiBefore () {(set -e
     shReadmeTest example.js
     # screenshot
     MODE_BUILD=testExampleJs shBrowserScreenshot \
-        file:///tmp/app/tmp/build/coverage.html/app/example.js.html
+        file:///tmp/app/.tmp/build/coverage/app/example.js.html
     MODE_BUILD=testExampleJs shBrowserScreenshot \
-        file:///tmp/app/tmp/build/test-report.html
+        file:///tmp/app/.tmp/build/test-report.html
 )}
 
 # run shBuildCi

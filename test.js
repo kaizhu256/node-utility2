@@ -6,6 +6,8 @@
 (function () {
     "use strict";
     let consoleError;
+    let isBrowser;
+    let isWebWorker;
     let local;
     // init debugInline
     if (!globalThis.debugInline) {
@@ -21,22 +23,18 @@
             return argList[0];
         };
     }
-    // init local
-    local = {};
-    local.local = local;
-    globalThis.globalLocal = local;
     // init isBrowser
-    local.isBrowser = (
+    isBrowser = (
         typeof globalThis.XMLHttpRequest === "function"
         && globalThis.navigator
         && typeof globalThis.navigator.userAgent === "string"
     );
     // init isWebWorker
-    local.isWebWorker = (
-        local.isBrowser && typeof globalThis.importScripts === "function"
+    isWebWorker = (
+        isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
-    local.assertJsonEqual = function (aa, bb) {
+    function assertJsonEqual(aa, bb) {
     /*
      * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
      */
@@ -65,8 +63,8 @@
         if (aa !== bb) {
             throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));
         }
-    };
-    local.assertOrThrow = function (passed, msg) {
+    }
+    function assertOrThrow(passed, msg) {
     /*
      * this function will throw <msg> if <passed> is falsy
      */
@@ -89,8 +87,8 @@
                 : JSON.stringify(msg, undefined, 4)
             )
         );
-    };
-    local.coalesce = function (...argList) {
+    }
+    function coalesce(...argList) {
     /*
      * this function will coalesce null, undefined, or "" in <argList>
      */
@@ -105,20 +103,20 @@
             ii += 1;
         }
         return arg;
-    };
-    local.identity = function (val) {
+    }
+    function identity(val) {
     /*
      * this function will return <val>
      */
         return val;
-    };
-    local.nop = function () {
+    }
+    function nop() {
     /*
      * this function will do nothing
      */
         return;
-    };
-    local.objectAssignDefault = function (tgt = {}, src = {}, depth = 0) {
+    }
+    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
      * this function will if items from <tgt> are null, undefined, or "",
      * then overwrite them with items from <src>
@@ -145,15 +143,15 @@
         };
         recurse(tgt, src, depth | 0);
         return tgt;
-    };
-    local.onErrorThrow = function (err) {
+    }
+    function onErrorThrow(err) {
     /*
      * this function will throw <err> if exists
      */
         if (err) {
             throw err;
         }
-    };
+    }
     // bug-workaround - throw unhandledRejections in node-process
     if (
         typeof process === "object" && process
@@ -165,6 +163,19 @@
             throw err;
         });
     }
+    // init local
+    local = {};
+    local.local = local;
+    globalThis.globalLocal = local;
+    local.assertJsonEqual = assertJsonEqual;
+    local.assertOrThrow = assertOrThrow;
+    local.coalesce = coalesce;
+    local.identity = identity;
+    local.isBrowser = isBrowser;
+    local.isWebWorker = isWebWorker;
+    local.nop = nop;
+    local.objectAssignDefault = objectAssignDefault;
+    local.onErrorThrow = onErrorThrow;
 }());
 // assets.utility2.header.js - end
 
@@ -682,17 +693,10 @@ local.testCase_buildXxx_default = function (opt, onError) {
     local.testMock([
         [
             local, {
-                //!! assetsDict: {
-                    //!! "/": ""
-                //!! },
                 browserTest: local.nop
-                //!! buildApidoc: local.nop,
-                //!! fsWriteFileWithMkdirp: local.nop,
             }
         ]
     ], function (onError) {
-        //!! local._testCase_buildApidoc_default({}, local.nop);
-        //!! local.assetsDict["/"] = "<script src=\"assets.test.js\"></script>";
         local._testCase_webpage_default({}, local.nop);
         onError(undefined, opt);
     }, onError);
@@ -874,12 +878,12 @@ local.testCase_libUtility2Js_standalone = function (opt, onError) {
     }
     require("fs").readFile("lib.utility2.js", "utf8", function (err, data) {
         onErrorThrow(err);
-        require("fs").writeFile("tmp/lib.utility2.js", data.replace(
+        require("fs").writeFile(".tmp/lib.utility2.js", data.replace(
             "/* istanbul instrument in package utility2 */",
             ""
         ), function (err) {
             onErrorThrow(err);
-            require("./tmp/lib.utility2.js");
+            require("./.tmp/lib.utility2.js");
         });
         onError(undefined, opt);
     });

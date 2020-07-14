@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.istanbul.js (2020.6.9)
+ * lib.istanbul.js (2020.8.1)
  * https://github.com/kaizhu256/node-istanbul-lite
  * this zero-dependency package will provide browser-compatible version of istanbul coverage-tool (v0.4.5), with working web-demo
  *
@@ -15,6 +15,8 @@
 (function () {
     "use strict";
     let consoleError;
+    let isBrowser;
+    let isWebWorker;
     let local;
     // init debugInline
     if (!globalThis.debugInline) {
@@ -30,22 +32,18 @@
             return argList[0];
         };
     }
-    // init local
-    local = {};
-    local.local = local;
-    globalThis.globalLocal = local;
     // init isBrowser
-    local.isBrowser = (
+    isBrowser = (
         typeof globalThis.XMLHttpRequest === "function"
         && globalThis.navigator
         && typeof globalThis.navigator.userAgent === "string"
     );
     // init isWebWorker
-    local.isWebWorker = (
-        local.isBrowser && typeof globalThis.importScripts === "function"
+    isWebWorker = (
+        isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
-    local.assertJsonEqual = function (aa, bb) {
+    function assertJsonEqual(aa, bb) {
     /*
      * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
      */
@@ -74,8 +72,8 @@
         if (aa !== bb) {
             throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));
         }
-    };
-    local.assertOrThrow = function (passed, msg) {
+    }
+    function assertOrThrow(passed, msg) {
     /*
      * this function will throw <msg> if <passed> is falsy
      */
@@ -98,8 +96,8 @@
                 : JSON.stringify(msg, undefined, 4)
             )
         );
-    };
-    local.coalesce = function (...argList) {
+    }
+    function coalesce(...argList) {
     /*
      * this function will coalesce null, undefined, or "" in <argList>
      */
@@ -114,20 +112,20 @@
             ii += 1;
         }
         return arg;
-    };
-    local.identity = function (val) {
+    }
+    function identity(val) {
     /*
      * this function will return <val>
      */
         return val;
-    };
-    local.nop = function () {
+    }
+    function nop() {
     /*
      * this function will do nothing
      */
         return;
-    };
-    local.objectAssignDefault = function (tgt = {}, src = {}, depth = 0) {
+    }
+    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
      * this function will if items from <tgt> are null, undefined, or "",
      * then overwrite them with items from <src>
@@ -154,15 +152,15 @@
         };
         recurse(tgt, src, depth | 0);
         return tgt;
-    };
-    local.onErrorThrow = function (err) {
+    }
+    function onErrorThrow(err) {
     /*
      * this function will throw <err> if exists
      */
         if (err) {
             throw err;
         }
-    };
+    }
     // bug-workaround - throw unhandledRejections in node-process
     if (
         typeof process === "object" && process
@@ -174,6 +172,19 @@
             throw err;
         });
     }
+    // init local
+    local = {};
+    local.local = local;
+    globalThis.globalLocal = local;
+    local.assertJsonEqual = assertJsonEqual;
+    local.assertOrThrow = assertOrThrow;
+    local.coalesce = coalesce;
+    local.identity = identity;
+    local.isBrowser = isBrowser;
+    local.isWebWorker = isWebWorker;
+    local.nop = nop;
+    local.objectAssignDefault = objectAssignDefault;
+    local.onErrorThrow = onErrorThrow;
 }());
 // assets.utility2.header.js - end
 
@@ -632,7 +643,6 @@ let esprima;
 let estraverse;
 let esutils;
 let process;
-let require2;
 // mock builtins
 escodegen = {};
 esprima = {};
@@ -646,29 +656,19 @@ process = (
     }
     : globalThis.process
 );
-require2 = function (key) {
-    switch (key) {
-    case "./package.json":
-    case "source-map":
-        return {};
-    case "estraverse":
-        return estraverse;
-    case "esutils":
-        return esutils;
-    }
-};
-require2(escodegen, esprima);
+local.nop(escodegen, esprima, estraverse, esutils);
 
 
 /*
-repo https://github.com/acornjs/acorn/tree/6.3.0
-committed 2019-08-12T09:40:59Z
+repo https://github.com/acornjs/acorn/tree/6.4.1
+committed 2020-03-09T10:38:41Z
 */
 
 
 /*
-file https://github.com/acornjs/acorn/blob/6.3.0/acorn/dist/acorn.js
+file https://github.com/acornjs/acorn/blob/6.4.1/acorn/dist/acorn.js
 */
+// hack-istanbul - inline-require
 /* istanbul ignore next */
 /* jslint ignore:start */
 (function () { let exports, module; exports = module = esprima;
@@ -3880,7 +3880,8 @@ file https://github.com/acornjs/acorn/blob/6.3.0/acorn/dist/acorn.js
     if (!this.switchU || c <= 0xD7FF || c >= 0xE000 || i + 1 >= l) {
       return c
     }
-    return (c << 10) + s.charCodeAt(i + 1) - 0x35FDC00
+    var next = s.charCodeAt(i + 1);
+    return next >= 0xDC00 && next <= 0xDFFF ? (c << 10) + next - 0x35FDC00 : c
   };
 
   RegExpValidationState.prototype.nextIndex = function nextIndex (i) {
@@ -3889,8 +3890,9 @@ file https://github.com/acornjs/acorn/blob/6.3.0/acorn/dist/acorn.js
     if (i >= l) {
       return l
     }
-    var c = s.charCodeAt(i);
-    if (!this.switchU || c <= 0xD7FF || c >= 0xE000 || i + 1 >= l) {
+    var c = s.charCodeAt(i), next;
+    if (!this.switchU || c <= 0xD7FF || c >= 0xE000 || i + 1 >= l ||
+        (next = s.charCodeAt(i + 1)) < 0xDC00 || next > 0xDFFF) {
       return i + 1
     }
     return i + 2
@@ -5586,7 +5588,29 @@ file https://github.com/acornjs/acorn/blob/6.3.0/acorn/dist/acorn.js
 
   // Acorn is a tiny, fast JavaScript parser written in JavaScript.
 
-  var version = "6.3.0";
+  var version = "6.4.0";
+
+  Parser.acorn = {
+    Parser: Parser,
+    version: version,
+    defaultOptions: defaultOptions,
+    Position: Position,
+    SourceLocation: SourceLocation,
+    getLineInfo: getLineInfo,
+    Node: Node,
+    TokenType: TokenType,
+    tokTypes: types,
+    keywordTypes: keywords$1,
+    TokContext: TokContext,
+    tokContexts: types$1,
+    isIdentifierChar: isIdentifierChar,
+    isIdentifierStart: isIdentifierStart,
+    Token: Token,
+    isNewLine: isNewLine,
+    lineBreak: lineBreak,
+    lineBreakG: lineBreakG,
+    nonASCIIwhitespace: nonASCIIwhitespace
+  };
 
   // The main exported interface (under `self.acorn` when in the
   // browser) is a `parse` function that takes a code string and
@@ -5639,6 +5663,7 @@ file https://github.com/acornjs/acorn/blob/6.3.0/acorn/dist/acorn.js
 
   Object.defineProperty(exports, '__esModule', { value: true });
 }));
+// hack-istanbul - inline-require
 }());
 
 
@@ -5651,6 +5676,7 @@ committed 2016-03-10T21:51:59Z
 /*
 file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
 */
+// hack-istanbul - inline-require
 /* istanbul ignore next */
 (function () { let exports; exports = estraverse;
 /*
@@ -6489,7 +6515,8 @@ file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
         return tree;
     }
 
-    exports.version = require2('./package.json').version;
+    // hack-istanbul - inline-require
+    exports.version = {};
     exports.Syntax = Syntax;
     exports.traverse = traverse;
     exports.replace = replace;
@@ -6502,6 +6529,7 @@ file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
     return exports;
 }(exports));
 /* vim: set sw=4 ts=4 et tw=80 : */
+// hack-istanbul - inline-require
 }());
 
 
@@ -6514,6 +6542,7 @@ committed 2019-07-31T01:06:44Z
 /*
 file https://github.com/estools/esutils/blob/2.0.3/lib/code.js
 */
+// hack-istanbul - inline-require
 /* istanbul ignore next */
 (function () { let module; module = {};
 /*
@@ -6651,6 +6680,7 @@ file https://github.com/estools/esutils/blob/2.0.3/lib/code.js
     };
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
+// hack-istanbul - inline-require
 esutils = { code: module.exports }; }());
 
 
@@ -6663,6 +6693,7 @@ committed 2019-08-13T02:08:40Z
 /*
 file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
 */
+// hack-istanbul - inline-require
 /* istanbul ignore next */
 (function () { let exports; exports = escodegen;
 /*
@@ -6708,8 +6739,9 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
         Precedence,
         BinaryPrecedence,
         SourceNode,
-        estraverse,
-        esutils,
+        // hack-istanbul - inline-require
+        // estraverse,
+        // esutils,
         base,
         indent,
         json,
@@ -6731,8 +6763,9 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
         FORMAT_MINIFY,
         FORMAT_DEFAULTS;
 
-    estraverse = require2('estraverse');
-    esutils = require2('esutils');
+    // hack-istanbul - inline-require
+    // estraverse = require('estraverse');
+    // esutils = require('esutils');
 
     Syntax = estraverse.Syntax;
 
@@ -9218,7 +9251,8 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
             if (!exports.browser) {
                 // We assume environment is node.js
                 // And prevent from including source-map by browserify
-                SourceNode = require2('source-map').SourceNode;
+                // hack-istanbul - inline-require
+                SourceNode = {};
             } else {
                 SourceNode = global.sourceMap.SourceNode;
             }
@@ -9265,7 +9299,8 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
 
     FORMAT_DEFAULTS = getDefaultOptions().format;
 
-    exports.version = require2('./package.json').version;
+    // hack-istanbul - inline-require
+    exports.version = {};
     exports.generate = generate;
     exports.attachComments = estraverse.attachComments;
     exports.Precedence = updateDeeply({}, Precedence);
@@ -9274,6 +9309,7 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
     exports.FORMAT_DEFAULTS = FORMAT_DEFAULTS;
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
+// hack-istanbul - inline-require
 }());
 
 
@@ -9286,6 +9322,7 @@ committed 2016-08-21T19:53:22Z
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 */
+// hack-istanbul - inline-require
 /* istanbul ignore next */
 (function () { let module, window; module = undefined; window = local;
 /*
@@ -9298,9 +9335,9 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
     "use strict";
     var SYNTAX,
         nodeType,
-        ESP = isNode ? require2('esprima') : esprima,
-        ESPGEN = isNode ? require2('escodegen') : escodegen,  //TODO - package as dependency
-        crypto = isNode ? require2('crypto') : null,
+        ESP = isNode ? require('esprima') : esprima,
+        ESPGEN = isNode ? require('escodegen') : escodegen,  //TODO - package as dependency
+        crypto = isNode ? require('crypto') : null,
         LEADER_WRAP = '(function () { ',
         TRAILER_WRAP = '\n}());',
         COMMENT_RE = /^\s*istanbul\s+ignore\s+(if|else|next)(?=\W|$)/,
@@ -9345,7 +9382,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
             window.__cov_seq += 1;
             suffix = window.__cov_seq;
         }
-        // hack-coverage - pseudorandom coverage-identifier
+        // hack-istanbul - random coverage-identifier
         return '__cov_' + Math.random().toString(16).slice(2);
     }
 
@@ -9626,7 +9663,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
      * Usage on nodejs
      * ---------------
      *
-     *      var instrumenter = new require2('istanbul').Instrumenter(),
+     *      var instrumenter = new require('istanbul').Instrumenter(),
      *          changed = instrumenter.instrumentSync('function meaningOfLife() { return 42; }', 'filename.js');
      *
      * Usage in a browser
@@ -9747,7 +9784,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
                 code = LEADER_WRAP + code + TRAILER_WRAP;
             }
             try {
-                // hack-coverage - acorn opt
+                // hack-istanbul - inline acorn-opt
                 let opt = {
                     locations: true,
                     onComment: [],
@@ -9800,7 +9837,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
                 nodeStart = node.range[0],
                 hint;
             this.currentState.currentHint = null;
-            // hack-coverage - allow top-level istanbul-ignore-next
+            // hack-istanbul - allow top-level istanbul-ignore-next
             if (node.type === "Program") { return; }
             while (i < hints.length) {
                 hint = hints[i];
@@ -10390,6 +10427,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
         window.Instrumenter = Instrumenter;
     }
 }(typeof module !== 'undefined' && typeof module.exports !== 'undefined' && typeof exports !== 'undefined'));
+// hack-istanbul - inline-require
 }());
 
 
@@ -11334,7 +11372,6 @@ local.coverageReportCreate = function (opt) {
     let coverageInclude;
     let dirCoverage;
     let filePrefix;
-    let filesUnderRoot;
     let htmlAll;
     let nodeChildAdd;
     let nodeCreate;
@@ -11343,7 +11380,6 @@ local.coverageReportCreate = function (opt) {
     let nodeRoot;
     let summaryDict;
     let tmp;
-    let tmpChildren;
     if (!(opt && opt.coverage)) {
         return "";
     }
@@ -11473,7 +11509,7 @@ local.coverageReportCreate = function (opt) {
         });
     };
     // 1. merge previous <dirCoverage>/coverage.json into <opt>.coverage
-    dirCoverage = path.resolve("tmp/build/coverage.html");
+    dirCoverage = path.resolve(".tmp/build/coverage");
     coverageInclude = opt.coverageInclude || globalThis.__coverageInclude__;
     if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
         console.error(
@@ -11614,11 +11650,11 @@ local.coverageReportCreate = function (opt) {
         }
     });
     // 3. convert <summaryDict> to <nodeRoot>
+    filePrefix = filePrefix || [];
     tmp = filePrefix.join(path.sep) + path.sep;
     nodeRoot = nodeCreate(tmp);
     nodeDict = {};
     nodeDict[tmp] = nodeRoot;
-    filesUnderRoot = false;
     Object.entries(summaryDict).forEach(function ([
         key,
         metrics
@@ -11641,26 +11677,7 @@ local.coverageReportCreate = function (opt) {
             nodeDict[parentPath] = parent;
         }
         nodeChildAdd(parent, node);
-        if (parent === nodeRoot) {
-            filesUnderRoot = true;
-        }
     });
-    if (filesUnderRoot && filePrefix.length > 0) {
-        //start at one level above
-        filePrefix.pop();
-        tmp = nodeRoot;
-        tmpChildren = tmp.children;
-        tmp.children = [];
-        nodeRoot = nodeCreate(filePrefix.join(path.sep) + path.sep);
-        nodeChildAdd(nodeRoot, tmp);
-        tmpChildren.forEach(function (child) {
-            nodeChildAdd((
-                child.isFile
-                ? tmp
-                : nodeRoot
-            ), child);
-        });
-    }
     nodeNormalize(nodeRoot, 0, filePrefix.join(path.sep) + path.sep);
     // 4. convert <nodeRoot> to text-report <dirCoverage>/coverage.txt
     reportTextWrite(nodeRoot, dirCoverage);
@@ -11679,7 +11696,7 @@ local.coverageReportCreate = function (opt) {
     // write coverage.badge.svg
     tmp = nodeRoot.metrics.lines.pct;
     fileWrite(
-        path.dirname(dirCoverage) + "/coverage.badge.svg",
+        dirCoverage + "/coverage.badge.svg",
         // edit coverage badge percent
         // edit coverage badge color
         local.templateCoverageBadgeSvg.replace((

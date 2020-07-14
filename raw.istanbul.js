@@ -3,8 +3,8 @@ shRawLibFetch
 {
     "fetchList": [
         {
-            "sh": "curl https://registry.npmjs.org/acorn/-/acorn-6.3.0.tgz | tar -O -xz package/dist/acorn.js",
-            "url": "https://github.com/acornjs/acorn/blob/6.3.0/acorn/dist/acorn.js"
+            "sh": "curl https://registry.npmjs.org/acorn/-/acorn-6.4.1.tgz | tar -O -xz package/dist/acorn.js",
+            "url": "https://github.com/acornjs/acorn/blob/6.4.1/acorn/dist/acorn.js"
         },
         {
             "url": "https://github.com/estools/estraverse/blob/4.2.0/estraverse.js"
@@ -18,15 +18,56 @@ shRawLibFetch
         {
             "url": "https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js"
         }
-    ],
-    "replaceList": [
-        {
-            "flags": "g",
-            "aa": "\\brequire\\(",
-            "bb": "require2("
-        }
     ]
 }
+-
+-
+-/*
+-file none
++// hack-istanbul - inline-require
++}());
++
++
++/*
++file none
+
+-
+-
+-/*
+-repo https://github.com/estools/estraverse/tree/4.2.0
++// hack-istanbul - inline-require
++}());
++
++
++/*
++repo https://github.com/estools/estraverse/tree/4.2.0
+
+-
+-
+-/*
+-repo https://github.com/estools/esutils/tree/2.0.3
++// hack-istanbul - inline-require
++}());
++
++
++/*
++repo https://github.com/estools/esutils/tree/2.0.3
+
+-
+-
+-/*
+-repo https://github.com/gotwarlost/istanbul/tree/v0.4.5
++// hack-istanbul - inline-require
++}());
++
++
++/*
++repo https://github.com/gotwarlost/istanbul/tree/v0.4.5
+
+-                SourceNode = require('source-map').SourceNode;
++                // hack-istanbul - inline-require
++                SourceNode = {};
+
 -                program = ESP.parse(code, {
 -                    loc: true,
 -                    range: true,
@@ -34,7 +75,7 @@ shRawLibFetch
 -                    comment: true,
 -                    sourceType: this.opts.esModules ? 'module' : 'script'
 -                });
-+                // hack-coverage - acorn opt
++                // hack-istanbul - inline acorn-opt
 +                let opt = {
 +                    locations: true,
 +                    onComment: [],
@@ -47,24 +88,96 @@ shRawLibFetch
 
 -            this.currentState.currentHint = null;
 +            this.currentState.currentHint = null;
-+            // hack-coverage - allow top-level istanbul-ignore-next
++            // hack-istanbul - allow top-level istanbul-ignore-next
 +            if (node.type === "Program") { return; }
 
+-        estraverse,
+-        esutils,
++        // hack-istanbul - inline-require
++        // estraverse,
++        // esutils,
+
 -        return '__cov_' + (omitSuffix ? '' : suffix);
-+        // hack-coverage - pseudorandom coverage-identifier
++        // hack-istanbul - random coverage-identifier
 +        return '__cov_' + Math.random().toString(16).slice(2);
+
+-    estraverse = require('estraverse');
+-    esutils = require('esutils');
++    // hack-istanbul - inline-require
++    // estraverse = require('estraverse');
++    // esutils = require('esutils');
+
+-    exports.version = require('./package.json').version;
++    // hack-istanbul - inline-require
++    exports.version = {};
+
+-    exports.version = require('./package.json').version;
++    // hack-istanbul - inline-require
++    exports.version = {};
+
+-file https://github.com/acornjs/acorn/blob/6.4.1/acorn/dist/acorn.js
+-*/
++file https://github.com/acornjs/acorn/blob/6.4.1/acorn/dist/acorn.js
++*/
++// hack-istanbul - inline-require
++/* istanbul ignore next */
++/* jslint ignore:start */
++(function () { let exports, module; exports = module = esprima;
+
+-file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
+-*/
++file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
++*/
++// hack-istanbul - inline-require
++/* istanbul ignore next */
++(function () { let exports; exports = escodegen;
+
+-file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
+-*/
++file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
++*/
++// hack-istanbul - inline-require
++/* istanbul ignore next */
++(function () { let exports; exports = estraverse;
+
+-file https://github.com/estools/esutils/blob/2.0.3/lib/code.js
+-*/
++file https://github.com/estools/esutils/blob/2.0.3/lib/code.js
++*/
++// hack-istanbul - inline-require
++/* istanbul ignore next */
++(function () { let module; module = {};
+
+-file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
+-*/
++file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
++*/
++// hack-istanbul - inline-require
++/* istanbul ignore next */
++(function () { let module, window; module = undefined; window = local;
+
+-}());
+-/* vim: set sw=4 ts=4 et tw=80 : */
++}());
++/* vim: set sw=4 ts=4 et tw=80 : */
++// hack-istanbul - inline-require
++esutils = { code: module.exports }; }());
 */
 
 
 /*
-repo https://github.com/acornjs/acorn/tree/6.3.0
-committed 2019-08-12T09:40:59Z
+repo https://github.com/acornjs/acorn/tree/6.4.1
+committed 2020-03-09T10:38:41Z
 */
 
 
 /*
-file https://github.com/acornjs/acorn/blob/6.3.0/acorn/dist/acorn.js
+file https://github.com/acornjs/acorn/blob/6.4.1/acorn/dist/acorn.js
 */
+// hack-istanbul - inline-require
+/* istanbul ignore next */
+/* jslint ignore:start */
+(function () { let exports, module; exports = module = esprima;
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -3273,7 +3386,8 @@ file https://github.com/acornjs/acorn/blob/6.3.0/acorn/dist/acorn.js
     if (!this.switchU || c <= 0xD7FF || c >= 0xE000 || i + 1 >= l) {
       return c
     }
-    return (c << 10) + s.charCodeAt(i + 1) - 0x35FDC00
+    var next = s.charCodeAt(i + 1);
+    return next >= 0xDC00 && next <= 0xDFFF ? (c << 10) + next - 0x35FDC00 : c
   };
 
   RegExpValidationState.prototype.nextIndex = function nextIndex (i) {
@@ -3282,8 +3396,9 @@ file https://github.com/acornjs/acorn/blob/6.3.0/acorn/dist/acorn.js
     if (i >= l) {
       return l
     }
-    var c = s.charCodeAt(i);
-    if (!this.switchU || c <= 0xD7FF || c >= 0xE000 || i + 1 >= l) {
+    var c = s.charCodeAt(i), next;
+    if (!this.switchU || c <= 0xD7FF || c >= 0xE000 || i + 1 >= l ||
+        (next = s.charCodeAt(i + 1)) < 0xDC00 || next > 0xDFFF) {
       return i + 1
     }
     return i + 2
@@ -4979,7 +5094,29 @@ file https://github.com/acornjs/acorn/blob/6.3.0/acorn/dist/acorn.js
 
   // Acorn is a tiny, fast JavaScript parser written in JavaScript.
 
-  var version = "6.3.0";
+  var version = "6.4.0";
+
+  Parser.acorn = {
+    Parser: Parser,
+    version: version,
+    defaultOptions: defaultOptions,
+    Position: Position,
+    SourceLocation: SourceLocation,
+    getLineInfo: getLineInfo,
+    Node: Node,
+    TokenType: TokenType,
+    tokTypes: types,
+    keywordTypes: keywords$1,
+    TokContext: TokContext,
+    tokContexts: types$1,
+    isIdentifierChar: isIdentifierChar,
+    isIdentifierStart: isIdentifierStart,
+    Token: Token,
+    isNewLine: isNewLine,
+    lineBreak: lineBreak,
+    lineBreakG: lineBreakG,
+    nonASCIIwhitespace: nonASCIIwhitespace
+  };
 
   // The main exported interface (under `self.acorn` when in the
   // browser) is a `parse` function that takes a code string and
@@ -5032,6 +5169,8 @@ file https://github.com/acornjs/acorn/blob/6.3.0/acorn/dist/acorn.js
 
   Object.defineProperty(exports, '__esModule', { value: true });
 }));
+// hack-istanbul - inline-require
+}());
 
 
 /*
@@ -5043,6 +5182,9 @@ committed 2016-03-10T21:51:59Z
 /*
 file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
 */
+// hack-istanbul - inline-require
+/* istanbul ignore next */
+(function () { let exports; exports = estraverse;
 /*
   Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
@@ -5879,7 +6021,8 @@ file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
         return tree;
     }
 
-    exports.version = require2('./package.json').version;
+    // hack-istanbul - inline-require
+    exports.version = {};
     exports.Syntax = Syntax;
     exports.traverse = traverse;
     exports.replace = replace;
@@ -5892,6 +6035,8 @@ file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
     return exports;
 }(exports));
 /* vim: set sw=4 ts=4 et tw=80 : */
+// hack-istanbul - inline-require
+}());
 
 
 /*
@@ -5903,6 +6048,9 @@ committed 2019-07-31T01:06:44Z
 /*
 file https://github.com/estools/esutils/blob/2.0.3/lib/code.js
 */
+// hack-istanbul - inline-require
+/* istanbul ignore next */
+(function () { let module; module = {};
 /*
   Copyright (C) 2013-2014 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2014 Ivan Nikulin <ifaaan@gmail.com>
@@ -6038,6 +6186,8 @@ file https://github.com/estools/esutils/blob/2.0.3/lib/code.js
     };
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
+// hack-istanbul - inline-require
+esutils = { code: module.exports }; }());
 
 
 /*
@@ -6049,6 +6199,9 @@ committed 2019-08-13T02:08:40Z
 /*
 file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
 */
+// hack-istanbul - inline-require
+/* istanbul ignore next */
+(function () { let exports; exports = escodegen;
 /*
   Copyright (C) 2012-2014 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2015 Ingvar Stepanyan <me@rreverser.com>
@@ -6092,8 +6245,9 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
         Precedence,
         BinaryPrecedence,
         SourceNode,
-        estraverse,
-        esutils,
+        // hack-istanbul - inline-require
+        // estraverse,
+        // esutils,
         base,
         indent,
         json,
@@ -6115,8 +6269,9 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
         FORMAT_MINIFY,
         FORMAT_DEFAULTS;
 
-    estraverse = require2('estraverse');
-    esutils = require2('esutils');
+    // hack-istanbul - inline-require
+    // estraverse = require('estraverse');
+    // esutils = require('esutils');
 
     Syntax = estraverse.Syntax;
 
@@ -8602,7 +8757,8 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
             if (!exports.browser) {
                 // We assume environment is node.js
                 // And prevent from including source-map by browserify
-                SourceNode = require2('source-map').SourceNode;
+                // hack-istanbul - inline-require
+                SourceNode = {};
             } else {
                 SourceNode = global.sourceMap.SourceNode;
             }
@@ -8649,7 +8805,8 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
 
     FORMAT_DEFAULTS = getDefaultOptions().format;
 
-    exports.version = require2('./package.json').version;
+    // hack-istanbul - inline-require
+    exports.version = {};
     exports.generate = generate;
     exports.attachComments = estraverse.attachComments;
     exports.Precedence = updateDeeply({}, Precedence);
@@ -8658,6 +8815,8 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
     exports.FORMAT_DEFAULTS = FORMAT_DEFAULTS;
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
+// hack-istanbul - inline-require
+}());
 
 
 /*
@@ -8669,6 +8828,9 @@ committed 2016-08-21T19:53:22Z
 /*
 file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
 */
+// hack-istanbul - inline-require
+/* istanbul ignore next */
+(function () { let module, window; module = undefined; window = local;
 /*
  Copyright (c) 2012, Yahoo! Inc.  All rights reserved.
  Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
@@ -8679,9 +8841,9 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
     "use strict";
     var SYNTAX,
         nodeType,
-        ESP = isNode ? require2('esprima') : esprima,
-        ESPGEN = isNode ? require2('escodegen') : escodegen,  //TODO - package as dependency
-        crypto = isNode ? require2('crypto') : null,
+        ESP = isNode ? require('esprima') : esprima,
+        ESPGEN = isNode ? require('escodegen') : escodegen,  //TODO - package as dependency
+        crypto = isNode ? require('crypto') : null,
         LEADER_WRAP = '(function () { ',
         TRAILER_WRAP = '\n}());',
         COMMENT_RE = /^\s*istanbul\s+ignore\s+(if|else|next)(?=\W|$)/,
@@ -8726,7 +8888,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
             window.__cov_seq += 1;
             suffix = window.__cov_seq;
         }
-        // hack-coverage - pseudorandom coverage-identifier
+        // hack-istanbul - random coverage-identifier
         return '__cov_' + Math.random().toString(16).slice(2);
     }
 
@@ -9007,7 +9169,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
      * Usage on nodejs
      * ---------------
      *
-     *      var instrumenter = new require2('istanbul').Instrumenter(),
+     *      var instrumenter = new require('istanbul').Instrumenter(),
      *          changed = instrumenter.instrumentSync('function meaningOfLife() { return 42; }', 'filename.js');
      *
      * Usage in a browser
@@ -9128,7 +9290,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
                 code = LEADER_WRAP + code + TRAILER_WRAP;
             }
             try {
-                // hack-coverage - acorn opt
+                // hack-istanbul - inline acorn-opt
                 let opt = {
                     locations: true,
                     onComment: [],
@@ -9181,7 +9343,7 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
                 nodeStart = node.range[0],
                 hint;
             this.currentState.currentHint = null;
-            // hack-coverage - allow top-level istanbul-ignore-next
+            // hack-istanbul - allow top-level istanbul-ignore-next
             if (node.type === "Program") { return; }
             while (i < hints.length) {
                 hint = hints[i];
@@ -9771,6 +9933,8 @@ file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
         window.Instrumenter = Instrumenter;
     }
 }(typeof module !== 'undefined' && typeof module.exports !== 'undefined' && typeof exports !== 'undefined'));
+// hack-istanbul - inline-require
+}());
 
 
 /*

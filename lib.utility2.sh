@@ -21,6 +21,7 @@
 # shCryptoWithGithubOrg aa shCryptoTravisDecrypt ciphertext.txt
 # shCryptoWithGithubOrg aa shCryptoTravisEncrypt plaintext.txt
 # shCryptoWithGithubOrg aa shTravisRepoCreate aa/node-aa-bb
+# shCryptoWithGithubOrg aa shTravisRepoTrigger aa/node-aa-bb alpha
 # shCryptoWithGithubOrg aa shGithubApiRateLimitGet
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/node-aa-bb alpha "[build app]"
 # shDockerRestartUtility2 work kaizhu256/node-utility2
@@ -420,7 +421,7 @@ shBuildApp () {(set -e
                     fs.link((
                         file === "assets.utility2.rollup.js"
                         ? path.resolve(
-                            dirDev + "tmp/build/app/assets.utility2.rollup.js"
+                            dirDev + ".tmp/build/app/assets.utility2.rollup.js"
                         )
                         : dirDev + file
                     ), file, function (err) {
@@ -646,9 +647,9 @@ shBuildCi () {(set -e
             git clone https://github.com/kaizhu256/node-utility2 \
                 "$npm_config_dir_utility2" \
                 --branch=alpha --single-branch --depth=50
-            mkdir -p "$npm_config_dir_utility2/tmp/build/app"
+            mkdir -p "$npm_config_dir_utility2/.tmp/build/app"
             curl -Lf -o \
-"$npm_config_dir_utility2/tmp/build/app/assets.utility2.rollup.js" \
+"$npm_config_dir_utility2/.tmp/build/app/assets.utility2.rollup.js" \
 https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/build..alpha..travis-ci.com/app\
 /assets.utility2.rollup.js
@@ -927,54 +928,7 @@ shBuildCiInternal () {(set -e
         )
     then
         shSleep 60
-        node -e '
-/* jslint utility2:true */
-(function () {
-    "use strict";
-    let set;
-    set = new Set();
-    require("fs").readFileSync("README.md", "utf8").replace((
-        /[(\[](https?):\/\/.*?[)\]]/g
-    ), function (match0, match1) {
-        let req;
-        match0 = match0.slice(1, -1).replace((
-            /[\u0022\u0027]/g
-        ), "").replace((
-            /\bbeta\b|\bmaster\b/g
-        ), "alpha").replace((
-            /\/build\//g
-        ), "/build..alpha..travis-ci.com/");
-        // ignore private-link
-        if (
-            process.env.npm_package_private
-            && match0.indexOf("https://github.com/") === 0
-        ) {
-            return;
-        }
-        // ignore duplicate-link
-        if (set.has(match0)) {
-            return;
-        }
-        set.add(match0);
-        req = require(match1).request(require("url").parse(
-            match0
-        ), function (res) {
-            console.log(
-                "shReadmeLinkValidate " + res.statusCode + " " + match0
-            );
-            if (!(res.statusCode < 400)) {
-                throw new Error(
-                    "shReadmeLinkValidate - invalid link " + match0
-                );
-            }
-            req.abort();
-            res.destroy();
-        });
-        req.setTimeout(30000);
-        req.end();
-    });
-}());
-'
+        shReadmeLinkValidate
     fi
 )}
 
@@ -1133,14 +1087,14 @@ shBuildInit () {
         printf "$npm_package_name" | sed -e "s/[^0-9A-Z_a-z]/_/g"
     )}" || return "$?"
     # init $npm_config_*
-    export npm_config_dir_build="${npm_config_dir_build:-$PWD/tmp/build}" ||
+    export npm_config_dir_build="${npm_config_dir_build:-$PWD/.tmp/build}" ||
         return "$?"
-    mkdir -p "$npm_config_dir_build/coverage.html" || return "$?"
-    export npm_config_dir_tmp="$PWD/tmp" || return "$?"
+    mkdir -p "$npm_config_dir_build/coverage" || return "$?"
+    export npm_config_dir_tmp="$PWD/.tmp" || return "$?"
     mkdir -p "$npm_config_dir_tmp" || return "$?"
-    export npm_config_file_tmp="${npm_config_file_tmp:-$PWD/tmp/tmpfile}" ||
+    export npm_config_file_tmp="${npm_config_file_tmp:-$PWD/.tmp/tmpfile}" ||
         return "$?"
-    # extract and save scripts embedded in README.md to tmp/
+    # extract and save scripts embedded in README.md to .tmp/
     if [ -f README.md ]
     then
         node -e '
@@ -1168,7 +1122,7 @@ shBuildInit () {
             match0 = match0.trim();
         }
         require("fs").writeFileSync(
-            "tmp/README." + match2,
+            ".tmp/README." + match2,
             match0.trimEnd() + "\n"
         );
     });
@@ -1191,8 +1145,8 @@ shBuildInsideDocker () {(set -e
     npm install
     # npm-test
     npm test --mode-coverage
-    # cleanup tmp
-    rm -rf tmp
+    # cleanup .tmp
+    rm -rf .tmp
     # cleanup build
     rm -rf \
         /root/.npm \
@@ -1423,7 +1377,8 @@ shDeployHeroku () {(set -e
         shBuildApp
         cp "$npm_config_dir_build"/app/*.js .
         printf "web: npm_config_mode_backend=1 node assets.app.js\n" > Procfile
-        rm -rf tmp
+        # cleanup .tmp
+        rm -rf .tmp
         return
     fi
     export MODE_BUILD=deployHeroku
@@ -2359,8 +2314,6 @@ shNpmTest () {(set -e
     export MODE_BUILD="${MODE_BUILD:-npmTest}"
     export NODE_BINARY="${NODE_BINARY:-node}"
     shBuildPrint "npm-testing $PWD"
-    # cleanup tmp/*.json
-    rm -f tmp/*.json
     # init npm-test-mode
     export NODE_ENV="${NODE_ENV:-test}"
     export npm_config_mode_test=1
@@ -2371,7 +2324,7 @@ shNpmTest () {(set -e
     # npm-test with coverage
     else
         # cleanup old coverage
-        rm -f "$npm_config_dir_build/coverage.html/"coverage.*.json
+        rm -f "$npm_config_dir_build/coverage/"coverage.*.json
         # npm-test with coverage
         (shIstanbulCover "$@") || EXIT_CODE="$?"
         # if $EXIT_CODE != 0, then debug covered-test by re-running it uncovered
@@ -2558,7 +2511,7 @@ shRawLibDiff () {(set -e
 
 shRawLibFetch () {(set -e
 # this function will fetch raw-lib from $1
-    export DIR="tmp/raw.lib"
+    export DIR=".tmp/raw.lib"
     rm -rf "$DIR" && mkdir -p "$DIR"
     node -e '
 /* jslint utility2:true */
@@ -2953,6 +2906,58 @@ shRawLibFetch () {(set -e
 ' "$@"
 )}
 
+shReadmeLinkValidate () {(set -e
+# this function will validate http-links embedded in README.md
+    node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    let set;
+    set = new Set();
+    require("fs").readFileSync("README.md", "utf8").replace((
+        /[(\[](https?):\/\/.*?[)\]]/g
+    ), function (match0, match1) {
+        let req;
+        match0 = match0.slice(1, -1).replace((
+            /[\u0022\u0027]/g
+        ), "").replace((
+            /\bbeta\b|\bmaster\b/g
+        ), "alpha").replace((
+            /\/build\//g
+        ), "/build..alpha..travis-ci.com/");
+        // ignore private-link
+        if (
+            process.env.npm_package_private
+            && match0.indexOf("https://github.com/") === 0
+        ) {
+            return;
+        }
+        // ignore duplicate-link
+        if (set.has(match0)) {
+            return;
+        }
+        set.add(match0);
+        req = require(match1).request(require("url").parse(
+            match0
+        ), function (res) {
+            console.log(
+                "shReadmeLinkValidate " + res.statusCode + " " + match0
+            );
+            if (!(res.statusCode < 400)) {
+                throw new Error(
+                    "shReadmeLinkValidate - invalid link " + match0
+                );
+            }
+            req.abort();
+            res.destroy();
+        });
+        req.setTimeout(30000);
+        req.end();
+    });
+}());
+'
+)}
+
 shReadmeTest () {(set -e
 # this function will extract, save, and test script $FILE embedded in README.md
     shBuildInit
@@ -2975,13 +2980,13 @@ shReadmeTest () {(set -e
         ;;
     esac
     FILE="$1"
-    if [ ! -f "tmp/README.$FILE" ]
+    if [ ! -f ".tmp/README.$FILE" ]
     then
         return
     fi
     case "$FILE" in
     build_ci.sh)
-        FILE=tmp/README.build_ci.sh
+        FILE=.tmp/README.build_ci.sh
         ;;
     example.js)
         export MODE_BUILD=testExampleJs
@@ -2995,8 +3000,8 @@ shReadmeTest () {(set -e
         DIR=/tmp/app
         rm -rf "$DIR" && mkdir -p "$DIR"
         # cp script from README.md
-        cp "tmp/README.$FILE" "$DIR/$FILE"
-        cp "tmp/README.$FILE" "$npm_config_dir_build/$FILE"
+        cp ".tmp/README.$FILE" "$DIR/$FILE"
+        cp ".tmp/README.$FILE" "$npm_config_dir_build/$FILE"
         # delete all leading blank lines at top of file
         # http://sed.sourceforge.net/sed1line.txt
         sed -in -e '/./,$!d' "$npm_config_dir_build/$FILE"
@@ -3022,6 +3027,15 @@ shReadmeTest () {(set -e
     (shSleep 15 && shBrowserScreenshot "http://127.0.0.1:$PORT") &
     shBuildPrint "testing $FILE ..."
     case "$FILE" in
+    .tmp/README.build_ci.sh)
+        # delete all leading blank lines at top of file
+        # delete all trailing blank lines at end of file
+        # http://sed.sourceforge.net/sed1line.txt
+        printf "# file-begin\n"
+        cat "$FILE" | sed -e '/./,$!d' -e :a -e '/^\n*$/{$d;N;ba' -e '}'
+        printf "\n# file-end\n\n\n"
+        unset PORT && unset npm_config_timeout_exit && /bin/sh "$FILE"
+        ;;
     example.js)
         SCRIPT="$(cat "$FILE" | grep -E "^ *\\\$ " | grep -o -E "\w.*")" || true
         # delete all leading blank lines at top of file
@@ -3040,15 +3054,6 @@ shReadmeTest () {(set -e
         cat "$FILE" | sed -e '/./,$!d' -e :a -e '/^\n*$/{$d;N;ba' -e '}'
         printf "\n# file-end\n\n\n"
         shRunWithScreenshotTxt /bin/sh "$FILE"
-        ;;
-    tmp/README.build_ci.sh)
-        # delete all leading blank lines at top of file
-        # delete all trailing blank lines at end of file
-        # http://sed.sourceforge.net/sed1line.txt
-        printf "# file-begin\n"
-        cat "$FILE" | sed -e '/./,$!d' -e :a -e '/^\n*$/{$d;N;ba' -e '}'
-        printf "\n# file-end\n\n\n"
-        unset PORT && unset npm_config_timeout_exit && /bin/sh "$FILE"
         ;;
     esac
     shBuildPrint "... finished running command 'shReadmeTest $*'"
@@ -3554,6 +3559,8 @@ export UTILITY2_MACRO_JS='
 (function () {
     "use strict";
     let consoleError;
+    let isBrowser;
+    let isWebWorker;
     let local;
     // init debugInline
     if (!globalThis.debugInline) {
@@ -3569,22 +3576,18 @@ export UTILITY2_MACRO_JS='
             return argList[0];
         };
     }
-    // init local
-    local = {};
-    local.local = local;
-    globalThis.globalLocal = local;
     // init isBrowser
-    local.isBrowser = (
+    isBrowser = (
         typeof globalThis.XMLHttpRequest === "function"
         && globalThis.navigator
         && typeof globalThis.navigator.userAgent === "string"
     );
     // init isWebWorker
-    local.isWebWorker = (
-        local.isBrowser && typeof globalThis.importScripts === "function"
+    isWebWorker = (
+        isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
-    local.assertJsonEqual = function (aa, bb) {
+    function assertJsonEqual(aa, bb) {
     /*
      * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
      */
@@ -3613,8 +3616,8 @@ export UTILITY2_MACRO_JS='
         if (aa !== bb) {
             throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));
         }
-    };
-    local.assertOrThrow = function (passed, msg) {
+    }
+    function assertOrThrow(passed, msg) {
     /*
      * this function will throw <msg> if <passed> is falsy
      */
@@ -3637,8 +3640,8 @@ export UTILITY2_MACRO_JS='
                 : JSON.stringify(msg, undefined, 4)
             )
         );
-    };
-    local.coalesce = function (...argList) {
+    }
+    function coalesce(...argList) {
     /*
      * this function will coalesce null, undefined, or "" in <argList>
      */
@@ -3653,20 +3656,20 @@ export UTILITY2_MACRO_JS='
             ii += 1;
         }
         return arg;
-    };
-    local.identity = function (val) {
+    }
+    function identity(val) {
     /*
      * this function will return <val>
      */
         return val;
-    };
-    local.nop = function () {
+    }
+    function nop() {
     /*
      * this function will do nothing
      */
         return;
-    };
-    local.objectAssignDefault = function (tgt = {}, src = {}, depth = 0) {
+    }
+    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
      * this function will if items from <tgt> are null, undefined, or "",
      * then overwrite them with items from <src>
@@ -3693,15 +3696,15 @@ export UTILITY2_MACRO_JS='
         };
         recurse(tgt, src, depth | 0);
         return tgt;
-    };
-    local.onErrorThrow = function (err) {
+    }
+    function onErrorThrow(err) {
     /*
      * this function will throw <err> if exists
      */
         if (err) {
             throw err;
         }
-    };
+    }
     // bug-workaround - throw unhandledRejections in node-process
     if (
         typeof process === "object" && process
@@ -3713,6 +3716,19 @@ export UTILITY2_MACRO_JS='
             throw err;
         });
     }
+    // init local
+    local = {};
+    local.local = local;
+    globalThis.globalLocal = local;
+    local.assertJsonEqual = assertJsonEqual;
+    local.assertOrThrow = assertOrThrow;
+    local.coalesce = coalesce;
+    local.identity = identity;
+    local.isBrowser = isBrowser;
+    local.isWebWorker = isWebWorker;
+    local.nop = nop;
+    local.objectAssignDefault = objectAssignDefault;
+    local.onErrorThrow = onErrorThrow;
 }());
 // assets.utility2.header.js - end
 
