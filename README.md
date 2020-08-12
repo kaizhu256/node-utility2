@@ -51,15 +51,11 @@ this zero-dependency package will provide high-level functions to to build, test
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.8.1
-- change build-dir from tmp/build to .tmp/build
-- istanbul - change coverage-directory from coverage.html/ to coverage/
-- istanbul - remove filesUnderRoot subroutine
-- istanbul - upgrade to acorn v6.4.1
+#### changelog 2020.8.12
+- jslint - require macro jslint-autofix:true to conditionally-autofix .json file
 - none
 
 #### todo
-- jslint - require macro jslint-autofix:true to conditionally-autofix .json file
 - update function fsWriteFileWithMkdirp to write to tmpfile first
 - jslint - unmangle function jslintAutofixLocalFunction
 - update function shRawLibFetch to minify assets
@@ -1155,7 +1151,7 @@ require("http").createServer(function (req, res) {
     "engines": {
         "node": ">=12.0"
     },
-    "fileCount": 23,
+    "fileCount": 27,
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
         "continuous-integration",
@@ -1192,7 +1188,7 @@ require("http").createServer(function (req, res) {
         "2020.08.01 istanbul-lite",
         "2020.08.01 utility2"
     ],
-    "version": "2020.8.1"
+    "version": "2020.8.12"
 }
 ```
 

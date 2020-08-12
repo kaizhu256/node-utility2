@@ -29,6 +29,7 @@
 # shDockerSh work 'shUtility2DependentsShellEval shBuildApp'
 # npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
 # utility2 shReadmeTest example.js
+# vim rgx-lowercase \L\1\e
 
 shBaseInit () {
 # this function will init bash-login base-env, and is intended for aws-ec2 setup
@@ -2431,7 +2432,7 @@ shPackageJsonVersionIncrement () {(set -e
         }
         return aa.map(function (aa) {
             return (
-                Number.isFinite(aa)
+                Number.isFinite(Number(aa))
                 ? Number(aa)
                 : aa
             );
