@@ -16839,7 +16839,7 @@ jslintRecurse = function (code, file, opt, {
             /^\/\*jslint\b|(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$)/m
         ),
         ".json": (
-            /^\s*?\{\s*"!!jslint_utility2":\s*true/
+            /^\s*?\{\s*?"!!jslint_utility2":\s*?true/
         ),
         ".md": (
             /(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$)/m

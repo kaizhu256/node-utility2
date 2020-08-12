@@ -1140,6 +1140,7 @@ require("http").createServer(function (req, res) {
 # package.json
 ```json
 {
+    "!!jslint_utility2: true,
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
         "utility2": "lib.utility2.sh",
