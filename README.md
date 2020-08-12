@@ -53,6 +53,7 @@ this zero-dependency package will provide high-level functions to to build, test
 
 #### changelog 2020.8.12
 - jslint - require macro jslint-autofix:true to conditionally-autofix .json file
+- add files raw.msnodesqlv8.js, raw.sqlite3.js
 - none
 
 #### todo
