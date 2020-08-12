@@ -1140,14 +1140,13 @@ require("http").createServer(function (req, res) {
 # package.json
 ```json
 {
-    "!!jslint_utility2": true,
-    "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
         "utility2": "lib.utility2.sh",
         "utility2-apidoc": "lib.apidoc.js",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js"
     },
+    "author": "kai zhu <kaizhu256@gmail.com>",
     "description": "this zero-dependency package will provide high-level functions to to build, test, and deploy webapps",
     "devDependencies": {},
     "engines": {
