@@ -1409,17 +1409,20 @@ shDockerCdHostPwd () {
 /* jslint utility2:true */
 (function () {
     "use strict";
+    let chdir;
     let home;
     let pwd;
-    home = process.env.HOST_HOME + require("path").sep;
-    pwd = process.env.HOST_PWD + require("path").sep;
-    if (home.length > 1 && pwd.length > 1 && pwd.indexOf(home) === 0) {
-        console.log(require("path").resolve(
+    chdir = process.env.PWD;
+    home = process.env.HOST_HOME + "/";
+    pwd = process.env.HOST_PWD + "/";
+    if (home.length > 1 && pwd.indexOf(home) === 0) {
+        chdir = require("path").resolve(
             process.env.HOME + "/" + pwd.replace(home, "")
-        ));
-        return;
+        );
+    } else if (pwd.indexOf("G:/") === 0) {
+        chdir = pwd.replace("G:/", "/mnt/");
     }
-    console.log(process.env.PWD);
+    console.log(chdir);
 }());
 ')"
 }
