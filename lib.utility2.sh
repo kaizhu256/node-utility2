@@ -1404,7 +1404,7 @@ shDeployHeroku () {(set -e
 )}
 
 shDockerCdHostPwd () {
-# this function cd $HOST_PWD inside docker
+# this function will cd $HOST_PWD inside docker
     cd "$(node -e '
 /* jslint utility2:true */
 (function () {
