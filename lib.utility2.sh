@@ -1103,7 +1103,7 @@ shBuildInit () {
 (function () {
     "use strict";
     require("fs").readFileSync("README.md", "utf8").replace((
-        /```\w*?(\n[\W\s]*?(\w\S*?)[\n"][\S\s]*?)\n```/g
+        /```\w*?(\n[\s#*\/]*?(\w[\w\-]*?\.\w*?)[\n"][\S\s]*?)\n```/g
     ), function (match0, match1, match2, ii, text) {
         // preserve lineno
         match0 = text.slice(0, ii).replace((
