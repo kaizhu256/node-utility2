@@ -1,21 +1,8 @@
 #!/usr/bin/env node
-// (FILE="$(node -e 'console.log("napi-v3-" + process.platform + "-" + process.arch)')" &&curl -A "chrome" -Lf "https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.0/$FILE.tar.gz" | tar -O -xz "$FILE/node_sqlite3.node" > ".node_sqlite3-v5.0.0-$FILE.node")
 /*
-shRawLibFetch
-{
-    "fetchList": [
-        {
-            "sh": "for ARCH in x64\ndo\n    for PLATFORM in darwin linux win32\n    do\n        FILE=\"napi-v3-$PLATFORM-$ARCH\"\n        curl -A \"chrome\" -Lf \"https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.0/$FILE.tar.gz\" | tar -O -xz \"$FILE/node_sqlite3.node\" > \".node_sqlite3-v5.0.0-$FILE.node\"\n    done\ndone\n",
-            "url": "https://github.com/mapbox/node-sqlite3/blob/v5.0.0/lib/sqlite3-binding.js"
-        },
-        {
-            "url": "https://github.com/mapbox/node-sqlite3/blob/v5.0.0/lib/sqlite3.js"
-        }
-    ]
-}
--var sqlite3 = require('./sqlite3-binding.js');
-+var sqlite3 = require("./.node_sqlite3-v5.0.0-napi-v3-" + process.platform + "-" + process.arch + ".node");
-*/
+ * shell-command to download binary:
+(FILE="$(node -e 'console.log("napi-v3-" + process.platform + "-" + process.arch)')" &&curl -A "chrome" -Lf "https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.0/$FILE.tar.gz" | tar -O -xz "$FILE/node_sqlite3.node" > ".node_sqlite3-v5.0.0-$FILE.node")
+ */
 
 
 /*
