@@ -14,12 +14,12 @@
 // run shared js-env code - init-local
 (function () {
     "use strict";
-    let consoleError;
     let isBrowser;
     let isWebWorker;
     let local;
     // init debugInline
     if (!globalThis.debugInline) {
+        let consoleError;
         consoleError = console.error;
         globalThis.debugInline = function (...argList) {
         /*
@@ -249,12 +249,12 @@ local.assetsDict["/assets.utility2.header.js"] = '\
 // run shared js-env code - init-local\n\
 (function () {\n\
     "use strict";\n\
-    let consoleError;\n\
     let isBrowser;\n\
     let isWebWorker;\n\
     let local;\n\
     // init debugInline\n\
     if (!globalThis.debugInline) {\n\
+        let consoleError;\n\
         consoleError = console.error;\n\
         globalThis.debugInline = function (...argList) {\n\
         /*\n\
