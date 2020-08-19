@@ -507,7 +507,11 @@ shBuildApp () {(set -e
                 "https://raw.githubusercontent.com/kaizhu256/node-utility2"
                 + "/alpha/" + file
             ), function (res) {
-                res.pipe(fs.createWriteStream(file));
+                res.pipe(fs.createWriteStream(file).on("close", function () {
+                    if (file === "npm_scripts.sh") {
+                        fs.chmod(file, 0o755, onErrorThrow);
+                    }
+                }));
             }).end();
         });
     });
