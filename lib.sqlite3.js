@@ -1,10 +1,33 @@
 #!/usr/bin/env node
 /*
- * shell-command to download binary:
-(FILE="$(node -e 'console.log("napi-v3-" + process.platform + "-" + process.arch)')" &&curl -A "chrome" -Lf "https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.0/$FILE.tar.gz" | tar -O -xz "$FILE/node_sqlite3.node" > ".node_sqlite3-v5.0.0-$FILE.node")
+ * shell-command to install binary:
+node lib.sqlite3.js install
  */
-
-
+(function () {
+    "use strict";
+    if (
+        module === require.main
+        && process.argv[2] === "install"
+        && require("path").basename(process.argv[1]) === "lib.sqlite3.js"
+    ) {
+        let file;
+        file = "napi-v3-" + process.platform + "-" + process.arch;
+        require("child_process").spawnSync((
+            "curl -A \"chrome\" -Lf "
+            + "https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.0/"
+            + file + ".tar.gz "
+            + "| tar -O -xz " + file + "/node_sqlite3.node "
+            + "> .node_sqlite3-v5.0.0-" + file + ".node"
+        ), {
+            encoding: "utf8",
+            shell: true,
+            stdio: [
+                "ignore", 1, 2
+            ]
+        });
+        return;
+    }
+/* jslint ignore:start */
 /*
 repo https://github.com/mapbox/node-sqlite3/tree/v5.0.0
 committed 2020-06-02T12:27:30Z
@@ -229,3 +252,5 @@ sqlite3.verbose = function() {
 /*
 file none
 */
+/* jslint ignore:end */
+}());
