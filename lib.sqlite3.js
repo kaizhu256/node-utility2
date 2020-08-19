@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * shell-command to install binary:
+ * shell-command to download-and-install prebuilt-binary:
 node lib.sqlite3.js install
  */
 (function () {
@@ -12,6 +12,11 @@ node lib.sqlite3.js install
     ) {
         let file;
         file = "napi-v3-" + process.platform + "-" + process.arch;
+        console.error(
+            "downloading "
+            + "https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.0/"
+            + file + ".tar.gz"
+        );
         require("child_process").spawnSync((
             "curl -A \"chrome\" -Lf "
             + "https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.0/"

@@ -922,11 +922,10 @@ shBuildCiInternal () {(set -e
     fi
     shGitInfo | head -n 4096 || true
     # validate http-links embedded in README.md
-    if [ ! "$npm_package_private" ] &&
-        ! (
-            printf "$CI_COMMIT_MESSAGE_META" |
-            grep -q -E "^build app|^npm publishAfterCommitAfterBuild"
-        )
+    if [ ! "$npm_package_private" ] && ! (
+        printf "$CI_COMMIT_MESSAGE_META" |
+        grep -q -E "^build app|^npm publishAfterCommit"
+    )
     then
         shSleep 60
         shReadmeLinkValidate
