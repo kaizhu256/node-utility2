@@ -8,12 +8,12 @@
 // run shared js-env code - init-local
 (function () {
     "use strict";
-    let consoleError;
     let isBrowser;
     let isWebWorker;
     let local;
     // init debugInline
     if (!globalThis.debugInline) {
+        let consoleError;
         consoleError = console.error;
         globalThis.debugInline = function (...argList) {
         /*
