@@ -3,7 +3,7 @@ shRawLibFetch
 {
     "fetchList": [
         {
-            "sh": "FILE=\"$(node -e 'console.log(\"napi-v3-\" + process.platform + \"-\" + process.arch)')\" &&curl -A \"chrome\" -Lf \"https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.0/$FILE.tar.gz\" | tar -O -xz \"$FILE/node_sqlite3.node\" > \".node_sqlite3-v5.0.0-$FILE.node\"",
+            "sh": "for ARCH in x64\ndo\n    for PLATFORM in darwin linux win32\n    do\n        FILE=\"napi-v3-$PLATFORM-$ARCH\"\n        curl -A \"chrome\" -Lf \"https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.0/$FILE.tar.gz\" | tar -O -xz \"$FILE/node_sqlite3.node\" > \".node_sqlite3-v5.0.0-$FILE.node\"\n    done\ndone\n",
             "url": "https://github.com/mapbox/node-sqlite3/blob/v5.0.0/lib/sqlite3-binding.js"
         },
         {
