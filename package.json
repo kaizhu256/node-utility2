@@ -1,4 +1,5 @@
 {
+    "!!jslint_utility2": true,
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
         "utility2": "lib.utility2.sh",
@@ -11,7 +12,7 @@
     "engines": {
         "node": ">=12.0"
     },
-    "fileCount": 23,
+    "fileCount": 25,
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
         "continuous-integration",
@@ -44,9 +45,10 @@
         "2020.02.12 sqljs-lite",
         "2020.06.08 apidoc-lite",
         "2020.06.12 bootstrap-lite",
-        "2020.07.08 jslint-lite",
         "2020.08.01 istanbul-lite",
+        "2020.08.19 jslint-lite",
+        "2020.08.19 sqlite3-lite",
         "2020.08.01 utility2"
     ],
-    "version": "2020.8.1"
+    "version": "2020.8.19"
 }

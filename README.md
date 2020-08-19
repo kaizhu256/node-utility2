@@ -51,15 +51,13 @@ this zero-dependency package will provide high-level functions to to build, test
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.8.1
-- change build-dir from tmp/build to .tmp/build
-- istanbul - change coverage-directory from coverage.html/ to coverage/
-- istanbul - remove filesUnderRoot subroutine
-- istanbul - upgrade to acorn v6.4.1
+#### changelog 2020.8.19
+- add file lib.sqlite3.js
+- jslint - require macro jslint-autofix:true to conditionally-autofix .json file
+- add files lib.sqlite3.js
 - none
 
 #### todo
-- jslint - require macro jslint-autofix:true to conditionally-autofix .json file
 - update function fsWriteFileWithMkdirp to write to tmpfile first
 - jslint - unmangle function jslintAutofixLocalFunction
 - update function shRawLibFetch to minify assets
@@ -129,12 +127,12 @@ instruction
 // run shared js-env code - init-local
 (function () {
     "use strict";
-    let consoleError;
     let isBrowser;
     let isWebWorker;
     let local;
     // init debugInline
     if (!globalThis.debugInline) {
+        let consoleError;
         consoleError = console.error;
         globalThis.debugInline = function (...argList) {
         /*
@@ -162,8 +160,7 @@ instruction
     /*
      * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
      */
-        let objectDeepCopyWithKeysSorted;
-        objectDeepCopyWithKeysSorted = function (obj) {
+        function objectDeepCopyWithKeysSorted(obj) {
         /*
          * this function will recursively deep-copy <obj> with keys sorted
          */
@@ -181,7 +178,7 @@ instruction
                 sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
             });
             return sorted;
-        };
+        }
         aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
         bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
         if (aa !== bb) {
@@ -1143,6 +1140,7 @@ require("http").createServer(function (req, res) {
 # package.json
 ```json
 {
+    "!!jslint_utility2": true,
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
         "utility2": "lib.utility2.sh",
@@ -1155,7 +1153,7 @@ require("http").createServer(function (req, res) {
     "engines": {
         "node": ">=12.0"
     },
-    "fileCount": 23,
+    "fileCount": 25,
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
         "continuous-integration",
@@ -1188,11 +1186,12 @@ require("http").createServer(function (req, res) {
         "2020.02.12 sqljs-lite",
         "2020.06.08 apidoc-lite",
         "2020.06.12 bootstrap-lite",
-        "2020.07.08 jslint-lite",
         "2020.08.01 istanbul-lite",
+        "2020.08.19 jslint-lite",
+        "2020.08.19 sqlite3-lite",
         "2020.08.01 utility2"
     ],
-    "version": "2020.8.1"
+    "version": "2020.8.19"
 }
 ```
 

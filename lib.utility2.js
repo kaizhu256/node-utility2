@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2020.8.1)
+ * lib.utility2.js (2020.8.19)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -14,12 +14,12 @@
 // run shared js-env code - init-local
 (function () {
     "use strict";
-    let consoleError;
     let isBrowser;
     let isWebWorker;
     let local;
     // init debugInline
     if (!globalThis.debugInline) {
+        let consoleError;
         consoleError = console.error;
         globalThis.debugInline = function (...argList) {
         /*
@@ -47,8 +47,7 @@
     /*
      * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
      */
-        let objectDeepCopyWithKeysSorted;
-        objectDeepCopyWithKeysSorted = function (obj) {
+        function objectDeepCopyWithKeysSorted(obj) {
         /*
          * this function will recursively deep-copy <obj> with keys sorted
          */
@@ -66,7 +65,7 @@
                 sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
             });
             return sorted;
-        };
+        }
         aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
         bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
         if (aa !== bb) {
@@ -250,12 +249,12 @@ local.assetsDict["/assets.utility2.header.js"] = '\
 // run shared js-env code - init-local\n\
 (function () {\n\
     "use strict";\n\
-    let consoleError;\n\
     let isBrowser;\n\
     let isWebWorker;\n\
     let local;\n\
     // init debugInline\n\
     if (!globalThis.debugInline) {\n\
+        let consoleError;\n\
         consoleError = console.error;\n\
         globalThis.debugInline = function (...argList) {\n\
         /*\n\
@@ -283,8 +282,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
     /*\n\
      * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)\n\
      */\n\
-        let objectDeepCopyWithKeysSorted;\n\
-        objectDeepCopyWithKeysSorted = function (obj) {\n\
+        function objectDeepCopyWithKeysSorted(obj) {\n\
         /*\n\
          * this function will recursively deep-copy <obj> with keys sorted\n\
          */\n\
@@ -302,7 +300,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
                 sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);\n\
             });\n\
             return sorted;\n\
-        };\n\
+        }\n\
         aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));\n\
         bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));\n\
         if (aa !== bb) {\n\
@@ -1149,7 +1147,6 @@ the greatest app in the world!\n\
 ![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.npmPackageCliHelp.svg)\n\
 \n\
 #### changelog 0.0.1\n\
-- npm publish 0.0.1\n\
 - update build\n\
 - none\n\
 \n\
@@ -1229,6 +1226,7 @@ PORT=8081 node ./assets.app.js\n\
 # package.json\n\
 ```json\n\
 {\n\
+    "!!jslint_utility2": true,\n\
     "author": "kai zhu <kaizhu256@gmail.com>",\n\
     "description": "the greatest app in the world!",\n\
     "devDependencies": {\n\
@@ -2756,24 +2754,43 @@ local.buildApp = function ({
         });
     };
     buildAppStandalone = function (resolve) {
-        // write assets.app.js
-        writeFile((
-            ".tmp/build/app.standalone/assets.app.js"
-        ), local.assetsDict["/assets.app.js"], function () {
-            // test-file assets.app.js
-            require("child_process").spawn("node", [
-                "assets.app.js"
-            ], {
-                cwd: ".tmp/build/app.standalone",
-                env: {
-                    PATH: process.env.PATH,
-                    PORT: port,
-                    npm_config_timeout_exit: 4000
-                },
-                stdio: [
-                    "ignore", 1, 2
-                ]
-            }).on("exit", resolve);
+        // write native-module
+        require("fs").readdir(".", function (err, fileList) {
+            onErrorThrow(err);
+            Promise.all(fileList.map(function (file) {
+                return new Promise(function (resolve) {
+                    if (require("path").extname(file) !== ".node") {
+                        resolve();
+                        return;
+                    }
+                    require("fs").copyFile(file, (
+                        ".tmp/build/app.standalone/" + file
+                    ), function (err) {
+                        onErrorThrow(err);
+                        resolve();
+                    });
+                });
+            })).then(function () {
+                // write assets.app.js
+                writeFile((
+                    ".tmp/build/app.standalone/assets.app.js"
+                ), local.assetsDict["/assets.app.js"], function () {
+                    // test-file assets.app.js
+                    require("child_process").spawn("node", [
+                        "assets.app.js"
+                    ], {
+                        cwd: ".tmp/build/app.standalone",
+                        env: {
+                            PATH: process.env.PATH,
+                            PORT: port,
+                            npm_config_timeout_exit: 4000
+                        },
+                        stdio: [
+                            "ignore", 1, 2
+                        ]
+                    }).on("exit", resolve);
+                });
+            });
         });
     };
     buildLib = function (resolve) {
@@ -4290,8 +4307,7 @@ local.objectDeepCopyWithKeysSorted = function (obj) {
 /*
  * this function will recursively deep-copy <obj> with keys sorted
  */
-    let objectDeepCopyWithKeysSorted;
-    objectDeepCopyWithKeysSorted = function (obj) {
+    function objectDeepCopyWithKeysSorted(obj) {
     /*
      * this function will recursively deep-copy <obj> with keys sorted
      */
@@ -4309,7 +4325,7 @@ local.objectDeepCopyWithKeysSorted = function (obj) {
             sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
         });
         return sorted;
-    };
+    }
     return objectDeepCopyWithKeysSorted(obj);
 };
 

@@ -1,4 +1,3 @@
-!.gitignore
 *.[0123456789][0123456789]
 *.lock
 *.log
@@ -13,3 +12,4 @@ package-lock.json
 temp*
 tmp
 utility2
+!.gitignore

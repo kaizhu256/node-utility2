@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.jslint.js (2020.7.9)
+ * lib.jslint.js (2020.8.19)
  * https://github.com/kaizhu256/node-jslint-lite
  * this zero-dependency package will provide browser-compatible versions of jslint (v2020.7.2) and csslint (v2018.2.25), with working web-demo
  *
@@ -14,12 +14,12 @@
 // run shared js-env code - init-local
 (function () {
     "use strict";
-    let consoleError;
     let isBrowser;
     let isWebWorker;
     let local;
     // init debugInline
     if (!globalThis.debugInline) {
+        let consoleError;
         consoleError = console.error;
         globalThis.debugInline = function (...argList) {
         /*
@@ -47,8 +47,7 @@
     /*
      * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
      */
-        let objectDeepCopyWithKeysSorted;
-        objectDeepCopyWithKeysSorted = function (obj) {
+        function objectDeepCopyWithKeysSorted(obj) {
         /*
          * this function will recursively deep-copy <obj> with keys sorted
          */
@@ -66,7 +65,7 @@
                 sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
             });
             return sorted;
-        };
+        }
         aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
         bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
         if (aa !== bb) {
@@ -377,8 +376,7 @@ local.objectDeepCopyWithKeysSorted = function (obj) {
 /*
  * this function will recursively deep-copy <obj> with keys sorted
  */
-    let objectDeepCopyWithKeysSorted;
-    objectDeepCopyWithKeysSorted = function (obj) {
+    function objectDeepCopyWithKeysSorted(obj) {
     /*
      * this function will recursively deep-copy <obj> with keys sorted
      */
@@ -396,7 +394,7 @@ local.objectDeepCopyWithKeysSorted = function (obj) {
             sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
         });
         return sorted;
-    };
+    }
     return objectDeepCopyWithKeysSorted(obj);
 };
 }());
@@ -16515,7 +16513,6 @@ jslintAutofix = function (code, file, opt, {fileType, globalList, iiLine}) {
         });
         break;
     case ".js":
-    case ".json":
         // de-mux - code to [code, ignoreList]
         ignoreList = [];
         code = code.replace((
@@ -16732,15 +16729,11 @@ jslintAutofix = function (code, file, opt, {fileType, globalList, iiLine}) {
         ), function () {
             return ignoreList.shift().trimStart();
         });
-        // autofix-json - sort-keys
-        if (fileType === ".json") {
-            code = JSON.stringify(
-                local.objectDeepCopyWithKeysSorted(JSON.parse(code)),
-                undefined,
-                4
-            );
-            break;
-        }
+        break;
+    case ".json":
+        code = JSON.stringify(local.objectDeepCopyWithKeysSorted(JSON.parse(
+            code
+        )), undefined, 4);
         break;
     case ".md":
         // autofix-md - recurse ```javascript...```
@@ -16844,7 +16837,7 @@ jslintRecurse = function (code, file, opt, {
             /^\/\*jslint\b|(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$)/m
         ),
         ".json": (
-            /^\s*?(?:\[|\{)/
+            /^\s*?\{\s*?"!!jslint_utility2":\s*?true/
         ),
         ".md": (
             /(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$)/m
@@ -16854,11 +16847,11 @@ jslintRecurse = function (code, file, opt, {
         )
     };
     // jslint - .json
-    if (fileType === ".js" && tmp[".json"].test(code)) {
+    if (fileType === ".js" && tmp[".json"].test(code.slice(0, 4096))) {
         fileType = ".json";
     }
     // init mode-utility2
-    tmp = tmp[fileType] && tmp[fileType].exec(code);
+    tmp = tmp[fileType] && tmp[fileType].exec(code.slice(0, 4096));
     opt.utility2 = Boolean((tmp && tmp[1]) || modeAutofix);
     // if not modeConditional, then do not jslint
     if ((modeConditional && !tmp) || modeCoverage) {

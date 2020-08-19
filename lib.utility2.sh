@@ -29,6 +29,7 @@
 # shDockerSh work 'shUtility2DependentsShellEval shBuildApp'
 # npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
 # utility2 shReadmeTest example.js
+# vim rgx-lowercase \L\1\e
 
 shBaseInit () {
 # this function will init bash-login base-env, and is intended for aws-ec2 setup
@@ -506,7 +507,11 @@ shBuildApp () {(set -e
                 "https://raw.githubusercontent.com/kaizhu256/node-utility2"
                 + "/alpha/" + file
             ), function (res) {
-                res.pipe(fs.createWriteStream(file));
+                res.pipe(fs.createWriteStream(file).on("close", function () {
+                    if (file === "npm_scripts.sh") {
+                        fs.chmod(file, 0o755, onErrorThrow);
+                    }
+                }));
             }).end();
         });
     });
@@ -921,11 +926,10 @@ shBuildCiInternal () {(set -e
     fi
     shGitInfo | head -n 4096 || true
     # validate http-links embedded in README.md
-    if [ ! "$npm_package_private" ] &&
-        ! (
-            printf "$CI_COMMIT_MESSAGE_META" |
-            grep -q -E "^build app|^npm publishAfterCommitAfterBuild"
-        )
+    if [ ! "$npm_package_private" ] && ! (
+        printf "$CI_COMMIT_MESSAGE_META" |
+        grep -q -E "^build app|^npm publishAfterCommitAfterBuild"
+    )
     then
         shSleep 60
         shReadmeLinkValidate
@@ -1102,7 +1106,7 @@ shBuildInit () {
 (function () {
     "use strict";
     require("fs").readFileSync("README.md", "utf8").replace((
-        /```\w*?(\n[\W\s]*?(\w\S*?)[\n"][\S\s]*?)\n```/g
+        /```\w*?(\n[\s#*\/]*?(\w[\w\-]*?\.\w*?)[\n"][\S\s]*?)\n```/g
     ), function (match0, match1, match2, ii, text) {
         // preserve lineno
         match0 = text.slice(0, ii).replace((
@@ -1403,22 +1407,25 @@ shDeployHeroku () {(set -e
 )}
 
 shDockerCdHostPwd () {
-# this function cd $HOST_PWD inside docker
+# this function will cd $HOST_PWD inside docker
     cd "$(node -e '
 /* jslint utility2:true */
 (function () {
     "use strict";
+    let chdir;
     let home;
     let pwd;
-    home = process.env.HOST_HOME + require("path").sep;
-    pwd = process.env.HOST_PWD + require("path").sep;
-    if (home.length > 1 && pwd.length > 1 && pwd.indexOf(home) === 0) {
-        console.log(require("path").resolve(
+    chdir = process.env.PWD;
+    home = process.env.HOST_HOME + "/";
+    pwd = process.env.HOST_PWD + "/";
+    if (home.length > 1 && pwd.indexOf(home) === 0) {
+        chdir = require("path").resolve(
             process.env.HOME + "/" + pwd.replace(home, "")
-        ));
-        return;
+        );
+    } else if (pwd.indexOf("G:/") === 0) {
+        chdir = pwd.replace("G:/", "/mnt/");
     }
-    console.log(process.env.PWD);
+    console.log(chdir);
 }());
 ')"
 }
@@ -2431,7 +2438,7 @@ shPackageJsonVersionIncrement () {(set -e
         }
         return aa.map(function (aa) {
             return (
-                Number.isFinite(aa)
+                Number.isFinite(Number(aa))
                 ? Number(aa)
                 : aa
             );
@@ -3315,7 +3322,8 @@ shTravisRepoCreate () {(set -e
                 url: "https://github.com/" + process.env.GITHUB_REPO + ".git"
             },
             scripts: {
-                "build-ci": "utility2 shBuildCi"
+                "build-ci": "utility2 shBuildCi",
+                "test": "./npm_scripts.sh"
             },
             version: "0.0.1"
         }, undefined, 4)
@@ -3549,6 +3557,7 @@ apidoc-lite
 bootstrap-lite
 istanbul-lite
 jslint-lite
+sqlite3-lite
 '
 export UTILITY2_MACRO_JS='
 /* istanbul instrument in package utility2 */
@@ -3558,12 +3567,12 @@ export UTILITY2_MACRO_JS='
 // run shared js-env code - init-local
 (function () {
     "use strict";
-    let consoleError;
     let isBrowser;
     let isWebWorker;
     let local;
     // init debugInline
     if (!globalThis.debugInline) {
+        let consoleError;
         consoleError = console.error;
         globalThis.debugInline = function (...argList) {
         /*
@@ -3591,8 +3600,7 @@ export UTILITY2_MACRO_JS='
     /*
      * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
      */
-        let objectDeepCopyWithKeysSorted;
-        objectDeepCopyWithKeysSorted = function (obj) {
+        function objectDeepCopyWithKeysSorted(obj) {
         /*
          * this function will recursively deep-copy <obj> with keys sorted
          */
@@ -3610,7 +3618,7 @@ export UTILITY2_MACRO_JS='
                 sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
             });
             return sorted;
-        };
+        }
         aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
         bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
         if (aa !== bb) {
@@ -4054,8 +4062,7 @@ local.objectDeepCopyWithKeysSorted = function (obj) {
 /*
  * this function will recursively deep-copy <obj> with keys sorted
  */
-    let objectDeepCopyWithKeysSorted;
-    objectDeepCopyWithKeysSorted = function (obj) {
+    function objectDeepCopyWithKeysSorted(obj) {
     /*
      * this function will recursively deep-copy <obj> with keys sorted
      */
@@ -4073,7 +4080,7 @@ local.objectDeepCopyWithKeysSorted = function (obj) {
             sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
         });
         return sorted;
-    };
+    }
     return objectDeepCopyWithKeysSorted(obj);
 };
 
