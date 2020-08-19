@@ -924,7 +924,7 @@ shBuildCiInternal () {(set -e
     # validate http-links embedded in README.md
     if [ ! "$npm_package_private" ] && ! (
         printf "$CI_COMMIT_MESSAGE_META" |
-        grep -q -E "^build app|^npm publishAfterCommit"
+        grep -q -E "^build app|^npm publishAfterCommitAfterBuild"
     )
     then
         shSleep 60
@@ -3318,7 +3318,8 @@ shTravisRepoCreate () {(set -e
                 url: "https://github.com/" + process.env.GITHUB_REPO + ".git"
             },
             scripts: {
-                "build-ci": "utility2 shBuildCi"
+                "build-ci": "utility2 shBuildCi",
+                "test": "./npm_scripts.sh"
             },
             version: "0.0.1"
         }, undefined, 4)
