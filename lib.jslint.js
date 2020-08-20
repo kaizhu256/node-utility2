@@ -17359,7 +17359,9 @@ local.jslintAndPrintDir = function (dir, opt, onError) {
                     }
                     // jslint file
                     require("fs").readFile(file, "utf8", function (err, data) {
-                        local.onErrorThrow(err);
+                        if (err) {
+                            return;
+                        }
                         local.jslintAndPrint(data, file, opt);
                         errCnt += local.jslintResult.errList.length;
                         console.error(
