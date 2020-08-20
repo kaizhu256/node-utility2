@@ -4724,7 +4724,7 @@ local.requireReadme = function () {
             "/assets." + env.npm_package_nameLib + extname
         ] = local.fsReadFileOrDefaultSync(
             require("path").resolve(env.npm_package_main).replace((
-                /\.\w+$/
+                /\.\w+?$/
             ), extname),
             "utf8",
             ""
