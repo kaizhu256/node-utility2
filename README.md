@@ -63,7 +63,6 @@ this zero-dependency package will provide high-level functions to to build, test
 - istanbul - inline class Instrumenter into function instrumentSync
 - jslint - add nullish-coalescing support
 - jslint - add optional-chaining support
-- replace function local.objectAssignRecurse with Object.assign
 - replace db-lite with sql_lite.js
 - add default testCase _testCase_cliRun_help
 - add server stress-test using puppeteer
