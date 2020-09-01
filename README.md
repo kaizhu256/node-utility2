@@ -51,10 +51,8 @@ this zero-dependency package will provide high-level functions to to build, test
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.8.19
-- add file lib.sqlite3.js
-- jslint - require macro jslint-autofix:true to conditionally-autofix .json file
-- add files lib.sqlite3.js
+#### changelog 2020.9.1
+- polyfill globalThis in web-demo
 - none
 
 #### todo
@@ -547,6 +545,16 @@ pre {\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
 <script>\n\
 /* jslint utility2:true */\n\
+// polyfill globalThis\n\
+(function () {\n\
+/*\n\
+ * this function will polyfill globalThis\n\
+ */\n\
+    "use strict";\n\
+    window.globalThis = window.globalThis || globalThis;\n\
+}());\n\
+\n\
+\n\
 // init domOnEventWindowOnloadTimeElapsed\n\
 (function () {\n\
 /*\n\
@@ -1191,7 +1199,7 @@ require("http").createServer(function (req, res) {
         "2020.08.19 sqlite3-lite",
         "2020.08.01 utility2"
     ],
-    "version": "2020.8.19"
+    "version": "2020.9.1"
 }
 ```
 
