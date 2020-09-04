@@ -247,7 +247,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
 // assets.utility2.header.js - start\n\
 /* jslint utility2:true */\n\
 /* istanbul ignore next */\n\
-// run shared js-env code - init-local\n\
+// run shared js\-env code - init-local\n\
 (function () {\n\
     "use strict";\n\
     let isBrowser;\n\
@@ -939,14 +939,14 @@ instruction\n\
 \n\
 // run shared js\-env code - init-before\n\
 (function () {\n\
-// init local\n\
-local = (\n\
-    globalThis.utility2_rollup\n\
-    || globalThis.utility2_my_app\n\
-    || require("my-app-lite")\n\
-);\n\
-// init exports\n\
-globalThis.local = local;\n\
+    // init local\n\
+    local = (\n\
+        globalThis.utility2_rollup\n\
+        || globalThis.utility2_my_app\n\
+        || require("my-app-lite")\n\
+    );\n\
+    // init exports\n\
+    globalThis.local = local;\n\
 }());\n\
 \n\
 \n\
