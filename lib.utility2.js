@@ -939,14 +939,14 @@ instruction\n\
 \n\
 // run shared js\-env code - init-before\n\
 (function () {\n\
-    // init local\n\
-    local = (\n\
-        globalThis.utility2_rollup\n\
-        || globalThis.utility2_my_app\n\
-        || require("my-app-lite")\n\
-    );\n\
-    // init exports\n\
-    globalThis.local = local;\n\
+// init local\n\
+local = (\n\
+    globalThis.utility2_rollup\n\
+    || globalThis.utility2_my_app\n\
+    || require("my-app-lite")\n\
+);\n\
+// init exports\n\
+globalThis.local = local;\n\
 }());\n\
 \n\
 \n\
