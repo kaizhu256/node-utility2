@@ -372,32 +372,6 @@ local.cliRun = function (opt) {
     }
     cliDict._default();
 };
-
-local.objectDeepCopyWithKeysSorted = function (obj) {
-/*
- * this function will recursively deep-copy <obj> with keys sorted
- */
-    function objectDeepCopyWithKeysSorted(obj) {
-    /*
-     * this function will recursively deep-copy <obj> with keys sorted
-     */
-        let sorted;
-        if (!(typeof obj === "object" && obj)) {
-            return obj;
-        }
-        // recursively deep-copy list with child-keys sorted
-        if (Array.isArray(obj)) {
-            return obj.map(objectDeepCopyWithKeysSorted);
-        }
-        // recursively deep-copy obj with keys sorted
-        sorted = {};
-        Object.keys(obj).sort().forEach(function (key) {
-            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
-        });
-        return sorted;
-    }
-    return objectDeepCopyWithKeysSorted(obj);
-};
 }());
 
 
