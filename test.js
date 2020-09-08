@@ -12,7 +12,8 @@
     if (!(typeof globalThis === "object" && globalThis)) {
         if (typeof window === "object" && window && window.window === window) {
             window.globalThis = window;
-        } else {
+        }
+        if (typeof global === "object" && global && global.global === global) {
             global.globalThis = global;
         }
     }
