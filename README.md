@@ -52,10 +52,12 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.9.1
-- polyfill globalThis in web-demo
+- node v10.x - re-polyfill globalThis
+- node v10.x - re-polyfill TextDecoder and TextEncoder
 - none
 
 #### todo
+- migrate from travis to github-actions
 - update function fsWriteFileWithMkdirp to write to tmpfile first
 - jslint - unmangle function jslintAutofixLocalFunction
 - update function shRawLibFetch to minify assets
@@ -1206,7 +1208,7 @@ require("http").createServer(function (req, res) {
         "2020.08.01 istanbul-lite",
         "2020.08.19 jslint-lite",
         "2020.08.19 sqlite3-lite",
-        "2020.08.01 utility2"
+        "2020.08.19 utility2"
     ],
     "version": "2020.9.1"
 }

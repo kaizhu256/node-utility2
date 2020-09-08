@@ -6,6 +6,7 @@
     remote = origin
 [core]
     autocrlf = false
+    # autocrlf = input
     bare = false
     # filemode = false
     logallrefupdates = true
