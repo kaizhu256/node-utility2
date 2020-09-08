@@ -17,6 +17,14 @@
     let isBrowser;
     let isWebWorker;
     let local;
+    // polyfill globalThis
+    if (!(typeof globalThis === "object" && globalThis)) {
+        if (typeof window === "object" && window && window.window === window) {
+            window.globalThis = window;
+        } else {
+            global.globalThis = global;
+        }
+    }
     // init debugInline
     if (!globalThis.debugInline) {
         let consoleError;
@@ -253,6 +261,14 @@ local.assetsDict["/assets.utility2.header.js"] = '\
     let isBrowser;\n\
     let isWebWorker;\n\
     let local;\n\
+    // polyfill globalThis\n\
+    if (!(typeof globalThis === "object" && globalThis)) {\n\
+        if (typeof window === "object" && window && window.window === window) {\n\
+            window.globalThis = window;\n\
+        } else {\n\
+            global.globalThis = global;\n\
+        }\n\
+    }\n\
     // init debugInline\n\
     if (!globalThis.debugInline) {\n\
         let consoleError;\n\

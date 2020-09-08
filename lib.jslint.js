@@ -17,6 +17,14 @@
     let isBrowser;
     let isWebWorker;
     let local;
+    // polyfill globalThis
+    if (!(typeof globalThis === "object" && globalThis)) {
+        if (typeof window === "object" && window && window.window === window) {
+            window.globalThis = window;
+        } else {
+            global.globalThis = global;
+        }
+    }
     // init debugInline
     if (!globalThis.debugInline) {
         let consoleError;
@@ -11807,6 +11815,7 @@ function tokenize(source) {
                 [].concat(
                     allowed_option.browser,
                     allowed_option.node,
+                    "global",
                     "globalThis"
                 ).forEach(function (key) {
                     declared_globals[key] = false;
