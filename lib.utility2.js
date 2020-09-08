@@ -21,7 +21,8 @@
     if (!(typeof globalThis === "object" && globalThis)) {
         if (typeof window === "object" && window && window.window === window) {
             window.globalThis = window;
-        } else {
+        }
+        if (typeof global === "object" && global && global.global === global) {
             global.globalThis = global;
         }
     }
@@ -1613,6 +1614,8 @@ let onErrorThrow;
 localEventListenerDict = {};
 localEventListenerId = 0;
 onErrorThrow = local.onErrorThrow;
+
+
 // polyfill TextDecoder and TextEncoder
 (function () {
     try {
