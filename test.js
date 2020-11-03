@@ -726,63 +726,6 @@ local.testCase_corsForwardProxyHostIfNeeded_default = function (
     onError(undefined, opt);
 };
 
-/* istanbul ignore next */
-local.testCase_cryptoAesXxxCbcRawXxx_default = function (opt, onError) {
-/*
- * this function will cryptoAesXxxCbcRawXxx's default handling-behavior
- */
-    if (!local.nop()) {
-        onError(undefined, opt);
-        return;
-    }
-    opt = {};
-    local.gotoNext(opt, function (err, data) {
-        switch (opt.gotoState) {
-        case 1:
-            // encrypt data
-            opt.data = new TextEncoder().encode("aa");
-            opt.key = "0123456789abcdef0123456789abcdef";
-            opt.mode = null;
-            local.cryptoAesXxxCbcRawEncrypt(opt, opt.gotoNext);
-            break;
-        case 2:
-            // decrypt data
-            opt.data = data.buffer;
-            local.cryptoAesXxxCbcRawDecrypt(opt, opt.gotoNext);
-            break;
-        case 3:
-            // validate data
-            assertJsonEqual(local.bufferToUtf8(data), "aa");
-            opt.gotoNext();
-            break;
-        case 4:
-            // encrypt data - base64
-            opt.data = new TextEncoder().encode("aa");
-            opt.key = (
-                "0123456789abcdef0123456789abcdef"
-                + "0123456789abcdef0123456789abcdef"
-            );
-            opt.mode = "base64";
-            local.cryptoAesXxxCbcRawEncrypt(opt, opt.gotoNext);
-            break;
-        case 5:
-            // decrypt data - base64
-            opt.data = data;
-            local.cryptoAesXxxCbcRawDecrypt(opt, opt.gotoNext);
-            break;
-        case 6:
-            // validate data
-            assertJsonEqual(local.bufferToUtf8(data), "aa");
-            opt.gotoNext();
-            break;
-        default:
-            onError(err, opt);
-        }
-    });
-    opt.gotoState = 0;
-    opt.gotoNext();
-};
-
 local.testCase_domFragmentRender_default = function (opt, onError) {
 /*
  * this function will test domFragmentRender's default handling-behavior

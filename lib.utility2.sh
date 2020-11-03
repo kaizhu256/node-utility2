@@ -1016,18 +1016,13 @@ shBuildInit () {
         else
             export npm_config_dir_utility2="$(node -e '
 /* jslint utility2:true */
-(function () {
-    "use strict";
-    try {
-        process.stdout.write(
-            require("path").dirname(require.resolve("utility2"))
-        );
-    } catch (ignore) {
-        process.stdout.write(
-            require("path").resolve(process.env.HOME + "/node_modules/utility2")
-        );
-    }
-}());
+try {
+    process.stdout.write(require("path").dirname(require.resolve("utility2")));
+} catch (ignore) {
+    process.stdout.write(require("path").resolve(
+        process.env.HOME + "/node_modules/utility2"
+    ));
+}
 ')"
         fi
         export PATH="$PATH\
@@ -1040,51 +1035,46 @@ shBuildInit () {
 /* jslint utility2:true */
 (function () {
     "use strict";
+    let cmd;
     let packageJson;
-    let val;
+    function export2(key, val) {
+    /*
+     * this function will export "key=val" to shell-env
+     */
+        return "export " + key + "=\u0027" + String(val || "").replace((
+            /\u0027/g
+        ), "\u0027\"\u0027\"\u0027") + "\u0027\n";
+    }
     packageJson = require("./package.json");
-    Object.entries(packageJson).forEach(function ([
-        key, val
-    ]) {
-        if (!(
-            /\W/g
-        ).test(key) && typeof val === "string" && !(
-            /[\n$]/
-        ).test(val)) {
-            process.stdout.write(
-                "export npm_package_" + key + "=\u0027"
-                + val.replace((
-                    /\u0027/g
-                ), "\u0027\"\u0027\"\u0027") + "\u0027;"
-            );
-        }
+    cmd = "# shBuildInit env\n";
+    [
+        "description",
+        "homepage",
+        "main",
+        "name",
+        "nameLib",
+        "nameOriginal",
+        "private",
+        "version"
+    ].forEach(function (key) {
+        cmd += export2("npm_package_" + key, packageJson[key]);
     });
-    val = String(
+    String(
         (packageJson.repository && packageJson.repository.url)
         || packageJson.repository
         || ""
-    ).split(":").slice(-1)[0].split("/").slice(-2).join("/").replace((
-        /\.git$/
-    ), "");
-    if ((
-        /^[^\/]+\/[^\/]+$/
-    ).test(val)) {
-        val = val.split("/");
+    ).replace((
+        /([^\/]+?)\/([^\/]+?)(?:\.git)?$/
+    ), function (ignore, user, project) {
         if (!process.env.GITHUB_REPO) {
-            process.env.GITHUB_REPO = val.join("/");
-            process.stdout.write(
-                "export GITHUB_REPO=" + JSON.stringify(process.env.GITHUB_REPO)
-                + ";"
-            );
+            cmd += export2("GITHUB_REPO", user + "/" + project);
         }
         if (!process.env.GITHUB_ORG) {
-            process.env.GITHUB_ORG = val[0];
-            process.stdout.write(
-                "export GITHUB_ORG=" + JSON.stringify(process.env.GITHUB_ORG)
-                + ";"
-            );
+            cmd += export2("GITHUB_ORG", user);
         }
-    }
+    });
+    process.stdout.write(cmd);
+    process.stderr.write(cmd);
 }());
 ')" || return "$?"
     else
@@ -1112,6 +1102,7 @@ shBuildInit () {
     require("fs").readFileSync("README.md", "utf8").replace((
         /```\w*?(\n[\s#*\/]*?(\w[\w\-]*?\.\w*?)[\n"][\S\s]*?)\n```/g
     ), function (match0, match1, match2, ii, text) {
+        let filename;
         // preserve lineno
         match0 = text.slice(0, ii).replace((
             /.+/g
@@ -1129,10 +1120,16 @@ shBuildInit () {
         if (match2.slice(-5) === ".json") {
             match0 = match0.trim();
         }
-        require("fs").writeFileSync(
-            ".tmp/README." + match2,
-            match0.trimEnd() + "\n"
-        );
+        filename = require("path").resolve(".tmp/README." + match2);
+        require("fs").writeFile(filename, match0.trimEnd() + "\n", function (
+            err
+        ) {
+            if (err) {
+                throw err;
+            }
+            console.error("shBuildInit - wrote " + filename);
+        }
+);
     });
 }());
 '
@@ -1197,17 +1194,92 @@ shCryptoAesXxxCbcRawDecrypt () {(set -e
 # this function will inplace aes-xxx-cbc decrypt stdin with given hex-key $1
 # example use:
 # printf 'hello world\n' | shCryptoAesXxxCbcRawEncrypt 0123456789abcdef0123456789abcdef | shCryptoAesXxxCbcRawDecrypt 0123456789abcdef0123456789abcdef
-    node -e "$UTILITY2_MACRO_JS"'
+    node -e '
 /* jslint utility2:true */
-(function (local) {
+(function () {
     "use strict";
     let bufList;
+    function cryptoAesXxxCbcRawDecrypt(opt, onError) {
+    /*
+     * this function will aes-xxx-cbc decrypt with given <opt>
+     * example use:
+        data = new Uint8Array([1,2,3]);
+        key = '"'"'0123456789abcdef0123456789abcdef'"'"';
+        mode = undefined;
+        cryptoAesXxxCbcRawEncrypt({
+            data,
+            key,
+            mode
+        }, function (err, data) {
+            console.assert(!err, err);
+            cryptoAesXxxCbcRawDecrypt({
+                data,
+                key,
+                mode
+            }, console.log);
+        });
+     */
+        let cipher;
+        let crypto;
+        let data;
+        let ii;
+        let iv;
+        let key;
+        // init key
+        key = new Uint8Array(0.5 * opt.key.length);
+        ii = 0;
+        while (ii < key.byteLength) {
+            key[ii] = parseInt(opt.key.slice(2 * ii, 2 * ii + 2), 16);
+            ii += 2;
+        }
+        data = opt.data;
+        // base64
+        if (opt.mode === "base64") {
+            data = Buffer.from(data, "base64");
+        }
+        // normalize data
+        if (Object.prototype.toString.call(data) !== "[object Uint8Array]") {
+            data = new Uint8Array(data);
+        }
+        // init iv
+        iv = data.slice(0, 16);
+        // optimization - create resized-view of data
+        data = data.slice(16);
+        try {
+            crypto = require("crypto");
+        } catch (ignore) {
+            crypto = globalThis.crypto;
+            crypto.subtle.importKey("raw", key, {
+                name: "AES-CBC"
+            }, false, [
+                "decrypt"
+            ]).then(function (key) {
+                crypto.subtle.decrypt({
+                    iv,
+                    name: "AES-CBC"
+                }, key, data).then(function (data) {
+                    onError(undefined, new Uint8Array(data));
+                }).catch(onError);
+            }).catch(onError);
+            return;
+        }
+        setTimeout(function () {
+            cipher = crypto.createDecipheriv(
+                "aes-" + (8 * key.byteLength) + "-cbc",
+                key,
+                iv
+            );
+            onError(undefined, Buffer.concat([
+                cipher.update(data), cipher.final()
+            ]));
+        });
+    }
     bufList = [];
     process.stdin.on("data", function (chunk) {
         bufList.push(chunk);
     });
     process.stdin.on("end", function () {
-        local.cryptoAesXxxCbcRawDecrypt({
+        cryptoAesXxxCbcRawDecrypt({
             data: (
                 process.argv[2] === "base64"
                 ? Buffer.concat(bufList).toString()
@@ -1216,12 +1288,14 @@ shCryptoAesXxxCbcRawDecrypt () {(set -e
             key: process.argv[1],
             mode: process.argv[2]
         }, function (err, data) {
-            local.onErrorThrow(err);
+            if (err) {
+                throw err;
+            }
             Object.setPrototypeOf(data, Buffer.prototype);
             process.stdout.write(data);
         });
     });
-}(globalThis.globalLocal));
+}());
 ' "$@"
 )}
 
@@ -1229,27 +1303,111 @@ shCryptoAesXxxCbcRawEncrypt () {(set -e
 # this function will inplace aes-xxx-cbc encrypt stdin with given hex-key $1
 # example use:
 # printf 'hello world\n' | shCryptoAesXxxCbcRawEncrypt 0123456789abcdef0123456789abcdef | shCryptoAesXxxCbcRawDecrypt 0123456789abcdef0123456789abcdef
-    node -e "$UTILITY2_MACRO_JS"'
+    node -e '
 /* jslint utility2:true */
-(function (local) {
+(function () {
     "use strict";
     let bufList;
+    function assertOrThrow(passed, msg) {
+    /*
+     * this function will throw <msg> if <passed> is falsy
+     */
+        if (passed) {
+            return;
+        }
+        throw (
+            (
+                msg
+                && typeof msg.message === "string"
+                && typeof msg.stack === "string"
+            )
+            // if msg is err, then leave as is
+            ? msg
+            : new Error(
+                typeof msg === "string"
+                // if msg is string, then leave as is
+                ? msg
+                // else JSON.stringify(msg)
+                : JSON.stringify(msg, undefined, 4)
+            )
+        );
+    }
+    function cryptoAesXxxCbcRawEncrypt(opt, onError) {
+    /*
+     * this function will aes-xxx-cbc encrypt with given <opt>
+     * example use:
+        data = new Uint8Array([1,2,3]);
+        key = '"'"'0123456789abcdef0123456789abcdef'"'"';
+        mode = undefined;
+        cryptoAesXxxCbcRawEncrypt({
+            data,
+            key,
+            mode
+        }, function (err, data) {
+            console.assert(!err, err);
+            cryptoAesXxxCbcRawDecrypt({
+                data,
+                key,
+                mode
+            }, console.log);
+        });
+     */
+        let cipher;
+        let crypto;
+        let data;
+        let ii;
+        let iv;
+        let key;
+        // init key
+        key = new Uint8Array(0.5 * opt.key.length);
+        ii = 0;
+        while (ii < key.byteLength) {
+            key[ii] = parseInt(opt.key.slice(2 * ii, 2 * ii + 2), 16);
+            ii += 2;
+        }
+        data = opt.data;
+        // init iv
+        iv = new Uint8Array((((data.byteLength) >> 4) << 4) + 32);
+        crypto = globalThis.crypto;
+        // init iv
+        iv.set(crypto.getRandomValues(new Uint8Array(16)));
+        crypto.subtle.importKey("raw", key, {
+            name: "AES-CBC"
+        }, false, [
+            "encrypt"
+        ]).then(function (key) {
+            crypto.subtle.encrypt({
+                iv: iv.slice(0, 16),
+                name: "AES-CBC"
+            }, key, data).then(function (data) {
+                iv.set(new Uint8Array(data), 16);
+                // base64
+                if (opt.mode === "base64") {
+                    iv = Buffer.from().toString("base64").replace((
+                        /=/g
+                    ), "");
+                    iv += "\n";
+                }
+                onError(undefined, iv);
+            }).catch(onError);
+        }).catch(onError);
+    }
     bufList = [];
     process.stdin.on("data", function (chunk) {
         bufList.push(chunk);
     });
     process.stdin.on("end", function () {
-        local.cryptoAesXxxCbcRawEncrypt({
+        cryptoAesXxxCbcRawEncrypt({
             data: Buffer.concat(bufList),
             key: process.argv[1],
             mode: process.argv[2]
         }, function (err, data) {
-            local.assertOrThrow(!err, err);
+            assertOrThrow(!err, err);
             Object.setPrototypeOf(data, Buffer.prototype);
             process.stdout.write(data);
         });
     });
-}(globalThis.globalLocal));
+}());
 ' "$@"
 )}
 
@@ -1786,6 +1944,10 @@ shGitSquashPop () {(set -e
     # reset git to previous $COMMIT
     git reset "$COMMIT"
     git add .
+    if [ -f lib.utility2.sh ]
+    then
+        git add -f package-lock.json
+    fi
     # commit HEAD immediately after previous $COMMIT
     git commit -am "$MESSAGE" || true
 )}
@@ -3573,574 +3735,6 @@ bootstrap-lite
 istanbul-lite
 jslint-lite
 sqlite3-lite
-'
-export UTILITY2_MACRO_JS='
-/* istanbul instrument in package utility2 */
-// assets.utility2.header.js - start
-/* jslint utility2:true */
-/* istanbul ignore next */
-// run shared js-env code - init-local
-(function () {
-    "use strict";
-    let isBrowser;
-    let isWebWorker;
-    let local;
-    // polyfill globalThis
-    if (!(typeof globalThis === "object" && globalThis)) {
-        if (typeof window === "object" && window && window.window === window) {
-            window.globalThis = window;
-        }
-        if (typeof global === "object" && global && global.global === global) {
-            global.globalThis = global;
-        }
-    }
-    // init debugInline
-    if (!globalThis.debugInline) {
-        let consoleError;
-        consoleError = console.error;
-        globalThis.debugInline = function (...argList) {
-        /*
-         * this function will both print <argList> to stderr
-         * and return <argList>[0]
-         */
-            consoleError("\n\ndebugInline");
-            consoleError(...argList);
-            consoleError("\n");
-            return argList[0];
-        };
-    }
-    // init isBrowser
-    isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function"
-        && globalThis.navigator
-        && typeof globalThis.navigator.userAgent === "string"
-    );
-    // init isWebWorker
-    isWebWorker = (
-        isBrowser && typeof globalThis.importScripts === "function"
-    );
-    // init function
-    function objectDeepCopyWithKeysSorted(obj) {
-    /*
-     * this function will recursively deep-copy <obj> with keys sorted
-     */
-        let sorted;
-        if (typeof obj !== "object" || !obj) {
-            return obj;
-        }
-        // recursively deep-copy list with child-keys sorted
-        if (Array.isArray(obj)) {
-            return obj.map(objectDeepCopyWithKeysSorted);
-        }
-        // recursively deep-copy obj with keys sorted
-        sorted = {};
-        Object.keys(obj).sort().forEach(function (key) {
-            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
-        });
-        return sorted;
-    }
-    function assertJsonEqual(aa, bb) {
-    /*
-     * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
-     */
-        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
-        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
-        if (aa !== bb) {
-            throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));
-        }
-    }
-    function assertOrThrow(passed, msg) {
-    /*
-     * this function will throw <msg> if <passed> is falsy
-     */
-        if (passed) {
-            return;
-        }
-        throw (
-            (
-                msg
-                && typeof msg.message === "string"
-                && typeof msg.stack === "string"
-            )
-            // if msg is err, then leave as is
-            ? msg
-            : new Error(
-                typeof msg === "string"
-                // if msg is string, then leave as is
-                ? msg
-                // else JSON.stringify(msg)
-                : JSON.stringify(msg, undefined, 4)
-            )
-        );
-    }
-    function coalesce(...argList) {
-    /*
-     * this function will coalesce null, undefined, or "" in <argList>
-     */
-        let arg;
-        let ii;
-        ii = 0;
-        while (ii < argList.length) {
-            arg = argList[ii];
-            if (arg !== undefined && arg !== null && arg !== "") {
-                return arg;
-            }
-            ii += 1;
-        }
-        return arg;
-    }
-    function identity(val) {
-    /*
-     * this function will return <val>
-     */
-        return val;
-    }
-    function nop() {
-    /*
-     * this function will do nothing
-     */
-        return;
-    }
-    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
-    /*
-     * this function will if items from <tgt> are null, undefined, or "",
-     * then overwrite them with items from <src>
-     */
-        let recurse;
-        recurse = function (tgt, src, depth) {
-            Object.entries(src).forEach(function ([
-                key, bb
-            ]) {
-                let aa;
-                aa = tgt[key];
-                if (aa === undefined || aa === null || aa === "") {
-                    tgt[key] = bb;
-                    return;
-                }
-                if (
-                    depth !== 0
-                    && typeof aa === "object" && aa && !Array.isArray(aa)
-                    && typeof bb === "object" && bb && !Array.isArray(bb)
-                ) {
-                    recurse(aa, bb, depth - 1);
-                }
-            });
-        };
-        recurse(tgt, src, depth | 0);
-        return tgt;
-    }
-    function onErrorThrow(err) {
-    /*
-     * this function will throw <err> if exists
-     */
-        if (err) {
-            throw err;
-        }
-    }
-    // bug-workaround - throw unhandledRejections in node-process
-    if (
-        typeof process === "object" && process
-        && typeof process.on === "function"
-        && process.unhandledRejections !== "strict"
-    ) {
-        process.unhandledRejections = "strict";
-        process.on("unhandledRejection", function (err) {
-            throw err;
-        });
-    }
-    // init local
-    local = {};
-    local.local = local;
-    globalThis.globalLocal = local;
-    local.assertJsonEqual = assertJsonEqual;
-    local.assertOrThrow = assertOrThrow;
-    local.coalesce = coalesce;
-    local.identity = identity;
-    local.isBrowser = isBrowser;
-    local.isWebWorker = isWebWorker;
-    local.nop = nop;
-    local.objectAssignDefault = objectAssignDefault;
-    local.objectDeepCopyWithKeysSorted = objectDeepCopyWithKeysSorted;
-    local.onErrorThrow = onErrorThrow;
-}());
-// assets.utility2.header.js - end
-
-
-(function (local) {
-"use strict";
-
-
-/* istanbul ignore next */
-// run shared js-env code - init-before
-(function () {
-// init local
-local = (
-    globalThis.utility2_rollup
-    // || globalThis.utility2_rollup_old
-    // || require("./assets.utility2.rollup.js")
-    || globalThis.globalLocal
-);
-// init exports
-if (local.isBrowser) {
-    globalThis.utility2_utility2 = local;
-} else {
-    module.exports = local;
-    module.exports.__dirname = __dirname;
-}
-// init lib main
-local.utility2 = local;
-
-
-/* validateLineSortedReset */
-globalThis.local = local;
-
-local.base64FromBuffer = function (buf) {
-/*
- * this function will convert Uint8Array <buf> to base64 str
- */
-    let ii;
-    let mod3;
-    let str;
-    let uint24;
-    let uint6ToB64;
-    // convert utf8 to Uint8Array
-    if (typeof buf === "string") {
-        buf = new TextEncoder().encode(buf);
-    }
-    buf = buf || [];
-    str = "";
-    uint24 = 0;
-    uint6ToB64 = function (uint6) {
-        return (
-            uint6 < 26
-            ? uint6 + 65
-            : uint6 < 52
-            ? uint6 + 71
-            : uint6 < 62
-            ? uint6 - 4
-            : uint6 === 62
-            ? 43
-            : 47
-        );
-    };
-    ii = 0;
-    while (ii < buf.length) {
-        mod3 = ii % 3;
-        uint24 |= buf[ii] << (16 >>> mod3 & 24);
-        if (mod3 === 2 || buf.length - ii === 1) {
-            str += String.fromCharCode(
-                uint6ToB64(uint24 >>> 18 & 63),
-                uint6ToB64(uint24 >>> 12 & 63),
-                uint6ToB64(uint24 >>> 6 & 63),
-                uint6ToB64(uint24 & 63)
-            );
-            uint24 = 0;
-        }
-        ii += 1;
-    }
-    return str.replace((
-        /A(?=A$|$)/gm
-    ), "");
-};
-
-local.base64ToBuffer = function (str) {
-/*
- * this function will convert base64 <str> to Uint8Array
- * https://gist.github.com/wang-bin/7332335
- */
-    let buf;
-    let byte;
-    let chr;
-    let ii;
-    let jj;
-    let map64;
-    let mod4;
-    str = str || "";
-    buf = new Uint8Array(str.length); // 3/4
-    byte = 0;
-    jj = 0;
-    map64 = (
-        !(str.indexOf("-") < 0 && str.indexOf("_") < 0)
-        // base64url
-        ? "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
-        // base64
-        : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-    );
-    mod4 = 0;
-    ii = 0;
-    while (ii < str.length) {
-        chr = map64.indexOf(str[ii]);
-        if (chr !== -1) {
-            mod4 %= 4;
-            if (mod4 === 0) {
-                byte = chr;
-            } else {
-                byte = byte * 64 + chr;
-                buf[jj] = 255 & (byte >> ((-2 * (mod4 + 1)) & 6));
-                jj += 1;
-            }
-            mod4 += 1;
-        }
-        ii += 1;
-    }
-    // optimization - create resized-view of buf
-    return buf.slice(0, jj);
-};
-
-local.base64ToUtf8 = function (str) {
-/*
- * this function will convert base64 <str> to utf8 str
- */
-    return local.bufferValidateAndCoerce(local.base64ToBuffer(str), "string");
-};
-
-local.bufferValidateAndCoerce = function (buf, mode) {
-/*
- * this function will validate and coerce/convert
- * <buf> to Buffer/Uint8Array, or String if <mode> = "string"
- */
-    // validate not 0
-    if (buf !== 0) {
-        buf = buf || "";
-    }
-    if (typeof buf === "string" && mode === "string") {
-        return buf;
-    }
-    // convert utf8 to Uint8Array
-    if (typeof buf === "string") {
-        buf = new TextEncoder().encode(buf);
-    // validate instanceof Uint8Array
-    } else if (Object.prototype.toString.call(buf) !== "[object Uint8Array]") {
-        throw new Error(
-            "bufferValidateAndCoerce - value is not instanceof "
-            + "ArrayBuffer, String, or Uint8Array"
-        );
-    }
-    // convert Uint8Array to utf8
-    if (mode === "string") {
-        return new TextDecoder().decode(buf);
-    }
-    // coerce Uint8Array to Buffer
-    if (globalThis.Buffer && Buffer.isBuffer && !Buffer.isBuffer(buf)) {
-        Object.setPrototypeOf(buf, Buffer.prototype);
-    }
-    return buf;
-};
-
-local.cryptoAesXxxCbcRawDecrypt = function (opt, onError) {
-/*
- * this function will aes-xxx-cbc decrypt with given <opt>
- * example use:
-    data = new Uint8Array([1,2,3]);
-    key = '"'"'0123456789abcdef0123456789abcdef'"'"';
-    mode = undefined;
-    local.cryptoAesXxxCbcRawEncrypt({
-        data,
-        key,
-        mode
-    }, function (err, data) {
-        console.assert(!err, err);
-        local.cryptoAesXxxCbcRawDecrypt({
-            data,
-            key,
-            mode
-        }, console.log);
-    });
- */
-    let cipher;
-    let crypto;
-    let data;
-    let ii;
-    let iv;
-    let key;
-    // init key
-    key = new Uint8Array(0.5 * opt.key.length);
-    ii = 0;
-    while (ii < key.byteLength) {
-        key[ii] = parseInt(opt.key.slice(2 * ii, 2 * ii + 2), 16);
-        ii += 2;
-    }
-    data = opt.data;
-    // base64
-    if (opt.mode === "base64") {
-        data = local.base64ToBuffer(data);
-    }
-    // normalize data
-    if (Object.prototype.toString.call(data) !== "[object Uint8Array]") {
-        data = new Uint8Array(data);
-    }
-    // init iv
-    iv = data.slice(0, 16);
-    // optimization - create resized-view of data
-    data = data.slice(16);
-    try {
-        crypto = require("crypto");
-    } catch (ignore) {
-        crypto = globalThis.crypto;
-        crypto.subtle.importKey("raw", key, {
-            name: "AES-CBC"
-        }, false, [
-            "decrypt"
-        ]).then(function (key) {
-            crypto.subtle.decrypt({
-                iv,
-                name: "AES-CBC"
-            }, key, data).then(function (data) {
-                onError(undefined, new Uint8Array(data));
-            }).catch(onError);
-        }).catch(onError);
-        return;
-    }
-    setTimeout(function () {
-        cipher = crypto.createDecipheriv(
-            "aes-" + (8 * key.byteLength) + "-cbc",
-            key,
-            iv
-        );
-        onError(undefined, Buffer.concat([
-            cipher.update(data), cipher.final()
-        ]));
-    });
-};
-
-local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
-/*
- * this function will aes-xxx-cbc encrypt with given <opt>
- * example use:
-    data = new Uint8Array([1,2,3]);
-    key = '"'"'0123456789abcdef0123456789abcdef'"'"';
-    mode = undefined;
-    local.cryptoAesXxxCbcRawEncrypt({
-        data,
-        key,
-        mode
-    }, function (err, data) {
-        console.assert(!err, err);
-        local.cryptoAesXxxCbcRawDecrypt({
-            data,
-            key,
-            mode
-        }, console.log);
-    });
- */
-    let cipher;
-    let crypto;
-    let data;
-    let ii;
-    let iv;
-    let key;
-    // init key
-    key = new Uint8Array(0.5 * opt.key.length);
-    ii = 0;
-    while (ii < key.byteLength) {
-        key[ii] = parseInt(opt.key.slice(2 * ii, 2 * ii + 2), 16);
-        ii += 2;
-    }
-    data = opt.data;
-    // init iv
-    iv = new Uint8Array((((data.byteLength) >> 4) << 4) + 32);
-    crypto = globalThis.crypto;
-    if (!local.isBrowser) {
-        setTimeout(function () {
-            crypto = require("crypto");
-            // init iv
-            iv.set(crypto.randomBytes(16));
-            cipher = crypto.createCipheriv(
-                "aes-" + (8 * key.byteLength) + "-cbc",
-                key,
-                iv.slice(0, 16)
-            );
-            data = cipher.update(data);
-            iv.set(data, 16);
-            iv.set(cipher.final(), 16 + data.byteLength);
-            if (opt.mode === "base64") {
-                iv = local.base64FromBuffer(iv);
-                iv += "\n";
-            }
-            onError(undefined, iv);
-        });
-        return;
-    }
-    // init iv
-    iv.set(crypto.getRandomValues(new Uint8Array(16)));
-    crypto.subtle.importKey("raw", key, {
-        name: "AES-CBC"
-    }, false, [
-        "encrypt"
-    ]).then(function (key) {
-        crypto.subtle.encrypt({
-            iv: iv.slice(0, 16),
-            name: "AES-CBC"
-        }, key, data).then(function (data) {
-            iv.set(new Uint8Array(data), 16);
-            // base64
-            if (opt.mode === "base64") {
-                iv = local.base64FromBuffer(iv);
-                iv += "\n";
-            }
-            onError(undefined, iv);
-        }).catch(onError);
-    }).catch(onError);
-};
-
-local.templateRenderMyApp = function (template) {
-/*
- * this function will render my-app-lite template
- */
-    let githubRepo;
-    let packageJson;
-    packageJson = JSON.parse(
-        require("fs").readFileSync("package.json", "utf8")
-    );
-    local.objectAssignDefault(packageJson, {
-        nameLib: packageJson.name.replace((
-            /\W/g
-        ), "_"),
-        repository: {
-            url: (
-                "https://github.com/kaizhu256/node-" + packageJson.name
-            )
-        }
-    }, 2);
-    githubRepo = packageJson.repository.url.replace((
-        /\.git$/
-    ), "").split("/").slice(-2);
-    template = template.replace((
-        /kaizhu256(\.github\.io\/|%252F|\/)/g
-    ), githubRepo[0] + ("$1"));
-    template = template.replace((
-        /node-my-app-lite/g
-    ), githubRepo[1]);
-    template = template.replace((
-        /\bh1-my-app\b/g
-    ), (
-        packageJson.nameHeroku
-        || ("h1-" + packageJson.nameLib.replace((
-            /_/g
-        ), "-"))
-    ));
-    template = template.replace((
-        /my-app-lite/g
-    ), packageJson.name);
-    template = template.replace((
-        /my_app/g
-    ), packageJson.nameLib);
-    template = template.replace((
-        /\{\{packageJson\.(\S+)\}\}/g
-    ), function (ignore, match1) {
-        return packageJson[match1];
-    });
-    return template;
-};
-
-local.throwError = function () {
-/*
- * this function will throw new err
- */
-    throw new Error();
-};
-}());
-}());
 '
 (set -e
     if [ ! "$1" ]

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.jslint.js (2020.10.27)
+ * lib.jslint.js (2020.11.3)
  * https://github.com/kaizhu256/node-jslint-lite
  * this zero-dependency package will provide browser-compatible versions of jslint (v2020.7.2) and csslint (v2018.2.25), with working web-demo
  *

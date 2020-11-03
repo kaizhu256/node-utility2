@@ -51,20 +51,13 @@ this zero-dependency package will provide high-level functions to to build, test
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.10.27
-- update build to npm v7
-- jslint - update to v2020.10.27
-- jslint - add nullish-coalescing support
-- jslint - add optional-chaining support
-- experiment with github-actions
-- update shell-function shGitInitBase with option dos2unix
-- node v10.x - re-polyfill globalThis
-- node v10.x - re-polyfill TextDecoder and TextEncoder
-- remove blob-polyfill
+#### changelog 2020.11.3
+- decouple build from npm-env-variables npm_config_xxx and npm_package_xxx
+- update lib.utility2.sh to remove dependency on \$UTILITY2_MACRO_JS
+- remove functions cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRawEncrypt
 - none
 
 #### todo
-- decouple build from npm-env-variables npm_config_xxx and npm_package_xxx
 - migrate from travis to github-actions
 - update function fsWriteFileWithMkdirp to write to tmpfile first
 - jslint - unmangle function jslintAutofixLocalFunction
@@ -1215,7 +1208,7 @@ require("http").createServer(function (req, res) {
         "2020.10.27 jslint-lite",
         "2020.10.27 utility2"
     ],
-    "version": "2020.10.27"
+    "version": "2020.11.3"
 }
 ```
 
