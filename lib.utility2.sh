@@ -4,6 +4,8 @@
 # POSIX reference
 # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/test.html
 # http://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
+# curl with custom CA certificates
+# https://gist.github.com/olih/a50ce2181a657eefb041
 
 # useful sh one-liners
 # http://sed.sourceforge.net/sed1line.txt
@@ -15,6 +17,7 @@
 # git ls-files --stage | sort
 # git ls-remote --heads origin
 # git update-index --chmod=+x aa.js
+# gpupdate /force
 # npm_package_private=1 GITHUB_REPO=aa/node-aa-bb-pro shCryptoWithGithubOrg aa shCryptoTravisEncrypt
 # openssl rand -base64 32 # random key
 # printf "$USERNAME:$(openssl passwd -apr1 "$PASSWD")\n" # htpasswd
@@ -315,7 +318,7 @@ shBuildApidoc () {(set -e
 )}
 
 shBuildApp () {(set -e
-# this function will build app in "$CWD" with name "$1"
+# this function will build app in "$PWD" with name "$1"
     # if windows-env, then run inside docker
     case "$(uname)" in
     MINGW*)
@@ -1040,8 +1043,9 @@ shBuildInit () {
     let packageJson;
     let val;
     packageJson = require("./package.json");
-    Object.keys(packageJson).forEach(function (key) {
-        val = packageJson[key];
+    Object.entries(packageJson).forEach(function ([
+        key, val
+    ]) {
         if (!(
             /\W/g
         ).test(key) && typeof val === "string" && !(
@@ -1732,6 +1736,10 @@ shGitInfo () {(set -e
 shGitInitBase () {(set -e
 # this function will git init && git fetch utility2 base
     git init
+    if [ "$DOS2UNIX" ]
+    then
+        git config core.autocrlf input
+    fi
     git remote add utility2 https://github.com/kaizhu256/node-utility2
     git fetch utility2 base
     git reset utility2/base
@@ -2029,6 +2037,13 @@ shHttpFileServer () {(set -e
                 return;
             }
             switch (require("path").extname(file)) {
+            case ".js":
+            case ".mjs":
+                res.setHeader(
+                    "content-type",
+                    "application/javascript; charset=utf-8"
+                );
+                break;
             case ".wasm":
                 res.setHeader("content-type", "application/wasm");
                 break;
@@ -3570,6 +3585,15 @@ export UTILITY2_MACRO_JS='
     let isBrowser;
     let isWebWorker;
     let local;
+    // polyfill globalThis
+    if (!(typeof globalThis === "object" && globalThis)) {
+        if (typeof window === "object" && window && window.window === window) {
+            window.globalThis = window;
+        }
+        if (typeof global === "object" && global && global.global === global) {
+            global.globalThis = global;
+        }
+    }
     // init debugInline
     if (!globalThis.debugInline) {
         let consoleError;
@@ -3596,29 +3620,29 @@ export UTILITY2_MACRO_JS='
         isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
+    function objectDeepCopyWithKeysSorted(obj) {
+    /*
+     * this function will recursively deep-copy <obj> with keys sorted
+     */
+        let sorted;
+        if (typeof obj !== "object" || !obj) {
+            return obj;
+        }
+        // recursively deep-copy list with child-keys sorted
+        if (Array.isArray(obj)) {
+            return obj.map(objectDeepCopyWithKeysSorted);
+        }
+        // recursively deep-copy obj with keys sorted
+        sorted = {};
+        Object.keys(obj).sort().forEach(function (key) {
+            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
+        });
+        return sorted;
+    }
     function assertJsonEqual(aa, bb) {
     /*
      * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
      */
-        function objectDeepCopyWithKeysSorted(obj) {
-        /*
-         * this function will recursively deep-copy <obj> with keys sorted
-         */
-            let sorted;
-            if (typeof obj !== "object" || !obj) {
-                return obj;
-            }
-            // recursively deep-copy list with child-keys sorted
-            if (Array.isArray(obj)) {
-                return obj.map(objectDeepCopyWithKeysSorted);
-            }
-            // recursively deep-copy obj with keys sorted
-            sorted = {};
-            Object.keys(obj).sort().forEach(function (key) {
-                sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
-            });
-            return sorted;
-        }
         aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
         bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
         if (aa !== bb) {
@@ -3736,6 +3760,7 @@ export UTILITY2_MACRO_JS='
     local.isWebWorker = isWebWorker;
     local.nop = nop;
     local.objectAssignDefault = objectAssignDefault;
+    local.objectDeepCopyWithKeysSorted = objectDeepCopyWithKeysSorted;
     local.onErrorThrow = onErrorThrow;
 }());
 // assets.utility2.header.js - end
@@ -4056,32 +4081,6 @@ local.cryptoAesXxxCbcRawEncrypt = function (opt, onError) {
             onError(undefined, iv);
         }).catch(onError);
     }).catch(onError);
-};
-
-local.objectDeepCopyWithKeysSorted = function (obj) {
-/*
- * this function will recursively deep-copy <obj> with keys sorted
- */
-    function objectDeepCopyWithKeysSorted(obj) {
-    /*
-     * this function will recursively deep-copy <obj> with keys sorted
-     */
-        let sorted;
-        if (!(typeof obj === "object" && obj)) {
-            return obj;
-        }
-        // recursively deep-copy list with child-keys sorted
-        if (Array.isArray(obj)) {
-            return obj.map(objectDeepCopyWithKeysSorted);
-        }
-        // recursively deep-copy obj with keys sorted
-        sorted = {};
-        Object.keys(obj).sort().forEach(function (key) {
-            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
-        });
-        return sorted;
-    }
-    return objectDeepCopyWithKeysSorted(obj);
 };
 
 local.templateRenderMyApp = function (template) {

@@ -12,7 +12,7 @@
     "engines": {
         "node": ">=12.0"
     },
-    "fileCount": 25,
+    "fileCount": 30,
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
         "continuous-integration",
@@ -42,13 +42,12 @@
         "utility2": "./npm_scripts.sh"
     },
     "utility2Dependents": [
-        "2020.02.12 sqljs-lite",
         "2020.06.08 apidoc-lite",
         "2020.06.12 bootstrap-lite",
         "2020.08.01 istanbul-lite",
-        "2020.08.19 jslint-lite",
         "2020.08.19 sqlite3-lite",
-        "2020.08.01 utility2"
+        "2020.10.27 jslint-lite",
+        "2020.10.27 utility2"
     ],
-    "version": "2020.8.19"
+    "version": "2020.10.27"
 }

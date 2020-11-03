@@ -6,7 +6,7 @@ shRawLibFetch
             "url": "https://github.com/CSSLint/csslint/blob/e8aeeda06c928636e21428e09b1af93f66621209/dist/csslint.js"
         },
         {
-            "url": "https://github.com/douglascrockford/JSLint/blob/118167e967b4ebfc08759fdd1ab2d87f5a27cc37/jslint.js"
+            "url": "https://github.com/douglascrockford/JSLint/blob/873a757ad7060e778a85b1bcd4a03d9e9f334a3b/jslint.js"
         }
     ],
     "replaceList": [
@@ -78,6 +78,7 @@ shRawLibFetch
 +                [].concat(
 +                    allowed_option.browser,
 +                    allowed_option.node,
++                    "global",
 +                    "globalThis"
 +                ).forEach(function (key) {
 +                    declared_globals[key] = false;
@@ -332,6 +333,26 @@ shRawLibFetch
 +        return true;
 +    });
 
+-  | (
+-        0
+-      | [ 1-9 ] [ 0-9 ]*
+-    )
+-) ( .* ) $ `;
+-const rx_digits = /^[0-9]*/;
+-const rx_hexs = /^[0-9A-F]*/i;
+-const rx_octals = /^[0-7]*/;
+-const rx_bits = /^[01]*/;
++  | (
++        0 n?
++      | [ 1-9 ] [ 0-9 ]* n?
++    )
++) ( .* ) $ `;
++// hack-jslint - bigint
++const rx_digits = /^[0-9]*n?/;
++const rx_hexs = /^[0-9A-F]*n?/i;
++const rx_octals = /^[0-7]*n?/;
++const rx_bits = /^[01]*n?/;
+
 -/*property
 +// hack-jslint - property
 +let line_ignore;
@@ -344,18 +365,6 @@ shRawLibFetch
 +    debug: true,
 +    nomen: true,
 +    throw_error: true,
-
--const rx_token = /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|\*[*\/=]?|\/[*\/]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0|[1-9][0-9]*))(.*)$/;
--const rx_digits = /^([0-9]+)(.*)$/;
--const rx_hexs = /^([0-9a-fA-F]+)(.*)$/;
--const rx_octals = /^([0-7]+)(.*)$/;
--const rx_bits = /^([01]+)(.*)$/;
-+// hack-jslint - bigint
-+const rx_token = /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|\*[*\/=]?|\/[*\/]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0n?|[1-9][0-9]*n?))(.*)$/;
-+const rx_digits = /^([0-9]+)(.*)$/;
-+const rx_hexs = /^([0-9a-fA-F]+n?)(.*)$/;
-+const rx_octals = /^([0-7]+n?)(.*)$/;
-+const rx_bits = /^([01]+n?)(.*)$/;
 
 -export default Object.freeze(function jslint(
 +// hack-jslint - jslint0
@@ -11114,16 +11123,16 @@ return CSSLint;
 
 
 /*
-repo https://github.com/douglascrockford/JSLint/tree/118167e967b4ebfc08759fdd1ab2d87f5a27cc37
-committed 2020-07-02T15:21:03Z
+repo https://github.com/douglascrockford/JSLint/tree/873a757ad7060e778a85b1bcd4a03d9e9f334a3b
+committed 2020-10-24T03:28:10Z
 */
 
 
 /*
-file https://github.com/douglascrockford/JSLint/blob/118167e967b4ebfc08759fdd1ab2d87f5a27cc37/jslint.js
+file https://github.com/douglascrockford/JSLint/blob/873a757ad7060e778a85b1bcd4a03d9e9f334a3b/jslint.js
 */
 // jslint.js
-// 2020-07-02
+// 2020-10-21
 // Copyright (c) 2015 Douglas Crockford  (www.JSLint.com)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -11218,7 +11227,7 @@ let lines_extra;
     body, browser, c, calls, catch, charCodeAt, closer, closure, code, column,
     concat, constant, context, convert, couch, create, d, dead, default, devel,
     directive, directives, disrupt, dot, duplicate_a, edition, ellipsis, else,
-    empty_block, escape_mega, eval, every, expected_a, expected_a_at_b_c,
+    empty_block, eval, every, expected_a, expected_a_at_b_c,
     expected_a_b, expected_a_b_from_c_d, expected_a_before_b,
     expected_a_next_at_b, expected_digits_after_a, expected_four_digits,
     expected_identifier_a, expected_line_break_a_b, expected_regexp_factor_a,
@@ -11231,7 +11240,7 @@ let lines_extra;
     margin, match, message, misplaced_a, misplaced_directive_a, missing_browser,
     missing_m, module, naked_block, name, names, nested_comment, new, node,
     not_label_a, nr, nud, number_isNaN, ok, open, opening, option,
-    out_of_scope_a, parameters, parent, pop, property, push, quote,
+    out_of_scope_a, parameters, parent, pop, property, push, quote, raw,
     redefinition_a_b, replace, required_a_optional_b, reserved_a, role, search,
     shebang, signature, single, slice, some, sort, split, startsWith, statement,
     stop, subscript_a, switch, test, this, thru, toString, todo_comment,
@@ -11242,7 +11251,7 @@ let lines_extra;
     unexpected_expression_a, unexpected_label_a, unexpected_parens,
     unexpected_space_a_b, unexpected_statement_a, unexpected_trailing_space,
     unexpected_typeof_a, uninitialized_a, unreachable_a,
-    unregistered_property_a, unsafe, unused_a, use_double, use_open, use_spaces,
+    unregistered_property_a, unused_a, use_double, use_open, use_spaces,
     used, value, var_loop, var_switch, variable, warning, warnings,
     weird_condition_a, weird_expression_a, weird_loop, weird_relation_a, white,
     wrap_condition, wrap_immediate, wrap_parameter, wrap_regexp, wrap_unary,
@@ -11387,7 +11396,6 @@ const bundle = {
     bad_set: "A set function takes one parameter.",
     duplicate_a: "Duplicate '{a}'.",
     empty_block: "Empty block.",
-    escape_mega: "Unexpected escapement in mega literal.",
     expected_a: "Expected '{a}'.",
     expected_a_at_b_c: "Expected '{a}' at column {b}, not column {c}.",
     expected_a_b: "Expected '{a}' and instead saw '{b}'.",
@@ -11461,7 +11469,6 @@ const bundle = {
     uninitialized_a: "Uninitialized '{a}'.",
     unreachable_a: "Unreachable '{a}'.",
     unregistered_property_a: "Unregistered property name '{a}'.",
-    unsafe: "Unsafe character '{a}'.",
     unused_a: "Unused '{a}'.",
     use_double: "Use double quotes, not single quotes.",
     use_open: (
@@ -11488,40 +11495,102 @@ const bundle = {
 
 // Regular expression literals:
 
+function tag_regexp(strings) {
+    return new RegExp(strings.raw[0].replace(/\s/g, ""));
+}
+
 // supplant {variables}
 const rx_supplant = /\{([^{}]*)\}/g;
 // carriage return, carriage return linefeed, or linefeed
-const rx_crlf = /\n|\r\n?/;
-// unsafe characters that are silently deleted by one or more browsers
-const rx_unsafe = /[\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/;
+const rx_crlf = tag_regexp `
+      \n
+    | \r \n?
+`;
 // identifier
-const rx_identifier = /^([a-zA-Z_$][a-zA-Z0-9_$]*)$/;
-const rx_module = /^[a-zA-Z0-9_$:.@\-\/]+$/;
-const rx_bad_property = /^_|\$|Sync\$|_$/;
+const rx_identifier = tag_regexp ` ^(
+    [ a-z A-Z _ $ ]
+    [ a-z A-Z 0-9 _ $ ]*
+)$`;
+const rx_module = tag_regexp ` ^ [ a-z A-Z 0-9 _ $ : . @ \- \/ ]+ $ `;
+const rx_bad_property = tag_regexp `
+    ^_
+  | \$
+  | Sync $
+  | _ $
+`;
 // star slash
-const rx_star_slash = /\*\//;
+const rx_star_slash = tag_regexp ` \* \/ `;
 // slash star
-const rx_slash_star = /\/\*/;
+const rx_slash_star = tag_regexp ` \/ \* `;
 // slash star or ending slash
-const rx_slash_star_or_slash = /\/\*|\/$/;
+const rx_slash_star_or_slash = tag_regexp ` \/ \* | \/ $ `;
 // uncompleted work comment
-const rx_todo = /\b(?:todo|TO\s?DO|HACK)\b/;
+const rx_todo = tag_regexp ` \b (?:
+    todo
+  | TO \s? DO
+  | HACK
+) \b `;
 // tab
 const rx_tab = /\t/g;
 // directive
-const rx_directive = /^(jslint|property|global)\s+(.*)$/;
-const rx_directive_part = /^([a-zA-Z$_][a-zA-Z0-9$_]*)(?::\s*(true|false))?,?\s*(.*)$/;
-// token (sorry it is so long)
+const rx_directive = tag_regexp ` ^ (
+    jslint
+  | property
+  | global
+) \s+ ( .* ) $ `;
+const rx_directive_part = tag_regexp ` ^ (
+    [ a-z A-Z $ _ ] [ a-z A-Z 0-9 $ _ ]*
+) (?:
+    : \s* ( true | false )
+)? ,? \s* ( .* ) $ `;
+// token
+const rx_token = tag_regexp ` ^ (
+    (\s+)
+  | (
+      [ a-z A-Z _ $ ]
+      [ a-z A-Z 0-9 _ $ ]*
+    )
+  | [
+      ( ) { } \[ \] , : ; ' " ~ \`
+  ]
+  | \? [ ? . ]?
+  | = (?:
+        = =?
+      | >
+    )?
+  | \.+
+  | \* [ * \/ = ]?
+  | \/ [ * \/ ]?
+  | \+ [ = + ]?
+  | - [ = \- ]?
+  | [ \^ % ] =?
+  | & [ & = ]?
+  | \| [ | = ]?
+  | >{1,3} =?
+  | < <? =?
+  | ! (?:
+        !
+      | = =?
+    )?
+  | (
+        0 n?
+      | [ 1-9 ] [ 0-9 ]* n?
+    )
+) ( .* ) $ `;
 // hack-jslint - bigint
-const rx_token = /^((\s+)|([a-zA-Z_$][a-zA-Z0-9_$]*)|[(){}\[\],:;'"~`]|\?\.?|=(?:==?|>)?|\.+|\*[*\/=]?|\/[*\/]?|\+[=+]?|-[=\-]?|[\^%]=?|&[&=]?|\|[|=]?|>{1,3}=?|<<?=?|!(?:!|==?)?|(0n?|[1-9][0-9]*n?))(.*)$/;
-const rx_digits = /^([0-9]+)(.*)$/;
-const rx_hexs = /^([0-9a-fA-F]+n?)(.*)$/;
-const rx_octals = /^([0-7]+n?)(.*)$/;
-const rx_bits = /^([01]+n?)(.*)$/;
+const rx_digits = /^[0-9]*n?/;
+const rx_hexs = /^[0-9A-F]*n?/i;
+const rx_octals = /^[0-7]*n?/;
+const rx_bits = /^[01]*n?/;
 // mega
 const rx_mega = /[`\\]|\$\{/;
 // JSON number
-const rx_JSON_number = /^-?\d+(?:\.\d*)?(?:e[\-+]?\d+)?$/i;
+const rx_JSON_number = tag_regexp ` ^
+    -?
+    (?: 0 | [ 1-9 ] \d* )
+    (?: \. \d* )?
+    (?: [ e E ] [ \- + ]? \d+ )?
+$ `;
 // initial cap
 const rx_cap = /^[A-Z]/;
 
@@ -11796,6 +11865,7 @@ function tokenize(source) {
                 [].concat(
                     allowed_option.browser,
                     allowed_option.node,
+                    "global",
                     "globalThis"
                 ).forEach(function (key) {
                     declared_globals[key] = false;
@@ -11818,15 +11888,6 @@ function tokenize(source) {
                 }
                 source_line = source_line.replace(rx_tab, " ");
             }
-            at = source_line.search(rx_unsafe);
-            if (at >= 0) {
-                warn_at(
-                    "unsafe",
-                    line,
-                    column + at,
-                    "U+" + source_line.charCodeAt(at).toString(16)
-                );
-            }
             if (!option.white && source_line.slice(-1) === " ") {
                 warn_at(
                     "unexpected_trailing_space",
@@ -11842,7 +11903,7 @@ function tokenize(source) {
 // found with a regular expression. Regular expressions cannot correctly match
 // regular expression literals, so we will match those the hard way. String
 // literals and number literals can be matched by regular expressions, but they
-// don't provide good warnings. The functions snip, next_char, prev_char,
+// don't provide good warnings. The functions snip, next_char, back_char,
 // some_digits, and escape help in the parsing of literals.
 
     function snip() {
@@ -11900,24 +11961,16 @@ function tokenize(source) {
     }
 
     function some_digits(rx, quiet) {
-        const result = source_line.match(rx);
-        if (result) {
-            char = result[1];
-            column += char.length;
-            source_line = result[2];
-            snippet += char;
-        } else {
-            char = "";
-            if (!quiet) {
-                warn_at(
-                    "expected_digits_after_a",
-                    line,
-                    column,
-                    snippet
-                );
-            }
+        const digits = source_line.match(rx)[0];
+        const length = digits.length;
+        if (!quiet && length === 0) {
+            warn_at("expected_digits_after_a", line, column, snippet);
         }
-        return char.length;
+        column += length;
+        source_line = source_line.slice(length);
+        snippet += digits;
+        next_char();
+        return length;
     }
 
     function escape(extra) {
@@ -12114,11 +12167,10 @@ function tokenize(source) {
                 next_char();
             } else if (char === "{") {
                 if (some_digits(rx_digits, true) === 0) {
-                    warn_at("expected_a", line, column, "0");
+                    warn_at("expected_a_before_b", line, column, "0", ",");
                 }
-                if (next_char() === ",") {
+                if (char === ",") {
                     some_digits(rx_digits, true);
-                    next_char();
                 }
                 next_char("}");
             } else {
@@ -12386,7 +12438,6 @@ function tokenize(source) {
     function frack() {
         if (char === ".") {
             some_digits(rx_digits);
-            next_char();
         }
         if (char === "E" || char === "e") {
             next_char();
@@ -12394,7 +12445,6 @@ function tokenize(source) {
                 back_char();
             }
             some_digits(rx_digits);
-            next_char();
         }
     }
 
@@ -12405,13 +12455,10 @@ function tokenize(source) {
                 frack();
             } else if (char === "b") {
                 some_digits(rx_bits);
-                next_char();
             } else if (char === "o") {
                 some_digits(rx_octals);
-                next_char();
             } else if (char === "x") {
                 some_digits(rx_hexs);
-                next_char();
             }
         } else {
             next_char();
@@ -12563,16 +12610,19 @@ function tokenize(source) {
                         : part()
                     );
                 }
-
-// if either ` or ${ was found, then the preceding joins the snippet to become
-// a string token.
-
                 snippet += source_line.slice(0, at);
                 column += at;
                 source_line = source_line.slice(at);
                 if (source_line[0] === "\\") {
-                    stop_at("escape_mega", line, at);
+                    snippet += source_line.slice(0, 2);
+                    source_line = source_line.slice(2);
+                    column += 2;
+                    return part();
                 }
+
+// if either ` or ${ was found, then the preceding joins the snippet to become
+// a string token.
+
                 make("(string)", snippet).quote = "`";
                 snippet = "";
 
@@ -13656,6 +13706,7 @@ assignment("<<=");
 assignment(">>=");
 assignment(">>>=");
 
+infix("??", 35);
 infix("||", 40);
 infix("&&", 50);
 infix("|", 70);
@@ -16360,7 +16411,7 @@ local.jslint0 = Object.freeze(function (
     });
     return {
         directives,
-        edition: "2020-07-02",
+        edition: "2020-10-21",
         exports,
         froms,
         functions,

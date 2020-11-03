@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2020.8.19)
+ * lib.utility2.js (2020.10.27)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -17,6 +17,15 @@
     let isBrowser;
     let isWebWorker;
     let local;
+    // polyfill globalThis
+    if (!(typeof globalThis === "object" && globalThis)) {
+        if (typeof window === "object" && window && window.window === window) {
+            window.globalThis = window;
+        }
+        if (typeof global === "object" && global && global.global === global) {
+            global.globalThis = global;
+        }
+    }
     // init debugInline
     if (!globalThis.debugInline) {
         let consoleError;
@@ -43,29 +52,29 @@
         isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
+    function objectDeepCopyWithKeysSorted(obj) {
+    /*
+     * this function will recursively deep-copy <obj> with keys sorted
+     */
+        let sorted;
+        if (typeof obj !== "object" || !obj) {
+            return obj;
+        }
+        // recursively deep-copy list with child-keys sorted
+        if (Array.isArray(obj)) {
+            return obj.map(objectDeepCopyWithKeysSorted);
+        }
+        // recursively deep-copy obj with keys sorted
+        sorted = {};
+        Object.keys(obj).sort().forEach(function (key) {
+            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
+        });
+        return sorted;
+    }
     function assertJsonEqual(aa, bb) {
     /*
      * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
      */
-        function objectDeepCopyWithKeysSorted(obj) {
-        /*
-         * this function will recursively deep-copy <obj> with keys sorted
-         */
-            let sorted;
-            if (typeof obj !== "object" || !obj) {
-                return obj;
-            }
-            // recursively deep-copy list with child-keys sorted
-            if (Array.isArray(obj)) {
-                return obj.map(objectDeepCopyWithKeysSorted);
-            }
-            // recursively deep-copy obj with keys sorted
-            sorted = {};
-            Object.keys(obj).sort().forEach(function (key) {
-                sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
-            });
-            return sorted;
-        }
         aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
         bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
         if (aa !== bb) {
@@ -183,6 +192,7 @@
     local.isWebWorker = isWebWorker;
     local.nop = nop;
     local.objectAssignDefault = objectAssignDefault;
+    local.objectDeepCopyWithKeysSorted = objectDeepCopyWithKeysSorted;
     local.onErrorThrow = onErrorThrow;
 }());
 // assets.utility2.header.js - end
@@ -246,12 +256,21 @@ local.assetsDict["/assets.utility2.header.js"] = '\
 // assets.utility2.header.js - start\n\
 /* jslint utility2:true */\n\
 /* istanbul ignore next */\n\
-// run shared js-env code - init-local\n\
+// run shared js\-env code - init-local\n\
 (function () {\n\
     "use strict";\n\
     let isBrowser;\n\
     let isWebWorker;\n\
     let local;\n\
+    // polyfill globalThis\n\
+    if (!(typeof globalThis === "object" && globalThis)) {\n\
+        if (typeof window === "object" && window && window.window === window) {\n\
+            window.globalThis = window;\n\
+        }\n\
+        if (typeof global === "object" && global && global.global === global) {\n\
+            global.globalThis = global;\n\
+        }\n\
+    }\n\
     // init debugInline\n\
     if (!globalThis.debugInline) {\n\
         let consoleError;\n\
@@ -278,29 +297,29 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         isBrowser && typeof globalThis.importScripts === "function"\n\
     );\n\
     // init function\n\
+    function objectDeepCopyWithKeysSorted(obj) {\n\
+    /*\n\
+     * this function will recursively deep-copy <obj> with keys sorted\n\
+     */\n\
+        let sorted;\n\
+        if (typeof obj !== "object" || !obj) {\n\
+            return obj;\n\
+        }\n\
+        // recursively deep-copy list with child-keys sorted\n\
+        if (Array.isArray(obj)) {\n\
+            return obj.map(objectDeepCopyWithKeysSorted);\n\
+        }\n\
+        // recursively deep-copy obj with keys sorted\n\
+        sorted = {};\n\
+        Object.keys(obj).sort().forEach(function (key) {\n\
+            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);\n\
+        });\n\
+        return sorted;\n\
+    }\n\
     function assertJsonEqual(aa, bb) {\n\
     /*\n\
      * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)\n\
      */\n\
-        function objectDeepCopyWithKeysSorted(obj) {\n\
-        /*\n\
-         * this function will recursively deep-copy <obj> with keys sorted\n\
-         */\n\
-            let sorted;\n\
-            if (typeof obj !== "object" || !obj) {\n\
-                return obj;\n\
-            }\n\
-            // recursively deep-copy list with child-keys sorted\n\
-            if (Array.isArray(obj)) {\n\
-                return obj.map(objectDeepCopyWithKeysSorted);\n\
-            }\n\
-            // recursively deep-copy obj with keys sorted\n\
-            sorted = {};\n\
-            Object.keys(obj).sort().forEach(function (key) {\n\
-                sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);\n\
-            });\n\
-            return sorted;\n\
-        }\n\
         aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));\n\
         bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));\n\
         if (aa !== bb) {\n\
@@ -418,6 +437,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
     local.isWebWorker = isWebWorker;\n\
     local.nop = nop;\n\
     local.objectAssignDefault = objectAssignDefault;\n\
+    local.objectDeepCopyWithKeysSorted = objectDeepCopyWithKeysSorted;\n\
     local.onErrorThrow = onErrorThrow;\n\
 }());\n\
 // assets.utility2.header.js - end\n\
@@ -532,6 +552,16 @@ pre {\n\
 <div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
 <script>\n\
 /* jslint utility2:true */\n\
+// polyfill globalThis\n\
+(function () {\n\
+/*\n\
+ * this function will polyfill globalThis\n\
+ */\n\
+    "use strict";\n\
+    window.globalThis = window.globalThis || globalThis;\n\
+}());\n\
+\n\
+\n\
 // init domOnEventWindowOnloadTimeElapsed\n\
 (function () {\n\
 /*\n\
@@ -1584,24 +1614,19 @@ let onErrorThrow;
 localEventListenerDict = {};
 localEventListenerId = 0;
 onErrorThrow = local.onErrorThrow;
-// init lib Blob
-local.Blob = globalThis.Blob || function (list, opt) {
-    /*
-     * this function will emulate in node, browser's Blob class
-     * https://developer.mozilla.org/en-US/docs/Web/API/Blob/Blob
-     */
-    this.buf = local.bufferConcat(list.map(function (elem) {
-        if (
-            typeof elem === "string"
-            || Object.prototype.toString.call(elem) === "[object Uint8Array]"
-        ) {
-            return elem;
-        }
-        // emulate in node, browser-behavior - auto-stringify arbitrary data
-        return String(elem);
-    }));
-    this.type = (opt && opt.type) || "";
-};
+
+
+// polyfill TextDecoder and TextEncoder
+(function () {
+    try {
+        globalThis.TextDecoder = (
+            globalThis.TextDecoder || require("util").TextDecoder
+        );
+        globalThis.TextEncoder = (
+            globalThis.TextEncoder || require("util").TextEncoder
+        );
+    } catch (ignore) {}
+}());
 
 // init lib _http
 local._http = {};
@@ -2194,23 +2219,7 @@ local.ajax = function (opt, onError) {
     Object.keys(xhr.headers).forEach(function (key) {
         xhr.setRequestHeader(key, xhr.headers[key]);
     });
-    // send data
-    switch ((xhr.data && xhr.data.constructor) || true) {
-    // Blob
-    // https://developer.mozilla.org/en-US/docs/Web/API/Blob
-    case local2.Blob:
-        local2.blobRead(xhr.data, function (err, data) {
-            if (err) {
-                xhr.onEvent(err);
-                return;
-            }
-            // send data
-            xhr.send(data);
-        });
-        break;
-    default:
-        xhr.send(xhr.data);
-    }
+    xhr.send(xhr.data);
     return xhr;
 };
 
@@ -2312,44 +2321,6 @@ local.base64ToUtf8 = function (str) {
  * this function will convert base64 <str> to utf8 str
  */
     return local.bufferValidateAndCoerce(local.base64ToBuffer(str), "string");
-};
-
-local.blobRead = function (blob, onError) {
-/*
- * this function will read from <blob>
- */
-    let isDone;
-    let reader;
-    if (!local.isBrowser) {
-        onError(undefined, local.bufferValidateAndCoerce(blob.buf));
-        return;
-    }
-    reader = new FileReader();
-    reader.onabort = function (evt) {
-        if (isDone) {
-            return;
-        }
-        isDone = true;
-        switch (evt.type) {
-        case "abort":
-        case "error":
-            onError(new Error("blobRead - " + evt.type));
-            break;
-        case "load":
-            onError(
-                undefined,
-                Object.prototype.toString.call(reader.result)
-                === "[object ArrayBuffer]"
-                // convert ArrayBuffer to Uint8Array
-                ? new Uint8Array(reader.result)
-                : reader.result
-            );
-            break;
-        }
-    };
-    reader.onerror = reader.onabort;
-    reader.onload = reader.onabort;
-    reader.readAsArrayBuffer(blob);
 };
 
 local.browserTest = function (opt, onError) {
@@ -2615,6 +2586,8 @@ local.buildApp = function ({
     let buildReadme;
     let buildTest;
     let fileDict;
+    let packageJson;
+    let packageNameLib;
     let port;
     let promiseList;
     let src;
@@ -2695,14 +2668,12 @@ local.buildApp = function ({
             {
                 url: "/LICENSE"
             }, {
-                file: (
-                    "/assets." + process.env.npm_package_nameLib + ".html"
-                ),
+                file: "/assets." + packageNameLib + ".html",
                 url: "/index.html"
             }, {
-                url: "/assets." + process.env.npm_package_nameLib + ".css"
+                url: "/assets." + packageNameLib + ".css"
             }, {
-                url: "/assets." + process.env.npm_package_nameLib + ".js"
+                url: "/assets." + packageNameLib + ".js"
             }, {
                 url: "/assets.app.js"
             }, {
@@ -2794,7 +2765,7 @@ local.buildApp = function ({
         });
     };
     buildLib = function (resolve) {
-        src = fileDict["lib." + process.env.npm_package_nameLib + ".js"];
+        src = fileDict["lib." + packageNameLib + ".js"];
         // render lib.xxx.js
         tgt = local.templateRenderMyApp(
             local.assetsDict["/assets.my_app.template.js"]
@@ -2823,17 +2794,12 @@ local.buildApp = function ({
             }
         ]);
         // write lib.xxx.js
-        writeFile(
-            "lib." + process.env.npm_package_nameLib + ".js",
-            tgt,
-            resolve
-        );
+        writeFile("lib." + packageNameLib + ".js", tgt, resolve);
     };
     buildReadme = function (resolve) {
     /*
      * this function will build readme with template assets.readme.template.md
      */
-        let packageJson;
         let packageJsonRgx;
         let toc;
         // reset toc
@@ -2847,7 +2813,7 @@ local.buildApp = function ({
         tgt = local.templateRenderMyApp(
             local.assetsDict["/assets.readme.template.md"]
         );
-        // init package.json
+        // init packageJson
         src.replace(packageJsonRgx, function (match0, match1) {
             // remove null from package.json
             packageJson = JSON.parse(match1.replace((
@@ -2946,7 +2912,7 @@ local.buildApp = function ({
             }
         ]);
         // customize private-repository
-        tgtReplaceConditional(process.env.npm_package_private, [
+        tgtReplaceConditional(packageJson.private, [
             {
                 aa: (
                     /\n\[!\[NPM\]\(https:\/\/nodei.co\/npm\/.*?\n/
@@ -2956,7 +2922,7 @@ local.buildApp = function ({
                 aa: "$ npm install ",
                 bb: (
                     "$ git clone \\\n"
-                    + process.env.npm_package_repository_url.replace(
+                    + packageJson.repository.url.replace(
                         "git+https://github.com/",
                         "git@github.com:"
                     ) + " \\\n--single-branch -b beta node_modules/"
@@ -3029,11 +2995,11 @@ local.buildApp = function ({
         // customize shNpmTestPublished
         tgt = tgt.replace(
             "$ npm install " + process.env.GITHUB_REPO + "#alpha",
-            "$ npm install " + process.env.npm_package_name
+            "$ npm install " + packageJson.name
         );
         tgtReplaceConditional(src.indexOf("    shNpmTestPublished\n") < 0, [
             {
-                aa: "$ npm install " + process.env.npm_package_name,
+                aa: "$ npm install " + packageJson.name,
                 bb: "$ npm install " + process.env.GITHUB_REPO + "#alpha"
             }, {
                 aa: (
@@ -3143,6 +3109,12 @@ local.buildApp = function ({
     };
     // buildInit
     Promise.resolve().then(function () {
+        // init packageJson
+        packageJson = JSON.parse(
+            require("fs").readFileSync("package.json", "utf8")
+        );
+        // init packageNameLib
+        packageNameLib = packageJson.nameLib || packageJson.name;
         fileDict = {};
         promiseList = [];
         // cleanup build-dir
@@ -3180,7 +3152,7 @@ local.buildApp = function ({
         // read file
         [
             "README.md",
-            "lib." + process.env.npm_package_nameLib + ".js",
+            "lib." + packageNameLib + ".js",
             "package.json",
             "test.js"
         ].forEach(function (file) {
@@ -3949,6 +3921,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
         "identity",
         "nop",
         "objectAssignDefault",
+        "objectDeepCopyWithKeysSorted",
         "onErrorThrow"
     ].forEach(function (key) {
         dictFnc[key] = true;
@@ -4225,6 +4198,7 @@ local.middlewareInit = function (req, res, next) {
         // application
         ".js": "application/javascript; charset=utf-8",
         ".json": "application/json; charset=utf-8",
+        ".mjs": "application/javascript; charset=utf-8",
         ".pdf": "application/pdf",
         ".wasm": "application/wasm",
         ".xml": "application/xml; charset=utf-8",
@@ -4301,32 +4275,6 @@ local.middlewareUtility2StateInit = function (req, res, next) {
     res.end(state.init.replace("({})", function () {
         return "(\n" + JSON.stringify(state) + "\n)";
     }));
-};
-
-local.objectDeepCopyWithKeysSorted = function (obj) {
-/*
- * this function will recursively deep-copy <obj> with keys sorted
- */
-    function objectDeepCopyWithKeysSorted(obj) {
-    /*
-     * this function will recursively deep-copy <obj> with keys sorted
-     */
-        let sorted;
-        if (!(typeof obj === "object" && obj)) {
-            return obj;
-        }
-        // recursively deep-copy list with child-keys sorted
-        if (Array.isArray(obj)) {
-            return obj.map(objectDeepCopyWithKeysSorted);
-        }
-        // recursively deep-copy obj with keys sorted
-        sorted = {};
-        Object.keys(obj).sort().forEach(function (key) {
-            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
-        });
-        return sorted;
-    }
-    return objectDeepCopyWithKeysSorted(obj);
 };
 
 local.onErrorWithStack = function (onError) {
@@ -4724,7 +4672,7 @@ local.requireReadme = function () {
             "/assets." + env.npm_package_nameLib + extname
         ] = local.fsReadFileOrDefaultSync(
             require("path").resolve(env.npm_package_main).replace((
-                /\.\w+$/
+                /\.\w+?$/
             ), extname),
             "utf8",
             ""
@@ -5482,7 +5430,11 @@ local.testMock = function (mockList, onTestCase, onError) {
         // restore mock[0] from mock[2]
         mockList.reverse().forEach(function (mock) {
             Object.keys(mock[2]).forEach(function (key) {
-                mock[0][key] = mock[2][key];
+                try {
+                    mock[0][key] = mock[2][key];
+                } catch (errCaught) {
+                    console.error(errCaught);
+                }
             });
         });
         onError(err);
@@ -5504,7 +5456,11 @@ local.testMock = function (mockList, onTestCase, onError) {
         });
         // override mock[0] with mock[1]
         Object.keys(mock[1]).forEach(function (key) {
-            mock[0][key] = mock[1][key];
+            try {
+                mock[0][key] = mock[1][key];
+            } catch (errCaught) {
+                console.error(errCaught);
+            }
         });
     });
     // try to run onTestCase with mock[0]

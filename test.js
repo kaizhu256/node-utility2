@@ -8,6 +8,15 @@
     let isBrowser;
     let isWebWorker;
     let local;
+    // polyfill globalThis
+    if (!(typeof globalThis === "object" && globalThis)) {
+        if (typeof window === "object" && window && window.window === window) {
+            window.globalThis = window;
+        }
+        if (typeof global === "object" && global && global.global === global) {
+            global.globalThis = global;
+        }
+    }
     // init debugInline
     if (!globalThis.debugInline) {
         let consoleError;
@@ -34,29 +43,29 @@
         isBrowser && typeof globalThis.importScripts === "function"
     );
     // init function
+    function objectDeepCopyWithKeysSorted(obj) {
+    /*
+     * this function will recursively deep-copy <obj> with keys sorted
+     */
+        let sorted;
+        if (typeof obj !== "object" || !obj) {
+            return obj;
+        }
+        // recursively deep-copy list with child-keys sorted
+        if (Array.isArray(obj)) {
+            return obj.map(objectDeepCopyWithKeysSorted);
+        }
+        // recursively deep-copy obj with keys sorted
+        sorted = {};
+        Object.keys(obj).sort().forEach(function (key) {
+            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
+        });
+        return sorted;
+    }
     function assertJsonEqual(aa, bb) {
     /*
      * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
      */
-        function objectDeepCopyWithKeysSorted(obj) {
-        /*
-         * this function will recursively deep-copy <obj> with keys sorted
-         */
-            let sorted;
-            if (typeof obj !== "object" || !obj) {
-                return obj;
-            }
-            // recursively deep-copy list with child-keys sorted
-            if (Array.isArray(obj)) {
-                return obj.map(objectDeepCopyWithKeysSorted);
-            }
-            // recursively deep-copy obj with keys sorted
-            sorted = {};
-            Object.keys(obj).sort().forEach(function (key) {
-                sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
-            });
-            return sorted;
-        }
         aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
         bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
         if (aa !== bb) {
@@ -174,6 +183,7 @@
     local.isWebWorker = isWebWorker;
     local.nop = nop;
     local.objectAssignDefault = objectAssignDefault;
+    local.objectDeepCopyWithKeysSorted = objectDeepCopyWithKeysSorted;
     local.onErrorThrow = onErrorThrow;
 }());
 // assets.utility2.header.js - end
@@ -261,7 +271,6 @@ local.testCase_ajax_default = function (opt, onError) {
         list: [
             "",
             "arraybuffer",
-            "blob",
             "text"
         ]
     }, function (responseType, onParallel) {
@@ -272,19 +281,12 @@ local.testCase_ajax_default = function (opt, onError) {
                 responseType === "arraybuffer"
                 // test POST buffer-data handling-behavior
                 ? new TextEncoder().encode(local.stringHelloEmoji)
-                : responseType === "blob"
-                // test POST blob-data handling-behavior
-                ? new local.Blob([
-                    "",
-                    new Uint8Array(0),
-                    local.stringHelloEmoji
-                ])
                 // test POST string-data handling-behavior
                 : local.stringHelloEmoji
             ),
             method: "POST",
             // test nodejs-res handling-behavior
-            responseType: responseType.replace("blob", "arraybuffer"),
+            responseType,
             url: "/test.body"
         }, function (err, xhr) {
             onErrorThrow(err);
@@ -293,7 +295,6 @@ local.testCase_ajax_default = function (opt, onError) {
             // validate responseText
             switch (responseType) {
             case "arraybuffer":
-            case "blob":
                 assertJsonEqual(xhr.responseBuffer.byteLength, 11);
                 assertJsonEqual(Array.from(xhr.responseBuffer), [
                     0x68,
@@ -374,9 +375,9 @@ local.testCase_ajax_default = function (opt, onError) {
             {
                 // test 404-not-found handling-behavior
                 url: "/test.err-404"
-            }, {
-                // test 500-internal-server-error handling-behavior
-                url: "/test.err-500"
+            //!! }, {
+                //!! // test 500-internal-server-error handling-behavior
+                //!! url: "/test.err-500"
             }, {
                 // test undefined-status-code handling-behavior
                 url: "/test.err-undefined"
@@ -542,59 +543,6 @@ local.testCase_base64Xxx_default = function (opt, onError) {
         opt.base64
     );
     onError(undefined, opt);
-};
-
-local.testCase_blobRead_default = function (opt, onError) {
-/*
- * this function will test blobRead's default handling-behavior
- */
-    let onParallel;
-    onParallel = local.onParallel(onError);
-    onParallel.cnt += 1;
-    // test data handling-behavior
-    onParallel.cnt += 1;
-    local.blobRead(new local.Blob([
-        "",
-        "aa",
-        "bb",
-        new Uint8Array(0),
-        local.stringHelloEmoji
-    ]), function (err, data) {
-        onErrorThrow(err);
-        // validate data
-        assertJsonEqual(
-            local.bufferToUtf8(data),
-            "aabbhello \ud83d\ude01\n"
-        );
-        onParallel(undefined, opt);
-    });
-    if (!local.isBrowser) {
-        onParallel(undefined, opt);
-        return;
-    }
-    // test err handling-behavior
-    onParallel.cnt += 1;
-    local.testMock([
-        [
-            FileReader.prototype, {
-                readAsArrayBuffer: function () {
-                    this.onabort({
-                        type: "abort"
-                    });
-                    this.onerror({
-                        type: "error"
-                    });
-                }
-            }
-        ]
-    ], function (onError) {
-        local.blobRead(undefined, function (err) {
-            // handle err
-            assertOrThrow(err, err);
-        });
-        onError(undefined, opt);
-    }, onParallel);
-    onParallel();
 };
 
 local.testCase_bufferValidateAndCoerce_err = function (opt, onError) {
