@@ -1983,9 +1983,11 @@ Connection.prototype.url = function () {
   */
 Connection.prototype.send = function (method, params = {}) {
     let that = this;
-    const id = that._rawSend({method, params});
+    const id = that._rawSend({
+        method, params});
     return new Promise(function (resolve, reject) {
-        that._callbacks.set(id, {resolve, reject, error: new Error(), method});
+        that._callbacks.set(id, {
+            resolve, reject, error: new Error(), method});
     });
 };
 /**
@@ -2006,7 +2008,8 @@ Connection.prototype._rawSend = function (message) {
 Connection.prototype._onMessage = async function (message) {
     let that = this;
     if (that._delay) {
-        await new Promise(function (f) { setTimeout(f, that._delay); });
+        await new Promise(function (f) {
+            setTimeout(f, that._delay); });
     }
     debugProtocol("◀ RECV " + message);
     const object = JSON.parse(message);
@@ -2069,7 +2072,9 @@ Connection.prototype.dispose = function () {
   * @return {!Promise<!CDPSession>}
   */
 Connection.prototype.createSession = async function (targetInfo) {
-    const {sessionId} = await this.send("Target.attachToTarget", {targetId: targetInfo.targetId, flatten: true});
+    const {
+        sessionId} = await this.send("Target.attachToTarget", {
+            targetId: targetInfo.targetId, flatten: true});
     return this._sessions.get(sessionId);
 };
 /**
@@ -2096,9 +2101,11 @@ CDPSession.prototype.send = function (method, params = {}) {
     if (!that._connection) {
         return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${that._targetType} has been closed.`));
     }
-    const id = that._connection._rawSend({sessionId: that._sessionId, method, params});
+    const id = that._connection._rawSend({
+        sessionId: that._sessionId, method, params});
     return new Promise(function (resolve, reject) {
-        that._callbacks.set(id, {resolve, reject, error: new Error(), method});
+        that._callbacks.set(id, {
+            resolve, reject, error: new Error(), method});
     });
 };
 /**
@@ -2123,7 +2130,8 @@ CDPSession.prototype.detach = async function () {
     if (!this._connection) {
         throw new Error(`Session already detached. Most likely the ${this._targetType} has been closed.`);
     }
-    await this._connection.send("Target.detachFromTarget",  {sessionId: this._sessionId});
+    await this._connection.send("Target.detachFromTarget",  {
+        sessionId: this._sessionId});
 };
 CDPSession.prototype._onClosed = function () {
     this._callbacks.values().forEach(function (callback) {
