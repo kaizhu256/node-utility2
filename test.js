@@ -410,9 +410,9 @@ local.testCase_ajax_default = function (opt, onError) {
             {
                 // test 404-not-found handling-behavior
                 url: "/test.err-404"
-            //!! }, {
-                //!! // test 500-internal-server-error handling-behavior
-                //!! url: "/test.err-500"
+            }, {
+                // test 500-internal-server-error handling-behavior
+                url: "/test.err-500"
             }, {
                 // test undefined-status-code handling-behavior
                 url: "/test.err-undefined"
