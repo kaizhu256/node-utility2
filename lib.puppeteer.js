@@ -3,6 +3,7 @@
 
 // vim
 // ,$s/^    \(async \)*\(\w\w*\)(/    Connection.prorotype.\2 = \1function (/gc
+// ,$s/\(\w\w*\) => {/function (\1) {/gc
 // ,$s/\(\w\w*\) =>\( {\)*/function (\1) {/gc
 // ,$s/\<\(if\|else\) .*[^{]$/& {/gc
 // ,$s/^\( *\)\(\<\(if\|else\) .*[^{]\)\(\n.*\)/\1\2 {\4\r\1}/gc
@@ -1348,7 +1349,7 @@ class Helper {
         if (!remoteObject.objectId) {
             return;
         }
-        await client.send("Runtime.releaseObject", {objectId: remoteObject.objectId}).catch(error => {
+        await client.send("Runtime.releaseObject", {objectId: remoteObject.objectId}).catch(function (error) {
             // Exceptions might happen in case of a page been navigated or closed.
             // Swallow these since they are harmless and we don't leak anything in this case.
             debugError(error);
@@ -1366,7 +1367,7 @@ class Helper {
             Reflect.set(classType.prototype, methodName, function(...args) {
                 const syncStack = {};
                 Error.captureStackTrace(syncStack);
-                return method.call(this, ...args).catch(e => {
+                return method.call(this, ...args).catch(function (e) {
                     const stack = syncStack.stack.substring(syncStack.stack.indexOf("\n") + 1);
                     const clientStack = stack.substring(stack.indexOf("\n"));
                     if (e instanceof Error && e.stack && !e.stack.includes(clientStack)) {
@@ -1438,7 +1439,7 @@ class Helper {
             resolveCallback = resolve;
             rejectCallback = reject;
         });
-        const listener = Helper.addEventListener(emitter, eventName, event => {
+        const listener = Helper.addEventListener(emitter, eventName, function (event) {
             if (!predicate(event)) {
                 return;
             }
@@ -1853,7 +1854,7 @@ class BrowserContext extends EventEmitter {
             // chrome-specific permissions we have.
             ["midi-sysex", "midiSysex"],
         ]);
-        permissions = permissions.map(permission => {
+        permissions = permissions.map(function (permission) {
             const protocolPermission = webPermissionToProtocol.get(permission);
             if (!protocolPermission) {
                 throw new Error("Unknown permission: " + permission);
@@ -1922,14 +1923,15 @@ function Connection(url, ws, delay = 0) {
     this._delay = delay;
     this._ws = ws;
     let ws2 = this._ws;
-    ws2.addEventListener("message", event => {
-        if (this.onmessage) {
-            this.onmessage.call(null, event.data);
+    let that = this;
+    ws2.addEventListener("message", function (event) {
+        if (that.onmessage) {
+            that.onmessage.call(null, event.data);
         }
     });
-    ws2.addEventListener("close", event => {
-        if (this.onclose) {
-            this.onclose.call(null);
+    ws2.addEventListener("close", function (event) {
+        if (that.onclose) {
+            that.onclose.call(null);
         }
     });
     // Silently ignore all errors - we don't know what to do with them.
@@ -2497,6 +2499,7 @@ class DOMWorld {
       * @param {?Puppeteer.ExecutionContext} context
       */
     _setContext(context) {
+        let that = this;
         if (context) {
             this._contextResolveCallback.call(null, context);
             this._contextResolveCallback = null;
@@ -2504,8 +2507,8 @@ class DOMWorld {
                 waitTask.rerun();
         } else {
             this._documentPromise = null;
-            this._contextPromise = new Promise(fulfill => {
-                this._contextResolveCallback = fulfill;
+            this._contextPromise = new Promise(function (fulfill) {
+                that._contextResolveCallback = fulfill;
             });
         }
     }
@@ -3811,13 +3814,14 @@ class LifecycleWatcher {
       * @param {number} timeout
       */
     constructor(frameManager, frame, waitUntil, timeout) {
+        let that = this;
         if (Array.isArray(waitUntil)) {
             waitUntil = waitUntil.slice();
         }
         else if (typeof waitUntil === "string") {
             waitUntil = [waitUntil];
         }
-        this._expectedLifecycle = waitUntil.map(value => {
+        this._expectedLifecycle = waitUntil.map(function (value) {
             const protocolEvent = puppeteerToProtocolLifecycle[value];
             assert(protocolEvent, "Unknown value for options.waitUntil: " + value);
             return protocolEvent;
@@ -3835,20 +3839,20 @@ class LifecycleWatcher {
             helper.addEventListener(this._frameManager, Events.FrameManager.FrameDetached, this._onFrameDetached.bind(this)),
             helper.addEventListener(this._frameManager.networkManager(), Events.NetworkManager.Request, this._onRequest.bind(this)),
         ];
-        this._sameDocumentNavigationPromise = new Promise(fulfill => {
-            this._sameDocumentNavigationCompleteCallback = fulfill;
+        that._sameDocumentNavigationPromise = new Promise(function (fulfill) {
+            that._sameDocumentNavigationCompleteCallback = fulfill;
         });
-        this._lifecyclePromise = new Promise(fulfill => {
-            this._lifecycleCallback = fulfill;
+        that._lifecyclePromise = new Promise(function (fulfill) {
+            that._lifecycleCallback = fulfill;
         });
-        this._newDocumentNavigationPromise = new Promise(fulfill => {
-            this._newDocumentNavigationCompleteCallback = fulfill;
+        that._newDocumentNavigationPromise = new Promise(function (fulfill) {
+            that._newDocumentNavigationCompleteCallback = fulfill;
         });
-        this._timeoutPromise = this._createTimeoutPromise();
-        this._terminationPromise = new Promise(fulfill => {
-            this._terminationCallback = fulfill;
+        that._timeoutPromise = that._createTimeoutPromise();
+        that._terminationPromise = new Promise(function (fulfill) {
+            that._terminationCallback = fulfill;
         });
-        this._checkLifecycleComplete();
+        that._checkLifecycleComplete();
     }
     /**
       * @param {!Puppeteer.Request} request
