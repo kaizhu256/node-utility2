@@ -8,7 +8,7 @@
 */
 // ,$s/\(\w\w*\) => {/function (\1) {/gc
 // ,$s/\<this\>/that/gc
-// ,$s/\(\w\w*\) => \(.*\))/function (\1) { return \2; })/gc
+// ,$s/\(\w\w*\) => \([^,]*\)\([,)]\)/function (\1) { return \2; }\3/gc
 // ,$s/\<\(if\|else\) .*[^{]$/& {/gc
 // ,$s/^\( *\)\(\<\(if\|else\) .*[^{]\)\(\n.*\)/\1\2 {\4\r\1}/gc
 // ,$s/^\( *\)\(\<else\)\(\n.*\)/\1\2 {\3\r\1}/gc
@@ -1807,7 +1807,7 @@ class BrowserContext extends EventEmitter {
       * @return {!Array<!Target>} target
       */
     targets() {
-        return this._browser.targets().filter(target => target.browserContext() === this);
+        return this._browser.targets().filter(function (target) { return target.browserContext() === this; });
     }
     /**
       * @param {function(!Target):boolean} predicate
@@ -1815,7 +1815,8 @@ class BrowserContext extends EventEmitter {
       * @return {!Promise<!Target>}
       */
     waitForTarget(predicate, options) {
-        return this._browser.waitForTarget(target => target.browserContext() === this && predicate(target), options);
+        let that = this;
+        return that._browser.waitForTarget(function (target) { return target.browserContext() === that && predicate(target); }, options);
     }
     /**
       * @return {!Promise<!Array<!Puppeteer.Page>>}
@@ -1823,10 +1824,10 @@ class BrowserContext extends EventEmitter {
     async pages() {
         const pages = await Promise.all(
                 this.targets()
-                        .filter(target => target.type() === "page")
-                        .map(target => target.page())
+                        .filter(function (target) { return target.type() === "page"; })
+                        .map(function (target) { return target.page(); })
         );
-        return pages.filter(page => !!page);
+        return pages.filter(function (page) { return !!page; });
     }
     /**
       * @return {boolean}
@@ -1995,7 +1996,7 @@ Connection.prototype._rawSend = function (message) {
   */
 Connection.prototype._onMessage = async function (message) {
     if (this._delay) {
-        await new Promise(f => setTimeout(f, this._delay));
+        await new Promise(function (f) { setTimeout(f, this._delay); });
     }
     debugProtocol("◀ RECV " + message);
     const object = JSON.parse(message);
