@@ -1315,8 +1315,9 @@ class Helper {
     static valueFromRemoteObject(remoteObject) {
         assert(!remoteObject.objectId, "Cannot extract value when objectId is given");
         if (remoteObject.unserializableValue) {
-            if (remoteObject.type === "bigint" && typeof BigInt !== "undefined")
+            if (remoteObject.type === "bigint" && typeof BigInt !== "undefined") {
                 return BigInt(remoteObject.unserializableValue.replace("n", ""));
+            }
             switch (remoteObject.unserializableValue) {
                 case "-0":
                     return -0;
@@ -1337,8 +1338,9 @@ class Helper {
       * @param {!Protocol.Runtime.RemoteObject} remoteObject
       */
     static async releaseObject(client, remoteObject) {
-        if (!remoteObject.objectId)
+        if (!remoteObject.objectId) {
             return;
+        }
         await client.send("Runtime.releaseObject", {objectId: remoteObject.objectId}).catch(error => {
             // Exceptions might happen in case of a page been navigated or closed.
             // Swallow these since they are harmless and we don't leak anything in this case.
@@ -1351,16 +1353,18 @@ class Helper {
     static installAsyncStackHooks(classType) {
         for (const methodName of Reflect.ownKeys(classType.prototype)) {
             const method = Reflect.get(classType.prototype, methodName);
-            if (methodName === "constructor" || typeof methodName !== "string" || methodName.startsWith("_") || typeof method !== "function" || method.constructor.name !== "AsyncFunction")
+            if (methodName === "constructor" || typeof methodName !== "string" || methodName.startsWith("_") || typeof method !== "function" || method.constructor.name !== "AsyncFunction") {
                 continue;
+            }
             Reflect.set(classType.prototype, methodName, function(...args) {
                 const syncStack = {};
                 Error.captureStackTrace(syncStack);
                 return method.call(this, ...args).catch(e => {
                     const stack = syncStack.stack.substring(syncStack.stack.indexOf("\n") + 1);
                     const clientStack = stack.substring(stack.indexOf("\n"));
-                    if (e instanceof Error && e.stack && !e.stack.includes(clientStack))
+                    if (e instanceof Error && e.stack && !e.stack.includes(clientStack)) {
                         e.stack += "\n  -- ASYNC --\n" + stack;
+                    }
                     throw e;
                 });
             });
@@ -1402,10 +1406,12 @@ class Helper {
         function promisified(...args) {
             return new Promise((resolve, reject) => {
                 function callback(err, ...result) {
-                    if (err)
+                    if (err) {
                         return reject(err);
-                    if (result.length === 1)
+                    }
+                    if (result.length === 1) {
                         return resolve(result[0]);
+                    }
                     return resolve(result);
                 }
                 nodeFunction.call(null, ...args, callback);
@@ -1426,8 +1432,9 @@ class Helper {
             rejectCallback = reject;
         });
         const listener = Helper.addEventListener(emitter, eventName, event => {
-            if (!predicate(event))
+            if (!predicate(event)) {
                 return;
+            }
             cleanup();
             resolveCallback(event);
         });
@@ -1455,13 +1462,15 @@ class Helper {
         const timeoutError = new TimeoutError(`waiting for ${taskName} failed: timeout ${timeout}ms exceeded`);
         const timeoutPromise = new Promise((resolve, x) => reject = x);
         let timeoutTimer = null;
-        if (timeout)
+        if (timeout) {
             timeoutTimer = setTimeout(() => reject(timeoutError), timeout);
+        }
         try {
             return await Promise.race([promise, timeoutPromise]);
         } finally {
-            if (timeoutTimer)
+            if (timeoutTimer) {
                 clearTimeout(timeoutTimer);
+            }
         }
     }
     /**
@@ -1473,19 +1482,22 @@ class Helper {
     static async readProtocolStream(client, handle, path) {
         let eof = false;
         let file;
-        if (path)
+        if (path) {
             file = await openAsync(path, "w");
+        }
         const bufs = [];
         while (!eof) {
             const response = await client.send("IO.read", {handle});
             eof = response.eof;
             const buf = Buffer.from(response.data, response.base64Encoded ? "base64" : undefined);
             bufs.push(buf);
-            if (path)
+            if (path) {
                 await writeAsync(file, buf);
+            }
         }
-        if (path)
+        if (path) {
             await closeAsync(file);
+        }
         await client.send("IO.close", {handle});
         let resultBuffer = null;
         try {
@@ -1503,8 +1515,9 @@ const closeAsync = Helper.promisify(fs.close);
   * @param {string=} message
   */
 function assert(value, message) {
-    if (!value)
+    if (!value) {
         throw new Error(message);
+    }
 }
 exports_puppeteer_puppeteer_lib_helper = {
     helper: Helper,
@@ -1699,15 +1712,17 @@ class Browser extends EventEmitter {
             timeout = 30000
         } = options;
         const existingTarget = this.targets().find(predicate);
-        if (existingTarget)
+        if (existingTarget) {
             return existingTarget;
+        }
         let resolve;
         const targetPromise = new Promise(x => resolve = x);
         this.on(Events.Browser.TargetCreated, check);
         this.on(Events.Browser.TargetChanged, check);
         try {
-            if (!timeout)
+            if (!timeout) {
                 return await targetPromise;
+            }
             return await helper.waitWithTimeout(targetPromise, "target", timeout);
         } finally {
             this.removeListener(Events.Browser.TargetCreated, check);
@@ -1717,8 +1732,9 @@ class Browser extends EventEmitter {
           * @param {!Target} target
           */
         function check(target) {
-            if (predicate(target))
+            if (predicate(target)) {
                 resolve(target);
+            }
         }
     }
     /**
@@ -1832,8 +1848,9 @@ class BrowserContext extends EventEmitter {
         ]);
         permissions = permissions.map(permission => {
             const protocolPermission = webPermissionToProtocol.get(permission);
-            if (!protocolPermission)
+            if (!protocolPermission) {
                 throw new Error("Unknown permission: " + permission);
+            }
             return protocolPermission;
         });
         await this._connection.send("Browser.grantPermissions", {origin, browserContextId: this._id || undefined, permissions});
@@ -1899,12 +1916,14 @@ function Connection(url, ws, delay = 0) {
     this._ws = ws;
     let ws2 = this._ws;
     ws2.addEventListener("message", event => {
-        if (this.onmessage)
+        if (this.onmessage) {
             this.onmessage.call(null, event.data);
+        }
     });
     ws2.addEventListener("close", event => {
-        if (this.onclose)
+        if (this.onclose) {
             this.onclose.call(null);
+        }
     });
     // Silently ignore all errors - we don't know what to do with them.
     ws2.addEventListener("error", local.noop);
@@ -1962,8 +1981,9 @@ Connection.prototype._rawSend = function (message) {
   * @param {string} message
   */
 Connection.prototype._onMessage = async function (message) {
-    if (this._delay)
+    if (this._delay) {
         await new Promise(f => setTimeout(f, this._delay));
+    }
     debugProtocol("◀ RECV " + message);
     const object = JSON.parse(message);
     if (object.method === "Target.attachedToTarget") {
@@ -1979,8 +1999,9 @@ Connection.prototype._onMessage = async function (message) {
     }
     if (object.sessionId) {
         const session = this._sessions.get(object.sessionId);
-        if (session)
+        if (session) {
             session._onMessage(object);
+        }
     } else if (object.id) {
         const callback = this._callbacks.get(object.id);
         // Callbacks could be all rejected if someone has called `.dispose()`.
