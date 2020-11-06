@@ -1926,7 +1926,7 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
   */
 function createProtocolError(error, method, object) {
     let message = `Protocol error (${method}): ${object.error.message}`;
-    if ("data" in object.error) {
+    if (object.error.data) {
         message += ` ${object.error.data}`;
     }
     return rewriteError(error, message);
@@ -4707,8 +4707,13 @@ class SecurityDetails {
   */
 function headersArray(headers) {
     const result = [];
-    for (const name in headers)
-        result.push({name, value: headers[name] + ""});
+    Object.entries(headers).forEach(function ([
+        name, value
+    ]) {
+        result.push({
+            name, value: value + ""
+        });
+    });
     return result;
 }
 // List taken from https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml with extra 306 and 418 codes.
@@ -6189,12 +6194,14 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/index.js
   * limitations under the License.
   */
 const api = exports_puppeteer_puppeteer_lib_api;
-for (const className in api) {
+Object.entries(api).forEach(function ([
+    className, val
+]) {
     // Puppeteer-web excludes certain classes from bundle, e.g. BrowserFetcher.
-    if (typeof api[className] === "function") {
-        helper.installAsyncStackHooks(api[className]);
+    if (typeof val === "function") {
+        helper.installAsyncStackHooks(val);
     }
-}
+});
 // If node does not support async await, use the compiled version.
 const Puppeteer = exports_puppeteer_puppeteer_lib_Puppeteer
 const packageJson = exports_puppeteer_puppeteer_package_json;
