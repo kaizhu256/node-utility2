@@ -1504,7 +1504,6 @@ exports_puppeteer_puppeteer_lib_helper = {
 };
 // hack-puppeteer - init helper
 let helper = exports_puppeteer_puppeteer_lib_helper.helper;
-/* jslint ignore:end */
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Browser.js
 */
@@ -1855,8 +1854,8 @@ class BrowserContext extends EventEmitter {
         await this._browser._disposeContext(this._id);
     }
 };
-/* jslint ignore:start */
 exports_puppeteer_puppeteer_lib_Browser = {Browser, BrowserContext};
+/* jslint ignore:end */
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
 */
@@ -2096,6 +2095,7 @@ function rewriteError(error, message) {
     return error;
 }
 exports_puppeteer_puppeteer_lib_Connection = {Connection, CDPSession};
+/* jslint ignore:start */
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Coverage.js
 */
