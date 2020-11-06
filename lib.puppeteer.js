@@ -557,7 +557,7 @@ file https://github.com/websockets/ws/blob/6.2.1/lib/buffer-util.js
   * @public
   */
 function _mask(source, mask, output, offset, length) {
-    for (var ii = 0; ii < length; ii++) {
+    for (var ii = 0; ii < length; ii += 1) {
         output[offset + ii] = source[ii] ^ mask[ii & 3];
     }
 }
@@ -729,7 +729,7 @@ const EventTarget = {
       */
     removeEventListener(method, listener) {
         const listeners = this.listeners(method);
-        for (var ii = 0; ii < listeners.length; ii++) {
+        for (var ii = 0; ii < listeners.length; ii += 1) {
             if (listeners[ii] === listener || listeners[ii]._listener === listener) {
                 this.removeListener(method, listeners[ii]);
             }
@@ -1919,7 +1919,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
   * limitations under the License.
   */
 /**
-  * @param {{id?: number, method: string, params: Object, error: {message: string, data: any}, result?: *}} object
   */
 /**
   * @param {!Connection} connection
@@ -1928,7 +1927,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
   */
 function CDPSession(connection, targetType, sessionId) {
     require("stream").EventEmitter.call(this);
-    /** @type {!Map<number, {resolve: function, reject: function, error: !Error, method: string}>}*/
     this._callbacks = new Map();
     this._connection = connection;
     this._targetType = targetType;
@@ -1943,13 +1941,17 @@ require("util").inherits(CDPSession, require("stream").EventEmitter);
 CDPSession.prototype.send = function (method, params = {}) {
     let that = this;
     if (!that._connection) {
-        return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${that._targetType} has been closed.`));
+        return Promise.reject(new Error(
+            "Protocol error (" + method + "): Session closed. Most likely the "
+            + that._targetType + " has been closed."
+        ));
     }
     const id = that._connection._rawSend({
         sessionId: that._sessionId, method, params});
     return new Promise(function (resolve, reject) {
         that._callbacks.set(id, {
-            resolve, reject, error: new Error(), method});
+            resolve, reject, error: new Error(), method
+        });
     });
 };
 CDPSession.prototype._onMessage = function (object) {
@@ -1957,7 +1959,9 @@ CDPSession.prototype._onMessage = function (object) {
         const callback = this._callbacks.get(object.id);
         this._callbacks.delete(object.id);
         if (object.error) {
-            callback.reject(createProtocolError(callback.error, callback.method, object));
+            callback.reject(createProtocolError(
+                callback.error, callback.method, object
+            ));
         }
         else {
             callback.resolve(object.result);
@@ -1969,14 +1973,21 @@ CDPSession.prototype._onMessage = function (object) {
 };
 CDPSession.prototype.detach = async function () {
     if (!this._connection) {
-        throw new Error(`Session already detached. Most likely the ${this._targetType} has been closed.`);
+        throw new Error(
+            "Session already detached. Most likely the "
+            + this._targetType
+            + "has been closed."
+        );
     }
     await this._connection.send("Target.detachFromTarget",  {
         sessionId: this._sessionId});
 };
 CDPSession.prototype._onClosed = function () {
     this._callbacks.forEach(function (callback) {
-        callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
+        callback.reject(rewriteError(
+            callback.error,
+            `Protocol error (${callback.method}): Target closed.`
+        ));
     });
     this._callbacks.clear();
     this._connection = null;
@@ -2055,7 +2066,8 @@ Connection.prototype.send = function (method, params = {}) {
   * @return {number}
   */
 Connection.prototype._rawSend = function (message) {
-    const id = ++this._lastId;
+    this._lastId += 1;
+    const id = this._lastId;
     message = JSON.stringify(Object.assign({}, message, {id}));
     debugProtocol("SEND ► " + message);
     let ws2 = this._ws;
