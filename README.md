@@ -52,6 +52,7 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.3
+- update file lib.puppeteer.js with simplified websockets part 2 - remove websocket-server and websocket-non-chrome code and errors
 - update file lib.puppeteer.js with simplified websockets part 1 - preserve old errors
 - remove dependency on env-var \$CHROME_BIN
 - remove functions base64FromBuffer, base64ToUtf8, cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRawEncrypt, gotoNext

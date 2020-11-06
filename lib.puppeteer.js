@@ -390,39 +390,8 @@ local.cliRun = function (opt) {
 if (local.isBrowser) {
     return;
 }
-local.fsRmrfSync = function (pathname) {
-/*
- * this function will sync "rm -rf" <pathname>
- */
-    let child_process;
-    // do nothing if module not exists
-    try {
-        child_process = require("child_process");
-    } catch (ignore) {
-        return;
-    }
-    pathname = require("path").resolve(pathname);
-    if (process.platform !== "win32") {
-        child_process.spawnSync("rm", [
-            "-rf", pathname
-        ], {
-            stdio: [
-                "ignore", 1, 2
-            ]
-        });
-        return;
-    }
-    try {
-        child_process.spawnSync("rd", [
-            "/s", "/q", pathname
-        ], {
-            stdio: [
-                "ignore", 1, 2
-            ]
-        });
-    } catch (ignore) {}
-};
-
+let BUFFER0;
+BUFFER0 = Buffer.alloc(0);
 /* jslint ignore:start */
 const debugError = console.error;
 const debugProtocol = function () {
@@ -443,8 +412,6 @@ const mime = {
         }
     }
 };
-
-
 let EventEmitter = require("events");
 let URL = require("url");
 // let WebSocket = require("ws");
@@ -455,7 +422,6 @@ let childProcess = require("child_process");
 let fs = require("fs");
 let http = require("http");
 let https = require("https");
-// let isValidUTF8 = require("utf-8-validate");
 // let mime = require("mime");
 let net = require("net");
 let os = require("os");
@@ -494,18 +460,12 @@ let exports_websockets_ws_lib_buffer_util = {};
 let exports_websockets_ws_lib_constants = {};
 let exports_websockets_ws_lib_event_target = {};
 let exports_websockets_ws_lib_extension = {};
-let exports_websockets_ws_lib_receiver = {};
-let exports_websockets_ws_lib_sender = {};
 let exports_websockets_ws_lib_validation = {};
-let exports_websockets_ws_lib_websocket = {};
-let exports_websockets_ws_lib_websocket_server = {};
 let exports_websockets_ws_package_json = {};
 /*
 repo https://github.com/websockets/ws/tree/6.2.1
 committed 2019-03-27T08:34:10Z
 */
-
-
 /*
 file https://github.com/websockets/ws/blob/6.2.1/package.json
 */
@@ -554,62 +514,18 @@ exports_websockets_ws_package_json = {
         "utf-8-validate": "~5.0.0"
     }
 }
-
-
 /*
 file https://github.com/websockets/ws/blob/6.2.1/lib/constants.js
 */
 "use strict";
-
 exports_websockets_ws_lib_constants = {
     GUID: "258EAFA5-E914-47DA-95CA-C5AB0DC85B11",
     kStatusCode: Symbol("status-code"),
-    EMPTY_BUFFER: Buffer.alloc(0)
 };
-
-
-/*
-file https://github.com/websockets/ws/blob/6.2.1/lib/validation.js
-*/
-"use strict";
-
-try {
-//   const isValidUTF8 = require("utf-8-validate");
-
-    exports_websockets_ws_lib_validation.isValidUTF8 =
-        typeof isValidUTF8 === "object"
-            ? isValidUTF8.Validation.isValidUTF8 // utf-8-validate@<3.0.0
-            : isValidUTF8;
-} catch (e) /* istanbul ignore next */ {
-    exports_websockets_ws_lib_validation.isValidUTF8 = () => true;
-}
-
-/**
-  * Checks if a status code is allowed in a close frame.
-  *
-  * @param {Number} code The status code
-  * @return {Boolean} `true` if the status code is valid, else `false`
-  * @public
-  */
-exports_websockets_ws_lib_validation.isValidStatusCode = (code) => {
-    return (
-        (code >= 1000 &&
-            code <= 1013 &&
-            code !== 1004 &&
-            code !== 1005 &&
-            code !== 1006) ||
-        (code >= 3000 && code <= 4999)
-    );
-};
-
-
 /*
 file https://github.com/websockets/ws/blob/6.2.1/lib/buffer-util.js
 */
 "use strict";
-
-// const { EMPTY_BUFFER } = exports_websockets_ws_lib_constants;
-
 /**
   * Masks a buffer using the given mask.
   *
@@ -621,117 +537,29 @@ file https://github.com/websockets/ws/blob/6.2.1/lib/buffer-util.js
   * @public
   */
 function _mask(source, mask, output, offset, length) {
-    for (var i = 0; i < length; i++) {
-        output[offset + i] = source[i] ^ mask[i & 3];
+    for (var ii = 0; ii < length; ii++) {
+        output[offset + ii] = source[ii] ^ mask[ii & 3];
     }
 }
-
-/**
-  * Unmasks a buffer using the given mask.
-  *
-  * @param {Buffer} buffer The buffer to unmask
-  * @param {Buffer} mask The mask to use
-  * @public
-  */
-function _unmask(buffer, mask) {
-    // Required until https://github.com/nodejs/node/issues/9006 is resolved.
-    const length = buffer.length;
-    for (var i = 0; i < length; i++) {
-        buffer[i] ^= mask[i & 3];
-    }
-}
-
-/**
-  * Converts a buffer to an `ArrayBuffer`.
-  *
-  * @param {Buffer} buf The buffer to convert
-  * @return {ArrayBuffer} Converted buffer
-  * @public
-  */
-function toArrayBuffer(buf) {
-    if (buf.byteLength === buf.buffer.byteLength) {
-        return buf.buffer;
-    }
-
-    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-}
-
-/**
-  * Converts `data` to a `Buffer`.
-  *
-  * @param {*} data The data to convert
-  * @return {Buffer} The buffer
-  * @throws {TypeError}
-  * @public
-  */
-function toBuffer(data) {
-    toBuffer.readOnly = true;
-
-    if (Buffer.isBuffer(data)) return data;
-
-    var buf;
-
-    if (data instanceof ArrayBuffer) {
-        buf = Buffer.from(data);
-    } else if (ArrayBuffer.isView(data)) {
-        buf = viewToBuffer(data);
-    } else {
-        buf = Buffer.from(data);
-        toBuffer.readOnly = false;
-    }
-
-    return buf;
-}
-
-/**
-  * Converts an `ArrayBuffer` view into a buffer.
-  *
-  * @param {(DataView|TypedArray)} view The view to convert
-  * @return {Buffer} Converted view
-  * @private
-  */
-function viewToBuffer(view) {
-    const buf = Buffer.from(view.buffer);
-
-    if (view.byteLength !== view.buffer.byteLength) {
-        return buf.slice(view.byteOffset, view.byteOffset + view.byteLength);
-    }
-
-    return buf;
-}
-
 try {
 //   const bufferUtil = require("bufferutil");
     const bu = bufferUtil.BufferUtil || bufferUtil;
-
     exports_websockets_ws_lib_buffer_util = {
         concat,
         mask(source, mask, output, offset, length) {
             if (length < 48) _mask(source, mask, output, offset, length);
             else bu.mask(source, mask, output, offset, length);
         },
-        toArrayBuffer,
-        toBuffer,
-        unmask(buffer, mask) {
-            if (buffer.length < 32) _unmask(buffer, mask);
-            else bu.unmask(buffer, mask);
-        }
     };
 } catch (e) /* istanbul ignore next */ {
     exports_websockets_ws_lib_buffer_util = {
         mask: _mask,
-        toArrayBuffer,
-        toBuffer,
-        unmask: _unmask
     };
 }
-
-
 /*
 file https://github.com/websockets/ws/blob/6.2.1/lib/event-target.js
 */
 "use strict";
-
 /**
   * Class representing an event.
   *
@@ -749,7 +577,6 @@ class Event {
         this.type = type;
     }
 }
-
 /**
   * Class representing a message event.
   *
@@ -765,11 +592,9 @@ class MessageEvent extends Event {
       */
     constructor(data, target) {
         super("message", target);
-
         this.data = data;
     }
 }
-
 /**
   * Class representing a close event.
   *
@@ -786,13 +611,11 @@ class CloseEvent extends Event {
       */
     constructor(code, reason, target) {
         super("close", target);
-
         this.wasClean = target._closeFrameReceived && target._closeFrameSent;
         this.reason = reason;
         this.code = code;
     }
 }
-
 /**
   * Class representing an open event.
   *
@@ -809,7 +632,6 @@ class OpenEvent extends Event {
         super("open", target);
     }
 }
-
 /**
   * Class representing an error event.
   *
@@ -825,12 +647,10 @@ class ErrorEvent extends Event {
       */
     constructor(error, target) {
         super("error", target);
-
         this.message = error.message;
         this.error = error;
     }
 }
-
 /**
   * This provides methods for emulating the `EventTarget` interface. It's not
   * meant to be used directly.
@@ -847,23 +667,18 @@ const EventTarget = {
       */
     addEventListener(method, listener) {
         if (typeof listener !== "function") return;
-
         function onMessage(data) {
             listener.call(this, new MessageEvent(data, this));
         }
-
         function onClose(code, message) {
             listener.call(this, new CloseEvent(code, message, this));
         }
-
         function onError(error) {
             listener.call(this, new ErrorEvent(error, this));
         }
-
         function onOpen() {
             listener.call(this, new OpenEvent(this));
         }
-
         if (method === "message") {
             onMessage._listener = listener;
             this.on(method, onMessage);
@@ -880,7 +695,6 @@ const EventTarget = {
             this.on(method, listener);
         }
     },
-
     /**
       * Remove an event listener.
       *
@@ -890,664 +704,258 @@ const EventTarget = {
       */
     removeEventListener(method, listener) {
         const listeners = this.listeners(method);
-
-        for (var i = 0; i < listeners.length; i++) {
-            if (listeners[i] === listener || listeners[i]._listener === listener) {
-                this.removeListener(method, listeners[i]);
+        for (var ii = 0; ii < listeners.length; ii++) {
+            if (listeners[ii] === listener || listeners[ii]._listener === listener) {
+                this.removeListener(method, listeners[ii]);
             }
         }
     }
 };
-
 exports_websockets_ws_lib_event_target = EventTarget;
-
-
 /*
-file https://github.com/websockets/ws/blob/6.2.1/lib/receiver.js
+file https://github.com/websockets/ws/blob/6.2.1/lib/sender.js
 */
-"use strict";
-
-// const {
-//   EMPTY_BUFFER,
-//   kStatusCode,
-// } = exports_websockets_ws_lib_constants;
-// const { concat, toArrayBuffer, unmask } = exports_websockets_ws_lib_buffer_util;
-// const { isValidStatusCode, isValidUTF8 } = exports_websockets_ws_lib_validation;
 /* jslint ignore:end */
-
-
-function Receiver(options) {
+/*
+file https://github.com/websockets/ws/blob/6.2.1/lib/websocket.js
+*/
+function Socket2(socket) {
 /**
-  * HyBi Receiver implementation.
-  *
-  * @extends stream.Writable
+  * HyBi Sender implementation.
   */
-    let GET_DATA;
-    let GET_INFO;
-    let GET_MASK;
-    let GET_PAYLOAD_LENGTH_16;
-    let GET_PAYLOAD_LENGTH_64;
-    let bufferedBytes;
-    let buffers;
-    let fin;
-    let fragmented;
-    let fragments;
-    let loop;
-    let mask;
-    let masked;
-    let opcode;
+    let ERR_PAYLOADMAX;
+    let READ_HEADER;
+    let READ_LENGTH16;
+    let READ_LENGTH63;
+    let READ_PAYLOAD;
+    let bufList;
     let payloadLength;
-    let recv2;
-    let state;
-    let totalPayloadLength;
-    function consume(nn) {
-    /**
-      * Consumes `nn` bytes from the buffered data.
-      *
-      * @param {Number} nn The number of bytes to consume
-      * @return {Buffer} The consumed bytes
-      * @private
-      */
-        let buf;
-        let dst;
-        bufferedBytes -= nn;
-        if (nn === buffers[0].length) {
-            return buffers.shift();
+    let readState;
+    let that;
+    function _read() {
+        socket.resume();
+    }
+    function _write(payload, ignore, callback) {
+        let header;
+        let maskKey;
+        let result;
+        // init header
+        header = Buffer.alloc(2 + 8 + 4);
+        // init fin = true
+        header[0] |= 0x80;
+        // init opcode = text-frame
+        header[0] |= 1;
+        // init mask = true
+        header[1] |= 0x80;
+        // init payloadLength
+        payload = Buffer.from(payload);
+        if (payload.length < 126) {
+            header = header.slice(0, 2 + 0 + 4);
+            header[1] |= payload.length;
+        } else if (payload.length < 65536) {
+            header = header.slice(0, 2 + 2 + 4);
+            header[1] |= 126;
+            header.writeUInt16BE(payload.length, 2);
+        } else {
+            header[1] |= 127;
+            header.writeUInt32BE(payload.length, 6);
         }
-        if (nn < buffers[0].length) {
-            buf = buffers[0];
-            buffers[0] = buf.slice(nn);
+        // init maskKey
+        maskKey = require("crypto").randomBytes(4);
+        maskKey.copy(header, header.length - 4);
+        // send header
+        socket.cork();
+        socket.write(header);
+        // send payload ^ maskKey
+        payload.forEach(function (ignore, ii) {
+            payload[ii] ^= maskKey[ii & 3];
+        });
+        // return write-result
+        result = socket.write(payload, callback);
+        socket.uncork();
+        return result;
+    }
+    function bufListRead(nn) {
+    /*
+     * this function will read <nn> bytes from <bufList>
+     */
+        let buf;
+        let result;
+        if (nn === bufList[0].length) {
+            return bufList.shift();
+        }
+        if (nn < bufList[0].length) {
+            buf = bufList[0];
+            bufList[0] = buf.slice(nn);
             return buf.slice(0, nn);
         }
-        dst = Buffer.allocUnsafe(nn);
+        result = Buffer.allocUnsafe(nn);
         while (true) {
-            buf = buffers[0];
-            if (nn >= buf.length) {
-                buffers.shift().copy(dst, dst.length - nn);
-            } else {
-                buf.copy(dst, dst.length - nn, 0, nn);
-                buffers[0] = buf.slice(nn);
-            }
+            buf = bufList.shift();
+            buf.copy(result, result.length - nn);
             nn -= buf.length;
             if (nn <= 0) {
                 break;
             }
         }
-        return dst;
+        return result;
     }
-    function concatLength() {
-    /**
-      * Payload length has been read.
-      *
-      * @return {(RangeError|undefined)} A possible error
-      * @private
-      */
-        if (payloadLength && opcode < 0x08) {
-            totalPayloadLength += payloadLength;
-            local.assertOrThrow(
-                totalPayloadLength <= 256 * 1024 * 1024,
-                new Error("Max payload size exceeded")
-            );
-        }
-        state = (
-            masked
-            ? GET_MASK
-            : GET_DATA
-        );
-    }
-    function onState() {
+    function frameRead() {
+    /*
+     * this function will read from websocket-data-frame
+     * https://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-13#section-5.2
+     *
+     *  0               1               2               3
+     *  0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
+     * +-+-+-+-+-------+-+-------------+-------------------------------+
+     * |F|R|R|R| opcode|M| Payload len |    Extended payload length    |
+     * |I|S|S|S|  (4)  |A|     (7)     |             (16/63)           |
+     * |N|V|V|V|       |S|             |   (if payload len==126/127)   |
+     * | |1|2|3|       |K|             |                               |
+     * +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
+     * |     Extended payload length continued, if payload len == 127  |
+     * + - - - - - - - - - - - - - - - +-------------------------------+
+     * |                               |Masking-key, if MASK set to 1  |
+     * +-------------------------------+-------------------------------+
+     * | Masking-key (continued)       |          Payload Data         |
+     * +-------------------------------- - - - - - - - - - - - - - - - +
+     * :                     Payload Data continued ...                :
+     * + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
+     * |                     Payload Data continued ...                |
+     * +---------------------------------------------------------------+
+     *
+     * |Opcode  | Meaning                             | Reference |
+     * +--------+-------------------------------------+-----------|
+     * | 0      | Continuation Frame                  | RFC XXXX  |
+     * +--------+-------------------------------------+-----------|
+     * | 1      | Text Frame                          | RFC XXXX  |
+     * +--------+-------------------------------------+-----------|
+     * | 2      | Binary Frame                        | RFC XXXX  |
+     * +--------+-------------------------------------+-----------|
+     * | 8      | Connection Close Frame              | RFC XXXX  |
+     * +--------+-------------------------------------+-----------|
+     * | 9      | Ping Frame                          | RFC XXXX  |
+     * +--------+-------------------------------------+-----------|
+     * | 10     | Pong Frame                          | RFC XXXX  |
+     * +--------+-------------------------------------+-----------|
+     */
         let buf;
-        let tmp;
-        switch (state) {
-        // Reads the first two bytes of a frame.
-        case GET_INFO:
-            if (bufferedBytes < 2) {
-                loop = false;
-                return;
-            }
-            buf = consume(2);
-            if ((buf[0] & 0x30) !== 0x00) {
-                loop = false;
-                return error(RangeError, "RSV2 and RSV3 must be clear", true, 1002);
-            }
-
-            fin = (buf[0] & 0x80) === 0x80;
+        let opcode;
+        if (bufList.reduce(function (aa, bb) {
+            return aa + bb.length;
+        }, 0) < (
+            readState === READ_PAYLOAD
+            ? Math.max(payloadLength, 1)
+            : readState === READ_LENGTH63
+            ? 8
+            : 2
+        )) {
+            return;
+        }
+        switch (readState) {
+        // read frame-header
+        case READ_HEADER:
+            buf = bufListRead(2);
+            // validate opcode
             opcode = buf[0] & 0x0f;
+            local.assertOrThrow(
+                opcode === 0x01 || opcode === 0x02,
+                new Error(
+                    "Invalid WebSocket frame: opcode must be 0x01 or 0x02, not "
+                    + opcode
+                )
+            );
             payloadLength = buf[1] & 0x7f;
-
-            if (opcode === 0x00) {
-                if (!fragmented) {
-                    loop = false;
-                    return error(RangeError, "invalid opcode 0", true, 1002);
-                }
-
-                opcode = fragmented;
-            } else if (opcode === 0x01 || opcode === 0x02) {
-                if (fragmented) {
-                    loop = false;
-                    return error(RangeError, `invalid opcode ${opcode}`, true, 1002);
-                }
-            } else if (opcode > 0x07 && opcode < 0x0b) {
-                if (!fin) {
-                    loop = false;
-                    return error(RangeError, "FIN must be set", true, 1002);
-                }
-                if (payloadLength > 0x7d) {
-                    loop = false;
-                    return error(
-                        RangeError,
-                        `invalid payload length ${payloadLength}`,
-                        true,
-                        1002
-                    );
-                    return;
-                }
-            } else {
-                loop = false;
-                return error(RangeError, `invalid opcode ${opcode}`, true, 1002);
-            }
-
-            if (!fin && !fragmented) fragmented = opcode;
-            masked = (buf[1] & 0x80) === 0x80;
-
-            if (payloadLength === 126) state = GET_PAYLOAD_LENGTH_16;
-            else if (payloadLength === 127) state = GET_PAYLOAD_LENGTH_64;
-            else {
-                return concatLength();
-            }
-            return;
-        // Gets extended payload length (7+16).
-        case GET_PAYLOAD_LENGTH_16:
-            if (bufferedBytes < 2) {
-                loop = false;
-                return;
-            }
-
-            payloadLength = consume(2).readUInt16BE(0);
-            return concatLength();
-        // Gets extended payload length (7+64).
-        case GET_PAYLOAD_LENGTH_64:
-            if (bufferedBytes < 8) {
-                loop = false;
-                return;
-            }
-            buf = consume(8);
-            const num = buf.readUInt32BE(0);
-            //
-            // The maximum safe integer in JavaScript is 2^53 - 1. An error is returned
-            // if payload length is greater than this number.
-            //
-            if (num > Math.pow(2, 53 - 32) - 1) {
-                loop = false;
-                return error(
-                    RangeError,
-                    "Unsupported WebSocket frame: payload length > 2^53 - 1",
-                    false,
-                    1009
-                );
-            }
-            payloadLength = num * Math.pow(2, 32) + buf.readUInt32BE(4);
-            return concatLength();
-        // Reads mask bytes.
-        case GET_MASK:
-            if (bufferedBytes < 4) {
-                loop = false;
-                return;
-            }
-            mask = consume(4);
-            state = GET_DATA;
-            return;
-        // Reads data bytes.
-        case GET_DATA:
-            let data;
-            data = EMPTY_BUFFER;
-            if (payloadLength) {
-                if (bufferedBytes < payloadLength) {
-                    loop = false;
-                    return;
-                }
-
-                data = consume(payloadLength);
-                if (masked) unmask(data, mask);
-            }
-            // Handles a control message.
-            switch (opcode > 0x07 && opcode) {
-            case 0x08:
-                loop = false;
-
-                if (data.length === 0) {
-                    recv2.emit("conclude", 1005, "");
-                    recv2.end();
-                } else if (data.length === 1) {
-                    return error(RangeError, "invalid payload length 1", true, 1002);
-                } else {
-                    const code = data.readUInt16BE(0);
-
-                    if (!isValidStatusCode(code)) {
-                        return error(RangeError, `invalid status code ${code}`, true, 1002);
-                    }
-
-                    buf = data.slice(2);
-
-                    if (!isValidUTF8(buf)) {
-                        return error(Error, "invalid UTF-8 sequence", true, 1007);
-                    }
-                    recv2.emit("conclude", code, buf.toString());
-                    recv2.end();
-                }
-                return;
-            case 0x09:
-                recv2.emit("ping", data);
-                return;
-            default:
-                recv2.emit("pong", data);
-            }
-            state = GET_INFO;
-            // This message is not compressed so its length
-            // is the sum of the payload length of all fragments.
-            if (data.length) {
-                fragments.push(data);
-            }
-            tmp = Buffer.concat(fragments);
-            totalPayloadLength = 0;
-            fragmented = 0;
-            fragments = [];
-            recv2.emit("message", tmp.toString());
-            state = GET_INFO;
-            return;
+            readState = (
+                payloadLength === 126
+                ? READ_LENGTH16
+                : payloadLength === 127
+                ? READ_LENGTH63
+                : READ_PAYLOAD
+            );
+            break;
+        // read frame-payload-length-16
+        case READ_LENGTH16:
+            payloadLength = bufListRead(2).readUInt16BE(0);
+            readState = READ_PAYLOAD;
+            break;
+        // read frame-payload-length-63
+        case READ_LENGTH63:
+            buf = bufListRead(8);
+            payloadLength = (
+                buf.readUInt32BE(0) * 0x100000000 + buf.readUInt32BE(4)
+            );
+            readState = READ_PAYLOAD;
+            break;
+        // read frame-payload-data
+        case READ_PAYLOAD:
+            buf = (
+                payloadLength
+                ? bufListRead(payloadLength)
+                : Buffer.alloc(0)
+            );
+            readState = READ_HEADER;
+            that.push(buf);
+            break;
         }
+        local.assertOrThrow(payloadLength <= 256 * 1024 * 1024, ERR_PAYLOADMAX);
+        return true;
     }
-    recv2 = this;
-    require("stream").Writable.call(recv2, options);
-    GET_DATA = 4;
-    GET_INFO = 0;
-    GET_MASK = 3;
-    GET_PAYLOAD_LENGTH_16 = 1;
-    GET_PAYLOAD_LENGTH_64 = 2;
-    bufferedBytes = 0;
-    buffers = [];
-    fragmented = 0;
-    fragments = [];
-    opcode = 0;
-    payloadLength = 0;
-    state = GET_INFO;
-    totalPayloadLength = 0;
-    recv2._write2 = function (chunk, encoding, cb) {
-    /**
-      * Implements `Writable.prototype._write()`.
-      *
-      * @param {Buffer} chunk The chunk of data to write
-      * @param {String} encoding The character encoding of `chunk`
-      * @param {Function} cb Callback
-      */
-        let err;
-        if (state == GET_INFO && opcode === 0x08) {
-            return cb();
-        }
-        bufferedBytes += chunk.length;
-        buffers.push(chunk);
-        // Starts the parsing loop.
-        loop = true;
-        while (true) {
-            err = onState();
-            if (!loop) {
-                break;
+    // init that
+    that = this;
+    require("stream").Duplex.call(that);
+    that._read2 = _read;
+    that._write2 = _write;
+    // init Reader
+    function Reader() {
+        require("stream").Transform.call(this);
+    }
+    require("util").inherits(Reader, require("stream").Transform);
+    Reader.prototype._transform = function (chunk, ignore, callback) {
+    /*
+     * this function will implement Transform.prototype._transform
+     */
+        try {
+            bufList.push(chunk);
+            while (true) {
+                if (!frameRead()) {
+                    break;
+                }
             }
+            callback();
+        } catch (errCaught) {
+            this.destroy(errCaught);
         }
-        cb(err);
     };
+    // pipe Reader
+    ERR_PAYLOADMAX = new RangeError("Max payload size exceeded");
+    READ_HEADER = 0;
+    READ_LENGTH16 = 1;
+    READ_LENGTH63 = 2;
+    READ_PAYLOAD = 3;
+    bufList = [];
+    payloadLength = 0;
+    readState = READ_HEADER;
+    socket.pipe(new Reader());
 }
-require("util").inherits(Receiver, require("stream").Writable);
-Receiver.prototype._write = function (...argList) {
-    this._write2(...argList);
+// init Socket2
+require("util").inherits(Socket2, require("stream").Duplex);
+Socket2.prototype._read = function (...argList) {
+    try {
+        this._read2(...argList);
+    } catch (errCaught) {
+        this.destroy(errCaught);
+    }
+};
+Socket2.prototype._write = function (...argList) {
+    try {
+        this._write2(...argList);
+    } catch (errCaught) {
+        this.destroy(errCaught);
+    }
 };
 
-exports_websockets_ws_lib_receiver = Receiver;
-
-/**
-  * Builds an error object.
-  *
-  * @param {(Error|RangeError)} ErrorCtor The error constructor
-  * @param {String} message The error message
-  * @param {Boolean} prefix Specifies whether or not to add a default prefix to
-  *     `message`
-  * @param {Number} statusCode The status code
-  * @return {(Error|RangeError)} The error
-  * @private
-  */
-function error(ErrorCtor, message, prefix, statusCode) {
-    const err = new ErrorCtor(
-        prefix ? `Invalid WebSocket frame: ${message}` : message
-    );
-
-    Error.captureStackTrace(err, error);
-    err[kStatusCode] = statusCode;
-    return err;
-}
-
-
-/* jslint ignore:start */
-/*
-file https://github.com/websockets/ws/blob/6.2.1/lib/sender.js
-*/
-"use strict";
-
-// const { randomBytes } = require("crypto");
-
-// const { EMPTY_BUFFER } = exports_websockets_ws_lib_constants;
-// const { isValidStatusCode } = exports_websockets_ws_lib_validation;
-// const { mask: applyMask, toBuffer } = exports_websockets_ws_lib_buffer_util;
-
-/**
-  * HyBi Sender implementation.
-  */
-class Sender {
-    /**
-      * Creates a Sender instance.
-      *
-      * @param {net.Socket} socket The connection socket
-      */
-    constructor(socket) {
-        let send2 = this;
-        send2._socket = socket;
-
-        send2._firstFragment = true;
-
-        send2._bufferedBytes = 0;
-        send2._deflating = false;
-        send2._queue = [];
-    }
-
-    /**
-      * Frames a piece of data according to the HyBi WebSocket protocol.
-      *
-      * @param {Buffer} data The data to frame
-      * @param {Object} options Options object
-      * @param {Number} options.opcode The opcode
-      * @param {Boolean} options.readOnly Specifies whether `data` can be modified
-      * @param {Boolean} options.fin Specifies whether or not to set the FIN bit
-      * @param {Boolean} options.mask Specifies whether or not to mask `data`
-      * @param {Boolean} options.rsv1 Specifies whether or not to set the RSV1 bit
-      * @return {Buffer[]} The framed data as a list of `Buffer` instances
-      * @public
-      */
-    static frame(data, options) {
-        const merge = options.mask && options.readOnly;
-        var offset = options.mask ? 6 : 2;
-        var payloadLength = data.length;
-
-        if (data.length >= 65536) {
-            offset += 8;
-            payloadLength = 127;
-        } else if (data.length > 125) {
-            offset += 2;
-            payloadLength = 126;
-        }
-
-        const target = Buffer.allocUnsafe(merge ? data.length + offset : offset);
-
-        target[0] = options.fin ? options.opcode | 0x80 : options.opcode;
-        if (options.rsv1) target[0] |= 0x40;
-
-        target[1] = payloadLength;
-
-        if (payloadLength === 126) {
-            target.writeUInt16BE(data.length, 2);
-        } else if (payloadLength === 127) {
-            target.writeUInt32BE(0, 2);
-            target.writeUInt32BE(data.length, 6);
-        }
-
-        if (!options.mask) return [target, data];
-
-        const mask = require("crypto").randomBytes(4);
-
-        target[1] |= 0x80;
-        target[offset - 4] = mask[0];
-        target[offset - 3] = mask[1];
-        target[offset - 2] = mask[2];
-        target[offset - 1] = mask[3];
-
-        if (merge) {
-            applyMask(data, mask, target, offset, data.length);
-            return [target];
-        }
-
-        applyMask(data, mask, data, 0, data.length);
-        return [target, data];
-    }
-
-    /**
-      * Sends a close message to the other peer.
-      *
-      * @param {(Number|undefined)} code The status code component of the body
-      * @param {String} data The message component of the body
-      * @param {Boolean} mask Specifies whether or not to mask the message
-      * @param {Function} cb Callback
-      * @public
-      */
-    close(code, data, mask, cb) {
-        let send2 = this;
-        var buf;
-
-        if (code === undefined) {
-            buf = EMPTY_BUFFER;
-        } else if (typeof code !== "number" || !isValidStatusCode(code)) {
-            throw new TypeError("First argument must be a valid error code number");
-        } else if (data === undefined || data === "") {
-            buf = Buffer.allocUnsafe(2);
-            buf.writeUInt16BE(code, 0);
-        } else {
-            buf = Buffer.allocUnsafe(2 + Buffer.byteLength(data));
-            buf.writeUInt16BE(code, 0);
-            buf.write(data, 2);
-        }
-
-        if (send2._deflating) {
-            send2.enqueue([send2.doClose, buf, mask, cb]);
-        } else {
-            send2.doClose(buf, mask, cb);
-        }
-    }
-
-    /**
-      * Frames and sends a close message.
-      *
-      * @param {Buffer} data The message to send
-      * @param {Boolean} mask Specifies whether or not to mask `data`
-      * @param {Function} cb Callback
-      * @private
-      */
-    doClose(data, mask, cb) {
-        let send2 = this;
-        send2.sendFrame(
-            Sender.frame(data, {
-                fin: true,
-                rsv1: false,
-                opcode: 0x08,
-                mask,
-                readOnly: false
-            }),
-            cb
-        );
-    }
-
-    /**
-      * Sends a pong message to the other peer.
-      *
-      * @param {*} data The message to send
-      * @param {Boolean} mask Specifies whether or not to mask `data`
-      * @param {Function} cb Callback
-      * @public
-      */
-    pong(data, mask, cb) {
-        let send2 = this;
-        const buf = toBuffer(data);
-
-        if (send2._deflating) {
-            send2.enqueue([send2.doPong, buf, mask, toBuffer.readOnly, cb]);
-        } else {
-            send2.doPong(buf, mask, toBuffer.readOnly, cb);
-        }
-    }
-
-    /**
-      * Frames and sends a pong message.
-      *
-      * @param {*} data The message to send
-      * @param {Boolean} mask Specifies whether or not to mask `data`
-      * @param {Boolean} readOnly Specifies whether `data` can be modified
-      * @param {Function} cb Callback
-      * @private
-      */
-    doPong(data, mask, readOnly, cb) {
-        let send2 = this;
-        send2.sendFrame(
-            Sender.frame(data, {
-                fin: true,
-                rsv1: false,
-                opcode: 0x0a,
-                mask,
-                readOnly
-            }),
-            cb
-        );
-    }
-
-    /**
-      * Sends a data message to the other peer.
-      *
-      * @param {*} data The message to send
-      * @param {Object} options Options object
-      * @param {Boolean} options.binary Specifies whether `data` is binary or text
-      * @param {Boolean} options.fin Specifies whether the fragment is the last one
-      * @param {Boolean} options.mask Specifies whether or not to mask `data`
-      * @param {Function} cb Callback
-      * @public
-      */
-    send(data, options, cb) {
-        let send2 = this;
-        const buf = toBuffer(data);
-        var opcode = options.binary ? 2 : 1;
-        if (send2._firstFragment) {
-            send2._firstFragment = false;
-        } else {
-            opcode = 0;
-        }
-
-        if (options.fin) send2._firstFragment = true;
-
-        send2.sendFrame(
-            Sender.frame(buf, {
-                fin: options.fin,
-                rsv1: false,
-                opcode,
-                mask: options.mask,
-                readOnly: toBuffer.readOnly
-            }),
-            cb
-        );
-    }
-
-    /**
-      * Dispatches a data message.
-      *
-      * @param {Buffer} data The message to send
-      * @param {Object} options Options object
-      * @param {Number} options.opcode The opcode
-      * @param {Boolean} options.readOnly Specifies whether `data` can be modified
-      * @param {Boolean} options.fin Specifies whether or not to set the FIN bit
-      * @param {Boolean} options.mask Specifies whether or not to mask `data`
-      * @param {Boolean} options.rsv1 Specifies whether or not to set the RSV1 bit
-      * @param {Function} cb Callback
-      * @private
-      */
-    dispatch(data, compress, options, cb) {
-        let send2 = this;
-        send2.sendFrame(Sender.frame(data, options), cb);
-    }
-
-    /**
-      * Executes queued send operations.
-      *
-      * @private
-      */
-    dequeue() {
-        let send2 = this;
-        while (!send2._deflating && send2._queue.length) {
-            const params = send2._queue.shift();
-
-            send2._bufferedBytes -= params[1].length;
-            params[0].apply(send2, params.slice(1));
-        }
-    }
-
-    /**
-      * Enqueues a send operation.
-      *
-      * @param {Array} params Send operation parameters.
-      * @private
-      */
-    enqueue(params) {
-        let send2 = this;
-        send2._bufferedBytes += params[1].length;
-        send2._queue.push(params);
-    }
-
-    /**
-      * Sends a frame.
-      *
-      * @param {Buffer[]} list The frame to send
-      * @param {Function} cb Callback
-      * @private
-      */
-    sendFrame(list, cb) {
-        let send2 = this;
-        if (list.length === 2) {
-            send2._socket.cork();
-            send2._socket.write(list[0]);
-            send2._socket.write(list[1], cb);
-            send2._socket.uncork();
-        } else {
-            send2._socket.write(list[0], cb);
-        }
-    }
-}
-
-exports_websockets_ws_lib_sender = Sender;
-
-
-/*
-file https://github.com/websockets/ws/blob/6.2.1/lib/websocket.js
-*/
-"use strict";
-
-// const EventEmitter = require("events");
-// const crypto = require("crypto");
-// const https = require("https");
-// const http = require("http");
-// const net = require("net");
-// const tls = require("tls");
-// const url = require("url");
-
-// const EventTarget = exports_websockets_ws_lib_event_target;
-// const extension = exports_websockets_ws_lib_extension;
-// const Receiver = exports_websockets_ws_lib_receiver;
-// const Sender = exports_websockets_ws_lib_sender;
-// const {
-//   EMPTY_BUFFER,
-//   GUID,
-//   kStatusCode,
-// } = exports_websockets_ws_lib_constants;
-
-const readyStates = ["CONNECTING", "OPEN", "CLOSING", "CLOSED"];
-
-/**
-  * Class representing a WebSocket.
-  *
-  * @extends EventEmitter
-  */
-class WebSocket extends EventEmitter {
+function WebSocket(address) {
     /**
       * Create a new `WebSocket`.
       *
@@ -1555,429 +963,203 @@ class WebSocket extends EventEmitter {
       * @param {(String|String[])} protocols The subprotocols
       * @param {Object} options Connection options
       */
-    constructor(address) {
-        let cryptoKey;
-        let recv2;
-        let req;
-        let send2;
-        let ws2;
-        function close(code, data) {
-        /**
-          * Start a closing handshake.
-          *
-          *          +----------+   +-----------+   +----------+
-          *     - - -|ws.close()|-->|close frame|-->|ws.close()|- - -
-          *    |     +----------+   +-----------+   +----------+     |
-          *          +----------+   +-----------+         |
-          * CLOSING  |ws.close()|<--|close frame|<--+-----+       CLOSING
-          *          +----------+   +-----------+   |
-          *    |           |                        |   +---+        |
-          *                +------------------------+-->|fin| - - - -
-          *    |         +---+                      |   +---+
-          *     - - - - -|fin|<---------------------+
-          *              +---+
-          *
-          * @param {Number} code Status code explaining why the connection is closing
-          * @param {String} data A string explaining why the connection is closing
-          * @public
-          */
-            if (ws2.readyState === WebSocket.CLOSED) return;
-            if (ws2.readyState === WebSocket.CONNECTING) {
-                const msg = "WebSocket was closed before the connection was established";
-                return abortHandshake(ws2, req, msg);
-            }
-
-            if (ws2.readyState === WebSocket.CLOSING) {
-                if (ws2._closeFrameSent && ws2._closeFrameReceived) ws2._socket.end();
-                return;
-            }
-
-            ws2.readyState = WebSocket.CLOSING;
-            send2.close(code, data, !ws2._isServer, (err) => {
-                //
-                // This error is handled by the `"error"` listener on the socket. We only
-                // want to know if the close frame has been sent here.
-                //
-                if (err) return;
-
-                ws2._closeFrameSent = true;
-                if (ws2._closeFrameReceived) ws2._socket.end();
-            });
-
-            //
-            // Specify a timeout for the closing handshake to complete.
-            //
-            ws2._closeTimer = setTimeout(
-                ws2._socket.destroy.bind(ws2._socket),
-                30000
+    let cryptoKey;
+    let ws2;
+    let wsSend;
+    ws2 = this;
+    require("stream").EventEmitter.call(ws2);
+    function close() {
+/*
+ * Start a closing handshake.
+ *
+ *          +----------+   +-----------+   +----------+
+ *     - - -|ws.close()|-->|close frame|-->|ws.close()|- - -
+ *    |     +----------+   +-----------+   +----------+     |
+ *          +----------+   +-----------+         |
+ * CLOSING  |ws.close()|<--|close frame|<--+-----+       CLOSING
+ *          +----------+   +-----------+   |
+ *    |           |                        |   +---+        |
+ *                +------------------------+-->|fin| - - - -
+ *    |         +---+                      |   +---+
+ *     - - - - -|fin|<---------------------+
+ *              +---+
+ *
+ * @param {Number} code Status code explaining why the connection is closing
+ * @param {String} data A string explaining why the connection is closing
+ * @public
+ */
+        if (ws2.readyState === WebSocket.CLOSED) {
+            return;
+        }
+        if (ws2.readyState === WebSocket.CONNECTING) {
+            throw new Error(
+                "WebSocket was closed before the connection was established"
             );
         }
-        function emitClose() {
-        /**
-          * Emit the `"close"` event.
-          *
-          * @private
-          */
-            ws2.readyState = WebSocket.CLOSED;
-            if (!ws2._socket) {
-                ws2.emit("close", ws2._closeCode, ws2._closeMessage);
-                return;
+        if (ws2.readyState === WebSocket.CLOSING) {
+            if (ws2._closeFrameSent && ws2._closeFrameReceived) {
+                ws2._socket.end();
             }
-            recv2.removeAllListeners();
-            ws2.emit("close", ws2._closeCode, ws2._closeMessage);
+            return;
         }
-        function send(data, options, cb) {
-        /**
-          * Send a data message.
-          *
-          * @param {*} data The message to send
-          * @param {Object} options Options object
-          * @param {Boolean} options.binary Specifies whether `data` is binary or text
-          * @param {Boolean} options.fin Specifies whether the fragment is the last one
-          * @param {Boolean} options.mask Specifies whether or not to mask `data`
-          * @param {Function} cb Callback which is executed when data is written out
-          * @public
-          */
-            if (typeof options === "function") {
-                cb = options;
-                options = {};
-            }
-
-            if (ws2.readyState !== WebSocket.OPEN) {
-                const err = new Error(
-                    `WebSocket is not open: readyState ${ws2.readyState} ` +
-                        `(${readyStates[ws2.readyState]})`
-                );
-
-                if (cb) return cb(err);
-                throw err;
-            }
-
-            if (typeof data === "number") data = data.toString();
-
-            const opts = Object.assign(
-                {
-                    binary: typeof data !== "string",
-                    mask: !ws2._isServer,
-                    fin: true
-                },
-                options
-            );
-            send2.send(data || EMPTY_BUFFER, opts, cb);
-        }
-        super();
-        ws2 = this;
-        ws2.close = close;
-        ws2.emitClose = emitClose;
-        ws2.send = send;
-        ws2.readyState = WebSocket.CONNECTING;
-        ws2.protocol = "";
-        ws2._closeMessage = "";
-        ws2._closeCode = 1006;
-        ws2._redirects = 0;
-        // initAsClient
-        cryptoKey = require("crypto").randomBytes(16).toString("base64");
-        req = require("http").get(Object.assign(require("url").parse(
-            address
-        ), {
-            "createConnection": function (opt) {
-                return require("net").connect(Object.assign(opt, {
-                    path: opt.socketPath
-                }));
-            },
-            "defaultPort": 80,
-            "followRedirects": false,
-            "headers": {
-                "Connection": "Upgrade",
-                "Sec-WebSocket-Key": cryptoKey,
-                "Sec-WebSocket-Version": 13,
-                "Upgrade": "websocket"
-            },
-            "maxRedirects": 10,
-            "protocol": "http:",
-            "protocolVersion": 13
-        }));
-        req.once("upgrade", function (res, socket, head) {
-            function socketOnData(chunk) {
-                if (!recv2.write(chunk)) {
-                    socket.pause();
-                }
-            }
-            function socketOnEnd() {
-                ws2.readyState = WebSocket.CLOSING;
-                recv2.end();
-                socket.end();
-            }
-            recv2 = new Receiver();
-            send2 = new Sender(socket);
-            ws2.emit("upgrade", res);
-            // The user may have closed the connection from a listener
-            // of the `upgrade` event.
-            if (ws2.readyState !== WebSocket.CONNECTING) {
-                return;
-            }
-            req = null;
-            local.assertOrThrow(
-                (
-                    res.headers["sec-websocket-accept"]
-                    === require("crypto").createHash("sha1").update(
-                        cryptoKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-                    ).digest("base64")
-                ),
-                new Error("Invalid Sec-WebSocket-Accept header")
-            );
-            /**
-              * Set up the socket and the internal resources.
-              *
-              * @param {net.Socket} socket The network socket between the server and client
-              * @param {Buffer} head The first packet of the upgraded stream
-              * @private
-              */
-            //!! ws2.setSocket(socket, head);
-            ws2._socket = socket;
-            recv2.on("conclude", function receiverOnConclude(code, reason) {
-                ws2._socket.removeListener("data", socketOnData);
-                ws2._socket.resume();
-
-                ws2._closeFrameReceived = true;
-                ws2._closeMessage = reason;
-                ws2._closeCode = code;
-
-                if (code === 1005) ws2.close();
-                else ws2.close(code, reason);
-            });
-            recv2.on("drain", function () {
-                ws2._socket.resume();
-            });
-            recv2.on("error", function receiverOnError(err) {
-                ws2._socket.removeListener("data", socketOnData);
-                ws2.readyState = WebSocket.CLOSING;
-                ws2._closeCode = err[kStatusCode];
-                ws2.emit("error", err);
-                ws2._socket.destroy();
-            });
-            recv2.on("message", function receiverOnMessage(data) {
-                ws2.emit("message", data);
-            });
-            recv2.on("ping", function receiverOnPing(data) {
-                ws2.pong(data, !websocket._isServer, local.nop);
-                ws2.emit("ping", data);
-            });
-            recv2.on("pong", function receiverOnPong(data) {
-                ws2.emit("pong", data);
-            });
-            socket.setTimeout(0);
-            socket.setNoDelay();
-            if (head.length > 0) socket.unshift(head);
-            socket.on("data", socketOnData);
-            socket.once("close", function () {
-                socket.removeListener("end", socketOnEnd);
-                ws2.readyState = WebSocket.CLOSING;
-                //
-                // The close frame might not have been received or the `"end"` event emitted,
-                // for example, if the socket was destroyed due to an error. Ensure that the
-                // `receiver` stream is closed after writing any remaining buffered data to
-                // it. If the readable side of the socket is in flowing mode then there is no
-                // buffered data as everything has been already written and `readable.read()`
-                // will return `null`. If instead, the socket is paused, any possible buffered
-                // data will be read as a single chunk and emitted synchronously in a single
-                // `"data"` event.
-                //
-                ws2._socket.read();
-                recv2.end();
-
-                socket.removeListener("data", socketOnData);
-
-                clearTimeout(ws2._closeTimer);
-
-                if (
-                    recv2._writableState.finished ||
-                    recv2._writableState.errorEmitted
-                ) {
-                    ws2.emitClose();
-                } else {
-                    recv2.on("error", function () {
-                        ws2.emitClose();
-                    });
-                    recv2.on("finish", function () {
-                        ws2.emitClose();
-                    });
-                }
-            });
-            socket.on("end", socketOnEnd);
-            socket.once("error", function () {
-                socket.on("error", local.nop);
-                ws2.readyState = WebSocket.CLOSING;
-                socket.destroy();
-            });
-            ws2.readyState = WebSocket.OPEN;
-            ws2.emit("open");
-        });
-        req.on("error", (err) => {
-            if (req.aborted) {
-                return;
-            }
-            req = null;
-            ws2.readyState = WebSocket.CLOSING;
-            ws2.emit("error", err);
-            ws2.emitClose();
-        });
-        req.on("response", (res) => {
-            const location = res.headers.location;
-            const statusCode = res.statusCode;
-        });
+        ws2.readyState = WebSocket.CLOSING;
+        ws2._socket.end();
+        //
+        // Specify a timeout for the closing handshake to complete.
+        //
+        ws2._closeTimer = setTimeout(
+            ws2._socket.destroy.bind(ws2._socket),
+            30000
+        );
     }
-
-    get CONNECTING() {
-        return WebSocket.CONNECTING;
-    }
-    get CLOSING() {
-        return WebSocket.CLOSING;
-    }
-    get CLOSED() {
-        return WebSocket.CLOSED;
-    }
-    get OPEN() {
-        return WebSocket.OPEN;
-    }
-
+    function emitClose() {
     /**
-      * Send a pong.
+      * Emit the `"close"` event.
       *
-      * @param {*} data The data to send
-      * @param {Boolean} mask Indicates whether or not to mask `data`
-      * @param {Function} cb Callback which is executed when the pong is sent
-      * @public
+      * @private
       */
-    pong(data, mask, cb) {
-        let ws2 = this;
-        if (typeof data === "function") {
-            cb = data;
-            data = mask = undefined;
-        } else if (typeof mask === "function") {
-            cb = mask;
-            mask = undefined;
+        ws2.readyState = WebSocket.CLOSED;
+        ws2.emit("close");
+    }
+    function send(data, options, cb) {
+/**
+  * Send a data message.
+  *
+  * @param {*} data The message to send
+  * @param {Object} options Options object
+  * @param {Boolean} options.binary Specifies whether `data` is binary or text
+  * @param {Boolean} options.fin Specifies whether the fragment is the last one
+  * @param {Function} cb Callback which is executed when data is written out
+  * @public
+  */
+        if (typeof options === "function") {
+            cb = options;
+            options = {};
         }
-
         if (ws2.readyState !== WebSocket.OPEN) {
             const err = new Error(
-                `WebSocket is not open: readyState ${ws2.readyState} ` +
-                    `(${readyStates[ws2.readyState]})`
+                "WebSocket is not open: readyState " + ws2.readyState + "("
+                + Array.from([
+                    "CONNECTING", "OPEN", "CLOSING", "CLOSED"
+                ])[ws2.readyState] + ")"
             );
-
-            if (cb) return cb(err);
+            if (cb) {
+                return cb(err);
+            }
             throw err;
         }
-
-        if (typeof data === "number") data = data.toString();
-        if (mask === undefined) mask = !ws2._isServer;
-        send2.pong(data || EMPTY_BUFFER, mask, cb);
-    }
-}
-
-readyStates.forEach((readyState, i) => {
-    WebSocket[readyState] = i;
-});
-
-//
-// Add the `onopen`, `onerror`, `onclose`, and `onmessage` attributes.
-// See https://html.spec.whatwg.org/multipage/comms.html#the-websocket-interface
-//
-["open", "error", "close", "message"].forEach(function (method) {
-    Object.defineProperty(WebSocket.prototype, `on${method}`, {
-        /**
-          * Return the listener of the event.
-          *
-          * @return {(Function|undefined)} The event listener or `undefined`
-          * @public
-          */
-        get() {
-            const listeners = this.listeners(method);
-            for (var i = 0; i < listeners.length; i++) {
-                if (listeners[i]._listener) return listeners[i]._listener;
-            }
-
-            return undefined;
-        },
-        /**
-          * Add a listener for the event.
-          *
-          * @param {Function} listener The listener to add
-          * @public
-          */
-        set(listener) {
-            const listeners = this.listeners(method);
-            for (var i = 0; i < listeners.length; i++) {
-                //
-                // Remove only the listeners added via `addEventListener`.
-                //
-                if (listeners[i]._listener) this.removeListener(method, listeners[i]);
-            }
-            this.addEventListener(method, listener);
+        if (typeof data === "number") {
+            data = data.toString();
         }
+        wsSend.write(data || BUFFER0, cb);
+    }
+    //!! ws2 = this;
+    //!! require("stream").Transform.call(ws2);
+    ws2.close = close;
+    ws2.emitClose = emitClose;
+    ws2.send = send;
+    ws2.readyState = WebSocket.CONNECTING;
+    ws2.protocol = "";
+    // initAsClient
+    cryptoKey = require("crypto").randomBytes(16).toString("base64");
+    require("http").get(Object.assign(require("url").parse(
+        address
+    ), {
+        "createConnection": function (opt) {
+            return require("net").connect(Object.assign(opt, {
+                path: opt.socketPath
+            }));
+        },
+        "defaultPort": 80,
+        "followRedirects": false,
+        "headers": {
+            "Connection": "Upgrade",
+            "Sec-WebSocket-Key": cryptoKey,
+            "Sec-WebSocket-Version": 13,
+            "Upgrade": "websocket"
+        },
+        "maxRedirects": 10,
+        "protocol": "http:",
+        "protocolVersion": 13
+    })).once("upgrade", function (res, socket, head) {
+        function socketOnEnd() {
+            ws2.readyState = WebSocket.CLOSING;
+            socket.end();
+        }
+        wsSend = new Socket2(socket); // jslint ignore:line
+        wsSend.on("data", function (payload) {
+            ws2.emit("message", payload.toString());
+        });
+        ws2.emit("upgrade", res);
+        // The user may have closed the connection from a listener
+        // of the `upgrade` event.
+        if (ws2.readyState !== WebSocket.CONNECTING) {
+            return;
+        }
+        local.assertOrThrow(
+            (
+                res.headers["sec-websocket-accept"]
+                === require("crypto").createHash("sha1").update(
+                    cryptoKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+                ).digest("base64")
+            ),
+            new Error("Invalid Sec-WebSocket-Accept header")
+        );
+/**
+* Set up the socket and the internal resources.
+*
+* @param {net.Socket} socket The network socket between the server and client
+* @param {Buffer} head The first packet of the upgraded stream
+* @private
+*/
+        //!! ws2.setSocket(socket, head);
+        ws2._socket = socket;
+        socket.setTimeout(0);
+        socket.setNoDelay();
+        if (head.length > 0) {
+            socket.unshift(head);
+        }
+        socket.once("close", function () {
+            socket.removeListener("end", socketOnEnd);
+            ws2.readyState = WebSocket.CLOSING;
+// The close frame might not have been received or the `"end"` event emitted,
+// for example, if the socket was destroyed due to an error. Ensure that the
+// `receiver` stream is closed after writing any remaining buffered data to
+// it. If the readable side of the socket is in flowing mode then there is no
+// buffered data as everything has been already written and `readable.read()`
+// will return `null`. If instead, the socket is paused, any possible buffered
+// data will be read as a single chunk and emitted synchronously in a single
+// `"data"` event.
+            ws2._socket.read();
+            clearTimeout(ws2._closeTimer);
+            ws2.emitClose();
+        });
+        socket.on("end", socketOnEnd);
+        socket.once("error", function () {
+            socket.on("error", local.nop);
+            ws2.readyState = WebSocket.CLOSING;
+            socket.destroy();
+        });
+        ws2.readyState = WebSocket.OPEN;
+        ws2.emit("open");
     });
-});
-
+}
+require("util").inherits(WebSocket, require("stream").EventEmitter);
+/* jslint ignore:start */
 WebSocket.prototype.addEventListener = EventTarget.addEventListener;
 WebSocket.prototype.removeEventListener = EventTarget.removeEventListener;
-
-exports_websockets_ws_lib_websocket = WebSocket;
-
-/**
-  * Create a `net.Socket` and initiate a connection.
-  *
-  * @param {Object} options Connection options
-  * @return {net.Socket} The newly created socket used to start the connection
-  * @private
-  */
-
-
-/**
-  * Abort the handshake and emit an error.
-  *
-  * @param {WebSocket} websocket The WebSocket instance
-  * @param {(http.ClientRequest|net.Socket)} stream The request to abort or the
-  *     socket to destroy
-  * @param {String} message The error message
-  * @private
-  */
-function abortHandshake(ws2, stream, message) {
-    ws2.readyState = WebSocket.CLOSING;
-
-    const err = new Error(message);
-    Error.captureStackTrace(err, abortHandshake);
-
-    if (stream.setHeader) {
-        stream.abort();
-        stream.once("abort", ws2.emitClose.bind(ws2));
-        ws2.emit("error", err);
-    } else {
-        stream.destroy(err);
-        stream.once("error", ws2.emit.bind(ws2, "error"));
-        stream.once("close", ws2.emitClose.bind(ws2));
-    }
-}
-
+["CONNECTING", "OPEN", "CLOSING", "CLOSED"].forEach(function (readyState, ii) {
+    WebSocket[readyState] = ii;
+});
 /*
 file https://github.com/websockets/ws/blob/6.2.1/index.js
 */
 "use strict";
-
-// const WebSocket = exports_websockets_ws_lib_websocket;
-
-WebSocket.Server = exports_websockets_ws_lib_websocket_server;
-WebSocket.Receiver = exports_websockets_ws_lib_receiver;
-WebSocket.Sender = exports_websockets_ws_lib_sender;
-
 exports_websockets_ws_index = WebSocket;
-
-
 /*
 repo https://github.com/puppeteer/puppeteer/tree/v1.19.0
 committed 2019-07-23T05:02:45Z
 */
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/package.json
 */
@@ -2054,8 +1236,6 @@ exports_puppeteer_puppeteer_package_json = {
         "readline": false
     }
 }
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/helper.js
 */
@@ -2077,7 +1257,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/helper.js
 // const {TimeoutError} = exports_puppeteer_puppeteer_lib_Errors;
 // const debugError = require("debug")(`puppeteer:error`);
 // const fs = require("fs");
-
 class Helper {
     /**
       * @param {Function|string} fun
@@ -2090,25 +1269,25 @@ class Helper {
             return /** @type {string} */ (fun);
         }
         return `(${fun})(${args.map(serializeArgument).join(",")})`;
-
         /**
           * @param {*} arg
           * @return {string}
           */
         function serializeArgument(arg) {
-            if (Object.is(arg, undefined))
+            if (Object.is(arg, undefined)) {
                 return "undefined";
+            }
             return JSON.stringify(arg);
         }
     }
-
     /**
       * @param {!Protocol.Runtime.ExceptionDetails} exceptionDetails
       * @return {string}
       */
     static getExceptionMessage(exceptionDetails) {
-        if (exceptionDetails.exception)
+        if (exceptionDetails.exception) {
             return exceptionDetails.exception.description || exceptionDetails.exception.value;
+        }
         let message = exceptionDetails.text;
         if (exceptionDetails.stackTrace) {
             for (const callframe of exceptionDetails.stackTrace.callFrames) {
@@ -2119,7 +1298,6 @@ class Helper {
         }
         return message;
     }
-
     /**
       * @param {!Protocol.Runtime.RemoteObject} remoteObject
       * @return {*}
@@ -2144,7 +1322,6 @@ class Helper {
         }
         return remoteObject.value;
     }
-
     /**
       * @param {!Puppeteer.CDPSession} client
       * @param {!Protocol.Runtime.RemoteObject} remoteObject
@@ -2158,7 +1335,6 @@ class Helper {
             debugError(error);
         });
     }
-
     /**
       * @param {!Object} classType
       */
@@ -2180,7 +1356,6 @@ class Helper {
             });
         }
     }
-
     /**
       * @param {!NodeJS.EventEmitter} emitter
       * @param {(string|symbol)} eventName
@@ -2191,7 +1366,6 @@ class Helper {
         emitter.on(eventName, handler);
         return { emitter, eventName, handler };
     }
-
     /**
       * @param {!Array<{emitter: !NodeJS.EventEmitter, eventName: (string|symbol), handler: function(?):void}>} listeners
       */
@@ -2200,7 +1374,6 @@ class Helper {
             listener.emitter.removeListener(listener.eventName, listener.handler);
         listeners.splice(0, listeners.length);
     }
-
     /**
       * @param {!Object} obj
       * @return {boolean}
@@ -2208,7 +1381,6 @@ class Helper {
     static isString(obj) {
         return typeof obj === "string" || obj instanceof String;
     }
-
     /**
       * @param {!Object} obj
       * @return {boolean}
@@ -2216,7 +1388,6 @@ class Helper {
     static isNumber(obj) {
         return typeof obj === "number" || obj instanceof Number;
     }
-
     static promisify(nodeFunction) {
         function promisified(...args) {
             return new Promise((resolve, reject) => {
@@ -2232,7 +1403,6 @@ class Helper {
         }
         return promisified;
     }
-
     /**
       * @param {!NodeJS.EventEmitter} emitter
       * @param {(string|symbol)} eventName
@@ -2263,7 +1433,6 @@ class Helper {
         }
         return promise;
     }
-
     /**
       * @template T
       * @param {!Promise<T>} promise
@@ -2285,7 +1454,6 @@ class Helper {
                 clearTimeout(timeoutTimer);
         }
     }
-
     /**
       * @param {!Puppeteer.CDPSession} client
       * @param {string} handle
@@ -2317,11 +1485,9 @@ class Helper {
         }
     }
 }
-
 const openAsync = Helper.promisify(fs.open);
 const writeAsync = Helper.promisify(fs.write);
 const closeAsync = Helper.promisify(fs.close);
-
 /**
   * @param {*} value
   * @param {string=} message
@@ -2330,7 +1496,6 @@ function assert(value, message) {
     if (!value)
         throw new Error(message);
 }
-
 exports_puppeteer_puppeteer_lib_helper = {
     helper: Helper,
     assert,
@@ -2338,8 +1503,6 @@ exports_puppeteer_puppeteer_lib_helper = {
 };
 // hack-puppeteer - init helper
 let helper = exports_puppeteer_puppeteer_lib_helper.helper;
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Browser.js
 */
@@ -2358,13 +1521,11 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Browser.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-
 // const { helper, assert } = exports_puppeteer_puppeteer_lib_helper;
 // const {Target} = exports_puppeteer_puppeteer_lib_Target;
 // const EventEmitter = require("events");
 // const {TaskQueue} = exports_puppeteer_puppeteer_lib_TaskQueue;
 // const {Events} = exports_puppeteer_puppeteer_lib_Events;
-
 class Browser extends EventEmitter {
     /**
       * @param {!Puppeteer.Connection} connection
@@ -2379,7 +1540,6 @@ class Browser extends EventEmitter {
         await connection.send("Target.setDiscoverTargets", {discover: true});
         return browser;
     }
-
     /**
       * @param {!Puppeteer.Connection} connection
       * @param {!Array<string>} contextIds
@@ -2396,13 +1556,11 @@ class Browser extends EventEmitter {
         this._screenshotTaskQueue = new TaskQueue();
         this._connection = connection;
         this._closeCallback = closeCallback || new Function();
-
         this._defaultContext = new BrowserContext(this._connection, this, null);
         /** @type {Map<string, BrowserContext>} */
         this._contexts = new Map();
         for (const contextId of contextIds)
             this._contexts.set(contextId, new BrowserContext(this._connection, this, contextId));
-
         /** @type {Map<string, Target>} */
         this._targets = new Map();
         this._connection.on(Events.Connection.Disconnected, () => this.emit(Events.Browser.Disconnected));
@@ -2410,14 +1568,12 @@ class Browser extends EventEmitter {
         this._connection.on("Target.targetDestroyed", this._targetDestroyed.bind(this));
         this._connection.on("Target.targetInfoChanged", this._targetInfoChanged.bind(this));
     }
-
     /**
       * @return {?Puppeteer.ChildProcess}
       */
     process() {
         return this._process;
     }
-
     /**
       * @return {!Promise<!BrowserContext>}
       */
@@ -2427,21 +1583,18 @@ class Browser extends EventEmitter {
         this._contexts.set(browserContextId, context);
         return context;
     }
-
     /**
       * @return {!Array<!BrowserContext>}
       */
     browserContexts() {
         return [this._defaultContext, ...Array.from(this._contexts.values())];
     }
-
     /**
       * @return {!BrowserContext}
       */
     defaultBrowserContext() {
         return this._defaultContext;
     }
-
     /**
       * @param {?string} contextId
       */
@@ -2449,7 +1602,6 @@ class Browser extends EventEmitter {
         await this._connection.send("Target.disposeBrowserContext", {browserContextId: contextId || undefined});
         this._contexts.delete(contextId);
     }
-
     /**
       * @param {!Protocol.Target.targetCreatedPayload} event
       */
@@ -2457,17 +1609,14 @@ class Browser extends EventEmitter {
         const targetInfo = event.targetInfo;
         const {browserContextId} = targetInfo;
         const context = (browserContextId && this._contexts.has(browserContextId)) ? this._contexts.get(browserContextId) : this._defaultContext;
-
         const target = new Target(targetInfo, context, () => this._connection.createSession(targetInfo), this._ignoreHTTPSErrors, this._defaultViewport, this._screenshotTaskQueue);
         assert(!this._targets.has(event.targetInfo.targetId), "Target should not exist before targetCreated");
         this._targets.set(event.targetInfo.targetId, target);
-
         if (await target._initializedPromise) {
             this.emit(Events.Browser.TargetCreated, target);
             context.emit(Events.BrowserContext.TargetCreated, target);
         }
     }
-
     /**
       * @param {{targetId: string}} event
       */
@@ -2481,7 +1630,6 @@ class Browser extends EventEmitter {
             target.browserContext().emit(Events.BrowserContext.TargetDestroyed, target);
         }
     }
-
     /**
       * @param {!Protocol.Target.targetInfoChangedPayload} event
       */
@@ -2496,21 +1644,18 @@ class Browser extends EventEmitter {
             target.browserContext().emit(Events.BrowserContext.TargetChanged, target);
         }
     }
-
     /**
       * @return {string}
       */
     wsEndpoint() {
         return this._connection.url();
     }
-
     /**
       * @return {!Promise<!Puppeteer.Page>}
       */
     async newPage() {
         return this._defaultContext.newPage();
     }
-
     /**
       * @param {?string} contextId
       * @return {!Promise<!Puppeteer.Page>}
@@ -2522,21 +1667,18 @@ class Browser extends EventEmitter {
         const page = await target.page();
         return page;
     }
-
     /**
       * @return {!Array<!Target>}
       */
     targets() {
         return Array.from(this._targets.values()).filter(target => target._isInitialized);
     }
-
     /**
       * @return {!Target}
       */
     target() {
         return this.targets().find(target => target.type() === "browser");
     }
-
     /**
       * @param {function(!Target):boolean} predicate
       * @param {{timeout?: number}=} options
@@ -2561,7 +1703,6 @@ class Browser extends EventEmitter {
             this.removeListener(Events.Browser.TargetCreated, check);
             this.removeListener(Events.Browser.TargetChanged, check);
         }
-
         /**
           * @param {!Target} target
           */
@@ -2570,7 +1711,6 @@ class Browser extends EventEmitter {
                 resolve(target);
         }
     }
-
     /**
       * @return {!Promise<!Array<!Puppeteer.Page>>}
       */
@@ -2579,7 +1719,6 @@ class Browser extends EventEmitter {
         // Flatten array.
         return contextPages.reduce((acc, x) => acc.concat(x), []);
     }
-
     /**
       * @return {!Promise<string>}
       */
@@ -2587,7 +1726,6 @@ class Browser extends EventEmitter {
         const version = await this._getVersion();
         return version.product;
     }
-
     /**
       * @return {!Promise<string>}
       */
@@ -2595,23 +1733,19 @@ class Browser extends EventEmitter {
         const version = await this._getVersion();
         return version.userAgent;
     }
-
     async close() {
         await this._closeCallback.call(null);
         this.disconnect();
     }
-
     disconnect() {
         this._connection.dispose();
     }
-
     /**
       * @return {boolean}
       */
     isConnected() {
         return !this._connection._closed;
     }
-
     /**
       * @return {!Promise<!Object>}
       */
@@ -2619,7 +1753,6 @@ class Browser extends EventEmitter {
         return this._connection.send("Browser.getVersion");
     }
 }
-
 class BrowserContext extends EventEmitter {
     /**
       * @param {!Puppeteer.Connection} connection
@@ -2632,14 +1765,12 @@ class BrowserContext extends EventEmitter {
         this._browser = browser;
         this._id = contextId;
     }
-
     /**
       * @return {!Array<!Target>} target
       */
     targets() {
         return this._browser.targets().filter(target => target.browserContext() === this);
     }
-
     /**
       * @param {function(!Target):boolean} predicate
       * @param {{timeout?: number}=} options
@@ -2648,7 +1779,6 @@ class BrowserContext extends EventEmitter {
     waitForTarget(predicate, options) {
         return this._browser.waitForTarget(target => target.browserContext() === this && predicate(target), options);
     }
-
     /**
       * @return {!Promise<!Array<!Puppeteer.Page>>}
       */
@@ -2660,14 +1790,12 @@ class BrowserContext extends EventEmitter {
         );
         return pages.filter(page => !!page);
     }
-
     /**
       * @return {boolean}
       */
     isIncognito() {
         return !!this._id;
     }
-
     /**
       * @param {string} origin
       * @param {!Array<string>} permissions
@@ -2700,34 +1828,27 @@ class BrowserContext extends EventEmitter {
         });
         await this._connection.send("Browser.grantPermissions", {origin, browserContextId: this._id || undefined, permissions});
     }
-
     async clearPermissionOverrides() {
         await this._connection.send("Browser.resetPermissions", {browserContextId: this._id || undefined});
     }
-
     /**
       * @return {!Promise<!Puppeteer.Page>}
       */
     newPage() {
         return this._browser._createPageInContext(this._id);
     }
-
     /**
       * @return {!Browser}
       */
     browser() {
         return this._browser;
     }
-
     async close() {
         assert(this._id, "Non-incognito profiles cannot be closed!");
         await this._browser._disposeContext(this._id);
     }
 }
-
 exports_puppeteer_puppeteer_lib_Browser = {Browser, BrowserContext};
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
 */
@@ -2750,7 +1871,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
 // const {Events} = exports_puppeteer_puppeteer_lib_Events;
 // const debugProtocol = require("debug")("puppeteer:protocol");
 // const EventEmitter = require("events");
-
 class Connection extends EventEmitter {
     /**
       * @param {string} url
@@ -2764,30 +1884,24 @@ class Connection extends EventEmitter {
         /** @type {!Map<number, {resolve: function, reject: function, error: !Error, method: string}>}*/
         this._callbacks = new Map();
         this._delay = delay;
-
-        //!! this._transport = transport;
         this._ws = ws;
-        this._ws.addEventListener("message", event => {
+        let ws2 = this._ws;
+        ws2.addEventListener("message", event => {
             if (this.onmessage)
                 this.onmessage.call(null, event.data);
         });
-        this._ws.addEventListener("close", event => {
+        ws2.addEventListener("close", event => {
             if (this.onclose)
                 this.onclose.call(null);
         });
         // Silently ignore all errors - we don't know what to do with them.
-        this._ws.addEventListener("error", local.nop);
-        //!! this._transport.onmessage = this._onMessage.bind(this);
-        //!! this._transport.onclose = this._onClose.bind(this);
+        ws2.addEventListener("error", local.nop);
         this.onmessage = this._onMessage.bind(this);
         this.onclose = this._onClose.bind(this);
-
-
         /** @type {!Map<string, !CDPSession>}*/
         this._sessions = new Map();
         this._closed = false;
     }
-
     /**
       * @param {!CDPSession} session
       * @return {!Connection}
@@ -2795,7 +1909,6 @@ class Connection extends EventEmitter {
     static fromSession(session) {
         return session._connection;
     }
-
     /**
       * @param {string} sessionId
       * @return {?CDPSession}
@@ -2803,14 +1916,12 @@ class Connection extends EventEmitter {
     session(sessionId) {
         return this._sessions.get(sessionId) || null;
     }
-
     /**
       * @return {string}
       */
     url() {
         return this._url;
     }
-
     /**
       * @param {string} method
       * @param {!Object=} params
@@ -2822,7 +1933,6 @@ class Connection extends EventEmitter {
             this._callbacks.set(id, {resolve, reject, error: new Error(), method});
         });
     }
-
     /**
       * @param {*} message
       * @return {number}
@@ -2831,11 +1941,10 @@ class Connection extends EventEmitter {
         const id = ++this._lastId;
         message = JSON.stringify(Object.assign({}, message, {id}));
         debugProtocol("SEND ► " + message);
-        //!! this._transport.send(message);
-        this._ws.send(message);
+        let ws2 = this._ws;
+        ws2.send(message);
         return id;
     }
-
     /**
       * @param {string} message
       */
@@ -2873,7 +1982,6 @@ class Connection extends EventEmitter {
             this.emit(object.method, object.params);
         }
     }
-
     _onClose() {
         if (this._closed)
             return;
@@ -2888,12 +1996,11 @@ class Connection extends EventEmitter {
         this._sessions.clear();
         this.emit(Events.Connection.Disconnected);
     }
-
     dispose() {
         this._onClose();
-        this._ws.close();
+        let ws2 = this._ws;
+        ws2.close();
     }
-
     /**
       * @param {Protocol.Target.TargetInfo} targetInfo
       * @return {!Promise<!CDPSession>}
@@ -2903,7 +2010,6 @@ class Connection extends EventEmitter {
         return this._sessions.get(sessionId);
     }
 }
-
 class CDPSession extends EventEmitter {
     /**
       * @param {!Connection} connection
@@ -2918,7 +2024,6 @@ class CDPSession extends EventEmitter {
         this._targetType = targetType;
         this._sessionId = sessionId;
     }
-
     /**
       * @param {string} method
       * @param {!Object=} params
@@ -2932,7 +2037,6 @@ class CDPSession extends EventEmitter {
             this._callbacks.set(id, {resolve, reject, error: new Error(), method});
         });
     }
-
     /**
       * @param {{id?: number, method: string, params: Object, error: {message: string, data: any}, result?: *}} object
       */
@@ -2949,13 +2053,11 @@ class CDPSession extends EventEmitter {
             this.emit(object.method, object.params);
         }
     }
-
     async detach() {
         if (!this._connection)
             throw new Error(`Session already detached. Most likely the ${this._targetType} has been closed.`);
         await this._connection.send("Target.detachFromTarget",  {sessionId: this._sessionId});
     }
-
     _onClosed() {
         for (const callback of this._callbacks.values())
             callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
@@ -2964,7 +2066,6 @@ class CDPSession extends EventEmitter {
         this.emit(Events.CDPSession.Disconnected);
     }
 }
-
 /**
   * @param {!Error} error
   * @param {string} method
@@ -2977,7 +2078,6 @@ function createProtocolError(error, method, object) {
         message += ` ${object.error.data}`;
     return rewriteError(error, message);
 }
-
 /**
   * @param {!Error} error
   * @param {string} message
@@ -2987,10 +2087,7 @@ function rewriteError(error, message) {
     error.message = message;
     return error;
 }
-
 exports_puppeteer_puppeteer_lib_Connection = {Connection, CDPSession};
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Coverage.js
 */
@@ -3009,18 +2106,14 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Coverage.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-
 // const {helper, debugError, assert} = exports_puppeteer_puppeteer_lib_helper;
-
 // const {EVALUATION_SCRIPT_URL} = exports_puppeteer_puppeteer_lib_ExecutionContext;
-
 /**
   * @typedef {Object} CoverageEntry
   * @property {string} url
   * @property {string} text
   * @property {!Array<!{start: number, end: number}>} ranges
   */
-
 class Coverage {
     /**
       * @param {!Puppeteer.CDPSession} client
@@ -3029,28 +2122,24 @@ class Coverage {
         this._jsCoverage = new JSCoverage(client);
         this._cssCoverage = new CSSCoverage(client);
     }
-
     /**
       * @param {!{resetOnNavigation?: boolean, reportAnonymousScripts?: boolean}} options
       */
     async startJSCoverage(options) {
         return await this._jsCoverage.start(options);
     }
-
     /**
       * @return {!Promise<!Array<!CoverageEntry>>}
       */
     async stopJSCoverage() {
         return await this._jsCoverage.stop();
     }
-
     /**
       * @param {{resetOnNavigation?: boolean}=} options
       */
     async startCSSCoverage(options) {
         return await this._cssCoverage.start(options);
     }
-
     /**
       * @return {!Promise<!Array<!CoverageEntry>>}
       */
@@ -3058,9 +2147,7 @@ class Coverage {
         return await this._cssCoverage.stop();
     }
 }
-
 exports_puppeteer_puppeteer_lib_Coverage = {Coverage};
-
 class JSCoverage {
     /**
       * @param {!Puppeteer.CDPSession} client
@@ -3073,7 +2160,6 @@ class JSCoverage {
         this._eventListeners = [];
         this._resetOnNavigation = false;
     }
-
     /**
       * @param {!{resetOnNavigation?: boolean, reportAnonymousScripts?: boolean}} options
       */
@@ -3099,14 +2185,12 @@ class JSCoverage {
             this._client.send("Debugger.setSkipAllPauses", {skip: true})
         ]);
     }
-
     _onExecutionContextsCleared() {
         if (!this._resetOnNavigation)
             return;
         this._scriptURLs.clear();
         this._scriptSources.clear();
     }
-
     /**
       * @param {!Protocol.Debugger.scriptParsedPayload} event
       */
@@ -3126,7 +2210,6 @@ class JSCoverage {
             debugError(e);
         }
     }
-
     /**
       * @return {!Promise<!Array<!CoverageEntry>>}
       */
@@ -3140,7 +2223,6 @@ class JSCoverage {
             this._client.send("Debugger.disable"),
         ]);
         helper.removeEventListeners(this._eventListeners);
-
         const coverage = [];
         for (const entry of profileResponse.result) {
             let url = this._scriptURLs.get(entry.scriptId);
@@ -3158,7 +2240,6 @@ class JSCoverage {
         return coverage;
     }
 }
-
 class CSSCoverage {
     /**
       * @param {!Puppeteer.CDPSession} client
@@ -3171,7 +2252,6 @@ class CSSCoverage {
         this._eventListeners = [];
         this._resetOnNavigation = false;
     }
-
     /**
       * @param {{resetOnNavigation?: boolean}=} options
       */
@@ -3192,14 +2272,12 @@ class CSSCoverage {
             this._client.send("CSS.startRuleUsageTracking"),
         ]);
     }
-
     _onExecutionContextsCleared() {
         if (!this._resetOnNavigation)
             return;
         this._stylesheetURLs.clear();
         this._stylesheetSources.clear();
     }
-
     /**
       * @param {!Protocol.CSS.styleSheetAddedPayload} event
       */
@@ -3217,7 +2295,6 @@ class CSSCoverage {
             debugError(e);
         }
     }
-
     /**
       * @return {!Promise<!Array<!CoverageEntry>>}
       */
@@ -3230,7 +2307,6 @@ class CSSCoverage {
             this._client.send("DOM.disable"),
         ]);
         helper.removeEventListeners(this._eventListeners);
-
         // aggregate by styleSheetId
         const styleSheetIdToCoverage = new Map();
         for (const entry of ruleTrackingResponse.ruleUsage) {
@@ -3245,7 +2321,6 @@ class CSSCoverage {
                 count: entry.used ? 1 : 0,
             });
         }
-
         const coverage = [];
         for (const styleSheetId of this._stylesheetURLs.keys()) {
             const url = this._stylesheetURLs.get(styleSheetId);
@@ -3253,11 +2328,9 @@ class CSSCoverage {
             const ranges = convertToDisjointRanges(styleSheetIdToCoverage.get(styleSheetId) || []);
             coverage.push({url, ranges, text});
         }
-
         return coverage;
     }
 }
-
 /**
   * @param {!Array<!{startOffset:number, endOffset:number, count:number}>} nestedRanges
   * @return {!Array<!{start:number, end:number}>}
@@ -3284,7 +2357,6 @@ function convertToDisjointRanges(nestedRanges) {
         // For two "end" points, the one with shorter range goes first.
         return aLength - bLength;
     });
-
     const hitCountStack = [];
     const results = [];
     let lastOffset = 0;
@@ -3306,8 +2378,6 @@ function convertToDisjointRanges(nestedRanges) {
     // Filter out empty ranges.
     return results.filter(range => range.end - range.start > 1);
 }
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/DOMWorld.js
 */
@@ -3326,13 +2396,11 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/DOMWorld.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-
 // const fs = require("fs");
 // const {helper, assert} = exports_puppeteer_puppeteer_lib_helper;
 // const {LifecycleWatcher} = exports_puppeteer_puppeteer_lib_LifecycleWatcher;
 // const {TimeoutError} = exports_puppeteer_puppeteer_lib_Errors;
 const readFileAsync = helper.promisify(fs.readFile);
-
 /**
   * @unrestricted
   */
@@ -3346,25 +2414,21 @@ class DOMWorld {
         this._frameManager = frameManager;
         this._frame = frame;
         this._timeoutSettings = timeoutSettings;
-
         this._documentPromise = null;
         /** @type {!Promise<!Puppeteer.ExecutionContext>} */
         this._contextPromise;
         this._contextResolveCallback = null;
         this._setContext(null);
-
         /** @type {!Set<!WaitTask>} */
         this._waitTasks = new Set();
         this._detached = false;
     }
-
     /**
       * @return {!Puppeteer.Frame}
       */
     frame() {
         return this._frame;
     }
-
     /**
       * @param {?Puppeteer.ExecutionContext} context
       */
@@ -3381,20 +2445,17 @@ class DOMWorld {
             });
         }
     }
-
     /**
       * @return {boolean}
       */
     _hasContext() {
         return !this._contextResolveCallback;
     }
-
     _detach() {
         this._detached = true;
         for (const waitTask of this._waitTasks)
             waitTask.terminate(new Error("waitForFunction failed: frame got detached."));
     }
-
     /**
       * @return {!Promise<!Puppeteer.ExecutionContext>}
       */
@@ -3403,7 +2464,6 @@ class DOMWorld {
             throw new Error(`Execution Context is not available in detached frame "${this._frame.url()}" (are you trying to evaluate?)`);
         return this._contextPromise;
     }
-
     /**
       * @param {Function|string} pageFunction
       * @param {!Array<*>} args
@@ -3413,7 +2473,6 @@ class DOMWorld {
         const context = await this.executionContext();
         return context.evaluateHandle(pageFunction, ...args);
     }
-
     /**
       * @param {Function|string} pageFunction
       * @param {!Array<*>} args
@@ -3424,10 +2483,7 @@ class DOMWorld {
         return context.evaluate(pageFunction, ...args);
     }
 }
-
 exports_puppeteer_puppeteer_lib_DOMWorld = {DOMWorld};
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Dialog.js
 */
@@ -3446,9 +2502,7 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Dialog.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-
 // const {assert} = exports_puppeteer_puppeteer_lib_helper;
-
 class Dialog {
     /**
       * @param {!Puppeteer.CDPSession} client
@@ -3463,28 +2517,24 @@ class Dialog {
         this._handled = false;
         this._defaultValue = defaultValue;
     }
-
     /**
       * @return {string}
       */
     type() {
         return this._type;
     }
-
     /**
       * @return {string}
       */
     message() {
         return this._message;
     }
-
     /**
       * @return {string}
       */
     defaultValue() {
         return this._defaultValue;
     }
-
     /**
       * @param {string=} promptText
       */
@@ -3496,7 +2546,6 @@ class Dialog {
             promptText: promptText
         });
     }
-
     async dismiss() {
         assert(!this._handled, "Cannot dismiss dialog which is already handled!");
         this._handled = true;
@@ -3505,17 +2554,13 @@ class Dialog {
         });
     }
 }
-
 Dialog.Type = {
     Alert: "alert",
     BeforeUnload: "beforeunload",
     Confirm: "confirm",
     Prompt: "prompt"
 };
-
 exports_puppeteer_puppeteer_lib_Dialog = {Dialog};
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/EmulationManager.js
 */
@@ -3534,7 +2579,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/EmulationManager.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-
 class EmulationManager {
     /**
       * @param {!Puppeteer.CDPSession} client
@@ -3544,7 +2588,6 @@ class EmulationManager {
         this._emulatingMobile = false;
         this._hasTouch = false;
     }
-
     /**
       * @param {!Puppeteer.Viewport} viewport
       * @return {Promise<boolean>}
@@ -3557,24 +2600,19 @@ class EmulationManager {
         /** @type {Protocol.Emulation.ScreenOrientation} */
         const screenOrientation = viewport.isLandscape ? { angle: 90, type: "landscapePrimary" } : { angle: 0, type: "portraitPrimary" };
         const hasTouch = viewport.hasTouch || false;
-
         await Promise.all([
             this._client.send("Emulation.setDeviceMetricsOverride", { mobile, width, height, deviceScaleFactor, screenOrientation }),
             this._client.send("Emulation.setTouchEmulationEnabled", {
                 enabled: hasTouch
             })
         ]);
-
         const reloadNeeded = this._emulatingMobile !== mobile || this._hasTouch !== hasTouch;
         this._emulatingMobile = mobile;
         this._hasTouch = hasTouch;
         return reloadNeeded;
     }
 }
-
 exports_puppeteer_puppeteer_lib_EmulationManager = {EmulationManager};
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Errors.js
 */
@@ -3593,7 +2631,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Errors.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-
 class CustomError extends Error {
     constructor(message) {
         super(message);
@@ -3601,14 +2638,10 @@ class CustomError extends Error {
         Error.captureStackTrace(this, this.constructor);
     }
 }
-
 class TimeoutError extends CustomError {}
-
 exports_puppeteer_puppeteer_lib_Errors = {
     TimeoutError,
 };
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Events.js
 */
@@ -3627,7 +2660,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Events.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-
 const Events = {
     Page: {
         Close: "close",
@@ -3651,27 +2683,23 @@ const Events = {
         WorkerCreated: "workercreated",
         WorkerDestroyed: "workerdestroyed",
     },
-
     Browser: {
         TargetCreated: "targetcreated",
         TargetDestroyed: "targetdestroyed",
         TargetChanged: "targetchanged",
         Disconnected: "disconnected"
     },
-
     BrowserContext: {
         TargetCreated: "targetcreated",
         TargetDestroyed: "targetdestroyed",
         TargetChanged: "targetchanged",
     },
-
     NetworkManager: {
         Request: Symbol("Events.NetworkManager.Request"),
         Response: Symbol("Events.NetworkManager.Response"),
         RequestFailed: Symbol("Events.NetworkManager.RequestFailed"),
         RequestFinished: Symbol("Events.NetworkManager.RequestFinished"),
     },
-
     FrameManager: {
         FrameAttached: Symbol("Events.FrameManager.FrameAttached"),
         FrameNavigated: Symbol("Events.FrameManager.FrameNavigated"),
@@ -3681,19 +2709,14 @@ const Events = {
         ExecutionContextCreated: Symbol("Events.FrameManager.ExecutionContextCreated"),
         ExecutionContextDestroyed: Symbol("Events.FrameManager.ExecutionContextDestroyed"),
     },
-
     Connection: {
         Disconnected: Symbol("Events.Connection.Disconnected"),
     },
-
     CDPSession: {
         Disconnected: Symbol("Events.CDPSession.Disconnected"),
     },
 };
-
 exports_puppeteer_puppeteer_lib_Events = { Events };
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/ExecutionContext.js
 */
@@ -3712,13 +2735,10 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/ExecutionContext.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-
 // const {helper, assert} = exports_puppeteer_puppeteer_lib_helper;
 // const {createJSHandle, JSHandle} = exports_puppeteer_puppeteer_lib_JSHandle;
-
 const EVALUATION_SCRIPT_URL = "__puppeteer_evaluation_script__";
 const SOURCE_URL_REGEX = /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m;
-
 class ExecutionContext {
     /**
       * @param {!Puppeteer.CDPSession} client
@@ -3730,14 +2750,12 @@ class ExecutionContext {
         this._world = world;
         this._contextId = contextPayload.id;
     }
-
     /**
       * @return {?Puppeteer.Frame}
       */
     frame() {
         return this._world ? this._world.frame() : null;
     }
-
     /**
       * @param {Function|string} pageFunction
       * @param {...*} args
@@ -3746,7 +2764,6 @@ class ExecutionContext {
     async evaluate(pageFunction, ...args) {
         return await this._evaluateInternal(true /* returnByValue */, pageFunction, ...args);
     }
-
     /**
       * @param {Function|string} pageFunction
       * @param {...*} args
@@ -3755,7 +2772,6 @@ class ExecutionContext {
     async evaluateHandle(pageFunction, ...args) {
         return this._evaluateInternal(false /* returnByValue */, pageFunction, ...args);
     }
-
     /**
       * @param {boolean} returnByValue
       * @param {Function|string} pageFunction
@@ -3764,7 +2780,6 @@ class ExecutionContext {
       */
     async _evaluateInternal(returnByValue, pageFunction, ...args) {
         const suffix = `//# sourceURL=${EVALUATION_SCRIPT_URL}`;
-
         if (helper.isString(pageFunction)) {
             const contextId = this._contextId;
             const expression = /** @type {string} */ (pageFunction);
@@ -3780,10 +2795,8 @@ class ExecutionContext {
                 throw new Error("Evaluation failed: " + helper.getExceptionMessage(exceptionDetails));
             return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
         }
-
         if (typeof pageFunction !== "function")
             throw new Error(`Expected to get |string| or |function| as the first argument, but got "${pageFunction}" instead.`);
-
         let functionText = pageFunction.toString();
         // hack-coverage - un-instrument
         functionText = functionText.replace((/\b__cov_.*?\+\+/g), "0");
@@ -3806,7 +2819,7 @@ class ExecutionContext {
         let callFunctionOnPromise;
         try {
             callFunctionOnPromise = this._client.send("Runtime.callFunctionOn", {
-                functionDeclaration: functionText + "\n\" + suffix + \"\n",
+                functionDeclaration: functionText + "\n" + suffix + "\n",
                 executionContextId: this._contextId,
                 arguments: args.map(convertArgument.bind(this)),
                 returnByValue,
@@ -3822,7 +2835,6 @@ class ExecutionContext {
         if (exceptionDetails)
             throw new Error("Evaluation failed: " + helper.getExceptionMessage(exceptionDetails));
         return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
-
         /**
           * @param {*} arg
           * @return {*}
@@ -3853,7 +2865,6 @@ class ExecutionContext {
             }
             return { value: arg };
         }
-
         /**
           * @param {!Error} error
           * @return {!Protocol.Runtime.evaluateReturnValue}
@@ -3863,13 +2874,11 @@ class ExecutionContext {
                 return {result: {type: "undefined"}};
             if (error.message.includes("Object couldn't be returned by value"))
                 return {result: {type: "undefined"}};
-
             if (error.message.endsWith("Cannot find context with specified id"))
                 throw new Error("Execution context was destroyed, most likely because of a navigation.");
             throw error;
         }
     }
-
     /**
       * @param {!JSHandle} prototypeHandle
       * @return {!Promise<!JSHandle>}
@@ -3882,7 +2891,6 @@ class ExecutionContext {
         });
         return createJSHandle(this, response.objects);
     }
-
     /**
       * @param {Puppeteer.ElementHandle} elementHandle
       * @return {Promise<Puppeteer.ElementHandle>}
@@ -3900,10 +2908,7 @@ class ExecutionContext {
         return /** @type {Puppeteer.ElementHandle}*/(createJSHandle(this, object));
     }
 }
-
 exports_puppeteer_puppeteer_lib_ExecutionContext = {ExecutionContext, EVALUATION_SCRIPT_URL};
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/FrameManager.js
 */
@@ -3922,7 +2927,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/FrameManager.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-
 // const EventEmitter = require("events");
 // const {helper, assert, debugError} = exports_puppeteer_puppeteer_lib_helper;
 // const {Events} = exports_puppeteer_puppeteer_lib_Events;
@@ -3930,9 +2934,7 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/FrameManager.js
 // const {LifecycleWatcher} = exports_puppeteer_puppeteer_lib_LifecycleWatcher;
 // const {DOMWorld} = exports_puppeteer_puppeteer_lib_DOMWorld;
 // const {NetworkManager} = exports_puppeteer_puppeteer_lib_NetworkManager;
-
 const UTILITY_WORLD_NAME = "__puppeteer_utility_world__";
-
 class FrameManager extends EventEmitter {
     /**
       * @param {!Puppeteer.CDPSession} client
@@ -3953,7 +2955,6 @@ class FrameManager extends EventEmitter {
         this._contextIdToContext = new Map();
         /** @type {!Set<string>} */
         this._isolatedWorlds = new Set();
-
         this._client.on("Page.frameAttached", event => this._onFrameAttached(event.frameId, event.parentFrameId));
         this._client.on("Page.frameNavigated", event => this._onFrameNavigated(event.frame));
         this._client.on("Page.navigatedWithinDocument", event => this._onFrameNavigatedWithinDocument(event.frameId, event.url));
@@ -3964,7 +2965,6 @@ class FrameManager extends EventEmitter {
         this._client.on("Runtime.executionContextsCleared", event => this._onExecutionContextsCleared());
         this._client.on("Page.lifecycleEvent", event => this._onLifecycleEvent(event));
     }
-
     async initialize() {
         const [,{frameTree}] = await Promise.all([
             this._client.send("Page.enable"),
@@ -3977,14 +2977,12 @@ class FrameManager extends EventEmitter {
             this._networkManager.initialize(),
         ]);
     }
-
     /**
       * @return {!NetworkManager}
       */
     networkManager() {
         return this._networkManager;
     }
-
     /**
       * @param {!Puppeteer.Frame} frame
       * @param {string} url
@@ -3998,7 +2996,6 @@ class FrameManager extends EventEmitter {
             waitUntil = ["load"],
             timeout = this._timeoutSettings.navigationTimeout(),
         } = options;
-
         const watcher = new LifecycleWatcher(this, frame, waitUntil, timeout);
         let ensureNewDocumentNavigation = false;
         let error = await Promise.race([
@@ -4015,7 +3012,6 @@ class FrameManager extends EventEmitter {
         if (error)
             throw error;
         return watcher.navigationResponse();
-
         /**
           * @param {!Puppeteer.CDPSession} client
           * @param {string} url
@@ -4033,7 +3029,6 @@ class FrameManager extends EventEmitter {
             }
         }
     }
-
     /**
       * @param {!Puppeteer.Frame} frame
       * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
@@ -4056,7 +3051,6 @@ class FrameManager extends EventEmitter {
             throw error;
         return watcher.navigationResponse();
     }
-
     /**
       * @param {!Protocol.Page.lifecycleEventPayload} event
       */
@@ -4067,7 +3061,6 @@ class FrameManager extends EventEmitter {
         frame._onLifecycleEvent(event.loaderId, event.name);
         this.emit(Events.FrameManager.LifecycleEvent, frame);
     }
-
     /**
       * @param {string} frameId
       */
@@ -4078,7 +3071,6 @@ class FrameManager extends EventEmitter {
         frame._onLoadingStopped();
         this.emit(Events.FrameManager.LifecycleEvent, frame);
     }
-
     /**
       * @param {!Protocol.Page.FrameTree} frameTree
       */
@@ -4088,32 +3080,27 @@ class FrameManager extends EventEmitter {
         this._onFrameNavigated(frameTree.frame);
         if (!frameTree.childFrames)
             return;
-
         for (const child of frameTree.childFrames)
             this._handleFrameTree(child);
     }
-
     /**
       * @return {!Puppeteer.Page}
       */
     page() {
         return this._page;
     }
-
     /**
       * @return {!Frame}
       */
     mainFrame() {
         return this._mainFrame;
     }
-
     /**
       * @return {!Array<!Frame>}
       */
     frames() {
         return Array.from(this._frames.values());
     }
-
     /**
       * @param {!string} frameId
       * @return {?Frame}
@@ -4121,7 +3108,6 @@ class FrameManager extends EventEmitter {
     frame(frameId) {
         return this._frames.get(frameId) || null;
     }
-
     /**
       * @param {string} frameId
       * @param {?string} parentFrameId
@@ -4135,7 +3121,6 @@ class FrameManager extends EventEmitter {
         this._frames.set(frame._id, frame);
         this.emit(Events.FrameManager.FrameAttached, frame);
     }
-
     /**
       * @param {!Protocol.Page.Frame} framePayload
       */
@@ -4143,13 +3128,11 @@ class FrameManager extends EventEmitter {
         const isMainFrame = !framePayload.parentId;
         let frame = isMainFrame ? this._mainFrame : this._frames.get(framePayload.id);
         assert(isMainFrame || frame, "We either navigate top level or have old version of the navigated frame");
-
         // Detach all child frames first.
         if (frame) {
             for (const child of frame.childFrames())
                 this._removeFramesRecursively(child);
         }
-
         // Update or create main frame.
         if (isMainFrame) {
             if (frame) {
@@ -4163,13 +3146,10 @@ class FrameManager extends EventEmitter {
             this._frames.set(framePayload.id, frame);
             this._mainFrame = frame;
         }
-
         // Update frame payload.
         frame._navigated(framePayload);
-
         this.emit(Events.FrameManager.FrameNavigated, frame);
     }
-
     /**
       * @param {string} name
       */
@@ -4187,7 +3167,6 @@ class FrameManager extends EventEmitter {
             worldName: name,
         }).catch(debugError))); // frames might be removed before we send this
     }
-
     /**
       * @param {string} frameId
       * @param {string} url
@@ -4200,7 +3179,6 @@ class FrameManager extends EventEmitter {
         this.emit(Events.FrameManager.FrameNavigatedWithinDocument, frame);
         this.emit(Events.FrameManager.FrameNavigated, frame);
     }
-
     /**
       * @param {string} frameId
       */
@@ -4209,7 +3187,6 @@ class FrameManager extends EventEmitter {
         if (frame)
             this._removeFramesRecursively(frame);
     }
-
     _onExecutionContextCreated(contextPayload) {
         const frameId = contextPayload.auxData ? contextPayload.auxData.frameId : null;
         const frame = this._frames.get(frameId) || null;
@@ -4232,7 +3209,6 @@ class FrameManager extends EventEmitter {
             world._setContext(context);
         this._contextIdToContext.set(contextPayload.id, context);
     }
-
     /**
       * @param {number} executionContextId
       */
@@ -4244,7 +3220,6 @@ class FrameManager extends EventEmitter {
         if (context._world)
             context._world._setContext(null);
     }
-
     _onExecutionContextsCleared() {
         for (const context of this._contextIdToContext.values()) {
             if (context._world)
@@ -4252,7 +3227,6 @@ class FrameManager extends EventEmitter {
         }
         this._contextIdToContext.clear();
     }
-
     /**
       * @param {number} contextId
       * @return {!ExecutionContext}
@@ -4262,7 +3236,6 @@ class FrameManager extends EventEmitter {
         assert(context, "INTERNAL ERROR: missing context with id = " + contextId);
         return context;
     }
-
     /**
       * @param {!Frame} frame
       */
@@ -4274,7 +3247,6 @@ class FrameManager extends EventEmitter {
         this.emit(Events.FrameManager.FrameDetached, frame);
     }
 }
-
 /**
   * @unrestricted
   */
@@ -4292,7 +3264,6 @@ class Frame {
         this._url = "";
         this._id = frameId;
         this._detached = false;
-
         this._loaderId = "";
         /** @type {!Set<string>} */
         this._lifecycleEvents = new Set();
@@ -4300,13 +3271,11 @@ class Frame {
         this._mainWorld = new DOMWorld(frameManager, this, frameManager._timeoutSettings);
         /** @type {!DOMWorld} */
         this._secondaryWorld = new DOMWorld(frameManager, this, frameManager._timeoutSettings);
-
         /** @type {!Set<!Frame>} */
         this._childFrames = new Set();
         if (this._parentFrame)
             this._parentFrame._childFrames.add(this);
     }
-
     /**
       * @param {string} url
       * @param {!{referer?: string, timeout?: number, waitUntil?: string|!Array<string>}=} options
@@ -4315,7 +3284,6 @@ class Frame {
     async goto(url, options) {
         return await this._frameManager.navigateFrame(this, url, options);
     }
-
     /**
       * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
       * @return {!Promise<?Puppeteer.Response>}
@@ -4323,14 +3291,12 @@ class Frame {
     async waitForNavigation(options) {
         return await this._frameManager.waitForFrameNavigation(this, options);
     }
-
     /**
       * @return {!Promise<!ExecutionContext>}
       */
     executionContext() {
         return this._mainWorld.executionContext();
     }
-
     /**
       * @param {Function|string} pageFunction
       * @param {!Array<*>} args
@@ -4339,7 +3305,6 @@ class Frame {
     async evaluateHandle(pageFunction, ...args) {
         return this._mainWorld.evaluateHandle(pageFunction, ...args);
     }
-
     /**
       * @param {Function|string} pageFunction
       * @param {!Array<*>} args
@@ -4348,7 +3313,6 @@ class Frame {
     async evaluate(pageFunction, ...args) {
         return this._mainWorld.evaluate(pageFunction, ...args);
     }
-
     /**
       * @param {string} selector
       * @return {!Promise<?Puppeteer.ElementHandle>}
@@ -4356,7 +3320,6 @@ class Frame {
     async $(selector) {
         return this._mainWorld.$(selector);
     }
-
     /**
       * @param {string} expression
       * @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
@@ -4364,7 +3327,6 @@ class Frame {
     async $x(expression) {
         return this._mainWorld.$x(expression);
     }
-
     /**
       * @param {string} selector
       * @param {Function|string} pageFunction
@@ -4374,7 +3336,6 @@ class Frame {
     async $eval(selector, pageFunction, ...args) {
         return this._mainWorld.$eval(selector, pageFunction, ...args);
     }
-
     /**
       * @param {string} selector
       * @param {Function|string} pageFunction
@@ -4384,7 +3345,6 @@ class Frame {
     async $$eval(selector, pageFunction, ...args) {
         return this._mainWorld.$$eval(selector, pageFunction, ...args);
     }
-
     /**
       * @param {string} selector
       * @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
@@ -4392,14 +3352,12 @@ class Frame {
     async $$(selector) {
         return this._mainWorld.$$(selector);
     }
-
     /**
       * @return {!Promise<String>}
       */
     async content() {
         return this._secondaryWorld.content();
     }
-
     /**
       * @param {string} html
       * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
@@ -4407,42 +3365,36 @@ class Frame {
     async setContent(html, options = {}) {
         return this._secondaryWorld.setContent(html, options);
     }
-
     /**
       * @return {string}
       */
     name() {
         return this._name || "";
     }
-
     /**
       * @return {string}
       */
     url() {
         return this._url;
     }
-
     /**
       * @return {?Frame}
       */
     parentFrame() {
         return this._parentFrame;
     }
-
     /**
       * @return {!Array.<!Frame>}
       */
     childFrames() {
         return Array.from(this._childFrames);
     }
-
     /**
       * @return {boolean}
       */
     isDetached() {
         return this._detached;
     }
-
     /**
       * @param {!{url?: string, path?: string, content?: string, type?: string}} options
       * @return {!Promise<!Puppeteer.ElementHandle>}
@@ -4450,7 +3402,6 @@ class Frame {
     async addScriptTag(options) {
         return this._mainWorld.addScriptTag(options);
     }
-
     /**
       * @param {!{url?: string, path?: string, content?: string}} options
       * @return {!Promise<!Puppeteer.ElementHandle>}
@@ -4458,7 +3409,6 @@ class Frame {
     async addStyleTag(options) {
         return this._mainWorld.addStyleTag(options);
     }
-
     /**
       * @param {string} selector
       * @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
@@ -4466,21 +3416,18 @@ class Frame {
     async click(selector, options) {
         return this._secondaryWorld.click(selector, options);
     }
-
     /**
       * @param {string} selector
       */
     async focus(selector) {
         return this._secondaryWorld.focus(selector);
     }
-
     /**
       * @param {string} selector
       */
     async hover(selector) {
         return this._secondaryWorld.hover(selector);
     }
-
     /**
     * @param {string} selector
     * @param {!Array<string>} values
@@ -4489,14 +3436,12 @@ class Frame {
     select(selector, ...values){
         return this._secondaryWorld.select(selector, ...values);
     }
-
     /**
       * @param {string} selector
       */
     async tap(selector) {
         return this._secondaryWorld.tap(selector);
     }
-
     /**
       * @param {string} selector
       * @param {string} text
@@ -4505,7 +3450,6 @@ class Frame {
     async type(selector, text, options) {
         return this._mainWorld.type(selector, text, options);
     }
-
     /**
       * @param {(string|number|Function)} selectorOrFunctionOrTimeout
       * @param {!Object=} options
@@ -4514,7 +3458,6 @@ class Frame {
       */
     waitFor(selectorOrFunctionOrTimeout, options = {}, ...args) {
         const xPathPattern = "//";
-
         if (helper.isString(selectorOrFunctionOrTimeout)) {
             const string = /** @type {string} */ (selectorOrFunctionOrTimeout);
             if (string.startsWith(xPathPattern))
@@ -4527,7 +3470,6 @@ class Frame {
             return this.waitForFunction(selectorOrFunctionOrTimeout, options, ...args);
         return Promise.reject(new Error("Unsupported target type: " + (typeof selectorOrFunctionOrTimeout)));
     }
-
     /**
       * @param {string} selector
       * @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
@@ -4542,7 +3484,6 @@ class Frame {
         await handle.dispose();
         return result;
     }
-
     /**
       * @param {string} xpath
       * @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
@@ -4557,7 +3498,6 @@ class Frame {
         await handle.dispose();
         return result;
     }
-
     /**
       * @param {Function|string} pageFunction
       * @param {!{polling?: string|number, timeout?: number}=} options
@@ -4566,14 +3506,12 @@ class Frame {
     waitForFunction(pageFunction, options = {}, ...args) {
         return this._mainWorld.waitForFunction(pageFunction, options, ...args);
     }
-
     /**
       * @return {!Promise<string>}
       */
     async title() {
         return this._secondaryWorld.title();
     }
-
     /**
       * @param {!Protocol.Page.Frame} framePayload
       */
@@ -4583,14 +3521,12 @@ class Frame {
         this._navigationURL = framePayload.url;
         this._url = framePayload.url;
     }
-
     /**
       * @param {string} url
       */
     _navigatedWithinDocument(url) {
         this._url = url;
     }
-
     /**
       * @param {string} loaderId
       * @param {string} name
@@ -4602,12 +3538,10 @@ class Frame {
         }
         this._lifecycleEvents.add(name);
     }
-
     _onLoadingStopped() {
         this._lifecycleEvents.add("DOMContentLoaded");
         this._lifecycleEvents.add("load");
     }
-
     _detach() {
         this._detached = true;
         this._mainWorld._detach();
@@ -4617,16 +3551,12 @@ class Frame {
         this._parentFrame = null;
     }
 }
-
 function assertNoLegacyNavigationOptions(options) {
     assert(options["networkIdleTimeout"] === undefined, "ERROR: networkIdleTimeout option is no longer supported.");
     assert(options["networkIdleInflight"] === undefined, "ERROR: networkIdleInflight option is no longer supported.");
     assert(options.waitUntil !== "networkidle", "ERROR: \"networkidle\" option is no longer supported. Use \"networkidle2\" instead");
 }
-
 exports_puppeteer_puppeteer_lib_FrameManager = {FrameManager, Frame};
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/JSHandle.js
 */
@@ -4645,10 +3575,8 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/JSHandle.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-
 // const {helper, assert, debugError} = exports_puppeteer_puppeteer_lib_helper;
 // const path = require("path");
-
 function createJSHandle(context, remoteObject) {
     const frame = context.frame();
     if (remoteObject.subtype === "node" && frame) {
@@ -4657,7 +3585,6 @@ function createJSHandle(context, remoteObject) {
     }
     return new JSHandle(context, context._client, remoteObject);
 }
-
 class JSHandle {
     /**
       * @param {!Puppeteer.ExecutionContext} context
@@ -4670,14 +3597,12 @@ class JSHandle {
         this._remoteObject = remoteObject;
         this._disposed = false;
     }
-
     /**
       * @return {!Puppeteer.ExecutionContext}
       */
     executionContext() {
         return this._context;
     }
-
     /**
       * @param {string} propertyName
       * @return {!Promise<?JSHandle>}
@@ -4693,7 +3618,6 @@ class JSHandle {
         await objectHandle.dispose();
         return result;
     }
-
     /**
       * @return {!Promise<!Map<string, !JSHandle>>}
       */
@@ -4710,7 +3634,6 @@ class JSHandle {
         }
         return result;
     }
-
     /**
       * @return {!Promise<?Object>}
       */
@@ -4726,21 +3649,18 @@ class JSHandle {
         }
         return helper.valueFromRemoteObject(this._remoteObject);
     }
-
     /**
       * @return {?Puppeteer.ElementHandle}
       */
     asElement() {
         return null;
     }
-
     async dispose() {
         if (this._disposed)
             return;
         this._disposed = true;
         await helper.releaseObject(this._client, this._remoteObject);
     }
-
     /**
       * @override
       * @return {string}
@@ -4753,10 +3673,7 @@ class JSHandle {
         return "JSHandle:" + helper.valueFromRemoteObject(this._remoteObject);
     }
 }
-
 exports_puppeteer_puppeteer_lib_JSHandle = {createJSHandle, JSHandle};
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/LifecycleWatcher.js
 */
@@ -4775,11 +3692,9 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/LifecycleWatcher.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-
 // const {helper, assert} = exports_puppeteer_puppeteer_lib_helper;
 // const {Events} = exports_puppeteer_puppeteer_lib_Events;
 // const {TimeoutError} = exports_puppeteer_puppeteer_lib_Errors;
-
 class LifecycleWatcher {
     /**
       * @param {!Puppeteer.FrameManager} frameManager
@@ -4797,7 +3712,6 @@ class LifecycleWatcher {
             assert(protocolEvent, "Unknown value for options.waitUntil: " + value);
             return protocolEvent;
         });
-
         this._frameManager = frameManager;
         this._frame = frame;
         this._initialLoaderId = frame._loaderId;
@@ -4811,26 +3725,21 @@ class LifecycleWatcher {
             helper.addEventListener(this._frameManager, Events.FrameManager.FrameDetached, this._onFrameDetached.bind(this)),
             helper.addEventListener(this._frameManager.networkManager(), Events.NetworkManager.Request, this._onRequest.bind(this)),
         ];
-
         this._sameDocumentNavigationPromise = new Promise(fulfill => {
             this._sameDocumentNavigationCompleteCallback = fulfill;
         });
-
         this._lifecyclePromise = new Promise(fulfill => {
             this._lifecycleCallback = fulfill;
         });
-
         this._newDocumentNavigationPromise = new Promise(fulfill => {
             this._newDocumentNavigationCompleteCallback = fulfill;
         });
-
         this._timeoutPromise = this._createTimeoutPromise();
         this._terminationPromise = new Promise(fulfill => {
             this._terminationCallback = fulfill;
         });
         this._checkLifecycleComplete();
     }
-
     /**
       * @param {!Puppeteer.Request} request
       */
@@ -4839,7 +3748,6 @@ class LifecycleWatcher {
             return;
         this._navigationRequest = request;
     }
-
     /**
       * @param {!Puppeteer.Frame} frame
       */
@@ -4850,49 +3758,42 @@ class LifecycleWatcher {
         }
         this._checkLifecycleComplete();
     }
-
     /**
       * @return {?Puppeteer.Response}
       */
     navigationResponse() {
         return this._navigationRequest ? this._navigationRequest.response() : null;
     }
-
     /**
       * @param {!Error} error
       */
     _terminate(error) {
         this._terminationCallback.call(null, error);
     }
-
     /**
       * @return {!Promise<?Error>}
       */
     sameDocumentNavigationPromise() {
         return this._sameDocumentNavigationPromise;
     }
-
     /**
       * @return {!Promise<?Error>}
       */
     newDocumentNavigationPromise() {
         return this._newDocumentNavigationPromise;
     }
-
     /**
       * @return {!Promise}
       */
     lifecyclePromise() {
         return this._lifecyclePromise;
     }
-
     /**
       * @return {!Promise<?Error>}
       */
     timeoutOrTerminationPromise() {
         return Promise.race([this._timeoutPromise, this._terminationPromise]);
     }
-
     /**
       * @return {!Promise<?Error>}
       */
@@ -4903,7 +3804,6 @@ class LifecycleWatcher {
         return new Promise(fulfill => this._maximumTimer = setTimeout(fulfill, this._timeout))
                 .then(() => new TimeoutError(errorMessage));
     }
-
     /**
       * @param {!Puppeteer.Frame} frame
       */
@@ -4913,7 +3813,6 @@ class LifecycleWatcher {
         this._hasSameDocumentNavigation = true;
         this._checkLifecycleComplete();
     }
-
     _checkLifecycleComplete() {
         // We expect navigation to commit.
         if (!checkLifecycle(this._frame, this._expectedLifecycle))
@@ -4925,7 +3824,6 @@ class LifecycleWatcher {
             this._sameDocumentNavigationCompleteCallback();
         if (this._frame._loaderId !== this._initialLoaderId)
             this._newDocumentNavigationCompleteCallback();
-
         /**
           * @param {!Puppeteer.Frame} frame
           * @param {!Array<string>} expectedLifecycle
@@ -4943,23 +3841,18 @@ class LifecycleWatcher {
             return true;
         }
     }
-
     dispose() {
         helper.removeEventListeners(this._eventListeners);
         clearTimeout(this._maximumTimer);
     }
 }
-
 const puppeteerToProtocolLifecycle = {
     "load": "load",
     "domcontentloaded": "DOMContentLoaded",
     "networkidle0": "networkIdle",
     "networkidle2": "networkAlmostIdle",
 };
-
 exports_puppeteer_puppeteer_lib_LifecycleWatcher = {LifecycleWatcher};
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/NetworkManager.js
 */
@@ -4981,7 +3874,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/NetworkManager.js
 // const EventEmitter = require("events");
 // const {helper, assert, debugError} = exports_puppeteer_puppeteer_lib_helper;
 // const {Events} = exports_puppeteer_puppeteer_lib_Events;
-
 class NetworkManager extends EventEmitter {
     /**
       * @param {!Puppeteer.CDPSession} client
@@ -4997,9 +3889,7 @@ class NetworkManager extends EventEmitter {
         this._requestIdToRequestWillBeSentEvent = new Map();
         /** @type {!Object<string, string>} */
         this._extraHTTPHeaders = {};
-
         this._offline = false;
-
         /** @type {?{username: string, password: string}} */
         this._credentials = null;
         /** @type {!Set<string>} */
@@ -5009,7 +3899,6 @@ class NetworkManager extends EventEmitter {
         this._userCacheDisabled = false;
         /** @type {!Map<string, string>} */
         this._requestIdToInterceptionId = new Map();
-
         this._client.on("Fetch.requestPaused", this._onRequestPaused.bind(this));
         this._client.on("Fetch.authRequired", this._onAuthRequired.bind(this));
         this._client.on("Network.requestWillBeSent", this._onRequestWillBeSent.bind(this));
@@ -5018,20 +3907,17 @@ class NetworkManager extends EventEmitter {
         this._client.on("Network.loadingFinished", this._onLoadingFinished.bind(this));
         this._client.on("Network.loadingFailed", this._onLoadingFailed.bind(this));
     }
-
     async initialize() {
         await this._client.send("Network.enable");
         if (this._ignoreHTTPSErrors)
             await this._client.send("Security.setIgnoreCertificateErrors", {ignore: true});
     }
-
     /**
       * @param {!Puppeteer.FrameManager} frameManager
       */
     setFrameManager(frameManager) {
         this._frameManager = frameManager;
     }
-
     /**
       * @param {?{username: string, password: string}} credentials
       */
@@ -5039,7 +3925,6 @@ class NetworkManager extends EventEmitter {
         this._credentials = credentials;
         await this._updateProtocolRequestInterception();
     }
-
     /**
       * @param {!Object<string, string>} extraHTTPHeaders
       */
@@ -5052,14 +3937,12 @@ class NetworkManager extends EventEmitter {
         }
         await this._client.send("Network.setExtraHTTPHeaders", { headers: this._extraHTTPHeaders });
     }
-
     /**
       * @return {!Object<string, string>}
       */
     extraHTTPHeaders() {
         return Object.assign({}, this._extraHTTPHeaders);
     }
-
     /**
       * @param {boolean} value
       */
@@ -5075,14 +3958,12 @@ class NetworkManager extends EventEmitter {
             uploadThroughput: -1
         });
     }
-
     /**
       * @param {string} userAgent
       */
     async setUserAgent(userAgent) {
         await this._client.send("Network.setUserAgentOverride", { userAgent });
     }
-
     /**
       * @param {boolean} enabled
       */
@@ -5090,7 +3971,6 @@ class NetworkManager extends EventEmitter {
         this._userCacheDisabled = !enabled;
         await this._updateProtocolCacheDisabled();
     }
-
     /**
       * @param {boolean} value
       */
@@ -5098,7 +3978,6 @@ class NetworkManager extends EventEmitter {
         this._userRequestInterceptionEnabled = value;
         await this._updateProtocolRequestInterception();
     }
-
     async _updateProtocolRequestInterception() {
         const enabled = this._userRequestInterceptionEnabled || !!this._credentials;
         if (enabled === this._protocolRequestInterceptionEnabled)
@@ -5119,13 +3998,11 @@ class NetworkManager extends EventEmitter {
             ]);
         }
     }
-
     async _updateProtocolCacheDisabled() {
         await this._client.send("Network.setCacheDisabled", {
             cacheDisabled: this._userCacheDisabled || this._protocolRequestInterceptionEnabled
         });
     }
-
     /**
       * @param {!Protocol.Network.requestWillBeSentPayload} event
       */
@@ -5144,7 +4021,6 @@ class NetworkManager extends EventEmitter {
         }
         this._onRequest(event, null);
     }
-
     /**
       * @param {!Protocol.Fetch.authRequiredPayload} event
       */
@@ -5163,7 +4039,6 @@ class NetworkManager extends EventEmitter {
             authChallengeResponse: { response, username, password },
         }).catch(debugError);
     }
-
     /**
       * @param {!Protocol.Fetch.requestPausedPayload} event
       */
@@ -5173,7 +4048,6 @@ class NetworkManager extends EventEmitter {
                 requestId: event.requestId
             }).catch(debugError);
         }
-
         const requestId = event.networkId;
         const interceptionId = event.requestId;
         if (requestId && this._requestIdToRequestWillBeSentEvent.has(requestId)) {
@@ -5184,7 +4058,6 @@ class NetworkManager extends EventEmitter {
             this._requestIdToInterceptionId.set(requestId, interceptionId);
         }
     }
-
     /**
       * @param {!Protocol.Network.requestWillBeSentPayload} event
       * @param {?string} interceptionId
@@ -5204,8 +4077,6 @@ class NetworkManager extends EventEmitter {
         this._requestIdToRequest.set(event.requestId, request);
         this.emit(Events.NetworkManager.Request, request);
     }
-
-
     /**
       * @param {!Protocol.Network.requestServedFromCachePayload} event
       */
@@ -5214,7 +4085,6 @@ class NetworkManager extends EventEmitter {
         if (request)
             request._fromMemoryCache = true;
     }
-
     /**
       * @param {!Request} request
       * @param {!Protocol.Network.Response} responsePayload
@@ -5229,7 +4099,6 @@ class NetworkManager extends EventEmitter {
         this.emit(Events.NetworkManager.Response, response);
         this.emit(Events.NetworkManager.RequestFinished, request);
     }
-
     /**
       * @param {!Protocol.Network.responseReceivedPayload} event
       */
@@ -5242,7 +4111,6 @@ class NetworkManager extends EventEmitter {
         request._response = response;
         this.emit(Events.NetworkManager.Response, response);
     }
-
     /**
       * @param {!Protocol.Network.loadingFinishedPayload} event
       */
@@ -5252,7 +4120,6 @@ class NetworkManager extends EventEmitter {
         // @see https://crbug.com/750469
         if (!request)
             return;
-
         // Under certain conditions we never get the Network.responseReceived
         // event from protocol. @see https://crbug.com/883475
         if (request.response())
@@ -5261,7 +4128,6 @@ class NetworkManager extends EventEmitter {
         this._attemptedAuthentications.delete(request._interceptionId);
         this.emit(Events.NetworkManager.RequestFinished, request);
     }
-
     /**
       * @param {!Protocol.Network.loadingFailedPayload} event
       */
@@ -5280,7 +4146,6 @@ class NetworkManager extends EventEmitter {
         this.emit(Events.NetworkManager.RequestFailed, request);
     }
 }
-
 class Request {
     /**
       * @param {!Puppeteer.CDPSession} client
@@ -5299,7 +4164,6 @@ class Request {
         this._interceptionHandled = false;
         this._response = null;
         this._failureText = null;
-
         this._url = event.request.url;
         this._resourceType = event.type.toLowerCase();
         this._method = event.request.method;
@@ -5309,73 +4173,62 @@ class Request {
         this._redirectChain = redirectChain;
         for (const key of Object.keys(event.request.headers))
             this._headers[key.toLowerCase()] = event.request.headers[key];
-
         this._fromMemoryCache = false;
     }
-
     /**
       * @return {string}
       */
     url() {
         return this._url;
     }
-
     /**
       * @return {string}
       */
     resourceType() {
         return this._resourceType;
     }
-
     /**
       * @return {string}
       */
     method() {
         return this._method;
     }
-
     /**
       * @return {string|undefined}
       */
     postData() {
         return this._postData;
     }
-
     /**
       * @return {!Object}
       */
     headers() {
         return this._headers;
     }
-
     /**
       * @return {?Response}
       */
     response() {
         return this._response;
     }
-
     /**
       * @return {?Puppeteer.Frame}
       */
     frame() {
         return this._frame;
     }
-
     /**
       * @return {boolean}
       */
     isNavigationRequest() {
         return this._isNavigationRequest;
     }
-
     /**
       * @return {!Array<!Request>}
       */
     redirectChain() {
         return this._redirectChain.slice();
     }
-
     /**
       * @return {?{errorText: string}}
       */
@@ -5386,7 +4239,6 @@ class Request {
             errorText: this._failureText
         };
     }
-
     /**
       * @param {!{url?: string, method?:string, postData?: string, headers?: !Object}} overrides
       */
@@ -5415,7 +4267,6 @@ class Request {
             debugError(error);
         });
     }
-
     /**
       * @param {!{status: number, headers: Object, contentType: string, body: (string|Buffer)}} response
       */
@@ -5426,9 +4277,7 @@ class Request {
         assert(this._allowInterception, "Request Interception is not enabled!");
         assert(!this._interceptionHandled, "Request is already handled!");
         this._interceptionHandled = true;
-
         const responseBody = response.body && helper.isString(response.body) ? Buffer.from(/** @type {string} */(response.body)) : /** @type {?Buffer} */(response.body || null);
-
         /** @type {!Object<string, string>} */
         const responseHeaders = {};
         if (response.headers) {
@@ -5439,7 +4288,6 @@ class Request {
             responseHeaders["content-type"] = response.contentType;
         if (responseBody && !("content-length" in responseHeaders))
             responseHeaders["content-length"] = String(Buffer.byteLength(responseBody));
-
         await this._client.send("Fetch.fulfillRequest", {
             requestId: this._interceptionId,
             responseCode: response.status || 200,
@@ -5452,7 +4300,6 @@ class Request {
             debugError(error);
         });
     }
-
     /**
       * @param {string=} errorCode
       */
@@ -5475,7 +4322,6 @@ class Request {
         });
     }
 }
-
 const errorReasons = {
     "aborted": "Aborted",
     "accessdenied": "AccessDenied",
@@ -5492,7 +4338,6 @@ const errorReasons = {
     "timedout": "TimedOut",
     "failed": "Failed",
 };
-
 class Response {
     /**
       * @param {!Puppeteer.CDPSession} client
@@ -5503,11 +4348,9 @@ class Response {
         this._client = client;
         this._request = request;
         this._contentPromise = null;
-
         this._bodyLoadedPromise = new Promise(fulfill => {
             this._bodyLoadedPromiseFulfill = fulfill;
         });
-
         this._remoteAddress = {
             ip: responsePayload.remoteIPAddress,
             port: responsePayload.remotePort,
@@ -5522,56 +4365,48 @@ class Response {
             this._headers[key.toLowerCase()] = responsePayload.headers[key];
         this._securityDetails = responsePayload.securityDetails ? new SecurityDetails(responsePayload.securityDetails) : null;
     }
-
     /**
       * @return {{ip: string, port: number}}
       */
     remoteAddress() {
         return this._remoteAddress;
     }
-
     /**
       * @return {string}
       */
     url() {
         return this._url;
     }
-
     /**
       * @return {boolean}
       */
     ok() {
         return this._status === 0 || (this._status >= 200 && this._status <= 299);
     }
-
     /**
       * @return {number}
       */
     status() {
         return this._status;
     }
-
     /**
       * @return {string}
       */
     statusText() {
         return this._statusText;
     }
-
     /**
       * @return {!Object}
       */
     headers() {
         return this._headers;
     }
-
     /**
       * @return {?SecurityDetails}
       */
     securityDetails() {
         return this._securityDetails;
     }
-
     /**
       * @return {!Promise<!Buffer>}
       */
@@ -5588,7 +4423,6 @@ class Response {
         }
         return this._contentPromise;
     }
-
     /**
       * @return {!Promise<string>}
       */
@@ -5596,7 +4430,6 @@ class Response {
         const content = await this.buffer();
         return content.toString("utf8");
     }
-
     /**
       * @return {!Promise<!Object>}
       */
@@ -5604,28 +4437,24 @@ class Response {
         const content = await this.text();
         return JSON.parse(content);
     }
-
     /**
       * @return {!Request}
       */
     request() {
         return this._request;
     }
-
     /**
       * @return {boolean}
       */
     fromCache() {
         return this._fromDiskCache || this._request._fromMemoryCache;
     }
-
     /**
       * @return {boolean}
       */
     fromServiceWorker() {
         return this._fromServiceWorker;
     }
-
     /**
       * @return {?Puppeteer.Frame}
       */
@@ -5633,7 +4462,6 @@ class Response {
         return this._request.frame();
     }
 }
-
 class SecurityDetails {
     /**
       * @param {!Protocol.Network.SecurityDetails} securityPayload
@@ -5645,35 +4473,30 @@ class SecurityDetails {
         this._validTo = securityPayload["validTo"];
         this._protocol = securityPayload["protocol"];
     }
-
     /**
       * @return {string}
       */
     subjectName() {
         return this._subjectName;
     }
-
     /**
       * @return {string}
       */
     issuer() {
         return this._issuer;
     }
-
     /**
       * @return {number}
       */
     validFrom() {
         return this._validFrom;
     }
-
     /**
       * @return {number}
       */
     validTo() {
         return this._validTo;
     }
-
     /**
       * @return {string}
       */
@@ -5681,7 +4504,6 @@ class SecurityDetails {
         return this._protocol;
     }
 }
-
 /**
   * @param {Object<string, string>} headers
   * @return {!Array<{name: string, value: string}>}
@@ -5692,7 +4514,6 @@ function headersArray(headers) {
         result.push({name, value: headers[name] + ""});
     return result;
 }
-
 // List taken from https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml with extra 306 and 418 codes.
 const STATUS_TEXTS = {
     "100": "Continue",
@@ -5759,10 +4580,7 @@ const STATUS_TEXTS = {
     "510": "Not Extended",
     "511": "Network Authentication Required",
 };
-
 exports_puppeteer_puppeteer_lib_NetworkManager = {Request, Response, NetworkManager, SecurityDetails};
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Page.js
 */
@@ -5781,7 +4599,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Page.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-
 // const fs = require("fs");
 // const path = require("path");
 // const EventEmitter = require("events");
@@ -5796,7 +4613,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Page.js
 // const {createJSHandle} = exports_puppeteer_puppeteer_lib_JSHandle;
 // const {TimeoutSettings} = exports_puppeteer_puppeteer_lib_TimeoutSettings;
 const writeFileAsync = helper.promisify(fs.writeFile);
-
 class Page extends EventEmitter {
     /**
       * @param {!Puppeteer.CDPSession} client
@@ -5813,7 +4629,6 @@ class Page extends EventEmitter {
             await page.setViewport(defaultViewport);
         return page;
     }
-
     /**
       * @param {!Puppeteer.CDPSession} client
       * @param {!Puppeteer.Target} target
@@ -5835,9 +4650,7 @@ class Page extends EventEmitter {
         this._javascriptEnabled = true;
         /** @type {?Puppeteer.Viewport} */
         this._viewport = null;
-
         this._screenshotTaskQueue = screenshotTaskQueue;
-
         /** @type {!Map<string, Worker>} */
         this._workers = new Map();
         client.on("Target.attachedToTarget", event => {
@@ -5860,11 +4673,9 @@ class Page extends EventEmitter {
             this.emit(Events.Page.WorkerDestroyed, worker);
             this._workers.delete(event.sessionId);
         });
-
         this._frameManager.on(Events.FrameManager.FrameAttached, event => this.emit(Events.Page.FrameAttached, event));
         this._frameManager.on(Events.FrameManager.FrameDetached, event => this.emit(Events.Page.FrameDetached, event));
         this._frameManager.on(Events.FrameManager.FrameNavigated, event => this.emit(Events.Page.FrameNavigated, event));
-
         const networkManager = this._frameManager.networkManager();
         networkManager.on(Events.NetworkManager.Request, event => this.emit(Events.Page.Request, event));
         networkManager.on(Events.NetworkManager.Response, event => this.emit(Events.Page.Response, event));
@@ -5872,7 +4683,6 @@ class Page extends EventEmitter {
         networkManager.on(Events.NetworkManager.RequestFinished, event => this.emit(Events.Page.RequestFinished, event));
         this._fileChooserInterceptionIsDisabled = false;
         this._fileChooserInterceptors = new Set();
-
         client.on("Page.domContentEventFired", event => this.emit(Events.Page.DOMContentLoaded));
         client.on("Page.loadEventFired", event => this.emit(Events.Page.Load));
         client.on("Runtime.consoleAPICalled", event => this._onConsoleAPI(event));
@@ -5888,7 +4698,6 @@ class Page extends EventEmitter {
             this._closed = true;
         });
     }
-
     async _initialize() {
         await Promise.all([
             this._frameManager.initialize(),
@@ -5900,7 +4709,6 @@ class Page extends EventEmitter {
             }),
         ]);
     }
-
     /**
       * @param {!Protocol.Page.fileChooserOpenedPayload} event
       */
@@ -5915,7 +4723,6 @@ class Page extends EventEmitter {
         for (const interceptor of interceptors)
             interceptor.call(null, fileChooser);
     }
-
     /**
       * @param {!{timeout?: number}=} options
       * @return !Promise<!FileChooser>}
@@ -5934,7 +4741,6 @@ class Page extends EventEmitter {
             throw e;
         });
     }
-
     /**
       * @param {!{longitude: number, latitude: number, accuracy: (number|undefined)}} options
       */
@@ -5948,32 +4754,27 @@ class Page extends EventEmitter {
             throw new Error(`Invalid accuracy "${accuracy}": precondition 0 <= ACCURACY failed.`);
         await this._client.send("Emulation.setGeolocationOverride", {longitude, latitude, accuracy});
     }
-
     /**
       * @return {!Puppeteer.Target}
       */
     target() {
         return this._target;
     }
-
     /**
       * @return {!Puppeteer.Browser}
       */
     browser() {
         return this._target.browser();
     }
-
     /**
       * @return {!Puppeteer.BrowserContext}
       */
     browserContext() {
         return this._target.browserContext();
     }
-
     _onTargetCrashed() {
         this.emit("error", new Error("Page crashed!"));
     }
-
     /**
       * @param {!Protocol.Log.entryAddedPayload} event
       */
@@ -5984,70 +4785,60 @@ class Page extends EventEmitter {
         if (source !== "worker")
             this.emit(Events.Page.Console, new ConsoleMessage(level, text, [], {url, lineNumber}));
     }
-
     /**
       * @return {!Puppeteer.Frame}
       */
     mainFrame() {
         return this._frameManager.mainFrame();
     }
-
     /**
       * @return {!Touchscreen}
       */
     get touchscreen() {
         return this._touchscreen;
     }
-
     /**
       * @return {!Coverage}
       */
     get coverage() {
         return this._coverage;
     }
-
     /**
       * @return {!Array<Puppeteer.Frame>}
       */
     frames() {
         return this._frameManager.frames();
     }
-
     /**
       * @return {!Array<!Worker>}
       */
     workers() {
         return Array.from(this._workers.values());
     }
-
     /**
       * @param {boolean} value
       */
     async setRequestInterception(value) {
         return this._frameManager.networkManager().setRequestInterception(value);
     }
-
     /**
       * @param {boolean} enabled
       */
     setOfflineMode(enabled) {
         return this._frameManager.networkManager().setOfflineMode(enabled);
     }
-
     /**
       * @param {number} timeout
       */
     setDefaultNavigationTimeout(timeout) {
         this._timeoutSettings.setDefaultNavigationTimeout(timeout);
     }
-
     /**
       * @param {number} timeout
       */
     setDefaultTimeout(timeout) {
         this._timeoutSettings.setDefaultTimeout(timeout);
     }
-
     /**
       * @param {string} selector
       * @return {!Promise<?Puppeteer.ElementHandle>}
@@ -6055,7 +4846,6 @@ class Page extends EventEmitter {
     async $(selector) {
         return this.mainFrame().$(selector);
     }
-
     /**
       * @param {Function|string} pageFunction
       * @param {!Array<*>} args
@@ -6065,7 +4855,6 @@ class Page extends EventEmitter {
         const context = await this.mainFrame().executionContext();
         return context.evaluateHandle(pageFunction, ...args);
     }
-
     /**
       * @param {!Puppeteer.JSHandle} prototypeHandle
       * @return {!Promise<!Puppeteer.JSHandle>}
@@ -6074,7 +4863,6 @@ class Page extends EventEmitter {
         const context = await this.mainFrame().executionContext();
         return context.queryObjects(prototypeHandle);
     }
-
     /**
       * @param {string} selector
       * @param {Function|string} pageFunction
@@ -6084,7 +4872,6 @@ class Page extends EventEmitter {
     async $eval(selector, pageFunction, ...args) {
         return this.mainFrame().$eval(selector, pageFunction, ...args);
     }
-
     /**
       * @param {string} selector
       * @param {Function|string} pageFunction
@@ -6094,7 +4881,6 @@ class Page extends EventEmitter {
     async $$eval(selector, pageFunction, ...args) {
         return this.mainFrame().$$eval(selector, pageFunction, ...args);
     }
-
     /**
       * @param {string} selector
       * @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
@@ -6102,7 +4888,6 @@ class Page extends EventEmitter {
     async $$(selector) {
         return this.mainFrame().$$(selector);
     }
-
     /**
       * @param {string} expression
       * @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
@@ -6110,7 +4895,6 @@ class Page extends EventEmitter {
     async $x(expression) {
         return this.mainFrame().$x(expression);
     }
-
     /**
       * @param {!Array<string>} urls
       * @return {!Promise<!Array<Network.Cookie>>}
@@ -6120,7 +4904,6 @@ class Page extends EventEmitter {
             urls: urls.length ? urls : [this.url()]
         })).cookies;
     }
-
     /**
       * @param {Array<Protocol.Network.deleteCookiesParameters>} cookies
       */
@@ -6133,7 +4916,6 @@ class Page extends EventEmitter {
             await this._client.send("Network.deleteCookies", item);
         }
     }
-
     /**
       * @param {Array<Network.CookieParam>} cookies
       */
@@ -6152,7 +4934,6 @@ class Page extends EventEmitter {
         if (items.length)
             await this._client.send("Network.setCookies", { cookies: items });
     }
-
     /**
       * @param {!{url?: string, path?: string, content?: string, type?: string}} options
       * @return {!Promise<!Puppeteer.ElementHandle>}
@@ -6160,7 +4941,6 @@ class Page extends EventEmitter {
     async addScriptTag(options) {
         return this.mainFrame().addScriptTag(options);
     }
-
     /**
       * @param {!{url?: string, path?: string, content?: string}} options
       * @return {!Promise<!Puppeteer.ElementHandle>}
@@ -6168,7 +4948,6 @@ class Page extends EventEmitter {
     async addStyleTag(options) {
         return this.mainFrame().addStyleTag(options);
     }
-
     /**
       * @param {string} name
       * @param {Function} puppeteerFunction
@@ -6177,12 +4956,10 @@ class Page extends EventEmitter {
         if (this._pageBindings.has(name))
             throw new Error(`Failed to add page binding with name ${name}: window["${name}"] already exists!`);
         this._pageBindings.set(name, puppeteerFunction);
-
         const expression = helper.evaluationString(addPageBinding, name);
         await this._client.send("Runtime.addBinding", {name: name});
         await this._client.send("Page.addScriptToEvaluateOnNewDocument", {source: expression});
         await Promise.all(this.frames().map(frame => frame.evaluate(expression).catch(debugError)));
-
         function addPageBinding(bindingName) {
             const binding = window[bindingName];
             window[bindingName] = (...args) => {
@@ -6200,28 +4977,24 @@ class Page extends EventEmitter {
             };
         }
     }
-
     /**
       * @param {?{username: string, password: string}} credentials
       */
     async authenticate(credentials) {
         return this._frameManager.networkManager().authenticate(credentials);
     }
-
     /**
       * @param {!Object<string, string>} headers
       */
     async setExtraHTTPHeaders(headers) {
         return this._frameManager.networkManager().setExtraHTTPHeaders(headers);
     }
-
     /**
       * @param {string} userAgent
       */
     async setUserAgent(userAgent) {
         return this._frameManager.networkManager().setUserAgent(userAgent);
     }
-
     /**
       * @return {!Promise<!Metrics>}
       */
@@ -6229,7 +5002,6 @@ class Page extends EventEmitter {
         const response = await this._client.send("Performance.getMetrics");
         return this._buildMetricsObject(response.metrics);
     }
-
     /**
       * @param {!Protocol.Performance.metricsPayload} event
       */
@@ -6239,7 +5011,6 @@ class Page extends EventEmitter {
             metrics: this._buildMetricsObject(event.metrics)
         });
     }
-
     /**
       * @param {?Array<!Protocol.Performance.Metric>} metrics
       * @return {!Metrics}
@@ -6252,7 +5023,6 @@ class Page extends EventEmitter {
         }
         return result;
     }
-
     /**
       * @param {!Protocol.Runtime.ExceptionDetails} exceptionDetails
       */
@@ -6262,7 +5032,6 @@ class Page extends EventEmitter {
         err.stack = ""; // Don't report clientside error with a node stack attached
         this.emit(Events.Page.PageError, err);
     }
-
     /**
       * @param {!Protocol.Runtime.consoleAPICalledPayload} event
       */
@@ -6287,7 +5056,6 @@ class Page extends EventEmitter {
         const values = event.args.map(arg => createJSHandle(context, arg));
         this._addConsoleMessage(event.type, values, event.stackTrace);
     }
-
     /**
       * @param {!Protocol.Runtime.bindingCalledPayload} event
       */
@@ -6304,7 +5072,6 @@ class Page extends EventEmitter {
                 expression = helper.evaluationString(deliverErrorValue, name, seq, error);
         }
         this._client.send("Runtime.evaluate", { expression, contextId: event.executionContextId }).catch(debugError);
-
         /**
           * @param {string} name
           * @param {number} seq
@@ -6314,7 +5081,6 @@ class Page extends EventEmitter {
             window[name]["callbacks"].get(seq).resolve(result);
             window[name]["callbacks"].delete(seq);
         }
-
         /**
           * @param {string} name
           * @param {number} seq
@@ -6327,7 +5093,6 @@ class Page extends EventEmitter {
             window[name]["callbacks"].get(seq).reject(error);
             window[name]["callbacks"].delete(seq);
         }
-
         /**
           * @param {string} name
           * @param {number} seq
@@ -6338,7 +5103,6 @@ class Page extends EventEmitter {
             window[name]["callbacks"].delete(seq);
         }
     }
-
     /**
       * @param {string} type
       * @param {!Array<!Puppeteer.JSHandle>} args
@@ -6365,7 +5129,6 @@ class Page extends EventEmitter {
         const message = new ConsoleMessage(type, textTokens.join(" "), args, location);
         this.emit(Events.Page.Console, message);
     }
-
     _onDialog(event) {
         let dialogType = null;
         if (event.type === "alert")
@@ -6380,21 +5143,18 @@ class Page extends EventEmitter {
         const dialog = new Dialog(this._client, dialogType, event.message, event.defaultPrompt);
         this.emit(Events.Page.Dialog, dialog);
     }
-
     /**
       * @return {!string}
       */
     url() {
         return this.mainFrame().url();
     }
-
     /**
       * @return {!Promise<string>}
       */
     async content() {
         return await this._frameManager.mainFrame().content();
     }
-
     /**
       * @param {string} html
       * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
@@ -6402,7 +5162,6 @@ class Page extends EventEmitter {
     async setContent(html, options) {
         await this._frameManager.mainFrame().setContent(html, options);
     }
-
     /**
       * @param {string} url
       * @param {!{referer?: string, timeout?: number, waitUntil?: string|!Array<string>}=} options
@@ -6411,7 +5170,6 @@ class Page extends EventEmitter {
     async goto(url, options) {
         return await this._frameManager.mainFrame().goto(url, options);
     }
-
     /**
       * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
       * @return {!Promise<?Puppeteer.Response>}
@@ -6423,7 +5181,6 @@ class Page extends EventEmitter {
         ]);
         return response;
     }
-
     /**
       * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
       * @return {!Promise<?Puppeteer.Response>}
@@ -6431,7 +5188,6 @@ class Page extends EventEmitter {
     async waitForNavigation(options = {}) {
         return await this._frameManager.mainFrame().waitForNavigation(options);
     }
-
     /**
       * @param {(string|Function)} urlOrPredicate
       * @param {!{timeout?: number}=} options
@@ -6449,7 +5205,6 @@ class Page extends EventEmitter {
             return false;
         }, timeout);
     }
-
     /**
       * @param {(string|Function)} urlOrPredicate
       * @param {!{timeout?: number}=} options
@@ -6467,7 +5222,6 @@ class Page extends EventEmitter {
             return false;
         }, timeout);
     }
-
     /**
       * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
       * @return {!Promise<?Puppeteer.Response>}
@@ -6475,7 +5229,6 @@ class Page extends EventEmitter {
     async goBack(options) {
         return this._go(-1, options);
     }
-
     /**
       * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
       * @return {!Promise<?Puppeteer.Response>}
@@ -6483,7 +5236,6 @@ class Page extends EventEmitter {
     async goForward(options) {
         return this._go(+1, options);
     }
-
     /**
       * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
       * @return {!Promise<?Puppeteer.Response>}
@@ -6499,11 +5251,9 @@ class Page extends EventEmitter {
         ]);
         return response;
     }
-
     async bringToFront() {
         await this._client.send("Page.bringToFront");
     }
-
     /**
       * @param {!{viewport: !Puppeteer.Viewport, userAgent: string}} options
       */
@@ -6513,7 +5263,6 @@ class Page extends EventEmitter {
             this.setUserAgent(options.userAgent)
         ]);
     }
-
     /**
       * @param {boolean} enabled
       */
@@ -6523,14 +5272,12 @@ class Page extends EventEmitter {
         this._javascriptEnabled = enabled;
         await this._client.send("Emulation.setScriptExecutionDisabled", { value: !enabled });
     }
-
     /**
       * @param {boolean} enabled
       */
     async setBypassCSP(enabled) {
         await this._client.send("Page.setBypassCSP", { enabled });
     }
-
     /**
       * @param {?string} mediaType
       */
@@ -6538,7 +5285,6 @@ class Page extends EventEmitter {
         assert(mediaType === "screen" || mediaType === "print" || mediaType === null, "Unsupported media type: " + mediaType);
         await this._client.send("Emulation.setEmulatedMedia", {media: mediaType || ""});
     }
-
     /**
       * @param {!Puppeteer.Viewport} viewport
       */
@@ -6548,14 +5294,12 @@ class Page extends EventEmitter {
         if (needsReload)
             await this.reload();
     }
-
     /**
       * @return {?Puppeteer.Viewport}
       */
     viewport() {
         return this._viewport;
     }
-
     /**
       * @param {Function|string} pageFunction
       * @param {!Array<*>} args
@@ -6564,7 +5308,6 @@ class Page extends EventEmitter {
     async evaluate(pageFunction, ...args) {
         return this._frameManager.mainFrame().evaluate(pageFunction, ...args);
     }
-
     /**
       * @param {Function|string} pageFunction
       * @param {!Array<*>} args
@@ -6573,14 +5316,12 @@ class Page extends EventEmitter {
         const source = helper.evaluationString(pageFunction, ...args);
         await this._client.send("Page.addScriptToEvaluateOnNewDocument", { source });
     }
-
     /**
       * @param {boolean} enabled
       */
     async setCacheEnabled(enabled = true) {
         await this._frameManager.networkManager().setCacheEnabled(enabled);
     }
-
     /**
       * @param {!ScreenshotOptions=} options
       * @return {!Promise<!Buffer|!String>}
@@ -6600,10 +5341,8 @@ class Page extends EventEmitter {
                 screenshotType = "jpeg";
             assert(screenshotType, "Unsupported screenshot mime type: " + mimeType);
         }
-
         if (!screenshotType)
             screenshotType = "png";
-
         if (options.quality) {
             assert(screenshotType === "jpeg", "options.quality is unsupported for the " + screenshotType + " screenshots");
             assert(typeof options.quality === "number", "Expected options.quality to be a number but found " + (typeof options.quality));
@@ -6621,7 +5360,6 @@ class Page extends EventEmitter {
         }
         return this._screenshotTaskQueue.postTask(this._screenshotTask.bind(this, screenshotType, options));
     }
-
     /**
       * @param {"png"|"jpeg"} format
       * @param {!ScreenshotOptions=} options
@@ -6630,12 +5368,10 @@ class Page extends EventEmitter {
     async _screenshotTask(format, options) {
         await this._client.send("Target.activateTarget", {targetId: this._target._targetId});
         let clip = options.clip ? processClip(options.clip) : undefined;
-
         if (options.fullPage) {
             const metrics = await this._client.send("Page.getLayoutMetrics");
             const width = Math.ceil(metrics.contentSize.width);
             const height = Math.ceil(metrics.contentSize.height);
-
             // Overwrite clip for full page at all times.
             clip = { x: 0, y: 0, width, height, scale: 1 };
             const {
@@ -6653,15 +5389,12 @@ class Page extends EventEmitter {
         const result = await this._client.send("Page.captureScreenshot", { format, quality: options.quality, clip });
         if (shouldSetDefaultBackground)
             await this._client.send("Emulation.setDefaultBackgroundColorOverride");
-
         if (options.fullPage && this._viewport)
             await this.setViewport(this._viewport);
-
         const buffer = options.encoding === "base64" ? result.data : Buffer.from(result.data, "base64");
         if (options.path)
             await writeFileAsync(options.path, buffer);
         return buffer;
-
         function processClip(clip) {
             const x = Math.round(clip.x);
             const y = Math.round(clip.y);
@@ -6670,7 +5403,6 @@ class Page extends EventEmitter {
             return {x, y, width, height, scale: 1};
         }
     }
-
     /**
       * @param {!PDFOptions=} options
       * @return {!Promise<!Buffer>}
@@ -6688,7 +5420,6 @@ class Page extends EventEmitter {
             margin = {},
             path = null
         } = options;
-
         let paperWidth = 8.5;
         let paperHeight = 11;
         if (options.format) {
@@ -6700,12 +5431,10 @@ class Page extends EventEmitter {
             paperWidth = convertPrintParameterToInches(options.width) || paperWidth;
             paperHeight = convertPrintParameterToInches(options.height) || paperHeight;
         }
-
         const marginTop = convertPrintParameterToInches(margin.top) || 0;
         const marginLeft = convertPrintParameterToInches(margin.left) || 0;
         const marginBottom = convertPrintParameterToInches(margin.bottom) || 0;
         const marginRight = convertPrintParameterToInches(margin.right) || 0;
-
         const result = await this._client.send("Page.printToPDF", {
             transferMode: "ReturnAsStream",
             landscape,
@@ -6725,14 +5454,12 @@ class Page extends EventEmitter {
         });
         return await helper.readProtocolStream(this._client, result.stream, path);
     }
-
     /**
       * @return {!Promise<string>}
       */
     async title() {
         return this.mainFrame().title();
     }
-
     /**
       * @param {!{runBeforeUnload: (boolean|undefined)}=} options
       */
@@ -6746,21 +5473,18 @@ class Page extends EventEmitter {
             await this._target._isClosedPromise;
         }
     }
-
     /**
       * @return {boolean}
       */
     isClosed() {
         return this._closed;
     }
-
     /**
       * @return {!Mouse}
       */
     get mouse() {
         return this._mouse;
     }
-
     /**
       * @param {string} selector
       * @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
@@ -6768,21 +5492,18 @@ class Page extends EventEmitter {
     click(selector, options = {}) {
         return this.mainFrame().click(selector, options);
     }
-
     /**
       * @param {string} selector
       */
     focus(selector) {
         return this.mainFrame().focus(selector);
     }
-
     /**
       * @param {string} selector
       */
     hover(selector) {
         return this.mainFrame().hover(selector);
     }
-
     /**
       * @param {string} selector
       * @param {!Array<string>} values
@@ -6791,14 +5512,12 @@ class Page extends EventEmitter {
     select(selector, ...values) {
         return this.mainFrame().select(selector, ...values);
     }
-
     /**
       * @param {string} selector
       */
     tap(selector) {
         return this.mainFrame().tap(selector);
     }
-
     /**
       * @param {string} selector
       * @param {string} text
@@ -6807,7 +5526,6 @@ class Page extends EventEmitter {
     type(selector, text, options) {
         return this.mainFrame().type(selector, text, options);
     }
-
     /**
       * @param {(string|number|Function)} selectorOrFunctionOrTimeout
       * @param {!Object=} options
@@ -6817,7 +5535,6 @@ class Page extends EventEmitter {
     waitFor(selectorOrFunctionOrTimeout, options = {}, ...args) {
         return this.mainFrame().waitFor(selectorOrFunctionOrTimeout, options, ...args);
     }
-
     /**
       * @param {string} selector
       * @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
@@ -6826,7 +5543,6 @@ class Page extends EventEmitter {
     waitForSelector(selector, options = {}) {
         return this.mainFrame().waitForSelector(selector, options);
     }
-
     /**
       * @param {string} xpath
       * @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
@@ -6835,7 +5551,6 @@ class Page extends EventEmitter {
     waitForXPath(xpath, options = {}) {
         return this.mainFrame().waitForXPath(xpath, options);
     }
-
     /**
       * @param {Function} pageFunction
       * @param {!{polling?: string|number, timeout?: number}=} options
@@ -6846,7 +5561,6 @@ class Page extends EventEmitter {
         return this.mainFrame().waitForFunction(pageFunction, options, ...args);
     }
 }
-
 /**
   * @typedef {Object} PDFOptions
   * @property {number=} scale
@@ -6863,7 +5577,6 @@ class Page extends EventEmitter {
   * @property {!{top?: string|number, bottom?: string|number, left?: string|number, right?: string|number}=} margin
   * @property {string=} path
   */
-
 /**
   * @typedef {Object} Metrics
   * @property {number=} Timestamp
@@ -6880,7 +5593,6 @@ class Page extends EventEmitter {
   * @property {number=} JSHeapUsedSize
   * @property {number=} JSHeapTotalSize
   */
-
 /**
   * @typedef {Object} ScreenshotOptions
   * @property {string=} type
@@ -6891,7 +5603,6 @@ class Page extends EventEmitter {
   * @property {boolean=} omitBackground
   * @property {string=} encoding
   */
-
 /** @type {!Set<string>} */
 const supportedMetrics = new Set([
     "Timestamp",
@@ -6908,14 +5619,12 @@ const supportedMetrics = new Set([
     "JSHeapUsedSize",
     "JSHeapTotalSize",
 ]);
-
 /**
   * @typedef {Object} ConsoleMessage.Location
   * @property {string=} url
   * @property {number=} lineNumber
   * @property {number=} columnNumber
   */
-
 class ConsoleMessage {
     /**
       * @param {string} type
@@ -6929,28 +5638,24 @@ class ConsoleMessage {
         this._args = args;
         this._location = location;
     }
-
     /**
       * @return {string}
       */
     type() {
         return this._type;
     }
-
     /**
       * @return {string}
       */
     text() {
         return this._text;
     }
-
     /**
       * @return {!Array<!Puppeteer.JSHandle>}
       */
     args() {
         return this._args;
     }
-
     /**
       * @return {Object}
       */
@@ -6958,10 +5663,7 @@ class ConsoleMessage {
         return this._location;
     }
 }
-
 exports_puppeteer_puppeteer_lib_Page = {Page, ConsoleMessage};
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Target.js
 */
@@ -6980,12 +5682,10 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Target.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-
 // const {Events} = exports_puppeteer_puppeteer_lib_Events;
 // const {Page} = exports_puppeteer_puppeteer_lib_Page;
 // const {Worker} = exports_puppeteer_puppeteer_lib_Worker;
 // const {Connection} = exports_puppeteer_puppeteer_lib_Connection;
-
 class Target {
     /**
       * @param {!Protocol.Target.TargetInfo} targetInfo
@@ -7025,14 +5725,12 @@ class Target {
         if (this._isInitialized)
             this._initializedCallback(true);
     }
-
     /**
       * @return {!Promise<!Puppeteer.CDPSession>}
       */
     createCDPSession() {
         return this._sessionFactory();
     }
-
     /**
       * @return {!Promise<?Page>}
       */
@@ -7043,7 +5741,6 @@ class Target {
         }
         return this._pagePromise;
     }
-
     /**
       * @return {!Promise<?Worker>}
       */
@@ -7064,14 +5761,12 @@ class Target {
         }
         return this._workerPromise;
     }
-
     /**
       * @return {string}
       */
     url() {
         return this._targetInfo.url;
     }
-
     /**
       * @return {"page"|"background_page"|"service_worker"|"shared_worker"|"other"|"browser"}
       */
@@ -7081,21 +5776,18 @@ class Target {
             return type;
         return "other";
     }
-
     /**
       * @return {!Puppeteer.Browser}
       */
     browser() {
         return this._browserContext.browser();
     }
-
     /**
       * @return {!Puppeteer.BrowserContext}
       */
     browserContext() {
         return this._browserContext;
     }
-
     /**
       * @return {?Puppeteer.Target}
       */
@@ -7105,13 +5797,11 @@ class Target {
             return null;
         return this.browser()._targets.get(openerId);
     }
-
     /**
       * @param {!Protocol.Target.TargetInfo} targetInfo
       */
     _targetInfoChanged(targetInfo) {
         this._targetInfo = targetInfo;
-
         if (!this._isInitialized && (this._targetInfo.type !== "page" || this._targetInfo.url !== "")) {
             this._isInitialized = true;
             this._initializedCallback(true);
@@ -7119,10 +5809,7 @@ class Target {
         }
     }
 }
-
 exports_puppeteer_puppeteer_lib_Target = {Target};
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/TaskQueue.js
 */
@@ -7130,7 +5817,6 @@ class TaskQueue {
     constructor() {
         this._chain = Promise.resolve();
     }
-
     /**
       * @param {Function} task
       * @return {!Promise}
@@ -7141,10 +5827,7 @@ class TaskQueue {
         return result;
     }
 }
-
 exports_puppeteer_puppeteer_lib_TaskQueue = {TaskQueue};
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/TimeoutSettings.js
 */
@@ -7163,29 +5846,24 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/TimeoutSettings.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-
 const DEFAULT_TIMEOUT = 30000;
-
 class TimeoutSettings {
     constructor() {
         this._defaultTimeout = null;
         this._defaultNavigationTimeout = null;
     }
-
     /**
       * @param {number} timeout
       */
     setDefaultTimeout(timeout) {
         this._defaultTimeout = timeout;
     }
-
     /**
       * @param {number} timeout
       */
     setDefaultNavigationTimeout(timeout) {
         this._defaultNavigationTimeout = timeout;
     }
-
     /**
       * @return {number}
       */
@@ -7196,17 +5874,13 @@ class TimeoutSettings {
             return this._defaultTimeout;
         return DEFAULT_TIMEOUT;
     }
-
     timeout() {
         if (this._defaultTimeout !== null)
             return this._defaultTimeout;
         return DEFAULT_TIMEOUT;
     }
 }
-
 exports_puppeteer_puppeteer_lib_TimeoutSettings = {TimeoutSettings};
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/api.js
 */
@@ -7225,7 +5899,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/api.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-
 exports_puppeteer_puppeteer_lib_api = {
     Browser: exports_puppeteer_puppeteer_lib_Browser.Browser,
     BrowserContext: exports_puppeteer_puppeteer_lib_Browser.BrowserContext,
@@ -7247,8 +5920,6 @@ exports_puppeteer_puppeteer_lib_api = {
     TimeoutError: exports_puppeteer_puppeteer_lib_Errors.TimeoutError,
     Touchscreen: exports_puppeteer_puppeteer_lib_Input.Touchscreen,
 };
-
-
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/index.js
 */
@@ -7267,19 +5938,16 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/index.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-
 const api = exports_puppeteer_puppeteer_lib_api;
 for (const className in api) {
     // Puppeteer-web excludes certain classes from bundle, e.g. BrowserFetcher.
     if (typeof api[className] === "function")
         helper.installAsyncStackHooks(api[className]);
 }
-
 // If node does not support async await, use the compiled version.
 const Puppeteer = exports_puppeteer_puppeteer_lib_Puppeteer
 const packageJson = exports_puppeteer_puppeteer_package_json;
 const preferredRevision = packageJson.puppeteer.chromium_revision;
-
 // let Browser         = exports_puppeteer_puppeteer_lib_Browser.Browser;
 let BrowserFetcher  = exports_puppeteer_puppeteer_lib_BrowserFetcher;
 // let Connection      = exports_puppeteer_puppeteer_lib_Connection.Connection;
@@ -7308,33 +5976,19 @@ let BrowserFetcher  = exports_puppeteer_puppeteer_lib_BrowserFetcher;
 // let debugError      = exports_puppeteer_puppeteer_lib_helper.debugError;
 // let helper          = exports_puppeteer_puppeteer_lib_helper.helper;
 // let packageJson     = exports_puppeteer_puppeteer_package_json;
-let applyMask       = exports_websockets_ws_lib_buffer_util.mask;
 // let concat          = exports_websockets_ws_lib_buffer_util.concat;
 // let mask            = exports_websockets_ws_lib_buffer_util.mask;
-// let toArrayBuffer   = exports_websockets_ws_lib_buffer_util.toArrayBuffer;
-// let toBuffer        = exports_websockets_ws_lib_buffer_util.toBuffer;
-let unmask          = exports_websockets_ws_lib_buffer_util.unmask;
-let EMPTY_BUFFER    = exports_websockets_ws_lib_constants.EMPTY_BUFFER;
 let GUID            = exports_websockets_ws_lib_constants.GUID;
 let kStatusCode     = exports_websockets_ws_lib_constants.kStatusCode;
 // let EventTarget     = exports_websockets_ws_lib_event_target;
 let extension       = exports_websockets_ws_lib_extension;
-// let Receiver        = exports_websockets_ws_lib_receiver;
-// let Sender          = exports_websockets_ws_lib_sender;
-let isValidStatusCode = exports_websockets_ws_lib_validation.isValidStatusCode;
-let isValidUTF8     = exports_websockets_ws_lib_validation.isValidUTF8;
-// let WebSocket       = exports_websockets_ws_lib_websocket;
 local._puppeteer = exports_puppeteer_puppeteer_index;
 local.puppeteerApi = exports_puppeteer_puppeteer_lib_api;
-
-
 /*
 file none
 */
 local.puppeteerApi.Connection = Connection;
 local.puppeteerApi.WebSocket = WebSocket;
-
-
 /*
 debugInline
 net.connect Error
