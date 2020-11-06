@@ -5042,8 +5042,9 @@ class Page extends EventEmitter {
         const pageURL = this.url();
         for (const cookie of cookies) {
             const item = Object.assign({}, cookie);
-            if (!cookie.url && pageURL.startsWith("http"))
+            if (!cookie.url && pageURL.startsWith("http")) {
                 item.url = pageURL;
+            }
             await this._client.send("Network.deleteCookies", item);
         }
     }
@@ -5055,15 +5056,17 @@ class Page extends EventEmitter {
         const startsWithHTTP = pageURL.startsWith("http");
         const items = cookies.map(cookie => {
             const item = Object.assign({}, cookie);
-            if (!item.url && startsWithHTTP)
+            if (!item.url && startsWithHTTP) {
                 item.url = pageURL;
+            }
             assert(item.url !== "about:blank", `Blank page can not have cookie "${item.name}"`);
             assert(!String.prototype.startsWith.call(item.url || "", "data:"), `Data URL page can not have cookie "${item.name}"`);
             return item;
         });
         await this.deleteCookie(...items);
-        if (items.length)
+        if (items.length) {
             await this._client.send("Network.setCookies", { cookies: items });
+        }
     }
     /**
       * @param {!{url?: string, path?: string, content?: string, type?: string}} options
@@ -5084,8 +5087,9 @@ class Page extends EventEmitter {
       * @param {Function} puppeteerFunction
       */
     async exposeFunction(name, puppeteerFunction) {
-        if (this._pageBindings.has(name))
+        if (this._pageBindings.has(name)) {
             throw new Error(`Failed to add page binding with name ${name}: window["${name}"] already exists!`);
+        }
         this._pageBindings.set(name, puppeteerFunction);
         const expression = helper.evaluationString(addPageBinding, name);
         await this._client.send("Runtime.addBinding", {name: name});
@@ -5149,8 +5153,9 @@ class Page extends EventEmitter {
     _buildMetricsObject(metrics) {
         const result = {};
         for (const metric of metrics || []) {
-            if (supportedMetrics.has(metric.name))
+            if (supportedMetrics.has(metric.name)) {
                 result[metric.name] = metric.value;
+            }
         }
         return result;
     }
@@ -5197,8 +5202,9 @@ class Page extends EventEmitter {
             const result = await this._pageBindings.get(name)(...args);
             expression = helper.evaluationString(deliverResult, name, seq, result);
         } catch (error) {
-            if (error instanceof Error)
+            if (error instanceof Error) {
                 expression = helper.evaluationString(deliverError, name, seq, error.message, error.stack);
+            }
             else
                 expression = helper.evaluationString(deliverErrorValue, name, seq, error);
         }
@@ -5247,8 +5253,9 @@ class Page extends EventEmitter {
         const textTokens = [];
         for (const arg of args) {
             const remoteObject = arg._remoteObject;
-            if (remoteObject.objectId)
+            if (remoteObject.objectId) {
                 textTokens.push(arg.toString());
+            }
             else
                 textTokens.push(helper.valueFromRemoteObject(remoteObject));
         }
@@ -5262,14 +5269,18 @@ class Page extends EventEmitter {
     }
     _onDialog(event) {
         let dialogType = null;
-        if (event.type === "alert")
+        if (event.type === "alert") {
             dialogType = Dialog.Type.Alert;
-        else if (event.type === "confirm")
+        }
+        else if (event.type === "confirm") {
             dialogType = Dialog.Type.Confirm;
-        else if (event.type === "prompt")
+        }
+        else if (event.type === "prompt") {
             dialogType = Dialog.Type.Prompt;
-        else if (event.type === "beforeunload")
+        }
+        else if (event.type === "beforeunload") {
             dialogType = Dialog.Type.BeforeUnload;
+        }
         assert(dialogType, "Unknown javascript dialog type: " + event.type);
         const dialog = new Dialog(this._client, dialogType, event.message, event.defaultPrompt);
         this.emit(Events.Page.Dialog, dialog);
@@ -5329,10 +5340,12 @@ class Page extends EventEmitter {
             timeout = this._timeoutSettings.timeout(),
         } = options;
         return helper.waitForEvent(this._frameManager.networkManager(), Events.NetworkManager.Request, request => {
-            if (helper.isString(urlOrPredicate))
+            if (helper.isString(urlOrPredicate)) {
                 return (urlOrPredicate === request.url());
-            if (typeof urlOrPredicate === "function")
+            }
+            if (typeof urlOrPredicate === "function") {
                 return !!(urlOrPredicate(request));
+            }
             return false;
         }, timeout);
     }
@@ -5346,10 +5359,12 @@ class Page extends EventEmitter {
             timeout = this._timeoutSettings.timeout(),
         } = options;
         return helper.waitForEvent(this._frameManager.networkManager(), Events.NetworkManager.Response, response => {
-            if (helper.isString(urlOrPredicate))
+            if (helper.isString(urlOrPredicate)) {
                 return (urlOrPredicate === response.url());
-            if (typeof urlOrPredicate === "function")
+            }
+            if (typeof urlOrPredicate === "function") {
                 return !!(urlOrPredicate(response));
+            }
             return false;
         }, timeout);
     }
@@ -5374,8 +5389,9 @@ class Page extends EventEmitter {
     async _go(delta, options) {
         const history = await this._client.send("Page.getNavigationHistory");
         const entry = history.entries[history.currentIndex + delta];
-        if (!entry)
+        if (!entry) {
             return null;
+        }
         const [response] = await Promise.all([
             this.waitForNavigation(options),
             this._client.send("Page.navigateToHistoryEntry", {entryId: entry.id}),
@@ -5398,8 +5414,9 @@ class Page extends EventEmitter {
       * @param {boolean} enabled
       */
     async setJavaScriptEnabled(enabled) {
-        if (this._javascriptEnabled === enabled)
+        if (this._javascriptEnabled === enabled) {
             return;
+        }
         this._javascriptEnabled = enabled;
         await this._client.send("Emulation.setScriptExecutionDisabled", { value: !enabled });
     }
@@ -5422,8 +5439,9 @@ class Page extends EventEmitter {
     async setViewport(viewport) {
         const needsReload = await this._emulationManager.emulateViewport(viewport);
         this._viewport = viewport;
-        if (needsReload)
+        if (needsReload) {
             await this.reload();
+        }
     }
     /**
       * @return {?Puppeteer.Viewport}
@@ -5466,14 +5484,17 @@ class Page extends EventEmitter {
             screenshotType = options.type;
         } else if (options.path) {
             const mimeType = mime.getType(options.path);
-            if (mimeType === "image/png")
+            if (mimeType === "image/png") {
                 screenshotType = "png";
-            else if (mimeType === "image/jpeg")
+            }
+            else if (mimeType === "image/jpeg") {
                 screenshotType = "jpeg";
+            }
             assert(screenshotType, "Unsupported screenshot mime type: " + mimeType);
         }
-        if (!screenshotType)
+        if (!screenshotType) {
             screenshotType = "png";
+        }
         if (options.quality) {
             assert(screenshotType === "jpeg", "options.quality is unsupported for the " + screenshotType + " screenshots");
             assert(typeof options.quality === "number", "Expected options.quality to be a number but found " + (typeof options.quality));
@@ -5515,16 +5536,20 @@ class Page extends EventEmitter {
             await this._client.send("Emulation.setDeviceMetricsOverride", { mobile: isMobile, width, height, deviceScaleFactor, screenOrientation });
         }
         const shouldSetDefaultBackground = options.omitBackground && format === "png";
-        if (shouldSetDefaultBackground)
+        if (shouldSetDefaultBackground) {
             await this._client.send("Emulation.setDefaultBackgroundColorOverride", { color: { r: 0, g: 0, b: 0, a: 0 } });
+        }
         const result = await this._client.send("Page.captureScreenshot", { format, quality: options.quality, clip });
-        if (shouldSetDefaultBackground)
+        if (shouldSetDefaultBackground) {
             await this._client.send("Emulation.setDefaultBackgroundColorOverride");
-        if (options.fullPage && this._viewport)
+        }
+        if (options.fullPage && this._viewport) {
             await this.setViewport(this._viewport);
+        }
         const buffer = options.encoding === "base64" ? result.data : Buffer.from(result.data, "base64");
-        if (options.path)
+        if (options.path) {
             await writeFileAsync(options.path, buffer);
+        }
         return buffer;
         function processClip(clip) {
             const x = Math.round(clip.x);
@@ -5839,22 +5864,26 @@ class Target {
         /** @type {?Promise<!Worker>} */
         this._workerPromise = null;
         this._initializedPromise = new Promise(fulfill => this._initializedCallback = fulfill).then(async success => {
-            if (!success)
+            if (!success) {
                 return false;
+            }
             const opener = this.opener();
-            if (!opener || !opener._pagePromise || this.type() !== "page")
+            if (!opener || !opener._pagePromise || this.type() !== "page") {
                 return true;
+            }
             const openerPage = await opener._pagePromise;
-            if (!openerPage.listenerCount(Events.Page.Popup))
+            if (!openerPage.listenerCount(Events.Page.Popup)) {
                 return true;
+            }
             const popupPage = await this.page();
             openerPage.emit(Events.Page.Popup, popupPage);
             return true;
         });
         this._isClosedPromise = new Promise(fulfill => this._closedCallback = fulfill);
         this._isInitialized = this._targetInfo.type !== "page" || this._targetInfo.url !== "";
-        if (this._isInitialized)
+        if (this._isInitialized) {
             this._initializedCallback(true);
+        }
     }
     /**
       * @return {!Promise<!Puppeteer.CDPSession>}
@@ -5876,8 +5905,9 @@ class Target {
       * @return {!Promise<?Worker>}
       */
     async worker() {
-        if (this._targetInfo.type !== "service_worker" && this._targetInfo.type !== "shared_worker")
+        if (this._targetInfo.type !== "service_worker" && this._targetInfo.type !== "shared_worker") {
             return null;
+        }
         if (!this._workerPromise) {
             this._workerPromise = this._sessionFactory().then(async client => {
                 // Top level workers have a fake page wrapping the actual worker.
@@ -5903,8 +5933,9 @@ class Target {
       */
     type() {
         const type = this._targetInfo.type;
-        if (type === "page" || type === "background_page" || type === "service_worker" || type === "shared_worker" || type === "browser")
+        if (type === "page" || type === "background_page" || type === "service_worker" || type === "shared_worker" || type === "browser") {
             return type;
+        }
         return "other";
     }
     /**
@@ -5924,8 +5955,9 @@ class Target {
       */
     opener() {
         const { openerId } = this._targetInfo;
-        if (!openerId)
+        if (!openerId) {
             return null;
+        }
         return this.browser()._targets.get(openerId);
     }
     /**
@@ -5999,15 +6031,18 @@ class TimeoutSettings {
       * @return {number}
       */
     navigationTimeout() {
-        if (this._defaultNavigationTimeout !== null)
+        if (this._defaultNavigationTimeout !== null) {
             return this._defaultNavigationTimeout;
-        if (this._defaultTimeout !== null)
+        }
+        if (this._defaultTimeout !== null) {
             return this._defaultTimeout;
+        }
         return DEFAULT_TIMEOUT;
     }
     timeout() {
-        if (this._defaultTimeout !== null)
+        if (this._defaultTimeout !== null) {
             return this._defaultTimeout;
+        }
         return DEFAULT_TIMEOUT;
     }
 }
@@ -6072,8 +6107,9 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/index.js
 const api = exports_puppeteer_puppeteer_lib_api;
 for (const className in api) {
     // Puppeteer-web excludes certain classes from bundle, e.g. BrowserFetcher.
-    if (typeof api[className] === "function")
+    if (typeof api[className] === "function") {
         helper.installAsyncStackHooks(api[className]);
+    }
 }
 // If node does not support async await, use the compiled version.
 const Puppeteer = exports_puppeteer_puppeteer_lib_Puppeteer
