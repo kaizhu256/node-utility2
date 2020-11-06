@@ -15,7 +15,7 @@
 // ,$s/\<\(if\|else\) .*[^{]$/& {/gc
 // ,$s/^\( *\)\(\<\(if\|else\) .*[^{]\)\(\n.*\)/\1\2 {\4\r\1}/gc
 // ,$s/^\( *\)\(\<else\)\(\n.*\)/\1\2 {\3\r\1}/gc
-// ,$s/^\( *\)\<for (\(\w\w* \)*\(\w\w*\) of \(\w\S*\))\(\n.*\)/\1\4.forEach(function (\3) {\5\r\1});/gc
+// ,$s/^\( *\)\<for (\(\w\w* \)*\(\w\w*\) of \(\w\S*\))\(\n.*\)/\1\4.forEach(function (\3) {\5\r\1});/gc // jslint ignore:line
 
 
 /*
@@ -1919,7 +1919,27 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
   * limitations under the License.
   */
 /**
+  * @param {!Error} error
+  * @param {string} method
+  * @param {{error: {message: string, data: any}}} object
+  * @return {!Error}
   */
+function createProtocolError(error, method, object) {
+    let message = `Protocol error (${method}): ${object.error.message}`;
+    if ("data" in object.error) {
+        message += ` ${object.error.data}`;
+    }
+    return rewriteError(error, message);
+}
+/**
+  * @param {!Error} error
+  * @param {string} message
+  * @return {!Error}
+  */
+function rewriteError(error, message) {
+    error.message = message;
+    return error;
+}
 /**
   * @param {!Connection} connection
   * @param {string} targetType
@@ -2155,28 +2175,6 @@ Connection.prototype.createSession = async function (targetInfo) {
             targetId: targetInfo.targetId, flatten: true});
     return this._sessions.get(sessionId);
 };
-/**
-  * @param {!Error} error
-  * @param {string} method
-  * @param {{error: {message: string, data: any}}} object
-  * @return {!Error}
-  */
-function createProtocolError(error, method, object) {
-    let message = `Protocol error (${method}): ${object.error.message}`;
-    if ("data" in object.error) {
-        message += ` ${object.error.data}`;
-    }
-    return rewriteError(error, message);
-}
-/**
-  * @param {!Error} error
-  * @param {string} message
-  * @return {!Error}
-  */
-function rewriteError(error, message) {
-    error.message = message;
-    return error;
-}
 
 
 /* jslint ignore:start */
