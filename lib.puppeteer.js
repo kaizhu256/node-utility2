@@ -4942,7 +4942,7 @@ class Page extends EventEmitter {
     _onLogEntryAdded(event) {
         const {level, text, args, source, url, lineNumber} = event.entry;
         if (args) {
-            args.map(arg => helper.releaseObject(this._client, arg));
+            args.map(function (arg) { return helper.releaseObject(this._client, arg); });
         }
         if (source !== "worker") {
             this.emit(Events.Page.Console, new ConsoleMessage(level, text, [], {url, lineNumber}));
@@ -5119,14 +5119,15 @@ class Page extends EventEmitter {
       * @param {Function} puppeteerFunction
       */
     async exposeFunction(name, puppeteerFunction) {
-        if (this._pageBindings.has(name)) {
+        let that = this;
+        if (that._pageBindings.has(name)) {
             throw new Error(`Failed to add page binding with name ${name}: window["${name}"] already exists!`);
         }
-        this._pageBindings.set(name, puppeteerFunction);
+        that._pageBindings.set(name, puppeteerFunction);
         const expression = helper.evaluationString(addPageBinding, name);
-        await this._client.send("Runtime.addBinding", {name: name});
-        await this._client.send("Page.addScriptToEvaluateOnNewDocument", {source: expression});
-        await Promise.all(this.frames().map(frame => frame.evaluate(expression).catch(debugError)));
+        await that._client.send("Runtime.addBinding", {name: name});
+        await that._client.send("Page.addScriptToEvaluateOnNewDocument", {source: expression});
+        await Promise.all(that.frames().map(function (frame) { return frame.evaluate(expression).catch(debugError); }));
         function addPageBinding(bindingName) {
             const binding = window[bindingName];
             window[bindingName] = (...args) => {
@@ -5221,7 +5222,7 @@ class Page extends EventEmitter {
             return;
         }
         const context = this._frameManager.executionContextById(event.executionContextId);
-        const values = event.args.map(arg => createJSHandle(context, arg));
+        const values = event.args.map(function (arg) { return createJSHandle(context, arg); });
         this._addConsoleMessage(event.type, values, event.stackTrace);
     }
     /**
@@ -5280,7 +5281,7 @@ class Page extends EventEmitter {
       */
     _addConsoleMessage(type, args, stackTrace) {
         if (!this.listenerCount(Events.Page.Console)) {
-            args.forEach(arg => arg.dispose());
+            args.forEach(function (arg) { return arg.dispose(); });
             return;
         }
         const textTokens = [];
@@ -5914,7 +5915,7 @@ class Target {
             openerPage.emit(Events.Page.Popup, popupPage);
             return true;
         });
-        that._isClosedPromise = new Promise(fulfill => that._closedCallback = fulfill);
+        that._isClosedPromise = new Promise(function (fulfill) { return that._closedCallback = fulfill; });
         that._isInitialized = that._targetInfo.type !== "page" || that._targetInfo.url !== "";
         if (that._isInitialized) {
             that._initializedCallback(true);
@@ -5930,11 +5931,12 @@ class Target {
       * @return {!Promise<?Page>}
       */
     async page() {
-        if ((this._targetInfo.type === "page" || this._targetInfo.type === "background_page") && !this._pagePromise) {
-            this._pagePromise = this._sessionFactory()
-                    .then(client => Page.create(client, this, this._ignoreHTTPSErrors, this._defaultViewport, this._screenshotTaskQueue));
+        let that = this;
+        if ((that._targetInfo.type === "page" || that._targetInfo.type === "background_page") && !that._pagePromise) {
+            that._pagePromise = that._sessionFactory()
+                    .then(function (client) { return Page.create(client, that, that._ignoreHTTPSErrors, that._defaultViewport, that._screenshotTaskQueue); });
         }
-        return this._pagePromise;
+        return that._pagePromise;
     }
     /**
       * @return {!Promise<?Worker>}
