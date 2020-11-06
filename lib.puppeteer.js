@@ -2040,7 +2040,7 @@ CDPSession.prototype.send = function (method, params = {}) {
     return new Promise((resolve, reject) => {
         this._callbacks.set(id, {resolve, reject, error: new Error(), method});
     });
-}
+};
 /**
   * @param {{id?: number, method: string, params: Object, error: {message: string, data: any}, result?: *}} object
   */
@@ -2056,19 +2056,19 @@ CDPSession.prototype._onMessage = function (object) {
         assert(!object.id);
         this.emit(object.method, object.params);
     }
-}
+};
 CDPSession.prototype.detach = async function () {
     if (!this._connection)
         throw new Error(`Session already detached. Most likely the ${this._targetType} has been closed.`);
     await this._connection.send("Target.detachFromTarget",  {sessionId: this._sessionId});
-}
+};
 CDPSession.prototype._onClosed = function () {
     for (const callback of this._callbacks.values())
         callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
     this._callbacks.clear();
     this._connection = null;
     this.emit(Events.CDPSession.Disconnected);
-}
+};
 /**
   * @param {!Error} error
   * @param {string} method
