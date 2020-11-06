@@ -1918,10 +1918,70 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-// const {assert} = exports_puppeteer_puppeteer_lib_helper;
-// const {Events} = exports_puppeteer_puppeteer_lib_Events;
-// const debugProtocol = require("debug")("puppeteer:protocol");
-// const EventEmitter = require("events");
+/**
+  * @param {{id?: number, method: string, params: Object, error: {message: string, data: any}, result?: *}} object
+  */
+/**
+  * @param {!Connection} connection
+  * @param {string} targetType
+  * @param {string} sessionId
+  */
+function CDPSession(connection, targetType, sessionId) {
+    require("stream").EventEmitter.call(this);
+    /** @type {!Map<number, {resolve: function, reject: function, error: !Error, method: string}>}*/
+    this._callbacks = new Map();
+    this._connection = connection;
+    this._targetType = targetType;
+    this._sessionId = sessionId;
+}
+require("util").inherits(CDPSession, require("stream").EventEmitter);
+/**
+  * @param {string} method
+  * @param {!Object=} params
+  * @return {!Promise<?Object>}
+  */
+CDPSession.prototype.send = function (method, params = {}) {
+    let that = this;
+    if (!that._connection) {
+        return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${that._targetType} has been closed.`));
+    }
+    const id = that._connection._rawSend({
+        sessionId: that._sessionId, method, params});
+    return new Promise(function (resolve, reject) {
+        that._callbacks.set(id, {
+            resolve, reject, error: new Error(), method});
+    });
+};
+CDPSession.prototype._onMessage = function (object) {
+    if (object.id && this._callbacks.has(object.id)) {
+        const callback = this._callbacks.get(object.id);
+        this._callbacks.delete(object.id);
+        if (object.error) {
+            callback.reject(createProtocolError(callback.error, callback.method, object));
+        }
+        else {
+            callback.resolve(object.result);
+        }
+    } else {
+        assert(!object.id);
+        this.emit(object.method, object.params);
+    }
+};
+CDPSession.prototype.detach = async function () {
+    if (!this._connection) {
+        throw new Error(`Session already detached. Most likely the ${this._targetType} has been closed.`);
+    }
+    await this._connection.send("Target.detachFromTarget",  {
+        sessionId: this._sessionId});
+};
+CDPSession.prototype._onClosed = function () {
+    this._callbacks.forEach(function (callback) {
+        callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
+    });
+    this._callbacks.clear();
+    this._connection = null;
+    this.emit(Events.CDPSession.Disconnected);
+};
 /**
   * @param {string} url
   * @param {!Puppeteer.ConnectionTransport} transport
@@ -2036,7 +2096,9 @@ Connection.prototype._onMessage = async function (message) {
         if (callback) {
             this._callbacks.delete(object.id);
             if (object.error) {
-                callback.reject(createProtocolError(callback.error, callback.method, object));
+                callback.reject(
+                    createProtocolError(callback.error, callback.method, object)
+                );
             }
             else {
                 callback.resolve(object.result);
@@ -2054,7 +2116,10 @@ Connection.prototype._onClose = function () {
     this.onmessage = null;
     this.onclose = null;
     this._callbacks.forEach(function (callback) {
-        callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
+        callback.reject(rewriteError(
+            callback.error,
+            `Protocol error (${callback.method}): Target closed.`
+        ));
     });
     this._callbacks.clear();
     this._sessions.forEach(function (session) {
@@ -2077,70 +2142,6 @@ Connection.prototype.createSession = async function (targetInfo) {
         sessionId} = await this.send("Target.attachToTarget", {
             targetId: targetInfo.targetId, flatten: true});
     return this._sessions.get(sessionId);
-};
-/**
-  * @param {!Connection} connection
-  * @param {string} targetType
-  * @param {string} sessionId
-  */
-function CDPSession(connection, targetType, sessionId) {
-    require("stream").EventEmitter.call(this);
-    /** @type {!Map<number, {resolve: function, reject: function, error: !Error, method: string}>}*/
-    this._callbacks = new Map();
-    this._connection = connection;
-    this._targetType = targetType;
-    this._sessionId = sessionId;
-}
-require("util").inherits(CDPSession, require("stream").EventEmitter);
-/**
-  * @param {string} method
-  * @param {!Object=} params
-  * @return {!Promise<?Object>}
-  */
-CDPSession.prototype.send = function (method, params = {}) {
-    let that = this;
-    if (!that._connection) {
-        return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${that._targetType} has been closed.`));
-    }
-    const id = that._connection._rawSend({
-        sessionId: that._sessionId, method, params});
-    return new Promise(function (resolve, reject) {
-        that._callbacks.set(id, {
-            resolve, reject, error: new Error(), method});
-    });
-};
-/**
-  * @param {{id?: number, method: string, params: Object, error: {message: string, data: any}, result?: *}} object
-  */
-CDPSession.prototype._onMessage = function (object) {
-    if (object.id && this._callbacks.has(object.id)) {
-        const callback = this._callbacks.get(object.id);
-        this._callbacks.delete(object.id);
-        if (object.error) {
-            callback.reject(createProtocolError(callback.error, callback.method, object));
-        }
-        else {
-            callback.resolve(object.result);
-        }
-    } else {
-        assert(!object.id);
-        this.emit(object.method, object.params);
-    }
-};
-CDPSession.prototype.detach = async function () {
-    if (!this._connection) {
-        throw new Error(`Session already detached. Most likely the ${this._targetType} has been closed.`);
-    }
-    await this._connection.send("Target.detachFromTarget",  {
-        sessionId: this._sessionId});
-};
-CDPSession.prototype._onClosed = function () {
-    this._callbacks.forEach(function (callback) {
-        callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
-    });
-    this._callbacks.clear();
-    this._connection = null;
-    this.emit(Events.CDPSession.Disconnected);
 };
 /**
   * @param {!Error} error
