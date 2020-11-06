@@ -5899,7 +5899,7 @@ class Target {
         that._pagePromise = null;
         /** @type {?Promise<!Worker>} */
         that._workerPromise = null;
-        that._initializedPromise = new Promise(fulfill => that._initializedCallback = fulfill).then(async function (success) {
+        that._initializedPromise = new Promise(function (fulfill) { return that._initializedCallback = fulfill; }).then(async function (success) {
             if (!success) {
                 return false;
             }
@@ -5949,7 +5949,7 @@ class Target {
             this._workerPromise = this._sessionFactory().then(async function (client) {
                 // Top level workers have a fake page wrapping the actual worker.
                 const [targetAttached] = await Promise.all([
-                    new Promise(x => client.once("Target.attachedToTarget", x)),
+                    new Promise(function (x) { return client.once("Target.attachedToTarget", x); }),
                     client.send("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
                 ]);
                 const session = Connection.fromSession(client).session(targetAttached.sessionId);
