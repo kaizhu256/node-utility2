@@ -2850,9 +2850,8 @@ class ExecutionContext {
             }
             return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
         }
-        if (typeof pageFunction !== "function") {
+        if (typeof pageFunction !== "function")
             throw new Error(`Expected to get |string| or |function| as the first argument, but got "${pageFunction}" instead.`);
-        }
         let functionText = pageFunction.toString();
         // hack-coverage - un-instrument
         functionText = functionText.replace((/\b__cov_.*?\+\+/g), "0");
@@ -2861,9 +2860,8 @@ class ExecutionContext {
         } catch (e1) {
             // This means we might have a function shorthand. Try another
             // time prefixing "function ".
-            if (functionText.startsWith("async ")) {
+            if (functionText.startsWith("async "))
                 functionText = "async function " + functionText.substring("async ".length);
-            }
             else
                 functionText = "function " + functionText;
             try {
@@ -2884,15 +2882,13 @@ class ExecutionContext {
                 userGesture: true
             });
         } catch (err) {
-            if (err instanceof TypeError && err.message.startsWith("Converting circular structure to JSON")) {
+            if (err instanceof TypeError && err.message.startsWith("Converting circular structure to JSON"))
                 err.message += " Are you passing a nested JSHandle?";
-            }
             throw err;
         }
         const { exceptionDetails, result: remoteObject } = await callFunctionOnPromise.catch(rewriteError);
-        if (exceptionDetails) {
+        if (exceptionDetails)
             throw new Error("Evaluation failed: " + helper.getExceptionMessage(exceptionDetails));
-        }
         return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
         /**
           * @param {*} arg
@@ -2900,35 +2896,26 @@ class ExecutionContext {
           * @this {ExecutionContext}
           */
         function convertArgument(arg) {
-            if (typeof arg === "bigint") // eslint-disable-line valid-typeof {
+            if (typeof arg === "bigint") // eslint-disable-line valid-typeof
                 return { unserializableValue: `${arg.toString()}n` };
-            }
-            if (Object.is(arg, -0)) {
+            if (Object.is(arg, -0))
                 return { unserializableValue: "-0" };
-            }
-            if (Object.is(arg, Infinity)) {
+            if (Object.is(arg, Infinity))
                 return { unserializableValue: "Infinity" };
-            }
-            if (Object.is(arg, -Infinity)) {
+            if (Object.is(arg, -Infinity))
                 return { unserializableValue: "-Infinity" };
-            }
-            if (Object.is(arg, NaN)) {
+            if (Object.is(arg, NaN))
                 return { unserializableValue: "NaN" };
-            }
             const objectHandle = arg && (arg instanceof JSHandle) ? arg : null;
             if (objectHandle) {
-                if (objectHandle._context !== this) {
+                if (objectHandle._context !== this)
                     throw new Error("JSHandles can be evaluated only in the context they were created!");
-                }
-                if (objectHandle._disposed) {
+                if (objectHandle._disposed)
                     throw new Error("JSHandle is disposed!");
-                }
-                if (objectHandle._remoteObject.unserializableValue) {
+                if (objectHandle._remoteObject.unserializableValue)
                     return { unserializableValue: objectHandle._remoteObject.unserializableValue };
-                }
-                if (!objectHandle._remoteObject.objectId) {
+                if (!objectHandle._remoteObject.objectId)
                     return { value: objectHandle._remoteObject.value };
-                }
                 return { objectId: objectHandle._remoteObject.objectId };
             }
             return { value: arg };
@@ -2938,15 +2925,12 @@ class ExecutionContext {
           * @return {!Protocol.Runtime.evaluateReturnValue}
           */
         function rewriteError(error) {
-            if (error.message.includes("Object reference chain is too long")) {
+            if (error.message.includes("Object reference chain is too long"))
                 return {result: {type: "undefined"}};
-            }
-            if (error.message.includes("Object couldn't be returned by value")) {
+            if (error.message.includes("Object couldn't be returned by value"))
                 return {result: {type: "undefined"}};
-            }
-            if (error.message.endsWith("Cannot find context with specified id")) {
+            if (error.message.endsWith("Cannot find context with specified id"))
                 throw new Error("Execution context was destroyed, most likely because of a navigation.");
-            }
             throw error;
         }
     }
@@ -3080,9 +3064,8 @@ class FrameManager extends EventEmitter {
             ]);
         }
         watcher.dispose();
-        if (error) {
+        if (error)
             throw error;
-        }
         return watcher.navigationResponse();
         /**
           * @param {!Puppeteer.CDPSession} client
@@ -3119,9 +3102,8 @@ class FrameManager extends EventEmitter {
             watcher.newDocumentNavigationPromise()
         ]);
         watcher.dispose();
-        if (error) {
+        if (error)
             throw error;
-        }
         return watcher.navigationResponse();
     }
     /**
@@ -3129,9 +3111,8 @@ class FrameManager extends EventEmitter {
       */
     _onLifecycleEvent(event) {
         const frame = this._frames.get(event.frameId);
-        if (!frame) {
+        if (!frame)
             return;
-        }
         frame._onLifecycleEvent(event.loaderId, event.name);
         this.emit(Events.FrameManager.LifecycleEvent, frame);
     }
@@ -3140,9 +3121,8 @@ class FrameManager extends EventEmitter {
       */
     _onFrameStoppedLoading(frameId) {
         const frame = this._frames.get(frameId);
-        if (!frame) {
+        if (!frame)
             return;
-        }
         frame._onLoadingStopped();
         this.emit(Events.FrameManager.LifecycleEvent, frame);
     }
@@ -3150,13 +3130,11 @@ class FrameManager extends EventEmitter {
       * @param {!Protocol.Page.FrameTree} frameTree
       */
     _handleFrameTree(frameTree) {
-        if (frameTree.frame.parentId) {
+        if (frameTree.frame.parentId)
             this._onFrameAttached(frameTree.frame.id, frameTree.frame.parentId);
-        }
         this._onFrameNavigated(frameTree.frame);
-        if (!frameTree.childFrames) {
+        if (!frameTree.childFrames)
             return;
-        }
         for (const child of frameTree.childFrames)
             this._handleFrameTree(child);
     }
@@ -3190,9 +3168,8 @@ class FrameManager extends EventEmitter {
       * @param {?string} parentFrameId
       */
     _onFrameAttached(frameId, parentFrameId) {
-        if (this._frames.has(frameId)) {
+        if (this._frames.has(frameId))
             return;
-        }
         assert(parentFrameId);
         const parentFrame = this._frames.get(parentFrameId);
         const frame = new Frame(this, this._client, parentFrame, frameId);
@@ -3232,9 +3209,8 @@ class FrameManager extends EventEmitter {
       * @param {string} name
       */
     async _ensureIsolatedWorld(name) {
-        if (this._isolatedWorlds.has(name)) {
+        if (this._isolatedWorlds.has(name))
             return;
-        }
         this._isolatedWorlds.add(name);
         await this._client.send("Page.addScriptToEvaluateOnNewDocument", {
             source: `//# sourceURL=${EVALUATION_SCRIPT_URL}`,
@@ -3252,9 +3228,8 @@ class FrameManager extends EventEmitter {
       */
     _onFrameNavigatedWithinDocument(frameId, url) {
         const frame = this._frames.get(frameId);
-        if (!frame) {
+        if (!frame)
             return;
-        }
         frame._navigatedWithinDocument(url);
         this.emit(Events.FrameManager.FrameNavigatedWithinDocument, frame);
         this.emit(Events.FrameManager.FrameNavigated, frame);
@@ -3264,9 +3239,8 @@ class FrameManager extends EventEmitter {
       */
     _onFrameDetached(frameId) {
         const frame = this._frames.get(frameId);
-        if (frame) {
+        if (frame)
             this._removeFramesRecursively(frame);
-        }
     }
     _onExecutionContextCreated(contextPayload) {
         const frameId = contextPayload.auxData ? contextPayload.auxData.frameId : null;
@@ -3282,14 +3256,12 @@ class FrameManager extends EventEmitter {
                 world = frame._secondaryWorld;
             }
         }
-        if (contextPayload.auxData && contextPayload.auxData["type"] === "isolated") {
+        if (contextPayload.auxData && contextPayload.auxData["type"] === "isolated")
             this._isolatedWorlds.add(contextPayload.name);
-        }
         /** @type {!ExecutionContext} */
         const context = new ExecutionContext(this._client, contextPayload, world);
-        if (world) {
+        if (world)
             world._setContext(context);
-        }
         this._contextIdToContext.set(contextPayload.id, context);
     }
     /**
@@ -3297,19 +3269,16 @@ class FrameManager extends EventEmitter {
       */
     _onExecutionContextDestroyed(executionContextId) {
         const context = this._contextIdToContext.get(executionContextId);
-        if (!context) {
+        if (!context)
             return;
-        }
         this._contextIdToContext.delete(executionContextId);
-        if (context._world) {
+        if (context._world)
             context._world._setContext(null);
-        }
     }
     _onExecutionContextsCleared() {
         for (const context of this._contextIdToContext.values()) {
-            if (context._world) {
+            if (context._world)
                 context._world._setContext(null);
-            }
         }
         this._contextIdToContext.clear();
     }
@@ -3359,9 +3328,8 @@ class Frame {
         this._secondaryWorld = new DOMWorld(frameManager, this, frameManager._timeoutSettings);
         /** @type {!Set<!Frame>} */
         this._childFrames = new Set();
-        if (this._parentFrame) {
+        if (this._parentFrame)
             this._parentFrame._childFrames.add(this);
-        }
     }
     /**
       * @param {string} url
@@ -3547,17 +3515,14 @@ class Frame {
         const xPathPattern = "//";
         if (helper.isString(selectorOrFunctionOrTimeout)) {
             const string = /** @type {string} */ (selectorOrFunctionOrTimeout);
-            if (string.startsWith(xPathPattern)) {
+            if (string.startsWith(xPathPattern))
                 return this.waitForXPath(string, options);
-            }
             return this.waitForSelector(string, options);
         }
-        if (helper.isNumber(selectorOrFunctionOrTimeout)) {
+        if (helper.isNumber(selectorOrFunctionOrTimeout))
             return new Promise(fulfill => setTimeout(fulfill, /** @type {number} */ (selectorOrFunctionOrTimeout)));
-        }
-        if (typeof selectorOrFunctionOrTimeout === "function") {
+        if (typeof selectorOrFunctionOrTimeout === "function")
             return this.waitForFunction(selectorOrFunctionOrTimeout, options, ...args);
-        }
         return Promise.reject(new Error("Unsupported target type: " + (typeof selectorOrFunctionOrTimeout)));
     }
     /**
@@ -3567,9 +3532,8 @@ class Frame {
       */
     async waitForSelector(selector, options) {
         const handle = await this._secondaryWorld.waitForSelector(selector, options);
-        if (!handle) {
+        if (!handle)
             return null;
-        }
         const mainExecutionContext = await this._mainWorld.executionContext();
         const result = await mainExecutionContext._adoptElementHandle(handle);
         await handle.dispose();
@@ -3582,9 +3546,8 @@ class Frame {
       */
     async waitForXPath(xpath, options) {
         const handle = await this._secondaryWorld.waitForXPath(xpath, options);
-        if (!handle) {
+        if (!handle)
             return null;
-        }
         const mainExecutionContext = await this._mainWorld.executionContext();
         const result = await mainExecutionContext._adoptElementHandle(handle);
         await handle.dispose();
@@ -3638,9 +3601,8 @@ class Frame {
         this._detached = true;
         this._mainWorld._detach();
         this._secondaryWorld._detach();
-        if (this._parentFrame) {
+        if (this._parentFrame)
             this._parentFrame._childFrames.delete(this);
-        }
         this._parentFrame = null;
     }
 }
@@ -3721,9 +3683,8 @@ class JSHandle {
         });
         const result = new Map();
         for (const property of response.result) {
-            if (!property.enumerable) {
+            if (!property.enumerable)
                 continue;
-            }
             result.set(property.name, createJSHandle(this._context, property.value));
         }
         return result;
@@ -3750,9 +3711,8 @@ class JSHandle {
         return null;
     }
     async dispose() {
-        if (this._disposed) {
+        if (this._disposed)
             return;
-        }
         this._disposed = true;
         await helper.releaseObject(this._client, this._remoteObject);
     }
@@ -3798,12 +3758,10 @@ class LifecycleWatcher {
       * @param {number} timeout
       */
     constructor(frameManager, frame, waitUntil, timeout) {
-        if (Array.isArray(waitUntil)) {
+        if (Array.isArray(waitUntil))
             waitUntil = waitUntil.slice();
-        }
-        else if (typeof waitUntil === "string") {
+        else if (typeof waitUntil === "string")
             waitUntil = [waitUntil];
-        }
         this._expectedLifecycle = waitUntil.map(value => {
             const protocolEvent = puppeteerToProtocolLifecycle[value];
             assert(protocolEvent, "Unknown value for options.waitUntil: " + value);
@@ -3841,9 +3799,8 @@ class LifecycleWatcher {
       * @param {!Puppeteer.Request} request
       */
     _onRequest(request) {
-        if (request.frame() !== this._frame || !request.isNavigationRequest()) {
+        if (request.frame() !== this._frame || !request.isNavigationRequest())
             return;
-        }
         this._navigationRequest = request;
     }
     /**
@@ -3896,9 +3853,8 @@ class LifecycleWatcher {
       * @return {!Promise<?Error>}
       */
     _createTimeoutPromise() {
-        if (!this._timeout) {
+        if (!this._timeout)
             return new Promise(() => {});
-        }
         const errorMessage = "Navigation Timeout Exceeded: " + this._timeout + "ms exceeded";
         return new Promise(fulfill => this._maximumTimer = setTimeout(fulfill, this._timeout))
                 .then(() => new TimeoutError(errorMessage));
@@ -3907,27 +3863,22 @@ class LifecycleWatcher {
       * @param {!Puppeteer.Frame} frame
       */
     _navigatedWithinDocument(frame) {
-        if (frame !== this._frame) {
+        if (frame !== this._frame)
             return;
-        }
         this._hasSameDocumentNavigation = true;
         this._checkLifecycleComplete();
     }
     _checkLifecycleComplete() {
         // We expect navigation to commit.
-        if (!checkLifecycle(this._frame, this._expectedLifecycle)) {
+        if (!checkLifecycle(this._frame, this._expectedLifecycle))
             return;
-        }
         this._lifecycleCallback();
-        if (this._frame._loaderId === this._initialLoaderId && !this._hasSameDocumentNavigation) {
+        if (this._frame._loaderId === this._initialLoaderId && !this._hasSameDocumentNavigation)
             return;
-        }
-        if (this._hasSameDocumentNavigation) {
+        if (this._hasSameDocumentNavigation)
             this._sameDocumentNavigationCompleteCallback();
-        }
-        if (this._frame._loaderId !== this._initialLoaderId) {
+        if (this._frame._loaderId !== this._initialLoaderId)
             this._newDocumentNavigationCompleteCallback();
-        }
         /**
           * @param {!Puppeteer.Frame} frame
           * @param {!Array<string>} expectedLifecycle
@@ -3935,14 +3886,12 @@ class LifecycleWatcher {
           */
         function checkLifecycle(frame, expectedLifecycle) {
             for (const event of expectedLifecycle) {
-                if (!frame._lifecycleEvents.has(event)) {
+                if (!frame._lifecycleEvents.has(event))
                     return false;
-                }
             }
             for (const child of frame.childFrames()) {
-                if (!checkLifecycle(child, expectedLifecycle)) {
+                if (!checkLifecycle(child, expectedLifecycle))
                     return false;
-                }
             }
             return true;
         }
@@ -4015,9 +3964,8 @@ class NetworkManager extends EventEmitter {
     }
     async initialize() {
         await this._client.send("Network.enable");
-        if (this._ignoreHTTPSErrors) {
+        if (this._ignoreHTTPSErrors)
             await this._client.send("Security.setIgnoreCertificateErrors", {ignore: true});
-        }
     }
     /**
       * @param {!Puppeteer.FrameManager} frameManager
@@ -4054,9 +4002,8 @@ class NetworkManager extends EventEmitter {
       * @param {boolean} value
       */
     async setOfflineMode(value) {
-        if (this._offline === value) {
+        if (this._offline === value)
             return;
-        }
         this._offline = value;
         await this._client.send("Network.emulateNetworkConditions", {
             offline: this._offline,
@@ -4088,9 +4035,8 @@ class NetworkManager extends EventEmitter {
     }
     async _updateProtocolRequestInterception() {
         const enabled = this._userRequestInterceptionEnabled || !!this._credentials;
-        if (enabled === this._protocolRequestInterceptionEnabled) {
+        if (enabled === this._protocolRequestInterceptionEnabled)
             return;
-        }
         this._protocolRequestInterceptionEnabled = enabled;
         if (enabled) {
             await Promise.all([
@@ -4191,9 +4137,8 @@ class NetworkManager extends EventEmitter {
       */
     _onRequestServedFromCache(event) {
         const request = this._requestIdToRequest.get(event.requestId);
-        if (request) {
+        if (request)
             request._fromMemoryCache = true;
-        }
     }
     /**
       * @param {!Request} request
@@ -4215,9 +4160,8 @@ class NetworkManager extends EventEmitter {
     _onResponseReceived(event) {
         const request = this._requestIdToRequest.get(event.requestId);
         // FileUpload sends a response without a matching request.
-        if (!request) {
+        if (!request)
             return;
-        }
         const response = new Response(this._client, request, event.response);
         request._response = response;
         this.emit(Events.NetworkManager.Response, response);
@@ -4229,14 +4173,12 @@ class NetworkManager extends EventEmitter {
         const request = this._requestIdToRequest.get(event.requestId);
         // For certain requestIds we never receive requestWillBeSent event.
         // @see https://crbug.com/750469
-        if (!request) {
+        if (!request)
             return;
-        }
         // Under certain conditions we never get the Network.responseReceived
         // event from protocol. @see https://crbug.com/883475
-        if (request.response()) {
+        if (request.response())
             request.response()._bodyLoadedPromiseFulfill.call(null);
-        }
         this._requestIdToRequest.delete(request._requestId);
         this._attemptedAuthentications.delete(request._interceptionId);
         this.emit(Events.NetworkManager.RequestFinished, request);
@@ -4248,14 +4190,12 @@ class NetworkManager extends EventEmitter {
         const request = this._requestIdToRequest.get(event.requestId);
         // For certain requestIds we never receive requestWillBeSent event.
         // @see https://crbug.com/750469
-        if (!request) {
+        if (!request)
             return;
-        }
         request._failureText = event.errorText;
         const response = request.response();
-        if (response) {
+        if (response)
             response._bodyLoadedPromiseFulfill.call(null);
-        }
         this._requestIdToRequest.delete(request._requestId);
         this._attemptedAuthentications.delete(request._interceptionId);
         this.emit(Events.NetworkManager.RequestFailed, request);
@@ -4348,9 +4288,8 @@ class Request {
       * @return {?{errorText: string}}
       */
     failure() {
-        if (!this._failureText) {
+        if (!this._failureText)
             return null;
-        }
         return {
             errorText: this._failureText
         };
@@ -4360,9 +4299,8 @@ class Request {
       */
     async continue(overrides = {}) {
         // Request interception is not supported for data: urls.
-        if (this._url.startsWith("data:")) {
+        if (this._url.startsWith("data:"))
             return;
-        }
         assert(this._allowInterception, "Request Interception is not enabled!");
         assert(!this._interceptionHandled, "Request is already handled!");
         const {
@@ -4389,9 +4327,8 @@ class Request {
       */
     async respond(response) {
         // Mocking responses for dataURL requests is not currently supported.
-        if (this._url.startsWith("data:")) {
+        if (this._url.startsWith("data:"))
             return;
-        }
         assert(this._allowInterception, "Request Interception is not enabled!");
         assert(!this._interceptionHandled, "Request is already handled!");
         this._interceptionHandled = true;
@@ -4402,12 +4339,10 @@ class Request {
             for (const header of Object.keys(response.headers))
                 responseHeaders[header.toLowerCase()] = response.headers[header];
         }
-        if (response.contentType) {
+        if (response.contentType)
             responseHeaders["content-type"] = response.contentType;
-        }
-        if (responseBody && !("content-length" in responseHeaders)) {
+        if (responseBody && !("content-length" in responseHeaders))
             responseHeaders["content-length"] = String(Buffer.byteLength(responseBody));
-        }
         await this._client.send("Fetch.fulfillRequest", {
             requestId: this._interceptionId,
             responseCode: response.status || 200,
@@ -4425,9 +4360,8 @@ class Request {
       */
     async abort(errorCode = "failed") {
         // Request interception is not supported for data: urls.
-        if (this._url.startsWith("data:")) {
+        if (this._url.startsWith("data:"))
             return;
-        }
         const errorReason = errorReasons[errorCode];
         assert(errorReason, "Unknown error code: " + errorCode);
         assert(this._allowInterception, "Request Interception is not enabled!");
@@ -4534,9 +4468,8 @@ class Response {
     buffer() {
         if (!this._contentPromise) {
             this._contentPromise = this._bodyLoadedPromise.then(async error => {
-                if (error) {
+                if (error)
                     throw error;
-                }
                 const response = await this._client.send("Network.getResponseBody", {
                     requestId: this._request._requestId
                 });
@@ -4747,9 +4680,8 @@ class Page extends EventEmitter {
     static async create(client, target, ignoreHTTPSErrors, defaultViewport, screenshotTaskQueue) {
         const page = new Page(client, target, ignoreHTTPSErrors, screenshotTaskQueue);
         await page._initialize();
-        if (defaultViewport) {
+        if (defaultViewport)
             await page.setViewport(defaultViewport);
-        }
         return page;
     }
     /**
@@ -4791,9 +4723,8 @@ class Page extends EventEmitter {
         });
         client.on("Target.detachedFromTarget", event => {
             const worker = this._workers.get(event.sessionId);
-            if (!worker) {
+            if (!worker)
                 return;
-            }
             this.emit(Events.Page.WorkerDestroyed, worker);
             this._workers.delete(event.sessionId);
         });
@@ -4852,9 +4783,8 @@ class Page extends EventEmitter {
       * @return !Promise<!FileChooser>}
       */
     async waitForFileChooser(options = {}) {
-        if (this._fileChooserInterceptionIsDisabled) {
+        if (this._fileChooserInterceptionIsDisabled)
             throw new Error("File chooser handling does not work with multiple connections to the same page");
-        }
         const {
             timeout = this._timeoutSettings.timeout(),
         } = options;
@@ -4871,15 +4801,12 @@ class Page extends EventEmitter {
       */
     async setGeolocation(options) {
         const { longitude, latitude, accuracy = 0} = options;
-        if (longitude < -180 || longitude > 180) {
+        if (longitude < -180 || longitude > 180)
             throw new Error(`Invalid longitude "${longitude}": precondition -180 <= LONGITUDE <= 180 failed.`);
-        }
-        if (latitude < -90 || latitude > 90) {
+        if (latitude < -90 || latitude > 90)
             throw new Error(`Invalid latitude "${latitude}": precondition -90 <= LATITUDE <= 90 failed.`);
-        }
-        if (accuracy < 0) {
+        if (accuracy < 0)
             throw new Error(`Invalid accuracy "${accuracy}": precondition 0 <= ACCURACY failed.`);
-        }
         await this._client.send("Emulation.setGeolocationOverride", {longitude, latitude, accuracy});
     }
     /**
@@ -4908,12 +4835,10 @@ class Page extends EventEmitter {
       */
     _onLogEntryAdded(event) {
         const {level, text, args, source, url, lineNumber} = event.entry;
-        if (args) {
+        if (args)
             args.map(arg => helper.releaseObject(this._client, arg));
-        }
-        if (source !== "worker") {
+        if (source !== "worker")
             this.emit(Events.Page.Console, new ConsoleMessage(level, text, [], {url, lineNumber}));
-        }
     }
     /**
       * @return {!Puppeteer.Frame}
@@ -5041,9 +4966,8 @@ class Page extends EventEmitter {
         const pageURL = this.url();
         for (const cookie of cookies) {
             const item = Object.assign({}, cookie);
-            if (!cookie.url && pageURL.startsWith("http")) {
+            if (!cookie.url && pageURL.startsWith("http"))
                 item.url = pageURL;
-            }
             await this._client.send("Network.deleteCookies", item);
         }
     }
@@ -5055,17 +4979,15 @@ class Page extends EventEmitter {
         const startsWithHTTP = pageURL.startsWith("http");
         const items = cookies.map(cookie => {
             const item = Object.assign({}, cookie);
-            if (!item.url && startsWithHTTP) {
+            if (!item.url && startsWithHTTP)
                 item.url = pageURL;
-            }
             assert(item.url !== "about:blank", `Blank page can not have cookie "${item.name}"`);
             assert(!String.prototype.startsWith.call(item.url || "", "data:"), `Data URL page can not have cookie "${item.name}"`);
             return item;
         });
         await this.deleteCookie(...items);
-        if (items.length) {
+        if (items.length)
             await this._client.send("Network.setCookies", { cookies: items });
-        }
     }
     /**
       * @param {!{url?: string, path?: string, content?: string, type?: string}} options
@@ -5086,9 +5008,8 @@ class Page extends EventEmitter {
       * @param {Function} puppeteerFunction
       */
     async exposeFunction(name, puppeteerFunction) {
-        if (this._pageBindings.has(name)) {
+        if (this._pageBindings.has(name))
             throw new Error(`Failed to add page binding with name ${name}: window["${name}"] already exists!`);
-        }
         this._pageBindings.set(name, puppeteerFunction);
         const expression = helper.evaluationString(addPageBinding, name);
         await this._client.send("Runtime.addBinding", {name: name});
@@ -5152,9 +5073,8 @@ class Page extends EventEmitter {
     _buildMetricsObject(metrics) {
         const result = {};
         for (const metric of metrics || []) {
-            if (supportedMetrics.has(metric.name)) {
+            if (supportedMetrics.has(metric.name))
                 result[metric.name] = metric.value;
-            }
         }
         return result;
     }
@@ -5201,9 +5121,8 @@ class Page extends EventEmitter {
             const result = await this._pageBindings.get(name)(...args);
             expression = helper.evaluationString(deliverResult, name, seq, result);
         } catch (error) {
-            if (error instanceof Error) {
+            if (error instanceof Error)
                 expression = helper.evaluationString(deliverError, name, seq, error.message, error.stack);
-            }
             else
                 expression = helper.evaluationString(deliverErrorValue, name, seq, error);
         }
@@ -5252,9 +5171,8 @@ class Page extends EventEmitter {
         const textTokens = [];
         for (const arg of args) {
             const remoteObject = arg._remoteObject;
-            if (remoteObject.objectId) {
+            if (remoteObject.objectId)
                 textTokens.push(arg.toString());
-            }
             else
                 textTokens.push(helper.valueFromRemoteObject(remoteObject));
         }
@@ -5268,18 +5186,14 @@ class Page extends EventEmitter {
     }
     _onDialog(event) {
         let dialogType = null;
-        if (event.type === "alert") {
+        if (event.type === "alert")
             dialogType = Dialog.Type.Alert;
-        }
-        else if (event.type === "confirm") {
+        else if (event.type === "confirm")
             dialogType = Dialog.Type.Confirm;
-        }
-        else if (event.type === "prompt") {
+        else if (event.type === "prompt")
             dialogType = Dialog.Type.Prompt;
-        }
-        else if (event.type === "beforeunload") {
+        else if (event.type === "beforeunload")
             dialogType = Dialog.Type.BeforeUnload;
-        }
         assert(dialogType, "Unknown javascript dialog type: " + event.type);
         const dialog = new Dialog(this._client, dialogType, event.message, event.defaultPrompt);
         this.emit(Events.Page.Dialog, dialog);
@@ -5339,12 +5253,10 @@ class Page extends EventEmitter {
             timeout = this._timeoutSettings.timeout(),
         } = options;
         return helper.waitForEvent(this._frameManager.networkManager(), Events.NetworkManager.Request, request => {
-            if (helper.isString(urlOrPredicate)) {
+            if (helper.isString(urlOrPredicate))
                 return (urlOrPredicate === request.url());
-            }
-            if (typeof urlOrPredicate === "function") {
+            if (typeof urlOrPredicate === "function")
                 return !!(urlOrPredicate(request));
-            }
             return false;
         }, timeout);
     }
@@ -5358,12 +5270,10 @@ class Page extends EventEmitter {
             timeout = this._timeoutSettings.timeout(),
         } = options;
         return helper.waitForEvent(this._frameManager.networkManager(), Events.NetworkManager.Response, response => {
-            if (helper.isString(urlOrPredicate)) {
+            if (helper.isString(urlOrPredicate))
                 return (urlOrPredicate === response.url());
-            }
-            if (typeof urlOrPredicate === "function") {
+            if (typeof urlOrPredicate === "function")
                 return !!(urlOrPredicate(response));
-            }
             return false;
         }, timeout);
     }
@@ -5388,9 +5298,8 @@ class Page extends EventEmitter {
     async _go(delta, options) {
         const history = await this._client.send("Page.getNavigationHistory");
         const entry = history.entries[history.currentIndex + delta];
-        if (!entry) {
+        if (!entry)
             return null;
-        }
         const [response] = await Promise.all([
             this.waitForNavigation(options),
             this._client.send("Page.navigateToHistoryEntry", {entryId: entry.id}),
@@ -5413,9 +5322,8 @@ class Page extends EventEmitter {
       * @param {boolean} enabled
       */
     async setJavaScriptEnabled(enabled) {
-        if (this._javascriptEnabled === enabled) {
+        if (this._javascriptEnabled === enabled)
             return;
-        }
         this._javascriptEnabled = enabled;
         await this._client.send("Emulation.setScriptExecutionDisabled", { value: !enabled });
     }
@@ -5438,9 +5346,8 @@ class Page extends EventEmitter {
     async setViewport(viewport) {
         const needsReload = await this._emulationManager.emulateViewport(viewport);
         this._viewport = viewport;
-        if (needsReload) {
+        if (needsReload)
             await this.reload();
-        }
     }
     /**
       * @return {?Puppeteer.Viewport}
@@ -5483,17 +5390,14 @@ class Page extends EventEmitter {
             screenshotType = options.type;
         } else if (options.path) {
             const mimeType = mime.getType(options.path);
-            if (mimeType === "image/png") {
+            if (mimeType === "image/png")
                 screenshotType = "png";
-            }
-            else if (mimeType === "image/jpeg") {
+            else if (mimeType === "image/jpeg")
                 screenshotType = "jpeg";
-            }
             assert(screenshotType, "Unsupported screenshot mime type: " + mimeType);
         }
-        if (!screenshotType) {
+        if (!screenshotType)
             screenshotType = "png";
-        }
         if (options.quality) {
             assert(screenshotType === "jpeg", "options.quality is unsupported for the " + screenshotType + " screenshots");
             assert(typeof options.quality === "number", "Expected options.quality to be a number but found " + (typeof options.quality));
@@ -5535,20 +5439,16 @@ class Page extends EventEmitter {
             await this._client.send("Emulation.setDeviceMetricsOverride", { mobile: isMobile, width, height, deviceScaleFactor, screenOrientation });
         }
         const shouldSetDefaultBackground = options.omitBackground && format === "png";
-        if (shouldSetDefaultBackground) {
+        if (shouldSetDefaultBackground)
             await this._client.send("Emulation.setDefaultBackgroundColorOverride", { color: { r: 0, g: 0, b: 0, a: 0 } });
-        }
         const result = await this._client.send("Page.captureScreenshot", { format, quality: options.quality, clip });
-        if (shouldSetDefaultBackground) {
+        if (shouldSetDefaultBackground)
             await this._client.send("Emulation.setDefaultBackgroundColorOverride");
-        }
-        if (options.fullPage && this._viewport) {
+        if (options.fullPage && this._viewport)
             await this.setViewport(this._viewport);
-        }
         const buffer = options.encoding === "base64" ? result.data : Buffer.from(result.data, "base64");
-        if (options.path) {
+        if (options.path)
             await writeFileAsync(options.path, buffer);
-        }
         return buffer;
         function processClip(clip) {
             const x = Math.round(clip.x);
@@ -5863,26 +5763,22 @@ class Target {
         /** @type {?Promise<!Worker>} */
         this._workerPromise = null;
         this._initializedPromise = new Promise(fulfill => this._initializedCallback = fulfill).then(async success => {
-            if (!success) {
+            if (!success)
                 return false;
-            }
             const opener = this.opener();
-            if (!opener || !opener._pagePromise || this.type() !== "page") {
+            if (!opener || !opener._pagePromise || this.type() !== "page")
                 return true;
-            }
             const openerPage = await opener._pagePromise;
-            if (!openerPage.listenerCount(Events.Page.Popup)) {
+            if (!openerPage.listenerCount(Events.Page.Popup))
                 return true;
-            }
             const popupPage = await this.page();
             openerPage.emit(Events.Page.Popup, popupPage);
             return true;
         });
         this._isClosedPromise = new Promise(fulfill => this._closedCallback = fulfill);
         this._isInitialized = this._targetInfo.type !== "page" || this._targetInfo.url !== "";
-        if (this._isInitialized) {
+        if (this._isInitialized)
             this._initializedCallback(true);
-        }
     }
     /**
       * @return {!Promise<!Puppeteer.CDPSession>}
