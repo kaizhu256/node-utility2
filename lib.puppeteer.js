@@ -1850,6 +1850,9 @@ class BrowserContext extends EventEmitter {
     }
 }
 exports_puppeteer_puppeteer_lib_Browser = {Browser, BrowserContext};
+
+
+/* jslint ignore:end */
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
 */
@@ -2011,61 +2014,60 @@ class Connection extends EventEmitter {
         return this._sessions.get(sessionId);
     }
 }
-class CDPSession extends EventEmitter {
-    /**
-      * @param {!Connection} connection
-      * @param {string} targetType
-      * @param {string} sessionId
-      */
-    constructor(connection, targetType, sessionId) {
-        super();
-        /** @type {!Map<number, {resolve: function, reject: function, error: !Error, method: string}>}*/
-        this._callbacks = new Map();
-        this._connection = connection;
-        this._targetType = targetType;
-        this._sessionId = sessionId;
+/**
+  * @param {!Connection} connection
+  * @param {string} targetType
+  * @param {string} sessionId
+  */
+function CDPSession(connection, targetType, sessionId) {
+    require("stream").EventEmitter.call(this);
+    /** @type {!Map<number, {resolve: function, reject: function, error: !Error, method: string}>}*/
+    this._callbacks = new Map();
+    this._connection = connection;
+    this._targetType = targetType;
+    this._sessionId = sessionId;
+}
+require("util").inherits(WebSocket, require("stream").EventEmitter);
+/**
+  * @param {string} method
+  * @param {!Object=} params
+  * @return {!Promise<?Object>}
+  */
+CDPSession.prototype.send = function (method, params = {}) {
+    if (!this._connection)
+        return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${this._targetType} has been closed.`));
+    const id = this._connection._rawSend({sessionId: this._sessionId, method, params});
+    return new Promise((resolve, reject) => {
+        this._callbacks.set(id, {resolve, reject, error: new Error(), method});
+    });
+}
+/**
+  * @param {{id?: number, method: string, params: Object, error: {message: string, data: any}, result?: *}} object
+  */
+CDPSession.prototype._onMessage = function (object) {
+    if (object.id && this._callbacks.has(object.id)) {
+        const callback = this._callbacks.get(object.id);
+        this._callbacks.delete(object.id);
+        if (object.error)
+            callback.reject(createProtocolError(callback.error, callback.method, object));
+        else
+            callback.resolve(object.result);
+    } else {
+        assert(!object.id);
+        this.emit(object.method, object.params);
     }
-    /**
-      * @param {string} method
-      * @param {!Object=} params
-      * @return {!Promise<?Object>}
-      */
-    send(method, params = {}) {
-        if (!this._connection)
-            return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${this._targetType} has been closed.`));
-        const id = this._connection._rawSend({sessionId: this._sessionId, method, params});
-        return new Promise((resolve, reject) => {
-            this._callbacks.set(id, {resolve, reject, error: new Error(), method});
-        });
-    }
-    /**
-      * @param {{id?: number, method: string, params: Object, error: {message: string, data: any}, result?: *}} object
-      */
-    _onMessage(object) {
-        if (object.id && this._callbacks.has(object.id)) {
-            const callback = this._callbacks.get(object.id);
-            this._callbacks.delete(object.id);
-            if (object.error)
-                callback.reject(createProtocolError(callback.error, callback.method, object));
-            else
-                callback.resolve(object.result);
-        } else {
-            assert(!object.id);
-            this.emit(object.method, object.params);
-        }
-    }
-    async detach() {
-        if (!this._connection)
-            throw new Error(`Session already detached. Most likely the ${this._targetType} has been closed.`);
-        await this._connection.send("Target.detachFromTarget",  {sessionId: this._sessionId});
-    }
-    _onClosed() {
-        for (const callback of this._callbacks.values())
-            callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
-        this._callbacks.clear();
-        this._connection = null;
-        this.emit(Events.CDPSession.Disconnected);
-    }
+}
+CDPSession.prototype.detach = async function () {
+    if (!this._connection)
+        throw new Error(`Session already detached. Most likely the ${this._targetType} has been closed.`);
+    await this._connection.send("Target.detachFromTarget",  {sessionId: this._sessionId});
+}
+CDPSession.prototype._onClosed = function () {
+    for (const callback of this._callbacks.values())
+        callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
+    this._callbacks.clear();
+    this._connection = null;
+    this.emit(Events.CDPSession.Disconnected);
 }
 /**
   * @param {!Error} error
@@ -2088,6 +2090,9 @@ function rewriteError(error, message) {
     error.message = message;
     return error;
 }
+
+
+/* jslint ignore:start */
 exports_puppeteer_puppeteer_lib_Connection = {Connection, CDPSession};
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Coverage.js
