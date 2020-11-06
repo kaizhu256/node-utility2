@@ -1893,11 +1893,11 @@ function Connection(url, ws, delay = 0) {
     this._delay = delay;
     this._ws = ws;
     let ws2 = this._ws;
-    ws2.addEventListener("message", event => {
+    ws2.addEventListener("message", function (event) {
         if (this.onmessage)
             this.onmessage.call(null, event.data);
     });
-    ws2.addEventListener("close", event => {
+    ws2.addEventListener("close", function (event) {
         if (this.onclose)
             this.onclose.call(null);
     });
@@ -1957,8 +1957,11 @@ Connection.prototype._rawSend = function (message) {
   * @param {string} message
   */
 Connection.prototype._onMessage = async function (message) {
-    if (this._delay)
-        await new Promise(f => setTimeout(f, this._delay));
+    let that;
+    that = this;
+    if (this._delay) {
+        await new Promise(function (f) { setTimeout(f, that._delay); });
+    }
     debugProtocol("◀ RECV " + message);
     const object = JSON.parse(message);
     if (object.method === "Target.attachedToTarget") {
@@ -2385,7 +2388,7 @@ function convertToDisjointRanges(nestedRanges) {
             hitCountStack.pop();
     }
     // Filter out empty ranges.
-    return results.filter(range => range.end - range.start > 1);
+    return results.filter(function (range) { return range.end - range.start > 1; });
 }
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/DOMWorld.js
