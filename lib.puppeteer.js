@@ -6,6 +6,7 @@
 // ,$s/\(\w\w*\) =>\( {\)*/function (\1) {/gc
 // ,$s/\<\(if\|else\) .*[^{]$/& {/gc
 // ,$s/^\( *\)\(\<\(if\|else\) .*[^{]\)\(\n.*\)/\1\2 {\4\r\1}/gc
+// ,$s/^\( *\)\(\<else\)\(\n.*\)/\1\2 {\3\r\1}/gc
 
 
 /*
@@ -557,8 +558,11 @@ try {
     exports_websockets_ws_lib_buffer_util = {
         concat,
         mask(source, mask, output, offset, length) {
-            if (length < 48) _mask(source, mask, output, offset, length);
-            else bu.mask(source, mask, output, offset, length);
+            if (length < 48) {
+                _mask(source, mask, output, offset, length);
+            } else {
+                bu.mask(source, mask, output, offset, length);
+            }
         },
     };
 } catch (e) /* istanbul ignore next */ {
@@ -676,7 +680,9 @@ const EventTarget = {
       * @public
       */
     addEventListener(method, listener) {
-        if (typeof listener !== "function") return;
+        if (typeof listener !== "function") {
+            return;
+        }
         function onMessage(data) {
             listener.call(this, new MessageEvent(data, this));
         }
@@ -2010,8 +2016,9 @@ Connection.prototype._onMessage = async function (message) {
             if (object.error) {
                 callback.reject(createProtocolError(callback.error, callback.method, object));
             }
-            else
+            else {
                 callback.resolve(object.result);
+            }
         }
     } else {
         this.emit(object.method, object.params);
@@ -2083,8 +2090,9 @@ CDPSession.prototype._onMessage = function (object) {
         if (object.error) {
             callback.reject(createProtocolError(callback.error, callback.method, object));
         }
-        else
+        else {
             callback.resolve(object.result);
+        }
     } else {
         assert(!object.id);
         this.emit(object.method, object.params);
@@ -2418,15 +2426,17 @@ function convertToDisjointRanges(nestedRanges) {
             if (lastResult && lastResult.end === lastOffset) {
                 lastResult.end = point.offset;
             }
-            else
+            else {
                 results.push({start: lastOffset, end: point.offset});
+            }
         }
         lastOffset = point.offset;
         if (point.type === 0) {
             hitCountStack.push(point.range.count);
         }
-        else
+        else {
             hitCountStack.pop();
+        }
     }
     // Filter out empty ranges.
     return results.filter(range => range.end - range.start > 1);
@@ -2864,8 +2874,9 @@ class ExecutionContext {
             if (functionText.startsWith("async ")) {
                 functionText = "async function " + functionText.substring("async ".length);
             }
-            else
+            else {
                 functionText = "function " + functionText;
+            }
             try {
                 new Function("(" + functionText  + ")");
             } catch (e2) {
@@ -5205,8 +5216,9 @@ class Page extends EventEmitter {
             if (error instanceof Error) {
                 expression = helper.evaluationString(deliverError, name, seq, error.message, error.stack);
             }
-            else
+            else {
                 expression = helper.evaluationString(deliverErrorValue, name, seq, error);
+            }
         }
         this._client.send("Runtime.evaluate", { expression, contextId: event.executionContextId }).catch(debugError);
         /**
@@ -5256,8 +5268,9 @@ class Page extends EventEmitter {
             if (remoteObject.objectId) {
                 textTokens.push(arg.toString());
             }
-            else
+            else {
                 textTokens.push(helper.valueFromRemoteObject(remoteObject));
+            }
         }
         const location = stackTrace && stackTrace.callFrames.length ? {
             url: stackTrace.callFrames[0].url,
