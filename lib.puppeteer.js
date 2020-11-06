@@ -1645,14 +1645,15 @@ class Browser extends EventEmitter {
       * @param {!Protocol.Target.targetCreatedPayload} event
       */
     async _targetCreated(event) {
+        let that = this;
         const targetInfo = event.targetInfo;
         const {browserContextId} = targetInfo;
-        const context = (browserContextId && this._contexts.has(browserContextId)) ? this._contexts.get(browserContextId) : this._defaultContext;
-        const target = new Target(targetInfo, context, function () { return this._connection.createSession(targetInfo); }, this._ignoreHTTPSErrors, this._defaultViewport, this._screenshotTaskQueue);
-        assert(!this._targets.has(event.targetInfo.targetId), "Target should not exist before targetCreated");
-        this._targets.set(event.targetInfo.targetId, target);
+        const context = (browserContextId && that._contexts.has(browserContextId)) ? that._contexts.get(browserContextId) : that._defaultContext;
+        const target = new Target(targetInfo, context, function () { return that._connection.createSession(targetInfo); }, that._ignoreHTTPSErrors, that._defaultViewport, that._screenshotTaskQueue);
+        assert(!that._targets.has(event.targetInfo.targetId), "Target should not exist before targetCreated");
+        that._targets.set(event.targetInfo.targetId, target);
         if (await target._initializedPromise) {
-            this.emit(Events.Browser.TargetCreated, target);
+            that.emit(Events.Browser.TargetCreated, target);
             context.emit(Events.BrowserContext.TargetCreated, target);
         }
     }
@@ -3066,15 +3067,16 @@ class FrameManager extends EventEmitter {
         that._client.on("Page.lifecycleEvent", function (event) { return that._onLifecycleEvent(event); });
     }
     async initialize() {
+        let that = this;
         const [,{frameTree}] = await Promise.all([
-            this._client.send("Page.enable"),
-            this._client.send("Page.getFrameTree"),
+            that._client.send("Page.enable"),
+            that._client.send("Page.getFrameTree"),
         ]);
-        this._handleFrameTree(frameTree);
+        that._handleFrameTree(frameTree);
         await Promise.all([
-            this._client.send("Page.setLifecycleEventsEnabled", { enabled: true }),
-            this._client.send("Runtime.enable", {}).then(function () { return this._ensureIsolatedWorld(UTILITY_WORLD_NAME); }),
-            this._networkManager.initialize(),
+            that._client.send("Page.setLifecycleEventsEnabled", { enabled: true }),
+            that._client.send("Runtime.enable", {}).then(function () { return that._ensureIsolatedWorld(UTILITY_WORLD_NAME); }),
+            that._networkManager.initialize(),
         ]);
     }
     /**
@@ -3835,23 +3837,23 @@ class LifecycleWatcher {
         else if (typeof waitUntil === "string") {
             waitUntil = [waitUntil];
         }
-        this._expectedLifecycle = waitUntil.map(function (value) {
+        that._expectedLifecycle = waitUntil.map(function (value) {
             const protocolEvent = puppeteerToProtocolLifecycle[value];
             assert(protocolEvent, "Unknown value for options.waitUntil: " + value);
             return protocolEvent;
         });
-        this._frameManager = frameManager;
-        this._frame = frame;
-        this._initialLoaderId = frame._loaderId;
-        this._timeout = timeout;
+        that._frameManager = frameManager;
+        that._frame = frame;
+        that._initialLoaderId = frame._loaderId;
+        that._timeout = timeout;
         /** @type {?Puppeteer.Request} */
-        this._navigationRequest = null;
-        this._eventListeners = [
-            helper.addEventListener(frameManager._client, Events.CDPSession.Disconnected, function () { return this._terminate(new Error("Navigation failed because browser has disconnected!")); }),
-            helper.addEventListener(this._frameManager, Events.FrameManager.LifecycleEvent, this._checkLifecycleComplete.bind(this)),
-            helper.addEventListener(this._frameManager, Events.FrameManager.FrameNavigatedWithinDocument, this._navigatedWithinDocument.bind(this)),
-            helper.addEventListener(this._frameManager, Events.FrameManager.FrameDetached, this._onFrameDetached.bind(this)),
-            helper.addEventListener(this._frameManager.networkManager(), Events.NetworkManager.Request, this._onRequest.bind(this)),
+        that._navigationRequest = null;
+        that._eventListeners = [
+            helper.addEventListener(frameManager._client, Events.CDPSession.Disconnected, function () { return that._terminate(new Error("Navigation failed because browser has disconnected!")); }),
+            helper.addEventListener(that._frameManager, Events.FrameManager.LifecycleEvent, that._checkLifecycleComplete.bind(that)),
+            helper.addEventListener(that._frameManager, Events.FrameManager.FrameNavigatedWithinDocument, that._navigatedWithinDocument.bind(that)),
+            helper.addEventListener(that._frameManager, Events.FrameManager.FrameDetached, that._onFrameDetached.bind(that)),
+            helper.addEventListener(that._frameManager.networkManager(), Events.NetworkManager.Request, that._onRequest.bind(that)),
         ];
         that._sameDocumentNavigationPromise = new Promise(function (fulfill) {
             that._sameDocumentNavigationCompleteCallback = fulfill;
@@ -3933,7 +3935,7 @@ class LifecycleWatcher {
         }
         const errorMessage = "Navigation Timeout Exceeded: " + that._timeout + "ms exceeded";
         return new Promise(function (fulfill) { return that._maximumTimer = setTimeout(fulfill, that._timeout); })
-                .then(() => new TimeoutError(errorMessage));
+                .then(function () { return new TimeoutError(errorMessage); });
     }
     /**
       * @param {!Puppeteer.Frame} frame
@@ -5143,7 +5145,7 @@ class Page extends EventEmitter {
                 }
                 const seq = (me["lastSeq"] || 0) + 1;
                 me["lastSeq"] = seq;
-                const promise = new Promise((resolve, reject) => callbacks.set(seq, {resolve, reject}));
+                const promise = new Promise(function (resolve, reject) { return callbacks.set(seq, {resolve, reject}); });
                 binding(JSON.stringify({name: bindingName, seq, args}));
                 return promise;
             };
