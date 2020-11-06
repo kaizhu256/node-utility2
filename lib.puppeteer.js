@@ -1983,11 +1983,9 @@ Connection.prototype.url = function () {
   */
 Connection.prototype.send = function (method, params = {}) {
     let that = this;
-    const id = that._rawSend({
-        method, params});
+    const id = that._rawSend({method, params});
     return new Promise(function (resolve, reject) {
-        that._callbacks.set(id, {
-            resolve, reject, error: new Error(), method});
+        that._callbacks.set(id, {resolve, reject, error: new Error(), method});
     });
 };
 /**
@@ -2008,8 +2006,7 @@ Connection.prototype._rawSend = function (message) {
 Connection.prototype._onMessage = async function (message) {
     let that = this;
     if (that._delay) {
-        await new Promise(function (f) {
-            setTimeout(f, that._delay); });
+        await new Promise(function (f) { setTimeout(f, that._delay); });
     }
     debugProtocol("◀ RECV " + message);
     const object = JSON.parse(message);
@@ -2072,9 +2069,7 @@ Connection.prototype.dispose = function () {
   * @return {!Promise<!CDPSession>}
   */
 Connection.prototype.createSession = async function (targetInfo) {
-    const {
-        sessionId} = await this.send("Target.attachToTarget", {
-            targetId: targetInfo.targetId, flatten: true});
+    const {sessionId} = await this.send("Target.attachToTarget", {targetId: targetInfo.targetId, flatten: true});
     return this._sessions.get(sessionId);
 };
 /**
@@ -2101,11 +2096,9 @@ CDPSession.prototype.send = function (method, params = {}) {
     if (!that._connection) {
         return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${that._targetType} has been closed.`));
     }
-    const id = that._connection._rawSend({
-        sessionId: that._sessionId, method, params});
+    const id = that._connection._rawSend({sessionId: that._sessionId, method, params});
     return new Promise(function (resolve, reject) {
-        that._callbacks.set(id, {
-            resolve, reject, error: new Error(), method});
+        that._callbacks.set(id, {resolve, reject, error: new Error(), method});
     });
 };
 /**
@@ -2130,8 +2123,7 @@ CDPSession.prototype.detach = async function () {
     if (!this._connection) {
         throw new Error(`Session already detached. Most likely the ${this._targetType} has been closed.`);
     }
-    await this._connection.send("Target.detachFromTarget",  {
-        sessionId: this._sessionId});
+    await this._connection.send("Target.detachFromTarget",  {sessionId: this._sessionId});
 };
 CDPSession.prototype._onClosed = function () {
     this._callbacks.values().forEach(function (callback) {
@@ -3198,15 +3190,16 @@ class FrameManager extends EventEmitter {
       * @param {!Protocol.Page.FrameTree} frameTree
       */
     _handleFrameTree(frameTree) {
+        let that = this;
         if (frameTree.frame.parentId) {
-            this._onFrameAttached(frameTree.frame.id, frameTree.frame.parentId);
+            that._onFrameAttached(frameTree.frame.id, frameTree.frame.parentId);
         }
-        this._onFrameNavigated(frameTree.frame);
+        that._onFrameNavigated(frameTree.frame);
         if (!frameTree.childFrames) {
             return;
         }
         frameTree.childFrames.forEach(function (child) {
-            this._handleFrameTree(child);
+            that._handleFrameTree(child);
         });
     }
     /**
@@ -3252,31 +3245,32 @@ class FrameManager extends EventEmitter {
       * @param {!Protocol.Page.Frame} framePayload
       */
     _onFrameNavigated(framePayload) {
+        let that = this;
         const isMainFrame = !framePayload.parentId;
-        let frame = isMainFrame ? this._mainFrame : this._frames.get(framePayload.id);
+        let frame = isMainFrame ? that._mainFrame : that._frames.get(framePayload.id);
         assert(isMainFrame || frame, "We either navigate top level or have old version of the navigated frame");
         // Detach all child frames first.
         if (frame) {
             frame.childFrames().forEach(function (child) {
-                this._removeFramesRecursively(child);
+                that._removeFramesRecursively(child);
             });
         }
         // Update or create main frame.
         if (isMainFrame) {
             if (frame) {
                 // Update frame id to retain frame identity on cross-process navigation.
-                this._frames.delete(frame._id);
+                that._frames.delete(frame._id);
                 frame._id = framePayload.id;
             } else {
                 // Initial main frame navigation.
-                frame = new Frame(this, this._client, null, framePayload.id);
+                frame = new Frame(that, that._client, null, framePayload.id);
             }
-            this._frames.set(framePayload.id, frame);
-            this._mainFrame = frame;
+            that._frames.set(framePayload.id, frame);
+            that._mainFrame = frame;
         }
         // Update frame payload.
         frame._navigated(framePayload);
-        this.emit(Events.FrameManager.FrameNavigated, frame);
+        that.emit(Events.FrameManager.FrameNavigated, frame);
     }
     /**
       * @param {string} name
@@ -3377,12 +3371,13 @@ class FrameManager extends EventEmitter {
       * @param {!Frame} frame
       */
     _removeFramesRecursively(frame) {
+        let that = this;
         frame.childFrames().forEach(function (child) {
-            this._removeFramesRecursively(child);
+            that._removeFramesRecursively(child);
         });
         frame._detach();
-        this._frames.delete(frame._id);
-        this.emit(Events.FrameManager.FrameDetached, frame);
+        that._frames.delete(frame._id);
+        that.emit(Events.FrameManager.FrameDetached, frame);
     }
 }
 /**
@@ -4325,25 +4320,26 @@ class Request {
       * @param {!Array<!Request>} redirectChain
       */
     constructor(client, frame, interceptionId, allowInterception, event, redirectChain) {
-        this._client = client;
-        this._requestId = event.requestId;
-        this._isNavigationRequest = event.requestId === event.loaderId && event.type === "Document";
-        this._interceptionId = interceptionId;
-        this._allowInterception = allowInterception;
-        this._interceptionHandled = false;
-        this._response = null;
-        this._failureText = null;
-        this._url = event.request.url;
-        this._resourceType = event.type.toLowerCase();
-        this._method = event.request.method;
-        this._postData = event.request.postData;
-        this._headers = {};
-        this._frame = frame;
-        this._redirectChain = redirectChain;
+        let that = this;
+        that._client = client;
+        that._requestId = event.requestId;
+        that._isNavigationRequest = event.requestId === event.loaderId && event.type === "Document";
+        that._interceptionId = interceptionId;
+        that._allowInterception = allowInterception;
+        that._interceptionHandled = false;
+        that._response = null;
+        that._failureText = null;
+        that._url = event.request.url;
+        that._resourceType = event.type.toLowerCase();
+        that._method = event.request.method;
+        that._postData = event.request.postData;
+        that._headers = {};
+        that._frame = frame;
+        that._redirectChain = redirectChain;
         Object.keys(event.request.headers).forEach(function (key) {
-            this._headers[key.toLowerCase()] = event.request.headers[key];
+            that._headers[key.toLowerCase()] = event.request.headers[key];
         });
-        this._fromMemoryCache = false;
+        that._fromMemoryCache = false;
     }
     /**
       * @return {string}
@@ -4523,26 +4519,26 @@ class Response {
       */
     constructor(client, request, responsePayload) {
         let that = this;
-        this._client = client;
-        this._request = request;
-        this._contentPromise = null;
+        that._client = client;
+        that._request = request;
+        that._contentPromise = null;
         that._bodyLoadedPromise = new Promise(function (fulfill) {
             that._bodyLoadedPromiseFulfill = fulfill;
         });
-        this._remoteAddress = {
+        that._remoteAddress = {
             ip: responsePayload.remoteIPAddress,
             port: responsePayload.remotePort,
         };
-        this._status = responsePayload.status;
-        this._statusText = responsePayload.statusText;
-        this._url = request.url();
-        this._fromDiskCache = !!responsePayload.fromDiskCache;
-        this._fromServiceWorker = !!responsePayload.fromServiceWorker;
-        this._headers = {};
+        that._status = responsePayload.status;
+        that._statusText = responsePayload.statusText;
+        that._url = request.url();
+        that._fromDiskCache = !!responsePayload.fromDiskCache;
+        that._fromServiceWorker = !!responsePayload.fromServiceWorker;
+        that._headers = {};
         Object.keys(responsePayload.headers).forEach(function (key) {
-            this._headers[key.toLowerCase()] = responsePayload.headers[key];
+            that._headers[key.toLowerCase()] = responsePayload.headers[key];
         });
-        this._securityDetails = responsePayload.securityDetails ? new SecurityDetails(responsePayload.securityDetails) : null;
+        that._securityDetails = responsePayload.securityDetails ? new SecurityDetails(responsePayload.securityDetails) : null;
     }
     /**
       * @return {{ip: string, port: number}}
