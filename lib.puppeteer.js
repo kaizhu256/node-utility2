@@ -3049,9 +3049,9 @@ class FrameManager extends EventEmitter {
         that._contextIdToContext = new Map();
         /** @type {!Set<string>} */
         that._isolatedWorlds = new Set();
-        that._client.on("Page.frameAttached", function (event) { return that._onFrameAttached(event.frameId; }, event.parentFrameId));
+        that._client.on("Page.frameAttached", function (event) { return that._onFrameAttached(event.frameId, event.parentFrameId); });
         that._client.on("Page.frameNavigated", function (event) { return that._onFrameNavigated(event.frame); });
-        that._client.on("Page.navigatedWithinDocument", function (event) { return that._onFrameNavigatedWithinDocument(event.frameId; }, event.url));
+        that._client.on("Page.navigatedWithinDocument", function (event) { return that._onFrameNavigatedWithinDocument(event.frameId, event.url); });
         that._client.on("Page.frameDetached", function (event) { return that._onFrameDetached(event.frameId); });
         that._client.on("Page.frameStoppedLoading", function (event) { return that._onFrameStoppedLoading(event.frameId); });
         that._client.on("Runtime.executionContextCreated", function (event) { return that._onExecutionContextCreated(event.context); });
@@ -3264,11 +3264,11 @@ class FrameManager extends EventEmitter {
             source: `//# sourceURL=${EVALUATION_SCRIPT_URL}`,
             worldName: name,
         }),
-        await Promise.all(that.frames().map(function (frame) { return that._client.send("Page.createIsolatedWorld"; }, {
+        await Promise.all(that.frames().map(function (frame) { return that._client.send("Page.createIsolatedWorld", {
             frameId: frame._id,
             grantUniveralAccess: true,
             worldName: name,
-        }).catch(debugError))); // frames might be removed before we send this
+        }).catch(debugError); })); // frames might be removed before we send this
     }
     /**
       * @param {string} frameId
@@ -3577,7 +3577,7 @@ class Frame {
             return this.waitForSelector(string, options);
         }
         if (helper.isNumber(selectorOrFunctionOrTimeout)) {
-            return new Promise(fulfill => setTimeout(fulfill, /** @type {number} */ (selectorOrFunctionOrTimeout)));
+            return new Promise(function (fulfill) { return setTimeout(fulfill, /** @type {number} */ (selectorOrFunctionOrTimeout)); });
         }
         if (typeof selectorOrFunctionOrTimeout === "function") {
             return this.waitForFunction(selectorOrFunctionOrTimeout, options, ...args);
