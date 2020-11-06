@@ -1937,9 +1937,11 @@ require("util").inherits(Connection, require("stream").EventEmitter);
       * @return {!Promise<?Object>}
       */
     Connection.prototype.send = function(method, params = {}) {
-        const id = this._rawSend({method, params});
+        const id = this._rawSend({
+            method, params});
         return new Promise((resolve, reject) => {
-            this._callbacks.set(id, {resolve, reject, error: new Error(), method});
+            this._callbacks.set(id, {
+                resolve, reject, error: new Error(), method});
         });
     };
     /**
@@ -1959,7 +1961,8 @@ require("util").inherits(Connection, require("stream").EventEmitter);
       */
     Connection.prototype._onMessage = async function(message) {
         if (this._delay) {
-            await new Promise(function (f) { return setTimeout(f, this._delay); });
+            await new Promise(function (f) {
+                return setTimeout(f, this._delay); });
         }
         debugProtocol("◀ RECV " + message);
         const object = JSON.parse(message);
@@ -1976,33 +1979,39 @@ require("util").inherits(Connection, require("stream").EventEmitter);
         }
         if (object.sessionId) {
             const session = this._sessions.get(object.sessionId);
-            if (session)
+            if (session) {
                 session._onMessage(object);
+            }
         } else if (object.id) {
             const callback = this._callbacks.get(object.id);
             // Callbacks could be all rejected if someone has called `.dispose()`.
             if (callback) {
                 this._callbacks.delete(object.id);
-                if (object.error)
+                if (object.error) {
                     callback.reject(createProtocolError(callback.error, callback.method, object));
-                else
+                }
+                else {
                     callback.resolve(object.result);
+                }
             }
         } else {
             this.emit(object.method, object.params);
         }
     };
     Connection.prototype._onClose = function () {
-        if (this._closed)
+        if (this._closed) {
             return;
+        }
         this._closed = true;
         this.onmessage = null;
         this.onclose = null;
-        for (const callback of this._callbacks.values())
+        this._callbacks.values().forEach(function (callback) {
             callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
+        });
         this._callbacks.clear();
-        for (const session of this._sessions.values())
+        this._sessions.values().forEach(function (session) {
             session._onClosed();
+        });
         this._sessions.clear();
         this.emit(Events.Connection.Disconnected);
     };
@@ -2016,7 +2025,9 @@ require("util").inherits(Connection, require("stream").EventEmitter);
       * @return {!Promise<!CDPSession>}
       */
     Connection.prototype.createSession = async function(targetInfo) {
-        const {sessionId} = await this.send("Target.attachToTarget", {targetId: targetInfo.targetId, flatten: true});
+        const {
+            sessionId} = await this.send("Target.attachToTarget", {
+                targetId: targetInfo.targetId, flatten: true});
         return this._sessions.get(sessionId);
     };
     /**
@@ -2031,7 +2042,7 @@ require("util").inherits(Connection, require("stream").EventEmitter);
         this._connection = connection;
         this._targetType = targetType;
         this._sessionId = sessionId;
-    };
+    }
 require("util").inherits(CDPSession, require("stream").EventEmitter);
     /**
       * @param {string} method
@@ -2039,11 +2050,15 @@ require("util").inherits(CDPSession, require("stream").EventEmitter);
       * @return {!Promise<?Object>}
       */
     CDPSession.prototype.send = function (method, params = {}) {
-        if (!this._connection)
+        if (!this._connection) {
+            j
             return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${this._targetType} has been closed.`));
-        const id = this._connection._rawSend({sessionId: this._sessionId, method, params});
+        const id = this._connection._rawSend({
+            sessionId: this._sessionId, method, params});
+        }
         return new Promise((resolve, reject) => {
-            this._callbacks.set(id, {resolve, reject, error: new Error(), method});
+            this._callbacks.set(id, {
+                resolve, reject, error: new Error(), method});
         });
     };
     /**
@@ -2053,23 +2068,28 @@ require("util").inherits(CDPSession, require("stream").EventEmitter);
         if (object.id && this._callbacks.has(object.id)) {
             const callback = this._callbacks.get(object.id);
             this._callbacks.delete(object.id);
-            if (object.error)
+            if (object.error) {
                 callback.reject(createProtocolError(callback.error, callback.method, object));
-            else
+            }
+            else {
                 callback.resolve(object.result);
+            }
         } else {
             assert(!object.id);
             this.emit(object.method, object.params);
         }
     };
     CDPSession.prototype.detach = async function() {
-        if (!this._connection)
+        if (!this._connection) {
             throw new Error(`Session already detached. Most likely the ${this._targetType} has been closed.`);
-        await this._connection.send("Target.detachFromTarget",  {sessionId: this._sessionId});
+        }
+        await this._connection.send("Target.detachFromTarget",  {
+            sessionId: this._sessionId});
     };
     CDPSession.prototype._onClosed = function () {
-        for (const callback of this._callbacks.values())
+        this._callbacks.values().forEach(function (callback) {
             callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
+        });
         this._callbacks.clear();
         this._connection = null;
         this.emit(Events.CDPSession.Disconnected);
@@ -2082,8 +2102,9 @@ require("util").inherits(CDPSession, require("stream").EventEmitter);
   */
 function createProtocolError(error, method, object) {
     let message = `Protocol error (${method}): ${object.error.message}`;
-    if ("data" in object.error)
+    if ("data" in object.error) {
         message += ` ${object.error.data}`;
+    }
     return rewriteError(error, message);
 }
 /**
@@ -2195,8 +2216,9 @@ class JSCoverage {
         ]);
     }
     _onExecutionContextsCleared() {
-        if (!this._resetOnNavigation)
+        if (!this._resetOnNavigation) {
             return;
+        }
         this._scriptURLs.clear();
         this._scriptSources.clear();
     }
@@ -2205,11 +2227,13 @@ class JSCoverage {
       */
     async _onScriptParsed(event) {
         // Ignore puppeteer-injected scripts
-        if (event.url === EVALUATION_SCRIPT_URL)
+        if (event.url === EVALUATION_SCRIPT_URL) {
             return;
+        }
         // Ignore other anonymous scripts unless the reportAnonymousScripts option is true.
-        if (!event.url && !this._reportAnonymousScripts)
+        if (!event.url && !this._reportAnonymousScripts) {
             return;
+        }
         try {
             const response = await this._client.send("Debugger.getScriptSource", {scriptId: event.scriptId});
             this._scriptURLs.set(event.scriptId, event.url);
