@@ -1984,17 +1984,15 @@ Connection.prototype._onMessage = async function (message) {
     }
     if (object.sessionId) {
         const session = this._sessions.get(object.sessionId);
-        if (session) {
+        if (session)
             session._onMessage(object);
-        }
     } else if (object.id) {
         const callback = this._callbacks.get(object.id);
         // Callbacks could be all rejected if someone has called `.dispose()`.
         if (callback) {
             this._callbacks.delete(object.id);
-            if (object.error) {
+            if (object.error)
                 callback.reject(createProtocolError(callback.error, callback.method, object));
-            }
             else
                 callback.resolve(object.result);
         }
@@ -2003,9 +2001,8 @@ Connection.prototype._onMessage = async function (message) {
     }
 };
 Connection.prototype._onClose = function () {
-    if (this._closed) {
+    if (this._closed)
         return;
-    }
     this._closed = true;
     this.onmessage = null;
     this.onclose = null;
@@ -2050,9 +2047,8 @@ require("util").inherits(CDPSession, require("stream").EventEmitter);
   * @return {!Promise<?Object>}
   */
 CDPSession.prototype.send = function (method, params = {}) {
-    if (!this._connection) {
+    if (!this._connection)
         return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${this._targetType} has been closed.`));
-    }
     const id = this._connection._rawSend({sessionId: this._sessionId, method, params});
     return new Promise((resolve, reject) => {
         this._callbacks.set(id, {resolve, reject, error: new Error(), method});
@@ -2065,9 +2061,8 @@ CDPSession.prototype._onMessage = function (object) {
     if (object.id && this._callbacks.has(object.id)) {
         const callback = this._callbacks.get(object.id);
         this._callbacks.delete(object.id);
-        if (object.error) {
+        if (object.error)
             callback.reject(createProtocolError(callback.error, callback.method, object));
-        }
         else
             callback.resolve(object.result);
     } else {
@@ -2076,9 +2071,8 @@ CDPSession.prototype._onMessage = function (object) {
     }
 };
 CDPSession.prototype.detach = async function () {
-    if (!this._connection) {
+    if (!this._connection)
         throw new Error(`Session already detached. Most likely the ${this._targetType} has been closed.`);
-    }
     await this._connection.send("Target.detachFromTarget",  {sessionId: this._sessionId});
 };
 CDPSession.prototype._onClosed = function () {
@@ -2096,9 +2090,8 @@ CDPSession.prototype._onClosed = function () {
   */
 function createProtocolError(error, method, object) {
     let message = `Protocol error (${method}): ${object.error.message}`;
-    if ("data" in object.error) {
+    if ("data" in object.error)
         message += ` ${object.error.data}`;
-    }
     return rewriteError(error, message);
 }
 /**
@@ -2212,9 +2205,8 @@ class JSCoverage {
         ]);
     }
     _onExecutionContextsCleared() {
-        if (!this._resetOnNavigation) {
+        if (!this._resetOnNavigation)
             return;
-        }
         this._scriptURLs.clear();
         this._scriptSources.clear();
     }
@@ -2223,13 +2215,11 @@ class JSCoverage {
       */
     async _onScriptParsed(event) {
         // Ignore puppeteer-injected scripts
-        if (event.url === EVALUATION_SCRIPT_URL) {
+        if (event.url === EVALUATION_SCRIPT_URL)
             return;
-        }
         // Ignore other anonymous scripts unless the reportAnonymousScripts option is true.
-        if (!event.url && !this._reportAnonymousScripts) {
+        if (!event.url && !this._reportAnonymousScripts)
             return;
-        }
         try {
             const response = await this._client.send("Debugger.getScriptSource", {scriptId: event.scriptId});
             this._scriptURLs.set(event.scriptId, event.url);
@@ -2255,13 +2245,11 @@ class JSCoverage {
         const coverage = [];
         for (const entry of profileResponse.result) {
             let url = this._scriptURLs.get(entry.scriptId);
-            if (!url && this._reportAnonymousScripts) {
+            if (!url && this._reportAnonymousScripts)
                 url = "debugger://VM" + entry.scriptId;
-            }
             const text = this._scriptSources.get(entry.scriptId);
-            if (text === undefined || url === undefined) {
+            if (text === undefined || url === undefined)
                 continue;
-            }
             const flattenRanges = [];
             for (const func of entry.functions)
                 flattenRanges.push(...func.ranges);
@@ -2304,9 +2292,8 @@ class CSSCoverage {
         ]);
     }
     _onExecutionContextsCleared() {
-        if (!this._resetOnNavigation) {
+        if (!this._resetOnNavigation)
             return;
-        }
         this._stylesheetURLs.clear();
         this._stylesheetSources.clear();
     }
@@ -2316,9 +2303,8 @@ class CSSCoverage {
     async _onStyleSheet(event) {
         const header = event.header;
         // Ignore anonymous scripts
-        if (!header.sourceURL) {
+        if (!header.sourceURL)
             return;
-        }
         try {
             const response = await this._client.send("CSS.getStyleSheetText", {styleSheetId: header.styleSheetId});
             this._stylesheetURLs.set(header.styleSheetId, header.sourceURL);
@@ -2377,19 +2363,16 @@ function convertToDisjointRanges(nestedRanges) {
     // Sort points to form a valid parenthesis sequence.
     points.sort((a, b) => {
         // Sort with increasing offsets.
-        if (a.offset !== b.offset) {
+        if (a.offset !== b.offset)
             return a.offset - b.offset;
-        }
         // All "end" points should go before "start" points.
-        if (a.type !== b.type) {
+        if (a.type !== b.type)
             return b.type - a.type;
-        }
         const aLength = a.range.endOffset - a.range.startOffset;
         const bLength = b.range.endOffset - b.range.startOffset;
         // For two "start" points, the one with longer range goes first.
-        if (a.type === 0) {
+        if (a.type === 0)
             return bLength - aLength;
-        }
         // For two "end" points, the one with shorter range goes first.
         return aLength - bLength;
     });
@@ -2400,16 +2383,14 @@ function convertToDisjointRanges(nestedRanges) {
     for (const point of points) {
         if (hitCountStack.length && lastOffset < point.offset && hitCountStack[hitCountStack.length - 1] > 0) {
             const lastResult = results.length ? results[results.length - 1] : null;
-            if (lastResult && lastResult.end === lastOffset) {
+            if (lastResult && lastResult.end === lastOffset)
                 lastResult.end = point.offset;
-            }
             else
                 results.push({start: lastOffset, end: point.offset});
         }
         lastOffset = point.offset;
-        if (point.type === 0) {
+        if (point.type === 0)
             hitCountStack.push(point.range.count);
-        }
         else
             hitCountStack.pop();
     }
@@ -2498,9 +2479,8 @@ class DOMWorld {
       * @return {!Promise<!Puppeteer.ExecutionContext>}
       */
     executionContext() {
-        if (this._detached) {
+        if (this._detached)
             throw new Error(`Execution Context is not available in detached frame "${this._frame.url()}" (are you trying to evaluate?)`);
-        }
         return this._contextPromise;
     }
     /**
@@ -2830,14 +2810,12 @@ class ExecutionContext {
                 awaitPromise: true,
                 userGesture: true
             }).catch(rewriteError);
-            if (exceptionDetails) {
+            if (exceptionDetails)
                 throw new Error("Evaluation failed: " + helper.getExceptionMessage(exceptionDetails));
-            }
             return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
         }
-        if (typeof pageFunction !== "function") {
+        if (typeof pageFunction !== "function")
             throw new Error(`Expected to get |string| or |function| as the first argument, but got "${pageFunction}" instead.`);
-        }
         let functionText = pageFunction.toString();
         // hack-coverage - un-instrument
         functionText = functionText.replace((/\b__cov_.*?\+\+/g), "0");
@@ -2846,9 +2824,8 @@ class ExecutionContext {
         } catch (e1) {
             // This means we might have a function shorthand. Try another
             // time prefixing "function ".
-            if (functionText.startsWith("async ")) {
+            if (functionText.startsWith("async "))
                 functionText = "async function " + functionText.substring("async ".length);
-            }
             else
                 functionText = "function " + functionText;
             try {
@@ -2869,15 +2846,13 @@ class ExecutionContext {
                 userGesture: true
             });
         } catch (err) {
-            if (err instanceof TypeError && err.message.startsWith("Converting circular structure to JSON")) {
+            if (err instanceof TypeError && err.message.startsWith("Converting circular structure to JSON"))
                 err.message += " Are you passing a nested JSHandle?";
-            }
             throw err;
         }
         const { exceptionDetails, result: remoteObject } = await callFunctionOnPromise.catch(rewriteError);
-        if (exceptionDetails) {
+        if (exceptionDetails)
             throw new Error("Evaluation failed: " + helper.getExceptionMessage(exceptionDetails));
-        }
         return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
         /**
           * @param {*} arg
@@ -2885,35 +2860,26 @@ class ExecutionContext {
           * @this {ExecutionContext}
           */
         function convertArgument(arg) {
-            if (typeof arg === "bigint") // eslint-disable-line valid-typeof {
+            if (typeof arg === "bigint") // eslint-disable-line valid-typeof
                 return { unserializableValue: `${arg.toString()}n` };
-            }
-            if (Object.is(arg, -0)) {
+            if (Object.is(arg, -0))
                 return { unserializableValue: "-0" };
-            }
-            if (Object.is(arg, Infinity)) {
+            if (Object.is(arg, Infinity))
                 return { unserializableValue: "Infinity" };
-            }
-            if (Object.is(arg, -Infinity)) {
+            if (Object.is(arg, -Infinity))
                 return { unserializableValue: "-Infinity" };
-            }
-            if (Object.is(arg, NaN)) {
+            if (Object.is(arg, NaN))
                 return { unserializableValue: "NaN" };
-            }
             const objectHandle = arg && (arg instanceof JSHandle) ? arg : null;
             if (objectHandle) {
-                if (objectHandle._context !== this) {
+                if (objectHandle._context !== this)
                     throw new Error("JSHandles can be evaluated only in the context they were created!");
-                }
-                if (objectHandle._disposed) {
+                if (objectHandle._disposed)
                     throw new Error("JSHandle is disposed!");
-                }
-                if (objectHandle._remoteObject.unserializableValue) {
+                if (objectHandle._remoteObject.unserializableValue)
                     return { unserializableValue: objectHandle._remoteObject.unserializableValue };
-                }
-                if (!objectHandle._remoteObject.objectId) {
+                if (!objectHandle._remoteObject.objectId)
                     return { value: objectHandle._remoteObject.value };
-                }
                 return { objectId: objectHandle._remoteObject.objectId };
             }
             return { value: arg };
@@ -2923,15 +2889,12 @@ class ExecutionContext {
           * @return {!Protocol.Runtime.evaluateReturnValue}
           */
         function rewriteError(error) {
-            if (error.message.includes("Object reference chain is too long")) {
+            if (error.message.includes("Object reference chain is too long"))
                 return {result: {type: "undefined"}};
-            }
-            if (error.message.includes("Object couldn't be returned by value")) {
+            if (error.message.includes("Object couldn't be returned by value"))
                 return {result: {type: "undefined"}};
-            }
-            if (error.message.endsWith("Cannot find context with specified id")) {
+            if (error.message.endsWith("Cannot find context with specified id"))
                 throw new Error("Execution context was destroyed, most likely because of a navigation.");
-            }
             throw error;
         }
     }
@@ -3065,9 +3028,8 @@ class FrameManager extends EventEmitter {
             ]);
         }
         watcher.dispose();
-        if (error) {
+        if (error)
             throw error;
-        }
         return watcher.navigationResponse();
         /**
           * @param {!Puppeteer.CDPSession} client
