@@ -3,6 +3,7 @@
 
 // vim
 // ,$s/^    \(async \)*\(\w\w*\)(/    Connection.prorotype.\2 = \1function (/gc
+// ,$s/\(([^()]*)\) => {/function \1 {/gc
 /*
         let that = this;
 */
@@ -1418,7 +1419,7 @@ class Helper {
     }
     static promisify(nodeFunction) {
         function promisified(...args) {
-            return new Promise((resolve, reject) => {
+            return new Promise(function (resolve, reject) {
                 function callback(err, ...result) {
                     if (err) {
                         return reject(err);
@@ -1441,7 +1442,7 @@ class Helper {
       */
     static waitForEvent(emitter, eventName, predicate, timeout) {
         let eventTimeout, resolveCallback, rejectCallback;
-        const promise = new Promise((resolve, reject) => {
+        const promise = new Promise(function (resolve, reject) {
             resolveCallback = resolve;
             rejectCallback = reject;
         });
@@ -1453,7 +1454,7 @@ class Helper {
             resolveCallback(event);
         });
         if (timeout) {
-            eventTimeout = setTimeout(() => {
+            eventTimeout = setTimeout(function () {
                 cleanup();
                 rejectCallback(new TimeoutError("Timeout exceeded while waiting for event"));
             }, timeout);
@@ -1976,9 +1977,10 @@ Connection.prototype.url = function () {
   * @return {!Promise<?Object>}
   */
 Connection.prototype.send = function (method, params = {}) {
-    const id = this._rawSend({method, params});
-    return new Promise((resolve, reject) => {
-        this._callbacks.set(id, {resolve, reject, error: new Error(), method});
+    let that = this;
+    const id = that._rawSend({method, params});
+    return new Promise(function (resolve, reject) {
+        that._callbacks.set(id, {resolve, reject, error: new Error(), method});
     });
 };
 /**
@@ -2083,12 +2085,13 @@ require("util").inherits(CDPSession, require("stream").EventEmitter);
   * @return {!Promise<?Object>}
   */
 CDPSession.prototype.send = function (method, params = {}) {
-    if (!this._connection) {
-        return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${this._targetType} has been closed.`));
+    let that = this;
+    if (!that._connection) {
+        return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${that._targetType} has been closed.`));
     }
-    const id = this._connection._rawSend({sessionId: this._sessionId, method, params});
-    return new Promise((resolve, reject) => {
-        this._callbacks.set(id, {resolve, reject, error: new Error(), method});
+    const id = that._connection._rawSend({sessionId: that._sessionId, method, params});
+    return new Promise(function (resolve, reject) {
+        that._callbacks.set(id, {resolve, reject, error: new Error(), method});
     });
 };
 /**
@@ -2409,7 +2412,7 @@ function convertToDisjointRanges(nestedRanges) {
         points.push({ offset: range.endOffset, type: 1, range });
     }
     // Sort points to form a valid parenthesis sequence.
-    points.sort((a, b) => {
+    points.sort(function (a, b) {
         // Sort with increasing offsets.
         if (a.offset !== b.offset) {
             return a.offset - b.offset;
@@ -3727,7 +3730,7 @@ class JSHandle {
       * @return {!Promise<?JSHandle>}
       */
     async getProperty(propertyName) {
-        const objectHandle = await this._context.evaluateHandle((object, propertyName) => {
+        const objectHandle = await this._context.evaluateHandle(function (object, propertyName) {
             const result = {__proto__: null};
             result[propertyName] = object[propertyName];
             return result;
@@ -3925,7 +3928,7 @@ class LifecycleWatcher {
     _createTimeoutPromise() {
         let that = this;
         if (!that._timeout) {
-            return new Promise(() => {});
+            return new Promise(function () {});
         }
         const errorMessage = "Navigation Timeout Exceeded: " + that._timeout + "ms exceeded";
         return new Promise(function (fulfill) { return that._maximumTimer = setTimeout(fulfill, that._timeout); })
@@ -4848,7 +4851,7 @@ class Page extends EventEmitter {
         client.on("Performance.metrics", function (event) { return that._emitMetrics(event); });
         client.on("Log.entryAdded", function (event) { return that._onLogEntryAdded(event); });
         client.on("Page.fileChooserOpened", function (event) { return that._onFileChooser(event); });
-        that._target._isClosedPromise.then(() => {
+        that._target._isClosedPromise.then(function () {
             that.emit(Events.Page.Close);
             that._closed = true;
         });
@@ -5130,7 +5133,7 @@ class Page extends EventEmitter {
         await Promise.all(that.frames().map(function (frame) { return frame.evaluate(expression).catch(debugError); }));
         function addPageBinding(bindingName) {
             const binding = window[bindingName];
-            window[bindingName] = (...args) => {
+            window[bindingName] = function (...args) {
                 const me = window[bindingName];
                 let callbacks = me["callbacks"];
                 if (!callbacks) {
@@ -5954,7 +5957,7 @@ class Target {
                 ]);
                 const session = Connection.fromSession(client).session(targetAttached.sessionId);
                 // TODO(einbinder): Make workers send their console logs.
-                return new Worker(session, this._targetInfo.url, () => {} /* consoleAPICalled */, () => {} /* exceptionThrown */);
+                return new Worker(session, this._targetInfo.url, function () {} /* consoleAPICalled */, function () {} /* exceptionThrown */);
             });
         }
         return this._workerPromise;
@@ -6023,7 +6026,7 @@ class TaskQueue {
       */
     postTask(task) {
         const result = this._chain.then(task);
-        this._chain = result.catch(() => {});
+        this._chain = result.catch(function () {});
         return result;
     }
 }
