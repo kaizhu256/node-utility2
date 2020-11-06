@@ -2232,6 +2232,9 @@ local.browserTest = function ({
  * this function will spawn google-puppeteer-process to test <url>
  */
     let browser;
+    let chromeProcess;
+    let chromeSocket;
+    let chromeUserDataDir;
     let fileScreenshot;
     let isDone;
     let page;
@@ -2239,6 +2242,23 @@ local.browserTest = function ({
     let testId;
     let testName;
     let timerTimeout;
+    function chromeKill() {
+    /*
+     * this function will kill chrome-process and cleanup <chromeUserDataDir>
+     */
+        try {
+            if (process.platform === "win32") {
+                require("child_process").spawnSync("taskkill", [
+                    "/pid", chromeProcess.pid, "/T", "/F"
+                ], {
+                    stdio: "ignore"
+                });
+            } else {
+                process.kill(-chromeProcess.pid, "SIGKILL");
+            }
+        } catch (ignore) {}
+        local.fsRmrfSync(chromeUserDataDir);
+    }
     function onError2(err) {
         // cleanup timerTimeout
         clearTimeout(timerTimeout);
@@ -2287,29 +2307,89 @@ local.browserTest = function ({
         timerTimeout = setTimeout(onError2, local.timeoutDefault, new Error(
             "timeout - " + local.timeoutDefault + " ms - " + testName
         ));
-        // create puppeteer browser
-        return local.puppeteerLaunch({
-            args: [
-                "--headless",
-                "--incognito",
-                "--no-sandbox",
-                "--remote-debugging-port=0"
-            ],
-            dumpio: !modeSilent,
-            executablePath: (
-                process.platform === "darwin"
-                ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-                : process.platform === "win32"
-                ? (
-                    "C:\\Program Files (x86)\\Google\\Chrome\\Application\\"
-                    + "chrome.exe"
-                )
-                : "/usr/bin/google-chrome-stable"
-            ),
-            ignoreDefaultArgs: true
+        // init chromeProcess
+        chromeUserDataDir = require("fs").mkdtempSync(require("path").join(
+            require("os").tmpdir(),
+            "puppeteer_dev_profile-"
+        ));
+        chromeProcess = require("child_process").spawn((
+            process.platform === "darwin"
+            ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+            : process.platform === "win32"
+            ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+            : "/usr/bin/google-chrome-stable"
+        ), [
+            "--headless",
+            "--incognito",
+            "--no-sandbox",
+            "--remote-debugging-port=0",
+            "--user-data-dir=" + chromeUserDataDir
+        ], {
+            // On non-windows platforms, `detached: false` makes child process
+            // a leader of a new process group, making it possible to kill
+            // child process tree with `.kill(-pid)` command.
+            // https://nodejs.org/api/child_process.html#child_process_options_detached
+            detached: process.platform !== "win32",
+            stdio: [
+                "ignore", (
+                    !modeSilent
+                    ? 1
+                    : "ignore"
+                ), "pipe"
+            ]
+        });
+        if (!modeSilent) {
+            chromeProcess.stderr.pipe(process.stderr, {
+                end: false
+            });
+        }
+        process.on("exit", chromeKill);
+        process.on("SIGINT", chromeKill);
+        process.on("SIGTERM", chromeKill);
+        process.on("SIGHUP", chromeKill);
+        return new Promise(function (resolve) {
+            let stderr;
+            stderr = "";
+            chromeProcess.stderr.on("data", function onData(chunk) {
+                local.assertOrThrow(stderr.length < 65536, new Error(
+                    "chrome-devtools-websocket - buffer-overflow"
+                ));
+                stderr += chunk;
+                stderr.replace((
+                    /^DevTools\u0020listening\u0020on\u0020(ws:\/\/.*)$/m
+                ), function (ignore, url) {
+                    chromeProcess.stderr.removeListener("data", onData);
+                    resolve(url);
+                    return "";
+                });
+            });
         });
     }).then(function (data) {
+        chromeSocket = data;
+        return new Promise(function (resolve) {
+            let ws = new local.puppeteer.puppeteerApi.WebSocket(chromeSocket);
+            ws.addEventListener("open", () => resolve(ws));
+        });
+    }).then(function (data) {
+        return local.puppeteer.puppeteerApi.Browser.create(
+            new local.puppeteer.puppeteerApi.Connection(chromeSocket, data),
+            [],
+            // ignoreHTTPSErrors
+            false,
+            // defaultViewport
+            {
+                width: 800,
+                height: 600
+            },
+            chromeProcess,
+            chromeKill
+        );
+    }).then(function (data) {
         browser = data;
+        return browser.waitForTarget(function (target) {
+            return target.type() === "page";
+        });
+    }).then(function () {
         return browser.newPage();
     }).then(function (data) {
         page = data;
@@ -3405,6 +3485,39 @@ local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
     } catch (ignore) {
         return dflt;
     }
+};
+
+local.fsRmrfSync = function (pathname) {
+/*
+ * this function will sync "rm -rf" <pathname>
+ */
+    let child_process;
+    // do nothing if module not exists
+    try {
+        child_process = require("child_process");
+    } catch (ignore) {
+        return;
+    }
+    pathname = require("path").resolve(pathname);
+    if (process.platform !== "win32") {
+        child_process.spawnSync("rm", [
+            "-rf", pathname
+        ], {
+            stdio: [
+                "ignore", 1, 2
+            ]
+        });
+        return;
+    }
+    try {
+        child_process.spawnSync("rd", [
+            "/s", "/q", pathname
+        ], {
+            stdio: [
+                "ignore", 1, 2
+            ]
+        });
+    } catch (ignore) {}
 };
 
 local.fsWriteFileWithMkdirp = function (pathname, data, onError) {
@@ -6132,7 +6245,6 @@ local.istanbulInstrumentInPackage = (
 );
 local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.identity;
 local.jslintAndPrint = local.jslint.jslintAndPrint || local.identity;
-local.puppeteerLaunch = local.puppeteer.puppeteerLaunch || local.identity;
 local.regexpCharsetEncodeUri = (
     /\w!#\$%&'\(\)\*\+,-\.\/:;=\?@~/
 );
