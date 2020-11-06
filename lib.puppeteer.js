@@ -1878,14 +1878,13 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
 // const {Events} = exports_puppeteer_puppeteer_lib_Events;
 // const debugProtocol = require("debug")("puppeteer:protocol");
 // const EventEmitter = require("events");
-class Connection extends EventEmitter {
     /**
       * @param {string} url
       * @param {!Puppeteer.ConnectionTransport} transport
       * @param {number=} delay
       */
-    constructor(url, ws, delay = 0) {
-        super();
+    function Connection(url, ws, delay = 0) {
+        require("stream").EventEmitter.call(this);
         this._url = url;
         this._lastId = 0;
         /** @type {!Map<number, {resolve: function, reject: function, error: !Error, method: string}>}*/
@@ -1911,53 +1910,54 @@ class Connection extends EventEmitter {
         this._sessions = new Map();
         this._closed = false;
     }
+require("util").inherits(Connection, require("stream").EventEmitter);
     /**
       * @param {!CDPSession} session
       * @return {!Connection}
       */
-    static fromSession(session) {
+    Connection.fromSession = function(session) {
         return session._connection;
-    }
+    };
     /**
       * @param {string} sessionId
       * @return {?CDPSession}
       */
-    session(sessionId) {
+    Connection.prototype.session = function(sessionId) {
         return this._sessions.get(sessionId) || null;
-    }
+    };
     /**
       * @return {string}
       */
-    url() {
+    Connection.prototype.url = function() {
         return this._url;
-    }
+    };
     /**
       * @param {string} method
       * @param {!Object=} params
       * @return {!Promise<?Object>}
       */
-    send(method, params = {}) {
+    Connection.prototype.send = function(method, params = {}) {
         const id = this._rawSend({method, params});
         return new Promise((resolve, reject) => {
             this._callbacks.set(id, {resolve, reject, error: new Error(), method});
         });
-    }
+    };
     /**
       * @param {*} message
       * @return {number}
       */
-    _rawSend(message) {
+    Connection.prototype._rawSend = function(message) {
         const id = ++this._lastId;
         message = JSON.stringify(Object.assign({}, message, {id}));
         debugProtocol("SEND ► " + message);
         let ws2 = this._ws;
         ws2.send(message);
         return id;
-    }
+    };
     /**
       * @param {string} message
       */
-    async _onMessage(message) {
+    Connection.prototype._onMessage = async function(message) {
         if (this._delay) {
             await new Promise(function (f) { return setTimeout(f, this._delay); });
         }
@@ -1991,8 +1991,8 @@ class Connection extends EventEmitter {
         } else {
             this.emit(object.method, object.params);
         }
-    }
-    _onClose() {
+    };
+    Connection.prototype._onClose = function () {
         if (this._closed)
             return;
         this._closed = true;
@@ -2005,52 +2005,51 @@ class Connection extends EventEmitter {
             session._onClosed();
         this._sessions.clear();
         this.emit(Events.Connection.Disconnected);
-    }
-    dispose() {
+    };
+    Connection.prototype.dispose = function () {
         this._onClose();
         let ws2 = this._ws;
         ws2.close();
-    }
+    };
     /**
       * @param {Protocol.Target.TargetInfo} targetInfo
       * @return {!Promise<!CDPSession>}
       */
-    async createSession(targetInfo) {
+    Connection.prototype.createSession = async function(targetInfo) {
         const {sessionId} = await this.send("Target.attachToTarget", {targetId: targetInfo.targetId, flatten: true});
         return this._sessions.get(sessionId);
-    }
-}
-class CDPSession extends EventEmitter {
+    };
     /**
       * @param {!Connection} connection
       * @param {string} targetType
       * @param {string} sessionId
       */
-    constructor(connection, targetType, sessionId) {
-        super();
+    function CDPSession(connection, targetType, sessionId) {
+        require("stream").EventEmitter.call(this);
         /** @type {!Map<number, {resolve: function, reject: function, error: !Error, method: string}>}*/
         this._callbacks = new Map();
         this._connection = connection;
         this._targetType = targetType;
         this._sessionId = sessionId;
-    }
+    };
+require("util").inherits(CDPSession, require("stream").EventEmitter);
     /**
       * @param {string} method
       * @param {!Object=} params
       * @return {!Promise<?Object>}
       */
-    send(method, params = {}) {
+    CDPSession.prototype.send = function (method, params = {}) {
         if (!this._connection)
             return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${this._targetType} has been closed.`));
         const id = this._connection._rawSend({sessionId: this._sessionId, method, params});
         return new Promise((resolve, reject) => {
             this._callbacks.set(id, {resolve, reject, error: new Error(), method});
         });
-    }
+    };
     /**
       * @param {{id?: number, method: string, params: Object, error: {message: string, data: any}, result?: *}} object
       */
-    _onMessage(object) {
+    CDPSession.prototype._onMessage = function (object) {
         if (object.id && this._callbacks.has(object.id)) {
             const callback = this._callbacks.get(object.id);
             this._callbacks.delete(object.id);
@@ -2062,20 +2061,19 @@ class CDPSession extends EventEmitter {
             assert(!object.id);
             this.emit(object.method, object.params);
         }
-    }
-    async detach() {
+    };
+    CDPSession.prototype.detach = async function() {
         if (!this._connection)
             throw new Error(`Session already detached. Most likely the ${this._targetType} has been closed.`);
         await this._connection.send("Target.detachFromTarget",  {sessionId: this._sessionId});
-    }
-    _onClosed() {
+    };
+    CDPSession.prototype._onClosed = function () {
         for (const callback of this._callbacks.values())
             callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
         this._callbacks.clear();
         this._connection = null;
         this.emit(Events.CDPSession.Disconnected);
-    }
-}
+    };
 /**
   * @param {!Error} error
   * @param {string} method
