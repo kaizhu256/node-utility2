@@ -414,7 +414,7 @@ let BUFFER0;
 BUFFER0 = Buffer.alloc(0);
 /* jslint ignore:start */
 const debugError = console.error;
-const debugProtocol = function () {
+function debugProtocol() {
     return;
 }
 const mime = {
@@ -2048,10 +2048,16 @@ CDPSession.prototype.send = function (method, params = {}) {
         ));
     }
     const id = that._connection._rawSend({
-        sessionId: that._sessionId, method, params});
+        sessionId: that._sessionId,
+        method,
+        params
+    });
     return new Promise(function (resolve, reject) {
         that._callbacks.set(id, {
-            resolve, reject, error: new Error(), method
+            resolve,
+            reject,
+            error: new Error(),
+            method
         });
     });
 };
@@ -2061,14 +2067,16 @@ CDPSession.prototype._onMessage = function (object) {
         this._callbacks.delete(object.id);
         if (object.error) {
             callback.reject(createProtocolError(
-                callback.error, callback.method, object
+                callback.error,
+                callback.method,
+                object
             ));
         }
-        else {
+ else {
             callback.resolve(object.result);
         }
     } else {
-        assert(!object.id);
+        local.assertOrThrow(!object.id, "missing object.id");
         this.emit(object.method, object.params);
     }
 };
@@ -2080,8 +2088,9 @@ CDPSession.prototype.detach = async function () {
             + "has been closed."
         );
     }
-    await this._connection.send("Target.detachFromTarget",  {
-        sessionId: this._sessionId});
+    await this._connection.send("Target.detachFromTarget", {
+        sessionId: this._sessionId
+    });
 };
 CDPSession.prototype._onClosed = function () {
     this._callbacks.forEach(function (callback) {
@@ -2103,7 +2112,10 @@ function Connection(url, ws, delay = 0) {
     require("stream").EventEmitter.call(this);
     this._url = url;
     this._lastId = 0;
-    /** @type {!Map<number, {resolve: function, reject: function, error: !Error, method: string}>}*/
+    /** @type {
+     *    !Map<number,
+     *    {resolve: function, reject: function, error: !Error, method: string}>}
+     */
     this._callbacks = new Map();
     this._delay = delay;
     this._ws = ws;
@@ -2156,10 +2168,16 @@ Connection.prototype.url = function () {
 Connection.prototype.send = function (method, params = {}) {
     let that = this;
     const id = that._rawSend({
-        method, params});
+        method,
+        params
+    });
     return new Promise(function (resolve, reject) {
         that._callbacks.set(id, {
-            resolve, reject, error: new Error(), method});
+            resolve,
+            reject,
+            error: new Error(),
+            method
+        });
     });
 };
 /**
@@ -2170,7 +2188,7 @@ Connection.prototype._rawSend = function (message) {
     this._lastId += 1;
     const id = this._lastId;
     message = JSON.stringify(Object.assign({}, message, {id}));
-    debugProtocol("SEND ► " + message);
+    console.error("SEND ► " + message);
     let ws2 = this._ws;
     ws2.send(message);
     return id;
@@ -2183,13 +2201,18 @@ Connection.prototype._onMessage = async function (message) {
     let session;
     if (that._delay) {
         await new Promise(function (f) {
-            setTimeout(f, that._delay); });
+            setTimeout(f, that._delay);
+        });
     }
-    debugProtocol("◀ RECV " + message);
+    console.error("◀ RECV " + message);
     const object = JSON.parse(message);
     if (object.method === "Target.attachedToTarget") {
         const sessionId = object.params.sessionId;
-        session = new CDPSession(this, object.params.targetInfo.type, sessionId);
+        session = new CDPSession(
+            this,
+            object.params.targetInfo.type,
+            sessionId
+        );
         this._sessions.set(sessionId, session);
     } else if (object.method === "Target.detachedFromTarget") {
         session = this._sessions.get(object.params.sessionId);
@@ -2213,7 +2236,7 @@ Connection.prototype._onMessage = async function (message) {
                     createProtocolError(callback.error, callback.method, object)
                 );
             }
-            else {
+ else {
                 callback.resolve(object.result);
             }
         }
@@ -2252,8 +2275,11 @@ Connection.prototype.dispose = function () {
   */
 Connection.prototype.createSession = async function (targetInfo) {
     const {
-        sessionId} = await this.send("Target.attachToTarget", {
-            targetId: targetInfo.targetId, flatten: true});
+        sessionId
+    } = await this.send("Target.attachToTarget", {
+        targetId: targetInfo.targetId,
+        flatten: true
+    });
     return this._sessions.get(sessionId);
 };
 
