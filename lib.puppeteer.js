@@ -2448,7 +2448,7 @@ function convertToDisjointRanges(nestedRanges) {
         }
     }
     // Filter out empty ranges.
-    return results.filter(range => range.end - range.start > 1);
+    return results.filter(function (range) { return range.end - range.start > 1; });
 }
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/DOMWorld.js
@@ -3037,26 +3037,27 @@ class FrameManager extends EventEmitter {
       */
     constructor(client, page, ignoreHTTPSErrors, timeoutSettings) {
         super();
-        this._client = client;
-        this._page = page;
-        this._networkManager = new NetworkManager(client, ignoreHTTPSErrors);
-        this._networkManager.setFrameManager(this);
-        this._timeoutSettings = timeoutSettings;
+        let that = this;
+        that._client = client;
+        that._page = page;
+        that._networkManager = new NetworkManager(client, ignoreHTTPSErrors);
+        that._networkManager.setFrameManager(that);
+        that._timeoutSettings = timeoutSettings;
         /** @type {!Map<string, !Frame>} */
-        this._frames = new Map();
+        that._frames = new Map();
         /** @type {!Map<number, !ExecutionContext>} */
-        this._contextIdToContext = new Map();
+        that._contextIdToContext = new Map();
         /** @type {!Set<string>} */
-        this._isolatedWorlds = new Set();
-        this._client.on("Page.frameAttached", event => this._onFrameAttached(event.frameId, event.parentFrameId));
-        this._client.on("Page.frameNavigated", event => this._onFrameNavigated(event.frame));
-        this._client.on("Page.navigatedWithinDocument", event => this._onFrameNavigatedWithinDocument(event.frameId, event.url));
-        this._client.on("Page.frameDetached", event => this._onFrameDetached(event.frameId));
-        this._client.on("Page.frameStoppedLoading", event => this._onFrameStoppedLoading(event.frameId));
-        this._client.on("Runtime.executionContextCreated", event => this._onExecutionContextCreated(event.context));
-        this._client.on("Runtime.executionContextDestroyed", event => this._onExecutionContextDestroyed(event.executionContextId));
-        this._client.on("Runtime.executionContextsCleared", event => this._onExecutionContextsCleared());
-        this._client.on("Page.lifecycleEvent", event => this._onLifecycleEvent(event));
+        that._isolatedWorlds = new Set();
+        that._client.on("Page.frameAttached", function (event) { return that._onFrameAttached(event.frameId; }, event.parentFrameId));
+        that._client.on("Page.frameNavigated", function (event) { return that._onFrameNavigated(event.frame); });
+        that._client.on("Page.navigatedWithinDocument", function (event) { return that._onFrameNavigatedWithinDocument(event.frameId; }, event.url));
+        that._client.on("Page.frameDetached", function (event) { return that._onFrameDetached(event.frameId); });
+        that._client.on("Page.frameStoppedLoading", function (event) { return that._onFrameStoppedLoading(event.frameId); });
+        that._client.on("Runtime.executionContextCreated", function (event) { return that._onExecutionContextCreated(event.context); });
+        that._client.on("Runtime.executionContextDestroyed", function (event) { return that._onExecutionContextDestroyed(event.executionContextId); });
+        that._client.on("Runtime.executionContextsCleared", function (event) { return that._onExecutionContextsCleared(); });
+        that._client.on("Page.lifecycleEvent", function (event) { return that._onLifecycleEvent(event); });
     }
     async initialize() {
         const [,{frameTree}] = await Promise.all([
@@ -3254,15 +3255,16 @@ class FrameManager extends EventEmitter {
       * @param {string} name
       */
     async _ensureIsolatedWorld(name) {
-        if (this._isolatedWorlds.has(name)) {
+        let that = this;
+        if (that._isolatedWorlds.has(name)) {
             return;
         }
-        this._isolatedWorlds.add(name);
-        await this._client.send("Page.addScriptToEvaluateOnNewDocument", {
+        that._isolatedWorlds.add(name);
+        await that._client.send("Page.addScriptToEvaluateOnNewDocument", {
             source: `//# sourceURL=${EVALUATION_SCRIPT_URL}`,
             worldName: name,
         }),
-        await Promise.all(this.frames().map(frame => this._client.send("Page.createIsolatedWorld", {
+        await Promise.all(that.frames().map(function (frame) { return that._client.send("Page.createIsolatedWorld"; }, {
             frameId: frame._id,
             grantUniveralAccess: true,
             worldName: name,
