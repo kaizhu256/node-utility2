@@ -2071,8 +2071,7 @@ CDPSession.prototype._onMessage = function (object) {
                 callback.method,
                 object
             ));
-        }
- else {
+        } else {
             callback.resolve(object.result);
         }
     } else {
@@ -2126,7 +2125,7 @@ function Connection(url, ws, delay = 0) {
             that.onmessage.call(null, event.data);
         }
     });
-    ws2.addEventListener("close", function (event) {
+    ws2.addEventListener("close", function () {
         if (that.onclose) {
             that.onclose.call(null);
         }
@@ -2235,8 +2234,7 @@ Connection.prototype._onMessage = async function (message) {
                 callback.reject(
                     createProtocolError(callback.error, callback.method, object)
                 );
-            }
- else {
+            } else {
                 callback.resolve(object.result);
             }
         }
