@@ -3923,11 +3923,12 @@ class LifecycleWatcher {
       * @return {!Promise<?Error>}
       */
     _createTimeoutPromise() {
-        if (!this._timeout) {
+        let that = this;
+        if (!that._timeout) {
             return new Promise(() => {});
         }
-        const errorMessage = "Navigation Timeout Exceeded: " + this._timeout + "ms exceeded";
-        return new Promise(function (fulfill) { return this._maximumTimer = setTimeout(fulfill, this._timeout); })
+        const errorMessage = "Navigation Timeout Exceeded: " + that._timeout + "ms exceeded";
+        return new Promise(function (fulfill) { return that._maximumTimer = setTimeout(fulfill, that._timeout); })
                 .then(() => new TimeoutError(errorMessage));
     }
     /**
