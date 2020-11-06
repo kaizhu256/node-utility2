@@ -1528,20 +1528,7 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Browser.js
 // const EventEmitter = require("events");
 // const {TaskQueue} = exports_puppeteer_puppeteer_lib_TaskQueue;
 // const {Events} = exports_puppeteer_puppeteer_lib_Events;
-class Browser extends EventEmitter {
-    /**
-      * @param {!Puppeteer.Connection} connection
-      * @param {!Array<string>} contextIds
-      * @param {boolean} ignoreHTTPSErrors
-      * @param {?Puppeteer.Viewport} defaultViewport
-      * @param {?Puppeteer.ChildProcess} process
-      * @param {function()=} closeCallback
-      */
-    static async create(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback) {
-        const browser = new Browser(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback);
-        await connection.send("Target.setDiscoverTargets", {discover: true});
-        return browser;
-    }
+function Browser(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback) {
     /**
       * @param {!Puppeteer.Connection} connection
       * @param {!Array<string>} contextIds
@@ -1550,8 +1537,7 @@ class Browser extends EventEmitter {
       * @param {?Puppeteer.ChildProcess} process
       * @param {(function():Promise)=} closeCallback
       */
-    constructor(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback) {
-        super();
+        require("stream").EventEmitter.call(this);
         this._ignoreHTTPSErrors = ignoreHTTPSErrors;
         this._defaultViewport = defaultViewport;
         this._process = process;
@@ -1561,200 +1547,219 @@ class Browser extends EventEmitter {
         this._defaultContext = new BrowserContext(this._connection, this, null);
         /** @type {Map<string, BrowserContext>} */
         this._contexts = new Map();
-        for (const contextId of contextIds)
+        contextIds.forEach(function (contextId) {
             this._contexts.set(contextId, new BrowserContext(this._connection, this, contextId));
+        });
         /** @type {Map<string, Target>} */
         this._targets = new Map();
         this._connection.on(Events.Connection.Disconnected, () => this.emit(Events.Browser.Disconnected));
         this._connection.on("Target.targetCreated", this._targetCreated.bind(this));
         this._connection.on("Target.targetDestroyed", this._targetDestroyed.bind(this));
         this._connection.on("Target.targetInfoChanged", this._targetInfoChanged.bind(this));
-    }
-    /**
-      * @return {?Puppeteer.ChildProcess}
-      */
-    process() {
-        return this._process;
-    }
-    /**
-      * @return {!Promise<!BrowserContext>}
-      */
-    async createIncognitoBrowserContext() {
-        const {browserContextId} = await this._connection.send("Target.createBrowserContext");
-        const context = new BrowserContext(this._connection, this, browserContextId);
-        this._contexts.set(browserContextId, context);
-        return context;
-    }
-    /**
-      * @return {!Array<!BrowserContext>}
-      */
-    browserContexts() {
-        return [this._defaultContext, ...Array.from(this._contexts.values())];
-    }
-    /**
-      * @return {!BrowserContext}
-      */
-    defaultBrowserContext() {
-        return this._defaultContext;
-    }
-    /**
-      * @param {?string} contextId
-      */
-    async _disposeContext(contextId) {
-        await this._connection.send("Target.disposeBrowserContext", {browserContextId: contextId || undefined});
-        this._contexts.delete(contextId);
-    }
-    /**
-      * @param {!Protocol.Target.targetCreatedPayload} event
-      */
-    async _targetCreated(event) {
-        const targetInfo = event.targetInfo;
-        const {browserContextId} = targetInfo;
-        const context = (browserContextId && this._contexts.has(browserContextId)) ? this._contexts.get(browserContextId) : this._defaultContext;
-        const target = new Target(targetInfo, context, () => this._connection.createSession(targetInfo), this._ignoreHTTPSErrors, this._defaultViewport, this._screenshotTaskQueue);
-        assert(!this._targets.has(event.targetInfo.targetId), "Target should not exist before targetCreated");
-        this._targets.set(event.targetInfo.targetId, target);
-        if (await target._initializedPromise) {
-            this.emit(Events.Browser.TargetCreated, target);
-            context.emit(Events.BrowserContext.TargetCreated, target);
-        }
-    }
-    /**
-      * @param {{targetId: string}} event
-      */
-    async _targetDestroyed(event) {
-        const target = this._targets.get(event.targetId);
-        target._initializedCallback(false);
-        this._targets.delete(event.targetId);
-        target._closedCallback();
-        if (await target._initializedPromise) {
-            this.emit(Events.Browser.TargetDestroyed, target);
-            target.browserContext().emit(Events.BrowserContext.TargetDestroyed, target);
-        }
-    }
-    /**
-      * @param {!Protocol.Target.targetInfoChangedPayload} event
-      */
-    _targetInfoChanged(event) {
-        const target = this._targets.get(event.targetInfo.targetId);
-        assert(target, "target should exist before targetInfoChanged");
-        const previousURL = target.url();
-        const wasInitialized = target._isInitialized;
-        target._targetInfoChanged(event.targetInfo);
-        if (wasInitialized && previousURL !== target.url()) {
-            this.emit(Events.Browser.TargetChanged, target);
-            target.browserContext().emit(Events.BrowserContext.TargetChanged, target);
-        }
-    }
-    /**
-      * @return {string}
-      */
-    wsEndpoint() {
-        return this._connection.url();
-    }
-    /**
-      * @return {!Promise<!Puppeteer.Page>}
-      */
-    async newPage() {
-        return this._defaultContext.newPage();
-    }
-    /**
-      * @param {?string} contextId
-      * @return {!Promise<!Puppeteer.Page>}
-      */
-    async _createPageInContext(contextId) {
-        const {targetId} = await this._connection.send("Target.createTarget", {url: "about:blank", browserContextId: contextId || undefined});
-        const target = await this._targets.get(targetId);
-        assert(await target._initializedPromise, "Failed to create target for page");
-        const page = await target.page();
-        return page;
-    }
-    /**
-      * @return {!Array<!Target>}
-      */
-    targets() {
-        return Array.from(this._targets.values()).filter(target => target._isInitialized);
-    }
-    /**
-      * @return {!Target}
-      */
-    target() {
-        return this.targets().find(target => target.type() === "browser");
-    }
-    /**
-      * @param {function(!Target):boolean} predicate
-      * @param {{timeout?: number}=} options
-      * @return {!Promise<!Target>}
-      */
-    async waitForTarget(predicate, options = {}) {
-        const {
-            timeout = 30000
-        } = options;
-        const existingTarget = this.targets().find(predicate);
-        if (existingTarget)
-            return existingTarget;
-        let resolve;
-        const targetPromise = new Promise(x => resolve = x);
-        this.on(Events.Browser.TargetCreated, check);
-        this.on(Events.Browser.TargetChanged, check);
-        try {
-            if (!timeout)
-                return await targetPromise;
-            return await helper.waitWithTimeout(targetPromise, "target", timeout);
-        } finally {
-            this.removeListener(Events.Browser.TargetCreated, check);
-            this.removeListener(Events.Browser.TargetChanged, check);
-        }
-        /**
-          * @param {!Target} target
-          */
-        function check(target) {
-            if (predicate(target))
-                resolve(target);
-        }
-    }
-    /**
-      * @return {!Promise<!Array<!Puppeteer.Page>>}
-      */
-    async pages() {
-        const contextPages = await Promise.all(this.browserContexts().map(context => context.pages()));
-        // Flatten array.
-        return contextPages.reduce((acc, x) => acc.concat(x), []);
-    }
-    /**
-      * @return {!Promise<string>}
-      */
-    async version() {
-        const version = await this._getVersion();
-        return version.product;
-    }
-    /**
-      * @return {!Promise<string>}
-      */
-    async userAgent() {
-        const version = await this._getVersion();
-        return version.userAgent;
-    }
-    async close() {
-        await this._closeCallback.call(null);
-        this.disconnect();
-    }
-    disconnect() {
-        this._connection.dispose();
-    }
-    /**
-      * @return {boolean}
-      */
-    isConnected() {
-        return !this._connection._closed;
-    }
-    /**
-      * @return {!Promise<!Object>}
-      */
-    _getVersion() {
-        return this._connection.send("Browser.getVersion");
-    }
 }
+require("util").inherits(Browser, require("stream").EventEmitter);
+Browser.create = async function(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback) {
+    const browser = new Browser(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback);
+    await connection.send("Target.setDiscoverTargets", {discover: true});
+    return browser;
+};
+/**
+  * @return {?Puppeteer.ChildProcess}
+  */
+Browser.prototype.process = function() {
+    return this._process;
+};
+/**
+  * @return {!Promise<!BrowserContext>}
+  */
+Browser.prototype.createIncognitoBrowserContext = async function() {
+    const {browserContextId} = await this._connection.send("Target.createBrowserContext");
+    const context = new BrowserContext(this._connection, this, browserContextId);
+    this._contexts.set(browserContextId, context);
+    return context;
+};
+/**
+  * @return {!Array<!BrowserContext>}
+  */
+Browser.prototype.browserContexts = function() {
+    return [this._defaultContext, ...Array.from(this._contexts.values())];
+};
+/**
+  * @return {!BrowserContext}
+  */
+Browser.prototype.defaultBrowserContext = function() {
+    return this._defaultContext;
+};
+/**
+  * @param {?string} contextId
+  */
+Browser.prototype._disposeContext = async function(contextId) {
+    await this._connection.send("Target.disposeBrowserContext", {browserContextId: contextId || undefined});
+    this._contexts.delete(contextId);
+};
+/**
+  * @param {!Protocol.Target.targetCreatedPayload} event
+  */
+Browser.prototype._targetCreated = async function(event) {
+    const targetInfo = event.targetInfo;
+    const {browserContextId} = targetInfo;
+    const context = (browserContextId && this._contexts.has(browserContextId)) ? this._contexts.get(browserContextId) : this._defaultContext;
+    const target = new Target(targetInfo, context, () => this._connection.createSession(targetInfo), this._ignoreHTTPSErrors, this._defaultViewport, this._screenshotTaskQueue);
+    assert(!this._targets.has(event.targetInfo.targetId), "Target should not exist before targetCreated");
+    this._targets.set(event.targetInfo.targetId, target);
+    if (await target._initializedPromise) {
+        this.emit(Events.Browser.TargetCreated, target);
+        context.emit(Events.BrowserContext.TargetCreated, target);
+    }
+};
+/**
+  * @param {{targetId: string}} event
+  */
+Browser.prototype._targetDestroyed = async function(event) {
+    const target = this._targets.get(event.targetId);
+    target._initializedCallback(false);
+    this._targets.delete(event.targetId);
+    target._closedCallback();
+    if (await target._initializedPromise) {
+        this.emit(Events.Browser.TargetDestroyed, target);
+        target.browserContext().emit(Events.BrowserContext.TargetDestroyed, target);
+    }
+};
+/**
+  * @param {!Protocol.Target.targetInfoChangedPayload} event
+  */
+Browser.prototype._targetInfoChanged = function(event) {
+    const target = this._targets.get(event.targetInfo.targetId);
+    assert(target, "target should exist before targetInfoChanged");
+    const previousURL = target.url();
+    const wasInitialized = target._isInitialized;
+    target._targetInfoChanged(event.targetInfo);
+    if (wasInitialized && previousURL !== target.url()) {
+        this.emit(Events.Browser.TargetChanged, target);
+        target.browserContext().emit(Events.BrowserContext.TargetChanged, target);
+    }
+};
+/**
+  * @return {string}
+  */
+Browser.prototype.wsEndpoint = function() {
+    return this._connection.url();
+};
+/**
+  * @return {!Promise<!Puppeteer.Page>}
+  */
+Browser.prototype.newPage = async function() {
+    return this._defaultContext.newPage();
+};
+/**
+  * @param {?string} contextId
+  * @return {!Promise<!Puppeteer.Page>}
+  */
+Browser.prototype._createPageInContext = async function(contextId) {
+    const {targetId} = await this._connection.send("Target.createTarget", {url: "about:blank", browserContextId: contextId || undefined});
+    const target = await this._targets.get(targetId);
+    assert(await target._initializedPromise, "Failed to create target for page");
+    const page = await target.page();
+    return page;
+};
+/**
+  * @return {!Array<!Target>}
+  */
+Browser.prototype.targets = function() {
+    return Array.from(this._targets.values()).filter(function (target) {
+        return target._isInitialized;
+    });
+};
+/**
+  * @return {!Target}
+  */
+Browser.prototype.target = function() {
+    return this.targets().find(function (target) {
+        return target.type() === "browser";
+    });
+};
+/**
+  * @param {function(!Target):boolean} predicate
+  * @param {{timeout?: number}=} options
+  * @return {!Promise<!Target>}
+  */
+Browser.prototype.waitForTarget = async function(predicate, options = {}) {
+    const {
+        timeout = 30000
+    } = options;
+    const existingTarget = this.targets().find(predicate);
+    if (existingTarget) {
+        return existingTarget;
+    }
+    let resolve;
+    const targetPromise = new Promise(function (x) {
+        resolve = x;
+        return resolve;
+    });
+    this.on(Events.Browser.TargetCreated, check);
+    this.on(Events.Browser.TargetChanged, check);
+    try {
+        if (!timeout) {
+            return await targetPromise;
+        }
+        return await helper.waitWithTimeout(targetPromise, "target", timeout);
+    } catch (ignore) {
+    } finally {
+        this.removeListener(Events.Browser.TargetCreated, check);
+        this.removeListener(Events.Browser.TargetChanged, check);
+    }
+    /**
+      * @param {!Target} target
+      */
+    function check(target) {
+        if (predicate(target)) {
+            resolve(target);
+        }
+    }
+};
+/**
+  * @return {!Promise<!Array<!Puppeteer.Page>>}
+  */
+Browser.prototype.pages = async function() {
+    const contextPages = await Promise.all(this.browserContexts().map(function (context) {
+        return context.pages();
+    }));
+    // Flatten array.
+    return contextPages.reduce(function (acc, x) { return acc.concat(x); }, []);
+};
+/**
+  * @return {!Promise<string>}
+  */
+Browser.prototype.version = async function() {
+    const version = await this._getVersion();
+    return version.product;
+};
+/**
+  * @return {!Promise<string>}
+  */
+Browser.prototype.userAgent = async function() {
+    const version = await this._getVersion();
+    return version.userAgent;
+};
+Browser.prototype.close = async function() {
+    await this._closeCallback.call(null);
+    this.disconnect();
+};
+Browser.prototype.disconnect = function() {
+    this._connection.dispose();
+};
+/**
+  * @return {boolean}
+  */
+Browser.prototype.isConnected = function() {
+    return !this._connection._closed;
+};
+/**
+  * @return {!Promise<!Object>}
+  */
+Browser.prototype._getVersion = function() {
+    return this._connection.send("Browser.getVersion");
+};
 class BrowserContext extends EventEmitter {
     /**
       * @param {!Puppeteer.Connection} connection
@@ -1771,7 +1776,7 @@ class BrowserContext extends EventEmitter {
       * @return {!Array<!Target>} target
       */
     targets() {
-        return this._browser.targets().filter(target => target.browserContext() === this);
+        return this._browser.targets().filter(function (target) {return target.browserContext() === this; });
     }
     /**
       * @param {function(!Target):boolean} predicate
@@ -1779,7 +1784,7 @@ class BrowserContext extends EventEmitter {
       * @return {!Promise<!Target>}
       */
     waitForTarget(predicate, options) {
-        return this._browser.waitForTarget(target => target.browserContext() === this && predicate(target), options);
+        return this._browser.waitForTarget(function (target) { return target.browserContext() === this && predicate(target) }, options);
     }
     /**
       * @return {!Promise<!Array<!Puppeteer.Page>>}
@@ -1787,10 +1792,10 @@ class BrowserContext extends EventEmitter {
     async pages() {
         const pages = await Promise.all(
                 this.targets()
-                        .filter(target => target.type() === "page")
-                        .map(target => target.page())
+                        .filter(function (target) { return target.type() === "page"; })
+                        .map(function (target) { return target.page(); })
         );
-        return pages.filter(page => !!page);
+        return pages.filter(function (page) { return !!page; });
     }
     /**
       * @return {boolean}
@@ -1822,7 +1827,7 @@ class BrowserContext extends EventEmitter {
             // chrome-specific permissions we have.
             ["midi-sysex", "midiSysex"],
         ]);
-        permissions = permissions.map(permission => {
+        permissions = permissions.map(function (permission) {
             const protocolPermission = webPermissionToProtocol.get(permission);
             if (!protocolPermission)
                 throw new Error("Unknown permission: " + permission);
@@ -1849,7 +1854,7 @@ class BrowserContext extends EventEmitter {
         assert(this._id, "Non-incognito profiles cannot be closed!");
         await this._browser._disposeContext(this._id);
     }
-}
+};
 /* jslint ignore:start */
 exports_puppeteer_puppeteer_lib_Browser = {Browser, BrowserContext};
 /*
