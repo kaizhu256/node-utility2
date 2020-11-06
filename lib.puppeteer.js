@@ -4016,8 +4016,9 @@ class NetworkManager extends EventEmitter {
     }
     async initialize() {
         await this._client.send("Network.enable");
-        if (this._ignoreHTTPSErrors)
+        if (this._ignoreHTTPSErrors) {
             await this._client.send("Security.setIgnoreCertificateErrors", {ignore: true});
+        }
     }
     /**
       * @param {!Puppeteer.FrameManager} frameManager
@@ -4054,8 +4055,9 @@ class NetworkManager extends EventEmitter {
       * @param {boolean} value
       */
     async setOfflineMode(value) {
-        if (this._offline === value)
+        if (this._offline === value) {
             return;
+        }
         this._offline = value;
         await this._client.send("Network.emulateNetworkConditions", {
             offline: this._offline,
@@ -4087,8 +4089,9 @@ class NetworkManager extends EventEmitter {
     }
     async _updateProtocolRequestInterception() {
         const enabled = this._userRequestInterceptionEnabled || !!this._credentials;
-        if (enabled === this._protocolRequestInterceptionEnabled)
+        if (enabled === this._protocolRequestInterceptionEnabled) {
             return;
+        }
         this._protocolRequestInterceptionEnabled = enabled;
         if (enabled) {
             await Promise.all([
@@ -4189,8 +4192,9 @@ class NetworkManager extends EventEmitter {
       */
     _onRequestServedFromCache(event) {
         const request = this._requestIdToRequest.get(event.requestId);
-        if (request)
+        if (request) {
             request._fromMemoryCache = true;
+        }
     }
     /**
       * @param {!Request} request
@@ -4212,8 +4216,9 @@ class NetworkManager extends EventEmitter {
     _onResponseReceived(event) {
         const request = this._requestIdToRequest.get(event.requestId);
         // FileUpload sends a response without a matching request.
-        if (!request)
+        if (!request) {
             return;
+        }
         const response = new Response(this._client, request, event.response);
         request._response = response;
         this.emit(Events.NetworkManager.Response, response);
@@ -4225,12 +4230,14 @@ class NetworkManager extends EventEmitter {
         const request = this._requestIdToRequest.get(event.requestId);
         // For certain requestIds we never receive requestWillBeSent event.
         // @see https://crbug.com/750469
-        if (!request)
+        if (!request) {
             return;
+        }
         // Under certain conditions we never get the Network.responseReceived
         // event from protocol. @see https://crbug.com/883475
-        if (request.response())
+        if (request.response()) {
             request.response()._bodyLoadedPromiseFulfill.call(null);
+        }
         this._requestIdToRequest.delete(request._requestId);
         this._attemptedAuthentications.delete(request._interceptionId);
         this.emit(Events.NetworkManager.RequestFinished, request);
@@ -4242,12 +4249,14 @@ class NetworkManager extends EventEmitter {
         const request = this._requestIdToRequest.get(event.requestId);
         // For certain requestIds we never receive requestWillBeSent event.
         // @see https://crbug.com/750469
-        if (!request)
+        if (!request) {
             return;
+        }
         request._failureText = event.errorText;
         const response = request.response();
-        if (response)
+        if (response) {
             response._bodyLoadedPromiseFulfill.call(null);
+        }
         this._requestIdToRequest.delete(request._requestId);
         this._attemptedAuthentications.delete(request._interceptionId);
         this.emit(Events.NetworkManager.RequestFailed, request);
@@ -4340,8 +4349,9 @@ class Request {
       * @return {?{errorText: string}}
       */
     failure() {
-        if (!this._failureText)
+        if (!this._failureText) {
             return null;
+        }
         return {
             errorText: this._failureText
         };
@@ -4351,8 +4361,9 @@ class Request {
       */
     async continue(overrides = {}) {
         // Request interception is not supported for data: urls.
-        if (this._url.startsWith("data:"))
+        if (this._url.startsWith("data:")) {
             return;
+        }
         assert(this._allowInterception, "Request Interception is not enabled!");
         assert(!this._interceptionHandled, "Request is already handled!");
         const {
@@ -4379,8 +4390,9 @@ class Request {
       */
     async respond(response) {
         // Mocking responses for dataURL requests is not currently supported.
-        if (this._url.startsWith("data:"))
+        if (this._url.startsWith("data:")) {
             return;
+        }
         assert(this._allowInterception, "Request Interception is not enabled!");
         assert(!this._interceptionHandled, "Request is already handled!");
         this._interceptionHandled = true;
@@ -4391,10 +4403,12 @@ class Request {
             for (const header of Object.keys(response.headers))
                 responseHeaders[header.toLowerCase()] = response.headers[header];
         }
-        if (response.contentType)
+        if (response.contentType) {
             responseHeaders["content-type"] = response.contentType;
-        if (responseBody && !("content-length" in responseHeaders))
+        }
+        if (responseBody && !("content-length" in responseHeaders)) {
             responseHeaders["content-length"] = String(Buffer.byteLength(responseBody));
+        }
         await this._client.send("Fetch.fulfillRequest", {
             requestId: this._interceptionId,
             responseCode: response.status || 200,
@@ -4412,8 +4426,9 @@ class Request {
       */
     async abort(errorCode = "failed") {
         // Request interception is not supported for data: urls.
-        if (this._url.startsWith("data:"))
+        if (this._url.startsWith("data:")) {
             return;
+        }
         const errorReason = errorReasons[errorCode];
         assert(errorReason, "Unknown error code: " + errorCode);
         assert(this._allowInterception, "Request Interception is not enabled!");
@@ -4520,8 +4535,9 @@ class Response {
     buffer() {
         if (!this._contentPromise) {
             this._contentPromise = this._bodyLoadedPromise.then(async error => {
-                if (error)
+                if (error) {
                     throw error;
+                }
                 const response = await this._client.send("Network.getResponseBody", {
                     requestId: this._request._requestId
                 });
@@ -4732,8 +4748,9 @@ class Page extends EventEmitter {
     static async create(client, target, ignoreHTTPSErrors, defaultViewport, screenshotTaskQueue) {
         const page = new Page(client, target, ignoreHTTPSErrors, screenshotTaskQueue);
         await page._initialize();
-        if (defaultViewport)
+        if (defaultViewport) {
             await page.setViewport(defaultViewport);
+        }
         return page;
     }
     /**
@@ -4775,8 +4792,9 @@ class Page extends EventEmitter {
         });
         client.on("Target.detachedFromTarget", event => {
             const worker = this._workers.get(event.sessionId);
-            if (!worker)
+            if (!worker) {
                 return;
+            }
             this.emit(Events.Page.WorkerDestroyed, worker);
             this._workers.delete(event.sessionId);
         });
@@ -4835,8 +4853,9 @@ class Page extends EventEmitter {
       * @return !Promise<!FileChooser>}
       */
     async waitForFileChooser(options = {}) {
-        if (this._fileChooserInterceptionIsDisabled)
+        if (this._fileChooserInterceptionIsDisabled) {
             throw new Error("File chooser handling does not work with multiple connections to the same page");
+        }
         const {
             timeout = this._timeoutSettings.timeout(),
         } = options;
@@ -4853,12 +4872,15 @@ class Page extends EventEmitter {
       */
     async setGeolocation(options) {
         const { longitude, latitude, accuracy = 0} = options;
-        if (longitude < -180 || longitude > 180)
+        if (longitude < -180 || longitude > 180) {
             throw new Error(`Invalid longitude "${longitude}": precondition -180 <= LONGITUDE <= 180 failed.`);
-        if (latitude < -90 || latitude > 90)
+        }
+        if (latitude < -90 || latitude > 90) {
             throw new Error(`Invalid latitude "${latitude}": precondition -90 <= LATITUDE <= 90 failed.`);
-        if (accuracy < 0)
+        }
+        if (accuracy < 0) {
             throw new Error(`Invalid accuracy "${accuracy}": precondition 0 <= ACCURACY failed.`);
+        }
         await this._client.send("Emulation.setGeolocationOverride", {longitude, latitude, accuracy});
     }
     /**
@@ -4887,10 +4909,12 @@ class Page extends EventEmitter {
       */
     _onLogEntryAdded(event) {
         const {level, text, args, source, url, lineNumber} = event.entry;
-        if (args)
+        if (args) {
             args.map(arg => helper.releaseObject(this._client, arg));
-        if (source !== "worker")
+        }
+        if (source !== "worker") {
             this.emit(Events.Page.Console, new ConsoleMessage(level, text, [], {url, lineNumber}));
+        }
     }
     /**
       * @return {!Puppeteer.Frame}
