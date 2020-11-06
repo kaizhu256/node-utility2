@@ -911,7 +911,7 @@ utility2-comment -->\n\
      * this function will run a failed error demo\n\
      */\n\
         // hack-jslint\n\
-        window.utility2.nop(opt);\n\
+        window.utility2.noop(opt);\n\
         onError(new Error("this is a failed error demo"));\n\
     };\n\
 \n\
