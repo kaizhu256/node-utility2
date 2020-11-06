@@ -1527,7 +1527,20 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Browser.js
 // const EventEmitter = require("events");
 // const {TaskQueue} = exports_puppeteer_puppeteer_lib_TaskQueue;
 // const {Events} = exports_puppeteer_puppeteer_lib_Events;
-function Browser(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback) {
+class Browser extends EventEmitter {
+    /**
+      * @param {!Puppeteer.Connection} connection
+      * @param {!Array<string>} contextIds
+      * @param {boolean} ignoreHTTPSErrors
+      * @param {?Puppeteer.Viewport} defaultViewport
+      * @param {?Puppeteer.ChildProcess} process
+      * @param {function()=} closeCallback
+      */
+    static async create(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback) {
+        const browser = new Browser(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback);
+        await connection.send("Target.setDiscoverTargets", {discover: true});
+        return browser;
+    }
     /**
       * @param {!Puppeteer.Connection} connection
       * @param {!Array<string>} contextIds
@@ -1536,7 +1549,8 @@ function Browser(connection, contextIds, ignoreHTTPSErrors, defaultViewport, pro
       * @param {?Puppeteer.ChildProcess} process
       * @param {(function():Promise)=} closeCallback
       */
-        require("stream").EventEmitter.call(this);
+    constructor(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback) {
+        super();
         this._ignoreHTTPSErrors = ignoreHTTPSErrors;
         this._defaultViewport = defaultViewport;
         this._process = process;
@@ -1546,219 +1560,200 @@ function Browser(connection, contextIds, ignoreHTTPSErrors, defaultViewport, pro
         this._defaultContext = new BrowserContext(this._connection, this, null);
         /** @type {Map<string, BrowserContext>} */
         this._contexts = new Map();
-        contextIds.forEach(function (contextId) {
+        for (const contextId of contextIds)
             this._contexts.set(contextId, new BrowserContext(this._connection, this, contextId));
-        });
         /** @type {Map<string, Target>} */
         this._targets = new Map();
         this._connection.on(Events.Connection.Disconnected, () => this.emit(Events.Browser.Disconnected));
         this._connection.on("Target.targetCreated", this._targetCreated.bind(this));
         this._connection.on("Target.targetDestroyed", this._targetDestroyed.bind(this));
         this._connection.on("Target.targetInfoChanged", this._targetInfoChanged.bind(this));
-}
-require("util").inherits(Browser, require("stream").EventEmitter);
-Browser.create = async function(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback) {
-    const browser = new Browser(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback);
-    await connection.send("Target.setDiscoverTargets", {discover: true});
-    return browser;
-};
-/**
-  * @return {?Puppeteer.ChildProcess}
-  */
-Browser.prototype.process = function() {
-    return this._process;
-};
-/**
-  * @return {!Promise<!BrowserContext>}
-  */
-Browser.prototype.createIncognitoBrowserContext = async function() {
-    const {browserContextId} = await this._connection.send("Target.createBrowserContext");
-    const context = new BrowserContext(this._connection, this, browserContextId);
-    this._contexts.set(browserContextId, context);
-    return context;
-};
-/**
-  * @return {!Array<!BrowserContext>}
-  */
-Browser.prototype.browserContexts = function() {
-    return [this._defaultContext, ...Array.from(this._contexts.values())];
-};
-/**
-  * @return {!BrowserContext}
-  */
-Browser.prototype.defaultBrowserContext = function() {
-    return this._defaultContext;
-};
-/**
-  * @param {?string} contextId
-  */
-Browser.prototype._disposeContext = async function(contextId) {
-    await this._connection.send("Target.disposeBrowserContext", {browserContextId: contextId || undefined});
-    this._contexts.delete(contextId);
-};
-/**
-  * @param {!Protocol.Target.targetCreatedPayload} event
-  */
-Browser.prototype._targetCreated = async function(event) {
-    const targetInfo = event.targetInfo;
-    const {browserContextId} = targetInfo;
-    const context = (browserContextId && this._contexts.has(browserContextId)) ? this._contexts.get(browserContextId) : this._defaultContext;
-    const target = new Target(targetInfo, context, () => this._connection.createSession(targetInfo), this._ignoreHTTPSErrors, this._defaultViewport, this._screenshotTaskQueue);
-    assert(!this._targets.has(event.targetInfo.targetId), "Target should not exist before targetCreated");
-    this._targets.set(event.targetInfo.targetId, target);
-    if (await target._initializedPromise) {
-        this.emit(Events.Browser.TargetCreated, target);
-        context.emit(Events.BrowserContext.TargetCreated, target);
-    }
-};
-/**
-  * @param {{targetId: string}} event
-  */
-Browser.prototype._targetDestroyed = async function(event) {
-    const target = this._targets.get(event.targetId);
-    target._initializedCallback(false);
-    this._targets.delete(event.targetId);
-    target._closedCallback();
-    if (await target._initializedPromise) {
-        this.emit(Events.Browser.TargetDestroyed, target);
-        target.browserContext().emit(Events.BrowserContext.TargetDestroyed, target);
-    }
-};
-/**
-  * @param {!Protocol.Target.targetInfoChangedPayload} event
-  */
-Browser.prototype._targetInfoChanged = function(event) {
-    const target = this._targets.get(event.targetInfo.targetId);
-    assert(target, "target should exist before targetInfoChanged");
-    const previousURL = target.url();
-    const wasInitialized = target._isInitialized;
-    target._targetInfoChanged(event.targetInfo);
-    if (wasInitialized && previousURL !== target.url()) {
-        this.emit(Events.Browser.TargetChanged, target);
-        target.browserContext().emit(Events.BrowserContext.TargetChanged, target);
-    }
-};
-/**
-  * @return {string}
-  */
-Browser.prototype.wsEndpoint = function() {
-    return this._connection.url();
-};
-/**
-  * @return {!Promise<!Puppeteer.Page>}
-  */
-Browser.prototype.newPage = async function() {
-    return this._defaultContext.newPage();
-};
-/**
-  * @param {?string} contextId
-  * @return {!Promise<!Puppeteer.Page>}
-  */
-Browser.prototype._createPageInContext = async function(contextId) {
-    const {targetId} = await this._connection.send("Target.createTarget", {url: "about:blank", browserContextId: contextId || undefined});
-    const target = await this._targets.get(targetId);
-    assert(await target._initializedPromise, "Failed to create target for page");
-    const page = await target.page();
-    return page;
-};
-/**
-  * @return {!Array<!Target>}
-  */
-Browser.prototype.targets = function() {
-    return Array.from(this._targets.values()).filter(function (target) {
-        return target._isInitialized;
-    });
-};
-/**
-  * @return {!Target}
-  */
-Browser.prototype.target = function() {
-    return this.targets().find(function (target) {
-        return target.type() === "browser";
-    });
-};
-/**
-  * @param {function(!Target):boolean} predicate
-  * @param {{timeout?: number}=} options
-  * @return {!Promise<!Target>}
-  */
-Browser.prototype.waitForTarget = async function(predicate, options = {}) {
-    const {
-        timeout = 30000
-    } = options;
-    const existingTarget = this.targets().find(predicate);
-    if (existingTarget) {
-        return existingTarget;
-    }
-    let resolve;
-    const targetPromise = new Promise(function (x) {
-        resolve = x;
-        return resolve;
-    });
-    this.on(Events.Browser.TargetCreated, check);
-    this.on(Events.Browser.TargetChanged, check);
-    try {
-        if (!timeout) {
-            return await targetPromise;
-        }
-        return await helper.waitWithTimeout(targetPromise, "target", timeout);
-    } catch (ignore) {
-    } finally {
-        this.removeListener(Events.Browser.TargetCreated, check);
-        this.removeListener(Events.Browser.TargetChanged, check);
     }
     /**
-      * @param {!Target} target
+      * @return {?Puppeteer.ChildProcess}
       */
-    function check(target) {
-        if (predicate(target)) {
-            resolve(target);
+    process() {
+        return this._process;
+    }
+    /**
+      * @return {!Promise<!BrowserContext>}
+      */
+    async createIncognitoBrowserContext() {
+        const {browserContextId} = await this._connection.send("Target.createBrowserContext");
+        const context = new BrowserContext(this._connection, this, browserContextId);
+        this._contexts.set(browserContextId, context);
+        return context;
+    }
+    /**
+      * @return {!Array<!BrowserContext>}
+      */
+    browserContexts() {
+        return [this._defaultContext, ...Array.from(this._contexts.values())];
+    }
+    /**
+      * @return {!BrowserContext}
+      */
+    defaultBrowserContext() {
+        return this._defaultContext;
+    }
+    /**
+      * @param {?string} contextId
+      */
+    async _disposeContext(contextId) {
+        await this._connection.send("Target.disposeBrowserContext", {browserContextId: contextId || undefined});
+        this._contexts.delete(contextId);
+    }
+    /**
+      * @param {!Protocol.Target.targetCreatedPayload} event
+      */
+    async _targetCreated(event) {
+        const targetInfo = event.targetInfo;
+        const {browserContextId} = targetInfo;
+        const context = (browserContextId && this._contexts.has(browserContextId)) ? this._contexts.get(browserContextId) : this._defaultContext;
+        const target = new Target(targetInfo, context, () => this._connection.createSession(targetInfo), this._ignoreHTTPSErrors, this._defaultViewport, this._screenshotTaskQueue);
+        assert(!this._targets.has(event.targetInfo.targetId), "Target should not exist before targetCreated");
+        this._targets.set(event.targetInfo.targetId, target);
+        if (await target._initializedPromise) {
+            this.emit(Events.Browser.TargetCreated, target);
+            context.emit(Events.BrowserContext.TargetCreated, target);
         }
     }
-};
-/**
-  * @return {!Promise<!Array<!Puppeteer.Page>>}
-  */
-Browser.prototype.pages = async function() {
-    const contextPages = await Promise.all(this.browserContexts().map(function (context) {
-        return context.pages();
-    }));
-    // Flatten array.
-    return contextPages.reduce(function (acc, x) { return acc.concat(x); }, []);
-};
-/**
-  * @return {!Promise<string>}
-  */
-Browser.prototype.version = async function() {
-    const version = await this._getVersion();
-    return version.product;
-};
-/**
-  * @return {!Promise<string>}
-  */
-Browser.prototype.userAgent = async function() {
-    const version = await this._getVersion();
-    return version.userAgent;
-};
-Browser.prototype.close = async function() {
-    await this._closeCallback.call(null);
-    this.disconnect();
-};
-Browser.prototype.disconnect = function() {
-    this._connection.dispose();
-};
-/**
-  * @return {boolean}
-  */
-Browser.prototype.isConnected = function() {
-    return !this._connection._closed;
-};
-/**
-  * @return {!Promise<!Object>}
-  */
-Browser.prototype._getVersion = function() {
-    return this._connection.send("Browser.getVersion");
-};
+    /**
+      * @param {{targetId: string}} event
+      */
+    async _targetDestroyed(event) {
+        const target = this._targets.get(event.targetId);
+        target._initializedCallback(false);
+        this._targets.delete(event.targetId);
+        target._closedCallback();
+        if (await target._initializedPromise) {
+            this.emit(Events.Browser.TargetDestroyed, target);
+            target.browserContext().emit(Events.BrowserContext.TargetDestroyed, target);
+        }
+    }
+    /**
+      * @param {!Protocol.Target.targetInfoChangedPayload} event
+      */
+    _targetInfoChanged(event) {
+        const target = this._targets.get(event.targetInfo.targetId);
+        assert(target, "target should exist before targetInfoChanged");
+        const previousURL = target.url();
+        const wasInitialized = target._isInitialized;
+        target._targetInfoChanged(event.targetInfo);
+        if (wasInitialized && previousURL !== target.url()) {
+            this.emit(Events.Browser.TargetChanged, target);
+            target.browserContext().emit(Events.BrowserContext.TargetChanged, target);
+        }
+    }
+    /**
+      * @return {string}
+      */
+    wsEndpoint() {
+        return this._connection.url();
+    }
+    /**
+      * @return {!Promise<!Puppeteer.Page>}
+      */
+    async newPage() {
+        return this._defaultContext.newPage();
+    }
+    /**
+      * @param {?string} contextId
+      * @return {!Promise<!Puppeteer.Page>}
+      */
+    async _createPageInContext(contextId) {
+        const {targetId} = await this._connection.send("Target.createTarget", {url: "about:blank", browserContextId: contextId || undefined});
+        const target = await this._targets.get(targetId);
+        assert(await target._initializedPromise, "Failed to create target for page");
+        const page = await target.page();
+        return page;
+    }
+    /**
+      * @return {!Array<!Target>}
+      */
+    targets() {
+        return Array.from(this._targets.values()).filter(target => target._isInitialized);
+    }
+    /**
+      * @return {!Target}
+      */
+    target() {
+        return this.targets().find(target => target.type() === "browser");
+    }
+    /**
+      * @param {function(!Target):boolean} predicate
+      * @param {{timeout?: number}=} options
+      * @return {!Promise<!Target>}
+      */
+    async waitForTarget(predicate, options = {}) {
+        const {
+            timeout = 30000
+        } = options;
+        const existingTarget = this.targets().find(predicate);
+        if (existingTarget)
+            return existingTarget;
+        let resolve;
+        const targetPromise = new Promise(x => resolve = x);
+        this.on(Events.Browser.TargetCreated, check);
+        this.on(Events.Browser.TargetChanged, check);
+        try {
+            if (!timeout)
+                return await targetPromise;
+            return await helper.waitWithTimeout(targetPromise, "target", timeout);
+        } finally {
+            this.removeListener(Events.Browser.TargetCreated, check);
+            this.removeListener(Events.Browser.TargetChanged, check);
+        }
+        /**
+          * @param {!Target} target
+          */
+        function check(target) {
+            if (predicate(target))
+                resolve(target);
+        }
+    }
+    /**
+      * @return {!Promise<!Array<!Puppeteer.Page>>}
+      */
+    async pages() {
+        const contextPages = await Promise.all(this.browserContexts().map(context => context.pages()));
+        // Flatten array.
+        return contextPages.reduce((acc, x) => acc.concat(x), []);
+    }
+    /**
+      * @return {!Promise<string>}
+      */
+    async version() {
+        const version = await this._getVersion();
+        return version.product;
+    }
+    /**
+      * @return {!Promise<string>}
+      */
+    async userAgent() {
+        const version = await this._getVersion();
+        return version.userAgent;
+    }
+    async close() {
+        await this._closeCallback.call(null);
+        this.disconnect();
+    }
+    disconnect() {
+        this._connection.dispose();
+    }
+    /**
+      * @return {boolean}
+      */
+    isConnected() {
+        return !this._connection._closed;
+    }
+    /**
+      * @return {!Promise<!Object>}
+      */
+    _getVersion() {
+        return this._connection.send("Browser.getVersion");
+    }
+}
 class BrowserContext extends EventEmitter {
     /**
       * @param {!Puppeteer.Connection} connection
@@ -1775,7 +1770,7 @@ class BrowserContext extends EventEmitter {
       * @return {!Array<!Target>} target
       */
     targets() {
-        return this._browser.targets().filter(function (target) {return target.browserContext() === this; });
+        return this._browser.targets().filter(target => target.browserContext() === this);
     }
     /**
       * @param {function(!Target):boolean} predicate
@@ -1783,7 +1778,7 @@ class BrowserContext extends EventEmitter {
       * @return {!Promise<!Target>}
       */
     waitForTarget(predicate, options) {
-        return this._browser.waitForTarget(function (target) { return target.browserContext() === this && predicate(target) }, options);
+        return this._browser.waitForTarget(target => target.browserContext() === this && predicate(target), options);
     }
     /**
       * @return {!Promise<!Array<!Puppeteer.Page>>}
@@ -1791,10 +1786,10 @@ class BrowserContext extends EventEmitter {
     async pages() {
         const pages = await Promise.all(
                 this.targets()
-                        .filter(function (target) { return target.type() === "page"; })
-                        .map(function (target) { return target.page(); })
+                        .filter(target => target.type() === "page")
+                        .map(target => target.page())
         );
-        return pages.filter(function (page) { return !!page; });
+        return pages.filter(page => !!page);
     }
     /**
       * @return {boolean}
@@ -1826,7 +1821,7 @@ class BrowserContext extends EventEmitter {
             // chrome-specific permissions we have.
             ["midi-sysex", "midiSysex"],
         ]);
-        permissions = permissions.map(function (permission) {
+        permissions = permissions.map(permission => {
             const protocolPermission = webPermissionToProtocol.get(permission);
             if (!protocolPermission)
                 throw new Error("Unknown permission: " + permission);
@@ -1853,9 +1848,8 @@ class BrowserContext extends EventEmitter {
         assert(this._id, "Non-incognito profiles cannot be closed!");
         await this._browser._disposeContext(this._id);
     }
-};
+}
 exports_puppeteer_puppeteer_lib_Browser = {Browser, BrowserContext};
-/* jslint ignore:end */
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
 */
@@ -1878,13 +1872,14 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
 // const {Events} = exports_puppeteer_puppeteer_lib_Events;
 // const debugProtocol = require("debug")("puppeteer:protocol");
 // const EventEmitter = require("events");
+class Connection extends EventEmitter {
     /**
       * @param {string} url
       * @param {!Puppeteer.ConnectionTransport} transport
       * @param {number=} delay
       */
-    function Connection(url, ws, delay = 0) {
-        require("stream").EventEmitter.call(this);
+    constructor(url, ws, delay = 0) {
+        super();
         this._url = url;
         this._lastId = 0;
         /** @type {!Map<number, {resolve: function, reject: function, error: !Error, method: string}>}*/
@@ -1892,15 +1887,13 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
         this._delay = delay;
         this._ws = ws;
         let ws2 = this._ws;
-        ws2.addEventListener("message", function (event) {
-            if (this.onmessage) {
+        ws2.addEventListener("message", event => {
+            if (this.onmessage)
                 this.onmessage.call(null, event.data);
-            }
         });
-        ws2.addEventListener("close", function (event) {
-            if (this.onclose) {
+        ws2.addEventListener("close", event => {
+            if (this.onclose)
                 this.onclose.call(null);
-            }
         });
         // Silently ignore all errors - we don't know what to do with them.
         ws2.addEventListener("error", local.noop);
@@ -1910,60 +1903,55 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
         this._sessions = new Map();
         this._closed = false;
     }
-require("util").inherits(Connection, require("stream").EventEmitter);
     /**
       * @param {!CDPSession} session
       * @return {!Connection}
       */
-    Connection.fromSession = function(session) {
+    static fromSession(session) {
         return session._connection;
-    };
+    }
     /**
       * @param {string} sessionId
       * @return {?CDPSession}
       */
-    Connection.prototype.session = function(sessionId) {
+    session(sessionId) {
         return this._sessions.get(sessionId) || null;
-    };
+    }
     /**
       * @return {string}
       */
-    Connection.prototype.url = function() {
+    url() {
         return this._url;
-    };
+    }
     /**
       * @param {string} method
       * @param {!Object=} params
       * @return {!Promise<?Object>}
       */
-    Connection.prototype.send = function(method, params = {}) {
-        const id = this._rawSend({
-            method, params});
+    send(method, params = {}) {
+        const id = this._rawSend({method, params});
         return new Promise((resolve, reject) => {
-            this._callbacks.set(id, {
-                resolve, reject, error: new Error(), method});
+            this._callbacks.set(id, {resolve, reject, error: new Error(), method});
         });
-    };
+    }
     /**
       * @param {*} message
       * @return {number}
       */
-    Connection.prototype._rawSend = function(message) {
+    _rawSend(message) {
         const id = ++this._lastId;
         message = JSON.stringify(Object.assign({}, message, {id}));
         debugProtocol("SEND ► " + message);
         let ws2 = this._ws;
         ws2.send(message);
         return id;
-    };
+    }
     /**
       * @param {string} message
       */
-    Connection.prototype._onMessage = async function(message) {
-        if (this._delay) {
-            await new Promise(function (f) {
-                return setTimeout(f, this._delay); });
-        }
+    async _onMessage(message) {
+        if (this._delay)
+            await new Promise(f => setTimeout(f, this._delay));
         debugProtocol("◀ RECV " + message);
         const object = JSON.parse(message);
         if (object.method === "Target.attachedToTarget") {
@@ -1979,121 +1967,106 @@ require("util").inherits(Connection, require("stream").EventEmitter);
         }
         if (object.sessionId) {
             const session = this._sessions.get(object.sessionId);
-            if (session) {
+            if (session)
                 session._onMessage(object);
-            }
         } else if (object.id) {
             const callback = this._callbacks.get(object.id);
             // Callbacks could be all rejected if someone has called `.dispose()`.
             if (callback) {
                 this._callbacks.delete(object.id);
-                if (object.error) {
+                if (object.error)
                     callback.reject(createProtocolError(callback.error, callback.method, object));
-                }
-                else {
+                else
                     callback.resolve(object.result);
-                }
             }
         } else {
             this.emit(object.method, object.params);
         }
-    };
-    Connection.prototype._onClose = function () {
-        if (this._closed) {
+    }
+    _onClose() {
+        if (this._closed)
             return;
-        }
         this._closed = true;
         this.onmessage = null;
         this.onclose = null;
-        this._callbacks.values().forEach(function (callback) {
+        for (const callback of this._callbacks.values())
             callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
-        });
         this._callbacks.clear();
-        this._sessions.values().forEach(function (session) {
+        for (const session of this._sessions.values())
             session._onClosed();
-        });
         this._sessions.clear();
         this.emit(Events.Connection.Disconnected);
-    };
-    Connection.prototype.dispose = function () {
+    }
+    dispose() {
         this._onClose();
         let ws2 = this._ws;
         ws2.close();
-    };
+    }
     /**
       * @param {Protocol.Target.TargetInfo} targetInfo
       * @return {!Promise<!CDPSession>}
       */
-    Connection.prototype.createSession = async function(targetInfo) {
-        const {
-            sessionId} = await this.send("Target.attachToTarget", {
-                targetId: targetInfo.targetId, flatten: true});
+    async createSession(targetInfo) {
+        const {sessionId} = await this.send("Target.attachToTarget", {targetId: targetInfo.targetId, flatten: true});
         return this._sessions.get(sessionId);
-    };
+    }
+}
+class CDPSession extends EventEmitter {
     /**
       * @param {!Connection} connection
       * @param {string} targetType
       * @param {string} sessionId
       */
-    function CDPSession(connection, targetType, sessionId) {
-        require("stream").EventEmitter.call(this);
+    constructor(connection, targetType, sessionId) {
+        super();
         /** @type {!Map<number, {resolve: function, reject: function, error: !Error, method: string}>}*/
         this._callbacks = new Map();
         this._connection = connection;
         this._targetType = targetType;
         this._sessionId = sessionId;
     }
-require("util").inherits(CDPSession, require("stream").EventEmitter);
     /**
       * @param {string} method
       * @param {!Object=} params
       * @return {!Promise<?Object>}
       */
-    CDPSession.prototype.send = function (method, params = {}) {
-        if (!this._connection) {
-            j
+    send(method, params = {}) {
+        if (!this._connection)
             return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${this._targetType} has been closed.`));
-        const id = this._connection._rawSend({
-            sessionId: this._sessionId, method, params});
-        }
+        const id = this._connection._rawSend({sessionId: this._sessionId, method, params});
         return new Promise((resolve, reject) => {
-            this._callbacks.set(id, {
-                resolve, reject, error: new Error(), method});
+            this._callbacks.set(id, {resolve, reject, error: new Error(), method});
         });
-    };
+    }
     /**
       * @param {{id?: number, method: string, params: Object, error: {message: string, data: any}, result?: *}} object
       */
-    CDPSession.prototype._onMessage = function (object) {
+    _onMessage(object) {
         if (object.id && this._callbacks.has(object.id)) {
             const callback = this._callbacks.get(object.id);
             this._callbacks.delete(object.id);
-            if (object.error) {
+            if (object.error)
                 callback.reject(createProtocolError(callback.error, callback.method, object));
-            }
-            else {
+            else
                 callback.resolve(object.result);
-            }
         } else {
             assert(!object.id);
             this.emit(object.method, object.params);
         }
-    };
-    CDPSession.prototype.detach = async function() {
-        if (!this._connection) {
+    }
+    async detach() {
+        if (!this._connection)
             throw new Error(`Session already detached. Most likely the ${this._targetType} has been closed.`);
-        }
-        await this._connection.send("Target.detachFromTarget",  {
-            sessionId: this._sessionId});
-    };
-    CDPSession.prototype._onClosed = function () {
-        this._callbacks.values().forEach(function (callback) {
+        await this._connection.send("Target.detachFromTarget",  {sessionId: this._sessionId});
+    }
+    _onClosed() {
+        for (const callback of this._callbacks.values())
             callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
-        });
         this._callbacks.clear();
         this._connection = null;
         this.emit(Events.CDPSession.Disconnected);
-    };
+    }
+}
 /**
   * @param {!Error} error
   * @param {string} method
@@ -2102,9 +2075,8 @@ require("util").inherits(CDPSession, require("stream").EventEmitter);
   */
 function createProtocolError(error, method, object) {
     let message = `Protocol error (${method}): ${object.error.message}`;
-    if ("data" in object.error) {
+    if ("data" in object.error)
         message += ` ${object.error.data}`;
-    }
     return rewriteError(error, message);
 }
 /**
@@ -2117,7 +2089,6 @@ function rewriteError(error, message) {
     return error;
 }
 exports_puppeteer_puppeteer_lib_Connection = {Connection, CDPSession};
-/* jslint ignore:start */
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Coverage.js
 */
@@ -2216,9 +2187,8 @@ class JSCoverage {
         ]);
     }
     _onExecutionContextsCleared() {
-        if (!this._resetOnNavigation) {
+        if (!this._resetOnNavigation)
             return;
-        }
         this._scriptURLs.clear();
         this._scriptSources.clear();
     }
@@ -2227,13 +2197,11 @@ class JSCoverage {
       */
     async _onScriptParsed(event) {
         // Ignore puppeteer-injected scripts
-        if (event.url === EVALUATION_SCRIPT_URL) {
+        if (event.url === EVALUATION_SCRIPT_URL)
             return;
-        }
         // Ignore other anonymous scripts unless the reportAnonymousScripts option is true.
-        if (!event.url && !this._reportAnonymousScripts) {
+        if (!event.url && !this._reportAnonymousScripts)
             return;
-        }
         try {
             const response = await this._client.send("Debugger.getScriptSource", {scriptId: event.scriptId});
             this._scriptURLs.set(event.scriptId, event.url);
