@@ -2053,11 +2053,11 @@ Connection.prototype._onClose = function () {
     this._closed = true;
     this.onmessage = null;
     this.onclose = null;
-    this._callbacks.values().forEach(function (callback) {
+    this._callbacks.forEach(function (callback) {
         callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
     });
     this._callbacks.clear();
-    this._sessions.values().forEach(function (session) {
+    this._sessions.forEach(function (session) {
         session._onClosed();
     });
     this._sessions.clear();
@@ -2135,7 +2135,7 @@ CDPSession.prototype.detach = async function () {
         sessionId: this._sessionId});
 };
 CDPSession.prototype._onClosed = function () {
-    this._callbacks.values().forEach(function (callback) {
+    this._callbacks.forEach(function (callback) {
         callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
     });
     this._callbacks.clear();
