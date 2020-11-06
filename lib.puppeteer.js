@@ -7,6 +7,7 @@
 // ,$s/\<\(if\|else\) .*[^{]$/& {/gc
 // ,$s/^\( *\)\(\<\(if\|else\) .*[^{]\)\(\n.*\)/\1\2 {\4\r\1}/gc
 // ,$s/^\( *\)\(\<else\)\(\n.*\)/\1\2 {\3\r\1}/gc
+// ,$s/^\( *\)\<for (\(\w\w* )*\(\w\w*\) of \(\w\S*\))\(\n.*\)/\1\4.forEach(function (\3) {\5\r\1});/gc
 
 
 /*
@@ -1921,12 +1922,12 @@ function Connection(url, ws, delay = 0) {
     this._delay = delay;
     this._ws = ws;
     let ws2 = this._ws;
-    ws2.addEventListener("message", event => {
+    ws2.addEventListener("message", function (event) {
         if (this.onmessage) {
             this.onmessage.call(null, event.data);
         }
     });
-    ws2.addEventListener("close", event => {
+    ws2.addEventListener("close", function (event) {
         if (this.onclose) {
             this.onclose.call(null);
         }
@@ -1988,7 +1989,7 @@ Connection.prototype._rawSend = function (message) {
   */
 Connection.prototype._onMessage = async function (message) {
     if (this._delay) {
-        await new Promise(f => setTimeout(f, this._delay));
+        await new Promise(function (f) { setTimeout(f, this._delay); });
     }
     debugProtocol("◀ RECV " + message);
     const object = JSON.parse(message);
