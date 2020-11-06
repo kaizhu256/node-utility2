@@ -4395,7 +4395,7 @@ class Request {
             method,
             postData,
             headers: headers ? headersArray(headers) : undefined,
-        }).catch(error => {
+        }).catch(function (error) {
             // In certain cases, protocol will return error if the request was already canceled
             // or the page was closed. We should tolerate these errors.
             debugError(error);
@@ -4431,7 +4431,7 @@ class Request {
             responsePhrase: STATUS_TEXTS[response.status || 200],
             responseHeaders: headersArray(responseHeaders),
             body: responseBody ? responseBody.toString("base64") : undefined,
-        }).catch(error => {
+        }).catch(function (error) {
             // In certain cases, protocol will return error if the request was already canceled
             // or the page was closed. We should tolerate these errors.
             debugError(error);
@@ -4453,7 +4453,7 @@ class Request {
         await this._client.send("Fetch.failRequest", {
             requestId: this._interceptionId,
             errorReason
-        }).catch(error => {
+        }).catch(function (error) {
             // In certain cases, protocol will return error if the request was already canceled
             // or the page was closed. We should tolerate these errors.
             debugError(error);
@@ -4483,11 +4483,12 @@ class Response {
       * @param {!Protocol.Network.Response} responsePayload
       */
     constructor(client, request, responsePayload) {
+        let that = this;
         this._client = client;
         this._request = request;
         this._contentPromise = null;
-        this._bodyLoadedPromise = new Promise(fulfill => {
-            this._bodyLoadedPromiseFulfill = fulfill;
+        that._bodyLoadedPromise = new Promise(function (fulfill) {
+            that._bodyLoadedPromiseFulfill = fulfill;
         });
         this._remoteAddress = {
             ip: responsePayload.remoteIPAddress,
@@ -4549,18 +4550,19 @@ class Response {
       * @return {!Promise<!Buffer>}
       */
     buffer() {
-        if (!this._contentPromise) {
-            this._contentPromise = this._bodyLoadedPromise.then(async error => {
+        let that = this;
+        if (!that._contentPromise) {
+            that._contentPromise = that._bodyLoadedPromise.then(async function (error) {
                 if (error) {
                     throw error;
                 }
-                const response = await this._client.send("Network.getResponseBody", {
-                    requestId: this._request._requestId
+                const response = await that._client.send("Network.getResponseBody", {
+                    requestId: that._request._requestId
                 });
                 return Buffer.from(response.body, response.base64Encoded ? "base64" : "utf8");
             });
         }
-        return this._contentPromise;
+        return that._contentPromise;
     }
     /**
       * @return {!Promise<string>}
@@ -4777,23 +4779,24 @@ class Page extends EventEmitter {
       */
     constructor(client, target, ignoreHTTPSErrors, screenshotTaskQueue) {
         super();
-        this._closed = false;
-        this._client = client;
-        this._target = target;
-        this._timeoutSettings = new TimeoutSettings();
+        let that = this;
+        that._closed = false;
+        that._client = client;
+        that._target = target;
+        that._timeoutSettings = new TimeoutSettings();
         /** @type {!FrameManager} */
-        this._frameManager = new FrameManager(client, this, ignoreHTTPSErrors, this._timeoutSettings);
-        this._emulationManager = new EmulationManager(client);
+        that._frameManager = new FrameManager(client, that, ignoreHTTPSErrors, that._timeoutSettings);
+        that._emulationManager = new EmulationManager(client);
         /** @type {!Map<string, Function>} */
-        this._pageBindings = new Map();
-        this._coverage = new Coverage(client);
-        this._javascriptEnabled = true;
+        that._pageBindings = new Map();
+        that._coverage = new Coverage(client);
+        that._javascriptEnabled = true;
         /** @type {?Puppeteer.Viewport} */
-        this._viewport = null;
-        this._screenshotTaskQueue = screenshotTaskQueue;
+        that._viewport = null;
+        that._screenshotTaskQueue = screenshotTaskQueue;
         /** @type {!Map<string, Worker>} */
-        this._workers = new Map();
-        client.on("Target.attachedToTarget", event => {
+        that._workers = new Map();
+        client.on("Target.attachedToTarget", function (event) {
             if (event.targetInfo.type !== "worker") {
                 // If we don't detach from service workers, they will never die.
                 client.send("Target.detachFromTarget", {
@@ -4802,41 +4805,41 @@ class Page extends EventEmitter {
                 return;
             }
             const session = Connection.fromSession(client).session(event.sessionId);
-            const worker = new Worker(session, event.targetInfo.url, this._addConsoleMessage.bind(this), this._handleException.bind(this));
-            this._workers.set(event.sessionId, worker);
-            this.emit(Events.Page.WorkerCreated, worker);
+            const worker = new Worker(session, event.targetInfo.url, that._addConsoleMessage.bind(that), that._handleException.bind(that));
+            that._workers.set(event.sessionId, worker);
+            that.emit(Events.Page.WorkerCreated, worker);
         });
-        client.on("Target.detachedFromTarget", event => {
-            const worker = this._workers.get(event.sessionId);
+        client.on("Target.detachedFromTarget", function (event) {
+            const worker = that._workers.get(event.sessionId);
             if (!worker) {
                 return;
             }
-            this.emit(Events.Page.WorkerDestroyed, worker);
-            this._workers.delete(event.sessionId);
+            that.emit(Events.Page.WorkerDestroyed, worker);
+            that._workers.delete(event.sessionId);
         });
-        this._frameManager.on(Events.FrameManager.FrameAttached, event => this.emit(Events.Page.FrameAttached, event));
-        this._frameManager.on(Events.FrameManager.FrameDetached, event => this.emit(Events.Page.FrameDetached, event));
-        this._frameManager.on(Events.FrameManager.FrameNavigated, event => this.emit(Events.Page.FrameNavigated, event));
-        const networkManager = this._frameManager.networkManager();
-        networkManager.on(Events.NetworkManager.Request, event => this.emit(Events.Page.Request, event));
-        networkManager.on(Events.NetworkManager.Response, event => this.emit(Events.Page.Response, event));
-        networkManager.on(Events.NetworkManager.RequestFailed, event => this.emit(Events.Page.RequestFailed, event));
-        networkManager.on(Events.NetworkManager.RequestFinished, event => this.emit(Events.Page.RequestFinished, event));
-        this._fileChooserInterceptionIsDisabled = false;
-        this._fileChooserInterceptors = new Set();
-        client.on("Page.domContentEventFired", event => this.emit(Events.Page.DOMContentLoaded));
-        client.on("Page.loadEventFired", event => this.emit(Events.Page.Load));
-        client.on("Runtime.consoleAPICalled", event => this._onConsoleAPI(event));
-        client.on("Runtime.bindingCalled", event => this._onBindingCalled(event));
-        client.on("Page.javascriptDialogOpening", event => this._onDialog(event));
-        client.on("Runtime.exceptionThrown", exception => this._handleException(exception.exceptionDetails));
-        client.on("Inspector.targetCrashed", event => this._onTargetCrashed());
-        client.on("Performance.metrics", event => this._emitMetrics(event));
-        client.on("Log.entryAdded", event => this._onLogEntryAdded(event));
-        client.on("Page.fileChooserOpened", event => this._onFileChooser(event));
-        this._target._isClosedPromise.then(() => {
-            this.emit(Events.Page.Close);
-            this._closed = true;
+        that._frameManager.on(Events.FrameManager.FrameAttached, event => that.emit(Events.Page.FrameAttached, event));
+        that._frameManager.on(Events.FrameManager.FrameDetached, event => that.emit(Events.Page.FrameDetached, event));
+        that._frameManager.on(Events.FrameManager.FrameNavigated, event => that.emit(Events.Page.FrameNavigated, event));
+        const networkManager = that._frameManager.networkManager();
+        networkManager.on(Events.NetworkManager.Request, event => that.emit(Events.Page.Request, event));
+        networkManager.on(Events.NetworkManager.Response, event => that.emit(Events.Page.Response, event));
+        networkManager.on(Events.NetworkManager.RequestFailed, event => that.emit(Events.Page.RequestFailed, event));
+        networkManager.on(Events.NetworkManager.RequestFinished, event => that.emit(Events.Page.RequestFinished, event));
+        that._fileChooserInterceptionIsDisabled = false;
+        that._fileChooserInterceptors = new Set();
+        client.on("Page.domContentEventFired", event => that.emit(Events.Page.DOMContentLoaded));
+        client.on("Page.loadEventFired", event => that.emit(Events.Page.Load));
+        client.on("Runtime.consoleAPICalled", event => that._onConsoleAPI(event));
+        client.on("Runtime.bindingCalled", event => that._onBindingCalled(event));
+        client.on("Page.javascriptDialogOpening", event => that._onDialog(event));
+        client.on("Runtime.exceptionThrown", exception => that._handleException(exception.exceptionDetails));
+        client.on("Inspector.targetCrashed", event => that._onTargetCrashed());
+        client.on("Performance.metrics", event => that._emitMetrics(event));
+        client.on("Log.entryAdded", event => that._onLogEntryAdded(event));
+        client.on("Page.fileChooserOpened", event => that._onFileChooser(event));
+        that._target._isClosedPromise.then(() => {
+            that.emit(Events.Page.Close);
+            that._closed = true;
         });
     }
     async _initialize() {
