@@ -50,7 +50,7 @@ shMain () {(set -e
         then
             export npm_config_mode_auto_restart=1
         fi
-        export PORT=$(UTILITY2_BIN shServerPortRandom)
+        export PORT=$($UTILITY2_BIN shServerPortRandom)
         "$UTILITY2_BIN" test test.js
         ;;
     utility2)

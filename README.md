@@ -52,9 +52,12 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.3
+- update file lib.puppeteer.js with simplified websockets (preserve old errors)
+- remove dependency on env-var \$CHROME_BIN
+- remove functions base64FromBuffer, base64ToUtf8, cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRawEncrypt, gotoNext
+- jslint - fix off-by-one column in autofix-expected_a_before_b
 - decouple build from npm-env-variables npm_config_xxx and npm_package_xxx
 - update lib.utility2.sh to remove dependency on \$UTILITY2_MACRO_JS
-- remove functions cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRawEncrypt
 - none
 
 #### todo

@@ -2223,118 +2223,29 @@ local.ajax = function (opt, onError) {
     return xhr;
 };
 
-local.base64FromBuffer = function (buf) {
+local.browserTest = function ({
+    modeSilent,
+    modeTestReportCreate,
+    url
+}, onError) {
 /*
- * this function will convert Uint8Array <buf> to base64 str
- */
-    let ii;
-    let mod3;
-    let str;
-    let uint24;
-    let uint6ToB64;
-    // convert utf8 to Uint8Array
-    if (typeof buf === "string") {
-        buf = new TextEncoder().encode(buf);
-    }
-    buf = buf || [];
-    str = "";
-    uint24 = 0;
-    uint6ToB64 = function (uint6) {
-        return (
-            uint6 < 26
-            ? uint6 + 65
-            : uint6 < 52
-            ? uint6 + 71
-            : uint6 < 62
-            ? uint6 - 4
-            : uint6 === 62
-            ? 43
-            : 47
-        );
-    };
-    ii = 0;
-    while (ii < buf.length) {
-        mod3 = ii % 3;
-        uint24 |= buf[ii] << (16 >>> mod3 & 24);
-        if (mod3 === 2 || buf.length - ii === 1) {
-            str += String.fromCharCode(
-                uint6ToB64(uint24 >>> 18 & 63),
-                uint6ToB64(uint24 >>> 12 & 63),
-                uint6ToB64(uint24 >>> 6 & 63),
-                uint6ToB64(uint24 & 63)
-            );
-            uint24 = 0;
-        }
-        ii += 1;
-    }
-    return str.replace((
-        /A(?=A$|$)/gm
-    ), "");
-};
-
-local.base64ToBuffer = function (str) {
-/*
- * this function will convert base64 <str> to Uint8Array
- * https://gist.github.com/wang-bin/7332335
- */
-    let buf;
-    let byte;
-    let chr;
-    let ii;
-    let jj;
-    let map64;
-    let mod4;
-    str = str || "";
-    buf = new Uint8Array(str.length); // 3/4
-    byte = 0;
-    jj = 0;
-    map64 = (
-        !(str.indexOf("-") < 0 && str.indexOf("_") < 0)
-        // base64url
-        ? "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
-        // base64
-        : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-    );
-    mod4 = 0;
-    ii = 0;
-    while (ii < str.length) {
-        chr = map64.indexOf(str[ii]);
-        if (chr !== -1) {
-            mod4 %= 4;
-            if (mod4 === 0) {
-                byte = chr;
-            } else {
-                byte = byte * 64 + chr;
-                buf[jj] = 255 & (byte >> ((-2 * (mod4 + 1)) & 6));
-                jj += 1;
-            }
-            mod4 += 1;
-        }
-        ii += 1;
-    }
-    // optimization - create resized-view of buf
-    return buf.slice(0, jj);
-};
-
-local.base64ToUtf8 = function (str) {
-/*
- * this function will convert base64 <str> to utf8 str
- */
-    return local.bufferValidateAndCoerce(local.base64ToBuffer(str), "string");
-};
-
-local.browserTest = function (opt, onError) {
-/*
- * this function will spawn google-puppeteer-process to test <opt>.url
+ * this function will spawn google-puppeteer-process to test <url>
  */
     let browser;
     let fileScreenshot;
     let isDone;
-    let onParallel;
     let page;
+    let promiseList;
     let testId;
     let testName;
     let timerTimeout;
+    function onError2(err) {
+        // cleanup timerTimeout
+        clearTimeout(timerTimeout);
+        // cleanup puppeteer
+        browser.close();
+        onError(err);
+    }
     // init utility2_testReport
     globalThis.utility2_testReport = globalThis.utility2_testReport || {
         coverage: globalThis.__coverage__,
@@ -2352,62 +2263,60 @@ local.browserTest = function (opt, onError) {
             }
         ]
     };
-    if (opt.modeTestReportCreate) {
+    if (modeTestReportCreate) {
         return;
     }
-    local.gotoNext(opt, function (err, data) {
-        switch (opt.gotoState) {
+    Promise.resolve().then(function () {
         // node - init
-        case 1:
-            onParallel = local.onParallel(opt.gotoNext);
-            onParallel.cnt += 1;
-            isDone = 0;
-            testId = Math.random().toString(16);
-            testName = local.env.MODE_BUILD + ".browser." + encodeURIComponent(
-                require("url").parse(opt.url).pathname.replace(
-                    "/build.." + local.env.CI_BRANCH + ".." + local.env.CI_HOST,
-                    "/build"
+        url = url.replace(
+            "{{timeExit}}",
+            Date.now() + local.timeoutDefault
+        );
+        testId = Math.random().toString(16);
+        testName = process.env.MODE_BUILD + ".browser." + encodeURIComponent(
+            require("url").parse(url).pathname.replace(
+                "/build.." + process.env.CI_BRANCH + ".." + process.env.CI_HOST,
+                "/build"
+            )
+        );
+        fileScreenshot = (
+            process.env.npm_config_dir_build
+            + "/screenshot." + testName + ".png"
+        );
+        // init timerTimeout
+        timerTimeout = setTimeout(onError2, local.timeoutDefault, new Error(
+            "timeout - " + local.timeoutDefault + " ms - " + testName
+        ));
+        // create puppeteer browser
+        return local.puppeteerLaunch({
+            args: [
+                "--headless",
+                "--incognito",
+                "--no-sandbox",
+                "--remote-debugging-port=0"
+            ],
+            dumpio: !modeSilent,
+            executablePath: (
+                process.platform === "darwin"
+                ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+                : process.platform === "win32"
+                ? (
+                    "C:\\Program Files (x86)\\Google\\Chrome\\Application\\"
+                    + "chrome.exe"
                 )
-            );
-            fileScreenshot = (
-                local.env.npm_config_dir_build
-                + "/screenshot." + testName + ".png"
-            );
-            opt.url = opt.url.replace(
-                "{{timeExit}}",
-                Date.now() + local.timeoutDefault
-            );
-            // init timerTimeout
-            timerTimeout = setTimeout(
-                opt.gotoNext,
-                local.timeoutDefault,
-                new Error(
-                    "timeout - " + local.timeoutDefault + " ms - " + testName
-                )
-            );
-            // create puppeteer browser
-            local.puppeteerLaunch({
-                args: [
-                    "--headless",
-                    "--incognito",
-                    "--no-sandbox",
-                    "--remote-debugging-port=0"
-                ],
-                dumpio: !opt.modeSilent,
-                executablePath: local.env.CHROME_BIN,
-                ignoreDefaultArgs: true
-            }).then(opt.gotoNextData);
-            break;
-        case 2:
-            browser = data;
-            browser.newPage().then(opt.gotoNextData);
-            break;
-        case 3:
-            page = data;
-            page.goto(opt.url).then(opt.gotoNextData);
-            break;
-        case 4:
-            onParallel.cnt += 1;
+                : "/usr/bin/google-chrome-stable"
+            ),
+            ignoreDefaultArgs: true
+        });
+    }).then(function (data) {
+        browser = data;
+        return browser.newPage();
+    }).then(function (data) {
+        page = data;
+        return page.goto(url);
+    }).then(function () {
+        promiseList = [];
+        promiseList.push(new Promise(function (resolve) {
             setTimeout(function () {
                 page.screenshot({
                     path: fileScreenshot
@@ -2416,73 +2325,64 @@ local.browserTest = function (opt, onError) {
                         "\nbrowserTest - created screenshot file "
                         + fileScreenshot + "\n"
                     );
-                    onParallel();
+                    resolve();
                 });
             }, 100);
+        }));
+        page.evaluate(
+            // coverage-hack
+            "console.timeStamp();\n"
+            + "window.utility2_testId=\"" + testId + "\";\n"
+            + "if(!window.utility2_modeTest){\n"
+            + "console.timeStamp(window.utility2_testId);\n"
+            + "}\n"
+        );
+        return new Promise(function (resolve) {
             page.on("metrics", function (metric) {
-                if (isDone >= 1 || metric.title !== testId) {
+                if (isDone || metric.title !== testId) {
                     return;
                 }
-                isDone = 1;
-                opt.gotoNext();
+                isDone = true;
+                resolve(page.evaluate(
+                    "JSON.stringify(\n"
+                    + "window.utility2_testReport\n"
+                    + "||{testPlatformList:[{}]}\n"
+                    + ");\n"
+                ));
             });
-            page.evaluate(function (testId) {
-                window.utility2_testId = testId;
-                if (!window.utility2_modeTest) {
-                    console.timeStamp(window.utility2_testId);
-                }
-            }, testId);
-            break;
-        case 5:
-            page.evaluate(function () {
-                return JSON.stringify(window.utility2_testReport || {
-                    testPlatformList: [
-                        {}
-                    ]
-                });
-            }).then(opt.gotoNextData);
-            break;
-        case 6:
-            data = JSON.parse(data);
-            // merge browser-screenshot
-            data.testPlatformList[0].screenshot = fileScreenshot.replace((
-                /.*\//
-            ), "");
-            // merge browser-coverage
-            local.istanbulCoverageMerge(globalThis.__coverage__, data.coverage);
-            // merge browser-test-report
-            local.testReportMerge(globalThis.utility2_testReport, data);
-            // save test-report.json
-            onParallel.cnt += 1;
+        });
+    }).then(function (data) {
+        data = JSON.parse(data);
+        // merge browser-screenshot
+        data.testPlatformList[0].screenshot = fileScreenshot.replace((
+            /.*\//
+        ), "");
+        // merge browser-coverage
+        local.istanbulCoverageMerge(globalThis.__coverage__, data.coverage);
+        // merge browser-test-report
+        local.testReportMerge(globalThis.utility2_testReport, data);
+        // save test-report.json
+        promiseList.push(new Promise(function (resolve) {
             require("fs").writeFile(
                 require("path").resolve(
-                    local.env.npm_config_dir_build + "/test-report.json"
+                    process.env.npm_config_dir_build + "/test-report.json"
                 ),
                 JSON.stringify(globalThis.utility2_testReport),
                 function (err) {
+                    local.onErrorThrow(err);
                     console.error(
                         "\nbrowserTest - merged test-report "
-                        + local.env.npm_config_dir_build + "/test-report.json"
+                        + process.env.npm_config_dir_build + "/test-report.json"
                         + "\n"
                     );
-                    onParallel(err);
+                    resolve();
                 }
             );
-            onParallel();
-            break;
-        default:
-            if (isDone >= 2) {
-                return;
-            }
-            isDone = 2;
-            // cleanup timerTimeout
-            clearTimeout(timerTimeout);
-            browser.close();
-            onError(err);
-        }
+        }));
+        return Promise.all(promiseList);
+    }).then(function () {
+        onError2();
     });
-    opt.gotoState = 0;
-    opt.gotoNext();
 };
 
 local.bufferConcat = function (bufList) {
@@ -3567,41 +3467,6 @@ local.fsWriteFileWithMkdirpSync = function (pathname, data) {
     }
     console.error("fsWriteFileWithMkdirpSync - " + pathname);
     return true;
-};
-
-local.gotoNext = function (opt, onError) {
-/*
- * this function will wrap onError inside recursive-function <opt>.gotoNext,
- * and append current-stack to any err
- */
-    opt.gotoNext = local.onErrorWithStack(function (err, data, meta) {
-        try {
-            opt.gotoState += (
-                (err && !opt.modeErrorIgnore)
-                ? 1000
-                : 1
-            );
-            if (opt.modeDebug) {
-                console.error("gotoNext - " + JSON.stringify({
-                    gotoState: opt.gotoState,
-                    errMsg: err && err.message
-                }));
-                if (err && err.stack) {
-                    console.error(err.stack);
-                }
-            }
-            onError(err, data, meta);
-        } catch (errCaught) {
-            // throw errCaught to break infinite recursion-loop
-            if (opt.errCaught) {
-                local.assertOrThrow(undefined, opt.errCaught);
-            }
-            opt.errCaught = errCaught;
-            opt.gotoNext(errCaught, data, meta);
-        }
-    });
-    opt.gotoNextData = opt.gotoNext.bind(undefined, undefined);
-    return opt;
 };
 
 local.jslintAutofixLocalFunction = function (code, file) {
@@ -5926,18 +5791,34 @@ local.testRunServer = function (opt) {
     }
     globalThis.utility2_onReadyBefore.cnt += 1;
     local.serverLocalReqHandler = function (req, res) {
-        let that;
-        that = {};
-        local.gotoNext(that, function (err) {
-            if (err || that.gotoState >= local.middlewareList.length) {
-                local.middlewareError(err, req, res);
-                return;
+    /*
+     * this function will emulate express-like middleware-chaining
+     */
+        let errStack;
+        let gotoState;
+        let isDone;
+        errStack = new Error().stack;
+        gotoState = -1;
+        (function gotoNext(err) {
+            try {
+                gotoState += 1;
+                // preserve stack-trace
+                if (err) {
+                    err.stack += "\n" + errStack;
+                }
+                if (err || gotoState >= local.middlewareList.length) {
+                    local.middlewareError(err, req, res);
+                    return;
+                }
+                // recurse with next middleware in middlewareList
+                local.middlewareList[gotoState](req, res, gotoNext);
+            } catch (errCaught) {
+                // throw errCaught to break infinite recursion-loop
+                local.assertOrThrow(!isDone, errCaught);
+                isDone = true;
+                gotoNext(errCaught);
             }
-            // recurse with next middleware in middlewareList
-            local.middlewareList[that.gotoState](req, res, that.gotoNext);
-        });
-        that.gotoState = -1;
-        that.gotoNext();
+        }());
     };
     globalThis.utility2_serverHttp1 = local.http.createServer(
         local.serverLocalReqHandler

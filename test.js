@@ -214,6 +214,40 @@ let onErrorThrow;
 assertJsonEqual = local.assertJsonEqual;
 assertOrThrow = local.assertOrThrow;
 onErrorThrow = local.onErrorThrow;
+local.gotoNext = function (opt, onError) {
+/*
+ * this function will wrap onError inside recursive-function <opt>.gotoNext,
+ * and append current-stack to any err
+ */
+    opt.gotoNext = local.onErrorWithStack(function (err, data, meta) {
+        try {
+            opt.gotoState += (
+                (err && !opt.modeErrorIgnore)
+                ? 1000
+                : 1
+            );
+            if (opt.modeDebug) {
+                console.error("gotoNext - " + JSON.stringify({
+                    gotoState: opt.gotoState,
+                    errMsg: err && err.message
+                }));
+                if (err && err.stack) {
+                    console.error(err.stack);
+                }
+            }
+            onError(err, data, meta);
+        } catch (errCaught) {
+            // throw errCaught to break infinite recursion-loop
+            if (opt.errCaught) {
+                local.assertOrThrow(undefined, opt.errCaught);
+            }
+            opt.errCaught = errCaught;
+            opt.gotoNext(errCaught, data, meta);
+        }
+    });
+    return opt;
+};
+
 local.testCase_ajax_cache = function (opt, onError) {
 /*
  * this function will test ajax's cache handling-behavior
@@ -516,32 +550,6 @@ local.testCase_assertXxx_default = function (opt, onError) {
         // validate err.message
         assertJsonEqual(err.message, "{\n    \"aa\": 1\n}");
     });
-    onError(undefined, opt);
-};
-
-local.testCase_base64Xxx_default = function (opt, onError) {
-/*
- * this function will test base64Xxx's default handling-behavior
- */
-    opt = {};
-    opt.base64 = local.base64FromBuffer(
-        local.stringCharsetAscii + local.stringHelloEmoji
-    );
-    // test null-case handling-behavior
-    assertJsonEqual(local.base64FromBuffer(), "");
-    assertJsonEqual(local.bufferToUtf8(local.base64ToBuffer()), "");
-    assertJsonEqual(local.base64ToUtf8(), "");
-    assertJsonEqual(local.base64FromBuffer(local.base64ToBuffer()), "");
-    assertJsonEqual(local.base64FromBuffer(local.base64ToUtf8()), "");
-    // test identity handling-behavior
-    assertJsonEqual(
-        local.base64FromBuffer(local.base64ToBuffer(opt.base64)),
-        opt.base64
-    );
-    assertJsonEqual(
-        local.base64FromBuffer(local.base64ToUtf8(opt.base64)),
-        opt.base64
-    );
     onError(undefined, opt);
 };
 
@@ -861,26 +869,6 @@ local.testCase_onErrorWithStack_toString = function (opt, onError) {
         String(local.nop)
     );
     onError(undefined, opt);
-};
-
-local.testCase_onNext_err = function (opt, onError) {
-/*
- * this function will test gotoNext's err handling-behavior
- */
-
-    opt = {};
-    opt.modeDebug = true;
-    local.gotoNext(opt, function () {
-        throw new Error();
-    });
-    opt.gotoState = 0;
-    local.tryCatchOnError(function () {
-        opt.gotoNext();
-    }, function (err) {
-        // handle err
-        assertOrThrow(err, err);
-        onError(undefined, opt);
-    });
 };
 
 local.testCase_onParallelList_default = function (opt, onError) {

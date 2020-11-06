@@ -235,15 +235,6 @@ shBrowserScreenshot () {(set -e
     let timeStart;
     let url;
     timeStart = Date.now();
-    // windows-env
-    [
-        "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-    ].forEach(function (file) {
-        if (!process.env.CHROME_BIN && require("fs").existsSync(file)) {
-            process.env.CHROME_BIN = file;
-        }
-    });
     url = process.argv[1];
     if (!(
         /^\w+?:/
@@ -282,7 +273,13 @@ shBrowserScreenshot () {(set -e
     });
     process.on("uncaughtException", process.exit);
     process.on("unhandledRejection", process.exit);
-    require("child_process").spawn(process.env.CHROME_BIN, [
+    require("child_process").spawn((
+        process.platform === "darwin"
+        ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        : process.platform === "win32"
+        ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+        : "/usr/bin/google-chrome-stable"
+    ), [
         "--headless",
         "--incognito",
         "--screenshot",
@@ -353,20 +350,19 @@ shBuildApp () {(set -e
     let dirBin;
     let dirDev;
     let fs;
-    let onErrorThrow;
     let path;
-    fs = require("fs");
-    path = require("path");
-    dirBin = path.resolve(process.env.HOME + "/bin") + path.sep;
-    dirDev = path.resolve(process.env.HOME + "/Documents/utility2") + path.sep;
-    onErrorThrow = function (err) {
+    function onErrorThrow(err) {
     /*
      * this function will throw <err> if exists
      */
         if (err) {
             throw err;
         }
-    };
+    }
+    fs = require("fs");
+    path = require("path");
+    dirBin = path.resolve(process.env.HOME + "/bin") + path.sep;
+    dirDev = path.resolve(process.env.HOME + "/Documents/utility2") + path.sep;
     if (!fs.existsSync(dirDev + "lib.utility2.js")) {
         return;
     }
@@ -488,16 +484,15 @@ shBuildApp () {(set -e
     "use strict";
     let fs;
     let modeUtility2Rollup;
-    let onErrorThrow;
-    fs = require("fs");
-    onErrorThrow = function (err) {
+    function onErrorThrow(err) {
     /*
      * this function will throw <err> if exists
      */
         if (err) {
             throw err;
         }
-    };
+    }
+    fs = require("fs");
     // fetch file .gitignore, .travis.yml, LICENSE, npm_scripts.sh
     [
         ".gitignore", ".travis.yml", "LICENSE", "npm_scripts.sh"
@@ -986,21 +981,6 @@ shBuildGithubUpload () {(set -e
 
 shBuildInit () {
 # this function will init env
-    # init $CHROME_BIN
-    CHROME_BIN="${CHROME_BIN:-$(which google-chrome-stable 2>/dev/null)}" ||
-        true
-    local FILE
-    for FILE in \
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-        "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" \
-        "C:\Program Files\Google\Chrome\Application\chrome.exe"
-    do
-        if [ ! "$CHROME_BIN" ] && [ -f "$FILE" ]
-        then
-            CHROME_BIN="$FILE"
-        fi
-    done
-    export CHROME_BIN
     # init $CI_BRANCH
     export CI_BRANCH="${CI_BRANCH:-$TRAVIS_BRANCH}"
     export CI_BRANCH="${CI_BRANCH:-alpha}"
@@ -1352,7 +1332,6 @@ shCryptoAesXxxCbcRawEncrypt () {(set -e
             }, console.log);
         });
      */
-        let cipher;
         let crypto;
         let data;
         let ii;
@@ -1384,7 +1363,7 @@ shCryptoAesXxxCbcRawEncrypt () {(set -e
                 // base64
                 if (opt.mode === "base64") {
                     iv = Buffer.from().toString("base64").replace((
-                        /=/g
+                        /\=/g
                     ), "");
                     iv += "\n";
                 }
@@ -2278,13 +2257,12 @@ shJsonNormalize () {(set -e
 /* jslint utility2:true */
 (function () {
     "use strict";
-    let objectDeepCopyWithKeysSorted;
-    objectDeepCopyWithKeysSorted = function (obj) {
+    function objectDeepCopyWithKeysSorted(obj) {
     /*
      * this function will recursively deep-copy <obj> with keys sorted
      */
         let sorted;
-        if (!(typeof obj === "object" && obj)) {
+        if (typeof obj !== "object" || !obj) {
             return obj;
         }
         // recursively deep-copy list with child-keys sorted
@@ -2297,7 +2275,7 @@ shJsonNormalize () {(set -e
             sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
         });
         return sorted;
-    };
+    }
     console.error("shJsonNormalize - " + process.argv[1]);
     require("fs").writeFileSync(
         process.argv[1],
@@ -2566,17 +2544,16 @@ shPackageJsonVersionIncrement () {(set -e
     let cc;
     let dd;
     let ii;
-    let onErrorThrow;
     let packageJson;
     let result;
-    onErrorThrow = function (err) {
+    function onErrorThrow(err) {
     /*
      * this function will throw <err> if exists
      */
         if (err) {
             throw err;
         }
-    };
+    }
     packageJson = require("./package.json");
     // increment packageJson.version
     aa = packageJson.version.replace((
@@ -2704,15 +2681,12 @@ shRawLibFetch () {(set -e
     let fetchList;
     let footer;
     let header;
-    let normalizeWhitespace;
-    let onResponse;
     let opt;
-    let replaceAndWriteFile;
     let replaceList;
     let repoDict;
     let requireDict;
     let result;
-    normalizeWhitespace = function (str) {
+    function normalizeWhitespace(str) {
     /*
      * this function will normalize whitespace
      */
@@ -2734,8 +2708,8 @@ shRawLibFetch () {(set -e
             /\n{4,}/g
         ), "\n\n\n");
         return str.trim() + "\n";
-    };
-    onResponse = function (res, dict, key) {
+    }
+    function onResponse(res, dict, key) {
     /*
      * this function will concat data from <res> to <dict>[<key>]
      */
@@ -2746,8 +2720,8 @@ shRawLibFetch () {(set -e
         }).on("end", function () {
             dict[key] = Buffer.concat(data);
         });
-    };
-    replaceAndWriteFile = function () {
+    }
+    function replaceAndWriteFile() {
     /*
      * this function will replace result with replaceList and write to file
      */
@@ -2817,7 +2791,7 @@ shRawLibFetch () {(set -e
             process.argv[1],
             normalizeWhitespace(result)
         );
-    };
+    }
     // init opt
     opt = (
         /^\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?)\n\*\/\n/m
@@ -3311,9 +3285,8 @@ shRunWithScreenshotTxt () {(set -e
 (function () {
     "use strict";
     let result;
-    let wordwrap;
     let yy;
-    wordwrap = function (line, ii) {
+    function wordwrap(line, ii) {
         if (ii && !line) {
             return "";
         }
@@ -3325,7 +3298,7 @@ shRunWithScreenshotTxt () {(set -e
         ), "&lt;").replace((
             />/g
         ), "&gt;") + "</tspan>\n";
-    };
+    }
     yy = 10;
     result = require("fs").readFileSync(
         process.env.npm_config_dir_tmp + "/runWithScreenshotTxt",
@@ -3376,9 +3349,8 @@ shServerPortRandom () {(set -e
 (function () {
     "use strict";
     let port;
-    let recurse;
     let server;
-    recurse = function (err) {
+    function recurse(err) {
         if (server) {
             server.close();
         }
@@ -3391,7 +3363,7 @@ shServerPortRandom () {(set -e
         ) | 0x8000;
         server = require("net").createServer().listen(port);
         server.on("error", recurse).on("listening", recurse);
-    };
+    }
     recurse(true);
 }());
 '
@@ -3418,10 +3390,8 @@ shTravisRepoCreate () {(set -e
 /* jslint utility2:true */
 (async function () {
     "use strict";
-    let httpRequest;
-    let sleep;
     let tmp;
-    httpRequest = function (opt) {
+    function httpRequest(opt) {
     /*
      * this function will make simple http-request to <opt>.url
      * and return <opt>.statusCode and <opt>.responseText
@@ -3456,12 +3426,12 @@ shTravisRepoCreate () {(set -e
             }).setEncoding("utf8");
         }).end(opt.data);
         return promise;
-    };
-    sleep = function (time) {
+    }
+    function sleep(time) {
         return new Promise(function (resolve) {
             setTimeout(resolve, time);
         });
-    };
+    }
     process.on("unhandledRejection", function (err) {
         throw err;
     });
