@@ -2850,8 +2850,9 @@ class ExecutionContext {
             }
             return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
         }
-        if (typeof pageFunction !== "function")
+        if (typeof pageFunction !== "function") {
             throw new Error(`Expected to get |string| or |function| as the first argument, but got "${pageFunction}" instead.`);
+        }
         let functionText = pageFunction.toString();
         // hack-coverage - un-instrument
         functionText = functionText.replace((/\b__cov_.*?\+\+/g), "0");
@@ -2860,8 +2861,9 @@ class ExecutionContext {
         } catch (e1) {
             // This means we might have a function shorthand. Try another
             // time prefixing "function ".
-            if (functionText.startsWith("async "))
+            if (functionText.startsWith("async ")) {
                 functionText = "async function " + functionText.substring("async ".length);
+            }
             else
                 functionText = "function " + functionText;
             try {
@@ -2882,13 +2884,15 @@ class ExecutionContext {
                 userGesture: true
             });
         } catch (err) {
-            if (err instanceof TypeError && err.message.startsWith("Converting circular structure to JSON"))
+            if (err instanceof TypeError && err.message.startsWith("Converting circular structure to JSON")) {
                 err.message += " Are you passing a nested JSHandle?";
+            }
             throw err;
         }
         const { exceptionDetails, result: remoteObject } = await callFunctionOnPromise.catch(rewriteError);
-        if (exceptionDetails)
+        if (exceptionDetails) {
             throw new Error("Evaluation failed: " + helper.getExceptionMessage(exceptionDetails));
+        }
         return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
         /**
           * @param {*} arg
@@ -2896,26 +2900,36 @@ class ExecutionContext {
           * @this {ExecutionContext}
           */
         function convertArgument(arg) {
-            if (typeof arg === "bigint") // eslint-disable-line valid-typeof
+            // eslint-disable-line valid-typeof
+            if (typeof arg === "bigint") {
                 return { unserializableValue: `${arg.toString()}n` };
-            if (Object.is(arg, -0))
+            }
+            if (Object.is(arg, -0)) {
                 return { unserializableValue: "-0" };
-            if (Object.is(arg, Infinity))
+            }
+            if (Object.is(arg, Infinity)) {
                 return { unserializableValue: "Infinity" };
-            if (Object.is(arg, -Infinity))
+            }
+            if (Object.is(arg, -Infinity)) {
                 return { unserializableValue: "-Infinity" };
-            if (Object.is(arg, NaN))
+            }
+            if (Object.is(arg, NaN)) {
                 return { unserializableValue: "NaN" };
+            }
             const objectHandle = arg && (arg instanceof JSHandle) ? arg : null;
             if (objectHandle) {
-                if (objectHandle._context !== this)
+                if (objectHandle._context !== this) {
                     throw new Error("JSHandles can be evaluated only in the context they were created!");
-                if (objectHandle._disposed)
+                }
+                if (objectHandle._disposed) {
                     throw new Error("JSHandle is disposed!");
-                if (objectHandle._remoteObject.unserializableValue)
+                }
+                if (objectHandle._remoteObject.unserializableValue) {
                     return { unserializableValue: objectHandle._remoteObject.unserializableValue };
-                if (!objectHandle._remoteObject.objectId)
+                }
+                if (!objectHandle._remoteObject.objectId) {
                     return { value: objectHandle._remoteObject.value };
+                }
                 return { objectId: objectHandle._remoteObject.objectId };
             }
             return { value: arg };
@@ -2925,12 +2939,15 @@ class ExecutionContext {
           * @return {!Protocol.Runtime.evaluateReturnValue}
           */
         function rewriteError(error) {
-            if (error.message.includes("Object reference chain is too long"))
+            if (error.message.includes("Object reference chain is too long")) {
                 return {result: {type: "undefined"}};
-            if (error.message.includes("Object couldn't be returned by value"))
+            }
+            if (error.message.includes("Object couldn't be returned by value")) {
                 return {result: {type: "undefined"}};
-            if (error.message.endsWith("Cannot find context with specified id"))
+            }
+            if (error.message.endsWith("Cannot find context with specified id")) {
                 throw new Error("Execution context was destroyed, most likely because of a navigation.");
+            }
             throw error;
         }
     }
@@ -3064,8 +3081,9 @@ class FrameManager extends EventEmitter {
             ]);
         }
         watcher.dispose();
-        if (error)
+        if (error) {
             throw error;
+        }
         return watcher.navigationResponse();
         /**
           * @param {!Puppeteer.CDPSession} client
