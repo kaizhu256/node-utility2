@@ -2170,11 +2170,11 @@ local.ajax = function (opt, onError) {
                 type: "abort"
             });
         };
-        xhr.addEventListener = local.nop;
-        xhr.open = local.nop;
+        xhr.addEventListener = local.noop;
+        xhr.open = local.noop;
         xhr.reqStream = xhr;
         xhr.send = xhr.end;
-        xhr.setRequestHeader = local.nop;
+        xhr.setRequestHeader = local.noop;
         xhr.on("error", onEvent);
     }
     // init xhr
@@ -4129,8 +4129,8 @@ local.onParallel = function (onError, onEach, onRetry) {
  */
     let onParallel;
     onError = local.onErrorWithStack(onError);
-    onEach = onEach || local.nop;
-    onRetry = onRetry || local.nop;
+    onEach = onEach || local.noop;
+    onRetry = onRetry || local.noop;
     onParallel = function (err, data) {
         if (onRetry(err, data)) {
             return;
@@ -4376,7 +4376,7 @@ local.requireReadme = function () {
     env = (typeof process === "object" && process && process.env) || {};
     // library-mode
     if (env.npm_config_mode_lib) {
-        local.testRunDefault = local.nop;
+        local.testRunDefault = local.noop;
         return local;
     }
     // init module.exports
@@ -5240,7 +5240,7 @@ local.testCase_nop_default = function (opt, onError) {
 /*
  * this function will test nop's default handling-behavior
  */
-    local.nop();
+    local.noop();
     onError(undefined, opt);
 };
 
@@ -5267,8 +5267,8 @@ local.testMock = function (mockList, onTestCase, onError) {
         console, {}
     ]);
     local.objectAssignDefault(mockList[0][1], {
-        error: local.nop,
-        log: local.nop
+        error: local.noop,
+        log: local.noop
     });
     // mock mock[0]
     mockList.forEach(function (mock) {
@@ -6005,7 +6005,7 @@ local.uiAnimateSlideDown = function (elem, onError) {
 /*
  * this function will slideDown dom-<elem>
  */
-    onError = onError || local.nop;
+    onError = onError || local.noop;
     if (!(
         elem
         && elem.style && elem.style.maxHeight !== "100%"
@@ -6153,7 +6153,7 @@ local.urlParse = function (url) {
         urlParsed.basename = urlParsed.pathname.replace((
             /^.*\//
         ), "");
-    }, local.nop);
+    }, local.noop);
     // https://developer.mozilla.org/en/docs/Web/API/URL#Properties
     return {
         basename: urlParsed.basename || "",
@@ -6299,7 +6299,7 @@ if (local.isBrowser) {
         // try to JSON.parse string
         local.tryCatchOnError(function () {
             local[key] = JSON.parse(match0);
-        }, local.nop);
+        }, local.noop);
     });
 } else {
     local.timeoutDefault = local.env.npm_config_timeout_default;
@@ -6338,7 +6338,7 @@ globalThis.utility2_onReadyBefore = (
         local.eventListenerEmit("utility2_onReadyAfter", err);
     })
 );
-globalThis.utility2_onReadyAfter(local.nop);
+globalThis.utility2_onReadyAfter(local.noop);
 }());
 
 

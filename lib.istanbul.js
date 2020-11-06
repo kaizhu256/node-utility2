@@ -666,7 +666,7 @@ process = (
     }
     : globalThis.process
 );
-local.nop(escodegen, esprima, estraverse, esutils);
+local.noop(escodegen, esprima, estraverse, esutils);
 
 
 /*

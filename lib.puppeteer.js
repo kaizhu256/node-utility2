@@ -1137,7 +1137,7 @@ function WebSocket(address) {
         });
         socket.on("end", socketOnEnd);
         socket.once("error", function () {
-            socket.on("error", local.nop);
+            socket.on("error", local.noop);
             ws2.readyState = WebSocket.CLOSING;
             socket.destroy();
         });
@@ -1896,7 +1896,7 @@ class Connection extends EventEmitter {
                 this.onclose.call(null);
         });
         // Silently ignore all errors - we don't know what to do with them.
-        ws2.addEventListener("error", local.nop);
+        ws2.addEventListener("error", local.noop);
         this.onmessage = this._onMessage.bind(this);
         this.onclose = this._onClose.bind(this);
         /** @type {!Map<string, !CDPSession>}*/

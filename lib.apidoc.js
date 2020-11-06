@@ -1074,7 +1074,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
     ].forEach(function (key) {
         local.tryCatchOnError(function () {
             opt.circularSet.add(require(key));
-        }, local.nop);
+        }, local.noop);
     });
     // init circularSet - blacklistDict
     Object.keys(opt.blacklistDict).forEach(function (key) {
@@ -1235,7 +1235,7 @@ local.apidocModuleDictAdd = function (opt, moduleDict) {
         return Object.keys(dict).sort().filter(function (key) {
             return local.tryCatchOnError(function () {
                 return dict[key] || true;
-            }, local.nop);
+            }, local.noop);
         });
     };
     [

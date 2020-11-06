@@ -181,7 +181,7 @@
     local.identity = identity;
     local.isBrowser = isBrowser;
     local.isWebWorker = isWebWorker;
-    local.nop = nop;
+    local.noop = nop;
     local.objectAssignDefault = objectAssignDefault;
     local.onErrorThrow = onErrorThrow;
 }());

@@ -650,11 +650,11 @@ local.testCase_buildXxx_default = function (opt, onError) {
     local.testMock([
         [
             local, {
-                browserTest: local.nop
+                browserTest: local.noop
             }
         ]
     ], function (onError) {
-        local._testCase_webpage_default({}, local.nop);
+        local._testCase_webpage_default({}, local.noop);
         onError(undefined, opt);
     }, onError);
 };
@@ -674,7 +674,7 @@ local.testCase_cliRun_default = function (opt, onError) {
             }
         ], [
             local.cliDict, {
-                _default: local.nop,
+                _default: local.noop,
                 _help: null
             }
         ], [
@@ -683,11 +683,11 @@ local.testCase_cliRun_default = function (opt, onError) {
             }
         ], [
             require("repl"), {
-                start: local.nop
+                start: local.noop
             }
         ], [
             require("vm"), {
-                runInThisContext: local.nop
+                runInThisContext: local.noop
             }
         ]
     ], function (onError) {
@@ -711,7 +711,7 @@ local.testCase_cliRun_default = function (opt, onError) {
         // test err handling-behavior
         local.cliDict._default = null;
         local.cliDict._help = null;
-        local.tryCatchOnError(local.cliRun, local.nop);
+        local.tryCatchOnError(local.cliRun, local.noop);
         onError(undefined, opt);
     }, onError);
 };
@@ -867,8 +867,8 @@ local.testCase_onErrorWithStack_toString = function (opt, onError) {
  * this function will test onErrorWithStack's toString handling-behavior
  */
     assertJsonEqual(
-        String(local.onErrorWithStack(local.nop)),
-        String(local.nop)
+        String(local.onErrorWithStack(local.noop)),
+        String(local.noop)
     );
     onError(undefined, opt);
 };
@@ -1030,7 +1030,7 @@ local.testCase_replStart_default = function (opt, onError) {
         // suppress process.stdout
         [
             process.stdout, {
-                write: local.nop
+                write: local.noop
             }
         ]
     ], function (onError) {
@@ -1058,7 +1058,7 @@ local.testCase_replStart_default = function (opt, onError) {
             // test err handling-behavior
             "undefined()\n"
         ].forEach(function (script) {
-            globalThis.utility2_repl1.eval(script, null, "repl", local.nop);
+            globalThis.utility2_repl1.eval(script, null, "repl", local.noop);
         });
         onError(undefined, opt);
     }, onError);
@@ -1113,7 +1113,7 @@ local.testCase_serverRespondTimeoutDefault_timeout = function (opt, onError) {
         [
             local, {
                 onTimeout: opt,
-                serverRespondDefault: local.nop,
+                serverRespondDefault: local.noop,
                 setTimeout: opt
             }
         ]
@@ -1316,7 +1316,7 @@ local.testCase_templateRender_default = function (opt, onError) {
         local.templateRender("{{aa bb}}", {
             aa: 1
         });
-    }, local.nop);
+    }, local.noop);
     // handle err
     assertOrThrow(local._debugTryCatchError, local._debugTryCatchError);
     onError(undefined, opt);
@@ -1632,7 +1632,7 @@ if (local.isBrowser) {
                 url: "https://h1-cron1.herokuapp.com"
             }, local.onErrorThrow);
         }, 5 * 60 * 1000);
-        local.cronJob = local.nop;
+        local.cronJob = local.noop;
         // update cron
         local.ajax({
             url: "https://kaizhu256.github.io/node-utility2/cronJob.js"
