@@ -1399,8 +1399,9 @@ class Helper {
       * @param {!Array<{emitter: !NodeJS.EventEmitter, eventName: (string|symbol), handler: function(?):void}>} listeners
       */
     static removeEventListeners(listeners) {
-        for (const listener of listeners)
+        listeners.forEach(function (listener) {
             listener.emitter.removeListener(listener.eventName, listener.handler);
+        });
         listeners.splice(0, listeners.length);
     }
     /**
@@ -1598,8 +1599,9 @@ class Browser extends EventEmitter {
         that._defaultContext = new BrowserContext(that._connection, that, null);
         /** @type {Map<string, BrowserContext>} */
         that._contexts = new Map();
-        for (const contextId of contextIds)
+        contextIds.forEach(function (contextId) {
             that._contexts.set(contextId, new BrowserContext(that._connection, that, contextId));
+        });
         /** @type {Map<string, Target>} */
         that._targets = new Map();
         that._connection.on(Events.Connection.Disconnected, function () { return that.emit(Events.Browser.Disconnected); });
@@ -1981,9 +1983,11 @@ Connection.prototype.url = function () {
   */
 Connection.prototype.send = function (method, params = {}) {
     let that = this;
-    const id = that._rawSend({method, params});
+    const id = that._rawSend({
+        method, params});
     return new Promise(function (resolve, reject) {
-        that._callbacks.set(id, {resolve, reject, error: new Error(), method});
+        that._callbacks.set(id, {
+            resolve, reject, error: new Error(), method});
     });
 };
 /**
@@ -2004,7 +2008,8 @@ Connection.prototype._rawSend = function (message) {
 Connection.prototype._onMessage = async function (message) {
     let that = this;
     if (that._delay) {
-        await new Promise(function (f) { setTimeout(f, that._delay); });
+        await new Promise(function (f) {
+            setTimeout(f, that._delay); });
     }
     debugProtocol("◀ RECV " + message);
     const object = JSON.parse(message);
@@ -2047,11 +2052,13 @@ Connection.prototype._onClose = function () {
     this._closed = true;
     this.onmessage = null;
     this.onclose = null;
-    for (const callback of this._callbacks.values())
+    this._callbacks.values().forEach(function (callback) {
         callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
+    });
     this._callbacks.clear();
-    for (const session of this._sessions.values())
+    this._sessions.values().forEach(function (session) {
         session._onClosed();
+    });
     this._sessions.clear();
     this.emit(Events.Connection.Disconnected);
 };
@@ -2065,7 +2072,9 @@ Connection.prototype.dispose = function () {
   * @return {!Promise<!CDPSession>}
   */
 Connection.prototype.createSession = async function (targetInfo) {
-    const {sessionId} = await this.send("Target.attachToTarget", {targetId: targetInfo.targetId, flatten: true});
+    const {
+        sessionId} = await this.send("Target.attachToTarget", {
+            targetId: targetInfo.targetId, flatten: true});
     return this._sessions.get(sessionId);
 };
 /**
@@ -2092,9 +2101,11 @@ CDPSession.prototype.send = function (method, params = {}) {
     if (!that._connection) {
         return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${that._targetType} has been closed.`));
     }
-    const id = that._connection._rawSend({sessionId: that._sessionId, method, params});
+    const id = that._connection._rawSend({
+        sessionId: that._sessionId, method, params});
     return new Promise(function (resolve, reject) {
-        that._callbacks.set(id, {resolve, reject, error: new Error(), method});
+        that._callbacks.set(id, {
+            resolve, reject, error: new Error(), method});
     });
 };
 /**
@@ -2119,11 +2130,13 @@ CDPSession.prototype.detach = async function () {
     if (!this._connection) {
         throw new Error(`Session already detached. Most likely the ${this._targetType} has been closed.`);
     }
-    await this._connection.send("Target.detachFromTarget",  {sessionId: this._sessionId});
+    await this._connection.send("Target.detachFromTarget",  {
+        sessionId: this._sessionId});
 };
 CDPSession.prototype._onClosed = function () {
-    for (const callback of this._callbacks.values())
+    this._callbacks.values().forEach(function (callback) {
         callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
+    });
     this._callbacks.clear();
     this._connection = null;
     this.emit(Events.CDPSession.Disconnected);
@@ -2303,8 +2316,9 @@ class JSCoverage {
                 continue;
             }
             const flattenRanges = [];
-            for (const func of entry.functions)
+            entry.functions.forEach(function (func) {
                 flattenRanges.push(...func.ranges);
+            });
             const ranges = convertToDisjointRanges(flattenRanges);
             coverage.push({url, ranges, text});
         }
@@ -2517,8 +2531,9 @@ class DOMWorld {
         if (context) {
             this._contextResolveCallback.call(null, context);
             this._contextResolveCallback = null;
-            for (const waitTask of this._waitTasks)
+            this._waitTasks.forEach(function (waitTask) {
                 waitTask.rerun();
+            });
         } else {
             this._documentPromise = null;
             this._contextPromise = new Promise(function (fulfill) {
@@ -2534,8 +2549,9 @@ class DOMWorld {
     }
     _detach() {
         this._detached = true;
-        for (const waitTask of this._waitTasks)
+        this._waitTasks.forEach(function (waitTask) {
             waitTask.terminate(new Error("waitForFunction failed: frame got detached."));
+        });
     }
     /**
       * @return {!Promise<!Puppeteer.ExecutionContext>}
@@ -3189,8 +3205,9 @@ class FrameManager extends EventEmitter {
         if (!frameTree.childFrames) {
             return;
         }
-        for (const child of frameTree.childFrames)
+        frameTree.childFrames.forEach(function (child) {
             this._handleFrameTree(child);
+        });
     }
     /**
       * @return {!Puppeteer.Page}
@@ -3240,8 +3257,9 @@ class FrameManager extends EventEmitter {
         assert(isMainFrame || frame, "We either navigate top level or have old version of the navigated frame");
         // Detach all child frames first.
         if (frame) {
-            for (const child of frame.childFrames())
+            frame.childFrames().forEach(function (child) {
                 this._removeFramesRecursively(child);
+            });
         }
         // Update or create main frame.
         if (isMainFrame) {
@@ -3359,8 +3377,9 @@ class FrameManager extends EventEmitter {
       * @param {!Frame} frame
       */
     _removeFramesRecursively(frame) {
-        for (const child of frame.childFrames())
+        frame.childFrames().forEach(function (child) {
             this._removeFramesRecursively(child);
+        });
         frame._detach();
         this._frames.delete(frame._id);
         this.emit(Events.FrameManager.FrameDetached, frame);
@@ -4321,8 +4340,9 @@ class Request {
         this._headers = {};
         this._frame = frame;
         this._redirectChain = redirectChain;
-        for (const key of Object.keys(event.request.headers))
+        Object.keys(event.request.headers).forEach(function (key) {
             this._headers[key.toLowerCase()] = event.request.headers[key];
+        });
         this._fromMemoryCache = false;
     }
     /**
@@ -4434,8 +4454,9 @@ class Request {
         /** @type {!Object<string, string>} */
         const responseHeaders = {};
         if (response.headers) {
-            for (const header of Object.keys(response.headers))
+            Object.keys(response.headers).forEach(function (header) {
                 responseHeaders[header.toLowerCase()] = response.headers[header];
+            });
         }
         if (response.contentType) {
             responseHeaders["content-type"] = response.contentType;
@@ -4518,8 +4539,9 @@ class Response {
         this._fromDiskCache = !!responsePayload.fromDiskCache;
         this._fromServiceWorker = !!responsePayload.fromServiceWorker;
         this._headers = {};
-        for (const key of Object.keys(responsePayload.headers))
+        Object.keys(responsePayload.headers).forEach(function (key) {
             this._headers[key.toLowerCase()] = responsePayload.headers[key];
+        });
         this._securityDetails = responsePayload.securityDetails ? new SecurityDetails(responsePayload.securityDetails) : null;
     }
     /**
@@ -4883,8 +4905,9 @@ class Page extends EventEmitter {
         const interceptors = Array.from(this._fileChooserInterceptors);
         this._fileChooserInterceptors.clear();
         const fileChooser = new FileChooser(this._client, event);
-        for (const interceptor of interceptors)
+        interceptors.forEach(function (interceptor) {
             interceptor.call(null, fileChooser);
+        });
     }
     /**
       * @param {!{timeout?: number}=} options
