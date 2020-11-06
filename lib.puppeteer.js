@@ -1475,10 +1475,10 @@ class Helper {
     static async waitWithTimeout(promise, taskName, timeout) {
         let reject;
         const timeoutError = new TimeoutError(`waiting for ${taskName} failed: timeout ${timeout}ms exceeded`);
-        const timeoutPromise = new Promise((resolve, x) => reject = x);
+        const timeoutPromise = new Promise(function (resolve, x) { return reject = x; });
         let timeoutTimer = null;
         if (timeout) {
-            timeoutTimer = setTimeout(() => reject(timeoutError), timeout);
+            timeoutTimer = setTimeout(function () { return reject(timeoutError); }, timeout);
         }
         try {
             return await Promise.race([promise, timeoutPromise]);
@@ -1588,23 +1588,24 @@ class Browser extends EventEmitter {
       */
     constructor(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback) {
         super();
-        this._ignoreHTTPSErrors = ignoreHTTPSErrors;
-        this._defaultViewport = defaultViewport;
-        this._process = process;
-        this._screenshotTaskQueue = new TaskQueue();
-        this._connection = connection;
-        this._closeCallback = closeCallback || new Function();
-        this._defaultContext = new BrowserContext(this._connection, this, null);
+        let that = this;
+        that._ignoreHTTPSErrors = ignoreHTTPSErrors;
+        that._defaultViewport = defaultViewport;
+        that._process = process;
+        that._screenshotTaskQueue = new TaskQueue();
+        that._connection = connection;
+        that._closeCallback = closeCallback || new Function();
+        that._defaultContext = new BrowserContext(that._connection, that, null);
         /** @type {Map<string, BrowserContext>} */
-        this._contexts = new Map();
+        that._contexts = new Map();
         for (const contextId of contextIds)
-            this._contexts.set(contextId, new BrowserContext(this._connection, this, contextId));
+            that._contexts.set(contextId, new BrowserContext(that._connection, that, contextId));
         /** @type {Map<string, Target>} */
-        this._targets = new Map();
-        this._connection.on(Events.Connection.Disconnected, () => this.emit(Events.Browser.Disconnected));
-        this._connection.on("Target.targetCreated", this._targetCreated.bind(this));
-        this._connection.on("Target.targetDestroyed", this._targetDestroyed.bind(this));
-        this._connection.on("Target.targetInfoChanged", this._targetInfoChanged.bind(this));
+        that._targets = new Map();
+        that._connection.on(Events.Connection.Disconnected, function () { return that.emit(Events.Browser.Disconnected); });
+        that._connection.on("Target.targetCreated", that._targetCreated.bind(that));
+        that._connection.on("Target.targetDestroyed", that._targetDestroyed.bind(that));
+        that._connection.on("Target.targetInfoChanged", that._targetInfoChanged.bind(that));
     }
     /**
       * @return {?Puppeteer.ChildProcess}
@@ -1647,7 +1648,7 @@ class Browser extends EventEmitter {
         const targetInfo = event.targetInfo;
         const {browserContextId} = targetInfo;
         const context = (browserContextId && this._contexts.has(browserContextId)) ? this._contexts.get(browserContextId) : this._defaultContext;
-        const target = new Target(targetInfo, context, () => this._connection.createSession(targetInfo), this._ignoreHTTPSErrors, this._defaultViewport, this._screenshotTaskQueue);
+        const target = new Target(targetInfo, context, function () { return this._connection.createSession(targetInfo); }, this._ignoreHTTPSErrors, this._defaultViewport, this._screenshotTaskQueue);
         assert(!this._targets.has(event.targetInfo.targetId), "Target should not exist before targetCreated");
         this._targets.set(event.targetInfo.targetId, target);
         if (await target._initializedPromise) {
@@ -1758,7 +1759,7 @@ class Browser extends EventEmitter {
     async pages() {
         const contextPages = await Promise.all(this.browserContexts().map(function (context) { return context.pages(); }));
         // Flatten array.
-        return contextPages.reduce((acc, x) => acc.concat(x), []);
+        return contextPages.reduce(function (acc, x) { return acc.concat(x); }, []);
     }
     /**
       * @return {!Promise<string>}
@@ -3072,7 +3073,7 @@ class FrameManager extends EventEmitter {
         this._handleFrameTree(frameTree);
         await Promise.all([
             this._client.send("Page.setLifecycleEventsEnabled", { enabled: true }),
-            this._client.send("Runtime.enable", {}).then(() => this._ensureIsolatedWorld(UTILITY_WORLD_NAME)),
+            this._client.send("Runtime.enable", {}).then(function () { return this._ensureIsolatedWorld(UTILITY_WORLD_NAME); }),
             this._networkManager.initialize(),
         ]);
     }
@@ -3846,7 +3847,7 @@ class LifecycleWatcher {
         /** @type {?Puppeteer.Request} */
         this._navigationRequest = null;
         this._eventListeners = [
-            helper.addEventListener(frameManager._client, Events.CDPSession.Disconnected, () => this._terminate(new Error("Navigation failed because browser has disconnected!"))),
+            helper.addEventListener(frameManager._client, Events.CDPSession.Disconnected, function () { return this._terminate(new Error("Navigation failed because browser has disconnected!")); }),
             helper.addEventListener(this._frameManager, Events.FrameManager.LifecycleEvent, this._checkLifecycleComplete.bind(this)),
             helper.addEventListener(this._frameManager, Events.FrameManager.FrameNavigatedWithinDocument, this._navigatedWithinDocument.bind(this)),
             helper.addEventListener(this._frameManager, Events.FrameManager.FrameDetached, this._onFrameDetached.bind(this)),
