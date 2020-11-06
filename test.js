@@ -181,7 +181,6 @@
         isWebWorker,
         local,
         noop,
-        nop: noop,
         objectAssignDefault,
         objectDeepCopyWithKeysSorted,
         onErrorThrow

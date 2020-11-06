@@ -190,7 +190,6 @@
         isWebWorker,
         local,
         noop,
-        nop: noop,
         objectAssignDefault,
         objectDeepCopyWithKeysSorted,
         onErrorThrow
@@ -437,7 +436,6 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         isWebWorker,\n\
         local,\n\
         noop,\n\
-        nop: noop,\n\
         objectAssignDefault,\n\
         objectDeepCopyWithKeysSorted,\n\
         onErrorThrow\n\
