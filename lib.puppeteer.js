@@ -127,7 +127,7 @@
      */
         return val;
     }
-    function nop() {
+    function noop() {
     /*
      * this function will do nothing
      */
@@ -189,7 +189,8 @@
         isBrowser,
         isWebWorker,
         local,
-        nop,
+        noop,
+        nop: noop,
         objectAssignDefault,
         objectDeepCopyWithKeysSorted,
         onErrorThrow
