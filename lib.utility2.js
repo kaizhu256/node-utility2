@@ -181,19 +181,20 @@
         });
     }
     // init local
-    local = {};
-    local.local = local;
+    local = {
+        assertJsonEqual,
+        assertOrThrow,
+        coalesce,
+        identity,
+        isBrowser,
+        isWebWorker,
+        local,
+        nop,
+        objectAssignDefault,
+        objectDeepCopyWithKeysSorted,
+        onErrorThrow
+    };
     globalThis.globalLocal = local;
-    local.assertJsonEqual = assertJsonEqual;
-    local.assertOrThrow = assertOrThrow;
-    local.coalesce = coalesce;
-    local.identity = identity;
-    local.isBrowser = isBrowser;
-    local.isWebWorker = isWebWorker;
-    local.nop = nop;
-    local.objectAssignDefault = objectAssignDefault;
-    local.objectDeepCopyWithKeysSorted = objectDeepCopyWithKeysSorted;
-    local.onErrorThrow = onErrorThrow;
 }());
 // assets.utility2.header.js - end
 
@@ -426,19 +427,20 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         });\n\
     }\n\
     // init local\n\
-    local = {};\n\
-    local.local = local;\n\
+    local = {\n\
+        assertJsonEqual,\n\
+        assertOrThrow,\n\
+        coalesce,\n\
+        identity,\n\
+        isBrowser,\n\
+        isWebWorker,\n\
+        local,\n\
+        nop,\n\
+        objectAssignDefault,\n\
+        objectDeepCopyWithKeysSorted,\n\
+        onErrorThrow\n\
+    };\n\
     globalThis.globalLocal = local;\n\
-    local.assertJsonEqual = assertJsonEqual;\n\
-    local.assertOrThrow = assertOrThrow;\n\
-    local.coalesce = coalesce;\n\
-    local.identity = identity;\n\
-    local.isBrowser = isBrowser;\n\
-    local.isWebWorker = isWebWorker;\n\
-    local.nop = nop;\n\
-    local.objectAssignDefault = objectAssignDefault;\n\
-    local.objectDeepCopyWithKeysSorted = objectDeepCopyWithKeysSorted;\n\
-    local.onErrorThrow = onErrorThrow;\n\
 }());\n\
 // assets.utility2.header.js - end\n\
 '
