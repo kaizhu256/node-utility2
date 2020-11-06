@@ -1812,7 +1812,8 @@ class BrowserContext extends EventEmitter {
       * @return {!Array<!Target>} target
       */
     targets() {
-        return this._browser.targets().filter(function (target) { return target.browserContext() === this; });
+        let that = this;
+        return that._browser.targets().filter(function (target) { return target.browserContext() === that; });
     }
     /**
       * @param {function(!Target):boolean} predicate
@@ -4946,12 +4947,13 @@ class Page extends EventEmitter {
       * @param {!Protocol.Log.entryAddedPayload} event
       */
     _onLogEntryAdded(event) {
+        let that = this;
         const {level, text, args, source, url, lineNumber} = event.entry;
         if (args) {
-            args.map(function (arg) { return helper.releaseObject(this._client, arg); });
+            args.map(function (arg) { return helper.releaseObject(that._client, arg); });
         }
         if (source !== "worker") {
-            this.emit(Events.Page.Console, new ConsoleMessage(level, text, [], {url, lineNumber}));
+            that.emit(Events.Page.Console, new ConsoleMessage(level, text, [], {url, lineNumber}));
         }
     }
     /**
