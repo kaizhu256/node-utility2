@@ -118,7 +118,7 @@
      */
         return val;
     }
-    function nop() {
+    function noop() {
     /*
      * this function will do nothing
      */
@@ -181,7 +181,7 @@
     local.identity = identity;
     local.isBrowser = isBrowser;
     local.isWebWorker = isWebWorker;
-    local.noop = nop;
+    local.noop = noop;
     local.objectAssignDefault = objectAssignDefault;
     local.onErrorThrow = onErrorThrow;
 }());

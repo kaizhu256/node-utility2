@@ -1762,21 +1762,21 @@ local._testCase_buildApidoc_default = function (opt, onError) {
         let exports;
         let mockDict;
         let mockList;
-        let nop;
-        nop = function () {
+        let noop;
+        noop = function () {
         /*
          * this function will do nothing
          */
             return;
         };
         // coverage-hack
-        nop();
+        noop();
         mockList = [
             [
                 globalThis, {
-                    setImmediate: nop,
-                    setInterval: nop,
-                    setTimeout: nop
+                    setImmediate: noop,
+                    setInterval: noop,
+                    setTimeout: noop
                 }
             ]
         ];
@@ -1807,7 +1807,7 @@ local._testCase_buildApidoc_default = function (opt, onError) {
             require("vm"),
             {
                 // coverage-hack
-                "__zjqx1234__": nop
+                "__zjqx1234__": noop
             }
         ].forEach(function (dict) {
             mockDict = {};
@@ -1818,7 +1818,7 @@ local._testCase_buildApidoc_default = function (opt, onError) {
                     // coverage-hack
                     || key === "__zjqx1234__"
                 )) {
-                    mockDict[key] = nop;
+                    mockDict[key] = noop;
                 }
             });
             mockList.push([
@@ -1841,7 +1841,7 @@ local._testCase_buildApidoc_default = function (opt, onError) {
     local.fsWriteFileWithMkdirp(".tmp/build/apidoc.html", local.apidocCreate(
         Object.assign({
             blacklistDict: local,
-            modeNop: (
+            modeNoop: (
                 process.env.npm_config_mode_test_case
                 !== "testCase_buildApidoc_default"
             ),
@@ -3741,7 +3741,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
         "assertOrThrow",
         "coalesce",
         "identity",
-        "nop",
+        "noop",
         "objectAssignDefault",
         "objectDeepCopyWithKeysSorted",
         "onErrorThrow"
@@ -5235,9 +5235,9 @@ local.templateRenderMyApp = function (template) {
     return template;
 };
 
-local.testCase_nop_default = function (opt, onError) {
+local.testCase_noop_default = function (opt, onError) {
 /*
- * this function will test nop's default handling-behavior
+ * this function will test noop's default handling-behavior
  */
     local.noop();
     onError(undefined, opt);
