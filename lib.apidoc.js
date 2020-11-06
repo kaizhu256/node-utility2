@@ -785,7 +785,7 @@ local.apidocCreate = function (opt) {
     let tmp;
     let toString;
     let trimStart;
-    if (opt.modeNop) {
+    if (opt.modeNoop) {
         return "";
     }
     elemCreate = function (module, prefix, key) {
