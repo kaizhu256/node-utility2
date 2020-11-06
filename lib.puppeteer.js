@@ -1893,11 +1893,11 @@ class Connection extends EventEmitter {
         this._delay = delay;
         this._ws = ws;
         let ws2 = this._ws;
-        ws2.addEventListener("message", event => {
+        ws2.addEventListener("message", function (event) {
             if (this.onmessage)
                 this.onmessage.call(null, event.data);
         });
-        ws2.addEventListener("close", event => {
+        ws2.addEventListener("close", function (event) {
             if (this.onclose)
                 this.onclose.call(null);
         });
@@ -1957,7 +1957,7 @@ class Connection extends EventEmitter {
       */
     async _onMessage(message) {
         if (this._delay)
-            await new Promise(f => setTimeout(f, this._delay));
+            await new Promise(function (f) { return setTimeout(f, this._delay); });
         debugProtocol("◀ RECV " + message);
         const object = JSON.parse(message);
         if (object.method === "Target.attachedToTarget") {
