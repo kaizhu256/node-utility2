@@ -2007,6 +2007,7 @@ Connection.prototype._rawSend = function (message) {
   */
 Connection.prototype._onMessage = async function (message) {
     let that = this;
+    let session;
     if (that._delay) {
         await new Promise(function (f) {
             setTimeout(f, that._delay); });
@@ -2015,17 +2016,17 @@ Connection.prototype._onMessage = async function (message) {
     const object = JSON.parse(message);
     if (object.method === "Target.attachedToTarget") {
         const sessionId = object.params.sessionId;
-        const session = new CDPSession(this, object.params.targetInfo.type, sessionId);
+        session = new CDPSession(this, object.params.targetInfo.type, sessionId);
         this._sessions.set(sessionId, session);
     } else if (object.method === "Target.detachedFromTarget") {
-        const session = this._sessions.get(object.params.sessionId);
+        session = this._sessions.get(object.params.sessionId);
         if (session) {
             session._onClosed();
             this._sessions.delete(object.params.sessionId);
         }
     }
     if (object.sessionId) {
-        const session = this._sessions.get(object.sessionId);
+        session = this._sessions.get(object.sessionId);
         if (session) {
             session._onMessage(object);
         }
