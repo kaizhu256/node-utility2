@@ -4847,8 +4847,8 @@ class Page extends EventEmitter {
         });
     }
     async _initialize() {
+        let that = this;
         await Promise.all([
-            let that = this;
             that._frameManager.initialize(),
             that._client.send("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
             that._client.send("Performance.enable", {}),
