@@ -989,7 +989,7 @@ function WebSocket(address) {
       * @param {Object} options Connection options
       */
     let cryptoKey;
-    let socket2;
+    let sock2;
     let ws2;
     ws2 = this;
     require("stream").EventEmitter.call(ws2);
@@ -1076,7 +1076,7 @@ function WebSocket(address) {
         if (typeof data === "number") {
             data = data.toString();
         }
-        socket2.write(data || BUFFER0, cb);
+        sock2.write(data || BUFFER0, cb);
     }
     //!! ws2 = this;
     //!! require("stream").Transform.call(ws2);
@@ -1111,8 +1111,8 @@ function WebSocket(address) {
             ws2.readyState = WebSocket.CLOSING;
             socket.end();
         }
-        socket2 = new Socket2(socket); // jslint ignore:line
-        socket2.on("data", function (payload) {
+        sock2 = new Socket2(socket); // jslint ignore:line
+        sock2.on("data", function (payload) {
             ws2.emit("message", payload.toString());
         });
         ws2.emit("upgrade", res);
