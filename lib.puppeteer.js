@@ -8,7 +8,7 @@
 */
 // ,$s/\(\w\w*\) => {/function (\1) {/gc
 // ,$s/\<this\>/that/gc
-// ,$s/\(\w\w*\) =>\( {\)*/function (\1) {/gc
+// ,$s/\(\w\w*\) => \(.*\))/function (\1) { return \2; })/gc
 // ,$s/\<\(if\|else\) .*[^{]$/& {/gc
 // ,$s/^\( *\)\(\<\(if\|else\) .*[^{]\)\(\n.*\)/\1\2 {\4\r\1}/gc
 // ,$s/^\( *\)\(\<else\)\(\n.*\)/\1\2 {\3\r\1}/gc
@@ -1706,13 +1706,13 @@ class Browser extends EventEmitter {
       * @return {!Array<!Target>}
       */
     targets() {
-        return Array.from(this._targets.values()).filter(target => target._isInitialized);
+        return Array.from(this._targets.values()).filter(function (target) { return target._isInitialized; });
     }
     /**
       * @return {!Target}
       */
     target() {
-        return this.targets().find(target => target.type() === "browser");
+        return this.targets().find(function (target) { return target.type() === "browser"; });
     }
     /**
       * @param {function(!Target):boolean} predicate
@@ -1728,7 +1728,7 @@ class Browser extends EventEmitter {
             return existingTarget;
         }
         let resolve;
-        const targetPromise = new Promise(x => resolve = x);
+        const targetPromise = new Promise(function (x) { return resolve = x; });
         this.on(Events.Browser.TargetCreated, check);
         this.on(Events.Browser.TargetChanged, check);
         try {
@@ -1753,7 +1753,7 @@ class Browser extends EventEmitter {
       * @return {!Promise<!Array<!Puppeteer.Page>>}
       */
     async pages() {
-        const contextPages = await Promise.all(this.browserContexts().map(context => context.pages()));
+        const contextPages = await Promise.all(this.browserContexts().map(function (context) { return context.pages(); }));
         // Flatten array.
         return contextPages.reduce((acc, x) => acc.concat(x), []);
     }
