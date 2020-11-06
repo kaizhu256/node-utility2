@@ -1995,8 +1995,9 @@ Connection.prototype._rawSend = function (message) {
   * @param {string} message
   */
 Connection.prototype._onMessage = async function (message) {
-    if (this._delay) {
-        await new Promise(function (f) { setTimeout(f, this._delay); });
+    let that = this;
+    if (that._delay) {
+        await new Promise(function (f) { setTimeout(f, that._delay); });
     }
     debugProtocol("◀ RECV " + message);
     const object = JSON.parse(message);
