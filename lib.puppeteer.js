@@ -2101,7 +2101,7 @@ CDPSession.prototype._onClosed = function () {
   * @param {!Puppeteer.ConnectionTransport} transport
   * @param {number=} delay
   */
-function Connection(url, ws, delay = 0) {
+function Connection(url, ws2, delay = 0) {
     require("stream").EventEmitter.call(this);
     this._url = url;
     this._lastId = 0;
@@ -2111,8 +2111,7 @@ function Connection(url, ws, delay = 0) {
      */
     this._callbacks = new Map();
     this._delay = delay;
-    this._ws = ws;
-    let ws2 = this._ws;
+    this.ws2 = ws2;
     let that = this;
     ws2.addEventListener("message", function (event) {
         if (that.onmessage) {
@@ -2181,8 +2180,8 @@ Connection.prototype._rawSend = function (message) {
     this._lastId += 1;
     const id = this._lastId;
     message = JSON.stringify(Object.assign({}, message, {id}));
-    console.error("SEND ► " + message);
-    let ws2 = this._ws;
+    // console.error("SEND ► " + message);
+    let ws2 = this.ws2;
     ws2.send(message);
     return id;
 };
@@ -2197,7 +2196,7 @@ Connection.prototype._onMessage = async function (message) {
             setTimeout(f, that._delay);
         });
     }
-    console.error("◀ RECV " + message);
+    // console.error("◀ RECV " + message);
     const object = JSON.parse(message);
     if (object.method === "Target.attachedToTarget") {
         const sessionId = object.params.sessionId;
@@ -2258,7 +2257,7 @@ Connection.prototype._onClose = function () {
 };
 Connection.prototype.dispose = function () {
     this._onClose();
-    let ws2 = this._ws;
+    let ws2 = this.ws2;
     ws2.close();
 };
 /**
@@ -5068,18 +5067,6 @@ class Page extends EventEmitter {
         return this._frameManager.networkManager().setOfflineMode(enabled);
     }
     /**
-      * @param {number} timeout
-      */
-    setDefaultNavigationTimeout(timeout) {
-        this._timeoutSettings.setDefaultNavigationTimeout(timeout);
-    }
-    /**
-      * @param {number} timeout
-      */
-    setDefaultTimeout(timeout) {
-        this._timeoutSettings.setDefaultTimeout(timeout);
-    }
-    /**
       * @param {string} selector
       * @return {!Promise<?Puppeteer.ElementHandle>}
       */
@@ -6128,18 +6115,6 @@ class TimeoutSettings {
     constructor() {
         this._defaultTimeout = null;
         this._defaultNavigationTimeout = null;
-    }
-    /**
-      * @param {number} timeout
-      */
-    setDefaultTimeout(timeout) {
-        this._defaultTimeout = timeout;
-    }
-    /**
-      * @param {number} timeout
-      */
-    setDefaultNavigationTimeout(timeout) {
-        this._defaultNavigationTimeout = timeout;
     }
     /**
       * @return {number}
