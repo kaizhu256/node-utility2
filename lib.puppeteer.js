@@ -3,7 +3,11 @@
 
 // vim
 // ,$s/^    \(async \)*\(\w\w*\)(/    Connection.prorotype.\2 = \1function (/gc
+/*
+        let that = this;
+*/
 // ,$s/\(\w\w*\) => {/function (\1) {/gc
+// ,$s/\<this\>/that/gc
 // ,$s/\(\w\w*\) =>\( {\)*/function (\1) {/gc
 // ,$s/\<\(if\|else\) .*[^{]$/& {/gc
 // ,$s/^\( *\)\(\<\(if\|else\) .*[^{]\)\(\n.*\)/\1\2 {\4\r\1}/gc
@@ -4844,12 +4848,13 @@ class Page extends EventEmitter {
     }
     async _initialize() {
         await Promise.all([
-            this._frameManager.initialize(),
-            this._client.send("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
-            this._client.send("Performance.enable", {}),
-            this._client.send("Log.enable", {}),
-            this._client.send("Page.setInterceptFileChooserDialog", {enabled: true}).catch(e => {
-                this._fileChooserInterceptionIsDisabled = true;
+            let that = this;
+            that._frameManager.initialize(),
+            that._client.send("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
+            that._client.send("Performance.enable", {}),
+            that._client.send("Log.enable", {}),
+            that._client.send("Page.setInterceptFileChooserDialog", {enabled: true}).catch(function (e) {
+                that._fileChooserInterceptionIsDisabled = true;
             }),
         ]);
     }
@@ -4872,17 +4877,18 @@ class Page extends EventEmitter {
       * @return !Promise<!FileChooser>}
       */
     async waitForFileChooser(options = {}) {
-        if (this._fileChooserInterceptionIsDisabled) {
+        let that = this;
+        if (that._fileChooserInterceptionIsDisabled) {
             throw new Error("File chooser handling does not work with multiple connections to the same page");
         }
         const {
-            timeout = this._timeoutSettings.timeout(),
+            timeout = that._timeoutSettings.timeout(),
         } = options;
         let callback;
         const promise = new Promise(x => callback = x);
-        this._fileChooserInterceptors.add(callback);
-        return helper.waitWithTimeout(promise, "waiting for file chooser", timeout).catch(e => {
-            this._fileChooserInterceptors.delete(callback);
+        that._fileChooserInterceptors.add(callback);
+        return helper.waitWithTimeout(promise, "waiting for file chooser", timeout).catch(function (e) {
+            that._fileChooserInterceptors.delete(callback);
             throw e;
         });
     }
@@ -5073,7 +5079,7 @@ class Page extends EventEmitter {
     async setCookie(...cookies) {
         const pageURL = this.url();
         const startsWithHTTP = pageURL.startsWith("http");
-        const items = cookies.map(cookie => {
+        const items = cookies.map(function (cookie) {
             const item = Object.assign({}, cookie);
             if (!item.url && startsWithHTTP) {
                 item.url = pageURL;
@@ -5360,7 +5366,7 @@ class Page extends EventEmitter {
         const {
             timeout = this._timeoutSettings.timeout(),
         } = options;
-        return helper.waitForEvent(this._frameManager.networkManager(), Events.NetworkManager.Request, request => {
+        return helper.waitForEvent(this._frameManager.networkManager(), Events.NetworkManager.Request, function (request) {
             if (helper.isString(urlOrPredicate)) {
                 return (urlOrPredicate === request.url());
             }
@@ -5379,7 +5385,7 @@ class Page extends EventEmitter {
         const {
             timeout = this._timeoutSettings.timeout(),
         } = options;
-        return helper.waitForEvent(this._frameManager.networkManager(), Events.NetworkManager.Response, response => {
+        return helper.waitForEvent(this._frameManager.networkManager(), Events.NetworkManager.Response, function (response) {
             if (helper.isString(urlOrPredicate)) {
                 return (urlOrPredicate === response.url());
             }
@@ -5873,37 +5879,38 @@ class Target {
       * @param {!Puppeteer.TaskQueue} screenshotTaskQueue
       */
     constructor(targetInfo, browserContext, sessionFactory, ignoreHTTPSErrors, defaultViewport, screenshotTaskQueue) {
-        this._targetInfo = targetInfo;
-        this._browserContext = browserContext;
-        this._targetId = targetInfo.targetId;
-        this._sessionFactory = sessionFactory;
-        this._ignoreHTTPSErrors = ignoreHTTPSErrors;
-        this._defaultViewport = defaultViewport;
-        this._screenshotTaskQueue = screenshotTaskQueue;
+        let that = this;
+        that._targetInfo = targetInfo;
+        that._browserContext = browserContext;
+        that._targetId = targetInfo.targetId;
+        that._sessionFactory = sessionFactory;
+        that._ignoreHTTPSErrors = ignoreHTTPSErrors;
+        that._defaultViewport = defaultViewport;
+        that._screenshotTaskQueue = screenshotTaskQueue;
         /** @type {?Promise<!Puppeteer.Page>} */
-        this._pagePromise = null;
+        that._pagePromise = null;
         /** @type {?Promise<!Worker>} */
-        this._workerPromise = null;
-        this._initializedPromise = new Promise(fulfill => this._initializedCallback = fulfill).then(async success => {
+        that._workerPromise = null;
+        that._initializedPromise = new Promise(fulfill => that._initializedCallback = fulfill).then(async function (success) {
             if (!success) {
                 return false;
             }
-            const opener = this.opener();
-            if (!opener || !opener._pagePromise || this.type() !== "page") {
+            const opener = that.opener();
+            if (!opener || !opener._pagePromise || that.type() !== "page") {
                 return true;
             }
             const openerPage = await opener._pagePromise;
             if (!openerPage.listenerCount(Events.Page.Popup)) {
                 return true;
             }
-            const popupPage = await this.page();
+            const popupPage = await that.page();
             openerPage.emit(Events.Page.Popup, popupPage);
             return true;
         });
-        this._isClosedPromise = new Promise(fulfill => this._closedCallback = fulfill);
-        this._isInitialized = this._targetInfo.type !== "page" || this._targetInfo.url !== "";
-        if (this._isInitialized) {
-            this._initializedCallback(true);
+        that._isClosedPromise = new Promise(fulfill => that._closedCallback = fulfill);
+        that._isInitialized = that._targetInfo.type !== "page" || that._targetInfo.url !== "";
+        if (that._isInitialized) {
+            that._initializedCallback(true);
         }
     }
     /**
@@ -5930,7 +5937,7 @@ class Target {
             return null;
         }
         if (!this._workerPromise) {
-            this._workerPromise = this._sessionFactory().then(async client => {
+            this._workerPromise = this._sessionFactory().then(async function (client) {
                 // Top level workers have a fake page wrapping the actual worker.
                 const [targetAttached] = await Promise.all([
                     new Promise(x => client.once("Target.attachedToTarget", x)),
