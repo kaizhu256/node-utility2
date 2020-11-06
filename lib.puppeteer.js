@@ -3120,8 +3120,9 @@ class FrameManager extends EventEmitter {
             watcher.newDocumentNavigationPromise()
         ]);
         watcher.dispose();
-        if (error)
+        if (error) {
             throw error;
+        }
         return watcher.navigationResponse();
     }
     /**
@@ -3129,8 +3130,9 @@ class FrameManager extends EventEmitter {
       */
     _onLifecycleEvent(event) {
         const frame = this._frames.get(event.frameId);
-        if (!frame)
+        if (!frame) {
             return;
+        }
         frame._onLifecycleEvent(event.loaderId, event.name);
         this.emit(Events.FrameManager.LifecycleEvent, frame);
     }
@@ -3139,8 +3141,9 @@ class FrameManager extends EventEmitter {
       */
     _onFrameStoppedLoading(frameId) {
         const frame = this._frames.get(frameId);
-        if (!frame)
+        if (!frame) {
             return;
+        }
         frame._onLoadingStopped();
         this.emit(Events.FrameManager.LifecycleEvent, frame);
     }
@@ -3148,11 +3151,13 @@ class FrameManager extends EventEmitter {
       * @param {!Protocol.Page.FrameTree} frameTree
       */
     _handleFrameTree(frameTree) {
-        if (frameTree.frame.parentId)
+        if (frameTree.frame.parentId) {
             this._onFrameAttached(frameTree.frame.id, frameTree.frame.parentId);
+        }
         this._onFrameNavigated(frameTree.frame);
-        if (!frameTree.childFrames)
+        if (!frameTree.childFrames) {
             return;
+        }
         for (const child of frameTree.childFrames)
             this._handleFrameTree(child);
     }
@@ -3186,8 +3191,9 @@ class FrameManager extends EventEmitter {
       * @param {?string} parentFrameId
       */
     _onFrameAttached(frameId, parentFrameId) {
-        if (this._frames.has(frameId))
+        if (this._frames.has(frameId)) {
             return;
+        }
         assert(parentFrameId);
         const parentFrame = this._frames.get(parentFrameId);
         const frame = new Frame(this, this._client, parentFrame, frameId);
@@ -3227,8 +3233,9 @@ class FrameManager extends EventEmitter {
       * @param {string} name
       */
     async _ensureIsolatedWorld(name) {
-        if (this._isolatedWorlds.has(name))
+        if (this._isolatedWorlds.has(name)) {
             return;
+        }
         this._isolatedWorlds.add(name);
         await this._client.send("Page.addScriptToEvaluateOnNewDocument", {
             source: `//# sourceURL=${EVALUATION_SCRIPT_URL}`,
@@ -3246,8 +3253,9 @@ class FrameManager extends EventEmitter {
       */
     _onFrameNavigatedWithinDocument(frameId, url) {
         const frame = this._frames.get(frameId);
-        if (!frame)
+        if (!frame) {
             return;
+        }
         frame._navigatedWithinDocument(url);
         this.emit(Events.FrameManager.FrameNavigatedWithinDocument, frame);
         this.emit(Events.FrameManager.FrameNavigated, frame);
@@ -3257,8 +3265,9 @@ class FrameManager extends EventEmitter {
       */
     _onFrameDetached(frameId) {
         const frame = this._frames.get(frameId);
-        if (frame)
+        if (frame) {
             this._removeFramesRecursively(frame);
+        }
     }
     _onExecutionContextCreated(contextPayload) {
         const frameId = contextPayload.auxData ? contextPayload.auxData.frameId : null;
@@ -3274,12 +3283,14 @@ class FrameManager extends EventEmitter {
                 world = frame._secondaryWorld;
             }
         }
-        if (contextPayload.auxData && contextPayload.auxData["type"] === "isolated")
+        if (contextPayload.auxData && contextPayload.auxData["type"] === "isolated") {
             this._isolatedWorlds.add(contextPayload.name);
+        }
         /** @type {!ExecutionContext} */
         const context = new ExecutionContext(this._client, contextPayload, world);
-        if (world)
+        if (world) {
             world._setContext(context);
+        }
         this._contextIdToContext.set(contextPayload.id, context);
     }
     /**
@@ -3287,16 +3298,19 @@ class FrameManager extends EventEmitter {
       */
     _onExecutionContextDestroyed(executionContextId) {
         const context = this._contextIdToContext.get(executionContextId);
-        if (!context)
+        if (!context) {
             return;
+        }
         this._contextIdToContext.delete(executionContextId);
-        if (context._world)
+        if (context._world) {
             context._world._setContext(null);
+        }
     }
     _onExecutionContextsCleared() {
         for (const context of this._contextIdToContext.values()) {
-            if (context._world)
+            if (context._world) {
                 context._world._setContext(null);
+            }
         }
         this._contextIdToContext.clear();
     }
@@ -3346,8 +3360,9 @@ class Frame {
         this._secondaryWorld = new DOMWorld(frameManager, this, frameManager._timeoutSettings);
         /** @type {!Set<!Frame>} */
         this._childFrames = new Set();
-        if (this._parentFrame)
+        if (this._parentFrame) {
             this._parentFrame._childFrames.add(this);
+        }
     }
     /**
       * @param {string} url
@@ -3533,14 +3548,17 @@ class Frame {
         const xPathPattern = "//";
         if (helper.isString(selectorOrFunctionOrTimeout)) {
             const string = /** @type {string} */ (selectorOrFunctionOrTimeout);
-            if (string.startsWith(xPathPattern))
+            if (string.startsWith(xPathPattern)) {
                 return this.waitForXPath(string, options);
+            }
             return this.waitForSelector(string, options);
         }
-        if (helper.isNumber(selectorOrFunctionOrTimeout))
+        if (helper.isNumber(selectorOrFunctionOrTimeout)) {
             return new Promise(fulfill => setTimeout(fulfill, /** @type {number} */ (selectorOrFunctionOrTimeout)));
-        if (typeof selectorOrFunctionOrTimeout === "function")
+        }
+        if (typeof selectorOrFunctionOrTimeout === "function") {
             return this.waitForFunction(selectorOrFunctionOrTimeout, options, ...args);
+        }
         return Promise.reject(new Error("Unsupported target type: " + (typeof selectorOrFunctionOrTimeout)));
     }
     /**
@@ -3550,8 +3568,9 @@ class Frame {
       */
     async waitForSelector(selector, options) {
         const handle = await this._secondaryWorld.waitForSelector(selector, options);
-        if (!handle)
+        if (!handle) {
             return null;
+        }
         const mainExecutionContext = await this._mainWorld.executionContext();
         const result = await mainExecutionContext._adoptElementHandle(handle);
         await handle.dispose();
@@ -3564,8 +3583,9 @@ class Frame {
       */
     async waitForXPath(xpath, options) {
         const handle = await this._secondaryWorld.waitForXPath(xpath, options);
-        if (!handle)
+        if (!handle) {
             return null;
+        }
         const mainExecutionContext = await this._mainWorld.executionContext();
         const result = await mainExecutionContext._adoptElementHandle(handle);
         await handle.dispose();
@@ -3619,8 +3639,9 @@ class Frame {
         this._detached = true;
         this._mainWorld._detach();
         this._secondaryWorld._detach();
-        if (this._parentFrame)
+        if (this._parentFrame) {
             this._parentFrame._childFrames.delete(this);
+        }
         this._parentFrame = null;
     }
 }
@@ -3701,8 +3722,9 @@ class JSHandle {
         });
         const result = new Map();
         for (const property of response.result) {
-            if (!property.enumerable)
+            if (!property.enumerable) {
                 continue;
+            }
             result.set(property.name, createJSHandle(this._context, property.value));
         }
         return result;
@@ -3729,8 +3751,9 @@ class JSHandle {
         return null;
     }
     async dispose() {
-        if (this._disposed)
+        if (this._disposed) {
             return;
+        }
         this._disposed = true;
         await helper.releaseObject(this._client, this._remoteObject);
     }
@@ -3776,10 +3799,12 @@ class LifecycleWatcher {
       * @param {number} timeout
       */
     constructor(frameManager, frame, waitUntil, timeout) {
-        if (Array.isArray(waitUntil))
+        if (Array.isArray(waitUntil)) {
             waitUntil = waitUntil.slice();
-        else if (typeof waitUntil === "string")
+        }
+        else if (typeof waitUntil === "string") {
             waitUntil = [waitUntil];
+        }
         this._expectedLifecycle = waitUntil.map(value => {
             const protocolEvent = puppeteerToProtocolLifecycle[value];
             assert(protocolEvent, "Unknown value for options.waitUntil: " + value);
@@ -3817,8 +3842,9 @@ class LifecycleWatcher {
       * @param {!Puppeteer.Request} request
       */
     _onRequest(request) {
-        if (request.frame() !== this._frame || !request.isNavigationRequest())
+        if (request.frame() !== this._frame || !request.isNavigationRequest()) {
             return;
+        }
         this._navigationRequest = request;
     }
     /**
@@ -3871,8 +3897,9 @@ class LifecycleWatcher {
       * @return {!Promise<?Error>}
       */
     _createTimeoutPromise() {
-        if (!this._timeout)
+        if (!this._timeout) {
             return new Promise(() => {});
+        }
         const errorMessage = "Navigation Timeout Exceeded: " + this._timeout + "ms exceeded";
         return new Promise(fulfill => this._maximumTimer = setTimeout(fulfill, this._timeout))
                 .then(() => new TimeoutError(errorMessage));
@@ -3881,22 +3908,27 @@ class LifecycleWatcher {
       * @param {!Puppeteer.Frame} frame
       */
     _navigatedWithinDocument(frame) {
-        if (frame !== this._frame)
+        if (frame !== this._frame) {
             return;
+        }
         this._hasSameDocumentNavigation = true;
         this._checkLifecycleComplete();
     }
     _checkLifecycleComplete() {
         // We expect navigation to commit.
-        if (!checkLifecycle(this._frame, this._expectedLifecycle))
+        if (!checkLifecycle(this._frame, this._expectedLifecycle)) {
             return;
+        }
         this._lifecycleCallback();
-        if (this._frame._loaderId === this._initialLoaderId && !this._hasSameDocumentNavigation)
+        if (this._frame._loaderId === this._initialLoaderId && !this._hasSameDocumentNavigation) {
             return;
-        if (this._hasSameDocumentNavigation)
+        }
+        if (this._hasSameDocumentNavigation) {
             this._sameDocumentNavigationCompleteCallback();
-        if (this._frame._loaderId !== this._initialLoaderId)
+        }
+        if (this._frame._loaderId !== this._initialLoaderId) {
             this._newDocumentNavigationCompleteCallback();
+        }
         /**
           * @param {!Puppeteer.Frame} frame
           * @param {!Array<string>} expectedLifecycle
@@ -3904,12 +3936,14 @@ class LifecycleWatcher {
           */
         function checkLifecycle(frame, expectedLifecycle) {
             for (const event of expectedLifecycle) {
-                if (!frame._lifecycleEvents.has(event))
+                if (!frame._lifecycleEvents.has(event)) {
                     return false;
+                }
             }
             for (const child of frame.childFrames()) {
-                if (!checkLifecycle(child, expectedLifecycle))
+                if (!checkLifecycle(child, expectedLifecycle)) {
                     return false;
+                }
             }
             return true;
         }
