@@ -2001,25 +2001,19 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
   */
 /**
   * @param {!Error} error
-  * @param {string} message
-  * @return {!Error}
-  */
-function rewriteError(error, message) {
-    error.message = message;
-    return error;
-}
-/**
-  * @param {!Error} error
   * @param {string} method
   * @param {{error: {message: string, data: any}}} object
   * @return {!Error}
   */
 function createProtocolError(error, method, object) {
-    let message = `Protocol error (${method}): ${object.error.message}`;
-    if (object.error.data) {
-        message += ` ${object.error.data}`;
-    }
-    return rewriteError(error, message);
+    error.message = (
+        "Protocol error (" + method + "): " + object.error.message + (
+            object.error.data
+            ? " " + object.error.data
+            : ""
+        )
+    );
+    return error;
 }
 /**
   * @param {!Connection} connection
@@ -2093,10 +2087,10 @@ CDPSession.prototype.detach = async function () {
 };
 CDPSession.prototype._onClosed = function () {
     this._callbacks.forEach(function (callback) {
-        callback.reject(rewriteError(
-            callback.error,
+        callback.error.message = (
             `Protocol error (${callback.method}): Target closed.`
-        ));
+        );
+        callback.reject(callback.error);
     });
     this._callbacks.clear();
     this._connection = null;
@@ -2250,10 +2244,10 @@ Connection.prototype._onClose = function () {
     this.onmessage = null;
     this.onclose = null;
     this._callbacks.forEach(function (callback) {
-        callback.reject(rewriteError(
-            callback.error,
+        callback.error.message = (
             `Protocol error (${callback.method}): Target closed.`
-        ));
+        );
+        callback.reject(callback.error);
     });
     this._callbacks.clear();
     this._sessions.forEach(function (session) {
