@@ -52,6 +52,7 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.3
+- rename function nop to noop
 - update file lib.puppeteer.js with simplified websockets part 2 - remove websocket-server and websocket-non-chrome code and errors
 - update file lib.puppeteer.js with simplified websockets part 1 - preserve old errors
 - remove dependency on env-var \$CHROME_BIN
@@ -242,7 +243,7 @@ instruction
      */
         return val;
     }
-    function nop() {
+    function noop() {
     /*
      * this function will do nothing
      */
@@ -304,7 +305,8 @@ instruction
         isBrowser,
         isWebWorker,
         local,
-        nop,
+        noop,
+        nop: noop,
         objectAssignDefault,
         objectDeepCopyWithKeysSorted,
         onErrorThrow

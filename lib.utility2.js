@@ -373,7 +373,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
      */\n\
         return val;\n\
     }\n\
-    function nop() {\n\
+    function noop() {\n\
     /*\n\
      * this function will do nothing\n\
      */\n\
@@ -435,7 +435,8 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         isBrowser,\n\
         isWebWorker,\n\
         local,\n\
-        nop,\n\
+        noop,\n\
+        nop: noop,\n\
         objectAssignDefault,\n\
         objectDeepCopyWithKeysSorted,\n\
         onErrorThrow\n\
