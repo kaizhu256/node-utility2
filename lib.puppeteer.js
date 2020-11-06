@@ -4477,7 +4477,7 @@ class Request {
         if (response.contentType) {
             responseHeaders["content-type"] = response.contentType;
         }
-        if (responseBody && !("content-length" in responseHeaders)) {
+        if (responseBody && ! responseHeaders.hasOwnProperty("content-length")) {
             responseHeaders["content-length"] = String(Buffer.byteLength(responseBody));
         }
         await this._client.send("Fetch.fulfillRequest", {
