@@ -1,8 +1,12 @@
 #!/usr/bin/env node
-/*
-vim
-,$s/^    \(async \)*\(\w\w*\)(/    Connection.prorotype.\2 = \1function (/gc
- */
+
+
+// vim
+// ,$s/^    \(async \)*\(\w\w*\)(/    Connection.prorotype.\2 = \1function (/gc
+// ,$s/\(\w\w*\) =>\( {\)*/function (\1) {
+// ,$/\<\(if\|else\) .*[^{]$/& {
+
+
 /*
  * lib.puppeteer.js (2019.8.12)
  * https://github.com/kaizhu256/node-puppeteer-lite
