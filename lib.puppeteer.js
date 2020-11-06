@@ -1894,12 +1894,14 @@ class Connection extends EventEmitter {
         this._ws = ws;
         let ws2 = this._ws;
         ws2.addEventListener("message", function (event) {
-            if (this.onmessage)
+            if (this.onmessage) {
                 this.onmessage.call(null, event.data);
+            }
         });
         ws2.addEventListener("close", function (event) {
-            if (this.onclose)
+            if (this.onclose) {
                 this.onclose.call(null);
+            }
         });
         // Silently ignore all errors - we don't know what to do with them.
         ws2.addEventListener("error", local.noop);
@@ -1956,8 +1958,9 @@ class Connection extends EventEmitter {
       * @param {string} message
       */
     async _onMessage(message) {
-        if (this._delay)
+        if (this._delay) {
             await new Promise(function (f) { return setTimeout(f, this._delay); });
+        }
         debugProtocol("◀ RECV " + message);
         const object = JSON.parse(message);
         if (object.method === "Target.attachedToTarget") {
