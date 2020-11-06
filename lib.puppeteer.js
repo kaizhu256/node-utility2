@@ -1,13 +1,8 @@
 #!/usr/bin/env node
-
-
-// vim
-// ,$s/^    \(async \)*\(\w\w*\)(/    Connection.prorotype.\2 = \1function (/gc
-// ,$s/\(\w\w*\) =>\( {\)*/function (\1) {/gc
-// ,$s/\<\(if\|else\) .*[^{]$/& {/gc
-// ,$s/^\( *\)\(\<\(if\|else\) .*[^{]\)\(\n.*\)/\1\2 {\4\r\1}/gc
-
-
+/*
+vim
+,$s/^    \(async \)*\(\w\w*\)(/    Connection.prorotype.\2 = \1function (/gc
+ */
 /*
  * lib.puppeteer.js (2019.8.12)
  * https://github.com/kaizhu256/node-puppeteer-lite
@@ -1898,15 +1893,13 @@ function Connection(url, ws, delay = 0) {
     this._delay = delay;
     this._ws = ws;
     let ws2 = this._ws;
-    ws2.addEventListener("message", function (event) {
-        if (this.onmessage) {
+    ws2.addEventListener("message", event => {
+        if (this.onmessage)
             this.onmessage.call(null, event.data);
-        }
     });
-    ws2.addEventListener("close", function (event) {
-        if (this.onclose) {
+    ws2.addEventListener("close", event => {
+        if (this.onclose)
             this.onclose.call(null);
-        }
     });
     // Silently ignore all errors - we don't know what to do with them.
     ws2.addEventListener("error", local.noop);
@@ -1964,11 +1957,8 @@ Connection.prototype._rawSend = function (message) {
   * @param {string} message
   */
 Connection.prototype._onMessage = async function (message) {
-    let that;
-    that = this;
-    if (this._delay) {
-        await new Promise(function (f) { setTimeout(f, that._delay); });
-    }
+    if (this._delay)
+        await new Promise(f => setTimeout(f, this._delay));
     debugProtocol("◀ RECV " + message);
     const object = JSON.parse(message);
     if (object.method === "Target.attachedToTarget") {
@@ -2395,7 +2385,7 @@ function convertToDisjointRanges(nestedRanges) {
             hitCountStack.pop();
     }
     // Filter out empty ranges.
-    return results.filter(function (range) { return range.end - range.start > 1; });
+    return results.filter(range => range.end - range.start > 1);
 }
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/DOMWorld.js
