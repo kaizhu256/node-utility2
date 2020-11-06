@@ -2027,7 +2027,7 @@ function CDPSession(connection, targetType, sessionId) {
     this._targetType = targetType;
     this._sessionId = sessionId;
 }
-require("util").inherits(WebSocket, require("stream").EventEmitter);
+require("util").inherits(CDPSession, require("stream").EventEmitter);
 /**
   * @param {string} method
   * @param {!Object=} params
