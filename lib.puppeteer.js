@@ -8,6 +8,8 @@
 */
 // ,$s/\(\w\w*\) => {/function (\1) {/gc
 // ,$s/\<this\>/that/gc
+// ,$s/\(\w\w*\) => \(.*\)\([,)]\)/function (\1) { return \2; }\3/gc
+// ,$s/\(\w\w*\) => \([^)]*\)\([,)]\)/function (\1) { return \2; }\3/gc
 // ,$s/\(\w\w*\) => \([^,]*\)\([,)]\)/function (\1) { return \2; }\3/gc
 // ,$s/\<\(if\|else\) .*[^{]$/& {/gc
 // ,$s/^\( *\)\(\<\(if\|else\) .*[^{]\)\(\n.*\)/\1\2 {\4\r\1}/gc
@@ -3925,7 +3927,7 @@ class LifecycleWatcher {
             return new Promise(() => {});
         }
         const errorMessage = "Navigation Timeout Exceeded: " + this._timeout + "ms exceeded";
-        return new Promise(fulfill => this._maximumTimer = setTimeout(fulfill, this._timeout))
+        return new Promise(function (fulfill) { return this._maximumTimer = setTimeout(fulfill, this._timeout); })
                 .then(() => new TimeoutError(errorMessage));
     }
     /**
@@ -4825,26 +4827,26 @@ class Page extends EventEmitter {
             that.emit(Events.Page.WorkerDestroyed, worker);
             that._workers.delete(event.sessionId);
         });
-        that._frameManager.on(Events.FrameManager.FrameAttached, event => that.emit(Events.Page.FrameAttached, event));
-        that._frameManager.on(Events.FrameManager.FrameDetached, event => that.emit(Events.Page.FrameDetached, event));
-        that._frameManager.on(Events.FrameManager.FrameNavigated, event => that.emit(Events.Page.FrameNavigated, event));
+        that._frameManager.on(Events.FrameManager.FrameAttached, function (event) { return that.emit(Events.Page.FrameAttached, event); });
+        that._frameManager.on(Events.FrameManager.FrameDetached, function (event) { return that.emit(Events.Page.FrameDetached, event); });
+        that._frameManager.on(Events.FrameManager.FrameNavigated, function (event) { return that.emit(Events.Page.FrameNavigated, event); });
         const networkManager = that._frameManager.networkManager();
-        networkManager.on(Events.NetworkManager.Request, event => that.emit(Events.Page.Request, event));
-        networkManager.on(Events.NetworkManager.Response, event => that.emit(Events.Page.Response, event));
-        networkManager.on(Events.NetworkManager.RequestFailed, event => that.emit(Events.Page.RequestFailed, event));
-        networkManager.on(Events.NetworkManager.RequestFinished, event => that.emit(Events.Page.RequestFinished, event));
+        networkManager.on(Events.NetworkManager.Request, function (event) { return that.emit(Events.Page.Request, event); });
+        networkManager.on(Events.NetworkManager.Response, function (event) { return that.emit(Events.Page.Response, event); });
+        networkManager.on(Events.NetworkManager.RequestFailed, function (event) { return that.emit(Events.Page.RequestFailed, event); });
+        networkManager.on(Events.NetworkManager.RequestFinished, function (event) { return that.emit(Events.Page.RequestFinished, event); });
         that._fileChooserInterceptionIsDisabled = false;
         that._fileChooserInterceptors = new Set();
-        client.on("Page.domContentEventFired", event => that.emit(Events.Page.DOMContentLoaded));
-        client.on("Page.loadEventFired", event => that.emit(Events.Page.Load));
-        client.on("Runtime.consoleAPICalled", event => that._onConsoleAPI(event));
-        client.on("Runtime.bindingCalled", event => that._onBindingCalled(event));
-        client.on("Page.javascriptDialogOpening", event => that._onDialog(event));
-        client.on("Runtime.exceptionThrown", exception => that._handleException(exception.exceptionDetails));
-        client.on("Inspector.targetCrashed", event => that._onTargetCrashed());
-        client.on("Performance.metrics", event => that._emitMetrics(event));
-        client.on("Log.entryAdded", event => that._onLogEntryAdded(event));
-        client.on("Page.fileChooserOpened", event => that._onFileChooser(event));
+        client.on("Page.domContentEventFired", function (event) { return that.emit(Events.Page.DOMContentLoaded); });
+        client.on("Page.loadEventFired", function (event) { return that.emit(Events.Page.Load); });
+        client.on("Runtime.consoleAPICalled", function (event) { return that._onConsoleAPI(event); });
+        client.on("Runtime.bindingCalled", function (event) { return that._onBindingCalled(event); });
+        client.on("Page.javascriptDialogOpening", function (event) { return that._onDialog(event); });
+        client.on("Runtime.exceptionThrown", function (exception) { return that._handleException(exception.exceptionDetails); });
+        client.on("Inspector.targetCrashed", function (event) { return that._onTargetCrashed(); });
+        client.on("Performance.metrics", function (event) { return that._emitMetrics(event); });
+        client.on("Log.entryAdded", function (event) { return that._onLogEntryAdded(event); });
+        client.on("Page.fileChooserOpened", function (event) { return that._onFileChooser(event); });
         that._target._isClosedPromise.then(() => {
             that.emit(Events.Page.Close);
             that._closed = true;
@@ -4889,7 +4891,7 @@ class Page extends EventEmitter {
             timeout = that._timeoutSettings.timeout(),
         } = options;
         let callback;
-        const promise = new Promise(x => callback = x);
+        const promise = new Promise(function (x) { return callback = x; });
         that._fileChooserInterceptors.add(callback);
         return helper.waitWithTimeout(promise, "waiting for file chooser", timeout).catch(function (e) {
             that._fileChooserInterceptors.delete(callback);
