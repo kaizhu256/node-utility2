@@ -490,7 +490,7 @@ file https://github.com/websockets/ws/blob/6.2.1/lib/websocket.js
 */
 function cdpClientCreate({
     websocketUrl
-}, callback) {
+}, onClient) {
 /*
  * this function with create chrome-devtools-protocol-client from <websocketUrl>
  */
@@ -500,7 +500,10 @@ function cdpClientCreate({
     let READ_LENGTH63;
     let READ_PAYLOAD;
     let bufList;
+    let callbackId;
     let cdpClient;
+    let cdpPromise;
+    let cdpResolve;
     let cryptoKey;
     let onError;
     let payloadLength;
@@ -521,7 +524,9 @@ function cdpClientCreate({
     /*
      * this function will implement stream.Duplex.prototype._read
      */
-        websocket.resume();
+        if (websocket && websocket.readable) {
+            websocket.resume();
+        }
     };
     CdpClient.prototype._write = function (payload, ignore, callback) {
     /*
@@ -530,7 +535,7 @@ function cdpClientCreate({
         let header;
         let maskKey;
         let result;
-        // console.error("SEND ► " + payload.toString());
+        // console.error("SEND ► " + payload.slice(0, 256).toString());
         // init header
         header = Buffer.alloc(2 + 8 + 4);
         // init fin = true
@@ -566,26 +571,110 @@ function cdpClientCreate({
         websocket.uncork();
         return result;
     };
-    CdpClient.prototype.cdpSend = function (
+    CdpClient.prototype.cdpSend = function ({
         method,
         params = {},
-        sessionId = undefined
-    ) {
+        sessionId
+    }/*, callback*/) {
     /*
-     * this function will send payload {method, params, sessionId}
-     * using chrome-devtools-protocol
+     * this function will message-pass
+     * JSON.stringify({id, <method>, <params>, <sessionId>})
+     * to chrome-browser using chrome-devtools-protocol
      */
-        let id;
-        id = require("crypto").randomBytes(2).readUInt16BE(0, 2);
+        callbackId = (callbackId % 1024) + 1;
+        //!! cdpClient.callbackDict[callbackId] = callback;
         cdpClient.write(Buffer.from(JSON.stringify({
-            id,
+            id: callbackId,
             method,
             params,
             sessionId
         })));
-        return id;
+        return callbackId;
     };
+    callbackId = 0;
     cdpClient = new CdpClient();
+    cdpClient.callbackDict = {};
+    function createProtocolError(err, method, object) {
+        err.message = (
+            "Protocol error (" + method + "): " + object.error.message + (
+                object.error.data
+                ? " " + object.error.data
+                : ""
+            )
+        );
+        return err;
+    }
+    cdpClient.on("data", function (message) {
+    /*
+     * this function will handle callback for <message>
+     * received from chrome-browser using chrome-devtools-protocol
+     */
+        // console.error("◀ RECV " + message.slice(0, 256).toString());
+        let callback;
+        let callbackDict;
+        let cnn;
+        let session;
+        cnn = cdpClient.cnn;
+        callbackDict = cdpClient.callbackDict;
+        message = JSON.parse(message);
+        if (message.method === "Target.attachedToTarget") {
+            session = new CDPSession(
+                cnn,
+                message.params.targetInfo.type,
+                message.params.sessionId
+            );
+            cnn._sessions.set(message.params.sessionId, session);
+        } else if (message.method === "Target.detachedFromTarget") {
+            session = cnn._sessions.get(message.params.sessionId);
+            if (session) {
+                session._onClosed();
+                cnn._sessions.delete(message.params.sessionId);
+            }
+        }
+        if (message.sessionId) {
+            session = cnn._sessions.get(message.sessionId);
+            if (!session) {
+                return;
+            }
+            callback = callbackDict[message.id];
+            if (callback) {
+                delete callbackDict[message.id];
+                if (message.error) {
+                    callback.reject(createProtocolError(
+                        callback.error,
+                        callback.method,
+                        message
+                    ));
+                    return;
+                }
+                callback.resolve(message.result);
+                return;
+            }
+            local.assertOrThrow(!message.id, "missing message.id");
+            session.emit(message.method, message.params);
+            return;
+        }
+        if (message.id) {
+            callback = callbackDict[message.id];
+            // Callbacks could be all rejected if someone has called
+            // `.dispose()`.
+            if (!callback) {
+                return;
+            }
+            delete callbackDict[message.id];
+            if (message.error) {
+                callback.reject(createProtocolError(
+                    callback.error,
+                    callback.method,
+                    message
+                ));
+                return;
+            }
+            callback.resolve(message.result);
+            return;
+        }
+        cnn.emit(message.method, message.params);
+    });
     /*
      * init websocketReader
      */
@@ -708,8 +797,8 @@ Application data: y bytes
             buf = bufListRead(2);
             // validate opcode
             opcode = buf[0] & 0x0f;
-            local.assertOrThrow(opcode === 0x02 || opcode === 0x01, new Error(
-                "Invalid WebSocket frame: opcode must be 0x01 or 0x02, not 0x0"
+            local.assertOrThrow(opcode === 0x01, new Error(
+                "Invalid WebSocket frame: opcode must be 0x01, not 0x0"
                 + opcode.toString(16)
             ));
             payloadLength = buf[1] & 0x7f;
@@ -788,8 +877,11 @@ Application data: y bytes
     /*
      * init websocket
      */
-    onError = cdpClient._destroy.bind(cdpClient);
+    cdpPromise = new Promise(function (resolve) {
+        cdpResolve = resolve;
+    });
     cryptoKey = require("crypto").randomBytes(16).toString("base64");
+    onError = cdpClient._destroy.bind(cdpClient);
     require("http").get(Object.assign(require("url").parse(websocketUrl), {
         "createConnection": function (opt) {
             opt.path = opt.socketPath;
@@ -828,9 +920,12 @@ Application data: y bytes
         */
         // pipe websocket to websocketReader
         websocket.pipe(websocketReader);
-        // pass cdpClient to callback
-        callback(cdpClient);
+        // resolve cdpClient
+        cdpResolve(cdpClient);
+        onClient = onClient || local.noop;
+        onClient(cdpClient);
     }).on("error", onError);
+    return cdpPromise;
 }
 local.noop(cdpClientCreate);
 /* jslint ignore:start */
@@ -1151,10 +1246,10 @@ class Browser extends EventEmitter {
       * @param {boolean} ignoreHTTPSErrors
       * @param {?Puppeteer.Viewport} defaultViewport
       * @param {?Puppeteer.ChildProcess} process
-      * @param {function()=} closeCallback
       */
-    static async create(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback) {
-        const browser = new Browser(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback);
+    static async create(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, chromeKill) {
+        const browser = new Browser(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process);
+        browser.chromeKill = chromeKill;
         await connection.cdpSend2("Target.setDiscoverTargets", {discover: true});
         return browser;
     }
@@ -1164,29 +1259,27 @@ class Browser extends EventEmitter {
       * @param {boolean} ignoreHTTPSErrors
       * @param {?Puppeteer.Viewport} defaultViewport
       * @param {?Puppeteer.ChildProcess} process
-      * @param {(function():Promise)=} closeCallback
       */
-    constructor(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback) {
+    constructor(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process) {
         super();
         let that = this;
         that._ignoreHTTPSErrors = ignoreHTTPSErrors;
         that._defaultViewport = defaultViewport;
         that._process = process;
         that._screenshotTaskQueue = new TaskQueue();
-        that._connection = connection;
-        that._closeCallback = closeCallback || new Function();
-        that._defaultContext = new BrowserContext(that._connection, that, null);
+        that.cnn = connection;
+        that._defaultContext = new BrowserContext(that.cnn, that, null);
         /** @type {Map<string, BrowserContext>} */
         that._contexts = new Map();
         contextIds.forEach(function (contextId) {
-            that._contexts.set(contextId, new BrowserContext(that._connection, that, contextId));
+            that._contexts.set(contextId, new BrowserContext(that.cnn, that, contextId));
         });
         /** @type {Map<string, Target>} */
         that._targets = new Map();
-        that._connection.on(Events.Connection.Disconnected, function () { return that.emit(Events.Browser.Disconnected); });
-        that._connection.on("Target.targetCreated", that._targetCreated.bind(that));
-        that._connection.on("Target.targetDestroyed", that._targetDestroyed.bind(that));
-        that._connection.on("Target.targetInfoChanged", that._targetInfoChanged.bind(that));
+        that.cnn.on(Events.Connection.Disconnected, function () { return that.emit(Events.Browser.Disconnected); });
+        that.cnn.on("Target.targetCreated", that._targetCreated.bind(that));
+        that.cnn.on("Target.targetDestroyed", that._targetDestroyed.bind(that));
+        that.cnn.on("Target.targetInfoChanged", that._targetInfoChanged.bind(that));
     }
     /**
       * @return {?Puppeteer.ChildProcess}
@@ -1198,8 +1291,8 @@ class Browser extends EventEmitter {
       * @return {!Promise<!BrowserContext>}
       */
     async createIncognitoBrowserContext() {
-        const {browserContextId} = await this._connection.cdpSend2("Target.createBrowserContext");
-        const context = new BrowserContext(this._connection, this, browserContextId);
+        const {browserContextId} = await this.cnn.cdpSend2("Target.createBrowserContext");
+        const context = new BrowserContext(this.cnn, this, browserContextId);
         this._contexts.set(browserContextId, context);
         return context;
     }
@@ -1219,7 +1312,7 @@ class Browser extends EventEmitter {
       * @param {?string} contextId
       */
     async _disposeContext(contextId) {
-        await this._connection.cdpSend2("Target.disposeBrowserContext", {browserContextId: contextId || undefined});
+        await this.cnn.cdpSend2("Target.disposeBrowserContext", {browserContextId: contextId || undefined});
         this._contexts.delete(contextId);
     }
     /**
@@ -1230,7 +1323,7 @@ class Browser extends EventEmitter {
         const targetInfo = event.targetInfo;
         const {browserContextId} = targetInfo;
         const context = (browserContextId && that._contexts.has(browserContextId)) ? that._contexts.get(browserContextId) : that._defaultContext;
-        const target = new Target(targetInfo, context, function () { return that._connection.createSession(targetInfo); }, that._ignoreHTTPSErrors, that._defaultViewport, that._screenshotTaskQueue);
+        const target = new Target(targetInfo, context, function () { return that.cnn.createSession(targetInfo); }, that._ignoreHTTPSErrors, that._defaultViewport, that._screenshotTaskQueue);
         assert(!that._targets.has(event.targetInfo.targetId), "Target should not exist before targetCreated");
         that._targets.set(event.targetInfo.targetId, target);
         if (await target._initializedPromise) {
@@ -1269,20 +1362,20 @@ class Browser extends EventEmitter {
       * @return {string}
       */
     wsEndpoint() {
-        return this._connection.url();
+        return this.cnn.url();
     }
     /**
       * @return {!Promise<!Puppeteer.Page>}
       */
     async newPage() {
-        return this._defaultContext.newPage();
+        return this._defaultContext._browser._createPageInContext(this._defaultContext._id);
     }
     /**
       * @param {?string} contextId
       * @return {!Promise<!Puppeteer.Page>}
       */
     async _createPageInContext(contextId) {
-        const {targetId} = await this._connection.cdpSend2("Target.createTarget", {url: "about:blank", browserContextId: contextId || undefined});
+        const {targetId} = await this.cnn.cdpSend2("Target.createTarget", {url: "about:blank", browserContextId: contextId || undefined});
         const target = await this._targets.get(targetId);
         assert(await target._initializedPromise, "Failed to create target for page");
         const page = await target.page();
@@ -1347,34 +1440,11 @@ class Browser extends EventEmitter {
       * @return {!Promise<string>}
       */
     async version() {
-        const version = await this._getVersion();
-        return version.product;
-    }
-    /**
-      * @return {!Promise<string>}
-      */
-    async userAgent() {
-        const version = await this._getVersion();
-        return version.userAgent;
+        return this.cnn.cdpSend2("Browser.getVersion");
     }
     async close() {
-        await this._closeCallback.call(null);
-        this.disconnect();
-    }
-    disconnect() {
-        this._connection.dispose();
-    }
-    /**
-      * @return {boolean}
-      */
-    isConnected() {
-        return !this._connection._closed;
-    }
-    /**
-      * @return {!Promise<!Object>}
-      */
-    _getVersion() {
-        return this._connection.cdpSend2("Browser.getVersion");
+        await this.chromeKill();
+        this.cnn.sck2.end();
     }
 }
 class BrowserContext extends EventEmitter {
@@ -1385,7 +1455,7 @@ class BrowserContext extends EventEmitter {
       */
     constructor(connection, browser, contextId) {
         super();
-        this._connection = connection;
+        this.cnn = connection;
         this._browser = browser;
         this._id = contextId;
     }
@@ -1453,22 +1523,10 @@ class BrowserContext extends EventEmitter {
             }
             return protocolPermission;
         });
-        await this._connection.cdpSend2("Browser.grantPermissions", {origin, browserContextId: this._id || undefined, permissions});
+        await this.cnn.cdpSend2("Browser.grantPermissions", {origin, browserContextId: this._id || undefined, permissions});
     }
     async clearPermissionOverrides() {
-        await this._connection.cdpSend2("Browser.resetPermissions", {browserContextId: this._id || undefined});
-    }
-    /**
-      * @return {!Promise<!Puppeteer.Page>}
-      */
-    newPage() {
-        return this._browser._createPageInContext(this._id);
-    }
-    /**
-      * @return {!Browser}
-      */
-    browser() {
-        return this._browser;
+        await this.cnn.cdpSend2("Browser.resetPermissions", {browserContextId: this._id || undefined});
     }
     async close() {
         assert(this._id, "Non-incognito profiles cannot be closed!");
@@ -1579,30 +1637,14 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
   * limitations under the License.
   */
 /**
-  * @param {!Error} error
-  * @param {string} method
-  * @param {{error: {message: string, data: any}}} object
-  * @return {!Error}
-  */
-function createProtocolError(error, method, object) {
-    error.message = (
-        "Protocol error (" + method + "): " + object.error.message + (
-            object.error.data
-            ? " " + object.error.data
-            : ""
-        )
-    );
-    return error;
-}
-/**
   * @param {!Connection} connection
   * @param {string} targetType
   * @param {string} sessionId
   */
-function CDPSession(connection, targetType, sessionId) {
+function CDPSession(cnn, targetType, sessionId) {
     require("stream").EventEmitter.call(this);
-    this._callbacks = new Map();
-    this._connection = connection;
+    this.cnn = cnn;
+    this.callbackDict = cnn.callbackDict;
     this._targetType = targetType;
     this._sessionId = sessionId;
 }
@@ -1614,132 +1656,45 @@ require("util").inherits(CDPSession, require("stream").EventEmitter);
   */
 CDPSession.prototype.cdpSend3 = function (method, params) {
     let that = this;
-    let id = that._connection.sck2.cdpSend(
+    let id = that.cnn.sck2.cdpSend({
         method,
         params,
-        that._sessionId
-    );
+        sessionId: that._sessionId
+    });
     return new Promise(function (resolve, reject) {
-        that._callbacks.set(id, {
+        that.callbackDict[id] = {
             resolve,
             reject,
             error: new Error(),
             method
-        });
-    });
-};
-CDPSession.prototype._onMessage = function (object) {
-    if (object.id && this._callbacks.has(object.id)) {
-        const callback = this._callbacks.get(object.id);
-        this._callbacks.delete(object.id);
-        if (object.error) {
-            callback.reject(createProtocolError(
-                callback.error,
-                callback.method,
-                object
-            ));
-        } else {
-            callback.resolve(object.result);
-        }
-    } else {
-        local.assertOrThrow(!object.id, "missing object.id");
-        this.emit(object.method, object.params);
-    }
-};
-CDPSession.prototype.detach = async function () {
-    if (!this._connection) {
-        throw new Error(
-            "Session already detached. Most likely the "
-            + this._targetType
-            + "has been closed."
-        );
-    }
-    await this._connection.cdpSend2("Target.detachFromTarget", {
-        sessionId: this._sessionId
+        };
     });
 };
 CDPSession.prototype._onClosed = function () {
-    this._callbacks.forEach(function (callback) {
-        callback.error.message = (
-            `Protocol error (${callback.method}): Target closed.`
-        );
-        callback.reject(callback.error);
-    });
-    this._callbacks.clear();
-    this._connection = null;
+    this.cnn = null;
     this.emit(Events.CDPSession.Disconnected);
 };
 /**
   * @param {string} url
   * @param {!Puppeteer.ConnectionTransport} transport
-  * @param {number=} delay
   */
-function Connection(url, sck2, delay = 0) {
-    let that = this;
-    require("stream").EventEmitter.call(that);
-    that._url = url;
+function Connection(url, sck2) {
+    let cnn = this;
+    require("stream").EventEmitter.call(cnn);
+    cnn._url = url;
     /** @type {
      *    !Map<number,
      *    {resolve: function, reject: function, error: !Error, method: string}>}
      */
-    that._callbacks = new Map();
-    that._delay = delay;
-    that.sck2 = sck2;
-    that.sck2.on("data", async function (message) {
-        let session;
-        if (that._delay) {
-            await new Promise(function (f) {
-                setTimeout(f, that._delay);
-            });
-        }
-        // console.error("◀ RECV " + message);
-        const object = JSON.parse(message);
-        if (object.method === "Target.attachedToTarget") {
-            const sessionId = object.params.sessionId;
-            session = new CDPSession(
-                that,
-                object.params.targetInfo.type,
-                sessionId
-            );
-            that._sessions.set(sessionId, session);
-        } else if (object.method === "Target.detachedFromTarget") {
-            session = that._sessions.get(object.params.sessionId);
-            if (session) {
-                session._onClosed();
-                that._sessions.delete(object.params.sessionId);
-            }
-        }
-        if (object.sessionId) {
-            session = that._sessions.get(object.sessionId);
-            if (session) {
-                session._onMessage(object);
-            }
-        } else if (object.id) {
-            const callback = that._callbacks.get(object.id);
-            // Callbacks could be all rejected if someone has called
-            // `.dispose()`.
-            if (callback) {
-                that._callbacks.delete(object.id);
-                if (object.error) {
-                    callback.reject(createProtocolError(
-                        callback.error,
-                        callback.method,
-                        object
-                    ));
-                } else {
-                    callback.resolve(object.result);
-                }
-            }
-        } else {
-            that.emit(object.method, object.params);
-        }
-    });
+    cnn.sck2 = sck2;
+    cnn.callbackDict = sck2.callbackDict;
+    sck2.cnn = cnn;
     //!! // Silently ignore all errors - we don't know what to do with them.
-    //!! that.sck2.on("error", local.noop);
-    that.onclose = that._onClose.bind(that);
+    //!! cnn.sck2.on("error", local.noop);
+    cnn.onclose = cnn._onClose.bind(cnn);
     /** @type {!Map<string, !CDPSession>}*/
-    that._sessions = new Map();
-    that._closed = false;
+    cnn._sessions = new Map();
+    cnn._closed = false;
 }
 require("util").inherits(Connection, require("stream").EventEmitter);
 /**
@@ -1747,7 +1702,7 @@ require("util").inherits(Connection, require("stream").EventEmitter);
   * @return {!Connection}
   */
 Connection.fromSession = function (session) {
-    return session._connection;
+    return session.cnn;
 };
 /**
   * @param {string} sessionId
@@ -1768,41 +1723,45 @@ Connection.prototype.url = function () {
   * @return {!Promise<?Object>}
   */
 Connection.prototype.cdpSend2 = function (method, params = {}) {
-    let that = this;
-    let id = that.sck2.cdpSend(method, params);
+    let cnn = this;
+    let id = cnn.sck2.cdpSend({
+        method,
+        params
+    });
     return new Promise(function (resolve, reject) {
-        that._callbacks.set(id, {
+        cnn.callbackDict[id] = {
             resolve,
             reject,
             error: new Error(),
             method
-        });
+        };
     });
 };
 Connection.prototype._onClose = function () {
-    if (this._closed) {
+    let cnn = this;
+    if (cnn._closed) {
         return;
     }
-    this._closed = true;
-    this.onmessage = null;
-    this.onclose = null;
-    this._callbacks.forEach(function (callback) {
+    cnn._closed = true;
+    cnn.onmessage = null;
+    cnn.onclose = null;
+    Object.entries(cnn.callbackDict).forEach(function ([
+        id, callback
+    ]) {
+        if (!callback) {
+            return;
+        }
+        delete cnn.callbackDict[id];
         callback.error.message = (
             `Protocol error (${callback.method}): Target closed.`
         );
         callback.reject(callback.error);
     });
-    this._callbacks.clear();
-    this._sessions.forEach(function (session) {
+    cnn._sessions.forEach(function (session) {
         session._onClosed();
     });
-    this._sessions.clear();
-    this.emit(Events.Connection.Disconnected);
-};
-Connection.prototype.dispose = function () {
-    return;
-    //!! this._onClose();
-    //!! this.sck2.close();
+    cnn._sessions.clear();
+    cnn.emit(Events.Connection.Disconnected);
 };
 /**
   * @param {Protocol.Target.TargetInfo} targetInfo
@@ -4485,78 +4444,6 @@ class Page extends EventEmitter {
         ]);
     }
     /**
-      * @param {!Protocol.Page.fileChooserOpenedPayload} event
-      */
-    _onFileChooser(event) {
-        if (!this._fileChooserInterceptors.size) {
-            this._client.cdpSend3("Page.handleFileChooser", { action: "fallback" }).catch(debugError);
-            return;
-        }
-        const interceptors = Array.from(this._fileChooserInterceptors);
-        this._fileChooserInterceptors.clear();
-        const fileChooser = new FileChooser(this._client, event);
-        interceptors.forEach(function (interceptor) {
-            interceptor.call(null, fileChooser);
-        });
-    }
-    /**
-      * @param {!{timeout?: number}=} options
-      * @return !Promise<!FileChooser>}
-      */
-    async waitForFileChooser(options = {}) {
-        let that = this;
-        if (that._fileChooserInterceptionIsDisabled) {
-            throw new Error("File chooser handling does not work with multiple connections to the same page");
-        }
-        const {
-            timeout = that._timeoutSettings.timeout(),
-        } = options;
-        let callback;
-        const promise = new Promise(function (x) { return callback = x; });
-        that._fileChooserInterceptors.add(callback);
-        return helper.waitWithTimeout(promise, "waiting for file chooser", timeout).catch(function (e) {
-            that._fileChooserInterceptors.delete(callback);
-            throw e;
-        });
-    }
-    /**
-      * @param {!{longitude: number, latitude: number, accuracy: (number|undefined)}} options
-      */
-    async setGeolocation(options) {
-        const { longitude, latitude, accuracy = 0} = options;
-        if (longitude < -180 || longitude > 180) {
-            throw new Error(`Invalid longitude "${longitude}": precondition -180 <= LONGITUDE <= 180 failed.`);
-        }
-        if (latitude < -90 || latitude > 90) {
-            throw new Error(`Invalid latitude "${latitude}": precondition -90 <= LATITUDE <= 90 failed.`);
-        }
-        if (accuracy < 0) {
-            throw new Error(`Invalid accuracy "${accuracy}": precondition 0 <= ACCURACY failed.`);
-        }
-        await this._client.cdpSend3("Emulation.setGeolocationOverride", {longitude, latitude, accuracy});
-    }
-    /**
-      * @return {!Puppeteer.Target}
-      */
-    target() {
-        return this._target;
-    }
-    /**
-      * @return {!Puppeteer.Browser}
-      */
-    browser() {
-        return this._target.browser();
-    }
-    /**
-      * @return {!Puppeteer.BrowserContext}
-      */
-    browserContext() {
-        return this._target.browserContext();
-    }
-    _onTargetCrashed() {
-        this.emit("error", new Error("Page crashed!"));
-    }
-    /**
       * @param {!Protocol.Log.entryAddedPayload} event
       */
     _onLogEntryAdded(event) {
@@ -4568,12 +4455,6 @@ class Page extends EventEmitter {
         if (source !== "worker") {
             that.emit(Events.Page.Console, new ConsoleMessage(level, text, [], {url, lineNumber}));
         }
-    }
-    /**
-      * @return {!Puppeteer.Frame}
-      */
-    mainFrame() {
-        return this._frameManager.mainFrame();
     }
     /**
       * @return {!Touchscreen}
@@ -5264,12 +5145,12 @@ class Page extends EventEmitter {
       * @param {!{runBeforeUnload: (boolean|undefined)}=} options
       */
     async close(options = {runBeforeUnload: undefined}) {
-        assert(!!this._client._connection, "Protocol error: Connection closed. Most likely the page has been closed.");
+        assert(!!this._client.cnn, "Protocol error: Connection closed. Most likely the page has been closed.");
         const runBeforeUnload = !!options.runBeforeUnload;
         if (runBeforeUnload) {
             await this._client.cdpSend3("Page.close");
         } else {
-            await this._client._connection.cdpSend2("Target.closeTarget", { targetId: this._target._targetId });
+            await this._client.cnn.cdpSend2("Target.closeTarget", { targetId: this._target._targetId });
             await this._target._isClosedPromise;
         }
     }
