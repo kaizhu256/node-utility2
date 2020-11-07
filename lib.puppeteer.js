@@ -410,8 +410,8 @@ local.cliRun = function (opt) {
 if (local.isBrowser) {
     return;
 }
-let BUFFER0;
-BUFFER0 = Buffer.alloc(0);
+//!! let BUFFER0;
+//!! BUFFER0 = Buffer.alloc(0);
 /* jslint ignore:start */
 const debugError = console.error;
 function debugProtocol() {
@@ -764,6 +764,7 @@ function Socket2(socket) {
         let header;
         let maskKey;
         let result;
+        // console.error("SEND ► " + payload.toString());
         // init header
         header = Buffer.alloc(2 + 8 + 4);
         // init fin = true
@@ -773,15 +774,6 @@ function Socket2(socket) {
         // init mask = true
         header[1] |= 0x80;
         // init payloadLength
-        payload = (
-            Object.prototype.toString.call(payload) === "[object Uint8Array]"
-            ? payload
-            : !payload
-            ? BUFFER0
-            : typeof payload === "string"
-            ? Buffer.from(payload)
-            : Buffer.from(String(payload))
-        );
         if (payload.length < 126) {
             header = header.slice(0, 2 + 0 + 4);
             header[1] |= payload.length;
@@ -2014,17 +2006,13 @@ require("util").inherits(CDPSession, require("stream").EventEmitter);
   */
 CDPSession.prototype.send = function (method, params = {}) {
     let that = this;
-    if (!that._connection) {
-        return Promise.reject(new Error(
-            "Protocol error (" + method + "): Session closed. Most likely the "
-            + that._targetType + " has been closed."
-        ));
-    }
-    const id = that._connection._rawSend({
-        sessionId: that._sessionId,
+    let id = require("crypto").randomBytes(2).readUInt16BE(0, 2);
+    that._connection.ws2.sck2.write(Buffer.from(JSON.stringify({
+        id,
         method,
-        params
-    });
+        params,
+        sessionId: that._sessionId
+    })));
     return new Promise(function (resolve, reject) {
         that._callbacks.set(id, {
             resolve,
@@ -2083,7 +2071,6 @@ CDPSession.prototype._onClosed = function () {
 function Connection(url, ws2, delay = 0) {
     require("stream").EventEmitter.call(this);
     this._url = url;
-    this._lastId = 0;
     /** @type {
      *    !Map<number,
      *    {resolve: function, reject: function, error: !Error, method: string}>}
@@ -2138,10 +2125,12 @@ Connection.prototype.url = function () {
   */
 Connection.prototype.send = function (method, params = {}) {
     let that = this;
-    const id = that._rawSend({
+    let id = require("crypto").randomBytes(2).readUInt16BE(0, 2);
+    that.ws2.sck2.write(Buffer.from(JSON.stringify({
+        id,
         method,
         params
-    });
+    })));
     return new Promise(function (resolve, reject) {
         that._callbacks.set(id, {
             resolve,
@@ -2150,19 +2139,6 @@ Connection.prototype.send = function (method, params = {}) {
             method
         });
     });
-};
-/**
-  * @param {*} message
-  * @return {number}
-  */
-Connection.prototype._rawSend = function (message) {
-    this._lastId += 1;
-    const id = this._lastId;
-    message = JSON.stringify(Object.assign({}, message, {id}));
-    // console.error("SEND ► " + message);
-    let ws2 = this.ws2;
-    ws2.send(message);
-    return id;
 };
 /**
   * @param {string} message
